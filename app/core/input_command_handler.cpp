@@ -93,9 +93,12 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     QVector3D hit;
     if (m_picking_service->screen_to_ground(
             QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-      auto targets = Game::Systems::FormationPlanner::spreadFormation(
-          int(sel.size()), hit,
-          Game::GameConfig::instance().gameplay().formation_spacing_default);
+      auto targets =
+          Game::Systems::FormationPlanner::spread_formation_by_nation(
+              *m_world, sel, hit,
+              Game::GameConfig::instance()
+                  .gameplay()
+                  .formation_spacing_default);
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = sel.size() > 1;
       Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
@@ -191,6 +194,20 @@ void InputCommandHandler::on_guard_command() {
   }
 }
 
+void InputCommandHandler::on_formation_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller) {
+    return;
+  }
+
+  auto result = m_command_controller->on_formation_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
 void InputCommandHandler::on_guard_click(qreal sx, qreal sy,
                                          const ViewportState &viewport) {
   if (m_is_spectator_mode) {
@@ -219,6 +236,13 @@ auto InputCommandHandler::any_selected_in_guard_mode() const -> bool {
     return false;
   }
   return m_command_controller->any_selected_in_guard_mode();
+}
+
+auto InputCommandHandler::any_selected_in_formation_mode() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->any_selected_in_formation_mode();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,

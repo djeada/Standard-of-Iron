@@ -1,0 +1,79 @@
+{
+  "id": "forest_ambush",
+  "title": "Forest Ambush",
+  "summary": "Destroy enemy forces hiding in the forest before they can regroup",
+  "map_path": ":/assets/maps/map_forest.json",
+  "player_setup": {
+    "nation": "roman_republic",
+    "faction": "roman",
+    "color": "red",
+    "starting_units": [
+      {
+        "type": "swordsman",
+        "count": 15,
+        "position": {"x": 60, "z": 60}
+      },
+      {
+        "type": "archer",
+        "count": 8,
+        "position": {"x": 62, "z": 58}
+      },
+      {
+        "type": "spearman",
+        "count": 10,
+        "position": {"x": 58, "z": 58}
+      }
+    ],
+    "starting_buildings": [],
+    "starting_resources": {
+      "gold": 500,
+      "food": 300
+    }
+  },
+  "ai_setups": [
+    {
+      "id": "enemy_main",
+      "nation": "carthage",
+      "faction": "carthaginian",
+      "color": "blue",
+      "difficulty": "hard",
+      "personality": {
+        "aggression": 0.8,
+        "defense": 0.6,
+        "harassment": 0.4
+      },
+      "starting_units": [
+        {
+          "type": "swordsman",
+          "count": 10,
+          "position": {"x": 190, "z": 190}
+        },
+        {
+          "type": "archer",
+          "count": 6,
+          "position": {"x": 188, "z": 192}
+        }
+      ],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 190, "z": 190},
+          "max_population": 200
+        }
+      ]
+    }
+  ],
+  "victory_conditions": [
+    {
+      "type": "destroy_all_enemies",
+      "description": "Eliminate all enemy forces"
+    }
+  ],
+  "defeat_conditions": [
+    {
+      "type": "lose_all_units",
+      "description": "Do not lose all your units"
+    }
+  ],
+  "events": []
+}

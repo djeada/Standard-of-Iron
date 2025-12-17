@@ -6,8 +6,8 @@ namespace Game::Units {
 
 class DefenseTower : public Unit {
 public:
-  static auto create(Engine::Core::World &world,
-                     const SpawnParams &params) -> std::unique_ptr<DefenseTower>;
+  static auto create(Engine::Core::World &world, const SpawnParams &params)
+      -> std::unique_ptr<DefenseTower>;
 
 private:
   DefenseTower(Engine::Core::World &world);

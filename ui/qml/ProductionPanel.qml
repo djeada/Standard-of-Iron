@@ -1427,6 +1427,7 @@ Rectangle {
                                 onClicked: {
                                     if (parent.isEnabled)
                                         productionPanel.buildTower();
+
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
@@ -1445,18 +1446,21 @@ Rectangle {
                                 ColorAnimation {
                                     duration: 150
                                 }
+
                             }
 
                             Behavior on border.color {
                                 ColorAnimation {
                                     duration: 150
                                 }
+
                             }
 
                             Behavior on scale {
                                 NumberAnimation {
                                     duration: 100
                                 }
+
                             }
 
                         }

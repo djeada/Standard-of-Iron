@@ -1,6 +1,7 @@
 #include "combat_utils.h"
 #include "../../core/component.h"
 #include "../../core/world.h"
+#include "../../units/spawn_type.h"
 #include "../owner_registry.h"
 
 namespace Game::Systems::Combat {
@@ -151,6 +152,37 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
   }
 
   return nearest_enemy;
+}
+
+auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool {
+  if (unit == nullptr) {
+    return false;
+  }
+
+  auto *unit_comp = unit->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return false;
+  }
+
+  switch (unit_comp->spawn_type) {
+  case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::HorseArcher:
+  case Game::Units::SpawnType::Healer:
+  case Game::Units::SpawnType::Catapult:
+  case Game::Units::SpawnType::Ballista:
+    return false;
+
+  case Game::Units::SpawnType::Knight:
+  case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::MountedKnight:
+  case Game::Units::SpawnType::HorseSpearman:
+    return true;
+
+  case Game::Units::SpawnType::Barracks:
+    return false;
+  }
+
+  return false;
 }
 
 } // namespace Game::Systems::Combat

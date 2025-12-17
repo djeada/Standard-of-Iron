@@ -101,6 +101,9 @@ parse_formation_type(const QString &value) -> std::optional<FormationType> {
   if (lowered == QStringLiteral("barbarian")) {
     return FormationType::Barbarian;
   }
+  if (lowered == QStringLiteral("carthage")) {
+    return FormationType::Carthage;
+  }
   return std::nullopt;
 }
 

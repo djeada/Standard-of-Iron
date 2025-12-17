@@ -3,11 +3,13 @@
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
 #include "../../game/systems/command_service.h"
+#include "../../game/systems/formation_planner.h"
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
 #include "../../render/gl/camera.h"
 #include "../utils/movement_utils.h"
+#include "game/game_config.h"
 #include "units/spawn_type.h"
 #include <QPointF>
 #include <qglobal.h>
@@ -102,6 +104,13 @@ auto CommandController::on_stop_command() -> CommandResult {
       hold_mode->active = false;
       hold_mode->exit_cooldown = hold_mode->stand_up_duration;
       emit hold_mode_changed(false);
+    }
+
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      formation_mode->active = false;
+      emit formation_mode_changed(false);
     }
   }
 
@@ -556,6 +565,171 @@ auto CommandController::on_guard_click(qreal sx, qreal sy, int viewport_width,
   result.input_consumed = true;
   result.reset_cursor_to_normal = true;
   return result;
+}
+
+auto CommandController::on_formation_command() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.size() <= 1) {
+    return result;
+  }
+
+  int eligible_count = 0;
+  int formation_active_count = 0;
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    eligible_count++;
+
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      formation_active_count++;
+    }
+  }
+
+  if (eligible_count <= 1) {
+    return result;
+  }
+
+  const bool should_enable_formation =
+      (formation_active_count < eligible_count);
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+
+    if (should_enable_formation) {
+
+      if (formation_mode == nullptr) {
+        formation_mode =
+            entity->add_component<Engine::Core::FormationModeComponent>();
+      }
+      formation_mode->active = true;
+
+      auto *hold_mode =
+          entity->get_component<Engine::Core::HoldModeComponent>();
+      if ((hold_mode != nullptr) && hold_mode->active) {
+        hold_mode->active = false;
+      }
+
+      auto *guard_mode =
+          entity->get_component<Engine::Core::GuardModeComponent>();
+      if ((guard_mode != nullptr) && guard_mode->active) {
+        guard_mode->active = false;
+      }
+
+      if (auto *patrol =
+              entity->get_component<Engine::Core::PatrolComponent>()) {
+        patrol->patrolling = false;
+        patrol->waypoints.clear();
+      }
+    } else {
+
+      if ((formation_mode != nullptr) && formation_mode->active) {
+        formation_mode->active = false;
+      }
+    }
+  }
+
+  if (should_enable_formation) {
+    QVector3D center(0.0F, 0.0F, 0.0F);
+    int valid_count = 0;
+
+    for (auto id : selected) {
+      auto *entity = m_world->get_entity(id);
+      if (entity == nullptr) {
+        continue;
+      }
+
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        center.setX(center.x() + transform->position.x);
+        center.setY(center.y() + transform->position.y);
+        center.setZ(center.z() + transform->position.z);
+        valid_count++;
+      }
+    }
+
+    if (valid_count > 0) {
+      center.setX(center.x() / static_cast<float>(valid_count));
+      center.setY(center.y() / static_cast<float>(valid_count));
+      center.setZ(center.z() / static_cast<float>(valid_count));
+
+      auto targets =
+          Game::Systems::FormationPlanner::spread_formation_by_nation(
+              *m_world, selected, center,
+              Game::GameConfig::instance()
+                  .gameplay()
+                  .formation_spacing_default);
+
+      Game::Systems::CommandService::MoveOptions opts;
+      opts.group_move = selected.size() > 1;
+      opts.clear_attack_intent = true;
+      Game::Systems::CommandService::moveUnits(*m_world, selected, targets,
+                                               opts);
+    }
+  }
+
+  emit formation_mode_changed(should_enable_formation);
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+bool CommandController::any_selected_in_formation_mode() const {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return false;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if ((formation_mode != nullptr) && formation_mode->active) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 } // namespace App::Controllers

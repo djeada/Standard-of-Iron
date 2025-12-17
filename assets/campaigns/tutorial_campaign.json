@@ -1,0 +1,20 @@
+{
+  "id": "tutorial_campaign",
+  "title": "Roman Conquest Tutorial",
+  "description": "Learn the basics of warfare in a series of guided missions",
+  "missions": [
+    {
+      "mission_id": "forest_ambush",
+      "order_index": 0,
+      "intro_text": "Welcome, Commander. Your first task is to eliminate enemy scouts in the forest.",
+      "outro_text": "Well done! You've proven yourself in basic combat."
+    },
+    {
+      "mission_id": "defend_outpost",
+      "order_index": 1,
+      "intro_text": "Intelligence reports indicate an enemy attack on our outpost. Defend it at all costs!",
+      "outro_text": "Excellent work! The outpost is secure and reinforcements have arrived.",
+      "difficulty_modifier": 1.1
+    }
+  ]
+}
