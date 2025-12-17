@@ -36,6 +36,7 @@ public:
   auto on_stop_command() -> CommandResult;
   auto on_hold_command() -> CommandResult;
   auto on_guard_command() -> CommandResult;
+  auto on_formation_command() -> CommandResult;
   auto on_guard_click(qreal sx, qreal sy, int viewport_width,
                       int viewport_height, void *camera) -> CommandResult;
   auto on_patrol_click(qreal sx, qreal sy, int viewport_width,
@@ -55,12 +56,14 @@ public:
 
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
 
 signals:
   void attack_target_selected();
   void troop_limit_reached();
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
+  void formation_mode_changed(bool active);
 
 private:
   Engine::Core::World *m_world;
