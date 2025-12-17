@@ -5,7 +5,7 @@ on:
       - 'v*'   # run only on tags like v1.2.3
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-macos:
@@ -52,3 +52,9 @@ jobs:
         with:
           name: macos-${{ env.BUILD_TYPE }}
           path: standard_of_iron-macos.dmg
+
+      - name: Attach to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: standard_of_iron-macos.dmg
