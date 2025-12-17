@@ -13,8 +13,7 @@
       {
         "type": "spearman",
         "count": 20,
-        "position": {"x": 60, "z": 60},
-        "note": "Center formation - deliberately weak"
+        "position": {"x": 60, "z": 60}
       },
       {
         "type": "swordsman",
@@ -24,14 +23,12 @@
       {
         "type": "horse_swordsman",
         "count": 12,
-        "position": {"x": 45, "z": 60},
-        "note": "Left wing cavalry - key to victory"
+        "position": {"x": 45, "z": 60}
       },
       {
         "type": "horse_swordsman",
         "count": 12,
-        "position": {"x": 75, "z": 60},
-        "note": "Right wing cavalry - key to victory"
+        "position": {"x": 75, "z": 60}
       },
       {
         "type": "horse_archer",
@@ -41,14 +38,12 @@
       {
         "type": "spearman",
         "count": 18,
-        "position": {"x": 50, "z": 62},
-        "note": "African veterans on flanks"
+        "position": {"x": 50, "z": 62}
       },
       {
         "type": "spearman",
         "count": 18,
-        "position": {"x": 70, "z": 62},
-        "note": "African veterans on flanks"
+        "position": {"x": 70, "z": 62}
       }
     ],
     "starting_buildings": [],
@@ -73,8 +68,7 @@
         {
           "type": "spearman",
           "count": 40,
-          "position": {"x": 120, "z": 60},
-          "note": "Massive Roman center"
+          "position": {"x": 120, "z": 60}
         },
         {
           "type": "swordsman",
@@ -89,8 +83,7 @@
         {
           "type": "horse_swordsman",
           "count": 8,
-          "position": {"x": 110, "z": 60},
-          "note": "Weak Roman cavalry"
+          "position": {"x": 110, "z": 60}
         },
         {
           "type": "horse_swordsman",
@@ -123,10 +116,6 @@
     {
       "type": "destroy_all_enemies",
       "description": "Encircle and destroy the entire Roman army"
-    },
-    {
-      "type": "encirclement_bonus",
-      "description": "Bonus: Execute complete encirclement"
     }
   ],
   "defeat_conditions": [
@@ -138,8 +127,12 @@
   "optional_objectives": [
     {
       "type": "tactical_perfection",
-      "description": "Complete the double envelopment within 15 minutes",
+      "description": "Execute the double envelopment within 15 minutes",
       "time_limit": 900.0
+    },
+    {
+      "type": "complete_encirclement",
+      "description": "Achieve complete encirclement of enemy forces"
     }
   ],
   "events": [

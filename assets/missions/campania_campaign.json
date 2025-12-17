@@ -39,13 +39,11 @@
       },
       {
         "type": "village",
-        "position": {"x": 80, "z": 80},
-        "note": "Strategic village to defend"
+        "position": {"x": 80, "z": 80}
       },
       {
         "type": "village",
-        "position": {"x": 40, "z": 80},
-        "note": "Strategic village to defend"
+        "position": {"x": 40, "z": 80}
       }
     ],
     "starting_resources": {
