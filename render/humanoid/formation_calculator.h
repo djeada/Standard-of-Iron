@@ -67,11 +67,22 @@ public:
   }
 };
 
+class BuilderCircleFormation : public IFormationCalculator {
+public:
+  [[nodiscard]] auto
+  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+                  uint32_t seed) const -> FormationOffset override;
+
+  [[nodiscard]] auto get_description() const -> const char * override {
+    return "Builder Circle (Construction)";
+  }
+};
+
 class FormationCalculatorFactory {
 public:
   enum class Nation { Roman, Carthage };
 
-  enum class UnitCategory { Infantry, Cavalry };
+  enum class UnitCategory { Infantry, Cavalry, BuilderConstruction };
 
   static auto getCalculator(Nation nation, UnitCategory category)
       -> const IFormationCalculator *;
@@ -81,6 +92,7 @@ private:
   static RomanCavalryFormation s_romanCavalry;
   static CarthageInfantryFormation s_carthageInfantry;
   static CarthageCavalryFormation s_carthageCavalry;
+  static BuilderCircleFormation s_builderCircle;
 };
 
 } // namespace Render::GL

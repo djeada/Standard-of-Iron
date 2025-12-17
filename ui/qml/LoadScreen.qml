@@ -8,7 +8,7 @@ Rectangle {
     property bool is_loading: false
     property string stage_text: "Loading..."
     property bool use_real_progress: true
-    property var _bgSources: ["qrc:/qt/qml/StandardOfIron/assets/visuals/load_screen.png", "qrc:/StandardOfIron/assets/visuals/load_screen.png", "qrc:/assets/visuals/load_screen.png", "assets/visuals/load_screen.png"]
+    property var _bgSources: ["qrc:/StandardOfIron/assets/visuals/load_screen.png", "qrc:/assets/visuals/load_screen.png", "assets/visuals/load_screen.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/load_screen.png"]
     property int _bgIndex: 0
 
     function complete_loading() {
