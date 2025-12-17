@@ -133,14 +133,20 @@ void GlobalStatsRegistry::on_barrack_captured(
 void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
 
   std::unordered_map<int, std::chrono::steady_clock::time_point> start_times;
+  std::unordered_map<int, int> troops_recruited_values;
+  std::unordered_map<int, int> enemies_killed_values;
   for (auto &[owner_id, stats] : m_player_stats) {
     start_times[owner_id] = stats.game_start_time;
+    troops_recruited_values[owner_id] = stats.troops_recruited;
+    enemies_killed_values[owner_id] = stats.enemies_killed;
   }
 
   m_player_stats.clear();
 
   for (auto &[owner_id, startTime] : start_times) {
     m_player_stats[owner_id].game_start_time = startTime;
+    m_player_stats[owner_id].troops_recruited = troops_recruited_values[owner_id];
+    m_player_stats[owner_id].enemies_killed = enemies_killed_values[owner_id];
   }
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
@@ -154,11 +160,6 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
 
     if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
       stats.barracks_owned++;
-    } else {
-      int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
-              unit->spawn_type);
-      stats.troops_recruited += production_cost;
     }
   }
 }
