@@ -10,6 +10,8 @@ out vec4 frag_color;
 
 uniform vec3 u_dust_color;
 uniform float u_time;
+uniform vec3 u_center;
+uniform float u_radius;
 uniform int u_effect_type;
 
 void main() {
@@ -27,7 +29,7 @@ void main() {
 
   float final_alpha = v_alpha * particle_alpha * (0.5 + 0.5 * combined_noise);
 
-  vec3 color;
+  vec3 color = u_dust_color;
 
   if (u_effect_type == 0) {
 
@@ -38,7 +40,7 @@ void main() {
     color += vec3(scatter);
 
     frag_color = vec4(color, final_alpha * 0.6);
-  } else {
+  } else if (u_effect_type == 1) {
 
     float flame_height = v_texcoord.y;
     float angle_t = v_texcoord.x;
@@ -95,5 +97,75 @@ void main() {
 
     color = clamp(color, 0.0, 4.0);
     frag_color = vec4(color, clamp(flame_alpha, 0.0, 1.0));
+  } else if (u_effect_type == 2) {
+
+    float height = v_texcoord.y;
+    float angle_t = v_texcoord.x;
+    float t = u_time * 0.5;
+
+    float chunk_count = 24.0;
+    float chunk_id = floor(angle_t * chunk_count);
+    float chunk_local = fract(angle_t * chunk_count);
+    float chunk_hash = fract(sin(chunk_id * 127.1 + 311.7) * 43758.5453);
+
+    float noise1 =
+        fract(sin(dot(v_texcoord * 20.0 + t * 0.3, vec2(12.9898, 78.233))) *
+              43758.5453);
+    float noise2 = fract(
+        sin(dot(v_texcoord * 45.0 + chunk_id, vec2(93.989, 67.345))) * 23421.6);
+    float combined_noise = mix(noise1, noise2, 0.5);
+
+    vec3 dust_dark = vec3(0.35, 0.30, 0.22);
+    vec3 dust_mid = vec3(0.55, 0.48, 0.38);
+    vec3 dust_light = vec3(0.75, 0.68, 0.55);
+    vec3 rock_dark = vec3(0.25, 0.22, 0.18);
+    vec3 rock_mid = vec3(0.40, 0.36, 0.30);
+
+    float is_rock = step(0.6, chunk_hash) * step(height, 0.5);
+
+    if (is_rock > 0.5) {
+      color = mix(rock_dark, rock_mid, combined_noise);
+      color *= 0.85 + 0.15 * sin(t * 5.0 + chunk_id);
+    } else {
+      if (height < 0.25) {
+        color = mix(dust_dark, dust_mid, height / 0.25);
+      } else if (height < 0.6) {
+        color = mix(dust_mid, dust_light, (height - 0.25) / 0.35);
+      } else {
+        color = mix(dust_light, vec3(0.9, 0.85, 0.75), (height - 0.6) / 0.4);
+      }
+
+      float billow = 0.9 + 0.1 * sin(t * 2.0 + chunk_id * 1.5 + height * 4.0);
+      color *= billow;
+    }
+
+    color *= 0.9 + 0.2 * combined_noise;
+
+    float phase = smoothstep(0.0, 0.15, t);
+    float decay = 1.0 - smoothstep(2.5, 5.0, t);
+
+    float core_glow = (1.0 - height) * (1.0 - smoothstep(0.0, 0.4, t)) * 0.5;
+    color += vec3(1.0, 0.8, 0.4) * core_glow;
+
+    color *= v_intensity * 1.1;
+
+    float chunk_fade =
+        smoothstep(0.0, 0.15, chunk_local) * smoothstep(1.0, 0.85, chunk_local);
+    float density = 0.5 + 0.5 * (1.0 - height);
+
+    float radial = length(v_world_pos.xz - u_center.xz) / max(u_radius, 0.01);
+    float radial_fade = 1.0 - smoothstep(0.8, 2.0, radial);
+
+    float impact_alpha = v_alpha * chunk_fade * density * radial_fade *
+                         (0.8 + 0.2 * combined_noise);
+
+    impact_alpha = clamp(impact_alpha * 1.3, 0.0, 0.95);
+
+    color = clamp(color, 0.0, 1.5);
+    frag_color = vec4(color, impact_alpha);
+  } else {
+
+    color = u_dust_color;
+    frag_color = vec4(color, final_alpha * 0.6);
   }
 }

@@ -257,7 +257,7 @@
         "speed": 1.0,
         "vision_range": 20.0,
         "ranged_range": 15.0,
-        "ranged_damage": 80,
+        "ranged_damage": 180,
         "ranged_cooldown": 5.0,
         "melee_range": 1.5,
         "melee_damage": 5,
