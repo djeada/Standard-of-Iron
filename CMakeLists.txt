@@ -297,6 +297,12 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/ballista_cartaghe.png
             assets/visuals/icons/builder_rome.png
             assets/visuals/icons/builder_cartaghe.png
+            assets/visuals/icons/defense_tower_rome.png
+            assets/visuals/icons/defense_tower_cartaghe.png
+            assets/visuals/icons/wall_rome.png
+            assets/visuals/icons/wall_cartaghe.png
+            assets/visuals/icons/house_rome.png
+            assets/visuals/icons/house_cartaghe.png
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm

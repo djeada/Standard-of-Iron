@@ -127,6 +127,62 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       }
     }
   }
+
+  auto builder_entities =
+      world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+  for (auto *e : builder_entities) {
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod == nullptr || !builder_prod->in_progress) {
+      continue;
+    }
+
+    builder_prod->time_remaining -= delta_time;
+    if (builder_prod->time_remaining <= 0.0F) {
+
+      auto *t = e->get_component<Engine::Core::TransformComponent>();
+      auto *u = e->get_component<Engine::Core::UnitComponent>();
+      if ((t != nullptr) && (u != nullptr)) {
+        auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+        if (reg) {
+          Game::Units::SpawnParams sp;
+
+          float const spawn_offset = 2.5F;
+          float forward_x = 0.0F;
+          float forward_z = 1.0F;
+          float yaw = t->rotation.y;
+          forward_x = std::sin(yaw);
+          forward_z = std::cos(yaw);
+          sp.position =
+              QVector3D(t->position.x + forward_x * spawn_offset, t->position.y,
+                        t->position.z + forward_z * spawn_offset);
+          sp.player_id = u->owner_id;
+          sp.ai_controlled =
+              e->has_component<Engine::Core::AIControlledComponent>();
+          sp.nation_id = u->nation_id;
+
+          if (builder_prod->product_type == "catapult") {
+            sp.spawn_type = Game::Units::SpawnType::Catapult;
+          } else if (builder_prod->product_type == "ballista") {
+            sp.spawn_type = Game::Units::SpawnType::Ballista;
+          } else if (builder_prod->product_type == "defense_tower") {
+            sp.spawn_type = Game::Units::SpawnType::DefenseTower;
+          } else {
+
+            builder_prod->in_progress = false;
+            builder_prod->time_remaining = 0.0F;
+            continue;
+          }
+
+          reg->create(sp.spawn_type, *world, sp);
+        }
+      }
+
+      builder_prod->in_progress = false;
+      builder_prod->time_remaining = 0.0F;
+      builder_prod->construction_complete = true;
+    }
+  }
 }
 
 } // namespace Game::Systems
