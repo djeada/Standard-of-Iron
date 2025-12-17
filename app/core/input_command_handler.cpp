@@ -92,8 +92,8 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     QVector3D hit;
     if (m_picking_service->screen_to_ground(
             QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-      auto targets = Game::Systems::FormationPlanner::spreadFormation(
-          int(sel.size()), hit,
+      auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
+          *m_world, sel, hit,
           Game::GameConfig::instance().gameplay().formation_spacing_default);
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = sel.size() > 1;
