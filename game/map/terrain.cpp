@@ -618,17 +618,34 @@ void TerrainHeightMap::addRiverSegments(
 }
 
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
-  m_bridges = bridges;
+  constexpr float kBridgeSinkMin = 0.25F;
+  constexpr float kBridgeSinkMax = 0.65F;
+
+  m_bridges.clear();
+  m_bridges.reserve(bridges.size());
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
   for (const auto &bridge : bridges) {
-    QVector3D dir = bridge.end - bridge.start;
+
+    const float sink_amount =
+        std::clamp(bridge.width * 0.25F, kBridgeSinkMin, kBridgeSinkMax);
+
+    Bridge adjusted = bridge;
+    float const start_ground = getHeightAt(bridge.start.x(), bridge.start.z());
+    float const end_ground = getHeightAt(bridge.end.x(), bridge.end.z());
+    adjusted.start.setY(std::max(bridge.start.y(), start_ground - sink_amount));
+    adjusted.end.setY(std::max(bridge.end.y(), end_ground - sink_amount));
+
+    QVector3D dir = adjusted.end - adjusted.start;
     float const length = dir.length();
     if (length < 0.01F) {
       continue;
     }
+
+    m_bridges.push_back(adjusted);
+    const Bridge &stored_bridge = m_bridges.back();
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
@@ -638,19 +655,22 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
     for (int i = 0; i < steps; ++i) {
       float const t =
           static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
-      QVector3D const center_pos = bridge.start + dir * (length * t);
+      QVector3D const center_pos = stored_bridge.start + dir * (length * t);
 
       float const arch_curve = 4.0F * t * (1.0F - t);
-      float const arch_height = bridge.height * arch_curve * 0.8F;
-      float const deck_height =
-          bridge.start.y() + bridge.height + arch_height * 0.5F;
+      float const arch_height = stored_bridge.height * arch_curve * 0.8F;
+      float const base_deck_height =
+          stored_bridge.start.y() + stored_bridge.height + arch_height * 0.5F;
+      float const terrain_height = getHeightAt(center_pos.x(), center_pos.z());
+      float const deck_height = std::max(base_deck_height - sink_amount,
+                                         terrain_height - sink_amount);
 
       float const grid_center_x =
           (center_pos.x() / m_tile_size) + grid_half_width;
       float const grid_center_z =
           (center_pos.z() / m_tile_size) + grid_half_height;
 
-      float const half_width = bridge.width * 0.5F / m_tile_size;
+      float const half_width = stored_bridge.width * 0.5F / m_tile_size;
 
       int const min_x =
           std::max(0, static_cast<int>(std::floor(grid_center_x - half_width)));

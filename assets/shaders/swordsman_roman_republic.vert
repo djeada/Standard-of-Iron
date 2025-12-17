@@ -14,6 +14,7 @@ out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
+out vec3 v_localPos;
 out float v_armorLayer;
 out float v_bodyHeight;
 out float v_helmetDetail;
@@ -86,6 +87,7 @@ void main() {
   gl_Position = u_mvp * localBattered;
 
   v_worldPos = offsetPos;
+  v_localPos = localBattered.xyz;
   v_texCoord = a_texCoord;
   v_normal = worldNormal;
   v_worldNormal = worldNormal;
