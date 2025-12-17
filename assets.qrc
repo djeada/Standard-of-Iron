@@ -48,6 +48,12 @@
         <file>assets/shaders/healer_roman_republic.vert</file>
         <file>assets/shaders/healer_carthage.frag</file>
         <file>assets/shaders/healer_carthage.vert</file>
+        <file>assets/shaders/builder.frag</file>
+        <file>assets/shaders/builder.vert</file>
+        <file>assets/shaders/builder_roman_republic.frag</file>
+        <file>assets/shaders/builder_roman_republic.vert</file>
+        <file>assets/shaders/builder_carthage.frag</file>
+        <file>assets/shaders/builder_carthage.vert</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/olive_instanced.frag</file>
@@ -117,6 +123,8 @@
         <file>assets/visuals/icons/catapult_cartaghe.png</file>
         <file>assets/visuals/icons/ballista_rome.png</file>
         <file>assets/visuals/icons/ballista_cartaghe.png</file>
+        <file>assets/visuals/icons/builder_rome.png</file>
+        <file>assets/visuals/icons/builder_cartaghe.png</file>
 
         <!-- Gameplay data -->
         <file>assets/data/troops/base.json</file>
