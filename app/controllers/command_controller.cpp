@@ -3,11 +3,13 @@
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
 #include "../../game/systems/command_service.h"
+#include "../../game/systems/formation_planner.h"
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
 #include "../../render/gl/camera.h"
 #include "../utils/movement_utils.h"
+#include "game/game_config.h"
 #include "units/spawn_type.h"
 #include <QPointF>
 #include <qglobal.h>
@@ -658,6 +660,43 @@ auto CommandController::on_formation_command() -> CommandResult {
       if ((formation_mode != nullptr) && formation_mode->active) {
         formation_mode->active = false;
       }
+    }
+  }
+
+  if (should_enable_formation) {
+    QVector3D center(0.0F, 0.0F, 0.0F);
+    int valid_count = 0;
+
+    for (auto id : selected) {
+      auto *entity = m_world->get_entity(id);
+      if (entity == nullptr) {
+        continue;
+      }
+
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr) {
+        center.setX(center.x() + transform->position.x);
+        center.setY(center.y() + transform->position.y);
+        center.setZ(center.z() + transform->position.z);
+        valid_count++;
+      }
+    }
+
+    if (valid_count > 0) {
+      center.setX(center.x() / static_cast<float>(valid_count));
+      center.setY(center.y() / static_cast<float>(valid_count));
+      center.setZ(center.z() / static_cast<float>(valid_count));
+
+      auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
+          *m_world, selected, center,
+          Game::GameConfig::instance().gameplay().formation_spacing_default);
+
+      Game::Systems::CommandService::MoveOptions opts;
+      opts.group_move = selected.size() > 1;
+      opts.clear_attack_intent = true;
+      Game::Systems::CommandService::moveUnits(*m_world, selected, targets,
+                                               opts);
     }
   }
 
