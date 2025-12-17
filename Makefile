@@ -55,6 +55,8 @@ help:
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)       - Clean and build"
 	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
+	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
+	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
 	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
 	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files (git diff vs origin/main)"
@@ -193,6 +195,34 @@ test: build
 		cd $(BUILD_DIR) && ./bin/standard_of_iron_tests; \
 	else \
 		echo "$(RED)Test executable not found. Build may have failed.$(RESET)"; \
+		exit 1; \
+	fi
+
+# Validate mission and campaign content
+.PHONY: validate-content
+validate-content: build
+	@echo "$(BOLD)$(BLUE)Validating mission and campaign content...$(RESET)"
+	@if [ -f "$(BUILD_DIR)/bin/content_validator" ]; then \
+		$(BUILD_DIR)/bin/content_validator assets; \
+		if [ $$? -eq 0 ]; then \
+			echo "$(GREEN)✓ Content validation passed$(RESET)"; \
+		else \
+			echo "$(RED)✗ Content validation failed$(RESET)"; \
+			exit 1; \
+		fi \
+	else \
+		echo "$(RED)Content validator not found. Build may have failed.$(RESET)"; \
+		exit 1; \
+	fi
+
+# Test validator with integration tests
+.PHONY: test-validator
+test-validator: build
+	@echo "$(BOLD)$(BLUE)Running validator integration tests...$(RESET)"
+	@if [ -f "tests/validator_integration_test.sh" ]; then \
+		bash tests/validator_integration_test.sh; \
+	else \
+		echo "$(RED)Validator integration test not found.$(RESET)"; \
 		exit 1; \
 	fi
 
