@@ -1229,8 +1229,11 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
   const QString campaign_id = parts[0];
   const QString mission_id = parts[1];
 
-  const QString mission_file_path = Utils::Resources::resolveResourcePath(
-      QString(":/assets/missions/%1.json").arg(mission_id));
+  // Try filesystem first, then Qt resources
+  QString mission_file_path = QString("assets/missions/%1.json").arg(mission_id);
+  if (!QFile::exists(mission_file_path)) {
+    mission_file_path = QString(":/assets/missions/%1.json").arg(mission_id);
+  }
 
   Game::Mission::MissionDefinition mission;
   QString error;
