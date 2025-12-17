@@ -1,0 +1,91 @@
+{
+  "name": "Crossing the Rhône",
+  "description": "The strategic river crossing where Hannibal's army must overcome Roman resistance",
+  "coordSystem": "grid",
+  "maxTroopsPerPlayer": 1500,
+  "grid": {
+    "width": 140,
+    "height": 120,
+    "tileSize": 1.0
+  },
+  "biome": {
+    "groundType": "soil_rocky",
+    "seed": 10001,
+    "patchDensity": 2.8,
+    "patchJitter": 0.85,
+    "plantDensity": 0.45,
+    "groundIrregularityEnabled": true,
+    "irregularityScale": 0.14,
+    "irregularityAmplitude": 0.08
+  },
+  "camera": {
+    "center": [70, 0, 60],
+    "distance": 30.0,
+    "tiltDeg": 45.0,
+    "yaw": 225.0,
+    "fovY": 45.0,
+    "near": 1.0,
+    "far": 400.0
+  },
+  "spawns": [],
+  "firecamps": [
+    {
+      "x": 35,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 45,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 95,
+      "z": 55,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 85,
+      "z": 65,
+      "intensity": 1.0,
+      "radius": 3.0
+    }
+  ],
+  "terrain": [
+    {
+      "type": "river",
+      "path": [
+        {"x": 60, "z": 20},
+        {"x": 60, "z": 40},
+        {"x": 62, "z": 60},
+        {"x": 60, "z": 80},
+        {"x": 60, "z": 100}
+      ],
+      "width": 8.0,
+      "depth": 2.0,
+      "description": "The Rhône River"
+    },
+    {
+      "type": "crossing",
+      "x": 60,
+      "z": 60,
+      "width": 10,
+      "description": "Shallow crossing point"
+    },
+    {
+      "type": "hill",
+      "x": 85,
+      "z": 60,
+      "radius": 10,
+      "height": 2.5,
+      "description": "Roman defensive position"
+    }
+  ],
+  "victory": {
+    "type": "custom",
+    "description": "Control crossing and defeat enemies"
+  }
+}
