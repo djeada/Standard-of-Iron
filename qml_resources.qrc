@@ -33,6 +33,8 @@
         <file alias="assets/visuals/icons/builder_rome.png">assets/visuals/icons/builder_rome.png</file>
         <file alias="assets/visuals/icons/catapult_cartaghe.png">assets/visuals/icons/catapult_cartaghe.png</file>
         <file alias="assets/visuals/icons/catapult_rome.png">assets/visuals/icons/catapult_rome.png</file>
+        <file alias="assets/visuals/icons/defense_tower_cartaghe.png">assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file alias="assets/visuals/icons/defense_tower_rome.png">assets/visuals/icons/defense_tower_rome.png</file>
         <file alias="assets/visuals/icons/healer_cartaghe.png">assets/visuals/icons/healer_cartaghe.png</file>
         <file alias="assets/visuals/icons/healer_rome.png">assets/visuals/icons/healer_rome.png</file>
         <file alias="assets/visuals/icons/horse_archer_cartaghe.png">assets/visuals/icons/horse_archer_cartaghe.png</file>
@@ -45,5 +47,20 @@
         <file alias="assets/visuals/icons/spearman_rome.png">assets/visuals/icons/spearman_rome.png</file>
         <file alias="assets/visuals/icons/swordsman_cartaghe.png">assets/visuals/icons/swordsman_cartaghe.png</file>
         <file alias="assets/visuals/icons/swordsman_rome.png">assets/visuals/icons/swordsman_rome.png</file>
+        <file alias="assets/visuals/icons/wall_cartaghe.png">assets/visuals/icons/wall_cartaghe.png</file>
+        <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
+        <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
+        <file alias="assets/visuals/icons/house_rome.png">assets/visuals/icons/house_rome.png</file>
+        <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
+    </qresource>
+    <!-- Duplicate critical assets under the Qt6-installed module prefix -->
+    <qresource prefix="/qt/qml/StandardOfIron">
+        <file alias="assets/visuals/icons/defense_tower_cartaghe.png">assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file alias="assets/visuals/icons/defense_tower_rome.png">assets/visuals/icons/defense_tower_rome.png</file>
+        <file alias="assets/visuals/icons/wall_cartaghe.png">assets/visuals/icons/wall_cartaghe.png</file>
+        <file alias="assets/visuals/icons/wall_rome.png">assets/visuals/icons/wall_rome.png</file>
+        <file alias="assets/visuals/icons/house_cartaghe.png">assets/visuals/icons/house_cartaghe.png</file>
+        <file alias="assets/visuals/icons/house_rome.png">assets/visuals/icons/house_rome.png</file>
+        <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
     </qresource>
 </RCC>

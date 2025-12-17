@@ -125,6 +125,14 @@
         <file>assets/visuals/icons/ballista_cartaghe.png</file>
         <file>assets/visuals/icons/builder_rome.png</file>
         <file>assets/visuals/icons/builder_cartaghe.png</file>
+        <file>assets/visuals/icons/defense_tower_rome.png</file>
+        <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file>assets/visuals/icons/wall_rome.png</file>
+        <file>assets/visuals/icons/wall_cartaghe.png</file>
+        <file>assets/visuals/icons/house_rome.png</file>
+        <file>assets/visuals/icons/house_cartaghe.png</file>
+        <file>assets/visuals/icons/defense_tower_rome.png</file>
+        <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
 
         <!-- Gameplay data -->
         <file>assets/data/troops/base.json</file>

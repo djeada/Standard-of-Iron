@@ -74,7 +74,6 @@ using Render::GL::Humanoid::saturate_color;
 
 class BuilderRenderer : public HumanoidRendererBase {
 public:
-  // Builders are sturdy workers
   auto get_proportion_scaling() const -> QVector3D override {
     return {1.05F, 0.98F, 1.02F};
   }
@@ -98,52 +97,91 @@ public:
     float const arm_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.04F;
     float const asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.05F;
 
-    // Construction animation - hammer swinging motion
     if (anim.is_constructing) {
-      // Cyclic hammer swing animation
-      float const swing_cycle = std::fmod(anim.time * 2.5F + float(seed % 100) * 0.01F, 1.0F);
-      float const swing_angle = std::sin(swing_cycle * 2.0F * std::numbers::pi_v<float>) * 0.35F;
-      
-      // Hammer hand goes up and down in swinging motion
-      float const hammer_y_offset = HP::SHOULDER_Y - 0.08F + std::abs(swing_angle) * 0.15F;
-      float const hammer_forward = 0.28F + swing_angle * 0.12F;
-      
-      QVector3D const hammer_hand(-0.08F + asymmetry, hammer_y_offset, hammer_forward);
-      // Other hand braces or holds material
-      QVector3D const brace_hand(0.16F - asymmetry * 0.5F, HP::WAIST_Y + 0.06F, 0.22F);
-      
+
+      float const phase_offset = float(seed % 100) * 0.0628F;
+      float const cycle_speed = 2.0F + float(seed % 50) * 0.02F;
+      float const swing_cycle =
+          std::fmod(anim.time * cycle_speed + phase_offset, 1.0F);
+
+      float swing_angle;
+      float body_lean;
+      float crouch_amount;
+
+      if (swing_cycle < 0.3F) {
+
+        float const t = swing_cycle / 0.3F;
+        swing_angle = t * 0.85F;
+        body_lean = -t * 0.08F;
+        crouch_amount = 0.0F;
+      } else if (swing_cycle < 0.5F) {
+
+        float const t = (swing_cycle - 0.3F) / 0.2F;
+        swing_angle = 0.85F - t * 1.3F;
+        body_lean = -0.08F + t * 0.22F;
+        crouch_amount = t * 0.06F;
+      } else if (swing_cycle < 0.6F) {
+
+        float const t = (swing_cycle - 0.5F) / 0.1F;
+        swing_angle = -0.45F + t * 0.15F;
+        body_lean = 0.14F - t * 0.04F;
+        crouch_amount = 0.06F - t * 0.02F;
+      } else {
+
+        float const t = (swing_cycle - 0.6F) / 0.4F;
+        swing_angle = -0.30F + t * 0.30F;
+        body_lean = 0.10F * (1.0F - t);
+        crouch_amount = 0.04F * (1.0F - t);
+      }
+
+      float const torso_y_offset = -crouch_amount;
+
+      float const hammer_y = HP::SHOULDER_Y + 0.10F + swing_angle * 0.20F;
+      float const hammer_forward =
+          0.18F + std::abs(swing_angle) * 0.15F + body_lean * 0.5F;
+      float const hammer_down =
+          swing_cycle > 0.4F && swing_cycle < 0.65F ? 0.08F : 0.0F;
+
+      QVector3D const hammer_hand(-0.06F + asymmetry,
+                                  hammer_y - hammer_down + torso_y_offset,
+                                  hammer_forward);
+
+      float const brace_y =
+          HP::WAIST_Y + 0.12F + torso_y_offset - crouch_amount * 0.5F;
+      float const brace_forward = 0.15F + body_lean * 0.3F;
+      QVector3D const brace_hand(0.14F - asymmetry * 0.5F, brace_y,
+                                 brace_forward);
+
       controller.placeHandAt(true, hammer_hand);
       controller.placeHandAt(false, brace_hand);
       return;
     }
 
-    // Working pose - one hand forward holding hammer, other relaxed at side
     float const hammer_hand_forward = 0.22F + (anim.is_moving ? 0.03F : 0.0F);
     float const hammer_hand_height = HP::WAIST_Y + 0.08F + arm_jitter;
 
     QVector3D const hammer_hand(-0.10F + asymmetry, hammer_hand_height + 0.04F,
                                 hammer_hand_forward);
-    // Right hand more relaxed and extended (longer forearm appearance)
-    QVector3D const rest_hand(0.24F - asymmetry * 0.5F,
-                              HP::WAIST_Y - 0.02F + arm_jitter * 0.5F,
-                              0.08F);
 
-    controller.placeHandAt(true, hammer_hand);  // Left hand holds hammer
-    controller.placeHandAt(false, rest_hand);   // Right hand at rest with longer reach
+    QVector3D const rest_hand(0.24F - asymmetry * 0.5F,
+                              HP::WAIST_Y - 0.02F + arm_jitter * 0.5F, 0.08F);
+
+    controller.placeHandAt(true, hammer_hand);
+    controller.placeHandAt(false, rest_hand);
   }
 
   void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose,
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
-    // All builders hold stone hammers
+
     draw_stone_hammer(ctx, v, pose, out);
   }
 
   void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose, ISubmitter &out) const {
     QVector3D const wood_color = v.palette.wood;
-    // Stone color - grey with slight variation
+
     QVector3D const stone_color(0.55F, 0.52F, 0.48F);
     QVector3D const stone_dark(0.45F, 0.42F, 0.38F);
 
@@ -152,7 +190,6 @@ public:
     QVector3D const forward(0.0F, 0.0F, 1.0F);
     QVector3D const right(1.0F, 0.0F, 0.0F);
 
-    // Wooden handle
     float const handle_len = 0.32F;
     float const handle_r = 0.016F;
     QVector3D const handle_top = hand + up * 0.12F + forward * 0.02F;
@@ -162,31 +199,30 @@ public:
              cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
              wood_color, nullptr, 1.0F);
 
-    // Stone hammer head - rough, asymmetric look
     float const head_len = 0.10F;
     float const head_r = 0.030F;
     QVector3D const head_center = handle_top + up * 0.035F;
-    
-    // Main stone head
+
     out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, head_center - right * (head_len * 0.5F),
+             cylinder_between(ctx.model,
+                              head_center - right * (head_len * 0.5F),
                               head_center + right * (head_len * 0.5F), head_r),
              stone_color, nullptr, 1.0F);
-    
-    // Striking face (slightly larger, worn)
+
     out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center + right * (head_len * 0.5F), head_r * 1.15F),
+             sphere_at(ctx.model, head_center + right * (head_len * 0.5F),
+                       head_r * 1.15F),
              stone_dark, nullptr, 1.0F);
-    
-    // Back of hammer (peen)
+
     out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center - right * (head_len * 0.5F), head_r * 0.9F),
+             sphere_at(ctx.model, head_center - right * (head_len * 0.5F),
+                       head_r * 0.9F),
              stone_color * 0.95F, nullptr, 1.0F);
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
-    // Roman builders wear proper light helmets
+
     auto &registry = EquipmentRegistry::instance();
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
     if (helmet) {
@@ -204,25 +240,27 @@ public:
   }
 
   void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+                       const HumanoidPose &pose, uint32_t seed,
+                       ISubmitter &out) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
     const AttachmentFrame &waist = frames.waist;
 
-    if (torso.radius <= 0.0F) return;
+    if (torso.radius <= 0.0F) {
+      return;
+    }
 
-    // Varied tunic colors for different workers
     float const color_var = hash_01(seed ^ 0xABCU);
     QVector3D tunic_base;
     if (color_var < 0.4F) {
-      tunic_base = QVector3D(0.65F, 0.52F, 0.38F); // Brown
+      tunic_base = QVector3D(0.65F, 0.52F, 0.38F);
     } else if (color_var < 0.7F) {
-      tunic_base = QVector3D(0.58F, 0.48F, 0.35F); // Darker brown
+      tunic_base = QVector3D(0.58F, 0.48F, 0.35F);
     } else {
-      tunic_base = QVector3D(0.72F, 0.62F, 0.48F); // Tan
+      tunic_base = QVector3D(0.72F, 0.62F, 0.48F);
     }
-    
+
     QVector3D const tunic_dark = tunic_base * 0.85F;
 
     const QVector3D &origin = torso.origin;
@@ -230,7 +268,8 @@ public:
     const QVector3D &up = torso.up;
     const QVector3D &forward = torso.forward;
     float const torso_r = torso.radius * 1.08F;
-    float const torso_d = (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
+    float const torso_d =
+        (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
 
     float const y_shoulder = origin.y() + 0.032F;
     float const y_waist = waist.origin.y();
@@ -239,23 +278,26 @@ public:
     constexpr int segs = 12;
     constexpr float pi = std::numbers::pi_v<float>;
 
-    auto drawRing = [&](float y, float w, float d, const QVector3D &col, float th) {
+    auto drawRing = [&](float y, float w, float d, const QVector3D &col,
+                        float th) {
       for (int i = 0; i < segs; ++i) {
         float a1 = (float(i) / segs) * 2.0F * pi;
         float a2 = (float(i + 1) / segs) * 2.0F * pi;
-        QVector3D p1 = origin + right * (w * std::sin(a1)) + forward * (d * std::cos(a1)) + up * (y - origin.y());
-        QVector3D p2 = origin + right * (w * std::sin(a2)) + forward * (d * std::cos(a2)) + up * (y - origin.y());
-        out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, p1, p2, th), col, nullptr, 1.0F);
+        QVector3D p1 = origin + right * (w * std::sin(a1)) +
+                       forward * (d * std::cos(a1)) + up * (y - origin.y());
+        QVector3D p2 = origin + right * (w * std::sin(a2)) +
+                       forward * (d * std::cos(a2)) + up * (y - origin.y());
+        out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, p1, p2, th),
+                 col, nullptr, 1.0F);
       }
     };
 
-    // Neck opening
-    drawRing(y_shoulder + 0.04F, torso_r * 0.68F, torso_d * 0.60F, tunic_dark, 0.022F);
-    
-    // Shoulder area
-    drawRing(y_shoulder + 0.02F, torso_r * 1.08F, torso_d * 1.02F, tunic_base, 0.032F);
-    
-    // Torso
+    drawRing(y_shoulder + 0.04F, torso_r * 0.68F, torso_d * 0.60F, tunic_dark,
+             0.022F);
+
+    drawRing(y_shoulder + 0.02F, torso_r * 1.08F, torso_d * 1.02F, tunic_base,
+             0.032F);
+
     for (int i = 0; i < 5; ++i) {
       float t = float(i) / 4.0F;
       float y = y_shoulder - 0.01F - t * (y_shoulder - y_waist - 0.03F);
@@ -265,64 +307,71 @@ public:
       drawRing(y, w, d, col, 0.026F - t * 0.004F);
     }
 
-    // Short skirt (workers wear shorter tunics) - NO BELT
     for (int i = 0; i < 4; ++i) {
       float t = float(i) / 3.0F;
       float y = y_waist - 0.01F - t * (y_waist - y_hem);
       float flare = 1.0F + t * 0.18F;
       QVector3D col = tunic_base * (1.0F - t * 0.08F);
-      drawRing(y, torso_r * 0.80F * flare, torso_d * 0.76F * flare, col, 0.018F + t * 0.006F);
+      drawRing(y, torso_r * 0.80F * flare, torso_d * 0.76F * flare, col,
+               0.018F + t * 0.006F);
     }
 
-    // Simple short sleeves
-    auto drawSleeve = [&](const QVector3D &shoulder, const QVector3D &out_dir, const QVector3D &elbow) {
+    auto drawSleeve = [&](const QVector3D &shoulder, const QVector3D &out_dir,
+                          const QVector3D &elbow) {
       for (int i = 0; i < 3; ++i) {
         float t = float(i) / 3.0F;
-        QVector3D pos = shoulder * (1.0F - t) + elbow * t * 0.6F + out_dir * 0.008F;
+        QVector3D pos =
+            shoulder * (1.0F - t) + elbow * t * 0.6F + out_dir * 0.008F;
         float r = HP::UPPER_ARM_R * (1.40F - t * 0.25F);
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F);
+        out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r),
+                 tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F);
       }
     };
     drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
     drawSleeve(frames.shoulder_r.origin, right, pose.elbow_r);
 
-    // Extended forearm on non-hammer arm (right side) - make it look longer
     draw_extended_forearm(ctx, v, pose, out);
   }
 
   void draw_extended_forearm(const DrawContext &ctx, const HumanoidVariant &v,
                              const HumanoidPose &pose, ISubmitter &out) const {
-    // Draw additional forearm segments on right arm to make it appear longer
+
     QVector3D const skin_color = v.palette.skin;
-    
+
     QVector3D const elbow_r = pose.elbow_r;
     QVector3D const hand_r = pose.hand_r;
-    
-    // Add extra segments along the forearm
+
     for (int i = 0; i < 4; ++i) {
       float t = 0.25F + float(i) * 0.20F;
       QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
       float r = 0.024F - float(i) * 0.002F;
-      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), skin_color, nullptr, 1.0F);
+      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), skin_color,
+               nullptr, 1.0F);
     }
   }
 
 private:
-  auto resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
+  auto
+  resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
     ensure_builder_styles_registered();
     auto &styles = style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto *unit =
+              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nationIDToString(unit->nation_id);
       }
     }
     if (!nation_id.empty()) {
       auto it = styles.find(nation_id);
-      if (it != styles.end()) return it->second;
+      if (it != styles.end()) {
+        return it->second;
+      }
     }
     auto fallback = styles.find(std::string(k_default_style_key));
-    if (fallback != styles.end()) return fallback->second;
+    if (fallback != styles.end()) {
+      return fallback->second;
+    }
     static const BuilderStyleConfig default_style{};
     return default_style;
   }
@@ -330,7 +379,9 @@ private:
 public:
   auto resolve_shader_key(const DrawContext &ctx) const -> QString {
     const BuilderStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) return QString::fromStdString(style.shader_id);
+    if (!style.shader_id.empty()) {
+      return QString::fromStdString(style.shader_id);
+    }
     return QStringLiteral("builder");
   }
 
@@ -339,7 +390,8 @@ private:
                                const QVector3D &team_tint,
                                HumanoidVariant &variant) const {
     auto apply = [&](const std::optional<QVector3D> &c, QVector3D &t) {
-      t = mix_palette_color(t, c, team_tint, k_team_mix_weight, k_style_mix_weight);
+      t = mix_palette_color(t, c, team_tint, k_team_mix_weight,
+                            k_style_mix_weight);
     };
     apply(style.cloth_color, variant.palette.cloth);
     apply(style.leather_color, variant.palette.leather);
@@ -359,12 +411,18 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
         if (ctx.backend != nullptr) {
           QString key = r.resolve_shader_key(ctx);
           shader = ctx.backend->shader(key);
-          if (!shader) shader = ctx.backend->shader(QStringLiteral("builder"));
+          if (!shader) {
+            shader = ctx.backend->shader(QStringLiteral("builder"));
+          }
         }
         auto *sr = dynamic_cast<Renderer *>(&out);
-        if (sr && shader) sr->set_current_shader(shader);
+        if (sr && shader) {
+          sr->set_current_shader(shader);
+        }
         r.render(ctx, out);
-        if (sr) sr->set_current_shader(nullptr);
+        if (sr) {
+          sr->set_current_shader(nullptr);
+        }
       });
 }
 

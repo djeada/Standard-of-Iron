@@ -1093,6 +1093,99 @@ auto GameEngine::get_unit_production_info(const QString &unit_type) const
   return info;
 }
 
+auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
+  QVariantMap m;
+  m["in_progress"] = false;
+  m["time_remaining"] = 0.0;
+  m["build_time"] = 10.0;
+  m["product_type"] = "";
+
+  if (!m_world) {
+    return m;
+  }
+
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return m;
+  }
+
+  const auto &selected = selection_system->get_selected_units();
+  for (auto id : selected) {
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod == nullptr) {
+      continue;
+    }
+
+    m["in_progress"] = builder_prod->in_progress;
+    m["time_remaining"] = builder_prod->time_remaining;
+    m["build_time"] = builder_prod->build_time;
+    m["product_type"] = QString::fromStdString(builder_prod->product_type);
+    return m;
+  }
+
+  return m;
+}
+
+void GameEngine::start_builder_construction(const QString &item_type) {
+  if (!m_world) {
+    return;
+  }
+
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+
+  const auto &selected = selection_system->get_selected_units();
+  for (auto id : selected) {
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod == nullptr) {
+      continue;
+    }
+
+    if (builder_prod == nullptr) {
+      builder_prod =
+          e->add_component<Engine::Core::BuilderProductionComponent>();
+    }
+
+    if (builder_prod->in_progress) {
+      continue;
+    }
+
+    std::string item_str = item_type.toStdString();
+    builder_prod->product_type = item_str;
+    builder_prod->in_progress = true;
+    builder_prod->construction_complete = false;
+
+    if (item_str == "catapult") {
+      builder_prod->build_time = 15.0f;
+    } else if (item_str == "ballista") {
+      builder_prod->build_time = 12.0f;
+    } else if (item_str == "defense_tower") {
+      builder_prod->build_time = 20.0f;
+    } else {
+      builder_prod->build_time = 10.0f;
+    }
+    builder_prod->time_remaining = builder_prod->build_time;
+
+    return;
+  }
+}
+
 auto GameEngine::get_selected_units_command_mode() const -> QString {
   if (!m_world) {
     return "normal";

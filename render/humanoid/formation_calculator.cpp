@@ -105,13 +105,44 @@ auto CarthageCavalryFormation::calculateOffset(
   return {offset_x, offset_z};
 }
 
+auto BuilderCircleFormation::calculateOffset(
+    int idx, int row, int col, int rows, int cols, float spacing,
+    uint32_t seed) const -> FormationOffset {
+
+  int const total_units = rows * cols;
+  float const angle =
+      (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
+  float const radius = spacing * 1.8F;
+
+  float offset_x = std::cos(angle) * radius;
+  float offset_z = std::sin(angle) * radius;
+
+  uint32_t rng_state = seed ^ (uint32_t(idx) * 2654435761U);
+  auto fast_random = [](uint32_t &state) -> float {
+    state = state * 1664525U + 1013904223U;
+    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
+  };
+
+  float const jitter = spacing * 0.08F;
+  offset_x += (fast_random(rng_state) - 0.5F) * jitter;
+  offset_z += (fast_random(rng_state) - 0.5F) * jitter;
+
+  return {offset_x, offset_z};
+}
+
 RomanInfantryFormation FormationCalculatorFactory::s_romanInfantry;
 RomanCavalryFormation FormationCalculatorFactory::s_romanCavalry;
 CarthageInfantryFormation FormationCalculatorFactory::s_carthageInfantry;
 CarthageCavalryFormation FormationCalculatorFactory::s_carthageCavalry;
+BuilderCircleFormation FormationCalculatorFactory::s_builderCircle;
 
 auto FormationCalculatorFactory::getCalculator(
     Nation nation, UnitCategory category) -> const IFormationCalculator * {
+
+  if (category == UnitCategory::BuilderConstruction) {
+    return &s_builderCircle;
+  }
+
   switch (nation) {
   case Nation::Roman:
     switch (category) {
@@ -119,6 +150,8 @@ auto FormationCalculatorFactory::getCalculator(
       return &s_romanInfantry;
     case UnitCategory::Cavalry:
       return &s_romanCavalry;
+    case UnitCategory::BuilderConstruction:
+      return &s_builderCircle;
     }
     break;
 
@@ -128,6 +161,8 @@ auto FormationCalculatorFactory::getCalculator(
       return &s_carthageInfantry;
     case UnitCategory::Cavalry:
       return &s_carthageCavalry;
+    case UnitCategory::BuilderConstruction:
+      return &s_builderCircle;
     }
     break;
   }

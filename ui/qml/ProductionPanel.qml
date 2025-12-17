@@ -12,6 +12,7 @@ Rectangle {
     signal recruitUnit(string unitType)
     signal rallyModeToggled()
     signal buildTower()
+    signal builderConstruction(string itemType)
 
     function defaultProductionState() {
         return {
@@ -953,218 +954,6 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("catapult")
-                            property bool isHovered: catapultMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
-                            opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
-
-                            Image {
-                                id: catapultRecruitIcon
-
-                                anchors.fill: parent
-                                fillMode: Image.PreserveAspectCrop
-                                smooth: true
-                                source: productionPanel.unitIconSource("catapult", unitGridContent.prod.nation_id)
-                                visible: source !== ""
-                                opacity: parent.isEnabled ? 1 : 0.35
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !catapultRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("catapult")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                font.pointSize: 42
-                                opacity: parent.isEnabled ? 0.9 : 0.4
-                            }
-
-                            Rectangle {
-                                id: catapultCostBadge
-
-                                width: catapultCostText.implicitWidth + 12
-                                height: catapultCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
-                                border.width: 1
-
-                                Text {
-                                    id: catapultCostText
-
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unitInfo.cost || 200
-                                    color: catapultCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
-                                    font.pointSize: 16
-                                    font.bold: true
-                                }
-
-                            }
-
-                            MouseArea {
-                                id: catapultMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.isEnabled)
-                                        productionPanel.recruitUnit("catapult");
-
-                                }
-                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Catapult\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 200).arg((parent.unitInfo.build_time || 12).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#ffffff"
-                                opacity: catapultMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-
-                            }
-
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 100
-                                }
-
-                            }
-
-                        }
-
-                        Rectangle {
-                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("ballista")
-                            property bool isHovered: ballistaMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
-                            opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
-
-                            Image {
-                                id: ballistaRecruitIcon
-
-                                anchors.fill: parent
-                                fillMode: Image.PreserveAspectCrop
-                                smooth: true
-                                source: productionPanel.unitIconSource("ballista", unitGridContent.prod.nation_id)
-                                visible: source !== ""
-                                opacity: parent.isEnabled ? 1 : 0.35
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !ballistaRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("ballista")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                font.pointSize: 42
-                                opacity: parent.isEnabled ? 0.9 : 0.4
-                            }
-
-                            Rectangle {
-                                id: ballistaCostBadge
-
-                                width: ballistaCostText.implicitWidth + 12
-                                height: ballistaCostText.implicitHeight + 6
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
-                                border.width: 1
-
-                                Text {
-                                    id: ballistaCostText
-
-                                    anchors.centerIn: parent
-                                    text: parent.parent.unitInfo.cost || 180
-                                    color: ballistaCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
-                                    font.pointSize: 16
-                                    font.bold: true
-                                }
-
-                            }
-
-                            MouseArea {
-                                id: ballistaMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.isEnabled)
-                                        productionPanel.recruitUnit("ballista");
-
-                                }
-                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Recruit Ballista\nCost: %1 villagers\nBuild time: %2s").arg(parent.unitInfo.cost || 180).arg((parent.unitInfo.build_time || 10).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#ffffff"
-                                opacity: ballistaMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: 150
-                                }
-
-                            }
-
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 100
-                                }
-
-                            }
-
-                        }
-
-                        Rectangle {
-                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
-                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
                             property var unitInfo: productionPanel.getUnitProductionInfo("healer")
                             property bool isHovered: healerMouseArea.containsMouse
 
@@ -1452,40 +1241,136 @@ Rectangle {
 
             }
 
-            Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+            Item {
+                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
-                width: parent.width
-                height: 1
-                color: "#34495e"
-                visible: has_barracks
+                height: 20
+                visible: !has_barracksSelected
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_builder: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("builder")))
 
                 width: parent.width
-                height: buildingsContent.height + 16
+                height: builderProductionContent.height + 16
                 color: "#1a252f"
                 radius: 6
                 border.color: "#34495e"
                 border.width: 1
-                visible: has_barracks
+                visible: has_builder
 
                 Column {
-                    id: buildingsContent
+                    id: builderProductionContent
+
+                    property var builderProd: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_builder_production_state) ? productionPanel.gameInstance.get_selected_builder_production_state() : {
+                        "in_progress": false,
+                        "build_time": 10,
+                        "time_remaining": 0,
+                        "product_type": ""
+                    })
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
                     anchors.margins: 8
                     spacing: 8
+                    width: parent.width - 16
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 6
+
+                        Image {
+                            id: builderHeaderIcon
+
+                            width: 18
+                            height: 18
+                            source: productionPanel.unitIconSource("builder")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            visible: source !== ""
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : qsTr("🔨 BUILDER CONSTRUCTION")
+                            color: "#3498db"
+                            font.pointSize: 9
+                            font.bold: true
+                        }
+
+                    }
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("BUILD STRUCTURES")
-                        color: "#3498db"
+                        text: qsTr("Build siege weapons and structures")
+                        color: "#7f8c8d"
+                        font.pointSize: 7
+                    }
+
+                    Rectangle {
+                        width: parent.width - 20
+                        height: 20
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        radius: 10
+                        color: "#0a0f14"
+                        border.color: "#2c3e50"
+                        border.width: 2
+                        visible: builderProductionContent.builderProd.in_progress
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.margins: 2
+                            height: parent.height - 4
+                            width: {
+                                if (!builderProductionContent.builderProd.in_progress || builderProductionContent.builderProd.build_time <= 0)
+                                    return 0;
+
+                                var progress = 1 - (Math.max(0, builderProductionContent.builderProd.time_remaining) / builderProductionContent.builderProd.build_time);
+                                return Math.max(0, (parent.width - 4) * progress);
+                            }
+                            color: "#27ae60"
+                            radius: 8
+
+                            SequentialAnimation on opacity {
+                                running: parent.width > 0
+                                loops: Animation.Infinite
+
+                                NumberAnimation {
+                                    from: 0.8
+                                    to: 1
+                                    duration: 600
+                                }
+
+                                NumberAnimation {
+                                    from: 1
+                                    to: 0.8
+                                    duration: 600
+                                }
+
+                            }
+
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: builderProductionContent.builderProd.in_progress ? Math.max(0, builderProductionContent.builderProd.time_remaining).toFixed(1) + "s" : "Idle"
+                            color: "#ecf0f1"
+                            font.pointSize: 9
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#000000"
+                        }
+
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: builderProductionContent.builderProd.in_progress ? qsTr("Building: %1").arg(builderProductionContent.builderProd.product_type) : qsTr("Select an item to build")
+                        color: builderProductionContent.builderProd.in_progress ? "#27ae60" : "#7f8c8d"
                         font.pointSize: 8
-                        font.bold: true
+                        font.bold: builderProductionContent.builderProd.in_progress
+                        visible: true
                     }
 
                     Grid {
@@ -1495,8 +1380,8 @@ Rectangle {
                         rowSpacing: 8
 
                         Rectangle {
-                            property bool isEnabled: true
-                            property bool isHovered: defenseTowerMouseArea.containsMouse
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
+                            property bool isHovered: builderCatapultMouseArea.containsMouse
 
                             width: 110
                             height: 80
@@ -1507,8 +1392,201 @@ Rectangle {
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
 
+                            Image {
+                                id: builderCatapultIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("catapult")
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
                             Text {
                                 anchors.centerIn: parent
+                                visible: !builderCatapultIcon.visible
+                                text: productionPanel.unitIconEmoji("catapult")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 36
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                text: qsTr("Catapult")
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: builderCatapultMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.isEnabled)
+                                        productionPanel.builderConstruction("catapult");
+
+                                }
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Catapult\nLong-range siege weapon\nEffective against structures\nBuild time: 15s") : qsTr("Already building...")
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: builderCatapultMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
+                        }
+
+                        Rectangle {
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
+                            property bool isHovered: builderBallistaMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
+                            opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
+
+                            Image {
+                                id: builderBallistaIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("ballista")
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderBallistaIcon.visible
+                                text: productionPanel.unitIconEmoji("ballista")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 36
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                text: qsTr("Ballista")
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: builderBallistaMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.isEnabled)
+                                        productionPanel.builderConstruction("ballista");
+
+                                }
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Ballista\nPrecision siege weapon\nEffective against units\nBuild time: 12s") : qsTr("Already building...")
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: builderBallistaMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
+                        }
+
+                        Rectangle {
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
+                            property bool isHovered: builderDefenseTowerMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
+                            opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
+
+                            Image {
+                                id: builderDefenseTowerIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("defense_tower")
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderDefenseTowerIcon.visible
                                 text: "🏰"
                                 color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                                 font.pointSize: 36
@@ -1520,31 +1598,31 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Defense Tower")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
                                 font.pointSize: 8
                                 font.bold: true
                             }
 
                             MouseArea {
-                                id: defenseTowerMouseArea
+                                id: builderDefenseTowerMouseArea
 
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.buildTower();
+                                        productionPanel.builderConstruction("defense_tower");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                                 ToolTip.visible: containsMouse
-                                ToolTip.text: qsTr("Build Defense Tower\nClick map to place.\nShoots arrows at nearby enemies.")
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Defense Tower\nStationary defense structure\nShoots arrows at enemies\nBuild time: 20s") : qsTr("Already building...")
                                 ToolTip.delay: 300
                             }
 
                             Rectangle {
                                 anchors.fill: parent
                                 color: "#ffffff"
-                                opacity: defenseTowerMouseArea.pressed ? 0.2 : 0
+                                opacity: builderDefenseTowerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
 
@@ -1575,291 +1653,6 @@ Rectangle {
 
                 }
 
-            }
-
-            Item {
-                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
-
-                height: 20
-                visible: !has_barracksSelected
-            }
-
-            // Builder Production Panel - shows when builder unit is selected
-            Rectangle {
-                property bool has_builder: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("builder")))
-
-                width: parent.width
-                height: builderProductionContent.height + 16
-                color: "#1a252f"
-                radius: 6
-                border.color: "#34495e"
-                border.width: 1
-                visible: has_builder
-
-                Column {
-                    id: builderProductionContent
-
-                    property var builderProd: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_builder_production_state) ? productionPanel.gameInstance.get_selected_builder_production_state() : {"in_progress": false, "build_time": 10.0, "time_remaining": 0, "product_type": ""})
-
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    anchors.top: parent.top
-                    anchors.margins: 8
-                    spacing: 8
-                    width: parent.width - 16
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("🔨 BUILDER CONSTRUCTION")
-                        color: "#3498db"
-                        font.pointSize: 9
-                        font.bold: true
-                    }
-
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Build siege weapons and structures")
-                        color: "#7f8c8d"
-                        font.pointSize: 7
-                    }
-
-                    // Progress bar - visible when constructing
-                    Rectangle {
-                        width: parent.width - 20
-                        height: 20
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        radius: 10
-                        color: "#0a0f14"
-                        border.color: "#2c3e50"
-                        border.width: 2
-                        visible: builderProductionContent.builderProd.in_progress
-
-                        Rectangle {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: 2
-                            height: parent.height - 4
-                            width: {
-                                if (!builderProductionContent.builderProd.in_progress || builderProductionContent.builderProd.build_time <= 0)
-                                    return 0;
-                                var progress = 1 - (Math.max(0, builderProductionContent.builderProd.time_remaining) / builderProductionContent.builderProd.build_time);
-                                return Math.max(0, (parent.width - 4) * progress);
-                            }
-                            color: "#27ae60"
-                            radius: 8
-
-                            SequentialAnimation on opacity {
-                                running: parent.width > 0
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 0.8; to: 1; duration: 600 }
-                                NumberAnimation { from: 1; to: 0.8; duration: 600 }
-                            }
-                        }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: builderProductionContent.builderProd.in_progress ? Math.max(0, builderProductionContent.builderProd.time_remaining).toFixed(1) + "s" : "Idle"
-                            color: "#ecf0f1"
-                            font.pointSize: 9
-                            font.bold: true
-                            style: Text.Outline
-                            styleColor: "#000000"
-                        }
-                    }
-
-                    // Currently building indicator
-                    Text {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        text: builderProductionContent.builderProd.in_progress ? qsTr("Building: %1").arg(builderProductionContent.builderProd.product_type) : qsTr("Select an item to build")
-                        color: builderProductionContent.builderProd.in_progress ? "#27ae60" : "#7f8c8d"
-                        font.pointSize: 8
-                        font.bold: builderProductionContent.builderProd.in_progress
-                        visible: true
-                    }
-
-                    Grid {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        columns: 3
-                        columnSpacing: 8
-                        rowSpacing: 8
-
-                        // Catapult
-                        Rectangle {
-                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
-                            property bool isHovered: builderCatapultMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
-                            opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: productionPanel.unitIconEmoji("catapult")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                font.pointSize: 36
-                                opacity: parent.isEnabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Catapult")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderCatapultMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
-                                        productionPanel.gameInstance.start_builder_construction("catapult");
-                                }
-                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Build Catapult\nLong-range siege weapon\nEffective against structures\nBuild time: 15s") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#ffffff"
-                                opacity: builderCatapultMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            Behavior on border.color { ColorAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 100 } }
-                        }
-
-                        // Ballista
-                        Rectangle {
-                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
-                            property bool isHovered: builderBallistaMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
-                            opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: productionPanel.unitIconEmoji("ballista")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                font.pointSize: 36
-                                opacity: parent.isEnabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Ballista")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderBallistaMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
-                                        productionPanel.gameInstance.start_builder_construction("ballista");
-                                }
-                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Build Ballista\nPrecision siege weapon\nEffective against units\nBuild time: 12s") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#ffffff"
-                                opacity: builderBallistaMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            Behavior on border.color { ColorAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 100 } }
-                        }
-
-                        // Defense Tower
-                        Rectangle {
-                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
-                            property bool isHovered: builderDefenseTowerMouseArea.containsMouse
-
-                            width: 110
-                            height: 80
-                            radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
-                            opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
-
-                            Text {
-                                anchors.centerIn: parent
-                                text: "🏰"
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
-                                font.pointSize: 36
-                                opacity: parent.isEnabled ? 0.9 : 0.4
-                            }
-
-                            Text {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                anchors.bottom: parent.bottom
-                                anchors.bottomMargin: 6
-                                text: qsTr("Defense Tower")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
-                                font.pointSize: 8
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: builderDefenseTowerMouseArea
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (parent.isEnabled && productionPanel.gameInstance && productionPanel.gameInstance.start_builder_construction)
-                                        productionPanel.gameInstance.start_builder_construction("defense_tower");
-                                }
-                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                ToolTip.visible: containsMouse
-                                ToolTip.text: parent.isEnabled ? qsTr("Build Defense Tower\nStationary defense structure\nShoots arrows at enemies\nBuild time: 20s") : qsTr("Already building...")
-                                ToolTip.delay: 300
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                color: "#ffffff"
-                                opacity: builderDefenseTowerMouseArea.pressed ? 0.2 : 0
-                                radius: parent.radius
-                            }
-
-                            Behavior on color { ColorAnimation { duration: 150 } }
-                            Behavior on border.color { ColorAnimation { duration: 150 } }
-                            Behavior on scale { NumberAnimation { duration: 100 } }
-                        }
-                    }
-                }
             }
 
             Item {
