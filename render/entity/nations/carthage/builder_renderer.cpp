@@ -74,8 +74,9 @@ using Render::GL::Humanoid::saturate_color;
 
 class BuilderRenderer : public HumanoidRendererBase {
 public:
+  // Carthaginian craftsmen - skilled and lean
   auto get_proportion_scaling() const -> QVector3D override {
-    return {0.94F, 1.02F, 0.92F};
+    return {0.98F, 1.01F, 0.96F};
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
@@ -85,50 +86,29 @@ public:
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
+    // Carthaginian craftsmen often have beards
     auto nextRand = [](uint32_t &s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
 
     uint32_t beard_seed = seed ^ 0x0EA101U;
-    bool wants_beard = style.force_beard;
-    if (!wants_beard) {
-      float const beard_roll = nextRand(beard_seed);
-      wants_beard = (beard_roll < 0.80F);
-    }
-
-    if (wants_beard) {
+    if (style.force_beard || nextRand(beard_seed) < 0.75F) {
       float const style_roll = nextRand(beard_seed);
-
-      if (style_roll < 0.50F) {
+      if (style_roll < 0.5F) {
         v.facial_hair.style = FacialHairStyle::ShortBeard;
-        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
-      } else if (style_roll < 0.80F) {
+        v.facial_hair.length = 0.7F + nextRand(beard_seed) * 0.3F;
+      } else if (style_roll < 0.8F) {
         v.facial_hair.style = FacialHairStyle::FullBeard;
-        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
+        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
       } else {
         v.facial_hair.style = FacialHairStyle::Goatee;
-        v.facial_hair.length = 0.7F + nextRand(beard_seed) * 0.4F;
+        v.facial_hair.length = 0.6F + nextRand(beard_seed) * 0.3F;
       }
-
-      float const color_roll = nextRand(beard_seed);
-      if (color_roll < 0.60F) {
-        v.facial_hair.color = QVector3D(0.12F + nextRand(beard_seed) * 0.08F,
-                                        0.10F + nextRand(beard_seed) * 0.06F,
-                                        0.08F + nextRand(beard_seed) * 0.05F);
-      } else if (color_roll < 0.85F) {
-        v.facial_hair.color = QVector3D(0.22F + nextRand(beard_seed) * 0.10F,
-                                        0.17F + nextRand(beard_seed) * 0.08F,
-                                        0.12F + nextRand(beard_seed) * 0.06F);
-      } else {
-        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.15F,
-                                        0.32F + nextRand(beard_seed) * 0.12F,
-                                        0.30F + nextRand(beard_seed) * 0.10F);
-        v.facial_hair.greyness = 0.3F + nextRand(beard_seed) * 0.4F;
-      }
-
-      v.facial_hair.thickness = 0.85F + nextRand(beard_seed) * 0.25F;
-      v.facial_hair.coverage = 0.80F + nextRand(beard_seed) * 0.20F;
+      v.facial_hair.color = QVector3D(0.15F + nextRand(beard_seed) * 0.1F,
+                                      0.12F + nextRand(beard_seed) * 0.08F,
+                                      0.10F + nextRand(beard_seed) * 0.06F);
+      v.facial_hair.thickness = 0.8F + nextRand(beard_seed) * 0.2F;
     }
   }
 
@@ -140,295 +120,320 @@ public:
     const AnimationInputs &anim = anim_ctx.inputs;
     HumanoidPoseController controller(pose, anim_ctx);
 
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.05F;
+    float const jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.04F;
+    float const asym = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.05F;
 
-    float const forward_offset = 0.20F + (anim.is_moving ? 0.03F : 0.0F);
-    float const hand_height = HP::WAIST_Y + 0.08F + arm_height_jitter;
+    // Craftsman pose - measuring/working stance
+    float const forward = 0.20F + (anim.is_moving ? 0.02F : 0.0F);
+    QVector3D const work_hand(-0.12F + asym, HP::WAIST_Y + 0.10F + jitter, forward + 0.04F);
+    QVector3D const guide_hand(0.18F - asym * 0.5F, HP::SHOULDER_Y - 0.04F + jitter * 0.5F, 0.15F);
 
-    QVector3D const idle_hand_l(-0.16F + arm_asymmetry, hand_height,
-                                forward_offset);
-    QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.5F,
-                                hand_height + 0.01F, forward_offset * 0.9F);
-
-    controller.placeHandAt(true, idle_hand_l);
-    controller.placeHandAt(false, idle_hand_r);
+    controller.placeHandAt(true, work_hand);
+    controller.placeHandAt(false, guide_hand);
   }
 
   void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose,
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
-    draw_mallet(ctx, v, pose, out);
+    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
+    
+    // Varied tools for Phoenician craftsmen
+    float const tool_roll = hash_01(seed ^ 0x2345U);
+    if (tool_roll < 0.30F) {
+      draw_adze(ctx, v, pose, seed, out);
+    } else if (tool_roll < 0.55F) {
+      draw_chisel_mallet(ctx, v, pose, seed, out);
+    } else if (tool_roll < 0.80F) {
+      draw_saw(ctx, v, pose, seed, out);
+    } else {
+      draw_measuring_rod(ctx, v, pose, seed, out);
+    }
+    
+    // Some carry a rope coil
+    if (hash_01(seed ^ 0x6789U) < 0.35F) {
+      draw_rope_coil(ctx, v, pose, out);
+    }
   }
 
-  void draw_mallet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const {
-    QVector3D const wood_color = v.palette.wood;
-    QVector3D const wood_dark = v.palette.wood * 0.75F;
+  void draw_adze(const DrawContext &ctx, const HumanoidVariant &v,
+                 const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+    QVector3D const wood = v.palette.wood;
+    QVector3D const metal = v.palette.metal * 0.88F;
 
+    QVector3D const hand = pose.hand_l;
+    QVector3D const up(0.0F, 1.0F, 0.0F);
+    QVector3D const fwd(0.0F, 0.0F, 1.0F);
+
+    float const h_len = 0.30F;
+    QVector3D const h_top = hand + up * 0.11F;
+    QVector3D const h_bot = h_top - up * h_len;
+
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, h_bot, h_top, 0.015F), wood, nullptr, 1.0F);
+
+    // Adze blade (curved, perpendicular to handle)
+    QVector3D const blade_start = h_top + up * 0.02F;
+    QVector3D const blade_end = blade_start + fwd * 0.09F - up * 0.03F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, blade_start, blade_end, 0.018F), metal, nullptr, 1.0F);
+  }
+
+  void draw_chisel_mallet(const DrawContext &ctx, const HumanoidVariant &v,
+                          const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+    QVector3D const wood = v.palette.wood;
+    QVector3D const metal = v.palette.metal;
+
+    QVector3D const hand_l = pose.hand_l;
     QVector3D const hand_r = pose.hand_r;
     QVector3D const up(0.0F, 1.0F, 0.0F);
+    QVector3D const right(1.0F, 0.0F, 0.0F);
 
-    float const handle_length = 0.22F;
-    float const handle_radius = 0.014F;
-    QVector3D const handle_top = hand_r + up * 0.06F;
-    QVector3D const handle_bottom = handle_top - up * handle_length;
+    // Chisel in left hand
+    QVector3D const c_top = hand_l + up * 0.08F;
+    QVector3D const c_bot = c_top - up * 0.16F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, c_bot, c_top, 0.010F), metal, nullptr, 1.0F);
 
-    out.mesh(
-        get_unit_cylinder(),
-        cylinder_between(ctx.model, handle_bottom, handle_top, handle_radius),
-        wood_color, nullptr, 1.0F);
+    // Small mallet in right hand
+    QVector3D const m_top = hand_r + up * 0.08F;
+    QVector3D const m_bot = m_top - up * 0.18F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, m_bot, m_top, 0.012F), wood, nullptr, 1.0F);
+    
+    QVector3D const head = m_top + up * 0.02F;
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, head - right * 0.03F, head + right * 0.03F, 0.028F),
+             wood * 0.8F, nullptr, 1.0F);
+  }
 
-    float const head_radius = 0.035F;
-    QVector3D const head_center = handle_top + up * 0.035F;
+  void draw_saw(const DrawContext &ctx, const HumanoidVariant &v,
+                const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+    QVector3D const wood = v.palette.wood;
+    QVector3D const metal = v.palette.metal * 0.9F;
 
-    out.mesh(get_unit_sphere(), sphere_at(ctx.model, head_center, head_radius),
-             wood_dark, nullptr, 1.0F);
+    QVector3D const hand = pose.hand_l;
+    QVector3D const up(0.0F, 1.0F, 0.0F);
+    QVector3D const fwd(0.0F, 0.0F, 1.0F);
+
+    // Handle
+    QVector3D const h_start = hand;
+    QVector3D const h_end = hand + up * 0.08F + fwd * 0.02F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, h_start, h_end, 0.016F), wood, nullptr, 1.0F);
+
+    // Blade
+    QVector3D const b_start = h_end;
+    QVector3D const b_end = b_start + fwd * 0.25F - up * 0.02F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, b_start, b_end, 0.008F), metal, nullptr, 1.0F);
+  }
+
+  void draw_measuring_rod(const DrawContext &ctx, const HumanoidVariant &v,
+                          const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
+    QVector3D const wood = v.palette.wood * 1.1F;
+    QVector3D const mark_color(0.2F, 0.15F, 0.1F);
+
+    QVector3D const hand = pose.hand_l;
+    QVector3D const up(0.0F, 1.0F, 0.0F);
+
+    // Long measuring rod
+    QVector3D const rod_top = hand + up * 0.35F;
+    QVector3D const rod_bot = hand - up * 0.10F;
+    out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, rod_bot, rod_top, 0.012F), wood, nullptr, 1.0F);
+
+    // Measurement marks
+    for (int i = 0; i < 4; ++i) {
+      float t = 0.2F + float(i) * 0.2F;
+      QVector3D pos = rod_bot * (1.0F - t) + rod_top * t;
+      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, 0.014F), mark_color, nullptr, 1.0F);
+    }
+  }
+
+  void draw_rope_coil(const DrawContext &ctx, const HumanoidVariant &v,
+                      const HumanoidPose &pose, ISubmitter &out) const {
+    const BodyFrames &frames = pose.body_frames;
+    QVector3D const rope_color(0.55F, 0.45F, 0.32F);
+
+    // Rope coil worn across shoulder
+    QVector3D const shoulder = frames.shoulder_r.origin;
+    QVector3D const hip = frames.waist.origin - frames.waist.right * 0.06F;
+    
+    // Draw as series of spheres
+    for (int i = 0; i < 6; ++i) {
+      float t = float(i) / 5.0F;
+      QVector3D pos = shoulder * (1.0F - t) + hip * t;
+      pos += QVector3D(0.02F, 0.0F, 0.03F);
+      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, 0.022F), rope_color, nullptr, 1.0F);
+    }
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
-    if (!resolve_style(ctx).show_helmet) {
-      return;
-    }
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
-    if (helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
+    // Phoenician craftsmen wear headwraps
+    draw_headwrap(ctx, v, pose, out);
+  }
+
+  void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
+                     const HumanoidPose &pose, ISubmitter &out) const {
+    const BodyFrames &frames = pose.body_frames;
+    QVector3D const wrap_color(0.88F, 0.82F, 0.72F);  // Linen color
+    
+    QVector3D const head_top = frames.head.origin + frames.head.up * 0.05F;
+    QVector3D const head_back = frames.head.origin - frames.head.forward * 0.03F + frames.head.up * 0.02F;
+    
+    // Wrapped cloth on head
+    out.mesh(get_unit_sphere(), sphere_at(ctx.model, head_top, 0.052F), wrap_color, nullptr, 1.0F);
+    out.mesh(get_unit_sphere(), sphere_at(ctx.model, head_back, 0.048F), wrap_color * 0.95F, nullptr, 1.0F);
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
-    draw_builder_robes(ctx, v, pose, out);
+    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
+    draw_craftsman_robes(ctx, v, pose, seed, out);
   }
 
-  void draw_builder_robes(const DrawContext &ctx, const HumanoidVariant &v,
-                          const HumanoidPose &pose, ISubmitter &out) const {
+  void draw_craftsman_robes(const DrawContext &ctx, const HumanoidVariant &v,
+                            const HumanoidPose &pose, uint32_t seed, ISubmitter &out) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
     const AttachmentFrame &waist = frames.waist;
 
-    if (torso.radius <= 0.0F) {
-      return;
-    }
+    if (torso.radius <= 0.0F) return;
 
-    QVector3D const team_tint = resolve_team_tint(ctx);
-    QVector3D const robe_tan(0.68F, 0.54F, 0.38F);
-    QVector3D const robe_light(0.72F, 0.58F, 0.42F);
-    QVector3D const apron_color =
-        resolve_style(ctx).apron_color.value_or(QVector3D(0.42F, 0.35F, 0.25F));
-    QVector3D const bronze_color = v.palette.metal;
-    QVector3D const leather_color = v.palette.leather;
+    // Varied linen/wool colors
+    float const var = hash_01(seed ^ 0xCDEU);
+    QVector3D robe_color;
+    if (var < 0.35F) {
+      robe_color = QVector3D(0.85F, 0.78F, 0.68F); // Light linen
+    } else if (var < 0.65F) {
+      robe_color = QVector3D(0.72F, 0.65F, 0.55F); // Natural wool
+    } else {
+      robe_color = QVector3D(0.62F, 0.58F, 0.52F); // Grey-brown
+    }
+    
+    QVector3D const robe_dark = robe_color * 0.88F;
+    QVector3D const sash_color(0.55F, 0.25F, 0.18F); // Red-brown sash
+    QVector3D const leather = v.palette.leather;
 
     const QVector3D &origin = torso.origin;
     const QVector3D &right = torso.right;
     const QVector3D &up = torso.up;
     const QVector3D &forward = torso.forward;
+    float const tr = torso.radius * 1.06F;
+    float const td = (torso.depth > 0.0F) ? torso.depth * 0.90F : torso.radius * 0.78F;
 
-    constexpr int k_mat_tunic = 1;
-    constexpr int k_mat_leather = 2;
-    constexpr int k_mat_tools = 3;
-    float const torso_r = torso.radius * 1.02F;
-    float const torso_depth =
-        (torso.depth > 0.0F) ? torso.depth * 0.88F : torso.radius * 0.82F;
+    float const y_sh = origin.y() + 0.035F;
+    float const y_w = waist.origin.y();
+    float const y_hem = y_w - 0.22F;
 
-    float const y_shoulder = origin.y() + 0.040F;
-    float const y_waist = waist.origin.y();
-
-    constexpr int segments = 12;
+    constexpr int segs = 12;
     constexpr float pi = std::numbers::pi_v<float>;
 
-    auto drawRobeRing = [&](float y_pos, float width, float depth,
-                            const QVector3D &color, float thickness,
-                            int materialId) {
-      for (int i = 0; i < segments; ++i) {
-        float const angle1 = (static_cast<float>(i) / segments) * 2.0F * pi;
-        float const angle2 = (static_cast<float>(i + 1) / segments) * 2.0F * pi;
-
-        float const sin1 = std::sin(angle1);
-        float const cos1 = std::cos(angle1);
-        float const sin2 = std::sin(angle2);
-        float const cos2 = std::cos(angle2);
-
-        float const r1 =
-            (std::abs(cos1) * depth + (1.0F - std::abs(cos1)) * width);
-        float const r2 =
-            (std::abs(cos2) * depth + (1.0F - std::abs(cos2)) * width);
-
-        QVector3D const p1 = origin + right * (r1 * sin1) +
-                             forward * (r1 * cos1) + up * (y_pos - origin.y());
-        QVector3D const p2 = origin + right * (r2 * sin2) +
-                             forward * (r2 * cos2) + up * (y_pos - origin.y());
-
-        out.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, p1, p2, thickness), color, nullptr,
-                 1.0F, materialId);
+    auto ring = [&](float y, float w, float d, const QVector3D &c, float th) {
+      for (int i = 0; i < segs; ++i) {
+        float a1 = (float(i) / segs) * 2.0F * pi;
+        float a2 = (float(i + 1) / segs) * 2.0F * pi;
+        QVector3D p1 = origin + right * (w * std::sin(a1)) + forward * (d * std::cos(a1)) + up * (y - origin.y());
+        QVector3D p2 = origin + right * (w * std::sin(a2)) + forward * (d * std::cos(a2)) + up * (y - origin.y());
+        out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, p1, p2, th), c, nullptr, 1.0F);
       }
     };
 
-    drawRobeRing(y_shoulder - 0.00F, torso_r * 1.18F, torso_depth * 1.08F,
-                 robe_light, 0.034F, k_mat_tunic);
-    drawRobeRing(y_shoulder - 0.04F, torso_r * 1.24F, torso_depth * 1.12F,
-                 robe_light, 0.036F, k_mat_tunic);
+    // Neck
+    ring(y_sh + 0.045F, tr * 0.65F, td * 0.58F, robe_dark, 0.020F);
+    
+    // Shoulders - wide for Phoenician style
+    ring(y_sh + 0.03F, tr * 1.15F, td * 1.08F, robe_color, 0.035F);
+    ring(y_sh, tr * 1.10F, td * 1.04F, robe_color, 0.032F);
 
-    float const torso_fill_top = y_shoulder - 0.08F;
-    float const torso_fill_bot = y_waist + 0.04F;
-    constexpr int torso_fill_layers = 7;
-    for (int i = 0; i < torso_fill_layers; ++i) {
-      float const t =
-          static_cast<float>(i) / static_cast<float>(torso_fill_layers - 1);
-      float const y = torso_fill_top + (torso_fill_bot - torso_fill_top) * t;
-      float const width = torso_r * (1.06F - t * 0.18F);
-      float const depth = torso_depth * (0.98F - t * 0.14F);
-      float const thickness = 0.028F - t * 0.008F;
-      QVector3D const c =
-          (t < 0.4F) ? robe_light : robe_tan * (1.0F - (t - 0.4F) * 0.25F);
-      drawRobeRing(y, width, depth, c, thickness, k_mat_tunic);
+    // Torso
+    for (int i = 0; i < 5; ++i) {
+      float t = float(i) / 4.0F;
+      float y = y_sh - 0.02F - t * (y_sh - y_w - 0.02F);
+      QVector3D c = robe_color * (1.0F - t * 0.05F);
+      ring(y, tr * (1.06F - t * 0.12F), td * (1.00F - t * 0.10F), c, 0.026F - t * 0.003F);
     }
 
-    constexpr int skirt_layers = 7;
-    for (int layer = 0; layer < skirt_layers; ++layer) {
-      float const t =
-          static_cast<float>(layer) / static_cast<float>(skirt_layers - 1);
-      float const y = y_waist - t * 0.22F;
-      float const flare = 1.0F + t * 0.30F;
-      QVector3D const skirt_color = robe_tan * (1.0F - t * 0.06F);
-      drawRobeRing(y, torso_r * 0.88F * flare, torso_depth * 0.82F * flare,
-                   skirt_color, 0.020F + t * 0.010F, k_mat_tunic);
-    }
-
-    float const belt_y = y_waist + 0.01F;
-    QVector3D const belt_top = origin + up * (belt_y + 0.020F - origin.y());
-    QVector3D const belt_bot = origin + up * (belt_y - 0.020F - origin.y());
+    // Sash/belt area
+    float const sash_y = y_w + 0.005F;
+    QVector3D const sash_c = origin + up * (sash_y - origin.y());
     out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, belt_bot, belt_top, torso_r * 0.96F),
-             leather_color, nullptr, 1.0F, k_mat_leather);
+             cylinder_between(ctx.model, sash_c - up * 0.022F, sash_c + up * 0.022F, tr * 0.94F),
+             sash_color, nullptr, 1.0F);
 
-    QVector3D const apron_top = origin + forward * (torso_depth * 0.82F) +
-                                up * (y_waist + 0.01F - origin.y());
-    QVector3D const apron_bottom = origin + forward * (torso_depth * 0.88F) +
-                                   up * (y_waist - 0.18F - origin.y());
-    float const apron_width = torso_r * 0.65F;
+    // Longer skirt - Phoenician style
+    for (int i = 0; i < 6; ++i) {
+      float t = float(i) / 5.0F;
+      float y = y_w - 0.02F - t * (y_w - y_hem);
+      float flare = 1.0F + t * 0.28F;
+      QVector3D c = robe_color * (1.0F - t * 0.06F);
+      ring(y, tr * 0.85F * flare, td * 0.80F * flare, c, 0.020F + t * 0.008F);
+    }
 
-    out.mesh(
-        get_unit_cube(),
-        [&]() {
-          QMatrix4x4 m = ctx.model;
-          QVector3D const center = (apron_top + apron_bottom) * 0.5F;
-          m.translate(center);
-          m.scale(apron_width, (apron_top.y() - apron_bottom.y()) * 0.5F,
-                  0.012F);
-          return m;
-        }(),
-        apron_color, nullptr, 1.0F, k_mat_leather);
+    // Tool bag on belt
+    QVector3D const bag = origin + right * (tr * 0.72F) + up * (sash_y - 0.06F - origin.y()) + forward * td * 0.08F;
+    out.mesh(get_unit_cube(),
+             [&]() {
+               QMatrix4x4 m = ctx.model;
+               m.translate(bag);
+               m.scale(0.042F, 0.058F, 0.035F);
+               return m;
+             }(),
+             leather * 0.92F, nullptr, 1.0F);
 
-    QVector3D const pouch_pos = origin + right * (torso_r * 0.70F) +
-                                up * (belt_y - 0.05F - origin.y()) +
-                                forward * (torso_depth * 0.10F);
-    out.mesh(
-        get_unit_cube(),
-        [&]() {
-          QMatrix4x4 m = ctx.model;
-          m.translate(pouch_pos);
-          m.scale(0.035F, 0.045F, 0.025F);
-          return m;
-        }(),
-        leather_color * 0.85F, nullptr, 1.0F, k_mat_leather);
-
-    QVector3D const buckle_pos =
-        origin + forward * (torso_depth * 0.82F) + up * (belt_y - origin.y());
-    out.mesh(get_unit_sphere(), sphere_at(ctx.model, buckle_pos, 0.016F),
-             bronze_color, nullptr, 1.0F, k_mat_tools);
-
-    auto drawFlowingSleeve = [&](const QVector3D &shoulder_pos,
-                                 const QVector3D &outward) {
-      QVector3D const backward = -forward;
-      QVector3D const anchor = shoulder_pos + up * 0.060F + backward * 0.015F;
-      for (int i = 0; i < 5; ++i) {
-        float const t = static_cast<float>(i) / 5.0F;
-        QVector3D const sleeve_pos = anchor + outward * (0.012F + t * 0.025F) +
-                                     forward * (-0.015F + t * 0.055F) -
-                                     up * (t * 0.04F);
-        float const sleeve_r = HP::UPPER_ARM_R * (1.50F - t * 0.06F);
-        QVector3D const sleeve_color = robe_light * (1.0F - t * 0.03F);
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, sleeve_pos, sleeve_r),
-                 sleeve_color, nullptr, 1.0F, k_mat_tunic);
+    // Flowing sleeves
+    auto sleeve = [&](const QVector3D &sh, const QVector3D &out_dir) {
+      QVector3D const back = -forward;
+      QVector3D anchor = sh + up * 0.055F + back * 0.012F;
+      for (int i = 0; i < 4; ++i) {
+        float t = float(i) / 4.0F;
+        QVector3D pos = anchor + out_dir * (0.012F + t * 0.022F) + forward * (-0.012F + t * 0.05F) - up * (t * 0.035F);
+        float r = HP::UPPER_ARM_R * (1.48F - t * 0.08F);
+        out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), robe_color * (1.0F - t * 0.03F), nullptr, 1.0F);
       }
     };
-    drawFlowingSleeve(frames.shoulder_l.origin, -right);
-    drawFlowingSleeve(frames.shoulder_r.origin, right);
+    sleeve(frames.shoulder_l.origin, -right);
+    sleeve(frames.shoulder_r.origin, right);
   }
 
 private:
-  auto
-  resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
+  auto resolve_style(const DrawContext &ctx) const -> const BuilderStyleConfig & {
     ensure_builder_styles_registered();
     auto &styles = style_registry();
     std::string nation_id;
     if (ctx.entity != nullptr) {
-      if (auto *unit =
-              ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
         nation_id = Game::Systems::nationIDToString(unit->nation_id);
       }
     }
     if (!nation_id.empty()) {
       auto it = styles.find(nation_id);
-      if (it != styles.end()) {
-        return it->second;
-      }
+      if (it != styles.end()) return it->second;
     }
-    auto fallback = styles.find(std::string(k_default_style_key));
-    if (fallback != styles.end()) {
-      return fallback->second;
-    }
-    static const BuilderStyleConfig default_style{};
-    return default_style;
+    auto f = styles.find(std::string(k_default_style_key));
+    if (f != styles.end()) return f->second;
+    static const BuilderStyleConfig def{};
+    return def;
   }
 
 public:
   auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const BuilderStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
+    const BuilderStyleConfig &s = resolve_style(ctx);
+    if (!s.shader_id.empty()) return QString::fromStdString(s.shader_id);
     return QStringLiteral("builder");
   }
 
 private:
   void apply_palette_overrides(const BuilderStyleConfig &style,
                                const QVector3D &team_tint,
-                               HumanoidVariant &variant) const {
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target, float team_weight,
-                           float style_weight) {
-      target = mix_palette_color(target, override_color, team_tint, team_weight,
-                                 style_weight);
+                               HumanoidVariant &v) const {
+    auto apply = [&](const std::optional<QVector3D> &c, QVector3D &t, float tw, float sw) {
+      t = mix_palette_color(t, c, team_tint, tw, sw);
     };
-
-    constexpr float k_skin_team_mix_weight = 0.0F;
-    constexpr float k_skin_style_mix_weight = 1.0F;
-
-    constexpr float k_cloth_team_mix_weight = 0.0F;
-    constexpr float k_cloth_style_mix_weight = 1.0F;
-
-    apply_color(style.skin_color, variant.palette.skin, k_skin_team_mix_weight,
-                k_skin_style_mix_weight);
-    apply_color(style.cloth_color, variant.palette.cloth,
-                k_cloth_team_mix_weight, k_cloth_style_mix_weight);
-    apply_color(style.leather_color, variant.palette.leather, k_team_mix_weight,
-                k_style_mix_weight);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark,
-                k_team_mix_weight, k_style_mix_weight);
-    apply_color(style.metal_color, variant.palette.metal, k_team_mix_weight,
-                k_style_mix_weight);
-    apply_color(style.wood_color, variant.palette.wood, k_team_mix_weight,
-                k_style_mix_weight);
+    apply(style.skin_color, v.palette.skin, 0.0F, 1.0F);
+    apply(style.cloth_color, v.palette.cloth, 0.0F, 1.0F);
+    apply(style.leather_color, v.palette.leather, k_team_mix_weight, k_style_mix_weight);
+    apply(style.leather_dark_color, v.palette.leatherDark, k_team_mix_weight, k_style_mix_weight);
+    apply(style.metal_color, v.palette.metal, k_team_mix_weight, k_style_mix_weight);
+    apply(style.wood_color, v.palette.wood, k_team_mix_weight, k_style_mix_weight);
   }
 };
 
@@ -437,23 +442,17 @@ void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
   static BuilderRenderer const renderer;
   registry.register_renderer(
       "troops/carthage/builder", [](const DrawContext &ctx, ISubmitter &out) {
-        static BuilderRenderer const static_renderer;
-        Shader *builder_shader = nullptr;
+        static BuilderRenderer const r;
+        Shader *shader = nullptr;
         if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          builder_shader = ctx.backend->shader(shader_key);
-          if (builder_shader == nullptr) {
-            builder_shader = ctx.backend->shader(QStringLiteral("builder"));
-          }
+          QString key = r.resolve_shader_key(ctx);
+          shader = ctx.backend->shader(key);
+          if (!shader) shader = ctx.backend->shader(QStringLiteral("builder"));
         }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (builder_shader != nullptr)) {
-          scene_renderer->set_current_shader(builder_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
+        auto *sr = dynamic_cast<Renderer *>(&out);
+        if (sr && shader) sr->set_current_shader(shader);
+        r.render(ctx, out);
+        if (sr) sr->set_current_shader(nullptr);
       });
 }
 
