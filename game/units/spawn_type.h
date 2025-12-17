@@ -19,6 +19,7 @@ enum class SpawnType : std::uint8_t {
   Healer,
   Catapult,
   Ballista,
+  Builder,
   Barracks,
   DefenseTower
 };
@@ -43,6 +44,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("catapult");
   case SpawnType::Ballista:
     return QStringLiteral("ballista");
+  case SpawnType::Builder:
+    return QStringLiteral("builder");
   case SpawnType::Barracks:
     return QStringLiteral("barracks");
   case SpawnType::DefenseTower:
@@ -94,6 +97,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Ballista;
     return true;
   }
+  if (lowered == QStringLiteral("builder")) {
+    out = SpawnType::Builder;
+    return true;
+  }
   if (lowered == QStringLiteral("barracks")) {
     out = SpawnType::Barracks;
     return true;
@@ -134,6 +141,9 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "ballista") {
     return SpawnType::Ballista;
   }
+  if (str == "builder") {
+    return SpawnType::Builder;
+  }
   if (str == "barracks") {
     return SpawnType::Barracks;
   }
@@ -152,8 +162,8 @@ inline auto is_building_spawn(SpawnType type) -> bool {
 }
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
-  return type != SpawnType::Healer && type != SpawnType::Barracks &&
-         type != SpawnType::DefenseTower;
+  return type != SpawnType::Healer && type != SpawnType::Builder &&
+         type != SpawnType::Barracks && type != SpawnType::DefenseTower;
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
@@ -189,7 +199,11 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Catapult;
   case SpawnType::Ballista:
     return TroopType::Ballista;
+  case SpawnType::Builder:
+    return TroopType::Builder;
   case SpawnType::Barracks:
+    return std::nullopt;
+  case SpawnType::DefenseTower:
     return std::nullopt;
   }
   return std::nullopt;
@@ -215,6 +229,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Catapult;
   case TroopType::Ballista:
     return SpawnType::Ballista;
+  case TroopType::Builder:
+    return SpawnType::Builder;
   }
   return SpawnType::Archer;
 }

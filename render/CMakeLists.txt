@@ -72,6 +72,10 @@ add_library(render_gl STATIC
     entity/nations/roman/healer_style.cpp
     entity/nations/carthage/healer_renderer.cpp
     entity/nations/carthage/healer_style.cpp
+    entity/nations/roman/builder_renderer.cpp
+    entity/nations/roman/builder_style.cpp
+    entity/nations/carthage/builder_renderer.cpp
+    entity/nations/carthage/builder_style.cpp
     entity/healing_beam_renderer.cpp
     entity/healer_aura_renderer.cpp
     entity/combat_dust_renderer.cpp
