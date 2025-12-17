@@ -2,6 +2,8 @@
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
 #include "../../game/systems/camera_visibility_service.h"
+#include "../../game/systems/projectile_system.h"
+#include "../../game/systems/stone_projectile.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -22,6 +24,14 @@ constexpr float kFlameColorR = 1.0F;
 constexpr float kFlameColorG = 0.4F;
 constexpr float kFlameColorB = 0.1F;
 constexpr float kBuildingHealthThreshold = 0.5F;
+
+constexpr float kStoneImpactRadius = 3.5F;
+constexpr float kStoneImpactIntensity = 1.0F;
+constexpr float kStoneImpactColorR = 0.65F;
+constexpr float kStoneImpactColorG = 0.60F;
+constexpr float kStoneImpactColorB = 0.50F;
+constexpr float kStoneImpactYOffset = 0.1F;
+constexpr float kStoneImpactThreshold = 0.95F;
 } // namespace
 
 void render_combat_dust(Renderer *renderer, ResourceManager *,
@@ -110,6 +120,46 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
     renderer->building_flame(position, color, kFlameRadius, flame_intensity,
                              animation_time);
+  }
+
+  auto *projectile_sys = world->get_system<Game::Systems::ProjectileSystem>();
+  if (projectile_sys != nullptr) {
+    const auto &projectiles = projectile_sys->projectiles();
+
+    for (const auto &projectile : projectiles) {
+      if (!projectile->is_active()) {
+        continue;
+      }
+
+      auto *stone_proj = dynamic_cast<const Game::Systems::StoneProjectile *>(
+          projectile.get());
+      if (stone_proj == nullptr) {
+        continue;
+      }
+
+      float progress = stone_proj->get_progress();
+      if (progress < kStoneImpactThreshold) {
+        continue;
+      }
+
+      const QVector3D delta = stone_proj->get_end() - stone_proj->get_start();
+      QVector3D impact_pos =
+          stone_proj->get_start() + delta * stone_proj->get_progress();
+
+      if (!visibility.is_entity_visible(impact_pos.x(), impact_pos.z(),
+                                        kVisibilityCheckRadius)) {
+        continue;
+      }
+
+      QVector3D position(impact_pos.x(),
+                         stone_proj->get_end().y() + kStoneImpactYOffset,
+                         impact_pos.z());
+      QVector3D color(kStoneImpactColorR, kStoneImpactColorG,
+                      kStoneImpactColorB);
+
+      renderer->combat_dust(position, color, kStoneImpactRadius,
+                            kStoneImpactIntensity, animation_time);
+    }
   }
 }
 
