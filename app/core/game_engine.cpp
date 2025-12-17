@@ -315,6 +315,9 @@ GameEngine::GameEngine(QObject *parent)
   connect(m_commandController.get(),
           &App::Controllers::CommandController::guard_mode_changed, this,
           &GameEngine::guard_mode_changed);
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::formation_mode_changed, this,
+          &GameEngine::formation_mode_changed);
 
   connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
           SLOT(refresh()));
