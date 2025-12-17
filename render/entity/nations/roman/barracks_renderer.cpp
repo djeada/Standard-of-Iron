@@ -299,60 +299,127 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
     return;
   }
 
-  float const bar_width = 1.0F;
-  float const bar_height = 0.06F;
-  float const bar_y = 2.35F;
-  float const border_thickness = 0.008F;
-
-  QVector3D const border_color(0.15F, 0.15F, 0.15F);
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-           QVector3D(bar_width * 0.5F + border_thickness,
-                     bar_height * 0.5F + border_thickness, 0.08F),
-           border_color);
-
-  QVector3D const bg(0.04F, 0.04F, 0.04F);
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.002F, 0.0F),
-           QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.075F), bg);
-
-  QVector3D fg_color;
-  if (ratio >= 0.70F) {
-
-    fg_color = QVector3D(0.15F, 0.85F, 0.15F);
-  } else if (ratio >= 0.30F) {
-
-    float t = (ratio - 0.30F) / 0.40F;
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
-    QVector3D normal_color(0.15F, 0.85F, 0.15F);
-    fg_color = normal_color * t + damaged_color * (1.0F - t);
-  } else {
-
-    float t = ratio / 0.30F;
-    QVector3D critical_color(0.95F, 0.10F, 0.10F);
-    QVector3D damaged_color(0.95F, 0.65F, 0.10F);
-    fg_color = damaged_color * t + critical_color * (1.0F - t);
+  // Check if building is under attack or being captured
+  auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
+  bool under_attack = (capture != nullptr && capture->is_being_captured);
+  
+  // Also check if health is not at maximum (indicating recent damage)
+  if (!under_attack && u->health >= u->max_health) {
+    return; // Don't show health bar if at full health and not under attack
   }
 
+  // Health bar dimensions - much larger and more prominent
+  float const bar_width = 1.4F;
+  float const bar_height = 0.10F;
+  float const bar_y = 2.45F;
+  float const border_thickness = 0.012F;
+  
+  // Outer glow effect - pulsing red when under attack
+  if (under_attack) {
+    float pulse = 0.7F + 0.3F * sinf(p.animation_time * 4.0F);
+    QVector3D glow_color(0.9F, 0.2F, 0.2F);
+    draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
+             QVector3D(bar_width * 0.5F + border_thickness * 3.0F,
+                       bar_height * 0.5F + border_thickness * 3.0F, 0.095F),
+             glow_color * pulse * 0.6F);
+  }
+  
+  // Metallic border frame - silver/steel color
+  QVector3D const border_color(0.45F, 0.45F, 0.50F);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
+           QVector3D(bar_width * 0.5F + border_thickness,
+                     bar_height * 0.5F + border_thickness, 0.09F),
+           border_color);
+  
+  // Inner border (darker for depth)
+  QVector3D const inner_border(0.25F, 0.25F, 0.28F);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
+           QVector3D(bar_width * 0.5F + border_thickness * 0.5F,
+                     bar_height * 0.5F + border_thickness * 0.5F, 0.088F),
+           inner_border);
+  
+  // Background - dark with slight gradient
+  QVector3D const bg_dark(0.08F, 0.08F, 0.10F);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.003F, 0.0F),
+           QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F), bg_dark);
+
+  // Determine state and color with vibrant, saturated colors
+  QVector3D fg_color;
+  QVector3D fg_dark; // Darker shade for gradient
+  
+  if (ratio >= 0.70F) {
+    // Normal state: Bright emerald green
+    fg_color = QVector3D(0.10F, 1.0F, 0.30F);
+    fg_dark = QVector3D(0.05F, 0.60F, 0.15F);
+  } else if (ratio >= 0.30F) {
+    // Damaged state: Vibrant orange/amber
+    float t = (ratio - 0.30F) / 0.40F;
+    QVector3D damaged_color(1.0F, 0.75F, 0.10F);
+    QVector3D damaged_dark(0.70F, 0.45F, 0.05F);
+    QVector3D normal_color(0.10F, 1.0F, 0.30F);
+    QVector3D normal_dark(0.05F, 0.60F, 0.15F);
+    fg_color = normal_color * t + damaged_color * (1.0F - t);
+    fg_dark = normal_dark * t + damaged_dark * (1.0F - t);
+  } else {
+    // Destroyed state: Intense red
+    float t = ratio / 0.30F;
+    QVector3D critical_color(1.0F, 0.15F, 0.15F);
+    QVector3D critical_dark(0.70F, 0.08F, 0.08F);
+    QVector3D damaged_color(1.0F, 0.75F, 0.10F);
+    QVector3D damaged_dark(0.70F, 0.45F, 0.05F);
+    fg_color = damaged_color * t + critical_color * (1.0F - t);
+    fg_dark = damaged_dark * t + critical_dark * (1.0F - t);
+  }
+  
+  // Bottom layer (darker) for gradient effect
   draw_box(
       out, unit, white, p.model,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.004F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.45F, 0.07F), fg_color);
-
-  QVector3D const highlight = fg_color * 1.3F;
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F), fg_dark);
+  
+  // Main health bar fill
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
+      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F), fg_color);
+  
+  // Top highlight for glossy/glass effect - very bright
+  QVector3D const highlight = fg_color * 1.6F;
   draw_box(out, unit, white, p.model,
            QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
                      bar_y + bar_height * 0.35F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.15F, 0.068F),
+           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
            clampVec01(highlight));
-
-  QVector3D const segment_color(0.2F, 0.2F, 0.2F);
-
+  
+  // Add subtle shine line at very top
+  QVector3D const shine = QVector3D(1.0F, 1.0F, 1.0F) * 0.8F;
   draw_box(out, unit, white, p.model,
-           QVector3D(bar_width * 0.5F * (0.70F - 0.5F), bar_y, 0.0F),
-           QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
-
+           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
+                     bar_y + bar_height * 0.48F, 0.0F),
+           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
+           shine);
+  
+  // Enhanced segment markers - more visible
+  QVector3D const segment_color(0.35F, 0.35F, 0.40F);
+  QVector3D const segment_highlight(0.55F, 0.55F, 0.60F);
+  
+  // 70% marker with highlight
+  float marker_70_x = bar_width * 0.5F * (0.70F - 0.5F);
   draw_box(out, unit, white, p.model,
-           QVector3D(bar_width * 0.5F * (0.30F - 0.5F), bar_y, 0.0F),
-           QVector3D(0.01F, bar_height * 0.55F, 0.08F), segment_color);
+           QVector3D(marker_70_x, bar_y, 0.0F),
+           QVector3D(0.015F, bar_height * 0.55F, 0.09F), segment_color);
+  draw_box(out, unit, white, p.model,
+           QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
+           QVector3D(0.008F, bar_height * 0.15F, 0.091F), segment_highlight);
+  
+  // 30% marker with highlight
+  float marker_30_x = bar_width * 0.5F * (0.30F - 0.5F);
+  draw_box(out, unit, white, p.model,
+           QVector3D(marker_30_x, bar_y, 0.0F),
+           QVector3D(0.015F, bar_height * 0.55F, 0.09F), segment_color);
+  draw_box(out, unit, white, p.model,
+           QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
+           QVector3D(0.008F, bar_height * 0.15F, 0.091F), segment_highlight);
 }
 
 void draw_selection(const DrawContext &p, ISubmitter &out) {
