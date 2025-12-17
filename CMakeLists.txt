@@ -383,3 +383,17 @@ if (CLANG_FORMAT_EXE)
       COMMAND "${CMAKE_COMMAND}" -E echo "No C/C++ files found to check.")
   endif()
 endif()
+
+# ---- Content Validation ----
+# Add custom target to validate missions and campaigns
+add_custom_target(validate-content
+  COMMAND content_validator "${CMAKE_SOURCE_DIR}/assets"
+  DEPENDS content_validator
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  COMMENT "Validating mission and campaign content"
+)
+
+# Optionally make validation run as part of the build
+# Uncomment the following line to make build fail on invalid content:
+# add_dependencies(standard_of_iron validate-content)
+
