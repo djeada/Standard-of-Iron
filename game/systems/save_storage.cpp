@@ -285,105 +285,108 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
 
 auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   QVariantList result;
-  
-  // Qt resources don't support directory listing, so we need to try known campaign files
-  // or use the filesystem path directly
+
   QStringList campaign_files;
-  
-  // Try filesystem first (for development/when running from source)
-  // Look in multiple possible locations
-  QStringList search_paths = {
-      QStringLiteral("assets/campaigns"),
-      QStringLiteral("../assets/campaigns"),
-      QStringLiteral("../../assets/campaigns"),
-      QCoreApplication::applicationDirPath() + QStringLiteral("/assets/campaigns"),
-      QCoreApplication::applicationDirPath() + QStringLiteral("/../assets/campaigns")
-  };
-  
+
+  QStringList search_paths = {QStringLiteral("assets/campaigns"),
+                              QStringLiteral("../assets/campaigns"),
+                              QStringLiteral("../../assets/campaigns"),
+                              QCoreApplication::applicationDirPath() +
+                                  QStringLiteral("/assets/campaigns"),
+                              QCoreApplication::applicationDirPath() +
+                                  QStringLiteral("/../assets/campaigns")};
+
   bool found_filesystem = false;
   for (const QString &campaigns_path : search_paths) {
     QDir campaigns_dir(campaigns_path);
     if (campaigns_dir.exists()) {
       campaign_files = campaigns_dir.entryList(
           QStringList() << QStringLiteral("*.json"), QDir::Files);
-      
+
       if (!campaign_files.isEmpty()) {
-        qInfo() << "Loading campaigns from filesystem:" << campaigns_dir.absolutePath();
-        
+        qInfo() << "Loading campaigns from filesystem:"
+                << campaigns_dir.absolutePath();
+
         for (const auto &campaign_file : campaign_files) {
           const QString campaign_path = campaigns_dir.filePath(campaign_file);
-          
+
           Game::Campaign::CampaignDefinition campaign;
           QString error;
-          if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path, campaign, &error)) {
-            qWarning() << "Failed to load campaign" << campaign_file << ":" << error;
+          if (!Game::Campaign::CampaignLoader::loadFromJsonFile(
+                  campaign_path, campaign, &error)) {
+            qWarning() << "Failed to load campaign" << campaign_file << ":"
+                       << error;
             continue;
           }
-          
+
           QVariantMap campaign_map;
           campaign_map.insert(QStringLiteral("id"), campaign.id);
           campaign_map.insert(QStringLiteral("title"), campaign.title);
-          campaign_map.insert(QStringLiteral("description"), campaign.description);
+          campaign_map.insert(QStringLiteral("description"),
+                              campaign.description);
           campaign_map.insert(QStringLiteral("unlocked"), true);
           campaign_map.insert(QStringLiteral("completed"), false);
-          
+
           QVariantList missions_list;
           for (const auto &mission : campaign.missions) {
             QVariantMap mission_map;
-            mission_map.insert(QStringLiteral("mission_id"), mission.mission_id);
-            mission_map.insert(QStringLiteral("order_index"), mission.order_index);
+            mission_map.insert(QStringLiteral("mission_id"),
+                               mission.mission_id);
+            mission_map.insert(QStringLiteral("order_index"),
+                               mission.order_index);
             if (mission.intro_text.has_value()) {
-              mission_map.insert(QStringLiteral("intro_text"), *mission.intro_text);
+              mission_map.insert(QStringLiteral("intro_text"),
+                                 *mission.intro_text);
             }
             if (mission.outro_text.has_value()) {
-              mission_map.insert(QStringLiteral("outro_text"), *mission.outro_text);
+              mission_map.insert(QStringLiteral("outro_text"),
+                                 *mission.outro_text);
             }
             missions_list.append(mission_map);
           }
           campaign_map.insert(QStringLiteral("missions"), missions_list);
-          
+
           result.append(campaign_map);
         }
-        
+
         found_filesystem = true;
         break;
       }
     }
   }
-  
+
   if (!found_filesystem) {
-    // Fallback to known campaigns from Qt resources
-    // Since Qt resources don't support directory listing, we hardcode known campaigns
+
     qInfo() << "Loading campaigns from Qt resources";
-    
-    QStringList known_campaigns = {
-        QStringLiteral("tutorial_campaign")
-    };
-    
+
+    QStringList known_campaigns = {QStringLiteral("tutorial_campaign")};
+
     for (const auto &campaign_name : known_campaigns) {
-      const QString campaign_path = QString(":/assets/campaigns/%1.json").arg(campaign_name);
-      
-      // Verify the resource exists
+      const QString campaign_path =
+          QString(":/assets/campaigns/%1.json").arg(campaign_name);
+
       QFile test_file(campaign_path);
       if (!test_file.exists()) {
         qWarning() << "Campaign resource does not exist:" << campaign_path;
         continue;
       }
-      
+
       Game::Campaign::CampaignDefinition campaign;
       QString error;
-      if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path, campaign, &error)) {
-        qWarning() << "Failed to load campaign from resources" << campaign_name << ":" << error;
+      if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path,
+                                                            campaign, &error)) {
+        qWarning() << "Failed to load campaign from resources" << campaign_name
+                   << ":" << error;
         continue;
       }
-      
+
       QVariantMap campaign_map;
       campaign_map.insert(QStringLiteral("id"), campaign.id);
       campaign_map.insert(QStringLiteral("title"), campaign.title);
       campaign_map.insert(QStringLiteral("description"), campaign.description);
       campaign_map.insert(QStringLiteral("unlocked"), true);
       campaign_map.insert(QStringLiteral("completed"), false);
-      
+
       QVariantList missions_list;
       for (const auto &mission : campaign.missions) {
         QVariantMap mission_map;
@@ -398,11 +401,11 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
         missions_list.append(mission_map);
       }
       campaign_map.insert(QStringLiteral("missions"), missions_list);
-      
+
       result.append(campaign_map);
     }
   }
-  
+
   if (result.isEmpty()) {
     if (out_error != nullptr) {
       *out_error = QStringLiteral("No campaigns found");
@@ -411,7 +414,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   } else {
     qInfo() << "Successfully loaded" << result.size() << "campaign(s)";
   }
-  
+
   return result;
 }
 
