@@ -36,7 +36,10 @@ public:
   }
 
   void update(float delta_time) override;
-  void deactivate() override { m_active = false; }
+  void deactivate() override {
+    m_active = false;
+    m_should_apply_damage = false;
+  }
 
 private:
   QVector3D m_start;
