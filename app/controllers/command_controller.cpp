@@ -732,4 +732,105 @@ bool CommandController::any_selected_in_formation_mode() const {
   return false;
 }
 
+auto CommandController::on_run_command() -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  int eligible_count = 0;
+  int run_active_count = 0;
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (!Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+
+    eligible_count++;
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if ((stamina != nullptr) && stamina->run_requested) {
+      run_active_count++;
+    }
+  }
+
+  if (eligible_count == 0) {
+    return result;
+  }
+
+  const bool should_enable_run = (run_active_count < eligible_count);
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (!Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+
+    if (should_enable_run) {
+      if (stamina == nullptr) {
+        stamina = entity->add_component<Engine::Core::StaminaComponent>();
+      }
+      stamina->run_requested = true;
+    } else {
+      if (stamina != nullptr) {
+        stamina->run_requested = false;
+        stamina->is_running = false;
+      }
+    }
+  }
+
+  emit run_mode_changed(should_enable_run);
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+bool CommandController::any_selected_in_run_mode() const {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return false;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if ((stamina != nullptr) && stamina->run_requested) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 } // namespace App::Controllers

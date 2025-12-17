@@ -13,7 +13,8 @@ RowLayout {
         "canAttack": true,
         "canGuard": true,
         "canHold": true,
-        "canPatrol": true
+        "canPatrol": true,
+        "canRun": true
     })
 
     signal commandModeChanged(string mode)
@@ -156,28 +157,57 @@ RowLayout {
 
                             }
 
-                            Rectangle {
-                                width: 60
-                                height: 12
-                                color: "#2c3e50"
-                                radius: 6
-                                border.color: "#1a252f"
-                                border.width: 1
+                            Column {
+                                spacing: 2
 
                                 Rectangle {
-                                    width: parent.width * (typeof health_ratio !== 'undefined' ? health_ratio : 0)
-                                    height: parent.height
-                                    color: {
-                                        var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
-                                        if (ratio > 0.6)
-                                            return "#27ae60";
+                                    width: 60
+                                    height: 10
+                                    color: "#2c3e50"
+                                    radius: 5
+                                    border.color: "#1a252f"
+                                    border.width: 1
 
-                                        if (ratio > 0.3)
-                                            return "#f39c12";
+                                    Rectangle {
+                                        width: parent.width * (typeof health_ratio !== 'undefined' ? health_ratio : 0)
+                                        height: parent.height
+                                        color: {
+                                            var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
+                                            if (ratio > 0.6)
+                                                return "#27ae60";
 
-                                        return "#e74c3c";
+                                            if (ratio > 0.3)
+                                                return "#f39c12";
+
+                                            return "#e74c3c";
+                                        }
+                                        radius: 5
                                     }
-                                    radius: 6
+
+                                }
+
+                                Rectangle {
+                                    width: 60
+                                    height: 6
+                                    color: "#2c3e50"
+                                    radius: 3
+                                    border.color: "#1a252f"
+                                    border.width: 1
+                                    visible: (typeof can_run !== 'undefined') ? can_run : false
+
+                                    Rectangle {
+                                        width: parent.width * (typeof stamina_ratio !== 'undefined' ? stamina_ratio : 1)
+                                        height: parent.height
+                                        color: {
+                                            var running = (typeof is_running !== 'undefined') ? is_running : false;
+                                            if (running)
+                                                return "#e67e22";
+
+                                            return "#3498db";
+                                        }
+                                        radius: 3
+                                    }
+
                                 }
 
                             }
@@ -540,6 +570,69 @@ RowLayout {
 
                 contentItem: Text {
                     text: (parent.isFormationActive ? "✓ " : "") + "🎯\n" + parent.text
+                    font.pointSize: 8
+                    font.bold: true
+                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                    horizontalAlignment: Text.AlignHCenter
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+            }
+
+            Button {
+                id: runButton
+
+                property bool isRunActive: {
+                    bottomRoot.selectionTick;
+                    return (typeof game !== 'undefined' && game.any_selected_in_run_mode) ? game.any_selected_in_run_mode() : false;
+                }
+                property bool modeAvailable: bottomRoot.modeAvailability.canRun !== false
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 38
+                text: qsTr("Run")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.hasMovableUnits && modeAvailable
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.on_run_command)
+                        game.on_run_command();
+
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: !modeAvailable ? qsTr("Run not available for selected units (e.g. catapults, ballista)") : (bottomRoot.hasMovableUnits ? (isRunActive ? qsTr("Stop running (toggle)") : qsTr("Run faster, uses stamina")) : qsTr("Select troops first"))
+                ToolTip.delay: 500
+
+                Connections {
+                    function onRun_mode_changed(active) {
+                        runButton.isRunActive = (typeof game !== 'undefined' && game.any_selected_in_run_mode) ? game.any_selected_in_run_mode() : false;
+                    }
+
+                    target: (typeof game !== 'undefined') ? game : null
+                }
+
+                background: Rectangle {
+                    color: {
+                        if (!parent.enabled)
+                            return "#1a252f";
+
+                        if (parent.isRunActive)
+                            return "#e67e22";
+
+                        if (parent.pressed)
+                            return "#e67e22";
+
+                        if (parent.hovered)
+                            return "#f39c12";
+
+                        return "#34495e";
+                    }
+                    radius: 6
+                    border.color: parent.enabled ? (parent.isRunActive ? "#d35400" : "#e67e22") : "#1a252f"
+                    border.width: parent.isRunActive ? 3 : 2
+                }
+
+                contentItem: Text {
+                    text: (parent.isRunActive ? "✓ " : "") + "🏃\n" + parent.text
                     font.pointSize: 8
                     font.bold: true
                     color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
