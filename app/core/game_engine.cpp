@@ -952,6 +952,62 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
                                              m_runtime.local_owner_id);
 }
 
+void GameEngine::start_building_placement(const QString &building_type) {
+  ensure_initialized();
+  if (building_type.isEmpty()) {
+    return;
+  }
+  m_pending_building_type = building_type;
+  set_cursor_mode(CursorMode::PlaceBuilding);
+}
+
+void GameEngine::place_building_at_screen(qreal sx, qreal sy) {
+  ensure_initialized();
+  if (m_pending_building_type.isEmpty()) {
+    return;
+  }
+  if (!m_world || !m_pickingService || !m_camera) {
+    return;
+  }
+
+  QVector3D hit;
+  if (!m_pickingService->screen_to_ground(QPointF(sx, sy), *m_camera,
+                                          m_viewport.width, m_viewport.height,
+                                          hit)) {
+    return;
+  }
+
+  Game::Units::SpawnParams params;
+  params.position = hit;
+  params.player_id = m_runtime.local_owner_id;
+  params.ai_controlled = false;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  params.nation_id = nation_registry.get_player_nation(m_runtime.local_owner_id);
+
+  if (m_pending_building_type == QStringLiteral("defense_tower")) {
+    params.spawn_type = Game::Units::SpawnType::DefenseTower;
+
+    auto &registry = Game::Units::UnitFactoryRegistry::instance();
+    auto unit = registry.create(*m_world, params.spawn_type, params);
+    if (unit) {
+      qInfo() << "Placed defense tower at" << hit.x() << hit.z();
+    }
+  }
+
+  m_pending_building_type.clear();
+  set_cursor_mode(CursorMode::Normal);
+}
+
+void GameEngine::cancel_building_placement() {
+  m_pending_building_type.clear();
+  set_cursor_mode(CursorMode::Normal);
+}
+
+auto GameEngine::pending_building_type() const -> QString {
+  return m_pending_building_type;
+}
+
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
   QVariantMap m;
   m["has_barracks"] = false;
