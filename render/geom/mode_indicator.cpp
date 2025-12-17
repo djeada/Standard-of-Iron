@@ -215,7 +215,9 @@ auto ModeIndicator::create_guard_mode_mesh()
     float const angle = (i / float(boss_segments)) * 2.0F * k_pi;
     float const x = boss_radius * std::cos(angle);
     float const y = boss_center_y + boss_radius * std::sin(angle);
-    verts.push_back({{x, y, 0.0F}, {n.x(), n.y(), n.z()}, {boss_texture_u, boss_texture_v}});
+    verts.push_back({{x, y, 0.0F},
+                     {n.x(), n.y(), n.z()},
+                     {boss_texture_u, boss_texture_v}});
   }
 
   for (int i = 0; i < boss_segments; ++i) {
