@@ -284,14 +284,14 @@ void TroopCatalog::register_defaults() {
   builder.combat.can_ranged = false;
   builder.combat.can_melee = true;
 
-  builder.visuals.render_scale = 0.55F;
-  builder.visuals.selection_ring_size = 1.2F;
+  builder.visuals.render_scale = 0.50F;
+  builder.visuals.selection_ring_size = 1.0F;
   builder.visuals.selection_ring_ground_offset = 0.0F;
   builder.visuals.selection_ring_y_offset = 0.0F;
   builder.visuals.renderer_id = "troops/roman/builder";
 
-  builder.individuals_per_unit = 1;
-  builder.max_units_per_row = 1;
+  builder.individuals_per_unit = 12;
+  builder.max_units_per_row = 4;
 
   register_class(std::move(builder));
 }
