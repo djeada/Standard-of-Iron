@@ -86,6 +86,16 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.healing_target_dz = healer->healing_target_z - transform->position.z;
   }
 
+  auto *builder_prod =
+      ctx.entity->get_component<Engine::Core::BuilderProductionComponent>();
+  if (builder_prod != nullptr && builder_prod->in_progress) {
+    anim.is_constructing = true;
+    if (builder_prod->build_time > 0.0F) {
+      anim.construction_progress =
+          1.0F - (builder_prod->time_remaining / builder_prod->build_time);
+    }
+  }
+
   if (combat_state != nullptr) {
     anim.combat_phase =
         map_combat_state_to_phase(combat_state->animation_state);

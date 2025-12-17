@@ -131,8 +131,12 @@ QtObject {
         "horse_archer": "🏹🐎",
         "horse_spearman": "🐎🛡️",
         "healer": "✚",
+        "builder": "🔨",
         "catapult": "🛞",
         "ballista": "🎯",
+        "defense_tower": "🏰",
+        "wall": "🧱",
+        "home": "🏠",
         "default": "👤"
     })
     readonly property var unitIconSources: ({
@@ -171,6 +175,11 @@ QtObject {
             "roman_republic": root.iconPath("healer_rome.png"),
             "carthage": root.iconPath("healer_cartaghe.png")
         }),
+        "builder": ({
+            "default": root.iconPath("builder_rome.png"),
+            "roman_republic": root.iconPath("builder_rome.png"),
+            "carthage": root.iconPath("builder_cartaghe.png")
+        }),
         "catapult": ({
             "default": root.iconPath("catapult_rome.png"),
             "roman_republic": root.iconPath("catapult_rome.png"),
@@ -181,13 +190,28 @@ QtObject {
             "roman_republic": root.iconPath("ballista_rome.png"),
             "carthage": root.iconPath("ballista_cartaghe.png")
         }),
+        "defense_tower": ({
+            "default": root.iconPath("defense_tower_rome.png"),
+            "roman_republic": root.iconPath("defense_tower_rome.png"),
+            "carthage": root.iconPath("defense_tower_cartaghe.png")
+        }),
+        "wall": ({
+            "default": root.iconPath("wall_rome.png"),
+            "roman_republic": root.iconPath("wall_rome.png"),
+            "carthage": root.iconPath("wall_cartaghe.png")
+        }),
+        "home": ({
+            "default": root.iconPath("house_rome.png"),
+            "roman_republic": root.iconPath("house_rome.png"),
+            "carthage": root.iconPath("house_cartaghe.png")
+        }),
         "default": ({
             "default": ""
         })
     })
 
     function iconPath(filename) {
-        return "qrc:/StandardOfIron/assets/visuals/icons/" + filename;
+        return Qt.resolvedUrl("../../assets/visuals/icons/" + filename);
     }
 
 }

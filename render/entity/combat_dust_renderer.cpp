@@ -112,6 +112,46 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
                           animation_time);
   }
 
+  auto builders =
+      world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+
+  for (auto *builder : builders) {
+    if (builder->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *transform =
+        builder->get_component<Engine::Core::TransformComponent>();
+    auto *production =
+        builder->get_component<Engine::Core::BuilderProductionComponent>();
+    auto *unit_comp = builder->get_component<Engine::Core::UnitComponent>();
+
+    if (transform == nullptr || production == nullptr) {
+      continue;
+    }
+
+    if (unit_comp != nullptr && unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (!production->in_progress) {
+      continue;
+    }
+
+    if (!visibility.is_entity_visible(transform->position.x,
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
+      continue;
+    }
+
+    QVector3D position(transform->position.x, kDustYOffset,
+                       transform->position.z);
+    QVector3D color(kDustColorR, kDustColorG, kDustColorB);
+
+    renderer->combat_dust(position, color, kDustRadius, kDustIntensity,
+                          animation_time);
+  }
+
   auto buildings = world->get_entities_with<Engine::Core::BuildingComponent>();
 
   for (auto *building : buildings) {

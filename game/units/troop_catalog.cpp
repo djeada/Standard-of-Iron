@@ -262,6 +262,38 @@ void TroopCatalog::register_defaults() {
   horse_spearman.max_units_per_row = 3;
 
   register_class(std::move(horse_spearman));
+
+  TroopClass builder{};
+  builder.unit_type = Game::Units::TroopType::Builder;
+  builder.display_name = "Builder";
+  builder.production.cost = 60;
+  builder.production.build_time = 6.0F;
+  builder.production.priority = 4;
+  builder.production.is_melee = true;
+
+  builder.combat.health = 80;
+  builder.combat.max_health = 80;
+  builder.combat.speed = 2.0F;
+  builder.combat.vision_range = 10.0F;
+  builder.combat.ranged_range = 1.5F;
+  builder.combat.ranged_damage = 2;
+  builder.combat.ranged_cooldown = 2.0F;
+  builder.combat.melee_range = 1.5F;
+  builder.combat.melee_damage = 5;
+  builder.combat.melee_cooldown = 1.0F;
+  builder.combat.can_ranged = false;
+  builder.combat.can_melee = true;
+
+  builder.visuals.render_scale = 0.50F;
+  builder.visuals.selection_ring_size = 1.0F;
+  builder.visuals.selection_ring_ground_offset = 0.0F;
+  builder.visuals.selection_ring_y_offset = 0.0F;
+  builder.visuals.renderer_id = "troops/roman/builder";
+
+  builder.individuals_per_unit = 12;
+  builder.max_units_per_row = 4;
+
+  register_class(std::move(builder));
 }
 
 } // namespace Game::Units
