@@ -46,6 +46,9 @@ public:
   void collect_building_flames(Engine::Core::World *world,
                                float animation_time);
 
+  void collect_catapult_impacts(Engine::Core::World *world,
+                                float animation_time);
+
   void collect_all_effects(Engine::Core::World *world, float animation_time);
 
   void render(const Camera &cam, float animation_time);

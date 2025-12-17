@@ -1,6 +1,8 @@
 #include "combat_dust_pipeline.h"
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
+#include "../../../game/systems/projectile_system.h"
+#include "../../../game/systems/stone_projectile.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
@@ -32,6 +34,14 @@ constexpr float kFlameColorG = 0.4F;
 constexpr float kFlameColorB = 0.1F;
 constexpr float kFlameYOffset = 0.5F;
 constexpr float kBuildingHealthThreshold = 0.5F;
+
+constexpr float kStoneImpactRadius = 2.5F;
+constexpr float kStoneImpactIntensity = 0.85F;
+constexpr float kStoneImpactColorR = 0.65F;
+constexpr float kStoneImpactColorG = 0.60F;
+constexpr float kStoneImpactColorB = 0.50F;
+constexpr float kStoneImpactYOffset = 0.1F;
+constexpr float kStoneImpactThreshold = 0.98F;
 
 void clear_gl_errors() {
   while (glGetError() != GL_NO_ERROR) {
@@ -382,11 +392,64 @@ void CombatDustPipeline::collect_building_flames(Engine::Core::World *world,
   }
 }
 
+void CombatDustPipeline::collect_catapult_impacts(Engine::Core::World *world,
+                                                  float animation_time) {
+  if (world == nullptr) {
+    return;
+  }
+
+  auto *projectile_sys = world->get_system<Game::Systems::ProjectileSystem>();
+  if (projectile_sys == nullptr) {
+    return;
+  }
+
+  const auto &projectiles = projectile_sys->projectiles();
+
+  for (const auto &projectile : projectiles) {
+    if (!projectile->is_active()) {
+      continue;
+    }
+
+    auto *stone_proj =
+        dynamic_cast<const Game::Systems::StoneProjectile *>(projectile.get());
+    if (stone_proj == nullptr) {
+      continue;
+    }
+
+    float progress = stone_proj->get_progress();
+    if (progress < kStoneImpactThreshold) {
+      continue;
+    }
+
+    const QVector3D delta = stone_proj->get_end() - stone_proj->get_start();
+    QVector3D impact_pos =
+        stone_proj->get_start() + delta * stone_proj->get_progress();
+
+    float const arc_h = stone_proj->get_arc_height() * 4.0F *
+                        stone_proj->get_progress() *
+                        (1.0F - stone_proj->get_progress());
+    impact_pos.setY(impact_pos.y() + arc_h);
+
+    CombatDustData data;
+    data.position =
+        QVector3D(impact_pos.x(), kStoneImpactYOffset, impact_pos.z());
+    data.radius = kStoneImpactRadius;
+    data.intensity = kStoneImpactIntensity;
+    data.color =
+        QVector3D(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);
+    data.time = animation_time;
+    data.effect_type = EffectType::Dust;
+
+    m_dust_data.push_back(data);
+  }
+}
+
 void CombatDustPipeline::collect_all_effects(Engine::Core::World *world,
                                              float animation_time) {
   m_dust_data.clear();
   collect_combat_zones(world, animation_time);
   collect_building_flames(world, animation_time);
+  collect_catapult_impacts(world, animation_time);
 }
 
 void CombatDustPipeline::add_dust_zone(const QVector3D &position, float radius,
