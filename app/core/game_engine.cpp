@@ -463,6 +463,14 @@ void GameEngine::on_formation_command() {
   m_input_handler->on_formation_command();
 }
 
+void GameEngine::on_run_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_run_command();
+}
+
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
   if (!m_input_handler || !m_camera) {
     return;
@@ -490,6 +498,13 @@ auto GameEngine::any_selected_in_formation_mode() const -> bool {
     return false;
   }
   return m_input_handler->any_selected_in_formation_mode();
+}
+
+auto GameEngine::any_selected_in_run_mode() const -> bool {
+  if (!m_input_handler) {
+    return false;
+  }
+  return m_input_handler->any_selected_in_run_mode();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
@@ -1260,6 +1275,7 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
   result["canGuard"] = true;
   result["canHold"] = true;
   result["canPatrol"] = true;
+  result["canRun"] = true;
 
   if (!m_world) {
     return result;
@@ -1279,10 +1295,11 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
   bool can_guard = true;
   bool can_hold = true;
   bool can_patrol = true;
+  bool can_run = true;
 
   for (auto id : sel) {
 
-    if (!can_attack && !can_guard && !can_hold && !can_patrol) {
+    if (!can_attack && !can_guard && !can_hold && !can_patrol && !can_run) {
       break;
     }
 
@@ -1312,12 +1329,16 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
     if (can_patrol && !Game::Units::can_use_patrol_mode(u->spawn_type)) {
       can_patrol = false;
     }
+    if (can_run && !Game::Units::can_use_run_mode(u->spawn_type)) {
+      can_run = false;
+    }
   }
 
   result["canAttack"] = can_attack;
   result["canGuard"] = can_guard;
   result["canHold"] = can_hold;
   result["canPatrol"] = can_patrol;
+  result["canRun"] = can_run;
 
   return result;
 }
@@ -1931,6 +1952,37 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   health = max_health = 0;
   alive = true;
   nation = QStringLiteral("");
+  return true;
+}
+
+auto GameEngine::get_unit_stamina_info(Engine::Core::EntityID id,
+                                       float &stamina_ratio, bool &is_running,
+                                       bool &can_run) const -> bool {
+  stamina_ratio = 1.0F;
+  is_running = false;
+  can_run = false;
+
+  if (!m_world) {
+    return false;
+  }
+  auto *e = m_world->get_entity(id);
+  if (e == nullptr) {
+    return false;
+  }
+
+  auto *unit = e->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return false;
+  }
+
+  can_run = Game::Units::can_use_run_mode(unit->spawn_type);
+
+  auto *stamina = e->get_component<Engine::Core::StaminaComponent>();
+  if (stamina != nullptr) {
+    stamina_ratio = stamina->get_stamina_ratio();
+    is_running = stamina->is_running;
+  }
+
   return true;
 }
 

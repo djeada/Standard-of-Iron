@@ -252,4 +252,55 @@ void Unit::clear_guard_mode() {
   }
 }
 
+void Unit::set_run_mode(bool enabled) {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return;
+  }
+
+  if (!Game::Units::can_use_run_mode(unit_comp->spawn_type)) {
+    return;
+  }
+
+  auto *stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
+  if (stamina_comp == nullptr) {
+    if (enabled) {
+      stamina_comp = e->add_component<Engine::Core::StaminaComponent>();
+    } else {
+      return;
+    }
+  }
+
+  stamina_comp->run_requested = enabled;
+}
+
+auto Unit::is_running() const -> bool {
+  auto *e = entity();
+  if (e == nullptr) {
+    return false;
+  }
+
+  auto *stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
+  return (stamina_comp != nullptr) && stamina_comp->is_running;
+}
+
+auto Unit::can_run() const -> bool {
+  auto *e = entity();
+  if (e == nullptr) {
+    return false;
+  }
+
+  auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return false;
+  }
+
+  return Game::Units::can_use_run_mode(unit_comp->spawn_type);
+}
+
 } // namespace Game::Units
