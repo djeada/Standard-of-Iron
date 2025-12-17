@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mission_definition.h"
+#include <QJsonObject>
 #include <QString>
 
 namespace Game::Mission {

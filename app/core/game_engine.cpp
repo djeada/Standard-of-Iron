@@ -109,7 +109,6 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
-#include "utils/resource_utils.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
@@ -133,6 +132,7 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
+#include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -1220,7 +1220,6 @@ void GameEngine::load_campaigns() {
 void GameEngine::start_campaign_mission(const QString &mission_path) {
   clear_error();
 
-  // Parse mission_path as "campaign_id/mission_id"
   const QStringList parts = mission_path.split('/');
   if (parts.size() != 2) {
     set_error("Invalid mission path format. Expected: campaign_id/mission_id");
@@ -1230,24 +1229,23 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
   const QString campaign_id = parts[0];
   const QString mission_id = parts[1];
 
-  // Load the mission JSON file
   const QString mission_file_path = Utils::Resources::resolveResourcePath(
       QString(":/assets/missions/%1.json").arg(mission_id));
 
   Game::Mission::MissionDefinition mission;
   QString error;
-  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path, mission, &error)) {
-    set_error(QString("Failed to load mission %1: %2").arg(mission_id).arg(error));
+  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path,
+                                                      mission, &error)) {
+    set_error(
+        QString("Failed to load mission %1: %2").arg(mission_id).arg(error));
     return;
   }
 
   m_current_campaign_id = campaign_id;
   m_current_mission_id = mission_id;
 
-  // Build player configs from mission definition
   QVariantList playerConfigs;
 
-  // Add human player from mission
   QVariantMap player1;
   player1.insert("player_id", 1);
   player1.insert("playerName", mission.player_setup.nation);
@@ -1257,7 +1255,6 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
   player1.insert("isHuman", true);
   playerConfigs.append(player1);
 
-  // Add AI players from mission
   int player_id = 2;
   for (const auto &ai_setup : mission.ai_setups) {
     QVariantMap ai_player;
@@ -1271,10 +1268,8 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     player_id++;
   }
 
-  // Store mission definition for victory condition integration
   m_current_mission_definition = mission;
 
-  // Start the game with the mission's map
   start_skirmish(mission.map_path, playerConfigs);
 }
 
@@ -1393,20 +1388,18 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 
   m_runtime.local_owner_id = load_result.updated_player_id;
 
-  // If we're loading a mission, override victory conditions with mission-specific ones
   if (m_victoryService && m_current_mission_definition.has_value()) {
     const auto &mission = *m_current_mission_definition;
-    
-    // Convert mission victory conditions to VictoryConfig
+
     Game::Map::VictoryConfig mission_victory_config;
-    
-    // Determine victory type from mission conditions
+
     if (!mission.victory_conditions.empty()) {
       const auto &first_condition = mission.victory_conditions[0];
       if (first_condition.type == "destroy_all_enemies") {
         mission_victory_config.victoryType = "elimination";
         mission_victory_config.keyStructures = {"barracks"};
-      } else if (first_condition.type == "survive_duration" && first_condition.duration.has_value()) {
+      } else if (first_condition.type == "survive_duration" &&
+                 first_condition.duration.has_value()) {
         mission_victory_config.victoryType = "survive_time";
         mission_victory_config.surviveTimeDuration = *first_condition.duration;
       } else {
@@ -1414,21 +1407,23 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
         mission_victory_config.keyStructures = {"barracks"};
       }
     }
-    
-    // Convert mission defeat conditions
+
     for (const auto &defeat_condition : mission.defeat_conditions) {
-      if (defeat_condition.type == "lose_structure" && defeat_condition.structure_type.has_value()) {
+      if (defeat_condition.type == "lose_structure" &&
+          defeat_condition.structure_type.has_value()) {
         mission_victory_config.defeatConditions.push_back("no_key_structures");
-        mission_victory_config.keyStructures.push_back(*defeat_condition.structure_type);
+        mission_victory_config.keyStructures.push_back(
+            *defeat_condition.structure_type);
       } else if (defeat_condition.type == "lose_all_units") {
         mission_victory_config.defeatConditions.push_back("no_units");
       }
     }
-    
-    // Configure victory service with mission-specific conditions
-    m_victoryService->configure(mission_victory_config, m_runtime.local_owner_id);
-    
-    qInfo() << "Applied mission victory conditions from" << m_current_mission_id;
+
+    m_victoryService->configure(mission_victory_config,
+                                m_runtime.local_owner_id);
+
+    qInfo() << "Applied mission victory conditions from"
+            << m_current_mission_id;
   }
 
   if (m_victoryService) {

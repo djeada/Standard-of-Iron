@@ -1,5 +1,5 @@
-#include "game/map/campaign_loader.h"
 #include "game/map/campaign_definition.h"
+#include "game/map/campaign_loader.h"
 #include <QTemporaryFile>
 #include <gtest/gtest.h>
 
@@ -36,14 +36,15 @@ protected:
 TEST_F(CampaignLoaderTest, LoadsValidCampaign) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestCampaign().toUtf8());
   temp_file.flush();
-  
+
   CampaignDefinition campaign;
   QString error;
-  bool result = CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error);
-  
+  bool result =
+      CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error);
+
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
   EXPECT_EQ(campaign.id, "test_campaign");
   EXPECT_EQ(campaign.title, "Test Campaign");
@@ -53,23 +54,24 @@ TEST_F(CampaignLoaderTest, LoadsValidCampaign) {
 TEST_F(CampaignLoaderTest, ParsesMissions) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(createTestCampaign().toUtf8());
   temp_file.flush();
-  
+
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
-  
+  ASSERT_TRUE(
+      CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
+
   ASSERT_EQ(campaign.missions.size(), 2);
-  
+
   EXPECT_EQ(campaign.missions[0].mission_id, "mission_1");
   EXPECT_EQ(campaign.missions[0].order_index, 0);
   EXPECT_TRUE(campaign.missions[0].intro_text.has_value());
   EXPECT_EQ(*campaign.missions[0].intro_text, "Welcome to mission 1");
   EXPECT_TRUE(campaign.missions[0].outro_text.has_value());
   EXPECT_EQ(*campaign.missions[0].outro_text, "Mission 1 completed");
-  
+
   EXPECT_EQ(campaign.missions[1].mission_id, "mission_2");
   EXPECT_EQ(campaign.missions[1].order_index, 1);
   EXPECT_TRUE(campaign.missions[1].difficulty_modifier.has_value());
@@ -79,14 +81,15 @@ TEST_F(CampaignLoaderTest, ParsesMissions) {
 TEST_F(CampaignLoaderTest, FailsOnInvalidJSON) {
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write("{ invalid json }");
   temp_file.flush();
-  
+
   CampaignDefinition campaign;
   QString error;
-  bool result = CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error);
-  
+  bool result =
+      CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error);
+
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
 }
@@ -94,8 +97,9 @@ TEST_F(CampaignLoaderTest, FailsOnInvalidJSON) {
 TEST_F(CampaignLoaderTest, FailsOnNonexistentFile) {
   CampaignDefinition campaign;
   QString error;
-  bool result = CampaignLoader::loadFromJsonFile("/nonexistent/file.json", campaign, &error);
-  
+  bool result = CampaignLoader::loadFromJsonFile("/nonexistent/file.json",
+                                                 campaign, &error);
+
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
 }
@@ -107,17 +111,18 @@ TEST_F(CampaignLoaderTest, HandlesEmptyMissions) {
     "description": "Campaign with no missions",
     "missions": []
   })";
-  
+
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(json.toUtf8());
   temp_file.flush();
-  
+
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
-  
+  ASSERT_TRUE(
+      CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
+
   EXPECT_EQ(campaign.missions.size(), 0);
 }
 
@@ -133,17 +138,18 @@ TEST_F(CampaignLoaderTest, HandlesOptionalFields) {
       }
     ]
   })";
-  
+
   QTemporaryFile temp_file;
   ASSERT_TRUE(temp_file.open());
-  
+
   temp_file.write(json.toUtf8());
   temp_file.flush();
-  
+
   CampaignDefinition campaign;
   QString error;
-  ASSERT_TRUE(CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
-  
+  ASSERT_TRUE(
+      CampaignLoader::loadFromJsonFile(temp_file.fileName(), campaign, &error));
+
   ASSERT_EQ(campaign.missions.size(), 1);
   EXPECT_EQ(campaign.missions[0].mission_id, "mission_1");
   EXPECT_FALSE(campaign.missions[0].intro_text.has_value());
