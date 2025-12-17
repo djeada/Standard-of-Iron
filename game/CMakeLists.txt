@@ -74,6 +74,8 @@ add_library(game_systems STATIC
     systems/rain_manager.cpp
     map/map_loader.cpp
     map/level_loader.cpp
+    map/mission_loader.cpp
+    map/campaign_loader.cpp
     map/map_transformer.cpp
     map/environment.cpp
     map/terrain.cpp

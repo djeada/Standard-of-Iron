@@ -265,18 +265,111 @@ Item {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    color: "#000000"
-                    border.color: Theme.border
-                    border.width: 1
-                    radius: Theme.radiusMedium
+                    Layout.preferredHeight: 1
+                    color: Theme.border
+                }
 
-                    Label {
-                        anchors.centerIn: parent
-                        text: qsTr("Mission Preview\n(Coming Soon)")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeLarge
-                        horizontalAlignment: Text.AlignHCenter
+                Label {
+                    text: qsTr("Select a Mission")
+                    color: Theme.textMain
+                    font.pointSize: Theme.fontSizeTitle
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                ScrollView {
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    clip: true
+
+                    ListView {
+                        id: missionListView
+
+                        model: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.missions || []) : []
+                        spacing: Theme.spacingMedium
+
+                        delegate: Rectangle {
+                            width: missionListView.width
+                            height: 80
+                            radius: Theme.radiusMedium
+                            color: missionMouseArea.containsMouse ? Theme.hoverBg : Theme.cardBase
+                            border.color: missionMouseArea.containsMouse ? Theme.selectedBr : Theme.cardBorder
+                            border.width: 1
+
+                            MouseArea {
+                                id: missionMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: {
+                                    if (missionDetailPanel.campaignData && modelData.mission_id)
+                                        root.missionSelected(missionDetailPanel.campaignData.id + "/" + modelData.mission_id);
+
+                                }
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingMedium
+                                spacing: Theme.spacingMedium
+
+                                Label {
+                                    text: (modelData.order_index + 1).toString()
+                                    color: Theme.accent
+                                    font.pointSize: Theme.fontSizeTitle
+                                    font.bold: true
+                                    Layout.preferredWidth: 40
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: Theme.spacingTiny
+
+                                    Label {
+                                        text: modelData.mission_id || ""
+                                        color: Theme.textMain
+                                        font.pointSize: Theme.fontSizeLarge
+                                        font.bold: true
+                                        Layout.fillWidth: true
+                                    }
+
+                                    Label {
+                                        text: modelData.intro_text || qsTr("Mission briefing...")
+                                        color: Theme.textSubLite
+                                        wrapMode: Text.WordWrap
+                                        maximumLineCount: 2
+                                        elide: Text.ElideRight
+                                        Layout.fillWidth: true
+                                        font.pointSize: Theme.fontSizeSmall
+                                    }
+
+                                }
+
+                                Text {
+                                    text: "›"
+                                    font.pointSize: Theme.fontSizeTitle
+                                    color: Theme.textHint
+                                }
+
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: Theme.animNormal
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: Theme.animNormal
+                                }
+
+                            }
+
+                        }
+
                     }
 
                 }
@@ -292,16 +385,6 @@ Item {
                     StyledButton {
                         text: qsTr("Cancel")
                         onClicked: missionDetailPanel.visible = false
-                    }
-
-                    StyledButton {
-                        text: qsTr("Start Mission")
-                        enabled: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.unlocked || false) : false
-                        onClicked: {
-                            if (missionDetailPanel.campaignData)
-                                root.missionSelected(missionDetailPanel.campaignData.id);
-
-                        }
                     }
 
                 }
