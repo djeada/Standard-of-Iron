@@ -121,13 +121,15 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
     return;
   }
 
+  float const effective_alpha = alpha * m_alpha_override;
+
   if (mesh == get_unit_cylinder() && (texture == nullptr) &&
       (m_current_shader == nullptr)) {
     QVector3D start;
     QVector3D end;
     float radius = 0.0F;
     if (detail::decompose_unit_cylinder(model, start, end, radius)) {
-      cylinder(start, end, radius, color, alpha);
+      cylinder(start, end, radius, color, effective_alpha);
       return;
     }
   }
@@ -137,7 +139,7 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.model = model;
   cmd.mvp = m_view_proj * model;
   cmd.color = color;
-  cmd.alpha = alpha;
+  cmd.alpha = effective_alpha;
   cmd.material_id = material_id;
   cmd.shader = m_current_shader;
   if (m_active_queue != nullptr) {
@@ -147,12 +149,14 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
 
 void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color, float alpha) {
+
+  float const effective_alpha = alpha * m_alpha_override;
   CylinderCmd cmd;
   cmd.start = start;
   cmd.end = end;
   cmd.radius = radius;
   cmd.color = color;
-  cmd.alpha = alpha;
+  cmd.alpha = effective_alpha;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(cmd);
   }
@@ -842,6 +846,93 @@ void Renderer::render_world(Engine::Core::World *world) {
       cmd.params = params;
       m_active_queue->submit(cmd);
     }
+  }
+
+  render_construction_previews(world, vis, visibility_enabled);
+}
+
+void Renderer::render_construction_previews(
+    Engine::Core::World *world, const Game::Map::VisibilityService &vis,
+    bool visibility_enabled) {
+  if (world == nullptr || m_entity_registry == nullptr) {
+    return;
+  }
+
+  auto builders =
+      world->get_entities_with<Engine::Core::BuilderProductionComponent>();
+
+  for (auto *builder : builders) {
+    if (builder->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *builder_prod =
+        builder->get_component<Engine::Core::BuilderProductionComponent>();
+    auto *transform =
+        builder->get_component<Engine::Core::TransformComponent>();
+    auto *unit_comp = builder->get_component<Engine::Core::UnitComponent>();
+
+    if (builder_prod == nullptr || transform == nullptr ||
+        !builder_prod->in_progress) {
+      continue;
+    }
+
+    const float preview_x = transform->position.x;
+    const float preview_z = transform->position.z;
+
+    if (unit_comp != nullptr && unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (unit_comp != nullptr && unit_comp->owner_id != m_local_owner_id) {
+      if (visibility_enabled && !vis.isVisibleWorld(preview_x, preview_z)) {
+        continue;
+      }
+    }
+
+    if (m_camera != nullptr) {
+      QVector3D const pos(preview_x, transform->position.y, preview_z);
+      if (!m_camera->is_in_frustum(pos, 5.0F)) {
+        continue;
+      }
+    }
+
+    std::string nation_prefix = "roman";
+    if (unit_comp != nullptr) {
+      if (unit_comp->nation_id == Game::Systems::NationID::Carthage) {
+        nation_prefix = "carthage";
+      }
+    }
+
+    std::string renderer_key =
+        "troops/" + nation_prefix + "/" + builder_prod->product_type;
+
+    auto fn = m_entity_registry->get(renderer_key);
+    if (!fn) {
+      continue;
+    }
+
+    auto &terrain_service = Game::Map::TerrainService::instance();
+    const float terrain_height =
+        terrain_service.get_terrain_height(preview_x, preview_z);
+
+    QMatrix4x4 model_matrix;
+    model_matrix.translate(preview_x, terrain_height, preview_z);
+
+    DrawContext ctx{resources(), builder, world, model_matrix};
+    ctx.selected = false;
+    ctx.hovered = false;
+    ctx.animation_time = m_accumulated_time;
+    ctx.renderer_id = renderer_key;
+    ctx.backend = m_backend.get();
+    ctx.camera = m_camera;
+
+    float const prev_alpha = m_alpha_override;
+    m_alpha_override = 0.60F;
+
+    fn(ctx, *this);
+
+    m_alpha_override = prev_alpha;
   }
 }
 
