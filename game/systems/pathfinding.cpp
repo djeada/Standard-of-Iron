@@ -186,9 +186,10 @@ void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
       bool blocked = false;
-      if (x < terrain_width && z < terrain_height) {
+      if (x >= 0 && x < terrain_width && z >= 0 && z < terrain_height) {
         blocked = !terrain_service.is_walkable(x, z);
       } else if (terrain_service.is_initialized()) {
+        // Outside terrain bounds - mark as blocked
         blocked = true;
       }
       m_obstacles[z][x] = static_cast<std::uint8_t>(blocked ? 1 : 0);
@@ -209,9 +210,10 @@ void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
       int const grid_z =
           static_cast<int>(std::round(cell.second - m_gridOffsetZ));
 
-      // Only update if within this region
+      // Only update if within this region AND within grid bounds
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z &&
-          grid_z <= max_z) {
+          grid_z <= max_z && grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
+          grid_z < m_height) {
         m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
       }
     }
