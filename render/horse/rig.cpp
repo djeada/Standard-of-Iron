@@ -1239,7 +1239,7 @@ void HorseRendererBase::render_full(
     if (is_moving) {
       float const angle = leg_phase * 2.0F * k_pi;
 
-      bool const is_galloping = (g.stride_swing > 1.0F);
+      bool const is_galloping = (g.stride_swing > 0.7F); // Adjusted threshold for new gallop params
 
       float const swing_progress =
           leg_phase < k_swing_phase_end ? leg_phase / k_swing_phase_end : 0.0F;
@@ -1257,15 +1257,15 @@ void HorseRendererBase::render_full(
       float lift_mult = 1.0F;
 
       if (is_galloping) {
-
+        // Reduced suspension and multipliers for more natural gallop
         float const suspension_phase =
             (leg_phase > 0.35F && leg_phase < 0.45F) ? 1.0F : 0.0F;
 
-        stride_mult = 0.95F + swing_ease * 0.15F;
+        stride_mult = 0.88F + swing_ease * 0.08F; // Reduced from 0.95 + 0.15
 
-        lift_mult = 1.0F + suspension_phase * 0.25F;
+        lift_mult = 1.0F + suspension_phase * 0.12F; // Reduced from 0.25
 
-        float const reach_factor = is_rear ? 0.85F : 1.15F;
+        float const reach_factor = is_rear ? 0.90F : 1.08F; // Reduced asymmetry
         stride_mult *= reach_factor;
       }
 
@@ -1316,9 +1316,9 @@ void HorseRendererBase::render_full(
                            stride + stance_pull + stance_stagger);
 
     float const gallop_angle = leg_phase * 2.0F * k_pi;
-    bool const is_galloping = (g.stride_swing > 1.0F);
+    bool const is_galloping = (g.stride_swing > 0.7F); // Adjusted threshold
 
-    float hip_swing_mult = is_galloping ? 1.4F : 1.0F;
+    float hip_swing_mult = is_galloping ? 1.1F : 1.0F; // Reduced from 1.4F
     float const hip_swing =
         is_moving ? std::sin(gallop_angle) * hip_swing_mult : 0.0F;
 
@@ -1329,7 +1329,7 @@ void HorseRendererBase::render_full(
             : 0.0F;
 
     float const hip_flex =
-        is_galloping ? (is_rear ? -0.14F : 0.12F) : (is_rear ? -0.10F : 0.08F);
+        is_galloping ? (is_rear ? -0.08F : 0.06F) : (is_rear ? -0.06F : 0.05F); // Reduced from -0.14/0.12
     shoulder.setZ(shoulder.z() + hip_swing * hip_flex);
     if (tighten_legs) {
       shoulder.setX(shoulder.x() - lateralSign * lift_factor * 0.04F);
@@ -1346,13 +1346,13 @@ void HorseRendererBase::render_full(
     float knee_flex_base =
         (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F));
     float knee_flex_gallop =
-        is_galloping ? knee_flex_base * 1.25F : knee_flex_base;
+        is_galloping ? knee_flex_base * 1.08F : knee_flex_base; // Reduced from 1.25F
     float const knee_flex = is_moving ? knee_flex_gallop : 0.35F;
 
     float cannon_flex_base = smoothstep(0.35F, 0.65F, leg_phase) *
                              (1.0F - extend_phase) * (is_rear ? 0.70F : 0.60F);
     float cannon_flex_gallop =
-        is_galloping ? cannon_flex_base * 1.15F : cannon_flex_base;
+        is_galloping ? cannon_flex_base * 1.05F : cannon_flex_base; // Reduced from 1.15F
     float const cannon_flex = is_moving ? cannon_flex_gallop : 0.35F;
 
     float const fetlock_compress =
