@@ -31,17 +31,21 @@ void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
 
     bool const is_infantry = m_outward_scale <= 1.1F;
     float const outward_offset =
-        (is_infantry ? 0.006F : 0.010F) * m_outward_scale;
+        (is_infantry ? 0.0035F : 0.0065F) * m_outward_scale;
+    float const inward_offset =
+        (is_infantry ? 0.012F : 0.018F) * m_outward_scale;
+    float const upper_y_offset = is_infantry ? 0.062F : 0.074F;
 
-    QVector3D upper_pos =
-        shoulder_pos + outward * outward_offset + QVector3D(0.0F, 0.108F, 0.0F);
+    QVector3D anchor = shoulder_pos + outward * (-inward_offset);
+    QVector3D upper_pos = anchor + outward * outward_offset +
+                          QVector3D(0.0F, upper_y_offset, 0.0F);
     QMatrix4x4 upper = ctx.model;
     upper.translate(upper_pos);
     upper.scale(upper_arm_r * 1.75F, upper_arm_r * 0.38F, upper_arm_r * 1.55F);
     submitter.mesh(get_unit_sphere(), upper, leather_color * 1.05F, nullptr,
                    1.0F, 1);
 
-    QVector3D lower_pos = upper_pos - QVector3D(0.0F, 0.045F, 0.0F) +
+    QVector3D lower_pos = upper_pos - QVector3D(0.0F, 0.055F, 0.0F) +
                           outward * (outward_offset * 0.75F);
     QMatrix4x4 lower = ctx.model;
     lower.translate(lower_pos);
@@ -49,7 +53,7 @@ void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
     submitter.mesh(get_unit_sphere(), lower, leather_color * 0.96F, nullptr,
                    1.0F, 1);
 
-    QVector3D trim_pos = lower_pos - QVector3D(0.0F, 0.025F, 0.0F) +
+    QVector3D trim_pos = lower_pos - QVector3D(0.0F, 0.030F, 0.0F) +
                          outward * (outward_offset * 0.55F);
     QMatrix4x4 trim = ctx.model;
     trim.translate(trim_pos);
