@@ -11,8 +11,6 @@ namespace Game::Systems::Combat {
 // This avoids allocating a new grid each frame while keeping thread safety
 namespace {
 thread_local SpatialGrid t_unit_grid(15.0F); // 15 unit cell size
-thread_local bool t_grid_valid = false;
-thread_local std::vector<Engine::Core::Entity *> t_cached_units;
 } // namespace
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {
