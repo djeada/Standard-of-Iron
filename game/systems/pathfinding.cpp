@@ -51,7 +51,7 @@ auto Pathfinding::isWalkable(int x, int y) const -> bool {
   return m_obstacles[y][x] == 0;
 }
 
-auto Pathfinding::isWalkableWithRadius(int x, int y, float unit_radius) const
+auto Pathfinding::is_walkable_with_radius(int x, int y, float unit_radius) const
     -> bool {
   if (unit_radius <= 0.5F) {
     return isWalkable(x, y);
@@ -327,7 +327,7 @@ auto Pathfinding::findPathInternal(const Point &start, const Point &end,
     if (unit_radius <= 0.5F) {
       return isWalkable(x, y);
     }
-    return isWalkableWithRadius(x, y, unit_radius);
+    return is_walkable_with_radius(x, y, unit_radius);
   };
 
   if (!isWalkableFunc(start.x, start.y) || !isWalkableFunc(end.x, end.y)) {
@@ -653,15 +653,15 @@ void Pathfinding::workerLoop() {
   }
 }
 
-auto Pathfinding::findNearestWalkablePoint(const Point &point,
-                                           int max_search_radius,
-                                           const Pathfinding &pathfinder,
-                                           float unit_radius) -> Point {
+auto Pathfinding::find_nearest_walkable_point(const Point &point,
+                                               int max_search_radius,
+                                               const Pathfinding &pathfinder,
+                                               float unit_radius) -> Point {
   auto const isWalkableFunc = [&pathfinder, unit_radius](int x, int y) -> bool {
     if (unit_radius <= 0.5F) {
       return pathfinder.isWalkable(x, y);
     }
-    return pathfinder.isWalkableWithRadius(x, y, unit_radius);
+    return pathfinder.is_walkable_with_radius(x, y, unit_radius);
   };
 
   if (isWalkableFunc(point.x, point.y)) {

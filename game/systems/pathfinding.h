@@ -48,7 +48,7 @@ public:
 
   void setObstacle(int x, int y, bool isObstacle);
   auto isWalkable(int x, int y) const -> bool;
-  auto isWalkableWithRadius(int x, int y, float unit_radius) const -> bool;
+  auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
   void updateBuildingObstacles();
 
@@ -77,9 +77,9 @@ public:
   };
   auto fetchCompletedPaths() -> std::vector<PathResult>;
 
-  static auto findNearestWalkablePoint(const Point &point, int max_search_radius,
-                                       const Pathfinding &pathfinder,
-                                       float unit_radius = 0.0F) -> Point;
+  static auto find_nearest_walkable_point(const Point &point, int max_search_radius,
+                                          const Pathfinding &pathfinder,
+                                          float unit_radius = 0.0F) -> Point;
 
 private:
   auto findPathInternal(const Point &start, const Point &end)

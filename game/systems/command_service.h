@@ -70,8 +70,8 @@ private:
   static std::atomic<std::uint64_t> s_nextRequestId;
   static auto worldToGrid(float world_x, float world_z) -> Point;
   static auto gridToWorld(const Point &gridPos) -> QVector3D;
-  static auto getUnitRadius(Engine::Core::World &world,
-                            Engine::Core::EntityID entity_id) -> float;
+  static auto get_unit_radius(Engine::Core::World &world,
+                               Engine::Core::EntityID entity_id) -> float;
   static void clearPendingRequest(Engine::Core::EntityID entity_id);
   static void moveGroup(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,

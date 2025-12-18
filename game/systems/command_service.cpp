@@ -76,8 +76,8 @@ auto CommandService::gridToWorld(const Point &gridPos) -> QVector3D {
   return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
 }
 
-auto CommandService::getUnitRadius(Engine::Core::World &world,
-                                   Engine::Core::EntityID entity_id) -> float {
+auto CommandService::get_unit_radius(Engine::Core::World &world,
+                                      Engine::Core::EntityID entity_id) -> float {
   auto *entity = world.get_entity(entity_id);
   if (entity == nullptr) {
     return 0.5F;
@@ -334,7 +334,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
         mv->pending_request_id = request_id;
 
-        float const unit_radius = getUnitRadius(world, units[i]);
+        float const unit_radius = get_unit_radius(world, units[i]);
 
         {
           std::lock_guard<std::mutex> const lock(s_pendingMutex);
@@ -727,7 +727,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   Point const start = worldToGrid(leader_pos.x(), leader_pos.z());
   Point const end = worldToGrid(leader_target.x(), leader_target.z());
 
-  float const unit_radius = getUnitRadius(world, leader.id);
+  float const unit_radius = get_unit_radius(world, leader.id);
 
   PendingPathRequest pending;
   pending.entity_id = leader.id;
