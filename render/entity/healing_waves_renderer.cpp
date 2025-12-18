@@ -11,6 +11,15 @@
 
 namespace Render::GL {
 
+namespace {
+// Wave animation configuration
+constexpr int k_num_waves = 5;          // Number of wave particles
+constexpr float k_wave_spacing = 0.15F; // Distance between waves
+constexpr float k_wave_width = 0.08F;   // Base width of wave oscillation
+constexpr float k_wave_speed = 3.0F;    // Speed multiplier for wave travel
+constexpr int k_wave_segments = 8;      // Number of segments per wave
+} // namespace
+
 void render_healing_waves(Renderer *renderer, ResourceManager *,
                           const Game::Systems::HealingBeamSystem &beam_system) {
   if (renderer == nullptr || beam_system.get_beam_count() == 0) {
@@ -49,15 +58,10 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
     direction.normalize();
 
     // Create wave effect - multiple wave particles traveling from healer to target
-    constexpr int num_waves = 5;
-    constexpr float wave_spacing = 0.15F;
-    constexpr float wave_width = 0.08F;
-    constexpr float wave_speed = 3.0F;
-
-    for (int i = 0; i < num_waves; ++i) {
+    for (int i = 0; i < k_num_waves; ++i) {
       // Calculate wave position along the path
-      float wave_offset = (animation_time * wave_speed + i * wave_spacing);
-      wave_offset = std::fmod(wave_offset, distance + wave_spacing * num_waves);
+      float wave_offset = (animation_time * k_wave_speed + i * k_wave_spacing);
+      wave_offset = std::fmod(wave_offset, distance + k_wave_spacing * k_num_waves);
       
       if (wave_offset > distance) {
         continue; // Wave hasn't started yet
@@ -86,13 +90,12 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
       perpendicular2.normalize();
 
       // Draw wave as a series of particles in a wave pattern
-      constexpr int wave_segments = 8;
       constexpr float pi = std::numbers::pi_v<float>;
       
-      for (int seg = 0; seg < wave_segments; ++seg) {
-        float angle = (static_cast<float>(seg) / wave_segments) * 2.0F * pi;
+      for (int seg = 0; seg < k_wave_segments; ++seg) {
+        float angle = (static_cast<float>(seg) / k_wave_segments) * 2.0F * pi;
         float wave_phase = animation_time * 4.0F + i * 0.5F;
-        float amplitude = wave_width * std::sin(wave_phase + angle);
+        float amplitude = k_wave_width * std::sin(wave_phase + angle);
         
         QVector3D particle_offset = perpendicular1 * std::cos(angle) * amplitude +
                                     perpendicular2 * std::sin(angle) * amplitude;
@@ -104,7 +107,7 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
         QVector3D segment_end = particle_pos + direction * 0.05F;
         
         renderer->healing_beam(segment_start, segment_end, color, 1.0F,
-                              wave_width * 0.5F, wave_intensity, animation_time);
+                              k_wave_width * 0.5F, wave_intensity, animation_time);
       }
     }
   }

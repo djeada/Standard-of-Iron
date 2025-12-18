@@ -27,7 +27,7 @@ inline auto get_healing_color(NationID nation_id) -> QVector3D {
 
 // Check if a color matches Roman healing (blue)
 inline auto is_roman_healing_color(const QVector3D &color) -> bool {
-  constexpr float tolerance = 0.3F;
+  constexpr float tolerance = 0.1F;
   QVector3D roman_color = get_roman_healing_color();
   return (std::abs(color.x() - roman_color.x()) < tolerance &&
           std::abs(color.y() - roman_color.y()) < tolerance &&
