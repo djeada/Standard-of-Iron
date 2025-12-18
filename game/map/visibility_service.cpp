@@ -101,7 +101,7 @@ auto VisibilityService::update(Engine::Core::World &world,
 
   if (shouldStartNewJob()) {
     auto sources = gatherVisionSources(world, player_id);
-    // Skip update if no units moved (incremental update optimization)
+
     if (!sources.empty()) {
       auto payload = composeJobPayload(sources);
       enqueueJob(std::move(payload));
@@ -139,7 +139,6 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
 
-  // Track which entities we've seen this frame for cleanup
   std::unordered_map<std::uint32_t, CachedPosition> current_positions;
   bool any_moved = m_forceFullUpdate;
 
@@ -171,11 +170,9 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
       continue;
     }
 
-    // Check if this unit has moved since last frame (incremental update fix)
     std::uint32_t const entity_id = entity->get_id();
     current_positions[entity_id] = {center_x, center_z};
 
-    // Only check for movement if we haven't already detected it
     if (!any_moved) {
       auto it = m_lastPositions.find(entity_id);
       if (it == m_lastPositions.end() || it->second.grid_x != center_x ||
@@ -192,23 +189,20 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
     sources.push_back({center_x, center_z, cell_radius, expanded_range_sq});
   }
 
-  // Check for units that were removed (their old visibility needs clearing)
   if (!any_moved) {
     for (const auto &[entity_id, pos] : m_lastPositions) {
       if (current_positions.find(entity_id) == current_positions.end()) {
-        any_moved = true; // Unit was removed
+        any_moved = true;
         break;
       }
     }
   }
 
-  // Update cached positions for next frame
   m_lastPositions = std::move(current_positions);
   m_forceFullUpdate = false;
 
-  // If nothing moved and no units added/removed, return empty to skip update
   if (!any_moved && !sources.empty()) {
-    return {}; // Signal to skip this update
+    return {};
   }
 
   return sources;
