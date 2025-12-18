@@ -50,7 +50,6 @@ namespace {
 constexpr float k_shadow_size_infantry = 0.16F;
 constexpr float k_shadow_size_mounted = 0.35F;
 
-// Animation constants for enhanced run dynamics
 constexpr float k_run_extra_foot_lift = 0.08F;
 constexpr float k_run_stride_enhancement = 0.15F;
 
@@ -313,64 +312,70 @@ void HumanoidRendererBase::compute_locomotion_pose(
 
     const float stride_length = 0.35F * variation.arm_swing_amp;
 
-    // Natural vertical bob - center of mass rises when feet are together
     float const bob_phase = walk_phase * 2.0F;
-    float const vertical_bob = std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
-    
-    // Hip sway - weight transfers side to side
-    float const hip_sway_amount = 0.025F;
-    float const hip_sway = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) * hip_sway_amount;
-    
-    // Torso rotation follows hip movement with slight delay
-    float const torso_rotation = std::sin((walk_phase - 0.05F) * 2.0F * std::numbers::pi_v<float>) * 0.015F;
+    float const vertical_bob =
+        std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
+
+    // Minimal hip sway - humans don't sway much laterally when walking
+    float const hip_sway_amount = 0.002F; // Drastically reduced - nearly disabled
+    float const sway_raw = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+    float const hip_sway = sway_raw * hip_sway_amount;
+
+    // Minimal torso rotation - shoulder counter-rotation is very subtle in real walking
+    float const torso_rotation_amount = 0.001F; // Nearly disabled - was causing unnatural full-body rotation
+    float const torso_phase = (walk_phase + 0.25F);
+    float const torso_raw = std::sin(torso_phase * 2.0F * std::numbers::pi_v<float>);
+    float const torso_rotation = torso_raw * torso_rotation_amount;
 
     auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
                                                          float phase) {
-      // More natural foot lift curve using easing
       float const lift_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
       float lift = 0.0F;
       if (lift_raw > 0.0F) {
-        // Normalize phase to lift cycle portion (0.0 to 0.5 maps to 0.0 to 1.0)
-        float const lift_phase = phase < 0.5F ? phase * 2.0F : (1.0F - phase) * 2.0F;
-        float const ease_t = lift_phase * lift_phase * (3.0F - 2.0F * lift_phase);
+
+        float const lift_phase =
+            phase < 0.5F ? phase * 2.0F : (1.0F - phase) * 2.0F;
+        float const ease_t =
+            lift_phase * lift_phase * (3.0F - 2.0F * lift_phase);
         lift = lift_raw * ease_t;
         foot.setY(ground_y + pose.foot_y_offset + lift * 0.15F);
       } else {
         foot.setY(ground_y + pose.foot_y_offset);
       }
-      
-      // Forward/backward stride with smooth acceleration/deceleration
-      float const stride_phase = (phase - 0.25F) * 2.0F * std::numbers::pi_v<float>;
+
+      float const stride_phase =
+          (phase - 0.25F) * 2.0F * std::numbers::pi_v<float>;
       foot.setZ(foot.z() + std::sin(stride_phase) * stride_length);
     };
 
     animate_foot(pose.foot_l, left_phase);
     animate_foot(pose.foot_r, right_phase);
-    
-    // Apply center of mass bob to pelvis and upper body
+
     pose.pelvis_pos.setY(pose.pelvis_pos.y() + vertical_bob);
     pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob);
     pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob);
     pose.neck_base.setY(pose.neck_base.y() + vertical_bob);
     pose.head_pos.setY(pose.head_pos.y() + vertical_bob);
-    
-    // Apply hip sway
+
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
-    
-    // Apply subtle torso counter-rotation for natural balance
+
     pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_rotation);
     pose.shoulder_r.setZ(pose.shoulder_r.z() - torso_rotation);
-    
-    // Enhanced arm swing with counter-rotation to torso
-    float const arm_swing_amp = 0.22F * variation.arm_swing_amp;
+
+    // Minimal arm swing - soldiers carrying weapons don't swing arms much
+    float const arm_swing_amp = 0.04F * variation.arm_swing_amp; // Very small swing
     float const arm_phase_offset = 0.15F;
-    
-    // Left arm swings opposite to left leg
-    float const left_arm_swing = std::sin((left_phase + arm_phase_offset) * 2.0F * std::numbers::pi_v<float>) * arm_swing_amp;
+    constexpr float max_arm_displacement = 0.06F; // Maximum hand movement from rest position
+
+    // Simple sine wave for subtle arm swing, clamped to prevent stretching
+    float const left_swing_raw = std::sin((left_phase + arm_phase_offset) *
+                                          2.0F * std::numbers::pi_v<float>);
+    float const left_arm_swing = std::clamp(left_swing_raw * arm_swing_amp, -max_arm_displacement, max_arm_displacement);
     pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
-    
-    // Right arm swings opposite to right leg
-    float const right_arm_swing = std::sin((right_phase + arm_phase_offset) * 2.0F * std::numbers::pi_v<float>) * arm_swing_amp;
+
+    float const right_swing_raw = std::sin((right_phase + arm_phase_offset) *
+                                           2.0F * std::numbers::pi_v<float>);
+    float const right_arm_swing = std::clamp(right_swing_raw * arm_swing_amp, -max_arm_displacement, max_arm_displacement);
     pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
   }
 
@@ -1575,7 +1580,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (anim.is_moving) {
       float stride_base = 0.8F;
       if (anim_ctx.motion_state == HumanoidMotionState::Run) {
-        stride_base = 0.45F; // Faster cycle time for running
+        stride_base = 0.45F;
       }
       float const base_cycle =
           stride_base / std::max(0.1F, variation.walk_speed_mult);
@@ -1602,60 +1607,65 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
-      // Enhanced run posture with more forward lean
-      float const run_lean = 0.15F;
-      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.08F);
+
+      // Reduced forward lean for more natural running posture
+      float const run_lean = 0.10F; // Reduced from 0.15F
+      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.05F); // Reduced from 0.08F
       pose.shoulder_l.setZ(pose.shoulder_l.z() + run_lean);
       pose.shoulder_r.setZ(pose.shoulder_r.z() + run_lean);
       pose.neck_base.setZ(pose.neck_base.z() + run_lean * 0.7F);
       pose.head_pos.setZ(pose.head_pos.z() + run_lean * 0.5F);
-      
-      // Lower center of gravity for running
+
       pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.03F);
       pose.shoulder_l.setY(pose.shoulder_l.y() - 0.04F);
       pose.shoulder_r.setY(pose.shoulder_r.y() - 0.04F);
-      
-      // Increase stride length for running
+
       float const run_stride_mult = 1.5F;
       float const phase = anim_ctx.locomotion_phase;
       float const left_phase = phase;
       float const right_phase = std::fmod(phase + 0.5F, 1.0F);
-      
-      // Higher foot lift during run
+
       auto enhance_run_foot = [&](QVector3D &foot, float foot_phase) {
-        float const lift_raw = std::sin(foot_phase * 2.0F * std::numbers::pi_v<float>);
+        float const lift_raw =
+            std::sin(foot_phase * 2.0F * std::numbers::pi_v<float>);
         if (lift_raw > 0.0F) {
-          // Higher lift for running
+
           float const extra_lift = lift_raw * k_run_extra_foot_lift;
           foot.setY(foot.y() + extra_lift);
-          
-          // Extended stride
-          float const stride_enhance = std::sin((foot_phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) * k_run_stride_enhancement;
+
+          float const stride_enhance = std::sin((foot_phase - 0.25F) * 2.0F *
+                                                std::numbers::pi_v<float>) *
+                                       k_run_stride_enhancement;
           foot.setZ(foot.z() + stride_enhance);
         }
       };
-      
+
       enhance_run_foot(pose.foot_l, left_phase);
       enhance_run_foot(pose.foot_r, right_phase);
-      
-      // Dynamic arm swing for running
-      float const run_arm_swing = 0.35F;
-      float const left_arm_phase = std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) * run_arm_swing;
-      float const right_arm_phase = std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) * run_arm_swing;
-      
+
+      // Minimal arm swing during running - soldiers hold weapons steady
+      float const run_arm_swing = 0.06F; // Very reduced - weapons should stay stable
+      constexpr float max_run_arm_displacement = 0.08F; // Strict limit on arm movement
+      float const left_swing_raw = std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const left_arm_phase = std::clamp(left_swing_raw * run_arm_swing, -max_run_arm_displacement, max_run_arm_displacement);
+      float const right_swing_raw = std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const right_arm_phase = std::clamp(right_swing_raw * run_arm_swing, -max_run_arm_displacement, max_run_arm_displacement);
+
       pose.hand_l.setZ(pose.hand_l.z() - left_arm_phase);
       pose.hand_r.setZ(pose.hand_r.z() - right_arm_phase);
-      
-      // Arms bend more at elbow when running
-      pose.hand_l.setY(pose.hand_l.y() + 0.05F);
-      pose.hand_r.setY(pose.hand_r.y() + 0.05F);
-      
-      // Hip rotation is more pronounced when running
-      float const hip_rotation = std::sin(phase * 2.0F * std::numbers::pi_v<float>) * 0.04F;
+
+      pose.hand_l.setY(pose.hand_l.y() + 0.02F); // Reduced from 0.05F
+      pose.hand_r.setY(pose.hand_r.y() + 0.02F);
+
+      // Minimal hip rotation - running soldiers stay stable
+      float const hip_rotation_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
+      float const hip_rotation = hip_rotation_raw * 0.003F; // Nearly disabled
       pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_rotation);
-      
-      // Counter-rotation in shoulders for balance
-      float const shoulder_rotation = std::sin((phase - 0.1F) * 2.0F * std::numbers::pi_v<float>) * 0.025F;
+
+      // Minimal shoulder counter-rotation - nearly disabled to prevent unnatural twisting
+      float const shoulder_phase = (phase + 0.15F);
+      float const shoulder_rotation_raw = std::sin(shoulder_phase * 2.0F * std::numbers::pi_v<float>);
+      float const shoulder_rotation = shoulder_rotation_raw * 0.002F; // Nearly disabled
       pose.shoulder_l.setZ(pose.shoulder_l.z() + shoulder_rotation);
       pose.shoulder_r.setZ(pose.shoulder_r.z() - shoulder_rotation);
 

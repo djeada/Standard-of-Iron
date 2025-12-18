@@ -77,7 +77,8 @@ public:
   };
   auto fetch_completed_paths() -> std::vector<PathResult>;
 
-  static auto find_nearest_walkable_point(const Point &point, int max_search_radius,
+  static auto find_nearest_walkable_point(const Point &point,
+                                          int max_search_radius,
                                           const Pathfinding &pathfinder,
                                           float unit_radius = 0.0F) -> Point;
 
