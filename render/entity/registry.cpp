@@ -4,12 +4,12 @@
 #include "barracks_renderer.h"
 #include "catapult_renderer.h"
 #include "defense_tower_renderer.h"
+#include "home_renderer.h"
 #include "nations/carthage/archer_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/builder_renderer.h"
 #include "nations/carthage/catapult_renderer.h"
 #include "nations/carthage/healer_renderer.h"
-#include "nations/carthage/home_renderer.h"
 #include "nations/carthage/horse_archer_renderer.h"
 #include "nations/carthage/horse_spearman_renderer.h"
 #include "nations/carthage/horse_swordsman_renderer.h"
@@ -20,7 +20,6 @@
 #include "nations/roman/builder_renderer.h"
 #include "nations/roman/catapult_renderer.h"
 #include "nations/roman/healer_renderer.h"
-#include "nations/roman/home_renderer.h"
 #include "nations/roman/horse_archer_renderer.h"
 #include "nations/roman/horse_spearman_renderer.h"
 #include "nations/roman/horse_swordsman_renderer.h"
@@ -77,8 +76,7 @@ void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
 
   register_defense_tower_renderer(registry);
 
-  Roman::register_home_renderer(registry);
-  Carthage::register_home_renderer(registry);
+  register_home_renderer(registry);
 }
 
 } // namespace Render::GL
