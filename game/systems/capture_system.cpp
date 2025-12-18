@@ -74,11 +74,6 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
   int const previous_owner_id = unit->owner_id;
   unit->owner_id = new_owner_id;
 
-  // NOTE: We intentionally do NOT change unit->nation_id here.
-  // The nation_id is used by renderers to determine the building mesh/style,
-  // and we want to preserve the original building appearance after capture.
-  // Only the flag color (via renderable->color) should change.
-
   QVector3D const tc = Game::Visuals::team_colorForOwner(new_owner_id);
   renderable->color[0] = tc.x();
   renderable->color[1] = tc.y();

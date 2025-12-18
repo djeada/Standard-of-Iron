@@ -20,8 +20,7 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 
 namespace {
 
-auto is_point_allowed(const QVector3D &pos,
-                      Engine::Core::EntityID ignoreEntity,
+auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
                       float unit_radius = 0.5F) -> bool {
   auto &registry = BuildingCollisionRegistry::instance();
   auto &terrain_service = Game::Map::TerrainService::instance();
@@ -170,11 +169,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
-  
-  float const unit_radius = CommandService::get_unit_radius(*world, entity->get_id());
-  
+
+  float const unit_radius =
+      CommandService::get_unit_radius(*world, entity->get_id());
+
   QVector3D const current_pos_3d(transform->position.x, 0.0F,
-                                  transform->position.z);
+                                 transform->position.z);
   bool const current_pos_valid =
       is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
 
@@ -193,7 +193,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       }
     }
   }
-  
+
   bool const destination_allowed =
       is_point_allowed(final_goal, entity->get_id(), unit_radius);
 

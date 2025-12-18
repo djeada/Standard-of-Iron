@@ -76,8 +76,8 @@ auto CommandService::gridToWorld(const Point &gridPos) -> QVector3D {
   return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
 }
 
-auto CommandService::get_unit_radius(Engine::Core::World &world,
-                                      Engine::Core::EntityID entity_id) -> float {
+auto CommandService::get_unit_radius(
+    Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
   auto *entity = world.get_entity(entity_id);
   if (entity == nullptr) {
     return 0.5F;
@@ -646,7 +646,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
   QVector3D const leader_target = leader.target;
 
   std::vector<MemberInfo *> units_needing_new_path;
-  constexpr float same_goal_threshold_sq = 4.0F;
 
   for (auto &member : members) {
     auto *mv = member.movement;
@@ -723,9 +722,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
     member->movement->last_goal_x = member->target.x();
     member->movement->last_goal_y = member->target.z();
   }
-
-  Point const start = worldToGrid(leader_pos.x(), leader_pos.z());
-  Point const end = worldToGrid(leader_target.x(), leader_target.z());
 
   float const unit_radius = get_unit_radius(world, leader.id);
 

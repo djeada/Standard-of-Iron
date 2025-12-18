@@ -60,8 +60,8 @@ public:
                                float depth);
 
   auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
-  auto findPath(const Point &start, const Point &end, float unit_radius)
-      -> std::vector<Point>;
+  auto findPath(const Point &start, const Point &end,
+                float unit_radius) -> std::vector<Point>;
 
   auto findPathAsync(const Point &start,
                      const Point &end) -> std::future<std::vector<Point>>;
@@ -77,15 +77,16 @@ public:
   };
   auto fetchCompletedPaths() -> std::vector<PathResult>;
 
-  static auto find_nearest_walkable_point(const Point &point, int max_search_radius,
+  static auto find_nearest_walkable_point(const Point &point,
+                                          int max_search_radius,
                                           const Pathfinding &pathfinder,
                                           float unit_radius = 0.0F) -> Point;
 
 private:
-  auto findPathInternal(const Point &start, const Point &end)
-      -> std::vector<Point>;
-  auto findPathInternal(const Point &start, const Point &end, float unit_radius)
-      -> std::vector<Point>;
+  auto findPathInternal(const Point &start,
+                        const Point &end) -> std::vector<Point>;
+  auto findPathInternal(const Point &start, const Point &end,
+                        float unit_radius) -> std::vector<Point>;
 
   static auto calculateHeuristic(const Point &a, const Point &b) -> int;
 
