@@ -468,4 +468,13 @@ public:
   }
 };
 
+class HomeComponent : public Component {
+public:
+  HomeComponent() = default;
+
+  int population_contribution{50};
+  Engine::Core::EntityID nearest_barracks_id{0};
+  float update_cooldown{0.0F};
+};
+
 } // namespace Engine::Core
