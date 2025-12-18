@@ -85,6 +85,8 @@ add_library(render_gl STATIC
     entity/defense_tower_renderer.cpp
     entity/nations/roman/defense_tower_renderer.cpp
     entity/nations/carthage/defense_tower_renderer.cpp
+    entity/nations/roman/home_renderer.cpp
+    entity/nations/carthage/home_renderer.cpp
     entity/catapult_renderer.cpp
     entity/nations/roman/catapult_renderer.cpp
     entity/nations/carthage/catapult_renderer.cpp
