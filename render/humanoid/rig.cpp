@@ -546,11 +546,13 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   const float shin_r = HP::LOWER_LEG_R * width_scale;
   const float foot_radius = shin_r * 1.10F;
 
-  QVector3D const tunic_top{shoulder_mid.x(), y_top_cover - 0.006F,
-                            shoulder_mid.z()};
+  // Force torso cylinder to be perfectly vertical to eliminate torso swing.
+  // Use a common X (average of pelvis and shoulder_mid) and Z=0 for both endpoints.
+  float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
+  constexpr float torso_z = 0.0F; // No fore/aft tilt
 
-  QVector3D const tunic_bot{pose.pelvis_pos.x(), pose.pelvis_pos.y() - 0.05F,
-                            pose.pelvis_pos.z()};
+  QVector3D const tunic_top{torso_x, y_top_cover - 0.006F, torso_z};
+  QVector3D const tunic_bot{torso_x, pose.pelvis_pos.y() - 0.05F, torso_z};
 
   QMatrix4x4 torso_transform =
       cylinder_between(ctx.model, tunic_top, tunic_bot, 1.0F);
@@ -1253,10 +1255,12 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   const float thigh_r = HP::UPPER_LEG_R * width_scale;
   const float shin_r = HP::LOWER_LEG_R * width_scale;
 
-  QVector3D const tunic_top{shoulder_mid.x(), y_top_cover - 0.006F,
-                            shoulder_mid.z()};
-  QVector3D const tunic_bot{pose.pelvis_pos.x(), pose.pelvis_pos.y() - 0.05F,
-                            pose.pelvis_pos.z()};
+  // Force torso cylinder to be perfectly vertical (same fix as draw_common_body).
+  float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
+  constexpr float torso_z = 0.0F;
+
+  QVector3D const tunic_top{torso_x, y_top_cover - 0.006F, torso_z};
+  QVector3D const tunic_bot{torso_x, pose.pelvis_pos.y() - 0.05F, torso_z};
   QMatrix4x4 torso_transform =
       cylinder_between(ctx.model, tunic_top, tunic_bot, 1.0F);
   torso_transform.scale(torso_r, 1.0F, torso_depth);
