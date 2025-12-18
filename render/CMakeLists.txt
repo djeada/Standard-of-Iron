@@ -85,6 +85,9 @@ add_library(render_gl STATIC
     entity/defense_tower_renderer.cpp
     entity/nations/roman/defense_tower_renderer.cpp
     entity/nations/carthage/defense_tower_renderer.cpp
+    entity/home_renderer.cpp
+    entity/nations/roman/home_renderer.cpp
+    entity/nations/carthage/home_renderer.cpp
     entity/catapult_renderer.cpp
     entity/nations/roman/catapult_renderer.cpp
     entity/nations/carthage/catapult_renderer.cpp
@@ -121,6 +124,9 @@ add_library(render_gl STATIC
     equipment/armor/roman_greaves.cpp
     equipment/armor/roman_shoulder_cover.cpp
     equipment/armor/carthage_shoulder_cover.cpp
+    equipment/armor/work_apron_renderer.cpp
+    equipment/armor/tool_belt_renderer.cpp
+    equipment/armor/arm_guards_renderer.cpp
     equipment/armor/cloak_renderer.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
