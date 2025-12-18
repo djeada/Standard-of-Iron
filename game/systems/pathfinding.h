@@ -26,6 +26,19 @@ struct Point {
   }
 };
 
+/**
+ * @brief Represents a rectangular region that needs obstacle updates.
+ */
+struct DirtyRegion {
+  int min_x;
+  int max_x;
+  int min_z;
+  int max_z;
+
+  DirtyRegion(int x1, int x2, int z1, int z2)
+      : min_x(x1), max_x(x2), min_z(z1), max_z(z2) {}
+};
+
 class Pathfinding {
 public:
   Pathfinding(int width, int height);
@@ -42,6 +55,30 @@ public:
   void updateBuildingObstacles();
 
   void markObstaclesDirty();
+
+  /**
+   * @brief Mark a specific region as dirty instead of the entire grid.
+   *
+   * This is more efficient than marking the entire grid dirty, as only
+   * the specified region will be updated on the next obstacle update.
+   *
+   * @param min_x Minimum X coordinate of the dirty region
+   * @param max_x Maximum X coordinate of the dirty region
+   * @param min_z Minimum Z coordinate of the dirty region
+   * @param max_z Maximum Z coordinate of the dirty region
+   */
+  void markRegionDirty(int min_x, int max_x, int min_z, int max_z);
+
+  /**
+   * @brief Mark a building's footprint region as dirty.
+   *
+   * @param center_x Building center X in world coordinates
+   * @param center_z Building center Z in world coordinates
+   * @param width Building width
+   * @param depth Building depth
+   */
+  void markBuildingRegionDirty(float center_x, float center_z, float width,
+                               float depth);
 
   auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
 
@@ -100,6 +137,16 @@ private:
 
   void workerLoop();
 
+  /**
+   * @brief Process dirty regions and update only the affected cells.
+   */
+  void processDirtyRegions();
+
+  /**
+   * @brief Update obstacles in a specific region.
+   */
+  void updateRegion(int min_x, int max_x, int min_z, int max_z);
+
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;
   float m_gridCellSize{1.0F};
@@ -126,6 +173,11 @@ private:
   mutable std::vector<int> m_parentValues;
   mutable std::vector<QueueNode> m_openHeap;
   mutable std::uint32_t m_generationCounter{0};
+
+  // Dirty region tracking for incremental updates
+  std::mutex m_dirtyMutex;
+  std::vector<DirtyRegion> m_dirtyRegions;
+  bool m_fullUpdateRequired{true}; // True means full grid update needed
 };
 
 } // namespace Game::Systems

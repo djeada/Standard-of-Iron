@@ -4,7 +4,9 @@
 #include "system.h"
 #include <memory>
 #include <mutex>
+#include <typeindex>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace Engine::Core {
@@ -39,14 +41,32 @@ public:
     return nullptr;
   }
 
+  /**
+   * @brief Get all entities that have a specific component type.
+   *
+   * This method uses a component index cache for O(k) lookup where k is the
+   * number of entities with the component, instead of O(n) iteration over
+   * all entities.
+   */
   template <typename T> auto get_entities_with() -> std::vector<Entity *> {
     const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+    std::type_index const type_idx = std::type_index(typeid(T));
+
+    auto it = m_component_index.find(type_idx);
+    if (it == m_component_index.end()) {
+      return {};
+    }
+
     std::vector<Entity *> result;
-    for (auto &[entity_id, entity] : m_entities) {
-      if (entity->template has_component<T>()) {
-        result.push_back(entity.get());
+    result.reserve(it->second.size());
+
+    for (EntityID entity_id : it->second) {
+      auto entity_it = m_entities.find(entity_id);
+      if (entity_it != m_entities.end()) {
+        result.push_back(entity_it->second.get());
       }
     }
+
     return result;
   }
 
@@ -67,10 +87,26 @@ public:
   auto get_entity_mutex() -> std::recursive_mutex & { return m_entity_mutex; }
 
 private:
+  /**
+   * @brief Callback for component changes.
+   * Updates the component index when components are added or removed.
+   */
+  void on_component_changed(EntityID entity_id, std::type_index component_type,
+                            bool added);
+
+  /**
+   * @brief Set up component change callback for a newly created entity.
+   */
+  void setup_entity_callback(Entity *entity);
+
   EntityID m_next_entity_id = 1;
   std::unordered_map<EntityID, std::unique_ptr<Entity>> m_entities;
   std::vector<std::unique_ptr<System>> m_systems;
   mutable std::recursive_mutex m_entity_mutex;
+
+  // Component type -> set of entity IDs that have that component
+  std::unordered_map<std::type_index, std::unordered_set<EntityID>>
+      m_component_index;
 };
 
 } // namespace Engine::Core

@@ -39,6 +39,7 @@ add_library(game_systems STATIC
     systems/patrol_system.cpp
     systems/guard_system.cpp
     systems/pathfinding.cpp
+    systems/spatial_grid.cpp
     systems/building_collision_registry.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp
@@ -72,6 +73,7 @@ add_library(game_systems STATIC
     systems/formation_system.cpp
     systems/troop_profile_service.cpp
     systems/rain_manager.cpp
+    systems/stamina_system.cpp
     map/map_loader.cpp
     map/level_loader.cpp
     map/mission_loader.cpp

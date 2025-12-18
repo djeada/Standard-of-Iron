@@ -17,6 +17,7 @@
 #include "game/systems/production_system.h"
 #include "game/systems/projectile_system.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/stamina_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
@@ -69,6 +70,7 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
 void RendererBootstrap::initialize_world_systems(Engine::Core::World &world) {
   world.add_system(std::make_unique<Game::Systems::ArrowSystem>());
   world.add_system(std::make_unique<Game::Systems::ProjectileSystem>());
+  world.add_system(std::make_unique<Game::Systems::StaminaSystem>());
   world.add_system(std::make_unique<Game::Systems::MovementSystem>());
   world.add_system(std::make_unique<Game::Systems::PatrolSystem>());
   world.add_system(std::make_unique<Game::Systems::GuardSystem>());
