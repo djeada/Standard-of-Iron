@@ -54,6 +54,20 @@ public:
   }
   void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
 
+  [[nodiscard]] bool is_placing_formation() const {
+    return m_is_placing_formation;
+  }
+  void update_formation_placement(const QVector3D &position);
+  void update_formation_rotation(float angle_degrees);
+  void confirm_formation_placement();
+  void cancel_formation_placement();
+  [[nodiscard]] QVector3D get_formation_placement_position() const {
+    return m_formation_placement_position;
+  }
+  [[nodiscard]] float get_formation_placement_angle() const {
+    return m_formation_placement_angle;
+  }
+
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
@@ -64,6 +78,9 @@ signals:
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);
+  void formation_placement_started();
+  void formation_placement_updated(QVector3D position, float angle);
+  void formation_placement_ended();
 
 private:
   Engine::Core::World *m_world;
@@ -72,6 +89,11 @@ private:
 
   bool m_has_patrol_first_waypoint = false;
   QVector3D m_patrol_first_waypoint;
+
+  bool m_is_placing_formation = false;
+  QVector3D m_formation_placement_position;
+  float m_formation_placement_angle = 0.0F;
+  std::vector<Engine::Core::EntityID> m_formation_units;
 
   static void reset_movement(Engine::Core::Entity *entity);
 };
