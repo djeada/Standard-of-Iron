@@ -33,18 +33,18 @@ Pathfinding::~Pathfinding() {
   }
 }
 
-void Pathfinding::setGridOffset(float offset_x, float offset_z) {
+void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
   m_gridOffsetX = offset_x;
   m_gridOffsetZ = offset_z;
 }
 
-void Pathfinding::setObstacle(int x, int y, bool isObstacle) {
+void Pathfinding::set_obstacle(int x, int y, bool isObstacle) {
   if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
     m_obstacles[y][x] = static_cast<std::uint8_t>(isObstacle);
   }
 }
 
-auto Pathfinding::isWalkable(int x, int y) const -> bool {
+auto Pathfinding::is_walkable(int x, int y) const -> bool {
   if (x < 0 || x >= m_width || y < 0 || y >= m_height) {
     return false;
   }
@@ -102,7 +102,7 @@ void Pathfinding::markRegionDirty(int min_x, int max_x, int min_z, int max_z) {
 
 void Pathfinding::markBuildingRegionDirty(float center_x, float center_z,
                                           float width, float depth) {
-  float const padding = BuildingCollisionRegistry::getGridPadding();
+  float const padding = BuildingCollisionRegistry::get_grid_padding();
   float const half_width = width / 2.0F + padding;
   float const half_depth = depth / 2.0F + padding;
 
@@ -158,11 +158,11 @@ void Pathfinding::processDirtyRegions() {
       }
 
       auto &registry = BuildingCollisionRegistry::instance();
-      const auto &buildings = registry.getAllBuildings();
+      const auto &buildings = registry.get_all_buildings();
 
       for (const auto &building : buildings) {
         auto cells =
-            Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+            Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
                 building, m_gridCellSize);
         for (const auto &cell : cells) {
           int const grid_x =
@@ -193,7 +193,7 @@ void Pathfinding::processDirtyRegions() {
   }
 }
 
-void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
+void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   auto &terrain_service = Game::Map::TerrainService::instance();
   const Game::Map::TerrainHeightMap *height_map = nullptr;
   int terrain_width = 0;
@@ -219,10 +219,10 @@ void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
   }
 
   auto &registry = BuildingCollisionRegistry::instance();
-  const auto &buildings = registry.getAllBuildings();
+  const auto &buildings = registry.get_all_buildings();
 
   for (const auto &building : buildings) {
-    auto cells = Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+    auto cells = Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
         building, m_gridCellSize);
     for (const auto &cell : cells) {
       int const grid_x =
@@ -239,7 +239,7 @@ void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
   }
 }
 
-void Pathfinding::updateBuildingObstacles() {
+void Pathfinding::update_building_obstacles() {
 
   if (!m_obstaclesDirty.load(std::memory_order_acquire)) {
     return;
@@ -414,7 +414,7 @@ auto Pathfinding::findPathInternal(const Point &start, const Point &end,
   return path;
 }
 
-auto Pathfinding::calculateHeuristic(const Point &a, const Point &b) -> int {
+auto Pathfinding::calculate_heuristic(const Point &a, const Point &b) -> int {
   return std::abs(a.x - b.x) + std::abs(a.y - b.y);
 }
 
@@ -446,7 +446,7 @@ auto Pathfinding::nextGeneration() -> std::uint32_t {
   return next;
 }
 
-void Pathfinding::resetGenerations() {
+void Pathfinding::reset_generations() {
   std::fill(m_closedGeneration.begin(), m_closedGeneration.end(), 0);
   std::fill(m_gCostGeneration.begin(), m_gCostGeneration.end(), 0);
   std::fill(m_parentGeneration.begin(), m_parentGeneration.end(), 0);
@@ -456,20 +456,20 @@ void Pathfinding::resetGenerations() {
   m_generationCounter = 0;
 }
 
-auto Pathfinding::isClosed(int index, std::uint32_t generation) const -> bool {
+auto Pathfinding::is_closed(int index, std::uint32_t generation) const -> bool {
   return index >= 0 &&
          static_cast<std::size_t>(index) < m_closedGeneration.size() &&
          m_closedGeneration[static_cast<std::size_t>(index)] == generation;
 }
 
-void Pathfinding::setClosed(int index, std::uint32_t generation) {
+void Pathfinding::set_closed(int index, std::uint32_t generation) {
   if (index >= 0 &&
       static_cast<std::size_t>(index) < m_closedGeneration.size()) {
     m_closedGeneration[static_cast<std::size_t>(index)] = generation;
   }
 }
 
-auto Pathfinding::getGCost(int index, std::uint32_t generation) const -> int {
+auto Pathfinding::get_g_cost(int index, std::uint32_t generation) const -> int {
   if (index < 0 ||
       static_cast<std::size_t>(index) >= m_gCostGeneration.size()) {
     return std::numeric_limits<int>::max();
@@ -480,7 +480,7 @@ auto Pathfinding::getGCost(int index, std::uint32_t generation) const -> int {
   return std::numeric_limits<int>::max();
 }
 
-void Pathfinding::setGCost(int index, std::uint32_t generation, int cost) {
+void Pathfinding::set_g_cost(int index, std::uint32_t generation, int cost) {
   if (index >= 0 &&
       static_cast<std::size_t>(index) < m_gCostGeneration.size()) {
     const auto idx = static_cast<std::size_t>(index);
@@ -495,14 +495,14 @@ auto Pathfinding::hasParent(int index, std::uint32_t generation) const -> bool {
          m_parentGeneration[static_cast<std::size_t>(index)] == generation;
 }
 
-auto Pathfinding::getParent(int index, std::uint32_t generation) const -> int {
+auto Pathfinding::get_parent(int index, std::uint32_t generation) const -> int {
   if (hasParent(index, generation)) {
     return m_parentValues[static_cast<std::size_t>(index)];
   }
   return -1;
 }
 
-void Pathfinding::setParent(int index, std::uint32_t generation,
+void Pathfinding::set_parent(int index, std::uint32_t generation,
                             int parentIndex) {
   if (index >= 0 &&
       static_cast<std::size_t>(index) < m_parentGeneration.size()) {
@@ -659,7 +659,7 @@ auto Pathfinding::find_nearest_walkable_point(const Point &point,
                                                float unit_radius) -> Point {
   auto const isWalkableFunc = [&pathfinder, unit_radius](int x, int y) -> bool {
     if (unit_radius <= 0.5F) {
-      return pathfinder.isWalkable(x, y);
+      return pathfinder.is_walkable(x, y);
     }
     return pathfinder.is_walkable_with_radius(x, y, unit_radius);
   };

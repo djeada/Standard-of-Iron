@@ -33,10 +33,10 @@ public:
   void set_follow_lerp(Render::GL::Camera &camera, float alpha);
   [[nodiscard]] static auto
   get_distance(const Render::GL::Camera &camera) -> float;
-  static void resetCamera(Render::GL::Camera &camera,
+  static void reset_camera(Render::GL::Camera &camera,
                           Engine::Core::World &world, int local_owner_id,
                           unsigned int player_unit_id);
-  static void snapToEntity(Render::GL::Camera &camera,
+  static void snap_to_entity(Render::GL::Camera &camera,
                            Engine::Core::Entity &entity);
   void update_follow(Render::GL::Camera &camera, Engine::Core::World &world,
                      bool follow_enabled);

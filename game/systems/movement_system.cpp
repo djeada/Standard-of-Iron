@@ -25,17 +25,17 @@ auto is_point_allowed(const QVector3D &pos,
                       float unit_radius = 0.5F) -> bool {
   auto &registry = BuildingCollisionRegistry::instance();
   auto &terrain_service = Game::Map::TerrainService::instance();
-  Pathfinding *pathfinder = CommandService::getPathfinder();
+  Pathfinding *pathfinder = CommandService::get_pathfinder();
 
-  if (registry.isPointInBuilding(pos.x(), pos.z(), ignoreEntity)) {
+  if (registry.is_point_in_building(pos.x(), pos.z(), ignoreEntity)) {
     return false;
   }
 
   if (pathfinder != nullptr) {
     int const grid_x =
-        static_cast<int>(std::round(pos.x() - pathfinder->getGridOffsetX()));
+        static_cast<int>(std::round(pos.x() - pathfinder->get_grid_offset_x()));
     int const grid_z =
-        static_cast<int>(std::round(pos.z() - pathfinder->getGridOffsetZ()));
+        static_cast<int>(std::round(pos.z() - pathfinder->get_grid_offset_z()));
     if (!pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)) {
       return false;
     }
@@ -179,15 +179,15 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
 
   if (!current_pos_valid && !movement->path_pending) {
-    Pathfinding *pathfinder = CommandService::getPathfinder();
+    Pathfinding *pathfinder = CommandService::get_pathfinder();
     if (pathfinder != nullptr) {
-      Point const current_grid = CommandService::worldToGrid(
+      Point const current_grid = CommandService::world_to_grid(
           transform->position.x, transform->position.z);
       Point const nearest = Pathfinding::find_nearest_walkable_point(
           current_grid, 10, *pathfinder, unit_radius);
 
       if (!(nearest == current_grid)) {
-        QVector3D const safe_pos = CommandService::gridToWorld(nearest);
+        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
         transform->position.x = safe_pos.x();
         transform->position.z = safe_pos.z();
       }

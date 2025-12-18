@@ -175,7 +175,7 @@ public:
         auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
         if (unit_comp != nullptr) {
           auto *nation =
-              NationRegistry::instance().getNation(unit_comp->nation_id);
+              NationRegistry::instance().get_nation(unit_comp->nation_id);
           if (nation != nullptr) {
             formation_type = nation->formation_type;
             formation_type_determined = true;

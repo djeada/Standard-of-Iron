@@ -33,7 +33,7 @@ public:
 
   static void initialize(int worldWidth, int worldHeight);
 
-  static auto getPathfinder() -> Pathfinding *;
+  static auto get_pathfinder() -> Pathfinding *;
 
   static void moveUnits(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
@@ -56,8 +56,8 @@ private:
     Engine::Core::EntityID entity_id{};
     QVector3D target;
     MoveOptions options;
-    std::vector<Engine::Core::EntityID> groupMembers;
-    std::vector<QVector3D> groupTargets;
+    std::vector<Engine::Core::EntityID> group_members;
+    std::vector<QVector3D> group_targets;
     float unit_radius{0.0F};
   };
 
@@ -68,12 +68,12 @@ private:
       s_entityToRequest;
   static std::mutex s_pendingMutex;
   static std::atomic<std::uint64_t> s_nextRequestId;
-  static auto worldToGrid(float world_x, float world_z) -> Point;
-  static auto gridToWorld(const Point &gridPos) -> QVector3D;
+  static auto world_to_grid(float world_x, float world_z) -> Point;
+  static auto grid_to_world(const Point &gridPos) -> QVector3D;
   static auto get_unit_radius(Engine::Core::World &world,
                                Engine::Core::EntityID entity_id) -> float;
-  static void clearPendingRequest(Engine::Core::EntityID entity_id);
-  static void moveGroup(Engine::Core::World &world,
+  static void clear_pending_request(Engine::Core::EntityID entity_id);
+  static void move_group(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
                         const std::vector<QVector3D> &targets,
                         const MoveOptions &options);

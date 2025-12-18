@@ -130,7 +130,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     if (!nearby_threats.empty()) {
 
-      auto target_info = TacticalUtils::selectFocusFireTarget(
+      auto target_info = TacticalUtils::select_focus_fire_target(
           ready_defenders, nearby_threats, defend_pos_x, defend_pos_y,
           defend_pos_z, context, 0);
 

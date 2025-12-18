@@ -25,7 +25,7 @@ auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry & {
   return instance;
 }
 
-auto BuildingCollisionRegistry::getBuildingSize(const std::string &buildingType)
+auto BuildingCollisionRegistry::get_building_size(const std::string &buildingType)
     -> BuildingCollisionRegistry::BuildingSize {
   auto it = s_buildingSizes.find(buildingType);
   if (it != s_buildingSizes.end()) {
@@ -122,7 +122,7 @@ void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
   m_buildings[index].owner_id = owner_id;
 }
 
-auto BuildingCollisionRegistry::isPointInBuilding(
+auto BuildingCollisionRegistry::is_point_in_building(
     float x, float z, unsigned int ignoreEntityId) const -> bool {
   for (const auto &building : m_buildings) {
     if (ignoreEntityId != 0 && building.entity_id == ignoreEntityId) {
@@ -144,7 +144,7 @@ auto BuildingCollisionRegistry::isPointInBuilding(
   return false;
 }
 
-auto BuildingCollisionRegistry::getOccupiedGridCells(
+auto BuildingCollisionRegistry::get_occupied_grid_cells(
     const BuildingFootprint &footprint,
     float grid_cell_size) -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
@@ -176,7 +176,7 @@ void BuildingCollisionRegistry::clear() {
   m_entityToIndex.clear();
 }
 
-void BuildingCollisionRegistry::setGridPadding(float padding) {
+void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_gridPadding = padding;
 
   if (auto *pf = CommandService::getPathfinder()) {
@@ -184,7 +184,7 @@ void BuildingCollisionRegistry::setGridPadding(float padding) {
   }
 }
 
-auto BuildingCollisionRegistry::getGridPadding() -> float {
+auto BuildingCollisionRegistry::get_grid_padding() -> float {
   return s_gridPadding;
 }
 

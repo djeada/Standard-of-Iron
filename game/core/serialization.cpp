@@ -120,7 +120,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     unit_obj["unit_type"] = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
     unit_obj["owner_id"] = unit->owner_id;
-    unit_obj["nation_id"] = Game::Systems::nationIDToQString(unit->nation_id);
+    unit_obj["nation_id"] = Game::Systems::nation_id_to_qstring(unit->nation_id);
     entity_obj["unit"] = unit_obj;
   }
 
@@ -373,7 +373,7 @@ void Serialization::deserialize_entity(Entity *entity,
     if (unit_obj.contains("nation_id")) {
       const QString nation_str = unit_obj["nation_id"].toString();
       Game::Systems::NationID nation_id;
-      if (Game::Systems::tryParseNationID(nation_str, nation_id)) {
+      if (Game::Systems::try_parse_nation_id(nation_str, nation_id)) {
         unit->nation_id = nation_id;
       } else {
         qWarning() << "Unknown nation ID in save file:" << nation_str

@@ -11,7 +11,7 @@
 
 namespace Game::Systems::AI {
 
-void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
+void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
   if (ctx.nation == nullptr) {
     ctx.nation =
@@ -95,7 +95,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
         auto troop_type = *troop_type_opt;
         if (ctx.nation->is_ranged_unit(troop_type)) {
           ctx.ranged_count++;
-        } else if (ctx.nation->isMeleeUnit(troop_type)) {
+        } else if (ctx.nation->is_melee_unit(troop_type)) {
           ctx.melee_count++;
         }
       }
@@ -192,7 +192,7 @@ void AIReasoner::updateContext(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.last_total_units = ctx.total_units;
 }
 
-void AIReasoner::updateStateMachine(const AISnapshot &snapshot, AIContext &ctx,
+void AIReasoner::update_state_machine(const AISnapshot &snapshot, AIContext &ctx,
                                     float delta_time) {
   ctx.state_timer += delta_time;
   ctx.decision_timer += delta_time;

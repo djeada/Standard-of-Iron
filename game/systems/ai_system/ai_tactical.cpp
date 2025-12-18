@@ -12,7 +12,7 @@
 
 namespace Game::Systems::AI {
 
-auto TacticalUtils::assessEngagement(
+auto TacticalUtils::assess_engagement(
     const std::vector<const EntitySnapshot *> &friendlies,
     const std::vector<const ContactSnapshot *> &enemies,
     float min_force_ratio) -> TacticalUtils::EngagementAssessment {
@@ -72,7 +72,7 @@ auto TacticalUtils::assessEngagement(
   return result;
 }
 
-auto TacticalUtils::selectFocusFireTarget(
+auto TacticalUtils::select_focus_fire_target(
     const std::vector<const EntitySnapshot *> &,
     const std::vector<const ContactSnapshot *> &enemies, float group_center_x,
     float group_center_y, float group_center_z, const AIContext &context,
@@ -149,7 +149,7 @@ auto TacticalUtils::selectFocusFireTarget(
   return best_target;
 }
 
-auto TacticalUtils::calculateForceStrength(
+auto TacticalUtils::calculate_force_strength(
     const std::vector<const EntitySnapshot *> &units) -> float {
 
   float strength = 0.0F;
@@ -165,7 +165,7 @@ auto TacticalUtils::calculateForceStrength(
   return strength;
 }
 
-auto TacticalUtils::calculateForceStrength(
+auto TacticalUtils::calculate_force_strength(
     const std::vector<const ContactSnapshot *> &units) -> float {
 
   float strength = 0.0F;
@@ -181,7 +181,7 @@ auto TacticalUtils::calculateForceStrength(
   return strength;
 }
 
-auto TacticalUtils::isTargetIsolated(
+auto TacticalUtils::is_target_isolated(
     const ContactSnapshot &target,
     const std::vector<const ContactSnapshot *> &allEnemies,
     float isolation_radius) -> bool {
@@ -207,7 +207,7 @@ auto TacticalUtils::isTargetIsolated(
   return (nearby_allies <= 1);
 }
 
-auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
+auto TacticalUtils::get_unit_type_priority(const std::string &unit_type,
                                         const Game::Systems::Nation *nation)
     -> float {
 
@@ -216,7 +216,7 @@ auto TacticalUtils::getUnitTypePriority(const std::string &unit_type,
     if (nation->is_ranged_unit(troop_type)) {
       return 3.0F;
     }
-    if (nation->isMeleeUnit(troop_type)) {
+    if (nation->is_melee_unit(troop_type)) {
       return 2.0F;
     }
   }

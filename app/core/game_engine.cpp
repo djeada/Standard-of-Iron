@@ -1245,7 +1245,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
   m["villager_cost"] = st.villager_cost;
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
-      QString::fromStdString(Game::Systems::nationIDToString(st.nation_id));
+      QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
 
   QVariantList queue_list;
   for (const auto &unit_type : st.production_queue) {
@@ -1533,7 +1533,7 @@ auto GameEngine::available_nations() const -> QVariantList {
     QVariantMap entry;
     entry.insert(
         QStringLiteral("id"),
-        QString::fromStdString(Game::Systems::nationIDToString(nation.id)));
+        QString::fromStdString(Game::Systems::nation_id_to_string(nation.id)));
     entry.insert(QStringLiteral("name"),
                  QString::fromStdString(nation.display_name));
     ordered.append(entry);
@@ -1805,7 +1805,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   }
 
   if (m_victoryService) {
-    m_victoryService->setVictoryCallback([this](const QString &state) {
+    m_victoryService->set_victory_callback([this](const QString &state) {
       if (m_runtime.victory_state != state) {
         m_runtime.victory_state = state;
         emit victory_state_changed();
@@ -1906,12 +1906,12 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
-  Game::Systems::GameStateSerializer::restoreLevelFromMetadata(meta, m_level);
-  Game::Systems::GameStateSerializer::restoreCameraFromMetadata(
+  Game::Systems::GameStateSerializer::restore_level_from_metadata(meta, m_level);
+  Game::Systems::GameStateSerializer::restore_camera_from_metadata(
       meta, m_camera.get(), m_viewport.width, m_viewport.height);
 
   Game::Systems::RuntimeSnapshot runtime_snap = to_runtime_snapshot();
-  Game::Systems::GameStateSerializer::restoreRuntimeFromMetadata(meta,
+  Game::Systems::GameStateSerializer::restore_runtime_from_metadata(meta,
                                                                  runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
@@ -1967,7 +1967,7 @@ auto GameEngine::save_to_slot(const QString &slot,
     return false;
   }
   Game::Systems::RuntimeSnapshot const runtime_snap = to_runtime_snapshot();
-  QJsonObject meta = Game::Systems::GameStateSerializer::buildMetadata(
+  QJsonObject meta = Game::Systems::GameStateSerializer::build_metadata(
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
   const QByteArray screenshot = capture_screenshot();
@@ -2103,7 +2103,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
     health = u->health;
     max_health = u->max_health;
     alive = (u->health > 0);
-    nation = Game::Systems::nationIDToQString(u->nation_id);
+    nation = Game::Systems::nation_id_to_qstring(u->nation_id);
     return true;
   }
   name = QStringLiteral("Entity");

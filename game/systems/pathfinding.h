@@ -41,16 +41,16 @@ public:
   Pathfinding(int width, int height);
   ~Pathfinding();
 
-  void setGridOffset(float offset_x, float offset_z);
+  void set_grid_offset(float offset_x, float offset_z);
 
-  auto getGridOffsetX() const -> float { return m_gridOffsetX; }
-  auto getGridOffsetZ() const -> float { return m_gridOffsetZ; }
+  auto get_grid_offset_x() const -> float { return m_gridOffsetX; }
+  auto get_grid_offset_z() const -> float { return m_gridOffsetZ; }
 
-  void setObstacle(int x, int y, bool isObstacle);
-  auto isWalkable(int x, int y) const -> bool;
+  void set_obstacle(int x, int y, bool isObstacle);
+  auto is_walkable(int x, int y) const -> bool;
   auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
-  void updateBuildingObstacles();
+  void update_building_obstacles();
 
   void markObstaclesDirty();
 
@@ -87,11 +87,11 @@ private:
   auto findPathInternal(const Point &start, const Point &end, float unit_radius)
       -> std::vector<Point>;
 
-  static auto calculateHeuristic(const Point &a, const Point &b) -> int;
+  static auto calculate_heuristic(const Point &a, const Point &b) -> int;
 
   void ensureWorkingBuffers();
   auto nextGeneration() -> std::uint32_t;
-  void resetGenerations();
+  void reset_generations();
 
   auto toIndex(int x, int y) const -> int { return y * m_width + x; }
   auto toIndex(const Point &p) const -> int { return toIndex(p.x, p.y); }
@@ -99,15 +99,15 @@ private:
     return {index % m_width, index / m_width};
   }
 
-  auto isClosed(int index, std::uint32_t generation) const -> bool;
-  void setClosed(int index, std::uint32_t generation);
+  auto is_closed(int index, std::uint32_t generation) const -> bool;
+  void set_closed(int index, std::uint32_t generation);
 
-  auto getGCost(int index, std::uint32_t generation) const -> int;
-  void setGCost(int index, std::uint32_t generation, int cost);
+  auto get_g_cost(int index, std::uint32_t generation) const -> int;
+  void set_g_cost(int index, std::uint32_t generation, int cost);
 
   auto hasParent(int index, std::uint32_t generation) const -> bool;
-  auto getParent(int index, std::uint32_t generation) const -> int;
-  void setParent(int index, std::uint32_t generation, int parentIndex);
+  auto get_parent(int index, std::uint32_t generation) const -> int;
+  void set_parent(int index, std::uint32_t generation, int parentIndex);
 
   auto collect_neighbors(const Point &point,
                          std::array<Point, 8> &buffer) const -> std::size_t;
@@ -128,7 +128,7 @@ private:
 
   void processDirtyRegions();
 
-  void updateRegion(int min_x, int max_x, int min_z, int max_z);
+  void update_region(int min_x, int max_x, int min_z, int max_z);
 
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;

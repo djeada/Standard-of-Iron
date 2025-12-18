@@ -219,7 +219,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  auto assessment = TacticalUtils::assessEngagement(
+  auto assessment = TacticalUtils::assess_engagement(
       ready_units, nearby_enemies,
       context.state == AIState::Attacking ? 0.7F : 0.9F);
 
@@ -248,7 +248,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     m_targetLockDuration = 0.0F;
   }
 
-  auto target_info = TacticalUtils::selectFocusFireTarget(
+  auto target_info = TacticalUtils::select_focus_fire_target(
       ready_units, nearby_enemies, group_center_x, group_center_y,
       group_center_z, context, m_lastTarget);
 

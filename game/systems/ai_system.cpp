@@ -49,7 +49,7 @@ void AISystem::reinitialize() {
   initializeAIPlayers();
 }
 
-void AISystem::initializeAIPlayers() {
+void AISystem::initialize_ai_players() {
   auto &registry = OwnerRegistry::instance();
   const auto &ai_owner_ids = registry.get_ai_owner_ids();
 

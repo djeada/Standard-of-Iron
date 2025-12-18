@@ -11,7 +11,7 @@
 
 namespace Game::Systems {
 
-auto GameStateSerializer::buildMetadata(
+auto GameStateSerializer::build_metadata(
     const Engine::Core::World &, const Render::GL::Camera *camera,
     const LevelSnapshot &level, const RuntimeSnapshot &runtime) -> QJsonObject {
 
@@ -58,7 +58,7 @@ auto GameStateSerializer::buildMetadata(
   return metadata;
 }
 
-void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
+void GameStateSerializer::restore_camera_from_metadata(const QJsonObject &metadata,
                                                     Render::GL::Camera *camera,
                                                     int viewport_width,
                                                     int viewport_height) {
@@ -87,7 +87,7 @@ void GameStateSerializer::restoreCameraFromMetadata(const QJsonObject &metadata,
   camera->set_perspective(fov, aspect, near_plane, far_plane);
 }
 
-void GameStateSerializer::restoreRuntimeFromMetadata(
+void GameStateSerializer::restore_runtime_from_metadata(
     const QJsonObject &metadata, RuntimeSnapshot &runtime) {
   if (!metadata.contains("runtime")) {
     return;
@@ -126,7 +126,7 @@ void GameStateSerializer::restoreRuntimeFromMetadata(
       runtime_obj.value("followSelection").toBool(runtime.follow_selection);
 }
 
-void GameStateSerializer::restoreLevelFromMetadata(const QJsonObject &metadata,
+void GameStateSerializer::restore_level_from_metadata(const QJsonObject &metadata,
                                                    LevelSnapshot &level) {
   const QString map_path = metadata.value("map_path").toString();
   if (!map_path.isEmpty()) {
