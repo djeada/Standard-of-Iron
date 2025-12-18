@@ -81,22 +81,26 @@ void draw_home_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
     height_multiplier = 0.4F;
   }
 
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, -0.85F),
-           QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-           c.limestone);
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, 0.85F),
-           QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-           c.limestone);
-  draw_box(out, unit, white, p.model,
-           QVector3D(-0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-           QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-           c.limestone);
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-           QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-           c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, -0.85F),
+      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
+      c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, 0.85F),
+      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
+      c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
+      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
+      c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
+      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
+      c.limestone);
 }
 
 void draw_home_columns(const DrawContext &p, ISubmitter &out, Mesh *unit,

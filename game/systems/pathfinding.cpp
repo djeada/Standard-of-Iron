@@ -58,7 +58,7 @@ void Pathfinding::markObstaclesDirty() {
 }
 
 void Pathfinding::markRegionDirty(int min_x, int max_x, int min_z, int max_z) {
-  // Clamp to grid bounds
+
   min_x = std::max(0, min_x);
   max_x = std::min(m_width - 1, max_x);
   min_z = std::max(0, min_z);
@@ -97,11 +97,10 @@ void Pathfinding::processDirtyRegions() {
   {
     std::lock_guard<std::mutex> const lock(m_dirtyMutex);
     if (m_fullUpdateRequired) {
-      // Full update needed, clear regions and do complete update
+
       m_dirtyRegions.clear();
       m_fullUpdateRequired = false;
 
-      // Do the full grid update
       for (auto &row : m_obstacles) {
         std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
       }
@@ -131,7 +130,6 @@ void Pathfinding::processDirtyRegions() {
         }
       }
 
-      // Add all buildings
       auto &registry = BuildingCollisionRegistry::instance();
       const auto &buildings = registry.getAllBuildings();
 
@@ -155,7 +153,6 @@ void Pathfinding::processDirtyRegions() {
       return;
     }
 
-    // Swap out the dirty regions for processing
     regions_to_process = std::move(m_dirtyRegions);
     m_dirtyRegions.clear();
   }
@@ -164,7 +161,6 @@ void Pathfinding::processDirtyRegions() {
     return;
   }
 
-  // Process each dirty region
   for (const auto &region : regions_to_process) {
     updateRegion(region.min_x, region.max_x, region.min_z, region.max_z);
   }
@@ -182,35 +178,31 @@ void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
     terrain_height = (height_map != nullptr) ? height_map->getHeight() : 0;
   }
 
-  // First, reset the region based on terrain
   for (int z = min_z; z <= max_z; ++z) {
     for (int x = min_x; x <= max_x; ++x) {
       bool blocked = false;
       if (x >= 0 && x < terrain_width && z >= 0 && z < terrain_height) {
         blocked = !terrain_service.is_walkable(x, z);
       } else if (terrain_service.is_initialized()) {
-        // Outside terrain bounds - mark as blocked
+
         blocked = true;
       }
       m_obstacles[z][x] = static_cast<std::uint8_t>(blocked ? 1 : 0);
     }
   }
 
-  // Then, add building obstacles that overlap this region
   auto &registry = BuildingCollisionRegistry::instance();
   const auto &buildings = registry.getAllBuildings();
 
   for (const auto &building : buildings) {
-    auto cells =
-        Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
-            building, m_gridCellSize);
+    auto cells = Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+        building, m_gridCellSize);
     for (const auto &cell : cells) {
       int const grid_x =
           static_cast<int>(std::round(cell.first - m_gridOffsetX));
       int const grid_z =
           static_cast<int>(std::round(cell.second - m_gridOffsetZ));
 
-      // Only update if within this region AND within grid bounds
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z &&
           grid_z <= max_z && grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
           grid_z < m_height) {
@@ -232,7 +224,6 @@ void Pathfinding::updateBuildingObstacles() {
     return;
   }
 
-  // Use the new region-based processing
   processDirtyRegions();
 
   m_obstaclesDirty.store(false, std::memory_order_release);

@@ -122,6 +122,9 @@ add_library(render_gl STATIC
     equipment/armor/roman_greaves.cpp
     equipment/armor/roman_shoulder_cover.cpp
     equipment/armor/carthage_shoulder_cover.cpp
+    equipment/armor/work_apron_renderer.cpp
+    equipment/armor/tool_belt_renderer.cpp
+    equipment/armor/arm_guards_renderer.cpp
     equipment/armor/cloak_renderer.cpp
     equipment/weapons/bow_renderer.cpp
     equipment/weapons/quiver_renderer.cpp
