@@ -39,20 +39,19 @@ void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
 }
 
 namespace {
-// Helper to handle the common logic for right-click based movement
-void handle_move_command(
-    Engine::Core::World *world,
-    const std::vector<Engine::Core::EntityID> &selected,
-    Game::Systems::PickingService *picking_service, Render::GL::Camera *camera,
-    qreal sx, qreal sy, int local_owner_id, const ViewportState &viewport) {
+
+void handle_move_command(Engine::Core::World *world,
+                         const std::vector<Engine::Core::EntityID> &selected,
+                         Game::Systems::PickingService *picking_service,
+                         Render::GL::Camera *camera, qreal sx, qreal sy,
+                         int local_owner_id, const ViewportState &viewport) {
   if (!picking_service || !camera || !world) {
     return;
   }
 
-  // Check for enemy target
-  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
-      float(sx), float(sy), *world, *camera, viewport.width, viewport.height,
-      0);
+  Engine::Core::EntityID const target_id =
+      picking_service->pick_unit_first(float(sx), float(sy), *world, *camera,
+                                       viewport.width, viewport.height, 0);
 
   if (target_id != 0U) {
     auto *target_entity = world->get_entity(target_id);
@@ -70,10 +69,9 @@ void handle_move_command(
     }
   }
 
-  // Move to ground location
   QVector3D hit;
-  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera, viewport.width,
-                                        viewport.height, hit)) {
+  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera,
+                                        viewport.width, viewport.height, hit)) {
     auto formation_result =
         Game::Systems::FormationPlanner::get_formation_with_facing(
             *world, selected, hit,
@@ -94,8 +92,8 @@ void handle_move_command(
 
     Game::Systems::CommandService::MoveOptions opts;
     opts.group_move = selected.size() > 1;
-    Game::Systems::CommandService::moveUnits(
-        *world, selected, formation_result.positions, opts);
+    Game::Systems::CommandService::moveUnits(*world, selected,
+                                             formation_result.positions, opts);
   }
 }
 } // namespace
@@ -125,7 +123,6 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     return;
   }
 
-  // Disable run mode for regular single right-click (walking)
   if (m_command_controller) {
     m_command_controller->disable_run_mode_for_selected();
   }
@@ -160,7 +157,6 @@ void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
     return;
   }
 
-  // Enable run mode for double right-click (running)
   if (m_command_controller) {
     m_command_controller->enable_run_mode_for_selected();
   }
