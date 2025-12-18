@@ -163,7 +163,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
     }
 
     for (int const player_id : player_ids) {
-      int const troop_count = countNearbyTroops(world, barrack_x, barrack_z,
+      int const troop_count = count_nearby_troops(world, barrack_x, barrack_z,
                                                 player_id, capture_radius);
       if (troop_count > max_enemy_troops) {
         max_enemy_troops = troop_count;
@@ -173,7 +173,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
 
     int defender_troops = 0;
     if (!Game::Core::isNeutralOwner(barrack_owner_id)) {
-      defender_troops = countNearbyTroops(world, barrack_x, barrack_z,
+      defender_troops = count_nearby_troops(world, barrack_x, barrack_z,
                                           barrack_owner_id, capture_radius);
     }
 

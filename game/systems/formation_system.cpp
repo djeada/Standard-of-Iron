@@ -78,7 +78,7 @@ auto calculate_balanced_rows(int total_units, int max_per_row,
 }
 } // namespace
 
-auto RomanFormation::calculatePositions(int unit_count, const QVector3D &center,
+auto RomanFormation::calculate_positions(int unit_count, const QVector3D &center,
                                         float base_spacing) const
     -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
@@ -113,7 +113,7 @@ auto RomanFormation::calculatePositions(int unit_count, const QVector3D &center,
   return positions;
 }
 
-auto RomanFormation::calculateFormationPositions(
+auto RomanFormation::calculate_formation_positions(
     const std::vector<UnitFormationInfo> &units, const QVector3D &center,
     float base_spacing) const -> std::vector<FormationPosition> {
   std::vector<FormationPosition> positions;
@@ -296,13 +296,13 @@ auto RomanFormation::calculateFormationPositions(
   return positions;
 }
 
-auto BarbarianFormation::calculateFormationPositions(
+auto BarbarianFormation::calculate_formation_positions(
     const std::vector<UnitFormationInfo> &units, const QVector3D &center,
     float base_spacing) const -> std::vector<FormationPosition> {
 
   std::vector<FormationPosition> positions;
   auto simple_pos =
-      calculatePositions(static_cast<int>(units.size()), center, base_spacing);
+      calculate_positions(static_cast<int>(units.size()), center, base_spacing);
 
   for (size_t i = 0; i < simple_pos.size() && i < units.size(); ++i) {
     FormationPosition fpos;
@@ -315,7 +315,7 @@ auto BarbarianFormation::calculateFormationPositions(
   return positions;
 }
 
-auto BarbarianFormation::calculatePositions(
+auto BarbarianFormation::calculate_positions(
     int unit_count, const QVector3D &center,
     float base_spacing) const -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
@@ -349,7 +349,7 @@ auto BarbarianFormation::calculatePositions(
   return positions;
 }
 
-auto CarthageFormation::calculateFormationPositions(
+auto CarthageFormation::calculate_formation_positions(
     const std::vector<UnitFormationInfo> &units, const QVector3D &center,
     float base_spacing) const -> std::vector<FormationPosition> {
   std::vector<FormationPosition> positions;
@@ -534,7 +534,7 @@ auto CarthageFormation::calculateFormationPositions(
   return positions;
 }
 
-auto CarthageFormation::calculatePositions(
+auto CarthageFormation::calculate_positions(
     int unit_count, const QVector3D &center,
     float base_spacing) const -> std::vector<QVector3D> {
   std::vector<QVector3D> positions;
@@ -590,11 +590,11 @@ auto FormationSystem::get_formation_positions(
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default spread";
-    return RomanFormation().calculatePositions(unit_count, center,
+    return RomanFormation().calculate_positions(unit_count, center,
                                                base_spacing);
   }
 
-  return it->second->calculatePositions(unit_count, center, base_spacing);
+  return it->second->calculate_positions(unit_count, center, base_spacing);
 }
 
 auto FormationSystem::get_formation_positions_with_facing(
@@ -604,11 +604,11 @@ auto FormationSystem::get_formation_positions_with_facing(
   auto it = m_formations.find(type);
   if (it == m_formations.end()) {
     qWarning() << "Formation type not found, using default";
-    return RomanFormation().calculateFormationPositions(units, center,
+    return RomanFormation().calculate_formation_positions(units, center,
                                                         base_spacing);
   }
 
-  return it->second->calculateFormationPositions(units, center, base_spacing);
+  return it->second->calculate_formation_positions(units, center, base_spacing);
 }
 
 void FormationSystem::register_formation(FormationType type,

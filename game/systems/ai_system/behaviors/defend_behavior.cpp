@@ -143,7 +143,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claimUnits(defender_ids, getPriority(), "defending", context,
+            claim_units(defender_ids, getPriority(), "defending", context,
                        m_defendTimer + delta_time, 3.0F);
 
         if (!claimed_units.empty()) {
@@ -187,7 +187,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claimUnits(defender_ids, getPriority(), "intercepting", context,
+            claim_units(defender_ids, getPriority(), "intercepting", context,
                        m_defendTimer + delta_time, 2.0F);
 
         if (!claimed_units.empty()) {
@@ -273,7 +273,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_for_move =
-      claimUnits(units_to_move, BehaviorPriority::Low, "positioning", context,
+      claim_units(units_to_move, BehaviorPriority::Low, "positioning", context,
                  m_defendTimer + delta_time, 1.5F);
 
   if (claimed_for_move.empty()) {

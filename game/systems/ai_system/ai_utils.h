@@ -76,7 +76,7 @@ inline auto distance(float x1, float y1, float z1, float x2, float y2,
   return std::sqrt(distance_squared(x1, y1, z1, x2, y2, z2));
 }
 
-inline auto claimUnits(
+inline auto claim_units(
     const std::vector<Engine::Core::EntityID> &requestedUnits,
     BehaviorPriority priority, const std::string &taskName, AIContext &context,
     float currentTime,

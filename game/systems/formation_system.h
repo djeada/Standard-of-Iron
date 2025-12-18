@@ -44,11 +44,11 @@ class IFormation {
 public:
   virtual ~IFormation() = default;
 
-  [[nodiscard]] virtual auto calculatePositions(
+  [[nodiscard]] virtual auto calculate_positions(
       int unit_count, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<QVector3D> = 0;
 
-  [[nodiscard]] virtual auto calculateFormationPositions(
+  [[nodiscard]] virtual auto calculate_formation_positions(
       const std::vector<UnitFormationInfo> &units, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<FormationPosition> = 0;
 
@@ -57,12 +57,12 @@ public:
 
 class RomanFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
+  [[nodiscard]] auto calculate_positions(int unit_count, const QVector3D &center,
                                         float base_spacing = 1.0F) const
       -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
                               const QVector3D &center,
                               float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
@@ -74,12 +74,12 @@ public:
 
 class BarbarianFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
+  [[nodiscard]] auto calculate_positions(int unit_count, const QVector3D &center,
                                         float base_spacing = 1.0F) const
       -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
                               const QVector3D &center,
                               float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
@@ -91,12 +91,12 @@ public:
 
 class CarthageFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
+  [[nodiscard]] auto calculate_positions(int unit_count, const QVector3D &center,
                                         float base_spacing = 1.0F) const
       -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
                               const QVector3D &center,
                               float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;

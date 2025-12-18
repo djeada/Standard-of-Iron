@@ -258,8 +258,8 @@ void CommandService::move_units(Engine::Core::World &world,
 
     if (s_pathfinder) {
       Point const start =
-          worldToGrid(transform->position.x, transform->position.z);
-      Point const end = worldToGrid(targets[i].x(), targets[i].z());
+          world_to_grid(transform->position.x, transform->position.z);
+      Point const end = world_to_grid(targets[i].x(), targets[i].z());
 
       if (start == end) {
         mv->target_x = target_x;
@@ -477,7 +477,7 @@ void CommandService::move_group(Engine::Core::World &world,
     bool any_target_invalid = false;
     for (const auto &member : moving_members) {
       Point const target_grid =
-          worldToGrid(member.target.x(), member.target.z());
+          world_to_grid(member.target.x(), member.target.z());
 
       if (target_grid.x < 0 || target_grid.y < 0) {
         any_target_invalid = true;
@@ -680,8 +680,8 @@ void CommandService::move_group(Engine::Core::World &world,
   }
 
   Point const start =
-      worldToGrid(leader.transform->position.x, leader.transform->position.z);
-  Point const end = worldToGrid(leader_target.x(), leader_target.z());
+      world_to_grid(leader.transform->position.x, leader.transform->position.z);
+  Point const end = world_to_grid(leader_target.x(), leader_target.z());
 
   if (start == end) {
     for (auto *member : units_needing_new_path) {
@@ -724,8 +724,8 @@ void CommandService::move_group(Engine::Core::World &world,
     member->movement->last_goal_y = member->target.z();
   }
 
-  Point const start = worldToGrid(leader_pos.x(), leader_pos.z());
-  Point const end = worldToGrid(leader_target.x(), leader_target.z());
+  Point const start = world_to_grid(leader_pos.x(), leader_pos.z());
+  Point const end = world_to_grid(leader_target.x(), leader_target.z());
 
   float const unit_radius = get_unit_radius(world, leader.id);
 
