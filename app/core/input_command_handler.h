@@ -54,6 +54,12 @@ public:
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
   [[nodiscard]] bool any_selected_in_formation_mode() const;
+  [[nodiscard]] bool is_placing_formation() const;
+  void on_formation_mouse_move(qreal sx, qreal sy,
+                               const ViewportState &viewport);
+  void on_formation_scroll(float delta);
+  void on_formation_confirm();
+  void on_formation_cancel();
   void on_patrol_click(qreal sx, qreal sy, const ViewportState &viewport);
   void on_click_select(qreal sx, qreal sy, bool additive, int local_owner_id,
                        const ViewportState &viewport);
