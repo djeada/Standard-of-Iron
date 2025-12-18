@@ -93,7 +93,7 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
       movement->has_target = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
-      movement->path.clear();
+      movement->clear_path();
       movement->path_pending = false;
     }
 

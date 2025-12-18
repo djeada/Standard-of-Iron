@@ -9,7 +9,8 @@
 namespace Game::Systems::Combat {
 
 void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+  // Query all units once and reuse for all enemy searches (bottleneck fix #4)
+  auto all_units = world->get_entities_with<Engine::Core::UnitComponent>();
 
   for (auto it = m_engagement_cooldowns.begin();
        it != m_engagement_cooldowns.end();) {
@@ -21,7 +22,7 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
     }
   }
 
-  for (auto *unit : units) {
+  for (auto *unit : all_units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
@@ -67,7 +68,9 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
       detection_range = std::min(detection_range, guard_mode->guard_radius);
     }
 
-    auto *nearest_enemy = find_nearest_enemy(unit, world, detection_range);
+    // Use shared unit list instead of querying again (avoids O(n²))
+    auto *nearest_enemy =
+        find_nearest_enemy_from_list(unit, all_units, world, detection_range);
 
     if (nearest_enemy != nullptr) {
       auto *attack_target =

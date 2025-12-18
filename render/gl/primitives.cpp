@@ -280,14 +280,18 @@ auto create_unit_torso_mesh(int radialSegments,
   const float half_h = k_half_scalar;
 
   constexpr float k_lower_extension = 0.05F;
-  const float torso_bottom_y = -half_h;
-  const float torso_top_y = half_h + k_lower_extension;
-  const float torso_height = torso_top_y - torso_bottom_y;
+  const float y_min = -half_h;
+  const float y_max = half_h + k_lower_extension;
+  const float y_span = y_max - y_min;
 
   const bool invert_profile = true;
 
   constexpr float k_band_epsilon = 1e-6F;
   constexpr float k_radius_epsilon = 1e-8F;
+
+  constexpr float k_shoulder_dome_t_end = 0.10F;
+  constexpr float k_shoulder_dome_height = 0.06F;
+  constexpr float k_shoulder_dome_min_radius_scale = 0.06F;
 
   constexpr float k_xforward_amp = 0.02F;
   constexpr float k_xforward_start = 0.6F;
@@ -376,10 +380,10 @@ auto create_unit_torso_mesh(int radialSegments,
                    (-p0 + 3.0F * p1 - 3.0F * p2 + p3) * u * u * u);
   };
 
-  auto sample_axes = [&](float t) -> Axes {
-    t = clampf(t, 0.0F, 1.0F);
+  auto sample_profile_axes = [&](float profile_t) -> Axes {
+    profile_t = clampf(profile_t, 0.0F, 1.0F);
     int i = 0;
-    while (i + 1 < key_count && t > keys[i + 1].t) {
+    while (i + 1 < key_count && profile_t > keys[i + 1].t) {
       ++i;
     }
     int const i0 = i > 0 ? i - 1 : 0;
@@ -388,7 +392,7 @@ auto create_unit_torso_mesh(int radialSegments,
     int const i3 = (i + 2 < key_count) ? i + 2 : key_count - 1;
 
     float const denom = (keys[i2].t - keys[i1].t);
-    float u = denom > k_band_epsilon ? (t - keys[i1].t) / denom : 0.0F;
+    float u = denom > k_band_epsilon ? (profile_t - keys[i1].t) / denom : 0.0F;
     u = clampf(u, 0.0F, 1.0F);
 
     float const ax =
@@ -405,54 +409,61 @@ auto create_unit_torso_mesh(int radialSegments,
     return (a * b) / (denom + k_radius_epsilon);
   };
 
-  auto x_offset_at = [&](float t) {
+  auto x_offset_at = [&](float profile_t) {
     float const forward =
-        k_xforward_amp * smooth_band(t, k_xforward_start, k_xforward_end);
+        k_xforward_amp *
+        smooth_band(profile_t, k_xforward_start, k_xforward_end);
     float const backward =
-        k_xbackward_amp * smooth_band(t, k_xbackward_start, k_xbackward_end);
+        k_xbackward_amp *
+        smooth_band(profile_t, k_xbackward_start, k_xbackward_end);
     return forward + backward;
   };
-  auto z_offset_at = [&](float t) {
+  auto z_offset_at = [&](float profile_t) {
     float const lordosis =
-        k_lordosis_amp * smooth_band(t, k_lordosis_start, k_lordosis_end);
+        k_lordosis_amp *
+        smooth_band(profile_t, k_lordosis_start, k_lordosis_end);
     float const chest_fwd =
         k_chest_forward_amp *
-        smooth_band(t, k_chest_forward_start, k_chest_forward_end);
+        smooth_band(profile_t, k_chest_forward_start, k_chest_forward_end);
     float const neck_back =
-        k_neck_back_amp * smooth_band(t, k_neck_back_start, k_neck_back_end);
+        k_neck_back_amp *
+        smooth_band(profile_t, k_neck_back_start, k_neck_back_end);
     return lordosis + chest_fwd + neck_back;
   };
-  auto twist_at = [&](float t) {
-    return k_twist_amplitude * smooth_band(t, k_twist_start, k_twist_end);
+  auto twist_at = [&](float profile_t) {
+    return k_twist_amplitude *
+           smooth_band(profile_t, k_twist_start, k_twist_end);
   };
 
-  auto theta_scale = [&](float t, float ang) {
+  auto theta_scale = [&](float profile_t, float ang) {
     float s = 0.0F;
     float const sin_a = std::sin(ang);
     float const cos_a = std::cos(ang);
     float const cos2 = cos_a * cos_a;
     s += k_theta_sin_pos_amp *
-         smooth_band(t, k_theta_sin_pos_start, k_theta_sin_pos_end) *
+         smooth_band(profile_t, k_theta_sin_pos_start, k_theta_sin_pos_end) *
          std::max(0.0F, sin_a);
     s += k_theta_sin_neg_amp *
-         smooth_band(t, k_theta_sin_neg_start, k_theta_sin_neg_end) *
+         smooth_band(profile_t, k_theta_sin_neg_start, k_theta_sin_neg_end) *
          std::max(0.0F, -sin_a);
     s += k_theta_cos_sq_amp *
-         smooth_band(t, k_theta_cos_sq_start, k_theta_cos_sq_end) * cos2;
-    s += k_theta_cos_sq_neg_amp *
-         smooth_band(t, k_theta_cos_sq_neg_start, k_theta_cos_sq_neg_end) *
+         smooth_band(profile_t, k_theta_cos_sq_start, k_theta_cos_sq_end) *
          cos2;
-    s += k_theta_cos_amp * smooth_band(t, k_theta_cos_start, k_theta_cos_end) *
-         cos_a;
+    s += k_theta_cos_sq_neg_amp *
+         smooth_band(profile_t, k_theta_cos_sq_neg_start,
+                     k_theta_cos_sq_neg_end) *
+         cos2;
+    s += k_theta_cos_amp *
+         smooth_band(profile_t, k_theta_cos_start, k_theta_cos_end) * cos_a;
 
     float const shoulder_band =
-        smooth_band(t, k_shoulder_bulge_start, k_shoulder_bulge_end);
+        smooth_band(profile_t, k_shoulder_bulge_start, k_shoulder_bulge_end);
 
     float const lateral_factor = std::abs(sin_a);
     s += k_shoulder_bulge_amp * shoulder_band * lateral_factor;
 
     float const trap_band =
-        smooth_band(t, k_trap_slope_start, k_trap_slope_end);
+        smooth_band(profile_t, k_trap_slope_start, k_trap_slope_end);
 
     float const trap_factor = (1.0F - std::abs(sin_a)) * 0.7F + 0.3F;
     s += k_trap_slope_amp * trap_band * trap_factor;
@@ -466,23 +477,35 @@ auto create_unit_torso_mesh(int radialSegments,
   };
 
   auto sample_pos = [&](float t, float ang) -> QVector3D {
-    float const ts = invert_profile ? (1.0F - t) : t;
+    float const profile_t = invert_profile ? (1.0F - t) : t;
 
-    Axes const a = sample_axes(ts);
-    float const twist = twist_at(ts);
+    Axes const a = sample_profile_axes(profile_t);
+    float const twist = twist_at(profile_t);
     float const th = ang + twist;
 
     float const radius = ellipse_radius(a.ax, a.az, th);
-    float const s = theta_scale(ts, th);
-    float const r = radius * s;
+    float const s = theta_scale(profile_t, th);
+    float r = radius * s;
+
+    float py = y_min + t * y_span;
+
+    if (t < k_shoulder_dome_t_end) {
+      float const u = clampf(t / k_shoulder_dome_t_end, 0.0F, 1.0F);
+      float const us = smoothstep01(u);
+
+      float const sphere = std::sqrt(std::max(0.0F, (2.0F * us) - (us * us)));
+      float const dome_radius_scale =
+          std::max(sphere, k_shoulder_dome_min_radius_scale);
+      r *= dome_radius_scale;
+
+      py -= k_shoulder_dome_height * (1.0F - us);
+    }
 
     float px = r * std::cos(th);
     float pz = r * std::sin(th);
 
-    px += x_offset_at(ts);
-    pz += z_offset_at(ts);
-
-    float const py = torso_bottom_y + t * torso_height;
+    px += x_offset_at(profile_t);
+    pz += z_offset_at(profile_t);
 
     float const s_value =
         (t * k_micro_temporal_frequency) + (ang * k_micro_angular_frequency);
@@ -548,8 +571,8 @@ auto create_unit_torso_mesh(int radialSegments,
     int base_top = (int)v.size();
     float const t_top = 1.0F;
     float const t_top_s = invert_profile ? (1.0F - t_top) : t_top;
-    QVector3D const c_top(x_offset_at(t_top_s), torso_top_y,
-                          z_offset_at(t_top_s));
+    QVector3D const c_top(x_offset_at(t_top_s), y_max, z_offset_at(t_top_s));
+
     v.push_back({{c_top.x(), c_top.y(), c_top.z()},
                  {0, 1, 0},
                  {k_uv_center, k_uv_center}});
@@ -570,27 +593,20 @@ auto create_unit_torso_mesh(int radialSegments,
   }
   {
 
-    int base_bot = (int)v.size();
-    float const t_bot = 0.0F;
-    float const t_bot_s = invert_profile ? (1.0F - t_bot) : t_bot;
-    QVector3D const c_bot(x_offset_at(t_bot_s), torso_bottom_y,
-                          z_offset_at(t_bot_s));
-    v.push_back({{c_bot.x(), c_bot.y(), c_bot.z()},
+    float const t_apex = 0.0F;
+    float const ts_apex = invert_profile ? (1.0F - t_apex) : t_apex;
+    float const apex_y = y_min - k_shoulder_dome_height;
+
+    int const apex_idx = (int)v.size();
+    QVector3D const apex(x_offset_at(ts_apex), apex_y, z_offset_at(ts_apex));
+    v.push_back({{apex.x(), apex.y(), apex.z()},
                  {0, -1, 0},
                  {k_uv_center, k_uv_center}});
-    for (int i = 0; i <= radialSegments; ++i) {
-      float const u = float(i) / float(radialSegments);
-      float const ang = u * k_two_pi;
-      QVector3D const p = sample_pos(t_bot, ang);
-      v.push_back({{p.x(), p.y(), p.z()},
-                   {0, -1, 0},
-                   {k_uv_center + k_uv_scale * std::cos(ang),
-                    k_uv_center + k_uv_scale * std::sin(ang)}});
-    }
-    for (int i = 1; i <= radialSegments; ++i) {
-      idx.push_back(base_bot);
-      idx.push_back(base_bot + i + 1);
-      idx.push_back(base_bot + i);
+
+    for (int i = 0; i < radialSegments; ++i) {
+      idx.push_back(apex_idx);
+      idx.push_back(i + 1);
+      idx.push_back(i);
     }
   }
 

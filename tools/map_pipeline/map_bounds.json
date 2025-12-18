@@ -1,0 +1,8 @@
+{
+  "projection": "equirectangular",
+  "lon_min": -10.0,
+  "lon_max": 18.0,
+  "lat_min": 30.0,
+  "lat_max": 47.5,
+  "notes": "West Mediterranean for Hannibal route: Iberia -> Alps -> Italy; adjust lon_max to 20-22 if you need more east."
+}

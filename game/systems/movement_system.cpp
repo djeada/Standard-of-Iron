@@ -122,7 +122,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       movement->has_target = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
-      movement->path.clear();
+      movement->clear_path();
       movement->path_pending = false;
       in_hold_mode = true;
     }
@@ -161,7 +161,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     movement->has_target = false;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
-    movement->path.clear();
+    movement->clear_path();
     movement->path_pending = false;
     return;
   }
@@ -170,7 +170,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   bool const destination_allowed = isPointAllowed(final_goal, entity->get_id());
 
   if (movement->has_target && !destination_allowed) {
-    movement->path.clear();
+    movement->clear_path();
     movement->has_target = false;
     movement->path_pending = false;
     movement->pending_request_id = 0;
@@ -188,7 +188,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     movement->time_since_last_path_request += delta_time;
   }
 
-  const float max_speed = std::max(0.1F, unit->speed);
+  float base_speed = std::max(0.1F, unit->speed);
+  auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+  if (stamina != nullptr && stamina->is_running) {
+    base_speed *= Engine::Core::StaminaComponent::kRunSpeedMultiplier;
+  }
+  const float max_speed = base_speed;
   const float accel = max_speed * 4.0F;
   const float damping = 6.0F;
 
@@ -219,14 +224,15 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   } else {
     QVector3D current_pos(transform->position.x, 0.0F, transform->position.z);
     QVector3D segment_target(movement->target_x, 0.0F, movement->target_y);
-    if (!movement->path.empty()) {
-      segment_target = QVector3D(movement->path.front().first, 0.0F,
-                                 movement->path.front().second);
+    if (movement->has_waypoints()) {
+      const auto &wp = movement->current_waypoint();
+      segment_target = QVector3D(wp.first, 0.0F, wp.second);
     }
     auto refresh_segment_target = [&]() {
-      if (!movement->path.empty()) {
-        movement->target_x = movement->path.front().first;
-        movement->target_y = movement->path.front().second;
+      if (movement->has_waypoints()) {
+        const auto &wp = movement->current_waypoint();
+        movement->target_x = wp.first;
+        movement->target_y = wp.second;
         segment_target =
             QVector3D(movement->target_x, 0.0F, movement->target_y);
       } else {
@@ -238,8 +244,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     auto try_advance_past_blocked_segment = [&]() {
       bool recovered = false;
       int skips_remaining = max_waypoint_skip_count;
-      while (!movement->path.empty() && skips_remaining-- > 0) {
-        movement->path.erase(movement->path.begin());
+      while (movement->has_waypoints() && skips_remaining-- > 0) {
+        movement->advance_waypoint(); // O(1) instead of O(n) erase
         refresh_segment_target();
         if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
           recovered = true;
@@ -247,7 +253,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         }
       }
 
-      if (!recovered && movement->path.empty()) {
+      if (!recovered && !movement->has_waypoints()) {
         refresh_segment_target();
         if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
           recovered = true;
@@ -282,7 +288,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
           movement->pending_request_id = 0;
         }
 
-        movement->path.clear();
+        movement->clear_path(); // Use new clear_path() method
         movement->has_target = false;
         movement->vx = 0.0F;
         movement->vz = 0.0F;
@@ -301,11 +307,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     int safety_counter = max_waypoint_skip_count;
     while (movement->has_target && dist2 < arrive_radius_sq &&
            safety_counter-- > 0) {
-      if (!movement->path.empty()) {
-        movement->path.erase(movement->path.begin());
-        if (!movement->path.empty()) {
-          movement->target_x = movement->path.front().first;
-          movement->target_y = movement->path.front().second;
+      if (movement->has_waypoints()) {
+        movement->advance_waypoint(); // O(1) instead of O(n) erase
+        if (movement->has_waypoints()) {
+          const auto &wp = movement->current_waypoint();
+          movement->target_x = wp.first;
+          movement->target_y = wp.second;
           dx = movement->target_x - transform->position.x;
           dz = movement->target_y - transform->position.z;
           dist2 = dx * dx + dz * dz;
