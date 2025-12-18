@@ -21,80 +21,77 @@ void HumanoidPoseController::applyMicroIdle(float time, std::uint32_t seed) {
   float const seed_offset = static_cast<float>(seed % 1000) / 1000.0F * 6.28F;
   float const seed_scale = 0.8F + static_cast<float>(seed % 500) / 1000.0F;
 
-  // Breathing animation (chest rise/fall) - subtle vertical movement
-  float const breath_period = 3.5F * seed_scale;
+  // Breathing animation - subtle vertical pelvis movement only
+  float const breath_period = 4.0F * seed_scale;
   float const breath_phase = std::fmod(time + seed_offset, breath_period) /
                              breath_period * 2.0F * std::numbers::pi_v<float>;
-  float const breath_amount = std::sin(breath_phase) * 0.008F;
+  float const breath_amount = std::sin(breath_phase) * 0.004F;
+  m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + breath_amount);
 
-  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + breath_amount);
-  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + breath_amount);
-  m_pose.neck_base.setY(m_pose.neck_base.y() + breath_amount * 0.7F);
-
-  // Weight shift animation (subtle lateral sway)
-  float const sway_period = 4.2F * seed_scale;
+  // Weight shift - pelvis lateral sway (leg-focused)
+  float const sway_period = 6.0F * seed_scale;
   float const sway_phase = std::fmod(time + seed_offset * 1.3F, sway_period) /
                            sway_period * 2.0F * std::numbers::pi_v<float>;
-  float const sway_amount = std::sin(sway_phase) * 0.006F;
-
+  float const sway_amount = std::sin(sway_phase) * 0.008F;
   m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + sway_amount);
-  m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + sway_amount * 0.8F);
-  m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + sway_amount * 0.8F);
 
-  // Head micro-movement (subtle head turns and nods)
-  float const head_yaw_period = 6.0F * seed_scale;
+  // Knee bend variation - one leg slightly more bent
+  float const knee_period = 7.0F * seed_scale;
+  float const knee_phase = std::fmod(time + seed_offset * 0.8F, knee_period) /
+                           knee_period * 2.0F * std::numbers::pi_v<float>;
+  float const knee_bend = std::sin(knee_phase) * 0.012F;
+  m_pose.knee_l.setY(m_pose.knee_l.y() + knee_bend);
+  m_pose.knee_r.setY(m_pose.knee_r.y() - knee_bend * 0.6F);
+
+  // Foot micro-adjustments (more pronounced leg movement)
+  float const foot_period = 5.0F * seed_scale;
+  float const foot_phase = std::fmod(time + seed_offset * 0.9F, foot_period) /
+                           foot_period * 2.0F * std::numbers::pi_v<float>;
+  float const foot_shift = std::sin(foot_phase) * 0.008F;
+  m_pose.foot_l.setZ(m_pose.foot_l.z() + foot_shift);
+  m_pose.foot_r.setZ(m_pose.foot_r.z() - foot_shift * 0.5F);
+
+  // Subtle foot lateral shift
+  float const foot_lateral_period = 8.0F * seed_scale;
+  float const foot_lateral_phase =
+      std::fmod(time + seed_offset * 1.2F, foot_lateral_period) /
+      foot_lateral_period * 2.0F * std::numbers::pi_v<float>;
+  float const foot_lateral = std::sin(foot_lateral_phase) * 0.005F;
+  m_pose.foot_l.setX(m_pose.foot_l.x() + foot_lateral);
+  m_pose.foot_r.setX(m_pose.foot_r.x() - foot_lateral * 0.7F);
+
+  // Head micro-movement (subtle head turns only, no torso)
+  float const head_yaw_period = 8.0F * seed_scale;
   float const head_yaw_phase =
       std::fmod(time + seed_offset * 0.7F, head_yaw_period) / head_yaw_period *
       2.0F * std::numbers::pi_v<float>;
-  float const head_yaw = std::sin(head_yaw_phase) * 0.012F;
-
-  float const head_nod_period = 5.0F * seed_scale;
-  float const head_nod_phase =
-      std::fmod(time + seed_offset * 1.1F, head_nod_period) / head_nod_period *
-      2.0F * std::numbers::pi_v<float>;
-  float const head_nod = std::sin(head_nod_phase) * 0.004F;
-
+  float const head_yaw = std::sin(head_yaw_phase) * 0.008F;
   m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw);
-  m_pose.head_pos.setZ(m_pose.head_pos.z() + head_nod);
-
-  // Subtle foot adjustment (small shifts in stance)
-  float const foot_period = 8.0F * seed_scale;
-  float const foot_phase = std::fmod(time + seed_offset * 0.9F, foot_period) /
-                           foot_period * 2.0F * std::numbers::pi_v<float>;
-  float const foot_shift = std::sin(foot_phase) * 0.004F;
-
-  m_pose.foot_l.setZ(m_pose.foot_l.z() + foot_shift);
-  m_pose.foot_r.setZ(m_pose.foot_r.z() - foot_shift * 0.7F);
-
-  // Arm micro-adjustments (grip shifting, slight arm movement)
-  float const arm_period = 5.5F * seed_scale;
-  float const arm_phase = std::fmod(time + seed_offset * 1.5F, arm_period) /
-                          arm_period * 2.0F * std::numbers::pi_v<float>;
-  float const arm_drift = std::sin(arm_phase) * 0.008F;
-
-  m_pose.hand_l.setY(m_pose.hand_l.y() + arm_drift * 0.5F);
-  m_pose.hand_r.setY(m_pose.hand_r.y() - arm_drift * 0.3F);
-  m_pose.hand_l.setZ(m_pose.hand_l.z() + arm_drift * 0.4F);
 }
 
 auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
                                                 float idle_duration)
     -> AmbientIdleType {
-  // Only trigger ambient idles after being idle for a while
-  constexpr float kMinIdleDuration = 3.0F;
+  // Only trigger ambient idles after being idle for a longer while
+  constexpr float kMinIdleDuration = 5.0F;
   if (idle_duration < kMinIdleDuration) {
     return AmbientIdleType::None;
   }
 
   // Use seed to create a unique cycle offset for this soldier
-  float const seed_offset = static_cast<float>(seed % 1000) / 100.0F;
+  float const seed_offset = static_cast<float>(seed % 1000) / 50.0F;
 
-  // Ambient idles cycle every 12-18 seconds based on seed
-  float const cycle_period = 12.0F + static_cast<float>(seed % 600) / 100.0F;
+  // Much longer cycle - 25-40 seconds between ambient idles
+  float const cycle_period = 25.0F + static_cast<float>(seed % 1500) / 100.0F;
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
-  // Only active during the first 4 seconds of each cycle
-  constexpr float kAmbientDuration = 4.0F;
+  // Only 1 in 3 soldiers will trigger ambient idles (based on seed)
+  if ((seed % 3) != 0) {
+    return AmbientIdleType::None;
+  }
+
+  // Only active during the first 6 seconds of each cycle (for sit down/stand up)
+  constexpr float kAmbientDuration = 6.0F;
   if (cycle_time > kAmbientDuration) {
     return AmbientIdleType::None;
   }
@@ -115,10 +112,10 @@ void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
   }
 
   // Calculate phase within the ambient idle animation (0 to 1)
-  float const seed_offset = static_cast<float>(seed % 1000) / 100.0F;
-  float const cycle_period = 12.0F + static_cast<float>(seed % 600) / 100.0F;
+  float const seed_offset = static_cast<float>(seed % 1000) / 50.0F;
+  float const cycle_period = 25.0F + static_cast<float>(seed % 1500) / 100.0F;
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
-  constexpr float kAmbientDuration = 4.0F;
+  constexpr float kAmbientDuration = 6.0F;
 
   // Create smooth in/out animation curve
   float phase = cycle_time / kAmbientDuration;
@@ -128,81 +125,112 @@ void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
                      : (1.0F - std::pow(-2.0F * phase + 2.0F, 2.0F) / 2.0F);
 
   switch (idle_type) {
-  case AmbientIdleType::RaiseWeapon: {
-    // Raise the right hand/weapon slightly to inspect it
-    float const raise_amount = intensity * 0.15F;
-    float const forward_amount = intensity * 0.08F;
-    m_pose.hand_r.setY(m_pose.hand_r.y() + raise_amount);
-    m_pose.hand_r.setZ(m_pose.hand_r.z() + forward_amount);
-    m_pose.elbow_r.setY(m_pose.elbow_r.y() + raise_amount * 0.5F);
-    // Tilt head slightly to look at weapon
-    m_pose.head_pos.setZ(m_pose.head_pos.z() + intensity * 0.02F);
-    m_pose.head_pos.setY(m_pose.head_pos.y() - intensity * 0.01F);
+  case AmbientIdleType::SitDown: {
+    // Soldier sits down then stands back up
+    // Phase 0-0.4: sit down, 0.4-0.6: hold, 0.6-1.0: stand up
+    float sit_intensity = 0.0F;
+    if (phase < 0.4F) {
+      sit_intensity = phase / 0.4F;
+    } else if (phase < 0.6F) {
+      sit_intensity = 1.0F;
+    } else {
+      sit_intensity = 1.0F - (phase - 0.6F) / 0.4F;
+    }
+    sit_intensity = sit_intensity * sit_intensity * (3.0F - 2.0F * sit_intensity);
+
+    // Lower pelvis significantly
+    float const sit_drop = sit_intensity * 0.35F;
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - sit_drop);
+
+    // Bend knees outward
+    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.8F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.8F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.1F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.1F);
+
+    // Feet stay planted but widen slightly
+    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.03F);
+    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.03F);
+
+    // Head drops slightly when sitting
+    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop * 0.3F);
     break;
   }
 
-  case AmbientIdleType::StretchShoulders: {
-    // Roll shoulders back in a stretch
-    float const stretch_amount = intensity * 0.04F;
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - stretch_amount);
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() - stretch_amount);
-    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + stretch_amount * 0.5F);
-    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + stretch_amount * 0.5F);
-    // Chest rises slightly
-    m_pose.neck_base.setY(m_pose.neck_base.y() + stretch_amount * 0.3F);
-    m_pose.neck_base.setZ(m_pose.neck_base.z() - stretch_amount * 0.5F);
+  case AmbientIdleType::ShuffleFeet: {
+    // Shuffle feet back and forth
+    float const shuffle_phase = phase * 2.0F * std::numbers::pi_v<float>;
+    float const shuffle_amount = std::sin(shuffle_phase) * intensity * 0.04F;
+
+    m_pose.foot_l.setZ(m_pose.foot_l.z() + shuffle_amount);
+    m_pose.foot_r.setZ(m_pose.foot_r.z() - shuffle_amount);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + shuffle_amount * 0.5F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() - shuffle_amount * 0.5F);
     break;
   }
 
-  case AmbientIdleType::AdjustHelmet: {
-    // Raise left hand to helmet
-    float const raise_amount = intensity * 0.25F;
-    float const inward_amount = intensity * 0.08F;
-    m_pose.hand_l.setY(m_pose.hand_l.y() + raise_amount);
-    m_pose.hand_l.setX(m_pose.hand_l.x() + inward_amount);
-    m_pose.hand_l.setZ(m_pose.hand_l.z() - intensity * 0.05F);
-    m_pose.elbow_l.setY(m_pose.elbow_l.y() + raise_amount * 0.6F);
-    // Slight head tilt
-    m_pose.head_pos.setX(m_pose.head_pos.x() - intensity * 0.015F);
+  case AmbientIdleType::TapFoot: {
+    // Tap one foot impatiently
+    float const tap_phase = std::fmod(phase * 6.0F, 1.0F);
+    float const tap_lift =
+        (tap_phase < 0.3F) ? std::sin(tap_phase / 0.3F * std::numbers::pi_v<float>) : 0.0F;
+    float const tap_amount = tap_lift * intensity * 0.03F;
+
+    // Lift and lower foot heel
+    m_pose.foot_r.setY(m_pose.foot_r.y() + tap_amount);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + tap_amount * 0.3F);
     break;
   }
 
-  case AmbientIdleType::LookAround: {
-    // Look left, then right during the animation
-    float const look_phase = phase * 2.0F * std::numbers::pi_v<float>;
-    float const look_amount = std::sin(look_phase) * 0.04F;
-    m_pose.head_pos.setX(m_pose.head_pos.x() + look_amount * intensity);
-    // Slight shoulder turn to match
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + look_amount * 0.3F);
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() - look_amount * 0.3F);
-    break;
-  }
-
-  case AmbientIdleType::ShiftStance: {
-    // More pronounced weight shift than micro idle
+  case AmbientIdleType::ShiftWeight: {
+    // Shift weight from one leg to the other
     float const shift_phase = phase * std::numbers::pi_v<float>;
-    float const shift_amount = std::sin(shift_phase) * intensity * 0.03F;
+    float const shift_amount = std::sin(shift_phase) * intensity * 0.05F;
+
+    // Pelvis shifts to one side
     m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift_amount);
-    m_pose.foot_l.setY(m_pose.foot_l.y() + shift_amount * 0.5F);
-    m_pose.knee_l.setY(m_pose.knee_l.y() + shift_amount * 0.3F);
-    // Counterbalance with shoulders
-    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() - shift_amount * 0.4F);
-    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() - shift_amount * 0.4F);
+
+    // One knee bends more, other straightens
+    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_amount * 0.4F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_amount * 0.3F);
+
+    // Foot pressure shifts
+    m_pose.foot_l.setY(m_pose.foot_l.y() + shift_amount * 0.2F);
     break;
   }
 
-  case AmbientIdleType::RestOnWeapon: {
-    // Lean forward slightly as if resting on weapon/spear
-    float const lean_amount = intensity * 0.03F;
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + lean_amount);
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + lean_amount);
-    m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() - lean_amount * 0.5F);
-    // Drop head slightly
-    m_pose.head_pos.setY(m_pose.head_pos.y() - lean_amount * 0.5F);
-    m_pose.head_pos.setZ(m_pose.head_pos.z() + lean_amount * 0.8F);
-    // Lower both hands slightly as if gripping weapon shaft
-    m_pose.hand_l.setY(m_pose.hand_l.y() - lean_amount * 0.5F);
-    m_pose.hand_r.setY(m_pose.hand_r.y() - lean_amount * 0.5F);
+  case AmbientIdleType::StepInPlace: {
+    // Small step in place - lift one foot then set it down
+    float step_phase = phase * 2.0F;
+    bool const is_left_step = step_phase < 1.0F;
+    if (!is_left_step) {
+      step_phase -= 1.0F;
+    }
+
+    float const step_lift =
+        std::sin(step_phase * std::numbers::pi_v<float>) * intensity * 0.05F;
+
+    if (is_left_step) {
+      m_pose.foot_l.setY(m_pose.foot_l.y() + step_lift);
+      m_pose.knee_l.setY(m_pose.knee_l.y() + step_lift * 0.6F);
+    } else {
+      m_pose.foot_r.setY(m_pose.foot_r.y() + step_lift);
+      m_pose.knee_r.setY(m_pose.knee_r.y() + step_lift * 0.6F);
+    }
+    break;
+  }
+
+  case AmbientIdleType::BendKnee: {
+    // Bend one knee to rest the leg
+    float const bend_amount = intensity * 0.08F;
+
+    // Bend left knee, shift weight to right
+    m_pose.knee_l.setY(m_pose.knee_l.y() - bend_amount);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + bend_amount * 0.5F);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + bend_amount * 0.3F);
+
+    // Pelvis shifts slightly to right (weight-bearing leg)
+    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + bend_amount * 0.3F);
     break;
   }
 

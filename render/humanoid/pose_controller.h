@@ -10,12 +10,12 @@ namespace Render::GL {
 /// Types of ambient idle animations (occasional, more noticeable actions)
 enum class AmbientIdleType : std::uint8_t {
   None = 0,
-  RaiseWeapon,      // Briefly raise/inspect weapon
-  StretchShoulders, // Shoulder stretch
-  AdjustHelmet,     // Touch/adjust helmet
-  LookAround,       // Look left and right
-  ShiftStance,      // Shift weight more noticeably
-  RestOnWeapon      // Lean slightly on weapon
+  SitDown,          // Soldier sits down briefly then stands
+  ShuffleFeet,      // Shuffle/adjust feet position
+  TapFoot,          // Tap foot impatiently
+  ShiftWeight,      // Shift weight between legs
+  StepInPlace,      // Small step in place
+  BendKnee          // Bend one knee briefly (resting leg)
 };
 
 class HumanoidPoseController {
