@@ -314,6 +314,7 @@ public:
   float construction_site_x{0.0F};
   float construction_site_z{0.0F};
   bool at_construction_site{false};
+  bool is_placement_preview{false};
 };
 
 class PendingRemovalComponent : public Component {

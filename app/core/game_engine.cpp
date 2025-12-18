@@ -612,6 +612,12 @@ void GameEngine::on_construction_confirm() {
       continue;
     }
 
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod != nullptr) {
+      builder_prod->is_placement_preview = false;
+    }
+
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->goal_x = m_construction_placement_position.x();
@@ -646,6 +652,7 @@ void GameEngine::on_construction_cancel() {
       builder_prod->construction_site_z = 0.0F;
       builder_prod->at_construction_site = false;
       builder_prod->product_type = "";
+      builder_prod->is_placement_preview = false;
     }
   }
 
@@ -1497,6 +1504,7 @@ void GameEngine::start_builder_construction(const QString &item_type) {
     builder_prod->construction_site_z = center.z();
     builder_prod->at_construction_site = false;
     builder_prod->in_progress = false;
+    builder_prod->is_placement_preview = true;
   }
 
   emit placing_construction_changed();

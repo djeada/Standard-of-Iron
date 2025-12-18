@@ -140,6 +140,10 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
+    if (builder_prod->is_placement_preview) {
+      continue;
+    }
+
     auto *transform = e->get_component<Engine::Core::TransformComponent>();
     auto *movement = e->get_component<Engine::Core::MovementComponent>();
 
