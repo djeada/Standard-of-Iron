@@ -7,6 +7,7 @@
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
+#include "../../game/systems/troop_profile_service.h"
 #include "../../render/gl/camera.h"
 #include "../utils/movement_utils.h"
 #include "game/game_config.h"
@@ -748,6 +749,8 @@ auto CommandController::on_run_command() -> CommandResult {
   struct UnitRunState {
     Engine::Core::Entity *entity;
     Engine::Core::StaminaComponent *stamina;
+    Game::Systems::NationID nation_id;
+    Game::Units::SpawnType spawn_type;
   };
   std::vector<UnitRunState> eligible_units;
   eligible_units.reserve(selected.size());
@@ -769,7 +772,8 @@ auto CommandController::on_run_command() -> CommandResult {
     const bool is_active = stamina != nullptr && stamina->run_requested;
     run_active_count += is_active ? 1 : 0;
 
-    eligible_units.push_back({entity, stamina});
+    eligible_units.push_back(
+        {entity, stamina, unit->nation_id, unit->spawn_type});
   }
 
   if (eligible_units.empty()) {
@@ -780,10 +784,21 @@ auto CommandController::on_run_command() -> CommandResult {
       run_active_count < static_cast<int>(eligible_units.size());
 
   // Second pass: apply state using cached pointers
-  for (auto &[entity, stamina] : eligible_units) {
+  for (auto &[entity, stamina, nation_id, spawn_type] : eligible_units) {
     if (should_enable_run) {
       if (stamina == nullptr) {
         stamina = entity->add_component<Engine::Core::StaminaComponent>();
+        // Initialize stamina values from troop profile
+        const auto troop_type =
+            Game::Units::spawn_typeToTroopType(spawn_type);
+        if (troop_type.has_value()) {
+          const auto profile =
+              Game::Systems::TroopProfileService::instance().get_profile(
+                  nation_id, *troop_type);
+          stamina->initialize_from_stats(profile.combat.max_stamina,
+                                         profile.combat.stamina_regen_rate,
+                                         profile.combat.stamina_depletion_rate);
+        }
       }
       stamina->run_requested = true;
     } else if (stamina != nullptr) {
