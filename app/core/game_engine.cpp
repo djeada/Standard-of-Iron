@@ -1492,7 +1492,9 @@ auto GameEngine::collect_available_builders()
 
 auto GameEngine::calculate_builder_center_position(
     const std::vector<Engine::Core::EntityID> &builder_ids) -> QVector3D {
-  QVector3D center(0.0F, 0.0F, 0.0F);
+  float sum_x = 0.0F;
+  float sum_y = 0.0F;
+  float sum_z = 0.0F;
   int valid_count = 0;
 
   for (auto id : builder_ids) {
@@ -1503,31 +1505,39 @@ auto GameEngine::calculate_builder_center_position(
 
     auto *transform = e->get_component<Engine::Core::TransformComponent>();
     if (transform) {
-      center += QVector3D(transform->position.x, transform->position.y,
-                          transform->position.z);
+      sum_x += transform->position.x;
+      sum_y += transform->position.y;
+      sum_z += transform->position.z;
       valid_count++;
     }
   }
 
   if (valid_count > 0) {
-    center /= static_cast<float>(valid_count);
+    return QVector3D(sum_x / static_cast<float>(valid_count),
+                     sum_y / static_cast<float>(valid_count),
+                     sum_z / static_cast<float>(valid_count));
   }
 
-  return center;
+  return QVector3D(0.0F, 0.0F, 0.0F);
 }
 
 auto GameEngine::get_construction_build_time(const std::string &item_type)
     -> float {
+  constexpr float DEFAULT_BUILD_TIME = 10.0F;
+  constexpr float CATAPULT_BUILD_TIME = 15.0F;
+  constexpr float BALLISTA_BUILD_TIME = 12.0F;
+  constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
+
   if (item_type == "catapult") {
-    return 15.0F;
+    return CATAPULT_BUILD_TIME;
   }
   if (item_type == "ballista") {
-    return 12.0F;
+    return BALLISTA_BUILD_TIME;
   }
   if (item_type == "defense_tower") {
-    return 20.0F;
+    return DEFENSE_TOWER_BUILD_TIME;
   }
-  return 10.0F; // Default for "home" and others
+  return DEFAULT_BUILD_TIME; // Default for "home" and others
 }
 
 auto GameEngine::get_selected_units_command_mode() const -> QString {
