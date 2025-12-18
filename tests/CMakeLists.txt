@@ -16,6 +16,7 @@ add_executable(standard_of_iron_tests
     systems/guard_system_test.cpp
     systems/stamina_system_test.cpp
     systems/idle_behavior_system_test.cpp
+    systems/building_collision_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
