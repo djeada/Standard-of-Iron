@@ -41,6 +41,8 @@ public:
   [[nodiscard]] bool has_minimap() const {
     return !m_minimap_base_image.isNull();
   }
+  [[nodiscard]] float get_world_width() const { return m_world_width; }
+  [[nodiscard]] float get_world_height() const { return m_world_height; }
 
 private:
   QImage m_minimap_image;

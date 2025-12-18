@@ -540,6 +540,21 @@ Item {
                     visible: parent.status !== Image.Ready
                 }
 
+                MouseArea {
+                    anchors.fill: parent
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: function(mouse) {
+                        if (typeof game === 'undefined')
+                            return;
+
+                        if (mouse.button === Qt.LeftButton) {
+                            game.on_minimap_left_click(mouse.x, mouse.y, width, height);
+                        } else if (mouse.button === Qt.RightButton) {
+                            game.on_minimap_right_click(mouse.x, mouse.y, width, height);
+                        }
+                    }
+                }
+
             }
 
         }
