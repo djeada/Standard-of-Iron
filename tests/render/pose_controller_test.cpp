@@ -66,9 +66,9 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
   QVector3D const original_pelvis = pose.pelvis_pos;
   QVector3D const original_shoulder_l = pose.shoulder_l;
 
-  controller.standIdle();
+  controller.stand_idle();
 
-  // standIdle should be a no-op, keeping pose unchanged
+  // stand_idle should be a no-op, keeping pose unchanged
   EXPECT_TRUE(approxEqual(pose.pelvis_pos, original_pelvis));
   EXPECT_TRUE(approxEqual(pose.shoulder_l, original_shoulder_l));
 }
