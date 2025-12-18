@@ -216,7 +216,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
     }
 
     if (!mv->path_pending) {
-      bool const current_target_matches = mv->has_target && !mv->has_waypoints();
+      bool const current_target_matches =
+          mv->has_target && !mv->has_waypoints();
       if (current_target_matches) {
         float const dx = mv->target_x - target_x;
         float const dz = mv->target_y - target_z;
@@ -796,7 +797,6 @@ void CommandService::processPathResults(Engine::Core::World &world) {
                                                 world_pos.z() + offset.z());
         }
 
-        // Skip waypoints that are already reached (O(1) index advance)
         while (movement_component->has_waypoints()) {
           const auto &wp = movement_component->current_waypoint();
           float const dx = wp.first - member_transform->position.x;

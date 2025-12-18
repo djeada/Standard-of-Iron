@@ -53,7 +53,7 @@ void BuildingCollisionRegistry::register_building(
   m_entityToIndex[entity_id] = m_buildings.size() - 1;
 
   if (auto *pf = CommandService::getPathfinder()) {
-    // Use region-based dirty marking instead of full grid
+
     pf->markBuildingRegionDirty(center_x, center_z, size.width, size.depth);
   }
 }
@@ -66,7 +66,6 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
 
   size_t const index = it->second;
 
-  // Get building info before removal for region-based dirty marking
   float const center_x = m_buildings[index].center_x;
   float const center_z = m_buildings[index].center_z;
   float const width = m_buildings[index].width;
@@ -82,7 +81,7 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   m_entityToIndex.erase(entity_id);
 
   if (auto *pf = CommandService::getPathfinder()) {
-    // Use region-based dirty marking instead of full grid
+
     pf->markBuildingRegionDirty(center_x, center_z, width, depth);
   }
 }
@@ -97,7 +96,6 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
 
   size_t const index = it->second;
 
-  // Get old position for region-based dirty marking
   float const old_x = m_buildings[index].center_x;
   float const old_z = m_buildings[index].center_z;
   float const width = m_buildings[index].width;
@@ -107,7 +105,7 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
   m_buildings[index].center_z = center_z;
 
   if (auto *pf = CommandService::getPathfinder()) {
-    // Mark both old and new positions as dirty
+
     pf->markBuildingRegionDirty(old_x, old_z, width, depth);
     pf->markBuildingRegionDirty(center_x, center_z, width, depth);
   }

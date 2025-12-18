@@ -39,20 +39,19 @@ void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
 }
 
 namespace {
-// Helper to handle the common logic for right-click based movement
-void handle_move_command(
-    Engine::Core::World *world,
-    const std::vector<Engine::Core::EntityID> &selected,
-    Game::Systems::PickingService *picking_service, Render::GL::Camera *camera,
-    qreal sx, qreal sy, int local_owner_id, const ViewportState &viewport) {
+
+void handle_move_command(Engine::Core::World *world,
+                         const std::vector<Engine::Core::EntityID> &selected,
+                         Game::Systems::PickingService *picking_service,
+                         Render::GL::Camera *camera, qreal sx, qreal sy,
+                         int local_owner_id, const ViewportState &viewport) {
   if (!picking_service || !camera || !world) {
     return;
   }
 
-  // Check for enemy target
-  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
-      float(sx), float(sy), *world, *camera, viewport.width, viewport.height,
-      0);
+  Engine::Core::EntityID const target_id =
+      picking_service->pick_unit_first(float(sx), float(sy), *world, *camera,
+                                       viewport.width, viewport.height, 0);
 
   if (target_id != 0U) {
     auto *target_entity = world->get_entity(target_id);
@@ -70,16 +69,31 @@ void handle_move_command(
     }
   }
 
-  // Move to ground location
   QVector3D hit;
-  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera, viewport.width,
-                                        viewport.height, hit)) {
-    auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
-        *world, selected, hit,
-        Game::GameConfig::instance().gameplay().formation_spacing_default);
+  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera,
+                                        viewport.width, viewport.height, hit)) {
+    auto formation_result =
+        Game::Systems::FormationPlanner::get_formation_with_facing(
+            *world, selected, hit,
+            Game::GameConfig::instance().gameplay().formation_spacing_default);
+
+    for (size_t i = 0; i < selected.size(); ++i) {
+      auto *entity = world->get_entity(selected[i]);
+      if (entity == nullptr) {
+        continue;
+      }
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr && i < formation_result.facing_angles.size()) {
+        transform->desired_yaw = formation_result.facing_angles[i];
+        transform->has_desired_yaw = true;
+      }
+    }
+
     Game::Systems::CommandService::MoveOptions opts;
     opts.group_move = selected.size() > 1;
-    Game::Systems::CommandService::moveUnits(*world, selected, targets, opts);
+    Game::Systems::CommandService::moveUnits(*world, selected,
+                                             formation_result.positions, opts);
   }
 }
 } // namespace
@@ -109,7 +123,6 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     return;
   }
 
-  // Disable run mode for regular single right-click (walking)
   if (m_command_controller) {
     m_command_controller->disable_run_mode_for_selected();
   }
@@ -144,7 +157,6 @@ void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
     return;
   }
 
-  // Enable run mode for double right-click (running)
   if (m_command_controller) {
     m_command_controller->enable_run_mode_for_selected();
   }
@@ -311,6 +323,65 @@ auto InputCommandHandler::any_selected_in_run_mode() const -> bool {
     return false;
   }
   return m_command_controller->any_selected_in_run_mode();
+}
+
+auto InputCommandHandler::is_placing_formation() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->is_placing_formation();
+}
+
+void InputCommandHandler::on_formation_mouse_move(
+    qreal sx, qreal sy, const ViewportState &viewport) {
+  if (!m_command_controller || !m_camera || !m_picking_service) {
+    return;
+  }
+
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  QVector3D hit;
+  if (m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+    m_command_controller->update_formation_placement(hit);
+  }
+}
+
+void InputCommandHandler::on_formation_scroll(float delta) {
+  if (!m_command_controller) {
+    return;
+  }
+
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  float current_angle = m_command_controller->get_formation_placement_angle();
+  float new_angle = current_angle + delta * 5.0F;
+
+  while (new_angle < 0.0F) {
+    new_angle += 360.0F;
+  }
+  while (new_angle >= 360.0F) {
+    new_angle -= 360.0F;
+  }
+  m_command_controller->update_formation_rotation(new_angle);
+}
+
+void InputCommandHandler::on_formation_confirm() {
+  if (!m_command_controller) {
+    return;
+  }
+  m_command_controller->confirm_formation_placement();
+}
+
+void InputCommandHandler::on_formation_cancel() {
+  if (!m_command_controller) {
+    return;
+  }
+  m_command_controller->cancel_formation_placement();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,

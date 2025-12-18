@@ -13,7 +13,8 @@ constexpr float kMinMovementSpeedSq = 0.01F;
   if (movement == nullptr) {
     return false;
   }
-  const float speed_sq = movement->vx * movement->vx + movement->vz * movement->vz;
+  const float speed_sq =
+      movement->vx * movement->vx + movement->vz * movement->vz;
   return speed_sq > kMinMovementSpeedSq;
 }
 } // namespace

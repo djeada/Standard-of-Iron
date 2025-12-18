@@ -9,6 +9,7 @@ Item {
     property real gameSpeed: 1
     property bool setRallyMode: false
     property string cursorMode: "normal"
+    property bool isPlacingFormation: false
     property var pressedKeys: ({
     })
 
@@ -31,7 +32,6 @@ Item {
     }
 
     function issueCommand(command) {
-        console.log("Command issued:", command);
     }
 
     function beginPanKey(e) {
@@ -243,6 +243,12 @@ Item {
 
             }
 
+            function onPlacing_formation_changed() {
+                if (typeof game !== 'undefined')
+                    gameView.isPlacingFormation = game.is_placing_formation;
+
+            }
+
             target: game
         }
 
@@ -282,10 +288,22 @@ Item {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
 
+                    if (gameView.isPlacingFormation) {
+                        if (typeof game !== 'undefined' && game.on_formation_mouse_move)
+                            game.on_formation_mouse_move(mouse.x, mouse.y);
+
+                    }
                 }
             }
             onWheel: function(w) {
                 var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
+                if (typeof game !== 'undefined' && game.is_placing_formation) {
+                    if (game.on_formation_scroll)
+                        game.on_formation_scroll(dy);
+
+                    w.accepted = true;
+                    return ;
+                }
                 if (dy !== 0 && typeof game !== 'undefined' && game.camera_zoom)
                     game.camera_zoom(dy * 0.8);
 
@@ -324,6 +342,12 @@ Item {
 
                         return ;
                     }
+                    if (typeof game !== 'undefined' && game.is_placing_formation) {
+                        if (game.on_formation_confirm)
+                            game.on_formation_confirm();
+
+                        return ;
+                    }
                     isSelecting = true;
                     startX = mouse.x;
                     startY = mouse.y;
@@ -333,6 +357,12 @@ Item {
                     selectionBox.height = 0;
                     selectionBox.visible = true;
                 } else if (mouse.button === Qt.RightButton) {
+                    if (typeof game !== 'undefined' && game.is_placing_formation) {
+                        if (game.on_formation_cancel)
+                            game.on_formation_cancel();
+
+                        return ;
+                    }
                     renderArea.mousePanActive = true;
                     mainWindow.edgeScrollDisabled = true;
                     if (gameView.setRallyMode)
