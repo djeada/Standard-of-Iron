@@ -49,8 +49,14 @@ auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t see
       static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
-  // Only 1 in 10 soldiers will trigger ambient idles (1-2 per unit max)
-  if ((seed % 10) > 1) {
+  // Determine which cycle we're in (changes over time)
+  auto const cycle_number =
+      static_cast<std::uint32_t>((time + seed_offset) / cycle_period);
+
+  // Randomize which soldiers animate each cycle using cycle_number + seed
+  // This ensures different soldiers animate at different times
+  std::uint32_t const soldier_selector = seed ^ (cycle_number * 2654435761U);
+  if ((soldier_selector % 10) > 1) {
     return AmbientIdleType::None;
   }
 
@@ -59,8 +65,10 @@ auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t see
     return AmbientIdleType::None;
   }
 
-  // Select which ambient idle based on seed (now 8 types)
-  auto const idle_type = static_cast<std::uint8_t>((seed / 7) % 8);
+  // Randomize animation type each cycle using cycle_number + seed
+  // This ensures each soldier gets different animations over time
+  std::uint32_t const anim_selector = seed ^ (cycle_number * 1664525U);
+  auto const idle_type = static_cast<std::uint8_t>(anim_selector % 8);
   return static_cast<AmbientIdleType>(idle_type + 1);
 }
 
