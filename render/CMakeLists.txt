@@ -104,6 +104,7 @@ add_library(render_gl STATIC
     geom/flag.cpp
     geom/banner_cloth.cpp
     geom/patrol_flags.cpp
+    geom/formation_arrow.cpp
     geom/transforms.cpp
     humanoid/humanoid_math.cpp
     gl/humanoid/animation/animation_inputs.cpp
