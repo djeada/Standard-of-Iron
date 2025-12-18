@@ -1,6 +1,7 @@
 #include "healing_beam_renderer.h"
 #include "../../game/systems/healing_beam.h"
 #include "../../game/systems/healing_beam_system.h"
+#include "../../game/systems/healing_colors.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -20,12 +21,11 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
         continue;
       }
       
-      // Only render non-blue (Carthage) beams
-      // Blue beams (Roman) are rendered by the wave renderer
+      // Only render non-Roman (Carthage) beams
+      // Roman beams are rendered by the wave renderer
       QVector3D color = beam->get_color();
-      bool is_blue = (color.z() > 0.8F && color.x() < 0.5F); // Blue has high Z, low X
-      if (is_blue) {
-        continue; // Skip blue beams
+      if (Game::Systems::is_roman_healing_color(color)) {
+        continue; // Skip Roman beams
       }
       
       renderer->healing_beam(beam->get_start(), beam->get_end(),

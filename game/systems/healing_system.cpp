@@ -2,6 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
+#include "healing_colors.h"
 #include "nation_id.h"
 #include <QDebug>
 #include <cmath>
@@ -98,10 +99,7 @@ void HealingSystem::process_healing(Engine::Core::World *world,
                                      target_transform->position.z);
 
           // Roman healers use blue waves, Carthage uses green beams
-          QVector3D heal_color(0.4F, 1.0F, 0.5F); // Default green for Carthage
-          if (healer_unit->nation_id == NationID::RomanRepublic) {
-            heal_color = QVector3D(0.3F, 0.6F, 1.0F); // Blue for Roman
-          }
+          QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
           
           healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
                                           0.7F);

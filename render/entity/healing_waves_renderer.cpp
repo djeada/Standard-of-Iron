@@ -2,6 +2,7 @@
 #include "../../game/core/component.h"
 #include "../../game/systems/healing_beam.h"
 #include "../../game/systems/healing_beam_system.h"
+#include "../../game/systems/healing_colors.h"
 #include "../../game/systems/nation_id.h"
 #include "../scene_renderer.h"
 #include <QVector3D>
@@ -35,9 +36,8 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
 
     // Only render waves for blue (Roman) beams
     // Green beams (Carthage) are rendered by the regular beam renderer
-    bool is_blue = (color.z() > 0.8F && color.x() < 0.5F); // Blue has high Z, low X
-    if (!is_blue) {
-      continue; // Skip non-blue beams
+    if (!Game::Systems::is_roman_healing_color(color)) {
+      continue; // Skip non-Roman beams
     }
 
     // Calculate direction and distance
