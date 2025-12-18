@@ -48,6 +48,7 @@ public:
 
   void setObstacle(int x, int y, bool isObstacle);
   auto isWalkable(int x, int y) const -> bool;
+  auto isWalkableWithRadius(int x, int y, float unit_radius) const -> bool;
 
   void updateBuildingObstacles();
 
@@ -59,12 +60,16 @@ public:
                                float depth);
 
   auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
+  auto findPath(const Point &start, const Point &end, float unit_radius)
+      -> std::vector<Point>;
 
   auto findPathAsync(const Point &start,
                      const Point &end) -> std::future<std::vector<Point>>;
 
   void submitPathRequest(std::uint64_t request_id, const Point &start,
                          const Point &end);
+  void submitPathRequest(std::uint64_t request_id, const Point &start,
+                         const Point &end, float unit_radius);
 
   struct PathResult {
     std::uint64_t request_id;
@@ -72,9 +77,15 @@ public:
   };
   auto fetchCompletedPaths() -> std::vector<PathResult>;
 
+  static auto findNearestWalkablePoint(const Point &point, int max_search_radius,
+                                       const Pathfinding &pathfinder,
+                                       float unit_radius = 0.0F) -> Point;
+
 private:
-  auto findPathInternal(const Point &start,
-                        const Point &end) -> std::vector<Point>;
+  auto findPathInternal(const Point &start, const Point &end)
+      -> std::vector<Point>;
+  auto findPathInternal(const Point &start, const Point &end, float unit_radius)
+      -> std::vector<Point>;
 
   static auto calculateHeuristic(const Point &a, const Point &b) -> int;
 
@@ -133,6 +144,7 @@ private:
     std::uint64_t request_id{};
     Point start;
     Point end;
+    float unit_radius{0.0F};
   };
   std::queue<PathRequest> m_requestQueue;
   std::mutex m_resultMutex;

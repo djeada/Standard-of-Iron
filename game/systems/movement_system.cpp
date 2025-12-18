@@ -1,5 +1,6 @@
 #include "movement_system.h"
 #include "../map/terrain_service.h"
+#include "../units/troop_config.h"
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "core/component.h"
@@ -20,7 +21,8 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 namespace {
 
 auto isPointAllowed(const QVector3D &pos,
-                    Engine::Core::EntityID ignoreEntity) -> bool {
+                    Engine::Core::EntityID ignoreEntity,
+                    float unit_radius = 0.5F) -> bool {
   auto &registry = BuildingCollisionRegistry::instance();
   auto &terrain_service = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::getPathfinder();
@@ -34,7 +36,7 @@ auto isPointAllowed(const QVector3D &pos,
         static_cast<int>(std::round(pos.x() - pathfinder->getGridOffsetX()));
     int const grid_z =
         static_cast<int>(std::round(pos.z() - pathfinder->getGridOffsetZ()));
-    if (!pathfinder->isWalkable(grid_x, grid_z)) {
+    if (!pathfinder->isWalkableWithRadius(grid_x, grid_z, unit_radius)) {
       return false;
     }
   } else if (terrain_service.is_initialized()) {
@@ -49,12 +51,13 @@ auto isPointAllowed(const QVector3D &pos,
 }
 
 auto isSegmentWalkable(const QVector3D &from, const QVector3D &to,
-                       Engine::Core::EntityID ignoreEntity) -> bool {
+                       Engine::Core::EntityID ignoreEntity,
+                       float unit_radius = 0.5F) -> bool {
   QVector3D const delta = to - from;
   float const distance_squared = delta.lengthSquared();
 
-  bool const start_allowed = isPointAllowed(from, ignoreEntity);
-  bool const end_allowed = isPointAllowed(to, ignoreEntity);
+  bool const start_allowed = isPointAllowed(from, ignoreEntity, unit_radius);
+  bool const end_allowed = isPointAllowed(to, ignoreEntity, unit_radius);
 
   if (distance_squared < 0.000001F) {
     return end_allowed;
@@ -67,7 +70,7 @@ auto isSegmentWalkable(const QVector3D &from, const QVector3D &to,
 
   for (int i = 1; i <= steps; ++i) {
     QVector3D const pos = from + step * static_cast<float>(i);
-    bool const allowed = isPointAllowed(pos, ignoreEntity);
+    bool const allowed = isPointAllowed(pos, ignoreEntity, unit_radius);
 
     if (!exited_blocked_zone) {
       if (allowed) {
@@ -167,7 +170,32 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   QVector3D const final_goal(movement->goal_x, 0.0F, movement->goal_y);
-  bool const destination_allowed = isPointAllowed(final_goal, entity->get_id());
+  
+  float const unit_radius = CommandService::getUnitRadius(*world, entity->get_id());
+  
+  QVector3D const current_pos_3d(transform->position.x, 0.0F,
+                                  transform->position.z);
+  bool const current_pos_valid =
+      isPointAllowed(current_pos_3d, entity->get_id(), unit_radius);
+
+  if (!current_pos_valid && !movement->path_pending) {
+    Pathfinding *pathfinder = CommandService::getPathfinder();
+    if (pathfinder != nullptr) {
+      Point const current_grid = CommandService::worldToGrid(
+          transform->position.x, transform->position.z);
+      Point const nearest = Pathfinding::findNearestWalkablePoint(
+          current_grid, 10, *pathfinder, unit_radius);
+
+      if (!(nearest == current_grid)) {
+        QVector3D const safe_pos = CommandService::gridToWorld(nearest);
+        transform->position.x = safe_pos.x();
+        transform->position.z = safe_pos.z();
+      }
+    }
+  }
+  
+  bool const destination_allowed =
+      isPointAllowed(final_goal, entity->get_id(), unit_radius);
 
   if (movement->has_target && !destination_allowed) {
     movement->clear_path();
@@ -247,7 +275,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       while (movement->has_waypoints() && skips_remaining-- > 0) {
         movement->advance_waypoint();
         refresh_segment_target();
-        if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
+        if (isSegmentWalkable(current_pos, segment_target, entity->get_id(),
+                              unit_radius)) {
           recovered = true;
           break;
         }
@@ -255,7 +284,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
       if (!recovered && !movement->has_waypoints()) {
         refresh_segment_target();
-        if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
+        if (isSegmentWalkable(current_pos, segment_target, entity->get_id(),
+                              unit_radius)) {
           recovered = true;
         }
       }
@@ -263,7 +293,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       return recovered;
     };
 
-    if (!isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
+    if (!isSegmentWalkable(current_pos, segment_target, entity->get_id(),
+                           unit_radius)) {
       if (try_advance_past_blocked_segment()) {
 
       } else {

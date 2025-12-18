@@ -51,6 +51,33 @@ auto Pathfinding::isWalkable(int x, int y) const -> bool {
   return m_obstacles[y][x] == 0;
 }
 
+auto Pathfinding::isWalkableWithRadius(int x, int y, float unit_radius) const
+    -> bool {
+  if (unit_radius <= 0.5F) {
+    return isWalkable(x, y);
+  }
+
+  int const radius_cells = static_cast<int>(std::ceil(unit_radius));
+
+  for (int dy = -radius_cells; dy <= radius_cells; ++dy) {
+    for (int dx = -radius_cells; dx <= radius_cells; ++dx) {
+      int const check_x = x + dx;
+      int const check_y = y + dy;
+
+      float const dist_sq = static_cast<float>(dx * dx + dy * dy);
+      if (dist_sq > unit_radius * unit_radius) {
+        continue;
+      }
+
+      if (!isWalkable(check_x, check_y)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 void Pathfinding::markObstaclesDirty() {
   std::lock_guard<std::mutex> const lock(m_dirtyMutex);
   m_fullUpdateRequired = true;
@@ -240,6 +267,17 @@ auto Pathfinding::findPath(const Point &start,
   return findPathInternal(start, end);
 }
 
+auto Pathfinding::findPath(const Point &start, const Point &end,
+                           float unit_radius) -> std::vector<Point> {
+
+  if (m_obstaclesDirty.load(std::memory_order_acquire)) {
+    updateBuildingObstacles();
+  }
+
+  std::lock_guard<std::mutex> const lock(m_mutex);
+  return findPathInternal(start, end, unit_radius);
+}
+
 auto Pathfinding::findPathAsync(const Point &start, const Point &end)
     -> std::future<std::vector<Point>> {
   return std::async(std::launch::async,
@@ -250,7 +288,17 @@ void Pathfinding::submitPathRequest(std::uint64_t request_id,
                                     const Point &start, const Point &end) {
   {
     std::lock_guard<std::mutex> const lock(m_requestMutex);
-    m_requestQueue.push({request_id, start, end});
+    m_requestQueue.push({request_id, start, end, 0.0F});
+  }
+  m_requestCondition.notify_one();
+}
+
+void Pathfinding::submitPathRequest(std::uint64_t request_id,
+                                    const Point &start, const Point &end,
+                                    float unit_radius) {
+  {
+    std::lock_guard<std::mutex> const lock(m_requestMutex);
+    m_requestQueue.push({request_id, start, end, unit_radius});
   }
   m_requestCondition.notify_one();
 }
@@ -268,9 +316,21 @@ auto Pathfinding::fetchCompletedPaths()
 
 auto Pathfinding::findPathInternal(const Point &start,
                                    const Point &end) -> std::vector<Point> {
+  return findPathInternal(start, end, 0.0F);
+}
+
+auto Pathfinding::findPathInternal(const Point &start, const Point &end,
+                                   float unit_radius) -> std::vector<Point> {
   ensureWorkingBuffers();
 
-  if (!isWalkable(start.x, start.y) || !isWalkable(end.x, end.y)) {
+  auto const isWalkableFunc = [this, unit_radius](int x, int y) -> bool {
+    if (unit_radius <= 0.5F) {
+      return isWalkable(x, y);
+    }
+    return isWalkableWithRadius(x, y, unit_radius);
+  };
+
+  if (!isWalkableFunc(start.x, start.y) || !isWalkableFunc(end.x, end.y)) {
     return {};
   }
 
@@ -322,7 +382,7 @@ auto Pathfinding::findPathInternal(const Point &start,
 
     for (std::size_t i = 0; i < neighbor_count; ++i) {
       const Point &neighbor = neighbors[i];
-      if (!isWalkable(neighbor.x, neighbor.y)) {
+      if (!isWalkableFunc(neighbor.x, neighbor.y)) {
         continue;
       }
 
@@ -582,13 +642,50 @@ void Pathfinding::workerLoop() {
       m_requestQueue.pop();
     }
 
-    auto path = findPath(request.start, request.end);
+    auto path = (request.unit_radius > 0.0F)
+                    ? findPath(request.start, request.end, request.unit_radius)
+                    : findPath(request.start, request.end);
 
     {
       std::lock_guard<std::mutex> const lock(m_resultMutex);
       m_resultQueue.push({request.request_id, std::move(path)});
     }
   }
+}
+
+auto Pathfinding::findNearestWalkablePoint(const Point &point,
+                                           int max_search_radius,
+                                           const Pathfinding &pathfinder,
+                                           float unit_radius) -> Point {
+  auto const isWalkableFunc = [&pathfinder, unit_radius](int x, int y) -> bool {
+    if (unit_radius <= 0.5F) {
+      return pathfinder.isWalkable(x, y);
+    }
+    return pathfinder.isWalkableWithRadius(x, y, unit_radius);
+  };
+
+  if (isWalkableFunc(point.x, point.y)) {
+    return point;
+  }
+
+  for (int radius = 1; radius <= max_search_radius; ++radius) {
+    for (int dy = -radius; dy <= radius; ++dy) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dy) != radius) {
+          continue;
+        }
+
+        int const check_x = point.x + dx;
+        int const check_y = point.y + dy;
+
+        if (isWalkableFunc(check_x, check_y)) {
+          return {check_x, check_y};
+        }
+      }
+    }
+  }
+
+  return point;
 }
 
 } // namespace Game::Systems

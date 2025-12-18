@@ -1,6 +1,7 @@
 #include "command_service.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../units/troop_config.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 #include <QDebug>
@@ -73,6 +74,25 @@ auto CommandService::gridToWorld(const Point &gridPos) -> QVector3D {
             static_cast<float>(gridPos.y) + s_pathfinder->getGridOffsetZ()};
   }
   return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
+}
+
+auto CommandService::getUnitRadius(Engine::Core::World &world,
+                                   Engine::Core::EntityID entity_id) -> float {
+  auto *entity = world.get_entity(entity_id);
+  if (entity == nullptr) {
+    return 0.5F;
+  }
+
+  auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return 0.5F;
+  }
+
+  float const selection_ring_size =
+      Game::Units::TroopConfig::instance().getSelectionRingSize(
+          unit_comp->spawn_type);
+
+  return selection_ring_size * 0.5F;
 }
 
 void CommandService::clearPendingRequest(Engine::Core::EntityID entity_id) {
@@ -314,14 +334,20 @@ void CommandService::moveUnits(Engine::Core::World &world,
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
         mv->pending_request_id = request_id;
 
+        float const unit_radius = getUnitRadius(world, units[i]);
+
         {
           std::lock_guard<std::mutex> const lock(s_pendingMutex);
-          s_pendingRequests[request_id] = {
-              units[i], targets[i], options, {}, {}};
+          PendingPathRequest pending;
+          pending.entity_id = units[i];
+          pending.target = targets[i];
+          pending.options = options;
+          pending.unit_radius = unit_radius;
+          s_pendingRequests[request_id] = std::move(pending);
           s_entityToRequest[units[i]] = request_id;
         }
 
-        s_pathfinder->submitPathRequest(request_id, start, end);
+        s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
 
         mv->time_since_last_path_request = 0.0F;
         mv->last_goal_x = target_x;
@@ -698,10 +724,16 @@ void CommandService::moveGroup(Engine::Core::World &world,
     member->movement->last_goal_y = member->target.z();
   }
 
+  Point const start = worldToGrid(leader_pos.x(), leader_pos.z());
+  Point const end = worldToGrid(leader_target.x(), leader_target.z());
+
+  float const unit_radius = getUnitRadius(world, leader.id);
+
   PendingPathRequest pending;
   pending.entity_id = leader.id;
   pending.target = leader_target;
   pending.options = options;
+  pending.unit_radius = unit_radius;
   pending.groupMembers.reserve(units_needing_new_path.size());
   pending.groupTargets.reserve(units_needing_new_path.size());
   for (const auto *member : units_needing_new_path) {
@@ -717,7 +749,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     }
   }
 
-  s_pathfinder->submitPathRequest(request_id, start, end);
+  s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
 }
 
 void CommandService::processPathResults(Engine::Core::World &world) {
