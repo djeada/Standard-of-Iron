@@ -21,12 +21,12 @@ void ArmGuardsRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                                const HumanoidAnimationContext &,
                                ISubmitter &submitter) {
   QVector3D elbow_l = frames.shoulder_l.origin +
-                      (frames.hand_l - frames.shoulder_l.origin) * 0.55F;
+                      (frames.hand_l.origin - frames.shoulder_l.origin) * 0.55F;
   QVector3D elbow_r = frames.shoulder_r.origin +
-                      (frames.hand_r - frames.shoulder_r.origin) * 0.55F;
+                      (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
 
-  renderArmGuard(ctx, elbow_l, frames.hand_l, submitter);
-  renderArmGuard(ctx, elbow_r, frames.hand_r, submitter);
+  renderArmGuard(ctx, elbow_l, frames.hand_l.origin, submitter);
+  renderArmGuard(ctx, elbow_r, frames.hand_r.origin, submitter);
 }
 
 void ArmGuardsRenderer::renderArmGuard(const DrawContext &ctx,
