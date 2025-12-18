@@ -98,7 +98,7 @@ struct KnightExtras {
 class KnightRenderer : public HumanoidRendererBase {
 public:
   static constexpr float kLimbWidthScale = 0.90F;
-  static constexpr float kTorsoWidthScale = 0.55F;
+  static constexpr float kTorsoWidthScale = 0.75F;
   static constexpr float kHeightScale = 1.03F;
   static constexpr float kDepthScale = 0.46F;
 

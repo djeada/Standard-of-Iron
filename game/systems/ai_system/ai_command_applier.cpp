@@ -136,8 +136,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
           Game::GameConfig::instance().get_max_troops_per_player();
       Game::Units::TroopType const product_type = production->product_type;
       int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
-              product_type);
+          Game::Units::TroopConfig::instance().getProductionCost(product_type);
       if (current_troops + production_cost > max_troops) {
         break;
       }
