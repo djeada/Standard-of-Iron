@@ -46,14 +46,14 @@ void BuildingCollisionRegistry::register_building(
     return;
   }
 
-  BuildingSize const size = getBuildingSize(buildingType);
+  BuildingSize const size = get_building_size(buildingType);
   BuildingFootprint const footprint(center_x, center_z, size.width, size.depth,
                                     owner_id, entity_id);
 
   m_buildings.push_back(footprint);
   m_entityToIndex[entity_id] = m_buildings.size() - 1;
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
   }
@@ -81,7 +81,7 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   m_buildings.pop_back();
   m_entityToIndex.erase(entity_id);
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
@@ -105,7 +105,7 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
   m_buildings[index].center_x = center_x;
   m_buildings[index].center_z = center_z;
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
     pf->mark_building_region_dirty(old_x, old_z, width, depth);
     pf->mark_building_region_dirty(center_x, center_z, width, depth);

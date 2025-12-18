@@ -105,7 +105,7 @@ void CameraService::reset_camera(Render::GL::Camera &camera,
   }
 
   if (focus_entity != nullptr) {
-    snapToEntity(camera, *focus_entity);
+    snap_to_entity(camera, *focus_entity);
   }
 }
 

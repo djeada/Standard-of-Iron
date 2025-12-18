@@ -31,7 +31,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       std::vector<float> expanded_z;
 
       if (command.move_target_x.size() != command.units.size()) {
-        replicateLastTargetIfNeeded(
+        replicate_last_target_if_needed(
             command.move_target_x, command.move_target_y, command.move_target_z,
             command.units.size(), expanded_x, expanded_y, expanded_z);
       } else {

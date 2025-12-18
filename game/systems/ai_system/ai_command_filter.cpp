@@ -43,8 +43,8 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
         }
       }
 
-      if (!isDuplicate(unit_id, cmd.type, target_id, move_x, move_y, move_z,
-                       currentTime)) {
+      if (!is_duplicate(unit_id, cmd.type, target_id, move_x, move_y, move_z,
+                        currentTime)) {
         valid_units.push_back(unit_id);
       } else {
         blocked_count++;
@@ -86,22 +86,24 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
 
       filtered.push_back(std::move(filtered_cmd));
 
-      recordCommand(filtered.back(), currentTime);
+      record_command(filtered.back(), currentTime);
     }
   }
 
   return filtered;
 }
 
-void AICommandFilter::update(float currentTime) { cleanupHistory(currentTime); }
+void AICommandFilter::update(float currentTime) {
+  cleanup_history(currentTime);
+}
 
 void AICommandFilter::reset() { m_history.clear(); }
 
-auto AICommandFilter::isDuplicate(Engine::Core::EntityID unit_id,
-                                  AICommandType type,
-                                  Engine::Core::EntityID target_id,
-                                  float move_x, float move_y, float move_z,
-                                  float currentTime) const -> bool {
+auto AICommandFilter::is_duplicate(Engine::Core::EntityID unit_id,
+                                   AICommandType type,
+                                   Engine::Core::EntityID target_id,
+                                   float move_x, float move_y, float move_z,
+                                   float currentTime) const -> bool {
   for (const auto &entry : m_history) {
     if (entry.is_similar_to(type, unit_id, target_id, move_x, move_y, move_z,
                             currentTime, m_cooldownPeriod)) {
@@ -152,7 +154,7 @@ void AICommandFilter::cleanup_history(float currentTime) {
                   m_history.end());
 }
 
-auto AICommandFilter::CommandHistory::isSimilarTo(
+auto AICommandFilter::CommandHistory::is_similar_to(
     const AICommandType &cmdType, Engine::Core::EntityID unit,
     Engine::Core::EntityID target, float x, float y, float z, float currentTime,
     float cooldown) const -> bool {

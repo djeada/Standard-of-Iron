@@ -92,8 +92,8 @@ void handle_move_command(Engine::Core::World *world,
 
     Game::Systems::CommandService::MoveOptions opts;
     opts.group_move = selected.size() > 1;
-    Game::Systems::CommandService::moveUnits(*world, selected,
-                                             formation_result.positions, opts);
+    Game::Systems::CommandService::move_units(*world, selected,
+                                              formation_result.positions, opts);
   }
 }
 } // namespace
