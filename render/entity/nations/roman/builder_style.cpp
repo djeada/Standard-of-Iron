@@ -29,7 +29,7 @@ void register_roman_builder_style() {
   style.apron_color = k_roman_apron;
   style.shader_id = "builder_roman_republic";
 
-  style.show_helmet = false;
+  style.show_helmet = true;
   style.show_armor = false;
   style.show_tool_belt = true;
 

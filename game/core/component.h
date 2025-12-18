@@ -4,6 +4,7 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -97,12 +98,63 @@ public:
   float goal_x{0.0F}, goal_y{0.0F};
   float vx{0.0F}, vz{0.0F};
   std::vector<std::pair<float, float>> path;
+  std::size_t path_index{0}; // Current waypoint index (avoids O(n) erase)
   bool path_pending{false};
   std::uint64_t pending_request_id{0};
   float repath_cooldown{0.0F};
 
   float last_goal_x{0.0F}, last_goal_y{0.0F};
   float time_since_last_path_request{0.0F};
+
+  /**
+   * @brief Clear path and reset index.
+   */
+  void clear_path() {
+    path.clear();
+    path_index = 0;
+  }
+
+  /**
+   * @brief Check if there are remaining waypoints.
+   */
+  [[nodiscard]] auto has_waypoints() const -> bool {
+    return path_index < path.size();
+  }
+
+  /**
+   * @brief Get current waypoint. Must call has_waypoints() first.
+   * @pre has_waypoints() returns true
+   */
+  [[nodiscard]] auto current_waypoint() const
+      -> const std::pair<float, float> & {
+    // Caller must ensure has_waypoints() is true
+    return path[path_index];
+  }
+
+  /**
+   * @brief Advance to next waypoint (O(1) instead of O(n) erase).
+   */
+  void advance_waypoint() {
+    if (path_index < path.size()) {
+      ++path_index;
+    }
+  }
+
+  /**
+   * @brief Get remaining path size.
+   */
+  [[nodiscard]] auto remaining_waypoints() const -> std::size_t {
+    return path.size() > path_index ? path.size() - path_index : 0;
+  }
+
+  /**
+   * @brief Ensure path_index is within bounds after deserialization.
+   */
+  void validate_path_index() {
+    if (path_index > path.size()) {
+      path_index = path.size();
+    }
+  }
 };
 
 class AttackComponent : public Component {
@@ -368,6 +420,52 @@ public:
   bool active{false};
   float formation_center_x{0.0F};
   float formation_center_z{0.0F};
+};
+
+class StaminaComponent : public Component {
+public:
+  static constexpr float kRunSpeedMultiplier = 1.5F;
+  static constexpr float kMinStaminaToStartRun = 10.0F;
+  static constexpr float kDefaultMaxStamina = 100.0F;
+  static constexpr float kDefaultRegenRate = 10.0F;
+  static constexpr float kDefaultDepletionRate = 20.0F;
+
+  StaminaComponent() noexcept = default;
+
+  float stamina{kDefaultMaxStamina};
+  float max_stamina{kDefaultMaxStamina};
+  float regen_rate{kDefaultRegenRate};
+  float depletion_rate{kDefaultDepletionRate};
+  bool is_running{false};
+  bool run_requested{false};
+
+  [[nodiscard]] auto get_stamina_ratio() const noexcept -> float {
+    return max_stamina > 0.0F ? stamina / max_stamina : 0.0F;
+  }
+
+  [[nodiscard]] auto can_start_running() const noexcept -> bool {
+    return stamina >= kMinStaminaToStartRun;
+  }
+
+  [[nodiscard]] auto has_stamina() const noexcept -> bool {
+    return stamina > 0.0F;
+  }
+
+  void deplete(float delta_time) noexcept {
+    stamina = std::max(0.0F, stamina - depletion_rate * delta_time);
+  }
+
+  void regenerate(float delta_time) noexcept {
+    stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
+  }
+
+  void initialize_from_stats(float new_max_stamina, float new_regen_rate,
+                             float new_depletion_rate) noexcept {
+    max_stamina = new_max_stamina;
+    stamina = new_max_stamina;
+    regen_rate = new_regen_rate;
+    depletion_rate = new_depletion_rate;
+  }
 };
 
 } // namespace Engine::Core

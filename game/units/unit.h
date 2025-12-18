@@ -53,6 +53,10 @@ public:
   [[nodiscard]] auto is_in_guard_mode() const -> bool;
   void clear_guard_mode();
 
+  void set_run_mode(bool enabled);
+  [[nodiscard]] auto is_running() const -> bool;
+  [[nodiscard]] auto can_run() const -> bool;
+
 protected:
   Unit(Engine::Core::World &world, TroopType type);
   Unit(Engine::Core::World &world, std::string type);

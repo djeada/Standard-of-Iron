@@ -21,6 +21,7 @@ Pathfinding::Pathfinding(int width, int height)
   m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
   ensureWorkingBuffers();
   m_obstaclesDirty.store(true, std::memory_order_release);
+  m_fullUpdateRequired = true;
   m_workerThread = std::thread(&Pathfinding::workerLoop, this);
 }
 
@@ -51,7 +52,172 @@ auto Pathfinding::isWalkable(int x, int y) const -> bool {
 }
 
 void Pathfinding::markObstaclesDirty() {
+  std::lock_guard<std::mutex> const lock(m_dirtyMutex);
+  m_fullUpdateRequired = true;
   m_obstaclesDirty.store(true, std::memory_order_release);
+}
+
+void Pathfinding::markRegionDirty(int min_x, int max_x, int min_z, int max_z) {
+  // Clamp to grid bounds
+  min_x = std::max(0, min_x);
+  max_x = std::min(m_width - 1, max_x);
+  min_z = std::max(0, min_z);
+  max_z = std::min(m_height - 1, max_z);
+
+  if (min_x > max_x || min_z > max_z) {
+    return;
+  }
+
+  std::lock_guard<std::mutex> const lock(m_dirtyMutex);
+  m_dirtyRegions.emplace_back(min_x, max_x, min_z, max_z);
+  m_obstaclesDirty.store(true, std::memory_order_release);
+}
+
+void Pathfinding::markBuildingRegionDirty(float center_x, float center_z,
+                                          float width, float depth) {
+  float const padding = BuildingCollisionRegistry::getGridPadding();
+  float const half_width = width / 2.0F + padding;
+  float const half_depth = depth / 2.0F + padding;
+
+  int const min_x =
+      static_cast<int>(std::floor(center_x - half_width - m_gridOffsetX));
+  int const max_x =
+      static_cast<int>(std::ceil(center_x + half_width - m_gridOffsetX));
+  int const min_z =
+      static_cast<int>(std::floor(center_z - half_depth - m_gridOffsetZ));
+  int const max_z =
+      static_cast<int>(std::ceil(center_z + half_depth - m_gridOffsetZ));
+
+  markRegionDirty(min_x, max_x, min_z, max_z);
+}
+
+void Pathfinding::processDirtyRegions() {
+  std::vector<DirtyRegion> regions_to_process;
+
+  {
+    std::lock_guard<std::mutex> const lock(m_dirtyMutex);
+    if (m_fullUpdateRequired) {
+      // Full update needed, clear regions and do complete update
+      m_dirtyRegions.clear();
+      m_fullUpdateRequired = false;
+
+      // Do the full grid update
+      for (auto &row : m_obstacles) {
+        std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
+      }
+
+      auto &terrain_service = Game::Map::TerrainService::instance();
+      if (terrain_service.is_initialized()) {
+        const Game::Map::TerrainHeightMap *height_map =
+            terrain_service.get_height_map();
+        const int terrain_width =
+            (height_map != nullptr) ? height_map->getWidth() : 0;
+        const int terrain_height =
+            (height_map != nullptr) ? height_map->getHeight() : 0;
+
+        for (int z = 0; z < m_height; ++z) {
+          for (int x = 0; x < m_width; ++x) {
+            bool blocked = false;
+            if (x < terrain_width && z < terrain_height) {
+              blocked = !terrain_service.is_walkable(x, z);
+            } else {
+              blocked = true;
+            }
+
+            if (blocked) {
+              m_obstacles[z][x] = static_cast<std::uint8_t>(1);
+            }
+          }
+        }
+      }
+
+      // Add all buildings
+      auto &registry = BuildingCollisionRegistry::instance();
+      const auto &buildings = registry.getAllBuildings();
+
+      for (const auto &building : buildings) {
+        auto cells =
+            Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+                building, m_gridCellSize);
+        for (const auto &cell : cells) {
+          int const grid_x =
+              static_cast<int>(std::round(cell.first - m_gridOffsetX));
+          int const grid_z =
+              static_cast<int>(std::round(cell.second - m_gridOffsetZ));
+
+          if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
+              grid_z < m_height) {
+            m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
+          }
+        }
+      }
+
+      return;
+    }
+
+    // Swap out the dirty regions for processing
+    regions_to_process = std::move(m_dirtyRegions);
+    m_dirtyRegions.clear();
+  }
+
+  if (regions_to_process.empty()) {
+    return;
+  }
+
+  // Process each dirty region
+  for (const auto &region : regions_to_process) {
+    updateRegion(region.min_x, region.max_x, region.min_z, region.max_z);
+  }
+}
+
+void Pathfinding::updateRegion(int min_x, int max_x, int min_z, int max_z) {
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  const Game::Map::TerrainHeightMap *height_map = nullptr;
+  int terrain_width = 0;
+  int terrain_height = 0;
+
+  if (terrain_service.is_initialized()) {
+    height_map = terrain_service.get_height_map();
+    terrain_width = (height_map != nullptr) ? height_map->getWidth() : 0;
+    terrain_height = (height_map != nullptr) ? height_map->getHeight() : 0;
+  }
+
+  // First, reset the region based on terrain
+  for (int z = min_z; z <= max_z; ++z) {
+    for (int x = min_x; x <= max_x; ++x) {
+      bool blocked = false;
+      if (x >= 0 && x < terrain_width && z >= 0 && z < terrain_height) {
+        blocked = !terrain_service.is_walkable(x, z);
+      } else if (terrain_service.is_initialized()) {
+        // Outside terrain bounds - mark as blocked
+        blocked = true;
+      }
+      m_obstacles[z][x] = static_cast<std::uint8_t>(blocked ? 1 : 0);
+    }
+  }
+
+  // Then, add building obstacles that overlap this region
+  auto &registry = BuildingCollisionRegistry::instance();
+  const auto &buildings = registry.getAllBuildings();
+
+  for (const auto &building : buildings) {
+    auto cells =
+        Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
+            building, m_gridCellSize);
+    for (const auto &cell : cells) {
+      int const grid_x =
+          static_cast<int>(std::round(cell.first - m_gridOffsetX));
+      int const grid_z =
+          static_cast<int>(std::round(cell.second - m_gridOffsetZ));
+
+      // Only update if within this region AND within grid bounds
+      if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z &&
+          grid_z <= max_z && grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
+          grid_z < m_height) {
+        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
+      }
+    }
+  }
 }
 
 void Pathfinding::updateBuildingObstacles() {
@@ -66,52 +232,8 @@ void Pathfinding::updateBuildingObstacles() {
     return;
   }
 
-  for (auto &row : m_obstacles) {
-    std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
-  }
-
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.is_initialized()) {
-    const Game::Map::TerrainHeightMap *height_map =
-        terrain_service.get_height_map();
-    const int terrain_width =
-        (height_map != nullptr) ? height_map->getWidth() : 0;
-    const int terrain_height =
-        (height_map != nullptr) ? height_map->getHeight() : 0;
-
-    for (int z = 0; z < m_height; ++z) {
-      for (int x = 0; x < m_width; ++x) {
-        bool blocked = false;
-        if (x < terrain_width && z < terrain_height) {
-          blocked = !terrain_service.is_walkable(x, z);
-        } else {
-          blocked = true;
-        }
-
-        if (blocked) {
-          m_obstacles[z][x] = static_cast<std::uint8_t>(1);
-        }
-      }
-    }
-  }
-
-  auto &registry = BuildingCollisionRegistry::instance();
-  const auto &buildings = registry.getAllBuildings();
-
-  for (const auto &building : buildings) {
-    auto cells = Game::Systems::BuildingCollisionRegistry::getOccupiedGridCells(
-        building, m_gridCellSize);
-    for (const auto &cell : cells) {
-      int const grid_x =
-          static_cast<int>(std::round(cell.first - m_gridOffsetX));
-      int const grid_z =
-          static_cast<int>(std::round(cell.second - m_gridOffsetZ));
-
-      if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 && grid_z < m_height) {
-        m_obstacles[grid_z][grid_x] = static_cast<std::uint8_t>(1);
-      }
-    }
-  }
+  // Use the new region-based processing
+  processDirtyRegions();
 
   m_obstaclesDirty.store(false, std::memory_order_release);
 }

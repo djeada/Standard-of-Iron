@@ -38,6 +38,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   AnimationInputs anim{};
   anim.time = ctx.animation_time;
   anim.is_moving = false;
+  anim.is_running = false;
   anim.is_attacking = false;
   anim.is_melee = false;
   anim.is_in_hold_mode = false;
@@ -69,6 +70,8 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->get_component<Engine::Core::CombatStateComponent>();
   auto *hit_feedback =
       ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
+  const auto *stamina =
+      ctx.entity->get_component<Engine::Core::StaminaComponent>();
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if ((hold_mode != nullptr) && !hold_mode->active &&
@@ -78,6 +81,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
         1.0F - (hold_mode->exit_cooldown / hold_mode->stand_up_duration);
   }
   anim.is_moving = ((movement != nullptr) && movement->has_target);
+  anim.is_running = (stamina != nullptr) && stamina->is_running;
 
   auto *healer = ctx.entity->get_component<Engine::Core::HealerComponent>();
   if (healer != nullptr && healer->is_healing_active && transform != nullptr) {

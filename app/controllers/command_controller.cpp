@@ -7,6 +7,7 @@
 #include "../../game/systems/picking_service.h"
 #include "../../game/systems/production_service.h"
 #include "../../game/systems/selection_system.h"
+#include "../../game/systems/troop_profile_service.h"
 #include "../../render/gl/camera.h"
 #include "../utils/movement_utils.h"
 #include "game/game_config.h"
@@ -18,6 +19,7 @@
 #include <qobject.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
+#include <vector>
 
 namespace App::Controllers {
 
@@ -834,5 +836,171 @@ void CommandController::cancel_formation_placement() {
   emit formation_placement_ended();
   emit formation_mode_changed(false);
 }
+
+auto CommandController::on_run_command() -> CommandResult {
+  CommandResult result;
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return result;
+  }
+
+  struct UnitRunState {
+    Engine::Core::Entity *entity;
+    Engine::Core::StaminaComponent *stamina;
+    Game::Systems::NationID nation_id;
+    Game::Units::SpawnType spawn_type;
+  };
+  std::vector<UnitRunState> eligible_units;
+  eligible_units.reserve(selected.size());
+
+  int run_active_count = 0;
+
+  for (const auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    const bool is_active = stamina != nullptr && stamina->run_requested;
+    run_active_count += is_active ? 1 : 0;
+
+    eligible_units.push_back(
+        {entity, stamina, unit->nation_id, unit->spawn_type});
+  }
+
+  if (eligible_units.empty()) {
+    return result;
+  }
+
+  const bool should_enable_run =
+      run_active_count < static_cast<int>(eligible_units.size());
+
+  for (auto &[entity, stamina, nation_id, spawn_type] : eligible_units) {
+    if (should_enable_run) {
+      if (stamina == nullptr) {
+        stamina = entity->add_component<Engine::Core::StaminaComponent>();
+        const auto troop_type =
+            Game::Units::spawn_typeToTroopType(spawn_type);
+        if (troop_type.has_value()) {
+          const auto profile =
+              Game::Systems::TroopProfileService::instance().get_profile(
+                  nation_id, *troop_type);
+          stamina->initialize_from_stats(profile.combat.max_stamina,
+                                         profile.combat.stamina_regen_rate,
+                                         profile.combat.stamina_depletion_rate);
+        }
+      }
+      stamina->run_requested = true;
+    } else if (stamina != nullptr) {
+      stamina->run_requested = false;
+      stamina->is_running = false;
+    }
+  }
+
+  emit run_mode_changed(should_enable_run);
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+auto CommandController::any_selected_in_run_mode() const -> bool {
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return false;
+  }
+
+  for (const auto id : m_selection_system->get_selected_units()) {
+    const auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    const auto *stamina =
+        entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina != nullptr && stamina->run_requested) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void CommandController::enable_run_mode_for_selected() {
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  for (const auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina == nullptr) {
+      stamina = entity->add_component<Engine::Core::StaminaComponent>();
+      const auto troop_type =
+          Game::Units::spawn_typeToTroopType(unit->spawn_type);
+      if (troop_type.has_value()) {
+        const auto profile =
+            Game::Systems::TroopProfileService::instance().get_profile(
+                unit->nation_id, *troop_type);
+        stamina->initialize_from_stats(profile.combat.max_stamina,
+                                       profile.combat.stamina_regen_rate,
+                                       profile.combat.stamina_depletion_rate);
+      }
+    }
+    stamina->run_requested = true;
+  }
+
+  emit run_mode_changed(true);
+}
+
+void CommandController::disable_run_mode_for_selected() {
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  for (const auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina != nullptr) {
+      stamina->run_requested = false;
+      stamina->is_running = false;
+    }
+  }
+
+  emit run_mode_changed(false);
+}
+
 
 } // namespace App::Controllers

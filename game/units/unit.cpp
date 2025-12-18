@@ -4,6 +4,7 @@
 #include "../core/world.h"
 #include "../systems/nation_id.h"
 #include "../systems/nation_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "units/troop_type.h"
 #include <qvectornd.h>
 #include <string>
@@ -63,7 +64,7 @@ void Unit::move_to(float x, float z) {
     m_mv->has_target = true;
     m_mv->goal_x = x;
     m_mv->goal_y = z;
-    m_mv->path.clear();
+    m_mv->clear_path();
     m_mv->path_pending = false;
     m_mv->pending_request_id = 0;
   }
@@ -121,7 +122,7 @@ void Unit::set_hold_mode(bool enabled) {
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->has_target = false;
-      mv->path.clear();
+      mv->clear_path();
       mv->path_pending = false;
     }
   } else {
@@ -250,6 +251,62 @@ void Unit::clear_guard_mode() {
     guard_comp->returning_to_guard_position = false;
     guard_comp->has_guard_target = false;
   }
+}
+
+void Unit::set_run_mode(bool enabled) {
+  auto *e = entity();
+  if (e == nullptr) {
+    return;
+  }
+
+  const auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr ||
+      !Game::Units::can_use_run_mode(unit_comp->spawn_type)) {
+    return;
+  }
+
+  auto *stamina_comp = e->get_component<Engine::Core::StaminaComponent>();
+  if (stamina_comp == nullptr) {
+    if (!enabled) {
+      return;
+    }
+    stamina_comp = e->add_component<Engine::Core::StaminaComponent>();
+    // Initialize stamina values from troop profile
+    const auto troop_type =
+        Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+    if (troop_type.has_value()) {
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              unit_comp->nation_id, *troop_type);
+      stamina_comp->initialize_from_stats(profile.combat.max_stamina,
+                                          profile.combat.stamina_regen_rate,
+                                          profile.combat.stamina_depletion_rate);
+    }
+  }
+
+  stamina_comp->run_requested = enabled;
+}
+
+auto Unit::is_running() const -> bool {
+  const auto *e = entity();
+  if (e == nullptr) {
+    return false;
+  }
+
+  const auto *stamina_comp =
+      e->get_component<Engine::Core::StaminaComponent>();
+  return stamina_comp != nullptr && stamina_comp->is_running;
+}
+
+auto Unit::can_run() const -> bool {
+  const auto *e = entity();
+  if (e == nullptr) {
+    return false;
+  }
+
+  const auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
+  return unit_comp != nullptr &&
+         Game::Units::can_use_run_mode(unit_comp->spawn_type);
 }
 
 } // namespace Game::Units

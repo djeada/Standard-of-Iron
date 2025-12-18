@@ -15,7 +15,10 @@ public:
     HealthRole,
     max_healthRole,
     HealthRatioRole,
-    NationRole
+    NationRole,
+    StaminaRatioRole,
+    IsRunningRole,
+    CanRunRole
   };
 
   explicit SelectedUnitsModel(GameEngine *engine, QObject *parent = nullptr);

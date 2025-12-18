@@ -1300,6 +1300,12 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     UnitCategory category =
         is_mounted_spawn ? UnitCategory::Cavalry : UnitCategory::Infantry;
 
+    if (unit_comp != nullptr &&
+        unit_comp->spawn_type == Game::Units::SpawnType::Builder &&
+        anim.is_constructing) {
+      category = UnitCategory::BuilderConstruction;
+    }
+
     formation_calculator =
         FormationCalculatorFactory::getCalculator(nation, category);
   }
