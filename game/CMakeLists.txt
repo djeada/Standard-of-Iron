@@ -39,6 +39,7 @@ add_library(game_systems STATIC
     systems/patrol_system.cpp
     systems/guard_system.cpp
     systems/pathfinding.cpp
+    systems/spatial_grid.cpp
     systems/building_collision_registry.cpp
     systems/selection_system.cpp
     systems/arrow_system.cpp

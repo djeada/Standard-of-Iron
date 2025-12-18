@@ -15,11 +15,39 @@ namespace Engine::Core {
 World::World() = default;
 World::~World() = default;
 
+void World::on_component_changed(EntityID entity_id,
+                                 std::type_index component_type, bool added) {
+  // Note: This is called from entity methods, so we need to be careful about
+  // locking. The entity_mutex should already be held when create_entity is
+  // called, but add_component can be called later when the mutex isn't held.
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+
+  if (added) {
+    m_component_index[component_type].insert(entity_id);
+  } else {
+    auto it = m_component_index.find(component_type);
+    if (it != m_component_index.end()) {
+      it->second.erase(entity_id);
+      if (it->second.empty()) {
+        m_component_index.erase(it);
+      }
+    }
+  }
+}
+
+void World::setup_entity_callback(Entity *entity) {
+  entity->set_component_change_callback(
+      [this](EntityID entity_id, std::type_index component_type, bool added) {
+        this->on_component_changed(entity_id, component_type, added);
+      });
+}
+
 auto World::create_entity() -> Entity * {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   EntityID const id = m_next_entity_id++;
   auto entity = std::make_unique<Entity>(id);
   auto *ptr = entity.get();
+  setup_entity_callback(ptr);
   m_entities[id] = std::move(entity);
   return ptr;
 }
@@ -32,6 +60,7 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
 
   auto entity = std::make_unique<Entity>(entity_id);
   auto *ptr = entity.get();
+  setup_entity_callback(ptr);
   m_entities[entity_id] = std::move(entity);
 
   if (entity_id >= m_next_entity_id) {
@@ -43,12 +72,19 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
 
 void World::destroy_entity(EntityID entity_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+
+  // Remove entity from all component indices
+  for (auto &[type, entity_set] : m_component_index) {
+    entity_set.erase(entity_id);
+  }
+
   m_entities.erase(entity_id);
 }
 
 void World::clear() {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   m_entities.clear();
+  m_component_index.clear();
   m_next_entity_id = 1;
 }
 
