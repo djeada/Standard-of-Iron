@@ -709,10 +709,12 @@ void HorseRendererBase::render_full(
     const HorseMotionSample *shared_motion, ISubmitter &out) const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
-  const HorseGait &g = profile.gait;
+  // IMPORTANT: evaluate_horse_motion updates profile.gait, so we must call it
+  // BEFORE binding 'g' to profile.gait, otherwise the leg animation uses stale values.
   HorseMotionSample const motion =
       shared_motion ? *shared_motion
                     : evaluate_horse_motion(profile, anim, rider_ctx);
+  const HorseGait &g = profile.gait;  // Now bound AFTER gait is updated
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
