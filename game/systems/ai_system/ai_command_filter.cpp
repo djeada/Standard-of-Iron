@@ -103,7 +103,7 @@ auto AICommandFilter::isDuplicate(Engine::Core::EntityID unit_id,
                                   float move_x, float move_y, float move_z,
                                   float currentTime) const -> bool {
   for (const auto &entry : m_history) {
-    if (entry.isSimilarTo(type, unit_id, target_id, move_x, move_y, move_z,
+    if (entry.is_similar_to(type, unit_id, target_id, move_x, move_y, move_z,
                           currentTime, m_cooldownPeriod)) {
       return true;
     }

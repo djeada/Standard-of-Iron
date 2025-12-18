@@ -31,7 +31,7 @@ private:
 
     float issued_time;
 
-    [[nodiscard]] auto isSimilarTo(const AICommandType &cmdType,
+    [[nodiscard]] auto is_similar_to(const AICommandType &cmdType,
                                    Engine::Core::EntityID unit,
                                    Engine::Core::EntityID target, float x,
                                    float y, float z, float currentTime,
@@ -41,7 +41,7 @@ private:
   std::vector<CommandHistory> m_history;
   float m_cooldownPeriod;
 
-  [[nodiscard]] auto isDuplicate(Engine::Core::EntityID unit_id,
+  [[nodiscard]] auto is_duplicate(Engine::Core::EntityID unit_id,
                                  AICommandType type,
                                  Engine::Core::EntityID target_id, float move_x,
                                  float move_y, float move_z,

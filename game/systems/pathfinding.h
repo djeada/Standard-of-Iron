@@ -52,45 +52,45 @@ public:
 
   void update_building_obstacles();
 
-  void markObstaclesDirty();
+  void mark_obstacles_dirty();
 
-  void markRegionDirty(int min_x, int max_x, int min_z, int max_z);
+  void mark_region_dirty(int min_x, int max_x, int min_z, int max_z);
 
-  void markBuildingRegionDirty(float center_x, float center_z, float width,
+  void mark_building_region_dirty(float center_x, float center_z, float width,
                                float depth);
 
-  auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
-  auto findPath(const Point &start, const Point &end, float unit_radius)
+  auto find_path(const Point &start, const Point &end) -> std::vector<Point>;
+  auto find_path(const Point &start, const Point &end, float unit_radius)
       -> std::vector<Point>;
 
-  auto findPathAsync(const Point &start,
+  auto find_path_async(const Point &start,
                      const Point &end) -> std::future<std::vector<Point>>;
 
-  void submitPathRequest(std::uint64_t request_id, const Point &start,
+  void submit_path_request(std::uint64_t request_id, const Point &start,
                          const Point &end);
-  void submitPathRequest(std::uint64_t request_id, const Point &start,
+  void submit_path_request(std::uint64_t request_id, const Point &start,
                          const Point &end, float unit_radius);
 
   struct PathResult {
     std::uint64_t request_id;
     std::vector<Point> path;
   };
-  auto fetchCompletedPaths() -> std::vector<PathResult>;
+  auto fetch_completed_paths() -> std::vector<PathResult>;
 
   static auto find_nearest_walkable_point(const Point &point, int max_search_radius,
                                           const Pathfinding &pathfinder,
                                           float unit_radius = 0.0F) -> Point;
 
 private:
-  auto findPathInternal(const Point &start, const Point &end)
+  auto find_path_internal(const Point &start, const Point &end)
       -> std::vector<Point>;
-  auto findPathInternal(const Point &start, const Point &end, float unit_radius)
+  auto find_path_internal(const Point &start, const Point &end, float unit_radius)
       -> std::vector<Point>;
 
   static auto calculate_heuristic(const Point &a, const Point &b) -> int;
 
-  void ensureWorkingBuffers();
-  auto nextGeneration() -> std::uint32_t;
+  void ensure_working_buffers();
+  auto next_generation() -> std::uint32_t;
   void reset_generations();
 
   auto toIndex(int x, int y) const -> int { return y * m_width + x; }
@@ -105,7 +105,7 @@ private:
   auto get_g_cost(int index, std::uint32_t generation) const -> int;
   void set_g_cost(int index, std::uint32_t generation, int cost);
 
-  auto hasParent(int index, std::uint32_t generation) const -> bool;
+  auto has_parent(int index, std::uint32_t generation) const -> bool;
   auto get_parent(int index, std::uint32_t generation) const -> int;
   void set_parent(int index, std::uint32_t generation, int parentIndex);
 

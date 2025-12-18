@@ -54,7 +54,7 @@ void BuildingCollisionRegistry::register_building(
 
   if (auto *pf = CommandService::getPathfinder()) {
 
-    pf->markBuildingRegionDirty(center_x, center_z, size.width, size.depth);
+    pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
   }
 }
 
@@ -82,7 +82,7 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
 
   if (auto *pf = CommandService::getPathfinder()) {
 
-    pf->markBuildingRegionDirty(center_x, center_z, width, depth);
+    pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
 }
 
@@ -106,8 +106,8 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
 
   if (auto *pf = CommandService::getPathfinder()) {
 
-    pf->markBuildingRegionDirty(old_x, old_z, width, depth);
-    pf->markBuildingRegionDirty(center_x, center_z, width, depth);
+    pf->mark_building_region_dirty(old_x, old_z, width, depth);
+    pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
 }
 
@@ -180,7 +180,7 @@ void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_gridPadding = padding;
 
   if (auto *pf = CommandService::get_pathfinder()) {
-    pf->markObstaclesDirty();
+    pf->mark_obstacles_dirty();
   }
 }
 

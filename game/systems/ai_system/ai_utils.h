@@ -9,7 +9,7 @@
 
 namespace Game::Systems::AI {
 
-inline void replicateLastTargetIfNeeded(const std::vector<float> &fromX,
+inline void replicate_last_target_if_needed(const std::vector<float> &fromX,
                                         const std::vector<float> &fromY,
                                         const std::vector<float> &fromZ,
                                         size_t wanted, std::vector<float> &outX,
@@ -120,7 +120,7 @@ inline auto claim_units(
   return claimed;
 }
 
-inline void releaseUnits(const std::vector<Engine::Core::EntityID> &units,
+inline void release_units(const std::vector<Engine::Core::EntityID> &units,
                          AIContext &context) {
   for (Engine::Core::EntityID const unit_id : units) {
     context.assigned_units.erase(unit_id);
