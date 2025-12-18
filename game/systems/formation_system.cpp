@@ -574,13 +574,13 @@ auto FormationSystem::instance() -> FormationSystem & {
   return inst;
 }
 
-FormationSystem::FormationSystem() { initializeDefaults(); }
+FormationSystem::FormationSystem() { initialize_defaults(); }
 
 void FormationSystem::initialize_defaults() {
-  registerFormation(FormationType::Roman, std::make_unique<RomanFormation>());
-  registerFormation(FormationType::Barbarian,
+  register_formation(FormationType::Roman, std::make_unique<RomanFormation>());
+  register_formation(FormationType::Barbarian,
                     std::make_unique<BarbarianFormation>());
-  registerFormation(FormationType::Carthage,
+  register_formation(FormationType::Carthage,
                     std::make_unique<CarthageFormation>());
 }
 

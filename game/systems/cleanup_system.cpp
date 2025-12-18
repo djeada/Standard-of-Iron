@@ -7,7 +7,7 @@
 namespace Game::Systems {
 
 void CleanupSystem::update(Engine::Core::World *world, float) {
-  removeDeadEntities(world);
+  remove_dead_entities(world);
 }
 
 void CleanupSystem::remove_dead_entities(Engine::Core::World *world) {

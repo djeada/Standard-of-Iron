@@ -48,7 +48,7 @@ void CommandService::initialize(int worldWidth, int worldHeight) {
 
   float const offset_x = -(worldWidth * 0.5F - 0.5F);
   float const offset_z = -(worldHeight * 0.5F - 0.5F);
-  s_pathfinder->setGridOffset(offset_x, offset_z);
+  s_pathfinder->set_grid_offset(offset_x, offset_z);
 }
 
 auto CommandService::get_pathfinder() -> Pathfinding * {

@@ -57,7 +57,7 @@ private:
     int const center_grid_z =
         static_cast<int>(std::round(position.z() - offset_z));
 
-    if (pathfinder->isWalkable(center_grid_x, center_grid_z)) {
+    if (pathfinder->is_walkable(center_grid_x, center_grid_z)) {
       return position;
     }
 
@@ -71,7 +71,7 @@ private:
           int const test_x = center_grid_x + dx;
           int const test_z = center_grid_z + dz;
 
-          if (pathfinder->isWalkable(test_x, test_z)) {
+          if (pathfinder->is_walkable(test_x, test_z)) {
             return QVector3D(static_cast<float>(test_x) + offset_x,
                              position.y(),
                              static_cast<float>(test_z) + offset_z);
@@ -108,7 +108,7 @@ private:
         int const test_z = center_grid_z + dz;
 
         ++total_count;
-        if (pathfinder->isWalkable(test_x, test_z)) {
+        if (pathfinder->is_walkable(test_x, test_z)) {
           ++walkable_count;
         }
       }

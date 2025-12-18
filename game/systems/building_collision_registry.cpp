@@ -179,7 +179,7 @@ void BuildingCollisionRegistry::clear() {
 void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_gridPadding = padding;
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
     pf->markObstaclesDirty();
   }
 }
