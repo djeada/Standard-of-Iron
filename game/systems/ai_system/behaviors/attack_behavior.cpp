@@ -267,7 +267,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     unit_ids.push_back(unit->id);
   }
 
-  auto claimed_units = claim_units(unit_ids, getPriority(), "attacking",
+  auto claimed_units = claim_units(unit_ids, get_priority(), "attacking",
                                    context, m_attackTimer + delta_time, 2.5F);
 
   if (claimed_units.empty()) {

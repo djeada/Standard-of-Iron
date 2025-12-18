@@ -114,7 +114,7 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
       target_pos + QVector3D(0.0F, 0.8F, 0.0F) + perpendicular * lateral_offset;
 
   constexpr float kArrowSpeed = 12.0F;
-  arrow_sys->spawnArrow(start, end, color, kArrowSpeed);
+  arrow_sys->spawn_arrow(start, end, color, kArrowSpeed);
 }
 
 } // namespace

@@ -31,8 +31,8 @@ void CameraController::reset(int local_owner_id,
   if (!m_camera || !m_world || !m_camera_service) {
     return;
   }
-  m_camera_service->resetCamera(*m_camera, *m_world, local_owner_id,
-                                level.player_unit_id);
+  m_camera_service->reset_camera(*m_camera, *m_world, local_owner_id,
+                                 level.player_unit_id);
 }
 
 void CameraController::zoom(float delta) {

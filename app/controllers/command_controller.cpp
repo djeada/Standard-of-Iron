@@ -317,7 +317,7 @@ auto CommandController::set_rally_at_screen(
     return result;
   }
 
-  Game::Systems::ProductionService::setRallyForFirstSelectedBarracks(
+  Game::Systems::ProductionService::set_rally_for_first_selected_barracks(
       *m_world, m_selection_system->get_selected_units(), local_owner_id,
       hit.x(), hit.z());
 
@@ -336,8 +336,8 @@ void CommandController::recruit_near_selected(const QString &unit_type,
     return;
   }
 
-  auto result =
-      Game::Systems::ProductionService::startProductionForFirstSelectedBarracks(
+  auto result = Game::Systems::ProductionService::
+      start_production_for_first_selected_barracks(
           *m_world, sel, local_owner_id, unit_type.toStdString());
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
@@ -805,8 +805,8 @@ void CommandController::confirm_formation_placement() {
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = m_formation_units.size() > 1;
   opts.clear_attack_intent = true;
-  Game::Systems::CommandService::moveUnits(*m_world, m_formation_units,
-                                           formation_result.positions, opts);
+  Game::Systems::CommandService::move_units(*m_world, m_formation_units,
+                                            formation_result.positions, opts);
 
   m_is_placing_formation = false;
   m_formation_units.clear();

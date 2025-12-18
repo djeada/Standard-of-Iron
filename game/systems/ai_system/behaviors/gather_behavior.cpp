@@ -88,7 +88,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  auto claimed_units = claim_units(units_to_move, getPriority(), "gathering",
+  auto claimed_units = claim_units(units_to_move, get_priority(), "gathering",
                                    context, m_gatherTimer + delta_time, 2.0F);
 
   if (claimed_units.empty()) {

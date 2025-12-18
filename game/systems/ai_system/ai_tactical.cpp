@@ -105,7 +105,7 @@ auto TacticalUtils::select_focus_fire_target(
       }
     }
 
-    float const type_priority = getUnitTypePriority(
+    float const type_priority = get_unit_type_priority(
         Game::Units::spawn_typeToString(enemy->spawn_type), context.nation);
     score += type_priority * 3.0F;
 
@@ -117,7 +117,7 @@ auto TacticalUtils::select_focus_fire_target(
       score += 10.0F;
     }
 
-    bool const isolated = isTargetIsolated(*enemy, enemies, 8.0F);
+    bool const isolated = is_target_isolated(*enemy, enemies, 8.0F);
     if (isolated) {
       score += 6.0F;
     }

@@ -143,7 +143,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claim_units(defender_ids, getPriority(), "defending", context,
+            claim_units(defender_ids, get_priority(), "defending", context,
                         m_defendTimer + delta_time, 3.0F);
 
         if (!claimed_units.empty()) {
@@ -187,7 +187,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claim_units(defender_ids, getPriority(), "intercepting", context,
+            claim_units(defender_ids, get_priority(), "intercepting", context,
                         m_defendTimer + delta_time, 2.0F);
 
         if (!claimed_units.empty()) {

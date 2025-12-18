@@ -140,7 +140,7 @@ public:
     result.positions.resize(units.size(), center);
     result.facing_angles.resize(units.size(), 0.0F);
 
-    auto *pathfinder = CommandService::getPathfinder();
+    auto *pathfinder = CommandService::get_pathfinder();
 
     QVector3D adjusted_center = center;
     if (pathfinder != nullptr) {
