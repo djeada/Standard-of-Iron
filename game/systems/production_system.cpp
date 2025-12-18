@@ -147,15 +147,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         if (reg) {
           Game::Units::SpawnParams sp;
 
-          float const spawn_offset = 2.5F;
-          float forward_x = 0.0F;
-          float forward_z = 1.0F;
-          float yaw = t->rotation.y;
-          forward_x = std::sin(yaw);
-          forward_z = std::cos(yaw);
-          sp.position =
-              QVector3D(t->position.x + forward_x * spawn_offset, t->position.y,
-                        t->position.z + forward_z * spawn_offset);
+          sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
           sp.player_id = u->owner_id;
           sp.ai_controlled =
               e->has_component<Engine::Core::AIControlledComponent>();
