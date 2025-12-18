@@ -19,6 +19,7 @@ enum class CombatAnimPhase : std::uint8_t {
 struct AnimationInputs {
   float time;
   bool is_moving;
+  bool is_running;
   bool is_attacking;
   bool is_melee;
   bool is_in_hold_mode;

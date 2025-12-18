@@ -74,6 +74,9 @@ using Render::GL::Humanoid::saturate_color;
 
 class BuilderRenderer : public HumanoidRendererBase {
 public:
+  friend void
+  register_builder_renderer(Render::GL::EntityRendererRegistry &registry);
+
   auto get_proportion_scaling() const -> QVector3D override {
     return {1.05F, 0.98F, 1.02F};
   }
@@ -99,61 +102,26 @@ public:
 
     if (anim.is_constructing) {
 
+      uint32_t const pose_selector = seed % 100;
+
       float const phase_offset = float(seed % 100) * 0.0628F;
       float const cycle_speed = 2.0F + float(seed % 50) * 0.02F;
       float const swing_cycle =
           std::fmod(anim.time * cycle_speed + phase_offset, 1.0F);
 
-      float swing_angle;
-      float body_lean;
-      float crouch_amount;
+      if (pose_selector < 40) {
 
-      if (swing_cycle < 0.3F) {
+        apply_hammering_pose(controller, swing_cycle, asymmetry, seed);
+      } else if (pose_selector < 70) {
 
-        float const t = swing_cycle / 0.3F;
-        swing_angle = t * 0.85F;
-        body_lean = -t * 0.08F;
-        crouch_amount = 0.0F;
-      } else if (swing_cycle < 0.5F) {
+        apply_kneeling_work_pose(controller, swing_cycle, asymmetry, seed);
+      } else if (pose_selector < 90) {
 
-        float const t = (swing_cycle - 0.3F) / 0.2F;
-        swing_angle = 0.85F - t * 1.3F;
-        body_lean = -0.08F + t * 0.22F;
-        crouch_amount = t * 0.06F;
-      } else if (swing_cycle < 0.6F) {
-
-        float const t = (swing_cycle - 0.5F) / 0.1F;
-        swing_angle = -0.45F + t * 0.15F;
-        body_lean = 0.14F - t * 0.04F;
-        crouch_amount = 0.06F - t * 0.02F;
+        apply_sawing_pose(controller, swing_cycle, asymmetry, seed);
       } else {
 
-        float const t = (swing_cycle - 0.6F) / 0.4F;
-        swing_angle = -0.30F + t * 0.30F;
-        body_lean = 0.10F * (1.0F - t);
-        crouch_amount = 0.04F * (1.0F - t);
+        apply_lifting_pose(controller, swing_cycle, asymmetry, seed);
       }
-
-      float const torso_y_offset = -crouch_amount;
-
-      float const hammer_y = HP::SHOULDER_Y + 0.10F + swing_angle * 0.20F;
-      float const hammer_forward =
-          0.18F + std::abs(swing_angle) * 0.15F + body_lean * 0.5F;
-      float const hammer_down =
-          swing_cycle > 0.4F && swing_cycle < 0.65F ? 0.08F : 0.0F;
-
-      QVector3D const hammer_hand(-0.06F + asymmetry,
-                                  hammer_y - hammer_down + torso_y_offset,
-                                  hammer_forward);
-
-      float const brace_y =
-          HP::WAIST_Y + 0.12F + torso_y_offset - crouch_amount * 0.5F;
-      float const brace_forward = 0.15F + body_lean * 0.3F;
-      QVector3D const brace_hand(0.14F - asymmetry * 0.5F, brace_y,
-                                 brace_forward);
-
-      controller.placeHandAt(true, hammer_hand);
-      controller.placeHandAt(false, brace_hand);
       return;
     }
 
@@ -174,50 +142,25 @@ public:
                        const HumanoidPose &pose,
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
+    auto &registry = EquipmentRegistry::instance();
 
-    draw_stone_hammer(ctx, v, pose, out);
-  }
+    auto work_apron =
+        registry.get(EquipmentCategory::Armor, "work_apron_roman");
+    if (work_apron) {
+      work_apron->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    }
 
-  void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, ISubmitter &out) const {
-    QVector3D const wood_color = v.palette.wood;
+    auto tool_belt = registry.get(EquipmentCategory::Armor, "tool_belt_roman");
+    if (tool_belt) {
+      tool_belt->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    }
 
-    QVector3D const stone_color(0.55F, 0.52F, 0.48F);
-    QVector3D const stone_dark(0.45F, 0.42F, 0.38F);
+    auto arm_guards = registry.get(EquipmentCategory::Armor, "arm_guards");
+    if (arm_guards) {
+      arm_guards->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    }
 
-    QVector3D const hand = pose.hand_l;
-    QVector3D const up(0.0F, 1.0F, 0.0F);
-    QVector3D const forward(0.0F, 0.0F, 1.0F);
-    QVector3D const right(1.0F, 0.0F, 0.0F);
-
-    float const handle_len = 0.32F;
-    float const handle_r = 0.016F;
-    QVector3D const handle_top = hand + up * 0.12F + forward * 0.02F;
-    QVector3D const handle_bot = handle_top - up * handle_len;
-
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
-             wood_color, nullptr, 1.0F);
-
-    float const head_len = 0.10F;
-    float const head_r = 0.030F;
-    QVector3D const head_center = handle_top + up * 0.035F;
-
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model,
-                              head_center - right * (head_len * 0.5F),
-                              head_center + right * (head_len * 0.5F), head_r),
-             stone_color, nullptr, 1.0F);
-
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center + right * (head_len * 0.5F),
-                       head_r * 1.15F),
-             stone_dark, nullptr, 1.0F);
-
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center - right * (head_len * 0.5F),
-                       head_r * 0.9F),
-             stone_color * 0.95F, nullptr, 1.0F);
+    draw_stone_hammer(ctx, v, pose, anim_ctx, out);
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -237,6 +180,206 @@ public:
                   ISubmitter &out) const override {
     uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
     draw_work_tunic(ctx, v, pose, seed, out);
+  }
+
+private:
+  static constexpr uint32_t KNEEL_SEED_OFFSET = 0x1234U;
+
+  void apply_hammering_pose(HumanoidPoseController &controller,
+                            float swing_cycle, float asymmetry,
+                            uint32_t seed) const {
+    using HP = HumanProportions;
+
+    float swing_angle;
+    float body_lean;
+    float crouch_amount;
+
+    if (swing_cycle < 0.3F) {
+
+      float const t = swing_cycle / 0.3F;
+      swing_angle = t * 0.95F;
+      body_lean = -t * 0.10F;
+      crouch_amount = 0.0F;
+    } else if (swing_cycle < 0.5F) {
+
+      float const t = (swing_cycle - 0.3F) / 0.2F;
+      swing_angle = 0.95F - t * 1.5F;
+      body_lean = -0.10F + t * 0.28F;
+      crouch_amount = t * 0.08F;
+    } else if (swing_cycle < 0.6F) {
+
+      float const t = (swing_cycle - 0.5F) / 0.1F;
+      swing_angle = -0.55F + t * 0.18F;
+      body_lean = 0.18F - t * 0.06F;
+      crouch_amount = 0.08F - t * 0.02F;
+    } else {
+
+      float const t = (swing_cycle - 0.6F) / 0.4F;
+      swing_angle = -0.37F + t * 0.37F;
+      body_lean = 0.12F * (1.0F - t);
+      crouch_amount = 0.06F * (1.0F - t);
+    }
+
+    float const torso_y_offset = -crouch_amount;
+    float const hammer_y = HP::SHOULDER_Y + 0.10F + swing_angle * 0.22F;
+    float const hammer_forward =
+        0.18F + std::abs(swing_angle) * 0.16F + body_lean * 0.5F;
+    float const hammer_down =
+        swing_cycle > 0.4F && swing_cycle < 0.65F ? 0.10F : 0.0F;
+
+    QVector3D const hammer_hand(-0.06F + asymmetry,
+                                hammer_y - hammer_down + torso_y_offset,
+                                hammer_forward);
+
+    float const brace_y =
+        HP::WAIST_Y + 0.12F + torso_y_offset - crouch_amount * 0.5F;
+    float const brace_forward = 0.15F + body_lean * 0.3F;
+    QVector3D const brace_hand(0.14F - asymmetry * 0.5F, brace_y,
+                               brace_forward);
+
+    controller.placeHandAt(true, hammer_hand);
+    controller.placeHandAt(false, brace_hand);
+  }
+
+  void apply_kneeling_work_pose(HumanoidPoseController &controller, float cycle,
+                                float asymmetry, uint32_t seed) const {
+    using HP = HumanProportions;
+
+    float const kneel_depth =
+        0.45F + (hash_01(seed ^ KNEEL_SEED_OFFSET) * 0.15F);
+    controller.kneel(kneel_depth);
+
+    float const work_cycle = std::sin(cycle * std::numbers::pi_v<float> * 2.0F);
+
+    float const tool_y = HP::WAIST_Y * 0.3F + work_cycle * 0.08F;
+    float const tool_x_offset = 0.05F + work_cycle * 0.04F;
+    QVector3D const tool_hand(-tool_x_offset + asymmetry, tool_y, 0.25F);
+
+    float const brace_x = 0.18F - asymmetry * 0.5F;
+    QVector3D const brace_hand(brace_x, HP::WAIST_Y * 0.25F, 0.20F);
+
+    controller.placeHandAt(true, tool_hand);
+    controller.placeHandAt(false, brace_hand);
+  }
+
+  void apply_sawing_pose(HumanoidPoseController &controller, float cycle,
+                         float asymmetry, uint32_t seed) const {
+    using HP = HumanProportions;
+
+    controller.lean(QVector3D(0.0F, 0.0F, 1.0F), 0.12F);
+
+    float const saw_offset =
+        std::sin(cycle * std::numbers::pi_v<float> * 4.0F) * 0.12F;
+
+    float const saw_y = HP::WAIST_Y + 0.15F;
+    float const saw_z = 0.20F + saw_offset;
+
+    QVector3D const left_hand(-0.08F + asymmetry, saw_y, saw_z);
+    QVector3D const right_hand(0.08F - asymmetry, saw_y + 0.02F, saw_z);
+
+    controller.placeHandAt(true, left_hand);
+    controller.placeHandAt(false, right_hand);
+  }
+
+  void apply_lifting_pose(HumanoidPoseController &controller, float cycle,
+                          float asymmetry, uint32_t seed) const {
+    using HP = HumanProportions;
+
+    float lift_height;
+    float crouch;
+
+    if (cycle < 0.3F) {
+
+      float const t = cycle / 0.3F;
+      lift_height = HP::WAIST_Y * (1.0F - t * 0.5F);
+      crouch = t * 0.20F;
+    } else if (cycle < 0.6F) {
+
+      float const t = (cycle - 0.3F) / 0.3F;
+      lift_height =
+          HP::WAIST_Y * 0.5F + t * (HP::SHOULDER_Y - HP::WAIST_Y * 0.5F);
+      crouch = 0.20F * (1.0F - t);
+    } else if (cycle < 0.8F) {
+
+      lift_height = HP::SHOULDER_Y;
+      crouch = 0.0F;
+    } else {
+
+      float const t = (cycle - 0.8F) / 0.2F;
+      lift_height = HP::SHOULDER_Y * (1.0F - t * 0.3F);
+      crouch = 0.0F;
+    }
+
+    QVector3D const left_hand(-0.12F + asymmetry, lift_height, 0.15F);
+    QVector3D const right_hand(0.12F - asymmetry, lift_height, 0.15F);
+
+    controller.placeHandAt(true, left_hand);
+    controller.placeHandAt(false, right_hand);
+
+    if (crouch > 0.0F) {
+      controller.kneel(crouch);
+    }
+  }
+
+  void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
+                         const HumanoidPose &pose,
+                         const HumanoidAnimationContext &anim_ctx,
+                         ISubmitter &out) const {
+    QVector3D const wood_color = v.palette.wood;
+
+    QVector3D const stone_color(0.55F, 0.52F, 0.48F);
+    QVector3D const stone_dark(0.45F, 0.42F, 0.38F);
+
+    QVector3D const hand = pose.hand_l;
+    QVector3D const up(0.0F, 1.0F, 0.0F);
+    QVector3D const forward(0.0F, 0.0F, 1.0F);
+    QVector3D const right(1.0F, 0.0F, 0.0F);
+
+    const AnimationInputs &anim = anim_ctx.inputs;
+    QVector3D handle_axis;
+    QVector3D head_axis;
+
+    if (anim.is_constructing) {
+
+      handle_axis = forward;
+      head_axis = up;
+    } else {
+
+      handle_axis = up;
+      head_axis = right;
+    }
+
+    float const handle_len = 0.32F;
+    float const handle_r = 0.016F;
+    QVector3D const handle_offset = anim.is_constructing
+                                        ? (forward * 0.12F + up * 0.02F)
+                                        : (up * 0.12F + forward * 0.02F);
+    QVector3D const handle_top = hand + handle_offset;
+    QVector3D const handle_bot = handle_top - handle_axis * handle_len;
+
+    out.mesh(get_unit_cylinder(),
+             cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
+             wood_color, nullptr, 1.0F);
+
+    float const head_len = 0.10F;
+    float const head_r = 0.030F;
+    QVector3D const head_center = handle_top + handle_axis * 0.035F;
+
+    out.mesh(
+        get_unit_cylinder(),
+        cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                         head_center + head_axis * (head_len * 0.5F), head_r),
+        stone_color, nullptr, 1.0F);
+
+    out.mesh(get_unit_sphere(),
+             sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
+                       head_r * 1.15F),
+             stone_dark, nullptr, 1.0F);
+
+    out.mesh(get_unit_sphere(),
+             sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                       head_r * 0.9F),
+             stone_color * 0.95F, nullptr, 1.0F);
   }
 
   void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
@@ -376,7 +519,6 @@ private:
     return default_style;
   }
 
-public:
   auto resolve_shader_key(const DrawContext &ctx) const -> QString {
     const BuilderStyleConfig &style = resolve_style(ctx);
     if (!style.shader_id.empty()) {
@@ -385,7 +527,6 @@ public:
     return QStringLiteral("builder");
   }
 
-private:
   void apply_palette_overrides(const BuilderStyleConfig &style,
                                const QVector3D &team_tint,
                                HumanoidVariant &variant) const {

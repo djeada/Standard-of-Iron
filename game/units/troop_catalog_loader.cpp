@@ -201,6 +201,13 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
         read_bool(combat, "can_ranged", troop_class.combat.can_ranged);
     troop_class.combat.can_melee =
         read_bool(combat, "can_melee", troop_class.combat.can_melee);
+    troop_class.combat.max_stamina =
+        read_float(combat, "max_stamina", troop_class.combat.max_stamina);
+    troop_class.combat.stamina_regen_rate = read_float(
+        combat, "stamina_regen_rate", troop_class.combat.stamina_regen_rate);
+    troop_class.combat.stamina_depletion_rate =
+        read_float(combat, "stamina_depletion_rate",
+                   troop_class.combat.stamina_depletion_rate);
 
     const QJsonObject visuals = ensure_object(troop_obj.value("visuals"));
     troop_class.visuals.render_scale =
