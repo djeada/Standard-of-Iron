@@ -407,7 +407,7 @@ void Serialization::deserialize_entity(Entity *entity,
     movement->time_since_last_path_request = static_cast<float>(
         movement_obj["time_since_last_path_request"].toDouble());
 
-    movement->clear_path(); // Reset path and path_index
+    movement->clear_path();
     const auto path_array = movement_obj["path"].toArray();
     movement->path.reserve(path_array.size());
     for (const auto &value : path_array) {
@@ -416,12 +416,12 @@ void Serialization::deserialize_entity(Entity *entity,
           static_cast<float>(waypoint_obj["x"].toDouble()),
           static_cast<float>(waypoint_obj["y"].toDouble()));
     }
-    // Restore path_index if it was serialized
+
     if (movement_obj.contains("path_index")) {
       movement->path_index =
           static_cast<std::size_t>(movement_obj["path_index"].toInt());
     }
-    // Validate path_index is within bounds
+
     movement->validate_path_index();
   }
 
