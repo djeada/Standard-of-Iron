@@ -16,6 +16,7 @@
 #include <qobject.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
+#include <vector>
 
 namespace App::Controllers {
 
@@ -734,7 +735,7 @@ bool CommandController::any_selected_in_formation_mode() const {
 
 auto CommandController::on_run_command() -> CommandResult {
   CommandResult result;
-  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+  if (m_selection_system == nullptr || m_world == nullptr) {
     return result;
   }
 
@@ -743,65 +744,51 @@ auto CommandController::on_run_command() -> CommandResult {
     return result;
   }
 
-  int eligible_count = 0;
+  // First pass: count eligible units and those with run active
+  struct UnitRunState {
+    Engine::Core::Entity *entity;
+    Engine::Core::StaminaComponent *stamina;
+  };
+  std::vector<UnitRunState> eligible_units;
+  eligible_units.reserve(selected.size());
+
   int run_active_count = 0;
 
-  for (auto id : selected) {
+  for (const auto id : selected) {
     auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
 
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
+    const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
       continue;
     }
-
-    if (!Game::Units::can_use_run_mode(unit->spawn_type)) {
-      continue;
-    }
-
-    eligible_count++;
 
     auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
-    if ((stamina != nullptr) && stamina->run_requested) {
-      run_active_count++;
-    }
+    const bool is_active = stamina != nullptr && stamina->run_requested;
+    run_active_count += is_active ? 1 : 0;
+
+    eligible_units.push_back({entity, stamina});
   }
 
-  if (eligible_count == 0) {
+  if (eligible_units.empty()) {
     return result;
   }
 
-  const bool should_enable_run = (run_active_count < eligible_count);
+  const bool should_enable_run =
+      run_active_count < static_cast<int>(eligible_units.size());
 
-  for (auto id : selected) {
-    auto *entity = m_world->get_entity(id);
-    if (entity == nullptr) {
-      continue;
-    }
-
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr) {
-      continue;
-    }
-
-    if (!Game::Units::can_use_run_mode(unit->spawn_type)) {
-      continue;
-    }
-
-    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
-
+  // Second pass: apply state using cached pointers
+  for (auto &[entity, stamina] : eligible_units) {
     if (should_enable_run) {
       if (stamina == nullptr) {
         stamina = entity->add_component<Engine::Core::StaminaComponent>();
       }
       stamina->run_requested = true;
-    } else {
-      if (stamina != nullptr) {
-        stamina->run_requested = false;
-        stamina->is_running = false;
-      }
+    } else if (stamina != nullptr) {
+      stamina->run_requested = false;
+      stamina->is_running = false;
     }
   }
 
@@ -812,20 +799,20 @@ auto CommandController::on_run_command() -> CommandResult {
   return result;
 }
 
-bool CommandController::any_selected_in_run_mode() const {
-  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+auto CommandController::any_selected_in_run_mode() const -> bool {
+  if (m_selection_system == nullptr || m_world == nullptr) {
     return false;
   }
 
-  const auto &selected = m_selection_system->get_selected_units();
-  for (auto id : selected) {
-    auto *entity = m_world->get_entity(id);
+  for (const auto id : m_selection_system->get_selected_units()) {
+    const auto *entity = m_world->get_entity(id);
     if (entity == nullptr) {
       continue;
     }
 
-    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
-    if ((stamina != nullptr) && stamina->run_requested) {
+    const auto *stamina =
+        entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina != nullptr && stamina->run_requested) {
       return true;
     }
   }

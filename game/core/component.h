@@ -4,6 +4,7 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -372,30 +373,40 @@ public:
 
 class StaminaComponent : public Component {
 public:
-  StaminaComponent() = default;
+  static constexpr float kRunSpeedMultiplier = 1.5F;
+  static constexpr float kMinStaminaToStartRun = 10.0F;
+  static constexpr float kDefaultMaxStamina = 100.0F;
+  static constexpr float kDefaultRegenRate = 10.0F;
+  static constexpr float kDefaultDepletionRate = 20.0F;
 
-  float stamina{100.0F};
-  float max_stamina{100.0F};
-  float regen_rate{10.0F};
-  float depletion_rate{20.0F};
+  StaminaComponent() noexcept = default;
+
+  float stamina{kDefaultMaxStamina};
+  float max_stamina{kDefaultMaxStamina};
+  float regen_rate{kDefaultRegenRate};
+  float depletion_rate{kDefaultDepletionRate};
   bool is_running{false};
   bool run_requested{false};
 
-  static constexpr float kRunSpeedMultiplier = 1.5F;
-  static constexpr float kMinStaminaToStartRun = 10.0F;
-
-  [[nodiscard]] auto get_stamina_ratio() const -> float {
-    if (max_stamina <= 0.0F) {
-      return 0.0F;
-    }
-    return stamina / max_stamina;
+  [[nodiscard]] auto get_stamina_ratio() const noexcept -> float {
+    return max_stamina > 0.0F ? stamina / max_stamina : 0.0F;
   }
 
-  [[nodiscard]] auto can_start_running() const -> bool {
+  [[nodiscard]] auto can_start_running() const noexcept -> bool {
     return stamina >= kMinStaminaToStartRun;
   }
 
-  [[nodiscard]] auto has_stamina() const -> bool { return stamina > 0.0F; }
+  [[nodiscard]] auto has_stamina() const noexcept -> bool {
+    return stamina > 0.0F;
+  }
+
+  void deplete(float delta_time) noexcept {
+    stamina = std::max(0.0F, stamina - depletion_rate * delta_time);
+  }
+
+  void regenerate(float delta_time) noexcept {
+    stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
+  }
 };
 
 } // namespace Engine::Core
