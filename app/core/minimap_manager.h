@@ -43,6 +43,7 @@ public:
   }
   [[nodiscard]] float get_world_width() const { return m_world_width; }
   [[nodiscard]] float get_world_height() const { return m_world_height; }
+  [[nodiscard]] float get_tile_size() const { return m_tile_size; }
 
 private:
   QImage m_minimap_image;

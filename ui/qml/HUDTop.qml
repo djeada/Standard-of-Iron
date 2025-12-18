@@ -547,10 +547,30 @@ Item {
                         if (typeof game === 'undefined')
                             return;
 
+                        // The Image uses PreserveAspectFit, so we need to account for
+                        // the actual painted area within the Item
+                        var paintedW = parent.paintedWidth;
+                        var paintedH = parent.paintedHeight;
+                        
+                        if (paintedW === 0 || paintedH === 0)
+                            return;
+
+                        // Calculate offset due to centering
+                        var offsetX = (parent.width - paintedW) / 2;
+                        var offsetY = (parent.height - paintedH) / 2;
+
+                        // Adjust mouse coordinates to image space
+                        var imgX = mouse.x - offsetX;
+                        var imgY = mouse.y - offsetY;
+                        
+                        // Check if click is within the painted image
+                        if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
+                            return;
+
                         if (mouse.button === Qt.LeftButton) {
-                            game.on_minimap_left_click(mouse.x, mouse.y, width, height);
+                            game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
                         } else if (mouse.button === Qt.RightButton) {
-                            game.on_minimap_right_click(mouse.x, mouse.y, width, height);
+                            game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
                         }
                     }
                 }
