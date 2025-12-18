@@ -2,6 +2,7 @@
 
 #include "nation_id.h"
 #include <QVector3D>
+#include <cmath>
 
 namespace Game::Systems {
 
