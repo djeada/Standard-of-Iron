@@ -316,14 +316,18 @@ void HumanoidRendererBase::compute_locomotion_pose(
     float const vertical_bob =
         std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
 
-    float const hip_sway_amount = 0.025F;
-    float const hip_sway =
-        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) *
-        hip_sway_amount;
+    // Reduced hip sway for more natural movement
+    float const hip_sway_amount = 0.012F; // Reduced from 0.025F
+    float const sway_raw = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+    // Apply smooth easing to hip sway
+    float const sway_eased = sway_raw * sway_raw * sway_raw; // Cubic for smooth motion
+    float const hip_sway = sway_eased * hip_sway_amount;
 
-    float const torso_rotation =
-        std::sin((walk_phase - 0.05F) * 2.0F * std::numbers::pi_v<float>) *
-        0.015F;
+    // Reduced torso rotation and better phase timing for natural counter-rotation
+    float const torso_rotation_amount = 0.008F; // Reduced from 0.015F
+    float const torso_phase = (walk_phase + 0.25F); // Quarter cycle offset for natural counter-motion
+    float const torso_raw = std::sin(torso_phase * 2.0F * std::numbers::pi_v<float>);
+    float const torso_rotation = torso_raw * torso_rotation_amount;
 
     auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
                                                          float phase) {
@@ -360,17 +364,21 @@ void HumanoidRendererBase::compute_locomotion_pose(
     pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_rotation);
     pose.shoulder_r.setZ(pose.shoulder_r.z() - torso_rotation);
 
-    float const arm_swing_amp = 0.22F * variation.arm_swing_amp;
+    // Reduced arm swing to prevent unnatural weapon stretching
+    float const arm_swing_amp = 0.14F * variation.arm_swing_amp; // Reduced from 0.22F
     float const arm_phase_offset = 0.15F;
 
-    float const left_arm_swing = std::sin((left_phase + arm_phase_offset) *
-                                          2.0F * std::numbers::pi_v<float>) *
-                                 arm_swing_amp;
+    // Apply smooth easing to arm swing for natural motion
+    float const left_swing_raw = std::sin((left_phase + arm_phase_offset) *
+                                          2.0F * std::numbers::pi_v<float>);
+    float const left_swing_eased = left_swing_raw * (1.0F - 0.15F * std::abs(left_swing_raw)); // Damping at extremes
+    float const left_arm_swing = left_swing_eased * arm_swing_amp;
     pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
 
-    float const right_arm_swing = std::sin((right_phase + arm_phase_offset) *
-                                           2.0F * std::numbers::pi_v<float>) *
-                                  arm_swing_amp;
+    float const right_swing_raw = std::sin((right_phase + arm_phase_offset) *
+                                           2.0F * std::numbers::pi_v<float>);
+    float const right_swing_eased = right_swing_raw * (1.0F - 0.15F * std::abs(right_swing_raw)); // Damping at extremes
+    float const right_arm_swing = right_swing_eased * arm_swing_amp;
     pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
   }
 
@@ -1603,8 +1611,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
 
-      float const run_lean = 0.15F;
-      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.08F);
+      // Reduced forward lean for more natural running posture
+      float const run_lean = 0.10F; // Reduced from 0.15F
+      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.05F); // Reduced from 0.08F
       pose.shoulder_l.setZ(pose.shoulder_l.z() + run_lean);
       pose.shoulder_r.setZ(pose.shoulder_r.z() + run_lean);
       pose.neck_base.setZ(pose.neck_base.z() + run_lean * 0.7F);
@@ -1637,13 +1646,13 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       enhance_run_foot(pose.foot_l, left_phase);
       enhance_run_foot(pose.foot_r, right_phase);
 
-      float const run_arm_swing = 0.35F;
-      float const left_arm_phase =
-          std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) *
-          run_arm_swing;
-      float const right_arm_phase =
-          std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) *
-          run_arm_swing;
+      // Reduced arm swing during running to prevent weapon stretching
+      float const run_arm_swing = 0.22F; // Reduced from 0.35F
+      float const arm_damping = 0.85F; // Damping factor for natural motion
+      float const left_swing_raw = std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const left_arm_phase = left_swing_raw * run_arm_swing * arm_damping;
+      float const right_swing_raw = std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const right_arm_phase = right_swing_raw * run_arm_swing * arm_damping;
 
       pose.hand_l.setZ(pose.hand_l.z() - left_arm_phase);
       pose.hand_r.setZ(pose.hand_r.z() - right_arm_phase);
@@ -1651,12 +1660,15 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       pose.hand_l.setY(pose.hand_l.y() + 0.05F);
       pose.hand_r.setY(pose.hand_r.y() + 0.05F);
 
-      float const hip_rotation =
-          std::sin(phase * 2.0F * std::numbers::pi_v<float>) * 0.04F;
+      // Reduced hip rotation for more stable running
+      float const hip_rotation_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
+      float const hip_rotation = hip_rotation_raw * 0.020F; // Reduced from 0.04F
       pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_rotation);
 
-      float const shoulder_rotation =
-          std::sin((phase - 0.1F) * 2.0F * std::numbers::pi_v<float>) * 0.025F;
+      // Reduced shoulder counter-rotation for natural but controlled movement
+      float const shoulder_phase = (phase + 0.15F); // Better phase timing
+      float const shoulder_rotation_raw = std::sin(shoulder_phase * 2.0F * std::numbers::pi_v<float>);
+      float const shoulder_rotation = shoulder_rotation_raw * 0.015F; // Reduced from 0.025F
       pose.shoulder_l.setZ(pose.shoulder_l.z() + shoulder_rotation);
       pose.shoulder_r.setZ(pose.shoulder_r.z() - shoulder_rotation);
 
