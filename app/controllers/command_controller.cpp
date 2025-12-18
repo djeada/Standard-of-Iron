@@ -12,6 +12,8 @@
 #include "game/game_config.h"
 #include "units/spawn_type.h"
 #include <QPointF>
+#include <cmath>
+#include <numbers>
 #include <qglobal.h>
 #include <qobject.h>
 #include <qtmetamacros.h>
@@ -667,11 +669,21 @@ auto CommandController::on_formation_command() -> CommandResult {
     QVector3D center(0.0F, 0.0F, 0.0F);
     int valid_count = 0;
 
+    m_formation_units.clear();
+
     for (auto id : selected) {
       auto *entity = m_world->get_entity(id);
       if (entity == nullptr) {
         continue;
       }
+
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit == nullptr ||
+          unit->spawn_type == Game::Units::SpawnType::Barracks) {
+        continue;
+      }
+
+      m_formation_units.push_back(id);
 
       auto *transform =
           entity->get_component<Engine::Core::TransformComponent>();
@@ -688,25 +700,18 @@ auto CommandController::on_formation_command() -> CommandResult {
       center.setY(center.y() / static_cast<float>(valid_count));
       center.setZ(center.z() / static_cast<float>(valid_count));
 
-      auto targets =
-          Game::Systems::FormationPlanner::spread_formation_by_nation(
-              *m_world, selected, center,
-              Game::GameConfig::instance()
-                  .gameplay()
-                  .formation_spacing_default);
+      m_is_placing_formation = true;
+      m_formation_placement_position = center;
+      m_formation_placement_angle = 0.0F;
 
-      Game::Systems::CommandService::MoveOptions opts;
-      opts.group_move = selected.size() > 1;
-      opts.clear_attack_intent = true;
-      Game::Systems::CommandService::moveUnits(*m_world, selected, targets,
-                                               opts);
+      emit formation_placement_started();
+      emit formation_placement_updated(m_formation_placement_position,
+                                       m_formation_placement_angle);
     }
   }
 
-  emit formation_mode_changed(should_enable_formation);
-
   result.input_consumed = true;
-  result.reset_cursor_to_normal = true;
+  result.reset_cursor_to_normal = false;
   return result;
 }
 
@@ -730,6 +735,104 @@ bool CommandController::any_selected_in_formation_mode() const {
   }
 
   return false;
+}
+
+void CommandController::update_formation_placement(const QVector3D &position) {
+  if (!m_is_placing_formation) {
+    return;
+  }
+  m_formation_placement_position = position;
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
+}
+
+void CommandController::update_formation_rotation(float angle_degrees) {
+  if (!m_is_placing_formation) {
+    return;
+  }
+  m_formation_placement_angle = angle_degrees;
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
+}
+
+void CommandController::confirm_formation_placement() {
+  if (!m_is_placing_formation || m_formation_units.empty()) {
+    cancel_formation_placement();
+    return;
+  }
+
+  auto formation_result =
+      Game::Systems::FormationPlanner::get_formation_with_facing(
+          *m_world, m_formation_units, m_formation_placement_position,
+          Game::GameConfig::instance().gameplay().formation_spacing_default);
+
+  float const angle_rad =
+      m_formation_placement_angle * std::numbers::pi_v<float> / 180.0F;
+  float const cos_a = std::cos(angle_rad);
+  float const sin_a = std::sin(angle_rad);
+
+  for (size_t i = 0; i < m_formation_units.size(); ++i) {
+
+    if (i < formation_result.positions.size()) {
+      QVector3D &pos = formation_result.positions[i];
+      float const dx = pos.x() - m_formation_placement_position.x();
+      float const dz = pos.z() - m_formation_placement_position.z();
+
+      float const rotated_x = dx * cos_a - dz * sin_a;
+      float const rotated_z = dx * sin_a + dz * cos_a;
+
+      pos.setX(m_formation_placement_position.x() + rotated_x);
+      pos.setZ(m_formation_placement_position.z() + rotated_z);
+    }
+
+    auto *entity = m_world->get_entity(m_formation_units[i]);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform != nullptr) {
+
+      float unit_facing = (i < formation_result.facing_angles.size())
+                              ? formation_result.facing_angles[i]
+                              : 0.0F;
+      transform->desired_yaw = unit_facing + m_formation_placement_angle;
+      transform->has_desired_yaw = true;
+    }
+  }
+
+  Game::Systems::CommandService::MoveOptions opts;
+  opts.group_move = m_formation_units.size() > 1;
+  opts.clear_attack_intent = true;
+  Game::Systems::CommandService::moveUnits(*m_world, m_formation_units,
+                                           formation_result.positions, opts);
+
+  m_is_placing_formation = false;
+  m_formation_units.clear();
+  emit formation_placement_ended();
+  emit formation_mode_changed(true);
+}
+
+void CommandController::cancel_formation_placement() {
+  if (!m_is_placing_formation) {
+    return;
+  }
+
+  for (auto id : m_formation_units) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if (formation_mode != nullptr) {
+      formation_mode->active = false;
+    }
+  }
+
+  m_is_placing_formation = false;
+  m_formation_units.clear();
+  emit formation_placement_ended();
+  emit formation_mode_changed(false);
 }
 
 } // namespace App::Controllers

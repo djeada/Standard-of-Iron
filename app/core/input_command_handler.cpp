@@ -93,15 +93,30 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     QVector3D hit;
     if (m_picking_service->screen_to_ground(
             QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-      auto targets =
-          Game::Systems::FormationPlanner::spread_formation_by_nation(
+      auto formation_result =
+          Game::Systems::FormationPlanner::get_formation_with_facing(
               *m_world, sel, hit,
               Game::GameConfig::instance()
                   .gameplay()
                   .formation_spacing_default);
+
+      for (size_t i = 0; i < sel.size(); ++i) {
+        auto *entity = m_world->get_entity(sel[i]);
+        if (entity == nullptr) {
+          continue;
+        }
+        auto *transform =
+            entity->get_component<Engine::Core::TransformComponent>();
+        if (transform != nullptr && i < formation_result.facing_angles.size()) {
+          transform->desired_yaw = formation_result.facing_angles[i];
+          transform->has_desired_yaw = true;
+        }
+      }
+
       Game::Systems::CommandService::MoveOptions opts;
       opts.group_move = sel.size() > 1;
-      Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
+      Game::Systems::CommandService::moveUnits(
+          *m_world, sel, formation_result.positions, opts);
     }
   }
 }
@@ -243,6 +258,65 @@ auto InputCommandHandler::any_selected_in_formation_mode() const -> bool {
     return false;
   }
   return m_command_controller->any_selected_in_formation_mode();
+}
+
+auto InputCommandHandler::is_placing_formation() const -> bool {
+  if (!m_command_controller) {
+    return false;
+  }
+  return m_command_controller->is_placing_formation();
+}
+
+void InputCommandHandler::on_formation_mouse_move(
+    qreal sx, qreal sy, const ViewportState &viewport) {
+  if (!m_command_controller || !m_camera || !m_picking_service) {
+    return;
+  }
+
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  QVector3D hit;
+  if (m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
+    m_command_controller->update_formation_placement(hit);
+  }
+}
+
+void InputCommandHandler::on_formation_scroll(float delta) {
+  if (!m_command_controller) {
+    return;
+  }
+
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  float current_angle = m_command_controller->get_formation_placement_angle();
+  float new_angle = current_angle + delta * 5.0F;
+
+  while (new_angle < 0.0F) {
+    new_angle += 360.0F;
+  }
+  while (new_angle >= 360.0F) {
+    new_angle -= 360.0F;
+  }
+  m_command_controller->update_formation_rotation(new_angle);
+}
+
+void InputCommandHandler::on_formation_confirm() {
+  if (!m_command_controller) {
+    return;
+  }
+  m_command_controller->confirm_formation_placement();
+}
+
+void InputCommandHandler::on_formation_cancel() {
+  if (!m_command_controller) {
+    return;
+  }
+  m_command_controller->cancel_formation_placement();
 }
 
 void InputCommandHandler::on_patrol_click(qreal sx, qreal sy,
