@@ -2,7 +2,7 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
-#include "healing_colors.h"
+#include "nation_id.h"
 #include <QDebug>
 #include <cmath>
 #include <qvectornd.h>
@@ -90,19 +90,21 @@ void HealingSystem::process_healing(Engine::Core::World *world,
         }
 
         if (healing_beam_system != nullptr) {
-          // Only Roman healers use healing beams (blue waves shot at target)
-          if (uses_healing_beams(healer_unit->nation_id)) {
-            QVector3D const healer_pos(healer_transform->position.x,
-                                       healer_transform->position.y + 1.2F,
-                                       healer_transform->position.z);
-            QVector3D const target_pos(target_transform->position.x,
-                                       target_transform->position.y + 0.8F,
-                                       target_transform->position.z);
+          QVector3D const healer_pos(healer_transform->position.x,
+                                     healer_transform->position.y + 1.2F,
+                                     healer_transform->position.z);
+          QVector3D const target_pos(target_transform->position.x,
+                                     target_transform->position.y + 0.8F,
+                                     target_transform->position.z);
 
-            QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
-            healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
-                                            0.7F);
+          // Roman healers use blue waves, Carthage uses green beams
+          QVector3D heal_color(0.4F, 1.0F, 0.5F); // Default green for Carthage
+          if (healer_unit->nation_id == NationID::RomanRepublic) {
+            heal_color = QVector3D(0.3F, 0.6F, 1.0F); // Blue for Roman
           }
+          
+          healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
+                                          0.7F);
         }
 
         healed_any = true;

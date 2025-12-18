@@ -114,6 +114,7 @@
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
+#include "render/entity/healing_waves_renderer.h"
 #include "render/geom/arrow.h"
 #include "render/geom/formation_arrow.h"
 #include "render/geom/patrol_flags.h"
@@ -958,6 +959,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
           m_world->get_system<Game::Systems::HealingBeamSystem>()) {
     if (auto *res = m_renderer->resources()) {
       Render::GL::render_healing_beams(m_renderer.get(), res,
+                                       *healing_beam_system);
+      Render::GL::render_healing_waves(m_renderer.get(), res,
                                        *healing_beam_system);
     }
   }

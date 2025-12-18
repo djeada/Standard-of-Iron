@@ -1,7 +1,6 @@
 #include "healer_aura_renderer.h"
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
-#include "../../game/systems/healing_colors.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -25,21 +24,15 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
     auto *healer_comp = healer->get_component<Engine::Core::HealerComponent>();
     auto *unit_comp = healer->get_component<Engine::Core::UnitComponent>();
 
-    if (transform == nullptr || healer_comp == nullptr || unit_comp == nullptr) {
+    if (transform == nullptr || healer_comp == nullptr) {
       continue;
     }
 
-    if (unit_comp->health <= 0) {
+    if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
     }
 
     if (!healer_comp->is_healing_active) {
-      continue;
-    }
-
-    // Only Carthage healers use the aura of power (circular green aura)
-    // Roman healers use healing beams instead
-    if (!Game::Systems::uses_healing_aura(unit_comp->nation_id)) {
       continue;
     }
 
@@ -49,7 +42,7 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
 
     float intensity = 1.0F;
 
-    QVector3D color = Game::Systems::get_healing_color(unit_comp->nation_id);
+    QVector3D color(0.4F, 1.0F, 0.5F);
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
   }

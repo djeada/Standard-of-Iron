@@ -1,7 +1,6 @@
 #include "healer_aura_pipeline.h"
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
-#include "../../../game/systems/healing_colors.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
@@ -249,17 +248,11 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
     auto *healer_comp = healer->get_component<Engine::Core::HealerComponent>();
     auto *unit_comp = healer->get_component<Engine::Core::UnitComponent>();
 
-    if (transform == nullptr || healer_comp == nullptr || unit_comp == nullptr) {
+    if (transform == nullptr || healer_comp == nullptr) {
       continue;
     }
 
-    if (unit_comp->health <= 0) {
-      continue;
-    }
-
-    // Only Carthage healers use the aura of power (circular green aura)
-    // Roman healers use healing beams instead
-    if (!Game::Systems::uses_healing_aura(unit_comp->nation_id)) {
+    if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
     }
 
@@ -271,7 +264,7 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
 
     data.intensity = data.is_active ? 1.0F : 0.5F;
 
-    data.color = Game::Systems::get_healing_color(unit_comp->nation_id);
+    data.color = QVector3D(0.4F, 1.0F, 0.5F);
 
     m_healerData.push_back(data);
   }
