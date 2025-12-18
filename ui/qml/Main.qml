@@ -352,6 +352,22 @@ ApplicationWindow {
                     else
                         game.set_hover_at_screen(-1, -1);
                 }
+                if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_mouse_move) {
+                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
+                        game.on_formation_mouse_move(mouse.x, mouse.y);
+
+                }
+            }
+            onWheel: function(w) {
+                if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_scroll) {
+                    var dy = (w.angleDelta ? w.angleDelta.y / 120 : w.delta / 120);
+                    if (dy !== 0)
+                        game.on_formation_scroll(dy);
+
+                    w.accepted = true;
+                    return ;
+                }
+                w.accepted = false;
             }
             onEntered: function() {
                 edgeScrollTimer.start();
