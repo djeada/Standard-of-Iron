@@ -83,7 +83,7 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
 
   auto strap = [&](float side) {
     QVector3D shoulder_anchor =
-        top + right * (torso_r * 0.54F * side) - up * (torso_r * 0.04F);
+        top + right * (torso_r * 0.48F * side) - up * (torso_r * 0.12F);
     QVector3D chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
     submitter.mesh(get_unit_cylinder(),
