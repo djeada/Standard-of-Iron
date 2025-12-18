@@ -1,23 +1,10 @@
 #include "healer_aura_renderer.h"
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
-#include "../../game/systems/nation_id.h"
+#include "../../game/systems/healing_colors.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
-
-namespace {
-auto get_healing_aura_color(Game::Systems::NationID nation_id) -> QVector3D {
-  switch (nation_id) {
-  case Game::Systems::NationID::RomanRepublic:
-    return QVector3D(0.3F, 0.6F, 1.0F);
-  case Game::Systems::NationID::Carthage:
-    return QVector3D(0.4F, 1.0F, 0.5F);
-  default:
-    return QVector3D(0.4F, 1.0F, 0.5F);
-  }
-}
-} // namespace
 
 void render_healer_auras(Renderer *renderer, ResourceManager *,
                          Engine::Core::World *world) {
@@ -56,7 +43,7 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
 
     float intensity = 1.0F;
 
-    QVector3D color = get_healing_aura_color(unit_comp->nation_id);
+    QVector3D color = Game::Systems::get_healing_color(unit_comp->nation_id);
 
     renderer->healer_aura(position, color, radius, intensity, animation_time);
   }

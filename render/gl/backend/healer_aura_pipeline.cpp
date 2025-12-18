@@ -1,7 +1,7 @@
 #include "healer_aura_pipeline.h"
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
-#include "../../../game/systems/nation_id.h"
+#include "../../../game/systems/healing_colors.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
@@ -13,19 +13,6 @@
 #include <numbers>
 
 namespace Render::GL::BackendPipelines {
-
-namespace {
-auto get_healing_aura_color(Game::Systems::NationID nation_id) -> QVector3D {
-  switch (nation_id) {
-  case Game::Systems::NationID::RomanRepublic:
-    return QVector3D(0.3F, 0.6F, 1.0F);
-  case Game::Systems::NationID::Carthage:
-    return QVector3D(0.4F, 1.0F, 0.5F);
-  default:
-    return QVector3D(0.4F, 1.0F, 0.5F);
-  }
-}
-} // namespace
 
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
@@ -278,7 +265,7 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
 
     data.intensity = data.is_active ? 1.0F : 0.5F;
 
-    data.color = get_healing_aura_color(unit_comp->nation_id);
+    data.color = Game::Systems::get_healing_color(unit_comp->nation_id);
 
     m_healerData.push_back(data);
   }
