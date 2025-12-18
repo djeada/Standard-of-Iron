@@ -417,6 +417,17 @@ void GameEngine::on_right_click(qreal sx, qreal sy) {
   }
 }
 
+void GameEngine::on_right_double_click(qreal sx, qreal sy) {
+  if (m_window == nullptr) {
+    return;
+  }
+  ensure_initialized();
+  if (m_input_handler) {
+    m_input_handler->on_right_double_click(sx, sy, m_runtime.local_owner_id,
+                                           m_viewport);
+  }
+}
+
 void GameEngine::on_attack_click(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;
@@ -1275,7 +1286,6 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
   result["canGuard"] = true;
   result["canHold"] = true;
   result["canPatrol"] = true;
-  result["canRun"] = true;
 
   if (!m_world) {
     return result;
@@ -1295,11 +1305,10 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
   bool can_guard = true;
   bool can_hold = true;
   bool can_patrol = true;
-  bool can_run = true;
 
   for (auto id : sel) {
 
-    if (!can_attack && !can_guard && !can_hold && !can_patrol && !can_run) {
+    if (!can_attack && !can_guard && !can_hold && !can_patrol) {
       break;
     }
 
@@ -1329,16 +1338,12 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
     if (can_patrol && !Game::Units::can_use_patrol_mode(u->spawn_type)) {
       can_patrol = false;
     }
-    if (can_run && !Game::Units::can_use_run_mode(u->spawn_type)) {
-      can_run = false;
-    }
   }
 
   result["canAttack"] = can_attack;
   result["canGuard"] = can_guard;
   result["canHold"] = can_hold;
   result["canPatrol"] = can_patrol;
-  result["canRun"] = can_run;
 
   return result;
 }

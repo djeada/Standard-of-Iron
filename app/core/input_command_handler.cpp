@@ -38,12 +38,55 @@ void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
   }
 }
 
-void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
-                                         const ViewportState &viewport) {
-  if (m_is_spectator_mode) {
+namespace {
+// Helper to handle the common logic for right-click based movement
+void handle_move_command(
+    Engine::Core::World *world,
+    const std::vector<Engine::Core::EntityID> &selected,
+    Game::Systems::PickingService *picking_service, Render::GL::Camera *camera,
+    qreal sx, qreal sy, int local_owner_id, const ViewportState &viewport) {
+  if (!picking_service || !camera || !world) {
     return;
   }
-  if (!m_world) {
+
+  // Check for enemy target
+  Engine::Core::EntityID const target_id = picking_service->pick_unit_first(
+      float(sx), float(sy), *world, *camera, viewport.width, viewport.height,
+      0);
+
+  if (target_id != 0U) {
+    auto *target_entity = world->get_entity(target_id);
+    if (target_entity != nullptr) {
+      auto *target_unit =
+          target_entity->get_component<Engine::Core::UnitComponent>();
+      if (target_unit != nullptr) {
+        bool const is_enemy = (target_unit->owner_id != local_owner_id);
+        if (is_enemy) {
+          Game::Systems::CommandService::attack_target(*world, selected,
+                                                       target_id, true);
+          return;
+        }
+      }
+    }
+  }
+
+  // Move to ground location
+  QVector3D hit;
+  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera, viewport.width,
+                                        viewport.height, hit)) {
+    auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
+        *world, selected, hit,
+        Game::GameConfig::instance().gameplay().formation_spacing_default);
+    Game::Systems::CommandService::MoveOptions opts;
+    opts.group_move = selected.size() > 1;
+    Game::Systems::CommandService::moveUnits(*world, selected, targets, opts);
+  }
+}
+} // namespace
+
+void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
+                                         const ViewportState &viewport) {
+  if (m_is_spectator_mode || !m_world) {
     return;
   }
 
@@ -66,44 +109,48 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     return;
   }
 
-  if (m_picking_service && m_camera) {
-    Engine::Core::EntityID const target_id = m_picking_service->pick_unit_first(
-        float(sx), float(sy), *m_world, *m_camera, viewport.width,
-        viewport.height, 0);
-
-    if (target_id != 0U) {
-      auto *target_entity = m_world->get_entity(target_id);
-      if (target_entity != nullptr) {
-        auto *target_unit =
-            target_entity->get_component<Engine::Core::UnitComponent>();
-        if (target_unit != nullptr) {
-          bool const is_enemy = (target_unit->owner_id != local_owner_id);
-
-          if (is_enemy) {
-            Game::Systems::CommandService::attack_target(*m_world, sel,
-                                                         target_id, true);
-            return;
-          }
-        }
-      }
-    }
+  // Disable run mode for regular single right-click (walking)
+  if (m_command_controller) {
+    m_command_controller->disable_run_mode_for_selected();
   }
 
-  if (m_picking_service && m_camera) {
-    QVector3D hit;
-    if (m_picking_service->screen_to_ground(
-            QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
-      auto targets =
-          Game::Systems::FormationPlanner::spread_formation_by_nation(
-              *m_world, sel, hit,
-              Game::GameConfig::instance()
-                  .gameplay()
-                  .formation_spacing_default);
-      Game::Systems::CommandService::MoveOptions opts;
-      opts.group_move = sel.size() > 1;
-      Game::Systems::CommandService::moveUnits(*m_world, sel, targets, opts);
-    }
+  handle_move_command(m_world, sel, m_picking_service, m_camera, sx, sy,
+                      local_owner_id, viewport);
+}
+
+void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
+                                                int local_owner_id,
+                                                const ViewportState &viewport) {
+  if (m_is_spectator_mode || !m_world) {
+    return;
   }
+
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+
+  if (m_cursor_manager->mode() == CursorMode::Patrol ||
+      m_cursor_manager->mode() == CursorMode::Attack ||
+      m_cursor_manager->mode() == CursorMode::Guard ||
+      m_cursor_manager->mode() == CursorMode::PlaceBuilding) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+    return;
+  }
+
+  const auto &sel = selection_system->get_selected_units();
+  if (sel.empty()) {
+    return;
+  }
+
+  // Enable run mode for double right-click (running)
+  if (m_command_controller) {
+    m_command_controller->enable_run_mode_for_selected();
+  }
+
+  handle_move_command(m_world, sel, m_picking_service, m_camera, sx, sy,
+                      local_owner_id, viewport);
 }
 
 void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
