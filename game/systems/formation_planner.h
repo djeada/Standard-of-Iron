@@ -23,7 +23,7 @@ struct FormationResult {
 
 class FormationPlanner {
 public:
-  static auto spreadFormation(int n, const QVector3D &center,
+  static auto spread_formation(int n, const QVector3D &center,
                               float spacing = 1.0F) -> std::vector<QVector3D> {
     std::vector<QVector3D> out;
     out.reserve(n);
@@ -186,7 +186,7 @@ public:
 
     if (!all_in_formation_mode || !formation_type_determined) {
       result.positions =
-          spreadFormation(int(units.size()), adjusted_center, spacing);
+          spread_formation(int(units.size()), adjusted_center, spacing);
       result.facing_angles.assign(units.size(), 0.0F);
       return result;
     }
@@ -226,7 +226,7 @@ public:
 
     if (unit_infos.empty()) {
       result.positions =
-          spreadFormation(int(units.size()), adjusted_center, spacing);
+          spread_formation(int(units.size()), adjusted_center, spacing);
       result.facing_angles.assign(units.size(), 0.0F);
       return result;
     }
