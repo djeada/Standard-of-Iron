@@ -343,6 +343,13 @@ Item {
 
                 }
             }
+            onDoubleClicked: function(mouse) {
+                if (mouse.button === Qt.RightButton) {
+                    if (typeof game !== 'undefined' && game.on_right_double_click)
+                        game.on_right_double_click(mouse.x, mouse.y);
+
+                }
+            }
             onReleased: function(mouse) {
                 if (mouse.button === Qt.LeftButton && isSelecting) {
                     isSelecting = false;

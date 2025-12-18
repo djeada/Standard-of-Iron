@@ -59,6 +59,21 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
   if (role == NationRole) {
     return nation;
   }
+  if (role == StaminaRatioRole || role == IsRunningRole || role == CanRunRole) {
+    float stamina_ratio = 1.0F;
+    bool is_running = false;
+    bool can_run = false;
+    m_engine->get_unit_stamina_info(id, stamina_ratio, is_running, can_run);
+    if (role == StaminaRatioRole) {
+      return static_cast<double>(stamina_ratio);
+    }
+    if (role == IsRunningRole) {
+      return is_running;
+    }
+    if (role == CanRunRole) {
+      return can_run;
+    }
+  }
   return {};
 }
 
@@ -68,7 +83,10 @@ auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
           {HealthRole, "health"},
           {max_healthRole, "max_health"},
           {HealthRatioRole, "health_ratio"},
-          {NationRole, "nation"}};
+          {NationRole, "nation"},
+          {StaminaRatioRole, "stamina_ratio"},
+          {IsRunningRole, "is_running"},
+          {CanRunRole, "can_run"}};
 }
 
 void SelectedUnitsModel::refresh() {
@@ -84,7 +102,8 @@ void SelectedUnitsModel::refresh() {
       QModelIndex const first = index(0, 0);
       QModelIndex const last = index(static_cast<int>(m_ids.size()) - 1, 0);
       emit dataChanged(first, last,
-                       {HealthRole, max_healthRole, HealthRatioRole});
+                       {HealthRole, max_healthRole, HealthRatioRole,
+                        StaminaRatioRole, IsRunningRole});
     }
     return;
   }

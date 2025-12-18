@@ -179,6 +179,26 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
 }
 
+[[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
+  switch (type) {
+  case SpawnType::Archer:
+  case SpawnType::Knight:
+  case SpawnType::Spearman:
+  case SpawnType::Healer:
+  case SpawnType::Builder:
+  case SpawnType::MountedKnight:
+  case SpawnType::HorseArcher:
+  case SpawnType::HorseSpearman:
+    return true;
+  case SpawnType::Catapult:
+  case SpawnType::Ballista:
+  case SpawnType::Barracks:
+  case SpawnType::DefenseTower:
+    return false;
+  }
+  return false;
+}
+
 inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   switch (type) {
   case SpawnType::Archer:

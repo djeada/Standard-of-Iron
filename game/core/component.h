@@ -4,6 +4,7 @@
 #include "../units/spawn_type.h"
 #include "../units/troop_type.h"
 #include "entity.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <optional>
@@ -419,6 +420,52 @@ public:
   bool active{false};
   float formation_center_x{0.0F};
   float formation_center_z{0.0F};
+};
+
+class StaminaComponent : public Component {
+public:
+  static constexpr float kRunSpeedMultiplier = 1.5F;
+  static constexpr float kMinStaminaToStartRun = 10.0F;
+  static constexpr float kDefaultMaxStamina = 100.0F;
+  static constexpr float kDefaultRegenRate = 10.0F;
+  static constexpr float kDefaultDepletionRate = 20.0F;
+
+  StaminaComponent() noexcept = default;
+
+  float stamina{kDefaultMaxStamina};
+  float max_stamina{kDefaultMaxStamina};
+  float regen_rate{kDefaultRegenRate};
+  float depletion_rate{kDefaultDepletionRate};
+  bool is_running{false};
+  bool run_requested{false};
+
+  [[nodiscard]] auto get_stamina_ratio() const noexcept -> float {
+    return max_stamina > 0.0F ? stamina / max_stamina : 0.0F;
+  }
+
+  [[nodiscard]] auto can_start_running() const noexcept -> bool {
+    return stamina >= kMinStaminaToStartRun;
+  }
+
+  [[nodiscard]] auto has_stamina() const noexcept -> bool {
+    return stamina > 0.0F;
+  }
+
+  void deplete(float delta_time) noexcept {
+    stamina = std::max(0.0F, stamina - depletion_rate * delta_time);
+  }
+
+  void regenerate(float delta_time) noexcept {
+    stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
+  }
+
+  void initialize_from_stats(float new_max_stamina, float new_regen_rate,
+                             float new_depletion_rate) noexcept {
+    max_stamina = new_max_stamina;
+    stamina = new_max_stamina;
+    regen_rate = new_regen_rate;
+    depletion_rate = new_depletion_rate;
+  }
 };
 
 } // namespace Engine::Core
