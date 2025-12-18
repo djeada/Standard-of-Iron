@@ -30,7 +30,7 @@ void stop_unit_movement(Engine::Core::Entity *unit,
     movement->has_target = false;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
-    movement->path.clear();
+    movement->clear_path();
     if (transform != nullptr) {
       movement->target_x = transform->position.x;
       movement->target_y = transform->position.z;
@@ -470,7 +470,7 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                     movement->has_target = false;
                     movement->vx = 0.0F;
                     movement->vz = 0.0F;
-                    movement->path.clear();
+                    movement->clear_path();
                     movement->target_x = attacker_transform->position.x;
                     movement->target_y = attacker_transform->position.z;
                     movement->goal_x = attacker_transform->position.x;
