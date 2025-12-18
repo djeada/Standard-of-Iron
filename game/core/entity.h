@@ -18,7 +18,6 @@ public:
   virtual ~Component() = default;
 };
 
-// Callback type for component change notifications
 using ComponentChangeCallback =
     std::function<void(EntityID, std::type_index, bool)>;
 
@@ -28,10 +27,6 @@ public:
 
   auto get_id() const -> EntityID;
 
-  /**
-   * @brief Set a callback to be notified when components are added/removed.
-   * @param callback Function called with (entity_id, component_type, added)
-   */
   void set_component_change_callback(ComponentChangeCallback callback);
 
   template <typename T, typename... Args>
@@ -43,7 +38,6 @@ public:
     std::type_index const type_idx = std::type_index(typeid(T));
     m_components[type_idx] = std::move(component);
 
-    // Notify about component addition
     if (m_component_change_callback) {
       m_component_change_callback(m_id, type_idx, true);
     }
@@ -73,7 +67,6 @@ public:
     if (it != m_components.end()) {
       m_components.erase(it);
 
-      // Notify about component removal
       if (m_component_change_callback) {
         m_component_change_callback(m_id, type_idx, false);
       }

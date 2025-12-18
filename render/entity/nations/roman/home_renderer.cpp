@@ -65,29 +65,28 @@ void drawHomeBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c,
-                   BuildingState state) {
+                   Texture *white, const RomanPalette &c, BuildingState state) {
   float const wall_height = 0.8F;
   float height_multiplier = 1.0F;
-  
+
   if (state == BuildingState::Damaged) {
     height_multiplier = 0.7F;
   } else if (state == BuildingState::Destroyed) {
     height_multiplier = 0.4F;
   }
 
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.2F, -0.9F),
-           QVector3D(0.85F, wall_height * 0.5F * height_multiplier, 0.08F),
-           c.brick);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.2F, -0.9F),
+      QVector3D(0.85F, wall_height * 0.5F * height_multiplier, 0.08F), c.brick);
   draw_box(out, unit, white, p.model,
            QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.2F, 0.9F),
            QVector3D(0.85F, wall_height * 0.5F * height_multiplier, 0.08F),
            c.brick);
-  draw_box(out, unit, white, p.model,
-           QVector3D(-0.9F, wall_height * 0.5F * height_multiplier + 0.2F, 0.0F),
-           QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F),
-           c.brick);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-0.9F, wall_height * 0.5F * height_multiplier + 0.2F, 0.0F),
+      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F), c.brick);
   draw_box(out, unit, white, p.model,
            QVector3D(0.9F, wall_height * 0.5F * height_multiplier + 0.2F, 0.0F),
            QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F),
