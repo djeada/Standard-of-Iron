@@ -745,7 +745,6 @@ auto CommandController::on_run_command() -> CommandResult {
     return result;
   }
 
-  // First pass: count eligible units and those with run active
   struct UnitRunState {
     Engine::Core::Entity *entity;
     Engine::Core::StaminaComponent *stamina;
@@ -783,14 +782,12 @@ auto CommandController::on_run_command() -> CommandResult {
   const bool should_enable_run =
       run_active_count < static_cast<int>(eligible_units.size());
 
-  // Second pass: apply state using cached pointers
   for (auto &[entity, stamina, nation_id, spawn_type] : eligible_units) {
     if (should_enable_run) {
       if (stamina == nullptr) {
         stamina = entity->add_component<Engine::Core::StaminaComponent>();
-        // Initialize stamina values from troop profile
-        const auto troop_type =
-            Game::Units::spawn_typeToTroopType(spawn_type);
+
+        const auto troop_type = Game::Units::spawn_typeToTroopType(spawn_type);
         if (troop_type.has_value()) {
           const auto profile =
               Game::Systems::TroopProfileService::instance().get_profile(
@@ -859,7 +856,7 @@ void CommandController::enable_run_mode_for_selected() {
     auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
     if (stamina == nullptr) {
       stamina = entity->add_component<Engine::Core::StaminaComponent>();
-      // Initialize stamina values from troop profile
+
       const auto troop_type =
           Game::Units::spawn_typeToTroopType(unit->spawn_type);
       if (troop_type.has_value()) {
