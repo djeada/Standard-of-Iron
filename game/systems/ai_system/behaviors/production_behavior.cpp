@@ -42,12 +42,12 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   const Game::Systems::TroopType *troop_type =
-      produce_ranged ? nation->getBestRangedTroop()
-                     : nation->getBestMeleeTroop();
+      produce_ranged ? nation->get_best_ranged_troop()
+                     : nation->get_best_melee_troop();
 
   if (troop_type == nullptr) {
-    troop_type = produce_ranged ? nation->getBestMeleeTroop()
-                                : nation->getBestRangedTroop();
+    troop_type = produce_ranged ? nation->get_best_melee_troop()
+                                : nation->get_best_ranged_troop();
   }
 
   if (troop_type == nullptr) {

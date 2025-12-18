@@ -13,11 +13,11 @@ public:
   should_execute(const AISnapshot &snapshot,
                  const AIContext &context) const -> bool override;
 
-  [[nodiscard]] auto getPriority() const -> BehaviorPriority override {
+  [[nodiscard]] auto get_priority() const -> BehaviorPriority override {
     return BehaviorPriority::Normal;
   }
 
-  [[nodiscard]] auto canRunConcurrently() const -> bool override {
+  [[nodiscard]] auto can_run_concurrently() const -> bool override {
     return false;
   }
 

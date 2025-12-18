@@ -41,46 +41,58 @@ public:
   Pathfinding(int width, int height);
   ~Pathfinding();
 
-  void setGridOffset(float offset_x, float offset_z);
+  void set_grid_offset(float offset_x, float offset_z);
 
-  auto getGridOffsetX() const -> float { return m_gridOffsetX; }
-  auto getGridOffsetZ() const -> float { return m_gridOffsetZ; }
+  auto get_grid_offset_x() const -> float { return m_gridOffsetX; }
+  auto get_grid_offset_z() const -> float { return m_gridOffsetZ; }
 
-  void setObstacle(int x, int y, bool isObstacle);
-  auto isWalkable(int x, int y) const -> bool;
+  void set_obstacle(int x, int y, bool isObstacle);
+  auto is_walkable(int x, int y) const -> bool;
+  auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
-  void updateBuildingObstacles();
+  void update_building_obstacles();
 
-  void markObstaclesDirty();
+  void mark_obstacles_dirty();
 
-  void markRegionDirty(int min_x, int max_x, int min_z, int max_z);
+  void mark_region_dirty(int min_x, int max_x, int min_z, int max_z);
 
-  void markBuildingRegionDirty(float center_x, float center_z, float width,
-                               float depth);
+  void mark_building_region_dirty(float center_x, float center_z, float width,
+                                  float depth);
 
-  auto findPath(const Point &start, const Point &end) -> std::vector<Point>;
+  auto find_path(const Point &start, const Point &end) -> std::vector<Point>;
+  auto find_path(const Point &start, const Point &end,
+                 float unit_radius) -> std::vector<Point>;
 
-  auto findPathAsync(const Point &start,
-                     const Point &end) -> std::future<std::vector<Point>>;
+  auto find_path_async(const Point &start,
+                       const Point &end) -> std::future<std::vector<Point>>;
 
-  void submitPathRequest(std::uint64_t request_id, const Point &start,
-                         const Point &end);
+  void submit_path_request(std::uint64_t request_id, const Point &start,
+                           const Point &end);
+  void submit_path_request(std::uint64_t request_id, const Point &start,
+                           const Point &end, float unit_radius);
 
   struct PathResult {
     std::uint64_t request_id;
     std::vector<Point> path;
   };
-  auto fetchCompletedPaths() -> std::vector<PathResult>;
+  auto fetch_completed_paths() -> std::vector<PathResult>;
+
+  static auto find_nearest_walkable_point(const Point &point,
+                                          int max_search_radius,
+                                          const Pathfinding &pathfinder,
+                                          float unit_radius = 0.0F) -> Point;
 
 private:
-  auto findPathInternal(const Point &start,
-                        const Point &end) -> std::vector<Point>;
+  auto find_path_internal(const Point &start,
+                          const Point &end) -> std::vector<Point>;
+  auto find_path_internal(const Point &start, const Point &end,
+                          float unit_radius) -> std::vector<Point>;
 
-  static auto calculateHeuristic(const Point &a, const Point &b) -> int;
+  static auto calculate_heuristic(const Point &a, const Point &b) -> int;
 
-  void ensureWorkingBuffers();
-  auto nextGeneration() -> std::uint32_t;
-  void resetGenerations();
+  void ensure_working_buffers();
+  auto next_generation() -> std::uint32_t;
+  void reset_generations();
 
   auto toIndex(int x, int y) const -> int { return y * m_width + x; }
   auto toIndex(const Point &p) const -> int { return toIndex(p.x, p.y); }
@@ -88,15 +100,15 @@ private:
     return {index % m_width, index / m_width};
   }
 
-  auto isClosed(int index, std::uint32_t generation) const -> bool;
-  void setClosed(int index, std::uint32_t generation);
+  auto is_closed(int index, std::uint32_t generation) const -> bool;
+  void set_closed(int index, std::uint32_t generation);
 
-  auto getGCost(int index, std::uint32_t generation) const -> int;
-  void setGCost(int index, std::uint32_t generation, int cost);
+  auto get_g_cost(int index, std::uint32_t generation) const -> int;
+  void set_g_cost(int index, std::uint32_t generation, int cost);
 
-  auto hasParent(int index, std::uint32_t generation) const -> bool;
-  auto getParent(int index, std::uint32_t generation) const -> int;
-  void setParent(int index, std::uint32_t generation, int parentIndex);
+  auto has_parent(int index, std::uint32_t generation) const -> bool;
+  auto get_parent(int index, std::uint32_t generation) const -> int;
+  void set_parent(int index, std::uint32_t generation, int parentIndex);
 
   auto collect_neighbors(const Point &point,
                          std::array<Point, 8> &buffer) const -> std::size_t;
@@ -113,11 +125,11 @@ private:
   void push_open_node(const QueueNode &node);
   auto pop_open_node() -> QueueNode;
 
-  void workerLoop();
+  void worker_loop();
 
-  void processDirtyRegions();
+  void process_dirty_regions();
 
-  void updateRegion(int min_x, int max_x, int min_z, int max_z);
+  void update_region(int min_x, int max_x, int min_z, int max_z);
 
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;
@@ -133,6 +145,7 @@ private:
     std::uint64_t request_id{};
     Point start;
     Point end;
+    float unit_radius{0.0F};
   };
   std::queue<PathRequest> m_requestQueue;
   std::mutex m_resultMutex;

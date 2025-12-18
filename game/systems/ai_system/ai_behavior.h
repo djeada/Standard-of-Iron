@@ -18,9 +18,9 @@ public:
   should_execute(const AISnapshot &snapshot,
                  const AIContext &context) const -> bool = 0;
 
-  [[nodiscard]] virtual auto getPriority() const -> BehaviorPriority = 0;
+  [[nodiscard]] virtual auto get_priority() const -> BehaviorPriority = 0;
 
-  [[nodiscard]] virtual auto canRunConcurrently() const -> bool {
+  [[nodiscard]] virtual auto can_run_concurrently() const -> bool {
     return false;
   }
 };
