@@ -21,7 +21,8 @@ enum class SpawnType : std::uint8_t {
   Ballista,
   Builder,
   Barracks,
-  DefenseTower
+  DefenseTower,
+  Home
 };
 
 inline auto spawn_typeToQString(SpawnType type) -> QString {
@@ -50,6 +51,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("barracks");
   case SpawnType::DefenseTower:
     return QStringLiteral("defense_tower");
+  case SpawnType::Home:
+    return QStringLiteral("home");
   }
   return QStringLiteral("archer");
 }
@@ -109,6 +112,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::DefenseTower;
     return true;
   }
+  if (lowered == QStringLiteral("home")) {
+    out = SpawnType::Home;
+    return true;
+  }
   return false;
 }
 
@@ -150,24 +157,31 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "defense_tower") {
     return SpawnType::DefenseTower;
   }
+  if (str == "home") {
+    return SpawnType::Home;
+  }
   return std::nullopt;
 }
 
 inline auto isTroopSpawn(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
+         type != SpawnType::Home;
 }
 
 inline auto is_building_spawn(SpawnType type) -> bool {
-  return type == SpawnType::Barracks || type == SpawnType::DefenseTower;
+  return type == SpawnType::Barracks || type == SpawnType::DefenseTower ||
+         type == SpawnType::Home;
 }
 
 inline auto can_use_attack_mode(SpawnType type) -> bool {
   return type != SpawnType::Healer && type != SpawnType::Builder &&
-         type != SpawnType::Barracks && type != SpawnType::DefenseTower;
+         type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
+         type != SpawnType::Home;
 }
 
 inline auto can_use_guard_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
+         type != SpawnType::Home;
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
@@ -176,7 +190,8 @@ inline auto can_use_hold_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {
-  return type != SpawnType::Barracks && type != SpawnType::DefenseTower;
+  return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
+         type != SpawnType::Home;
 }
 
 [[nodiscard]] inline auto can_use_run_mode(SpawnType type) noexcept -> bool {
@@ -194,6 +209,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Ballista:
   case SpawnType::Barracks:
   case SpawnType::DefenseTower:
+  case SpawnType::Home:
     return false;
   }
   return false;
@@ -224,6 +240,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
   case SpawnType::Barracks:
     return std::nullopt;
   case SpawnType::DefenseTower:
+    return std::nullopt;
+  case SpawnType::Home:
     return std::nullopt;
   }
   return std::nullopt;
