@@ -22,6 +22,7 @@
 #include "level_orchestrator.h"
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
+#include "production_manager.h"
 #include "renderer_bootstrap.h"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -237,6 +238,12 @@ GameEngine::GameEngine(QObject *parent)
 
   m_camera_controller = std::make_unique<CameraController>(
       m_camera.get(), m_cameraService.get(), m_world.get());
+
+  m_production_manager = std::make_unique<ProductionManager>(
+      m_world.get(), m_pickingService.get(), m_camera.get(), this);
+  connect(m_production_manager.get(),
+          &ProductionManager::placing_construction_changed, this,
+          &GameEngine::placing_construction_changed);
 
   m_audioEventHandler =
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
@@ -566,102 +573,28 @@ void GameEngine::on_formation_cancel() {
 }
 
 auto GameEngine::is_placing_construction() const -> bool {
-  return m_is_placing_construction;
+  return m_production_manager ? m_production_manager->is_placing_construction()
+                              : false;
 }
 
 void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
-  if (!m_is_placing_construction) {
-    return;
-  }
   ensure_initialized();
-
-  QPointF screenPt(sx, sy);
-  QVector3D hit;
-  if (screen_to_ground(screenPt, hit)) {
-    m_construction_placement_position = hit;
-
-    for (auto id : m_pending_construction_builders) {
-      auto *e = m_world->get_entity(id);
-      if (e == nullptr) {
-        continue;
-      }
-
-      auto *builder_prod =
-          e->get_component<Engine::Core::BuilderProductionComponent>();
-      if (builder_prod == nullptr) {
-        continue;
-      }
-
-      builder_prod->construction_site_x = hit.x();
-      builder_prod->construction_site_z = hit.z();
-    }
+  if (m_production_manager) {
+    m_production_manager->on_construction_mouse_move(sx, sy, m_viewport);
   }
 }
 
 void GameEngine::on_construction_confirm() {
-  if (!m_is_placing_construction || m_pending_construction_builders.empty()) {
-    on_construction_cancel();
-    return;
-  }
-
   ensure_initialized();
-
-  for (auto id : m_pending_construction_builders) {
-    auto *e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
-    }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod != nullptr) {
-      builder_prod->is_placement_preview = false;
-      builder_prod->construction_site_x = m_construction_placement_position.x();
-      builder_prod->construction_site_z = m_construction_placement_position.z();
-    }
-
-    auto *mv = e->get_component<Engine::Core::MovementComponent>();
-    if (mv != nullptr) {
-      mv->goal_x = m_construction_placement_position.x();
-      mv->goal_y = m_construction_placement_position.z();
-      mv->target_x = m_construction_placement_position.x();
-      mv->target_y = m_construction_placement_position.z();
-    }
+  if (m_production_manager) {
+    m_production_manager->on_construction_confirm();
   }
-
-  m_is_placing_construction = false;
-  m_pending_construction_type.clear();
-  m_pending_construction_builders.clear();
-  emit placing_construction_changed();
 }
 
 void GameEngine::on_construction_cancel() {
-  if (!m_is_placing_construction) {
-    return;
+  if (m_production_manager) {
+    m_production_manager->on_construction_cancel();
   }
-
-  for (auto id : m_pending_construction_builders) {
-    auto *e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
-    }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod != nullptr) {
-      builder_prod->has_construction_site = false;
-      builder_prod->construction_site_x = 0.0F;
-      builder_prod->construction_site_z = 0.0F;
-      builder_prod->at_construction_site = false;
-      builder_prod->product_type = "";
-      builder_prod->is_placement_preview = false;
-    }
-  }
-
-  m_is_placing_construction = false;
-  m_pending_construction_type.clear();
-  m_pending_construction_builders.clear();
-  emit placing_construction_changed();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
@@ -1261,60 +1194,31 @@ void GameEngine::recruit_near_selected(const QString &unit_type) {
 
 void GameEngine::start_building_placement(const QString &building_type) {
   ensure_initialized();
-  if (building_type.isEmpty()) {
-    return;
+  if (m_production_manager) {
+    m_production_manager->start_building_placement(building_type);
+    set_cursor_mode(CursorMode::PlaceBuilding);
   }
-  m_pending_building_type = building_type;
-  set_cursor_mode(CursorMode::PlaceBuilding);
 }
 
 void GameEngine::place_building_at_screen(qreal sx, qreal sy) {
   ensure_initialized();
-  if (m_pending_building_type.isEmpty()) {
-    return;
+  if (m_production_manager) {
+    m_production_manager->place_building_at_screen(sx, sy, m_runtime.local_owner_id, m_viewport);
+    set_cursor_mode(CursorMode::Normal);
   }
-  if (!m_world || !m_pickingService || !m_camera) {
-    return;
-  }
-
-  QVector3D hit;
-  if (!m_pickingService->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                          m_viewport.width, m_viewport.height,
-                                          hit)) {
-    return;
-  }
-
-  Game::Units::SpawnParams params;
-  params.position = hit;
-  params.player_id = m_runtime.local_owner_id;
-  params.ai_controlled = false;
-
-  auto &nation_registry = Game::Systems::NationRegistry::instance();
-  if (const auto *nation =
-          nation_registry.get_nation_for_player(m_runtime.local_owner_id)) {
-    params.nation_id = nation->id;
-  } else {
-    params.nation_id = nation_registry.default_nation_id();
-  }
-
-  if (m_pending_building_type == QStringLiteral("defense_tower")) {
-    params.spawn_type = Game::Units::SpawnType::DefenseTower;
-
-    auto registry = Game::Map::MapTransformer::getFactoryRegistry();
-    if (registry) {
-      auto unit = registry->create(params.spawn_type, *m_world, params);
-      if (unit) {
-        qInfo() << "Placed defense tower at" << hit.x() << hit.z();
-      }
-    }
-  }
-
-  m_pending_building_type.clear();
-  set_cursor_mode(CursorMode::Normal);
 }
 
 void GameEngine::cancel_building_placement() {
-  m_pending_building_type.clear();
+  if (m_production_manager) {
+    m_production_manager->cancel_building_placement();
+  }
+  set_cursor_mode(CursorMode::Normal);
+}
+
+auto GameEngine::pending_building_type() const -> QString {
+  return m_production_manager ? m_production_manager->pending_building_type()
+                              : QString();
+}
   set_cursor_mode(CursorMode::Normal);
 }
 
@@ -1323,207 +1227,28 @@ auto GameEngine::pending_building_type() const -> QString {
 }
 
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
-  QVariantMap m;
-  m["has_barracks"] = false;
-  m["in_progress"] = false;
-  m["time_remaining"] = 0.0;
-  m["build_time"] = 0.0;
-  m["produced_count"] = 0;
-  m["max_units"] = 0;
-  m["villager_cost"] = 1;
-  if (!m_world) {
-    return m;
-  }
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return m;
-  }
-  Game::Systems::ProductionState st;
-  Game::Systems::ProductionService::get_selected_barracks_state(
-      *m_world, selection_system->get_selected_units(),
-      m_runtime.local_owner_id, st);
-  m["has_barracks"] = st.has_barracks;
-  m["in_progress"] = st.in_progress;
-  m["product_type"] =
-      QString::fromStdString(Game::Units::troop_typeToString(st.product_type));
-  m["time_remaining"] = st.time_remaining;
-  m["build_time"] = st.build_time;
-  m["produced_count"] = st.produced_count;
-  m["max_units"] = st.max_units;
-  m["villager_cost"] = st.villager_cost;
-  m["queue_size"] = st.queue_size;
-  m["nation_id"] =
-      QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
-
-  QVariantList queue_list;
-  for (const auto &unit_type : st.production_queue) {
-    queue_list.append(
-        QString::fromStdString(Game::Units::troop_typeToString(unit_type)));
-  }
-  m["production_queue"] = queue_list;
-
-  return m;
+  return m_production_manager
+             ? m_production_manager->get_selected_production_state(
+                   m_runtime.local_owner_id)
+             : QVariantMap();
 }
 
 auto GameEngine::get_unit_production_info(const QString &unit_type) const
     -> QVariantMap {
-  QVariantMap info;
-  const auto &config = Game::Units::TroopConfig::instance();
-  std::string type_str = unit_type.toStdString();
-
-  info["cost"] = config.getProductionCost(type_str);
-  info["build_time"] = static_cast<double>(config.getBuildTime(type_str));
-  info["individuals_per_unit"] = config.getIndividualsPerUnit(type_str);
-
-  return info;
+  return ProductionManager::get_unit_production_info(unit_type);
 }
 
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
-  QVariantMap m;
-  m["in_progress"] = false;
-  m["time_remaining"] = 0.0;
-  m["build_time"] = 10.0;
-  m["product_type"] = "";
-
-  if (!m_world) {
-    return m;
-  }
-
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if (selection_system == nullptr) {
-    return m;
-  }
-
-  const auto &selected = selection_system->get_selected_units();
-  for (auto id : selected) {
-    auto *e = m_world->get_entity(id);
-    if (e == nullptr) {
-      continue;
-    }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod == nullptr) {
-      continue;
-    }
-
-    m["in_progress"] = builder_prod->in_progress || builder_prod->is_placement_preview;
-    m["time_remaining"] = builder_prod->time_remaining;
-    m["build_time"] = builder_prod->build_time;
-    m["product_type"] = QString::fromStdString(builder_prod->product_type);
-    return m;
-  }
-
-  return m;
+  return m_production_manager
+             ? m_production_manager->get_selected_builder_production_state()
+             : QVariantMap();
 }
 
 void GameEngine::start_builder_construction(const QString &item_type) {
-  if (!m_world) {
-    return;
+  if (m_production_manager) {
+    m_production_manager->start_builder_construction(item_type);
   }
-
-  m_pending_construction_builders = collect_available_builders();
-  if (m_pending_construction_builders.empty()) {
-    return;
-  }
-
-  m_pending_construction_type = item_type;
-  m_is_placing_construction = true;
-  m_construction_placement_position =
-      calculate_builder_center_position(m_pending_construction_builders);
-
-  std::string item_str = item_type.toStdString();
-  float build_time = get_construction_build_time(item_str);
-
-  for (auto id : m_pending_construction_builders) {
-    auto *e = m_world->get_entity(id);
-    if (!e) {
-      continue;
-    }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (!builder_prod) {
-      continue;
-    }
-
-    builder_prod->product_type = item_str;
-    builder_prod->build_time = build_time;
-    builder_prod->time_remaining = build_time;
-    builder_prod->has_construction_site = true;
-    builder_prod->construction_site_x = m_construction_placement_position.x();
-    builder_prod->construction_site_z = m_construction_placement_position.z();
-    builder_prod->at_construction_site = false;
-    builder_prod->in_progress = false;
-    builder_prod->is_placement_preview = true;
-  }
-
-  emit placing_construction_changed();
 }
-
-auto GameEngine::collect_available_builders()
-    -> std::vector<Engine::Core::EntityID> {
-  std::vector<Engine::Core::EntityID> builders;
-
-  auto *selection_system =
-      m_world->get_system<Game::Systems::SelectionSystem>();
-  if (!selection_system) {
-    return builders;
-  }
-
-  const auto &selected = selection_system->get_selected_units();
-  for (auto id : selected) {
-    auto *e = m_world->get_entity(id);
-    if (!e) {
-      continue;
-    }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod && !builder_prod->in_progress) {
-      builders.push_back(id);
-    }
-  }
-
-  return builders;
-}
-
-auto GameEngine::calculate_builder_center_position(
-    const std::vector<Engine::Core::EntityID> &builder_ids) -> QVector3D {
-  float sum_x = 0.0F;
-  float sum_y = 0.0F;
-  float sum_z = 0.0F;
-  int valid_count = 0;
-
-  for (auto id : builder_ids) {
-    auto *e = m_world->get_entity(id);
-    if (!e) {
-      continue;
-    }
-
-    auto *transform = e->get_component<Engine::Core::TransformComponent>();
-    if (transform) {
-      sum_x += transform->position.x;
-      sum_y += transform->position.y;
-      sum_z += transform->position.z;
-      valid_count++;
-    }
-  }
-
-  if (valid_count > 0) {
-    return QVector3D(sum_x / static_cast<float>(valid_count),
-                     sum_y / static_cast<float>(valid_count),
-                     sum_z / static_cast<float>(valid_count));
-  }
-
-  return QVector3D(0.0F, 0.0F, 0.0F);
-}
-
-auto GameEngine::get_construction_build_time(const std::string &item_type)
-    -> float {
-  constexpr float DEFAULT_BUILD_TIME = 10.0F;
   constexpr float CATAPULT_BUILD_TIME = 15.0F;
   constexpr float BALLISTA_BUILD_TIME = 12.0F;
   constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
@@ -1678,12 +1403,10 @@ auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {
 
 void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
   ensure_initialized();
-  if (!m_commandController || !m_camera) {
-    return;
+  if (m_production_manager) {
+    m_production_manager->set_rally_at_screen(sx, sy, m_runtime.local_owner_id,
+                                             m_viewport);
   }
-  m_commandController->set_rally_at_screen(sx, sy, m_viewport.width,
-                                           m_viewport.height, m_camera.get(),
-                                           m_runtime.local_owner_id);
 }
 
 void GameEngine::start_loading_maps() {

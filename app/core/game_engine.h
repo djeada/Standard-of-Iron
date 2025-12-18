@@ -31,6 +31,8 @@
 #include <optional>
 #include <vector>
 
+class ProductionManager;
+
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
@@ -361,10 +363,6 @@ private:
   void render_game_effects();
   void update_loading_overlay();
   void update_cursor_position();
-  std::vector<Engine::Core::EntityID> collect_available_builders();
-  QVector3D calculate_builder_center_position(
-      const std::vector<Engine::Core::EntityID> &builder_ids);
-  float get_construction_build_time(const std::string &item_type);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -402,6 +400,7 @@ private:
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<CameraController> m_camera_controller;
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
+  std::unique_ptr<ProductionManager> m_production_manager;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -414,11 +413,6 @@ private:
   QVariantList m_available_campaigns;
   bool m_maps_loading = false;
   QString m_current_campaign_id;
-  QString m_pending_building_type;
-  QString m_pending_construction_type;
-  std::vector<Engine::Core::EntityID> m_pending_construction_builders;
-  QVector3D m_construction_placement_position;
-  bool m_is_placing_construction = false;
   QString m_current_mission_id;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
