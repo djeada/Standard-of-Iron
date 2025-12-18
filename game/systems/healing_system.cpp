@@ -90,16 +90,19 @@ void HealingSystem::process_healing(Engine::Core::World *world,
         }
 
         if (healing_beam_system != nullptr) {
-          QVector3D const healer_pos(healer_transform->position.x,
-                                     healer_transform->position.y + 1.2F,
-                                     healer_transform->position.z);
-          QVector3D const target_pos(target_transform->position.x,
-                                     target_transform->position.y + 0.8F,
-                                     target_transform->position.z);
+          // Only Roman healers use healing beams (blue waves shot at target)
+          if (healer_unit->nation_id == NationID::RomanRepublic) {
+            QVector3D const healer_pos(healer_transform->position.x,
+                                       healer_transform->position.y + 1.2F,
+                                       healer_transform->position.z);
+            QVector3D const target_pos(target_transform->position.x,
+                                       target_transform->position.y + 0.8F,
+                                       target_transform->position.z);
 
-          QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
-          healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
-                                          0.7F);
+            QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
+            healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
+                                            0.7F);
+          }
         }
 
         healed_any = true;

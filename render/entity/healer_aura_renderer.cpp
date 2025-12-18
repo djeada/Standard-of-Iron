@@ -37,6 +37,13 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
       continue;
     }
 
+    // Only Carthage healers use the aura of power (circular green aura)
+    // Roman healers use healing beams instead
+    if (unit_comp != nullptr && 
+        unit_comp->nation_id != Game::Systems::NationID::Carthage) {
+      continue;
+    }
+
     QVector3D position(transform->position.x, transform->position.y + 0.1F,
                        transform->position.z);
     float radius = healer_comp->healing_range;
