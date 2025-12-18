@@ -188,7 +188,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     movement->time_since_last_path_request += delta_time;
   }
 
-  const float max_speed = std::max(0.1F, unit->speed);
+  float base_speed = std::max(0.1F, unit->speed);
+  auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+  if (stamina != nullptr && stamina->is_running) {
+    base_speed *= Engine::Core::StaminaComponent::kRunSpeedMultiplier;
+  }
+  const float max_speed = base_speed;
   const float accel = max_speed * 4.0F;
   const float damping = 6.0F;
 

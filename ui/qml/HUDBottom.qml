@@ -156,28 +156,57 @@ RowLayout {
 
                             }
 
-                            Rectangle {
-                                width: 60
-                                height: 12
-                                color: "#2c3e50"
-                                radius: 6
-                                border.color: "#1a252f"
-                                border.width: 1
+                            Column {
+                                spacing: 2
 
                                 Rectangle {
-                                    width: parent.width * (typeof health_ratio !== 'undefined' ? health_ratio : 0)
-                                    height: parent.height
-                                    color: {
-                                        var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
-                                        if (ratio > 0.6)
-                                            return "#27ae60";
+                                    width: 60
+                                    height: 10
+                                    color: "#2c3e50"
+                                    radius: 5
+                                    border.color: "#1a252f"
+                                    border.width: 1
 
-                                        if (ratio > 0.3)
-                                            return "#f39c12";
+                                    Rectangle {
+                                        width: parent.width * (typeof health_ratio !== 'undefined' ? health_ratio : 0)
+                                        height: parent.height
+                                        color: {
+                                            var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
+                                            if (ratio > 0.6)
+                                                return "#27ae60";
 
-                                        return "#e74c3c";
+                                            if (ratio > 0.3)
+                                                return "#f39c12";
+
+                                            return "#e74c3c";
+                                        }
+                                        radius: 5
                                     }
-                                    radius: 6
+
+                                }
+
+                                Rectangle {
+                                    width: 60
+                                    height: 6
+                                    color: "#2c3e50"
+                                    radius: 3
+                                    border.color: "#1a252f"
+                                    border.width: 1
+                                    visible: (typeof can_run !== 'undefined') ? can_run : false
+
+                                    Rectangle {
+                                        width: parent.width * (typeof stamina_ratio !== 'undefined' ? stamina_ratio : 1)
+                                        height: parent.height
+                                        color: {
+                                            var running = (typeof is_running !== 'undefined') ? is_running : false;
+                                            if (running)
+                                                return "#e67e22";
+
+                                            return "#3498db";
+                                        }
+                                        radius: 3
+                                    }
+
                                 }
 
                             }
