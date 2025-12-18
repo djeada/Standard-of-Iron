@@ -216,7 +216,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
     }
 
     if (!mv->path_pending) {
-      bool const current_target_matches = mv->has_target && mv->path.empty();
+      bool const current_target_matches = mv->has_target && !mv->has_waypoints();
       if (current_target_matches) {
         float const dx = mv->target_x - target_x;
         float const dz = mv->target_y - target_z;
@@ -244,7 +244,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->target_x = target_x;
         mv->target_y = target_z;
         mv->has_target = true;
-        mv->path.clear();
+        mv->clear_path();
         mv->path_pending = false;
         mv->pending_request_id = 0;
         mv->vx = 0.0F;
@@ -265,7 +265,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
         mv->target_x = target_x;
         mv->target_y = target_z;
         mv->has_target = true;
-        mv->path.clear();
+        mv->clear_path();
         mv->path_pending = false;
         mv->pending_request_id = 0;
         mv->vx = 0.0F;
@@ -303,7 +303,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
           continue;
         }
 
-        mv->path.clear();
+        mv->clear_path();
         mv->has_target = false;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
@@ -331,7 +331,7 @@ void CommandService::moveUnits(Engine::Core::World &world,
       mv->target_x = target_x;
       mv->target_y = target_z;
       mv->has_target = true;
-      mv->path.clear();
+      mv->clear_path();
       mv->path_pending = false;
       mv->pending_request_id = 0;
       mv->vx = 0.0F;
@@ -633,7 +633,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     mv->has_target = false;
     mv->vx = 0.0F;
     mv->vz = 0.0F;
-    mv->path.clear();
+    mv->clear_path();
     mv->path_pending = false;
     mv->pending_request_id = 0;
     units_needing_new_path.push_back(&member);
@@ -782,7 +782,7 @@ void CommandService::processPathResults(Engine::Core::World &world) {
 
       movement_component->path_pending = false;
       movement_component->pending_request_id = 0;
-      movement_component->path.clear();
+      movement_component->clear_path();
       movement_component->goal_x = target.x();
       movement_component->goal_y = target.z();
       movement_component->vx = 0.0F;
@@ -796,22 +796,22 @@ void CommandService::processPathResults(Engine::Core::World &world) {
                                                 world_pos.z() + offset.z());
         }
 
-        while (!movement_component->path.empty()) {
-          float const dx = movement_component->path.front().first -
-                           member_transform->position.x;
-          float const dz = movement_component->path.front().second -
-                           member_transform->position.z;
+        // Skip waypoints that are already reached (O(1) index advance)
+        while (movement_component->has_waypoints()) {
+          const auto &wp = movement_component->current_waypoint();
+          float const dx = wp.first - member_transform->position.x;
+          float const dz = wp.second - member_transform->position.z;
           if (dx * dx + dz * dz <= skip_threshold_sq) {
-            movement_component->path.erase(movement_component->path.begin());
+            movement_component->advance_waypoint();
           } else {
             break;
           }
         }
 
-        if (!movement_component->path.empty()) {
-          movement_component->target_x = movement_component->path.front().first;
-          movement_component->target_y =
-              movement_component->path.front().second;
+        if (movement_component->has_waypoints()) {
+          const auto &wp = movement_component->current_waypoint();
+          movement_component->target_x = wp.first;
+          movement_component->target_y = wp.second;
           movement_component->has_target = true;
           return;
         }
@@ -987,7 +987,7 @@ void CommandService::attack_target(
       mv->goal_x = desired_pos.x();
       mv->goal_y = desired_pos.z();
       mv->has_target = true;
-      mv->path.clear();
+      mv->clear_path();
     }
   }
 }

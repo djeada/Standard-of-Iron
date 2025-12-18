@@ -63,7 +63,7 @@ void Unit::move_to(float x, float z) {
     m_mv->has_target = true;
     m_mv->goal_x = x;
     m_mv->goal_y = z;
-    m_mv->path.clear();
+    m_mv->clear_path();
     m_mv->path_pending = false;
     m_mv->pending_request_id = 0;
   }
@@ -121,7 +121,7 @@ void Unit::set_hold_mode(bool enabled) {
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->has_target = false;
-      mv->path.clear();
+      mv->clear_path();
       mv->path_pending = false;
     }
   } else {
