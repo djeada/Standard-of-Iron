@@ -6,6 +6,7 @@
 #include "catapult.h"
 #include "defense_tower.h"
 #include "healer.h"
+#include "home.h"
 #include "horse_archer.h"
 #include "horse_spearman.h"
 #include "horse_swordsman.h"
@@ -75,6 +76,11 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::DefenseTower, [](Engine::Core::World &world,
                                                   const SpawnParams &params) {
     return DefenseTower::create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::Home, [](Engine::Core::World &world,
+                                          const SpawnParams &params) {
+    return Home::Create(world, params);
   });
 }
 
