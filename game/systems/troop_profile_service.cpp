@@ -135,6 +135,15 @@ auto TroopProfileService::build_profile(
     if (variant.can_melee) {
       profile.combat.can_melee = *variant.can_melee;
     }
+    if (variant.max_stamina) {
+      profile.combat.max_stamina = *variant.max_stamina;
+    }
+    if (variant.stamina_regen_rate) {
+      profile.combat.stamina_regen_rate = *variant.stamina_regen_rate;
+    }
+    if (variant.stamina_depletion_rate) {
+      profile.combat.stamina_depletion_rate = *variant.stamina_depletion_rate;
+    }
   }
 
   return profile;

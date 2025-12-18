@@ -407,6 +407,14 @@ public:
   void regenerate(float delta_time) noexcept {
     stamina = std::min(max_stamina, stamina + regen_rate * delta_time);
   }
+
+  void initialize_from_stats(float new_max_stamina, float new_regen_rate,
+                             float new_depletion_rate) noexcept {
+    max_stamina = new_max_stamina;
+    stamina = new_max_stamina;
+    regen_rate = new_regen_rate;
+    depletion_rate = new_depletion_rate;
+  }
 };
 
 } // namespace Engine::Core
