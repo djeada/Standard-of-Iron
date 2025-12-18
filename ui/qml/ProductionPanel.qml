@@ -1649,6 +1649,96 @@ Rectangle {
 
                         }
 
+                        Rectangle {
+                            property bool isEnabled: !builderProductionContent.builderProd.in_progress
+                            property bool isHovered: builderHomeMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
+                            opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
+
+                            Image {
+                                id: builderHomeIcon
+
+                                anchors.fill: parent
+                                anchors.margins: 6
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("home")
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !builderHomeIcon.visible
+                                text: "🏠"
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 36
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                text: qsTr("Home")
+                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                font.pointSize: 8
+                                font.bold: true
+                            }
+
+                            MouseArea {
+                                id: builderHomeMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.isEnabled)
+                                        productionPanel.builderConstruction("home");
+
+                                }
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Build Home\nResidential building\nAdds +50 population to nearest barracks\nBuild time: 10s") : qsTr("Already building...")
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: builderHomeMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
+                        }
+
                     }
 
                 }
