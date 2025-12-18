@@ -579,6 +579,22 @@ void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
   QVector3D hit;
   if (screen_to_ground(screenPt, hit)) {
     m_construction_placement_position = hit;
+
+    for (auto id : m_pending_construction_builders) {
+      auto *e = m_world->get_entity(id);
+      if (e == nullptr) {
+        continue;
+      }
+
+      auto *builder_prod =
+          e->get_component<Engine::Core::BuilderProductionComponent>();
+      if (builder_prod == nullptr) {
+        continue;
+      }
+
+      builder_prod->construction_site_x = hit.x();
+      builder_prod->construction_site_z = hit.z();
+    }
   }
 }
 
@@ -590,39 +606,11 @@ void GameEngine::on_construction_confirm() {
 
   ensure_initialized();
 
-  std::string item_str = m_pending_construction_type.toStdString();
-  float build_time = 10.0F;
-
-  if (item_str == "catapult") {
-    build_time = 15.0F;
-  } else if (item_str == "ballista") {
-    build_time = 12.0F;
-  } else if (item_str == "defense_tower") {
-    build_time = 20.0F;
-  } else if (item_str == "home") {
-    build_time = 10.0F;
-  }
-
   for (auto id : m_pending_construction_builders) {
     auto *e = m_world->get_entity(id);
     if (e == nullptr) {
       continue;
     }
-
-    auto *builder_prod =
-        e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod == nullptr) {
-      continue;
-    }
-
-    builder_prod->product_type = item_str;
-    builder_prod->build_time = build_time;
-    builder_prod->time_remaining = build_time;
-    builder_prod->has_construction_site = true;
-    builder_prod->construction_site_x = m_construction_placement_position.x();
-    builder_prod->construction_site_z = m_construction_placement_position.z();
-    builder_prod->at_construction_site = false;
-    builder_prod->construction_complete = false;
 
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
@@ -636,7 +624,6 @@ void GameEngine::on_construction_confirm() {
   m_is_placing_construction = false;
   m_pending_construction_type.clear();
   m_pending_construction_builders.clear();
-  set_cursor_mode(CursorMode::Normal);
   emit placing_construction_changed();
 }
 
@@ -645,10 +632,26 @@ void GameEngine::on_construction_cancel() {
     return;
   }
 
+  for (auto id : m_pending_construction_builders) {
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod != nullptr) {
+      builder_prod->has_construction_site = false;
+      builder_prod->construction_site_x = 0.0F;
+      builder_prod->construction_site_z = 0.0F;
+      builder_prod->at_construction_site = false;
+      builder_prod->product_type = "";
+    }
+  }
+
   m_is_placing_construction = false;
   m_pending_construction_type.clear();
   m_pending_construction_builders.clear();
-  set_cursor_mode(CursorMode::Normal);
   emit placing_construction_changed();
 }
 
@@ -1460,7 +1463,42 @@ void GameEngine::start_builder_construction(const QString &item_type) {
   }
 
   m_construction_placement_position = center;
-  set_cursor_mode(CursorMode::PlaceBuilding);
+
+  std::string item_str = item_type.toStdString();
+  float build_time = 10.0F;
+
+  if (item_str == "catapult") {
+    build_time = 15.0F;
+  } else if (item_str == "ballista") {
+    build_time = 12.0F;
+  } else if (item_str == "defense_tower") {
+    build_time = 20.0F;
+  } else if (item_str == "home") {
+    build_time = 10.0F;
+  }
+
+  for (auto id : m_pending_construction_builders) {
+    auto *e = m_world->get_entity(id);
+    if (e == nullptr) {
+      continue;
+    }
+
+    auto *builder_prod =
+        e->get_component<Engine::Core::BuilderProductionComponent>();
+    if (builder_prod == nullptr) {
+      continue;
+    }
+
+    builder_prod->product_type = item_str;
+    builder_prod->build_time = build_time;
+    builder_prod->time_remaining = build_time;
+    builder_prod->has_construction_site = true;
+    builder_prod->construction_site_x = center.x();
+    builder_prod->construction_site_z = center.z();
+    builder_prod->at_construction_site = false;
+    builder_prod->in_progress = false;
+  }
+
   emit placing_construction_changed();
 }
 
