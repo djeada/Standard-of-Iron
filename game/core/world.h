@@ -41,13 +41,6 @@ public:
     return nullptr;
   }
 
-  /**
-   * @brief Get all entities that have a specific component type.
-   *
-   * This method uses a component index cache for O(k) lookup where k is the
-   * number of entities with the component, instead of O(n) iteration over
-   * all entities.
-   */
   template <typename T> auto get_entities_with() -> std::vector<Entity *> {
     const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
     std::type_index const type_idx = std::type_index(typeid(T));
@@ -87,16 +80,9 @@ public:
   auto get_entity_mutex() -> std::recursive_mutex & { return m_entity_mutex; }
 
 private:
-  /**
-   * @brief Callback for component changes.
-   * Updates the component index when components are added or removed.
-   */
   void on_component_changed(EntityID entity_id, std::type_index component_type,
                             bool added);
 
-  /**
-   * @brief Set up component change callback for a newly created entity.
-   */
   void setup_entity_callback(Entity *entity);
 
   EntityID m_next_entity_id = 1;
@@ -104,7 +90,6 @@ private:
   std::vector<std::unique_ptr<System>> m_systems;
   mutable std::recursive_mutex m_entity_mutex;
 
-  // Component type -> set of entity IDs that have that component
   std::unordered_map<std::type_index, std::unordered_set<EntityID>>
       m_component_index;
 };

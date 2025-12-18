@@ -7,11 +7,9 @@
 
 namespace Game::Systems::Combat {
 
-// Thread-local spatial grid for efficient enemy searches
-// This avoids allocating a new grid each frame while keeping thread safety
 namespace {
-thread_local SpatialGrid t_unit_grid(15.0F); // 15 unit cell size
-} // namespace
+thread_local SpatialGrid t_unit_grid(15.0F);
+}
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {
   if (entity == nullptr) {
@@ -104,8 +102,8 @@ auto is_unit_idle(Engine::Core::Entity *unit) -> bool {
 
 auto find_nearest_enemy_from_list(
     Engine::Core::Entity *unit,
-    const std::vector<Engine::Core::Entity *> &all_units,
-    Engine::Core::World * /*world*/, float max_range) -> Engine::Core::Entity * {
+    const std::vector<Engine::Core::Entity *> &all_units, Engine::Core::World *,
+    float max_range) -> Engine::Core::Entity * {
   auto *unit_comp = unit->get_component<Engine::Core::UnitComponent>();
   auto *unit_transform =
       unit->get_component<Engine::Core::TransformComponent>();
@@ -171,9 +169,6 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
     return nullptr;
   }
 
-  // Rebuild the spatial grid with current unit positions
-  // This is cached per-thread to avoid redundant rebuilds within the same
-  // frame
   t_unit_grid.clear();
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
 
@@ -185,7 +180,6 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
     }
   }
 
-  // Query nearby entities using spatial grid
   auto nearby_ids = t_unit_grid.get_entities_in_range(
       unit_transform->position.x, unit_transform->position.z, max_range);
 
