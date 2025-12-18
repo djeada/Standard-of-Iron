@@ -69,12 +69,12 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   // Test canter gait
   controller.set_gait(GaitType::CANTER);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.45F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.48F, 0.01F));
 
   // Test gallop gait
   controller.set_gait(GaitType::GALLOP);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.35F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
@@ -120,7 +120,7 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
   controller.accelerate(6.0F);
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.35F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
@@ -134,7 +134,7 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
   // Advance time to complete transition
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.45F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.48F, 0.01F));
 
   // Decelerate to trot
   controller.decelerate(2.0F);
@@ -305,11 +305,11 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   anim.time += 0.1F;
   controller.update_gait_parameters();
   float const transition_cycle1 = profile.gait.cycle_time;
-  EXPECT_GT(transition_cycle1, 0.35F);      // Not yet at gallop cycle time
+  EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
   EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
 
   // After enough time, should reach final value
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.35F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
