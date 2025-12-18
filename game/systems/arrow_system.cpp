@@ -8,8 +8,8 @@ namespace Game::Systems {
 
 ArrowSystem::ArrowSystem() : m_config(GameConfig::instance().arrow()) {}
 
-void ArrowSystem::spawnArrow(const QVector3D &start, const QVector3D &end,
-                             const QVector3D &color, float speed) {
+void ArrowSystem::spawn_arrow(const QVector3D &start, const QVector3D &end,
+                              const QVector3D &color, float speed) {
   ArrowInstance a;
   a.start = start;
   a.end = end;

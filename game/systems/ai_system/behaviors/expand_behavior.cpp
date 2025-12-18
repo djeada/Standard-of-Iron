@@ -108,8 +108,8 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     target_z.push_back(closest_neutral_barracks->posZ + offset_z);
   }
 
-  auto claimed_units = claimUnits(unit_ids, getPriority(), "expanding", context,
-                                  snapshot.game_time, 2.0F);
+  auto claimed_units = claim_units(unit_ids, get_priority(), "expanding",
+                                   context, snapshot.game_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;

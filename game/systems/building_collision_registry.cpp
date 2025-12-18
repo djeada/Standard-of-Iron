@@ -25,7 +25,8 @@ auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry & {
   return instance;
 }
 
-auto BuildingCollisionRegistry::getBuildingSize(const std::string &buildingType)
+auto BuildingCollisionRegistry::get_building_size(
+    const std::string &buildingType)
     -> BuildingCollisionRegistry::BuildingSize {
   auto it = s_buildingSizes.find(buildingType);
   if (it != s_buildingSizes.end()) {
@@ -45,16 +46,16 @@ void BuildingCollisionRegistry::register_building(
     return;
   }
 
-  BuildingSize const size = getBuildingSize(buildingType);
+  BuildingSize const size = get_building_size(buildingType);
   BuildingFootprint const footprint(center_x, center_z, size.width, size.depth,
                                     owner_id, entity_id);
 
   m_buildings.push_back(footprint);
   m_entityToIndex[entity_id] = m_buildings.size() - 1;
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
-    pf->markBuildingRegionDirty(center_x, center_z, size.width, size.depth);
+    pf->mark_building_region_dirty(center_x, center_z, size.width, size.depth);
   }
 }
 
@@ -80,9 +81,9 @@ void BuildingCollisionRegistry::unregister_building(unsigned int entity_id) {
   m_buildings.pop_back();
   m_entityToIndex.erase(entity_id);
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
-    pf->markBuildingRegionDirty(center_x, center_z, width, depth);
+    pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
 }
 
@@ -104,10 +105,10 @@ void BuildingCollisionRegistry::update_building_position(unsigned int entity_id,
   m_buildings[index].center_x = center_x;
   m_buildings[index].center_z = center_z;
 
-  if (auto *pf = CommandService::getPathfinder()) {
+  if (auto *pf = CommandService::get_pathfinder()) {
 
-    pf->markBuildingRegionDirty(old_x, old_z, width, depth);
-    pf->markBuildingRegionDirty(center_x, center_z, width, depth);
+    pf->mark_building_region_dirty(old_x, old_z, width, depth);
+    pf->mark_building_region_dirty(center_x, center_z, width, depth);
   }
 }
 
@@ -122,7 +123,7 @@ void BuildingCollisionRegistry::update_building_owner(unsigned int entity_id,
   m_buildings[index].owner_id = owner_id;
 }
 
-auto BuildingCollisionRegistry::isPointInBuilding(
+auto BuildingCollisionRegistry::is_point_in_building(
     float x, float z, unsigned int ignoreEntityId) const -> bool {
   for (const auto &building : m_buildings) {
     if (ignoreEntityId != 0 && building.entity_id == ignoreEntityId) {
@@ -144,7 +145,7 @@ auto BuildingCollisionRegistry::isPointInBuilding(
   return false;
 }
 
-auto BuildingCollisionRegistry::getOccupiedGridCells(
+auto BuildingCollisionRegistry::get_occupied_grid_cells(
     const BuildingFootprint &footprint,
     float grid_cell_size) -> std::vector<std::pair<int, int>> {
   std::vector<std::pair<int, int>> cells;
@@ -176,15 +177,15 @@ void BuildingCollisionRegistry::clear() {
   m_entityToIndex.clear();
 }
 
-void BuildingCollisionRegistry::setGridPadding(float padding) {
+void BuildingCollisionRegistry::set_grid_padding(float padding) {
   s_gridPadding = padding;
 
-  if (auto *pf = CommandService::getPathfinder()) {
-    pf->markObstaclesDirty();
+  if (auto *pf = CommandService::get_pathfinder()) {
+    pf->mark_obstacles_dirty();
   }
 }
 
-auto BuildingCollisionRegistry::getGridPadding() -> float {
+auto BuildingCollisionRegistry::get_grid_padding() -> float {
   return s_gridPadding;
 }
 

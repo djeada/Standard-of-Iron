@@ -36,16 +36,10 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
 
     return {0.55F, 0.0F, 0.50F, 0.62F, 0.32F, 0.028F};
   case GaitType::CANTER:
-    // Slightly reduced for more natural movement
+
     return {0.48F, 0.62F, 0.35F, 0.65F, 0.35F, 0.032F};
   case GaitType::GALLOP:
-    // Gallop: asymmetric 4-beat gait with suspension phase
-    // Sequence: trailing hind → leading hind → trailing front → leading front → suspension
-    // Phase offsets create proper rotary gallop pattern (left lead):
-    //   front_leg_phase = leading front base (left front)
-    //   rear_leg_phase = leading hind base (left rear)
-    // The +0.50 offsets in rig.cpp create the trailing legs
-    // Timing: RH(0.0) → LH(0.15) → RF(0.35) → LF(0.50) → suspension
+
     return {0.38F, 0.50F, 0.15F, 0.85F, 0.48F, 0.042F};
   }
   return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};

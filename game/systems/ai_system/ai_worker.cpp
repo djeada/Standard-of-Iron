@@ -14,7 +14,7 @@ AIWorker::AIWorker(AIReasoner &reasoner, AIExecutor &executor,
                    AIBehaviorRegistry &registry)
     : m_reasoner(reasoner), m_executor(executor), m_registry(registry) {
 
-  m_thread = std::thread(&AIWorker::workerLoop, this);
+  m_thread = std::thread(&AIWorker::worker_loop, this);
 }
 
 AIWorker::~AIWorker() {
@@ -28,7 +28,7 @@ AIWorker::~AIWorker() {
   }
 }
 
-auto AIWorker::trySubmit(AIJob &&job) -> bool {
+auto AIWorker::try_submit(AIJob &&job) -> bool {
 
   if (m_workerBusy.load(std::memory_order_acquire)) {
     return false;
@@ -46,7 +46,7 @@ auto AIWorker::trySubmit(AIJob &&job) -> bool {
   return true;
 }
 
-void AIWorker::drainResults(std::queue<AIResult> &out) {
+void AIWorker::drain_results(std::queue<AIResult> &out) {
   std::lock_guard<std::mutex> const lock(m_resultMutex);
 
   while (!m_results.empty()) {
@@ -57,7 +57,7 @@ void AIWorker::drainResults(std::queue<AIResult> &out) {
 
 void AIWorker::stop() { m_shouldStop.store(true, std::memory_order_release); }
 
-void AIWorker::workerLoop() {
+void AIWorker::worker_loop() {
   while (true) {
     AIJob job;
 
@@ -79,11 +79,11 @@ void AIWorker::workerLoop() {
       AIResult result;
       result.context = job.context;
 
-      Game::Systems::AI::AIReasoner::updateContext(job.snapshot,
-                                                   result.context);
-      Game::Systems::AI::AIReasoner::updateStateMachine(
+      Game::Systems::AI::AIReasoner::update_context(job.snapshot,
+                                                    result.context);
+      Game::Systems::AI::AIReasoner::update_state_machine(
           job.snapshot, result.context, job.delta_time);
-      Game::Systems::AI::AIReasoner::validateState(result.context);
+      Game::Systems::AI::AIReasoner::validate_state(result.context);
       Game::Systems::AI::AIExecutor::run(job.snapshot, result.context,
                                          job.delta_time, m_registry,
                                          result.commands);

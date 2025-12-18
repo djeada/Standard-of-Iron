@@ -21,18 +21,18 @@ namespace Game::Systems {
 
 AISystem::AISystem() {
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::RetreatBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::RetreatBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::DefendBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::DefendBehavior>());
 
-  m_behaviorRegistry.registerBehavior(
+  m_behaviorRegistry.register_behavior(
       std::make_unique<AI::ProductionBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::ExpandBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::ExpandBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::AttackBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::AttackBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::GatherBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::GatherBehavior>());
 
   m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
       Engine::Core::BuildingAttackedEvent>(
@@ -40,16 +40,16 @@ AISystem::AISystem() {
         this->on_building_attacked(event);
       });
 
-  initializeAIPlayers();
+  initialize_ai_players();
 }
 
 void AISystem::reinitialize() {
   m_aiInstances.clear();
 
-  initializeAIPlayers();
+  initialize_ai_players();
 }
 
-void AISystem::initializeAIPlayers() {
+void AISystem::initialize_ai_players() {
   auto &registry = OwnerRegistry::instance();
   const auto &ai_owner_ids = registry.get_ai_owner_ids();
 
@@ -103,7 +103,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
     job.context = ai.context;
     job.delta_time = ai.update_timer;
 
-    if (ai.worker->trySubmit(std::move(job))) {
+    if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;
     }
   }
@@ -114,7 +114,7 @@ void AISystem::process_results(Engine::Core::World &world) {
   for (auto &ai : m_aiInstances) {
 
     std::queue<AI::AIResult> results;
-    ai.worker->drainResults(results);
+    ai.worker->drain_results(results);
 
     while (!results.empty()) {
       auto &result = results.front();

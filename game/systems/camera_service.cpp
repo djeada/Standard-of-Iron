@@ -82,9 +82,9 @@ void CameraService::set_follow_lerp(Render::GL::Camera &camera, float alpha) {
   m_controller->set_follow_lerp(camera, a);
 }
 
-void CameraService::resetCamera(Render::GL::Camera &camera,
-                                Engine::Core::World &world, int local_owner_id,
-                                unsigned int player_unit_id) {
+void CameraService::reset_camera(Render::GL::Camera &camera,
+                                 Engine::Core::World &world, int local_owner_id,
+                                 unsigned int player_unit_id) {
   Engine::Core::Entity *focus_entity = nullptr;
   for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
     if (e == nullptr) {
@@ -105,12 +105,12 @@ void CameraService::resetCamera(Render::GL::Camera &camera,
   }
 
   if (focus_entity != nullptr) {
-    snapToEntity(camera, *focus_entity);
+    snap_to_entity(camera, *focus_entity);
   }
 }
 
-void CameraService::snapToEntity(Render::GL::Camera &camera,
-                                 Engine::Core::Entity &entity) {
+void CameraService::snap_to_entity(Render::GL::Camera &camera,
+                                   Engine::Core::Entity &entity) {
   if (auto *t = entity.get_component<Engine::Core::TransformComponent>()) {
     QVector3D const center(t->position.x, t->position.y, t->position.z);
     const auto &cam_config = Game::GameConfig::instance().camera();

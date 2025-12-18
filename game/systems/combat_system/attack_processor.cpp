@@ -214,7 +214,7 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                                     Constants::kArrowTargetOffset, 0.0F) +
                           end_offset;
 
-    arrow_sys->spawnArrow(start, end, color, Constants::kArrowSpeed);
+    arrow_sys->spawn_arrow(start, end, color, Constants::kArrowSpeed);
   }
 }
 
@@ -500,8 +500,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                       std::vector<Engine::Core::EntityID> const unit_ids = {
                           attacker->get_id()};
                       std::vector<QVector3D> const move_targets = {desired_pos};
-                      CommandService::moveUnits(*world, unit_ids, move_targets,
-                                                options);
+                      CommandService::move_units(*world, unit_ids, move_targets,
+                                                 options);
                     }
                   }
                 }
@@ -651,7 +651,7 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
               attacker->get_id()};
           std::vector<QVector3D> const move_targets = {
               QVector3D(guard_x, 0.0F, guard_z)};
-          CommandService::moveUnits(*world, unit_ids, move_targets, options);
+          CommandService::move_units(*world, unit_ids, move_targets, options);
         }
       }
     }

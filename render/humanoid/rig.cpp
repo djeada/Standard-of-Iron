@@ -316,17 +316,12 @@ void HumanoidRendererBase::compute_locomotion_pose(
     float const vertical_bob =
         std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
 
-    // Minimal hip sway - humans don't sway much laterally when walking
-    float const hip_sway_amount = 0.002F; // Drastically reduced - nearly disabled
-    float const sway_raw = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+    float const hip_sway_amount = 0.002F;
+    float const sway_raw =
+        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
     float const hip_sway = sway_raw * hip_sway_amount;
 
-      // IMPORTANT: Do not apply opposing Z offsets to the shoulders.
-      // That tilts the shoulder-to-shoulder vector in Z, which rotates the *entire torso frame*.
-      // Keep any torso motion symmetric (fore/aft sway), and keep it very subtle.
-      // Disable torso sway entirely: even tiny asymmetric noise here reads as
-      // full-torso yaw because the torso frame is derived from the shoulder line.
-      float const torso_sway_z = 0.0F;
+    float const torso_sway_z = 0.0F;
 
     auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
                                                          float phase) {
@@ -360,29 +355,29 @@ void HumanoidRendererBase::compute_locomotion_pose(
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
 
-      pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
-      pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
-      pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
-      pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
+    pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
+    pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
+    pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
+    pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
 
-    // Minimal arm swing - soldiers carrying weapons don't swing arms much
-    float const arm_swing_amp = 0.04F * variation.arm_swing_amp; // Very small swing
+    float const arm_swing_amp = 0.04F * variation.arm_swing_amp;
     float const arm_phase_offset = 0.15F;
-    constexpr float max_arm_displacement = 0.06F; // Maximum hand movement from rest position
+    constexpr float max_arm_displacement = 0.06F;
 
-    // Simple sine wave for subtle arm swing, clamped to prevent stretching
     float const left_swing_raw = std::sin((left_phase + arm_phase_offset) *
                                           2.0F * std::numbers::pi_v<float>);
-    float const left_arm_swing = std::clamp(left_swing_raw * arm_swing_amp, -max_arm_displacement, max_arm_displacement);
+    float const left_arm_swing =
+        std::clamp(left_swing_raw * arm_swing_amp, -max_arm_displacement,
+                   max_arm_displacement);
     pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
 
     float const right_swing_raw = std::sin((right_phase + arm_phase_offset) *
                                            2.0F * std::numbers::pi_v<float>);
-    float const right_arm_swing = std::clamp(right_swing_raw * arm_swing_amp, -max_arm_displacement, max_arm_displacement);
+    float const right_arm_swing =
+        std::clamp(right_swing_raw * arm_swing_amp, -max_arm_displacement,
+                   max_arm_displacement);
     pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
 
-    // Hard constraint: do not allow hands to exceed arm reach.
-    // This prevents weapon/arm "stretching" artifacts.
     auto clamp_hand_reach = [&](const QVector3D &shoulder, QVector3D &hand) {
       float const max_reach =
           (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * h_scale * 0.98F;
@@ -464,8 +459,7 @@ void HumanoidRendererBase::compute_locomotion_pose(
     right_axis = QVector3D(1, 0, 0);
   }
   right_axis.normalize();
-  // Stabilize sign so outward directions never flip 180°.
-  // In local humanoid space, +X should always point to the character's right.
+
   if (right_axis.x() < 0.0F) {
     right_axis = -right_axis;
   }
@@ -491,11 +485,6 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
   float const head_scale = 1.0F;
 
-  // The torso frame is derived from the shoulder line. If *any* pose logic
-  // introduces Z-asymmetry between shoulders (common with procedural twists),
-  // then (shoulder_r - shoulder_l) gains a Z component and the whole torso
-  // will yaw/"twist" unrealistically.
-  // Clamp the torso frame to a stable lateral axis.
   QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
   right_axis.setY(0.0F);
   right_axis.setZ(0.0F);
@@ -503,8 +492,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
     right_axis = QVector3D(1.0F, 0.0F, 0.0F);
   }
   right_axis.normalize();
-  // Prevent frame sign flips (full 180° torso yaw) if pose logic ever causes
-  // shoulder_r/shoulder_l to swap in X.
+
   if (right_axis.x() < 0.0F) {
     right_axis = -right_axis;
   }
@@ -546,10 +534,8 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
   const float shin_r = HP::LOWER_LEG_R * width_scale;
   const float foot_radius = shin_r * 1.10F;
 
-  // Force torso cylinder to be perfectly vertical to eliminate torso swing.
-  // Use a common X (average of pelvis and shoulder_mid) and Z=0 for both endpoints.
   float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
-  constexpr float torso_z = 0.0F; // No fore/aft tilt
+  constexpr float torso_z = 0.0F;
 
   QVector3D const tunic_top{torso_x, y_top_cover - 0.006F, torso_z};
   QVector3D const tunic_bot{torso_x, pose.pelvis_pos.y() - 0.05F, torso_z};
@@ -1213,7 +1199,6 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   float const height_scale = scaling.y();
   float const torso_scale = get_torso_scale();
 
-  // Same stability clamp as in draw_common_body (see comment there).
   QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
   right_axis.setY(0.0F);
   right_axis.setZ(0.0F);
@@ -1255,7 +1240,6 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   const float thigh_r = HP::UPPER_LEG_R * width_scale;
   const float shin_r = HP::LOWER_LEG_R * width_scale;
 
-  // Force torso cylinder to be perfectly vertical (same fix as draw_common_body).
   float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
   constexpr float torso_z = 0.0F;
 
@@ -1652,9 +1636,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
 
-      // Reduced forward lean for more natural running posture
-      float const run_lean = 0.10F; // Reduced from 0.15F
-      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.05F); // Reduced from 0.08F
+      float const run_lean = 0.10F;
+      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.05F);
       pose.shoulder_l.setZ(pose.shoulder_l.z() + run_lean);
       pose.shoulder_r.setZ(pose.shoulder_r.z() + run_lean);
       pose.neck_base.setZ(pose.neck_base.z() + run_lean * 0.7F);
@@ -1687,22 +1670,25 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       enhance_run_foot(pose.foot_l, left_phase);
       enhance_run_foot(pose.foot_r, right_phase);
 
-      // Minimal arm swing during running - soldiers hold weapons steady
-      float const run_arm_swing = 0.06F; // Very reduced - weapons should stay stable
-      constexpr float max_run_arm_displacement = 0.08F; // Strict limit on arm movement
-      float const left_swing_raw = std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
-      float const left_arm_phase = std::clamp(left_swing_raw * run_arm_swing, -max_run_arm_displacement, max_run_arm_displacement);
-      float const right_swing_raw = std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
-      float const right_arm_phase = std::clamp(right_swing_raw * run_arm_swing, -max_run_arm_displacement, max_run_arm_displacement);
+      float const run_arm_swing = 0.06F;
+      constexpr float max_run_arm_displacement = 0.08F;
+      float const left_swing_raw =
+          std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const left_arm_phase =
+          std::clamp(left_swing_raw * run_arm_swing, -max_run_arm_displacement,
+                     max_run_arm_displacement);
+      float const right_swing_raw =
+          std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>);
+      float const right_arm_phase =
+          std::clamp(right_swing_raw * run_arm_swing, -max_run_arm_displacement,
+                     max_run_arm_displacement);
 
       pose.hand_l.setZ(pose.hand_l.z() - left_arm_phase);
       pose.hand_r.setZ(pose.hand_r.z() - right_arm_phase);
 
-      pose.hand_l.setY(pose.hand_l.y() + 0.02F); // Reduced from 0.05F
+      pose.hand_l.setY(pose.hand_l.y() + 0.02F);
       pose.hand_r.setY(pose.hand_r.y() + 0.02F);
 
-      // Recompute elbows after modifying hands (otherwise the arm IK becomes inconsistent).
-      // Also clamp hands to realistic reach to avoid stretch.
       {
         using HP = HumanProportions;
         float const h_scale = variation.height_scale;
@@ -1725,7 +1711,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           right_axis = QVector3D(1.0F, 0.0F, 0.0F);
         }
         right_axis.normalize();
-        // Keep elbow bend direction stable across frames.
+
         if (right_axis.x() < 0.0F) {
           right_axis = -right_axis;
         }
@@ -1738,20 +1724,16 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
                                         0.48F, 0.12F, 0.02F, +1.0F);
       }
 
-      // Minimal hip rotation - running soldiers stay stable
-      float const hip_rotation_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
-      float const hip_rotation = hip_rotation_raw * 0.003F; // Nearly disabled
+      float const hip_rotation_raw =
+          std::sin(phase * 2.0F * std::numbers::pi_v<float>);
+      float const hip_rotation = hip_rotation_raw * 0.003F;
       pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_rotation);
 
-        // IMPORTANT: Never apply opposing Z offsets to the shoulders.
-        // That introduces a Z component in (shoulder_r - shoulder_l), which yaws the whole torso frame.
-        // Keep only a tiny symmetric fore/aft sway.
-        // Disable torso sway entirely in run as well (prevents visible torso yaw).
-        float const torso_sway_z = 0.0F;
-        pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
-        pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
-        pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
-        pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
+      float const torso_sway_z = 0.0F;
+      pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
+      pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
+      pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
+      pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
 
       if (pose.head_frame.radius > 0.001F) {
         QVector3D head_up = pose.head_pos - pose.neck_base;

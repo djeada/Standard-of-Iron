@@ -31,7 +31,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       std::vector<float> expanded_z;
 
       if (command.move_target_x.size() != command.units.size()) {
-        replicateLastTargetIfNeeded(
+        replicate_last_target_if_needed(
             command.move_target_x, command.move_target_y, command.move_target_z,
             command.units.size(), expanded_x, expanded_y, expanded_z);
       } else {
@@ -74,7 +74,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       opts.allow_direct_fallback = true;
       opts.clear_attack_intent = false;
       opts.group_move = owned_units.size() > 1;
-      CommandService::moveUnits(world, owned_units, owned_targets, opts);
+      CommandService::move_units(world, owned_units, owned_targets, opts);
       break;
     }
 
