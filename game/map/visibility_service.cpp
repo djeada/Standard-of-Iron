@@ -175,10 +175,13 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
     std::uint32_t const entity_id = entity->get_id();
     current_positions[entity_id] = {center_x, center_z};
 
-    auto it = m_lastPositions.find(entity_id);
-    if (it == m_lastPositions.end() || it->second.grid_x != center_x ||
-        it->second.grid_z != center_z) {
-      any_moved = true;
+    // Only check for movement if we haven't already detected it
+    if (!any_moved) {
+      auto it = m_lastPositions.find(entity_id);
+      if (it == m_lastPositions.end() || it->second.grid_x != center_x ||
+          it->second.grid_z != center_z) {
+        any_moved = true;
+      }
     }
 
     const int cell_radius =
@@ -190,10 +193,12 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
   }
 
   // Check for units that were removed (their old visibility needs clearing)
-  for (const auto &[entity_id, pos] : m_lastPositions) {
-    if (current_positions.find(entity_id) == current_positions.end()) {
-      any_moved = true; // Unit was removed
-      break;
+  if (!any_moved) {
+    for (const auto &[entity_id, pos] : m_lastPositions) {
+      if (current_positions.find(entity_id) == current_positions.end()) {
+        any_moved = true; // Unit was removed
+        break;
+      }
     }
   }
 
