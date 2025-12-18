@@ -20,7 +20,7 @@ void TerrainAlignmentSystem::update(Engine::Core::World *world, float) {
   }
 }
 
-void TerrainAlignmentSystem::alignEntityToTerrain(
+void TerrainAlignmentSystem::align_entity_to_terrain(
     Engine::Core::Entity *entity) {
   auto *transform = entity->get_component<Engine::Core::TransformComponent>();
   if (transform == nullptr) {

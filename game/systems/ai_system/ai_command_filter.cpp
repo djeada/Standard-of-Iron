@@ -111,7 +111,7 @@ auto AICommandFilter::isDuplicate(Engine::Core::EntityID unit_id,
   return false;
 }
 
-void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
+void AICommandFilter::record_command(const AICommand &cmd, float currentTime) {
   for (size_t i = 0; i < cmd.units.size(); ++i) {
     CommandHistory entry{};
     entry.unit_id = cmd.units[i];
@@ -142,7 +142,7 @@ void AICommandFilter::recordCommand(const AICommand &cmd, float currentTime) {
   }
 }
 
-void AICommandFilter::cleanupHistory(float currentTime) {
+void AICommandFilter::cleanup_history(float currentTime) {
 
   m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
                                  [&](const CommandHistory &entry) {

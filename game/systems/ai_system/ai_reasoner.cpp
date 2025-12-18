@@ -392,7 +392,7 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot, AIContext &ctx
   }
 }
 
-void AIReasoner::validateState(AIContext &ctx) {
+void AIReasoner::validate_state(AIContext &ctx) {
 
   constexpr size_t MAX_ASSIGNMENT_MULTIPLIER = 2;
   constexpr int MAX_NO_PROGRESS_CYCLES = 50;

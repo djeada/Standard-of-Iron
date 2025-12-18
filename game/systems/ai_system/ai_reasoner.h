@@ -17,7 +17,7 @@ public:
   static void update_state_machine(const AISnapshot &snapshot, AIContext &ctx,
                                  float delta_time);
 
-  static void validateState(AIContext &ctx);
+  static void validate_state(AIContext &ctx);
 };
 
 } // namespace Game::Systems::AI

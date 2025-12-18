@@ -1231,7 +1231,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
     return m;
   }
   Game::Systems::ProductionState st;
-  Game::Systems::ProductionService::getSelectedBarracksState(
+  Game::Systems::ProductionService::get_selected_barracks_state(
       *m_world, selection_system->get_selected_units(),
       m_runtime.local_owner_id, st);
   m["has_barracks"] = st.has_barracks;

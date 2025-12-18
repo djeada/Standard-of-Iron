@@ -21,7 +21,7 @@ void CaptureSystem::update(Engine::Core::World *world, float delta_time) {
   processBarrackCapture(world, delta_time);
 }
 
-auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
+auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
                                       float barrack_x, float barrack_z,
                                       int owner_id, float radius) -> int {
   int total_troops = 0;
@@ -58,7 +58,7 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
   return total_troops;
 }
 
-void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
+void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
                                              Engine::Core::Entity *barrack,
                                              int new_owner_id) {
   auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
@@ -117,7 +117,7 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                          new_owner_id));
 }
 
-void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
+void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
                                           float delta_time) {
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;

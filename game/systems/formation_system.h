@@ -120,14 +120,14 @@ public:
       const QVector3D &center,
       float base_spacing = 1.0F) -> std::vector<FormationPosition>;
 
-  void registerFormation(FormationType type,
+  void register_formation(FormationType type,
                          std::unique_ptr<IFormation> formation);
 
   auto get_formation(FormationType type) const -> const IFormation *;
 
 private:
   FormationSystem();
-  void initializeDefaults();
+  void initialize_defaults();
 
   std::unordered_map<FormationType, std::unique_ptr<IFormation>> m_formations;
 };

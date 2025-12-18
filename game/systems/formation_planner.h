@@ -42,15 +42,15 @@ public:
   }
 
 private:
-  static auto findNearestWalkable(const QVector3D &position,
+  static auto find_nearest_walkable(const QVector3D &position,
                                   Pathfinding *pathfinder,
                                   int max_search_radius = 5) -> QVector3D {
     if (pathfinder == nullptr) {
       return position;
     }
 
-    float const offset_x = pathfinder->getGridOffsetX();
-    float const offset_z = pathfinder->getGridOffsetZ();
+    float const offset_x = pathfinder->get_grid_offset_x();
+    float const offset_z = pathfinder->get_grid_offset_z();
 
     int const center_grid_x =
         static_cast<int>(std::round(position.x() - offset_x));
@@ -83,15 +83,15 @@ private:
     return position;
   }
 
-  static auto isAreaMostlyWalkable(const QVector3D &center,
+  static auto is_area_mostly_walkable(const QVector3D &center,
                                    Pathfinding *pathfinder,
                                    float radius) -> bool {
     if (pathfinder == nullptr) {
       return true;
     }
 
-    float const offset_x = pathfinder->getGridOffsetX();
-    float const offset_z = pathfinder->getGridOffsetZ();
+    float const offset_x = pathfinder->get_grid_offset_x();
+    float const offset_z = pathfinder->get_grid_offset_z();
 
     int const center_grid_x =
         static_cast<int>(std::round(center.x() - offset_x));
@@ -147,9 +147,9 @@ public:
       float const estimated_formation_radius =
           std::sqrt(static_cast<float>(units.size())) * spacing * 2.0F;
 
-      if (!isAreaMostlyWalkable(center, pathfinder,
+      if (!is_area_mostly_walkable(center, pathfinder,
                                 estimated_formation_radius)) {
-        adjusted_center = findNearestWalkable(center, pathfinder, 15);
+        adjusted_center = find_nearest_walkable(center, pathfinder, 15);
       }
     }
 

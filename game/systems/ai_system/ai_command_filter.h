@@ -47,9 +47,9 @@ private:
                                  float move_y, float move_z,
                                  float currentTime) const -> bool;
 
-  void recordCommand(const AICommand &cmd, float currentTime);
+  void record_command(const AICommand &cmd, float currentTime);
 
-  void cleanupHistory(float currentTime);
+  void cleanup_history(float currentTime);
 };
 
 } // namespace Game::Systems::AI

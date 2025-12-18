@@ -576,7 +576,7 @@ auto FormationSystem::instance() -> FormationSystem & {
 
 FormationSystem::FormationSystem() { initializeDefaults(); }
 
-void FormationSystem::initializeDefaults() {
+void FormationSystem::initialize_defaults() {
   registerFormation(FormationType::Roman, std::make_unique<RomanFormation>());
   registerFormation(FormationType::Barbarian,
                     std::make_unique<BarbarianFormation>());
@@ -611,7 +611,7 @@ auto FormationSystem::get_formation_positions_with_facing(
   return it->second->calculateFormationPositions(units, center, base_spacing);
 }
 
-void FormationSystem::registerFormation(FormationType type,
+void FormationSystem::register_formation(FormationType type,
                                         std::unique_ptr<IFormation> formation) {
   m_formations[type] = std::move(formation);
 }
