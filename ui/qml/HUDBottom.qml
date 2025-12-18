@@ -13,8 +13,7 @@ RowLayout {
         "canAttack": true,
         "canGuard": true,
         "canHold": true,
-        "canPatrol": true,
-        "canRun": true
+        "canPatrol": true
     })
 
     signal commandModeChanged(string mode)
@@ -570,69 +569,6 @@ RowLayout {
 
                 contentItem: Text {
                     text: (parent.isFormationActive ? "✓ " : "") + "🎯\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
-                }
-
-            }
-
-            Button {
-                id: runButton
-
-                property bool isRunActive: {
-                    bottomRoot.selectionTick;
-                    return (typeof game !== 'undefined' && game.any_selected_in_run_mode) ? game.any_selected_in_run_mode() : false;
-                }
-                property bool modeAvailable: bottomRoot.modeAvailability.canRun !== false
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: 38
-                text: qsTr("Run")
-                focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.hasMovableUnits && modeAvailable
-                onClicked: {
-                    if (typeof game !== 'undefined' && game.on_run_command)
-                        game.on_run_command();
-
-                }
-                ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Run not available for selected units (e.g. catapults, ballista)") : (bottomRoot.hasMovableUnits ? (isRunActive ? qsTr("Stop running (toggle)") : qsTr("Run faster, uses stamina")) : qsTr("Select troops first"))
-                ToolTip.delay: 500
-
-                Connections {
-                    function onRun_mode_changed(active) {
-                        runButton.isRunActive = (typeof game !== 'undefined' && game.any_selected_in_run_mode) ? game.any_selected_in_run_mode() : false;
-                    }
-
-                    target: (typeof game !== 'undefined') ? game : null
-                }
-
-                background: Rectangle {
-                    color: {
-                        if (!parent.enabled)
-                            return "#1a252f";
-
-                        if (parent.isRunActive)
-                            return "#e67e22";
-
-                        if (parent.pressed)
-                            return "#e67e22";
-
-                        if (parent.hovered)
-                            return "#f39c12";
-
-                        return "#34495e";
-                    }
-                    radius: 6
-                    border.color: parent.enabled ? (parent.isRunActive ? "#d35400" : "#e67e22") : "#1a252f"
-                    border.width: parent.isRunActive ? 3 : 2
-                }
-
-                contentItem: Text {
-                    text: (parent.isRunActive ? "✓ " : "") + "🏃\n" + parent.text
                     font.pointSize: 8
                     font.bold: true
                     color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
