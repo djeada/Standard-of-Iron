@@ -113,14 +113,12 @@ private:
   std::atomic<bool> m_workerRunning{false};
   std::atomic<bool> m_shutdownRequested{false};
 
-  // Incremental update tracking (bottleneck fix #5)
-  // Maps entity ID to last known grid position for movement detection
   struct CachedPosition {
     int grid_x;
     int grid_z;
   };
   std::unordered_map<std::uint32_t, CachedPosition> m_lastPositions;
-  bool m_forceFullUpdate{true}; // Force full update on first run or after reset
+  bool m_forceFullUpdate{true};
 };
 
 } // namespace Game::Map
