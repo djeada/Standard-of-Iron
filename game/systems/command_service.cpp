@@ -126,7 +126,7 @@ void CommandService::move_units(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &units,
     const std::vector<QVector3D> &targets) {
-  moveUnits(world, units, targets, MoveOptions{});
+  move_units(world, units, targets, MoveOptions{});
 }
 
 void CommandService::move_units(
@@ -138,7 +138,7 @@ void CommandService::move_units(
   }
 
   if (options.group_move && units.size() > 1) {
-    moveGroup(world, units, targets, options);
+    move_group(world, units, targets, options);
     return;
   }
 
@@ -271,7 +271,7 @@ void CommandService::move_units(
         mv->pending_request_id = 0;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
-        clearPendingRequest(units[i]);
+        clear_pending_request(units[i]);
         continue;
       }
 
@@ -292,7 +292,7 @@ void CommandService::move_units(
         mv->pending_request_id = 0;
         mv->vx = 0.0F;
         mv->vz = 0.0F;
-        clearPendingRequest(units[i]);
+        clear_pending_request(units[i]);
 
         mv->time_since_last_path_request = 0.0F;
         mv->last_goal_x = target_x;
@@ -348,7 +348,7 @@ void CommandService::move_units(
           s_entityToRequest[units[i]] = request_id;
         }
 
-        s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
+        s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
 
         mv->time_since_last_path_request = 0.0F;
         mv->last_goal_x = target_x;
@@ -364,7 +364,7 @@ void CommandService::move_units(
       mv->pending_request_id = 0;
       mv->vx = 0.0F;
       mv->vz = 0.0F;
-      clearPendingRequest(units[i]);
+      clear_pending_request(units[i]);
     }
   }
 }
@@ -455,7 +455,7 @@ void CommandService::move_group(
     std::vector<QVector3D> const single_target = {members[0].target};
     MoveOptions single_options = options;
     single_options.group_move = false;
-    moveUnits(world, single_unit, single_target, single_options);
+    move_units(world, single_unit, single_target, single_options);
     return;
   }
 
@@ -485,7 +485,7 @@ void CommandService::move_group(
         break;
       }
 
-      if (!s_pathfinder->isWalkable(target_grid.x, target_grid.y)) {
+      if (!s_pathfinder->is_walkable(target_grid.x, target_grid.y)) {
         any_target_invalid = true;
         break;
       }
@@ -557,7 +557,7 @@ void CommandService::move_group(
       direct_targets.push_back(member.target);
     }
 
-    moveUnits(world, direct_ids, direct_targets, direct_options);
+    move_units(world, direct_ids, direct_targets, direct_options);
     return;
   }
 
@@ -609,7 +609,7 @@ void CommandService::move_group(
       direct_targets.push_back(member.target);
     }
 
-    moveUnits(world, direct_ids, direct_targets, direct_options);
+    move_units(world, direct_ids, direct_targets, direct_options);
   }
 
   if (regroup_members.size() <= 1) {
@@ -620,7 +620,7 @@ void CommandService::move_group(
           regroup_members.front().id};
       std::vector<QVector3D> const single_targets = {
           regroup_members.front().target};
-      moveUnits(world, single_ids, single_targets, direct_options);
+      move_units(world, single_ids, single_targets, direct_options);
     }
     return;
   }
@@ -654,7 +654,7 @@ void CommandService::move_group(
     mv->goal_x = member.target.x();
     mv->goal_y = member.target.z();
 
-    clearPendingRequest(member.id);
+    clear_pending_request(member.id);
     mv->target_x = member.transform->position.x;
     mv->target_y = member.transform->position.z;
     mv->has_target = false;
@@ -724,9 +724,6 @@ void CommandService::move_group(
     member->movement->last_goal_y = member->target.z();
   }
 
-  Point const start = world_to_grid(leader_pos.x(), leader_pos.z());
-  Point const end = world_to_grid(leader_target.x(), leader_target.z());
-
   float const unit_radius = get_unit_radius(world, leader.id);
 
   PendingPathRequest pending;
@@ -749,7 +746,7 @@ void CommandService::move_group(
     }
   }
 
-  s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
+  s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
 }
 
 void CommandService::process_path_results(Engine::Core::World &world) {
@@ -757,7 +754,7 @@ void CommandService::process_path_results(Engine::Core::World &world) {
     return;
   }
 
-  auto results = s_pathfinder->fetchCompletedPaths();
+  auto results = s_pathfinder->fetch_completed_paths();
   if (results.empty()) {
     return;
   }
@@ -824,7 +821,7 @@ void CommandService::process_path_results(Engine::Core::World &world) {
       if (has_path) {
         movement_component->path.reserve(path_points.size() - 1);
         for (size_t idx = 1; idx < path_points.size(); ++idx) {
-          QVector3D const world_pos = gridToWorld(path_points[idx]);
+          QVector3D const world_pos = grid_to_world(path_points[idx]);
           movement_component->path.emplace_back(world_pos.x() + offset.x(),
                                                 world_pos.z() + offset.z());
         }
@@ -1006,7 +1003,7 @@ void CommandService::attack_target(
     opts.allow_direct_fallback = true;
     std::vector<Engine::Core::EntityID> const unit_ids = {unit_id};
     std::vector<QVector3D> const move_targets = {desired_pos};
-    CommandService::moveUnits(world, unit_ids, move_targets, opts);
+    CommandService::move_units(world, unit_ids, move_targets, opts);
 
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv == nullptr) {

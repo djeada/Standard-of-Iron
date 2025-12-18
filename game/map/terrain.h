@@ -431,7 +431,7 @@ public:
 
   [[nodiscard]] auto getHeightAtGrid(int grid_x, int grid_z) const -> float;
 
-  [[nodiscard]] auto isWalkable(int grid_x, int grid_z) const -> bool;
+  [[nodiscard]] auto is_walkable(int grid_x, int grid_z) const -> bool;
 
   [[nodiscard]] auto isHillEntrance(int grid_x, int grid_z) const -> bool;
 

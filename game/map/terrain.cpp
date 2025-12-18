@@ -376,7 +376,7 @@ auto TerrainHeightMap::getHeightAtGrid(int grid_x, int grid_z) const -> float {
   return m_heights[indexAt(grid_x, grid_z)];
 }
 
-auto TerrainHeightMap::isWalkable(int grid_x, int grid_z) const -> bool {
+auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
   if (!inBounds(grid_x, grid_z)) {
     return false;
   }

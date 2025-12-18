@@ -1112,7 +1112,7 @@ void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
 
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
-  Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
+  Game::Systems::CommandService::move_units(*m_world, selected, targets, opts);
 }
 
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
