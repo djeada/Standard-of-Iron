@@ -82,6 +82,13 @@ void handle_move_command(Engine::Core::World *world,
       if (entity == nullptr) {
         continue;
       }
+
+      auto *formation_mode =
+          entity->get_component<Engine::Core::FormationModeComponent>();
+      if ((formation_mode == nullptr) || !formation_mode->active) {
+        continue;
+      }
+
       auto *transform =
           entity->get_component<Engine::Core::TransformComponent>();
       if (transform != nullptr && i < formation_result.facing_angles.size()) {
