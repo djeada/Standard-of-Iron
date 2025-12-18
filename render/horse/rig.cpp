@@ -709,10 +709,11 @@ void HorseRendererBase::render_full(
     const HorseMotionSample *shared_motion, ISubmitter &out) const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
-  const HorseGait &g = profile.gait;
+
   HorseMotionSample const motion =
       shared_motion ? *shared_motion
                     : evaluate_horse_motion(profile, anim, rider_ctx);
+  const HorseGait &g = profile.gait;
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
@@ -1239,6 +1240,8 @@ void HorseRendererBase::render_full(
     if (is_moving) {
       float const angle = leg_phase * 2.0F * k_pi;
 
+      bool const is_galloping = (g.stride_swing > 0.7F);
+
       float const swing_progress =
           leg_phase < k_swing_phase_end ? leg_phase / k_swing_phase_end : 0.0F;
       float const stance_progress =
@@ -1251,11 +1254,27 @@ void HorseRendererBase::render_full(
 
       float const stance_motion = stance_progress;
 
-      float const stride_forward = swing_ease * g.stride_swing * 0.85F;
+      float stride_mult = 0.85F;
+      float lift_mult = 1.0F;
+
+      if (is_galloping) {
+
+        float const suspension_phase =
+            (leg_phase > 0.35F && leg_phase < 0.45F) ? 1.0F : 0.0F;
+
+        stride_mult = 0.88F + swing_ease * 0.08F;
+
+        lift_mult = 1.0F + suspension_phase * 0.12F;
+
+        float const reach_factor = is_rear ? 0.90F : 1.08F;
+        stride_mult *= reach_factor;
+      }
+
+      float const stride_forward = swing_ease * g.stride_swing * stride_mult;
       float const stride_backward = stance_motion * g.stride_swing * 0.65F;
       stride = (leg_phase < k_swing_phase_end
                     ? stride_forward
-                    : (g.stride_swing * 0.85F - stride_backward)) +
+                    : (g.stride_swing * stride_mult - stride_backward)) +
                forwardBias - g.stride_swing * 0.25F;
 
       float const lift_curve = std::sin(swing_progress * k_pi);
@@ -1264,8 +1283,9 @@ void HorseRendererBase::render_full(
               ? std::sin(stance_progress / k_impact_settle_duration * k_pi) *
                     k_impact_settle_intensity
               : 0.0F;
-      lift = leg_phase < k_swing_phase_end ? lift_curve * g.stride_lift
-                                           : -impact_settle * g.stride_lift;
+      lift = leg_phase < k_swing_phase_end
+                 ? lift_curve * g.stride_lift * lift_mult
+                 : -impact_settle * g.stride_lift;
 
     } else {
 
@@ -1297,14 +1317,21 @@ void HorseRendererBase::render_full(
                            stride + stance_pull + stance_stagger);
 
     float const gallop_angle = leg_phase * 2.0F * k_pi;
-    float const hip_swing = is_moving ? std::sin(gallop_angle) : 0.0F;
+    bool const is_galloping = (g.stride_swing > 0.7F);
+
+    float hip_swing_mult = is_galloping ? 1.1F : 1.0F;
+    float const hip_swing =
+        is_moving ? std::sin(gallop_angle) * hip_swing_mult : 0.0F;
+
     float const lift_factor =
         is_moving
             ? std::max(0.0F,
                        std::sin(gallop_angle + (is_rear ? 0.35F : -0.25F)))
             : 0.0F;
 
-    shoulder.setZ(shoulder.z() + hip_swing * (is_rear ? -0.10F : 0.08F));
+    float const hip_flex =
+        is_galloping ? (is_rear ? -0.08F : 0.06F) : (is_rear ? -0.06F : 0.05F);
+    shoulder.setZ(shoulder.z() + hip_swing * hip_flex);
     if (tighten_legs) {
       shoulder.setX(shoulder.x() - lateralSign * lift_factor * 0.04F);
     }
@@ -1317,15 +1344,17 @@ void HorseRendererBase::render_full(
     float const swing_phase = smoothstep(0.3F, 0.7F, leg_phase);
     float const extend_phase = smoothstep(0.7F, 1.0F, leg_phase);
 
-    float const knee_flex =
-        is_moving
-            ? (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F))
-            : 0.35F;
+    float knee_flex_base =
+        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F));
+    float knee_flex_gallop =
+        is_galloping ? knee_flex_base * 1.08F : knee_flex_base;
+    float const knee_flex = is_moving ? knee_flex_gallop : 0.35F;
 
-    float const cannon_flex = is_moving ? smoothstep(0.35F, 0.65F, leg_phase) *
-                                              (1.0F - extend_phase) *
-                                              (is_rear ? 0.70F : 0.60F)
-                                        : 0.35F;
+    float cannon_flex_base = smoothstep(0.35F, 0.65F, leg_phase) *
+                             (1.0F - extend_phase) * (is_rear ? 0.70F : 0.60F);
+    float cannon_flex_gallop =
+        is_galloping ? cannon_flex_base * 1.05F : cannon_flex_base;
+    float const cannon_flex = is_moving ? cannon_flex_gallop : 0.35F;
 
     float const fetlock_compress =
         is_moving ? std::max(stance_phase * 0.4F,

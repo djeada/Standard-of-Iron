@@ -37,29 +37,29 @@ struct ProductionState {
 
 class ProductionService {
 public:
-  static auto startProductionForFirstSelectedBarracks(
+  static auto start_production_for_first_selected_barracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       Game::Units::TroopType unit_type) -> ProductionResult;
 
-  static auto startProductionForFirstSelectedBarracks(
+  static auto start_production_for_first_selected_barracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       const std::string &unit_type) -> ProductionResult {
-    return startProductionForFirstSelectedBarracks(
+    return start_production_for_first_selected_barracks(
         world, selected, owner_id,
         Game::Units::troop_typeFromString(unit_type));
   }
 
-  static auto setRallyForFirstSelectedBarracks(
+  static auto set_rally_for_first_selected_barracks(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       float x, float z) -> bool;
 
-  static auto
-  getSelectedBarracksState(Engine::Core::World &world,
-                           const std::vector<Engine::Core::EntityID> &selected,
-                           int owner_id, ProductionState &outState) -> bool;
+  static auto get_selected_barracks_state(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      ProductionState &outState) -> bool;
 };
 
 } // namespace Game::Systems

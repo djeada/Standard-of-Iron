@@ -235,7 +235,7 @@ auto SpawnValidator::check_building_collision(float world_x,
                                               float world_z) const -> bool {
   auto &building_registry =
       Game::Systems::BuildingCollisionRegistry::instance();
-  return !building_registry.isPointInBuilding(world_x, world_z);
+  return !building_registry.is_point_in_building(world_x, world_z);
 }
 
 auto SpawnValidator::check_road_collision(float world_x,

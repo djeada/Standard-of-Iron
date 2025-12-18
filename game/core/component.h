@@ -262,6 +262,9 @@ namespace Engine::Core {
 class BuildingComponent : public Component {
 public:
   BuildingComponent() = default;
+
+  Game::Systems::NationID original_nation_id{
+      Game::Systems::NationID::RomanRepublic};
 };
 
 class ProductionComponent : public Component {

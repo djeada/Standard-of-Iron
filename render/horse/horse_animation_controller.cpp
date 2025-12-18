@@ -37,10 +37,10 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
     return {0.55F, 0.0F, 0.50F, 0.62F, 0.32F, 0.028F};
   case GaitType::CANTER:
 
-    return {0.45F, 0.66F, 0.33F, 0.78F, 0.42F, 0.038F};
+    return {0.48F, 0.62F, 0.35F, 0.65F, 0.35F, 0.032F};
   case GaitType::GALLOP:
 
-    return {0.35F, 0.75F, 0.25F, 1.15F, 0.62F, 0.052F};
+    return {0.38F, 0.50F, 0.15F, 0.85F, 0.48F, 0.042F};
   }
   return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
 }

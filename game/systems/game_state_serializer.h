@@ -46,21 +46,21 @@ struct RuntimeSnapshot {
 
 class GameStateSerializer {
 public:
-  static auto buildMetadata(const Engine::Core::World &world,
-                            const Render::GL::Camera *camera,
-                            const LevelSnapshot &level,
-                            const RuntimeSnapshot &runtime) -> QJsonObject;
+  static auto build_metadata(const Engine::Core::World &world,
+                             const Render::GL::Camera *camera,
+                             const LevelSnapshot &level,
+                             const RuntimeSnapshot &runtime) -> QJsonObject;
 
-  static void restoreCameraFromMetadata(const QJsonObject &metadata,
-                                        Render::GL::Camera *camera,
-                                        int viewport_width,
-                                        int viewport_height);
+  static void restore_camera_from_metadata(const QJsonObject &metadata,
+                                           Render::GL::Camera *camera,
+                                           int viewport_width,
+                                           int viewport_height);
 
-  static void restoreRuntimeFromMetadata(const QJsonObject &metadata,
-                                         RuntimeSnapshot &runtime);
+  static void restore_runtime_from_metadata(const QJsonObject &metadata,
+                                            RuntimeSnapshot &runtime);
 
-  static void restoreLevelFromMetadata(const QJsonObject &metadata,
-                                       LevelSnapshot &level);
+  static void restore_level_from_metadata(const QJsonObject &metadata,
+                                          LevelSnapshot &level);
 };
 
 } // namespace Game::Systems

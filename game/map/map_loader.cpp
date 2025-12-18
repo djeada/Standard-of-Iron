@@ -319,7 +319,7 @@ void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
     if (spawn_obj.contains(NATION)) {
       const QString nation_str = spawn_obj.value(NATION).toString();
       if (Game::Systems::NationID parsed_nation_id;
-          Game::Systems::tryParseNationID(nation_str, parsed_nation_id)) {
+          Game::Systems::try_parse_nation_id(nation_str, parsed_nation_id)) {
         spawn.nation = parsed_nation_id;
       } else {
         qWarning() << "MapLoader: unknown nation" << nation_str

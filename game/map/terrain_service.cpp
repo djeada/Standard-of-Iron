@@ -82,7 +82,7 @@ auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
   const float world_z = (static_cast<float>(grid_z) - half_height) * tile_size;
 
   auto &registry = Game::Systems::BuildingCollisionRegistry::instance();
-  return registry.isPointInBuilding(world_x, world_z);
+  return registry.is_point_in_building(world_x, world_z);
 }
 
 auto TerrainService::is_forbidden_world(float world_x,

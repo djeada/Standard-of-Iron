@@ -121,14 +121,14 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   const QString troop_id = obj.value("id").toString();
   if (troop_id.isEmpty()) {
     qCWarning(logger()) << "Encountered troop without id in nation"
-                        << nationIDToQString(nation.id);
+                        << nation_id_to_qstring(nation.id);
     return false;
   }
 
   const auto type_opt = Game::Units::tryParseTroopType(troop_id.toStdString());
   if (!type_opt.has_value()) {
     qCWarning(logger()) << "Unknown troop type" << troop_id << "for nation"
-                        << nationIDToQString(nation.id);
+                        << nation_id_to_qstring(nation.id);
     return false;
   }
 
@@ -356,7 +356,7 @@ auto NationLoader::load_from_file(const QString &path)
     return std::nullopt;
   }
 
-  auto parsed_id = Game::Systems::nationIDFromString(id_str.toStdString());
+  auto parsed_id = Game::Systems::nation_id_from_string(id_str.toStdString());
   if (!parsed_id) {
     qCWarning(nation_loader_logger())
         << "Nation file" << path << "has unknown nation id:" << id_str;

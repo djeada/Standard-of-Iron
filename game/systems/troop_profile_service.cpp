@@ -20,10 +20,10 @@ auto TroopProfileService::get_profile(
     return cached->second;
   }
 
-  const Nation *nation = NationRegistry::instance().getNation(nation_id);
+  const Nation *nation = NationRegistry::instance().get_nation(nation_id);
   if (nation == nullptr) {
     const auto fallback_id = NationRegistry::instance().default_nation_id();
-    nation = NationRegistry::instance().getNation(fallback_id);
+    nation = NationRegistry::instance().get_nation(fallback_id);
     if (nation == nullptr) {
       const auto &all = NationRegistry::instance().get_all_nations();
       if (all.empty()) {
@@ -62,7 +62,7 @@ auto TroopProfileService::build_profile(
   profile.max_units_per_row = catalogClass.max_units_per_row;
   profile.formation_type = nation.formation_type;
 
-  if (const auto *nationTroop = nation.getTroop(type)) {
+  if (const auto *nationTroop = nation.get_troop(type)) {
     profile.display_name = nationTroop->display_name;
     profile.production.cost = nationTroop->cost;
     profile.production.build_time = nationTroop->build_time;

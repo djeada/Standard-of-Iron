@@ -34,7 +34,7 @@ auto Nation::get_ranged_troops() const -> std::vector<const TroopType *> {
   return result;
 }
 
-auto Nation::getTroop(Game::Units::TroopType unit_type) const
+auto Nation::get_troop(Game::Units::TroopType unit_type) const
     -> const TroopType * {
   for (const auto &troop : available_troops) {
     if (troop.unit_type == unit_type) {
@@ -44,7 +44,7 @@ auto Nation::getTroop(Game::Units::TroopType unit_type) const
   return nullptr;
 }
 
-auto Nation::getBestMeleeTroop() const -> const TroopType * {
+auto Nation::get_best_melee_troop() const -> const TroopType * {
   auto melee = get_melee_troops();
   if (melee.empty()) {
     return nullptr;
@@ -58,7 +58,7 @@ auto Nation::getBestMeleeTroop() const -> const TroopType * {
   return *it;
 }
 
-auto Nation::getBestRangedTroop() const -> const TroopType * {
+auto Nation::get_best_ranged_troop() const -> const TroopType * {
   auto ranged = get_ranged_troops();
   if (ranged.empty()) {
     return nullptr;
@@ -72,13 +72,13 @@ auto Nation::getBestRangedTroop() const -> const TroopType * {
   return *it;
 }
 
-auto Nation::isMeleeUnit(Game::Units::TroopType unit_type) const -> bool {
-  const auto *troop = getTroop(unit_type);
+auto Nation::is_melee_unit(Game::Units::TroopType unit_type) const -> bool {
+  const auto *troop = get_troop(unit_type);
   return troop != nullptr && troop->is_melee;
 }
 
 auto Nation::is_ranged_unit(Game::Units::TroopType unit_type) const -> bool {
-  const auto *troop = getTroop(unit_type);
+  const auto *troop = get_troop(unit_type);
   return troop != nullptr && !troop->is_melee;
 }
 
@@ -101,7 +101,7 @@ void NationRegistry::register_nation(Nation nation) {
   m_nationIndex[m_nations.back().id] = index;
 }
 
-auto NationRegistry::getNation(NationID nationId) const -> const Nation * {
+auto NationRegistry::get_nation(NationID nationId) const -> const Nation * {
   auto it = m_nationIndex.find(nationId);
   if (it == m_nationIndex.end()) {
     return nullptr;
@@ -114,11 +114,11 @@ auto NationRegistry::get_nation_for_player(int player_id) const
 
   auto it = m_playerNations.find(player_id);
   if (it != m_playerNations.end()) {
-    const auto *nation = getNation(it->second);
+    const auto *nation = get_nation(it->second);
     return nation;
   }
 
-  const auto *nation = getNation(m_defaultNation);
+  const auto *nation = get_nation(m_defaultNation);
   if (nation == nullptr) {
   }
   return nation;

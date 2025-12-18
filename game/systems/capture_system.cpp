@@ -21,9 +21,9 @@ void CaptureSystem::update(Engine::Core::World *world, float delta_time) {
   processBarrackCapture(world, delta_time);
 }
 
-auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
-                                      float barrack_x, float barrack_z,
-                                      int owner_id, float radius) -> int {
+auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
+                                        float barrack_x, float barrack_z,
+                                        int owner_id, float radius) -> int {
   int total_troops = 0;
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
 
@@ -58,9 +58,9 @@ auto CaptureSystem::countNearbyTroops(Engine::Core::World *world,
   return total_troops;
 }
 
-void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
-                                             Engine::Core::Entity *barrack,
-                                             int new_owner_id) {
+void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
+                                               Engine::Core::Entity *barrack,
+                                               int new_owner_id) {
   auto *unit = barrack->get_component<Engine::Core::UnitComponent>();
   auto *renderable =
       barrack->get_component<Engine::Core::RenderableComponent>();
@@ -73,18 +73,6 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
 
   int const previous_owner_id = unit->owner_id;
   unit->owner_id = new_owner_id;
-
-  auto &nation_registry = NationRegistry::instance();
-  if (!Game::Core::isNeutralOwner(new_owner_id)) {
-    if (const auto *nation =
-            nation_registry.get_nation_for_player(new_owner_id)) {
-      unit->nation_id = nation->id;
-    } else {
-      unit->nation_id = nation_registry.default_nation_id();
-    }
-  } else {
-    unit->nation_id = nation_registry.default_nation_id();
-  }
 
   QVector3D const tc = Game::Visuals::team_colorForOwner(new_owner_id);
   renderable->color[0] = tc.x();
@@ -124,8 +112,8 @@ void CaptureSystem::transferBarrackOwnership(Engine::Core::World *,
                                          new_owner_id));
 }
 
-void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
-                                          float delta_time) {
+void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
+                                            float delta_time) {
   constexpr float capture_radius = 8.0F;
   constexpr int troop_advantage_multiplier = 3;
 
@@ -170,8 +158,8 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
     }
 
     for (int const player_id : player_ids) {
-      int const troop_count = countNearbyTroops(world, barrack_x, barrack_z,
-                                                player_id, capture_radius);
+      int const troop_count = count_nearby_troops(world, barrack_x, barrack_z,
+                                                  player_id, capture_radius);
       if (troop_count > max_enemy_troops) {
         max_enemy_troops = troop_count;
         capturing_player_id = player_id;
@@ -180,8 +168,8 @@ void CaptureSystem::processBarrackCapture(Engine::Core::World *world,
 
     int defender_troops = 0;
     if (!Game::Core::isNeutralOwner(barrack_owner_id)) {
-      defender_troops = countNearbyTroops(world, barrack_x, barrack_z,
-                                          barrack_owner_id, capture_radius);
+      defender_troops = count_nearby_troops(world, barrack_x, barrack_z,
+                                            barrack_owner_id, capture_radius);
     }
 
     bool const can_capture =

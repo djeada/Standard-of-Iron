@@ -12,7 +12,7 @@
 
 namespace {
 
-auto owner_typeToString(Game::Systems::OwnerType type) -> QString {
+auto owner_type_to_string(Game::Systems::OwnerType type) -> QString {
   using Game::Systems::OwnerType;
   switch (type) {
   case OwnerType::Player:
@@ -36,7 +36,7 @@ auto owner_typeFromString(const QString &value) -> Game::Systems::OwnerType {
   return OwnerType::Neutral;
 }
 
-auto colorToJson(const std::array<float, 3> &color) -> QJsonArray {
+auto color_to_json(const std::array<float, 3> &color) -> QJsonArray {
   QJsonArray array;
   array.append(color[0]);
   array.append(color[1]);
@@ -44,7 +44,7 @@ auto colorToJson(const std::array<float, 3> &color) -> QJsonArray {
   return array;
 }
 
-auto colorFromJson(const QJsonArray &array) -> std::array<float, 3> {
+auto color_from_json(const QJsonArray &array) -> std::array<float, 3> {
   std::array<float, 3> color{0.8F, 0.9F, 1.0F};
   if (array.size() >= 3) {
     color[0] = static_cast<float>(array.at(0).toDouble());
@@ -304,10 +304,10 @@ auto OwnerRegistry::to_json() const -> QJsonObject {
   for (const auto &owner : m_owners) {
     QJsonObject owner_obj;
     owner_obj["owner_id"] = owner.owner_id;
-    owner_obj["type"] = owner_typeToString(owner.type);
+    owner_obj["type"] = owner_type_to_string(owner.type);
     owner_obj["name"] = QString::fromStdString(owner.name);
     owner_obj["team_id"] = owner.team_id;
-    owner_obj["color"] = colorToJson(owner.color);
+    owner_obj["color"] = color_to_json(owner.color);
     owners_array.append(owner_obj);
   }
 
@@ -331,7 +331,7 @@ void OwnerRegistry::from_json(const QJsonObject &json) {
     info.name = owner_obj["name"].toString().toStdString();
     info.team_id = owner_obj["team_id"].toInt(0);
     if (owner_obj.contains("color")) {
-      info.color = colorFromJson(owner_obj["color"].toArray());
+      info.color = color_from_json(owner_obj["color"].toArray());
     }
 
     const size_t index = m_owners.size();

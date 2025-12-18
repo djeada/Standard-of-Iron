@@ -130,7 +130,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     if (!nearby_threats.empty()) {
 
-      auto target_info = TacticalUtils::selectFocusFireTarget(
+      auto target_info = TacticalUtils::select_focus_fire_target(
           ready_defenders, nearby_threats, defend_pos_x, defend_pos_y,
           defend_pos_z, context, 0);
 
@@ -143,8 +143,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claimUnits(defender_ids, getPriority(), "defending", context,
-                       m_defendTimer + delta_time, 3.0F);
+            claim_units(defender_ids, getPriority(), "defending", context,
+                        m_defendTimer + delta_time, 3.0F);
 
         if (!claimed_units.empty()) {
           AICommand attack;
@@ -187,8 +187,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         }
 
         auto claimed_units =
-            claimUnits(defender_ids, getPriority(), "intercepting", context,
-                       m_defendTimer + delta_time, 2.0F);
+            claim_units(defender_ids, getPriority(), "intercepting", context,
+                        m_defendTimer + delta_time, 2.0F);
 
         if (!claimed_units.empty()) {
 
@@ -273,8 +273,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_for_move =
-      claimUnits(units_to_move, BehaviorPriority::Low, "positioning", context,
-                 m_defendTimer + delta_time, 1.5F);
+      claim_units(units_to_move, BehaviorPriority::Low, "positioning", context,
+                  m_defendTimer + delta_time, 1.5F);
 
   if (claimed_for_move.empty()) {
     return;

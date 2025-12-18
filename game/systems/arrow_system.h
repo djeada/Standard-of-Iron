@@ -22,8 +22,8 @@ class ArrowSystem : public Engine::Core::System {
 public:
   ArrowSystem();
   void update(Engine::Core::World *world, float delta_time) override;
-  void spawnArrow(const QVector3D &start, const QVector3D &end,
-                  const QVector3D &color, float speed = 8.0F);
+  void spawn_arrow(const QVector3D &start, const QVector3D &end,
+                   const QVector3D &color, float speed = 8.0F);
   [[nodiscard]] auto arrows() const -> const std::vector<ArrowInstance> & {
     return m_arrows;
   }

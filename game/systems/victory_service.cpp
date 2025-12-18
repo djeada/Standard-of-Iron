@@ -121,7 +121,7 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
     victory = check_elimination(world);
     break;
   case VictoryType::SurviveTime:
-    victory = checkSurviveTime();
+    victory = check_survive_time();
     break;
   case VictoryType::Custom:
 
@@ -231,7 +231,7 @@ auto VictoryService::check_elimination(Engine::Core::World &world) -> bool {
   return !enemy_key_structures_alive;
 }
 
-auto VictoryService::checkSurviveTime() const -> bool {
+auto VictoryService::check_survive_time() const -> bool {
   return m_elapsed_time >= m_survive_time_duration;
 }
 

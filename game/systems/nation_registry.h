@@ -63,13 +63,13 @@ struct Nation {
   get_ranged_troops() const -> std::vector<const TroopType *>;
 
   [[nodiscard]] auto
-  getTroop(Game::Units::TroopType unit_type) const -> const TroopType *;
+  get_troop(Game::Units::TroopType unit_type) const -> const TroopType *;
 
-  [[nodiscard]] auto getBestMeleeTroop() const -> const TroopType *;
-  [[nodiscard]] auto getBestRangedTroop() const -> const TroopType *;
+  [[nodiscard]] auto get_best_melee_troop() const -> const TroopType *;
+  [[nodiscard]] auto get_best_ranged_troop() const -> const TroopType *;
 
   [[nodiscard]] auto
-  isMeleeUnit(Game::Units::TroopType unit_type) const -> bool;
+  is_melee_unit(Game::Units::TroopType unit_type) const -> bool;
   [[nodiscard]] auto
   is_ranged_unit(Game::Units::TroopType unit_type) const -> bool;
 };
@@ -80,7 +80,7 @@ public:
 
   void register_nation(Nation nation);
 
-  auto getNation(NationID nationId) const -> const Nation *;
+  auto get_nation(NationID nationId) const -> const Nation *;
 
   auto get_nation_for_player(int player_id) const -> const Nation *;
 

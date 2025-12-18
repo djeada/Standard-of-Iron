@@ -13,7 +13,7 @@ public:
   void update(Engine::Core::World *world, float delta_time) override;
 
 private:
-  static void alignEntityToTerrain(Engine::Core::Entity *entity);
+  static void align_entity_to_terrain(Engine::Core::Entity *entity);
 };
 
 } // namespace Game::Systems

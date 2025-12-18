@@ -346,7 +346,7 @@ private:
     if (ctx.entity != nullptr) {
       if (auto *unit =
               ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-        nation_id = Game::Systems::nationIDToString(unit->nation_id);
+        nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
       }
     }
     if (!nation_id.empty()) {

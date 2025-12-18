@@ -412,8 +412,9 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.5F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.5F);
   }
 
   if (forward_lean > 0.001F) {
@@ -550,8 +551,9 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.4F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.4F);
   }
 
   if (std::abs(hip_rotation) > 0.001F) {
@@ -682,8 +684,9 @@ void HumanoidPoseController::spearThrustFromHold(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.3F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.3F);
   }
 
   if (forward_lean > 0.001F) {
@@ -795,8 +798,9 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.6F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.6F);
   }
 
   if (std::abs(shoulder_rotation) > 0.001F) {
@@ -979,8 +983,9 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.6F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.6F);
   }
 
   if (std::abs(shoulder_rotation) > 0.001F) {
@@ -1146,8 +1151,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + torso_twist);
-    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - torso_twist * 0.4F);
+    float const twist = torso_twist * 0.05F;
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.4F);
   }
 
   if (std::abs(hip_rotation) > 0.001F) {

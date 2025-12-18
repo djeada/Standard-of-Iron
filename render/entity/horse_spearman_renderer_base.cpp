@@ -201,7 +201,7 @@ auto HorseSpearmanRendererBase::resolve_shader_key(const DrawContext &ctx) const
   std::string nation;
   if (ctx.entity != nullptr) {
     if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-      nation = Game::Systems::nationIDToString(unit->nation_id);
+      nation = Game::Systems::nation_id_to_string(unit->nation_id);
     }
   }
   if (!nation.empty()) {

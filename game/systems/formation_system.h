@@ -44,11 +44,11 @@ class IFormation {
 public:
   virtual ~IFormation() = default;
 
-  [[nodiscard]] virtual auto calculatePositions(
+  [[nodiscard]] virtual auto calculate_positions(
       int unit_count, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<QVector3D> = 0;
 
-  [[nodiscard]] virtual auto calculateFormationPositions(
+  [[nodiscard]] virtual auto calculate_formation_positions(
       const std::vector<UnitFormationInfo> &units, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<FormationPosition> = 0;
 
@@ -57,14 +57,14 @@ public:
 
 class RomanFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
-                                        float base_spacing = 1.0F) const
-      -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(
+      int unit_count, const QVector3D &center,
+      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
-                              const QVector3D &center,
-                              float base_spacing = 1.0F) const
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
+                                const QVector3D &center,
+                                float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto getType() const -> FormationType override {
@@ -74,14 +74,14 @@ public:
 
 class BarbarianFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
-                                        float base_spacing = 1.0F) const
-      -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(
+      int unit_count, const QVector3D &center,
+      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
-                              const QVector3D &center,
-                              float base_spacing = 1.0F) const
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
+                                const QVector3D &center,
+                                float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto getType() const -> FormationType override {
@@ -91,14 +91,14 @@ public:
 
 class CarthageFormation : public IFormation {
 public:
-  [[nodiscard]] auto calculatePositions(int unit_count, const QVector3D &center,
-                                        float base_spacing = 1.0F) const
-      -> std::vector<QVector3D> override;
+  [[nodiscard]] auto calculate_positions(
+      int unit_count, const QVector3D &center,
+      float base_spacing = 1.0F) const -> std::vector<QVector3D> override;
 
   [[nodiscard]] auto
-  calculateFormationPositions(const std::vector<UnitFormationInfo> &units,
-                              const QVector3D &center,
-                              float base_spacing = 1.0F) const
+  calculate_formation_positions(const std::vector<UnitFormationInfo> &units,
+                                const QVector3D &center,
+                                float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
   [[nodiscard]] auto getType() const -> FormationType override {
@@ -120,14 +120,14 @@ public:
       const QVector3D &center,
       float base_spacing = 1.0F) -> std::vector<FormationPosition>;
 
-  void registerFormation(FormationType type,
-                         std::unique_ptr<IFormation> formation);
+  void register_formation(FormationType type,
+                          std::unique_ptr<IFormation> formation);
 
   auto get_formation(FormationType type) const -> const IFormation *;
 
 private:
   FormationSystem();
-  void initializeDefaults();
+  void initialize_defaults();
 
   std::unordered_map<FormationType, std::unique_ptr<IFormation>> m_formations;
 };

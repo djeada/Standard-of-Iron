@@ -56,7 +56,10 @@ void Barracks::init(const SpawnParams &params) {
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
-  e->add_component<Engine::Core::BuildingComponent>();
+  auto *building = e->add_component<Engine::Core::BuildingComponent>();
+  if (building != nullptr) {
+    building->original_nation_id = nation_id;
+  }
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
