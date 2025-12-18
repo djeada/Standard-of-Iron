@@ -1,3 +1,4 @@
+#include "armor/arm_guards_renderer.h"
 #include "armor/armor_heavy_carthage.h"
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
@@ -6,6 +7,8 @@
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
 #include "armor/roman_shoulder_cover.h"
+#include "armor/tool_belt_renderer.h"
+#include "armor/work_apron_renderer.h"
 #include "equipment_registry.h"
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
@@ -149,6 +152,40 @@ void registerBuiltInEquipment() {
   auto shield_roman = std::make_shared<RomanShieldRenderer>();
   registry.registerEquipment(EquipmentCategory::Weapon, "shield_roman",
                              shield_roman);
+
+  WorkApronConfig roman_apron_config;
+  roman_apron_config.leather_color = QVector3D(0.48F, 0.35F, 0.22F);
+  auto work_apron_roman =
+      std::make_shared<WorkApronRenderer>(roman_apron_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "work_apron_roman",
+                             work_apron_roman);
+
+  WorkApronConfig carthage_apron_config;
+  carthage_apron_config.leather_color = QVector3D(0.44F, 0.30F, 0.18F);
+  auto work_apron_carthage =
+      std::make_shared<WorkApronRenderer>(carthage_apron_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "work_apron_carthage",
+                             work_apron_carthage);
+
+  ToolBeltConfig roman_tool_belt_config;
+  roman_tool_belt_config.leather_color = QVector3D(0.52F, 0.40F, 0.28F);
+  auto tool_belt_roman =
+      std::make_shared<ToolBeltRenderer>(roman_tool_belt_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "tool_belt_roman",
+                             tool_belt_roman);
+
+  ToolBeltConfig carthage_tool_belt_config;
+  carthage_tool_belt_config.leather_color = QVector3D(0.46F, 0.34F, 0.22F);
+  auto tool_belt_carthage =
+      std::make_shared<ToolBeltRenderer>(carthage_tool_belt_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "tool_belt_carthage",
+                             tool_belt_carthage);
+
+  ArmGuardsConfig arm_guards_config;
+  arm_guards_config.leather_color = QVector3D(0.50F, 0.38F, 0.26F);
+  auto arm_guards = std::make_shared<ArmGuardsRenderer>(arm_guards_config);
+  registry.registerEquipment(EquipmentCategory::Armor, "arm_guards",
+                             arm_guards);
 }
 
 } // namespace Render::GL
