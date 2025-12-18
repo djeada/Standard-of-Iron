@@ -52,7 +52,8 @@ template <typename T> auto get_entities_with() -> std::vector<Entity *> {
 // In World class
 std::unordered_map<std::type_index, std::unordered_set<EntityID>> m_component_indices;
 
-template <typename T> auto get_entities_with() -> std::vector<Entity *> {
+template <typename T>
+auto get_entities_with() -> std::vector<Entity *> {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   auto it = m_component_indices.find(std::type_index(typeid(T)));
   if (it == m_component_indices.end()) {
@@ -360,7 +361,14 @@ auto BuildingCollisionRegistry::isPointInBuilding(
 1. **Grid-Based Building Index**: Maintain a spatial grid mapping cells to buildings.
 
 ```cpp
-std::unordered_map<std::pair<int,int>, std::vector<size_t>> m_building_grid;
+// Custom hash for grid cell keys
+struct CellKeyHash {
+  std::size_t operator()(const std::pair<int,int>& key) const {
+    return std::hash<int>()(key.first) ^ (std::hash<int>()(key.second) << 16);
+  }
+};
+
+std::unordered_map<std::pair<int,int>, std::vector<size_t>, CellKeyHash> m_building_grid;
 
 bool isPointInBuilding(float x, float z, unsigned int ignoreEntityId) const {
   int cell_x = static_cast<int>(x / m_cell_size);
