@@ -91,7 +91,7 @@ void HealingSystem::process_healing(Engine::Core::World *world,
 
         if (healing_beam_system != nullptr) {
           // Only Roman healers use healing beams (blue waves shot at target)
-          if (healer_unit->nation_id == NationID::RomanRepublic) {
+          if (uses_healing_beams(healer_unit->nation_id)) {
             QVector3D const healer_pos(healer_transform->position.x,
                                        healer_transform->position.y + 1.2F,
                                        healer_transform->position.z);

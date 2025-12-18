@@ -260,7 +260,7 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
     // Only Carthage healers use the aura of power (circular green aura)
     // Roman healers use healing beams instead
     if (unit_comp != nullptr && 
-        unit_comp->nation_id != Game::Systems::NationID::Carthage) {
+        !Game::Systems::uses_healing_aura(unit_comp->nation_id)) {
       continue;
     }
 
