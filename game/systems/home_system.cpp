@@ -69,12 +69,14 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
     Engine::Core::EntityID old_barracks = home_comp->nearest_barracks_id;
     home_comp->nearest_barracks_id = nearest_barracks;
 
+    // Handle switching from old barracks to new barracks
     if (old_barracks != 0 && old_barracks != nearest_barracks) {
       auto *old_barracks_entity = world->get_entity(old_barracks);
       if (old_barracks_entity != nullptr) {
         auto *prod_comp = old_barracks_entity->get_component<
             Engine::Core::ProductionComponent>();
         if (prod_comp != nullptr) {
+          // Safely subtract population contribution, ensuring we don't go negative
           prod_comp->max_units =
               std::max(0, prod_comp->max_units - home_comp->population_contribution);
         }
