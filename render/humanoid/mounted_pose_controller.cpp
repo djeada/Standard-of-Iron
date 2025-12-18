@@ -715,7 +715,7 @@ void MountedPoseController::apply_torso_sculpt(
 
   // Twist is visually very sensitive because it changes the shoulder line
   // (and thus the derived torso frame). Keep it extremely small.
-  QVector3D const twist_vec = right * (0.003F * twist_amt);
+  QVector3D const twist_vec = right * (0.0003F * twist_amt);
   m_pose.shoulder_l += twist_vec;
   m_pose.shoulder_r -= twist_vec;
   m_pose.neck_base += twist_vec * 0.25F;

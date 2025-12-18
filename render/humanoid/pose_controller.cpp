@@ -412,7 +412,7 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.5F);
   }
@@ -551,7 +551,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.4F);
   }
@@ -684,7 +684,7 @@ void HumanoidPoseController::spearThrustFromHold(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.3F);
   }
@@ -798,7 +798,7 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.6F);
   }
@@ -983,7 +983,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.6F);
   }
@@ -1151,7 +1151,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   }
 
   if (std::abs(torso_twist) > 0.001F) {
-    float const twist = torso_twist * 0.10F;
+    float const twist = torso_twist * 0.05F;
     m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + twist);
     m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - twist * 0.4F);
   }

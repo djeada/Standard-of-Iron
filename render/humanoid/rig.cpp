@@ -486,9 +486,16 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
   float const head_scale = 1.0F;
 
+  // The torso frame is derived from the shoulder line. If *any* pose logic
+  // introduces Z-asymmetry between shoulders (common with procedural twists),
+  // then (shoulder_r - shoulder_l) gains a Z component and the whole torso
+  // will yaw/"twist" unrealistically.
+  // Clamp the torso frame to a stable lateral axis.
   QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
+  right_axis.setY(0.0F);
+  right_axis.setZ(0.0F);
   if (right_axis.lengthSquared() < 1e-8F) {
-    right_axis = QVector3D(1, 0, 0);
+    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
   }
   right_axis.normalize();
 
@@ -1194,9 +1201,12 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
   float const height_scale = scaling.y();
   float const torso_scale = get_torso_scale();
 
+  // Same stability clamp as in draw_common_body (see comment there).
   QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
+  right_axis.setY(0.0F);
+  right_axis.setZ(0.0F);
   if (right_axis.lengthSquared() < HP::EPSILON_VECTOR) {
-    right_axis = QVector3D(1, 0, 0);
+    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
   }
   right_axis.normalize();
 
