@@ -114,6 +114,7 @@
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
 #include "render/geom/arrow.h"
+#include "render/geom/formation_arrow.h"
 #include "render/geom/patrol_flags.h"
 #include "render/geom/stone.h"
 #include "render/gl/bootstrap.h"
@@ -318,6 +319,12 @@ GameEngine::GameEngine(QObject *parent)
   connect(m_commandController.get(),
           &App::Controllers::CommandController::formation_mode_changed, this,
           &GameEngine::formation_mode_changed);
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::formation_placement_started,
+          [this]() { emit placing_formation_changed(); });
+  connect(m_commandController.get(),
+          &App::Controllers::CommandController::formation_placement_ended,
+          [this]() { emit placing_formation_changed(); });
 
   connect(this, SIGNAL(selected_units_changed()), m_selectedUnitsModel,
           SLOT(refresh()));
@@ -516,6 +523,45 @@ auto GameEngine::any_selected_in_run_mode() const -> bool {
     return false;
   }
   return m_input_handler->any_selected_in_run_mode();
+}
+
+auto GameEngine::is_placing_formation() const -> bool {
+  if (m_commandController) {
+    return m_commandController->is_placing_formation();
+  }
+  return false;
+}
+
+void GameEngine::on_formation_mouse_move(qreal sx, qreal sy) {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_formation_mouse_move(sx, sy, m_viewport);
+}
+
+void GameEngine::on_formation_scroll(float delta) {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_formation_scroll(delta);
+}
+
+void GameEngine::on_formation_confirm() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_formation_confirm();
+}
+
+void GameEngine::on_formation_cancel() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_formation_cancel();
 }
 
 void GameEngine::on_patrol_click(qreal sx, qreal sy) {
@@ -833,6 +879,19 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
     Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
                                   preview_waypoint);
   }
+
+  if (auto *res = m_renderer->resources()) {
+    if (m_commandController && m_commandController->is_placing_formation()) {
+      Render::GL::FormationPlacementInfo placement;
+      placement.position =
+          m_commandController->get_formation_placement_position();
+      placement.angle_degrees =
+          m_commandController->get_formation_placement_angle();
+      placement.active = true;
+      Render::GL::renderFormationArrow(m_renderer.get(), res, placement);
+    }
+  }
+
   m_renderer->end_frame();
 
   if (m_loading_overlay_wait_for_first_frame) {
