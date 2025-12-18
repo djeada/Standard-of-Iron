@@ -39,8 +39,10 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
 
     return {0.45F, 0.66F, 0.33F, 0.78F, 0.42F, 0.038F};
   case GaitType::GALLOP:
-
-    return {0.35F, 0.75F, 0.25F, 1.15F, 0.62F, 0.052F};
+    // True gallop: 4-beat gait with suspension phase
+    // Rear legs push off sequentially, front legs reach forward sequentially
+    // Phase spacing creates proper lead leg sequence
+    return {0.32F, 0.70F, 0.20F, 1.35F, 0.78F, 0.065F};
   }
   return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
 }
