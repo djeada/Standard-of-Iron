@@ -421,6 +421,8 @@ void Serialization::deserialize_entity(Entity *entity,
       movement->path_index =
           static_cast<std::size_t>(movement_obj["path_index"].toInt());
     }
+    // Validate path_index is within bounds
+    movement->validate_path_index();
   }
 
   if (json.contains("attack")) {
