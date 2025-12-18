@@ -80,7 +80,8 @@ vec3 perturb_cloth_normal(vec3 N, vec3 T, vec3 B, vec2 uv, float warpFreq,
   float weft = sin(uv.y * weftFreq) * 0.07;
   float slub = fbm(uv * 7.5) * slubStrength;
   float micro_detail = noise(uv * 115.0) * 0.02;
-  return normalize(N + T * (warp + slub + micro_detail) + B * (weft + slub * 0.6 + micro_detail * 0.4));
+  return normalize(N + T * (warp + slub + micro_detail) +
+                   B * (weft + slub * 0.6 + micro_detail * 0.4));
 }
 
 vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
@@ -88,14 +89,16 @@ vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float pores = noise(uv * 34.0) * 0.11;
   float scars = noise(uv * 15.0 + vec2(3.9, -2.3)) * 0.07;
   float crease = fbm(uv * 4.8) * 0.06;
-  return normalize(N + T * (grain + scars * 0.4 + crease) + B * (pores + scars * 0.3 + crease * 0.5));
+  return normalize(N + T * (grain + scars * 0.4 + crease) +
+                   B * (pores + scars * 0.3 + crease * 0.5));
 }
 
 vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float hammer = fbm(uv * 15.0) * 0.17;
   float ripple = noise(uv * 52.0) * 0.06;
   float polish = smoothstep(0.3, 0.7, noise(uv * 8.5)) * 0.04;
-  return normalize(N + T * (hammer + polish) + B * (hammer * 0.4 + ripple + polish * 0.3));
+  return normalize(N + T * (hammer + polish) +
+                   B * (hammer * 0.4 + ripple + polish * 0.3));
 }
 
 float D_GGX(float NdotH, float a) {
@@ -119,9 +122,12 @@ vec3 fresnel_schlick(vec3 F0, float cos_theta) {
 vec3 compute_ambient(vec3 normal) {
   float up = clamp(normal.y, 0.0, 1.0);
   float down = clamp(-normal.y, 0.0, 1.0);
-  vec3 sky = vec3(0.85, 0.92, 1.0);
-  vec3 ground = vec3(0.45, 0.38, 0.32);
-  return sky * (0.40 + 0.50 * up) + ground * (0.20 + 0.40 * down);
+  vec3 sky = vec3(0.87, 0.94, 1.0);
+  vec3 ground = vec3(0.47, 0.40, 0.34);
+  vec3 horizon = vec3(0.72, 0.78, 0.88);
+  float horizon_blend = pow(1.0 - abs(normal.y), 2.0) * 0.25;
+  return mix(sky * (0.42 + 0.52 * up) + ground * (0.22 + 0.42 * down), horizon,
+             horizon_blend);
 }
 
 vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
