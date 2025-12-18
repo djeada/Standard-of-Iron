@@ -167,7 +167,7 @@ auto BuildingCollisionRegistry::is_circle_overlapping_building(
     float const dz = z - closest_z;
     float const distance_sq = dx * dx + dz * dz;
 
-    if (distance_sq < radius * radius) {
+    if (distance_sq <= radius * radius) {
       return true;
     }
   }
