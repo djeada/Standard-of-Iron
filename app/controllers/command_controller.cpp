@@ -835,4 +835,72 @@ auto CommandController::any_selected_in_run_mode() const -> bool {
   return false;
 }
 
+void CommandController::enable_run_mode_for_selected() {
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  for (const auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || !Game::Units::can_use_run_mode(unit->spawn_type)) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina == nullptr) {
+      stamina = entity->add_component<Engine::Core::StaminaComponent>();
+      // Initialize stamina values from troop profile
+      const auto troop_type =
+          Game::Units::spawn_typeToTroopType(unit->spawn_type);
+      if (troop_type.has_value()) {
+        const auto profile =
+            Game::Systems::TroopProfileService::instance().get_profile(
+                unit->nation_id, *troop_type);
+        stamina->initialize_from_stats(profile.combat.max_stamina,
+                                       profile.combat.stamina_regen_rate,
+                                       profile.combat.stamina_depletion_rate);
+      }
+    }
+    stamina->run_requested = true;
+  }
+
+  emit run_mode_changed(true);
+}
+
+void CommandController::disable_run_mode_for_selected() {
+  if (m_selection_system == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  for (const auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+    if (stamina != nullptr) {
+      stamina->run_requested = false;
+      stamina->is_running = false;
+    }
+  }
+
+  emit run_mode_changed(false);
+}
+
 } // namespace App::Controllers
