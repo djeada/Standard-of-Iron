@@ -872,13 +872,25 @@ void Renderer::render_construction_previews(
         builder->get_component<Engine::Core::TransformComponent>();
     auto *unit_comp = builder->get_component<Engine::Core::UnitComponent>();
 
-    if (builder_prod == nullptr || transform == nullptr ||
-        !builder_prod->in_progress) {
+    if (builder_prod == nullptr || transform == nullptr) {
       continue;
     }
 
-    const float preview_x = transform->position.x;
-    const float preview_z = transform->position.z;
+    bool show_preview = false;
+    float preview_x = transform->position.x;
+    float preview_z = transform->position.z;
+
+    if (builder_prod->has_construction_site) {
+      show_preview = true;
+      preview_x = builder_prod->construction_site_x;
+      preview_z = builder_prod->construction_site_z;
+    } else if (builder_prod->in_progress) {
+      show_preview = true;
+    }
+
+    if (!show_preview) {
+      continue;
+    }
 
     if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
