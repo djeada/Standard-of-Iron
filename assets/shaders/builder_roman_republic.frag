@@ -77,7 +77,8 @@ vec3 perturb_linen_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float weft = sin(uv.y * 141.0) * 0.06;
   float slub = fbm(uv * 7.5) * 0.05;
   float micro_thread = noise(uv * 110.0) * 0.02;
-  return normalize(N + T * (warp + slub + micro_thread) + B * (weft + slub * 0.6 + micro_thread * 0.4));
+  return normalize(N + T * (warp + slub + micro_thread) +
+                   B * (weft + slub * 0.6 + micro_thread * 0.4));
 }
 
 vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
@@ -85,14 +86,16 @@ vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float pores = noise(uv * 36.0) * 0.11;
   float scars = noise(uv * 17.0 + vec2(2.8, -2.1)) * 0.08;
   float crease = fbm(uv * 4.5) * 0.06;
-  return normalize(N + T * (grain + scars * 0.4 + crease) + B * (pores + scars * 0.3 + crease * 0.5));
+  return normalize(N + T * (grain + scars * 0.4 + crease) +
+                   B * (pores + scars * 0.3 + crease * 0.5));
 }
 
 vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
   float hammer = fbm(uv * 16.0) * 0.16;
   float ripple = noise(uv * 50.0) * 0.06;
   float polish = smoothstep(0.3, 0.7, noise(uv * 8.0)) * 0.04;
-  return normalize(N + T * (hammer + polish) + B * (hammer * 0.4 + ripple + polish * 0.3));
+  return normalize(N + T * (hammer + polish) +
+                   B * (hammer * 0.4 + ripple + polish * 0.3));
 }
 
 float D_GGX(float NdotH, float a) {
@@ -116,9 +119,12 @@ vec3 fresnel_schlick(vec3 F0, float cos_theta) {
 vec3 compute_ambient(vec3 normal) {
   float up = clamp(normal.y, 0.0, 1.0);
   float down = clamp(-normal.y, 0.0, 1.0);
-  vec3 sky = vec3(0.66, 0.76, 0.90);
-  vec3 ground = vec3(0.42, 0.36, 0.30);
-  return sky * (0.26 + 0.54 * up) + ground * (0.14 + 0.30 * down);
+  vec3 sky = vec3(0.68, 0.78, 0.92);
+  vec3 ground = vec3(0.44, 0.38, 0.32);
+  vec3 horizon = vec3(0.58, 0.62, 0.72);
+  float horizon_blend = pow(1.0 - abs(normal.y), 2.0) * 0.3;
+  return mix(sky * (0.28 + 0.56 * up) + ground * (0.16 + 0.32 * down), horizon,
+             horizon_blend);
 }
 
 vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
@@ -146,8 +152,8 @@ vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
   vec3 ambient = compute_ambient(N) * albedo;
   vec3 light = (diffuse + spec * (1.0 + sheen)) * NdotL;
 
-  float ao_strength = mix(0.35, 1.0, clamp(ao, 0.0, 1.0));
-  return ambient * (0.56 + 0.44 * ao_strength) + light * ao_strength;
+  float ao_strength = mix(0.38, 1.0, clamp(ao, 0.0, 1.0));
+  return ambient * (0.58 + 0.42 * ao_strength) + light * ao_strength;
 }
 
 void main() {
