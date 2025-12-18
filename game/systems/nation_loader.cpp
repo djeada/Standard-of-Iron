@@ -207,6 +207,18 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
     variant.can_melee = value;
     has_variant = true;
   }
+  if (auto value = read_float_opt(combat, "max_stamina")) {
+    variant.max_stamina = value;
+    has_variant = true;
+  }
+  if (auto value = read_float_opt(combat, "stamina_regen_rate")) {
+    variant.stamina_regen_rate = value;
+    has_variant = true;
+  }
+  if (auto value = read_float_opt(combat, "stamina_depletion_rate")) {
+    variant.stamina_depletion_rate = value;
+    has_variant = true;
+  }
 
   const QJsonObject visuals = ensure_object(obj.value("visuals"));
   if (auto value = read_float_opt(visuals, "selection_ring_size")) {
