@@ -1203,6 +1203,8 @@ void GameEngine::start_builder_construction(const QString &item_type) {
       builder_prod->build_time = 12.0f;
     } else if (item_str == "defense_tower") {
       builder_prod->build_time = 20.0f;
+    } else if (item_str == "home") {
+      builder_prod->build_time = 10.0f;
     } else {
       builder_prod->build_time = 10.0f;
     }
