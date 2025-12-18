@@ -214,7 +214,7 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                                     Constants::kArrowTargetOffset, 0.0F) +
                           end_offset;
 
-    arrow_sys->spawnArrow(start, end, color, Constants::kArrowSpeed);
+    arrow_sys->spawn_arrow(start, end, color, Constants::kArrowSpeed);
   }
 }
 

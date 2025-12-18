@@ -40,13 +40,13 @@ AISystem::AISystem() {
         this->on_building_attacked(event);
       });
 
-  initializeAIPlayers();
+  initialize_ai_players();
 }
 
 void AISystem::reinitialize() {
   m_aiInstances.clear();
 
-  initializeAIPlayers();
+  initialize_ai_players();
 }
 
 void AISystem::initialize_ai_players() {
@@ -103,7 +103,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
     job.context = ai.context;
     job.delta_time = ai.update_timer;
 
-    if (ai.worker->trySubmit(std::move(job))) {
+    if (ai.worker->try_submit(std::move(job))) {
       ai.update_timer = 0.0F;
     }
   }
@@ -114,7 +114,7 @@ void AISystem::process_results(Engine::Core::World &world) {
   for (auto &ai : m_aiInstances) {
 
     std::queue<AI::AIResult> results;
-    ai.worker->drainResults(results);
+    ai.worker->drain_results(results);
 
     while (!results.empty()) {
       auto &result = results.front();

@@ -62,7 +62,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   retreat_pos.setX(retreat_pos.x() - 8.0F);
 
-  auto retreat_targets = FormationPlanner::spreadFormation(
+  auto retreat_targets = FormationPlanner::spread_formation(
       static_cast<int>(retreating_units.size()), retreat_pos, 2.0F);
 
   std::vector<Engine::Core::EntityID> unit_ids;
@@ -81,7 +81,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     target_z.push_back(retreat_targets[i].z());
   }
 
-  auto claimed_units = claim_units(unit_ids, getPriority(), "retreating",
+  auto claimed_units = claim_units(unit_ids, get_priority(), "retreating",
                                    context, m_retreatTimer + delta_time, 1.0F);
 
   if (claimed_units.empty()) {
