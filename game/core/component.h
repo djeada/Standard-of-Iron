@@ -97,12 +97,63 @@ public:
   float goal_x{0.0F}, goal_y{0.0F};
   float vx{0.0F}, vz{0.0F};
   std::vector<std::pair<float, float>> path;
+  std::size_t path_index{0}; // Current waypoint index (avoids O(n) erase)
   bool path_pending{false};
   std::uint64_t pending_request_id{0};
   float repath_cooldown{0.0F};
 
   float last_goal_x{0.0F}, last_goal_y{0.0F};
   float time_since_last_path_request{0.0F};
+
+  /**
+   * @brief Clear path and reset index.
+   */
+  void clear_path() {
+    path.clear();
+    path_index = 0;
+  }
+
+  /**
+   * @brief Check if there are remaining waypoints.
+   */
+  [[nodiscard]] auto has_waypoints() const -> bool {
+    return path_index < path.size();
+  }
+
+  /**
+   * @brief Get current waypoint. Must call has_waypoints() first.
+   * @pre has_waypoints() returns true
+   */
+  [[nodiscard]] auto current_waypoint() const
+      -> const std::pair<float, float> & {
+    // Caller must ensure has_waypoints() is true
+    return path[path_index];
+  }
+
+  /**
+   * @brief Advance to next waypoint (O(1) instead of O(n) erase).
+   */
+  void advance_waypoint() {
+    if (path_index < path.size()) {
+      ++path_index;
+    }
+  }
+
+  /**
+   * @brief Get remaining path size.
+   */
+  [[nodiscard]] auto remaining_waypoints() const -> std::size_t {
+    return path.size() > path_index ? path.size() - path_index : 0;
+  }
+
+  /**
+   * @brief Ensure path_index is within bounds after deserialization.
+   */
+  void validate_path_index() {
+    if (path_index > path.size()) {
+      path_index = path.size();
+    }
+  }
 };
 
 class AttackComponent : public Component {
