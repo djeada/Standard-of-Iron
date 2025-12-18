@@ -22,6 +22,10 @@ class TransformComponent;
 class UnitComponent;
 } // namespace Engine::Core
 
+namespace Game::Map {
+class VisibilityService;
+}
+
 namespace Render::GL {
 class EntityRendererRegistry;
 }
@@ -167,6 +171,10 @@ public:
                   const RainBatchParams &params);
 
 private:
+  void render_construction_previews(Engine::Core::World *world,
+                                    const Game::Map::VisibilityService &vis,
+                                    bool visibility_enabled);
+
   void enqueue_selection_ring(Engine::Core::Entity *entity,
                               Engine::Core::TransformComponent *transform,
                               Engine::Core::UnitComponent *unit_comp,
@@ -191,6 +199,7 @@ private:
   GridParams m_grid_params;
   float m_accumulated_time = 0.0F;
   std::atomic<bool> m_paused{false};
+  float m_alpha_override = 1.0F;
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;

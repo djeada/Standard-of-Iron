@@ -26,13 +26,13 @@ void register_defense_tower_renderer(EntityRendererRegistry &registry) {
         std::string renderer_key;
         switch (unit->nation_id) {
         case Game::Systems::NationID::Carthage:
-          renderer_key = "defense_tower_carthage";
+          renderer_key = "troops/carthage/defense_tower";
           break;
         case Game::Systems::NationID::RomanRepublic:
-          renderer_key = "defense_tower_roman";
+          renderer_key = "troops/roman/defense_tower";
           break;
         default:
-          renderer_key = "defense_tower_roman";
+          renderer_key = "troops/roman/defense_tower";
           break;
         }
 
