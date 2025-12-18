@@ -1252,6 +1252,17 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDepthMask(GL_TRUE);
       }
 
+      bool const isTransparent = (!isShadowShader) && (it.alpha < 0.999F);
+      std::unique_ptr<DepthMaskScope> transparent_depth_scope;
+      std::unique_ptr<BlendScope> transparent_blend_scope;
+      GLint prev_depth_func = GL_LESS;
+      if (isTransparent) {
+        glGetIntegerv(GL_DEPTH_FUNC, &prev_depth_func);
+        transparent_depth_scope = std::make_unique<DepthMaskScope>(false);
+        transparent_blend_scope = std::make_unique<BlendScope>(true);
+        glDepthFunc(GL_LEQUAL);
+      }
+
       if (active_shader == m_waterPipeline->m_riverShader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
@@ -1455,6 +1466,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       active_shader->set_uniform(uniforms->alpha, it.alpha);
       active_shader->set_uniform(uniforms->materialId, it.material_id);
       it.mesh->draw();
+
+      if (isTransparent) {
+        glDepthFunc(static_cast<GLenum>(prev_depth_func));
+      }
       break;
     }
     case GridCmdIndex: {
