@@ -48,6 +48,7 @@ struct DrawContext {
   std::string renderer_id;
   class Backend *backend = nullptr;
   const Camera *camera = nullptr;
+  float alpha_multiplier = 1.0F;
 };
 
 using RenderFunc = std::function<void(const DrawContext &, ISubmitter &out)>;
