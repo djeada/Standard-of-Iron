@@ -23,22 +23,22 @@ public:
   HumanoidPoseController(HumanoidPose &pose,
                          const HumanoidAnimationContext &anim_ctx);
 
-  void standIdle();
+  void stand_idle();
 
   /// Apply micro idle animations (subtle continuous movements)
   /// @param time Current animation time for phase calculation
   /// @param seed Randomization seed for variation between soldiers
-  void applyMicroIdle(float time, std::uint32_t seed);
+  void apply_micro_idle(float time, std::uint32_t seed);
 
   /// Apply ambient idle animations (occasional, more noticeable actions)
   /// @param time Current animation time
   /// @param seed Randomization seed for variation
   /// @param idle_duration How long the unit has been idle (seconds)
-  void applyAmbientIdle(float time, std::uint32_t seed, float idle_duration);
+  void apply_ambient_idle(float time, std::uint32_t seed, float idle_duration);
 
   /// Get the current ambient idle type based on time and seed
-  static auto getAmbientIdleType(float time, std::uint32_t seed,
-                                 float idle_duration) -> AmbientIdleType;
+  static auto get_ambient_idle_type(float time, std::uint32_t seed,
+                                    float idle_duration) -> AmbientIdleType;
 
   void kneel(float depth);
   void kneelTransition(float progress, bool standing_up);

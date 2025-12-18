@@ -1639,11 +1639,11 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (!anim.is_moving && !anim.is_attacking) {
       HumanoidPoseController pose_ctrl(pose, anim_ctx);
       // Micro idles: subtle continuous movements (breathing, weight shift)
-      pose_ctrl.applyMicroIdle(anim.time + phase_offset, inst_seed);
+      pose_ctrl.apply_micro_idle(anim.time + phase_offset, inst_seed);
       // Ambient idles: occasional noticeable actions (raise weapon, stretch)
       // Use time as idle duration proxy - ambient idles trigger after 3+ seconds
-      pose_ctrl.applyAmbientIdle(anim.time + phase_offset, inst_seed,
-                                 anim.time);
+      pose_ctrl.apply_ambient_idle(anim.time + phase_offset, inst_seed,
+                                   anim.time);
     }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {

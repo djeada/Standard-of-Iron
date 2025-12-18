@@ -12,9 +12,9 @@ HumanoidPoseController::HumanoidPoseController(
     HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx)
     : m_pose(pose), m_anim_ctx(anim_ctx) {}
 
-void HumanoidPoseController::standIdle() {}
+void HumanoidPoseController::stand_idle() {}
 
-void HumanoidPoseController::applyMicroIdle(float time, std::uint32_t seed) {
+void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   using HP = HumanProportions;
 
   // Use seed to create unique offsets for this soldier to prevent sync
@@ -79,8 +79,8 @@ constexpr float kCyclePeriodRange = 15.0F;     // Additional random range (total
 constexpr float kTapFrequencyMultiplier = 6.0F; // Number of foot taps during animation
 } // namespace
 
-auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
-                                                float idle_duration)
+auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t seed,
+                                                   float idle_duration)
     -> AmbientIdleType {
   // Only trigger ambient idles after being idle for a longer while
   if (idle_duration < kMinIdleDuration) {
@@ -112,12 +112,12 @@ auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
   return static_cast<AmbientIdleType>(idle_type + 1);
 }
 
-void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
-                                              float idle_duration) {
+void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
+                                                float idle_duration) {
   using HP = HumanProportions;
 
   AmbientIdleType const idle_type =
-      getAmbientIdleType(time, seed, idle_duration);
+      get_ambient_idle_type(time, seed, idle_duration);
   if (idle_type == AmbientIdleType::None) {
     return;
   }
