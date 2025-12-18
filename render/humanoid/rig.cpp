@@ -464,6 +464,11 @@ void HumanoidRendererBase::compute_locomotion_pose(
     right_axis = QVector3D(1, 0, 0);
   }
   right_axis.normalize();
+  // Stabilize sign so outward directions never flip 180°.
+  // In local humanoid space, +X should always point to the character's right.
+  if (right_axis.x() < 0.0F) {
+    right_axis = -right_axis;
+  }
   QVector3D const outward_l = -right_axis;
   QVector3D const outward_r = right_axis;
 
@@ -498,6 +503,11 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
     right_axis = QVector3D(1.0F, 0.0F, 0.0F);
   }
   right_axis.normalize();
+  // Prevent frame sign flips (full 180° torso yaw) if pose logic ever causes
+  // shoulder_r/shoulder_l to swap in X.
+  if (right_axis.x() < 0.0F) {
+    right_axis = -right_axis;
+  }
 
   QVector3D const up_axis(0.0F, 1.0F, 0.0F);
   QVector3D forward_axis = QVector3D::crossProduct(right_axis, up_axis);
@@ -1209,6 +1219,9 @@ void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
     right_axis = QVector3D(1.0F, 0.0F, 0.0F);
   }
   right_axis.normalize();
+  if (right_axis.x() < 0.0F) {
+    right_axis = -right_axis;
+  }
 
   QVector3D const up_axis(0.0F, 1.0F, 0.0F);
   QVector3D forward_axis = QVector3D::crossProduct(right_axis, up_axis);
@@ -1708,6 +1721,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           right_axis = QVector3D(1.0F, 0.0F, 0.0F);
         }
         right_axis.normalize();
+        // Keep elbow bend direction stable across frames.
+        if (right_axis.x() < 0.0F) {
+          right_axis = -right_axis;
+        }
         QVector3D const outward_l = -right_axis;
         QVector3D const outward_r = right_axis;
 
