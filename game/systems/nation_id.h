@@ -10,7 +10,7 @@ namespace Game::Systems {
 
 enum class NationID : std::uint8_t { RomanRepublic, Carthage };
 
-inline auto nationIDToQString(NationID id) -> QString {
+inline auto nation_id_to_qstring(NationID id) -> QString {
   switch (id) {
   case NationID::RomanRepublic:
     return QStringLiteral("roman_republic");
@@ -21,11 +21,11 @@ inline auto nationIDToQString(NationID id) -> QString {
   return QStringLiteral("roman_republic");
 }
 
-inline auto nationIDToString(NationID id) -> std::string {
-  return nationIDToQString(id).toStdString();
+inline auto nation_id_to_string(NationID id) -> std::string {
+  return nation_id_to_qstring(id).toStdString();
 }
 
-inline auto tryParseNationID(const QString &value, NationID &out) -> bool {
+inline auto try_parse_nation_id(const QString &value, NationID &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("roman_republic")) {
     out = NationID::RomanRepublic;
@@ -39,9 +39,9 @@ inline auto tryParseNationID(const QString &value, NationID &out) -> bool {
 }
 
 inline auto
-nationIDFromString(const std::string &str) -> std::optional<NationID> {
+nation_id_from_string(const std::string &str) -> std::optional<NationID> {
   NationID result;
-  if (tryParseNationID(QString::fromStdString(str), result)) {
+  if (try_parse_nation_id(QString::fromStdString(str), result)) {
     return result;
   }
   return std::nullopt;

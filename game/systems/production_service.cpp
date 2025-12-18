@@ -55,7 +55,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
 
 } // namespace
 
-auto ProductionService::startProductionForFirstSelectedBarracks(
+auto ProductionService::start_production_for_first_selected_barracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
     Game::Units::TroopType unit_type) -> ProductionResult {
@@ -111,7 +111,7 @@ auto ProductionService::startProductionForFirstSelectedBarracks(
   return ProductionResult::Success;
 }
 
-auto ProductionService::setRallyForFirstSelectedBarracks(
+auto ProductionService::set_rally_for_first_selected_barracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id, float x,
     float z) -> bool {
@@ -132,7 +132,7 @@ auto ProductionService::setRallyForFirstSelectedBarracks(
   return true;
 }
 
-auto ProductionService::getSelectedBarracksState(
+auto ProductionService::get_selected_barracks_state(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
     ProductionState &outState) -> bool {

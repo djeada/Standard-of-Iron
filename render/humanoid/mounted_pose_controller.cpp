@@ -713,7 +713,7 @@ void MountedPoseController::apply_torso_sculpt(
   m_pose.shoulder_l -= narrow;
   m_pose.shoulder_r += narrow;
 
-  QVector3D const twist_vec = right * (0.03F * twist_amt);
+  QVector3D const twist_vec = right * (0.0003F * twist_amt);
   m_pose.shoulder_l += twist_vec;
   m_pose.shoulder_r -= twist_vec;
   m_pose.neck_base += twist_vec * 0.25F;

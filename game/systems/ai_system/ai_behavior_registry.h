@@ -16,23 +16,23 @@ public:
   AIBehaviorRegistry(const AIBehaviorRegistry &) = delete;
   auto operator=(const AIBehaviorRegistry &) -> AIBehaviorRegistry & = delete;
 
-  void registerBehavior(std::unique_ptr<AIBehavior> behavior) {
+  void register_behavior(std::unique_ptr<AIBehavior> behavior) {
     m_behaviors.push_back(std::move(behavior));
 
     std::sort(m_behaviors.begin(), m_behaviors.end(),
               [](const std::unique_ptr<AIBehavior> &a,
                  const std::unique_ptr<AIBehavior> &b) {
-                return a->getPriority() > b->getPriority();
+                return a->get_priority() > b->get_priority();
               });
   }
 
-  void forEach(const std::function<void(AIBehavior &)> &func) {
+  void for_each(const std::function<void(AIBehavior &)> &func) {
     for (auto &behavior : m_behaviors) {
       func(*behavior);
     }
   }
 
-  void forEach(const std::function<void(const AIBehavior &)> &func) const {
+  void for_each(const std::function<void(const AIBehavior &)> &func) const {
     for (const auto &behavior : m_behaviors) {
       func(*behavior);
     }

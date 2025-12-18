@@ -12,8 +12,8 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
 
   bool exclusive_behavior_executed = false;
 
-  registry.forEach([&](AIBehavior &behavior) {
-    if (exclusive_behavior_executed && !behavior.canRunConcurrently()) {
+  registry.for_each([&](AIBehavior &behavior) {
+    if (exclusive_behavior_executed && !behavior.can_run_concurrently()) {
       return;
     }
 
@@ -27,7 +27,7 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
       context.debug_info.total_commands_issued +=
           static_cast<int>(commands_after - commands_before);
 
-      if (!behavior.canRunConcurrently()) {
+      if (!behavior.can_run_concurrently()) {
         exclusive_behavior_executed = true;
       }
     }

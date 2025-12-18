@@ -30,7 +30,8 @@ public:
     float depth;
   };
 
-  static auto getBuildingSize(const std::string &buildingType) -> BuildingSize;
+  static auto
+  get_building_size(const std::string &buildingType) -> BuildingSize;
 
   void register_building(unsigned int entity_id,
                          const std::string &buildingType, float center_x,
@@ -44,21 +45,21 @@ public:
   void update_building_owner(unsigned int entity_id, int owner_id);
 
   [[nodiscard]] auto
-  getAllBuildings() const -> const std::vector<BuildingFootprint> & {
+  get_all_buildings() const -> const std::vector<BuildingFootprint> & {
     return m_buildings;
   }
 
   [[nodiscard]] auto
-  isPointInBuilding(float x, float z,
-                    unsigned int ignoreEntityId = 0) const -> bool;
+  is_point_in_building(float x, float z,
+                       unsigned int ignoreEntityId = 0) const -> bool;
 
-  [[nodiscard]] static auto getOccupiedGridCells(
+  [[nodiscard]] static auto get_occupied_grid_cells(
       const BuildingFootprint &footprint,
       float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
 
   static constexpr float kDefaultGridPadding = 0.1F;
-  static void setGridPadding(float padding);
-  static auto getGridPadding() -> float;
+  static void set_grid_padding(float padding);
+  static auto get_grid_padding() -> float;
 
   void clear();
 

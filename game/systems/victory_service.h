@@ -35,16 +35,16 @@ public:
 
   void update(Engine::Core::World &world, float delta_time);
 
-  [[nodiscard]] auto getVictoryState() const -> QString {
+  [[nodiscard]] auto get_victory_state() const -> QString {
     return m_victoryState;
   }
 
-  [[nodiscard]] auto isGameOver() const -> bool {
+  [[nodiscard]] auto is_game_over() const -> bool {
     return !m_victoryState.isEmpty();
   }
 
   using VictoryCallback = std::function<void(const QString &state)>;
-  void setVictoryCallback(VictoryCallback callback) {
+  void set_victory_callback(VictoryCallback callback) {
     m_victoryCallback = std::move(callback);
   }
 
@@ -55,7 +55,7 @@ private:
   void check_defeat_conditions(Engine::Core::World &world);
 
   auto check_elimination(Engine::Core::World &world) -> bool;
-  [[nodiscard]] auto checkSurviveTime() const -> bool;
+  [[nodiscard]] auto check_survive_time() const -> bool;
   auto check_no_units(Engine::Core::World &world) const -> bool;
   auto check_no_key_structures(Engine::Core::World &world) -> bool;
 
