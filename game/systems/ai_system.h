@@ -54,7 +54,7 @@ private:
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_buildingAttackedSubscription;
 
-  void initializeAIPlayers();
+  void initialize_ai_players();
 
   void process_results(Engine::Core::World &world);
 

@@ -9,12 +9,10 @@
 
 namespace Game::Systems::AI {
 
-inline void replicateLastTargetIfNeeded(const std::vector<float> &fromX,
-                                        const std::vector<float> &fromY,
-                                        const std::vector<float> &fromZ,
-                                        size_t wanted, std::vector<float> &outX,
-                                        std::vector<float> &outY,
-                                        std::vector<float> &outZ) {
+inline void replicate_last_target_if_needed(
+    const std::vector<float> &fromX, const std::vector<float> &fromY,
+    const std::vector<float> &fromZ, size_t wanted, std::vector<float> &outX,
+    std::vector<float> &outY, std::vector<float> &outZ) {
 
   outX.clear();
   outY.clear();
@@ -76,7 +74,7 @@ inline auto distance(float x1, float y1, float z1, float x2, float y2,
   return std::sqrt(distance_squared(x1, y1, z1, x2, y2, z2));
 }
 
-inline auto claimUnits(
+inline auto claim_units(
     const std::vector<Engine::Core::EntityID> &requestedUnits,
     BehaviorPriority priority, const std::string &taskName, AIContext &context,
     float currentTime,
@@ -120,25 +118,25 @@ inline auto claimUnits(
   return claimed;
 }
 
-inline void releaseUnits(const std::vector<Engine::Core::EntityID> &units,
-                         AIContext &context) {
+inline void release_units(const std::vector<Engine::Core::EntityID> &units,
+                          AIContext &context) {
   for (Engine::Core::EntityID const unit_id : units) {
     context.assigned_units.erase(unit_id);
   }
 }
 
-inline void cleanupDeadUnits(const AISnapshot &snapshot, AIContext &context) {
+inline void cleanup_dead_units(const AISnapshot &snapshot, AIContext &context) {
 
-  std::unordered_set<Engine::Core::EntityID> aliveUnits;
+  std::unordered_set<Engine::Core::EntityID> alive_units;
   for (const auto &entity : snapshot.friendly_units) {
     if (!entity.is_building) {
-      aliveUnits.insert(entity.id);
+      alive_units.insert(entity.id);
     }
   }
 
   for (auto it = context.assigned_units.begin();
        it != context.assigned_units.end();) {
-    if (aliveUnits.find(it->first) == aliveUnits.end()) {
+    if (alive_units.find(it->first) == alive_units.end()) {
       it = context.assigned_units.erase(it);
     } else {
       ++it;

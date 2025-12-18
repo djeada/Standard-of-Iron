@@ -52,7 +52,10 @@ void Home::init(const SpawnParams &params) {
   m_r->color[1] = tc.y();
   m_r->color[2] = tc.z();
 
-  e->add_component<Engine::Core::BuildingComponent>();
+  auto *building = e->add_component<Engine::Core::BuildingComponent>();
+  if (building != nullptr) {
+    building->original_nation_id = nation_id;
+  }
 
   auto *home_comp = e->add_component<Engine::Core::HomeComponent>();
   if (home_comp != nullptr) {

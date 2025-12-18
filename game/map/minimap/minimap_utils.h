@@ -47,4 +47,25 @@ inline auto world_to_pixel(float world_x, float world_z, float world_width,
   return {px, py};
 }
 
+inline auto pixel_to_world(float px, float py, float world_width,
+                           float world_height, float img_width,
+                           float img_height,
+                           float tile_size) -> std::pair<float, float> {
+
+  const float rotated_x = (px / img_width) * world_width - world_width * 0.5F;
+  const float rotated_z =
+      (py / img_height) * world_height - world_height * 0.5F;
+
+  const float cos_val = Constants::k_camera_yaw_cos;
+  const float sin_val = Constants::k_camera_yaw_sin;
+
+  const float grid_x = rotated_x * cos_val + rotated_z * sin_val;
+  const float grid_z = -rotated_x * sin_val + rotated_z * cos_val;
+
+  const float world_x = grid_x * tile_size;
+  const float world_z = grid_z * tile_size;
+
+  return {world_x, world_z};
+}
+
 } // namespace Game::Map::Minimap

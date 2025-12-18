@@ -195,6 +195,12 @@ public:
   Q_INVOKABLE void camera_orbit_direction(int direction, bool shift);
   Q_INVOKABLE void camera_follow_selection(bool enable);
   Q_INVOKABLE void camera_set_follow_lerp(float alpha);
+  Q_INVOKABLE void on_minimap_left_click(qreal mx, qreal my,
+                                         qreal minimap_width,
+                                         qreal minimap_height);
+  Q_INVOKABLE void on_minimap_right_click(qreal mx, qreal my,
+                                          qreal minimap_width,
+                                          qreal minimap_height);
   Q_INVOKABLE void start_loading_maps();
 
   Q_INVOKABLE void set_paused(bool paused) { m_runtime.paused = paused; }

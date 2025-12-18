@@ -13,7 +13,9 @@ RowLayout {
         "canAttack": true,
         "canGuard": true,
         "canHold": true,
-        "canPatrol": true
+        "canPatrol": true,
+        "canHeal": true,
+        "canBuild": true
     })
 
     signal commandModeChanged(string mode)
@@ -42,6 +44,20 @@ RowLayout {
             return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
 
         return "👤";
+    }
+
+    function commandIcon(filename) {
+        if (typeof StyleGuide === "undefined" || !filename)
+            return "";
+
+        return StyleGuide.iconPath(filename);
+    }
+
+    function hasSelectedUnit(type) {
+        if (typeof game !== 'undefined' && game.has_selected_type)
+            return game.has_selected_type(type);
+
+        return false;
     }
 
     Component.onCompleted: updateModeAvailability()
@@ -252,7 +268,7 @@ RowLayout {
 
             Text {
                 anchors.centerIn: parent
-                text: !bottomRoot.hasMovableUnits ? qsTr("◉ Select Troops for Commands") : (bottomRoot.currentCommandMode === "normal" ? qsTr("◉ Normal Mode") : bottomRoot.currentCommandMode === "attack" ? qsTr("⚔️ ATTACK MODE - Click Enemy") : bottomRoot.currentCommandMode === "guard" ? qsTr("🛡️ GUARD MODE - Click Position") : bottomRoot.currentCommandMode === "patrol" ? qsTr("🚶 PATROL MODE - Set Waypoints") : qsTr("⏹️ STOP COMMAND"))
+                text: !bottomRoot.hasMovableUnits ? qsTr("◉ Select Troops for Commands") : (bottomRoot.currentCommandMode === "normal" ? qsTr("◉ Normal Mode") : bottomRoot.currentCommandMode === "attack" ? qsTr("Attack mode - click enemy") : bottomRoot.currentCommandMode === "guard" ? qsTr("Guard mode - click position") : bottomRoot.currentCommandMode === "patrol" ? qsTr("Patrol mode - set waypoints") : bottomRoot.currentCommandMode === "heal" ? qsTr("Heal mode - click ally") : bottomRoot.currentCommandMode === "build" ? qsTr("Build mode - choose structure") : qsTr("Stop command"))
                 color: !bottomRoot.hasMovableUnits ? "#5a6c7d" : (bottomRoot.currentCommandMode === "normal" ? "#7f8c8d" : (bottomRoot.currentCommandMode === "attack" ? "#ff6b6b" : "#3498db"))
                 font.pointSize: bottomRoot.currentCommandMode === "normal" ? 10 : 11
                 font.bold: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits
@@ -279,6 +295,10 @@ RowLayout {
         }
 
         GridLayout {
+            id: cmdGrid
+
+            property int cmdIconSize: 42
+
             function getButtonColor(btn, baseColor) {
                 if (btn.pressed)
                     return Qt.darker(baseColor, 1.3);
@@ -293,7 +313,7 @@ RowLayout {
             }
 
             width: parent.width
-            columns: 3
+            columns: 4
             rowSpacing: 6
             columnSpacing: 6
 
@@ -303,7 +323,7 @@ RowLayout {
                 property bool modeAvailable: bottomRoot.modeAvailability.canAttack !== false
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
                 text: qsTr("Attack")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits && modeAvailable
@@ -323,13 +343,30 @@ RowLayout {
                     border.width: 2
                 }
 
-                contentItem: Text {
-                    text: "⚔️\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("attack_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: attackButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: attackButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }
@@ -340,7 +377,7 @@ RowLayout {
                 property bool modeAvailable: bottomRoot.modeAvailability.canGuard !== false
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
                 text: qsTr("Guard")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits && modeAvailable
@@ -360,13 +397,30 @@ RowLayout {
                     border.width: 2
                 }
 
-                contentItem: Text {
-                    text: "🛡️\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("defend_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: guardButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: guardButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }
@@ -377,7 +431,7 @@ RowLayout {
                 property bool modeAvailable: bottomRoot.modeAvailability.canPatrol !== false
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
                 text: qsTr("Patrol")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits && modeAvailable
@@ -397,20 +451,100 @@ RowLayout {
                     border.width: 2
                 }
 
-                contentItem: Text {
-                    text: "🚶\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("patrol_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: patrolButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: patrolButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }
 
             Button {
+                id: healButton
+
+                property bool modeAvailable: bottomRoot.modeAvailability.canHeal !== false
+                property bool hasHealerSelected: {
+                    bottomRoot.selectionTick;
+                    return bottomRoot.hasSelectedUnit("healer");
+                }
+
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
+                text: qsTr("Heal")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.hasMovableUnits && modeAvailable && hasHealerSelected
+                checkable: true
+                checked: bottomRoot.currentCommandMode === "heal" && bottomRoot.hasMovableUnits
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.on_heal_command)
+                        game.on_heal_command();
+
+                    bottomRoot.commandModeChanged(checked ? "heal" : "normal");
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: !modeAvailable ? qsTr("Heal not available for selected units") : (!hasHealerSelected ? qsTr("Select healer units") : qsTr("Heal allies in range"))
+                ToolTip.delay: 500
+
+                background: Rectangle {
+                    color: parent.enabled ? (parent.checked ? "#1abc9c" : (parent.hovered ? "#16a085" : "#34495e")) : "#1a252f"
+                    radius: 6
+                    border.color: parent.checked ? "#16a085" : "#1a252f"
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("heal_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: healButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: healButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                }
+
+            }
+
+            Button {
+                id: stopButton
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
                 text: qsTr("Stop")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits
@@ -430,13 +564,90 @@ RowLayout {
                     border.width: 2
                 }
 
-                contentItem: Text {
-                    text: "⏹️\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Text {
+                        text: "\u25a0"
+                        font.pointSize: 18
+                        font.bold: true
+                        color: stopButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                    Text {
+                        text: stopButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: stopButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
+                }
+
+            }
+
+            Button {
+                id: buildButton
+
+                property bool modeAvailable: bottomRoot.modeAvailability.canBuild !== false
+                property bool hasBuilderSelected: {
+                    bottomRoot.selectionTick;
+                    return bottomRoot.hasSelectedUnit("builder");
+                }
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 48
+                text: qsTr("Build")
+                focusPolicy: Qt.NoFocus
+                enabled: bottomRoot.hasMovableUnits && modeAvailable && hasBuilderSelected
+                checkable: true
+                checked: bottomRoot.currentCommandMode === "build" && bottomRoot.hasMovableUnits
+                onClicked: {
+                    if (typeof game !== 'undefined' && game.on_build_command)
+                        game.on_build_command();
+
+                    bottomRoot.commandModeChanged(checked ? "build" : "normal");
+                }
+                ToolTip.visible: hovered
+                ToolTip.text: !modeAvailable ? qsTr("Build not available for selected units") : (!hasBuilderSelected ? qsTr("Select builder units") : qsTr("Build structures or place foundations"))
+                ToolTip.delay: 500
+
+                background: Rectangle {
+                    color: parent.enabled ? (parent.checked ? "#f1c40f" : (parent.hovered ? "#f39c12" : "#34495e")) : "#1a252f"
+                    radius: 6
+                    border.color: parent.checked ? "#f39c12" : "#1a252f"
+                    border.width: 2
+                }
+
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("build_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: buildButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: buildButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }
@@ -451,7 +662,7 @@ RowLayout {
                 property bool modeAvailable: bottomRoot.modeAvailability.canHold !== false
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
                 text: qsTr("Hold")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits && modeAvailable
@@ -493,13 +704,30 @@ RowLayout {
                     border.width: parent.isHoldActive ? 3 : 2
                 }
 
-                contentItem: Text {
-                    text: (parent.isHoldActive ? "✓ " : "") + "📍\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("hold_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: (holdButton.isHoldActive ? qsTr("Active ") : "") + holdButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: holdButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }
@@ -517,7 +745,7 @@ RowLayout {
                 }
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: 38
+                Layout.preferredHeight: 48
                 text: qsTr("Formation")
                 focusPolicy: Qt.NoFocus
                 enabled: bottomRoot.hasMovableUnits && selectedCount > 1
@@ -567,13 +795,30 @@ RowLayout {
                     border.width: parent.isFormationActive ? 3 : 2
                 }
 
-                contentItem: Text {
-                    text: (parent.isFormationActive ? "✓ " : "") + "🎯\n" + parent.text
-                    font.pointSize: 8
-                    font.bold: true
-                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
-                    horizontalAlignment: Text.AlignHCenter
-                    verticalAlignment: Text.AlignVCenter
+                contentItem: Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Image {
+                        width: cmdGrid.cmdIconSize
+                        height: cmdGrid.cmdIconSize
+                        source: bottomRoot.commandIcon("formation_mode.png")
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        visible: source !== ""
+                    }
+
+                    Text {
+                        text: (formationButton.isFormationActive ? qsTr("Active ") : "") + formationButton.text
+                        font.pointSize: 11
+                        font.bold: true
+                        color: formationButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                    }
+
                 }
 
             }

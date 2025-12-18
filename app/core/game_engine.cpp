@@ -70,6 +70,7 @@
 #include "game/map/map_transformer.h"
 #include "game/map/minimap/map_preview_generator.h"
 #include "game/map/minimap/minimap_generator.h"
+#include "game/map/minimap/minimap_utils.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/mission_loader.h"
 #include "game/map/skirmish_loader.h"
@@ -1023,6 +1024,97 @@ void GameEngine::camera_set_follow_lerp(float alpha) {
   }
 }
 
+void GameEngine::on_minimap_left_click(qreal mx, qreal my, qreal minimap_width,
+                                       qreal minimap_height) {
+  ensure_initialized();
+  if (!m_camera || !m_minimap_manager || !m_minimap_manager->has_minimap()) {
+    return;
+  }
+
+  const QImage &minimap_img = m_minimap_manager->get_image();
+  if (minimap_img.isNull()) {
+    return;
+  }
+
+  const float img_width = static_cast<float>(minimap_img.width());
+  const float img_height = static_cast<float>(minimap_img.height());
+
+  const float px =
+      (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
+  const float py =
+      (static_cast<float>(my) / static_cast<float>(minimap_height)) *
+      img_height;
+
+  const auto [world_x, world_z] = Game::Map::Minimap::pixel_to_world(
+      px, py, m_minimap_manager->get_world_width(),
+      m_minimap_manager->get_world_height(), img_width, img_height,
+      m_minimap_manager->get_tile_size());
+
+  if (m_camera) {
+    const QVector3D new_target(world_x, 0.0F, world_z);
+    const QVector3D current_target = m_camera->get_target();
+    const QVector3D current_position = m_camera->get_position();
+
+    const QVector3D offset = current_position - current_target;
+
+    m_camera->lookAt(new_target + offset, new_target,
+                     m_camera->get_up_vector());
+  }
+
+  m_followSelectionEnabled = false;
+  if (m_camera_controller) {
+    m_camera_controller->follow_selection(false);
+  }
+}
+
+void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
+                                        qreal minimap_height) {
+  ensure_initialized();
+  if (m_level.is_spectator_mode || !m_world || !m_minimap_manager ||
+      !m_minimap_manager->has_minimap()) {
+    return;
+  }
+
+  const QImage &minimap_img = m_minimap_manager->get_image();
+  if (minimap_img.isNull()) {
+    return;
+  }
+
+  const float img_width = static_cast<float>(minimap_img.width());
+  const float img_height = static_cast<float>(minimap_img.height());
+
+  const float px =
+      (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
+  const float py =
+      (static_cast<float>(my) / static_cast<float>(minimap_height)) *
+      img_height;
+
+  const auto [world_x, world_z] = Game::Map::Minimap::pixel_to_world(
+      px, py, m_minimap_manager->get_world_width(),
+      m_minimap_manager->get_world_height(), img_width, img_height,
+      m_minimap_manager->get_tile_size());
+
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (!selection_system) {
+    return;
+  }
+
+  const auto &selected = selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  const QVector3D target_pos(world_x, 0.0F, world_z);
+  auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
+      *m_world, selected, target_pos,
+      Game::GameConfig::instance().gameplay().formation_spacing_default);
+
+  Game::Systems::CommandService::MoveOptions opts;
+  opts.group_move = selected.size() > 1;
+  Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);
+}
+
 auto GameEngine::selected_units_model() -> QAbstractItemModel * {
   return m_selectedUnitsModel;
 }
@@ -1139,7 +1231,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
     return m;
   }
   Game::Systems::ProductionState st;
-  Game::Systems::ProductionService::getSelectedBarracksState(
+  Game::Systems::ProductionService::get_selected_barracks_state(
       *m_world, selection_system->get_selected_units(),
       m_runtime.local_owner_id, st);
   m["has_barracks"] = st.has_barracks;
@@ -1153,7 +1245,7 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
   m["villager_cost"] = st.villager_cost;
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
-      QString::fromStdString(Game::Systems::nationIDToString(st.nation_id));
+      QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
 
   QVariantList queue_list;
   for (const auto &unit_type : st.production_queue) {
@@ -1441,7 +1533,7 @@ auto GameEngine::available_nations() const -> QVariantList {
     QVariantMap entry;
     entry.insert(
         QStringLiteral("id"),
-        QString::fromStdString(Game::Systems::nationIDToString(nation.id)));
+        QString::fromStdString(Game::Systems::nation_id_to_string(nation.id)));
     entry.insert(QStringLiteral("name"),
                  QString::fromStdString(nation.display_name));
     ordered.append(entry);
@@ -1713,7 +1805,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   }
 
   if (m_victoryService) {
-    m_victoryService->setVictoryCallback([this](const QString &state) {
+    m_victoryService->set_victory_callback([this](const QString &state) {
       if (m_runtime.victory_state != state) {
         m_runtime.victory_state = state;
         emit victory_state_changed();
@@ -1814,13 +1906,14 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
-  Game::Systems::GameStateSerializer::restoreLevelFromMetadata(meta, m_level);
-  Game::Systems::GameStateSerializer::restoreCameraFromMetadata(
+  Game::Systems::GameStateSerializer::restore_level_from_metadata(meta,
+                                                                  m_level);
+  Game::Systems::GameStateSerializer::restore_camera_from_metadata(
       meta, m_camera.get(), m_viewport.width, m_viewport.height);
 
   Game::Systems::RuntimeSnapshot runtime_snap = to_runtime_snapshot();
-  Game::Systems::GameStateSerializer::restoreRuntimeFromMetadata(meta,
-                                                                 runtime_snap);
+  Game::Systems::GameStateSerializer::restore_runtime_from_metadata(
+      meta, runtime_snap);
   apply_runtime_snapshot(runtime_snap);
 
   GameStateRestorer::RendererRefs renderers{
@@ -1875,7 +1968,7 @@ auto GameEngine::save_to_slot(const QString &slot,
     return false;
   }
   Game::Systems::RuntimeSnapshot const runtime_snap = to_runtime_snapshot();
-  QJsonObject meta = Game::Systems::GameStateSerializer::buildMetadata(
+  QJsonObject meta = Game::Systems::GameStateSerializer::build_metadata(
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
   const QByteArray screenshot = capture_screenshot();
@@ -2011,7 +2104,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
     health = u->health;
     max_health = u->max_health;
     alive = (u->health > 0);
-    nation = Game::Systems::nationIDToQString(u->nation_id);
+    nation = Game::Systems::nation_id_to_qstring(u->nation_id);
     return true;
   }
   name = QStringLiteral("Entity");
