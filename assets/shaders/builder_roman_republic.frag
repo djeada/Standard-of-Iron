@@ -66,29 +66,33 @@ float cloth_weave(vec2 p) {
 
 float roman_linen(vec2 p) {
   float weave = cloth_weave(p);
-  float fine_thread = noise(p * 95.0) * 0.06;
-  float slub = fbm(p * 7.5) * 0.05;
-  return weave + fine_thread + slub;
+  float fine_thread = noise(p * 98.0) * 0.07;
+  float slub = fbm(p * 8.2) * 0.06;
+  float natural_variation = noise(p * 3.5) * 0.03;
+  return weave + fine_thread + slub + natural_variation;
 }
 
 vec3 perturb_linen_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
-  float warp = sin(uv.x * 142.0) * 0.05;
-  float weft = sin(uv.y * 138.0) * 0.05;
-  float slub = fbm(uv * 7.0) * 0.04;
-  return normalize(N + T * (warp + slub) + B * (weft + slub * 0.6));
+  float warp = sin(uv.x * 145.0) * 0.06;
+  float weft = sin(uv.y * 141.0) * 0.06;
+  float slub = fbm(uv * 7.5) * 0.05;
+  float micro_thread = noise(uv * 110.0) * 0.02;
+  return normalize(N + T * (warp + slub + micro_thread) + B * (weft + slub * 0.6 + micro_thread * 0.4));
 }
 
 vec3 perturb_leather_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
-  float grain = fbm(uv * 8.5) * 0.16;
-  float pores = noise(uv * 34.0) * 0.10;
-  float scars = noise(uv * 16.0 + vec2(2.7, -1.9)) * 0.07;
-  return normalize(N + T * (grain + scars * 0.4) + B * (pores + scars * 0.3));
+  float grain = fbm(uv * 9.0) * 0.18;
+  float pores = noise(uv * 36.0) * 0.11;
+  float scars = noise(uv * 17.0 + vec2(2.8, -2.1)) * 0.08;
+  float crease = fbm(uv * 4.5) * 0.06;
+  return normalize(N + T * (grain + scars * 0.4 + crease) + B * (pores + scars * 0.3 + crease * 0.5));
 }
 
 vec3 perturb_bronze_normal(vec3 N, vec3 T, vec3 B, vec2 uv) {
-  float hammer = fbm(uv * 15.0) * 0.14;
-  float ripple = noise(uv * 46.0) * 0.05;
-  return normalize(N + T * hammer + B * (hammer * 0.4 + ripple));
+  float hammer = fbm(uv * 16.0) * 0.16;
+  float ripple = noise(uv * 50.0) * 0.06;
+  float polish = smoothstep(0.3, 0.7, noise(uv * 8.0)) * 0.04;
+  return normalize(N + T * (hammer + polish) + B * (hammer * 0.4 + ripple + polish * 0.3));
 }
 
 float D_GGX(float NdotH, float a) {
@@ -179,60 +183,61 @@ void main() {
 
   if (is_body) {
     vec3 skin = base_color;
-    float skin_detail = noise(uv * 24.0) * 0.06;
-    float subdermal = noise(uv * 7.0) * 0.05;
-    skin *= 1.0 + skin_detail;
-    skin += vec3(0.03, 0.015, 0.0) * subdermal;
+    float skin_detail = noise(uv * 26.0) * 0.07;
+    float subdermal = noise(uv * 7.5) * 0.06;
+    float micro_detail = noise(uv * 48.0) * 0.03;
+    skin *= 1.0 + skin_detail + micro_detail;
+    skin += vec3(0.035, 0.018, 0.0) * subdermal;
 
-    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 4.0) * 0.05;
+    float rim = pow(1.0 - clamp(dot(N_used, V), 0.0, 1.0), 3.8) * 0.06;
     skin += vec3(rim);
 
     albedo = skin;
-    roughness = 0.55;
-    sheen = 0.06 + subdermal * 0.2;
-    wrap = 0.46;
+    roughness = 0.52;
+    sheen = 0.08 + subdermal * 0.25;
+    wrap = 0.48;
   }
 
   else if (is_tunica) {
-    vec3 tunic_base = vec3(0.72, 0.58, 0.42);
+    vec3 tunic_base = vec3(0.74, 0.60, 0.44);
     albedo = tunic_base;
 
     float linen = roman_linen(v_worldPos.xz);
-    float fine_thread = noise(uv * 98.0) * 0.05;
+    float fine_thread = noise(uv * 102.0) * 0.06;
 
-    float fold_depth = v_clothFolds * noise(uv * 14.0) * 0.16;
-    float wear_pattern = v_fabricWear * noise(uv * 9.0) * 0.11;
+    float fold_depth = v_clothFolds * noise(uv * 15.0) * 0.18;
+    float wear_pattern = v_fabricWear * noise(uv * 10.0) * 0.12;
 
     float dust =
-        smoothstep(0.24, 0.0, v_bodyHeight) * (0.10 + noise(uv * 6.5) * 0.10);
+        smoothstep(0.26, 0.0, v_bodyHeight) * (0.11 + noise(uv * 6.8) * 0.11);
 
     N_used = perturb_linen_normal(N, T, B, uv);
 
-    albedo *= 1.0 + linen + fine_thread - 0.025;
+    albedo *= 1.0 + linen + fine_thread - 0.02;
     albedo -= vec3(fold_depth + wear_pattern);
-    albedo -= vec3(dust * 0.18);
+    albedo -= vec3(dust * 0.20);
 
-    roughness = 0.70 - clamp(v_fabricWear * 0.08, 0.0, 0.12);
-    sheen = 0.08;
-    wrap = 0.54;
-    ao *= 1.0 - dust * 0.35;
+    roughness = 0.68 - clamp(v_fabricWear * 0.09, 0.0, 0.14);
+    sheen = 0.10;
+    wrap = 0.56;
+    ao *= 1.0 - dust * 0.38;
   }
 
   else if (is_leather) {
-    float leather_grain = noise(uv * 16.0) * 0.16 * (1.0 + v_fabricWear * 0.25);
-    float pores = noise(uv * 38.0) * 0.06;
+    float leather_grain = noise(uv * 17.0) * 0.18 * (1.0 + v_fabricWear * 0.28);
+    float pores = noise(uv * 40.0) * 0.07;
 
-    float tooling = noise(uv * 24.0) * 0.05;
-    float stitching = step(0.94, fract(v_worldPos.x * 16.0)) *
-                      step(0.94, fract(v_worldPos.y * 14.0)) * 0.07;
+    float tooling = noise(uv * 26.0) * 0.06;
+    float stitching = step(0.93, fract(v_worldPos.x * 17.0)) *
+                      step(0.93, fract(v_worldPos.y * 15.0)) * 0.08;
 
-    float oil_darkening = v_fabricWear * 0.12;
-    float conditioning = noise(uv * 6.0) * 0.04;
+    float oil_darkening = v_fabricWear * 0.14;
+    float conditioning = noise(uv * 6.5) * 0.05;
 
     float view_angle = max(dot(N, V), 0.0);
-    float leather_sheen = pow(1.0 - view_angle, 5.0) * 0.12;
+    float leather_sheen = pow(1.0 - view_angle, 4.8) * 0.14;
 
-    float edge_wear = smoothstep(0.86, 0.92, abs(dot(N, T))) * 0.09;
+    float edge_wear = smoothstep(0.85, 0.93, abs(dot(N, T))) * 0.10;
 
     N_used = perturb_leather_normal(N, T, B, uv);
 
@@ -240,32 +245,32 @@ void main() {
         1.0 + leather_grain + pores + tooling + conditioning - oil_darkening;
     albedo += vec3(stitching + leather_sheen + edge_wear);
 
-    roughness = 0.56 - clamp(v_fabricWear * 0.06, 0.0, 0.10);
-    sheen = 0.08;
-    wrap = 0.46;
+    roughness = 0.54 - clamp(v_fabricWear * 0.07, 0.0, 0.11);
+    sheen = 0.10;
+    wrap = 0.48;
   }
 
   else if (is_tools) {
-    vec3 iron_base = vec3(0.52, 0.50, 0.48);
+    vec3 iron_base = vec3(0.54, 0.52, 0.50);
 
-    float patina = noise(uv * 13.0) * 0.16;
-    float rust = noise(uv * 20.0) * 0.08;
+    float patina = noise(uv * 14.0) * 0.18;
+    float rust = noise(uv * 22.0) * 0.09;
 
     float view_angle = max(dot(N, V), 0.0);
-    float iron_sheen = pow(view_angle, 9.0) * 0.32;
+    float iron_sheen = pow(view_angle, 8.5) * 0.35;
 
-    float edge_polish = smoothstep(0.85, 0.95, abs(dot(N, T))) * 0.12;
+    float edge_polish = smoothstep(0.84, 0.96, abs(dot(N, T))) * 0.14;
 
     N_used = perturb_bronze_normal(N, T, B, uv);
 
-    albedo = mix(base_color, iron_base, 0.58);
-    albedo -= vec3(patina * 0.22 + rust * 0.14);
+    albedo = mix(base_color, iron_base, 0.60);
+    albedo -= vec3(patina * 0.24 + rust * 0.16);
     albedo += vec3(iron_sheen + edge_polish);
 
-    roughness = 0.38 + patina * 0.12;
-    metallic = 0.85;
-    sheen = 0.12;
-    wrap = 0.42;
+    roughness = 0.36 + patina * 0.14;
+    metallic = 0.88;
+    sheen = 0.14;
+    wrap = 0.40;
   }
 
   else {
