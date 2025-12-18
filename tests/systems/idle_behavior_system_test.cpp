@@ -157,7 +157,7 @@ TEST_F(IdleBehaviorSystemTest, DisabledMicroIdlesRemainNone) {
 }
 
 TEST_F(IdleBehaviorSystemTest, InterruptClearsAllIdleStates) {
-  auto *idle = IdleBehaviorComponent();
+  IdleBehaviorComponent idle;
   idle.is_idle = true;
   idle.idle_time = 10.0F;
   idle.ambient_idle_active = true;
