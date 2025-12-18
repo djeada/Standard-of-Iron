@@ -18,7 +18,7 @@
 namespace Game::Systems {
 
 void CaptureSystem::update(Engine::Core::World *world, float delta_time) {
-  processBarrackCapture(world, delta_time);
+  process_barrack_capture(world, delta_time);
 }
 
 auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
@@ -185,7 +185,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
       capture->capture_progress += delta_time;
 
       if (capture->capture_progress >= capture->required_time) {
-        transferBarrackOwnership(world, barrack, capturing_player_id);
+        transfer_barrack_ownership(world, barrack, capturing_player_id);
         capture->capture_progress = 0.0F;
         capture->is_being_captured = false;
         capture->capturing_player_id = -1;

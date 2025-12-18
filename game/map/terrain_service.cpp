@@ -56,7 +56,7 @@ auto TerrainService::is_walkable(int grid_x, int grid_z) const -> bool {
   if (!m_height_map) {
     return true;
   }
-  return m_height_map->isWalkable(grid_x, grid_z);
+  return m_height_map->is_walkable(grid_x, grid_z);
 }
 
 auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
@@ -64,7 +64,7 @@ auto TerrainService::is_forbidden(int grid_x, int grid_z) const -> bool {
     return false;
   }
 
-  if (!m_height_map->isWalkable(grid_x, grid_z)) {
+  if (!m_height_map->is_walkable(grid_x, grid_z)) {
     return true;
   }
 

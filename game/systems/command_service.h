@@ -34,6 +34,10 @@ public:
   static void initialize(int worldWidth, int worldHeight);
 
   static auto get_pathfinder() -> Pathfinding *;
+  static auto world_to_grid(float world_x, float world_z) -> Point;
+  static auto grid_to_world(const Point &gridPos) -> QVector3D;
+  static auto get_unit_radius(Engine::Core::World &world,
+                              Engine::Core::EntityID entity_id) -> float;
 
   static void move_units(Engine::Core::World &world,
                          const std::vector<Engine::Core::EntityID> &units,
@@ -68,10 +72,6 @@ private:
       s_entityToRequest;
   static std::mutex s_pendingMutex;
   static std::atomic<std::uint64_t> s_nextRequestId;
-  static auto world_to_grid(float world_x, float world_z) -> Point;
-  static auto grid_to_world(const Point &gridPos) -> QVector3D;
-  static auto get_unit_radius(Engine::Core::World &world,
-                              Engine::Core::EntityID entity_id) -> float;
   static void clear_pending_request(Engine::Core::EntityID entity_id);
   static void move_group(Engine::Core::World &world,
                          const std::vector<Engine::Core::EntityID> &units,
