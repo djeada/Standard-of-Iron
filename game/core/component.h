@@ -121,10 +121,12 @@ public:
   }
 
   /**
-   * @brief Get current waypoint.
+   * @brief Get current waypoint. Must call has_waypoints() first.
+   * @pre has_waypoints() returns true
    */
   [[nodiscard]] auto current_waypoint() const
       -> const std::pair<float, float> & {
+    // Caller must ensure has_waypoints() is true
     return path[path_index];
   }
 
@@ -142,6 +144,15 @@ public:
    */
   [[nodiscard]] auto remaining_waypoints() const -> std::size_t {
     return path.size() > path_index ? path.size() - path_index : 0;
+  }
+
+  /**
+   * @brief Ensure path_index is within bounds after deserialization.
+   */
+  void validate_path_index() {
+    if (path_index > path.size()) {
+      path_index = path.size();
+    }
   }
 };
 
