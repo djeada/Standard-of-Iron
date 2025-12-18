@@ -69,20 +69,32 @@ void HumanoidPoseController::applyMicroIdle(float time, std::uint32_t seed) {
   m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw);
 }
 
+// Constants for ambient idle timing
+namespace {
+constexpr float kMinIdleDuration = 5.0F;       // Minimum seconds idle before ambient idles
+constexpr float kAmbientDuration = 6.0F;       // Duration of ambient idle animation
+constexpr float kSeedOffsetDivisor = 50.0F;    // Creates offset range 0-20 seconds
+constexpr float kBaseCyclePeriod = 25.0F;      // Base cycle period in seconds
+constexpr float kCyclePeriodRange = 15.0F;     // Additional random range (total 25-40s)
+constexpr float kTapFrequencyMultiplier = 6.0F; // Number of foot taps during animation
+} // namespace
+
 auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
                                                 float idle_duration)
     -> AmbientIdleType {
   // Only trigger ambient idles after being idle for a longer while
-  constexpr float kMinIdleDuration = 5.0F;
   if (idle_duration < kMinIdleDuration) {
     return AmbientIdleType::None;
   }
 
-  // Use seed to create a unique cycle offset for this soldier
-  float const seed_offset = static_cast<float>(seed % 1000) / 50.0F;
+  // Use seed to create a unique cycle offset for this soldier (range 0-20 seconds)
+  float const seed_offset =
+      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
 
   // Much longer cycle - 25-40 seconds between ambient idles
-  float const cycle_period = 25.0F + static_cast<float>(seed % 1500) / 100.0F;
+  float const cycle_period =
+      kBaseCyclePeriod +
+      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
   // Only 1 in 3 soldiers will trigger ambient idles (based on seed)
@@ -91,7 +103,6 @@ auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
   }
 
   // Only active during the first 6 seconds of each cycle (for sit down/stand up)
-  constexpr float kAmbientDuration = 6.0F;
   if (cycle_time > kAmbientDuration) {
     return AmbientIdleType::None;
   }
@@ -112,10 +123,13 @@ void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
   }
 
   // Calculate phase within the ambient idle animation (0 to 1)
-  float const seed_offset = static_cast<float>(seed % 1000) / 50.0F;
-  float const cycle_period = 25.0F + static_cast<float>(seed % 1500) / 100.0F;
+  // Must match timing calculation in getAmbientIdleType
+  float const seed_offset =
+      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
+  float const cycle_period =
+      kBaseCyclePeriod +
+      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
-  constexpr float kAmbientDuration = 6.0F;
 
   // Create smooth in/out animation curve
   float phase = cycle_time / kAmbientDuration;
@@ -170,8 +184,8 @@ void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
   }
 
   case AmbientIdleType::TapFoot: {
-    // Tap one foot impatiently
-    float const tap_phase = std::fmod(phase * 6.0F, 1.0F);
+    // Tap one foot impatiently (kTapFrequencyMultiplier taps during animation)
+    float const tap_phase = std::fmod(phase * kTapFrequencyMultiplier, 1.0F);
     float const tap_lift =
         (tap_phase < 0.3F) ? std::sin(tap_phase / 0.3F * std::numbers::pi_v<float>) : 0.0F;
     float const tap_amount = tap_lift * intensity * 0.03F;
