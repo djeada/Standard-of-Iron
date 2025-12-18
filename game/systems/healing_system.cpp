@@ -2,12 +2,26 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "healing_beam_system.h"
+#include "nation_id.h"
 #include <QDebug>
 #include <cmath>
 #include <qvectornd.h>
 #include <vector>
 
 namespace Game::Systems {
+
+namespace {
+auto get_healing_color(NationID nation_id) -> QVector3D {
+  switch (nation_id) {
+  case NationID::RomanRepublic:
+    return QVector3D(0.3F, 0.6F, 1.0F);
+  case NationID::Carthage:
+    return QVector3D(0.4F, 1.0F, 0.5F);
+  default:
+    return QVector3D(0.4F, 1.0F, 0.5F);
+  }
+}
+} // namespace
 
 void HealingSystem::update(Engine::Core::World *world, float delta_time) {
   process_healing(world, delta_time);
@@ -96,7 +110,7 @@ void HealingSystem::process_healing(Engine::Core::World *world,
                                      target_transform->position.y + 0.8F,
                                      target_transform->position.z);
 
-          QVector3D const heal_color(0.4F, 1.0F, 0.5F);
+          QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
           healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
                                           0.7F);
         }
