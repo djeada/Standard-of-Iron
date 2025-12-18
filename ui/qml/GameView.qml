@@ -10,6 +10,7 @@ Item {
     property bool setRallyMode: false
     property string cursorMode: "normal"
     property bool isPlacingFormation: false
+    property bool isPlacingConstruction: false
     property var pressedKeys: ({
     })
 
@@ -249,6 +250,12 @@ Item {
 
             }
 
+            function onPlacing_construction_changed() {
+                if (typeof game !== 'undefined')
+                    gameView.isPlacingConstruction = game.is_placing_construction;
+
+            }
+
             target: game
         }
 
@@ -291,6 +298,12 @@ Item {
                     if (gameView.isPlacingFormation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
                             game.on_formation_mouse_move(mouse.x, mouse.y);
+
+                    }
+                    
+                    if (gameView.isPlacingConstruction) {
+                        if (typeof game !== 'undefined' && game.on_construction_mouse_move)
+                            game.on_construction_mouse_move(mouse.x, mouse.y);
 
                     }
                 }
@@ -360,6 +373,12 @@ Item {
                     if (typeof game !== 'undefined' && game.is_placing_formation) {
                         if (game.on_formation_cancel)
                             game.on_formation_cancel();
+
+                        return ;
+                    }
+                    if (typeof game !== 'undefined' && game.is_placing_construction) {
+                        if (game.on_construction_cancel)
+                            game.on_construction_cancel();
 
                         return ;
                     }
