@@ -616,6 +616,8 @@ void GameEngine::on_construction_confirm() {
         e->get_component<Engine::Core::BuilderProductionComponent>();
     if (builder_prod != nullptr) {
       builder_prod->is_placement_preview = false;
+      builder_prod->construction_site_x = m_construction_placement_position.x();
+      builder_prod->construction_site_z = m_construction_placement_position.z();
     }
 
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
