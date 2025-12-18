@@ -1399,7 +1399,7 @@ auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
       continue;
     }
 
-    m["in_progress"] = builder_prod->in_progress;
+    m["in_progress"] = builder_prod->in_progress || builder_prod->is_placement_preview;
     m["time_remaining"] = builder_prod->time_remaining;
     m["build_time"] = builder_prod->build_time;
     m["product_type"] = QString::fromStdString(builder_prod->product_type);

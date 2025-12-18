@@ -158,11 +158,14 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
 
+          transform->position.x = builder_prod->construction_site_x;
+          transform->position.z = builder_prod->construction_site_z;
+
           if (movement != nullptr) {
-            movement->goal_x = transform->position.x;
-            movement->goal_y = transform->position.z;
-            movement->target_x = transform->position.x;
-            movement->target_y = transform->position.z;
+            movement->goal_x = builder_prod->construction_site_x;
+            movement->goal_y = builder_prod->construction_site_z;
+            movement->target_x = builder_prod->construction_site_x;
+            movement->target_y = builder_prod->construction_site_z;
           }
         } else {
 
