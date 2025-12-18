@@ -155,6 +155,8 @@ public:
                  loading_progress_changed)
   Q_PROPERTY(QString loading_stage_text READ loading_stage_text NOTIFY
                  loading_stage_changed)
+  Q_PROPERTY(bool is_placing_formation READ is_placing_formation NOTIFY
+                 placing_formation_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -173,6 +175,11 @@ public:
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
+  Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
+  Q_INVOKABLE void on_formation_scroll(float delta);
+  Q_INVOKABLE void on_formation_confirm();
+  Q_INVOKABLE void on_formation_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
 
   Q_INVOKABLE void camera_move(float dx, float dz);
@@ -419,4 +426,5 @@ signals:
   void is_loading_changed();
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
+  void placing_formation_changed();
 };
