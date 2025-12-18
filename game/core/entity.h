@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <type_traits>
 #include <typeindex>
@@ -17,11 +18,21 @@ public:
   virtual ~Component() = default;
 };
 
+// Callback type for component change notifications
+using ComponentChangeCallback =
+    std::function<void(EntityID, std::type_index, bool)>;
+
 class Entity {
 public:
   Entity(EntityID id);
 
   auto get_id() const -> EntityID;
+
+  /**
+   * @brief Set a callback to be notified when components are added/removed.
+   * @param callback Function called with (entity_id, component_type, added)
+   */
+  void set_component_change_callback(ComponentChangeCallback callback);
 
   template <typename T, typename... Args>
   auto add_component(Args &&...args) -> T * {
@@ -29,7 +40,14 @@ public:
                   "T must inherit from Component");
     auto component = std::make_unique<T>(std::forward<Args>(args)...);
     auto ptr = component.get();
-    m_components[std::type_index(typeid(T))] = std::move(component);
+    std::type_index const type_idx = std::type_index(typeid(T));
+    m_components[type_idx] = std::move(component);
+
+    // Notify about component addition
+    if (m_component_change_callback) {
+      m_component_change_callback(m_id, type_idx, true);
+    }
+
     return ptr;
   }
 
@@ -50,7 +68,16 @@ public:
   }
 
   template <typename T> void remove_component() {
-    m_components.erase(std::type_index(typeid(T)));
+    std::type_index const type_idx = std::type_index(typeid(T));
+    auto it = m_components.find(type_idx);
+    if (it != m_components.end()) {
+      m_components.erase(it);
+
+      // Notify about component removal
+      if (m_component_change_callback) {
+        m_component_change_callback(m_id, type_idx, false);
+      }
+    }
   }
 
   template <typename T> auto has_component() const -> bool {
@@ -60,6 +87,7 @@ public:
 private:
   EntityID m_id;
   std::unordered_map<std::type_index, std::unique_ptr<Component>> m_components;
+  ComponentChangeCallback m_component_change_callback;
 };
 
 } // namespace Engine::Core
