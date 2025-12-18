@@ -309,21 +309,65 @@ void HumanoidRendererBase::compute_locomotion_pose(
 
     const float stride_length = 0.35F * variation.arm_swing_amp;
 
+    // Natural vertical bob - center of mass rises when feet are together
+    float const bob_phase = walk_phase * 2.0F;
+    float const vertical_bob = std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
+    
+    // Hip sway - weight transfers side to side
+    float const hip_sway_amount = 0.025F;
+    float const hip_sway = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>) * hip_sway_amount;
+    
+    // Torso rotation follows hip movement with slight delay
+    float const torso_rotation = std::sin((walk_phase - 0.05F) * 2.0F * std::numbers::pi_v<float>) * 0.015F;
+
     auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
                                                          float phase) {
-      float const lift = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
-      if (lift > 0.0F) {
-        foot.setY(ground_y + pose.foot_y_offset + lift * 0.12F);
+      // More natural foot lift curve using easing
+      float const lift_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
+      float lift = 0.0F;
+      if (lift_raw > 0.0F) {
+        // Ease in-out for smooth lift
+        float const t = phase;
+        float const ease_t = t * t * (3.0F - 2.0F * t);
+        lift = lift_raw * ease_t;
+        foot.setY(ground_y + pose.foot_y_offset + lift * 0.15F);
       } else {
         foot.setY(ground_y + pose.foot_y_offset);
       }
-      foot.setZ(foot.z() +
-                std::sin((phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) *
-                    stride_length);
+      
+      // Forward/backward stride with smooth acceleration/deceleration
+      float const stride_phase = (phase - 0.25F) * 2.0F * std::numbers::pi_v<float>;
+      foot.setZ(foot.z() + std::sin(stride_phase) * stride_length);
     };
 
     animate_foot(pose.foot_l, left_phase);
     animate_foot(pose.foot_r, right_phase);
+    
+    // Apply center of mass bob to pelvis and upper body
+    pose.pelvis_pos.setY(pose.pelvis_pos.y() + vertical_bob);
+    pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob);
+    pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob);
+    pose.neck_base.setY(pose.neck_base.y() + vertical_bob);
+    pose.head_pos.setY(pose.head_pos.y() + vertical_bob);
+    
+    // Apply hip sway
+    pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
+    
+    // Apply subtle torso counter-rotation for natural balance
+    pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_rotation);
+    pose.shoulder_r.setZ(pose.shoulder_r.z() - torso_rotation);
+    
+    // Enhanced arm swing with counter-rotation to torso
+    float const arm_swing_amp = 0.22F * variation.arm_swing_amp;
+    float const arm_phase_offset = 0.15F;
+    
+    // Left arm swings opposite to left leg
+    float const left_arm_swing = std::sin((left_phase + arm_phase_offset) * 2.0F * std::numbers::pi_v<float>) * arm_swing_amp;
+    pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
+    
+    // Right arm swings opposite to right leg
+    float const right_arm_swing = std::sin((right_phase + arm_phase_offset) * 2.0F * std::numbers::pi_v<float>) * arm_swing_amp;
+    pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
   }
 
   QVector3D const hip_l =
@@ -1527,7 +1571,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (anim.is_moving) {
       float stride_base = 0.8F;
       if (anim_ctx.motion_state == HumanoidMotionState::Run) {
-        stride_base = 0.55F;
+        stride_base = 0.45F; // Faster cycle time for running
       }
       float const base_cycle =
           stride_base / std::max(0.1F, variation.walk_speed_mult);
@@ -1554,13 +1598,62 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
-      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.05F);
-      pose.shoulder_l.setZ(pose.shoulder_l.z() + 0.10F);
-      pose.shoulder_r.setZ(pose.shoulder_r.z() + 0.10F);
-      pose.neck_base.setZ(pose.neck_base.z() + 0.06F);
-      pose.head_pos.setZ(pose.head_pos.z() + 0.04F);
-      pose.shoulder_l.setY(pose.shoulder_l.y() - 0.02F);
-      pose.shoulder_r.setY(pose.shoulder_r.y() - 0.02F);
+      // Enhanced run posture with more forward lean
+      float const run_lean = 0.15F;
+      pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.08F);
+      pose.shoulder_l.setZ(pose.shoulder_l.z() + run_lean);
+      pose.shoulder_r.setZ(pose.shoulder_r.z() + run_lean);
+      pose.neck_base.setZ(pose.neck_base.z() + run_lean * 0.7F);
+      pose.head_pos.setZ(pose.head_pos.z() + run_lean * 0.5F);
+      
+      // Lower center of gravity for running
+      pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.03F);
+      pose.shoulder_l.setY(pose.shoulder_l.y() - 0.04F);
+      pose.shoulder_r.setY(pose.shoulder_r.y() - 0.04F);
+      
+      // Increase stride length for running
+      float const run_stride_mult = 1.5F;
+      float const phase = anim_ctx.locomotion_phase;
+      float const left_phase = phase;
+      float const right_phase = std::fmod(phase + 0.5F, 1.0F);
+      
+      // Higher foot lift during run
+      auto enhance_run_foot = [&](QVector3D &foot, float foot_phase) {
+        float const lift_raw = std::sin(foot_phase * 2.0F * std::numbers::pi_v<float>);
+        if (lift_raw > 0.0F) {
+          // Higher lift for running
+          float const extra_lift = lift_raw * 0.08F;
+          foot.setY(foot.y() + extra_lift);
+          
+          // Extended stride
+          float const stride_enhance = std::sin((foot_phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) * 0.15F;
+          foot.setZ(foot.z() + stride_enhance);
+        }
+      };
+      
+      enhance_run_foot(pose.foot_l, left_phase);
+      enhance_run_foot(pose.foot_r, right_phase);
+      
+      // Dynamic arm swing for running
+      float const run_arm_swing = 0.35F;
+      float const left_arm_phase = std::sin((left_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) * run_arm_swing;
+      float const right_arm_phase = std::sin((right_phase + 0.1F) * 2.0F * std::numbers::pi_v<float>) * run_arm_swing;
+      
+      pose.hand_l.setZ(pose.hand_l.z() - left_arm_phase);
+      pose.hand_r.setZ(pose.hand_r.z() - right_arm_phase);
+      
+      // Arms bend more at elbow when running
+      pose.hand_l.setY(pose.hand_l.y() + 0.05F);
+      pose.hand_r.setY(pose.hand_r.y() + 0.05F);
+      
+      // Hip rotation is more pronounced when running
+      float const hip_rotation = std::sin(phase * 2.0F * std::numbers::pi_v<float>) * 0.04F;
+      pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_rotation);
+      
+      // Counter-rotation in shoulders for balance
+      float const shoulder_rotation = std::sin((phase - 0.1F) * 2.0F * std::numbers::pi_v<float>) * 0.025F;
+      pose.shoulder_l.setZ(pose.shoulder_l.z() + shoulder_rotation);
+      pose.shoulder_r.setZ(pose.shoulder_r.z() - shoulder_rotation);
 
       if (pose.head_frame.radius > 0.001F) {
         QVector3D head_up = pose.head_pos - pose.neck_base;
