@@ -24,9 +24,9 @@ public:
   AIWorker(AIWorker &&) = delete;
   auto operator=(AIWorker &&) -> AIWorker & = delete;
 
-  auto trySubmit(AIJob &&job) -> bool;
+  auto try_submit(AIJob &&job) -> bool;
 
-  void drainResults(std::queue<AIResult> &out);
+  void drain_results(std::queue<AIResult> &out);
 
   auto busy() const noexcept -> bool {
     return m_workerBusy.load(std::memory_order_acquire);
@@ -35,7 +35,7 @@ public:
   void stop();
 
 private:
-  void workerLoop();
+  void worker_loop();
 
   AIReasoner &m_reasoner;
   AIExecutor &m_executor;

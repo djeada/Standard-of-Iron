@@ -28,7 +28,7 @@ AIWorker::~AIWorker() {
   }
 }
 
-auto AIWorker::trySubmit(AIJob &&job) -> bool {
+auto AIWorker::try_submit(AIJob &&job) -> bool {
 
   if (m_workerBusy.load(std::memory_order_acquire)) {
     return false;
@@ -46,7 +46,7 @@ auto AIWorker::trySubmit(AIJob &&job) -> bool {
   return true;
 }
 
-void AIWorker::drainResults(std::queue<AIResult> &out) {
+void AIWorker::drain_results(std::queue<AIResult> &out) {
   std::lock_guard<std::mutex> const lock(m_resultMutex);
 
   while (!m_results.empty()) {
@@ -57,7 +57,7 @@ void AIWorker::drainResults(std::queue<AIResult> &out) {
 
 void AIWorker::stop() { m_shouldStop.store(true, std::memory_order_release); }
 
-void AIWorker::workerLoop() {
+void AIWorker::worker_loop() {
   while (true) {
     AIJob job;
 

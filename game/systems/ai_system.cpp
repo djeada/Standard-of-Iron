@@ -21,18 +21,18 @@ namespace Game::Systems {
 
 AISystem::AISystem() {
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::RetreatBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::RetreatBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::DefendBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::DefendBehavior>());
 
-  m_behaviorRegistry.registerBehavior(
+  m_behaviorRegistry.register_behavior(
       std::make_unique<AI::ProductionBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::ExpandBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::ExpandBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::AttackBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::AttackBehavior>());
 
-  m_behaviorRegistry.registerBehavior(std::make_unique<AI::GatherBehavior>());
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::GatherBehavior>());
 
   m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
       Engine::Core::BuildingAttackedEvent>(
@@ -49,7 +49,7 @@ void AISystem::reinitialize() {
   initializeAIPlayers();
 }
 
-void AISystem::initializeAIPlayers() {
+void AISystem::initialize_ai_players() {
   auto &registry = OwnerRegistry::instance();
   const auto &ai_owner_ids = registry.get_ai_owner_ids();
 

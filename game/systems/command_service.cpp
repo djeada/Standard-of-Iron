@@ -1,6 +1,7 @@
 #include "command_service.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "../units/troop_config.h"
 #include "pathfinding.h"
 #include "units/spawn_type.h"
 #include <QDebug>
@@ -47,18 +48,18 @@ void CommandService::initialize(int worldWidth, int worldHeight) {
 
   float const offset_x = -(worldWidth * 0.5F - 0.5F);
   float const offset_z = -(worldHeight * 0.5F - 0.5F);
-  s_pathfinder->setGridOffset(offset_x, offset_z);
+  s_pathfinder->set_grid_offset(offset_x, offset_z);
 }
 
-auto CommandService::getPathfinder() -> Pathfinding * {
+auto CommandService::get_pathfinder() -> Pathfinding * {
   return s_pathfinder.get();
 }
-auto CommandService::worldToGrid(float world_x, float world_z) -> Point {
+auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
   if (s_pathfinder) {
-    int const grid_x =
-        static_cast<int>(std::round(world_x - s_pathfinder->getGridOffsetX()));
-    int const grid_z =
-        static_cast<int>(std::round(world_z - s_pathfinder->getGridOffsetZ()));
+    int const grid_x = static_cast<int>(
+        std::round(world_x - s_pathfinder->get_grid_offset_x()));
+    int const grid_z = static_cast<int>(
+        std::round(world_z - s_pathfinder->get_grid_offset_z()));
     return {grid_x, grid_z};
   }
 
@@ -66,16 +67,35 @@ auto CommandService::worldToGrid(float world_x, float world_z) -> Point {
           static_cast<int>(std::round(world_z))};
 }
 
-auto CommandService::gridToWorld(const Point &gridPos) -> QVector3D {
+auto CommandService::grid_to_world(const Point &gridPos) -> QVector3D {
   if (s_pathfinder) {
-    return {static_cast<float>(gridPos.x) + s_pathfinder->getGridOffsetX(),
+    return {static_cast<float>(gridPos.x) + s_pathfinder->get_grid_offset_x(),
             0.0F,
-            static_cast<float>(gridPos.y) + s_pathfinder->getGridOffsetZ()};
+            static_cast<float>(gridPos.y) + s_pathfinder->get_grid_offset_z()};
   }
   return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
 }
 
-void CommandService::clearPendingRequest(Engine::Core::EntityID entity_id) {
+auto CommandService::get_unit_radius(
+    Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
+  auto *entity = world.get_entity(entity_id);
+  if (entity == nullptr) {
+    return 0.5F;
+  }
+
+  auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return 0.5F;
+  }
+
+  float const selection_ring_size =
+      Game::Units::TroopConfig::instance().getSelectionRingSize(
+          unit_comp->spawn_type);
+
+  return selection_ring_size * 0.5F;
+}
+
+void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
   std::lock_guard<std::mutex> const lock(s_pendingMutex);
   auto it = s_entityToRequest.find(entity_id);
   if (it == s_entityToRequest.end()) {
@@ -90,7 +110,7 @@ void CommandService::clearPendingRequest(Engine::Core::EntityID entity_id) {
     return;
   }
 
-  auto members = pending_it->second.groupMembers;
+  auto members = pending_it->second.group_members;
   s_pendingRequests.erase(pending_it);
 
   for (auto member_id : members) {
@@ -102,16 +122,17 @@ void CommandService::clearPendingRequest(Engine::Core::EntityID entity_id) {
   }
 }
 
-void CommandService::moveUnits(Engine::Core::World &world,
-                               const std::vector<Engine::Core::EntityID> &units,
-                               const std::vector<QVector3D> &targets) {
+void CommandService::move_units(
+    Engine::Core::World &world,
+    const std::vector<Engine::Core::EntityID> &units,
+    const std::vector<QVector3D> &targets) {
   moveUnits(world, units, targets, MoveOptions{});
 }
 
-void CommandService::moveUnits(Engine::Core::World &world,
-                               const std::vector<Engine::Core::EntityID> &units,
-                               const std::vector<QVector3D> &targets,
-                               const MoveOptions &options) {
+void CommandService::move_units(
+    Engine::Core::World &world,
+    const std::vector<Engine::Core::EntityID> &units,
+    const std::vector<QVector3D> &targets, const MoveOptions &options) {
   if (units.size() != targets.size()) {
     return;
   }
@@ -238,8 +259,8 @@ void CommandService::moveUnits(Engine::Core::World &world,
 
     if (s_pathfinder) {
       Point const start =
-          worldToGrid(transform->position.x, transform->position.z);
-      Point const end = worldToGrid(targets[i].x(), targets[i].z());
+          world_to_grid(transform->position.x, transform->position.z);
+      Point const end = world_to_grid(targets[i].x(), targets[i].z());
 
       if (start == end) {
         mv->target_x = target_x;
@@ -314,14 +335,20 @@ void CommandService::moveUnits(Engine::Core::World &world,
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
         mv->pending_request_id = request_id;
 
+        float const unit_radius = get_unit_radius(world, units[i]);
+
         {
           std::lock_guard<std::mutex> const lock(s_pendingMutex);
-          s_pendingRequests[request_id] = {
-              units[i], targets[i], options, {}, {}};
+          PendingPathRequest pending;
+          pending.entity_id = units[i];
+          pending.target = targets[i];
+          pending.options = options;
+          pending.unit_radius = unit_radius;
+          s_pendingRequests[request_id] = std::move(pending);
           s_entityToRequest[units[i]] = request_id;
         }
 
-        s_pathfinder->submitPathRequest(request_id, start, end);
+        s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
 
         mv->time_since_last_path_request = 0.0F;
         mv->last_goal_x = target_x;
@@ -342,20 +369,20 @@ void CommandService::moveUnits(Engine::Core::World &world,
   }
 }
 
-void CommandService::moveGroup(Engine::Core::World &world,
-                               const std::vector<Engine::Core::EntityID> &units,
-                               const std::vector<QVector3D> &targets,
-                               const MoveOptions &options) {
+void CommandService::move_group(
+    Engine::Core::World &world,
+    const std::vector<Engine::Core::EntityID> &units,
+    const std::vector<QVector3D> &targets, const MoveOptions &options) {
   struct MemberInfo {
     Engine::Core::EntityID id;
     Engine::Core::Entity *entity;
     Engine::Core::TransformComponent *transform;
     Engine::Core::MovementComponent *movement;
     QVector3D target;
-    bool isEngaged;
+    bool is_engaged;
     float speed;
     Game::Units::SpawnType spawn_type;
-    float distanceToTarget;
+    float distance_to_target;
   };
 
   std::vector<MemberInfo> members;
@@ -436,7 +463,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   std::vector<MemberInfo> engaged_members;
 
   for (const auto &member : members) {
-    if (member.isEngaged) {
+    if (member.is_engaged) {
       engaged_members.push_back(member);
     } else {
       moving_members.push_back(member);
@@ -451,7 +478,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     bool any_target_invalid = false;
     for (const auto &member : moving_members) {
       Point const target_grid =
-          worldToGrid(member.target.x(), member.target.z());
+          world_to_grid(member.target.x(), member.target.z());
 
       if (target_grid.x < 0 || target_grid.y < 0) {
         any_target_invalid = true;
@@ -497,7 +524,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
     float const to_target = (current_pos - member.target).length();
     float const to_centroid = (current_pos - position_centroid).length();
 
-    member.distanceToTarget = to_target;
+    member.distance_to_target = to_target;
     target_distance_sum += to_target;
     centroid_distance_sum += to_centroid;
     max_target_distance = std::max(max_target_distance, to_target);
@@ -544,7 +571,7 @@ void CommandService::moveGroup(Engine::Core::World &world,
   for (const auto &member : members) {
     QVector3D const current_pos(member.transform->position.x, 0.0F,
                                 member.transform->position.z);
-    float const to_target = member.distanceToTarget;
+    float const to_target = member.distance_to_target;
     float const to_centroid = (current_pos - position_centroid).length();
     bool const near_destination = to_target <= near_threshold;
     bool const far_from_group = to_centroid > scatter_threshold * 1.5F;
@@ -620,7 +647,6 @@ void CommandService::moveGroup(Engine::Core::World &world,
   QVector3D const leader_target = leader.target;
 
   std::vector<MemberInfo *> units_needing_new_path;
-  constexpr float same_goal_threshold_sq = 4.0F;
 
   for (auto &member : members) {
     auto *mv = member.movement;
@@ -654,8 +680,8 @@ void CommandService::moveGroup(Engine::Core::World &world,
   }
 
   Point const start =
-      worldToGrid(leader.transform->position.x, leader.transform->position.z);
-  Point const end = worldToGrid(leader_target.x(), leader_target.z());
+      world_to_grid(leader.transform->position.x, leader.transform->position.z);
+  Point const end = world_to_grid(leader_target.x(), leader_target.z());
 
   if (start == end) {
     for (auto *member : units_needing_new_path) {
@@ -698,15 +724,21 @@ void CommandService::moveGroup(Engine::Core::World &world,
     member->movement->last_goal_y = member->target.z();
   }
 
+  Point const start = world_to_grid(leader_pos.x(), leader_pos.z());
+  Point const end = world_to_grid(leader_target.x(), leader_target.z());
+
+  float const unit_radius = get_unit_radius(world, leader.id);
+
   PendingPathRequest pending;
   pending.entity_id = leader.id;
   pending.target = leader_target;
   pending.options = options;
-  pending.groupMembers.reserve(units_needing_new_path.size());
-  pending.groupTargets.reserve(units_needing_new_path.size());
+  pending.unit_radius = unit_radius;
+  pending.group_members.reserve(units_needing_new_path.size());
+  pending.group_targets.reserve(units_needing_new_path.size());
   for (const auto *member : units_needing_new_path) {
-    pending.groupMembers.push_back(member->id);
-    pending.groupTargets.push_back(member->target);
+    pending.group_members.push_back(member->id);
+    pending.group_targets.push_back(member->target);
   }
 
   {
@@ -717,10 +749,10 @@ void CommandService::moveGroup(Engine::Core::World &world,
     }
   }
 
-  s_pathfinder->submitPathRequest(request_id, start, end);
+  s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
 }
 
-void CommandService::processPathResults(Engine::Core::World &world) {
+void CommandService::process_path_results(Engine::Core::World &world) {
   if (!s_pathfinder) {
     return;
   }
@@ -837,14 +869,14 @@ void CommandService::processPathResults(Engine::Core::World &world) {
     {
       std::lock_guard<std::mutex> const lock(s_pendingMutex);
       remove_entry(request_info.entity_id);
-      for (auto member_id : request_info.groupMembers) {
+      for (auto member_id : request_info.group_members) {
         remove_entry(member_id);
       }
     }
 
     QVector3D leader_target = request_info.target;
     std::vector<Engine::Core::EntityID> processed;
-    processed.reserve(request_info.groupMembers.size() + 1);
+    processed.reserve(request_info.group_members.size() + 1);
 
     auto add_member = [&](Engine::Core::EntityID id, const QVector3D &target) {
       if (std::find(processed.begin(), processed.end(), id) !=
@@ -858,12 +890,12 @@ void CommandService::processPathResults(Engine::Core::World &world) {
 
     add_member(request_info.entity_id, leader_target);
 
-    if (!request_info.groupMembers.empty()) {
-      const std::size_t count = request_info.groupMembers.size();
+    if (!request_info.group_members.empty()) {
+      const std::size_t count = request_info.group_members.size();
       for (std::size_t idx = 0; idx < count; ++idx) {
-        auto member_id = request_info.groupMembers[idx];
-        QVector3D const target = (idx < request_info.groupTargets.size())
-                                     ? request_info.groupTargets[idx]
+        auto member_id = request_info.group_members[idx];
+        QVector3D const target = (idx < request_info.group_targets.size())
+                                     ? request_info.group_targets[idx]
                                      : leader_target;
         add_member(member_id, target);
       }

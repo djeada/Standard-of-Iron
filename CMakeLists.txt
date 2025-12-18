@@ -303,6 +303,17 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/wall_cartaghe.png
             assets/visuals/icons/house_rome.png
             assets/visuals/icons/house_cartaghe.png
+            assets/visuals/icons/attack_mode.png
+            assets/visuals/icons/defend_mode.png
+            assets/visuals/icons/hold_mode.png
+            assets/visuals/icons/patrol_mode.png
+            assets/visuals/icons/formation_mode.png
+            assets/visuals/icons/build_mode.png
+            assets/visuals/icons/heal_mode.png
+            assets/visuals/icons/ai_player.png
+            assets/visuals/icons/human_player.png
+            assets/visuals/icons/troop_count.png
+            assets/visuals/icons/defeated.png
             translations/app_en.qm
             translations/app_de.qm
             translations/app_pt_br.qm
