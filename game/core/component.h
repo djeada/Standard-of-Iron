@@ -461,4 +461,105 @@ public:
   float update_cooldown{0.0F};
 };
 
+/// Idle behavior animation types for micro and ambient idle actions
+enum class IdleAnimationType : std::uint8_t {
+  None,
+  // Micro idles (always on, subtle)
+  WeightShift,
+  Breathing,
+  HeadTurn,
+  FootAdjust,
+  GripAdjust,
+  // Ambient idles (occasional, personality-driven)
+  CheckWeapon,
+  KneelRest,
+  StretchShoulders,
+  AdjustHelmet,
+  Yawn,
+  Sigh,
+  // Group idles (rare, contextual)
+  TalkingPair,
+  PointAndNod,
+  SharedLaugh
+};
+
+/// Component for managing unit idle behavior state and timing
+class IdleBehaviorComponent : public Component {
+public:
+  // Default timing constants
+  static constexpr float kDefaultIdleThreshold = 3.0F;
+  static constexpr float kDefaultMicroIdleInterval = 2.0F;
+  static constexpr float kDefaultAmbientIdleCooldown = 8.0F;
+  static constexpr float kDefaultGroupIdleCooldown = 15.0F;
+  static constexpr float kDefaultAnimationDuration = 1.5F;
+  static constexpr std::uint8_t kMaxMicroIdleVariants = 5;
+  static constexpr std::uint8_t kMaxAmbientIdleVariants = 6;
+
+  IdleBehaviorComponent() noexcept = default;
+
+  // Core idle state
+  float time_since_last_action{0.0F};
+  float idle_time{0.0F};
+  bool is_idle{false};
+
+  // Micro idle state (always on, subtle movements)
+  float micro_idle_timer{0.0F};
+  float micro_idle_interval{kDefaultMicroIdleInterval};
+  IdleAnimationType current_micro_idle{IdleAnimationType::None};
+  float micro_idle_phase{0.0F};
+  std::uint8_t micro_idle_variant{0};
+
+  // Ambient idle state (occasional personality-driven actions)
+  float ambient_idle_cooldown{0.0F};
+  float ambient_idle_threshold{kDefaultIdleThreshold};
+  IdleAnimationType current_ambient_idle{IdleAnimationType::None};
+  float ambient_animation_time{0.0F};
+  float ambient_animation_duration{kDefaultAnimationDuration};
+  bool ambient_idle_active{false};
+
+  // Group idle state (rare, contextual with nearby units)
+  float group_idle_cooldown{0.0F};
+  IdleAnimationType current_group_idle{IdleAnimationType::None};
+  EntityID group_partner_id{0};
+  bool group_idle_active{false};
+  bool is_group_idle_initiator{false};
+
+  // Randomization and variation
+  float random_offset{0.0F};
+  std::uint8_t personality_seed{0};
+
+  // Configuration
+  bool micro_idles_enabled{true};
+  bool ambient_idles_enabled{true};
+  bool group_idles_enabled{true};
+
+  /// Check if currently performing any idle animation
+  [[nodiscard]] auto is_performing_idle_animation() const noexcept -> bool {
+    return current_micro_idle != IdleAnimationType::None ||
+           ambient_idle_active || group_idle_active;
+  }
+
+  /// Reset all idle state (called when unit receives command)
+  void interrupt() noexcept {
+    current_micro_idle = IdleAnimationType::None;
+    current_ambient_idle = IdleAnimationType::None;
+    current_group_idle = IdleAnimationType::None;
+    ambient_idle_active = false;
+    group_idle_active = false;
+    group_partner_id = 0;
+    is_group_idle_initiator = false;
+    idle_time = 0.0F;
+    micro_idle_timer = 0.0F;
+    ambient_animation_time = 0.0F;
+  }
+
+  /// Initialize random offset based on entity ID for desynchronization
+  void initialize_random_offset(EntityID entity_id) noexcept {
+    // Use entity ID to create pseudo-random offset to prevent sync
+    random_offset = static_cast<float>(entity_id % 1000) / 1000.0F *
+                    kDefaultMicroIdleInterval;
+    personality_seed = static_cast<std::uint8_t>(entity_id % 256);
+  }
+};
+
 } // namespace Engine::Core
