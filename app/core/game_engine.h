@@ -309,7 +309,7 @@ public:
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
   bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
-                     int &max_health, bool &isBuilding, bool &alive,
+                     int &max_health, bool &is_building, bool &alive,
                      QString &nation) const;
   bool get_unit_stamina_info(Engine::Core::EntityID id, float &stamina_ratio,
                              bool &is_running, bool &can_run) const;

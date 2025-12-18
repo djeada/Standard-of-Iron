@@ -2263,7 +2263,7 @@ void GameEngine::get_selected_unit_ids(
 }
 
 auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
-                               int &health, int &max_health, bool &isBuilding,
+                               int &health, int &max_health, bool &is_building,
                                bool &alive, QString &nation) const -> bool {
   if (!m_world) {
     return false;
@@ -2272,7 +2272,7 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   if (e == nullptr) {
     return false;
   }
-  isBuilding = e->has_component<Engine::Core::BuildingComponent>();
+  is_building = e->has_component<Engine::Core::BuildingComponent>();
   if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
     name =
         QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));
