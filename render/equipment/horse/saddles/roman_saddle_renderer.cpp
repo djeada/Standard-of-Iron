@@ -40,4 +40,4 @@ void RomanSaddleRenderer::render(const DrawContext &ctx,
   }
 }
 
-} 
+} // namespace Render::GL

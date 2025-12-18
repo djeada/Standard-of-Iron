@@ -8,7 +8,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -62,4 +62,4 @@ public:
       ProductionState &outState) -> bool;
 };
 
-} 
+} // namespace Game::Systems

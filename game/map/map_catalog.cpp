@@ -271,4 +271,4 @@ auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
   return entry;
 }
 
-} 
+} // namespace Game::Map

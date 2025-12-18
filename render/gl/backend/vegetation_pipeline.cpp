@@ -788,4 +788,4 @@ void VegetationPipeline::shutdownFireCampPipeline() {
   m_firecampIndexCount = 0;
 }
 
-} 
+} // namespace Render::GL::BackendPipelines

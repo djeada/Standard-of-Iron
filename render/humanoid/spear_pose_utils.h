@@ -71,4 +71,4 @@ inline auto computeOffhandSpearGrip(const HumanoidPose &pose,
   return offhand;
 }
 
-} 
+} // namespace Render::GL

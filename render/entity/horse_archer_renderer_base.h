@@ -75,4 +75,4 @@ private:
   HorseArcherRendererConfig m_config;
 };
 
-} 
+} // namespace Render::GL

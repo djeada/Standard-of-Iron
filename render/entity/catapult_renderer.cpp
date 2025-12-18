@@ -43,4 +43,4 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

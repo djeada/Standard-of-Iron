@@ -54,4 +54,4 @@ void HeadwrapRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       cloth_color * QVector3D(0.92F, 0.98F, 1.05F), nullptr, 1.0F);
 }
 
-} 
+} // namespace Render::GL

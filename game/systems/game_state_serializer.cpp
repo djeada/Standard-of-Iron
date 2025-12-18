@@ -150,4 +150,4 @@ void GameStateSerializer::restore_level_from_metadata(
   Game::GameConfig::instance().set_max_troops_per_player(max_troops);
 }
 
-} 
+} // namespace Game::Systems

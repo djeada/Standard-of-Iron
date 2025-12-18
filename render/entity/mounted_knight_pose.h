@@ -116,4 +116,4 @@ inline void applyMountedKnightLowerBody(
   shape_leg(pose.knee_r, pose.foot_r, false);
 }
 
-} 
+} // namespace Render::GL

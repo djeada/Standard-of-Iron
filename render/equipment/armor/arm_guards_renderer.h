@@ -31,4 +31,4 @@ private:
                       const QVector3D &wrist, ISubmitter &submitter);
 };
 
-} 
+} // namespace Render::GL

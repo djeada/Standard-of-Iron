@@ -201,11 +201,11 @@ void draw_defense_tower(const DrawContext &p, ISubmitter &out) {
   draw_selection(p, out);
 }
 
-} 
+} // namespace
 
 void register_defense_tower_renderer(
     Render::GL::EntityRendererRegistry &registry) {
   registry.register_renderer("troops/roman/defense_tower", draw_defense_tower);
 }
 
-} 
+} // namespace Render::GL::Roman

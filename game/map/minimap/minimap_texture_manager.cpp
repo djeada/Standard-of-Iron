@@ -36,4 +36,4 @@ auto MinimapTextureManager::get_image() const -> const QImage & {
 
 void MinimapTextureManager::clear() { m_image = QImage(); }
 
-} 
+} // namespace Game::Map::Minimap

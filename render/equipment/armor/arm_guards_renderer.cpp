@@ -74,4 +74,4 @@ void ArmGuardsRenderer::renderArmGuard(const DrawContext &ctx,
   }
 }
 
-} 
+} // namespace Render::GL

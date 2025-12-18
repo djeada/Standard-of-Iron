@@ -55,7 +55,7 @@ inline auto section_for(Game::Map::TerrainType type) -> int {
   }
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -447,4 +447,4 @@ void BiomeRenderer::generate_grass_instances() {
   m_grassInstancesDirty = m_grassInstanceCount > 0;
 }
 
-} 
+} // namespace Render::GL

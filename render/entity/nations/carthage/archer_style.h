@@ -30,4 +30,4 @@ struct ArcherStyleConfig {
 
 void register_carthage_archer_style();
 
-} 
+} // namespace Render::GL::Carthage

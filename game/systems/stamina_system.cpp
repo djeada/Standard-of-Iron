@@ -17,7 +17,7 @@ constexpr float kMinMovementSpeedSq = 0.01F;
       movement->vx * movement->vx + movement->vz * movement->vz;
   return speed_sq > kMinMovementSpeedSq;
 }
-} 
+} // namespace
 
 void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
@@ -64,4 +64,4 @@ void StaminaSystem::update(Engine::Core::World *world, float delta_time) {
   }
 }
 
-} 
+} // namespace Game::Systems

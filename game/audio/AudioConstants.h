@@ -19,4 +19,4 @@ constexpr int DEFAULT_OUTPUT_CHANNELS = 2;
 constexpr int DEFAULT_FADE_IN_MS = 250;
 constexpr int DEFAULT_FADE_OUT_MS = 150;
 constexpr int NO_FADE_MS = 0;
-} 
+} // namespace AudioConstants

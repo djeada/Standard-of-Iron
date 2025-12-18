@@ -138,4 +138,4 @@ auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
   return false;
 }
 
-} 
+} // namespace Game::Systems::AI

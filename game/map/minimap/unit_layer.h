@@ -103,4 +103,4 @@ private:
   float m_offset_y = 0.0F;
 };
 
-} 
+} // namespace Game::Map::Minimap

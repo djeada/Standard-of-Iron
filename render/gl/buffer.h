@@ -48,4 +48,4 @@ private:
   int m_currentAttribIndex = 0;
 };
 
-} 
+} // namespace Render::GL

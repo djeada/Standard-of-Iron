@@ -86,7 +86,7 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
   return end_allowed && exited_blocked_zone;
 }
 
-} 
+} // namespace
 
 void MovementSystem::update(Engine::Core::World *world, float delta_time) {
   CommandService::process_path_results(*world);
@@ -458,4 +458,4 @@ auto MovementSystem::has_reached_target(
   return distance_squared < threshold * threshold;
 }
 
-} 
+} // namespace Game::Systems

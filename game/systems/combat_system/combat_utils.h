@@ -6,7 +6,7 @@
 namespace Engine::Core {
 class World;
 class AttackComponent;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems::Combat {
 
@@ -29,4 +29,4 @@ auto find_nearest_enemy_from_list(
 
 auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool;
 
-} 
+} // namespace Game::Systems::Combat

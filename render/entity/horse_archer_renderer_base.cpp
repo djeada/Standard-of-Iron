@@ -207,4 +207,4 @@ auto HorseArcherRendererBase::resolve_shader_key(const DrawContext &ctx) const
   return QStringLiteral("horse_archer");
 }
 
-} 
+} // namespace Render::GL

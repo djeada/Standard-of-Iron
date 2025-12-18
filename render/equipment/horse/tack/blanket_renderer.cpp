@@ -30,4 +30,4 @@ void BlanketRenderer::render(const DrawContext &ctx,
   }
 }
 
-} 
+} // namespace Render::GL

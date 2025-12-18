@@ -132,4 +132,4 @@ auto SpatialGrid::to_cell_key(float x, float z) const -> CellKey {
                  static_cast<int>(std::floor(z * m_inv_cell_size))};
 }
 
-} 
+} // namespace Game::Systems

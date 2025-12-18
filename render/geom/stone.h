@@ -11,7 +11,7 @@ public:
   static auto get() -> GL::Mesh *;
 };
 
-} 
-} 
+} // namespace Geom
+} // namespace Render
 
 #include "projectile_renderer.h"

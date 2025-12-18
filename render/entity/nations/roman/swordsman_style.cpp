@@ -10,7 +10,7 @@ constexpr QVector3D k_legionary_leather_dark{0.24F, 0.14F, 0.08F};
 constexpr QVector3D k_legionary_metal{0.78F, 0.72F, 0.58F};
 constexpr QVector3D k_legionary_shield{0.75F, 0.18F, 0.12F};
 constexpr QVector3D k_legionary_trim{0.88F, 0.66F, 0.32F};
-} 
+} // namespace
 
 namespace Render::GL::Roman {
 
@@ -31,4 +31,4 @@ void register_roman_swordsman_style() {
   register_swordsman_style("roman_republic", style);
 }
 
-} 
+} // namespace Render::GL::Roman

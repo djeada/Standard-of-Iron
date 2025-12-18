@@ -26,4 +26,4 @@ public:
                                 Render::GL::Camera &camera);
 };
 
-} 
+} // namespace Game::Systems

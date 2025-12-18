@@ -30,4 +30,4 @@ struct PlantBatchParams {
   float pad1 = 0.0F;
 };
 
-} 
+} // namespace Render::GL

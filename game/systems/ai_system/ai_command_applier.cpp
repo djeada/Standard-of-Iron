@@ -152,4 +152,4 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
   }
 }
 
-} 
+} // namespace Game::Systems::AI

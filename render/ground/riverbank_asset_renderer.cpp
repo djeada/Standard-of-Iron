@@ -37,7 +37,7 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -286,4 +286,4 @@ void RiverbankAssetRenderer::generate_asset_instances() {
   qDebug() << "Generated" << m_assetInstanceCount << "riverbank assets";
 }
 
-} 
+} // namespace Render::GL

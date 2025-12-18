@@ -45,4 +45,4 @@ private:
   bool m_grassInstancesDirty = false;
 };
 
-} 
+} // namespace Render::GL

@@ -195,6 +195,6 @@ inline CaptureColors get_capture_colors(const DrawContext &p,
   return result;
 }
 
-} 
+} // namespace BarracksFlagRenderer
 
-} 
+} // namespace Render::GL

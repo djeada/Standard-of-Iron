@@ -15,7 +15,7 @@ inline constexpr float k_default_aspect_ratio = 16.0F / 9.0F;
 inline constexpr float k_default_far_plane = 200.0F;
 inline constexpr float k_default_ortho_size = 10.0F;
 inline constexpr float k_default_pitch_min = -85.0F;
-} 
+} // namespace CameraDefaults
 
 class Camera {
   friend void solveConstraints(Render::GL::Camera *self, bool allowTargetShift);
@@ -144,4 +144,4 @@ private:
                                         float &pitch_deg);
 };
 
-} 
+} // namespace Render::GL

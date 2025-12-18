@@ -43,4 +43,4 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

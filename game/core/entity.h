@@ -83,4 +83,4 @@ private:
   ComponentChangeCallback m_component_change_callback;
 };
 
-} 
+} // namespace Engine::Core

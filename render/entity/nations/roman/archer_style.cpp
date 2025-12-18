@@ -12,7 +12,7 @@ constexpr QVector3D k_roman_wood{0.46F, 0.32F, 0.18F};
 constexpr QVector3D k_roman_cape{0.70F, 0.15F, 0.18F};
 constexpr QVector3D k_roman_fletch{0.93F, 0.83F, 0.33F};
 constexpr QVector3D k_roman_string{0.28F, 0.28F, 0.32F};
-} 
+} // namespace
 
 namespace Render::GL::Roman {
 
@@ -32,4 +32,4 @@ void register_roman_archer_style() {
   register_archer_style("roman_republic", style);
 }
 
-} 
+} // namespace Render::GL::Roman

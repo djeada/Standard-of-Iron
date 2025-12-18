@@ -39,4 +39,4 @@ struct GrassBatchParams {
   float pad2{0.0F};
 };
 
-} 
+} // namespace Render::GL

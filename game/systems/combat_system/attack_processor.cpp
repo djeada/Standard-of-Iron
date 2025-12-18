@@ -281,7 +281,7 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
   }
 }
 
-} 
+} // namespace
 
 void process_attacks(Engine::Core::World *world, float delta_time) {
   auto units = world->get_entities_with<Engine::Core::UnitComponent>();
@@ -658,4 +658,4 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
   }
 }
 
-} 
+} // namespace Game::Systems::Combat

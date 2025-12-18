@@ -31,4 +31,4 @@ auto Flag::create(float world_x, float world_z, const QVector3D &flagColor,
   return result;
 }
 
-} 
+} // namespace Render::Geom

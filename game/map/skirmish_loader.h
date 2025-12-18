@@ -12,7 +12,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Render::GL {
 class Renderer;
@@ -31,7 +31,7 @@ class RiverRenderer;
 class RoadRenderer;
 class RiverbankRenderer;
 class BridgeRenderer;
-} 
+} // namespace Render::GL
 
 namespace Game::Map {
 
@@ -123,4 +123,4 @@ private:
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;
 };
 
-} 
+} // namespace Game::Map

@@ -549,4 +549,4 @@ auto SkirmishLoader::start(const QString &map_path,
 
   return result;
 }
-} 
+} // namespace Game::Map

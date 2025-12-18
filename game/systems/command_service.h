@@ -12,7 +12,7 @@ namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
 struct MovementComponent;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -79,4 +79,4 @@ private:
                          const MoveOptions &options);
 };
 
-} 
+} // namespace Game::Systems

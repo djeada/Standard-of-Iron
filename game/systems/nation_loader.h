@@ -18,4 +18,4 @@ private:
   static auto resolve_data_path(const QString &relative) -> QString;
 };
 
-} 
+} // namespace Game::Systems

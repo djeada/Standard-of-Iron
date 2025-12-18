@@ -24,4 +24,4 @@ private:
   QWidget *m_renderWidget{};
 };
 
-} 
+} // namespace MapEditor

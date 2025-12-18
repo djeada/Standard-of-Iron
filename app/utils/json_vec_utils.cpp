@@ -26,4 +26,4 @@ auto jsonArrayToVec3(const QJsonValue &value,
           static_cast<float>(arr.at(2).toDouble(fallback.z()))};
 }
 
-} 
+} // namespace App::JsonUtils

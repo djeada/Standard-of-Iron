@@ -57,4 +57,4 @@ inline auto fromInt(int value) -> CursorMode {
   }
 }
 
-} 
+} // namespace CursorModeUtils

@@ -19,4 +19,4 @@ private:
   void init(const SpawnParams &params);
 };
 
-} 
+} // namespace Game::Units

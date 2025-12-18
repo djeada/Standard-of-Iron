@@ -37,4 +37,4 @@ private:
 
 void registerBuiltInEquipment();
 
-} 
+} // namespace Render::GL

@@ -87,4 +87,4 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
   render_greave(frames.shin_r);
 }
 
-} 
+} // namespace Render::GL

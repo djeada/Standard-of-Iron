@@ -27,7 +27,7 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
   return config;
 }
 
-} 
+} // namespace
 
 void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -55,4 +55,4 @@ void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL::Roman

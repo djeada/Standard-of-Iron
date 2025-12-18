@@ -9,7 +9,7 @@
 namespace Engine::Core {
 class Entity;
 class World;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -68,4 +68,4 @@ private:
   void sync_selection_flags();
 };
 
-} 
+} // namespace Game::Systems

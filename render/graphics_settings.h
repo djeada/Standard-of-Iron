@@ -275,4 +275,4 @@ private:
   BatchingConfig m_batching_config{};
 };
 
-} 
+} // namespace Render

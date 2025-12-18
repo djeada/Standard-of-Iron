@@ -25,4 +25,4 @@ public:
   }
 };
 
-} 
+} // namespace Game::Systems::AI

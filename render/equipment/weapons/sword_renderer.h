@@ -37,4 +37,4 @@ private:
   SwordRenderConfig m_config;
 };
 
-} 
+} // namespace Render::GL

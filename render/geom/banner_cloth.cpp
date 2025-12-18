@@ -126,4 +126,4 @@ auto BannerEmbroidery::generate_border_trim(
   return layers;
 }
 
-} 
+} // namespace Render::Geom

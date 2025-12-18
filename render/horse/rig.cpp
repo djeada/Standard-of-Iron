@@ -169,7 +169,7 @@ inline auto color_hash(const QVector3D &c) -> uint32_t {
   return v;
 }
 
-} 
+} // namespace
 
 namespace HorseDimensionRange {
 
@@ -242,7 +242,7 @@ constexpr uint32_t kSaltStirrupDrop = 0x9753U;
 constexpr uint32_t kSaltIdleBob = 0xA864U;
 constexpr uint32_t kSaltMoveBob = 0xB975U;
 
-} 
+} // namespace HorseDimensionRange
 
 auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
   using namespace HorseDimensionRange;
@@ -380,7 +380,7 @@ constexpr uint32_t kSaltLeatherTone = 0x7788U;
 constexpr uint32_t kSaltTackTone = 0x88AAU;
 constexpr uint32_t kSaltBlanketTint = 0x99B0U;
 
-} 
+} // namespace HorseVariantConstants
 
 namespace HorseGaitConstants {
 
@@ -401,7 +401,7 @@ constexpr uint32_t kSaltDiagonalLead = 0xCC56U;
 constexpr uint32_t kSaltStrideSwing = 0xDD78U;
 constexpr uint32_t kSaltStrideLift = 0xEE9AU;
 
-} 
+} // namespace HorseGaitConstants
 
 auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseVariant {
@@ -519,7 +519,7 @@ constexpr float kBitWidthOffset = 0.55F;
 constexpr float kBitHeightOffset = 0.08F;
 constexpr float kBitLengthOffset = 0.10F;
 
-} 
+} // namespace MountFrameConstants
 
 auto compute_mount_frame(const HorseProfile &profile)
     -> MountedAttachmentFrame {
@@ -602,7 +602,7 @@ constexpr float kDirLengthThreshold = 1e-4F;
 constexpr float kReinBaseLength = 0.85F;
 constexpr float kSlackLengthScale = 0.12F;
 
-} 
+} // namespace ReinConstants
 
 auto compute_rein_state(uint32_t horse_seed,
                         const HumanoidAnimationContext &rider_ctx)
@@ -1790,4 +1790,4 @@ void HorseRendererBase::render(
          shared_motion, out, HorseLOD::Full);
 }
 
-} 
+} // namespace Render::GL

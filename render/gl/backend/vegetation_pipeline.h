@@ -128,4 +128,4 @@ private:
   GL::Shader *m_firecampShader{nullptr};
 };
 
-} 
+} // namespace Render::GL::BackendPipelines

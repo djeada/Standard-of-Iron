@@ -37,4 +37,4 @@ private:
       m_unit_died_subscription;
 };
 
-} 
+} // namespace Game::Systems

@@ -108,4 +108,4 @@ private:
   bool m_initialized = false;
 };
 
-} 
+} // namespace Game::Systems

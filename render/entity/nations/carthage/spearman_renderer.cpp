@@ -80,7 +80,7 @@ void ensure_spearman_styles_registered() {
   (void)registered;
 }
 
-} 
+} // namespace
 
 void register_spearman_style(const std::string &nation_id,
                              const SpearmanStyleConfig &style) {
@@ -459,4 +459,4 @@ void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL::Carthage

@@ -110,4 +110,4 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   return snapshot;
 }
 
-} 
+} // namespace Game::Systems::AI

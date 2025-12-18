@@ -157,4 +157,4 @@ auto createPlaneMesh(float width, float height,
   return std::make_unique<Mesh>(vertices, indices);
 }
 
-} 
+} // namespace Render::GL

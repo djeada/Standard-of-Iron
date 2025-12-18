@@ -40,4 +40,4 @@ private:
   [[nodiscard]] static auto get_gl_wrap(Wrap wrap) -> GLenum;
 };
 
-} 
+} // namespace Render::GL

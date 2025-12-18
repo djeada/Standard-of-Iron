@@ -141,4 +141,4 @@ private:
   GameplayConfig m_gameplay;
 };
 
-} 
+} // namespace Game

@@ -43,7 +43,7 @@ namespace {
 const QVector3D k_axis_x(1.0F, 0.0F, 0.0F);
 const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
-} 
+} // namespace
 
 Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
 
@@ -875,12 +875,11 @@ void Renderer::render_construction_previews(
     if (builder_prod == nullptr || transform == nullptr) {
       continue;
     }
-    
-    
+
     bool show_preview = false;
     float preview_x = transform->position.x;
     float preview_z = transform->position.z;
-    
+
     if (builder_prod->has_construction_site) {
       show_preview = true;
       preview_x = builder_prod->construction_site_x;
@@ -888,7 +887,7 @@ void Renderer::render_construction_previews(
     } else if (builder_prod->in_progress) {
       show_preview = true;
     }
-    
+
     if (!show_preview) {
       continue;
     }
@@ -949,4 +948,4 @@ void Renderer::render_construction_previews(
   }
 }
 
-} 
+} // namespace Render::GL

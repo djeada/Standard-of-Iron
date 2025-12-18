@@ -101,5 +101,5 @@ private:
   DustUniforms m_uniforms;
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

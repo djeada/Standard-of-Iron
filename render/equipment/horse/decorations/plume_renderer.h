@@ -13,4 +13,4 @@ public:
               ISubmitter &out) const override;
 };
 
-} 
+} // namespace Render::GL

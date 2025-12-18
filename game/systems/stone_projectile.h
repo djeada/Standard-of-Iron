@@ -58,4 +58,4 @@ private:
   QVector3D m_target_locked_position;
 };
 
-} 
+} // namespace Game::Systems

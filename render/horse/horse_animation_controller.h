@@ -58,4 +58,4 @@ private:
   float m_jump_distance{};
 };
 
-} 
+} // namespace Render::GL

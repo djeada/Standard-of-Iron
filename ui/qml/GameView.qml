@@ -300,7 +300,6 @@ Item {
                             game.on_formation_mouse_move(mouse.x, mouse.y);
 
                     }
-                    
                     if (gameView.isPlacingConstruction) {
                         if (typeof game !== 'undefined' && game.on_construction_mouse_move)
                             game.on_construction_mouse_move(mouse.x, mouse.y);

@@ -9,7 +9,7 @@ namespace Game::Map {
 class TerrainHeightMap;
 struct BiomeSettings;
 struct RoadSegment;
-} 
+} // namespace Game::Map
 
 namespace Engine::Core {
 
@@ -35,4 +35,4 @@ public:
   static auto load_from_file(const QString &filename) -> QJsonDocument;
 };
 
-} 
+} // namespace Engine::Core

@@ -34,4 +34,4 @@ void TailRibbonRenderer::render(const DrawContext &ctx,
   out.mesh(get_unit_sphere(), bow, ribbon_color, nullptr, 1.0F, 4);
 }
 
-} 
+} // namespace Render::GL

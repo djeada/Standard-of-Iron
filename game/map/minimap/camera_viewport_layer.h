@@ -57,4 +57,4 @@ private:
   std::uint8_t m_border_a = 200;
 };
 
-} 
+} // namespace Game::Map::Minimap

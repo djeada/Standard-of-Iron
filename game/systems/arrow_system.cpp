@@ -45,4 +45,4 @@ void ArrowSystem::update(Engine::Core::World *, float delta_time) {
       m_arrows.end());
 }
 
-} 
+} // namespace Game::Systems

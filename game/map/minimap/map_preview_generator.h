@@ -37,4 +37,4 @@ private:
                  float pixels_per_tile) const -> std::pair<float, float>;
 };
 
-} 
+} // namespace Game::Map::Minimap

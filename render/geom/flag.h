@@ -21,4 +21,4 @@ public:
                      float scale = 1.0F) -> FlagMatrices;
 };
 
-} 
+} // namespace Render::Geom

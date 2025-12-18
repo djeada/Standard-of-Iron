@@ -363,4 +363,4 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
   }
 }
 
-} 
+} // namespace Render::GL

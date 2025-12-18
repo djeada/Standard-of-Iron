@@ -17,7 +17,7 @@ struct RenderableComponent;
 struct UnitComponent;
 struct MovementComponent;
 struct AttackComponent;
-} 
+} // namespace Engine::Core
 
 namespace Game::Units {
 
@@ -78,4 +78,4 @@ protected:
   Engine::Core::AttackComponent *m_atk = nullptr;
 };
 
-} 
+} // namespace Game::Units

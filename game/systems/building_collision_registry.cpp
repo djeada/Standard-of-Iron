@@ -189,4 +189,4 @@ auto BuildingCollisionRegistry::get_grid_padding() -> float {
   return s_gridPadding;
 }
 
-} 
+} // namespace Game::Systems

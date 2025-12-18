@@ -93,4 +93,4 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                  palette.leather, nullptr, 1.0F, 0);
 }
 
-} 
+} // namespace Render::GL

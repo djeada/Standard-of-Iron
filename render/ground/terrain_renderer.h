@@ -68,4 +68,4 @@ private:
   std::uint32_t m_noiseSeed = 0U;
 };
 
-} 
+} // namespace Render::GL

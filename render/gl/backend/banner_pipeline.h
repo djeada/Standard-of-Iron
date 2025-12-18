@@ -48,5 +48,5 @@ private:
   void cacheBannerUniforms();
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

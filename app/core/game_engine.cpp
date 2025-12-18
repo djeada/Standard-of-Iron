@@ -574,7 +574,7 @@ void GameEngine::on_construction_mouse_move(qreal sx, qreal sy) {
     return;
   }
   ensure_initialized();
-  
+
   QPointF screenPt(sx, sy);
   QVector3D hit;
   if (screen_to_ground(screenPt, hit)) {
@@ -589,10 +589,10 @@ void GameEngine::on_construction_confirm() {
   }
 
   ensure_initialized();
-  
+
   std::string item_str = m_pending_construction_type.toStdString();
   float build_time = 10.0F;
-  
+
   if (item_str == "catapult") {
     build_time = 15.0F;
   } else if (item_str == "ballista") {
@@ -603,7 +603,6 @@ void GameEngine::on_construction_confirm() {
     build_time = 10.0F;
   }
 
-  
   for (auto id : m_pending_construction_builders) {
     auto *e = m_world->get_entity(id);
     if (e == nullptr) {
@@ -624,9 +623,7 @@ void GameEngine::on_construction_confirm() {
     builder_prod->construction_site_z = m_construction_placement_position.z();
     builder_prod->at_construction_site = false;
     builder_prod->construction_complete = false;
-    
 
-    
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->goal_x = m_construction_placement_position.x();
@@ -1412,8 +1409,7 @@ void GameEngine::start_builder_construction(const QString &item_type) {
   }
 
   const auto &selected = selection_system->get_selected_units();
-  
-  
+
   m_pending_construction_builders.clear();
   for (auto id : selected) {
     auto *e = m_world->get_entity(id);
@@ -1438,11 +1434,9 @@ void GameEngine::start_builder_construction(const QString &item_type) {
     return;
   }
 
-  
   m_pending_construction_type = item_type;
   m_is_placing_construction = true;
-  
-  
+
   QVector3D center(0.0F, 0.0F, 0.0F);
   int valid_count = 0;
   for (auto id : m_pending_construction_builders) {
@@ -1464,7 +1458,7 @@ void GameEngine::start_builder_construction(const QString &item_type) {
     center.setY(center.y() / static_cast<float>(valid_count));
     center.setZ(center.z() / static_cast<float>(valid_count));
   }
-  
+
   m_construction_placement_position = center;
   set_cursor_mode(CursorMode::PlaceBuilding);
   emit placing_construction_changed();

@@ -117,7 +117,7 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
   arrow_sys->spawn_arrow(start, end, color, kArrowSpeed);
 }
 
-} 
+} // namespace
 
 void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
   auto *arrow_sys = world->get_system<ArrowSystem>();
@@ -164,4 +164,4 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
   }
 }
 
-} 
+} // namespace Game::Systems

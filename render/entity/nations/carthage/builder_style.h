@@ -27,4 +27,4 @@ struct BuilderStyleConfig {
 
 void register_carthage_builder_style();
 
-} 
+} // namespace Render::GL::Carthage

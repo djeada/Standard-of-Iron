@@ -76,5 +76,5 @@ private:
   RainUniforms m_uniforms;
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

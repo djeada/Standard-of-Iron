@@ -76,4 +76,4 @@ void EditorWindow::openMap() {}
 
 void EditorWindow::saveMap() {}
 
-} 
+} // namespace MapEditor

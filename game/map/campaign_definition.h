@@ -21,4 +21,4 @@ struct CampaignDefinition {
   std::vector<CampaignMission> missions;
 };
 
-} 
+} // namespace Game::Campaign

@@ -47,4 +47,4 @@ private:
   bool m_visibilityDirty = true;
 };
 
-} 
+} // namespace Render::GL

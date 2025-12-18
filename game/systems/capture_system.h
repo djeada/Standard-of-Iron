@@ -24,4 +24,4 @@ private:
                                          int new_owner_id);
 };
 
-} 
+} // namespace Game::Systems

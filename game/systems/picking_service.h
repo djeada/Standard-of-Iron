@@ -9,7 +9,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Render::GL {
 class Camera;
@@ -62,4 +62,4 @@ private:
                              int view_w, int view_h, QRectF &out) -> bool;
 };
 
-} 
+} // namespace Game::Systems

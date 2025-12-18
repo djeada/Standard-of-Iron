@@ -32,4 +32,4 @@ inline QMatrix4x4 createArmorTransform(const DrawContext &ctx,
   return transform;
 }
 
-} 
+} // namespace Render::GL

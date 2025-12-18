@@ -42,4 +42,4 @@ private:
                      ISubmitter &submitter);
 };
 
-} 
+} // namespace Render::GL

@@ -54,4 +54,4 @@ private:
   std::queue<AIResult> m_results;
 };
 
-} 
+} // namespace Game::Systems::AI

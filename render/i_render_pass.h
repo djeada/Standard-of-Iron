@@ -10,4 +10,4 @@ struct IRenderPass {
   virtual void submit(Renderer &renderer, ResourceManager *resources) = 0;
 };
 
-} 
+} // namespace Render::GL

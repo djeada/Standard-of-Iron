@@ -41,4 +41,4 @@ void HorseRenderer::draw_attachments(
   }
 }
 
-} 
+} // namespace Render::GL

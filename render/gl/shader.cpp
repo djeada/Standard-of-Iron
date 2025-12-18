@@ -119,7 +119,7 @@ auto uniformHandleImpl(
   cache.emplace(name, location);
   return location;
 }
-} 
+} // namespace
 
 auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
   return uniformHandleImpl(*this, m_program, m_uniformCache, name, true);
@@ -266,4 +266,4 @@ auto Shader::link_program(GLuint vertex_shader,
   return true;
 }
 
-} 
+} // namespace Render::GL

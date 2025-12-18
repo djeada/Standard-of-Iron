@@ -296,4 +296,4 @@ void TunicRenderer::renderBelt(const DrawContext &ctx,
       brass_color * 0.95F, nullptr, 1.0F);
 }
 
-} 
+} // namespace Render::GL

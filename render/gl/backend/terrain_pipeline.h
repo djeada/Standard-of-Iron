@@ -118,5 +118,5 @@ private:
   void shutdownGrassGeometry();
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

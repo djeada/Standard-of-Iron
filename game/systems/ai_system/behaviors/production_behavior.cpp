@@ -100,4 +100,4 @@ auto ProductionBehavior::should_execute(
   return context.total_units < context.max_troops_per_player;
 }
 
-} 
+} // namespace Game::Systems::AI

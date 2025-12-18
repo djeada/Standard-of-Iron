@@ -16,4 +16,4 @@ private:
   void process_healing(Engine::Core::World *world, float delta_time);
 };
 
-} 
+} // namespace Game::Systems

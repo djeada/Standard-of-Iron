@@ -26,4 +26,4 @@ auto classifyMotionState(const AnimationInputs &anim,
   return HumanoidMotionState::Idle;
 }
 
-} 
+} // namespace Render::GL

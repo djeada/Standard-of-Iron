@@ -32,4 +32,4 @@ void StirrupRenderer::render(const DrawContext &ctx,
   }
 }
 
-} 
+} // namespace Render::GL

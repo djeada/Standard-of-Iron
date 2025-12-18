@@ -121,4 +121,4 @@ private:
   bool m_forceFullUpdate{true};
 };
 
-} 
+} // namespace Game::Map

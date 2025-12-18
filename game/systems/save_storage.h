@@ -54,4 +54,4 @@ private:
   mutable QSqlDatabase m_database;
 };
 
-} 
+} // namespace Game::Systems
