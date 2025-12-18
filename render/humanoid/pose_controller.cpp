@@ -77,6 +77,141 @@ void HumanoidPoseController::applyMicroIdle(float time, std::uint32_t seed) {
   m_pose.hand_l.setZ(m_pose.hand_l.z() + arm_drift * 0.4F);
 }
 
+auto HumanoidPoseController::getAmbientIdleType(float time, std::uint32_t seed,
+                                                float idle_duration)
+    -> AmbientIdleType {
+  // Only trigger ambient idles after being idle for a while
+  constexpr float kMinIdleDuration = 3.0F;
+  if (idle_duration < kMinIdleDuration) {
+    return AmbientIdleType::None;
+  }
+
+  // Use seed to create a unique cycle offset for this soldier
+  float const seed_offset = static_cast<float>(seed % 1000) / 100.0F;
+
+  // Ambient idles cycle every 12-18 seconds based on seed
+  float const cycle_period = 12.0F + static_cast<float>(seed % 600) / 100.0F;
+  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
+
+  // Only active during the first 4 seconds of each cycle
+  constexpr float kAmbientDuration = 4.0F;
+  if (cycle_time > kAmbientDuration) {
+    return AmbientIdleType::None;
+  }
+
+  // Select which ambient idle based on seed
+  auto const idle_type = static_cast<std::uint8_t>((seed / 7) % 6);
+  return static_cast<AmbientIdleType>(idle_type + 1);
+}
+
+void HumanoidPoseController::applyAmbientIdle(float time, std::uint32_t seed,
+                                              float idle_duration) {
+  using HP = HumanProportions;
+
+  AmbientIdleType const idle_type =
+      getAmbientIdleType(time, seed, idle_duration);
+  if (idle_type == AmbientIdleType::None) {
+    return;
+  }
+
+  // Calculate phase within the ambient idle animation (0 to 1)
+  float const seed_offset = static_cast<float>(seed % 1000) / 100.0F;
+  float const cycle_period = 12.0F + static_cast<float>(seed % 600) / 100.0F;
+  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
+  constexpr float kAmbientDuration = 4.0F;
+
+  // Create smooth in/out animation curve
+  float phase = cycle_time / kAmbientDuration;
+  // Smooth ease in-out
+  float const intensity =
+      (phase < 0.5F) ? (2.0F * phase * phase)
+                     : (1.0F - std::pow(-2.0F * phase + 2.0F, 2.0F) / 2.0F);
+
+  switch (idle_type) {
+  case AmbientIdleType::RaiseWeapon: {
+    // Raise the right hand/weapon slightly to inspect it
+    float const raise_amount = intensity * 0.15F;
+    float const forward_amount = intensity * 0.08F;
+    m_pose.hand_r.setY(m_pose.hand_r.y() + raise_amount);
+    m_pose.hand_r.setZ(m_pose.hand_r.z() + forward_amount);
+    m_pose.elbow_r.setY(m_pose.elbow_r.y() + raise_amount * 0.5F);
+    // Tilt head slightly to look at weapon
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + intensity * 0.02F);
+    m_pose.head_pos.setY(m_pose.head_pos.y() - intensity * 0.01F);
+    break;
+  }
+
+  case AmbientIdleType::StretchShoulders: {
+    // Roll shoulders back in a stretch
+    float const stretch_amount = intensity * 0.04F;
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - stretch_amount);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() - stretch_amount);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + stretch_amount * 0.5F);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + stretch_amount * 0.5F);
+    // Chest rises slightly
+    m_pose.neck_base.setY(m_pose.neck_base.y() + stretch_amount * 0.3F);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() - stretch_amount * 0.5F);
+    break;
+  }
+
+  case AmbientIdleType::AdjustHelmet: {
+    // Raise left hand to helmet
+    float const raise_amount = intensity * 0.25F;
+    float const inward_amount = intensity * 0.08F;
+    m_pose.hand_l.setY(m_pose.hand_l.y() + raise_amount);
+    m_pose.hand_l.setX(m_pose.hand_l.x() + inward_amount);
+    m_pose.hand_l.setZ(m_pose.hand_l.z() - intensity * 0.05F);
+    m_pose.elbow_l.setY(m_pose.elbow_l.y() + raise_amount * 0.6F);
+    // Slight head tilt
+    m_pose.head_pos.setX(m_pose.head_pos.x() - intensity * 0.015F);
+    break;
+  }
+
+  case AmbientIdleType::LookAround: {
+    // Look left, then right during the animation
+    float const look_phase = phase * 2.0F * std::numbers::pi_v<float>;
+    float const look_amount = std::sin(look_phase) * 0.04F;
+    m_pose.head_pos.setX(m_pose.head_pos.x() + look_amount * intensity);
+    // Slight shoulder turn to match
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + look_amount * 0.3F);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() - look_amount * 0.3F);
+    break;
+  }
+
+  case AmbientIdleType::ShiftStance: {
+    // More pronounced weight shift than micro idle
+    float const shift_phase = phase * std::numbers::pi_v<float>;
+    float const shift_amount = std::sin(shift_phase) * intensity * 0.03F;
+    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift_amount);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + shift_amount * 0.5F);
+    m_pose.knee_l.setY(m_pose.knee_l.y() + shift_amount * 0.3F);
+    // Counterbalance with shoulders
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() - shift_amount * 0.4F);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() - shift_amount * 0.4F);
+    break;
+  }
+
+  case AmbientIdleType::RestOnWeapon: {
+    // Lean forward slightly as if resting on weapon/spear
+    float const lean_amount = intensity * 0.03F;
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + lean_amount);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + lean_amount);
+    m_pose.pelvis_pos.setZ(m_pose.pelvis_pos.z() - lean_amount * 0.5F);
+    // Drop head slightly
+    m_pose.head_pos.setY(m_pose.head_pos.y() - lean_amount * 0.5F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + lean_amount * 0.8F);
+    // Lower both hands slightly as if gripping weapon shaft
+    m_pose.hand_l.setY(m_pose.hand_l.y() - lean_amount * 0.5F);
+    m_pose.hand_r.setY(m_pose.hand_r.y() - lean_amount * 0.5F);
+    break;
+  }
+
+  case AmbientIdleType::None:
+  default:
+    break;
+  }
+}
+
 void HumanoidPoseController::kneel(float depth) {
   using HP = HumanProportions;
 

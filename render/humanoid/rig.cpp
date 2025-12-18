@@ -1635,10 +1635,15 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
-    // Apply micro idle animations when unit is not moving
+    // Apply idle animations when unit is not moving or attacking
     if (!anim.is_moving && !anim.is_attacking) {
       HumanoidPoseController pose_ctrl(pose, anim_ctx);
+      // Micro idles: subtle continuous movements (breathing, weight shift)
       pose_ctrl.applyMicroIdle(anim.time + phase_offset, inst_seed);
+      // Ambient idles: occasional noticeable actions (raise weapon, stretch)
+      // Use time as idle duration proxy - ambient idles trigger after 3+ seconds
+      pose_ctrl.applyAmbientIdle(anim.time + phase_offset, inst_seed,
+                                 anim.time);
     }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
