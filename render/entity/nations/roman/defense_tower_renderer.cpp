@@ -19,11 +19,14 @@ using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
 struct TowerPalette {
-  QVector3D stone_light{0.65F, 0.63F, 0.60F};
-  QVector3D stone_dark{0.52F, 0.50F, 0.48F};
-  QVector3D stone_base{0.58F, 0.55F, 0.53F};
-  QVector3D brick{0.72F, 0.50F, 0.40F};
+  QVector3D stone_light{0.62F, 0.60F, 0.58F};
+  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
+  QVector3D stone_base{0.55F, 0.53F, 0.51F};
+  QVector3D brick{0.75F, 0.52F, 0.42F};
+  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
+  QVector3D tile_red{0.72F, 0.40F, 0.30F};
   QVector3D wood{0.42F, 0.28F, 0.16F};
+  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
   QVector3D iron{0.35F, 0.35F, 0.38F};
   QVector3D team{0.8F, 0.9F, 1.0F};
 };
@@ -52,51 +55,87 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 
 void draw_tower_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const TowerPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.2F, 0.0F),
-           QVector3D(0.8F, 0.2F, 0.8F), c.stone_base);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.15F, 0.0F),
+           QVector3D(1.0F, 0.15F, 1.0F), c.stone_base);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.45F, 0.0F),
-           QVector3D(0.75F, 0.25F, 0.75F), c.stone_light);
+  for (float x = -0.9F; x <= 0.9F; x += 0.45F) {
+    draw_box(out, unit, white, p.model, QVector3D(x, 0.35F, -0.85F),
+             QVector3D(0.12F, 0.08F, 0.08F), c.brick_dark);
+    draw_box(out, unit, white, p.model, QVector3D(x, 0.35F, 0.85F),
+             QVector3D(0.12F, 0.08F, 0.08F), c.brick_dark);
+  }
+  for (float z = -0.8F; z <= 0.8F; z += 0.4F) {
+    draw_box(out, unit, white, p.model, QVector3D(-0.85F, 0.35F, z),
+             QVector3D(0.08F, 0.08F, 0.12F), c.brick_dark);
+    draw_box(out, unit, white, p.model, QVector3D(0.85F, 0.35F, z),
+             QVector3D(0.08F, 0.08F, 0.12F), c.brick_dark);
+  }
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.5F, 0.0F),
+           QVector3D(0.9F, 0.1F, 0.9F), c.stone_light);
 }
 
 void draw_tower_body(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const TowerPalette &c) {
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.2F, 0.0F),
-           QVector3D(0.65F, 0.75F, 0.65F), c.stone_light);
+           QVector3D(0.75F, 0.7F, 0.75F), c.stone_light);
 
   for (int i = 0; i < 4; ++i) {
     float const angle = static_cast<float>(i) * 1.57F;
-    float const ox = sinf(angle) * 0.55F;
-    float const oz = cosf(angle) * 0.55F;
-    draw_cyl(out, p.model, QVector3D(ox, 0.5F, oz), QVector3D(ox, 2.0F, oz),
-             0.12F, c.stone_dark, white);
+    float const ox = sinf(angle) * 0.65F;
+    float const oz = cosf(angle) * 0.65F;
+    draw_cyl(out, p.model, QVector3D(ox, 0.5F, oz), QVector3D(ox, 1.9F, oz),
+             0.14F, c.stone_dark, white);
   }
+
+  for (int i = 0; i < 4; ++i) {
+    float const angle = static_cast<float>(i) * 1.57F + 0.785F;
+    float const ox = sinf(angle) * 0.62F;
+    float const oz = cosf(angle) * 0.62F;
+    draw_box(out, unit, white, p.model, QVector3D(ox, 0.9F, oz),
+             QVector3D(0.12F, 0.4F, 0.12F), c.brick);
+  }
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.65F, 0.0F),
+           QVector3D(0.82F, 0.08F, 0.82F), c.brick_dark);
 }
 
 void draw_tower_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
                          Texture *white, const TowerPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.05F, 0.0F),
-           QVector3D(0.85F, 0.05F, 0.85F), c.wood);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.95F, 0.0F),
+           QVector3D(0.95F, 0.05F, 0.95F), c.wood);
 
   for (int i = 0; i < 8; ++i) {
     float const angle = static_cast<float>(i) * 0.785F;
-    float const ox = sinf(angle) * 0.7F;
-    float const oz = cosf(angle) * 0.7F;
-    draw_box(out, unit, white, p.model, QVector3D(ox, 2.2F, oz),
-             QVector3D(0.1F, 0.15F, 0.1F), c.stone_dark);
+    float const ox = sinf(angle) * 0.82F;
+    float const oz = cosf(angle) * 0.82F;
+    draw_box(out, unit, white, p.model, QVector3D(ox, 2.12F, oz),
+             QVector3D(0.12F, 0.17F, 0.12F), c.brick);
   }
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.32F, 0.0F),
+           QVector3D(1.0F, 0.03F, 1.0F), c.tile_red);
 }
 
 void draw_tower_top(const DrawContext &p, ISubmitter &out, Mesh *unit,
                     Texture *white, const TowerPalette &c) {
-  draw_cyl(out, p.model, QVector3D(0.0F, 2.0F, 0.0F),
-           QVector3D(0.0F, 2.8F, 0.0F), 0.06F, c.wood, white);
+  draw_cyl(out, p.model, QVector3D(0.0F, 2.05F, 0.0F),
+           QVector3D(0.0F, 2.9F, 0.0F), 0.08F, c.wood_dark, white);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.12F, 2.55F, 0.0F),
-           QVector3D(0.2F, 0.15F, 0.02F), c.team);
+  draw_box(out, unit, white, p.model, QVector3D(0.15F, 2.6F, 0.0F),
+           QVector3D(0.25F, 0.18F, 0.025F), c.team);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.9F, 0.0F),
-           QVector3D(0.08F, 0.05F, 0.08F), c.iron);
+  for (int i = 0; i < 3; ++i) {
+    float ring_y = 2.3F + static_cast<float>(i) * 0.25F;
+    out.mesh(get_unit_cylinder(),
+             p.model * Render::Geom::cylinder_between(
+                           QVector3D(0.0F, ring_y, 0.0F),
+                           QVector3D(0.0F, ring_y + 0.03F, 0.0F), 0.12F),
+             c.iron, white, 1.0F);
+  }
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.95F, 0.0F),
+           QVector3D(0.1F, 0.08F, 0.1F), c.iron);
 }
 
 void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
