@@ -127,18 +127,18 @@ inline void releaseUnits(const std::vector<Engine::Core::EntityID> &units,
   }
 }
 
-inline void cleanupDeadUnits(const AISnapshot &snapshot, AIContext &context) {
+inline void cleanup_dead_units(const AISnapshot &snapshot, AIContext &context) {
 
-  std::unordered_set<Engine::Core::EntityID> aliveUnits;
+  std::unordered_set<Engine::Core::EntityID> alive_units;
   for (const auto &entity : snapshot.friendly_units) {
     if (!entity.is_building) {
-      aliveUnits.insert(entity.id);
+      alive_units.insert(entity.id);
     }
   }
 
   for (auto it = context.assigned_units.begin();
        it != context.assigned_units.end();) {
-    if (aliveUnits.find(it->first) == aliveUnits.end()) {
+    if (alive_units.find(it->first) == alive_units.end()) {
       it = context.assigned_units.erase(it);
     } else {
       ++it;

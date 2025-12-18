@@ -118,7 +118,7 @@ void Pathfinding::markBuildingRegionDirty(float center_x, float center_z,
   markRegionDirty(min_x, max_x, min_z, max_z);
 }
 
-void Pathfinding::processDirtyRegions() {
+void Pathfinding::process_dirty_regions() {
   std::vector<DirtyRegion> regions_to_process;
 
   {
@@ -623,7 +623,7 @@ auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
   return top;
 }
 
-void Pathfinding::workerLoop() {
+void Pathfinding::worker_loop() {
   while (true) {
     PathRequest request;
     {

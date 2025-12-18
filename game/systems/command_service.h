@@ -35,16 +35,16 @@ public:
 
   static auto get_pathfinder() -> Pathfinding *;
 
-  static void moveUnits(Engine::Core::World &world,
+  static void move_units(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
                         const std::vector<QVector3D> &targets);
 
-  static void moveUnits(Engine::Core::World &world,
+  static void move_units(Engine::Core::World &world,
                         const std::vector<Engine::Core::EntityID> &units,
                         const std::vector<QVector3D> &targets,
                         const MoveOptions &options);
 
-  static void processPathResults(Engine::Core::World &world);
+  static void process_path_results(Engine::Core::World &world);
 
   static void attack_target(Engine::Core::World &world,
                             const std::vector<Engine::Core::EntityID> &units,

@@ -90,7 +90,7 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
 } // namespace
 
 void MovementSystem::update(Engine::Core::World *world, float delta_time) {
-  CommandService::processPathResults(*world);
+  CommandService::process_path_results(*world);
   auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
 
   for (auto *entity : entities) {
@@ -240,7 +240,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       opts.allow_direct_fallback = true;
       std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
       std::vector<QVector3D> const targets = {final_goal};
-      CommandService::moveUnits(*world, ids, targets, opts);
+      CommandService::move_units(*world, ids, targets, opts);
       movement->repath_cooldown = repath_cooldown_seconds;
       requested_recovery_move = true;
     }
@@ -308,7 +308,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
             std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
             std::vector<QVector3D> const targets = {
                 QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
-            CommandService::moveUnits(*world, ids, targets, opts);
+            CommandService::move_units(*world, ids, targets, opts);
             movement->repath_cooldown = repath_cooldown_seconds;
             issued_path_request = true;
           }

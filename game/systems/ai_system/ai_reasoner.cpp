@@ -19,7 +19,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
             ctx.player_id);
   }
 
-  cleanupDeadUnits(snapshot, ctx);
+  cleanup_dead_units(snapshot, ctx);
 
   int previous_unit_count = ctx.total_units;
 

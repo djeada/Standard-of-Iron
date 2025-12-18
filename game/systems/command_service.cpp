@@ -122,13 +122,13 @@ void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
   }
 }
 
-void CommandService::moveUnits(Engine::Core::World &world,
+void CommandService::move_units(Engine::Core::World &world,
                                const std::vector<Engine::Core::EntityID> &units,
                                const std::vector<QVector3D> &targets) {
   moveUnits(world, units, targets, MoveOptions{});
 }
 
-void CommandService::moveUnits(Engine::Core::World &world,
+void CommandService::move_units(Engine::Core::World &world,
                                const std::vector<Engine::Core::EntityID> &units,
                                const std::vector<QVector3D> &targets,
                                const MoveOptions &options) {
@@ -752,7 +752,7 @@ void CommandService::move_group(Engine::Core::World &world,
   s_pathfinder->submitPathRequest(request_id, start, end, unit_radius);
 }
 
-void CommandService::processPathResults(Engine::Core::World &world) {
+void CommandService::process_path_results(Engine::Core::World &world) {
   if (!s_pathfinder) {
     return;
   }

@@ -124,9 +124,9 @@ private:
   void push_open_node(const QueueNode &node);
   auto pop_open_node() -> QueueNode;
 
-  void workerLoop();
+  void worker_loop();
 
-  void processDirtyRegions();
+  void process_dirty_regions();
 
   void update_region(int min_x, int max_x, int min_z, int max_z);
 
