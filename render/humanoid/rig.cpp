@@ -50,6 +50,10 @@ namespace {
 constexpr float k_shadow_size_infantry = 0.16F;
 constexpr float k_shadow_size_mounted = 0.35F;
 
+// Animation constants for enhanced run dynamics
+constexpr float k_run_extra_foot_lift = 0.08F;
+constexpr float k_run_stride_enhancement = 0.15F;
+
 struct CachedPoseEntry {
   HumanoidPose pose;
   VariationParams variation;
@@ -326,9 +330,9 @@ void HumanoidRendererBase::compute_locomotion_pose(
       float const lift_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
       float lift = 0.0F;
       if (lift_raw > 0.0F) {
-        // Ease in-out for smooth lift
-        float const t = phase;
-        float const ease_t = t * t * (3.0F - 2.0F * t);
+        // Normalize phase to lift cycle portion (0.0 to 0.5 maps to 0.0 to 1.0)
+        float const lift_phase = phase < 0.5F ? phase * 2.0F : (1.0F - phase) * 2.0F;
+        float const ease_t = lift_phase * lift_phase * (3.0F - 2.0F * lift_phase);
         lift = lift_raw * ease_t;
         foot.setY(ground_y + pose.foot_y_offset + lift * 0.15F);
       } else {
@@ -1622,11 +1626,11 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         float const lift_raw = std::sin(foot_phase * 2.0F * std::numbers::pi_v<float>);
         if (lift_raw > 0.0F) {
           // Higher lift for running
-          float const extra_lift = lift_raw * 0.08F;
+          float const extra_lift = lift_raw * k_run_extra_foot_lift;
           foot.setY(foot.y() + extra_lift);
           
           // Extended stride
-          float const stride_enhance = std::sin((foot_phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) * 0.15F;
+          float const stride_enhance = std::sin((foot_phase - 0.25F) * 2.0F * std::numbers::pi_v<float>) * k_run_stride_enhancement;
           foot.setZ(foot.z() + stride_enhance);
         }
       };
