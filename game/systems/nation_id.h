@@ -47,7 +47,7 @@ nation_id_from_string(const std::string &str) -> std::optional<NationID> {
   return std::nullopt;
 }
 
-} // namespace Game::Systems
+} 
 
 namespace std {
 template <> struct hash<Game::Systems::NationID> {
@@ -55,4 +55,4 @@ template <> struct hash<Game::Systems::NationID> {
     return hash<std::uint8_t>()(static_cast<std::uint8_t>(id));
   }
 };
-} // namespace std
+} 

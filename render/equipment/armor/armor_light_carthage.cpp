@@ -117,4 +117,4 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                  back_panel, metal_core, nullptr, 1.0F, 1);
 }
 
-} // namespace Render::GL
+} 

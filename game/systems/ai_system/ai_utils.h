@@ -144,4 +144,4 @@ inline void cleanup_dead_units(const AISnapshot &snapshot, AIContext &context) {
   }
 }
 
-} // namespace Game::Systems::AI
+} 

@@ -24,4 +24,4 @@ struct HealerStyleConfig {
 
 void register_roman_healer_style();
 
-} // namespace Render::GL::Roman
+} 

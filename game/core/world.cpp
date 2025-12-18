@@ -188,4 +188,4 @@ void World::set_next_entity_id(EntityID next_id) {
   m_next_entity_id = std::max(next_id, m_next_entity_id);
 }
 
-} // namespace Engine::Core
+} 

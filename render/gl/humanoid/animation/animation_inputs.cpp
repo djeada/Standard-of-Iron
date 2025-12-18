@@ -32,7 +32,7 @@ auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
   }
 }
 
-} // namespace
+} 
 
 auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   AnimationInputs anim{};
@@ -162,4 +162,4 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   return anim;
 }
 
-} // namespace Render::GL
+} 

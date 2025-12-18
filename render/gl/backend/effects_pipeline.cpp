@@ -67,4 +67,4 @@ void EffectsPipeline::cache_grid_uniforms() {
   m_gridUniforms.thickness = m_gridShader->uniform_handle("u_thickness");
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

@@ -35,4 +35,4 @@ void Environment::applyDefault(Render::GL::Renderer &renderer,
   renderer.set_grid_params(gp);
 }
 
-} // namespace Game::Map
+} 

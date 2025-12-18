@@ -125,4 +125,4 @@ struct PrimitiveBatchStats {
 auto get_primitive_batch_stats() -> const PrimitiveBatchStats &;
 void reset_primitive_batch_stats();
 
-} // namespace Render::GL
+} 

@@ -280,4 +280,4 @@ void BallistaAttackSystem::update_firing(Engine::Core::Entity *ballista,
   }
 }
 
-} // namespace Game::Systems
+} 

@@ -12,4 +12,4 @@ public:
   CarthageSwordRenderer();
 };
 
-} // namespace Render::GL
+} 

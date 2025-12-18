@@ -83,4 +83,4 @@ private:
   Game::Systems::OwnerRegistry &m_owner_registry;
 };
 
-} // namespace Game::Systems
+} 

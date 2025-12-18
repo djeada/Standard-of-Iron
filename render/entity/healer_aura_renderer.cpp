@@ -48,4 +48,4 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
   }
 }
 
-} // namespace Render::GL
+} 

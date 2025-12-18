@@ -12,7 +12,7 @@ namespace {
 constexpr float k_corner_size_ratio = 0.15F;
 constexpr float k_min_corner_size = 4.0F;
 constexpr float k_corner_pen_offset = 1.0F;
-} // namespace
+} 
 
 void CameraViewportLayer::init(int width, int height, float world_width,
                                float world_height) {
@@ -116,4 +116,4 @@ void CameraViewportLayer::draw_viewport_rect(QPainter &painter, float px,
                    QPointF(rect.right(), rect.bottom() - actual_corner));
 }
 
-} // namespace Game::Map::Minimap
+} 

@@ -190,4 +190,4 @@ private:
       Platform::BufferStorageHelper::Mode::Persistent;
 };
 
-} // namespace Render::GL
+} 

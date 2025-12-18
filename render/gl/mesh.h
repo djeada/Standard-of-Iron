@@ -74,4 +74,4 @@ auto createCubeMesh() -> std::unique_ptr<Mesh>;
 auto createPlaneMesh(float width, float height,
                      int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
-} // namespace Render::GL
+} 

@@ -105,4 +105,4 @@ void update_combat_mode(Engine::Core::Entity *attacker,
   }
 }
 
-} // namespace Game::Systems::Combat
+} 

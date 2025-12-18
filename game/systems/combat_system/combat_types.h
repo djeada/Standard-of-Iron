@@ -26,6 +26,6 @@ inline constexpr float kArrowStartHeight = 0.6F;
 inline constexpr float kArrowStartOffset = 0.35F;
 inline constexpr float kArrowTargetOffset = 0.5F;
 inline constexpr float kArrowSpeed = 14.0F;
-} // namespace Constants
+} 
 
-} // namespace Game::Systems::Combat
+} 

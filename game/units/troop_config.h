@@ -221,4 +221,4 @@ private:
   std::unordered_map<TroopType, float> m_selectionRingGroundOffset;
 };
 
-} // namespace Game::Units
+} 

@@ -238,4 +238,4 @@ void CatapultAttackSystem::update_firing(Engine::Core::Entity *catapult,
   }
 }
 
-} // namespace Game::Systems
+} 

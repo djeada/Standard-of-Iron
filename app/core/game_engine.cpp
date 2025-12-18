@@ -603,7 +603,7 @@ void GameEngine::on_construction_confirm() {
     build_time = 10.0F;
   }
 
-  // Set construction site for all builders
+  
   for (auto id : m_pending_construction_builders) {
     auto *e = m_world->get_entity(id);
     if (e == nullptr) {
@@ -624,9 +624,9 @@ void GameEngine::on_construction_confirm() {
     builder_prod->construction_site_z = m_construction_placement_position.z();
     builder_prod->at_construction_site = false;
     builder_prod->construction_complete = false;
-    // Don't set in_progress yet - that happens when they reach the site
+    
 
-    // Move builder to construction site
+    
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv != nullptr) {
       mv->goal_x = m_construction_placement_position.x();
@@ -1413,7 +1413,7 @@ void GameEngine::start_builder_construction(const QString &item_type) {
 
   const auto &selected = selection_system->get_selected_units();
   
-  // Collect builders from selection
+  
   m_pending_construction_builders.clear();
   for (auto id : selected) {
     auto *e = m_world->get_entity(id);
@@ -1438,11 +1438,11 @@ void GameEngine::start_builder_construction(const QString &item_type) {
     return;
   }
 
-  // Enter placement mode instead of starting construction immediately
+  
   m_pending_construction_type = item_type;
   m_is_placing_construction = true;
   
-  // Calculate center position of selected builders
+  
   QVector3D center(0.0F, 0.0F, 0.0F);
   int valid_count = 0;
   for (auto id : m_pending_construction_builders) {

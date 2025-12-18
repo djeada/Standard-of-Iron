@@ -290,7 +290,7 @@ void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.12F, 0.25F, 0.35F), 0.065F, c.rope, white);
 }
 
-} // namespace
+} 
 
 void register_catapult_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -328,4 +328,4 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Carthage
+} 

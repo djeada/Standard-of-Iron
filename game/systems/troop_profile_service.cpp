@@ -149,4 +149,4 @@ auto TroopProfileService::build_profile(
   return profile;
 }
 
-} // namespace Game::Systems
+} 

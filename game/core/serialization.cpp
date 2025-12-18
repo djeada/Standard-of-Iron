@@ -74,7 +74,7 @@ void deserialize_color(const QJsonArray &array, std::array<float, 3> &color) {
   }
 }
 
-} // namespace
+} 
 
 auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
   QJsonObject entity_obj;
@@ -1014,4 +1014,4 @@ auto Serialization::load_from_file(const QString &filename) -> QJsonDocument {
   return QJsonDocument::fromJson(data);
 }
 
-} // namespace Engine::Core
+} 

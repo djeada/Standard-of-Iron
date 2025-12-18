@@ -8,4 +8,4 @@ inline auto isNeutralOwner(int owner_id) -> bool {
   return owner_id == NEUTRAL_OWNER_ID;
 }
 
-} // namespace Game::Core
+} 

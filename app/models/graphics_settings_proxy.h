@@ -32,4 +32,4 @@ signals:
   void quality_level_changed();
 };
 
-} // namespace App::Models
+} 

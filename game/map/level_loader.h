@@ -8,12 +8,12 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Engine::Core
+} 
 
 namespace Render::GL {
 class Renderer;
 class Camera;
-} // namespace Render::GL
+} 
 
 namespace Game::Map {
 
@@ -42,4 +42,4 @@ public:
                              Render::GL::Camera &camera) -> LevelLoadResult;
 };
 
-} // namespace Game::Map
+} 

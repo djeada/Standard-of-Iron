@@ -35,4 +35,4 @@ struct RainBatchParams {
   QVector3D wind_direction{1.0F, 0.0F, 0.3F};
 };
 
-} // namespace Render::GL
+} 

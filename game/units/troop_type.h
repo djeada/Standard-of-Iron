@@ -118,7 +118,7 @@ tryParseTroopType(const std::string &str) -> std::optional<TroopType> {
   return std::nullopt;
 }
 
-} // namespace Game::Units
+} 
 
 namespace std {
 template <> struct hash<Game::Units::TroopType> {
@@ -126,4 +126,4 @@ template <> struct hash<Game::Units::TroopType> {
     return hash<int>()(static_cast<int>(type));
   }
 };
-} // namespace std
+} 

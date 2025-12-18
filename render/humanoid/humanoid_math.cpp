@@ -25,4 +25,4 @@ auto elbow_bend_torso(const QVector3D &shoulder, const QVector3D &hand,
          lateral * (lateral_offset * outwardSign) + QVector3D(0, yBias, 0);
 }
 
-} // namespace Render::GL
+} 

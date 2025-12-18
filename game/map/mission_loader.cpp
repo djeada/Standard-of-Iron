@@ -255,4 +255,4 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
   return true;
 }
 
-} // namespace Game::Mission
+} 

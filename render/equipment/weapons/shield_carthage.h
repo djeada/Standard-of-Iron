@@ -20,4 +20,4 @@ private:
   float m_scale_multiplier = 1.0F;
 };
 
-} // namespace Render::GL
+} 

@@ -5,7 +5,7 @@
 namespace Render::GL {
 class Renderer;
 class Camera;
-} // namespace Render::GL
+} 
 
 namespace Game::Map {
 
@@ -16,4 +16,4 @@ struct Environment {
                            Render::GL::Camera &camera);
 };
 
-} // namespace Game::Map
+} 

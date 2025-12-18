@@ -37,4 +37,4 @@ auto RenderBootstrap::initialize(Renderer &renderer, Camera &camera) -> bool {
   return true;
 }
 
-} // namespace Render::GL
+} 

@@ -618,7 +618,7 @@ void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
   }
 }
 
-} // namespace
+} 
 
 auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
                                  QString *out_error) -> bool {
@@ -724,4 +724,4 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   return true;
 }
 
-} // namespace Game::Map
+} 

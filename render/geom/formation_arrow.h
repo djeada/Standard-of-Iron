@@ -6,7 +6,7 @@
 namespace Render::GL {
 class Renderer;
 class ResourceManager;
-} // namespace Render::GL
+} 
 
 namespace Render::GL {
 
@@ -19,4 +19,4 @@ struct FormationPlacementInfo {
 void renderFormationArrow(Renderer *renderer, ResourceManager *resources,
                           const FormationPlacementInfo &placement);
 
-} // namespace Render::GL
+} 

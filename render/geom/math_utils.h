@@ -54,4 +54,4 @@ inline auto nlerp(const QVector3D &a, const QVector3D &b,
   return v;
 }
 
-} // namespace Render::Geom
+} 

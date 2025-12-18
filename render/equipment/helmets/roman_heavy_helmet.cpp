@@ -46,7 +46,7 @@ constexpr float brass_color_mul[3] = {1.40f, 1.15f, 0.65f};
 
 constexpr float helmet_y_offset = 0.05f;
 
-} // namespace
+} 
 
 void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
                                       const BodyFrames &frames,
@@ -125,4 +125,4 @@ void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
                  brass_color, nullptr, 1.0f, 2);
 }
 
-} // namespace Render::GL
+} 

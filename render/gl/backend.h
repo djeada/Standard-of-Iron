@@ -31,7 +31,7 @@ class HealerAuraPipeline;
 class CombatDustPipeline;
 class RainPipeline;
 class ModeIndicatorPipeline;
-} // namespace Render::GL::BackendPipelines
+} 
 
 namespace Render::GL {
 
@@ -178,4 +178,4 @@ private:
   } m_riverbankVisibility;
 };
 
-} // namespace Render::GL
+} 

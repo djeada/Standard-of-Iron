@@ -18,4 +18,4 @@ public:
   static void set_follow_lerp(Render::GL::Camera &camera, float alpha);
 };
 
-} // namespace Game::Systems
+} 

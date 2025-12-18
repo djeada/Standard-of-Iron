@@ -343,4 +343,4 @@ auto FogOfWarMask::generate_mask(int target_width,
   return mask;
 }
 
-} // namespace Game::Map::Minimap
+} 

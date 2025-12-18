@@ -272,4 +272,4 @@ private:
   std::unordered_map<QString, std::unique_ptr<Shader>> m_cache;
 };
 
-} // namespace Render::GL
+} 

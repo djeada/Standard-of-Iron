@@ -10,7 +10,7 @@
 namespace Engine::Core {
 using EntityID = unsigned int;
 class World;
-} // namespace Engine::Core
+} 
 
 namespace Game::Systems {
 
@@ -28,7 +28,7 @@ struct FormationPosition {
   Engine::Core::EntityID entity_id{0};
 };
 
-} // namespace Game::Systems
+} 
 
 namespace std {
 template <> struct hash<Game::Systems::FormationType> {
@@ -36,7 +36,7 @@ template <> struct hash<Game::Systems::FormationType> {
     return std::hash<int>()(static_cast<int>(ft));
   }
 };
-} // namespace std
+} 
 
 namespace Game::Systems {
 
@@ -132,4 +132,4 @@ private:
   std::unordered_map<FormationType, std::unique_ptr<IFormation>> m_formations;
 };
 
-} // namespace Game::Systems
+} 

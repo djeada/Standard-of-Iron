@@ -326,4 +326,4 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
   return ready_units >= 1;
 }
 
-} // namespace Game::Systems::AI
+} 

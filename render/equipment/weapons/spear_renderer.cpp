@@ -59,4 +59,4 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                  palette.leather * 0.92F, nullptr, 1.0F, m_config.material_id);
 }
 
-} // namespace Render::GL
+} 

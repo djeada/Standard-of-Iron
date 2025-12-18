@@ -17,7 +17,7 @@ inline auto saturate(const QVector3D &c) -> QVector3D {
   return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
 }
-} // namespace
+} 
 
 static auto clamp01(const QVector3D &c) -> QVector3D { return saturate(c); }
 
@@ -223,4 +223,4 @@ auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
          a.soil_roughness == b.soil_roughness && a.snow_color == b.snow_color;
 }
 
-} // namespace Render::GL
+} 

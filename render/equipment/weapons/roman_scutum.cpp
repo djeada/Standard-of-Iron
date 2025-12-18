@@ -181,4 +181,4 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
   }
 }
 
-} // namespace Render::GL
+} 

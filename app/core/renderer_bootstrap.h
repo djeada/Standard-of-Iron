@@ -21,7 +21,7 @@ class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
 struct IRenderPass;
-} // namespace Render::GL
+} 
 
 namespace Engine::Core {
 class World;

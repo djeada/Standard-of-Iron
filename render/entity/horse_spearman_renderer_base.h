@@ -71,4 +71,4 @@ private:
   HorseSpearmanRendererConfig m_config;
 };
 
-} // namespace Render::GL
+} 

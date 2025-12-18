@@ -43,4 +43,4 @@ void TerrainAlignmentSystem::align_entity_to_terrain(
       terrain_height + entity_base_offset * transform->scale.y;
 }
 
-} // namespace Game::Systems
+} 

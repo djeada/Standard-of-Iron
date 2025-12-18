@@ -13,4 +13,4 @@ private:
   static constexpr float kMaxSearchRadius = 50.0F;
 };
 
-} // namespace Game::Systems
+} 

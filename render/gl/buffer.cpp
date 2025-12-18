@@ -110,4 +110,4 @@ void VertexArray::set_index_buffer(Buffer &buffer) {
   buffer.bind();
 }
 
-} // namespace Render::GL
+} 

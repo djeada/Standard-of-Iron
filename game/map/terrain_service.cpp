@@ -176,4 +176,4 @@ auto TerrainService::is_point_on_road(float world_x,
   return false;
 }
 
-} // namespace Game::Map
+} 

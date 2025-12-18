@@ -33,4 +33,4 @@ private:
   SpearRenderConfig m_config;
 };
 
-} // namespace Render::GL
+} 

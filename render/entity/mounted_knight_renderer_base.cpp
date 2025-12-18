@@ -238,4 +238,4 @@ auto MountedKnightRendererBase::resolve_shader_key(const DrawContext &ctx) const
   return QStringLiteral("horse_swordsman");
 }
 
-} // namespace Render::GL
+} 

@@ -38,4 +38,4 @@ inline auto world_to_screen(const Game::Systems::PickingService *pickingService,
                                                         outScreen);
 }
 
-} // namespace App::Utils
+} 

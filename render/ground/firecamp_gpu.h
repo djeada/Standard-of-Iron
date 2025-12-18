@@ -22,4 +22,4 @@ struct FireCampBatchParams {
   float glow_strength = kDefaultGlowStrength;
 };
 
-} // namespace Render::GL
+} 

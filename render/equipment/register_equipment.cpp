@@ -188,4 +188,4 @@ void registerBuiltInEquipment() {
                              arm_guards);
 }
 
-} // namespace Render::GL
+} 

@@ -81,4 +81,4 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
   draw_shoulder_cover(frames.shoulder_r.origin, right_axis);
 }
 
-} // namespace Render::GL
+} 

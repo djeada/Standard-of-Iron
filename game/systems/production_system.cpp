@@ -38,7 +38,7 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
   return registry.default_nation_id();
 }
 
-} // namespace
+} 
 
 void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
@@ -128,9 +128,9 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     }
   }
 
-  // Constants for construction site distance checks
-  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 4.0F;  // 2 units radius
-  constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;      // 3 units radius
+  
+  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 4.0F;  
+  constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;      
 
   auto builder_entities =
       world->get_entities_with<Engine::Core::BuilderProductionComponent>();
@@ -144,19 +144,19 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     auto *transform = e->get_component<Engine::Core::TransformComponent>();
     auto *movement = e->get_component<Engine::Core::MovementComponent>();
     
-    // Check if builder has a construction site but hasn't reached it yet
+    
     if (builder_prod->has_construction_site && !builder_prod->at_construction_site) {
       if (transform != nullptr) {
         float dx = builder_prod->construction_site_x - transform->position.x;
         float dz = builder_prod->construction_site_z - transform->position.z;
         float dist_sq = dx * dx + dz * dz;
         
-        // If close enough to construction site, start building
+        
         if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           
-          // Stop movement
+          
           if (movement != nullptr) {
             movement->goal_x = transform->position.x;
             movement->goal_y = transform->position.z;
@@ -164,13 +164,13 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             movement->target_y = transform->position.z;
           }
         } else {
-          // Check if builder was moved away from construction site (attacked or manually moved)
+          
           if (movement != nullptr) {
             float goal_dx = movement->goal_x - builder_prod->construction_site_x;
             float goal_dz = movement->goal_y - builder_prod->construction_site_z;
             float goal_dist_sq = goal_dx * goal_dx + goal_dz * goal_dz;
             
-            // If goal is far from construction site, reset construction
+            
             if (goal_dist_sq > CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
               builder_prod->has_construction_site = false;
               builder_prod->at_construction_site = false;
@@ -185,18 +185,18 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
     
-    // Process active construction
+    
     if (!builder_prod->in_progress) {
       continue;
     }
 
-    // Check if builder is being attacked or moved during construction
+    
     if (builder_prod->at_construction_site && transform != nullptr) {
       float dx = builder_prod->construction_site_x - transform->position.x;
       float dz = builder_prod->construction_site_z - transform->position.z;
       float dist_sq = dx * dx + dz * dz;
       
-      // If builder moved too far from construction site, reset
+      
       if (dist_sq > MAX_CONSTRUCTION_DISTANCE_SQ) {
         builder_prod->has_construction_site = false;
         builder_prod->at_construction_site = false;
@@ -217,7 +217,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         if (reg) {
           Game::Units::SpawnParams sp;
 
-          // Spawn at construction site if it exists, otherwise at builder position
+          
           if (builder_prod->has_construction_site) {
             sp.position = QVector3D(builder_prod->construction_site_x, t->position.y, 
                                    builder_prod->construction_site_z);
@@ -248,19 +248,19 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
           reg->create(sp.spawn_type, *world, sp);
           
-          // Move builder slightly away from completed construction
+          
           if (builder_prod->has_construction_site && movement != nullptr && t != nullptr) {
-            // Calculate direction away from construction site
+            
             float dx = t->position.x - builder_prod->construction_site_x;
             float dz = t->position.z - builder_prod->construction_site_z;
             float dist = std::sqrt(dx * dx + dz * dz);
             if (dist < 0.1F) {
-              // If builder is exactly at site, move in random direction
+              
               dx = 1.0F;
               dz = 0.0F;
               dist = 1.0F;
             }
-            // Normalize and move 3 units away
+            
             dx = (dx / dist) * 3.0F;
             dz = (dz / dist) * 3.0F;
             
@@ -281,4 +281,4 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   }
 }
 
-} // namespace Game::Systems
+} 

@@ -11,7 +11,7 @@
 namespace Engine::Core {
 class Entity;
 class World;
-} // namespace Engine::Core
+} 
 
 namespace Render::GL {
 class ResourceManager;
@@ -19,7 +19,7 @@ class Mesh;
 class Texture;
 class Backend;
 class Camera;
-} // namespace Render::GL
+} 
 
 namespace Render::GL {
 
@@ -64,4 +64,4 @@ private:
 
 void registerBuiltInEntityRenderers(EntityRendererRegistry &registry);
 
-} // namespace Render::GL
+} 

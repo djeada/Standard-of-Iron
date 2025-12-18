@@ -10,13 +10,13 @@ class Arrow {
 public:
   static auto get() -> GL::Mesh *;
 };
-} // namespace Geom
+} 
 
 namespace GL {
 class Renderer;
 class ResourceManager;
-} // namespace GL
-} // namespace Render
+} 
+} 
 
 namespace Game::Systems {
 class ArrowSystem;

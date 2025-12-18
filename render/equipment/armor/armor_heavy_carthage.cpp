@@ -85,4 +85,4 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   draw_torso(top, bottom, torso_r * 1.10F, bronze_core, 1.05F, 1.00F, 1);
 }
 
-} // namespace Render::GL
+} 

@@ -394,4 +394,4 @@ void PrimitiveBatchPipeline::draw_cones(std::size_t count,
   glBindVertexArray(0);
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

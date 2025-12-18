@@ -76,7 +76,7 @@ static HumanoidRenderStats s_render_stats;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
-} // namespace
+} 
 
 void advance_pose_cache_frame() {
   ++s_current_frame;
@@ -1898,4 +1898,4 @@ auto get_humanoid_render_stats() -> const HumanoidRenderStats & {
 
 void reset_humanoid_render_stats() { s_render_stats.reset(); }
 
-} // namespace Render::GL
+} 

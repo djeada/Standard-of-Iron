@@ -101,4 +101,4 @@ void Ballista::init(const SpawnParams &params) {
   m_atk->can_melee = profile.combat.can_melee;
 }
 
-} // namespace Game::Units
+} 

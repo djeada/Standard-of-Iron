@@ -32,4 +32,4 @@ void CarthageSaddleRenderer::render(const DrawContext &ctx,
   out.mesh(get_unit_sphere(), cantle, variant.saddle_color, nullptr, 1.0F, 4);
 }
 
-} // namespace Render::GL
+} 

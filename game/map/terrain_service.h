@@ -79,4 +79,4 @@ private:
   std::vector<RoadSegment> m_road_segments;
 };
 
-} // namespace Game::Map
+} 

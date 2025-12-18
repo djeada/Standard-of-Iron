@@ -491,10 +491,10 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   draw_selection(p, out);
 }
 
-} // namespace
+} 
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
   registry.register_renderer("barracks_carthage", draw_barracks);
 }
 
-} // namespace Render::GL::Carthage
+} 

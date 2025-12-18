@@ -48,7 +48,7 @@ inline auto valueNoise(float x, float z, uint32_t seed) -> float {
   return v0 * (1.0F - fz) + v1 * fz;
 }
 
-} // namespace
+} 
 
 namespace Render::GL {
 
@@ -359,4 +359,4 @@ void FireCampRenderer::generate_firecamp_instances() {
            << "total instances";
 }
 
-} // namespace Render::GL
+} 

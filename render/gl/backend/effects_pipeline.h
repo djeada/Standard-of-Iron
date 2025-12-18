@@ -52,5 +52,5 @@ private:
   void cache_grid_uniforms();
 };
 
-} // namespace BackendPipelines
-} // namespace Render::GL
+} 
+} 

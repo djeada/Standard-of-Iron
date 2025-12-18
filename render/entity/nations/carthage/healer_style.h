@@ -27,4 +27,4 @@ struct HealerStyleConfig {
 
 void register_carthage_healer_style();
 
-} // namespace Render::GL::Carthage
+} 

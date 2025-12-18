@@ -78,5 +78,5 @@ auto Stone::get() -> GL::Mesh * {
   return mesh.get();
 }
 
-} // namespace Geom
-} // namespace Render
+} 
+} 

@@ -125,7 +125,7 @@ inline auto smoothApproach(float current, float target,
          (target - current) * std::clamp(1.0F - smoothness, 0.01F, 0.99F);
 }
 
-} // namespace
+} 
 
 Camera::Camera() { update_vectors(); }
 
@@ -778,4 +778,4 @@ auto Camera::is_in_frustum(const QVector3D &center,
          test_plane(near_n, near_d) && test_plane(far_n, far_d);
 }
 
-} // namespace Render::GL
+} 

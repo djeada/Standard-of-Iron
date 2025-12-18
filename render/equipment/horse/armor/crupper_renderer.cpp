@@ -31,4 +31,4 @@ void CrupperRenderer::render(const DrawContext &ctx,
   }
 }
 
-} // namespace Render::GL
+} 

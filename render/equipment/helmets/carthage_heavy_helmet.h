@@ -31,4 +31,4 @@ private:
   CarthageHeavyHelmetConfig m_config;
 };
 
-} // namespace Render::GL
+} 

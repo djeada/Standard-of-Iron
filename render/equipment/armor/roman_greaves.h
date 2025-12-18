@@ -15,4 +15,4 @@ public:
               ISubmitter &submitter) override;
 };
 
-} // namespace Render::GL
+} 

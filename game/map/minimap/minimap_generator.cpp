@@ -45,7 +45,7 @@ constexpr QColor TEAM_BLUE_DARK{40, 65, 100};
 constexpr QColor TEAM_RED{175, 65, 55};
 constexpr QColor TEAM_RED_DARK{110, 40, 35};
 
-} // namespace Palette
+} 
 
 auto hash_coords(int x, int y, int seed = 0) -> float {
   const int n = x + y * 57 + seed * 131;
@@ -57,7 +57,7 @@ auto hash_coords(int x, int y, int seed = 0) -> float {
              1073741824.0F;
 }
 
-} // namespace
+} 
 
 MinimapGenerator::MinimapGenerator() : m_config() {}
 
@@ -649,4 +649,4 @@ auto MinimapGenerator::terrain_feature_color(TerrainType type) -> QColor {
   }
 }
 
-} // namespace Game::Map::Minimap
+} 

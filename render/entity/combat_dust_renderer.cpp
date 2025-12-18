@@ -37,7 +37,7 @@ constexpr float kStoneImpactDuration = 10.0F;
 constexpr float kStoneImpactTriggerProgress = 0.99F;
 
 std::unordered_set<const void *> g_tracked_projectiles;
-} // namespace
+} 
 
 auto StoneImpactTracker::instance() -> StoneImpactTracker & {
   static StoneImpactTracker instance;
@@ -263,4 +263,4 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
   }
 }
 
-} // namespace Render::GL
+} 

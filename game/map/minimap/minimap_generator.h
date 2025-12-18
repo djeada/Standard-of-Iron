@@ -63,4 +63,4 @@ private:
   [[nodiscard]] static auto terrain_feature_color(TerrainType type) -> QColor;
 };
 
-} // namespace Game::Map::Minimap
+} 

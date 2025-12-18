@@ -37,7 +37,7 @@ auto check_gl_error(const char *operation) -> bool {
   }
   return true;
 }
-} // namespace
+} 
 
 auto RainPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {
@@ -318,4 +318,4 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
   }
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

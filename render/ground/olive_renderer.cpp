@@ -37,7 +37,7 @@ inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-} // namespace
+} 
 
 namespace Render::GL {
 
@@ -261,4 +261,4 @@ void OliveRenderer::generate_olive_instances() {
   m_oliveInstancesDirty = m_oliveInstanceCount > 0;
 }
 
-} // namespace Render::GL
+} 

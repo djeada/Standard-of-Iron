@@ -26,7 +26,7 @@ auto reinAnchor(const MountedAttachmentFrame &mount, bool is_left, float slack,
          mount.ground_offset;
 }
 
-} // namespace
+} 
 
 MountedPoseController::MountedPoseController(
     HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx)
@@ -949,4 +949,4 @@ void MountedPoseController::finalize_head_sync(
   apply_fixed_head_frame(mount, debug_label);
 }
 
-} // namespace Render::GL
+} 

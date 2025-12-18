@@ -27,7 +27,7 @@ constexpr float same_target_threshold_sq = 0.01F;
 constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
-} // namespace
+} 
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
 std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
@@ -1021,4 +1021,4 @@ void CommandService::attack_target(
   }
 }
 
-} // namespace Game::Systems
+} 

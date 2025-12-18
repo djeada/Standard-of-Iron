@@ -52,4 +52,4 @@ buildingTypeFromString(const std::string &str) -> std::optional<BuildingType> {
   return std::nullopt;
 }
 
-} // namespace Game::Units
+} 

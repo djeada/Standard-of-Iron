@@ -43,7 +43,7 @@ namespace {
 const QVector3D k_axis_x(1.0F, 0.0F, 0.0F);
 const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
-} // namespace
+} 
 
 Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
 
@@ -876,7 +876,7 @@ void Renderer::render_construction_previews(
       continue;
     }
     
-    // Show preview at construction site if has site, or at builder position if in progress
+    
     bool show_preview = false;
     float preview_x = transform->position.x;
     float preview_z = transform->position.z;
@@ -949,4 +949,4 @@ void Renderer::render_construction_previews(
   }
 }
 
-} // namespace Render::GL
+} 

@@ -265,7 +265,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
   return true;
 }
 
-} // namespace
+} 
 
 namespace Game::Systems {
 
@@ -390,4 +390,4 @@ auto NationLoader::load_from_file(const QString &path)
   return nation;
 }
 
-} // namespace Game::Systems
+} 

@@ -14,7 +14,7 @@ constexpr float k_camera_yaw_sin = -0.70710678118F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr float k_degrees_to_radians = 3.14159265358979323846F / 180.0F;
 
-} // namespace Constants
+} 
 
 inline auto
 grid_to_world_coords(float grid_x, float grid_z,
@@ -68,4 +68,4 @@ inline auto pixel_to_world(float px, float py, float world_width,
   return {world_x, world_z};
 }
 
-} // namespace Game::Map::Minimap
+} 

@@ -28,4 +28,4 @@ private:
   static auto parseGameEvent(const QJsonObject &obj) -> GameEvent;
 };
 
-} // namespace Game::Mission
+} 

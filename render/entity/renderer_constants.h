@@ -33,4 +33,4 @@ static const QVector3D CHAINMAIL_TINT(0.85F, 0.88F, 0.92F);
 static const QVector3D DARK_METAL(0.15F, 0.15F, 0.15F);
 static const QVector3D VISOR_COLOR(0.1F, 0.1F, 0.1F);
 
-} // namespace Render::GL
+} 

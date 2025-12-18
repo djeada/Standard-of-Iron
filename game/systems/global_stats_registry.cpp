@@ -165,4 +165,4 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
   }
 }
 
-} // namespace Game::Systems
+} 

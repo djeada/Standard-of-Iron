@@ -56,4 +56,4 @@ void CameraController::set_follow_lerp(Render::GL::Camera &camera,
   camera.set_follow_lerp(alpha);
 }
 
-} // namespace Game::Systems
+} 

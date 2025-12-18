@@ -71,4 +71,4 @@ private:
   MountedKnightRendererConfig m_config;
 };
 
-} // namespace Render::GL
+} 

@@ -237,4 +237,4 @@ auto TacticalUtils::get_unit_type_priority(const std::string &unit_type,
   return 1.5F;
 }
 
-} // namespace Game::Systems::AI
+} 

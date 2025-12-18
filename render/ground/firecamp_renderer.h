@@ -60,4 +60,4 @@ private:
   std::vector<float> m_explicitRadii;
 };
 
-} // namespace Render::GL
+} 

@@ -187,4 +187,4 @@ void NationRegistry::clear() {
 
 void NationRegistry::clear_player_assignments() { m_playerNations.clear(); }
 
-} // namespace Game::Systems
+} 

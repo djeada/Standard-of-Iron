@@ -26,4 +26,4 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
   }
 }
 
-} // namespace Render::GL
+} 

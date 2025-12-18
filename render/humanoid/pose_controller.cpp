@@ -1206,4 +1206,4 @@ void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {
   m_pose.body_frames.head.origin += offset * 1.5F;
 }
 
-} // namespace Render::GL
+} 

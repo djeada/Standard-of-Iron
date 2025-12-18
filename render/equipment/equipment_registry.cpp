@@ -42,4 +42,4 @@ auto EquipmentRegistry::has(EquipmentCategory category,
   return category_it->second.find(id) != category_it->second.end();
 }
 
-} // namespace Render::GL
+} 

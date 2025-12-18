@@ -25,4 +25,4 @@ auto get_unit_capsule(int radialSegments = kDefaultRadialSegments,
 auto get_unit_torso(int radialSegments = kDefaultRadialSegments,
                     int heightSegments = kDefaultTorsoHeightSegments) -> Mesh *;
 
-} // namespace Render::GL
+} 

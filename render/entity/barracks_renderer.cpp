@@ -43,4 +43,4 @@ void register_barracks_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 

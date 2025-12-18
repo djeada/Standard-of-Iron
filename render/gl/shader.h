@@ -57,4 +57,4 @@ private:
   std::unordered_map<std::string, UniformHandle> m_uniformCache;
 };
 
-} // namespace Render::GL
+} 

@@ -27,4 +27,4 @@ void HealingBeamSystem::spawn_beam(const QVector3D &healer_pos,
       std::make_unique<HealingBeam>(healer_pos, target_pos, color, duration));
 }
 
-} // namespace Game::Systems
+} 

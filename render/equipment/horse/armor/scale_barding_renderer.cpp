@@ -36,4 +36,4 @@ void ScaleBardingRenderer::render(const DrawContext &ctx,
   out.mesh(get_unit_sphere(), neck_armor, armor_color, nullptr, 1.0F, 1);
 }
 
-} // namespace Render::GL
+} 

@@ -15,7 +15,7 @@ class World;
 class MovementComponent;
 class TransformComponent;
 class UnitComponent;
-} // namespace Engine::Core
+} 
 
 namespace Render::GL {
 
@@ -166,4 +166,4 @@ auto get_humanoid_render_stats() -> const HumanoidRenderStats &;
 
 void reset_humanoid_render_stats();
 
-} // namespace Render::GL
+} 

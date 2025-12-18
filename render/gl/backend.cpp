@@ -1720,4 +1720,4 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   }
 }
 
-} // namespace Render::GL
+} 

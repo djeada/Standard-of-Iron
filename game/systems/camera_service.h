@@ -5,7 +5,7 @@
 namespace Engine::Core {
 class World;
 class Entity;
-} // namespace Engine::Core
+} 
 
 namespace Render::GL {
 class Camera;
@@ -46,4 +46,4 @@ private:
   std::unique_ptr<CameraFollowSystem> m_followSystem;
 };
 
-} // namespace Game::Systems
+} 

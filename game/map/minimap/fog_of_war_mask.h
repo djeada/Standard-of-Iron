@@ -109,4 +109,4 @@ private:
   mutable int m_cached_height = 0;
 };
 
-} // namespace Game::Map::Minimap
+} 

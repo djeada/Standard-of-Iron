@@ -172,4 +172,4 @@ auto LevelLoader::loadFromAssets(
   return res;
 }
 
-} // namespace Game::Map
+} 

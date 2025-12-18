@@ -29,4 +29,4 @@ private:
   float m_lastScoutTime = 0.0F;
 };
 
-} // namespace Game::Systems::AI
+} 

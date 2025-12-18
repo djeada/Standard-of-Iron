@@ -53,7 +53,7 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   prod->villager_cost = profile.production.cost;
 }
 
-} // namespace
+} 
 
 auto ProductionService::start_production_for_first_selected_barracks(
     Engine::Core::World &world,
@@ -161,4 +161,4 @@ auto ProductionService::get_selected_barracks_state(
   return true;
 }
 
-} // namespace Game::Systems
+} 

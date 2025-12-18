@@ -91,7 +91,7 @@ private:
   QSqlDatabase &m_database;
   bool m_active = false;
 };
-} // namespace
+} 
 
 SaveStorage::SaveStorage(QString database_path)
     : m_database_path(std::move(database_path)),
@@ -770,4 +770,4 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
   return true;
 }
 
-} // namespace Game::Systems
+} 

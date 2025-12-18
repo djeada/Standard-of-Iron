@@ -199,4 +199,4 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
                  back_panel, leather_shadow, nullptr, 1.0F, 1);
 }
 
-} // namespace Render::GL
+} 

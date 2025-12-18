@@ -107,4 +107,4 @@ void HorseSpearman::init(const SpawnParams &params) {
       Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type));
 }
 
-} // namespace Game::Units
+} 

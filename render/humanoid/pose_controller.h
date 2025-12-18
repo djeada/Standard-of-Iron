@@ -62,4 +62,4 @@ private:
   auto compute_outward_dir(bool is_left) const -> QVector3D;
 };
 
-} // namespace Render::GL
+} 

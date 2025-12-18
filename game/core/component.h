@@ -32,7 +32,7 @@ inline constexpr float kHoldStandUpDuration = 2.0F;
 
 inline constexpr float kGuardDefaultRadius = 10.0F;
 inline constexpr float kGuardReturnThreshold = 1.0F;
-} // namespace Defaults
+} 
 
 class TransformComponent : public Component {
 public:
@@ -255,7 +255,7 @@ public:
   bool patrolling{false};
 };
 
-} // namespace Engine::Core
+} 
 
 namespace Engine::Core {
 
@@ -465,4 +465,4 @@ public:
   float update_cooldown{0.0F};
 };
 
-} // namespace Engine::Core
+} 

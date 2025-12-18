@@ -34,4 +34,4 @@ inline void reset_movement(Engine::Core::Entity *entity) {
   }
 }
 
-} // namespace App::Utils
+} 

@@ -302,7 +302,7 @@ void drawRomanOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.04F, 0.04F, 0.01F), c.metal_bronze);
 }
 
-} // namespace
+} 
 
 void register_ballista_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer("troops/roman/ballista", [](const DrawContext &p,
@@ -348,4 +348,4 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
   });
 }
 
-} // namespace Render::GL::Roman
+} 

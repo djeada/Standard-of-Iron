@@ -305,4 +305,4 @@ inline auto sphere_at_fast(const Mat3x4 &parent, const Vec3 &pos,
   return parent * local;
 }
 
-} // namespace Render::Math
+} 

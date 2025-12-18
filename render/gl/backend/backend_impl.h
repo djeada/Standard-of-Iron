@@ -33,5 +33,5 @@ void upload_fog_instances(Backend *backend, std::size_t count);
 
 void draw_fog(Backend *backend, std::size_t count);
 
-} // namespace BackendImpl
-} // namespace Render::GL
+} 
+} 
