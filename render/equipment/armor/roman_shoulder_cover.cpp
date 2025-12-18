@@ -50,7 +50,7 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
     bool const is_infantry = m_outward_scale <= 1.1F;
     float const outward_offset =
         (is_infantry ? 0.003F : 0.009F) * m_outward_scale;
-    float const upward_offset = is_infantry ? 0.070F : 0.072F;
+    float const upward_offset = is_infantry ? 0.052F : 0.054F;
     float const back_offset =
         (is_infantry ? -0.018F : -0.012F) * m_outward_scale;
 

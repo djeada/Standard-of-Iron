@@ -160,6 +160,7 @@ public:
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_double_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
   Q_INVOKABLE void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
                                     bool additive = false);
@@ -171,10 +172,12 @@ public:
   Q_INVOKABLE void on_hold_command();
   Q_INVOKABLE void on_guard_command();
   Q_INVOKABLE void on_formation_command();
+  Q_INVOKABLE void on_run_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
+  Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
   Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
   Q_INVOKABLE void on_formation_scroll(float delta);
@@ -296,6 +299,8 @@ public:
   bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
                      int &max_health, bool &isBuilding, bool &alive,
                      QString &nation) const;
+  bool get_unit_stamina_info(Engine::Core::EntityID id, float &stamina_ratio,
+                             bool &is_running, bool &can_run) const;
 
   [[nodiscard]] bool has_patrol_preview_waypoint() const;
   [[nodiscard]] QVector3D get_patrol_preview_waypoint() const;
@@ -422,6 +427,7 @@ signals:
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);
+  void run_mode_changed(bool active);
   void spectator_mode_changed();
   void is_loading_changed();
   void loading_progress_changed(float progress);
