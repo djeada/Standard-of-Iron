@@ -59,8 +59,8 @@ auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t see
     return AmbientIdleType::None;
   }
 
-  // Select which ambient idle based on seed
-  auto const idle_type = static_cast<std::uint8_t>((seed / 7) % 6);
+  // Select which ambient idle based on seed (now 8 types)
+  auto const idle_type = static_cast<std::uint8_t>((seed / 7) % 8);
   return static_cast<AmbientIdleType>(idle_type + 1);
 }
 
@@ -206,6 +206,83 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
     m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift);
     m_pose.neck_base.setX(m_pose.neck_base.x() + shift);
     m_pose.head_pos.setX(m_pose.head_pos.x() + shift);
+    break;
+  }
+
+  case AmbientIdleType::RaiseWeapon: {
+    // Raise weapon up then lower it (like checking/inspecting)
+    // Phase 0-0.3: raise, 0.3-0.7: hold up, 0.7-1.0: lower
+    float raise_intensity = 0.0F;
+    if (phase < 0.3F) {
+      raise_intensity = phase / 0.3F;
+    } else if (phase < 0.7F) {
+      raise_intensity = 1.0F;
+    } else {
+      raise_intensity = 1.0F - (phase - 0.7F) / 0.3F;
+    }
+    raise_intensity =
+        raise_intensity * raise_intensity * (3.0F - 2.0F * raise_intensity);
+
+    // Raise both hands together (holding weapon)
+    float const raise_amount = raise_intensity * 0.15F;
+    m_pose.hand_l.setY(m_pose.hand_l.y() + raise_amount);
+    m_pose.hand_r.setY(m_pose.hand_r.y() + raise_amount);
+    m_pose.elbow_l.setY(m_pose.elbow_l.y() + raise_amount * 0.6F);
+    m_pose.elbow_r.setY(m_pose.elbow_r.y() + raise_amount * 0.6F);
+
+    // Slight head tilt to look at weapon
+    m_pose.head_pos.setZ(m_pose.head_pos.z() - raise_intensity * 0.02F);
+    break;
+  }
+
+  case AmbientIdleType::Jump: {
+    // Small jump in place
+    // Phase 0-0.15: crouch, 0.15-0.4: jump up, 0.4-0.6: airborne, 0.6-0.85: land, 0.85-1.0: recover
+    float jump_height = 0.0F;
+    float crouch_amount = 0.0F;
+
+    if (phase < 0.15F) {
+      // Crouch before jump
+      crouch_amount = phase / 0.15F;
+    } else if (phase < 0.4F) {
+      // Launching up
+      float const launch_phase = (phase - 0.15F) / 0.25F;
+      jump_height = std::sin(launch_phase * std::numbers::pi_v<float> * 0.5F);
+    } else if (phase < 0.6F) {
+      // Airborne
+      jump_height = 1.0F;
+    } else if (phase < 0.85F) {
+      // Landing
+      float const land_phase = (phase - 0.6F) / 0.25F;
+      jump_height = 1.0F - std::sin(land_phase * std::numbers::pi_v<float> * 0.5F);
+    } else {
+      // Recovery crouch
+      crouch_amount = 1.0F - (phase - 0.85F) / 0.15F;
+    }
+
+    // Apply smooth easing
+    crouch_amount =
+        crouch_amount * crouch_amount * (3.0F - 2.0F * crouch_amount);
+    float const max_jump = 0.12F;
+    float const max_crouch = 0.06F;
+
+    // Vertical movement - entire body moves together
+    float const vertical = jump_height * max_jump - crouch_amount * max_crouch;
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + vertical);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + vertical);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + vertical);
+    m_pose.neck_base.setY(m_pose.neck_base.y() + vertical);
+    m_pose.head_pos.setY(m_pose.head_pos.y() + vertical);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + vertical);
+    m_pose.foot_r.setY(m_pose.foot_r.y() + vertical);
+    m_pose.knee_l.setY(m_pose.knee_l.y() + vertical);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + vertical);
+
+    // Bend knees during crouch phases
+    if (crouch_amount > 0.0F) {
+      m_pose.knee_l.setZ(m_pose.knee_l.z() + crouch_amount * 0.08F);
+      m_pose.knee_r.setZ(m_pose.knee_r.z() + crouch_amount * 0.08F);
+    }
     break;
   }
 

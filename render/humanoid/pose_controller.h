@@ -15,7 +15,9 @@ enum class AmbientIdleType : std::uint8_t {
   TapFoot,          // Tap foot impatiently
   ShiftWeight,      // Shift weight between legs
   StepInPlace,      // Small step in place
-  BendKnee          // Bend one knee briefly (resting leg)
+  BendKnee,         // Bend one knee briefly (resting leg)
+  RaiseWeapon,      // Raise weapon up then lower it
+  Jump              // Small jump in place
 };
 
 class HumanoidPoseController {
