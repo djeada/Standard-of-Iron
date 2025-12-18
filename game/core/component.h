@@ -310,6 +310,11 @@ public:
   float time_remaining{0.0F};
   std::string product_type{};
   bool construction_complete{false};
+  bool has_construction_site{false};
+  float construction_site_x{0.0F};
+  float construction_site_z{0.0F};
+  bool at_construction_site{false};
+  bool is_placement_preview{false};
 };
 
 class PendingRemovalComponent : public Component {

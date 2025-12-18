@@ -357,6 +357,11 @@ ApplicationWindow {
                         game.on_formation_mouse_move(mouse.x, mouse.y);
 
                 }
+                if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_mouse_move) {
+                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
+                        game.on_construction_mouse_move(mouse.x, mouse.y);
+
+                }
             }
             onWheel: function(w) {
                 if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_scroll) {

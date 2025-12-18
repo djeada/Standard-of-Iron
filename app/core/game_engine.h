@@ -157,6 +157,8 @@ public:
                  loading_stage_changed)
   Q_PROPERTY(bool is_placing_formation READ is_placing_formation NOTIFY
                  placing_formation_changed)
+  Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
+                 placing_construction_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -179,10 +181,14 @@ public:
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_formation_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_run_mode() const;
   Q_INVOKABLE [[nodiscard]] bool is_placing_formation() const;
+  Q_INVOKABLE [[nodiscard]] bool is_placing_construction() const;
   Q_INVOKABLE void on_formation_mouse_move(qreal sx, qreal sy);
   Q_INVOKABLE void on_formation_scroll(float delta);
   Q_INVOKABLE void on_formation_confirm();
   Q_INVOKABLE void on_formation_cancel();
+  Q_INVOKABLE void on_construction_mouse_move(qreal sx, qreal sy);
+  Q_INVOKABLE void on_construction_confirm();
+  Q_INVOKABLE void on_construction_cancel();
   Q_INVOKABLE void on_patrol_click(qreal sx, qreal sy);
 
   Q_INVOKABLE void camera_move(float dx, float dz);
@@ -399,6 +405,10 @@ private:
   bool m_maps_loading = false;
   QString m_current_campaign_id;
   QString m_pending_building_type;
+  QString m_pending_construction_type;
+  std::vector<Engine::Core::EntityID> m_pending_construction_builders;
+  QVector3D m_construction_placement_position;
+  bool m_is_placing_construction = false;
   QString m_current_mission_id;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
@@ -439,4 +449,5 @@ signals:
   void loading_progress_changed(float progress);
   void loading_stage_changed(QString stage_text);
   void placing_formation_changed();
+  void placing_construction_changed();
 };
