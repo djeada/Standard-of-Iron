@@ -32,6 +32,7 @@
 #include <vector>
 
 class ProductionManager;
+class CampaignManager;
 
 namespace Engine::Core {
 class World;
@@ -401,6 +402,7 @@ private:
   std::unique_ptr<CameraController> m_camera_controller;
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   std::unique_ptr<ProductionManager> m_production_manager;
+  std::unique_ptr<CampaignManager> m_campaign_manager;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -410,11 +412,7 @@ private:
   int m_enemyTroopsDefeated = 0;
   int m_selected_player_id = 1;
   QVariantList m_available_maps;
-  QVariantList m_available_campaigns;
   bool m_maps_loading = false;
-  QString m_current_campaign_id;
-  QString m_current_mission_id;
-  std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
   bool m_loading_overlay_wait_for_first_frame = false;
   int m_loading_overlay_frames_remaining = 0;

@@ -125,6 +125,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         main.cpp
         app/core/game_engine.cpp
         app/core/production_manager.cpp
+        app/core/campaign_manager.cpp
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
         app/core/ambient_state_manager.cpp
@@ -153,6 +154,7 @@ else()
         main.cpp
         app/core/game_engine.cpp
         app/core/production_manager.cpp
+        app/core/campaign_manager.cpp
         app/core/language_manager.cpp
         app/core/minimap_manager.cpp
         app/core/ambient_state_manager.cpp

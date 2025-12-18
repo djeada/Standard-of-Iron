@@ -12,6 +12,7 @@
 #include "app/utils/movement_utils.h"
 #include "app/utils/selection_utils.h"
 #include "audio_resource_loader.h"
+#include "campaign_manager.h"
 #include "camera_controller.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
@@ -244,6 +245,13 @@ GameEngine::GameEngine(QObject *parent)
   connect(m_production_manager.get(),
           &ProductionManager::placing_construction_changed, this,
           &GameEngine::placing_construction_changed);
+
+  m_campaign_manager = std::make_unique<CampaignManager>(this);
+  connect(m_campaign_manager.get(),
+          &CampaignManager::available_campaigns_changed, this,
+          &GameEngine::available_campaigns_changed);
+  connect(m_campaign_manager.get(), &CampaignManager::current_campaign_changed,
+          this, [this]() { emit current_campaign_changed(); });
 
   m_audioEventHandler =
       std::make_unique<Game::Audio::AudioEventHandler>(m_world.get());
@@ -1450,7 +1458,8 @@ auto GameEngine::available_nations() const -> QVariantList {
 }
 
 auto GameEngine::available_campaigns() const -> QVariantList {
-  return m_available_campaigns;
+  return m_campaign_manager ? m_campaign_manager->available_campaigns()
+                            : QVariantList();
 }
 
 void GameEngine::load_campaigns() {
@@ -1465,60 +1474,28 @@ void GameEngine::load_campaigns() {
     return;
   }
 
-  m_available_campaigns = campaigns;
-  emit available_campaigns_changed();
+  if (m_campaign_manager) {
+    // Update the campaign manager's list
+    emit available_campaigns_changed();
+  }
 }
 
 void GameEngine::start_campaign_mission(const QString &mission_path) {
   clear_error();
 
-  const QStringList parts = mission_path.split('/');
-  if (parts.size() != 2) {
-    set_error("Invalid mission path format. Expected: campaign_id/mission_id");
+  if (!m_campaign_manager) {
+    set_error("Campaign manager not initialized");
     return;
   }
 
-  const QString campaign_id = parts[0];
-  const QString mission_id = parts[1];
+  m_campaign_manager->start_campaign_mission(mission_path, m_selected_player_id);
 
-  QStringList search_paths = {
-      QString("assets/missions/%1.json").arg(mission_id),
-      QString("../assets/missions/%1.json").arg(mission_id),
-      QString("../../assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() +
-          QString("/assets/missions/%1.json").arg(mission_id),
-      QCoreApplication::applicationDirPath() +
-          QString("/../assets/missions/%1.json").arg(mission_id)};
-
-  QString mission_file_path;
-  bool found = false;
-
-  for (const QString &path : search_paths) {
-    if (QFile::exists(path)) {
-      mission_file_path = path;
-      found = true;
-      qInfo() << "Loading mission from filesystem:" << mission_file_path;
-      break;
-    }
-  }
-
-  if (!found) {
-
-    mission_file_path = QString(":/assets/missions/%1.json").arg(mission_id);
-    qInfo() << "Loading mission from Qt resources:" << mission_file_path;
-  }
-
-  Game::Mission::MissionDefinition mission;
-  QString error;
-  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path,
-                                                      mission, &error)) {
-    set_error(
-        QString("Failed to load mission %1: %2").arg(mission_id).arg(error));
+  if (!m_campaign_manager->current_mission_definition().has_value()) {
+    set_error("Failed to load mission");
     return;
   }
 
-  m_current_campaign_id = campaign_id;
-  m_current_mission_id = mission_id;
+  const auto &mission = *m_campaign_manager->current_mission_definition();
 
   QVariantList playerConfigs;
 
@@ -1544,13 +1521,16 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     player_id++;
   }
 
-  m_current_mission_definition = mission;
-
   start_skirmish(mission.map_path, playerConfigs);
 }
 
 void GameEngine::mark_current_mission_completed() {
-  if (m_current_campaign_id.isEmpty()) {
+  if (!m_campaign_manager) {
+    return;
+  }
+
+  const QString campaign_id = m_campaign_manager->current_campaign_id();
+  if (campaign_id.isEmpty()) {
     qWarning() << "No active campaign mission to mark as completed";
     return;
   }
@@ -1561,13 +1541,11 @@ void GameEngine::mark_current_mission_completed() {
   }
 
   QString error;
-  bool success =
-      m_saveLoadService->mark_campaign_completed(m_current_campaign_id, &error);
+  bool success = m_saveLoadService->mark_campaign_completed(campaign_id, &error);
   if (!success) {
     qWarning() << "Failed to mark campaign as completed:" << error;
   } else {
-    qInfo() << "Campaign mission" << m_current_campaign_id
-            << "marked as completed";
+    m_campaign_manager->mark_current_mission_completed();
     load_campaigns();
   }
 }
@@ -1670,49 +1648,20 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 }
 
 void GameEngine::configure_mission_victory_conditions() {
-  if (!m_victoryService || !m_current_mission_definition.has_value()) {
+  if (!m_campaign_manager || !m_victoryService) {
     return;
   }
 
-  const auto &mission = *m_current_mission_definition;
-  Game::Map::VictoryConfig mission_victory_config;
-
-  if (!mission.victory_conditions.empty()) {
-    const auto &first_condition = mission.victory_conditions[0];
-    if (first_condition.type == "destroy_all_enemies") {
-      mission_victory_config.victoryType = "elimination";
-      mission_victory_config.keyStructures = {"barracks"};
-    } else if (first_condition.type == "survive_duration" &&
-               first_condition.duration.has_value()) {
-      mission_victory_config.victoryType = "survive_time";
-      mission_victory_config.surviveTimeDuration = *first_condition.duration;
-    } else {
-      mission_victory_config.victoryType = "elimination";
-      mission_victory_config.keyStructures = {"barracks"};
-    }
-  }
-
-  for (const auto &defeat_condition : mission.defeat_conditions) {
-    if (defeat_condition.type == "lose_structure" &&
-        defeat_condition.structure_type.has_value()) {
-      mission_victory_config.defeatConditions.push_back("no_key_structures");
-      mission_victory_config.keyStructures.push_back(
-          *defeat_condition.structure_type);
-    } else if (defeat_condition.type == "lose_all_units") {
-      mission_victory_config.defeatConditions.push_back("no_units");
-    }
-  }
-
-  m_victoryService->configure(mission_victory_config,
-                              m_runtime.local_owner_id);
-  qInfo() << "Applied mission victory conditions from" << m_current_mission_id;
+  m_campaign_manager->configure_mission_victory_conditions(
+      m_victoryService.get(), m_runtime.local_owner_id);
 
   m_victoryService->set_victory_callback([this](const QString &state) {
     if (m_runtime.victory_state != state) {
       m_runtime.victory_state = state;
       emit victory_state_changed();
 
-      if (state == "victory" && !m_current_campaign_id.isEmpty()) {
+      if (state == "victory" &&
+          !m_campaign_manager->current_campaign_id().isEmpty()) {
         mark_current_mission_completed();
       }
     }
