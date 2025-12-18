@@ -355,6 +355,16 @@ private:
   [[nodiscard]] QByteArray capture_screenshot() const;
   void perform_skirmish_load(const QString &map_path,
                              const QVariantList &playerConfigs);
+  void configure_mission_victory_conditions();
+  void configure_rain_system();
+  void finalize_skirmish_load();
+  void render_game_effects();
+  void update_loading_overlay();
+  void update_cursor_position();
+  std::vector<Engine::Core::EntityID> collect_available_builders();
+  QVector3D calculate_builder_center_position(
+      const std::vector<Engine::Core::EntityID> &builder_ids);
+  float get_construction_build_time(const std::string &item_type);
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
