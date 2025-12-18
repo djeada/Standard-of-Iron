@@ -245,7 +245,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       bool recovered = false;
       int skips_remaining = max_waypoint_skip_count;
       while (movement->has_waypoints() && skips_remaining-- > 0) {
-        movement->advance_waypoint(); // O(1) instead of O(n) erase
+        movement->advance_waypoint();
         refresh_segment_target();
         if (isSegmentWalkable(current_pos, segment_target, entity->get_id())) {
           recovered = true;
@@ -288,7 +288,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
           movement->pending_request_id = 0;
         }
 
-        movement->clear_path(); // Use new clear_path() method
+        movement->clear_path();
         movement->has_target = false;
         movement->vx = 0.0F;
         movement->vz = 0.0F;
@@ -308,7 +308,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     while (movement->has_target && dist2 < arrive_radius_sq &&
            safety_counter-- > 0) {
       if (movement->has_waypoints()) {
-        movement->advance_waypoint(); // O(1) instead of O(n) erase
+        movement->advance_waypoint();
         if (movement->has_waypoints()) {
           const auto &wp = movement->current_waypoint();
           movement->target_x = wp.first;
