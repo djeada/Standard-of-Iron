@@ -361,6 +361,12 @@ Item {
 
                         return ;
                     }
+                    if (typeof game !== 'undefined' && game.is_placing_construction) {
+                        if (game.on_construction_confirm)
+                            game.on_construction_confirm();
+
+                        return ;
+                    }
                     isSelecting = true;
                     startX = mouse.x;
                     startY = mouse.y;

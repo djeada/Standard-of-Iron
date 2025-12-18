@@ -128,6 +128,10 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     }
   }
 
+  // Constants for construction site distance checks
+  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 4.0F;  // 2 units radius
+  constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;      // 3 units radius
+
   auto builder_entities =
       world->get_entities_with<Engine::Core::BuilderProductionComponent>();
   for (auto *e : builder_entities) {
@@ -148,7 +152,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         float dist_sq = dx * dx + dz * dz;
         
         // If close enough to construction site, start building
-        if (dist_sq < 4.0F) { // Within 2 units
+        if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           
@@ -167,7 +171,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             float goal_dist_sq = goal_dx * goal_dx + goal_dz * goal_dz;
             
             // If goal is far from construction site, reset construction
-            if (goal_dist_sq > 4.0F) {
+            if (goal_dist_sq > CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
               builder_prod->has_construction_site = false;
               builder_prod->at_construction_site = false;
               builder_prod->in_progress = false;
@@ -193,7 +197,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
       float dist_sq = dx * dx + dz * dz;
       
       // If builder moved too far from construction site, reset
-      if (dist_sq > 9.0F) { // More than 3 units away
+      if (dist_sq > MAX_CONSTRUCTION_DISTANCE_SQ) {
         builder_prod->has_construction_site = false;
         builder_prod->at_construction_site = false;
         builder_prod->in_progress = false;
