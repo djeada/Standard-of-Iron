@@ -324,10 +324,9 @@ void HumanoidRendererBase::compute_locomotion_pose(
       // IMPORTANT: Do not apply opposing Z offsets to the shoulders.
       // That tilts the shoulder-to-shoulder vector in Z, which rotates the *entire torso frame*.
       // Keep any torso motion symmetric (fore/aft sway), and keep it very subtle.
-      float const torso_sway_amount = 0.0008F;
-      float const torso_phase = (walk_phase + 0.25F);
-      float const torso_raw = std::sin(torso_phase * 2.0F * std::numbers::pi_v<float>);
-      float const torso_sway_z = torso_raw * torso_sway_amount;
+      // Disable torso sway entirely: even tiny asymmetric noise here reads as
+      // full-torso yaw because the torso frame is derived from the shoulder line.
+      float const torso_sway_z = 0.0F;
 
     auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
                                                          float phase) {
@@ -1716,10 +1715,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         // IMPORTANT: Never apply opposing Z offsets to the shoulders.
         // That introduces a Z component in (shoulder_r - shoulder_l), which yaws the whole torso frame.
         // Keep only a tiny symmetric fore/aft sway.
-        float const torso_sway_phase = (phase + 0.15F);
-        float const torso_sway_raw =
-          std::sin(torso_sway_phase * 2.0F * std::numbers::pi_v<float>);
-        float const torso_sway_z = torso_sway_raw * 0.0010F;
+        // Disable torso sway entirely in run as well (prevents visible torso yaw).
+        float const torso_sway_z = 0.0F;
         pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
         pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
         pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
