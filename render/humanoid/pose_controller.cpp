@@ -14,59 +14,11 @@ HumanoidPoseController::HumanoidPoseController(
 
 void HumanoidPoseController::stand_idle() {}
 
-void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
-  using HP = HumanProportions;
-
-  // Use seed to create unique offsets for this soldier to prevent sync
-  float const seed_offset = static_cast<float>(seed % 1000) / 1000.0F * 6.28F;
-  float const seed_scale = 0.8F + static_cast<float>(seed % 500) / 1000.0F;
-
-  // Breathing animation - subtle vertical pelvis movement only
-  float const breath_period = 4.0F * seed_scale;
-  float const breath_phase = std::fmod(time + seed_offset, breath_period) /
-                             breath_period * 2.0F * std::numbers::pi_v<float>;
-  float const breath_amount = std::sin(breath_phase) * 0.004F;
-  m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + breath_amount);
-
-  // Weight shift - pelvis lateral sway (leg-focused)
-  float const sway_period = 6.0F * seed_scale;
-  float const sway_phase = std::fmod(time + seed_offset * 1.3F, sway_period) /
-                           sway_period * 2.0F * std::numbers::pi_v<float>;
-  float const sway_amount = std::sin(sway_phase) * 0.008F;
-  m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + sway_amount);
-
-  // Knee bend variation - one leg slightly more bent
-  float const knee_period = 7.0F * seed_scale;
-  float const knee_phase = std::fmod(time + seed_offset * 0.8F, knee_period) /
-                           knee_period * 2.0F * std::numbers::pi_v<float>;
-  float const knee_bend = std::sin(knee_phase) * 0.012F;
-  m_pose.knee_l.setY(m_pose.knee_l.y() + knee_bend);
-  m_pose.knee_r.setY(m_pose.knee_r.y() - knee_bend * 0.6F);
-
-  // Foot micro-adjustments (more pronounced leg movement)
-  float const foot_period = 5.0F * seed_scale;
-  float const foot_phase = std::fmod(time + seed_offset * 0.9F, foot_period) /
-                           foot_period * 2.0F * std::numbers::pi_v<float>;
-  float const foot_shift = std::sin(foot_phase) * 0.008F;
-  m_pose.foot_l.setZ(m_pose.foot_l.z() + foot_shift);
-  m_pose.foot_r.setZ(m_pose.foot_r.z() - foot_shift * 0.5F);
-
-  // Subtle foot lateral shift
-  float const foot_lateral_period = 8.0F * seed_scale;
-  float const foot_lateral_phase =
-      std::fmod(time + seed_offset * 1.2F, foot_lateral_period) /
-      foot_lateral_period * 2.0F * std::numbers::pi_v<float>;
-  float const foot_lateral = std::sin(foot_lateral_phase) * 0.005F;
-  m_pose.foot_l.setX(m_pose.foot_l.x() + foot_lateral);
-  m_pose.foot_r.setX(m_pose.foot_r.x() - foot_lateral * 0.7F);
-
-  // Head micro-movement (subtle head turns only, no torso)
-  float const head_yaw_period = 8.0F * seed_scale;
-  float const head_yaw_phase =
-      std::fmod(time + seed_offset * 0.7F, head_yaw_period) / head_yaw_period *
-      2.0F * std::numbers::pi_v<float>;
-  float const head_yaw = std::sin(head_yaw_phase) * 0.008F;
-  m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw);
+void HumanoidPoseController::apply_micro_idle(float /*time*/,
+                                              std::uint32_t /*seed*/) {
+  // Micro idles disabled - they were causing visible torso/armor distortion
+  // when applied to all soldiers. Idle life is now handled purely through
+  // ambient idles which only affect 1-2 soldiers per unit.
 }
 
 // Constants for ambient idle timing
@@ -97,8 +49,8 @@ auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t see
       static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
-  // Only 1 in 3 soldiers will trigger ambient idles (based on seed)
-  if ((seed % 3) != 0) {
+  // Only 1 in 10 soldiers will trigger ambient idles (1-2 per unit max)
+  if ((seed % 10) > 1) {
     return AmbientIdleType::None;
   }
 
@@ -152,22 +104,25 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
     }
     sit_intensity = sit_intensity * sit_intensity * (3.0F - 2.0F * sit_intensity);
 
-    // Lower pelvis significantly
+    // Lower entire body together to maintain mesh integrity
     float const sit_drop = sit_intensity * 0.35F;
-    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - sit_drop);
 
-    // Bend knees outward
-    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.8F);
-    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.8F);
-    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.1F);
-    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.1F);
+    // All body parts drop together
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - sit_drop);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - sit_drop);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - sit_drop);
+    m_pose.neck_base.setY(m_pose.neck_base.y() - sit_drop);
+    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop);
+
+    // Knees bend outward and forward for crouching pose
+    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.5F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.5F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.12F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.12F);
 
     // Feet stay planted but widen slightly
-    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.03F);
-    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.03F);
-
-    // Head drops slightly when sitting
-    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop * 0.3F);
+    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.04F);
+    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.04F);
     break;
   }
 
@@ -199,17 +154,18 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
   case AmbientIdleType::ShiftWeight: {
     // Shift weight from one leg to the other
     float const shift_phase = phase * std::numbers::pi_v<float>;
-    float const shift_amount = std::sin(shift_phase) * intensity * 0.05F;
+    float const shift_amount = std::sin(shift_phase) * intensity * 0.04F;
 
-    // Pelvis shifts to one side
+    // Entire upper body shifts together to maintain mesh integrity
     m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift_amount);
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift_amount);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift_amount);
+    m_pose.neck_base.setX(m_pose.neck_base.x() + shift_amount);
+    m_pose.head_pos.setX(m_pose.head_pos.x() + shift_amount);
 
     // One knee bends more, other straightens
-    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_amount * 0.4F);
-    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_amount * 0.3F);
-
-    // Foot pressure shifts
-    m_pose.foot_l.setY(m_pose.foot_l.y() + shift_amount * 0.2F);
+    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_amount * 0.3F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_amount * 0.2F);
     break;
   }
 
@@ -236,15 +192,20 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
 
   case AmbientIdleType::BendKnee: {
     // Bend one knee to rest the leg
-    float const bend_amount = intensity * 0.08F;
+    float const bend_amount = intensity * 0.06F;
 
-    // Bend left knee, shift weight to right
+    // Bend left knee forward
     m_pose.knee_l.setY(m_pose.knee_l.y() - bend_amount);
-    m_pose.knee_l.setZ(m_pose.knee_l.z() + bend_amount * 0.5F);
-    m_pose.foot_l.setY(m_pose.foot_l.y() + bend_amount * 0.3F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + bend_amount * 0.4F);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + bend_amount * 0.2F);
 
-    // Pelvis shifts slightly to right (weight-bearing leg)
-    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + bend_amount * 0.3F);
+    // Entire body shifts slightly to right together (weight-bearing leg)
+    float const shift = bend_amount * 0.25F;
+    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift);
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift);
+    m_pose.neck_base.setX(m_pose.neck_base.x() + shift);
+    m_pose.head_pos.setX(m_pose.head_pos.x() + shift);
     break;
   }
 
