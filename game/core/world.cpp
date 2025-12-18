@@ -17,9 +17,7 @@ World::~World() = default;
 
 void World::on_component_changed(EntityID entity_id,
                                  std::type_index component_type, bool added) {
-  // Note: This is called from entity methods, so we need to be careful about
-  // locking. The entity_mutex should already be held when create_entity is
-  // called, but add_component can be called later when the mutex isn't held.
+
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
   if (added) {
@@ -73,7 +71,6 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
 void World::destroy_entity(EntityID entity_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
-  // Remove entity from all component indices
   for (auto &[type, entity_set] : m_component_index) {
     entity_set.erase(entity_id);
   }

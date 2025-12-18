@@ -889,8 +889,7 @@ auto CommandController::on_run_command() -> CommandResult {
     if (should_enable_run) {
       if (stamina == nullptr) {
         stamina = entity->add_component<Engine::Core::StaminaComponent>();
-        const auto troop_type =
-            Game::Units::spawn_typeToTroopType(spawn_type);
+        const auto troop_type = Game::Units::spawn_typeToTroopType(spawn_type);
         if (troop_type.has_value()) {
           const auto profile =
               Game::Systems::TroopProfileService::instance().get_profile(
@@ -1001,6 +1000,5 @@ void CommandController::disable_run_mode_for_selected() {
 
   emit run_mode_changed(false);
 }
-
 
 } // namespace App::Controllers

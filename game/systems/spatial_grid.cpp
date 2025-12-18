@@ -43,17 +43,16 @@ void SpatialGrid::update(Engine::Core::EntityID entity_id, float x, float z) {
 
   auto it = m_entity_cells.find(entity_id);
   if (it == m_entity_cells.end()) {
-    // Entity not in grid, insert it
+
     insert(entity_id, x, z);
     return;
   }
 
   if (it->second == new_key) {
-    // Same cell, no update needed
+
     return;
   }
 
-  // Remove from old cell
   CellKey const old_key = it->second;
   auto cell_it = m_cells.find(old_key);
   if (cell_it != m_cells.end()) {
@@ -65,7 +64,6 @@ void SpatialGrid::update(Engine::Core::EntityID entity_id, float x, float z) {
     }
   }
 
-  // Insert into new cell
   m_cells[new_key].push_back(entity_id);
   it->second = new_key;
 }
@@ -74,7 +72,6 @@ auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> result;
 
-  // Calculate the cell range to check
   int const cells_to_check =
       static_cast<int>(std::ceil(range * m_inv_cell_size));
   CellKey const center = to_cell_key(x, z);
@@ -89,12 +86,10 @@ auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
         continue;
       }
 
-      // For cells that are not adjacent, we need to verify distance
-      // Adjacent cells (within 1 cell) are always included
       if (std::abs(dx) <= 1 && std::abs(dz) <= 1) {
         result.insert(result.end(), it->second.begin(), it->second.end());
       } else {
-        // Check cell center distance (rough filter)
+
         float const cell_center_x =
             (static_cast<float>(key.x) + 0.5F) * m_cell_size;
         float const cell_center_z =
@@ -103,7 +98,6 @@ auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
         float const cell_dz = cell_center_z - z;
         float const cell_dist_sq = cell_dx * cell_dx + cell_dz * cell_dz;
 
-        // Cell diagonal is sqrt(2) * cell_size, add as buffer
         float const cell_buffer = m_cell_size * 1.5F;
         if (cell_dist_sq <= (range + cell_buffer) * (range + cell_buffer)) {
           result.insert(result.end(), it->second.begin(), it->second.end());
@@ -120,7 +114,6 @@ auto SpatialGrid::get_nearby_entities(float x, float z) const
   std::vector<Engine::Core::EntityID> result;
   CellKey const center = to_cell_key(x, z);
 
-  // Check the 3x3 grid of cells around the center
   for (int dx = -1; dx <= 1; ++dx) {
     for (int dz = -1; dz <= 1; ++dz) {
       CellKey const key{center.x + dx, center.z + dz};

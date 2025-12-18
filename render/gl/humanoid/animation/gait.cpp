@@ -16,7 +16,7 @@ auto classifyMotionState(const AnimationInputs &anim,
     return HumanoidMotionState::Attacking;
   }
   if (anim.is_moving) {
-    // Use stamina-based running if available, otherwise fall back to speed
+
     if (anim.is_running) {
       return HumanoidMotionState::Run;
     }
