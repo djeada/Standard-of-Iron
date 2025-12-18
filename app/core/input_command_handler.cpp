@@ -77,18 +77,23 @@ void handle_move_command(Engine::Core::World *world,
             *world, selected, hit,
             Game::GameConfig::instance().gameplay().formation_spacing_default);
 
-    if (selected.size() > 1) {
-      for (size_t i = 0; i < selected.size(); ++i) {
-        auto *entity = world->get_entity(selected[i]);
-        if (entity == nullptr) {
-          continue;
-        }
-        auto *transform =
-            entity->get_component<Engine::Core::TransformComponent>();
-        if (transform != nullptr && i < formation_result.facing_angles.size()) {
-          transform->desired_yaw = formation_result.facing_angles[i];
-          transform->has_desired_yaw = true;
-        }
+    for (size_t i = 0; i < selected.size(); ++i) {
+      auto *entity = world->get_entity(selected[i]);
+      if (entity == nullptr) {
+        continue;
+      }
+
+      auto *formation_mode =
+          entity->get_component<Engine::Core::FormationModeComponent>();
+      if ((formation_mode == nullptr) || !formation_mode->active) {
+        continue;
+      }
+
+      auto *transform =
+          entity->get_component<Engine::Core::TransformComponent>();
+      if (transform != nullptr && i < formation_result.facing_angles.size()) {
+        transform->desired_yaw = formation_result.facing_angles[i];
+        transform->has_desired_yaw = true;
       }
     }
 
