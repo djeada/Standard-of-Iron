@@ -34,6 +34,9 @@ struct NationTroopVariant {
   std::optional<std::string> renderer_id;
   std::optional<bool> can_ranged;
   std::optional<bool> can_melee;
+  std::optional<float> max_stamina;
+  std::optional<float> stamina_regen_rate;
+  std::optional<float> stamina_depletion_rate;
 };
 
 struct TroopType {
