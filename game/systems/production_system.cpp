@@ -128,13 +128,85 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     }
   }
 
+  constexpr float CONSTRUCTION_ARRIVAL_DISTANCE_SQ = 4.0F;
+  constexpr float MAX_CONSTRUCTION_DISTANCE_SQ = 9.0F;
+
   auto builder_entities =
       world->get_entities_with<Engine::Core::BuilderProductionComponent>();
   for (auto *e : builder_entities) {
     auto *builder_prod =
         e->get_component<Engine::Core::BuilderProductionComponent>();
-    if (builder_prod == nullptr || !builder_prod->in_progress) {
+    if (builder_prod == nullptr) {
       continue;
+    }
+
+    if (builder_prod->is_placement_preview) {
+      continue;
+    }
+
+    auto *transform = e->get_component<Engine::Core::TransformComponent>();
+    auto *movement = e->get_component<Engine::Core::MovementComponent>();
+
+    if (builder_prod->has_construction_site &&
+        !builder_prod->at_construction_site) {
+      if (transform != nullptr) {
+        float dx = builder_prod->construction_site_x - transform->position.x;
+        float dz = builder_prod->construction_site_z - transform->position.z;
+        float dist_sq = dx * dx + dz * dz;
+
+        if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
+          builder_prod->at_construction_site = true;
+          builder_prod->in_progress = true;
+
+          transform->position.x = builder_prod->construction_site_x;
+          transform->position.z = builder_prod->construction_site_z;
+
+          if (movement != nullptr) {
+            movement->goal_x = builder_prod->construction_site_x;
+            movement->goal_y = builder_prod->construction_site_z;
+            movement->target_x = builder_prod->construction_site_x;
+            movement->target_y = builder_prod->construction_site_z;
+          }
+        } else {
+
+          if (movement != nullptr) {
+            float goal_dx =
+                movement->goal_x - builder_prod->construction_site_x;
+            float goal_dz =
+                movement->goal_y - builder_prod->construction_site_z;
+            float goal_dist_sq = goal_dx * goal_dx + goal_dz * goal_dz;
+
+            if (goal_dist_sq > CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
+              builder_prod->has_construction_site = false;
+              builder_prod->at_construction_site = false;
+              builder_prod->in_progress = false;
+              builder_prod->construction_complete = false;
+              builder_prod->product_type = "";
+              continue;
+            }
+          }
+        }
+      }
+      continue;
+    }
+
+    if (!builder_prod->in_progress) {
+      continue;
+    }
+
+    if (builder_prod->at_construction_site && transform != nullptr) {
+      float dx = builder_prod->construction_site_x - transform->position.x;
+      float dz = builder_prod->construction_site_z - transform->position.z;
+      float dist_sq = dx * dx + dz * dz;
+
+      if (dist_sq > MAX_CONSTRUCTION_DISTANCE_SQ) {
+        builder_prod->has_construction_site = false;
+        builder_prod->at_construction_site = false;
+        builder_prod->in_progress = false;
+        builder_prod->construction_complete = false;
+        builder_prod->time_remaining = 0.0F;
+        continue;
+      }
     }
 
     builder_prod->time_remaining -= delta_time;
@@ -147,7 +219,14 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         if (reg) {
           Game::Units::SpawnParams sp;
 
-          sp.position = QVector3D(t->position.x, t->position.y, t->position.z);
+          if (builder_prod->has_construction_site) {
+            sp.position =
+                QVector3D(builder_prod->construction_site_x, t->position.y,
+                          builder_prod->construction_site_z);
+          } else {
+            sp.position =
+                QVector3D(t->position.x, t->position.y, t->position.z);
+          }
           sp.player_id = u->owner_id;
           sp.ai_controlled =
               e->has_component<Engine::Core::AIControlledComponent>();
@@ -165,16 +244,42 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
             builder_prod->in_progress = false;
             builder_prod->time_remaining = 0.0F;
+            builder_prod->has_construction_site = false;
+            builder_prod->at_construction_site = false;
             continue;
           }
 
           reg->create(sp.spawn_type, *world, sp);
+
+          if (builder_prod->has_construction_site && movement != nullptr &&
+              t != nullptr) {
+
+            float dx = t->position.x - builder_prod->construction_site_x;
+            float dz = t->position.z - builder_prod->construction_site_z;
+            float dist = std::sqrt(dx * dx + dz * dz);
+            if (dist < 0.1F) {
+
+              dx = 1.0F;
+              dz = 0.0F;
+              dist = 1.0F;
+            }
+
+            dx = (dx / dist) * 3.0F;
+            dz = (dz / dist) * 3.0F;
+
+            movement->goal_x = t->position.x + dx;
+            movement->goal_y = t->position.z + dz;
+            movement->target_x = t->position.x + dx;
+            movement->target_y = t->position.z + dz;
+          }
         }
       }
 
       builder_prod->in_progress = false;
       builder_prod->time_remaining = 0.0F;
       builder_prod->construction_complete = true;
+      builder_prod->has_construction_site = false;
+      builder_prod->at_construction_site = false;
     }
   }
 }
