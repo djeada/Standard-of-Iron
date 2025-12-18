@@ -145,6 +145,35 @@ auto BuildingCollisionRegistry::is_point_in_building(
   return false;
 }
 
+auto BuildingCollisionRegistry::is_circle_overlapping_building(
+    float x, float z, float radius, unsigned int ignoreEntityId) const -> bool {
+  for (const auto &building : m_buildings) {
+    if (ignoreEntityId != 0 && building.entity_id == ignoreEntityId) {
+      continue;
+    }
+
+    float const half_width = building.width / 2.0F;
+    float const half_depth = building.depth / 2.0F;
+
+    float const min_x = building.center_x - half_width;
+    float const max_x = building.center_x + half_width;
+    float const min_z = building.center_z - half_depth;
+    float const max_z = building.center_z + half_depth;
+
+    float const closest_x = std::clamp(x, min_x, max_x);
+    float const closest_z = std::clamp(z, min_z, max_z);
+
+    float const dx = x - closest_x;
+    float const dz = z - closest_z;
+    float const distance_sq = dx * dx + dz * dz;
+
+    if (distance_sq < radius * radius) {
+      return true;
+    }
+  }
+  return false;
+}
+
 auto BuildingCollisionRegistry::get_occupied_grid_cells(
     const BuildingFootprint &footprint,
     float grid_cell_size) -> std::vector<std::pair<int, int>> {
