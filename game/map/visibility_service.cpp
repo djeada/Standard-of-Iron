@@ -78,6 +78,8 @@ void VisibilityService::reset() {
   std::fill(m_cells.begin(), m_cells.end(),
             static_cast<std::uint8_t>(VisibilityState::Unseen));
   m_version.fetch_add(1, std::memory_order_release);
+  m_lastPositions.clear();
+  m_forceFullUpdate = true;
   resetThrottle();
 }
 
@@ -98,9 +100,12 @@ auto VisibilityService::update(Engine::Core::World &world,
   }
 
   if (shouldStartNewJob()) {
-    const auto sources = gatherVisionSources(world, player_id);
-    auto payload = composeJobPayload(sources);
-    enqueueJob(std::move(payload));
+    auto sources = gatherVisionSources(world, player_id);
+    // Skip update if no units moved (incremental update optimization)
+    if (!sources.empty()) {
+      auto payload = composeJobPayload(sources);
+      enqueueJob(std::move(payload));
+    }
   }
 
   return integrated;
@@ -125,7 +130,7 @@ void VisibilityService::computeImmediate(Engine::Core::World &world,
 }
 
 auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
-                                            int player_id) const
+                                            int player_id)
     -> std::vector<VisibilityService::VisionSource> {
   std::vector<VisionSource> sources;
   const auto entities =
@@ -133,6 +138,10 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
   const float range_padding = m_tile_size * k_half_cell_offset;
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+
+  // Track which entities we've seen this frame for cleanup
+  std::unordered_map<std::uint32_t, CachedPosition> current_positions;
+  bool any_moved = m_forceFullUpdate;
 
   for (auto *entity : entities) {
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
@@ -162,12 +171,44 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
       continue;
     }
 
+    // Check if this unit has moved since last frame (incremental update fix)
+    std::uint32_t const entity_id = entity->get_id();
+    current_positions[entity_id] = {center_x, center_z};
+
+    // Only check for movement if we haven't already detected it
+    if (!any_moved) {
+      auto it = m_lastPositions.find(entity_id);
+      if (it == m_lastPositions.end() || it->second.grid_x != center_x ||
+          it->second.grid_z != center_z) {
+        any_moved = true;
+      }
+    }
+
     const int cell_radius =
         std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
     const float expanded_range_sq =
         (vision_range + range_padding) * (vision_range + range_padding);
 
     sources.push_back({center_x, center_z, cell_radius, expanded_range_sq});
+  }
+
+  // Check for units that were removed (their old visibility needs clearing)
+  if (!any_moved) {
+    for (const auto &[entity_id, pos] : m_lastPositions) {
+      if (current_positions.find(entity_id) == current_positions.end()) {
+        any_moved = true; // Unit was removed
+        break;
+      }
+    }
+  }
+
+  // Update cached positions for next frame
+  m_lastPositions = std::move(current_positions);
+  m_forceFullUpdate = false;
+
+  // If nothing moved and no units added/removed, return empty to skip update
+  if (!any_moved && !sources.empty()) {
+    return {}; // Signal to skip this update
   }
 
   return sources;

@@ -8,6 +8,7 @@
 #include <optional>
 #include <shared_mutex>
 #include <thread>
+#include <unordered_map>
 #include <vector>
 
 namespace Engine::Core {
@@ -78,7 +79,7 @@ private:
   };
 
   auto gatherVisionSources(Engine::Core::World &world,
-                           int player_id) const -> std::vector<VisionSource>;
+                           int player_id) -> std::vector<VisionSource>;
   auto composeJobPayload(const std::vector<VisionSource> &sources) const
       -> JobPayload;
   void enqueueJob(JobPayload &&payload);
@@ -111,6 +112,15 @@ private:
   std::thread m_workerThread;
   std::atomic<bool> m_workerRunning{false};
   std::atomic<bool> m_shutdownRequested{false};
+
+  // Incremental update tracking (bottleneck fix #5)
+  // Maps entity ID to last known grid position for movement detection
+  struct CachedPosition {
+    int grid_x;
+    int grid_z;
+  };
+  std::unordered_map<std::uint32_t, CachedPosition> m_lastPositions;
+  bool m_forceFullUpdate{true}; // Force full update on first run or after reset
 };
 
 } // namespace Game::Map
