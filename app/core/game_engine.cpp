@@ -1031,7 +1031,6 @@ void GameEngine::on_minimap_left_click(qreal mx, qreal my, qreal minimap_width,
     return;
   }
 
-  // Get the minimap base image dimensions
   const QImage &minimap_img = m_minimap_manager->get_image();
   if (minimap_img.isNull()) {
     return;
@@ -1040,31 +1039,28 @@ void GameEngine::on_minimap_left_click(qreal mx, qreal my, qreal minimap_width,
   const float img_width = static_cast<float>(minimap_img.width());
   const float img_height = static_cast<float>(minimap_img.height());
 
-  // Normalize mouse coordinates to image space
-  const float px = (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
-  const float py = (static_cast<float>(my) / static_cast<float>(minimap_height)) * img_height;
+  const float px =
+      (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
+  const float py =
+      (static_cast<float>(my) / static_cast<float>(minimap_height)) *
+      img_height;
 
-  // Convert pixel coordinates to world coordinates
   const auto [world_x, world_z] = Game::Map::Minimap::pixel_to_world(
       px, py, m_minimap_manager->get_world_width(),
       m_minimap_manager->get_world_height(), img_width, img_height,
       m_minimap_manager->get_tile_size());
 
-  // Move camera to this position, preserving the offset between position and target
-  // (this preserves zoom, pitch, yaw, etc.)
   if (m_camera) {
     const QVector3D new_target(world_x, 0.0F, world_z);
     const QVector3D current_target = m_camera->get_target();
     const QVector3D current_position = m_camera->get_position();
-    
-    // Calculate the offset from target to position (this is what we want to preserve)
+
     const QVector3D offset = current_position - current_target;
-    
-    // Move both target and position by the same delta
-    m_camera->lookAt(new_target + offset, new_target, m_camera->get_up_vector());
+
+    m_camera->lookAt(new_target + offset, new_target,
+                     m_camera->get_up_vector());
   }
 
-  // Disable follow mode when manually clicking on minimap
   m_followSelectionEnabled = false;
   if (m_camera_controller) {
     m_camera_controller->follow_selection(false);
@@ -1074,12 +1070,11 @@ void GameEngine::on_minimap_left_click(qreal mx, qreal my, qreal minimap_width,
 void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
                                         qreal minimap_height) {
   ensure_initialized();
-  if (m_level.is_spectator_mode || !m_world || !m_minimap_manager || 
+  if (m_level.is_spectator_mode || !m_world || !m_minimap_manager ||
       !m_minimap_manager->has_minimap()) {
     return;
   }
 
-  // Get the minimap base image dimensions
   const QImage &minimap_img = m_minimap_manager->get_image();
   if (minimap_img.isNull()) {
     return;
@@ -1088,18 +1083,19 @@ void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
   const float img_width = static_cast<float>(minimap_img.width());
   const float img_height = static_cast<float>(minimap_img.height());
 
-  // Normalize mouse coordinates to image space
-  const float px = (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
-  const float py = (static_cast<float>(my) / static_cast<float>(minimap_height)) * img_height;
+  const float px =
+      (static_cast<float>(mx) / static_cast<float>(minimap_width)) * img_width;
+  const float py =
+      (static_cast<float>(my) / static_cast<float>(minimap_height)) *
+      img_height;
 
-  // Convert pixel coordinates to world coordinates
   const auto [world_x, world_z] = Game::Map::Minimap::pixel_to_world(
       px, py, m_minimap_manager->get_world_width(),
       m_minimap_manager->get_world_height(), img_width, img_height,
       m_minimap_manager->get_tile_size());
 
-  // Get selected units
-  auto *selection_system = m_world->get_system<Game::Systems::SelectionSystem>();
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
   if (!selection_system) {
     return;
   }
@@ -1109,12 +1105,11 @@ void GameEngine::on_minimap_right_click(qreal mx, qreal my, qreal minimap_width,
     return;
   }
 
-  // Create move command to this position
   const QVector3D target_pos(world_x, 0.0F, world_z);
   auto targets = Game::Systems::FormationPlanner::spread_formation_by_nation(
       *m_world, selected, target_pos,
       Game::GameConfig::instance().gameplay().formation_spacing_default);
-  
+
   Game::Systems::CommandService::MoveOptions opts;
   opts.group_move = selected.size() > 1;
   Game::Systems::CommandService::moveUnits(*m_world, selected, targets, opts);

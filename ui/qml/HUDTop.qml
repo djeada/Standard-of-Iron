@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 2.15
+import StandardOfIron 1.0
 
 Item {
     id: topRoot
@@ -377,28 +378,44 @@ Item {
                     spacing: 10
                     Layout.alignment: Qt.AlignVCenter
 
-                    Label {
-                        id: playerLbl
+                    Row {
+                        id: playerRow
 
-                        text: "🗡️ " + (typeof game !== 'undefined' ? game.player_troop_count : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
-                        color: {
-                            if (typeof game === 'undefined')
-                                return "#95a5a6";
+                        spacing: 6
 
-                            var count = game.player_troop_count;
-                            var max = game.max_troops_per_player;
-                            if (count >= max)
-                                return "#e74c3c";
-
-                            if (count >= max * 0.8)
-                                return "#f39c12";
-
-                            return "#2ecc71";
+                        Image {
+                            width: 33
+                            height: 33
+                            source: StyleGuide.iconPath("troop_count.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
                         }
-                        font.pixelSize: 14
-                        font.bold: true
-                        elide: Text.ElideRight
-                        verticalAlignment: Text.AlignVCenter
+
+                        Label {
+                            id: playerLbl
+
+                            text: (typeof game !== 'undefined' ? game.player_troop_count : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
+                            color: {
+                                if (typeof game === 'undefined')
+                                    return "#95a5a6";
+
+                                var count = game.player_troop_count;
+                                var max = game.max_troops_per_player;
+                                if (count >= max)
+                                    return "#e74c3c";
+
+                                if (count >= max * 0.8)
+                                    return "#f39c12";
+
+                                return "#2ecc71";
+                            }
+                            font.pixelSize: 14
+                            font.bold: true
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
                     }
 
                     Rectangle {
@@ -409,40 +426,42 @@ Item {
                         visible: !topRoot.compact
                     }
 
-                    Label {
-                        id: ownersLbl
+                    Item {
+                        id: ownersContainer
 
-                        text: {
-                            if (typeof game === 'undefined')
-                                return "Players: 0";
+                        property var owners: (typeof game !== 'undefined') ? game.owner_info : []
 
-                            var owners = game.owner_info;
-                            var playerCount = 0;
-                            var aiCount = 0;
-                            for (var i = 0; i < owners.length; i++) {
-                                if (owners[i].type === "Player")
-                                    playerCount++;
-                                else if (owners[i].type === "AI")
-                                    aiCount++;
+                        function playerCount() {
+                            var ownersList = ownersContainer.owners || [];
+                            var count = 0;
+                            for (var i = 0; i < ownersList.length; i++) {
+                                if (ownersList[i].type === "Player")
+                                    count++;
+
                             }
-                            return "👥 " + playerCount + " | 🤖 " + aiCount;
+                            return count;
                         }
-                        color: "#ecf0f1"
-                        font.pixelSize: 13
-                        font.bold: false
-                        visible: !topRoot.compact
-                        verticalAlignment: Text.AlignVCenter
-                        ToolTip.visible: ma.containsMouse
-                        ToolTip.delay: 500
-                        ToolTip.text: {
+
+                        function aiCount() {
+                            var ownersList = ownersContainer.owners || [];
+                            var count = 0;
+                            for (var i = 0; i < ownersList.length; i++) {
+                                if (ownersList[i].type === "AI")
+                                    count++;
+
+                            }
+                            return count;
+                        }
+
+                        function ownersTooltip() {
                             if (typeof game === 'undefined')
                                 return "";
 
-                            var owners = game.owner_info;
+                            var ownersList = ownersContainer.owners || [];
                             var tip = "Owner IDs:\n";
-                            for (var i = 0; i < owners.length; i++) {
-                                tip += owners[i].id + ": " + owners[i].name + " (" + owners[i].type + ")";
-                                if (owners[i].isLocal)
+                            for (var i = 0; i < ownersList.length; i++) {
+                                tip += ownersList[i].id + ": " + ownersList[i].name + " (" + ownersList[i].type + ")";
+                                if (ownersList[i].isLocal)
                                     tip += " [You]";
 
                                 tip += "\n";
@@ -450,23 +469,95 @@ Item {
                             return tip;
                         }
 
+                        visible: !topRoot.compact
+                        width: ownersRow.implicitWidth
+                        height: ownersRow.implicitHeight
+                        implicitWidth: ownersRow.implicitWidth
+                        implicitHeight: ownersRow.implicitHeight
+
+                        Row {
+                            id: ownersRow
+
+                            spacing: 6
+
+                            Image {
+                                width: 30
+                                height: 30
+                                source: StyleGuide.iconPath("human_player.png")
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                            }
+
+                            Label {
+                                id: humanCountLbl
+
+                                text: ownersContainer.playerCount()
+                                color: "#ecf0f1"
+                                font.pixelSize: 13
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                            Image {
+                                width: 30
+                                height: 30
+                                source: StyleGuide.iconPath("ai_player.png")
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                            }
+
+                            Label {
+                                id: aiCountLbl
+
+                                text: ownersContainer.aiCount()
+                                color: "#ecf0f1"
+                                font.pixelSize: 13
+                                verticalAlignment: Text.AlignVCenter
+                            }
+
+                        }
+
+                        ToolTip {
+                            visible: ownersMA.containsMouse
+                            delay: 500
+                            text: ownersContainer.ownersTooltip()
+                        }
+
                         MouseArea {
-                            id: ma
+                            id: ownersMA
 
                             anchors.fill: parent
                             hoverEnabled: true
+                            acceptedButtons: Qt.NoButton
                         }
 
                     }
 
-                    Label {
-                        id: enemyLbl
+                    Row {
+                        id: enemyRow
 
-                        text: "💀 " + (typeof game !== 'undefined' ? game.enemy_troops_defeated : 0)
-                        color: "#ecf0f1"
-                        font.pixelSize: 14
-                        elide: Text.ElideRight
-                        verticalAlignment: Text.AlignVCenter
+                        spacing: 6
+
+                        Image {
+                            width: 30
+                            height: 30
+                            source: StyleGuide.iconPath("defeated.png")
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Label {
+                            id: enemyLbl
+
+                            text: (typeof game !== 'undefined' ? game.enemy_troops_defeated : 0)
+                            color: "#ecf0f1"
+                            font.pixelSize: 14
+                            elide: Text.ElideRight
+                            verticalAlignment: Text.AlignVCenter
+                        }
+
                     }
 
                 }
@@ -545,33 +636,24 @@ Item {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton
                     onClicked: function(mouse) {
                         if (typeof game === 'undefined')
-                            return;
+                            return ;
 
-                        // The Image uses PreserveAspectFit, so we need to account for
-                        // the actual painted area within the Item
                         var paintedW = parent.paintedWidth;
                         var paintedH = parent.paintedHeight;
-                        
                         if (paintedW === 0 || paintedH === 0)
-                            return;
+                            return ;
 
-                        // Calculate offset due to centering
                         var offsetX = (parent.width - paintedW) / 2;
                         var offsetY = (parent.height - paintedH) / 2;
-
-                        // Adjust mouse coordinates to image space
                         var imgX = mouse.x - offsetX;
                         var imgY = mouse.y - offsetY;
-                        
-                        // Check if click is within the painted image
                         if (imgX < 0 || imgX >= paintedW || imgY < 0 || imgY >= paintedH)
-                            return;
+                            return ;
 
-                        if (mouse.button === Qt.LeftButton) {
+                        if (mouse.button === Qt.LeftButton)
                             game.on_minimap_left_click(imgX, imgY, paintedW, paintedH);
-                        } else if (mouse.button === Qt.RightButton) {
+                        else if (mouse.button === Qt.RightButton)
                             game.on_minimap_right_click(imgX, imgY, paintedW, paintedH);
-                        }
                     }
                 }
 

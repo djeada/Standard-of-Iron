@@ -133,6 +133,17 @@
         <file>assets/visuals/icons/house_cartaghe.png</file>
         <file>assets/visuals/icons/defense_tower_rome.png</file>
         <file>assets/visuals/icons/defense_tower_cartaghe.png</file>
+        <file>assets/visuals/icons/attack_mode.png</file>
+        <file>assets/visuals/icons/defend_mode.png</file>
+        <file>assets/visuals/icons/hold_mode.png</file>
+        <file>assets/visuals/icons/patrol_mode.png</file>
+        <file>assets/visuals/icons/formation_mode.png</file>
+        <file>assets/visuals/icons/build_mode.png</file>
+        <file>assets/visuals/icons/heal_mode.png</file>
+        <file>assets/visuals/icons/ai_player.png</file>
+        <file>assets/visuals/icons/human_player.png</file>
+        <file>assets/visuals/icons/troop_count.png</file>
+        <file>assets/visuals/icons/defeated.png</file>
 
         <!-- Gameplay data -->
         <file>assets/data/troops/base.json</file>
