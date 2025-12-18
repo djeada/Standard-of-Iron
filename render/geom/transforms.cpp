@@ -68,8 +68,14 @@ auto cylinder_between(const QMatrix4x4 &parent, const QVector3D &a,
     const float len = std::sqrt(len_sq);
     const QVector3D dir = diff / len;
 
-    QQuaternion rot = QQuaternion::rotationTo(QVector3D(0.0F, 1.0F, 0.0F), dir);
-    m.rotate(rot);
+    const QVector3D up(0.0F, 1.0F, 0.0F);
+
+    if (QVector3D::dotProduct(up, dir) < -0.99999F) {
+      m.rotate(k_flip_rotation_degrees, 1.0F, 0.0F, 0.0F);
+    } else {
+      QQuaternion rot = QQuaternion::rotationTo(up, dir);
+      m.rotate(rot);
+    }
     m.scale(radius, len, radius);
   } else {
     m.scale(radius, 1.0F, radius);
