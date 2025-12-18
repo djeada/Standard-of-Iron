@@ -14,6 +14,11 @@ public:
 
   void standIdle();
 
+  /// Apply micro idle animations (subtle continuous movements)
+  /// @param time Current animation time for phase calculation
+  /// @param seed Randomization seed for variation between soldiers
+  void applyMicroIdle(float time, std::uint32_t seed);
+
   void kneel(float depth);
   void kneelTransition(float progress, bool standing_up);
 

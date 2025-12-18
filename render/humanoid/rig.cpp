@@ -24,6 +24,7 @@
 #include "../submitter.h"
 #include "formation_calculator.h"
 #include "humanoid_math.h"
+#include "pose_controller.h"
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector4D>
@@ -1633,6 +1634,12 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     }
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
+
+    // Apply micro idle animations when unit is not moving
+    if (!anim.is_moving && !anim.is_attacking) {
+      HumanoidPoseController pose_ctrl(pose, anim_ctx);
+      pose_ctrl.applyMicroIdle(anim.time + phase_offset, inst_seed);
+    }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
 

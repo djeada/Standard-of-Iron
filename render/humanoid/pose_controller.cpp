@@ -14,6 +14,69 @@ HumanoidPoseController::HumanoidPoseController(
 
 void HumanoidPoseController::standIdle() {}
 
+void HumanoidPoseController::applyMicroIdle(float time, std::uint32_t seed) {
+  using HP = HumanProportions;
+
+  // Use seed to create unique offsets for this soldier to prevent sync
+  float const seed_offset = static_cast<float>(seed % 1000) / 1000.0F * 6.28F;
+  float const seed_scale = 0.8F + static_cast<float>(seed % 500) / 1000.0F;
+
+  // Breathing animation (chest rise/fall) - subtle vertical movement
+  float const breath_period = 3.5F * seed_scale;
+  float const breath_phase = std::fmod(time + seed_offset, breath_period) /
+                             breath_period * 2.0F * std::numbers::pi_v<float>;
+  float const breath_amount = std::sin(breath_phase) * 0.008F;
+
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + breath_amount);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + breath_amount);
+  m_pose.neck_base.setY(m_pose.neck_base.y() + breath_amount * 0.7F);
+
+  // Weight shift animation (subtle lateral sway)
+  float const sway_period = 4.2F * seed_scale;
+  float const sway_phase = std::fmod(time + seed_offset * 1.3F, sway_period) /
+                           sway_period * 2.0F * std::numbers::pi_v<float>;
+  float const sway_amount = std::sin(sway_phase) * 0.006F;
+
+  m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + sway_amount);
+  m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + sway_amount * 0.8F);
+  m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + sway_amount * 0.8F);
+
+  // Head micro-movement (subtle head turns and nods)
+  float const head_yaw_period = 6.0F * seed_scale;
+  float const head_yaw_phase =
+      std::fmod(time + seed_offset * 0.7F, head_yaw_period) / head_yaw_period *
+      2.0F * std::numbers::pi_v<float>;
+  float const head_yaw = std::sin(head_yaw_phase) * 0.012F;
+
+  float const head_nod_period = 5.0F * seed_scale;
+  float const head_nod_phase =
+      std::fmod(time + seed_offset * 1.1F, head_nod_period) / head_nod_period *
+      2.0F * std::numbers::pi_v<float>;
+  float const head_nod = std::sin(head_nod_phase) * 0.004F;
+
+  m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + head_nod);
+
+  // Subtle foot adjustment (small shifts in stance)
+  float const foot_period = 8.0F * seed_scale;
+  float const foot_phase = std::fmod(time + seed_offset * 0.9F, foot_period) /
+                           foot_period * 2.0F * std::numbers::pi_v<float>;
+  float const foot_shift = std::sin(foot_phase) * 0.004F;
+
+  m_pose.foot_l.setZ(m_pose.foot_l.z() + foot_shift);
+  m_pose.foot_r.setZ(m_pose.foot_r.z() - foot_shift * 0.7F);
+
+  // Arm micro-adjustments (grip shifting, slight arm movement)
+  float const arm_period = 5.5F * seed_scale;
+  float const arm_phase = std::fmod(time + seed_offset * 1.5F, arm_period) /
+                          arm_period * 2.0F * std::numbers::pi_v<float>;
+  float const arm_drift = std::sin(arm_phase) * 0.008F;
+
+  m_pose.hand_l.setY(m_pose.hand_l.y() + arm_drift * 0.5F);
+  m_pose.hand_r.setY(m_pose.hand_r.y() - arm_drift * 0.3F);
+  m_pose.hand_l.setZ(m_pose.hand_l.z() + arm_drift * 0.4F);
+}
+
 void HumanoidPoseController::kneel(float depth) {
   using HP = HumanProportions;
 
