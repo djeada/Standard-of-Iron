@@ -61,8 +61,6 @@ public:
       const BuildingFootprint &footprint,
       float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
 
-  // Grid padding around buildings to account for unit sizes.
-  // Default is 1.0 to prevent clipping for all unit sizes (max radius is 1.0)
   static constexpr float kDefaultGridPadding = 1.0F;
   static void set_grid_padding(float padding);
   static auto get_grid_padding() -> float;
