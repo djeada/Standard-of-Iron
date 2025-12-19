@@ -986,117 +986,20 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case GridCmdIndex: {
-      if (m_effectsPipeline->m_gridShader == nullptr) {
-        break;
-      }
-      const auto &gc = std::get<GridCmdIndex>(cmd);
-
-      if (m_lastBoundShader != m_effectsPipeline->m_gridShader) {
-        m_effectsPipeline->m_gridShader->use();
-        m_lastBoundShader = m_effectsPipeline->m_gridShader;
-      }
-
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.mvp, gc.mvp);
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.model, gc.model);
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.gridColor, gc.color);
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.lineColor, k_grid_line_color);
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.cellSize, gc.cell_size);
-      m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.thickness, gc.thickness);
-
-      if (m_resources) {
-        if (auto *plane = m_resources->ground()) {
-          plane->draw();
-        }
+      if (m_effectsPipeline) {
+        m_effectsPipeline->render_grid(queue, i, view_proj);
       }
       break;
     }
     case SelectionRingCmdIndex: {
-      const auto &sc = std::get<SelectionRingCmdIndex>(cmd);
-      Mesh *ring = Render::Geom::SelectionRing::get();
-      if (ring == nullptr) {
-        break;
-      }
-
-      if (m_lastBoundShader != m_effectsPipeline->m_basicShader) {
-        m_effectsPipeline->m_basicShader->use();
-        m_lastBoundShader = m_effectsPipeline->m_basicShader;
-      }
-
-      m_effectsPipeline->m_basicShader->use();
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.useTexture, false);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.color, sc.color);
-
-      DepthMaskScope const depth_mask(false);
-      PolygonOffsetScope const poly(-1.0F, -1.0F);
-      BlendScope const blend(true);
-
-      {
-        QMatrix4x4 m = sc.model;
-        m.scale(1.08F, 1.0F, 1.08F);
-        const QMatrix4x4 mvp = view_proj * m;
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.mvp, mvp);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.model, m);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_outer);
-        ring->draw();
-      }
-
-      {
-        const QMatrix4x4 mvp = view_proj * sc.model;
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.mvp, mvp);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.model, sc.model);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.alpha, sc.alpha_inner);
-        ring->draw();
+      if (m_effectsPipeline) {
+        m_effectsPipeline->render_selection_ring(queue, i, view_proj);
       }
       break;
     }
     case SelectionSmokeCmdIndex: {
-      const auto &sm = std::get<SelectionSmokeCmdIndex>(cmd);
-      Mesh *disc = Render::Geom::SelectionDisc::get();
-      if (disc == nullptr) {
-        break;
-      }
-
-      if (m_lastBoundShader != m_effectsPipeline->m_basicShader) {
-        m_effectsPipeline->m_basicShader->use();
-        m_lastBoundShader = m_effectsPipeline->m_basicShader;
-      }
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.useTexture, false);
-      m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.color, sm.color);
-      DepthMaskScope const depth_mask(false);
-      DepthTestScope const depth_test(true);
-
-      PolygonOffsetScope const poly(-1.0F, -1.0F);
-      BlendScope const blend(true);
-      for (int i = 0; i < 7; ++i) {
-        float const scale = 1.35F + 0.12F * i;
-        float const a = sm.base_alpha * (1.0F - 0.09F * i);
-        QMatrix4x4 m = sm.model;
-        m.translate(0.0F, 0.02F, 0.0F);
-        m.scale(scale, 1.0F, scale);
-        const QMatrix4x4 mvp = view_proj * m;
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.mvp, mvp);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.model, m);
-        m_effectsPipeline->m_basicShader->set_uniform(
-            m_effectsPipeline->m_basicUniforms.alpha, a);
-        disc->draw();
+      if (m_effectsPipeline) {
+        m_effectsPipeline->render_selection_smoke(queue, i, view_proj);
       }
       break;
     }
