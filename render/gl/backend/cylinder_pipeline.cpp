@@ -83,8 +83,8 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
     return;
   }
 
-  const auto &vertices = unit->getVertices();
-  const auto &indices = unit->getIndices();
+  const auto &vertices = unit->get_vertices();
+  const auto &indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }

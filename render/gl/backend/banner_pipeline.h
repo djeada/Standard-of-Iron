@@ -21,7 +21,7 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  auto getBannerMesh(int subdivisions = 16) -> GL::Mesh *;
+  auto get_banner_mesh(int subdivisions = 16) -> GL::Mesh *;
 
   struct BannerUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};

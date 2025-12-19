@@ -203,7 +203,7 @@ void Backend::initialize() {
 
 auto Backend::banner_mesh() const -> Mesh * {
   if (m_bannerPipeline != nullptr) {
-    return m_bannerPipeline->getBannerMesh();
+    return m_bannerPipeline->get_banner_mesh();
   }
   return nullptr;
 }

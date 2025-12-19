@@ -106,7 +106,7 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
     return nullptr;
   }
 
-  auto filtered = base->cloneWithFilteredIndices(
+  auto filtered = base->clone_with_filtered_indices(
       [](unsigned int a, unsigned int b, unsigned int c,
          const std::vector<Vertex> &verts) -> bool {
         auto sample = [&](unsigned int idx) -> QVector3D {
@@ -1585,7 +1585,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     anim_ctx.locomotion_velocity =
         anim_ctx.locomotion_direction * anim_ctx.move_speed;
-    anim_ctx.motion_state = classifyMotionState(anim, anim_ctx.move_speed);
+    anim_ctx.motion_state = classify_motion_state(anim, anim_ctx.move_speed);
     anim_ctx.gait.state = anim_ctx.motion_state;
     anim_ctx.gait.speed = anim_ctx.move_speed;
     anim_ctx.gait.velocity = anim_ctx.locomotion_velocity;

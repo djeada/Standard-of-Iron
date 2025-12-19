@@ -22,7 +22,7 @@ constexpr float k_uv_center = 0.5F;
 constexpr float k_uv_scale = 0.5F;
 constexpr int k_indices_per_quad = 6;
 
-auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
+auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   const float radius = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -32,8 +32,8 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   for (int y = 0; y <= 1; ++y) {
     float py = (y != 0) ? half_h : -half_h;
     auto v_coord = float(y);
-    for (int i = 0; i <= radialSegments; ++i) {
-      float u = float(i) / float(radialSegments);
+    for (int i = 0; i <= radial_segments; ++i) {
+      float u = float(i) / float(radial_segments);
       float const ang = u * k_two_pi;
       float px = radius * std::cos(ang);
       float pz = radius * std::sin(ang);
@@ -42,8 +42,8 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
       v.push_back({{px, py, pz}, {n.x(), n.y(), n.z()}, {u, v_coord}});
     }
   }
-  int const row = radialSegments + 1;
-  for (int i = 0; i < radialSegments; ++i) {
+  int const row = radial_segments + 1;
+  for (int i = 0; i < radial_segments; ++i) {
     int a = 0 * row + i;
     int b = 0 * row + i + 1;
     int c = 1 * row + i + 1;
@@ -59,8 +59,8 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   int base_top = (int)v.size();
   v.push_back(
       {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
-  for (int i = 0; i <= radialSegments; ++i) {
-    float const u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
@@ -69,7 +69,7 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
                  {k_uv_center + k_uv_scale * std::cos(ang),
                   k_uv_center + k_uv_scale * std::sin(ang)}});
   }
-  for (int i = 1; i <= radialSegments; ++i) {
+  for (int i = 1; i <= radial_segments; ++i) {
     idx.push_back(base_top);
     idx.push_back(base_top + i);
     idx.push_back(base_top + i + 1);
@@ -78,8 +78,8 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   int base_bot = (int)v.size();
   v.push_back(
       {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
-  for (int i = 0; i <= radialSegments; ++i) {
-    float const u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
@@ -88,7 +88,7 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
                  {k_uv_center + k_uv_scale * std::cos(ang),
                   k_uv_center + k_uv_scale * std::sin(ang)}});
   }
-  for (int i = 1; i <= radialSegments; ++i) {
+  for (int i = 1; i <= radial_segments; ++i) {
     idx.push_back(base_bot);
     idx.push_back(base_bot + i + 1);
     idx.push_back(base_bot + i);
@@ -97,20 +97,20 @@ auto create_unit_cylinder_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_sphere_mesh(int latSegments,
-                             int lonSegments) -> std::unique_ptr<Mesh> {
+auto create_unit_sphere_mesh(int lat_segments,
+                             int lon_segments) -> std::unique_ptr<Mesh> {
   const float r = k_unit_radius;
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
 
-  for (int y = 0; y <= latSegments; ++y) {
-    float vy = float(y) / float(latSegments);
+  for (int y = 0; y <= lat_segments; ++y) {
+    float vy = float(y) / float(lat_segments);
     float const phi = vy * k_pi;
     float py = r * std::cos(phi);
     float const pr = r * std::sin(phi);
 
-    for (int x = 0; x <= lonSegments; ++x) {
-      float vx = float(x) / float(lonSegments);
+    for (int x = 0; x <= lon_segments; ++x) {
+      float vx = float(x) / float(lon_segments);
       float const theta = vx * k_two_pi;
       float px = pr * std::cos(theta);
       float pz = pr * std::sin(theta);
@@ -121,9 +121,9 @@ auto create_unit_sphere_mesh(int latSegments,
     }
   }
 
-  int const row = lonSegments + 1;
-  for (int y = 0; y < latSegments; ++y) {
-    for (int x = 0; x < lonSegments; ++x) {
+  int const row = lon_segments + 1;
+  for (int y = 0; y < lat_segments; ++y) {
+    for (int x = 0; x < lon_segments; ++x) {
       int a = y * row + x;
       int b = a + 1;
       int c = (y + 1) * row + x + 1;
@@ -140,7 +140,7 @@ auto create_unit_sphere_mesh(int latSegments,
   return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
+auto create_unit_cone_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   const float base_r = k_unit_radius;
   const float half_h = k_half_scalar;
 
@@ -150,8 +150,8 @@ auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   int apex_idx = 0;
   v.push_back({{0.0F, +half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, 1.0F}});
 
-  for (int i = 0; i <= radialSegments; ++i) {
-    float u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = base_r * std::cos(ang);
     float pz = base_r * std::sin(ang);
@@ -160,7 +160,7 @@ auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
     v.push_back({{px, -half_h, pz}, {n.x(), n.y(), n.z()}, {u, 0.0F}});
   }
 
-  for (int i = 1; i <= radialSegments; ++i) {
+  for (int i = 1; i <= radial_segments; ++i) {
     idx.push_back(apex_idx);
     idx.push_back(i);
     idx.push_back(i + 1);
@@ -170,8 +170,8 @@ auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   v.push_back(
       {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   int const base_start = (int)v.size();
-  for (int i = 0; i <= radialSegments; ++i) {
-    float const u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = base_r * std::cos(ang);
     float pz = base_r * std::sin(ang);
@@ -180,7 +180,7 @@ auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
                  {k_uv_center + k_uv_scale * std::cos(ang),
                   k_uv_center + k_uv_scale * std::sin(ang)}});
   }
-  for (int i = 0; i < radialSegments; ++i) {
+  for (int i = 0; i < radial_segments; ++i) {
     idx.push_back(base_center);
     idx.push_back(base_start + i + 1);
     idx.push_back(base_start + i);
@@ -189,8 +189,8 @@ auto create_unit_cone_mesh(int radialSegments) -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(v, idx);
 }
 
-auto createCapsuleMesh(int radialSegments,
-                       int heightSegments) -> std::unique_ptr<Mesh> {
+auto create_capsule_mesh(int radial_segments,
+                       int height_segments) -> std::unique_ptr<Mesh> {
   constexpr float k_capsule_radius = 0.25F;
   const float radius = k_capsule_radius;
   const float half_h = k_half_scalar;
@@ -198,11 +198,11 @@ auto createCapsuleMesh(int radialSegments,
   std::vector<Vertex> verts;
   std::vector<unsigned int> idx;
 
-  for (int y = 0; y <= heightSegments; ++y) {
-    float v = float(y) / float(heightSegments);
+  for (int y = 0; y <= height_segments; ++y) {
+    float v = float(y) / float(height_segments);
     float py = -half_h + v * (2.0F * half_h);
-    for (int i = 0; i <= radialSegments; ++i) {
-      float u = float(i) / float(radialSegments);
+    for (int i = 0; i <= radial_segments; ++i) {
+      float u = float(i) / float(radial_segments);
       float const ang = u * k_two_pi;
       float px = radius * std::cos(ang);
       float pz = radius * std::sin(ang);
@@ -212,9 +212,9 @@ auto createCapsuleMesh(int radialSegments,
     }
   }
 
-  int const row = radialSegments + 1;
-  for (int y = 0; y < heightSegments; ++y) {
-    for (int i = 0; i < radialSegments; ++i) {
+  int const row = radial_segments + 1;
+  for (int y = 0; y < height_segments; ++y) {
+    for (int i = 0; i < radial_segments; ++i) {
       int a = y * row + i;
       int b = y * row + i + 1;
       int c = (y + 1) * row + i + 1;
@@ -231,8 +231,8 @@ auto createCapsuleMesh(int radialSegments,
   int base_top = (int)verts.size();
   verts.push_back(
       {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
-  for (int i = 0; i <= radialSegments; ++i) {
-    float const u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
@@ -241,7 +241,7 @@ auto createCapsuleMesh(int radialSegments,
                      {k_uv_center + k_uv_scale * std::cos(ang),
                       k_uv_center + k_uv_scale * std::sin(ang)}});
   }
-  for (int i = 1; i <= radialSegments; ++i) {
+  for (int i = 1; i <= radial_segments; ++i) {
     idx.push_back(base_top);
     idx.push_back(base_top + i);
     idx.push_back(base_top + i + 1);
@@ -250,8 +250,8 @@ auto createCapsuleMesh(int radialSegments,
   int base_bot = (int)verts.size();
   verts.push_back(
       {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
-  for (int i = 0; i <= radialSegments; ++i) {
-    float const u = float(i) / float(radialSegments);
+  for (int i = 0; i <= radial_segments; ++i) {
+    float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
     float px = radius * std::cos(ang);
     float pz = radius * std::sin(ang);
@@ -260,7 +260,7 @@ auto createCapsuleMesh(int radialSegments,
                      {k_uv_center + k_uv_scale * std::cos(ang),
                       k_uv_center + k_uv_scale * std::sin(ang)}});
   }
-  for (int i = 1; i <= radialSegments; ++i) {
+  for (int i = 1; i <= radial_segments; ++i) {
     idx.push_back(base_bot);
     idx.push_back(base_bot + i + 1);
     idx.push_back(base_bot + i);
@@ -275,8 +275,8 @@ auto simple_hash(float seed) -> float {
   return x - std::floor(x);
 }
 
-auto create_unit_torso_mesh(int radialSegments,
-                            int heightSegments) -> std::unique_ptr<Mesh> {
+auto create_unit_torso_mesh(int radial_segments,
+                            int height_segments) -> std::unique_ptr<Mesh> {
   const float half_h = k_half_scalar;
 
   constexpr float k_lower_extension = 0.05F;
@@ -518,20 +518,20 @@ auto create_unit_torso_mesh(int radialSegments,
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
-  v.reserve((radialSegments + 1) * (heightSegments + 1) +
-            (radialSegments + 1) * 2 + 2);
-  idx.reserve(radialSegments * heightSegments * k_indices_per_quad +
-              radialSegments * k_indices_per_quad);
+  v.reserve((radial_segments + 1) * (height_segments + 1) +
+            (radial_segments + 1) * 2 + 2);
+  idx.reserve(radial_segments * height_segments * k_indices_per_quad +
+              radial_segments * k_indices_per_quad);
 
-  for (int y = 0; y <= heightSegments; ++y) {
-    float const t = float(y) / float(heightSegments);
-    float const dt = 1.0F / float(heightSegments);
+  for (int y = 0; y <= height_segments; ++y) {
+    float const t = float(y) / float(height_segments);
+    float const dt = 1.0F / float(height_segments);
     float v_coord = t;
 
-    for (int i = 0; i <= radialSegments; ++i) {
-      float u = float(i) / float(radialSegments);
+    for (int i = 0; i <= radial_segments; ++i) {
+      float u = float(i) / float(radial_segments);
       float const ang = u * k_two_pi;
-      float const da = k_two_pi / float(radialSegments);
+      float const da = k_two_pi / float(radial_segments);
 
       QVector3D const p = sample_pos(t, ang);
       QVector3D const pu = sample_pos(t, ang + da);
@@ -549,9 +549,9 @@ auto create_unit_torso_mesh(int radialSegments,
     }
   }
 
-  int const row = radialSegments + 1;
-  for (int y = 0; y < heightSegments; ++y) {
-    for (int i = 0; i < radialSegments; ++i) {
+  int const row = radial_segments + 1;
+  for (int y = 0; y < height_segments; ++y) {
+    for (int i = 0; i < radial_segments; ++i) {
       int a = y * row + i;
       int b = y * row + i + 1;
       int c = (y + 1) * row + i + 1;
@@ -576,8 +576,8 @@ auto create_unit_torso_mesh(int radialSegments,
     v.push_back({{c_top.x(), c_top.y(), c_top.z()},
                  {0, 1, 0},
                  {k_uv_center, k_uv_center}});
-    for (int i = 0; i <= radialSegments; ++i) {
-      float const u = float(i) / float(radialSegments);
+    for (int i = 0; i <= radial_segments; ++i) {
+      float const u = float(i) / float(radial_segments);
       float const ang = u * k_two_pi;
       QVector3D const p = sample_pos(t_top, ang);
       v.push_back({{p.x(), p.y(), p.z()},
@@ -585,7 +585,7 @@ auto create_unit_torso_mesh(int radialSegments,
                    {k_uv_center + k_uv_scale * std::cos(ang),
                     k_uv_center + k_uv_scale * std::sin(ang)}});
     }
-    for (int i = 1; i <= radialSegments; ++i) {
+    for (int i = 1; i <= radial_segments; ++i) {
       idx.push_back(base_top);
       idx.push_back(base_top + i);
       idx.push_back(base_top + i + 1);
@@ -603,7 +603,7 @@ auto create_unit_torso_mesh(int radialSegments,
                  {0, -1, 0},
                  {k_uv_center, k_uv_center}});
 
-    for (int i = 0; i < radialSegments; ++i) {
+    for (int i = 0; i < radial_segments; ++i) {
       idx.push_back(apex_idx);
       idx.push_back(i + 1);
       idx.push_back(i);
@@ -615,14 +615,14 @@ auto create_unit_torso_mesh(int radialSegments,
 
 } // namespace
 
-auto get_unit_cylinder(int radialSegments) -> Mesh * {
+auto get_unit_cylinder(int radial_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_cylinder_mesh(radialSegments));
+      create_unit_cylinder_mesh(radial_segments));
   return s_mesh.get();
 }
 
 auto get_unit_cube() -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(createCubeMesh());
+  static std::unique_ptr<Mesh> const s_mesh(create_cube_mesh());
   return s_mesh.get();
 }
 
@@ -632,21 +632,21 @@ auto get_unit_sphere(int latSegments, int lonSegments) -> Mesh * {
   return s_mesh.get();
 }
 
-auto get_unit_cone(int radialSegments) -> Mesh * {
+auto get_unit_cone(int radial_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_cone_mesh(radialSegments));
+      create_unit_cone_mesh(radial_segments));
   return s_mesh.get();
 }
 
-auto get_unit_capsule(int radialSegments, int heightSegments) -> Mesh * {
+auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      createCapsuleMesh(radialSegments, heightSegments));
+      createCapsuleMesh(radial_segments, height_segments));
   return s_mesh.get();
 }
 
-auto get_unit_torso(int radialSegments, int heightSegments) -> Mesh * {
+auto get_unit_torso(int radial_segments, int height_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_torso_mesh(radialSegments, heightSegments));
+      create_unit_torso_mesh(radial_segments, height_segments));
   return s_mesh.get();
 }
 

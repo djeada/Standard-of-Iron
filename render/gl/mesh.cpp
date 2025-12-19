@@ -17,9 +17,9 @@ Mesh::Mesh(const std::vector<Vertex> &vertices,
 
 Mesh::~Mesh() = default;
 
-void Mesh::setupBuffers() {
+void Mesh::setup_buffers() {
   if (QOpenGLContext::currentContext() == nullptr) {
-    qWarning() << "Mesh::setupBuffers called without current GL context; "
+    qWarning() << "Mesh::setup_buffers called without current GL context; "
                   "skipping VAO/VBO creation";
     return;
   }
@@ -42,13 +42,13 @@ void Mesh::setupBuffers() {
 
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
-    qWarning() << "Mesh::setupBuffers GL error" << err;
+    qWarning() << "Mesh::setup_buffers GL error" << err;
   }
 }
 
 void Mesh::draw() {
   if (!m_vao) {
-    setupBuffers();
+    setup_buffers();
   }
   if (QOpenGLContext::currentContext() == nullptr) {
     qWarning() << "Mesh::draw called without current GL context; skipping draw"
@@ -87,7 +87,7 @@ auto createQuadMesh() -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto createCubeMesh() -> std::unique_ptr<Mesh> {
+auto create_cube_mesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {
 
       {{-1.0F, -1.0F, 1.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},
@@ -116,7 +116,7 @@ auto createCubeMesh() -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(vertices, indices);
 }
 
-auto createPlaneMesh(float width, float height,
+auto create_plane_mesh(float width, float height,
                      int subdivisions) -> std::unique_ptr<Mesh> {
   std::vector<Vertex> vertices;
   std::vector<unsigned int> indices;

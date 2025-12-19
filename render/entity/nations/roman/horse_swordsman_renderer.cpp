@@ -13,7 +13,7 @@
 namespace Render::GL::Roman {
 namespace {
 
-auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
+auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
   config.sword_equipment_id = "sword_roman";
   config.shield_equipment_id = "shield_roman";
@@ -35,7 +35,7 @@ void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
       "troops/roman/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
         static MountedKnightRendererBase const static_renderer(
-            makeMountedKnightConfig());
+            make_mounted_knight_config());
         Shader *horse_swordsman_shader = nullptr;
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);

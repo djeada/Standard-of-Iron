@@ -41,7 +41,7 @@ auto BannerPipeline::is_initialized() const -> bool {
   return m_bannerShader != nullptr && m_bannerMesh16 != nullptr;
 }
 
-auto BannerPipeline::getBannerMesh(int subdivisions) -> GL::Mesh * {
+auto BannerPipeline::get_banner_mesh(int subdivisions) -> GL::Mesh * {
   if (subdivisions >= 12) {
     return m_bannerMesh16.get();
   }

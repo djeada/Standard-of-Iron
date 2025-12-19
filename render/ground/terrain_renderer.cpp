@@ -692,7 +692,7 @@ void TerrainRenderer::build_meshes() {
 
         chunk.params = params;
 
-        total_triangles += chunk.mesh->getIndices().size() / 3;
+        total_triangles += chunk.mesh->get_indices().size() / 3;
         m_chunks.push_back(std::move(chunk));
       }
     }

@@ -17,7 +17,7 @@ auto ResourceManager::initialize() -> bool {
 
   m_quadMesh = createQuadMesh();
   m_groundMesh = createPlaneMesh(1.0F, 1.0F, GroundPlaneSubdivisions);
-  m_unitMesh = createCubeMesh();
+  m_unitMesh = create_cube_mesh();
 
   m_whiteTexture = std::make_unique<Texture>();
   m_whiteTexture->create_empty(1, 1, Texture::Format::RGBA);
