@@ -28,7 +28,7 @@ auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
   Pathfinding *pathfinder = CommandService::get_pathfinder();
 
   if (registry.is_circle_overlapping_building(pos.x(), pos.z(), unit_radius,
-                                               ignoreEntity)) {
+                                              ignoreEntity)) {
     return false;
   }
 

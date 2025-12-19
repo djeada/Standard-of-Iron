@@ -7,17 +7,16 @@
 
 namespace Render::GL {
 
-/// Types of ambient idle animations (occasional, more noticeable actions)
 enum class AmbientIdleType : std::uint8_t {
   None = 0,
-  SitDown,          // Soldier sits down briefly then stands
-  ShuffleFeet,      // Shuffle/adjust feet position
-  TapFoot,          // Tap foot impatiently
-  ShiftWeight,      // Shift weight between legs
-  StepInPlace,      // Small step in place
-  BendKnee,         // Bend one knee briefly (resting leg)
-  RaiseWeapon,      // Raise weapon up then lower it
-  Jump              // Small jump in place
+  SitDown,
+  ShuffleFeet,
+  TapFoot,
+  ShiftWeight,
+  StepInPlace,
+  BendKnee,
+  RaiseWeapon,
+  Jump
 };
 
 class HumanoidPoseController {
@@ -27,18 +26,12 @@ public:
 
   void stand_idle();
 
-  /// Apply micro idle animations (subtle continuous movements)
-  /// @param time Current animation time for phase calculation
-  /// @param seed Randomization seed for variation between soldiers
   void apply_micro_idle(float time, std::uint32_t seed);
 
-  /// Apply ambient idle animations (occasional, more noticeable actions)
-  /// @param time Current animation time
-  /// @param seed Randomization seed for variation
-  /// @param idle_duration How long the unit has been idle (seconds)
   void apply_ambient_idle(float time, std::uint32_t seed, float idle_duration);
 
-  /// Get the current ambient idle type based on time and seed
+  void apply_ambient_idle_explicit(AmbientIdleType idle_type, float phase);
+
   static auto get_ambient_idle_type(float time, std::uint32_t seed,
                                     float idle_duration) -> AmbientIdleType;
 
