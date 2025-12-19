@@ -371,7 +371,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
               target_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
           QVector3D const safe_pos = CommandService::grid_to_world(nearest);
           
-          // Double-check the safe position
+          // Grid-based pathfinding may return positions that are walkable but still
+          // overlap buildings in continuous world-space. Verify with precise check.
           if (!registry.is_circle_overlapping_building(
                   safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
             transform->position.x = safe_pos.x();
