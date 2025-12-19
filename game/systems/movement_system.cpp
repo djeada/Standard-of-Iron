@@ -22,20 +22,18 @@ static constexpr int invalid_position_search_radius = 10;
 namespace {
 
 auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
-                      float unit_radius = 0.5F, 
-                      float building_collision_radius = 0.5F) -> bool {
+                      float unit_radius = 0.5F) -> bool {
   auto &registry = BuildingCollisionRegistry::instance();
   auto &terrain_service = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::get_pathfinder();
 
-  // Use full collision radius for building checks to prevent clipping
+  // Use unit radius for all checks - this should match pathfinding behavior
   if (registry.is_circle_overlapping_building(pos.x(), pos.z(), 
-                                               building_collision_radius,
+                                               unit_radius,
                                                ignoreEntity)) {
     return false;
   }
 
-  // Use pathfinding radius for terrain/walkability checks
   if (pathfinder != nullptr) {
     int const grid_x =
         static_cast<int>(std::round(pos.x() - pathfinder->get_grid_offset_x()));
@@ -55,15 +53,24 @@ auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
   return true;
 }
 
+// Check if a position would cause the unit to clip into a building
+// This uses the full collision radius
+auto would_clip_building(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
+                         float collision_radius) -> bool {
+  auto &registry = BuildingCollisionRegistry::instance();
+  return registry.is_circle_overlapping_building(pos.x(), pos.z(), 
+                                                  collision_radius,
+                                                  ignoreEntity);
+}
+
 auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
                          Engine::Core::EntityID ignoreEntity,
-                         float unit_radius = 0.5F,
-                         float building_collision_radius = 0.5F) -> bool {
+                         float unit_radius = 0.5F) -> bool {
   QVector3D const delta = to - from;
   float const distance_squared = delta.lengthSquared();
 
-  bool const start_allowed = is_point_allowed(from, ignoreEntity, unit_radius, building_collision_radius);
-  bool const end_allowed = is_point_allowed(to, ignoreEntity, unit_radius, building_collision_radius);
+  bool const start_allowed = is_point_allowed(from, ignoreEntity, unit_radius);
+  bool const end_allowed = is_point_allowed(to, ignoreEntity, unit_radius);
 
   if (distance_squared < 0.000001F) {
     return end_allowed;
@@ -76,7 +83,7 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
 
   for (int i = 1; i <= steps; ++i) {
     QVector3D const pos = from + step * static_cast<float>(i);
-    bool const allowed = is_point_allowed(pos, ignoreEntity, unit_radius, building_collision_radius);
+    bool const allowed = is_point_allowed(pos, ignoreEntity, unit_radius);
 
     if (!exited_blocked_zone) {
       if (allowed) {
@@ -185,7 +192,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   QVector3D const current_pos_3d(transform->position.x, 0.0F,
                                  transform->position.z);
   bool const current_pos_valid =
-      is_point_allowed(current_pos_3d, entity->get_id(), unit_radius, collision_radius);
+      is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
 
   // Note: Pre-move validation was removed to prevent deadlocks.
   // With the larger collision radius, units could enter invalid positions,
@@ -193,13 +200,32 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   // The pathfinding system and is_segment_walkable checks handle collision avoidance.
 
   bool const destination_allowed =
-      is_point_allowed(final_goal, entity->get_id(), unit_radius, collision_radius);
+      is_point_allowed(final_goal, entity->get_id(), unit_radius);
 
-  if (movement->has_target && !destination_allowed) {
+  // Check if destination would cause clipping with full collision radius
+  bool const destination_would_clip =
+      would_clip_building(final_goal, entity->get_id(), collision_radius);
+
+  if (movement->has_target && (!destination_allowed || destination_would_clip)) {
+    // Destination is blocked or would cause clipping - try to repath around the obstacle
+    if (!movement->path_pending && movement->repath_cooldown <= 0.0F) {
+      QVector3D const current_pos(transform->position.x, 0.0F,
+                                  transform->position.z);
+      float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
+      if (goal_dist_sq > 0.01F) {
+        CommandService::MoveOptions opts;
+        opts.clear_attack_intent = false;
+        opts.allow_direct_fallback = false;
+        std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+        std::vector<QVector3D> const targets = {final_goal};
+        CommandService::move_units(*world, ids, targets, opts);
+        movement->repath_cooldown = repath_cooldown_seconds;
+      }
+    }
+    
+    // Clear current path since it's blocked
     movement->clear_path();
     movement->has_target = false;
-    movement->path_pending = false;
-    movement->pending_request_id = 0;
     movement->vx = 0.0F;
     movement->vz = 0.0F;
     return;
@@ -274,7 +300,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         movement->advance_waypoint();
         refresh_segment_target();
         if (is_segment_walkable(current_pos, segment_target, entity->get_id(),
-                                unit_radius, collision_radius)) {
+                                unit_radius)) {
           recovered = true;
           break;
         }
@@ -283,7 +309,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       if (!recovered && !movement->has_waypoints()) {
         refresh_segment_target();
         if (is_segment_walkable(current_pos, segment_target, entity->get_id(),
-                                unit_radius, collision_radius)) {
+                                unit_radius)) {
           recovered = true;
         }
       }
@@ -292,7 +318,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     };
 
     if (!is_segment_walkable(current_pos, segment_target, entity->get_id(),
-                             unit_radius, collision_radius)) {
+                             unit_radius)) {
       if (try_advance_past_blocked_segment()) {
 
       } else {
@@ -351,6 +377,28 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
       transform->position.x = movement->target_x;
       transform->position.z = movement->target_y;
+      
+      // Check if final position would cause clipping and nudge if needed
+      QVector3D const final_pos(transform->position.x, 0.0F, transform->position.z);
+      if (would_clip_building(final_pos, entity->get_id(), collision_radius)) {
+        // Try to find a nearby non-clipping position
+        const float nudge_distance = 0.2F;
+        bool found_valid = false;
+        for (float angle = 0.0F; angle < 360.0F && !found_valid; angle += 45.0F) {
+          float const rad = angle * std::numbers::pi_v<float> / 180.0F;
+          QVector3D const nudged(
+              movement->target_x + std::cos(rad) * nudge_distance,
+              0.0F,
+              movement->target_y + std::sin(rad) * nudge_distance);
+          if (!would_clip_building(nudged, entity->get_id(), collision_radius) &&
+              is_point_allowed(nudged, entity->get_id(), unit_radius)) {
+            transform->position.x = nudged.x();
+            transform->position.z = nudged.z();
+            found_valid = true;
+          }
+        }
+      }
+      
       movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
 
