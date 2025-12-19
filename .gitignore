@@ -63,9 +63,7 @@ _codeql_build_dir/
 _codeql_detected_source_root
 
 # Generated campaign map assets (pipeline outputs)
-assets/campaign_map/*.png
-assets/campaign_map/*.obj
-assets/campaign_map/manifest.json
+assets/campaign_map/
 
 # Local virtualenvs
 venv/
@@ -77,4 +75,3 @@ __pycache__/
 tools/assets/
 assets/campaing_map/
 tools/map_pipeline/assets/
-
