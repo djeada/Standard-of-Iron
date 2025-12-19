@@ -17,6 +17,7 @@ namespace Game::Systems {
 
 static constexpr int max_waypoint_skip_count = 4;
 static constexpr float repath_cooldown_seconds = 0.4F;
+static constexpr int kNearestPointSearchRadius = 5;
 
 namespace {
 
@@ -412,7 +413,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         Point const new_grid =
             CommandService::world_to_grid(new_pos_3d.x(), new_pos_3d.z());
         Point const nearest = Pathfinding::find_nearest_walkable_point(
-            new_grid, 5, *pathfinder, unit_radius);
+            new_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
 
         QVector3D const safe_pos = CommandService::grid_to_world(nearest);
 

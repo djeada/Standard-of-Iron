@@ -3,6 +3,10 @@
 
 using namespace Game::Systems;
 
+namespace {
+constexpr float kDefaultGridCellSize = 1.0F;
+} // namespace
+
 class BuildingCollisionRegistryTest : public ::testing::Test {
 protected:
   void SetUp() override {
@@ -123,7 +127,7 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   const auto &buildings = registry.get_all_buildings();
   ASSERT_EQ(buildings.size(), 1);
   
-  auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(buildings[0], 1.0F);
+  auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(buildings[0], kDefaultGridCellSize);
   
   // With padding of 0.5 and building bounds [-2, 2]:
   // min_grid should be floor(-2 - 0.5) = -3
