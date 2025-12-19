@@ -20,3 +20,10 @@ Single-shot pipeline to prep the West Mediterranean campaign map. It locks coord
 ./tools/map_pipeline/pipeline.py
 ```
 Outputs land/rivers UV, mesh binaries, OBJs, preview PNG, and base textures to `assets/campaign_map/`.
+
+### Provinces (rough draft)
+Generate a gameplay-focused `provinces.json` with hand-authored boundaries (requires `shapely` + `mapbox_earcut`):
+```bash
+./tools/map_pipeline/provinces.py
+```
+This writes `assets/campaign_map/provinces.json` (triangulated UVs + colors).

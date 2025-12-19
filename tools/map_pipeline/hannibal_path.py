@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+"""Generate hannibal_path.json from provinces.json city UVs."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import List
+
+ROOT = Path(__file__).resolve().parents[2]
+PROVINCES_PATH = ROOT / "assets" / "campaign_map" / "provinces.json"
+OUT_PATH = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
+
+
+def build_hannibal_path(provinces: List[dict]) -> List[List[List[float]]]:
+    city_uv: dict[str, List[float]] = {}
+    for prov in provinces:
+        for city in prov.get("cities", []):
+            name = city.get("name")
+            uv = city.get("uv")
+            if not name or not uv or len(uv) < 2:
+                continue
+            city_uv[name] = [float(uv[0]), float(uv[1])]
+
+    route_names = [
+        "New Carthage",
+        "Massalia",
+        "Mediolanum",
+        "Rome",
+        "Capua",
+    ]
+
+    line: List[List[float]] = []
+    for name in route_names:
+        uv = city_uv.get(name)
+        if uv is None:
+            print(f"Warning: Hannibal path city '{name}' not found in provinces.")
+            continue
+        line.append(uv)
+
+    if len(line) < 2:
+        return []
+
+    return [line]
+
+
+def main() -> None:
+    data = json.loads(PROVINCES_PATH.read_text())
+    provinces = data.get("provinces", [])
+    lines = build_hannibal_path(provinces)
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUT_PATH.write_text(json.dumps({"lines": lines}, indent=2))
+    print(f"Wrote Hannibal path to {OUT_PATH}")
+
+
+if __name__ == "__main__":
+    main()
