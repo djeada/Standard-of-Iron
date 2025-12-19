@@ -33,6 +33,7 @@
 
 class ProductionManager;
 class CampaignManager;
+class SelectionQueryService;
 
 namespace Engine::Core {
 class World;
@@ -403,6 +404,7 @@ private:
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
   std::unique_ptr<ProductionManager> m_production_manager;
   std::unique_ptr<CampaignManager> m_campaign_manager;
+  std::unique_ptr<SelectionQueryService> m_selection_query_service;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
