@@ -446,7 +446,7 @@ void CylinderPipeline::render_fog(const DrawQueue &queue, std::size_t &i,
   const auto &batch = std::get<FogBatchCmdIndex>(queue.get_sorted(i));
   const FogInstanceData *instances = batch.instances;
   const std::size_t instance_count = batch.count;
-  
+
   if (instances && instance_count > 0 && m_fogShader) {
     m_fogScratch.resize(instance_count);
     for (std::size_t idx = 0; idx < instance_count; ++idx) {

@@ -7,13 +7,13 @@
 #include <memory>
 #include <vector>
 
-namespace Render {
-class DrawQueue;
+namespace Render::GL {
+class Backend;
 struct FogInstanceData;
 }
 
-namespace Render::GL {
-class Backend;
+namespace Render {
+class DrawQueue;
 }
 
 namespace Render::GL::BackendPipelines {
