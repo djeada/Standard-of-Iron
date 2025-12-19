@@ -147,6 +147,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
+        ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )
@@ -177,6 +178,7 @@ else()
         app/controllers/command_controller.cpp
         app/controllers/action_vfx.cpp
         app/utils/json_vec_utils.cpp
+        ui/campaign_map_view.cpp
         ui/gl_view.cpp
         ui/theme.cpp
     )
@@ -279,6 +281,15 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
+            assets/campaigns/tutorial_campaign.json
+            assets/campaigns/second_punic_war.json
+            assets/campaign_map/campaign_base_color.png
+            assets/campaign_map/campaign_water.png
+            assets/campaign_map/coastlines_uv.json
+            assets/campaign_map/rivers_uv.json
+            assets/campaign_map/land_mesh.bin
+            assets/campaign_map/hannibal_path.json
+            assets/campaign_map/provinces.json
             assets/visuals/unit_visuals.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png

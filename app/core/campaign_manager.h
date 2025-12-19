@@ -21,6 +21,7 @@ public:
   explicit CampaignManager(QObject *parent = nullptr);
 
   void load_campaigns();
+  void set_available_campaigns(const QVariantList &campaigns);
   void start_campaign_mission(const QString &mission_path,
                               int &selected_player_id);
   void mark_current_mission_completed();
