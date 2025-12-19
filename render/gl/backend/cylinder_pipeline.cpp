@@ -3,6 +3,7 @@
 #include "../mesh.h"
 #include "../primitives.h"
 #include "../render_constants.h"
+#include "../../draw_queue.h"
 #include "gl/shader_cache.h"
 #include <GL/gl.h>
 #include <QOpenGLContext>
@@ -406,6 +407,66 @@ void CylinderPipeline::draw_fog(std::size_t count) {
   glDrawElementsInstanced(GL_TRIANGLES, m_fogIndexCount, GL_UNSIGNED_INT,
                           nullptr, static_cast<GLsizei>(count));
   glBindVertexArray(0);
+}
+
+void CylinderPipeline::render_cylinders(const DrawQueue &queue, std::size_t &i,
+                                         const QMatrix4x4 &view_proj,
+                                         GL::Backend *backend) {
+  m_cylinderScratch.clear();
+  const std::size_t count = queue.size();
+  do {
+    const auto &cy = std::get<CylinderCmdIndex>(queue.get_sorted(i));
+    CylinderInstanceGpu gpu{};
+    gpu.start = cy.start;
+    gpu.end = cy.end;
+    gpu.radius = cy.radius;
+    gpu.alpha = cy.alpha;
+    gpu.color = cy.color;
+    m_cylinderScratch.emplace_back(gpu);
+    ++i;
+  } while (i < count && queue.get_sorted(i).index() == CylinderCmdIndex);
+
+  const std::size_t instance_count = m_cylinderScratch.size();
+  if (instance_count > 0 && m_cylinderShader) {
+    glDepthMask(GL_TRUE);
+    if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+      glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+    backend->bind_shader(m_cylinderShader);
+    backend->set_view_proj_uniform(m_cylinderShader, m_cylinderUniforms.view_proj,
+                                    view_proj);
+    upload_cylinder_instances(instance_count);
+    draw_cylinders(instance_count);
+  }
+}
+
+void CylinderPipeline::render_fog(const DrawQueue &queue, std::size_t &i,
+                                   const QMatrix4x4 &view_proj,
+                                   GL::Backend *backend) {
+  const auto &batch = std::get<FogBatchCmdIndex>(queue.get_sorted(i));
+  const FogInstanceData *instances = batch.instances;
+  const std::size_t instance_count = batch.count;
+  
+  if (instances && instance_count > 0 && m_fogShader) {
+    m_fogScratch.resize(instance_count);
+    for (std::size_t idx = 0; idx < instance_count; ++idx) {
+      FogInstanceGpu gpu{};
+      gpu.center = instances[idx].center;
+      gpu.size = instances[idx].size;
+      gpu.color = instances[idx].color;
+      gpu.alpha = instances[idx].alpha;
+      m_fogScratch[idx] = gpu;
+    }
+    glDepthMask(GL_TRUE);
+    if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+      glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+    backend->bind_shader(m_fogShader);
+    backend->set_view_proj_uniform(m_fogShader, m_fogUniforms.view_proj, view_proj);
+    upload_fog_instances(instance_count);
+    draw_fog(instance_count);
+  }
+  ++i;
 }
 
 } // namespace Render::GL::BackendPipelines

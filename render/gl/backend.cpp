@@ -1,8 +1,6 @@
 #include "backend.h"
 #include "../draw_queue.h"
 #include "../geom/mode_indicator.h"
-#include "../geom/selection_disc.h"
-#include "../geom/selection_ring.h"
 #include "../primitive_batch.h"
 #include "backend/banner_pipeline.h"
 #include "backend/character_pipeline.h"
@@ -20,13 +18,6 @@
 #include "buffer.h"
 #include "gl/camera.h"
 #include "gl/resources.h"
-#include "ground/firecamp_gpu.h"
-#include "ground/grass_gpu.h"
-#include "ground/olive_gpu.h"
-#include "ground/pine_gpu.h"
-#include "ground/plant_gpu.h"
-#include "ground/rain_gpu.h"
-#include "ground/stone_gpu.h"
 #include "mesh.h"
 #include "render_constants.h"
 #include "shader.h"
@@ -263,85 +254,19 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     const auto &cmd = queue.get_sorted(i);
     switch (cmd.index()) {
     case CylinderCmdIndex: {
-      if (!m_cylinderPipeline) {
+      if (m_cylinderPipeline) {
+        m_cylinderPipeline->render_cylinders(queue, i, view_proj, this);
+      } else {
         ++i;
-        continue;
-      }
-      m_cylinderPipeline->m_cylinderScratch.clear();
-      do {
-        const auto &cy = std::get<CylinderCmdIndex>(queue.get_sorted(i));
-        BackendPipelines::CylinderPipeline::CylinderInstanceGpu gpu{};
-        gpu.start = cy.start;
-        gpu.end = cy.end;
-        gpu.radius = cy.radius;
-        gpu.alpha = cy.alpha;
-        gpu.color = cy.color;
-        m_cylinderPipeline->m_cylinderScratch.emplace_back(gpu);
-        ++i;
-      } while (i < count && queue.get_sorted(i).index() == CylinderCmdIndex);
-
-      const std::size_t instance_count =
-          m_cylinderPipeline->m_cylinderScratch.size();
-      if (instance_count > 0 &&
-          (m_cylinderPipeline->cylinderShader() != nullptr)) {
-        glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
-          glDisable(GL_POLYGON_OFFSET_FILL);
-        }
-        Shader *cylinder_shader = m_cylinderPipeline->cylinderShader();
-        if (m_lastBoundShader != cylinder_shader) {
-          cylinder_shader->use();
-          m_lastBoundShader = cylinder_shader;
-          m_lastBoundTexture = nullptr;
-        }
-        if (m_cylinderPipeline->m_cylinderUniforms.view_proj !=
-            Shader::InvalidUniform) {
-          cylinder_shader->set_uniform(
-              m_cylinderPipeline->m_cylinderUniforms.view_proj, view_proj);
-        }
-        m_cylinderPipeline->upload_cylinder_instances(instance_count);
-        m_cylinderPipeline->draw_cylinders(instance_count);
       }
       continue;
     }
     case FogBatchCmdIndex: {
-      if (!m_cylinderPipeline) {
+      if (m_cylinderPipeline) {
+        m_cylinderPipeline->render_fog(queue, i, view_proj, this);
+      } else {
         ++i;
-        continue;
       }
-      const auto &batch = std::get<FogBatchCmdIndex>(cmd);
-      const FogInstanceData *instances = batch.instances;
-      const std::size_t instance_count = batch.count;
-      if ((instances != nullptr) && instance_count > 0 &&
-          (m_cylinderPipeline->fogShader() != nullptr)) {
-        m_cylinderPipeline->m_fogScratch.resize(instance_count);
-        for (std::size_t idx = 0; idx < instance_count; ++idx) {
-          BackendPipelines::CylinderPipeline::FogInstanceGpu gpu{};
-          gpu.center = instances[idx].center;
-          gpu.size = instances[idx].size;
-          gpu.color = instances[idx].color;
-          gpu.alpha = instances[idx].alpha;
-          m_cylinderPipeline->m_fogScratch[idx] = gpu;
-        }
-        glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
-          glDisable(GL_POLYGON_OFFSET_FILL);
-        }
-        Shader *fog_shader = m_cylinderPipeline->fogShader();
-        if (m_lastBoundShader != fog_shader) {
-          fog_shader->use();
-          m_lastBoundShader = fog_shader;
-          m_lastBoundTexture = nullptr;
-        }
-        if (m_cylinderPipeline->m_fogUniforms.view_proj !=
-            Shader::InvalidUniform) {
-          fog_shader->set_uniform(m_cylinderPipeline->m_fogUniforms.view_proj,
-                                  view_proj);
-        }
-        m_cylinderPipeline->upload_fog_instances(instance_count);
-        m_cylinderPipeline->draw_fog(instance_count);
-      }
-      ++i;
       continue;
     }
     case GrassBatchCmdIndex: {
