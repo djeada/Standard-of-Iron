@@ -252,8 +252,6 @@ GameEngine::GameEngine(QObject *parent)
   connect(m_campaign_manager.get(),
           &CampaignManager::available_campaigns_changed, this,
           &GameEngine::available_campaigns_changed);
-  connect(m_campaign_manager.get(), &CampaignManager::current_campaign_changed,
-          this, [this]() { emit current_campaign_changed(); });
 
   m_selection_query_service =
       std::make_unique<SelectionQueryService>(m_world.get(), this);
@@ -1236,12 +1234,6 @@ auto GameEngine::pending_building_type() const -> QString {
   return m_production_manager ? m_production_manager->pending_building_type()
                               : QString();
 }
-  set_cursor_mode(CursorMode::Normal);
-}
-
-auto GameEngine::pending_building_type() const -> QString {
-  return m_pending_building_type;
-}
 
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
   return m_production_manager
@@ -1265,21 +1257,6 @@ void GameEngine::start_builder_construction(const QString &item_type) {
   if (m_production_manager) {
     m_production_manager->start_builder_construction(item_type);
   }
-}
-  constexpr float CATAPULT_BUILD_TIME = 15.0F;
-  constexpr float BALLISTA_BUILD_TIME = 12.0F;
-  constexpr float DEFENSE_TOWER_BUILD_TIME = 20.0F;
-
-  if (item_type == "catapult") {
-    return CATAPULT_BUILD_TIME;
-  }
-  if (item_type == "ballista") {
-    return BALLISTA_BUILD_TIME;
-  }
-  if (item_type == "defense_tower") {
-    return DEFENSE_TOWER_BUILD_TIME;
-  }
-  return DEFAULT_BUILD_TIME; // Default for "home" and others
 }
 
 auto GameEngine::get_selected_units_command_mode() const -> QString {

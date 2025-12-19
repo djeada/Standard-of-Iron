@@ -1,5 +1,6 @@
 #include "production_manager.h"
 
+#include "app/core/input_command_handler.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
@@ -349,9 +350,9 @@ void ProductionManager::set_rally_at_screen(qreal sx, qreal sy,
 
     auto *prod = e->get_component<Engine::Core::ProductionComponent>();
     if (prod) {
-      prod->rally_point_x = hit.x();
-      prod->rally_point_z = hit.z();
-      prod->has_rally_point = true;
+      prod->rally_x = hit.x();
+      prod->rally_z = hit.z();
+      prod->rally_set = true;
     }
   }
 }

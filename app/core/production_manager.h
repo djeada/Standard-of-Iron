@@ -19,10 +19,8 @@ namespace Game::Systems {
 class PickingService;
 } // namespace Game::Systems
 
-struct ViewportState {
-  int width = 0;
-  int height = 0;
-};
+// Forward declare ViewportState from input_command_handler.h
+struct ViewportState;
 
 class ProductionManager : public QObject {
   Q_OBJECT
