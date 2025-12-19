@@ -154,7 +154,7 @@ ApplicationWindow {
             mainWindow.menuVisible = false;
         }
         onOpenCampaign: function() {
-            campaignMenu.visible = true;
+            campaign_screen.visible = true;
             mainWindow.menuVisible = false;
         }
         onSaveGame: function() {
@@ -207,23 +207,23 @@ ApplicationWindow {
         }
     }
 
-    CampaignMenu {
-        id: campaignMenu
+    CampaignScreen {
+        id: campaign_screen
 
         anchors.fill: parent
         z: 21
         visible: false
         onVisibleChanged: {
             if (visible) {
-                campaignMenu.forceActiveFocus();
+                campaign_screen.forceActiveFocus();
                 gameViewItem.focus = false;
             }
         }
-        onMissionSelected: function(campaignId) {
-            console.log("Main: Mission selected:", campaignId);
+        onMission_selected: function(campaign_id, mission_id) {
+            console.log("Main: Campaign mission selected:", campaign_id + "/" + mission_id);
             if (typeof game !== 'undefined' && game.start_campaign_mission) {
-                game.start_campaign_mission(campaignId);
-                campaignMenu.visible = false;
+                game.start_campaign_mission(campaign_id + "/" + mission_id);
+                campaign_screen.visible = false;
                 mainWindow.menuVisible = false;
                 mainWindow.gameStarted = true;
                 mainWindow.gamePaused = false;
@@ -231,7 +231,7 @@ ApplicationWindow {
             }
         }
         onCancelled: function() {
-            campaignMenu.visible = false;
+            campaign_screen.visible = false;
             mainWindow.menuVisible = true;
         }
     }
