@@ -92,6 +92,27 @@ auto CommandService::get_unit_radius(
       Game::Units::TroopConfig::instance().getSelectionRingSize(
           unit_comp->spawn_type);
 
+  // Use halved radius for pathfinding to maintain smooth movement
+  return selection_ring_size * 0.5F;
+}
+
+auto CommandService::get_unit_collision_radius(
+    Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
+  auto *entity = world.get_entity(entity_id);
+  if (entity == nullptr) {
+    return 0.5F;
+  }
+
+  auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit_comp == nullptr) {
+    return 0.5F;
+  }
+
+  float const selection_ring_size =
+      Game::Units::TroopConfig::instance().getSelectionRingSize(
+          unit_comp->spawn_type);
+
+  // Use full ring size for building collision to prevent clipping
   return selection_ring_size;
 }
 
