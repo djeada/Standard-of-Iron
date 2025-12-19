@@ -1,6 +1,7 @@
 #include "healer_aura_pipeline.h"
 #include "../../../game/core/component.h"
 #include "../../../game/core/world.h"
+#include "../../../game/systems/nation_id.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"
@@ -254,6 +255,12 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
 
     if (unit_comp != nullptr && unit_comp->health <= 0) {
       continue;
+    }
+
+    // Only Carthage healers use auras - Roman healers use waves
+    if (unit_comp != nullptr && 
+        unit_comp->nation_id == Game::Systems::NationID::RomanRepublic) {
+      continue; // Skip Roman healers
     }
 
     HealerAuraData data;

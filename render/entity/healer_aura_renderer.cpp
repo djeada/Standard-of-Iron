@@ -1,6 +1,7 @@
 #include "healer_aura_renderer.h"
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/systems/nation_id.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -34,6 +35,12 @@ void render_healer_auras(Renderer *renderer, ResourceManager *,
 
     if (!healer_comp->is_healing_active) {
       continue;
+    }
+
+    // Only Carthage healers use auras - Roman healers use waves
+    if (unit_comp != nullptr && 
+        unit_comp->nation_id == Game::Systems::NationID::RomanRepublic) {
+      continue; // Skip Roman healers
     }
 
     QVector3D position(transform->position.x, transform->position.y + 0.1F,
