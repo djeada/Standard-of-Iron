@@ -7,11 +7,10 @@
 #include "game/units/troop_config.h"
 
 SelectionQueryService::SelectionQueryService(Engine::Core::World *world,
-                                           QObject *parent)
+                                             QObject *parent)
     : QObject(parent), m_world(world) {}
 
-auto SelectionQueryService::get_selected_units_command_mode() const
-    -> QString {
+auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
   if (!m_world) {
     return "normal";
   }

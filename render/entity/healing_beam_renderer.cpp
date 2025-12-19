@@ -20,17 +20,15 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
       if (intensity < 0.01F) {
         continue;
       }
-      
-      // Only render non-Roman (Carthage) beams
-      // Roman beams are rendered by the wave renderer
+
       QVector3D color = beam->get_color();
       if (Game::Systems::is_roman_healing_color(color)) {
-        continue; // Skip Roman beams
+        continue;
       }
-      
-      renderer->healing_beam(beam->get_start(), beam->get_end(),
-                             color, beam->get_progress(),
-                             beam->get_beam_width(), intensity, animation_time);
+
+      renderer->healing_beam(beam->get_start(), beam->get_end(), color,
+                             beam->get_progress(), beam->get_beam_width(),
+                             intensity, animation_time);
     }
   }
 }

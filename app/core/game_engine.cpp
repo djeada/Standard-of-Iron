@@ -12,8 +12,8 @@
 #include "app/utils/movement_utils.h"
 #include "app/utils/selection_utils.h"
 #include "audio_resource_loader.h"
-#include "campaign_manager.h"
 #include "camera_controller.h"
+#include "campaign_manager.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
 #include "game/units/spawn_type.h"
@@ -927,8 +927,7 @@ void GameEngine::render_game_effects() {
   Render::GL::render_combat_dust(m_renderer.get(), res, m_world.get());
 
   std::optional<QVector3D> preview_waypoint;
-  if (m_commandController &&
-      m_commandController->has_patrol_first_waypoint()) {
+  if (m_commandController && m_commandController->has_patrol_first_waypoint()) {
     preview_waypoint = m_commandController->get_patrol_first_waypoint();
   }
   Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
@@ -954,9 +953,9 @@ void GameEngine::update_loading_overlay() {
     m_loading_overlay_frames_remaining--;
   }
 
-  const bool enough_time = m_loading_overlay_timer.isValid() &&
-                           (m_loading_overlay_timer.elapsed() >=
-                            m_loading_overlay_min_duration_ms);
+  const bool enough_time =
+      m_loading_overlay_timer.isValid() &&
+      (m_loading_overlay_timer.elapsed() >= m_loading_overlay_min_duration_ms);
 
   if (enough_time && m_loading_overlay_frames_remaining <= 0) {
     m_loading_overlay_wait_for_first_frame = false;
@@ -1218,7 +1217,8 @@ void GameEngine::start_building_placement(const QString &building_type) {
 void GameEngine::place_building_at_screen(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
-    m_production_manager->place_building_at_screen(sx, sy, m_runtime.local_owner_id, m_viewport);
+    m_production_manager->place_building_at_screen(
+        sx, sy, m_runtime.local_owner_id, m_viewport);
     set_cursor_mode(CursorMode::Normal);
   }
 }
@@ -1275,7 +1275,7 @@ void GameEngine::set_rally_at_screen(qreal sx, qreal sy) {
   ensure_initialized();
   if (m_production_manager) {
     m_production_manager->set_rally_at_screen(sx, sy, m_runtime.local_owner_id,
-                                             m_viewport);
+                                              m_viewport);
   }
 }
 
@@ -1337,7 +1337,7 @@ void GameEngine::load_campaigns() {
   }
 
   if (m_campaign_manager) {
-    // Update the campaign manager's list
+
     emit available_campaigns_changed();
   }
 }
@@ -1350,7 +1350,8 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     return;
   }
 
-  m_campaign_manager->start_campaign_mission(mission_path, m_selected_player_id);
+  m_campaign_manager->start_campaign_mission(mission_path,
+                                             m_selected_player_id);
 
   if (!m_campaign_manager->current_mission_definition().has_value()) {
     set_error("Failed to load mission");
@@ -1403,7 +1404,8 @@ void GameEngine::mark_current_mission_completed() {
   }
 
   QString error;
-  bool success = m_saveLoadService->mark_campaign_completed(campaign_id, &error);
+  bool success =
+      m_saveLoadService->mark_campaign_completed(campaign_id, &error);
   if (!success) {
     qWarning() << "Failed to mark campaign as completed:" << error;
   } else {

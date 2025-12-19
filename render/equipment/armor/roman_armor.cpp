@@ -69,8 +69,10 @@ void RomanHeavyArmorRenderer::render(const DrawContext &ctx,
     top = head_guard - up * (torso_r * 0.05F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.45F) -
-                     forward * (torso_r * 0.016F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.45F);
+
+  top += forward * (torso_r * 0.010F);
+  bottom += forward * (torso_r * 0.010F);
 
   QMatrix4x4 plates = cylinder_between(ctx.model, top, bottom, torso_r * 1.24F);
   plates.scale(1.18F, 1.0F, depth_scale_for(1.10F));
@@ -151,8 +153,10 @@ void RomanLightArmorRenderer::render(const DrawContext &ctx,
     top = head_guard - up * (torso_r * 0.05F);
   }
 
-  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.24F) -
-                     forward * (torso_r * 0.016F);
+  QVector3D bottom = waist.origin - waist_up * (waist_r * 0.24F);
+
+  top += forward * (torso_r * 0.010F);
+  bottom += forward * (torso_r * 0.010F);
 
   float main_radius = torso_r * 1.26F;
   float const main_depth = torso_depth * 1.24F;
