@@ -409,7 +409,8 @@ void CylinderPipeline::draw_fog(std::size_t count) {
   glBindVertexArray(0);
 }
 
-void CylinderPipeline::render_cylinders(const DrawQueue &queue, std::size_t &i,
+void CylinderPipeline::render_cylinders(const GL::DrawQueue &queue,
+                                         std::size_t &i,
                                          const QMatrix4x4 &view_proj,
                                          GL::Backend *backend) {
   m_cylinderScratch.clear();
@@ -440,7 +441,7 @@ void CylinderPipeline::render_cylinders(const DrawQueue &queue, std::size_t &i,
   }
 }
 
-void CylinderPipeline::render_fog(const DrawQueue &queue, std::size_t &i,
+void CylinderPipeline::render_fog(const GL::DrawQueue &queue, std::size_t &i,
                                    const QMatrix4x4 &view_proj,
                                    GL::Backend *backend) {
   const auto &batch = std::get<FogBatchCmdIndex>(queue.get_sorted(i));

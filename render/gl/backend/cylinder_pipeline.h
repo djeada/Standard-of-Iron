@@ -10,9 +10,6 @@
 namespace Render::GL {
 class Backend;
 struct FogInstanceData;
-}
-
-namespace Render {
 class DrawQueue;
 }
 
@@ -33,9 +30,9 @@ public:
   void begin_frame();
 
   // Rendering methods
-  void render_cylinders(const DrawQueue &queue, std::size_t &i,
+  void render_cylinders(const GL::DrawQueue &queue, std::size_t &i,
                         const QMatrix4x4 &view_proj, GL::Backend *backend);
-  void render_fog(const DrawQueue &queue, std::size_t &i,
+  void render_fog(const GL::DrawQueue &queue, std::size_t &i,
                   const QMatrix4x4 &view_proj, GL::Backend *backend);
 
   void upload_cylinder_instances(std::size_t count);
