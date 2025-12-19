@@ -17,6 +17,7 @@ namespace Game::Systems {
 
 static constexpr int max_waypoint_skip_count = 4;
 static constexpr float repath_cooldown_seconds = 0.4F;
+static constexpr int kNearestPointSearchRadius = 5;
 
 namespace {
 
@@ -352,8 +353,34 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         }
       }
 
-      transform->position.x = movement->target_x;
-      transform->position.z = movement->target_y;
+      // Validate target position before snapping to prevent clipping
+      QVector3D const target_pos(movement->target_x, 0.0F, movement->target_y);
+      auto &registry = BuildingCollisionRegistry::instance();
+      if (!registry.is_circle_overlapping_building(
+              target_pos.x(), target_pos.z(), unit_radius, entity->get_id())) {
+        // Target is valid - snap to it
+        transform->position.x = movement->target_x;
+        transform->position.z = movement->target_y;
+      } else {
+        // Target overlaps building - find nearest valid position
+        Pathfinding *pathfinder = CommandService::get_pathfinder();
+        if (pathfinder != nullptr) {
+          Point const target_grid =
+              CommandService::world_to_grid(target_pos.x(), target_pos.z());
+          Point const nearest = Pathfinding::find_nearest_walkable_point(
+              target_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
+          QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+          
+          // Grid-based pathfinding may return positions that are walkable but still
+          // overlap buildings in continuous world-space. Verify with precise check.
+          if (!registry.is_circle_overlapping_building(
+                  safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
+            transform->position.x = safe_pos.x();
+            transform->position.z = safe_pos.z();
+          }
+          // If still not valid, keep current position (don't snap)
+        }
+      }
       movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
 
@@ -392,8 +419,51 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
+  float const old_x = transform->position.x;
+  float const old_z = transform->position.z;
+
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
+
+  // Post-move validation: check if new position overlaps with buildings
+  {
+    auto &registry = BuildingCollisionRegistry::instance();
+    QVector3D const new_pos_3d(transform->position.x, 0.0F,
+                               transform->position.z);
+
+    if (registry.is_circle_overlapping_building(new_pos_3d.x(), new_pos_3d.z(),
+                                                 unit_radius, entity->get_id())) {
+      // Unit would clip into building - find nearest valid position
+      Pathfinding *pathfinder = CommandService::get_pathfinder();
+      if (pathfinder != nullptr) {
+        Point const new_grid =
+            CommandService::world_to_grid(new_pos_3d.x(), new_pos_3d.z());
+        Point const nearest = Pathfinding::find_nearest_walkable_point(
+            new_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
+
+        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+
+        // Verify the safe position doesn't overlap with buildings
+        if (!registry.is_circle_overlapping_building(
+                safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
+          transform->position.x = safe_pos.x();
+          transform->position.z = safe_pos.z();
+        } else {
+          // Fallback: revert to previous position
+          transform->position.x = old_x;
+          transform->position.z = old_z;
+        }
+      } else {
+        // No pathfinder available - revert to previous position
+        transform->position.x = old_x;
+        transform->position.z = old_z;
+      }
+
+      // Stop movement to prevent jitter
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+    }
+  }
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
