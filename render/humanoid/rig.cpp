@@ -356,11 +356,6 @@ void HumanoidRendererBase::compute_locomotion_pose(
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
 
-    // Counter-rotate shoulders to reduce excessive torso twist during walking
-    float const shoulder_counter_rotation = -hip_sway * 0.5F;
-    pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
-    pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_rotation);
-
     pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
     pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
     pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
@@ -1649,6 +1644,21 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       // Use time as idle duration proxy - ambient idles trigger after 3+ seconds
       pose_ctrl.apply_ambient_idle(anim.time + phase_offset, inst_seed,
                                    anim.time);
+    }
+
+    // Apply counter-rotation to shoulders during walking to reduce excessive torso twist
+    if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
+      // Recalculate hip sway to match the walking animation
+      float const walk_cycle_time = 0.8F / variation.walk_speed_mult;
+      float const walk_phase = std::fmod((anim.time + phase_offset) * (1.0F / walk_cycle_time), 1.0F);
+      float const hip_sway_amount = 0.002F;
+      float const sway_raw = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+      float const hip_sway = sway_raw * hip_sway_amount;
+      
+      // Counter-rotate shoulders to reduce torso twist
+      float const shoulder_counter_rotation = -hip_sway * 0.5F;
+      pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
+      pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_rotation);
     }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
