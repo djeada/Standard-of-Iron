@@ -22,6 +22,7 @@
 #include <qvariant.h>
 #include <utility>
 
+#include "../map/campaign_definition.h"
 #include "../map/campaign_loader.h"
 #include "../map/mission_loader.h"
 #include "utils/resource_utils.h"
@@ -108,7 +109,7 @@ SaveStorage::~SaveStorage() {
   }
 }
 
-auto SaveStorage::initialize(QString *out_error) -> bool {
+auto SaveStorage::initialize(QString *out_error) const -> bool {
   if (m_initialized && m_database.isValid() && m_database.isOpen()) {
     return true;
   }
@@ -1010,7 +1011,7 @@ auto SaveStorage::get_mission_progress(const QString &mission_id,
                                        QString *out_error) const
     -> QVariantMap {
   QVariantMap result;
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+  if (!initialize(out_error)) {
     return result;
   }
 
@@ -1046,7 +1047,7 @@ auto SaveStorage::get_campaign_mission_progress(const QString &campaign_id,
                                                 QString *out_error) const
     -> QVariantList {
   QVariantList result;
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+  if (!initialize(out_error)) {
     return result;
   }
 

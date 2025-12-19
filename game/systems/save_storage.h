@@ -19,7 +19,7 @@ public:
   explicit SaveStorage(QString database_path);
   ~SaveStorage();
 
-  auto initialize(QString *out_error = nullptr) -> bool;
+  auto initialize(QString *out_error = nullptr) const -> bool;
 
   auto save_slot(const QString &slot_name, const QString &title,
                  const QJsonObject &metadata, const QByteArray &world_state,
