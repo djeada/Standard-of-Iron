@@ -5,10 +5,12 @@
 #include "../state_scopes.h"
 #include "../../draw_queue.h"
 #include "../../ground/grass_gpu.h"
+#include "../../ground/terrain_gpu.h"
 #include <GL/gl.h>
 #include <QDebug>
 #include <QOpenGLExtraFunctions>
 #include <cstddef>
+#include <memory>
 #include <qglobal.h>
 #include <qopenglext.h>
 #include <qvectornd.h>
@@ -318,5 +320,160 @@ void TerrainPipeline::render_grass(const DrawQueue &queue, std::size_t &i,
     glEnable(GL_CULL_FACE);
   }
 }
+
+#define SET_UNIFORM_IF_VALID(shader, uniform, value)                          \
+  if ((uniform) != GL::Shader::InvalidUniform) {                              \
+    (shader)->set_uniform((uniform), (value));                                \
+  }
+
+void TerrainPipeline::apply_ground_uniforms(GL::Shader *shader,
+                                             const TerrainChunkParams &params,
+                                             const QMatrix4x4 &mvp,
+                                             const QMatrix4x4 &model) {
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.mvp, mvp);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.model, model);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.grass_primary,
+                       params.grass_primary);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.grass_secondary,
+                       params.grass_secondary);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.grass_dry, params.grass_dry);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.soil_color, params.soil_color);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.tint, params.tint);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.noise_offset,
+                       params.noise_offset);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.tile_size, params.tile_size);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.macro_noise_scale,
+                       params.macro_noise_scale);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.detail_noise_scale,
+                       params.detail_noise_scale);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.soil_blend_height,
+                       params.soil_blend_height);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.soil_blend_sharpness,
+                       params.soil_blend_sharpness);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.height_noise_strength,
+                       params.height_noise_strength);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.height_noise_frequency,
+                       params.height_noise_frequency);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.ambient_boost,
+                       params.ambient_boost);
+
+  if (m_groundUniforms.light_dir != GL::Shader::InvalidUniform) {
+    QVector3D light_dir = params.light_direction;
+    if (!light_dir.isNull()) {
+      light_dir.normalize();
+    }
+    shader->set_uniform(m_groundUniforms.light_dir, light_dir);
+  }
+
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.snow_coverage,
+                       params.snow_coverage);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.moisture_level,
+                       params.moisture_level);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.crack_intensity,
+                       params.crack_intensity);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.grass_saturation,
+                       params.grass_saturation);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.soil_roughness,
+                       params.soil_roughness);
+  SET_UNIFORM_IF_VALID(shader, m_groundUniforms.snow_color, params.snow_color);
+}
+
+void TerrainPipeline::apply_terrain_uniforms(GL::Shader *shader,
+                                              const TerrainChunkParams &params,
+                                              const QMatrix4x4 &mvp,
+                                              const QMatrix4x4 &model) {
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.mvp, mvp);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.model, model);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.grass_primary,
+                       params.grass_primary);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.grass_secondary,
+                       params.grass_secondary);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.grass_dry, params.grass_dry);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.soil_color,
+                       params.soil_color);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.rock_low, params.rock_low);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.rock_high, params.rock_high);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.tint, params.tint);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.noise_offset,
+                       params.noise_offset);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.tile_size, params.tile_size);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.macro_noise_scale,
+                       params.macro_noise_scale);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.detail_noise_scale,
+                       params.detail_noise_scale);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.slope_rock_threshold,
+                       params.slope_rock_threshold);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.slope_rock_sharpness,
+                       params.slope_rock_sharpness);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.soil_blend_height,
+                       params.soil_blend_height);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.soil_blend_sharpness,
+                       params.soil_blend_sharpness);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.height_noise_strength,
+                       params.height_noise_strength);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.height_noise_frequency,
+                       params.height_noise_frequency);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.ambient_boost,
+                       params.ambient_boost);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.rock_detail_strength,
+                       params.rock_detail_strength);
+
+  if (m_terrainUniforms.light_dir != GL::Shader::InvalidUniform) {
+    QVector3D light_dir = params.light_direction;
+    if (!light_dir.isNull()) {
+      light_dir.normalize();
+    }
+    shader->set_uniform(m_terrainUniforms.light_dir, light_dir);
+  }
+
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.snow_coverage,
+                       params.snow_coverage);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.moisture_level,
+                       params.moisture_level);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.crack_intensity,
+                       params.crack_intensity);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.rock_exposure,
+                       params.rock_exposure);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.grass_saturation,
+                       params.grass_saturation);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.soil_roughness,
+                       params.soil_roughness);
+  SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.snow_color, params.snow_color);
+}
+
+void TerrainPipeline::render_terrain_chunk(const DrawQueue &queue,
+                                            std::size_t &i,
+                                            const QMatrix4x4 &view_proj,
+                                            GL::Backend *backend) {
+  const auto &terrain = std::get<TerrainChunkCmdIndex>(queue.get_sorted(i));
+
+  GL::Shader *active_shader =
+      terrain.params.is_ground_plane ? m_groundShader : m_terrainShader;
+
+  if (!terrain.mesh || !active_shader) {
+    return;
+  }
+
+  backend->bind_shader(active_shader);
+
+  const QMatrix4x4 mvp = view_proj * terrain.model;
+
+  if (terrain.params.is_ground_plane) {
+    apply_ground_uniforms(active_shader, terrain.params, mvp, terrain.model);
+  } else {
+    apply_terrain_uniforms(active_shader, terrain.params, mvp, terrain.model);
+  }
+
+  DepthMaskScope const depth_mask(terrain.depth_write);
+  std::unique_ptr<PolygonOffsetScope> poly_scope;
+  if (terrain.depth_bias != 0.0F) {
+    poly_scope =
+        std::make_unique<PolygonOffsetScope>(terrain.depth_bias, terrain.depth_bias);
+  }
+
+  terrain.mesh->draw();
+}
+
+#undef SET_UNIFORM_IF_VALID
 
 } // namespace Render::GL::BackendPipelines

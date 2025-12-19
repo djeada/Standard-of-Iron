@@ -8,6 +8,7 @@
 
 namespace Render {
 class DrawQueue;
+struct TerrainChunkParams;
 }
 
 namespace Render::GL {
@@ -30,6 +31,8 @@ public:
   // Rendering methods
   void render_grass(const DrawQueue &queue, std::size_t &i,
                     const QMatrix4x4 &view_proj, GL::Backend *backend);
+  void render_terrain_chunk(const DrawQueue &queue, std::size_t &i,
+                             const QMatrix4x4 &view_proj, GL::Backend *backend);
 
   struct GrassUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
@@ -121,6 +124,12 @@ private:
   void cache_grass_uniforms();
   void cache_ground_uniforms();
   void cache_terrain_uniforms();
+
+  void apply_ground_uniforms(GL::Shader *shader, const TerrainChunkParams &params,
+                             const QMatrix4x4 &mvp, const QMatrix4x4 &model);
+  void apply_terrain_uniforms(GL::Shader *shader,
+                              const TerrainChunkParams &params,
+                              const QMatrix4x4 &mvp, const QMatrix4x4 &model);
 
   void initializeGrassGeometry();
   void shutdownGrassGeometry();
