@@ -118,6 +118,8 @@ public:
 
   void cleanup_opengl_resources();
 
+  Q_INVOKABLE void load_campaigns();
+
   Q_PROPERTY(QAbstractItemModel *selected_units_model READ selected_units_model
                  NOTIFY selected_units_changed)
   Q_PROPERTY(bool paused READ paused WRITE set_paused)
@@ -427,7 +429,6 @@ private:
       m_unit_spawned_subscription;
   EntityCache m_entity_cache;
 
-  void load_campaigns();
 signals:
   void selected_units_changed();
   void selected_units_data_changed();
