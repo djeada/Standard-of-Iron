@@ -13,7 +13,7 @@ class SelectionQueryService : public QObject {
 
 public:
   explicit SelectionQueryService(Engine::Core::World *world,
-                                QObject *parent = nullptr);
+                                 QObject *parent = nullptr);
 
   [[nodiscard]] QString get_selected_units_command_mode() const;
   [[nodiscard]] QVariantMap get_selected_units_mode_availability() const;

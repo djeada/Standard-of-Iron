@@ -6,13 +6,12 @@
 
 namespace Game::Systems {
 
-// Healing colors for each nation
 inline auto get_roman_healing_color() -> QVector3D {
-  return QVector3D(0.3F, 0.6F, 1.0F); // Blue
+  return QVector3D(0.3F, 0.6F, 1.0F);
 }
 
 inline auto get_carthage_healing_color() -> QVector3D {
-  return QVector3D(0.4F, 1.0F, 0.5F); // Green
+  return QVector3D(0.4F, 1.0F, 0.5F);
 }
 
 inline auto get_healing_color(NationID nation_id) -> QVector3D {
@@ -26,7 +25,6 @@ inline auto get_healing_color(NationID nation_id) -> QVector3D {
   }
 }
 
-// Check if a color matches Roman healing (blue)
 inline auto is_roman_healing_color(const QVector3D &color) -> bool {
   constexpr float tolerance = 0.1F;
   QVector3D roman_color = get_roman_healing_color();

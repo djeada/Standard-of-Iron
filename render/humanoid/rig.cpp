@@ -623,9 +623,8 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
   pose.body_frames.head = pose.head_frame;
 
-  QVector3D const torso_center =
-      QVector3D((shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F, y_shoulder,
-                (shoulder_mid.z() + pose.pelvis_pos.z()) * 0.5F);
+  QVector3D const torso_center = QVector3D(
+      (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F, y_shoulder, 0.0F);
 
   pose.body_frames.torso.origin = torso_center;
   pose.body_frames.torso.right = right_axis;
@@ -1635,15 +1634,91 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
-    // Apply idle animations when unit is not moving or attacking
     if (!anim.is_moving && !anim.is_attacking) {
       HumanoidPoseController pose_ctrl(pose, anim_ctx);
-      // Micro idles: subtle continuous movements (breathing, weight shift)
+
       pose_ctrl.apply_micro_idle(anim.time + phase_offset, inst_seed);
-      // Ambient idles: occasional noticeable actions (raise weapon, stretch)
-      // Use time as idle duration proxy - ambient idles trigger after 3+ seconds
-      pose_ctrl.apply_ambient_idle(anim.time + phase_offset, inst_seed,
-                                   anim.time);
+
+      if (visible_count > 0) {
+        auto hash_u32 = [](std::uint32_t x) -> std::uint32_t {
+          x ^= x >> 16;
+          x *= 0x7feb352dU;
+          x ^= x >> 15;
+          x *= 0x846ca68bU;
+          x ^= x >> 16;
+          return x;
+        };
+
+        constexpr float kAmbientAnimDuration = 6.0F;
+        constexpr float kUnitCycleBase = 15.0F;
+        constexpr float kUnitCycleRange = 10.0F;
+
+        float const unit_cycle_period =
+            kUnitCycleBase +
+            static_cast<float>(seed % 1000U) / (1000.0F / kUnitCycleRange);
+        float const unit_time_in_cycle =
+            std::fmod(anim.time, std::max(0.001F, unit_cycle_period));
+        std::uint32_t const unit_cycle_number = static_cast<std::uint32_t>(
+            anim.time / std::max(0.001F, unit_cycle_period));
+
+        int const max_slots = std::min(2, visible_count);
+        std::uint32_t const cycle_rng =
+            hash_u32(seed ^ (unit_cycle_number * 0x9e3779b9U));
+        int const slots =
+            (max_slots <= 0)
+                ? 0
+                : (1 + static_cast<int>(cycle_rng %
+                                        static_cast<std::uint32_t>(max_slots)));
+
+        int const idx_a =
+            static_cast<int>(hash_u32(cycle_rng ^ 0xA341316CU) %
+                             static_cast<std::uint32_t>(visible_count));
+        int idx_b = static_cast<int>(hash_u32(cycle_rng ^ 0xC8013EA4U) %
+                                     static_cast<std::uint32_t>(visible_count));
+        if (visible_count > 1 && idx_b == idx_a) {
+          idx_b = (idx_a + 1 +
+                   static_cast<int>(cycle_rng % static_cast<std::uint32_t>(
+                                                    visible_count - 1))) %
+                  visible_count;
+        }
+
+        auto pick_idle_type = [&](std::uint32_t v) -> AmbientIdleType {
+          std::uint32_t const roll = v % 100U;
+          if (roll < 18U) {
+            return AmbientIdleType::SitDown;
+          }
+          if (roll < 36U) {
+            return AmbientIdleType::ShiftWeight;
+          }
+          if (roll < 52U) {
+            return AmbientIdleType::ShuffleFeet;
+          }
+          if (roll < 66U) {
+            return AmbientIdleType::TapFoot;
+          }
+          if (roll < 78U) {
+            return AmbientIdleType::StepInPlace;
+          }
+          if (roll < 90U) {
+            return AmbientIdleType::BendKnee;
+          }
+          if (roll < 98U) {
+            return AmbientIdleType::RaiseWeapon;
+          }
+          return AmbientIdleType::Jump;
+        };
+
+        AmbientIdleType const unit_idle_type =
+            pick_idle_type(hash_u32(cycle_rng ^ 0x3C6EF372U));
+
+        if (slots > 0 && unit_time_in_cycle <= kAmbientAnimDuration) {
+          bool const is_active = (idx == idx_a) || (slots > 1 && idx == idx_b);
+          if (is_active) {
+            float const phase = unit_time_in_cycle / kAmbientAnimDuration;
+            pose_ctrl.apply_ambient_idle_explicit(unit_idle_type, phase);
+          }
+        }
+      }
     }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {

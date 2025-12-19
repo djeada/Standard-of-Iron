@@ -12,17 +12,14 @@
 
 CampaignManager::CampaignManager(QObject *parent) : QObject(parent) {}
 
-void CampaignManager::load_campaigns() {
-  // This method now just provides structure
-  // Actual loading will be done via SaveLoadService passed from GameEngine
-  emit available_campaigns_changed();
-}
+void CampaignManager::load_campaigns() { emit available_campaigns_changed(); }
 
 void CampaignManager::start_campaign_mission(const QString &mission_path,
-                                            int &selected_player_id) {
+                                             int &selected_player_id) {
   const QStringList parts = mission_path.split('/');
   if (parts.size() != 2) {
-    qWarning() << "Invalid mission path format. Expected: campaign_id/mission_id";
+    qWarning()
+        << "Invalid mission path format. Expected: campaign_id/mission_id";
     return;
   }
 
@@ -59,9 +56,8 @@ void CampaignManager::start_campaign_mission(const QString &mission_path,
   QString error;
   if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_file_path,
                                                       mission, &error)) {
-    qWarning() << QString("Failed to load mission %1: %2")
-                      .arg(mission_id)
-                      .arg(error);
+    qWarning()
+        << QString("Failed to load mission %1: %2").arg(mission_id).arg(error);
     return;
   }
 
