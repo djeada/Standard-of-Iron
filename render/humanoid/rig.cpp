@@ -1648,11 +1648,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     // Apply counter-rotation to shoulders during walking to reduce excessive torso twist
     if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
-      // Recalculate hip sway to match the walking animation
-      float const walk_cycle_time = 0.8F / variation.walk_speed_mult;
-      float const walk_phase = std::fmod((anim.time + phase_offset) * (1.0F / walk_cycle_time), 1.0F);
+      // Calculate hip sway matching the walking animation
       float const hip_sway_amount = 0.002F;
-      float const sway_raw = std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+      float const sway_raw = std::sin(anim_ctx.locomotion_phase * 2.0F * std::numbers::pi_v<float>);
       float const hip_sway = sway_raw * hip_sway_amount;
       
       // Counter-rotate shoulders to reduce torso twist
