@@ -89,6 +89,17 @@ def triangulate_polygon(poly) -> List[List[float]]:
     return triangles
 
 
+def triangulate_land(land_geom) -> List[List[List[float]]]:
+    triangles: List[List[List[float]]] = []
+    polys = [land_geom] if land_geom.geom_type == "Polygon" else list(land_geom.geoms)
+    for poly in polys:
+        tri = triangulate_polygon(poly)
+        for i in range(0, len(tri), 3):
+            if i + 2 < len(tri):
+                triangles.append([tri[i], tri[i + 1], tri[i + 2]])
+    return triangles
+
+
 def densify_ring(ring: List[Tuple[float, float]], step: float) -> List[Tuple[float, float]]:
     if len(ring) < 2:
         return ring
@@ -332,15 +343,15 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "name": "Carthage Core",
             "owner": "carthage",
             "jitter_amplitude": 0.05,
-            "expand_factor": 1.04,
+            "expand_factor": 1.06,
             "lonlat": [
-                (8.6, 37.9),
-                (12.8, 37.9),
-                (13.2, 36.4),
-                (12.0, 35.6),
-                (9.4, 35.6),
-                (8.6, 36.9),
-                (8.6, 37.9),
+                (7.8, 38.3),
+                (13.8, 38.3),
+                (14.2, 36.2),
+                (12.8, 35.2),
+                (9.0, 35.2),
+                (7.8, 36.8),
+                (7.8, 38.3),
             ],
             "label_lonlat": (10.6, 36.9),
         },
@@ -351,15 +362,23 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "jitter_amplitude": 0.06,
             "expand_factor": 1.02,
             "lonlat": [
-                (-9.5, 36.9),
-                (8.6, 36.9),
-                (8.6, 37.9),
-                (4.0, 37.2),
-                (0.0, 36.9),
-                (-5.5, 36.7),
-                (-9.5, 36.9),
+                (-10.0, 37.4),
+                (7.6, 37.4),
+                (7.6, 38.3),
+                (1.5, 38.0),
+                (-4.0, 37.6),
+                (-8.5, 37.2),
+                (-10.0, 37.4),
+                (-9.0, 35.6),
+                (-6.0, 34.6),
+                (-2.0, 34.0),
+                (2.5, 34.2),
+                (6.5, 34.8),
+                (7.6, 35.8),
+                (-10.0, 35.8),
+                (-10.0, 37.4),
             ],
-            "label_lonlat": (2.0, 36.5),
+            "label_lonlat": (-1.0, 35.6),
         },
         {
             "id": "libya",
@@ -368,11 +387,11 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "jitter_amplitude": 0.05,
             "expand_factor": 1.02,
             "lonlat": [
-                (12.4, 36.6),
-                (18.0, 36.3),
-                (18.0, 33.2),
-                (12.6, 33.2),
-                (12.4, 36.6),
+                (13.2, 36.8),
+                (18.0, 36.6),
+                (18.0, 32.5),
+                (13.4, 32.5),
+                (13.2, 36.8),
             ],
             "label_lonlat": (14.8, 35.0),
         },
@@ -408,9 +427,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         raise RuntimeError("No land geometry found in land_uv.geojson")
     land_union = unary_union(geoms)
 
-    output: List[dict] = []
-    borders: List[List[List[float]]] = []  # <-- FIX: define borders here
-
+    province_defs = []
     for province in provinces:
         ring = province["lonlat"]
         expand_factor = province.get("expand_factor", 1.0)
@@ -431,41 +448,77 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         poly = Polygon(uv_ring)
         if not poly.is_valid:
             poly = poly.buffer(0)
-
-        clipped = poly.intersection(land_union)
-        if clipped.is_empty:
+        if poly.is_empty:
             continue
 
-        triangles: List[List[float]] = []
-        polys = [clipped] if clipped.geom_type == "Polygon" else list(clipped.geoms)
-
-        for cp in polys:
-            triangles.extend(triangulate_polygon(cp))
-            border = [[float(u), float(v)] for (u, v) in cp.exterior.coords]
-            if len(border) >= 2:
-                borders.append(border)
-
-        if not triangles:
-            continue
-
-        owner = province.get("owner", "neutral")
-        color = owner_palette.get(owner, owner_palette["neutral"])
-
-        label_lonlat = province.get("label_lonlat")
-        if label_lonlat is not None:
-            label_uv = bounds.to_uv(label_lonlat[0], label_lonlat[1])
-        else:
-            label_pt = clipped.representative_point()
-            label_uv = (float(label_pt.x), float(label_pt.y))
-
-        output.append(
+        province_defs.append(
             {
                 "id": province["id"],
                 "name": province["name"],
-                "owner": owner,
+                "owner": province.get("owner", "neutral"),
+                "poly": poly,
+                "label_lonlat": province.get("label_lonlat"),
+                "centroid": poly.representative_point(),
+            }
+        )
+
+    land_triangles = triangulate_land(land_union)
+    if not land_triangles:
+        raise RuntimeError("Failed to triangulate land geometry")
+
+    province_triangles = {prov["id"]: [] for prov in province_defs}
+    province_tri_polys = {prov["id"]: [] for prov in province_defs}
+
+    for tri in land_triangles:
+        tri_poly = Polygon(tri)
+        centroid = tri_poly.representative_point()
+        candidates = [
+            idx for idx, prov in enumerate(province_defs)
+            if prov["poly"].contains(centroid)
+        ]
+        if candidates:
+            chosen = candidates[0]
+        else:
+            best_idx = 0
+            best_dist = None
+            for idx, prov in enumerate(province_defs):
+                dist = centroid.distance(prov["centroid"])
+                if best_dist is None or dist < best_dist:
+                    best_dist = dist
+                    best_idx = idx
+            chosen = best_idx
+        prov_id = province_defs[chosen]["id"]
+        province_triangles[prov_id].extend(tri)
+        province_tri_polys[prov_id].append(tri_poly)
+
+    output: List[dict] = []
+    borders: List[List[List[float]]] = []
+    for prov in province_defs:
+        prov_id = prov["id"]
+        tris = province_triangles.get(prov_id, [])
+        if not tris:
+            continue
+        union = unary_union(province_tri_polys[prov_id])
+        polys = [union] if union.geom_type == "Polygon" else list(union.geoms)
+        for poly in polys:
+            border = [[float(u), float(v)] for (u, v) in poly.exterior.coords]
+            if len(border) >= 2:
+                borders.append(border)
+        label_lonlat = prov["label_lonlat"]
+        if label_lonlat is not None:
+            label_uv = bounds.to_uv(label_lonlat[0], label_lonlat[1])
+        else:
+            label_pt = union.representative_point()
+            label_uv = (float(label_pt.x), float(label_pt.y))
+        color = owner_palette.get(prov["owner"], owner_palette["neutral"])
+        output.append(
+            {
+                "id": prov_id,
+                "name": prov["name"],
+                "owner": prov["owner"],
                 "color": color,
                 "label_uv": [label_uv[0], label_uv[1]],
-                "triangles": triangles,
+                "triangles": [[float(u), float(v)] for (u, v) in tris],
             }
         )
 

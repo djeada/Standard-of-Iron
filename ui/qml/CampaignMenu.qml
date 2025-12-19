@@ -225,6 +225,12 @@ Item {
             { name: qsTr("Carthage"), color: "#cc8f47" },
             { name: qsTr("Neutral"), color: "#3a3a3a" }
         ]
+        property var provinceSources: [
+            "qrc:/assets/campaign_map/provinces.json",
+            "qrc:/StandardOfIron/assets/campaign_map/provinces.json",
+            "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json",
+            "assets/campaign_map/provinces.json"
+        ]
         property int labelRefresh: 0
         Component.onCompleted: loadProvinces()
         onCampaignDataChanged: {
@@ -234,13 +240,19 @@ Item {
         }
 
         function loadProvinces() {
+            loadProvincesFrom(0);
+        }
+
+        function loadProvincesFrom(index) {
+            if (index >= provinceSources.length)
+                return;
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "qrc:/assets/campaign_map/provinces.json");
+            xhr.open("GET", provinceSources[index]);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState !== XMLHttpRequest.DONE)
                     return;
                 if (xhr.status !== 200 && xhr.status !== 0) {
-                    console.warn("CampaignMenu: failed to load provinces.json", xhr.status);
+                    loadProvincesFrom(index + 1);
                     return;
                 }
                 try {
@@ -250,7 +262,7 @@ Item {
                         missionDetailPanel.labelRefresh += 1;
                     }
                 } catch (e) {
-                    console.warn("CampaignMenu: invalid provinces.json", e);
+                    loadProvincesFrom(index + 1);
                 }
             };
             xhr.send();
