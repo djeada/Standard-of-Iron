@@ -98,10 +98,10 @@ using Render::GL::Humanoid::saturate_color;
 
 struct SpearmanExtras {
   QVector3D spearShaftColor;
-  QVector3D spearheadColor;
-  float spearLength = 1.20F;
-  float spearShaftRadius = 0.020F;
-  float spearheadLength = 0.18F;
+  QVector3D spearhead_color;
+  float spear_length = 1.20F;
+  float spear_shaft_radius = 0.020F;
+  float spearhead_length = 0.18F;
 };
 
 class SpearmanRenderer : public HumanoidRendererBase {
@@ -169,8 +169,8 @@ public:
             computeOffhandSpearGrip(pose, anim_ctx, hand_r_pos, false,
                                     offhand_along, offhand_drop, -0.08F);
 
-        controller.placeHandAt(false, hand_r_pos);
-        controller.placeHandAt(true, hand_l_pos);
+        controller.place_hand_at(false, hand_r_pos);
+        controller.place_hand_at(true, hand_l_pos);
       }
 
     } else if (anim.is_attacking && anim.is_melee && !anim.is_in_hold_mode) {
@@ -184,8 +184,8 @@ public:
       QVector3D const idle_hand_l = computeOffhandSpearGrip(
           pose, anim_ctx, idle_hand_r, false, -0.04F, 0.10F, -0.08F);
 
-      controller.placeHandAt(false, idle_hand_r);
-      controller.placeHandAt(true, idle_hand_l);
+      controller.place_hand_at(false, idle_hand_r);
+      controller.place_hand_at(true, idle_hand_l);
     }
   }
 
@@ -221,10 +221,10 @@ public:
     if (spear) {
       SpearRenderConfig spear_config;
       spear_config.shaft_color = extras.spearShaftColor;
-      spear_config.spearhead_color = extras.spearheadColor;
-      spear_config.spear_length = extras.spearLength;
-      spear_config.shaft_radius = extras.spearShaftRadius;
-      spear_config.spearhead_length = extras.spearheadLength;
+      spear_config.spearhead_color = extras.spearhead_color;
+      spear_config.spear_length = extras.spear_length;
+      spear_config.shaft_radius = extras.spear_shaft_radius;
+      spear_config.spearhead_length = extras.spearhead_length;
 
       auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
       if (spear_renderer) {
@@ -273,11 +273,11 @@ private:
     SpearmanExtras e;
 
     e.spearShaftColor = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
-    e.spearheadColor = QVector3D(0.75F, 0.76F, 0.80F);
+    e.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
 
-    e.spearLength = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
-    e.spearShaftRadius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
-    e.spearheadLength = 0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
+    e.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+    e.spear_shaft_radius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+    e.spearhead_length = 0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
 
     return e;
   }
@@ -329,7 +329,7 @@ private:
 
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
   }
 
@@ -338,7 +338,7 @@ private:
                               [[maybe_unused]] const HumanoidVariant &variant,
                               SpearmanExtras &extras) const {
     extras.spearShaftColor = saturate_color(extras.spearShaftColor);
-    extras.spearheadColor = saturate_color(extras.spearheadColor);
+    extras.spearhead_color = saturate_color(extras.spearhead_color);
 
     auto apply_color = [&](const std::optional<QVector3D> &override_color,
                            QVector3D &target) {
@@ -348,11 +348,11 @@ private:
     };
 
     apply_color(style.spear_shaft_color, extras.spearShaftColor);
-    apply_color(style.spearhead_color, extras.spearheadColor);
+    apply_color(style.spearhead_color, extras.spearhead_color);
 
     if (style.spear_length_scale) {
-      extras.spearLength =
-          std::max(0.80F, extras.spearLength * *style.spear_length_scale);
+      extras.spear_length =
+          std::max(0.80F, extras.spear_length * *style.spear_length_scale);
     }
   }
 };

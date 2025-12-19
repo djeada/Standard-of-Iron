@@ -17,7 +17,7 @@ public:
   virtual ~IFormationCalculator() = default;
 
   [[nodiscard]] virtual auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset = 0;
 
   [[nodiscard]] virtual auto get_description() const -> const char * = 0;
@@ -26,7 +26,7 @@ public:
 class RomanInfantryFormation : public IFormationCalculator {
 public:
   [[nodiscard]] auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
@@ -37,7 +37,7 @@ public:
 class RomanCavalryFormation : public IFormationCalculator {
 public:
   [[nodiscard]] auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
@@ -48,7 +48,7 @@ public:
 class CarthageInfantryFormation : public IFormationCalculator {
 public:
   [[nodiscard]] auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
@@ -59,7 +59,7 @@ public:
 class CarthageCavalryFormation : public IFormationCalculator {
 public:
   [[nodiscard]] auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
@@ -70,7 +70,7 @@ public:
 class BuilderCircleFormation : public IFormationCalculator {
 public:
   [[nodiscard]] auto
-  calculateOffset(int idx, int row, int col, int rows, int cols, float spacing,
+  calculate_offset(int idx, int row, int col, int rows, int cols, float spacing,
                   uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {

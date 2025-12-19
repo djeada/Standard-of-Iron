@@ -13,7 +13,7 @@ class EquipmentRegistry {
 public:
   static auto instance() -> EquipmentRegistry &;
 
-  void registerEquipment(EquipmentCategory category, const std::string &id,
+  void register_equipment(EquipmentCategory category, const std::string &id,
                          std::shared_ptr<IEquipmentRenderer> renderer);
 
   auto get(EquipmentCategory category,

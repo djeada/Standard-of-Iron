@@ -12,8 +12,8 @@ namespace BackendPipelines {
 
 class CharacterPipeline final : public IPipeline {
 public:
-  explicit CharacterPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit CharacterPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~CharacterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

@@ -20,8 +20,8 @@ using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 using namespace Render::GL::Geometry;
 
-VegetationPipeline::VegetationPipeline(ShaderCache *shaderCache)
-    : m_shaderCache(shaderCache) {}
+VegetationPipeline::VegetationPipeline(ShaderCache *shader_cache)
+    : m_shaderCache(shader_cache) {}
 
 VegetationPipeline::~VegetationPipeline() { shutdown(); }
 

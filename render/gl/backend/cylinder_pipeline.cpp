@@ -20,8 +20,8 @@ using namespace Render::GL::BufferCapacity;
 using namespace Render::GL::Geometry;
 using namespace Render::GL::Growth;
 
-CylinderPipeline::CylinderPipeline(ShaderCache *shaderCache)
-    : m_shaderCache(shaderCache) {}
+CylinderPipeline::CylinderPipeline(ShaderCache *shader_cache)
+    : m_shaderCache(shader_cache) {}
 
 CylinderPipeline::~CylinderPipeline() { shutdown(); }
 

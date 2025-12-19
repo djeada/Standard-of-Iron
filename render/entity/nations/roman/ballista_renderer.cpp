@@ -117,7 +117,7 @@ void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.45F, 0.06F, 0.06F), c.wood_frame);
 }
 
-void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
                 Texture *white, const RomanBallistaPalette &c) {
 
   float wheel_radius = 0.14F;
@@ -126,7 +126,7 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D left_pos(-0.42F, wheel_radius, 0.0F);
   QVector3D right_pos(0.42F, wheel_radius, 0.0F);
 
-  auto drawWheel = [&](const QVector3D &pos, float side_offset) {
+  auto draw_wheel = [&](const QVector3D &pos, float side_offset) {
     QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
     QVector3D outer =
         pos + QVector3D(side_offset * (wheel_thickness + 0.05F), 0, 0);
@@ -154,8 +154,8 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
     }
   };
 
-  drawWheel(left_pos, -1.0F);
-  drawWheel(right_pos, 1.0F);
+  draw_wheel(left_pos, -1.0F);
+  draw_wheel(right_pos, 1.0F);
 
   draw_cyl(out, p.model, QVector3D(-0.38F, wheel_radius, 0.0F),
            QVector3D(0.38F, wheel_radius, 0.0F), 0.022F, c.metal_iron, white);
@@ -338,7 +338,7 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
     ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
     drawBaseFrame(ctx, out, unit, white, c);
-    drawWheels(ctx, out, unit, white, c);
+    draw_wheels(ctx, out, unit, white, c);
     drawTorsionBundles(ctx, out, unit, white, c);
     drawArms(ctx, out, unit, white, c);
     drawBowstring(ctx, out, white, c);

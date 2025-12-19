@@ -22,8 +22,8 @@ namespace BackendPipelines {
 class HealingBeamPipeline final : public IPipeline {
 public:
   explicit HealingBeamPipeline(GL::Backend *backend,
-                               GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+                               GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~HealingBeamPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

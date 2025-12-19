@@ -229,7 +229,7 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
 
   stabilizeUpperBody(mount, request.dims);
 
-  float forward = request.forwardBias;
+  float forward = request.forward_bias;
   switch (request.seatPose) {
   case MountedSeatPose::Forward:
     forward += 0.35F;
@@ -251,14 +251,14 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
   update_head_hierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
                         "applyPose_fixup");
 
-  const bool needs_weapon_right = request.weaponPose != MountedWeaponPose::None;
+  const bool needs_weapon_right = request.weapon_pose != MountedWeaponPose::None;
   const bool needs_weapon_left =
-      request.weaponPose == MountedWeaponPose::SpearGuard ||
-      request.weaponPose == MountedWeaponPose::SpearThrust ||
-      request.weaponPose == MountedWeaponPose::BowDraw;
+      request.weapon_pose == MountedWeaponPose::SpearGuard ||
+      request.weapon_pose == MountedWeaponPose::SpearThrust ||
+      request.weapon_pose == MountedWeaponPose::BowDraw;
 
   const bool shield_claims_left =
-      request.shieldPose != MountedShieldPose::None ? true : false;
+      request.shield_pose != MountedShieldPose::None ? true : false;
 
   bool apply_left_rein =
       request.leftHandOnReins && !shield_claims_left && !needs_weapon_left;
@@ -270,7 +270,7 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
                   apply_left_rein, apply_right_rein);
   }
 
-  switch (request.shieldPose) {
+  switch (request.shield_pose) {
   case MountedShieldPose::Guard:
     apply_shield_defense(mount, false);
     break;
@@ -285,13 +285,13 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
     break;
   }
 
-  switch (request.weaponPose) {
+  switch (request.weapon_pose) {
   case MountedWeaponPose::SwordIdle:
     apply_sword_idle_pose(mount, request.dims);
     break;
   case MountedWeaponPose::SwordStrike:
     apply_sword_strike(mount, request.actionPhase,
-                       request.shieldPose != MountedShieldPose::None);
+                       request.shield_pose != MountedShieldPose::None);
     break;
   case MountedWeaponPose::SpearGuard:
     apply_spear_guard(mount, SpearGrip::OVERHAND);

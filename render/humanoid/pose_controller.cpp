@@ -425,7 +425,7 @@ void HumanoidPoseController::lean(const QVector3D &direction, float amount) {
   m_pose.head_pos += lean_offset * 0.75F;
 }
 
-void HumanoidPoseController::placeHandAt(bool is_left,
+void HumanoidPoseController::place_hand_at(bool is_left,
                                          const QVector3D &target_position) {
 
   get_hand(is_left) = target_position;
@@ -589,8 +589,8 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   }
 
   QVector3D const hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 
   if (shoulder_twist > 0.01F) {
     m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_twist);
@@ -698,8 +698,8 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
     m_pose.knee_r.setZ(m_pose.knee_r.z() + step_forward * 0.5F);
   }
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::graspTwoHanded(const QVector3D &grip_center,
@@ -713,8 +713,8 @@ void HumanoidPoseController::graspTwoHanded(const QVector3D &grip_center,
   QVector3D const left_hand_pos =
       grip_center - right_axis * (hand_separation * 0.5F);
 
-  placeHandAt(false, right_hand_pos);
-  placeHandAt(true, left_hand_pos);
+  place_hand_at(false, right_hand_pos);
+  place_hand_at(true, left_hand_pos);
 }
 
 void HumanoidPoseController::spearThrust(float attack_phase) {
@@ -737,7 +737,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   float step_forward = 0.0F;
   float hip_rotation = 0.0F;
 
-  auto easeInOutCubic = [](float t) {
+  auto ease_in_out_cubic = [](float t) {
     return t < 0.5F ? 4.0F * t * t * t
                     : 1.0F - std::pow(-2.0F * t + 2.0F, 3.0F) / 2.0F;
   };
@@ -747,7 +747,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
 
   if (attack_phase < 0.18F) {
 
-    float const t = easeInOutCubic(attack_phase / 0.18F);
+    float const t = ease_in_out_cubic(attack_phase / 0.18F);
     hand_r_target = guard_pos * (1.0F - t) + chamber_pos * t;
     hand_l_target = QVector3D(-0.08F, HP::SHOULDER_Y - 0.04F,
                               0.22F * (1.0F - t) + 0.06F * t);
@@ -792,7 +792,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
     step_forward = 0.10F + 0.04F * t;
   } else if (attack_phase < 0.78F) {
 
-    float const t = easeInOutCubic((attack_phase - 0.60F) / 0.18F);
+    float const t = ease_in_out_cubic((attack_phase - 0.60F) / 0.18F);
     hand_r_target = extended_pos * (1.0F - t) + recover_pos * t;
     hand_l_target = QVector3D(-0.02F * (1.0F - t) - 0.08F * t,
                               HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.05F * t,
@@ -851,8 +851,8 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   hand_l_target = computeOffhandSpearGrip(m_pose, m_anim_ctx, hand_r_target,
                                           false, along_offset, y_drop, -0.06F);
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::spearThrustFromHold(float attack_phase,
@@ -976,8 +976,8 @@ void HumanoidPoseController::spearThrustFromHold(float attack_phase,
   hand_l_target = computeOffhandSpearGrip(m_pose, m_anim_ctx, hand_r_target,
                                           false, along_offset, y_drop, -0.05F);
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::sword_slash(float attack_phase) {
@@ -1086,8 +1086,8 @@ void HumanoidPoseController::sword_slash(float attack_phase) {
     m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::mount_on_horse(float saddle_height) {
@@ -1102,8 +1102,8 @@ void HumanoidPoseController::hold_sword_and_shield() {
   QVector3D const sword_hand_pos(0.30F, HP::SHOULDER_Y - 0.02F, 0.35F);
   QVector3D const shield_hand_pos(-0.22F, HP::SHOULDER_Y, 0.18F);
 
-  placeHandAt(false, sword_hand_pos);
-  placeHandAt(true, shield_hand_pos);
+  place_hand_at(false, sword_hand_pos);
+  place_hand_at(true, shield_hand_pos);
 }
 
 void HumanoidPoseController::look_at(const QVector3D &target) {
@@ -1270,8 +1270,8 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     m_pose.knee_r.setZ(m_pose.knee_r.z() + weight_shift * 0.6F);
   }
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::spear_thrust_variant(float attack_phase,
@@ -1325,7 +1325,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   float hip_rotation = 0.0F;
   float crouch_factor = 0.0F;
 
-  auto easeInOutCubic = [](float t) {
+  auto ease_in_out_cubic = [](float t) {
     return t < 0.5F ? 4.0F * t * t * t
                     : 1.0F - std::pow(-2.0F * t + 2.0F, 3.0F) / 2.0F;
   };
@@ -1335,7 +1335,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 
   if (attack_phase < 0.18F) {
 
-    float const t = easeInOutCubic(attack_phase / 0.18F);
+    float const t = ease_in_out_cubic(attack_phase / 0.18F);
     hand_r_target = guard_pos * (1.0F - t) + chamber_pos * t;
     hand_l_target = QVector3D(-0.08F, HP::SHOULDER_Y - 0.04F,
                               0.22F * (1.0F - t) + 0.06F * t);
@@ -1391,7 +1391,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
     crouch_factor = crouch_amount * 0.7F;
   } else if (attack_phase < 0.78F) {
 
-    float const t = easeInOutCubic((attack_phase - 0.60F) / 0.18F);
+    float const t = ease_in_out_cubic((attack_phase - 0.60F) / 0.18F);
     hand_r_target = extended_pos * (1.0F - t) + recover_pos * t;
     hand_l_target = QVector3D(-0.02F * (1.0F - t) - 0.08F * t,
                               HP::SHOULDER_Y - 0.02F * (1.0F - t) - 0.05F * t,
@@ -1451,8 +1451,8 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
     m_pose.head_pos.setY(m_pose.head_pos.y() - crouch_factor * 0.4F);
   }
 
-  placeHandAt(false, hand_r_target);
-  placeHandAt(true, hand_l_target);
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
 }
 
 void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {

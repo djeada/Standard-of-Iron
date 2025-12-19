@@ -55,7 +55,7 @@ inline auto smooth(float a, float b, float x) -> float {
   return t * t * (3.0F - 2.0F * t);
 }
 
-inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   int const x0 = int(std::floor(x));
   int const z0 = int(std::floor(z));
   int const x1 = x0 + 1;
@@ -568,7 +568,7 @@ void TerrainRenderer::build_meshes() {
 
         float const center_wx = (center_gx - half_width) * m_tile_size;
         float const center_wz = (center_gz - half_height) * m_tile_size;
-        float const macro = valueNoise(center_wx * 0.02F, center_wz * 0.02F,
+        float const macro = value_noise(center_wx * 0.02F, center_wz * 0.02F,
                                        m_noiseSeed ^ 0x51C3U);
         float const macro_shade = 0.9F + 0.2F * macro;
 

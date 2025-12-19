@@ -12,8 +12,8 @@ namespace BackendPipelines {
 
 class BannerPipeline final : public IPipeline {
 public:
-  explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~BannerPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

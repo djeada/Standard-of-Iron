@@ -220,10 +220,10 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D const pole_size(pole_radius * 1.8F, pole_height / 2.0F,
                             pole_radius * 1.8F);
 
-  QMatrix4x4 poleTransform = p.model;
-  poleTransform.translate(pole_center);
-  poleTransform.scale(pole_size);
-  out.mesh(unit, poleTransform, c.wood, white, 1.0F);
+  QMatrix4x4 pole_transform = p.model;
+  pole_transform.translate(pole_center);
+  pole_transform.scale(pole_size);
+  out.mesh(unit, pole_transform, c.wood, white, 1.0F);
 
   float const beam_length = banner_width * 0.5F;
   float const max_lowering = pole_height * 0.85F;

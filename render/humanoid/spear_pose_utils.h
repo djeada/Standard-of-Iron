@@ -43,7 +43,7 @@ computeSpearDirection(const AnimationInputs &anim_inputs) -> QVector3D {
   return spear_dir;
 }
 
-inline auto computeOffhandSpearGrip(const HumanoidPose &pose,
+inline auto compute_offhand_spear_grip(const HumanoidPose &pose,
                                     const HumanoidAnimationContext &anim_ctx,
                                     const QVector3D &main_hand_pos,
                                     bool main_is_left, float along_offset,

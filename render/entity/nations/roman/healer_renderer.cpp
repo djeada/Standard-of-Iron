@@ -381,7 +381,7 @@ public:
     drawFabricRing(hem_y - 0.012F, torso_r * 0.90F * 1.45F,
                    torso_depth * 0.84F * 1.45F, trim_gold * 0.85F, 0.015F);
 
-    auto drawSleeve = [&](const QVector3D &shoulder_pos,
+    auto draw_sleeve = [&](const QVector3D &shoulder_pos,
                           const QVector3D &outward,
                           const QVector3D &elbow_pos) {
       out.mesh(get_unit_sphere(),
@@ -404,8 +404,8 @@ public:
                sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.25F),
                tunic_cream * 0.95F, nullptr, 1.0F);
     };
-    drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
-    drawSleeve(frames.shoulder_r.origin, right, pose.elbow_r);
+    draw_sleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
+    draw_sleeve(frames.shoulder_r.origin, right, pose.elbow_r);
 
     QVector3D const satchel_pos = origin + right * (torso_r * 0.75F) +
                                   up * (y_waist - 0.08F - origin.y()) +

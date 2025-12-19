@@ -13,8 +13,8 @@ namespace Render::GL::BackendPipelines {
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-PrimitiveBatchPipeline::PrimitiveBatchPipeline(ShaderCache *shaderCache)
-    : m_shader_cache(shaderCache) {}
+PrimitiveBatchPipeline::PrimitiveBatchPipeline(ShaderCache *shader_cache)
+    : m_shader_cache(shader_cache) {}
 
 PrimitiveBatchPipeline::~PrimitiveBatchPipeline() { shutdown(); }
 

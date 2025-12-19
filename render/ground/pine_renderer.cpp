@@ -21,7 +21,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   int const x0 = int(std::floor(x));
   int const z0 = int(std::floor(z));
   int const x1 = x0 + 1;
@@ -229,7 +229,7 @@ void PineRenderer::generate_pine_instances() {
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
 
-      float const cluster_noise = valueNoise(world_x * 0.03F, world_z * 0.03F,
+      float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
                                              m_noiseSeed ^ 0x7F8E9D0AU);
 
       if (cluster_noise < 0.35F) {

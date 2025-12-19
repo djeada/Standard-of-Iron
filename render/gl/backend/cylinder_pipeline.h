@@ -11,7 +11,7 @@ namespace Render::GL::BackendPipelines {
 
 class CylinderPipeline : public IPipeline {
 public:
-  explicit CylinderPipeline(GL::ShaderCache *shaderCache);
+  explicit CylinderPipeline(GL::ShaderCache *shader_cache);
   ~CylinderPipeline() override;
 
   auto initialize() -> bool override;

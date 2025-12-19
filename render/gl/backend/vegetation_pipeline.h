@@ -10,7 +10,7 @@ namespace Render::GL::BackendPipelines {
 
 class VegetationPipeline : public IPipeline {
 public:
-  explicit VegetationPipeline(GL::ShaderCache *shaderCache);
+  explicit VegetationPipeline(GL::ShaderCache *shader_cache);
   ~VegetationPipeline() override;
 
   auto initialize() -> bool override;
