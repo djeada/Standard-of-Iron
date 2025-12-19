@@ -56,7 +56,7 @@ auto Renderer::initialize() -> bool {
   m_backend->initialize();
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
-  registerBuiltInEquipment();
+  register_built_in_equipment();
   return true;
 }
 
