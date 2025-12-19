@@ -116,7 +116,7 @@ void BiomeRenderer::clear() {
   m_grassInstancesDirty = false;
 }
 
-void BiomeRenderer::refreshGrass() { generate_grass_instances(); }
+void BiomeRenderer::refresh_grass() { generate_grass_instances(); }
 
 void BiomeRenderer::generate_grass_instances() {
   QElapsedTimer timer;

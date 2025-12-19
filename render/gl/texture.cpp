@@ -87,18 +87,18 @@ void Texture::unbind() {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::set_filter(Filter minFilter, Filter magFilter) {
+void Texture::set_filter(Filter min_filter, Filter mag_filter) {
   bind();
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  get_gl_filter(minFilter));
+                  get_gl_filter(min_filter));
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
-                  get_gl_filter(magFilter));
+                  get_gl_filter(mag_filter));
 }
 
-void Texture::set_wrap(Wrap sWrap, Wrap tWrap) {
+void Texture::set_wrap(Wrap s_wrap, Wrap t_wrap) {
   bind();
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, get_gl_wrap(sWrap));
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, get_gl_wrap(tWrap));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, get_gl_wrap(s_wrap));
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, get_gl_wrap(t_wrap));
 }
 
 auto Texture::get_gl_format(Format format) -> GLenum {

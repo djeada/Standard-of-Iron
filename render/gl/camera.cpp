@@ -296,8 +296,8 @@ void Camera::zoom_distance(float delta) {
 
 void Camera::rotate(float yaw, float pitch) { orbit(yaw, pitch); }
 
-void Camera::pan(float right_dist, float forwardDist) {
-  if (!finite(right_dist) || !finite(forwardDist)) {
+void Camera::pan(float right_dist, float forward_dist) {
+  if (!finite(right_dist) || !finite(forward_dist)) {
     return;
   }
 
@@ -308,7 +308,7 @@ void Camera::pan(float right_dist, float forwardDist) {
     front.normalize();
   }
 
-  QVector3D const delta = right * right_dist + front * forwardDist;
+  QVector3D const delta = right * right_dist + front * forward_dist;
   if (!finite(delta)) {
     return;
   }

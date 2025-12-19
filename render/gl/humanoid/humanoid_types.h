@@ -102,19 +102,19 @@ struct VariationParams {
   static auto fromSeed(uint32_t seed) -> VariationParams {
     VariationParams v{};
 
-    auto nextRand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t &s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
 
     uint32_t rng = seed;
-    v.height_scale = 0.95F + nextRand(rng) * 0.10F;
-    v.bulk_scale = 0.92F + nextRand(rng) * 0.16F;
-    v.stance_width = 0.88F + nextRand(rng) * 0.24F;
-    v.arm_swing_amp = 0.85F + nextRand(rng) * 0.30F;
-    v.walk_speed_mult = 0.90F + nextRand(rng) * 0.20F;
-    v.posture_slump = nextRand(rng) * 0.08F;
-    v.shoulder_tilt = (nextRand(rng) - 0.5F) * 0.06F;
+    v.height_scale = 0.95F + next_rand(rng) * 0.10F;
+    v.bulk_scale = 0.92F + next_rand(rng) * 0.16F;
+    v.stance_width = 0.88F + next_rand(rng) * 0.24F;
+    v.arm_swing_amp = 0.85F + next_rand(rng) * 0.30F;
+    v.walk_speed_mult = 0.90F + next_rand(rng) * 0.20F;
+    v.posture_slump = next_rand(rng) * 0.08F;
+    v.shoulder_tilt = (next_rand(rng) - 0.5F) * 0.06F;
 
     return v;
   }

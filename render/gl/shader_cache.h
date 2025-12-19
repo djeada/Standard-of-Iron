@@ -15,16 +15,16 @@ namespace Render::GL {
 
 class ShaderCache {
 public:
-  auto load(const QString &name, const QString &vertPath,
-            const QString &fragPath) -> Shader * {
+  auto load(const QString &name, const QString &vert_path,
+            const QString &frag_path) -> Shader * {
     auto it = m_named.find(name);
     if (it != m_named.end()) {
       return it->second.get();
     }
     const QString resolved_vert =
-        Utils::Resources::resolveResourcePath(vertPath);
+        Utils::Resources::resolveResourcePath(vert_path);
     const QString resolved_frag =
-        Utils::Resources::resolveResourcePath(fragPath);
+        Utils::Resources::resolveResourcePath(frag_path);
     auto sh = std::make_unique<Shader>();
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
@@ -40,12 +40,12 @@ public:
     return (it != m_named.end()) ? it->second.get() : nullptr;
   }
 
-  auto get_or_load(const QString &vertPath,
-                   const QString &fragPath) -> Shader * {
+  auto get_or_load(const QString &vert_path,
+                   const QString &frag_path) -> Shader * {
     const QString resolved_vert =
-        Utils::Resources::resolveResourcePath(vertPath);
+        Utils::Resources::resolveResourcePath(vert_path);
     const QString resolved_frag =
-        Utils::Resources::resolveResourcePath(fragPath);
+        Utils::Resources::resolveResourcePath(frag_path);
     auto key = resolved_vert + "|" + resolved_frag;
     auto it = m_byPath.find(key);
     if (it != m_byPath.end()) {
@@ -221,14 +221,14 @@ public:
       return info.exists();
     };
 
-    auto loadVariant = [&](const QString &baseKey, const QString &baseVertPath,
+    auto loadVariant = [&](const QString &base_key, const QString &baseVertPath,
                            const QString &baseFragPath) {
       for (const QString &nation : nationVariants) {
-        const QString shaderName = baseKey + QStringLiteral("_") + nation;
-        const QString variantVertRes = kShaderBase + baseKey +
+        const QString shaderName = base_key + QStringLiteral("_") + nation;
+        const QString variantVertRes = kShaderBase + base_key +
                                        QStringLiteral("_") + nation +
                                        QStringLiteral(".vert");
-        const QString variantFragRes = kShaderBase + baseKey +
+        const QString variantFragRes = kShaderBase + base_key +
                                        QStringLiteral("_") + nation +
                                        QStringLiteral(".frag");
 

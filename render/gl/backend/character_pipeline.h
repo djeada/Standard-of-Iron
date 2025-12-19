@@ -53,7 +53,7 @@ private:
   void cache_knight_uniforms();
   void cache_spearman_uniforms();
   BasicUniforms buildUniformSet(GL::Shader *shader) const;
-  void cache_nation_variants(const QString &baseKey);
+  void cache_nation_variants(const QString &base_key);
 };
 
 } // namespace BackendPipelines

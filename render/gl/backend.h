@@ -62,12 +62,12 @@ public:
   [[nodiscard]] auto shader(const QString &name) const -> Shader * {
     return m_shaderCache ? m_shaderCache->get(name) : nullptr;
   }
-  auto get_or_load_shader(const QString &name, const QString &vertPath,
+  auto get_or_load_shader(const QString &name, const QString &vert_path,
                           const QString &fragPath) -> Shader * {
     if (!m_shaderCache) {
       return nullptr;
     }
-    return m_shaderCache->load(name, vertPath, fragPath);
+    return m_shaderCache->load(name, vert_path, fragPath);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh *;

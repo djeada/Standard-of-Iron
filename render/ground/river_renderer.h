@@ -16,7 +16,7 @@ public:
   RiverRenderer();
   ~RiverRenderer() override;
 
-  void configure(const std::vector<Game::Map::RiverSegment> &riverSegments,
+  void configure(const std::vector<Game::Map::RiverSegment> &river_segments,
                  float tile_size);
 
   void submit(Renderer &renderer, ResourceManager *resources) override;

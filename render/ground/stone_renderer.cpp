@@ -65,7 +65,7 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_stoneParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_stoneParams.time = 0.0F;
 
-  generateStoneInstances();
+  generate_stone_instances();
 }
 
 void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -94,7 +94,7 @@ void StoneRenderer::clear() {
   m_stoneInstancesDirty = false;
 }
 
-void StoneRenderer::generateStoneInstances() {
+void StoneRenderer::generate_stone_instances() {
   QElapsedTimer timer;
   timer.start();
 
