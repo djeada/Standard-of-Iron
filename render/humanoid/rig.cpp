@@ -1664,7 +1664,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         int const max_slots = std::min(2, visible_count);
         std::uint32_t const cycle_rng =
             hash_u32(seed ^ (unit_cycle_number * 0x9e3779b9U));
-        int const slots =
+        int const slot_count =
             (max_slots <= 0)
                 ? 0
                 : (1 + static_cast<int>(cycle_rng %
@@ -1711,8 +1711,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         AmbientIdleType const unit_idle_type =
             pick_idle_type(hash_u32(cycle_rng ^ 0x3C6EF372U));
 
-        if (slots > 0 && unit_time_in_cycle <= kAmbientAnimDuration) {
-          bool const is_active = (idx == idx_a) || (slots > 1 && idx == idx_b);
+        if (slot_count > 0 && unit_time_in_cycle <= kAmbientAnimDuration) {
+          bool const is_active =
+              (idx == idx_a) || (slot_count > 1 && idx == idx_b);
           if (is_active) {
             float const phase = unit_time_in_cycle / kAmbientAnimDuration;
             pose_ctrl.apply_ambient_idle_explicit(unit_idle_type, phase);
