@@ -198,6 +198,10 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/PlayerListItem.qml
             ui/qml/PlayerConfigPanel.qml
             ui/qml/CampaignMenu.qml
+            ui/qml/CampaignScreen.qml
+            ui/qml/MissionListItem.qml
+            ui/qml/MissionDetailPanel.qml
+            ui/qml/MediterraneanMapPanel.qml
             ui/qml/StyleGuide.qml
             ui/qml/StyledButton.qml
             ui/qml/HUD.qml
