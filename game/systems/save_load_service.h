@@ -46,6 +46,25 @@ public:
   auto mark_campaign_completed(const QString &campaign_id,
                                QString *out_error = nullptr) -> bool;
 
+  auto save_mission_result(const QString &mission_id, const QString &mode,
+                           const QString &campaign_id, bool completed,
+                           const QString &result, const QString &difficulty,
+                           float completion_time,
+                           QString *out_error = nullptr) -> bool;
+
+  auto get_mission_progress(const QString &mission_id,
+                            QString *out_error = nullptr) const -> QVariantMap;
+
+  auto get_campaign_mission_progress(const QString &campaign_id,
+                                     QString *out_error = nullptr) const
+      -> QVariantList;
+
+  auto unlock_next_campaign_mission(const QString &campaign_id,
+                                    const QString &completed_mission_id,
+                                    QString *out_error = nullptr) -> bool;
+
+  static SaveLoadService *instance();
+
   static void open_settings();
 
   static void exit_game();

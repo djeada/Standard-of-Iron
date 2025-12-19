@@ -30,7 +30,7 @@ namespace Game::Systems {
 
 namespace {
 constexpr const char *k_driver_name = "QSQLITE";
-constexpr int k_current_schema_version = 2;
+constexpr int k_current_schema_version = 3;
 
 auto build_connection_name(const SaveStorage *instance) -> QString {
   return QStringLiteral("SaveStorage_%1")
@@ -286,6 +286,10 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
 auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
   QVariantList result;
 
+  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+    return result;
+  }
+
   QStringList campaign_files;
 
   QStringList search_paths = {QStringLiteral("assets/campaigns"),
@@ -319,14 +323,23 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
             continue;
           }
 
+          // Ensure campaign missions are in the database
+          const_cast<SaveStorage *>(this)->ensure_campaign_missions_in_db(
+              campaign);
+
+          // Load progress from database
+          QVariantList missions_progress =
+              get_campaign_mission_progress(campaign.id);
+
           QVariantMap campaign_map;
           campaign_map.insert(QStringLiteral("id"), campaign.id);
           campaign_map.insert(QStringLiteral("title"), campaign.title);
           campaign_map.insert(QStringLiteral("description"),
                               campaign.description);
           campaign_map.insert(QStringLiteral("unlocked"), true);
-          campaign_map.insert(QStringLiteral("completed"), false);
 
+          // Check if campaign is completed
+          bool all_completed = true;
           QVariantList missions_list;
           for (const auto &mission : campaign.missions) {
             QVariantMap mission_map;
@@ -347,11 +360,27 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
                                  *mission.difficulty_modifier);
             }
 
-            mission_map.insert(QStringLiteral("unlocked"),
-                               mission.order_index == 0);
-            mission_map.insert(QStringLiteral("completed"), false);
+            // Find progress for this mission
+            bool unlocked = mission.order_index == 0;
+            bool completed = false;
+            for (const QVariant &progress_var : missions_progress) {
+              QVariantMap progress = progress_var.toMap();
+              if (progress["mission_id"].toString() == mission.mission_id) {
+                unlocked = progress["unlocked"].toBool();
+                completed = progress["completed"].toBool();
+                break;
+              }
+            }
+
+            mission_map.insert(QStringLiteral("unlocked"), unlocked);
+            mission_map.insert(QStringLiteral("completed"), completed);
             missions_list.append(mission_map);
+
+            if (!completed) {
+              all_completed = false;
+            }
           }
+          campaign_map.insert(QStringLiteral("completed"), all_completed);
           campaign_map.insert(QStringLiteral("missions"), missions_list);
 
           result.append(campaign_map);
@@ -389,13 +418,21 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
         continue;
       }
 
+      // Ensure campaign missions are in the database
+      const_cast<SaveStorage *>(this)->ensure_campaign_missions_in_db(campaign);
+
+      // Load progress from database
+      QVariantList missions_progress =
+          get_campaign_mission_progress(campaign.id);
+
       QVariantMap campaign_map;
       campaign_map.insert(QStringLiteral("id"), campaign.id);
       campaign_map.insert(QStringLiteral("title"), campaign.title);
       campaign_map.insert(QStringLiteral("description"), campaign.description);
       campaign_map.insert(QStringLiteral("unlocked"), true);
-      campaign_map.insert(QStringLiteral("completed"), false);
 
+      // Check if campaign is completed
+      bool all_completed = true;
       QVariantList missions_list;
       for (const auto &mission : campaign.missions) {
         QVariantMap mission_map;
@@ -412,11 +449,27 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
                              *mission.difficulty_modifier);
         }
 
-        mission_map.insert(QStringLiteral("unlocked"),
-                           mission.order_index == 0);
-        mission_map.insert(QStringLiteral("completed"), false);
+        // Find progress for this mission
+        bool unlocked = mission.order_index == 0;
+        bool completed = false;
+        for (const QVariant &progress_var : missions_progress) {
+          QVariantMap progress = progress_var.toMap();
+          if (progress["mission_id"].toString() == mission.mission_id) {
+            unlocked = progress["unlocked"].toBool();
+            completed = progress["completed"].toBool();
+            break;
+          }
+        }
+
+        mission_map.insert(QStringLiteral("unlocked"), unlocked);
+        mission_map.insert(QStringLiteral("completed"), completed);
         missions_list.append(mission_map);
+
+        if (!completed) {
+          all_completed = false;
+        }
       }
+      campaign_map.insert(QStringLiteral("completed"), all_completed);
       campaign_map.insert(QStringLiteral("missions"), missions_list);
 
       result.append(campaign_map);
@@ -703,6 +756,12 @@ auto SaveStorage::migrate_schema(int fromVersion,
       }
       version = 2;
       break;
+    case 2:
+      if (!migrate_to_3(out_error)) {
+        return false;
+      }
+      version = 3;
+      break;
     default:
       if (out_error != nullptr) {
         *out_error =
@@ -781,6 +840,373 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
           QStringLiteral("Failed to initialize campaign progress: %1")
               .arg(last_error_string(progress_insert_query.lastError()));
     }
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
+  // Create mission_progress table
+  QSqlQuery query(m_database);
+  const QString create_mission_progress_sql = QStringLiteral(
+      "CREATE TABLE IF NOT EXISTS mission_progress ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+      "mission_id TEXT NOT NULL, "
+      "mode TEXT NOT NULL, "
+      "campaign_id TEXT, "
+      "completed INTEGER NOT NULL DEFAULT 0, "
+      "completion_time REAL, "
+      "difficulty TEXT, "
+      "result TEXT, "
+      "completed_at TEXT, "
+      "created_at TEXT NOT NULL, "
+      "updated_at TEXT NOT NULL, "
+      "UNIQUE(mission_id, mode, campaign_id)"
+      ")");
+
+  if (!query.exec(create_mission_progress_sql)) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to create mission_progress table: %1")
+                       .arg(last_error_string(query.lastError()));
+    }
+    return false;
+  }
+
+  // Create campaign_missions table
+  QSqlQuery missions_query(m_database);
+  const QString create_campaign_missions_sql = QStringLiteral(
+      "CREATE TABLE IF NOT EXISTS campaign_missions ("
+      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+      "campaign_id TEXT NOT NULL, "
+      "mission_id TEXT NOT NULL, "
+      "order_index INTEGER NOT NULL, "
+      "unlocked INTEGER NOT NULL DEFAULT 0, "
+      "completed INTEGER NOT NULL DEFAULT 0, "
+      "completed_at TEXT, "
+      "UNIQUE(campaign_id, mission_id)"
+      ")");
+
+  if (!missions_query.exec(create_campaign_missions_sql)) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("Failed to create campaign_missions table: %1")
+              .arg(last_error_string(missions_query.lastError()));
+    }
+    return false;
+  }
+
+  // Create indexes for performance
+  QSqlQuery index_query(m_database);
+  if (!index_query.exec(QStringLiteral(
+          "CREATE INDEX IF NOT EXISTS idx_mission_progress_mission_id ON "
+          "mission_progress (mission_id)"))) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to create mission_progress index: %1")
+                       .arg(last_error_string(index_query.lastError()));
+    }
+    return false;
+  }
+
+  QSqlQuery campaign_index_query(m_database);
+  if (!campaign_index_query.exec(QStringLiteral(
+          "CREATE INDEX IF NOT EXISTS idx_campaign_missions_campaign_id ON "
+          "campaign_missions (campaign_id)"))) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("Failed to create campaign_missions index: %1")
+              .arg(last_error_string(campaign_index_query.lastError()));
+    }
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::save_mission_result(
+    const QString &mission_id, const QString &mode, const QString &campaign_id,
+    bool completed, const QString &result, const QString &difficulty,
+    float completion_time, QString *out_error) -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+
+  const QString now_iso =
+      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+
+  QSqlQuery query(m_database);
+  const QString insert_sql = QStringLiteral(
+      "INSERT INTO mission_progress (mission_id, mode, campaign_id, completed, "
+      "completion_time, difficulty, result, completed_at, created_at, "
+      "updated_at) "
+      "VALUES (:mission_id, :mode, :campaign_id, :completed, :completion_time, "
+      ":difficulty, :result, :completed_at, :created_at, :updated_at) "
+      "ON CONFLICT(mission_id, mode, campaign_id) DO UPDATE SET "
+      "completed = excluded.completed, "
+      "completion_time = excluded.completion_time, "
+      "difficulty = excluded.difficulty, "
+      "result = excluded.result, "
+      "completed_at = excluded.completed_at, "
+      "updated_at = excluded.updated_at");
+
+  if (!query.prepare(insert_sql)) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("Failed to prepare mission_progress insert: %1")
+              .arg(last_error_string(query.lastError()));
+    }
+    return false;
+  }
+
+  query.bindValue(QStringLiteral(":mission_id"), mission_id);
+  query.bindValue(QStringLiteral(":mode"), mode);
+  if (campaign_id.isEmpty()) {
+    query.bindValue(QStringLiteral(":campaign_id"), QVariant());
+  } else {
+    query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  }
+  query.bindValue(QStringLiteral(":completed"), completed ? 1 : 0);
+  query.bindValue(QStringLiteral(":completion_time"), completion_time);
+  query.bindValue(QStringLiteral(":difficulty"), difficulty);
+  query.bindValue(QStringLiteral(":result"), result);
+  query.bindValue(QStringLiteral(":completed_at"),
+                  completed ? now_iso : QVariant());
+  query.bindValue(QStringLiteral(":created_at"), now_iso);
+  query.bindValue(QStringLiteral(":updated_at"), now_iso);
+
+  if (!query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to save mission result: %1")
+                       .arg(last_error_string(query.lastError()));
+    }
+    transaction.rollback();
+    return false;
+  }
+
+  if (!transaction.commit(out_error)) {
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::get_mission_progress(const QString &mission_id,
+                                       QString *out_error) const
+    -> QVariantMap {
+  QVariantMap result;
+  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+    return result;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare(QStringLiteral(
+      "SELECT mode, campaign_id, completed, completion_time, difficulty, "
+      "result, completed_at FROM mission_progress "
+      "WHERE mission_id = :mission_id ORDER BY updated_at DESC LIMIT 1"));
+  query.bindValue(QStringLiteral(":mission_id"), mission_id);
+
+  if (!query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to get mission progress: %1")
+                       .arg(last_error_string(query.lastError()));
+    }
+    return result;
+  }
+
+  if (query.next()) {
+    result.insert(QStringLiteral("mode"), query.value(0).toString());
+    result.insert(QStringLiteral("campaign_id"), query.value(1).toString());
+    result.insert(QStringLiteral("completed"), query.value(2).toInt() != 0);
+    result.insert(QStringLiteral("completion_time"), query.value(3).toDouble());
+    result.insert(QStringLiteral("difficulty"), query.value(4).toString());
+    result.insert(QStringLiteral("result"), query.value(5).toString());
+    result.insert(QStringLiteral("completed_at"), query.value(6).toString());
+  }
+
+  return result;
+}
+
+auto SaveStorage::get_campaign_mission_progress(const QString &campaign_id,
+                                                QString *out_error) const
+    -> QVariantList {
+  QVariantList result;
+  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+    return result;
+  }
+
+  QSqlQuery query(m_database);
+  query.prepare(QStringLiteral(
+      "SELECT mission_id, order_index, unlocked, completed, completed_at "
+      "FROM campaign_missions "
+      "WHERE campaign_id = :campaign_id ORDER BY order_index ASC"));
+  query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+
+  if (!query.exec()) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("Failed to get campaign mission progress: %1")
+              .arg(last_error_string(query.lastError()));
+    }
+    return result;
+  }
+
+  while (query.next()) {
+    QVariantMap mission;
+    mission.insert(QStringLiteral("mission_id"), query.value(0).toString());
+    mission.insert(QStringLiteral("order_index"), query.value(1).toInt());
+    mission.insert(QStringLiteral("unlocked"), query.value(2).toInt() != 0);
+    mission.insert(QStringLiteral("completed"), query.value(3).toInt() != 0);
+    mission.insert(QStringLiteral("completed_at"), query.value(4).toString());
+    result.append(mission);
+  }
+
+  return result;
+}
+
+auto SaveStorage::ensure_campaign_missions_in_db(
+    const Game::Campaign::CampaignDefinition &campaign, QString *out_error)
+    -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+
+  for (const auto &mission : campaign.missions) {
+    QSqlQuery check_query(m_database);
+    check_query.prepare(QStringLiteral(
+        "SELECT COUNT(*) FROM campaign_missions "
+        "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+    check_query.bindValue(QStringLiteral(":campaign_id"), campaign.id);
+    check_query.bindValue(QStringLiteral(":mission_id"), mission.mission_id);
+
+    if (!check_query.exec() || !check_query.next()) {
+      if (out_error != nullptr) {
+        *out_error =
+            QStringLiteral("Failed to check campaign mission existence: %1")
+                .arg(last_error_string(check_query.lastError()));
+      }
+      transaction.rollback();
+      return false;
+    }
+
+    int count = check_query.value(0).toInt();
+    if (count == 0) {
+      // Insert the mission
+      QSqlQuery insert_query(m_database);
+      insert_query.prepare(QStringLiteral(
+          "INSERT INTO campaign_missions (campaign_id, mission_id, "
+          "order_index, unlocked, completed) "
+          "VALUES (:campaign_id, :mission_id, :order_index, :unlocked, 0)"));
+      insert_query.bindValue(QStringLiteral(":campaign_id"), campaign.id);
+      insert_query.bindValue(QStringLiteral(":mission_id"),
+                             mission.mission_id);
+      insert_query.bindValue(QStringLiteral(":order_index"),
+                             mission.order_index);
+      // First mission is unlocked by default
+      insert_query.bindValue(QStringLiteral(":unlocked"),
+                             mission.order_index == 0 ? 1 : 0);
+
+      if (!insert_query.exec()) {
+        if (out_error != nullptr) {
+          *out_error =
+              QStringLiteral("Failed to insert campaign mission: %1")
+                  .arg(last_error_string(insert_query.lastError()));
+        }
+        transaction.rollback();
+        return false;
+      }
+    }
+  }
+
+  if (!transaction.commit(out_error)) {
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::unlock_next_mission(const QString &campaign_id,
+                                      const QString &completed_mission_id,
+                                      QString *out_error) -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+
+  const QString now_iso =
+      QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
+
+  // Mark the completed mission as completed
+  QSqlQuery update_query(m_database);
+  update_query.prepare(QStringLiteral(
+      "UPDATE campaign_missions SET completed = 1, completed_at = :completed_at "
+      "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+  update_query.bindValue(QStringLiteral(":completed_at"), now_iso);
+  update_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  update_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
+
+  if (!update_query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to mark mission as completed: %1")
+                       .arg(last_error_string(update_query.lastError()));
+    }
+    transaction.rollback();
+    return false;
+  }
+
+  // Get the order_index of the completed mission
+  QSqlQuery order_query(m_database);
+  order_query.prepare(QStringLiteral(
+      "SELECT order_index FROM campaign_missions "
+      "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
+  order_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  order_query.bindValue(QStringLiteral(":mission_id"), completed_mission_id);
+
+  if (!order_query.exec() || !order_query.next()) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("Failed to find completed mission order: %1")
+              .arg(last_error_string(order_query.lastError()));
+    }
+    transaction.rollback();
+    return false;
+  }
+
+  int completed_order = order_query.value(0).toInt();
+
+  // Unlock the next mission
+  QSqlQuery unlock_query(m_database);
+  unlock_query.prepare(
+      QStringLiteral("UPDATE campaign_missions SET unlocked = 1 "
+                     "WHERE campaign_id = :campaign_id AND order_index = "
+                     ":next_order_index"));
+  unlock_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
+  unlock_query.bindValue(QStringLiteral(":next_order_index"),
+                         completed_order + 1);
+
+  if (!unlock_query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to unlock next mission: %1")
+                       .arg(last_error_string(unlock_query.lastError()));
+    }
+    transaction.rollback();
+    return false;
+  }
+
+  if (!transaction.commit(out_error)) {
     return false;
   }
 

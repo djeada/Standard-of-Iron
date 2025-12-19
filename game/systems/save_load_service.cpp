@@ -226,6 +226,63 @@ auto SaveLoadService::mark_campaign_completed(const QString &campaign_id,
   return m_storage->mark_campaign_completed(campaign_id, out_error);
 }
 
+auto SaveLoadService::save_mission_result(
+    const QString &mission_id, const QString &mode, const QString &campaign_id,
+    bool completed, const QString &result, const QString &difficulty,
+    float completion_time, QString *out_error) -> bool {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return false;
+  }
+  return m_storage->save_mission_result(mission_id, mode, campaign_id,
+                                        completed, result, difficulty,
+                                        completion_time, out_error);
+}
+
+auto SaveLoadService::get_mission_progress(const QString &mission_id,
+                                           QString *out_error) const
+    -> QVariantMap {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return {};
+  }
+  return m_storage->get_mission_progress(mission_id, out_error);
+}
+
+auto SaveLoadService::get_campaign_mission_progress(const QString &campaign_id,
+                                                    QString *out_error) const
+    -> QVariantList {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return {};
+  }
+  return m_storage->get_campaign_mission_progress(campaign_id, out_error);
+}
+
+auto SaveLoadService::unlock_next_campaign_mission(
+    const QString &campaign_id, const QString &completed_mission_id,
+    QString *out_error) -> bool {
+  if (!m_storage) {
+    if (out_error != nullptr) {
+      *out_error = "Storage not initialized";
+    }
+    return false;
+  }
+  return m_storage->unlock_next_mission(campaign_id, completed_mission_id,
+                                        out_error);
+}
+
+SaveLoadService *SaveLoadService::instance() {
+  static SaveLoadService instance;
+  return &instance;
+}
+
 void SaveLoadService::open_settings() { qInfo() << "Open settings requested"; }
 
 void SaveLoadService::exit_game() {

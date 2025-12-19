@@ -3,6 +3,7 @@
 #include "game/map/map_definition.h"
 #include "game/map/mission_loader.h"
 #include "game/systems/save_load_service.h"
+#include "game/systems/save_storage.h"
 #include "game/systems/victory_service.h"
 #include <QCoreApplication>
 #include <QDebug>
@@ -70,18 +71,47 @@ void CampaignManager::start_campaign_mission(const QString &mission_path,
   m_current_mission_id = mission_id;
   m_current_mission_definition = mission;
 
+  // Set mission context for campaign mission
+  m_current_mission_context.mode = "campaign";
+  m_current_mission_context.campaign_id = campaign_id;
+  m_current_mission_context.mission_id = mission_id;
+  m_current_mission_context.difficulty = "normal"; // Default difficulty
+
   emit current_campaign_changed();
   emit current_mission_changed();
 }
 
 void CampaignManager::mark_current_mission_completed() {
-  if (m_current_campaign_id.isEmpty()) {
+  if (m_current_campaign_id.isEmpty() || m_current_mission_id.isEmpty()) {
     qWarning() << "No active campaign mission to mark as completed";
     return;
   }
 
-  qInfo() << "Campaign mission" << m_current_campaign_id
-          << "marked as completed";
+  qInfo() << "Campaign mission" << m_current_campaign_id << "/"
+          << m_current_mission_id << "marked as completed";
+
+  // Save to database
+  auto *save_service = Game::Systems::SaveLoadService::instance();
+  if (save_service != nullptr) {
+    QString error;
+    bool saved = save_service->save_mission_result(
+        m_current_mission_id, m_current_mission_context.mode,
+        m_current_campaign_id, true, "victory",
+        m_current_mission_context.difficulty, 0.0F, &error);
+
+    if (!saved) {
+      qWarning() << "Failed to save mission result:" << error;
+    } else {
+      // Unlock next mission if this was a campaign mission
+      if (m_current_mission_context.is_campaign()) {
+        bool unlocked = save_service->unlock_next_campaign_mission(
+            m_current_campaign_id, m_current_mission_id, &error);
+        if (!unlocked) {
+          qWarning() << "Failed to unlock next mission:" << error;
+        }
+      }
+    }
+  }
 }
 
 void CampaignManager::configure_mission_victory_conditions(
