@@ -77,6 +77,15 @@ static HumanoidRenderStats s_render_stats;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
+
+// Calculate hip sway for walking animation based on locomotion phase
+inline auto calculate_walk_hip_sway(float locomotion_phase) -> float {
+  constexpr float k_hip_sway_amount = 0.002F;
+  float const sway_raw =
+      std::sin(locomotion_phase * 2.0F * std::numbers::pi_v<float>);
+  return sway_raw * k_hip_sway_amount;
+}
+
 } // namespace
 
 void advance_pose_cache_frame() {
@@ -317,10 +326,7 @@ void HumanoidRendererBase::compute_locomotion_pose(
     float const vertical_bob =
         std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
 
-    float const hip_sway_amount = 0.002F;
-    float const sway_raw =
-        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
-    float const hip_sway = sway_raw * hip_sway_amount;
+    float const hip_sway = calculate_walk_hip_sway(walk_phase);
 
     float const torso_sway_z = 0.0F;
 
@@ -1649,9 +1655,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     // Apply counter-rotation to shoulders during walking to reduce excessive torso twist
     if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
       // Calculate hip sway matching the walking animation
-      float const hip_sway_amount = 0.002F;
-      float const sway_raw = std::sin(anim_ctx.locomotion_phase * 2.0F * std::numbers::pi_v<float>);
-      float const hip_sway = sway_raw * hip_sway_amount;
+      float const hip_sway = calculate_walk_hip_sway(anim_ctx.locomotion_phase);
       
       // Counter-rotate shoulders to reduce torso twist
       float const shoulder_counter_rotation = -hip_sway * 0.5F;
