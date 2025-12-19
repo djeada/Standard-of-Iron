@@ -77,15 +77,6 @@ static HumanoidRenderStats s_render_stats;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
-
-// Calculate hip sway for walking animation based on locomotion phase
-inline auto calculate_walk_hip_sway(float locomotion_phase) -> float {
-  constexpr float k_hip_sway_amount = 0.002F;
-  float const sway_raw =
-      std::sin(locomotion_phase * 2.0F * std::numbers::pi_v<float>);
-  return sway_raw * k_hip_sway_amount;
-}
-
 } // namespace
 
 void advance_pose_cache_frame() {
@@ -326,7 +317,10 @@ void HumanoidRendererBase::compute_locomotion_pose(
     float const vertical_bob =
         std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
 
-    float const hip_sway = calculate_walk_hip_sway(walk_phase);
+    float const hip_sway_amount = 0.002F;
+    float const sway_raw =
+        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
+    float const hip_sway = sway_raw * hip_sway_amount;
 
     float const torso_sway_z = 0.0F;
 
@@ -361,6 +355,11 @@ void HumanoidRendererBase::compute_locomotion_pose(
     pose.head_pos.setY(pose.head_pos.y() + vertical_bob);
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
+    
+    // Counter-rotate shoulders to prevent torso twist during walking
+    float const shoulder_counter_sway = -hip_sway;
+    pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_sway);
+    pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_sway);
 
     pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
     pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
@@ -1650,19 +1649,6 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       // Use time as idle duration proxy - ambient idles trigger after 3+ seconds
       pose_ctrl.apply_ambient_idle(anim.time + phase_offset, inst_seed,
                                    anim.time);
-    }
-
-    // Apply counter-rotation to shoulders during walking to reduce excessive torso twist
-    if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
-      // Calculate hip sway matching the walking animation
-      // locomotion_phase is synchronized with walk_phase from compute_locomotion_pose
-      // since both use (anim.time + phase_offset) and the same cycle calculation
-      float const hip_sway = calculate_walk_hip_sway(anim_ctx.locomotion_phase);
-
-      // Counter-rotate shoulders to reduce torso twist
-      float const shoulder_counter_rotation = -hip_sway * 0.5F;
-      pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
-      pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_rotation);
     }
 
     if (anim_ctx.motion_state == HumanoidMotionState::Run) {
