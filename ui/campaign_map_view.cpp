@@ -28,7 +28,7 @@
 namespace {
 
 auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
-                    float distance) -> QMatrix4x4 {
+                      float distance) -> QMatrix4x4 {
   const float view_w = qMax(1.0F, width);
   const float view_h = qMax(1.0F, height);
   const float aspect = view_w / view_h;
@@ -57,8 +57,8 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   return projection * view * model;
 }
 
-auto point_in_triangle(const QVector2D &p, const QVector2D &a, const QVector2D &b,
-                     const QVector2D &c) -> bool {
+auto point_in_triangle(const QVector2D &p, const QVector2D &a,
+                       const QVector2D &b, const QVector2D &c) -> bool {
   const QVector2D v0 = c - a;
   const QVector2D v1 = b - a;
   const QVector2D v2 = p - a;
@@ -132,8 +132,8 @@ public:
 
     draw_textured_layer(m_waterTexture, m_quadVao, 6, mvp, 1.0F, -0.01F);
     if (m_landVertexCount > 0) {
-      draw_textured_layer(m_baseTexture, m_landVao, m_landVertexCount, mvp, 1.0F,
-                        0.0F);
+      draw_textured_layer(m_baseTexture, m_landVao, m_landVertexCount, mvp,
+                          1.0F, 0.0F);
     } else {
       draw_textured_layer(m_baseTexture, m_quadVao, 6, mvp, 1.0F, 0.0F);
     }
@@ -213,26 +213,26 @@ private:
     }
 
     init_quad();
-    m_waterTexture =
-        load_texture(QStringLiteral(":/assets/campaign_map/campaign_water.png"));
+    m_waterTexture = load_texture(
+        QStringLiteral(":/assets/campaign_map/campaign_water.png"));
     m_baseTexture = load_texture(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
     init_land_mesh();
 
     init_line_layer(m_coastLayer,
-                  QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
-                  QVector4D(0.22F, 0.19F, 0.16F, 1.0F), 1.4F);
+                    QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
+                    QVector4D(0.22F, 0.19F, 0.16F, 1.0F), 1.4F);
     init_line_layer(m_riverLayer,
-                  QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
-                  QVector4D(0.33F, 0.49F, 0.61F, 0.9F), 1.2F);
+                    QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
+                    QVector4D(0.33F, 0.49F, 0.61F, 0.9F), 1.2F);
     init_line_layer(m_pathLayer,
-                  QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
-                  QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
+                    QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
+                    QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
     init_province_layer(m_provinceLayer,
-                      QStringLiteral(":/assets/campaign_map/provinces.json"));
+                        QStringLiteral(":/assets/campaign_map/provinces.json"));
     init_borders_layer(m_provinceBorderLayer,
-                     QStringLiteral(":/assets/campaign_map/provinces.json"),
-                     QVector4D(0.18F, 0.16F, 0.14F, 0.85F), 1.6F);
+                       QStringLiteral(":/assets/campaign_map/provinces.json"),
+                       QVector4D(0.18F, 0.16F, 0.14F, 0.85F), 1.6F);
 
     m_initialized = true;
     return true;
@@ -396,7 +396,7 @@ void main() {
   }
 
   void init_line_layer(LineLayer &layer, const QString &resource_path,
-                     const QVector4D &color, float width) {
+                       const QVector4D &color, float width) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -543,7 +543,7 @@ void main() {
   }
 
   void init_borders_layer(LineLayer &layer, const QString &resource_path,
-                        const QVector4D &color, float width) {
+                          const QVector4D &color, float width) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -628,12 +628,13 @@ void main() {
 
   void compute_mvp(QMatrix4x4 &out_mvp) const {
     out_mvp = build_mvp_matrix(static_cast<float>(m_size.width()),
-                             static_cast<float>(m_size.height()), m_orbit_yaw,
-                             m_orbit_pitch, m_orbit_distance);
+                               static_cast<float>(m_size.height()), m_orbit_yaw,
+                               m_orbit_pitch, m_orbit_distance);
   }
 
-  void draw_textured_layer(QOpenGLTexture *texture, GLuint vao, int vertex_count,
-                         const QMatrix4x4 &mvp, float alpha, float z_offset) {
+  void draw_textured_layer(QOpenGLTexture *texture, GLuint vao,
+                           int vertex_count, const QMatrix4x4 &mvp, float alpha,
+                           float z_offset) {
     if (texture == nullptr || vao == 0 || vertex_count <= 0) {
       return;
     }
@@ -654,7 +655,7 @@ void main() {
   }
 
   void draw_line_layer(const LineLayer &layer, const QMatrix4x4 &mvp,
-                     float z_offset) {
+                       float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
     }
@@ -675,7 +676,7 @@ void main() {
   }
 
   void draw_province_layer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
-                         float z_offset) {
+                           float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
     }
@@ -958,7 +959,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
     const auto &triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
       if (point_in_triangle(p, triangles[i], triangles[i + 1],
-                          triangles[i + 2])) {
+                            triangles[i + 2])) {
         return province.id;
       }
     }
@@ -1021,7 +1022,7 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
     const auto &triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
       if (point_in_triangle(p, triangles[i], triangles[i + 1],
-                          triangles[i + 2])) {
+                            triangles[i + 2])) {
         info.insert(QStringLiteral("id"), province.id);
         info.insert(QStringLiteral("name"), province.name);
         info.insert(QStringLiteral("owner"), province.owner);
