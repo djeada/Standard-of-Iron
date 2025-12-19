@@ -324,7 +324,13 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
           }
 
           // Ensure campaign missions are in the database
-          ensure_campaign_missions_in_db(campaign);
+          QString db_error;
+          if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
+            qWarning() << "Failed to initialize campaign missions in DB for"
+                       << campaign.id << ":" << db_error;
+            // Continue with next campaign rather than failing completely
+            continue;
+          }
 
           // Load progress from database
           QVariantList missions_progress =
@@ -418,7 +424,13 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
       }
 
       // Ensure campaign missions are in the database
-      ensure_campaign_missions_in_db(campaign);
+      QString db_error;
+      if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
+        qWarning() << "Failed to initialize campaign missions in DB for"
+                   << campaign.id << ":" << db_error;
+        // Continue with next campaign rather than failing completely
+        continue;
+      }
 
       // Load progress from database
       QVariantList missions_progress =

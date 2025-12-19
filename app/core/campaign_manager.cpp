@@ -94,6 +94,8 @@ void CampaignManager::mark_current_mission_completed() {
   auto *save_service = Game::Systems::SaveLoadService::instance();
   if (save_service != nullptr) {
     QString error;
+    // TODO: Track actual mission completion time instead of using 0.0F
+    // This could be useful for statistics and leaderboards
     bool saved = save_service->save_mission_result(
         m_current_mission_id, m_current_mission_context.mode,
         m_current_campaign_id, true, "victory",
