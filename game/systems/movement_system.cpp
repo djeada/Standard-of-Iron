@@ -392,8 +392,51 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
+  float const old_x = transform->position.x;
+  float const old_z = transform->position.z;
+
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
+
+  // Post-move validation: check if new position overlaps with buildings
+  {
+    auto &registry = BuildingCollisionRegistry::instance();
+    QVector3D const new_pos_3d(transform->position.x, 0.0F,
+                               transform->position.z);
+
+    if (registry.is_circle_overlapping_building(new_pos_3d.x(), new_pos_3d.z(),
+                                                 unit_radius, entity->get_id())) {
+      // Unit would clip into building - find nearest valid position
+      Pathfinding *pathfinder = CommandService::get_pathfinder();
+      if (pathfinder != nullptr) {
+        Point const new_grid =
+            CommandService::world_to_grid(new_pos_3d.x(), new_pos_3d.z());
+        Point const nearest = Pathfinding::find_nearest_walkable_point(
+            new_grid, 5, *pathfinder, unit_radius);
+
+        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+
+        // Verify the safe position doesn't overlap with buildings
+        if (!registry.is_circle_overlapping_building(
+                safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
+          transform->position.x = safe_pos.x();
+          transform->position.z = safe_pos.z();
+        } else {
+          // Fallback: revert to previous position
+          transform->position.x = old_x;
+          transform->position.z = old_z;
+        }
+      } else {
+        // No pathfinder available - revert to previous position
+        transform->position.x = old_x;
+        transform->position.z = old_z;
+      }
+
+      // Stop movement to prevent jitter
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+    }
+  }
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
