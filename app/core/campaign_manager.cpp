@@ -1,7 +1,7 @@
 #include "campaign_manager.h"
 
+#include "game/map/map_definition.h"
 #include "game/map/mission_loader.h"
-#include "game/map/victory_config.h"
 #include "game/systems/save_load_service.h"
 #include "game/systems/victory_service.h"
 #include <QCoreApplication>

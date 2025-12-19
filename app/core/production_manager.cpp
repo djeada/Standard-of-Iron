@@ -342,8 +342,8 @@ void ProductionManager::set_rally_at_screen(qreal sx, qreal sy,
       continue;
     }
 
-    auto *owner = e->get_component<Engine::Core::OwnerComponent>();
-    if (!owner || owner->owner_id != local_owner_id) {
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+    if (!unit || unit->owner_id != local_owner_id) {
       continue;
     }
 
