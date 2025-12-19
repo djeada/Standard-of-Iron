@@ -76,44 +76,35 @@ auto CommandService::grid_to_world(const Point &gridPos) -> QVector3D {
   return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
 }
 
-auto CommandService::get_unit_radius(
-    Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
+namespace {
+// Helper function to get the selection ring size for a unit
+auto get_selection_ring_size(Engine::Core::World &world,
+                              Engine::Core::EntityID entity_id) -> float {
   auto *entity = world.get_entity(entity_id);
   if (entity == nullptr) {
-    return 0.5F;
+    return 1.0F;  // Default ring size when entity not found
   }
 
   auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
   if (unit_comp == nullptr) {
-    return 0.5F;
+    return 1.0F;  // Default ring size when unit component not found
   }
 
-  float const selection_ring_size =
-      Game::Units::TroopConfig::instance().getSelectionRingSize(
-          unit_comp->spawn_type);
+  return Game::Units::TroopConfig::instance().getSelectionRingSize(
+      unit_comp->spawn_type);
+}
+} // namespace
 
+auto CommandService::get_unit_radius(
+    Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
   // Use halved radius for pathfinding to maintain smooth movement
-  return selection_ring_size * 0.5F;
+  return get_selection_ring_size(world, entity_id) * 0.5F;
 }
 
 auto CommandService::get_unit_collision_radius(
     Engine::Core::World &world, Engine::Core::EntityID entity_id) -> float {
-  auto *entity = world.get_entity(entity_id);
-  if (entity == nullptr) {
-    return 0.5F;
-  }
-
-  auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-  if (unit_comp == nullptr) {
-    return 0.5F;
-  }
-
-  float const selection_ring_size =
-      Game::Units::TroopConfig::instance().getSelectionRingSize(
-          unit_comp->spawn_type);
-
   // Use full ring size for building collision to prevent clipping
-  return selection_ring_size;
+  return get_selection_ring_size(world, entity_id);
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {

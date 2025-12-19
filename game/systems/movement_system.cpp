@@ -187,8 +187,10 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   bool const current_pos_valid =
       is_point_allowed(current_pos_3d, entity->get_id(), unit_radius, collision_radius);
 
-  // Note: Pre-move validation disabled to prevent deadlocks with corrected radius
-  // The pathfinding system and is_segment_walkable checks handle collision avoidance
+  // Note: Pre-move validation was removed to prevent deadlocks.
+  // With the larger collision radius, units could enter invalid positions,
+  // trigger relocation, try to move again, and repeat infinitely.
+  // The pathfinding system and is_segment_walkable checks handle collision avoidance.
 
   bool const destination_allowed =
       is_point_allowed(final_goal, entity->get_id(), unit_radius, collision_radius);
