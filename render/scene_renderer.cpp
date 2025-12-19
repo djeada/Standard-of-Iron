@@ -63,16 +63,14 @@ auto Renderer::initialize() -> bool {
 void Renderer::shutdown() { m_backend.reset(); }
 
 void Renderer::begin_frame() {
-
   advance_pose_cache_frame();
-
   reset_humanoid_render_stats();
   reset_horse_render_stats();
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
 
-  if (m_camera != nullptr) {
+  if (m_camera) {
     m_view_proj =
         m_camera->get_projection_matrix() * m_camera->get_view_matrix();
   }
@@ -83,16 +81,14 @@ void Renderer::begin_frame() {
 }
 
 void Renderer::end_frame() {
-  if (m_paused.load()) {
+  if (m_paused.load() || !m_backend || !m_camera) {
     return;
   }
-  if (m_backend && (m_camera != nullptr)) {
-    std::swap(m_fill_queue_index, m_render_queue_index);
-    DrawQueue &render_queue = m_queues[m_render_queue_index];
-    render_queue.sort_for_batching();
-    m_backend->setAnimationTime(m_accumulated_time);
-    m_backend->execute(render_queue, *m_camera);
-  }
+  std::swap(m_fill_queue_index, m_render_queue_index);
+  DrawQueue &render_queue = m_queues[m_render_queue_index];
+  render_queue.sort_for_batching();
+  m_backend->setAnimationTime(m_accumulated_time);
+  m_backend->execute(render_queue, *m_camera);
 }
 
 void Renderer::set_camera(Camera *camera) { m_camera = camera; }
@@ -117,16 +113,14 @@ void Renderer::set_viewport(int width, int height) {
 }
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *texture, float alpha, int material_id) {
-  if (mesh == nullptr) {
+  if (!mesh) {
     return;
   }
 
   float const effective_alpha = alpha * m_alpha_override;
 
-  if (mesh == get_unit_cylinder() && (texture == nullptr) &&
-      (m_current_shader == nullptr)) {
-    QVector3D start;
-    QVector3D end;
+  if (mesh == get_unit_cylinder() && !texture && !m_current_shader) {
+    QVector3D start, end;
     float radius = 0.0F;
     if (detail::decompose_unit_cylinder(model, start, end, radius)) {
       cylinder(start, end, radius, color, effective_alpha);
@@ -142,28 +136,26 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.alpha = effective_alpha;
   cmd.material_id = material_id;
   cmd.shader = m_current_shader;
-  if (m_active_queue != nullptr) {
+  if (m_active_queue) {
     m_active_queue->submit(cmd);
   }
 }
 
 void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color, float alpha) {
-
-  float const effective_alpha = alpha * m_alpha_override;
   CylinderCmd cmd;
   cmd.start = start;
   cmd.end = end;
   cmd.radius = radius;
   cmd.color = color;
-  cmd.alpha = effective_alpha;
-  if (m_active_queue != nullptr) {
+  cmd.alpha = alpha * m_alpha_override;
+  if (m_active_queue) {
     m_active_queue->submit(cmd);
   }
 }
 
 void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
-  if ((instances == nullptr) || count == 0 || (m_active_queue == nullptr)) {
+  if (!instances || count == 0 || !m_active_queue) {
     return;
   }
   FogBatchCmd cmd;
@@ -174,8 +166,7 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
 
 void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
                            const GrassBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 || !m_active_queue) {
     return;
   }
   GrassBatchCmd cmd;
@@ -188,8 +179,7 @@ void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
 
 void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
                            const StoneBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 || !m_active_queue) {
     return;
   }
   StoneBatchCmd cmd;
@@ -201,8 +191,8 @@ void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
 
 void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
                            const PlantBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 ||
+      !m_active_queue) {
     return;
   }
   PlantBatchCmd cmd;
@@ -215,8 +205,8 @@ void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
 
 void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const PineBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 ||
+      !m_active_queue) {
     return;
   }
   PineBatchCmd cmd;
@@ -229,8 +219,8 @@ void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
 
 void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
                            const OliveBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 ||
+      !m_active_queue) {
     return;
   }
   OliveBatchCmd cmd;
@@ -244,8 +234,8 @@ void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
 void Renderer::firecamp_batch(Buffer *instance_buffer,
                               std::size_t instance_count,
                               const FireCampBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 ||
+      !m_active_queue) {
     return;
   }
   FireCampBatchCmd cmd;
@@ -258,8 +248,8 @@ void Renderer::firecamp_batch(Buffer *instance_buffer,
 
 void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const RainBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
+  if (!instance_buffer || instance_count == 0 ||
+      !m_active_queue) {
     return;
   }
   RainBatchCmd cmd;
@@ -274,7 +264,7 @@ void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                              const TerrainChunkParams &params,
                              std::uint16_t sort_key, bool depth_write,
                              float depth_bias) {
-  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
+  if (!mesh || !m_active_queue) {
     return;
   }
   TerrainChunkCmd cmd;
@@ -410,7 +400,7 @@ void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
 void Renderer::enqueue_selection_ring(
     Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
-  if ((!selected && !hovered) || (transform == nullptr)) {
+  if ((!selected && !hovered) || !transform) {
     return;
   }
 
@@ -475,7 +465,7 @@ void Renderer::enqueue_selection_ring(
 void Renderer::enqueue_mode_indicator(
     Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp) {
-  if ((entity == nullptr) || (transform == nullptr)) {
+  if (!entity || !transform) {
     return;
   }
 
@@ -578,10 +568,7 @@ void Renderer::enqueue_mode_indicator(
 }
 
 void Renderer::render_world(Engine::Core::World *world) {
-  if (m_paused.load()) {
-    return;
-  }
-  if (world == nullptr) {
+  if (m_paused.load() || !world) {
     return;
   }
 
@@ -596,10 +583,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   const auto &gfxSettings = Render::GraphicsSettings::instance();
   const auto &batch_config = gfxSettings.batching_config();
 
-  float cameraHeight = 0.0F;
-  if (m_camera != nullptr) {
-    cameraHeight = m_camera->get_position().y();
-  }
+  float cameraHeight = m_camera ? m_camera->get_position().y() : 0.0F;
 
   int visibleUnitCount = 0;
   for (auto *entity : renderable_entities) {
@@ -607,10 +591,10 @@ void Renderer::render_world(Engine::Core::World *world) {
       continue;
     }
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit_comp != nullptr && unit_comp->health > 0) {
+    if (unit_comp && unit_comp->health > 0) {
       auto *transform =
           entity->get_component<Engine::Core::TransformComponent>();
-      if (transform != nullptr && m_camera != nullptr) {
+      if (transform && m_camera) {
         QVector3D const unit_pos(transform->position.x, transform->position.y,
                                  transform->position.z);
         if (m_camera->is_in_frustum(unit_pos, 4.0F)) {
@@ -645,18 +629,17 @@ void Renderer::render_world(Engine::Core::World *world) {
         entity->get_component<Engine::Core::RenderableComponent>();
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
 
-    if (!renderable->visible || (transform == nullptr)) {
+    if (!renderable->visible || !transform) {
       continue;
     }
 
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
+    if (unit_comp && unit_comp->health <= 0) {
       continue;
     }
 
     float distanceToCamera = 0.0F;
-    if ((m_camera != nullptr) && (unit_comp != nullptr)) {
-
+    if (m_camera && unit_comp) {
       float cull_radius = 3.0F;
 
       if (unit_comp->spawn_type == Game::Units::SpawnType::MountedKnight) {
@@ -679,7 +662,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       distanceToCamera = std::sqrt(dx * dx + dz * dz);
     }
 
-    if ((unit_comp != nullptr) && unit_comp->owner_id != m_local_owner_id) {
+    if (unit_comp && unit_comp->owner_id != m_local_owner_id) {
       if (visibility_enabled) {
         if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
           continue;
@@ -744,13 +727,13 @@ void Renderer::render_world(Engine::Core::World *world) {
     ResourceManager *res = resources();
     switch (renderable->mesh) {
     case Engine::Core::RenderableComponent::MeshKind::Quad:
-      mesh_to_draw = (res != nullptr) ? res->quad() : nullptr;
+      mesh_to_draw = res ? res->quad() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Plane:
-      mesh_to_draw = (res != nullptr) ? res->ground() : nullptr;
+      mesh_to_draw = res ? res->ground() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Cube:
-      mesh_to_draw = (res != nullptr) ? res->unit() : nullptr;
+      mesh_to_draw = res ? res->unit() : nullptr;
       break;
     case Engine::Core::RenderableComponent::MeshKind::Capsule:
       mesh_to_draw = nullptr;
@@ -762,16 +745,16 @@ void Renderer::render_world(Engine::Core::World *world) {
     default:
       break;
     }
-    if ((mesh_to_draw == nullptr) && (res != nullptr)) {
+    if ((mesh_to_draw == nullptr) && res) {
       mesh_to_draw = res->unit();
     }
-    if ((mesh_to_draw == nullptr) && (res != nullptr)) {
+    if ((mesh_to_draw == nullptr) && res) {
       mesh_to_draw = res->quad();
     }
     QVector3D const color = QVector3D(
         renderable->color[0], renderable->color[1], renderable->color[2]);
 
-    if (res != nullptr) {
+    if res {
       Mesh *contact_quad = res->quad();
       Texture *white = res->white();
       if ((contact_quad != nullptr) && (white != nullptr)) {
@@ -816,7 +799,7 @@ void Renderer::render_world(Engine::Core::World *world) {
                            is_hovered);
     enqueue_mode_indicator(entity, transform, unit_comp);
     mesh(mesh_to_draw, model_matrix, color,
-         (res != nullptr) ? res->white() : nullptr, 1.0F);
+         res ? res->white() : nullptr, 1.0F);
   }
 
   if ((m_active_queue != nullptr) && batcher.total_count() > 0) {
