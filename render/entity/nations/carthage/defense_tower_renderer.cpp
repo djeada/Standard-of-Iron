@@ -205,7 +205,7 @@ void draw_defense_tower(const DrawContext &p, ISubmitter &out) {
 
 void register_defense_tower_renderer(
     Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("troops/roman/defense_tower", draw_defense_tower);
+  registry.register_renderer("troops/carthage/defense_tower", draw_defense_tower);
 }
 
 } // namespace Render::GL::Carthage
