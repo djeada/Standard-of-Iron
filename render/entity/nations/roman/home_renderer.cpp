@@ -12,6 +12,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <cmath>
 
 namespace Render::GL::Roman {
 namespace {
@@ -20,22 +21,23 @@ using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
-struct RomanPalette {
-  QVector3D stone_light{0.62F, 0.60F, 0.58F};
-  QVector3D stone_dark{0.50F, 0.48F, 0.46F};
-  QVector3D stone_base{0.55F, 0.53F, 0.51F};
-  QVector3D brick{0.75F, 0.52F, 0.42F};
-  QVector3D brick_dark{0.62F, 0.42F, 0.32F};
-  QVector3D tile_red{0.72F, 0.40F, 0.30F};
-  QVector3D tile_dark{0.58F, 0.30F, 0.22F};
-  QVector3D wood{0.42F, 0.28F, 0.16F};
-  QVector3D wood_dark{0.32F, 0.20F, 0.10F};
+struct CarthagePalette {
+  QVector3D limestone{0.96F, 0.94F, 0.88F};
+  QVector3D limestone_shade{0.88F, 0.85F, 0.78F};
+  QVector3D limestone_dark{0.80F, 0.76F, 0.70F};
+  QVector3D marble{0.98F, 0.97F, 0.95F};
+  QVector3D cedar{0.52F, 0.38F, 0.26F};
+  QVector3D cedar_dark{0.38F, 0.26F, 0.16F};
+  QVector3D terracotta{0.82F, 0.62F, 0.45F};
+  QVector3D terracotta_dark{0.68F, 0.48F, 0.32F};
+  QVector3D blue_accent{0.28F, 0.48F, 0.68F};
+  QVector3D blue_light{0.40F, 0.60F, 0.80F};
   QVector3D team{0.8F, 0.9F, 1.0F};
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto make_palette(const QVector3D &team) -> RomanPalette {
-  RomanPalette p;
+inline auto make_palette(const QVector3D &team) -> CarthagePalette {
+  CarthagePalette p;
   p.team = clampVec01(team);
   p.team_trim =
       clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
@@ -58,15 +60,19 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
-void drawHomeBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.1F, 0.0F),
-           QVector3D(1.0F, 0.1F, 1.0F), c.stone_base);
+void draw_home_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                        Texture *white, const CarthagePalette &c) {
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.06F, 0.0F),
+           QVector3D(1.1F, 0.06F, 1.1F), c.limestone_dark);
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.14F, 0.0F),
+           QVector3D(1.0F, 0.02F, 1.0F), c.limestone);
 }
 
-void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c, BuildingState state) {
-  float const wall_height = 0.8F;
+void draw_home_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                     Texture *white, const CarthagePalette &c,
+                     BuildingState state) {
+  float const wall_height = 0.9F;
   float height_multiplier = 1.0F;
 
   if (state == BuildingState::Damaged) {
@@ -77,41 +83,85 @@ void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   draw_box(
       out, unit, white, p.model,
-      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.2F, -0.9F),
-      QVector3D(0.85F, wall_height * 0.5F * height_multiplier, 0.08F), c.brick);
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.2F, 0.9F),
-           QVector3D(0.85F, wall_height * 0.5F * height_multiplier, 0.08F),
-           c.brick);
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, -0.85F),
+      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
+      c.limestone);
   draw_box(
       out, unit, white, p.model,
-      QVector3D(-0.9F, wall_height * 0.5F * height_multiplier + 0.2F, 0.0F),
-      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F), c.brick);
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.9F, wall_height * 0.5F * height_multiplier + 0.2F, 0.0F),
-           QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F),
-           c.brick);
+      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, 0.85F),
+      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
+      c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(-0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
+      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
+      c.limestone);
+  draw_box(
+      out, unit, white, p.model,
+      QVector3D(0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
+      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
+      c.limestone);
 }
 
-void drawHomeRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c, BuildingState state) {
+void draw_home_columns(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                       Texture *white, const CarthagePalette &c,
+                       BuildingState state) {
+  float const col_height = 0.8F;
+  float const col_radius = 0.06F;
+
+  float height_multiplier = 1.0F;
+  if (state == BuildingState::Damaged) {
+    height_multiplier = 0.7F;
+  } else if (state == BuildingState::Destroyed) {
+    height_multiplier = 0.4F;
+  }
+
+  QVector3D columns[4] = {
+      QVector3D(-0.7F, 0.0F, 0.88F), QVector3D(0.7F, 0.0F, 0.88F),
+      QVector3D(-0.7F, 0.0F, -0.88F), QVector3D(0.7F, 0.0F, -0.88F)};
+
+  for (int i = 0; i < 4; ++i) {
+    draw_box(out, unit, white, p.model,
+             QVector3D(columns[i].x(), 0.18F, columns[i].z()),
+             QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F), c.marble);
+
+    draw_cyl(out, p.model, QVector3D(columns[i].x(), 0.16F, columns[i].z()),
+             QVector3D(columns[i].x(), 0.16F + col_height * height_multiplier,
+                       columns[i].z()),
+             col_radius, c.limestone_shade, white);
+
+    if (state != BuildingState::Destroyed) {
+      draw_box(out, unit, white, p.model,
+               QVector3D(columns[i].x(),
+                         0.16F + col_height * height_multiplier + 0.04F,
+                         columns[i].z()),
+               QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F),
+               c.marble);
+    }
+  }
+}
+
+void draw_home_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                    Texture *white, const CarthagePalette &c,
+                    BuildingState state) {
   if (state == BuildingState::Destroyed) {
     return;
   }
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.15F, 0.0F),
-           QVector3D(1.0F, 0.05F, 1.0F), c.tile_red);
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.25F, 0.0F),
+           QVector3D(1.05F, 0.06F, 1.05F), c.terracotta);
 
-  for (float z = -0.8F; z <= 0.8F; z += 0.3F) {
-    draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.18F, z),
-             QVector3D(0.95F, 0.02F, 0.06F), c.tile_dark);
-  }
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 1.3F, 0.0F),
+           QVector3D(1.0F, 0.04F, 1.0F), c.terracotta_dark);
 }
 
-void drawHomeDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.4F, 0.95F),
-           QVector3D(0.3F, 0.4F, 0.05F), c.wood_dark);
+void draw_home_door(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                    Texture *white, const CarthagePalette &c) {
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.45F, 0.9F),
+           QVector3D(0.3F, 0.4F, 0.05F), c.cedar_dark);
+
+  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.62F, 0.92F),
+           QVector3D(0.32F, 0.04F, 0.02F), c.blue_accent);
 }
 
 void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -139,7 +189,7 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   float const bar_width = 1.0F;
   float const bar_height = 0.08F;
-  float const bar_y = 1.5F;
+  float const bar_y = 1.6F;
   float const border_thickness = 0.012F;
 
   if (under_attack) {
@@ -226,7 +276,7 @@ void draw_selection(const DrawContext &p, ISubmitter &out) {
   QMatrix4x4 m;
   QVector3D const pos = p.model.column(3).toVector3D();
   m.translate(pos.x(), 0.0F, pos.z());
-  m.scale(1.4F, 1.0F, 1.4F);
+  m.scale(1.5F, 1.0F, 1.5F);
   if (p.selected) {
     out.selection_smoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
   } else if (p.hovered) {
@@ -256,12 +306,13 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  RomanPalette const c = make_palette(team);
+  CarthagePalette const c = make_palette(team);
 
-  drawHomeBase(p, out, unit, white, c);
-  drawHomeWalls(p, out, unit, white, c, state);
-  drawHomeRoof(p, out, unit, white, c, state);
-  drawHomeDoor(p, out, unit, white, c);
+  draw_home_platform(p, out, unit, white, c);
+  draw_home_walls(p, out, unit, white, c, state);
+  draw_home_columns(p, out, unit, white, c, state);
+  draw_home_roof(p, out, unit, white, c, state);
+  draw_home_door(p, out, unit, white, c);
   draw_health_bar(p, out, unit, white);
   draw_selection(p, out);
 }
@@ -269,7 +320,7 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
 } // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("troops/roman/home", draw_home);
+  registry.register_renderer("troops/carthage/home", draw_home);
 }
 
 } // namespace Render::GL::Roman
