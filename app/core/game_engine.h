@@ -31,6 +31,10 @@
 #include <optional>
 #include <vector>
 
+class ProductionManager;
+class CampaignManager;
+class SelectionQueryService;
+
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
@@ -309,7 +313,7 @@ public:
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
   bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
-                     int &max_health, bool &isBuilding, bool &alive,
+                     int &max_health, bool &is_building, bool &alive,
                      QString &nation) const;
   bool get_unit_stamina_info(Engine::Core::EntityID id, float &stamina_ratio,
                              bool &is_running, bool &can_run) const;
@@ -355,6 +359,12 @@ private:
   [[nodiscard]] QByteArray capture_screenshot() const;
   void perform_skirmish_load(const QString &map_path,
                              const QVariantList &playerConfigs);
+  void configure_mission_victory_conditions();
+  void configure_rain_system();
+  void finalize_skirmish_load();
+  void render_game_effects();
+  void update_loading_overlay();
+  void update_cursor_position();
 
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
@@ -392,6 +402,9 @@ private:
   std::unique_ptr<InputCommandHandler> m_input_handler;
   std::unique_ptr<CameraController> m_camera_controller;
   std::unique_ptr<LoadingProgressTracker> m_loading_progress_tracker;
+  std::unique_ptr<ProductionManager> m_production_manager;
+  std::unique_ptr<CampaignManager> m_campaign_manager;
+  std::unique_ptr<SelectionQueryService> m_selection_query_service;
   QQuickWindow *m_window = nullptr;
   RuntimeState m_runtime;
   ViewportState m_viewport;
@@ -401,16 +414,7 @@ private:
   int m_enemyTroopsDefeated = 0;
   int m_selected_player_id = 1;
   QVariantList m_available_maps;
-  QVariantList m_available_campaigns;
   bool m_maps_loading = false;
-  QString m_current_campaign_id;
-  QString m_pending_building_type;
-  QString m_pending_construction_type;
-  std::vector<Engine::Core::EntityID> m_pending_construction_builders;
-  QVector3D m_construction_placement_position;
-  bool m_is_placing_construction = false;
-  QString m_current_mission_id;
-  std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
   bool m_loading_overlay_active = false;
   bool m_loading_overlay_wait_for_first_frame = false;
   int m_loading_overlay_frames_remaining = 0;
