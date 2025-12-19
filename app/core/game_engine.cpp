@@ -16,6 +16,7 @@
 #include "campaign_manager.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
+#include "game/map/mission_context.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "game_state_restorer.h"

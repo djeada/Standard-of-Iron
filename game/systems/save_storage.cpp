@@ -283,10 +283,10 @@ auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
   return result;
 }
 
-auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
+auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
   QVariantList result;
 
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+  if (!initialize(out_error)) {
     return result;
   }
 
@@ -324,8 +324,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
           }
 
           // Ensure campaign missions are in the database
-          const_cast<SaveStorage *>(this)->ensure_campaign_missions_in_db(
-              campaign);
+          ensure_campaign_missions_in_db(campaign);
 
           // Load progress from database
           QVariantList missions_progress =
@@ -419,7 +418,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
       }
 
       // Ensure campaign missions are in the database
-      const_cast<SaveStorage *>(this)->ensure_campaign_missions_in_db(campaign);
+      ensure_campaign_missions_in_db(campaign);
 
       // Load progress from database
       QVariantList missions_progress =

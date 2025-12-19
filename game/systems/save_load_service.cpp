@@ -194,7 +194,7 @@ auto SaveLoadService::delete_save_slot(const QString &slot_name) -> bool {
   return true;
 }
 
-auto SaveLoadService::list_campaigns(QString *out_error) const -> QVariantList {
+auto SaveLoadService::list_campaigns(QString *out_error) -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
