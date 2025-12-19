@@ -6,11 +6,23 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    property var campaigns: (typeof game !== "undefined" && game.available_campaigns) ? game.available_campaigns : []
+    property var campaigns: []
 
     signal missionSelected(string campaignId)
     signal cancelled()
 
+    function refreshCampaigns() {
+        if (typeof game !== "undefined" && game.available_campaigns)
+            campaigns = game.available_campaigns;
+
+    }
+
+    onVisibleChanged: {
+        if (visible && typeof game !== "undefined" && game.load_campaigns) {
+            game.load_campaigns();
+            refreshCampaigns();
+        }
+    }
     anchors.fill: parent
     focus: true
     Keys.onPressed: function(event) {
@@ -18,6 +30,14 @@ Item {
             root.cancelled();
             event.accepted = true;
         }
+    }
+
+    Connections {
+        function onAvailable_campaigns_changed() {
+            refreshCampaigns();
+        }
+
+        target: (typeof game !== "undefined") ? game : null
     }
 
     Rectangle {
@@ -216,33 +236,26 @@ Item {
         id: missionDetailPanel
 
         property var campaignData: null
-        property real mapOrbitYaw: 180.0
-        property real mapOrbitPitch: 55.0
+        property real mapOrbitYaw: 180
+        property real mapOrbitPitch: 55
         property real mapOrbitDistance: 2.4
         property var provinceLabels: []
         property string hoverProvinceName: ""
         property string hoverProvinceOwner: ""
         property real hoverMouseX: 0
         property real hoverMouseY: 0
-        property var ownerLegend: [
-            { name: qsTr("Rome"), color: "#d01f1a" },
-            { name: qsTr("Carthage"), color: "#cc8f47" },
-            { name: qsTr("Neutral"), color: "#3a3a3a" }
-        ]
-        property var provinceSources: [
-            "assets/campaign_map/provinces.json",
-            "qrc:/assets/campaign_map/provinces.json",
-            "qrc:/StandardOfIron/assets/campaign_map/provinces.json",
-            "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"
-        ]
+        property var ownerLegend: [{
+            "name": qsTr("Rome"),
+            "color": "#d01f1a"
+        }, {
+            "name": qsTr("Carthage"),
+            "color": "#cc8f47"
+        }, {
+            "name": qsTr("Neutral"),
+            "color": "#3a3a3a"
+        }]
+        property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
         property int labelRefresh: 0
-        onProvinceLabelsChanged: labelRefresh += 1
-        Component.onCompleted: loadProvinces()
-        onCampaignDataChanged: {
-            mapOrbitYaw = 180.0;
-            mapOrbitPitch = 55.0;
-            mapOrbitDistance = 2.4;
-        }
 
         function loadProvinces() {
             loadProvincesFrom(0);
@@ -251,47 +264,55 @@ Item {
         function labelUvFor(prov) {
             if (prov && prov.label_uv && prov.label_uv.length === 2)
                 return prov.label_uv;
+
             if (!prov || !prov.triangles || prov.triangles.length === 0)
                 return null;
-            var sumU = 0.0;
-            var sumV = 0.0;
+
+            var sumU = 0;
+            var sumV = 0;
             var count = 0;
             var step = Math.max(1, Math.floor(prov.triangles.length / 200));
             for (var i = 0; i < prov.triangles.length; i += step) {
                 var pt = prov.triangles[i];
                 if (!pt || pt.length < 2)
                     continue;
+
                 sumU += pt[0];
                 sumV += pt[1];
                 count += 1;
             }
             if (count === 0)
                 return null;
+
             return [sumU / count, sumV / count];
         }
 
         function provinceInfoFor(id) {
             if (!id)
                 return null;
+
             for (var i = 0; i < provinceLabels.length; i++) {
                 var prov = provinceLabels[i];
                 if (prov && prov.id === id)
                     return prov;
+
             }
             return null;
         }
 
         function loadProvincesFrom(index) {
             if (index >= provinceSources.length)
-                return;
+                return ;
+
             var xhr = new XMLHttpRequest();
             xhr.open("GET", provinceSources[index]);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState !== XMLHttpRequest.DONE)
-                    return;
+                    return ;
+
                 if (xhr.status !== 200 && xhr.status !== 0) {
                     loadProvincesFrom(index + 1);
-                    return;
+                    return ;
                 }
                 try {
                     var data = JSON.parse(xhr.responseText);
@@ -306,7 +327,7 @@ Item {
                         }
                         if (!hasCities) {
                             loadProvincesFrom(index + 1);
-                            return;
+                            return ;
                         }
                         missionDetailPanel.provinceLabels = data.provinces;
                         missionDetailPanel.labelRefresh += 1;
@@ -318,6 +339,22 @@ Item {
             xhr.send();
         }
 
+        onProvinceLabelsChanged: labelRefresh += 1
+        Component.onCompleted: {
+            refreshCampaigns();
+            var labels = campaignMap.provinceLabels;
+            if (labels && labels.length > 0) {
+                missionDetailPanel.provinceLabels = labels;
+                missionDetailPanel.labelRefresh += 1;
+            } else {
+                loadProvinces();
+            }
+        }
+        onCampaignDataChanged: {
+            mapOrbitYaw = 180;
+            mapOrbitPitch = 55;
+            mapOrbitDistance = 2.4;
+        }
         visible: false
         anchors.fill: parent
         color: Theme.dim
@@ -382,7 +419,6 @@ Item {
                         orbitYaw: missionDetailPanel.mapOrbitYaw
                         orbitPitch: missionDetailPanel.mapOrbitPitch
                         orbitDistance: missionDetailPanel.mapOrbitDistance
-
                         onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
                         onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
                         onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1
@@ -391,32 +427,31 @@ Item {
                     }
 
                     MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        acceptedButtons: Qt.LeftButton
-
                         property real lastX: 0
                         property real lastY: 0
 
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton
                         onPressed: function(mouse) {
                             lastX = mouse.x;
                             lastY = mouse.y;
                         }
-
                         onPositionChanged: function(mouse) {
                             if (!(mouse.buttons & Qt.LeftButton))
-                                return;
+                                return ;
+
                             var dx = mouse.x - lastX;
                             var dy = mouse.y - lastY;
                             lastX = mouse.x;
                             lastY = mouse.y;
                             missionDetailPanel.mapOrbitYaw += dx * 0.4;
-                            missionDetailPanel.mapOrbitPitch = Math.max(5.0, Math.min(85.0, missionDetailPanel.mapOrbitPitch + dy * 0.4));
+                            missionDetailPanel.mapOrbitPitch = Math.max(5, Math.min(85, missionDetailPanel.mapOrbitPitch + dy * 0.4));
                         }
-
                         onMouseXChanged: function() {
                             if (!hoverEnabled)
-                                return;
+                                return ;
+
                             missionDetailPanel.hoverMouseX = mouseX;
                             missionDetailPanel.hoverMouseY = mouseY;
                             var info = campaignMap.provinceInfoAtScreen(mouseX, mouseY);
@@ -425,10 +460,10 @@ Item {
                             missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
                             missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
                         }
-
                         onMouseYChanged: function() {
                             if (!hoverEnabled)
-                                return;
+                                return ;
+
                             missionDetailPanel.hoverMouseX = mouseX;
                             missionDetailPanel.hoverMouseY = mouseY;
                             var info = campaignMap.provinceInfoAtScreen(mouseX, mouseY);
@@ -437,17 +472,15 @@ Item {
                             missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
                             missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
                         }
-
                         onExited: {
                             campaignMap.hoverProvinceId = "";
                             missionDetailPanel.hoverProvinceName = "";
                             missionDetailPanel.hoverProvinceOwner = "";
                         }
-
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                             var nextDistance = missionDetailPanel.mapOrbitDistance * step;
-                            missionDetailPanel.mapOrbitDistance = Math.min(5.0, Math.max(1.2, nextDistance));
+                            missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(1.2, nextDistance));
                             wheel.accepted = true;
                         }
                     }
@@ -456,24 +489,23 @@ Item {
                         model: missionDetailPanel.provinceLabels
 
                         delegate: Text {
+                            property var _labelUv: missionDetailPanel.labelUvFor(modelData)
+                            property int _refresh: missionDetailPanel.labelRefresh
+                            property var _pos: (_labelUv !== null && _refresh >= 0) ? campaignMap.screenPosForUv(_labelUv[0], _labelUv[1]) : Qt.point(0, 0)
+
+                            visible: false
                             text: modelData.name
                             color: (campaignMap.hoverProvinceId === modelData.id) ? Theme.accent : Theme.textMain
                             font.pointSize: Theme.fontSizeSmall
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#101010"
-                            property var _labelUv: missionDetailPanel.labelUvFor(modelData)
-                            visible: _labelUv !== null
-                            opacity: (campaignMap.hoverProvinceId === modelData.id) ? 1.0 : 0.85
+                            opacity: (campaignMap.hoverProvinceId === modelData.id) ? 1 : 0.85
                             z: (campaignMap.hoverProvinceId === modelData.id) ? 3 : 2
-
-                            property int _refresh: missionDetailPanel.labelRefresh
-                            property var _pos: (_labelUv !== null)
-                                ? campaignMap.screenPosForUv(_labelUv[0], _labelUv[1])
-                                : Qt.point(0, 0)
                             x: _pos.x - width / 2
                             y: _pos.y - height / 2
                         }
+
                     }
 
                     Repeater {
@@ -481,21 +513,17 @@ Item {
 
                         delegate: Repeater {
                             property var _cities: (modelData && modelData.cities) ? modelData.cities : []
+
                             model: _cities
 
                             delegate: Item {
                                 property var cityData: modelData
-                                property var _cityUv: cityData.uv && cityData.uv.length === 2
-                                    ? cityData.uv
-                                    : null
+                                property var _cityUv: cityData.uv && cityData.uv.length === 2 ? cityData.uv : null
+                                property int _refresh: missionDetailPanel.labelRefresh
+                                property var _pos: (_cityUv !== null && _refresh >= 0) ? campaignMap.screenPosForUv(_cityUv[0], _cityUv[1]) : Qt.point(0, 0)
+
                                 visible: _cityUv !== null && cityData.name && cityData.name.length > 0
                                 z: 4
-
-                                property int _refresh: missionDetailPanel.labelRefresh
-                                property var _pos: (_cityUv !== null)
-                                    ? campaignMap.screenPosForUv(_cityUv[0], _cityUv[1])
-                                    : Qt.point(0, 0)
-
                                 x: _pos.x
                                 y: _pos.y
 
@@ -520,18 +548,19 @@ Item {
                                     x: 6
                                     y: -height / 2
                                 }
+
                             }
+
                         }
+
                     }
 
                     Rectangle {
                         id: hoverTooltip
 
                         visible: campaignMap.hoverProvinceId !== "" && missionDetailPanel.hoverProvinceName !== ""
-                        x: Math.min(parent.width - width - Theme.spacingSmall,
-                                    Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseX + 12))
-                        y: Math.min(parent.height - height - Theme.spacingSmall,
-                                    Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseY + 12))
+                        x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseX + 12))
+                        y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseY + 12))
                         radius: 6
                         color: "#1a1a1a"
                         border.color: "#2c2c2c"
@@ -560,8 +589,11 @@ Item {
                                 styleColor: "#000000"
                                 font.pointSize: Theme.fontSizeTiny
                             }
+
                         }
+
                     }
+
                 }
 
                 RowLayout {
@@ -595,8 +627,11 @@ Item {
                                 color: Theme.textSubLite
                                 font.pointSize: Theme.fontSizeSmall
                             }
+
                         }
+
                     }
+
                 }
 
                 Rectangle {

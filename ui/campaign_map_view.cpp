@@ -2,18 +2,18 @@
 
 #include "../utils/resource_utils.h"
 
+#include <QDebug>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
+#include <QMatrix4x4>
 #include <QOpenGLContext>
-#include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
+#include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
-#include <QMatrix4x4>
 #include <QVariantMap>
 #include <QVector2D>
 #include <QVector3D>
@@ -57,8 +57,7 @@ auto buildMvpMatrix(float width, float height, float yaw_deg, float pitch_deg,
   return projection * view * model;
 }
 
-auto pointInTriangle(const QVector2D &p, const QVector2D &a,
-                     const QVector2D &b,
+auto pointInTriangle(const QVector2D &p, const QVector2D &a, const QVector2D &b,
                      const QVector2D &c) -> bool {
   const QVector2D v0 = c - a;
   const QVector2D v1 = b - a;
@@ -214,8 +213,10 @@ private:
     }
 
     initQuad();
-    m_waterTexture = loadTexture(QStringLiteral(":/assets/campaign_map/campaign_water.png"));
-    m_baseTexture = loadTexture(QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
+    m_waterTexture =
+        loadTexture(QStringLiteral(":/assets/campaign_map/campaign_water.png"));
+    m_baseTexture = loadTexture(
+        QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
     initLandMesh();
 
     initLineLayer(m_coastLayer,
@@ -296,12 +297,14 @@ void main() {
 
     if (!m_textureProgram.addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                   kTexVert)) {
-      qWarning() << "CampaignMapRenderer: Failed to compile texture vertex shader";
+      qWarning()
+          << "CampaignMapRenderer: Failed to compile texture vertex shader";
       return false;
     }
     if (!m_textureProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,
                                                   kTexFrag)) {
-      qWarning() << "CampaignMapRenderer: Failed to compile texture fragment shader";
+      qWarning()
+          << "CampaignMapRenderer: Failed to compile texture fragment shader";
       return false;
     }
     if (!m_textureProgram.link()) {
@@ -316,7 +319,8 @@ void main() {
     }
     if (!m_lineProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,
                                                kLineFrag)) {
-      qWarning() << "CampaignMapRenderer: Failed to compile line fragment shader";
+      qWarning()
+          << "CampaignMapRenderer: Failed to compile line fragment shader";
       return false;
     }
     if (!m_lineProgram.link()) {
@@ -333,8 +337,7 @@ void main() {
     }
 
     static const float kQuadVerts[] = {
-        0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F,
-        0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 1.0F,
+        0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 1.0F,
     };
 
     glGenVertexArrays(1, &m_quadVao);
@@ -342,7 +345,8 @@ void main() {
 
     glBindVertexArray(m_quadVao);
     glBindBuffer(GL_ARRAY_BUFFER, m_quadVbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(kQuadVerts), kQuadVerts, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(kQuadVerts), kQuadVerts,
+                 GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
                           reinterpret_cast<void *>(0));
@@ -687,10 +691,9 @@ void main() {
       }
       QVector4D color = span.color;
       if (!m_hoverProvinceId.isEmpty() && span.id == m_hoverProvinceId) {
-        color = QVector4D(qMin(1.0F, color.x() + 0.42F),
-                          qMin(1.0F, color.y() + 0.42F),
-                          qMin(1.0F, color.z() + 0.42F),
-                          qMin(1.0F, color.w() + 0.55F));
+        color = QVector4D(
+            qMin(1.0F, color.x() + 0.42F), qMin(1.0F, color.y() + 0.42F),
+            qMin(1.0F, color.z() + 0.42F), qMin(1.0F, color.w() + 0.55F));
       }
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
@@ -776,8 +779,10 @@ CampaignMapView::CampaignMapView() {
   QOpenGLContext *ctx = QOpenGLContext::currentContext();
   if (ctx == nullptr) {
     qWarning() << "CampaignMapView: No OpenGL context available";
-    qWarning() << "CampaignMapView: 3D rendering will not work in software mode";
-    qWarning() << "CampaignMapView: Try running without QT_QUICK_BACKEND=software";
+    qWarning()
+        << "CampaignMapView: 3D rendering will not work in software mode";
+    qWarning()
+        << "CampaignMapView: Try running without QT_QUICK_BACKEND=software";
   }
 }
 
@@ -820,15 +825,84 @@ void CampaignMapView::loadProvincesForHitTest() {
       if (pt.size() < 2) {
         continue;
       }
-      province.triangles.emplace_back(
-          static_cast<float>(pt.at(0).toDouble()),
-          static_cast<float>(pt.at(1).toDouble()));
+      province.triangles.emplace_back(static_cast<float>(pt.at(0).toDouble()),
+                                      static_cast<float>(pt.at(1).toDouble()));
     }
 
     if (province.triangles.size() >= 3) {
       m_provinces.push_back(std::move(province));
     }
   }
+}
+
+void CampaignMapView::loadProvinceLabels() {
+  if (m_provinceLabelsLoaded) {
+    return;
+  }
+
+  m_provinceLabelsLoaded = true;
+  m_provinceLabels.clear();
+
+  const QString path = Utils::Resources::resolveResourcePath(
+      QStringLiteral(":/assets/campaign_map/provinces.json"));
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return;
+  }
+
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+  if (!doc.isObject()) {
+    return;
+  }
+
+  const QJsonArray provinces = doc.object().value("provinces").toArray();
+  for (const auto &prov_val : provinces) {
+    const QJsonObject prov = prov_val.toObject();
+    QVariantMap entry;
+    entry.insert(QStringLiteral("id"), prov.value("id").toString());
+    entry.insert(QStringLiteral("name"), prov.value("name").toString());
+    entry.insert(QStringLiteral("owner"), prov.value("owner").toString());
+
+    const QJsonArray label_uv = prov.value("label_uv").toArray();
+    if (label_uv.size() >= 2) {
+      QVariantList label_list;
+      label_list.reserve(2);
+      label_list.push_back(label_uv.at(0).toDouble());
+      label_list.push_back(label_uv.at(1).toDouble());
+      entry.insert(QStringLiteral("label_uv"), label_list);
+    }
+
+    const QJsonArray cities = prov.value("cities").toArray();
+    QVariantList city_list;
+    city_list.reserve(cities.size());
+    for (const auto &city_val : cities) {
+      const QJsonObject city = city_val.toObject();
+      const QString name = city.value("name").toString();
+      const QJsonArray uv = city.value("uv").toArray();
+      if (name.isEmpty() || uv.size() < 2) {
+        continue;
+      }
+      QVariantList uv_list;
+      uv_list.reserve(2);
+      uv_list.push_back(uv.at(0).toDouble());
+      uv_list.push_back(uv.at(1).toDouble());
+
+      QVariantMap city_entry;
+      city_entry.insert(QStringLiteral("name"), name);
+      city_entry.insert(QStringLiteral("uv"), uv_list);
+      city_list.push_back(city_entry);
+    }
+    entry.insert(QStringLiteral("cities"), city_list);
+
+    m_provinceLabels.push_back(entry);
+  }
+
+  emit provinceLabelsChanged();
+}
+
+QVariantList CampaignMapView::provinceLabels() {
+  loadProvinceLabels();
+  return m_provinceLabels;
 }
 
 QString CampaignMapView::provinceAtScreen(float x, float y) {
@@ -846,8 +920,8 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
-                                       m_orbitDistance);
+  const QMatrix4x4 mvp =
+      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -909,8 +983,8 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
-                                       m_orbitDistance);
+  const QMatrix4x4 mvp =
+      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -969,8 +1043,8 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
   const float clamped_u = qBound(0.0F, u, 1.0F);
   const float clamped_v = qBound(0.0F, v, 1.0F);
 
-  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
-                                       m_orbitDistance);
+  const QMatrix4x4 mvp =
+      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
   const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
   const QVector4D clip = mvp * world;
   if (qFuzzyIsNull(clip.w())) {
@@ -1025,8 +1099,10 @@ void CampaignMapView::setHoverProvinceId(const QString &province_id) {
 auto CampaignMapView::createRenderer() const -> Renderer * {
   QOpenGLContext *ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
-    qCritical() << "CampaignMapView::createRenderer() - No valid OpenGL context";
-    qCritical() << "Running in software rendering mode - map view not available";
+    qCritical()
+        << "CampaignMapView::createRenderer() - No valid OpenGL context";
+    qCritical()
+        << "Running in software rendering mode - map view not available";
     return nullptr;
   }
 

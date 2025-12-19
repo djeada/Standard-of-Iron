@@ -31,7 +31,7 @@ import fiona
 from shapely.geometry import box, mapping, shape
 from shapely.ops import transform
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 ASSETS_DIR = ROOT / "assets" / "campaign_map"
 BOUNDS_PATH = Path(__file__).with_name("map_bounds.json")
 WORK_DIR = Path(__file__).with_name("build")

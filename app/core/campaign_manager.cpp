@@ -14,8 +14,7 @@ CampaignManager::CampaignManager(QObject *parent) : QObject(parent) {}
 
 void CampaignManager::load_campaigns() { emit available_campaigns_changed(); }
 
-void CampaignManager::set_available_campaigns(
-    const QVariantList &campaigns) {
+void CampaignManager::set_available_campaigns(const QVariantList &campaigns) {
   m_available_campaigns = campaigns;
   emit available_campaigns_changed();
 }
