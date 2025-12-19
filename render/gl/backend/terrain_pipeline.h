@@ -6,6 +6,10 @@
 #include <QtOpenGL>
 #include <cstddef>
 
+namespace Render {
+class DrawQueue;
+}
+
 namespace Render::GL {
 class ShaderCache;
 class Backend;
@@ -22,6 +26,10 @@ public:
   void shutdown() override;
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
+
+  // Rendering methods
+  void render_grass(const DrawQueue &queue, std::size_t &i,
+                    const QMatrix4x4 &view_proj, GL::Backend *backend);
 
   struct GrassUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};

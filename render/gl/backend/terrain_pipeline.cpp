@@ -2,6 +2,9 @@
 #include "../backend.h"
 #include "../render_constants.h"
 #include "../shader_cache.h"
+#include "../state_scopes.h"
+#include "../../draw_queue.h"
+#include "../../ground/grass_gpu.h"
 #include <GL/gl.h>
 #include <QDebug>
 #include <QOpenGLExtraFunctions>
@@ -247,6 +250,73 @@ void TerrainPipeline::shutdownGrassGeometry() {
     m_grassVao = 0;
   }
   m_grassVertexCount = 0;
+}
+
+void TerrainPipeline::render_grass(const DrawQueue &queue, std::size_t &i,
+                                    const QMatrix4x4 &view_proj,
+                                    GL::Backend *backend) {
+  const auto &grass = std::get<GrassBatchCmdIndex>(queue.get_sorted(i));
+  if (!grass.instance_buffer || grass.instance_count == 0 || !m_grassShader ||
+      m_grassVao == 0 || m_grassVertexCount == 0) {
+    return;
+  }
+
+  DepthMaskScope const depth_mask(false);
+  BlendScope const blend(true);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLboolean const prev_cull = glIsEnabled(GL_CULL_FACE);
+  if (prev_cull != 0U) {
+    glDisable(GL_CULL_FACE);
+  }
+
+  backend->bind_shader(m_grassShader);
+  backend->set_view_proj_uniform(m_grassShader, m_grassUniforms.view_proj,
+                                  view_proj);
+
+  if (m_grassUniforms.time != GL::Shader::InvalidUniform) {
+    m_grassShader->set_uniform(m_grassUniforms.time, grass.params.time);
+  }
+  if (m_grassUniforms.wind_strength != GL::Shader::InvalidUniform) {
+    m_grassShader->set_uniform(m_grassUniforms.wind_strength,
+                               grass.params.wind_strength);
+  }
+  if (m_grassUniforms.wind_speed != GL::Shader::InvalidUniform) {
+    m_grassShader->set_uniform(m_grassUniforms.wind_speed,
+                               grass.params.wind_speed);
+  }
+  if (m_grassUniforms.soil_color != GL::Shader::InvalidUniform) {
+    m_grassShader->set_uniform(m_grassUniforms.soil_color,
+                               grass.params.soil_color);
+  }
+  if (m_grassUniforms.light_dir != GL::Shader::InvalidUniform) {
+    QVector3D light_dir = grass.params.light_direction;
+    if (!light_dir.isNull()) {
+      light_dir.normalize();
+    }
+    m_grassShader->set_uniform(m_grassUniforms.light_dir, light_dir);
+  }
+
+  glBindVertexArray(m_grassVao);
+  grass.instance_buffer->bind();
+  const auto stride = static_cast<GLsizei>(sizeof(GrassInstanceGpu));
+  glVertexAttribPointer(
+      TexCoord, Vec4, GL_FLOAT, GL_FALSE, stride,
+      reinterpret_cast<void *>(offsetof(GrassInstanceGpu, pos_height)));
+  glVertexAttribPointer(
+      InstancePosition, Vec4, GL_FLOAT, GL_FALSE, stride,
+      reinterpret_cast<void *>(offsetof(GrassInstanceGpu, color_width)));
+  glVertexAttribPointer(
+      InstanceScale, Vec4, GL_FLOAT, GL_FALSE, stride,
+      reinterpret_cast<void *>(offsetof(GrassInstanceGpu, sway_params)));
+  grass.instance_buffer->unbind();
+
+  glDrawArraysInstanced(GL_TRIANGLES, 0, m_grassVertexCount,
+                        static_cast<GLsizei>(grass.instance_count));
+  glBindVertexArray(0);
+
+  if (prev_cull != 0U) {
+    glEnable(GL_CULL_FACE);
+  }
 }
 
 } // namespace Render::GL::BackendPipelines
