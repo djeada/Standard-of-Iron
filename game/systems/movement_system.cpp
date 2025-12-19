@@ -18,6 +18,10 @@ namespace Game::Systems {
 static constexpr int max_waypoint_skip_count = 4;
 static constexpr float repath_cooldown_seconds = 0.4F;
 static constexpr int invalid_position_search_radius = 10;
+static constexpr float min_repath_distance_sq = 0.01F; // Minimum distance to trigger repath
+static constexpr float nudge_distance = 0.2F; // Distance to nudge unit away from building
+static constexpr float full_rotation_degrees = 360.0F;
+static constexpr float nudge_angle_increment = 45.0F; // Try 8 directions around unit
 
 namespace {
 
@@ -212,7 +216,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       QVector3D const current_pos(transform->position.x, 0.0F,
                                   transform->position.z);
       float const goal_dist_sq = (final_goal - current_pos).lengthSquared();
-      if (goal_dist_sq > 0.01F) {
+      if (goal_dist_sq > min_repath_distance_sq) {
         CommandService::MoveOptions opts;
         opts.clear_attack_intent = false;
         opts.allow_direct_fallback = false;
@@ -382,9 +386,9 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       QVector3D const final_pos(transform->position.x, 0.0F, transform->position.z);
       if (would_clip_building(final_pos, entity->get_id(), collision_radius)) {
         // Try to find a nearby non-clipping position
-        const float nudge_distance = 0.2F;
         bool found_valid = false;
-        for (float angle = 0.0F; angle < 360.0F && !found_valid; angle += 45.0F) {
+        for (float angle = 0.0F; angle < full_rotation_degrees && !found_valid; 
+             angle += nudge_angle_increment) {
           float const rad = angle * std::numbers::pi_v<float> / 180.0F;
           QVector3D const nudged(
               movement->target_x + std::cos(rad) * nudge_distance,
