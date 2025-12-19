@@ -310,7 +310,7 @@ auto create_unit_torso_mesh(int radialSegments,
   constexpr float k_neck_back_start = 0.90F;
   constexpr float k_neck_back_end = 1.0F;
 
-  constexpr float k_twist_amplitude = 0.10F;
+  constexpr float k_twist_amplitude = 0.05F;
   constexpr float k_twist_start = 0.55F;
   constexpr float k_twist_end = 0.95F;
 
