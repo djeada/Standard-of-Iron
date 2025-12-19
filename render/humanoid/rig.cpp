@@ -1745,6 +1745,11 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           std::sin(phase * 2.0F * std::numbers::pi_v<float>);
       float const hip_rotation = hip_rotation_raw * 0.003F;
       pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_rotation);
+      
+      // Counter-rotate shoulders to prevent torso/armor twist during running
+      float const shoulder_counter_rotation = -hip_rotation;
+      pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
+      pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_rotation);
 
       float const torso_sway_z = 0.0F;
       pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
