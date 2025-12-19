@@ -40,6 +40,7 @@
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
+#include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
 
@@ -331,6 +332,7 @@ auto main(int argc, char *argv[]) -> int {
   engine->addImportPath("qrc:/");
   qInfo() << "Registering QML types...";
   qmlRegisterType<GLView>("StandardOfIron", 1, 0, "GLView");
+  qmlRegisterType<CampaignMapView>("StandardOfIron", 1, 0, "CampaignMapView");
 
   // Register Theme singleton
   qmlRegisterSingletonType<Theme>("StandardOfIron", 1, 0, "Theme",

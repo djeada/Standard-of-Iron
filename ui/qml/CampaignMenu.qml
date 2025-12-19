@@ -216,6 +216,14 @@ Item {
         id: missionDetailPanel
 
         property var campaignData: null
+        property real mapOrbitYaw: 180.0
+        property real mapOrbitPitch: 55.0
+        property real mapOrbitDistance: 2.4
+        onCampaignDataChanged: {
+            mapOrbitYaw = 180.0;
+            mapOrbitPitch = 55.0;
+            mapOrbitDistance = 2.4;
+        }
 
         visible: false
         anchors.fill: parent
@@ -261,6 +269,59 @@ Item {
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
+                }
+
+                Rectangle {
+                    id: mapFrame
+
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 240
+                    radius: Theme.radiusMedium
+                    color: Theme.cardBase
+                    border.color: Theme.cardBorder
+                    border.width: 1
+
+                    CampaignMapView {
+                        id: campaignMap
+
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingSmall
+                        orbitYaw: missionDetailPanel.mapOrbitYaw
+                        orbitPitch: missionDetailPanel.mapOrbitPitch
+                        orbitDistance: missionDetailPanel.mapOrbitDistance
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton
+
+                        property real lastX: 0
+                        property real lastY: 0
+
+                        onPressed: function(mouse) {
+                            lastX = mouse.x;
+                            lastY = mouse.y;
+                        }
+
+                        onPositionChanged: function(mouse) {
+                            if (!(mouse.buttons & Qt.LeftButton))
+                                return;
+                            var dx = mouse.x - lastX;
+                            var dy = mouse.y - lastY;
+                            lastX = mouse.x;
+                            lastY = mouse.y;
+                            missionDetailPanel.mapOrbitYaw += dx * 0.4;
+                            missionDetailPanel.mapOrbitPitch = Math.max(5.0, Math.min(85.0, missionDetailPanel.mapOrbitPitch + dy * 0.4));
+                        }
+
+                        onWheel: function(wheel) {
+                            var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
+                            var nextDistance = missionDetailPanel.mapOrbitDistance * step;
+                            missionDetailPanel.mapOrbitDistance = Math.min(5.0, Math.max(1.2, nextDistance));
+                            wheel.accepted = true;
+                        }
+                    }
                 }
 
                 Rectangle {

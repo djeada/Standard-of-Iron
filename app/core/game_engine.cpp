@@ -1337,8 +1337,7 @@ void GameEngine::load_campaigns() {
   }
 
   if (m_campaign_manager) {
-
-    emit available_campaigns_changed();
+    m_campaign_manager->set_available_campaigns(campaigns);
   }
 }
 
