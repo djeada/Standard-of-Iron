@@ -462,54 +462,122 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             }
         )
 
-    land_triangles = triangulate_land(land_union)
-    if not land_triangles:
-        raise RuntimeError("Failed to triangulate land geometry")
-
-    province_triangles = {prov["id"]: [] for prov in province_defs}
-    province_tri_polys = {prov["id"]: [] for prov in province_defs}
-
-    for tri in land_triangles:
-        tri_poly = Polygon(tri)
-        centroid = tri_poly.representative_point()
-        candidates = [
-            idx for idx, prov in enumerate(province_defs)
-            if prov["poly"].contains(centroid)
-        ]
-        if candidates:
-            chosen = candidates[0]
+    # Step 1: Clip each province to land (preserving original shapes)
+    province_clipped = {}
+    for prov in province_defs:
+        clipped = prov["poly"].intersection(land_union)
+        if not clipped.is_empty:
+            province_clipped[prov["id"]] = clipped
         else:
-            best_idx = 0
-            best_dist = None
-            for idx, prov in enumerate(province_defs):
-                dist = centroid.distance(prov["centroid"])
-                if best_dist is None or dist < best_dist:
-                    best_dist = dist
-                    best_idx = idx
-            chosen = best_idx
-        prov_id = province_defs[chosen]["id"]
-        province_triangles[prov_id].extend(tri)
-        province_tri_polys[prov_id].append(tri_poly)
+            print(f"Warning: Province {prov['id']} has no land intersection")
+    
+    # Step 2: Add coastal buffer to pull edges to shoreline
+    COASTAL_BUFFER = 0.001  # Small buffer in UV space (~100m at mid-latitudes)
+    for prov_id, geom in province_clipped.items():
+        buffered = geom.buffer(COASTAL_BUFFER)
+        clipped_buffered = buffered.intersection(land_union)
+        if not clipped_buffered.is_empty:
+            province_clipped[prov_id] = clipped_buffered
+    
+    # Step 3: Resolve overlaps locally (only where provinces overlap)
+    # Build province priority based on area (larger = higher priority)
+    province_areas = {
+        prov["id"]: prov["poly"].area 
+        for prov in province_defs 
+        if prov["id"] in province_clipped
+    }
+    sorted_provs = sorted(province_areas.items(), key=lambda x: x[1], reverse=True)
+    
+    # Subtract higher-priority provinces from lower-priority ones
+    resolved_provinces = {}
+    for i, (prov_id, _) in enumerate(sorted_provs):
+        current_geom = province_clipped[prov_id]
+        
+        # Subtract all higher-priority provinces
+        for j in range(i):
+            higher_prov_id, _ = sorted_provs[j]
+            if higher_prov_id in resolved_provinces:
+                current_geom = current_geom.difference(resolved_provinces[higher_prov_id])
+                if current_geom.is_empty:
+                    break
+        
+        if not current_geom.is_empty:
+            resolved_provinces[prov_id] = current_geom
+    
+    # Step 4: Fill empty land between provinces by expanding both
+    # Find uncovered land
+    covered_union = unary_union(list(resolved_provinces.values()))
+    uncovered = land_union.difference(covered_union)
+    
+    if not uncovered.is_empty and uncovered.area > 0.00001:
+        # For each uncovered region, expand nearest provinces into it
+        uncovered_polys = [uncovered] if uncovered.geom_type == "Polygon" else list(uncovered.geoms)
+        
+        for uncovered_poly in uncovered_polys:
+            if uncovered_poly.area < 0.00001:  # Skip tiny gaps
+                continue
+            
+            centroid = uncovered_poly.representative_point()
+            
+            # Find closest provinces
+            distances = []
+            for prov_id, geom in resolved_provinces.items():
+                dist = centroid.distance(geom)
+                distances.append((dist, prov_id))
+            
+            distances.sort()
+            
+            # Expand the two nearest provinces into the gap
+            fill_count = min(2, len(distances))
+            for i in range(fill_count):
+                _, prov_id = distances[i]
+                # Expand this province towards the gap
+                expanded = resolved_provinces[prov_id].buffer(0.01)  # Larger buffer to reach gap
+                filled = expanded.intersection(uncovered_poly)
+                if not filled.is_empty:
+                    resolved_provinces[prov_id] = resolved_provinces[prov_id].union(filled)
+    
+    # Step 5: Triangulate each province's final geometry
+    province_triangles = {}
+    for prov_id, geom in resolved_provinces.items():
+        tris = []
+        polys = [geom] if geom.geom_type == "Polygon" else list(geom.geoms)
+        for poly in polys:
+            tri = triangulate_polygon(poly)
+            tris.extend(tri)
+        province_triangles[prov_id] = tris
 
+    # Step 6: Generate output with borders from resolved geometry
     output: List[dict] = []
     borders: List[List[List[float]]] = []
+    
     for prov in province_defs:
         prov_id = prov["id"]
         tris = province_triangles.get(prov_id, [])
         if not tris:
+            print(f"Warning: Province {prov_id} has no triangles after processing")
             continue
-        union = unary_union(province_tri_polys[prov_id])
-        polys = [union] if union.geom_type == "Polygon" else list(union.geoms)
-        for poly in polys:
-            border = [[float(u), float(v)] for (u, v) in poly.exterior.coords]
-            if len(border) >= 2:
-                borders.append(border)
+        
+        # Extract borders from resolved geometry (not from triangles)
+        if prov_id in resolved_provinces:
+            geom = resolved_provinces[prov_id]
+            polys = [geom] if geom.geom_type == "Polygon" else list(geom.geoms)
+            for poly in polys:
+                border = [[float(u), float(v)] for (u, v) in poly.exterior.coords]
+                if len(border) >= 2:
+                    borders.append(border)
+        
+        # Use provided label or compute from resolved geometry
         label_lonlat = prov["label_lonlat"]
         if label_lonlat is not None:
             label_uv = bounds.to_uv(label_lonlat[0], label_lonlat[1])
         else:
-            label_pt = union.representative_point()
-            label_uv = (float(label_pt.x), float(label_pt.y))
+            if prov_id in resolved_provinces:
+                label_pt = resolved_provinces[prov_id].representative_point()
+                label_uv = (float(label_pt.x), float(label_pt.y))
+            else:
+                label_uv = (0.0, 0.0)
+        
         color = owner_palette.get(prov["owner"], owner_palette["neutral"])
         output.append(
             {
