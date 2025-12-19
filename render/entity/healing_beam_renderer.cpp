@@ -1,6 +1,7 @@
 #include "healing_beam_renderer.h"
 #include "../../game/systems/healing_beam.h"
 #include "../../game/systems/healing_beam_system.h"
+#include "../../game/systems/healing_colors.h"
 #include "../scene_renderer.h"
 
 namespace Render::GL {
@@ -19,8 +20,16 @@ void render_healing_beams(Renderer *renderer, ResourceManager *,
       if (intensity < 0.01F) {
         continue;
       }
+      
+      // Only render non-Roman (Carthage) beams
+      // Roman beams are rendered by the wave renderer
+      QVector3D color = beam->get_color();
+      if (Game::Systems::is_roman_healing_color(color)) {
+        continue; // Skip Roman beams
+      }
+      
       renderer->healing_beam(beam->get_start(), beam->get_end(),
-                             beam->get_color(), beam->get_progress(),
+                             color, beam->get_progress(),
                              beam->get_beam_width(), intensity, animation_time);
     }
   }
