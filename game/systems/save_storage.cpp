@@ -238,7 +238,7 @@ auto SaveStorage::load_slot(const QString &slot_name, QByteArray &world_state,
 
 auto SaveStorage::list_slots(QString *out_error) const -> QVariantList {
   QVariantList result;
-  if (!const_cast<SaveStorage *>(this)->initialize(out_error)) {
+  if (!initialize(out_error)) {
     return result;
   }
 
