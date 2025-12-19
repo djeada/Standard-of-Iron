@@ -1656,7 +1656,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
       // Calculate hip sway matching the walking animation
       float const hip_sway = calculate_walk_hip_sway(anim_ctx.locomotion_phase);
-      
+
       // Counter-rotate shoulders to reduce torso twist
       float const shoulder_counter_rotation = -hip_sway * 0.5F;
       pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
