@@ -254,7 +254,7 @@ void TerrainPipeline::shutdownGrassGeometry() {
   m_grassVertexCount = 0;
 }
 
-void TerrainPipeline::render_grass(const DrawQueue &queue, std::size_t &i,
+void TerrainPipeline::render_grass(const GL::DrawQueue &queue, std::size_t &i,
                                     const QMatrix4x4 &view_proj,
                                     GL::Backend *backend) {
   const auto &grass = std::get<GrassBatchCmdIndex>(queue.get_sorted(i));
@@ -441,7 +441,7 @@ void TerrainPipeline::apply_terrain_uniforms(GL::Shader *shader,
   SET_UNIFORM_IF_VALID(shader, m_terrainUniforms.snow_color, params.snow_color);
 }
 
-void TerrainPipeline::render_terrain_chunk(const DrawQueue &queue,
+void TerrainPipeline::render_terrain_chunk(const GL::DrawQueue &queue,
                                             std::size_t &i,
                                             const QMatrix4x4 &view_proj,
                                             GL::Backend *backend) {

@@ -797,7 +797,7 @@ void VegetationPipeline::shutdownFireCampPipeline() {
   m_firecampIndexCount = 0;
 }
 
-void VegetationPipeline::render_stones(const DrawQueue &queue, std::size_t &i,
+void VegetationPipeline::render_stones(const GL::DrawQueue &queue, std::size_t &i,
                                         const QMatrix4x4 &view_proj,
                                         GL::Backend *backend) {
   const auto &stone = std::get<StoneBatchCmdIndex>(queue.get_sorted(i));
@@ -837,7 +837,7 @@ void VegetationPipeline::render_stones(const DrawQueue &queue, std::size_t &i,
   glBindVertexArray(0);
 }
 
-void VegetationPipeline::render_plants(const DrawQueue &queue, std::size_t &i,
+void VegetationPipeline::render_plants(const GL::DrawQueue &queue, std::size_t &i,
                                         const QMatrix4x4 &view_proj,
                                         GL::Backend *backend) {
   const auto &plant = std::get<PlantBatchCmdIndex>(queue.get_sorted(i));
@@ -901,7 +901,7 @@ void VegetationPipeline::render_plants(const DrawQueue &queue, std::size_t &i,
   }
 }
 
-void VegetationPipeline::render_pines(const DrawQueue &queue, std::size_t &i,
+void VegetationPipeline::render_pines(const GL::DrawQueue &queue, std::size_t &i,
                                        const QMatrix4x4 &view_proj,
                                        GL::Backend *backend) {
   const auto &pine = std::get<PineBatchCmdIndex>(queue.get_sorted(i));
@@ -965,7 +965,7 @@ void VegetationPipeline::render_pines(const DrawQueue &queue, std::size_t &i,
   }
 }
 
-void VegetationPipeline::render_olives(const DrawQueue &queue, std::size_t &i,
+void VegetationPipeline::render_olives(const GL::DrawQueue &queue, std::size_t &i,
                                         const QMatrix4x4 &view_proj,
                                         GL::Backend *backend) {
   const auto &olive = std::get<OliveBatchCmdIndex>(queue.get_sorted(i));
@@ -1029,7 +1029,7 @@ void VegetationPipeline::render_olives(const DrawQueue &queue, std::size_t &i,
   }
 }
 
-void VegetationPipeline::render_firecamps(const DrawQueue &queue,
+void VegetationPipeline::render_firecamps(const GL::DrawQueue &queue,
                                            std::size_t &i, const GL::Camera &cam,
                                            const QMatrix4x4 &view_proj,
                                            GL::Backend *backend) {

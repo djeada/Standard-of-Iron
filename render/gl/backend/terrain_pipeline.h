@@ -6,16 +6,17 @@
 #include <QtOpenGL>
 #include <cstddef>
 
-namespace Render {
-class DrawQueue;
-struct TerrainChunkParams;
-}
-
 namespace Render::GL {
 class ShaderCache;
 class Backend;
+class DrawQueue;
+}
 
-namespace BackendPipelines {
+namespace Render {
+struct TerrainChunkParams;
+}
+
+namespace Render::GL::BackendPipelines {
 
 class TerrainPipeline final : public IPipeline {
 public:
@@ -29,9 +30,9 @@ public:
   [[nodiscard]] auto is_initialized() const -> bool override;
 
   // Rendering methods
-  void render_grass(const DrawQueue &queue, std::size_t &i,
+  void render_grass(const GL::DrawQueue &queue, std::size_t &i,
                     const QMatrix4x4 &view_proj, GL::Backend *backend);
-  void render_terrain_chunk(const DrawQueue &queue, std::size_t &i,
+  void render_terrain_chunk(const GL::DrawQueue &queue, std::size_t &i,
                              const QMatrix4x4 &view_proj, GL::Backend *backend);
 
   struct GrassUniforms {
