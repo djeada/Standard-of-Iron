@@ -258,8 +258,8 @@ void HealerAuraPipeline::collect_healers(Engine::Core::World *world) {
     }
 
     // Only Carthage healers use auras - Roman healers use waves
-    if (unit_comp != nullptr && 
-        unit_comp->nation_id == Game::Systems::NationID::RomanRepublic) {
+    if (unit_comp != nullptr
+        && unit_comp->nation_id == Game::Systems::NationID::RomanRepublic) {
       continue; // Skip Roman healers
     }
 

@@ -13,12 +13,15 @@ namespace Render::GL {
 
 namespace {
 // Wave animation configuration
-constexpr int k_num_waves = 3;           // Number of wave pulses
-constexpr float k_wave_spacing = 0.3F;   // Distance between wave pulses
-constexpr float k_wave_speed = 2.5F;     // Speed multiplier for wave travel
-constexpr float k_wave_width = 0.12F;    // Width of each wave pulse
-constexpr int k_wave_ribbons = 6;        // Number of ribbon strands in wave
-constexpr float k_ribbon_radius = 0.08F; // Radius of ribbon spiral
+constexpr int k_num_waves = 3;            // Number of wave pulses
+constexpr float k_wave_spacing = 0.3F;    // Distance between wave pulses
+constexpr float k_wave_speed = 2.5F;      // Speed multiplier for wave travel
+constexpr float k_wave_width = 0.12F;     // Width of each wave pulse
+constexpr int k_wave_ribbons = 6;         // Number of ribbon strands in wave
+constexpr float k_ribbon_radius = 0.08F;  // Radius of ribbon spiral
+constexpr int k_segments_per_wave = 10;   // Segments per ribbon for smoothness
+constexpr float k_spiral_twist_rate = 8.0F; // How many times ribbons twist along wave
+constexpr float k_edge_fade_factor = 1.5F;  // Intensity fade toward wave edges
 } // namespace
 
 void render_healing_waves(Renderer *renderer, ResourceManager *,
@@ -97,10 +100,9 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
         float ribbon_angle_offset = (static_cast<float>(ribbon) / k_wave_ribbons) * 2.0F * pi;
         
         // Create multiple segments along the wave to form a continuous ribbon
-        constexpr int segments_per_wave = 10;
-        for (int seg = 0; seg < segments_per_wave; ++seg) {
-          float seg_t = static_cast<float>(seg) / segments_per_wave;
-          float next_seg_t = static_cast<float>(seg + 1) / segments_per_wave;
+        for (int seg = 0; seg < k_segments_per_wave; ++seg) {
+          float seg_t = static_cast<float>(seg) / k_segments_per_wave;
+          float next_seg_t = static_cast<float>(seg + 1) / k_segments_per_wave;
           
           // Position along wave (relative to wave center)
           float seg_dist = (seg_t - 0.5F) * k_wave_width;
@@ -108,8 +110,8 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
           
           // Spiral angle changes along the wave
           float spiral_phase = animation_time * 3.0F + wave_idx * pi;
-          float seg_angle = ribbon_angle_offset + seg_dist * 8.0F + spiral_phase;
-          float next_seg_angle = ribbon_angle_offset + next_seg_dist * 8.0F + spiral_phase;
+          float seg_angle = ribbon_angle_offset + seg_dist * k_spiral_twist_rate + spiral_phase;
+          float next_seg_angle = ribbon_angle_offset + next_seg_dist * k_spiral_twist_rate + spiral_phase;
           
           // Calculate positions with spiral motion
           float seg_radius = k_ribbon_radius * (1.0F - std::abs(seg_t - 0.5F) * 2.0F);
@@ -124,7 +126,7 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
           QVector3D next_seg_pos = wave_center + direction * next_seg_dist + next_seg_offset;
           
           // Intensity fades toward wave edges
-          float seg_intensity = wave_intensity * (1.0F - std::abs(seg_t - 0.5F) * 1.5F);
+          float seg_intensity = wave_intensity * (1.0F - std::abs(seg_t - 0.5F) * k_edge_fade_factor);
           seg_intensity = std::max(0.0F, seg_intensity);
           
           // Draw ribbon segment
