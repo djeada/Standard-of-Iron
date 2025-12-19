@@ -54,11 +54,11 @@ auto VegetationPipeline::initialize() -> bool {
     qWarning() << "VegetationPipeline: firecamp shader missing";
   }
 
-  initializeStonePipeline();
+  initialize_stone_pipeline();
   initializePlantPipeline();
   initializePinePipeline();
   initializeOlivePipeline();
-  initializeFireCampPipeline();
+  initialize_fire_camp_pipeline();
   cache_uniforms();
 
   m_initialized = true;
@@ -67,9 +67,9 @@ auto VegetationPipeline::initialize() -> bool {
 
 void VegetationPipeline::shutdown() {
   shutdownStonePipeline();
-  shutdownPlantPipeline();
-  shutdownPinePipeline();
-  shutdownOlivePipeline();
+  shutdown_plant_pipeline();
+  shutdown_pine_pipeline();
+  shutdown_olive_pipeline();
   shutdownFireCampPipeline();
   m_initialized = false;
 }
@@ -130,7 +130,7 @@ void VegetationPipeline::cache_uniforms() {
   }
 }
 
-void VegetationPipeline::initializeStonePipeline() {
+void VegetationPipeline::initialize_stone_pipeline() {
   initializeOpenGLFunctions();
   shutdownStonePipeline();
 
@@ -235,7 +235,7 @@ void VegetationPipeline::shutdownStonePipeline() {
 
 void VegetationPipeline::initializePlantPipeline() {
   initializeOpenGLFunctions();
-  shutdownPlantPipeline();
+  shutdown_plant_pipeline();
 
   struct PlantVertex {
     QVector3D position;
@@ -309,7 +309,7 @@ void VegetationPipeline::initializePlantPipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void VegetationPipeline::shutdownPlantPipeline() {
+void VegetationPipeline::shutdown_plant_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
     m_plantVao = 0;
@@ -339,7 +339,7 @@ void VegetationPipeline::shutdownPlantPipeline() {
 
 void VegetationPipeline::initializePinePipeline() {
   initializeOpenGLFunctions();
-  shutdownPinePipeline();
+  shutdown_pine_pipeline();
 
   struct PineVertex {
     QVector3D position;
@@ -470,7 +470,7 @@ void VegetationPipeline::initializePinePipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void VegetationPipeline::shutdownPinePipeline() {
+void VegetationPipeline::shutdown_pine_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
     m_pineVao = 0;
@@ -500,7 +500,7 @@ void VegetationPipeline::shutdownPinePipeline() {
 
 void VegetationPipeline::initializeOlivePipeline() {
   initializeOpenGLFunctions();
-  shutdownOlivePipeline();
+  shutdown_olive_pipeline();
 
   struct OliveVertex {
     QVector3D position;
@@ -655,7 +655,7 @@ void VegetationPipeline::initializeOlivePipeline() {
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void VegetationPipeline::shutdownOlivePipeline() {
+void VegetationPipeline::shutdown_olive_pipeline() {
 
   if (QOpenGLContext::currentContext() == nullptr) {
     m_oliveVao = 0;
@@ -683,7 +683,7 @@ void VegetationPipeline::shutdownOlivePipeline() {
   m_oliveIndexCount = 0;
 }
 
-void VegetationPipeline::initializeFireCampPipeline() {
+void VegetationPipeline::initialize_fire_camp_pipeline() {
   initializeOpenGLFunctions();
   shutdownFireCampPipeline();
 

@@ -62,7 +62,7 @@ public:
     return raw;
   }
 
-  void initializeDefaults() {
+  void initialize_defaults() {
     static const QString kShaderBase = QStringLiteral(":/assets/shaders/");
     auto resolve = [](const QString &path) {
       return Utils::Resources::resolveResourcePath(path);

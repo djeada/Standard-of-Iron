@@ -18,15 +18,15 @@ inline constexpr float k_default_pitch_min = -85.0F;
 } // namespace CameraDefaults
 
 class Camera {
-  friend void solveConstraints(Render::GL::Camera *self, bool allowTargetShift);
+  friend void solve_constraints(Render::GL::Camera *self, bool allowTargetShift);
 
 public:
   Camera();
 
-  void setPosition(const QVector3D &position);
-  void setTarget(const QVector3D &target);
-  void setUp(const QVector3D &up);
-  void lookAt(const QVector3D &position, const QVector3D &target,
+  void set_position(const QVector3D &position);
+  void set_target(const QVector3D &target);
+  void set_up(const QVector3D &up);
+  void look_at(const QVector3D &position, const QVector3D &target,
               const QVector3D &up);
 
   void set_perspective(float fov, float aspect, float near_plane,
@@ -140,7 +140,7 @@ private:
   void update_vectors();
 
   void clamp_above_ground();
-  static void computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
+  static void compute_yaw_pitch_from_offset(const QVector3D &off, float &yaw_deg,
                                         float &pitch_deg);
 };
 

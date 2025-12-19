@@ -64,7 +64,7 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_pineParams.wind_strength = 0.3F;
   m_pineParams.wind_speed = 0.5F;
 
-  generatePineInstances();
+  generate_pine_instances();
 }
 
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -133,7 +133,7 @@ void PineRenderer::clear() {
   m_cachedVisibilityVersion = 0;
 }
 
-void PineRenderer::generatePineInstances() {
+void PineRenderer::generate_pine_instances() {
   m_pineInstances.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {

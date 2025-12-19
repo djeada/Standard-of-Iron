@@ -111,11 +111,11 @@ private:
   void shutdownStonePipeline();
   void initializePlantPipeline();
   void shutdownPlantPipeline();
-  void initializePinePipeline();
+  void initialize_pine_pipeline();
   void shutdownPinePipeline();
-  void initializeOlivePipeline();
-  void shutdownOlivePipeline();
-  void initializeFireCampPipeline();
+  void initialize_olive_pipeline();
+  void shutdown_olive_pipeline();
+  void initialize_fire_camp_pipeline();
   void shutdownFireCampPipeline();
 
   GL::ShaderCache *m_shaderCache;

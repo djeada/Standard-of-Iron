@@ -114,8 +114,8 @@ private:
   void cache_ground_uniforms();
   void cache_terrain_uniforms();
 
-  void initializeGrassGeometry();
-  void shutdownGrassGeometry();
+  void initialize_grass_geometry();
+  void shutdown_grass_geometry();
 };
 
 } // namespace BackendPipelines

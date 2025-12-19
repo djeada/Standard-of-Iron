@@ -105,8 +105,8 @@ public:
       glDisable(GL_DEPTH_TEST);
     }
   }
-  void setDepthFunc(GLenum func) { glDepthFunc(func); }
-  void setDepthMask(bool write) { glDepthMask(write ? GL_TRUE : GL_FALSE); }
+  void set_depth_func(GLenum func) { glDepthFunc(func); }
+  void set_depth_mask(bool write) { glDepthMask(write ? GL_TRUE : GL_FALSE); }
 
   void enable_blend(bool enable) {
     if (enable) {
@@ -115,7 +115,7 @@ public:
       glDisable(GL_BLEND);
     }
   }
-  void setBlendFunc(GLenum src, GLenum dst) { glBlendFunc(src, dst); }
+  void set_blend_func(GLenum src, GLenum dst) { glBlendFunc(src, dst); }
 
   void enable_polygon_offset(bool enable) {
     if (enable) {
@@ -124,11 +124,11 @@ public:
       glDisable(GL_POLYGON_OFFSET_FILL);
     }
   }
-  void setPolygonOffset(float factor, float units) {
+  void set_polygon_offset(float factor, float units) {
     glPolygonOffset(factor, units);
   }
 
-  void setRiverbankVisibility(bool enabled, Texture *texture,
+  void set_riverbank_visibility(bool enabled, Texture *texture,
                               const QVector2D &size, float tile_size,
                               float explored_alpha) {
     m_riverbankVisibility.enabled = enabled && (texture != nullptr);

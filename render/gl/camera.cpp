@@ -140,7 +140,7 @@ void Camera::setPosition(const QVector3D &position) {
   orthonormalize(new_front, m_front, m_right, m_up);
 }
 
-void Camera::setTarget(const QVector3D &target) {
+void Camera::set_target(const QVector3D &target) {
   if (!finite(target)) {
     return;
   }
@@ -157,7 +157,7 @@ void Camera::setTarget(const QVector3D &target) {
   orthonormalize(dir, m_front, m_right, m_up);
 }
 
-void Camera::setUp(const QVector3D &up) {
+void Camera::set_up(const QVector3D &up) {
   if (!finite(up)) {
     return;
   }

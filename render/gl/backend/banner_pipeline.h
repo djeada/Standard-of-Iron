@@ -45,7 +45,7 @@ private:
   std::unique_ptr<GL::Mesh> m_bannerMesh16;
   std::unique_ptr<GL::Mesh> m_bannerMesh8;
 
-  void cacheBannerUniforms();
+  void cache_banner_uniforms();
 };
 
 } // namespace BackendPipelines

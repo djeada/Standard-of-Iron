@@ -35,7 +35,7 @@ void BannerPipeline::shutdown() {
   m_bannerMesh8.reset();
 }
 
-void BannerPipeline::cache_uniforms() { cacheBannerUniforms(); }
+void BannerPipeline::cache_uniforms() { cache_banner_uniforms(); }
 
 auto BannerPipeline::is_initialized() const -> bool {
   return m_bannerShader != nullptr && m_bannerMesh16 != nullptr;
@@ -48,7 +48,7 @@ auto BannerPipeline::get_banner_mesh(int subdivisions) -> GL::Mesh * {
   return m_bannerMesh8.get();
 }
 
-void BannerPipeline::cacheBannerUniforms() {
+void BannerPipeline::cache_banner_uniforms() {
   if (m_bannerShader == nullptr) {
     return;
   }

@@ -64,7 +64,7 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_plantParams.wind_strength = m_biome_settings.sway_strength;
   m_plantParams.wind_speed = m_biome_settings.sway_speed;
 
-  generatePlantInstances();
+  generate_plant_instances();
 }
 
 void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -136,7 +136,7 @@ void PlantRenderer::clear() {
   m_cachedVisibilityVersion = 0;
 }
 
-void PlantRenderer::generatePlantInstances() {
+void PlantRenderer::generate_plant_instances() {
   m_plantInstances.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
