@@ -77,17 +77,20 @@ auto CommandService::grid_to_world(const Point &gridPos) -> QVector3D {
 }
 
 namespace {
+// Default selection ring size for units without valid configuration
+constexpr float kDefaultSelectionRingSize = 1.0F;
+
 // Helper function to get the selection ring size for a unit
 auto get_selection_ring_size(Engine::Core::World &world,
                               Engine::Core::EntityID entity_id) -> float {
   auto *entity = world.get_entity(entity_id);
   if (entity == nullptr) {
-    return 1.0F;  // Default ring size when entity not found
+    return kDefaultSelectionRingSize;
   }
 
   auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
   if (unit_comp == nullptr) {
-    return 1.0F;  // Default ring size when unit component not found
+    return kDefaultSelectionRingSize;
   }
 
   return Game::Units::TroopConfig::instance().getSelectionRingSize(
