@@ -91,6 +91,13 @@
         <file>assets/maps/map_forest.json</file>
         <file>assets/maps/map_rivers.json</file>
         <file>assets/maps/map_mountain.json</file>
+        <file>assets/campaign_map/campaign_base_color.png</file>
+        <file>assets/campaign_map/campaign_water.png</file>
+        <file>assets/campaign_map/coastlines_uv.json</file>
+        <file>assets/campaign_map/rivers_uv.json</file>
+        <file>assets/campaign_map/land_mesh.bin</file>
+        <file>assets/campaign_map/hannibal_path.json</file>
+        <file>assets/campaign_map/provinces.json</file>
 
         <!-- Mission files -->
         <file>assets/missions/defend_outpost.json</file>
@@ -98,6 +105,7 @@
 
         <!-- Campaign files -->
         <file>assets/campaigns/tutorial_campaign.json</file>
+        <file>assets/campaigns/second_punic_war.json</file>
 
         <!-- Visual config -->
         <file>assets/visuals/unit_visuals.json</file>

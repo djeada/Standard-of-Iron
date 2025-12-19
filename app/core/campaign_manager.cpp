@@ -14,6 +14,11 @@ CampaignManager::CampaignManager(QObject *parent) : QObject(parent) {}
 
 void CampaignManager::load_campaigns() { emit available_campaigns_changed(); }
 
+void CampaignManager::set_available_campaigns(const QVariantList &campaigns) {
+  m_available_campaigns = campaigns;
+  emit available_campaigns_changed();
+}
+
 void CampaignManager::start_campaign_mission(const QString &mission_path,
                                              int &selected_player_id) {
   const QStringList parts = mission_path.split('/');

@@ -6,11 +6,23 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    property var campaigns: (typeof game !== "undefined" && game.available_campaigns) ? game.available_campaigns : []
+    property var campaigns: []
 
     signal missionSelected(string campaignId)
     signal cancelled()
 
+    function refreshCampaigns() {
+        if (typeof game !== "undefined" && game.available_campaigns)
+            campaigns = game.available_campaigns;
+
+    }
+
+    onVisibleChanged: {
+        if (visible && typeof game !== "undefined" && game.load_campaigns) {
+            game.load_campaigns();
+            refreshCampaigns();
+        }
+    }
     anchors.fill: parent
     focus: true
     Keys.onPressed: function(event) {
@@ -18,6 +30,14 @@ Item {
             root.cancelled();
             event.accepted = true;
         }
+    }
+
+    Connections {
+        function onAvailable_campaigns_changed() {
+            refreshCampaigns();
+        }
+
+        target: (typeof game !== "undefined") ? game : null
     }
 
     Rectangle {
@@ -216,7 +236,125 @@ Item {
         id: missionDetailPanel
 
         property var campaignData: null
+        property real mapOrbitYaw: 180
+        property real mapOrbitPitch: 55
+        property real mapOrbitDistance: 2.4
+        property var provinceLabels: []
+        property string hoverProvinceName: ""
+        property string hoverProvinceOwner: ""
+        property real hoverMouseX: 0
+        property real hoverMouseY: 0
+        property var ownerLegend: [{
+            "name": qsTr("Rome"),
+            "color": "#d01f1a"
+        }, {
+            "name": qsTr("Carthage"),
+            "color": "#cc8f47"
+        }, {
+            "name": qsTr("Neutral"),
+            "color": "#3a3a3a"
+        }]
+        property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
+        property int labelRefresh: 0
 
+        function loadProvinces() {
+            loadProvincesFrom(0);
+        }
+
+        function labelUvFor(prov) {
+            if (prov && prov.label_uv && prov.label_uv.length === 2)
+                return prov.label_uv;
+
+            if (!prov || !prov.triangles || prov.triangles.length === 0)
+                return null;
+
+            var sumU = 0;
+            var sumV = 0;
+            var count = 0;
+            var step = Math.max(1, Math.floor(prov.triangles.length / 200));
+            for (var i = 0; i < prov.triangles.length; i += step) {
+                var pt = prov.triangles[i];
+                if (!pt || pt.length < 2)
+                    continue;
+
+                sumU += pt[0];
+                sumV += pt[1];
+                count += 1;
+            }
+            if (count === 0)
+                return null;
+
+            return [sumU / count, sumV / count];
+        }
+
+        function provinceInfoFor(id) {
+            if (!id)
+                return null;
+
+            for (var i = 0; i < provinceLabels.length; i++) {
+                var prov = provinceLabels[i];
+                if (prov && prov.id === id)
+                    return prov;
+
+            }
+            return null;
+        }
+
+        function loadProvincesFrom(index) {
+            if (index >= provinceSources.length)
+                return ;
+
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", provinceSources[index]);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== XMLHttpRequest.DONE)
+                    return ;
+
+                if (xhr.status !== 200 && xhr.status !== 0) {
+                    loadProvincesFrom(index + 1);
+                    return ;
+                }
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data && data.provinces) {
+                        var hasCities = false;
+                        for (var i = 0; i < data.provinces.length; i++) {
+                            var prov = data.provinces[i];
+                            if (prov && prov.cities && prov.cities.length > 0) {
+                                hasCities = true;
+                                break;
+                            }
+                        }
+                        if (!hasCities) {
+                            loadProvincesFrom(index + 1);
+                            return ;
+                        }
+                        missionDetailPanel.provinceLabels = data.provinces;
+                        missionDetailPanel.labelRefresh += 1;
+                    }
+                } catch (e) {
+                    loadProvincesFrom(index + 1);
+                }
+            };
+            xhr.send();
+        }
+
+        onProvinceLabelsChanged: labelRefresh += 1
+        Component.onCompleted: {
+            refreshCampaigns();
+            var labels = campaignMap.provinceLabels;
+            if (labels && labels.length > 0) {
+                missionDetailPanel.provinceLabels = labels;
+                missionDetailPanel.labelRefresh += 1;
+            } else {
+                loadProvinces();
+            }
+        }
+        onCampaignDataChanged: {
+            mapOrbitYaw = 180;
+            mapOrbitPitch = 55;
+            mapOrbitDistance = 2.4;
+        }
         visible: false
         anchors.fill: parent
         color: Theme.dim
@@ -261,6 +399,239 @@ Item {
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
                     font.pointSize: Theme.fontSizeMedium
+                }
+
+                Rectangle {
+                    id: mapFrame
+
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 240
+                    radius: Theme.radiusMedium
+                    color: Theme.cardBase
+                    border.color: Theme.cardBorder
+                    border.width: 1
+
+                    CampaignMapView {
+                        id: campaignMap
+
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingSmall
+                        orbitYaw: missionDetailPanel.mapOrbitYaw
+                        orbitPitch: missionDetailPanel.mapOrbitPitch
+                        orbitDistance: missionDetailPanel.mapOrbitDistance
+                        onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
+                        onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
+                        onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1
+                        onWidthChanged: missionDetailPanel.labelRefresh += 1
+                        onHeightChanged: missionDetailPanel.labelRefresh += 1
+                    }
+
+                    MouseArea {
+                        property real lastX: 0
+                        property real lastY: 0
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton
+                        onPressed: function(mouse) {
+                            lastX = mouse.x;
+                            lastY = mouse.y;
+                        }
+                        onPositionChanged: function(mouse) {
+                            if (!(mouse.buttons & Qt.LeftButton))
+                                return ;
+
+                            var dx = mouse.x - lastX;
+                            var dy = mouse.y - lastY;
+                            lastX = mouse.x;
+                            lastY = mouse.y;
+                            missionDetailPanel.mapOrbitYaw += dx * 0.4;
+                            missionDetailPanel.mapOrbitPitch = Math.max(5, Math.min(85, missionDetailPanel.mapOrbitPitch + dy * 0.4));
+                        }
+                        onMouseXChanged: function() {
+                            if (!hoverEnabled)
+                                return ;
+
+                            missionDetailPanel.hoverMouseX = mouseX;
+                            missionDetailPanel.hoverMouseY = mouseY;
+                            var info = campaignMap.provinceInfoAtScreen(mouseX, mouseY);
+                            var id = info && info.id ? info.id : "";
+                            campaignMap.hoverProvinceId = id;
+                            missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
+                            missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
+                        }
+                        onMouseYChanged: function() {
+                            if (!hoverEnabled)
+                                return ;
+
+                            missionDetailPanel.hoverMouseX = mouseX;
+                            missionDetailPanel.hoverMouseY = mouseY;
+                            var info = campaignMap.provinceInfoAtScreen(mouseX, mouseY);
+                            var id = info && info.id ? info.id : "";
+                            campaignMap.hoverProvinceId = id;
+                            missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
+                            missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
+                        }
+                        onExited: {
+                            campaignMap.hoverProvinceId = "";
+                            missionDetailPanel.hoverProvinceName = "";
+                            missionDetailPanel.hoverProvinceOwner = "";
+                        }
+                        onWheel: function(wheel) {
+                            var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
+                            var nextDistance = missionDetailPanel.mapOrbitDistance * step;
+                            missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(1.2, nextDistance));
+                            wheel.accepted = true;
+                        }
+                    }
+
+                    Repeater {
+                        model: missionDetailPanel.provinceLabels
+
+                        delegate: Text {
+                            property var _labelUv: missionDetailPanel.labelUvFor(modelData)
+                            property int _refresh: missionDetailPanel.labelRefresh
+                            property var _pos: (_labelUv !== null && _refresh >= 0) ? campaignMap.screenPosForUv(_labelUv[0], _labelUv[1]) : Qt.point(0, 0)
+
+                            visible: false
+                            text: modelData.name
+                            color: (campaignMap.hoverProvinceId === modelData.id) ? Theme.accent : Theme.textMain
+                            font.pointSize: Theme.fontSizeSmall
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#101010"
+                            opacity: (campaignMap.hoverProvinceId === modelData.id) ? 1 : 0.85
+                            z: (campaignMap.hoverProvinceId === modelData.id) ? 3 : 2
+                            x: _pos.x - width / 2
+                            y: _pos.y - height / 2
+                        }
+
+                    }
+
+                    Repeater {
+                        model: missionDetailPanel.provinceLabels
+
+                        delegate: Repeater {
+                            property var _cities: (modelData && modelData.cities) ? modelData.cities : []
+
+                            model: _cities
+
+                            delegate: Item {
+                                property var cityData: modelData
+                                property var _cityUv: cityData.uv && cityData.uv.length === 2 ? cityData.uv : null
+                                property int _refresh: missionDetailPanel.labelRefresh
+                                property var _pos: (_cityUv !== null && _refresh >= 0) ? campaignMap.screenPosForUv(_cityUv[0], _cityUv[1]) : Qt.point(0, 0)
+
+                                visible: _cityUv !== null && cityData.name && cityData.name.length > 0
+                                z: 4
+                                x: _pos.x
+                                y: _pos.y
+
+                                Rectangle {
+                                    width: 6
+                                    height: 6
+                                    radius: 3
+                                    color: "#f2e6c8"
+                                    border.color: "#2d241c"
+                                    border.width: 1
+                                    x: -width / 2
+                                    y: -height / 2
+                                }
+
+                                Text {
+                                    text: cityData.name
+                                    color: "#111111"
+                                    font.pointSize: Theme.fontSizeTiny
+                                    font.bold: true
+                                    style: Text.Outline
+                                    styleColor: "#f2e6c8"
+                                    x: 6
+                                    y: -height / 2
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    Rectangle {
+                        id: hoverTooltip
+
+                        visible: campaignMap.hoverProvinceId !== "" && missionDetailPanel.hoverProvinceName !== ""
+                        x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseX + 12))
+                        y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseY + 12))
+                        radius: 6
+                        color: "#1a1a1a"
+                        border.color: "#2c2c2c"
+                        border.width: 1
+                        opacity: 0.95
+                        z: 5
+
+                        ColumnLayout {
+                            anchors.margins: 8
+                            anchors.fill: parent
+                            spacing: 2
+
+                            Label {
+                                text: missionDetailPanel.hoverProvinceName
+                                color: "#ffffff"
+                                style: Text.Outline
+                                styleColor: "#000000"
+                                font.bold: true
+                                font.pointSize: Theme.fontSizeSmall
+                            }
+
+                            Label {
+                                text: qsTr("Control: ") + missionDetailPanel.hoverProvinceOwner
+                                color: "#ffffff"
+                                style: Text.Outline
+                                styleColor: "#000000"
+                                font.pointSize: Theme.fontSizeTiny
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacingMedium
+
+                    Label {
+                        text: qsTr("Legend")
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeSmall
+                        font.bold: true
+                    }
+
+                    Repeater {
+                        model: missionDetailPanel.ownerLegend
+
+                        delegate: RowLayout {
+                            spacing: Theme.spacingTiny
+
+                            Rectangle {
+                                width: 12
+                                height: 12
+                                radius: 2
+                                color: modelData.color
+                                border.color: Theme.border
+                                border.width: 1
+                            }
+
+                            Label {
+                                text: modelData.name
+                                color: Theme.textSubLite
+                                font.pointSize: Theme.fontSizeSmall
+                            }
+
+                        }
+
+                    }
+
                 }
 
                 Rectangle {
