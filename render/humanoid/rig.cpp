@@ -356,6 +356,11 @@ void HumanoidRendererBase::compute_locomotion_pose(
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
 
+    // Counter-rotate shoulders to reduce excessive torso twist during walking
+    float const shoulder_counter_rotation = -hip_sway * 0.5F;
+    pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_rotation);
+    pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_rotation);
+
     pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
     pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
     pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
