@@ -138,6 +138,23 @@ public:
     m_riverbankVisibility.explored_alpha = explored_alpha;
   }
 
+  // Helper methods for common rendering patterns
+  inline void bind_shader(Shader *shader) {
+    if (m_lastBoundShader != shader) {
+      shader->use();
+      m_lastBoundShader = shader;
+      m_lastBoundTexture = nullptr;
+    }
+  }
+
+  inline void set_view_proj_uniform(Shader *shader,
+                                     Shader::UniformHandle uniform,
+                                     const QMatrix4x4 &view_proj) {
+    if (uniform != Shader::InvalidUniform) {
+      shader->set_uniform(uniform, view_proj);
+    }
+  }
+
 private:
   int m_viewportWidth{0};
   int m_viewportHeight{0};

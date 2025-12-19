@@ -6,6 +6,14 @@
 #include <QVector3D>
 #include <vector>
 
+namespace Render::GL {
+class Backend;
+class Camera;
+}
+namespace Render {
+class DrawQueue;
+}
+
 namespace Render::GL::BackendPipelines {
 
 class VegetationPipeline : public IPipeline {
@@ -35,6 +43,19 @@ public:
   [[nodiscard]] auto firecamp_shader() const -> GL::Shader * {
     return m_firecampShader;
   }
+
+  // Rendering methods that encapsulate pipeline-specific logic
+  void render_stones(const DrawQueue &queue, std::size_t &i,
+                     const QMatrix4x4 &view_proj, GL::Backend *backend);
+  void render_plants(const DrawQueue &queue, std::size_t &i,
+                     const QMatrix4x4 &view_proj, GL::Backend *backend);
+  void render_pines(const DrawQueue &queue, std::size_t &i,
+                    const QMatrix4x4 &view_proj, GL::Backend *backend);
+  void render_olives(const DrawQueue &queue, std::size_t &i,
+                     const QMatrix4x4 &view_proj, GL::Backend *backend);
+  void render_firecamps(const DrawQueue &queue, std::size_t &i,
+                        const GL::Camera &cam, const QMatrix4x4 &view_proj,
+                        GL::Backend *backend);
 
   struct StoneUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
