@@ -3,13 +3,10 @@
 #include "../shader.h"
 #include "pipeline_interface.h"
 
-namespace Render {
-class DrawQueue;
-}
-
 namespace Render::GL {
 class ShaderCache;
 class Backend;
+class DrawQueue;
 
 namespace BackendPipelines {
 
@@ -25,11 +22,11 @@ public:
   [[nodiscard]] auto is_initialized() const -> bool override;
 
   // Rendering methods
-  void render_grid(const DrawQueue &queue, std::size_t &i,
+  void render_grid(const GL::DrawQueue &queue, std::size_t &i,
                    const QMatrix4x4 &view_proj);
-  void render_selection_ring(const DrawQueue &queue, std::size_t &i,
+  void render_selection_ring(const GL::DrawQueue &queue, std::size_t &i,
                              const QMatrix4x4 &view_proj);
-  void render_selection_smoke(const DrawQueue &queue, std::size_t &i,
+  void render_selection_smoke(const GL::DrawQueue &queue, std::size_t &i,
                               const QMatrix4x4 &view_proj);
 
   struct GridUniforms {

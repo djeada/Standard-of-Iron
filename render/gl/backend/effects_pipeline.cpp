@@ -71,7 +71,7 @@ void EffectsPipeline::cache_grid_uniforms() {
   m_gridUniforms.thickness = m_gridShader->uniform_handle("u_thickness");
 }
 
-void EffectsPipeline::render_grid(const DrawQueue &queue, std::size_t &i,
+void EffectsPipeline::render_grid(const GL::DrawQueue &queue, std::size_t &i,
                                    const QMatrix4x4 &view_proj) {
   if (!m_gridShader) {
     return;
@@ -95,7 +95,7 @@ void EffectsPipeline::render_grid(const DrawQueue &queue, std::size_t &i,
   }
 }
 
-void EffectsPipeline::render_selection_ring(const DrawQueue &queue,
+void EffectsPipeline::render_selection_ring(const GL::DrawQueue &queue,
                                              std::size_t &i,
                                              const QMatrix4x4 &view_proj) {
   const auto &sc = std::get<SelectionRingCmdIndex>(queue.get_sorted(i));
@@ -131,7 +131,7 @@ void EffectsPipeline::render_selection_ring(const DrawQueue &queue,
   }
 }
 
-void EffectsPipeline::render_selection_smoke(const DrawQueue &queue,
+void EffectsPipeline::render_selection_smoke(const GL::DrawQueue &queue,
                                               std::size_t &i,
                                               const QMatrix4x4 &view_proj) {
   const auto &sm = std::get<SelectionSmokeCmdIndex>(queue.get_sorted(i));
