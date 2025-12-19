@@ -62,7 +62,7 @@ void main() {
   vec3 worldPos = modelPos.xyz;
 
   bool deformArmor =
-      (u_materialId == 1 || u_materialId == 2 || u_materialId == 4 ||
+      (u_materialId == 1 || u_materialId == 2 ||
        u_materialId == 3 || u_materialId == 5);
 
   float dentSeed = 0.0;
