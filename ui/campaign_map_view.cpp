@@ -26,6 +26,59 @@
 
 namespace {
 
+auto buildMvpMatrix(float width, float height, float yaw_deg, float pitch_deg,
+                    float distance) -> QMatrix4x4 {
+  const float view_w = qMax(1.0F, width);
+  const float view_h = qMax(1.0F, height);
+  const float aspect = view_w / view_h;
+
+  QMatrix4x4 projection;
+  projection.perspective(45.0F, aspect, 0.1F, 10.0F);
+
+  const QVector3D center(0.5F, 0.0F, 0.5F);
+  const float yaw_rad = qDegreesToRadians(yaw_deg);
+  const float pitch_rad = qDegreesToRadians(pitch_deg);
+  const float clamped_distance = qMax(1.0F, distance);
+
+  const float cos_pitch = std::cos(pitch_rad);
+  const float sin_pitch = std::sin(pitch_rad);
+  const float cos_yaw = std::cos(yaw_rad);
+  const float sin_yaw = std::sin(yaw_rad);
+
+  QVector3D eye(center.x() + clamped_distance * sin_yaw * cos_pitch,
+                center.y() + clamped_distance * sin_pitch,
+                center.z() + clamped_distance * cos_yaw * cos_pitch);
+
+  QMatrix4x4 view;
+  view.lookAt(eye, center, QVector3D(0.0F, 0.0F, 1.0F));
+
+  QMatrix4x4 model;
+  return projection * view * model;
+}
+
+auto pointInTriangle(const QVector2D &p, const QVector2D &a,
+                     const QVector2D &b,
+                     const QVector2D &c) -> bool {
+  const QVector2D v0 = c - a;
+  const QVector2D v1 = b - a;
+  const QVector2D v2 = p - a;
+
+  const float dot00 = QVector2D::dotProduct(v0, v0);
+  const float dot01 = QVector2D::dotProduct(v0, v1);
+  const float dot02 = QVector2D::dotProduct(v0, v2);
+  const float dot11 = QVector2D::dotProduct(v1, v1);
+  const float dot12 = QVector2D::dotProduct(v1, v2);
+
+  const float denom = dot00 * dot11 - dot01 * dot01;
+  if (qFuzzyIsNull(denom)) {
+    return false;
+  }
+  const float inv_denom = 1.0F / denom;
+  const float u = (dot11 * dot02 - dot01 * dot12) * inv_denom;
+  const float v = (dot00 * dot12 - dot01 * dot02) * inv_denom;
+  return (u >= 0.0F) && (v >= 0.0F) && (u + v <= 1.0F);
+}
+
 struct LineSpan {
   int start = 0;
   int count = 0;
@@ -37,6 +90,20 @@ struct LineLayer {
   std::vector<LineSpan> spans;
   QVector4D color = QVector4D(1.0F, 1.0F, 1.0F, 1.0F);
   float width = 1.0F;
+  bool ready = false;
+};
+
+struct ProvinceSpan {
+  int start = 0;
+  int count = 0;
+  QVector4D color = QVector4D(0.0F, 0.0F, 0.0F, 0.0F);
+  QString id;
+};
+
+struct ProvinceLayer {
+  GLuint vao = 0;
+  GLuint vbo = 0;
+  std::vector<ProvinceSpan> spans;
   bool ready = false;
 };
 
@@ -72,8 +139,11 @@ public:
     }
 
     glDisable(GL_DEPTH_TEST);
+    drawProvinceLayer(m_provinceLayer, mvp, 0.002F);
+    drawLineLayer(m_provinceBorderLayer, mvp, 0.0045F);
     drawLineLayer(m_coastLayer, mvp, 0.004F);
     drawLineLayer(m_riverLayer, mvp, 0.003F);
+    drawLineLayer(m_pathLayer, mvp, 0.006F);
   }
 
   auto createFramebufferObject(const QSize &size)
@@ -94,6 +164,7 @@ public:
     m_orbitYaw = view->orbitYaw();
     m_orbitPitch = view->orbitPitch();
     m_orbitDistance = view->orbitDistance();
+    m_hoverProvinceId = view->hoverProvinceId();
   }
 
 private:
@@ -115,10 +186,14 @@ private:
 
   LineLayer m_coastLayer;
   LineLayer m_riverLayer;
+  LineLayer m_pathLayer;
+  LineLayer m_provinceBorderLayer;
+  ProvinceLayer m_provinceLayer;
 
-  float m_orbitYaw = 35.0F;
-  float m_orbitPitch = 35.0F;
-  float m_orbitDistance = 2.2F;
+  float m_orbitYaw = 180.0F;
+  float m_orbitPitch = 55.0F;
+  float m_orbitDistance = 2.4F;
+  QString m_hoverProvinceId;
 
   auto ensureInitialized() -> bool {
     if (m_initialized) {
@@ -148,6 +223,14 @@ private:
     initLineLayer(m_riverLayer,
                   QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                   QVector4D(0.33F, 0.49F, 0.61F, 0.9F), 1.2F);
+    initLineLayer(m_pathLayer,
+                  QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
+                  QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
+    initProvinceLayer(m_provinceLayer,
+                      QStringLiteral(":/assets/campaign_map/provinces.json"));
+    initBordersLayer(m_provinceBorderLayer,
+                     QStringLiteral(":/assets/campaign_map/provinces.json"),
+                     QVector4D(0.18F, 0.16F, 0.14F, 0.85F), 1.6F);
 
     m_initialized = true;
     return true;
@@ -376,6 +459,153 @@ void main() {
     layer.ready = true;
   }
 
+  void initProvinceLayer(ProvinceLayer &layer, const QString &resource_path) {
+    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      qWarning() << "CampaignMapRenderer: Failed to open provinces" << path;
+      return;
+    }
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (!doc.isObject()) {
+      qWarning() << "CampaignMapRenderer: Provinces JSON invalid" << path;
+      return;
+    }
+
+    const QJsonArray provinces = doc.object().value("provinces").toArray();
+    if (provinces.isEmpty()) {
+      return;
+    }
+
+    std::vector<float> verts;
+    std::vector<ProvinceSpan> spans;
+    int cursor = 0;
+
+    for (const auto &prov_val : provinces) {
+      const QJsonObject prov = prov_val.toObject();
+      const QString province_id = prov.value("id").toString();
+      const QJsonArray tri = prov.value("triangles").toArray();
+      if (tri.isEmpty()) {
+        continue;
+      }
+
+      const int start = cursor;
+      int count = 0;
+      for (const auto &pt_val : tri) {
+        const QJsonArray pt = pt_val.toArray();
+        if (pt.size() < 2) {
+          continue;
+        }
+        verts.push_back(static_cast<float>(pt.at(0).toDouble()));
+        verts.push_back(static_cast<float>(pt.at(1).toDouble()));
+        ++count;
+        ++cursor;
+      }
+
+      if (count >= 3) {
+        QVector4D color(0.0F, 0.0F, 0.0F, 0.0F);
+        const QJsonArray color_arr = prov.value("color").toArray();
+        if (color_arr.size() >= 4) {
+          color = QVector4D(static_cast<float>(color_arr.at(0).toDouble()),
+                            static_cast<float>(color_arr.at(1).toDouble()),
+                            static_cast<float>(color_arr.at(2).toDouble()),
+                            static_cast<float>(color_arr.at(3).toDouble()));
+        }
+        spans.push_back({start, count, color, province_id});
+      }
+    }
+
+    if (verts.empty() || spans.empty()) {
+      return;
+    }
+
+    glGenVertexArrays(1, &layer.vao);
+    glGenBuffers(1, &layer.vbo);
+
+    glBindVertexArray(layer.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          reinterpret_cast<void *>(0));
+    glBindVertexArray(0);
+
+    layer.spans = std::move(spans);
+    layer.ready = true;
+  }
+
+  void initBordersLayer(LineLayer &layer, const QString &resource_path,
+                        const QVector4D &color, float width) {
+    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      qWarning() << "CampaignMapRenderer: Failed to open borders" << path;
+      return;
+    }
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (!doc.isObject()) {
+      qWarning() << "CampaignMapRenderer: Borders JSON invalid" << path;
+      return;
+    }
+
+    const QJsonArray lines = doc.object().value("borders").toArray();
+    std::vector<float> verts;
+    verts.reserve(lines.size() * 8);
+
+    std::vector<LineSpan> spans;
+    int cursor = 0;
+
+    for (const auto &line_val : lines) {
+      const QJsonArray line = line_val.toArray();
+      if (line.isEmpty()) {
+        continue;
+      }
+
+      const int start = cursor;
+      int count = 0;
+      for (const auto &pt_val : line) {
+        const QJsonArray pt = pt_val.toArray();
+        if (pt.size() < 2) {
+          continue;
+        }
+        verts.push_back(static_cast<float>(pt.at(0).toDouble()));
+        verts.push_back(static_cast<float>(pt.at(1).toDouble()));
+        ++count;
+        ++cursor;
+      }
+
+      if (count >= 2) {
+        spans.push_back({start, count});
+      }
+    }
+
+    if (verts.empty() || spans.empty()) {
+      return;
+    }
+
+    glGenVertexArrays(1, &layer.vao);
+    glGenBuffers(1, &layer.vbo);
+
+    glBindVertexArray(layer.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          reinterpret_cast<void *>(0));
+    glBindVertexArray(0);
+
+    layer.color = color;
+    layer.width = width;
+    layer.spans = std::move(spans);
+    layer.ready = true;
+  }
+
   auto loadTexture(const QString &resource_path) -> QOpenGLTexture * {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QImage image(path);
@@ -392,32 +622,9 @@ void main() {
   }
 
   void computeMvp(QMatrix4x4 &out_mvp) const {
-    const float view_w = qMax(1, m_size.width());
-    const float view_h = qMax(1, m_size.height());
-    const float aspect = view_w / view_h;
-
-    QMatrix4x4 projection;
-    projection.perspective(45.0F, aspect, 0.1F, 10.0F);
-
-    const QVector3D center(0.5F, 0.0F, 0.5F);
-    const float yaw_rad = qDegreesToRadians(m_orbitYaw);
-    const float pitch_rad = qDegreesToRadians(m_orbitPitch);
-    const float distance = qMax(1.0F, m_orbitDistance);
-
-    const float cos_pitch = std::cos(pitch_rad);
-    const float sin_pitch = std::sin(pitch_rad);
-    const float cos_yaw = std::cos(yaw_rad);
-    const float sin_yaw = std::sin(yaw_rad);
-
-    QVector3D eye(center.x() + distance * sin_yaw * cos_pitch,
-                  center.y() + distance * sin_pitch,
-                  center.z() + distance * cos_yaw * cos_pitch);
-
-    QMatrix4x4 view;
-    view.lookAt(eye, center, QVector3D(0.0F, 0.0F, 1.0F));
-
-    QMatrix4x4 model;
-    out_mvp = projection * view * model;
+    out_mvp = buildMvpMatrix(static_cast<float>(m_size.width()),
+                             static_cast<float>(m_size.height()), m_orbitYaw,
+                             m_orbitPitch, m_orbitDistance);
   }
 
   void drawTexturedLayer(QOpenGLTexture *texture, GLuint vao, int vertex_count,
@@ -462,6 +669,35 @@ void main() {
     m_lineProgram.release();
   }
 
+  void drawProvinceLayer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
+                         float z_offset) {
+    if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
+      return;
+    }
+
+    m_lineProgram.bind();
+    m_lineProgram.setUniformValue("u_mvp", mvp);
+    m_lineProgram.setUniformValue("u_z", z_offset);
+
+    glBindVertexArray(layer.vao);
+    for (const auto &span : layer.spans) {
+      if (span.color.w() <= 0.0F) {
+        continue;
+      }
+      QVector4D color = span.color;
+      if (!m_hoverProvinceId.isEmpty() && span.id == m_hoverProvinceId) {
+        color = QVector4D(qMin(1.0F, color.x() + 0.28F),
+                          qMin(1.0F, color.y() + 0.28F),
+                          qMin(1.0F, color.z() + 0.28F),
+                          qMin(1.0F, color.w() + 0.32F));
+      }
+      m_lineProgram.setUniformValue("u_color", color);
+      glDrawArrays(GL_TRIANGLES, span.start, span.count);
+    }
+    glBindVertexArray(0);
+    m_lineProgram.release();
+  }
+
   void cleanup() {
     if (QOpenGLContext::currentContext() == nullptr) {
       return;
@@ -499,6 +735,30 @@ void main() {
       glDeleteVertexArrays(1, &m_riverLayer.vao);
       m_riverLayer.vao = 0;
     }
+    if (m_pathLayer.vbo != 0) {
+      glDeleteBuffers(1, &m_pathLayer.vbo);
+      m_pathLayer.vbo = 0;
+    }
+    if (m_pathLayer.vao != 0) {
+      glDeleteVertexArrays(1, &m_pathLayer.vao);
+      m_pathLayer.vao = 0;
+    }
+    if (m_provinceBorderLayer.vbo != 0) {
+      glDeleteBuffers(1, &m_provinceBorderLayer.vbo);
+      m_provinceBorderLayer.vbo = 0;
+    }
+    if (m_provinceBorderLayer.vao != 0) {
+      glDeleteVertexArrays(1, &m_provinceBorderLayer.vao);
+      m_provinceBorderLayer.vao = 0;
+    }
+    if (m_provinceLayer.vbo != 0) {
+      glDeleteBuffers(1, &m_provinceLayer.vbo);
+      m_provinceLayer.vbo = 0;
+    }
+    if (m_provinceLayer.vao != 0) {
+      glDeleteVertexArrays(1, &m_provinceLayer.vao);
+      m_provinceLayer.vao = 0;
+    }
 
     delete m_baseTexture;
     m_baseTexture = nullptr;
@@ -518,6 +778,141 @@ CampaignMapView::CampaignMapView() {
     qWarning() << "CampaignMapView: 3D rendering will not work in software mode";
     qWarning() << "CampaignMapView: Try running without QT_QUICK_BACKEND=software";
   }
+}
+
+void CampaignMapView::loadProvincesForHitTest() {
+  if (m_provincesLoaded) {
+    return;
+  }
+
+  m_provincesLoaded = true;
+  m_provinces.clear();
+
+  const QString path = Utils::Resources::resolveResourcePath(
+      QStringLiteral(":/assets/campaign_map/provinces.json"));
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    return;
+  }
+
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+  if (!doc.isObject()) {
+    return;
+  }
+
+  const QJsonArray provinces = doc.object().value("provinces").toArray();
+  for (const auto &prov_val : provinces) {
+    const QJsonObject prov = prov_val.toObject();
+    const QJsonArray tri = prov.value("triangles").toArray();
+    if (tri.isEmpty()) {
+      continue;
+    }
+
+    ProvinceHit province;
+    province.id = prov.value("id").toString();
+    province.triangles.reserve(static_cast<size_t>(tri.size()));
+
+    for (const auto &pt_val : tri) {
+      const QJsonArray pt = pt_val.toArray();
+      if (pt.size() < 2) {
+        continue;
+      }
+      province.triangles.emplace_back(
+          static_cast<float>(pt.at(0).toDouble()),
+          static_cast<float>(pt.at(1).toDouble()));
+    }
+
+    if (province.triangles.size() >= 3) {
+      m_provinces.push_back(std::move(province));
+    }
+  }
+}
+
+QString CampaignMapView::provinceAtScreen(float x, float y) {
+  loadProvincesForHitTest();
+  if (m_provinces.empty()) {
+    return {};
+  }
+
+  const float w = static_cast<float>(width());
+  const float h = static_cast<float>(height());
+  if (w <= 0.0F || h <= 0.0F) {
+    return {};
+  }
+
+  const float ndc_x = (2.0F * x / w) - 1.0F;
+  const float ndc_y = 1.0F - (2.0F * y / h);
+
+  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
+                                       m_orbitDistance);
+  bool inverted = false;
+  const QMatrix4x4 inv = mvp.inverted(&inverted);
+  if (!inverted) {
+    return {};
+  }
+
+  QVector4D near_p = inv * QVector4D(ndc_x, ndc_y, -1.0F, 1.0F);
+  QVector4D far_p = inv * QVector4D(ndc_x, ndc_y, 1.0F, 1.0F);
+  if (qFuzzyIsNull(near_p.w()) || qFuzzyIsNull(far_p.w())) {
+    return {};
+  }
+  QVector3D near_v = QVector3D(near_p.x(), near_p.y(), near_p.z()) / near_p.w();
+  QVector3D far_v = QVector3D(far_p.x(), far_p.y(), far_p.z()) / far_p.w();
+
+  const QVector3D dir = far_v - near_v;
+  if (qFuzzyIsNull(dir.y())) {
+    return {};
+  }
+
+  const float t = -near_v.y() / dir.y();
+  if (t < 0.0F) {
+    return {};
+  }
+
+  const QVector3D hit = near_v + dir * t;
+  const float u = 1.0F - hit.x();
+  const float v = hit.z();
+  if (u < 0.0F || u > 1.0F || v < 0.0F || v > 1.0F) {
+    return {};
+  }
+
+  const QVector2D p(u, v);
+  for (const auto &province : m_provinces) {
+    const auto &triangles = province.triangles;
+    for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
+      if (pointInTriangle(p, triangles[i], triangles[i + 1],
+                          triangles[i + 2])) {
+        return province.id;
+      }
+    }
+  }
+
+  return {};
+}
+
+QPointF CampaignMapView::screenPosForUv(float u, float v) {
+  const float w = static_cast<float>(width());
+  const float h = static_cast<float>(height());
+  if (w <= 0.0F || h <= 0.0F) {
+    return {};
+  }
+
+  const float clamped_u = qBound(0.0F, u, 1.0F);
+  const float clamped_v = qBound(0.0F, v, 1.0F);
+
+  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
+                                       m_orbitDistance);
+  const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
+  const QVector4D clip = mvp * world;
+  if (qFuzzyIsNull(clip.w())) {
+    return {};
+  }
+
+  const float ndc_x = clip.x() / clip.w();
+  const float ndc_y = clip.y() / clip.w();
+  const float screen_x = (ndc_x + 1.0F) * 0.5F * w;
+  const float screen_y = (1.0F - (ndc_y + 1.0F) * 0.5F) * h;
+  return QPointF(screen_x, screen_y);
 }
 
 void CampaignMapView::setOrbitYaw(float yaw) {
@@ -546,6 +941,15 @@ void CampaignMapView::setOrbitDistance(float distance) {
   }
   m_orbitDistance = clamped;
   emit orbitDistanceChanged();
+  update();
+}
+
+void CampaignMapView::setHoverProvinceId(const QString &province_id) {
+  if (m_hoverProvinceId == province_id) {
+    return;
+  }
+  m_hoverProvinceId = province_id;
+  emit hoverProvinceIdChanged();
   update();
 }
 

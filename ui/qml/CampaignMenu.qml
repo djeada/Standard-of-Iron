@@ -219,10 +219,41 @@ Item {
         property real mapOrbitYaw: 180.0
         property real mapOrbitPitch: 55.0
         property real mapOrbitDistance: 2.4
+        property var provinceLabels: []
+        property var ownerLegend: [
+            { name: qsTr("Rome"), color: "#d01f1a" },
+            { name: qsTr("Carthage"), color: "#cc8f47" },
+            { name: qsTr("Neutral"), color: "#3a3a3a" }
+        ]
+        property int labelRefresh: 0
+        Component.onCompleted: loadProvinces()
         onCampaignDataChanged: {
             mapOrbitYaw = 180.0;
             mapOrbitPitch = 55.0;
             mapOrbitDistance = 2.4;
+        }
+
+        function loadProvinces() {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", "qrc:/assets/campaign_map/provinces.json");
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState !== XMLHttpRequest.DONE)
+                    return;
+                if (xhr.status !== 200 && xhr.status !== 0) {
+                    console.warn("CampaignMenu: failed to load provinces.json", xhr.status);
+                    return;
+                }
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                    if (data && data.provinces) {
+                        missionDetailPanel.provinceLabels = data.provinces;
+                        missionDetailPanel.labelRefresh += 1;
+                    }
+                } catch (e) {
+                    console.warn("CampaignMenu: invalid provinces.json", e);
+                }
+            };
+            xhr.send();
         }
 
         visible: false
@@ -289,6 +320,12 @@ Item {
                         orbitYaw: missionDetailPanel.mapOrbitYaw
                         orbitPitch: missionDetailPanel.mapOrbitPitch
                         orbitDistance: missionDetailPanel.mapOrbitDistance
+
+                        onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
+                        onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
+                        onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1
+                        onWidthChanged: missionDetailPanel.labelRefresh += 1
+                        onHeightChanged: missionDetailPanel.labelRefresh += 1
                     }
 
                     MouseArea {
@@ -315,11 +352,85 @@ Item {
                             missionDetailPanel.mapOrbitPitch = Math.max(5.0, Math.min(85.0, missionDetailPanel.mapOrbitPitch + dy * 0.4));
                         }
 
+                        onMouseXChanged: function() {
+                            if (!hoverEnabled)
+                                return;
+                            var id = campaignMap.provinceAtScreen(mouseX, mouseY);
+                            campaignMap.hoverProvinceId = id;
+                        }
+
+                        onMouseYChanged: function() {
+                            if (!hoverEnabled)
+                                return;
+                            var id = campaignMap.provinceAtScreen(mouseX, mouseY);
+                            campaignMap.hoverProvinceId = id;
+                        }
+
+                        onExited: campaignMap.hoverProvinceId = ""
+
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                             var nextDistance = missionDetailPanel.mapOrbitDistance * step;
                             missionDetailPanel.mapOrbitDistance = Math.min(5.0, Math.max(1.2, nextDistance));
                             wheel.accepted = true;
+                        }
+                    }
+
+                    Repeater {
+                        model: missionDetailPanel.provinceLabels
+
+                        delegate: Text {
+                            text: modelData.name
+                            color: (campaignMap.hoverProvinceId === modelData.id) ? Theme.accent : Theme.textMain
+                            font.pointSize: Theme.fontSizeSmall
+                            font.bold: true
+                            style: Text.Outline
+                            styleColor: "#101010"
+                            visible: modelData.label_uv && modelData.label_uv.length === 2
+                            opacity: 0.85
+                            z: 2
+
+                            property int _refresh: missionDetailPanel.labelRefresh
+                            property var _pos: campaignMap.screenPosForUv(
+                                modelData.label_uv[0], modelData.label_uv[1]
+                            )
+                            x: _pos.x - width / 2
+                            y: _pos.y - height / 2
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: Theme.spacingMedium
+
+                    Label {
+                        text: qsTr("Legend")
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeSmall
+                        font.bold: true
+                    }
+
+                    Repeater {
+                        model: missionDetailPanel.ownerLegend
+
+                        delegate: RowLayout {
+                            spacing: Theme.spacingTiny
+
+                            Rectangle {
+                                width: 12
+                                height: 12
+                                radius: 2
+                                color: modelData.color
+                                border.color: Theme.border
+                                border.width: 1
+                            }
+
+                            Label {
+                                text: modelData.name
+                                color: Theme.textSubLite
+                                font.pointSize: Theme.fontSizeSmall
+                            }
                         }
                     }
                 }
