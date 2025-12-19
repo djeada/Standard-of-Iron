@@ -395,6 +395,32 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
 
+  QVector3D const new_pos_3d(transform->position.x, 0.0F,
+                             transform->position.z);
+  bool const new_pos_valid =
+      is_point_allowed(new_pos_3d, entity->get_id(), unit_radius);
+
+  if (!new_pos_valid) {
+    Pathfinding *pathfinder = CommandService::get_pathfinder();
+    if (pathfinder != nullptr) {
+      Point const current_grid = CommandService::world_to_grid(
+          transform->position.x, transform->position.z);
+      Point const nearest = Pathfinding::find_nearest_walkable_point(
+          current_grid, 10, *pathfinder, unit_radius);
+
+      if (!(nearest == current_grid)) {
+        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+        transform->position.x = safe_pos.x();
+        transform->position.z = safe_pos.z();
+      }
+    }
+
+    movement->clear_path();
+    movement->has_target = false;
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
+  }
+
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
     const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();

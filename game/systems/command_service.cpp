@@ -92,7 +92,7 @@ auto CommandService::get_unit_radius(
       Game::Units::TroopConfig::instance().getSelectionRingSize(
           unit_comp->spawn_type);
 
-  return selection_ring_size * 0.5F;
+  return selection_ring_size;
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
