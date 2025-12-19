@@ -342,6 +342,14 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
               mission_map.insert(QStringLiteral("outro_text"),
                                  *mission.outro_text);
             }
+            if (mission.difficulty_modifier.has_value()) {
+              mission_map.insert(QStringLiteral("difficulty_modifier"),
+                                 *mission.difficulty_modifier);
+            }
+            // For now, first mission is unlocked, others locked
+            mission_map.insert(QStringLiteral("unlocked"),
+                               mission.order_index == 0);
+            mission_map.insert(QStringLiteral("completed"), false);
             missions_list.append(mission_map);
           }
           campaign_map.insert(QStringLiteral("missions"), missions_list);
@@ -399,6 +407,14 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
         if (mission.outro_text.has_value()) {
           mission_map.insert(QStringLiteral("outro_text"), *mission.outro_text);
         }
+        if (mission.difficulty_modifier.has_value()) {
+          mission_map.insert(QStringLiteral("difficulty_modifier"),
+                             *mission.difficulty_modifier);
+        }
+        // For now, first mission is unlocked, others locked
+        mission_map.insert(QStringLiteral("unlocked"),
+                           mission.order_index == 0);
+        mission_map.insert(QStringLiteral("completed"), false);
         missions_list.append(mission_map);
       }
       campaign_map.insert(QStringLiteral("missions"), missions_list);
