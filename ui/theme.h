@@ -41,6 +41,7 @@ class Theme : public QObject {
 
   Q_PROPERTY(QColor accent READ accent CONSTANT)
   Q_PROPERTY(QColor accentBright READ accentBright CONSTANT)
+  Q_PROPERTY(QColor accentBr READ accentBr CONSTANT)
 
   Q_PROPERTY(QColor addColor READ addColor CONSTANT)
   Q_PROPERTY(QColor removeColor READ removeColor CONSTANT)
@@ -49,6 +50,12 @@ class Theme : public QObject {
   Q_PROPERTY(QColor successBr READ successBr CONSTANT)
   Q_PROPERTY(QColor successText READ successText CONSTANT)
   Q_PROPERTY(QColor disabledBg READ disabledBg CONSTANT)
+
+  Q_PROPERTY(QColor infoBg READ infoBg CONSTANT)
+  Q_PROPERTY(QColor infoBr READ infoBr CONSTANT)
+  Q_PROPERTY(QColor infoText READ infoText CONSTANT)
+
+  Q_PROPERTY(QColor warningText READ warningText CONSTANT)
 
   Q_PROPERTY(int spacingTiny READ spacingTiny CONSTANT)
   Q_PROPERTY(int spacingSmall READ spacingSmall CONSTANT)
@@ -113,6 +120,7 @@ public:
 
   [[nodiscard]] static auto accent() -> QColor { return {"#9fd9ff"}; }
   [[nodiscard]] static auto accentBright() -> QColor { return {"#d0e8ff"}; }
+  [[nodiscard]] static auto accentBr() -> QColor { return {"#7eb8db"}; }
 
   [[nodiscard]] static auto addColor() -> QColor { return {"#3A9CA8"}; }
   [[nodiscard]] static auto removeColor() -> QColor { return {"#D04040"}; }
@@ -121,6 +129,12 @@ public:
   [[nodiscard]] static auto successBr() -> QColor { return {"#2d6b3f"}; }
   [[nodiscard]] static auto successText() -> QColor { return {"#8fdc9f"}; }
   [[nodiscard]] static auto disabledBg() -> QColor { return {"#1a2a32"}; }
+
+  [[nodiscard]] static auto infoBg() -> QColor { return {"#1a3a5a"}; }
+  [[nodiscard]] static auto infoBr() -> QColor { return {"#2a5a8a"}; }
+  [[nodiscard]] static auto infoText() -> QColor { return {"#7ab8e8"}; }
+
+  [[nodiscard]] static auto warningText() -> QColor { return {"#f5a623"}; }
 
   [[nodiscard]] static auto spacingTiny() -> int { return 4; }
   [[nodiscard]] static auto spacingSmall() -> int { return 8; }
