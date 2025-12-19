@@ -50,7 +50,8 @@ help:
 	@echo "  $(GREEN)build-tidy$(RESET)    - Build with clang-tidy static analysis enabled"
 	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
 	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
-	@echo "  $(GREEN)run$(RESET)           - Run the main application"
+	@echo "  $(GREEN)run$(RESET)           - Run the main application (includes map pipeline)"
+	@echo "  $(GREEN)run-map-pipeline$(RESET) - Run map preprocessing pipeline only"
 	@echo "  $(GREEN)editor$(RESET)        - Run the map editor"
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
 	@echo "  $(GREEN)rebuild$(RESET)       - Clean and build"
@@ -117,9 +118,16 @@ build-tidy:
 .PHONY: all
 all: build
 
+# Run map pipeline preprocessing
+.PHONY: run-map-pipeline
+run-map-pipeline:
+	@echo "$(BOLD)$(BLUE)Running map pipeline preprocessing...$(RESET)"
+	@bash scripts/run-map-pipeline.sh
+	@echo "$(GREEN)✓ Map pipeline complete$(RESET)"
+
 # Run the main application
 .PHONY: run
-run: build
+run: run-map-pipeline build
 	@echo "$(BOLD)$(BLUE)Running Standard of Iron...$(RESET)"
 	@cd $(BUILD_DIR) && \
 	BIN_PATH="./bin/$(BINARY_NAME)"; \
