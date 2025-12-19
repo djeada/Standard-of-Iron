@@ -346,7 +346,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
               mission_map.insert(QStringLiteral("difficulty_modifier"),
                                  *mission.difficulty_modifier);
             }
-            // For now, first mission is unlocked, others locked
+
             mission_map.insert(QStringLiteral("unlocked"),
                                mission.order_index == 0);
             mission_map.insert(QStringLiteral("completed"), false);
@@ -411,7 +411,7 @@ auto SaveStorage::list_campaigns(QString *out_error) const -> QVariantList {
           mission_map.insert(QStringLiteral("difficulty_modifier"),
                              *mission.difficulty_modifier);
         }
-        // For now, first mission is unlocked, others locked
+
         mission_map.insert(QStringLiteral("unlocked"),
                            mission.order_index == 0);
         mission_map.insert(QStringLiteral("completed"), false);

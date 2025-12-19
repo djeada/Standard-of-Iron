@@ -21,7 +21,6 @@ Rectangle {
         anchors.margins: Theme.spacingMedium
         spacing: Theme.spacingLarge
 
-        // Left: Mission info
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -45,7 +44,6 @@ Rectangle {
             RowLayout {
                 spacing: Theme.spacingMedium
 
-                // Objectives placeholder
                 ColumnLayout {
                     spacing: Theme.spacingTiny
 
@@ -61,11 +59,13 @@ Rectangle {
                         color: Theme.textSubLite
                         font.pointSize: Theme.fontSizeSmall
                     }
+
                 }
 
-                Item { Layout.fillWidth: true }
+                Item {
+                    Layout.fillWidth: true
+                }
 
-                // Stats placeholder
                 ColumnLayout {
                     spacing: Theme.spacingTiny
 
@@ -90,12 +90,15 @@ Rectangle {
                             color: Theme.textSubLite
                             font.pointSize: Theme.fontSizeSmall
                         }
+
                     }
+
                 }
+
             }
+
         }
 
-        // Right: Action buttons
         ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
             spacing: Theme.spacingMedium
@@ -104,13 +107,14 @@ Rectangle {
                 text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
                 enabled: mission_data && mission_data.unlocked
                 onClicked: root.start_mission_clicked()
-
                 ToolTip.visible: !enabled && hovered
                 ToolTip.text: {
-                    if (!mission_data) return "";
-                    if (!mission_data.unlocked) {
+                    if (!mission_data)
+                        return "";
+
+                    if (!mission_data.unlocked)
                         return qsTr("Complete previous missions to unlock");
-                    }
+
                     return "";
                 }
                 ToolTip.delay: 500
@@ -134,6 +138,9 @@ Rectangle {
                 horizontalAlignment: Text.AlignHCenter
                 Layout.alignment: Qt.AlignHCenter
             }
+
         }
+
     }
+
 }

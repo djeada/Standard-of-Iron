@@ -14,22 +14,18 @@ Rectangle {
     height: 90
     radius: Theme.radiusMedium
     color: {
-        if (is_selected) return Theme.selectedBg;
-        if (mouse_area.containsMouse) return Theme.hoverBg;
+        if (is_selected)
+            return Theme.selectedBg;
+
+        if (mouse_area.containsMouse)
+            return Theme.hoverBg;
+
         return Theme.cardBase;
     }
     border.color: is_selected ? Theme.selectedBr : Theme.cardBorder
     border.width: is_selected ? 2 : 1
-    opacity: (mission_data && mission_data.unlocked === false) ? 0.5 : 1.0
+    opacity: (mission_data && mission_data.unlocked === false) ? 0.5 : 1
     clip: true
-
-    Behavior on color {
-        ColorAnimation { duration: Theme.animNormal }
-    }
-
-    Behavior on border.color {
-        ColorAnimation { duration: Theme.animNormal }
-    }
 
     MouseArea {
         id: mouse_area
@@ -45,7 +41,6 @@ Rectangle {
         anchors.margins: Theme.spacingMedium
         spacing: Theme.spacingMedium
 
-        // Mission number badge
         Rectangle {
             Layout.preferredWidth: 36
             Layout.preferredHeight: 36
@@ -62,6 +57,7 @@ Rectangle {
                 font.pointSize: Theme.fontSizeMedium
                 font.bold: true
             }
+
         }
 
         ColumnLayout {
@@ -81,7 +77,6 @@ Rectangle {
                     elide: Text.ElideRight
                 }
 
-                // Status badge
                 Rectangle {
                     visible: mission_data && mission_data.completed
                     Layout.preferredWidth: 80
@@ -98,6 +93,7 @@ Rectangle {
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
                     }
+
                 }
 
                 Rectangle {
@@ -115,6 +111,7 @@ Rectangle {
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
                     }
+
                 }
 
                 Rectangle {
@@ -133,7 +130,9 @@ Rectangle {
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
                     }
+
                 }
+
             }
 
             Label {
@@ -146,10 +145,9 @@ Rectangle {
                 font.pointSize: Theme.fontSizeSmall
             }
 
-            // Difficulty tag
             RowLayout {
                 spacing: Theme.spacingTiny
-                visible: mission_data && mission_data.difficulty_modifier
+                visible: !!(mission_data && mission_data.difficulty_modifier)
 
                 Label {
                     text: qsTr("Difficulty:")
@@ -159,7 +157,9 @@ Rectangle {
 
                 Repeater {
                     model: {
-                        if (!mission_data || !mission_data.difficulty_modifier) return 1;
+                        if (!mission_data || !mission_data.difficulty_modifier)
+                            return 1;
+
                         return Math.round(mission_data.difficulty_modifier);
                     }
 
@@ -168,8 +168,11 @@ Rectangle {
                         color: Theme.warningText
                         font.pointSize: Theme.fontSizeTiny
                     }
+
                 }
+
             }
+
         }
 
         Text {
@@ -178,5 +181,21 @@ Rectangle {
             color: Theme.textHint
             Layout.alignment: Qt.AlignVCenter
         }
+
     }
+
+    Behavior on color {
+        ColorAnimation {
+            duration: Theme.animNormal
+        }
+
+    }
+
+    Behavior on border.color {
+        ColorAnimation {
+            duration: Theme.animNormal
+        }
+
+    }
+
 }
