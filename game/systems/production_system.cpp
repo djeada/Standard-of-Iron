@@ -6,11 +6,14 @@
 #include "../map/map_transformer.h"
 #include "../units/factory.h"
 #include "../units/troop_config.h"
+#include "building_collision_registry.h"
+#include "command_service.h"
 #include "nation_registry.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
 #include <cmath>
+#include <limits>
 #include <qvectornd.h>
 
 namespace Game::Systems {
@@ -36,6 +39,41 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
     return nation->id;
   }
   return registry.default_nation_id();
+}
+
+auto compute_builder_exit_position(
+    float center_x, float center_z, const QVector3D &builder_pos,
+    float unit_radius, const std::string &building_type) -> QVector3D {
+  auto const size = BuildingCollisionRegistry::get_building_size(building_type);
+  float const half_width = size.width * 0.5F;
+  float const half_depth = size.depth * 0.5F;
+  float const clearance = unit_radius + 0.25F;
+
+  float dir_x = builder_pos.x() - center_x;
+  float dir_z = builder_pos.z() - center_z;
+  float const len_sq = dir_x * dir_x + dir_z * dir_z;
+  if (len_sq < 0.0001F) {
+    dir_x = 1.0F;
+    dir_z = 0.0F;
+  } else {
+    float const len = std::sqrt(len_sq);
+    dir_x /= len;
+    dir_z /= len;
+  }
+
+  float const abs_x = std::fabs(dir_x);
+  float const abs_z = std::fabs(dir_z);
+  float const sx = (abs_x > 0.0001F) ? (half_width + clearance) / abs_x
+                                     : std::numeric_limits<float>::infinity();
+  float const sz = (abs_z > 0.0001F) ? (half_depth + clearance) / abs_z
+                                     : std::numeric_limits<float>::infinity();
+  float const scale = std::min(sx, sz);
+  float const fallback_scale = std::max(half_width, half_depth) + clearance;
+  float const final_scale =
+      std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
+
+  return {center_x + dir_x * final_scale, builder_pos.y(),
+          center_z + dir_z * final_scale};
 }
 
 } // namespace
@@ -253,24 +291,20 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
           if (builder_prod->has_construction_site && movement != nullptr &&
               t != nullptr) {
+            float const unit_radius =
+                CommandService::get_unit_radius(*world, e->get_id());
+            QVector3D const exit_pos = compute_builder_exit_position(
+                builder_prod->construction_site_x,
+                builder_prod->construction_site_z,
+                QVector3D(t->position.x, t->position.y, t->position.z),
+                unit_radius, builder_prod->product_type);
 
-            float dx = t->position.x - builder_prod->construction_site_x;
-            float dz = t->position.z - builder_prod->construction_site_z;
-            float dist = std::sqrt(dx * dx + dz * dz);
-            if (dist < 0.1F) {
-
-              dx = 1.0F;
-              dz = 0.0F;
-              dist = 1.0F;
-            }
-
-            dx = (dx / dist) * 3.0F;
-            dz = (dz / dist) * 3.0F;
-
-            movement->goal_x = t->position.x + dx;
-            movement->goal_y = t->position.z + dz;
-            movement->target_x = t->position.x + dx;
-            movement->target_y = t->position.z + dz;
+            t->position.x = exit_pos.x();
+            t->position.z = exit_pos.z();
+            movement->goal_x = exit_pos.x();
+            movement->goal_y = exit_pos.z();
+            movement->target_x = exit_pos.x();
+            movement->target_y = exit_pos.z();
           }
         }
       }
