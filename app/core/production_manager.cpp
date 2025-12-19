@@ -18,10 +18,9 @@
 #include <QPointF>
 #include <algorithm>
 
-ProductionManager::ProductionManager(Engine::Core::World *world,
-                                   Game::Systems::PickingService *picking_service,
-                                   Render::GL::Camera *camera,
-                                   QObject *parent)
+ProductionManager::ProductionManager(
+    Engine::Core::World *world, Game::Systems::PickingService *picking_service,
+    Render::GL::Camera *camera, QObject *parent)
     : QObject(parent), m_world(world), m_picking_service(picking_service),
       m_camera(camera) {}
 
@@ -32,18 +31,16 @@ void ProductionManager::start_building_placement(const QString &building_type) {
   m_pending_building_type = building_type;
 }
 
-void ProductionManager::place_building_at_screen(qreal sx, qreal sy,
-                                                 int local_owner_id,
-                                                 const ViewportState &viewport) {
+void ProductionManager::place_building_at_screen(
+    qreal sx, qreal sy, int local_owner_id, const ViewportState &viewport) {
   if (m_pending_building_type.isEmpty() || !m_world || !m_picking_service ||
       !m_camera) {
     return;
   }
 
   QVector3D hit;
-  if (!m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                          viewport.width, viewport.height,
-                                          hit)) {
+  if (!m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
     return;
   }
 
@@ -79,8 +76,8 @@ void ProductionManager::cancel_building_placement() {
   m_pending_building_type.clear();
 }
 
-void ProductionManager::on_construction_mouse_move(qreal sx, qreal sy,
-                                                  const ViewportState &viewport) {
+void ProductionManager::on_construction_mouse_move(
+    qreal sx, qreal sy, const ViewportState &viewport) {
   if (!m_is_placing_construction || !m_picking_service || !m_camera) {
     return;
   }
@@ -88,7 +85,7 @@ void ProductionManager::on_construction_mouse_move(qreal sx, qreal sy,
   QPointF screenPt(sx, sy);
   QVector3D hit;
   if (m_picking_service->screen_to_ground(screenPt, *m_camera, viewport.width,
-                                         viewport.height, hit)) {
+                                          viewport.height, hit)) {
     m_construction_placement_position = hit;
 
     for (auto id : m_pending_construction_builders) {
@@ -317,16 +314,15 @@ auto ProductionManager::get_unit_production_info(const QString &unit_type)
 }
 
 void ProductionManager::set_rally_at_screen(qreal sx, qreal sy,
-                                           int local_owner_id,
-                                           const ViewportState &viewport) {
+                                            int local_owner_id,
+                                            const ViewportState &viewport) {
   if (!m_world || !m_picking_service || !m_camera) {
     return;
   }
 
   QVector3D hit;
-  if (!m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                          viewport.width, viewport.height,
-                                          hit)) {
+  if (!m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
     return;
   }
 
@@ -408,15 +404,15 @@ auto ProductionManager::calculate_builder_center_position(
 
   if (valid_count > 0) {
     return QVector3D(sum_x / static_cast<float>(valid_count),
-                    sum_y / static_cast<float>(valid_count),
-                    sum_z / static_cast<float>(valid_count));
+                     sum_y / static_cast<float>(valid_count),
+                     sum_z / static_cast<float>(valid_count));
   }
 
   return QVector3D(0.0F, 0.0F, 0.0F);
 }
 
-auto ProductionManager::get_construction_build_time(const std::string &item_type)
-    -> float {
+auto ProductionManager::get_construction_build_time(
+    const std::string &item_type) -> float {
   constexpr float DEFAULT_BUILD_TIME = 10.0F;
   constexpr float CATAPULT_BUILD_TIME = 15.0F;
   constexpr float BALLISTA_BUILD_TIME = 12.0F;
