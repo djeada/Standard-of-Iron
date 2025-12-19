@@ -120,8 +120,8 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   // Barracks is 4x4, centered at (0,0), so bounds are [-2, 2] x [-2, 2]
   registry.register_building(1, "barracks", 0.0F, 0.0F, 0);
 
-  // Default grid padding should be 0.5 to account for typical unit sizes
-  EXPECT_GE(BuildingCollisionRegistry::get_grid_padding(), 0.5F);
+  // Default grid padding should be at least 1.0 to account for largest unit sizes
+  EXPECT_GE(BuildingCollisionRegistry::get_grid_padding(), 1.0F);
 
   // Get occupied grid cells and verify they include padding
   const auto &buildings = registry.get_all_buildings();
@@ -129,9 +129,9 @@ TEST_F(BuildingCollisionRegistryTest, GridPaddingAccountsForUnitRadius) {
   
   auto cells = BuildingCollisionRegistry::get_occupied_grid_cells(buildings[0], kDefaultGridCellSize);
   
-  // With padding of 0.5 and building bounds [-2, 2]:
-  // min_grid should be floor(-2 - 0.5) = -3
-  // max_grid should be ceil(2 + 0.5) = 3
+  // With padding of 1.0 and building bounds [-2, 2]:
+  // min_grid should be floor(-2 - 1.0) = -3
+  // max_grid should be ceil(2 + 1.0) = 3
   // So cells should span from -3 to 2 (since loop uses < max_grid)
   bool has_min_x = false;
   bool has_max_x = false;

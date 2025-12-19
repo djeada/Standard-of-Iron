@@ -353,8 +353,33 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         }
       }
 
-      transform->position.x = movement->target_x;
-      transform->position.z = movement->target_y;
+      // Validate target position before snapping to prevent clipping
+      QVector3D const target_pos(movement->target_x, 0.0F, movement->target_y);
+      auto &registry = BuildingCollisionRegistry::instance();
+      if (!registry.is_circle_overlapping_building(
+              target_pos.x(), target_pos.z(), unit_radius, entity->get_id())) {
+        // Target is valid - snap to it
+        transform->position.x = movement->target_x;
+        transform->position.z = movement->target_y;
+      } else {
+        // Target overlaps building - find nearest valid position
+        Pathfinding *pathfinder = CommandService::get_pathfinder();
+        if (pathfinder != nullptr) {
+          Point const target_grid =
+              CommandService::world_to_grid(target_pos.x(), target_pos.z());
+          Point const nearest = Pathfinding::find_nearest_walkable_point(
+              target_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
+          QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+          
+          // Double-check the safe position
+          if (!registry.is_circle_overlapping_building(
+                  safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
+            transform->position.x = safe_pos.x();
+            transform->position.z = safe_pos.z();
+          }
+          // If still not valid, keep current position (don't snap)
+        }
+      }
       movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
 
