@@ -74,3 +74,6 @@ venv/
 __pycache__/
 *.py[cod]
 *$py.class
+tools/assets/
+assets/campaing_map/
+tools/map_pipeline/assets/
