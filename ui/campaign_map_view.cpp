@@ -14,6 +14,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLTexture>
 #include <QMatrix4x4>
+#include <QVariantMap>
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
@@ -686,10 +687,10 @@ void main() {
       }
       QVector4D color = span.color;
       if (!m_hoverProvinceId.isEmpty() && span.id == m_hoverProvinceId) {
-        color = QVector4D(qMin(1.0F, color.x() + 0.28F),
-                          qMin(1.0F, color.y() + 0.28F),
-                          qMin(1.0F, color.z() + 0.28F),
-                          qMin(1.0F, color.w() + 0.32F));
+        color = QVector4D(qMin(1.0F, color.x() + 0.42F),
+                          qMin(1.0F, color.y() + 0.42F),
+                          qMin(1.0F, color.z() + 0.42F),
+                          qMin(1.0F, color.w() + 0.55F));
       }
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
@@ -810,6 +811,8 @@ void CampaignMapView::loadProvincesForHitTest() {
 
     ProvinceHit province;
     province.id = prov.value("id").toString();
+    province.name = prov.value("name").toString();
+    province.owner = prov.value("owner").toString();
     province.triangles.reserve(static_cast<size_t>(tri.size()));
 
     for (const auto &pt_val : tri) {
@@ -888,6 +891,72 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   }
 
   return {};
+}
+
+QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
+  loadProvincesForHitTest();
+  QVariantMap info;
+  if (m_provinces.empty()) {
+    return info;
+  }
+
+  const float w = static_cast<float>(width());
+  const float h = static_cast<float>(height());
+  if (w <= 0.0F || h <= 0.0F) {
+    return info;
+  }
+
+  const float ndc_x = (2.0F * x / w) - 1.0F;
+  const float ndc_y = 1.0F - (2.0F * y / h);
+
+  const QMatrix4x4 mvp = buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch,
+                                       m_orbitDistance);
+  bool inverted = false;
+  const QMatrix4x4 inv = mvp.inverted(&inverted);
+  if (!inverted) {
+    return info;
+  }
+
+  QVector4D near_p = inv * QVector4D(ndc_x, ndc_y, -1.0F, 1.0F);
+  QVector4D far_p = inv * QVector4D(ndc_x, ndc_y, 1.0F, 1.0F);
+  if (qFuzzyIsNull(near_p.w()) || qFuzzyIsNull(far_p.w())) {
+    return info;
+  }
+  QVector3D near_v = QVector3D(near_p.x(), near_p.y(), near_p.z()) / near_p.w();
+  QVector3D far_v = QVector3D(far_p.x(), far_p.y(), far_p.z()) / far_p.w();
+
+  const QVector3D dir = far_v - near_v;
+  if (qFuzzyIsNull(dir.y())) {
+    return info;
+  }
+
+  const float t = -near_v.y() / dir.y();
+  if (t < 0.0F) {
+    return info;
+  }
+
+  const QVector3D hit = near_v + dir * t;
+  const float u = 1.0F - hit.x();
+  const float v = hit.z();
+  if (u < 0.0F || u > 1.0F || v < 0.0F || v > 1.0F) {
+    return info;
+  }
+
+  const QVector2D p(u, v);
+  for (const auto &province : m_provinces) {
+    const auto &triangles = province.triangles;
+    for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
+      if (pointInTriangle(p, triangles[i], triangles[i + 1],
+                          triangles[i + 2])) {
+        info.insert(QStringLiteral("id"), province.id);
+        info.insert(QStringLiteral("name"), province.name);
+        info.insert(QStringLiteral("owner"), province.owner);
+        return info;
+      }
+    }
+  }
+
+  return info;
 }
 
 QPointF CampaignMapView::screenPosForUv(float u, float v) {

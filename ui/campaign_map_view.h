@@ -4,6 +4,7 @@
 #include <QQuickFramebufferObject>
 #include <QString>
 #include <QVector2D>
+#include <QVariantMap>
 #include <vector>
 
 class CampaignMapView : public QQuickFramebufferObject {
@@ -18,6 +19,7 @@ public:
   [[nodiscard]] auto createRenderer() const -> Renderer * override;
 
   Q_INVOKABLE QString provinceAtScreen(float x, float y);
+  Q_INVOKABLE QVariantMap provinceInfoAtScreen(float x, float y);
   Q_INVOKABLE QPointF screenPosForUv(float u, float v);
 
   [[nodiscard]] auto orbitYaw() const -> float { return m_orbitYaw; }
@@ -46,6 +48,8 @@ private:
 
   struct ProvinceHit {
     QString id;
+    QString name;
+    QString owner;
     std::vector<QVector2D> triangles;
   };
 

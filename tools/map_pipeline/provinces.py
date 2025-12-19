@@ -166,6 +166,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "carthage",
             "jitter_amplitude": 0.1,
             "expand_factor": 1.02,
+            "cities": [
+                {"name": "New Carthage", "lonlat": (-0.98, 37.6)},
+            ],
             "lonlat": [
                 (-6.5, 40.5),
                 (2.5, 40.8),
@@ -184,6 +187,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.1,
             "expand_factor": 1.02,
+            "cities": [
+                {"name": "Numantia", "lonlat": (-2.4, 41.8)},
+            ],
             "lonlat": [
                 (-9.5, 43.5),
                 (-1.0, 43.8),
@@ -201,6 +207,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.08,
             "expand_factor": 1.01,
+            "cities": [
+                {"name": "Massalia", "lonlat": (5.4, 43.3)},
+            ],
             "lonlat": [
                 (-1.5, 45.6),
                 (6.5, 45.6),
@@ -219,6 +228,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.08,
             "expand_factor": 1.01,
+            "cities": [
+                {"name": "Mediolanum", "lonlat": (9.2, 45.5)},
+            ],
             "lonlat": [
                 (6.0, 46.6),
                 (12.5, 46.6),
@@ -235,6 +247,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "rome",
             "jitter_amplitude": 0.06,
             "expand_factor": 1.03,
+            "cities": [
+                {"name": "Veii", "lonlat": (12.3, 42.0)},
+            ],
             "lonlat": [
                 (8.6, 44.4),
                 (11.9, 44.4),
@@ -251,6 +266,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "rome",
             "jitter_amplitude": 0.06,
             "expand_factor": 1.03,
+            "cities": [
+                {"name": "Rome", "lonlat": (12.5, 41.9)},
+            ],
             "lonlat": [
                 (9.9, 42.7),
                 (13.3, 42.6),
@@ -267,6 +285,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.06,
             "expand_factor": 1.03,
+            "cities": [
+                {"name": "Capua", "lonlat": (14.3, 41.1)},
+            ],
             "lonlat": [
                 (11.6, 41.2),
                 (15.9, 41.2),
@@ -284,6 +305,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "rome",
             "jitter_amplitude": 0.04,
             "expand_factor": 1.0,
+            "cities": [
+                {"name": "Syracuse", "lonlat": (15.3, 37.1)},
+            ],
             "lonlat": [
                 (12.8, 38.3),
                 (15.7, 38.3),
@@ -299,6 +323,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "carthage",
             "jitter_amplitude": 0.03,
             "expand_factor": 1.0,
+            "cities": [
+                {"name": "Lilybaeum", "lonlat": (12.5, 37.8)},
+            ],
             "lonlat": [
                 (12.2, 38.3),
                 (13.1, 38.3),
@@ -314,6 +341,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "rome",
             "jitter_amplitude": 0.04,
             "expand_factor": 1.0,
+            "cities": [
+                {"name": "Caralis", "lonlat": (9.1, 39.2)},
+            ],
             "lonlat": [
                 (8.0, 41.3),
                 (9.5, 41.3),
@@ -329,6 +359,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "rome",
             "jitter_amplitude": 0.04,
             "expand_factor": 1.0,
+            "cities": [
+                {"name": "Aleria", "lonlat": (9.5, 42.1)},
+            ],
             "lonlat": [
                 (8.6, 43.0),
                 (9.7, 43.0),
@@ -344,6 +377,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "carthage",
             "jitter_amplitude": 0.05,
             "expand_factor": 1.06,
+            "cities": [
+                {"name": "Carthage", "lonlat": (10.3, 36.85)},
+            ],
             "lonlat": [
                 (7.8, 38.3),
                 (13.8, 38.3),
@@ -358,9 +394,12 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         {
             "id": "numidia",
             "name": "Numidia",
-            "owner": "neutral",
+            "owner": "carthage",
             "jitter_amplitude": 0.06,
             "expand_factor": 1.02,
+            "cities": [
+                {"name": "Cirta", "lonlat": (6.6, 36.4)},
+            ],
             "lonlat": [
                 (-10.0, 37.4),
                 (7.6, 37.4),
@@ -386,12 +425,15 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.05,
             "expand_factor": 1.02,
+            "cities": [
+                {"name": "Leptis", "lonlat": (14.5, 32.6)},
+            ],
             "lonlat": [
-                (13.2, 36.8),
-                (18.0, 36.6),
-                (18.0, 32.5),
-                (13.4, 32.5),
-                (13.2, 36.8),
+                (12.2, 37.2),
+                (18.0, 37.0),
+                (18.0, 31.0),
+                (12.6, 31.0),
+                (12.2, 37.2),
             ],
             "label_lonlat": (14.8, 35.0),
         },
@@ -401,6 +443,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "owner": "neutral",
             "jitter_amplitude": 0.06,
             "expand_factor": 1.0,
+            "cities": [
+                {"name": "Salona", "lonlat": (16.4, 43.5)},
+            ],
             "lonlat": [
                 (12.5, 45.5),
                 (16.5, 45.5),
@@ -426,6 +471,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
     if not geoms:
         raise RuntimeError("No land geometry found in land_uv.geojson")
     land_union = unary_union(geoms)
+    print(f"Loaded land geometry: {len(geoms)} feature(s)")
 
     province_defs = []
     for province in provinces:
@@ -458,9 +504,11 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                 "owner": province.get("owner", "neutral"),
                 "poly": poly,
                 "label_lonlat": province.get("label_lonlat"),
+                "cities": province.get("cities", []),
                 "centroid": poly.representative_point(),
             }
         )
+    print(f"Prepared province shapes: {len(province_defs)}")
 
     # Step 1: Clip each province to land (preserving original shapes)
     province_clipped = {}
@@ -526,12 +574,14 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         if uncovered.is_empty or uncovered.area < MIN_GAP_AREA:
             print(f"All land covered after {iteration} iterations")
             break
+        print(f"Gap fill iteration {iteration + 1}/{MAX_ITERATIONS}: uncovered area {uncovered.area:.6f}")
 
         uncovered_polys = extract_polygons(uncovered)
         if not uncovered_polys:
             break
 
         made_progress = False
+        processed_gaps = 0
         for gap_poly in uncovered_polys:
             if gap_poly.area < MIN_GAP_AREA:
                 continue
@@ -568,6 +618,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                         resolved_provinces[prov_id] = resolved_provinces[prov_id].union(claim)
                         remaining_gap = remaining_gap.difference(claim)
                         made_progress = True
+            processed_gaps += 1
+
+        print(f"  processed gaps: {processed_gaps}, progress: {'yes' if made_progress else 'no'}")
 
         if not made_progress:
             # Force-expand all provinces slightly to catch remaining gaps
@@ -674,6 +727,14 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                 label_uv = (0.0, 0.0)
 
         color = owner_palette.get(prov["owner"], owner_palette["neutral"])
+        cities = []
+        for city in prov.get("cities", []):
+            lonlat = city.get("lonlat")
+            name = city.get("name", "")
+            if not lonlat or len(lonlat) < 2 or not name:
+                continue
+            uv = bounds.to_uv(lonlat[0], lonlat[1])
+            cities.append({"name": name, "uv": [uv[0], uv[1]]})
         output.append(
             {
                 "id": prov_id,
@@ -682,6 +743,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                 "color": color,
                 "label_uv": [label_uv[0], label_uv[1]],
                 "triangles": [[float(u), float(v)] for (u, v) in tris],
+                "cities": cities,
             }
         )
 
