@@ -61,9 +61,8 @@ void main() {
   vec4 modelPos = u_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
-  bool deformArmor =
-      (u_materialId == 1 || u_materialId == 2 ||
-       u_materialId == 3 || u_materialId == 5);
+  bool deformArmor = (u_materialId == 1 || u_materialId == 2 ||
+                      u_materialId == 3 || u_materialId == 5);
 
   float dentSeed = 0.0;
   float combatStress = 0.0;
