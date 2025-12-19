@@ -27,7 +27,7 @@
 
 namespace {
 
-auto buildMvpMatrix(float width, float height, float yaw_deg, float pitch_deg,
+auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
                     float distance) -> QMatrix4x4 {
   const float view_w = qMax(1.0F, width);
   const float view_h = qMax(1.0F, height);
@@ -57,7 +57,7 @@ auto buildMvpMatrix(float width, float height, float yaw_deg, float pitch_deg,
   return projection * view * model;
 }
 
-auto pointInTriangle(const QVector2D &p, const QVector2D &a, const QVector2D &b,
+auto point_in_triangle(const QVector2D &p, const QVector2D &a, const QVector2D &b,
                      const QVector2D &c) -> bool {
   const QVector2D v0 = c - a;
   const QVector2D v1 = b - a;
@@ -627,7 +627,7 @@ void main() {
   }
 
   void compute_mvp(QMatrix4x4 &out_mvp) const {
-    out_mvp = buildMvpMatrix(static_cast<float>(m_size.width()),
+    out_mvp = build_mvp_matrix(static_cast<float>(m_size.width()),
                              static_cast<float>(m_size.height()), m_orbit_yaw,
                              m_orbit_pitch, m_orbit_distance);
   }
@@ -921,7 +921,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   const float ndc_y = 1.0F - (2.0F * y / h);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -957,7 +957,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   for (const auto &province : m_provinces) {
     const auto &triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
-      if (pointInTriangle(p, triangles[i], triangles[i + 1],
+      if (point_in_triangle(p, triangles[i], triangles[i + 1],
                           triangles[i + 2])) {
         return province.id;
       }
@@ -984,7 +984,7 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   const float ndc_y = 1.0F - (2.0F * y / h);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -1020,7 +1020,7 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   for (const auto &province : m_provinces) {
     const auto &triangles = province.triangles;
     for (size_t i = 0; i + 2 < triangles.size(); i += 3) {
-      if (pointInTriangle(p, triangles[i], triangles[i + 1],
+      if (point_in_triangle(p, triangles[i], triangles[i + 1],
                           triangles[i + 2])) {
         info.insert(QStringLiteral("id"), province.id);
         info.insert(QStringLiteral("name"), province.name);
@@ -1044,7 +1044,7 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
   const float clamped_v = qBound(0.0F, v, 1.0F);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
   const QVector4D clip = mvp * world;
   if (qFuzzyIsNull(clip.w())) {
