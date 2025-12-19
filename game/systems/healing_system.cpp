@@ -98,9 +98,9 @@ void HealingSystem::process_healing(Engine::Core::World *world,
                                      target_transform->position.y + 0.8F,
                                      target_transform->position.z);
 
-          // Roman healers use blue waves, Carthage uses green beams
-          QVector3D const heal_color = get_healing_color(healer_unit->nation_id);
-          
+          QVector3D const heal_color =
+              get_healing_color(healer_unit->nation_id);
+
           healing_beam_system->spawn_beam(healer_pos, target_pos, heal_color,
                                           0.7F);
         }
