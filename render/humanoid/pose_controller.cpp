@@ -12,7 +12,293 @@ HumanoidPoseController::HumanoidPoseController(
     HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx)
     : m_pose(pose), m_anim_ctx(anim_ctx) {}
 
-void HumanoidPoseController::standIdle() {}
+void HumanoidPoseController::stand_idle() {}
+
+void HumanoidPoseController::apply_micro_idle(float /*time*/,
+                                              std::uint32_t /*seed*/) {
+  // Micro idles disabled - they were causing visible torso/armor distortion
+  // when applied to all soldiers. Idle life is now handled purely through
+  // ambient idles which only affect 1-2 soldiers per unit.
+}
+
+// Constants for ambient idle timing
+namespace {
+constexpr float kMinIdleDuration = 5.0F;       // Minimum seconds idle before ambient idles
+constexpr float kAmbientDuration = 6.0F;       // Duration of ambient idle animation
+constexpr float kSeedOffsetDivisor = 50.0F;    // Creates offset range 0-20 seconds
+constexpr float kBaseCyclePeriod = 25.0F;      // Base cycle period in seconds
+constexpr float kCyclePeriodRange = 15.0F;     // Additional random range (total 25-40s)
+constexpr float kTapFrequencyMultiplier = 6.0F; // Number of foot taps during animation
+} // namespace
+
+auto HumanoidPoseController::get_ambient_idle_type(float time, std::uint32_t seed,
+                                                   float idle_duration)
+    -> AmbientIdleType {
+  // Only trigger ambient idles after being idle for a longer while
+  if (idle_duration < kMinIdleDuration) {
+    return AmbientIdleType::None;
+  }
+
+  // Use seed to create a unique cycle offset for this soldier (range 0-20 seconds)
+  float const seed_offset =
+      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
+
+  // Much longer cycle - 25-40 seconds between ambient idles
+  float const cycle_period =
+      kBaseCyclePeriod +
+      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
+  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
+
+  // Determine which cycle we're in (changes over time)
+  auto const cycle_number =
+      static_cast<std::uint32_t>((time + seed_offset) / cycle_period);
+
+  // Randomize which soldiers animate each cycle using cycle_number + seed
+  // This ensures different soldiers animate at different times
+  std::uint32_t const soldier_selector = seed ^ (cycle_number * 2654435761U);
+  if ((soldier_selector % 10) > 1) {
+    return AmbientIdleType::None;
+  }
+
+  // Only active during the first 6 seconds of each cycle (for sit down/stand up)
+  if (cycle_time > kAmbientDuration) {
+    return AmbientIdleType::None;
+  }
+
+  // Randomize animation type each cycle using cycle_number + seed
+  // This ensures each soldier gets different animations over time
+  std::uint32_t const anim_selector = seed ^ (cycle_number * 1664525U);
+  auto const idle_type = static_cast<std::uint8_t>(anim_selector % 8);
+  return static_cast<AmbientIdleType>(idle_type + 1);
+}
+
+void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
+                                                float idle_duration) {
+  using HP = HumanProportions;
+
+  AmbientIdleType const idle_type =
+      get_ambient_idle_type(time, seed, idle_duration);
+  if (idle_type == AmbientIdleType::None) {
+    return;
+  }
+
+  // Calculate phase within the ambient idle animation (0 to 1)
+  // Must match timing calculation in getAmbientIdleType
+  float const seed_offset =
+      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
+  float const cycle_period =
+      kBaseCyclePeriod +
+      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
+  float const cycle_time = std::fmod(time + seed_offset, cycle_period);
+
+  // Create smooth in/out animation curve
+  float phase = cycle_time / kAmbientDuration;
+  // Smooth ease in-out
+  float const intensity =
+      (phase < 0.5F) ? (2.0F * phase * phase)
+                     : (1.0F - std::pow(-2.0F * phase + 2.0F, 2.0F) / 2.0F);
+
+  switch (idle_type) {
+  case AmbientIdleType::SitDown: {
+    // Soldier sits down then stands back up
+    // Phase 0-0.4: sit down, 0.4-0.6: hold, 0.6-1.0: stand up
+    float sit_intensity = 0.0F;
+    if (phase < 0.4F) {
+      sit_intensity = phase / 0.4F;
+    } else if (phase < 0.6F) {
+      sit_intensity = 1.0F;
+    } else {
+      sit_intensity = 1.0F - (phase - 0.6F) / 0.4F;
+    }
+    sit_intensity = sit_intensity * sit_intensity * (3.0F - 2.0F * sit_intensity);
+
+    // Lower entire body together to maintain mesh integrity
+    float const sit_drop = sit_intensity * 0.35F;
+
+    // All body parts drop together
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() - sit_drop);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - sit_drop);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - sit_drop);
+    m_pose.neck_base.setY(m_pose.neck_base.y() - sit_drop);
+    m_pose.head_pos.setY(m_pose.head_pos.y() - sit_drop);
+
+    // Knees bend outward and forward for crouching pose
+    m_pose.knee_l.setY(m_pose.knee_l.y() - sit_drop * 0.5F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() - sit_drop * 0.5F);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + sit_intensity * 0.12F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() + sit_intensity * 0.12F);
+
+    // Feet stay planted but widen slightly
+    m_pose.foot_l.setX(m_pose.foot_l.x() - sit_intensity * 0.04F);
+    m_pose.foot_r.setX(m_pose.foot_r.x() + sit_intensity * 0.04F);
+    break;
+  }
+
+  case AmbientIdleType::ShuffleFeet: {
+    // Shuffle feet back and forth
+    float const shuffle_phase = phase * 2.0F * std::numbers::pi_v<float>;
+    float const shuffle_amount = std::sin(shuffle_phase) * intensity * 0.04F;
+
+    m_pose.foot_l.setZ(m_pose.foot_l.z() + shuffle_amount);
+    m_pose.foot_r.setZ(m_pose.foot_r.z() - shuffle_amount);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + shuffle_amount * 0.5F);
+    m_pose.knee_r.setZ(m_pose.knee_r.z() - shuffle_amount * 0.5F);
+    break;
+  }
+
+  case AmbientIdleType::TapFoot: {
+    // Tap one foot impatiently (kTapFrequencyMultiplier taps during animation)
+    float const tap_phase = std::fmod(phase * kTapFrequencyMultiplier, 1.0F);
+    float const tap_lift =
+        (tap_phase < 0.3F) ? std::sin(tap_phase / 0.3F * std::numbers::pi_v<float>) : 0.0F;
+    float const tap_amount = tap_lift * intensity * 0.03F;
+
+    // Lift and lower foot heel
+    m_pose.foot_r.setY(m_pose.foot_r.y() + tap_amount);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + tap_amount * 0.3F);
+    break;
+  }
+
+  case AmbientIdleType::ShiftWeight: {
+    // Shift weight from one leg to the other
+    float const shift_phase = phase * std::numbers::pi_v<float>;
+    float const shift_amount = std::sin(shift_phase) * intensity * 0.04F;
+
+    // Entire upper body shifts together to maintain mesh integrity
+    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift_amount);
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift_amount);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift_amount);
+    m_pose.neck_base.setX(m_pose.neck_base.x() + shift_amount);
+    m_pose.head_pos.setX(m_pose.head_pos.x() + shift_amount);
+
+    // One knee bends more, other straightens
+    m_pose.knee_l.setY(m_pose.knee_l.y() - shift_amount * 0.3F);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + shift_amount * 0.2F);
+    break;
+  }
+
+  case AmbientIdleType::StepInPlace: {
+    // Small step in place - lift one foot then set it down
+    float step_phase = phase * 2.0F;
+    bool const is_left_step = step_phase < 1.0F;
+    if (!is_left_step) {
+      step_phase -= 1.0F;
+    }
+
+    float const step_lift =
+        std::sin(step_phase * std::numbers::pi_v<float>) * intensity * 0.05F;
+
+    if (is_left_step) {
+      m_pose.foot_l.setY(m_pose.foot_l.y() + step_lift);
+      m_pose.knee_l.setY(m_pose.knee_l.y() + step_lift * 0.6F);
+    } else {
+      m_pose.foot_r.setY(m_pose.foot_r.y() + step_lift);
+      m_pose.knee_r.setY(m_pose.knee_r.y() + step_lift * 0.6F);
+    }
+    break;
+  }
+
+  case AmbientIdleType::BendKnee: {
+    // Bend one knee to rest the leg
+    float const bend_amount = intensity * 0.06F;
+
+    // Bend left knee forward
+    m_pose.knee_l.setY(m_pose.knee_l.y() - bend_amount);
+    m_pose.knee_l.setZ(m_pose.knee_l.z() + bend_amount * 0.4F);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + bend_amount * 0.2F);
+
+    // Entire body shifts slightly to right together (weight-bearing leg)
+    float const shift = bend_amount * 0.25F;
+    m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + shift);
+    m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + shift);
+    m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + shift);
+    m_pose.neck_base.setX(m_pose.neck_base.x() + shift);
+    m_pose.head_pos.setX(m_pose.head_pos.x() + shift);
+    break;
+  }
+
+  case AmbientIdleType::RaiseWeapon: {
+    // Raise weapon up then lower it (like checking/inspecting)
+    // Phase 0-0.3: raise, 0.3-0.7: hold up, 0.7-1.0: lower
+    float raise_intensity = 0.0F;
+    if (phase < 0.3F) {
+      raise_intensity = phase / 0.3F;
+    } else if (phase < 0.7F) {
+      raise_intensity = 1.0F;
+    } else {
+      raise_intensity = 1.0F - (phase - 0.7F) / 0.3F;
+    }
+    raise_intensity =
+        raise_intensity * raise_intensity * (3.0F - 2.0F * raise_intensity);
+
+    // Raise both hands together (holding weapon)
+    float const raise_amount = raise_intensity * 0.15F;
+    m_pose.hand_l.setY(m_pose.hand_l.y() + raise_amount);
+    m_pose.hand_r.setY(m_pose.hand_r.y() + raise_amount);
+    m_pose.elbow_l.setY(m_pose.elbow_l.y() + raise_amount * 0.6F);
+    m_pose.elbow_r.setY(m_pose.elbow_r.y() + raise_amount * 0.6F);
+
+    // Slight head tilt to look at weapon
+    m_pose.head_pos.setZ(m_pose.head_pos.z() - raise_intensity * 0.02F);
+    break;
+  }
+
+  case AmbientIdleType::Jump: {
+    // Small jump in place
+    // Phase 0-0.15: crouch, 0.15-0.4: jump up, 0.4-0.6: airborne, 0.6-0.85: land, 0.85-1.0: recover
+    float jump_height = 0.0F;
+    float crouch_amount = 0.0F;
+
+    if (phase < 0.15F) {
+      // Crouch before jump
+      crouch_amount = phase / 0.15F;
+    } else if (phase < 0.4F) {
+      // Launching up
+      float const launch_phase = (phase - 0.15F) / 0.25F;
+      jump_height = std::sin(launch_phase * std::numbers::pi_v<float> * 0.5F);
+    } else if (phase < 0.6F) {
+      // Airborne
+      jump_height = 1.0F;
+    } else if (phase < 0.85F) {
+      // Landing
+      float const land_phase = (phase - 0.6F) / 0.25F;
+      jump_height = 1.0F - std::sin(land_phase * std::numbers::pi_v<float> * 0.5F);
+    } else {
+      // Recovery crouch
+      crouch_amount = 1.0F - (phase - 0.85F) / 0.15F;
+    }
+
+    // Apply smooth easing
+    crouch_amount =
+        crouch_amount * crouch_amount * (3.0F - 2.0F * crouch_amount);
+    float const max_jump = 0.12F;
+    float const max_crouch = 0.06F;
+
+    // Vertical movement - entire body moves together
+    float const vertical = jump_height * max_jump - crouch_amount * max_crouch;
+    m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + vertical);
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + vertical);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + vertical);
+    m_pose.neck_base.setY(m_pose.neck_base.y() + vertical);
+    m_pose.head_pos.setY(m_pose.head_pos.y() + vertical);
+    m_pose.foot_l.setY(m_pose.foot_l.y() + vertical);
+    m_pose.foot_r.setY(m_pose.foot_r.y() + vertical);
+    m_pose.knee_l.setY(m_pose.knee_l.y() + vertical);
+    m_pose.knee_r.setY(m_pose.knee_r.y() + vertical);
+
+    // Bend knees during crouch phases
+    if (crouch_amount > 0.0F) {
+      m_pose.knee_l.setZ(m_pose.knee_l.z() + crouch_amount * 0.08F);
+      m_pose.knee_r.setZ(m_pose.knee_r.z() + crouch_amount * 0.08F);
+    }
+    break;
+  }
+
+  case AmbientIdleType::None:
+  default:
+    break;
+  }
+}
 
 void HumanoidPoseController::kneel(float depth) {
   using HP = HumanProportions;
