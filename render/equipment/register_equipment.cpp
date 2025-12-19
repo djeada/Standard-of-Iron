@@ -29,7 +29,7 @@
 
 namespace Render::GL {
 
-void registerBuiltInEquipment() {
+void register_built_in_equipment() {
   auto &registry = EquipmentRegistry::instance();
 
   BowRenderConfig carthage_config;

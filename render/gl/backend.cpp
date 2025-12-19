@@ -239,7 +239,7 @@ void Backend::setViewport(int w, int h) {
   m_viewportHeight = h;
 }
 
-void Backend::setClearColor(float r, float g, float b, float a) {
+void Backend::set_clear_color(float r, float g, float b, float a) {
   m_clearColor[Red] = r;
   m_clearColor[Green] = g;
   m_clearColor[Blue] = b;

@@ -26,7 +26,7 @@ public:
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
     return m_vertices;
   }
-  [[nodiscard]] auto getIndices() const -> const std::vector<unsigned int> & {
+  [[nodiscard]] auto get_indices() const -> const std::vector<unsigned int> & {
     return m_indices;
   }
 
@@ -70,8 +70,8 @@ private:
 };
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;
-auto createCubeMesh() -> std::unique_ptr<Mesh>;
-auto createPlaneMesh(float width, float height,
+auto create_cube_mesh() -> std::unique_ptr<Mesh>;
+auto create_plane_mesh(float width, float height,
                      int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
 } // namespace Render::GL

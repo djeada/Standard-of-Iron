@@ -626,9 +626,9 @@ auto get_unit_cube() -> Mesh * {
   return s_mesh.get();
 }
 
-auto get_unit_sphere(int latSegments, int lonSegments) -> Mesh * {
+auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_sphere_mesh(latSegments, lonSegments));
+      create_unit_sphere_mesh(lat_segments, lon_segments));
   return s_mesh.get();
 }
 
@@ -640,7 +640,7 @@ auto get_unit_cone(int radial_segments) -> Mesh * {
 
 auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
-      createCapsuleMesh(radial_segments, height_segments));
+      create_capsule_mesh(radial_segments, height_segments));
   return s_mesh.get();
 }
 

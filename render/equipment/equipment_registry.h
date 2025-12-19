@@ -35,6 +35,6 @@ private:
       m_renderers;
 };
 
-void registerBuiltInEquipment();
+void register_built_in_equipment();
 
 } // namespace Render::GL

@@ -74,7 +74,7 @@ void Mesh::draw() {
   }
 }
 
-auto createQuadMesh() -> std::unique_ptr<Mesh> {
+auto create_quad_mesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {
 
       {{-1.0F, -1.0F, 0.0F}, {0.0F, 0.0F, 1.0F}, {0.0F, 0.0F}},

@@ -20,7 +20,7 @@ auto seat_relative(const MountedAttachmentFrame &mount, float forward,
          mount.seat_up * up;
 }
 
-auto reinAnchor(const MountedAttachmentFrame &mount, bool is_left, float slack,
+auto rein_anchor(const MountedAttachmentFrame &mount, bool is_left, float slack,
                 float tension) -> QVector3D {
   return compute_rein_handle(mount, is_left, slack, tension) +
          mount.ground_offset;
@@ -101,8 +101,8 @@ void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
 
   mount_on_horse(mount);
 
-  QVector3D left_rein_pos = reinAnchor(mount, true, 0.15F, left_tension);
-  QVector3D right_rein_pos = reinAnchor(mount, false, 0.15F, right_tension);
+  QVector3D left_rein_pos = rein_anchor(mount, true, 0.15F, left_tension);
+  QVector3D right_rein_pos = rein_anchor(mount, false, 0.15F, right_tension);
 
   get_hand(true) = left_rein_pos;
   get_hand(false) = right_rein_pos;
@@ -330,7 +330,7 @@ void MountedPoseController::apply_shield_defense(
                                 : seat_relative(mount, 0.05F, -0.16F, 0.22F);
   float const rein_slack = raised ? 0.15F : 0.30F;
   float const rein_tension = raised ? 0.45F : 0.25F;
-  QVector3D const rein_pos = reinAnchor(mount, false, rein_slack, rein_tension);
+  QVector3D const rein_pos = rein_anchor(mount, false, rein_slack, rein_tension);
 
   get_hand(true) = shield_pos;
   get_hand(false) = rein_pos;
@@ -388,7 +388,7 @@ void MountedPoseController::apply_sword_strike(
 
   QVector3D hand_r_target;
   QVector3D hand_l_target =
-      reinAnchor(mount, true, 0.20F, 0.25F) + mount.seat_up * -0.02F;
+      rein_anchor(mount, true, 0.20F, 0.25F) + mount.seat_up * -0.02F;
 
   float torso_twist = 0.0F;
   float side_lean = 0.0F;
@@ -620,11 +620,11 @@ void MountedPoseController::apply_spear_guard(
   switch (grip_style) {
   case SpearGrip::OVERHAND:
     hand_r_target = seat_relative(mount, 0.0F, 0.12F, 0.55F);
-    hand_l_target = reinAnchor(mount, true, 0.30F, 0.30F);
+    hand_l_target = rein_anchor(mount, true, 0.30F, 0.30F);
     break;
   case SpearGrip::COUCHED:
     hand_r_target = seat_relative(mount, -0.15F, 0.08F, 0.08F);
-    hand_l_target = reinAnchor(mount, true, 0.35F, 0.20F);
+    hand_l_target = rein_anchor(mount, true, 0.35F, 0.20F);
     break;
   case SpearGrip::TWO_HANDED:
     hand_r_target = seat_relative(mount, 0.15F, 0.15F, 0.12F);
@@ -735,7 +735,7 @@ void MountedPoseController::holdReinsImpl(const MountedAttachmentFrame &mount,
 
   if (apply_left) {
     QVector3D const left_rein_pos =
-        reinAnchor(mount, true, left_slack, left_tension);
+        rein_anchor(mount, true, left_slack, left_tension);
     get_hand(true) = left_rein_pos;
     const QVector3D left_outward = compute_outward_dir(true);
     get_elbow(true) = solve_elbow_ik(true, get_shoulder(true), left_rein_pos,
@@ -744,7 +744,7 @@ void MountedPoseController::holdReinsImpl(const MountedAttachmentFrame &mount,
 
   if (apply_right) {
     QVector3D const right_rein_pos =
-        reinAnchor(mount, false, right_slack, right_tension);
+        rein_anchor(mount, false, right_slack, right_tension);
     get_hand(false) = right_rein_pos;
     const QVector3D right_outward = compute_outward_dir(false);
     get_elbow(false) =
