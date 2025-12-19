@@ -1655,6 +1655,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     // Apply counter-rotation to shoulders during walking to reduce excessive torso twist
     if (anim_ctx.motion_state == HumanoidMotionState::Walk && anim.is_moving) {
       // Calculate hip sway matching the walking animation
+      // locomotion_phase is synchronized with walk_phase from compute_locomotion_pose
+      // since both use (anim.time + phase_offset) and the same cycle calculation
       float const hip_sway = calculate_walk_hip_sway(anim_ctx.locomotion_phase);
 
       // Counter-rotate shoulders to reduce torso twist
