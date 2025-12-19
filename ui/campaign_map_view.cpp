@@ -114,7 +114,7 @@ public:
   ~CampaignMapRenderer() override { cleanup(); }
 
   void render() override {
-    if (!ensureInitialized()) {
+    if (!ensure_initialized()) {
       return;
     }
 
@@ -128,22 +128,22 @@ public:
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     QMatrix4x4 mvp;
-    computeMvp(mvp);
+    compute_mvp(mvp);
 
-    drawTexturedLayer(m_waterTexture, m_quadVao, 6, mvp, 1.0F, -0.01F);
+    draw_textured_layer(m_waterTexture, m_quadVao, 6, mvp, 1.0F, -0.01F);
     if (m_landVertexCount > 0) {
-      drawTexturedLayer(m_baseTexture, m_landVao, m_landVertexCount, mvp, 1.0F,
+      draw_textured_layer(m_baseTexture, m_landVao, m_landVertexCount, mvp, 1.0F,
                         0.0F);
     } else {
-      drawTexturedLayer(m_baseTexture, m_quadVao, 6, mvp, 1.0F, 0.0F);
+      draw_textured_layer(m_baseTexture, m_quadVao, 6, mvp, 1.0F, 0.0F);
     }
 
     glDisable(GL_DEPTH_TEST);
-    drawProvinceLayer(m_provinceLayer, mvp, 0.002F);
-    drawLineLayer(m_provinceBorderLayer, mvp, 0.0045F);
-    drawLineLayer(m_coastLayer, mvp, 0.004F);
-    drawLineLayer(m_riverLayer, mvp, 0.003F);
-    drawLineLayer(m_pathLayer, mvp, 0.006F);
+    draw_province_layer(m_provinceLayer, mvp, 0.002F);
+    draw_line_layer(m_provinceBorderLayer, mvp, 0.0045F);
+    draw_line_layer(m_coastLayer, mvp, 0.004F);
+    draw_line_layer(m_riverLayer, mvp, 0.003F);
+    draw_line_layer(m_pathLayer, mvp, 0.006F);
   }
 
   auto createFramebufferObject(const QSize &size)
@@ -161,10 +161,10 @@ public:
       return;
     }
 
-    m_orbitYaw = view->orbitYaw();
-    m_orbitPitch = view->orbitPitch();
-    m_orbitDistance = view->orbitDistance();
-    m_hoverProvinceId = view->hoverProvinceId();
+    m_orbit_yaw = view->orbitYaw();
+    m_orbit_pitch = view->orbitPitch();
+    m_orbit_distance = view->orbitDistance();
+    m_hover_province_id = view->hoverProvinceId();
   }
 
 private:
@@ -190,12 +190,12 @@ private:
   LineLayer m_provinceBorderLayer;
   ProvinceLayer m_provinceLayer;
 
-  float m_orbitYaw = 180.0F;
-  float m_orbitPitch = 55.0F;
-  float m_orbitDistance = 2.4F;
-  QString m_hoverProvinceId;
+  float m_orbit_yaw = 180.0F;
+  float m_orbit_pitch = 55.0F;
+  float m_orbit_distance = 2.4F;
+  QString m_hover_province_id;
 
-  auto ensureInitialized() -> bool {
+  auto ensure_initialized() -> bool {
     if (m_initialized) {
       return true;
     }
@@ -208,29 +208,29 @@ private:
 
     initializeOpenGLFunctions();
 
-    if (!initShaders()) {
+    if (!init_shaders()) {
       return false;
     }
 
-    initQuad();
+    init_quad();
     m_waterTexture =
-        loadTexture(QStringLiteral(":/assets/campaign_map/campaign_water.png"));
-    m_baseTexture = loadTexture(
+        load_texture(QStringLiteral(":/assets/campaign_map/campaign_water.png"));
+    m_baseTexture = load_texture(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
-    initLandMesh();
+    init_land_mesh();
 
-    initLineLayer(m_coastLayer,
+    init_line_layer(m_coastLayer,
                   QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
                   QVector4D(0.22F, 0.19F, 0.16F, 1.0F), 1.4F);
-    initLineLayer(m_riverLayer,
+    init_line_layer(m_riverLayer,
                   QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                   QVector4D(0.33F, 0.49F, 0.61F, 0.9F), 1.2F);
-    initLineLayer(m_pathLayer,
+    init_line_layer(m_pathLayer,
                   QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                   QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
-    initProvinceLayer(m_provinceLayer,
+    init_province_layer(m_provinceLayer,
                       QStringLiteral(":/assets/campaign_map/provinces.json"));
-    initBordersLayer(m_provinceBorderLayer,
+    init_borders_layer(m_provinceBorderLayer,
                      QStringLiteral(":/assets/campaign_map/provinces.json"),
                      QVector4D(0.18F, 0.16F, 0.14F, 0.85F), 1.6F);
 
@@ -238,7 +238,7 @@ private:
     return true;
   }
 
-  auto initShaders() -> bool {
+  auto init_shaders() -> bool {
     static const char *kTexVert = R"(
 #version 330 core
 layout(location = 0) in vec2 a_pos;
@@ -331,7 +331,7 @@ void main() {
     return true;
   }
 
-  void initQuad() {
+  void init_quad() {
     if (m_quadVao != 0) {
       return;
     }
@@ -353,7 +353,7 @@ void main() {
     glBindVertexArray(0);
   }
 
-  void initLandMesh() {
+  void init_land_mesh() {
     const QString path = Utils::Resources::resolveResourcePath(
         QStringLiteral(":/assets/campaign_map/land_mesh.bin"));
     QFile file(path);
@@ -395,7 +395,7 @@ void main() {
     glBindVertexArray(0);
   }
 
-  void initLineLayer(LineLayer &layer, const QString &resource_path,
+  void init_line_layer(LineLayer &layer, const QString &resource_path,
                      const QVector4D &color, float width) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
@@ -464,7 +464,7 @@ void main() {
     layer.ready = true;
   }
 
-  void initProvinceLayer(ProvinceLayer &layer, const QString &resource_path) {
+  void init_province_layer(ProvinceLayer &layer, const QString &resource_path) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -542,7 +542,7 @@ void main() {
     layer.ready = true;
   }
 
-  void initBordersLayer(LineLayer &layer, const QString &resource_path,
+  void init_borders_layer(LineLayer &layer, const QString &resource_path,
                         const QVector4D &color, float width) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
@@ -611,7 +611,7 @@ void main() {
     layer.ready = true;
   }
 
-  auto loadTexture(const QString &resource_path) -> QOpenGLTexture * {
+  auto load_texture(const QString &resource_path) -> QOpenGLTexture * {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QImage image(path);
     if (image.isNull()) {
@@ -626,13 +626,13 @@ void main() {
     return texture;
   }
 
-  void computeMvp(QMatrix4x4 &out_mvp) const {
+  void compute_mvp(QMatrix4x4 &out_mvp) const {
     out_mvp = buildMvpMatrix(static_cast<float>(m_size.width()),
-                             static_cast<float>(m_size.height()), m_orbitYaw,
-                             m_orbitPitch, m_orbitDistance);
+                             static_cast<float>(m_size.height()), m_orbit_yaw,
+                             m_orbit_pitch, m_orbit_distance);
   }
 
-  void drawTexturedLayer(QOpenGLTexture *texture, GLuint vao, int vertex_count,
+  void draw_textured_layer(QOpenGLTexture *texture, GLuint vao, int vertex_count,
                          const QMatrix4x4 &mvp, float alpha, float z_offset) {
     if (texture == nullptr || vao == 0 || vertex_count <= 0) {
       return;
@@ -653,7 +653,7 @@ void main() {
     m_textureProgram.release();
   }
 
-  void drawLineLayer(const LineLayer &layer, const QMatrix4x4 &mvp,
+  void draw_line_layer(const LineLayer &layer, const QMatrix4x4 &mvp,
                      float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
@@ -674,7 +674,7 @@ void main() {
     m_lineProgram.release();
   }
 
-  void drawProvinceLayer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
+  void draw_province_layer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
                          float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
@@ -690,7 +690,7 @@ void main() {
         continue;
       }
       QVector4D color = span.color;
-      if (!m_hoverProvinceId.isEmpty() && span.id == m_hoverProvinceId) {
+      if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
         color = QVector4D(
             qMin(1.0F, color.x() + 0.42F), qMin(1.0F, color.y() + 0.42F),
             qMin(1.0F, color.z() + 0.42F), qMin(1.0F, color.w() + 0.55F));
@@ -786,12 +786,12 @@ CampaignMapView::CampaignMapView() {
   }
 }
 
-void CampaignMapView::loadProvincesForHitTest() {
-  if (m_provincesLoaded) {
+void CampaignMapView::load_provinces_for_hit_test() {
+  if (m_provinces_loaded) {
     return;
   }
 
-  m_provincesLoaded = true;
+  m_provinces_loaded = true;
   m_provinces.clear();
 
   const QString path = Utils::Resources::resolveResourcePath(
@@ -835,13 +835,13 @@ void CampaignMapView::loadProvincesForHitTest() {
   }
 }
 
-void CampaignMapView::loadProvinceLabels() {
-  if (m_provinceLabelsLoaded) {
+void CampaignMapView::load_province_labels() {
+  if (m_province_labels_loaded) {
     return;
   }
 
-  m_provinceLabelsLoaded = true;
-  m_provinceLabels.clear();
+  m_province_labels_loaded = true;
+  m_province_labels.clear();
 
   const QString path = Utils::Resources::resolveResourcePath(
       QStringLiteral(":/assets/campaign_map/provinces.json"));
@@ -894,19 +894,19 @@ void CampaignMapView::loadProvinceLabels() {
     }
     entry.insert(QStringLiteral("cities"), city_list);
 
-    m_provinceLabels.push_back(entry);
+    m_province_labels.push_back(entry);
   }
 
   emit provinceLabelsChanged();
 }
 
 QVariantList CampaignMapView::provinceLabels() {
-  loadProvinceLabels();
-  return m_provinceLabels;
+  load_province_labels();
+  return m_province_labels;
 }
 
 QString CampaignMapView::provinceAtScreen(float x, float y) {
-  loadProvincesForHitTest();
+  load_provinces_for_hit_test();
   if (m_provinces.empty()) {
     return {};
   }
@@ -921,7 +921,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   const float ndc_y = 1.0F - (2.0F * y / h);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
+      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -968,7 +968,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
 }
 
 QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
-  loadProvincesForHitTest();
+  load_provinces_for_hit_test();
   QVariantMap info;
   if (m_provinces.empty()) {
     return info;
@@ -984,7 +984,7 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   const float ndc_y = 1.0F - (2.0F * y / h);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
+      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -1044,7 +1044,7 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
   const float clamped_v = qBound(0.0F, v, 1.0F);
 
   const QMatrix4x4 mvp =
-      buildMvpMatrix(w, h, m_orbitYaw, m_orbitPitch, m_orbitDistance);
+      buildMvpMatrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
   const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
   const QVector4D clip = mvp * world;
   if (qFuzzyIsNull(clip.w())) {
@@ -1059,39 +1059,39 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
 }
 
 void CampaignMapView::setOrbitYaw(float yaw) {
-  if (qFuzzyCompare(m_orbitYaw, yaw)) {
+  if (qFuzzyCompare(m_orbit_yaw, yaw)) {
     return;
   }
-  m_orbitYaw = yaw;
+  m_orbit_yaw = yaw;
   emit orbitYawChanged();
   update();
 }
 
 void CampaignMapView::setOrbitPitch(float pitch) {
   const float clamped = qBound(5.0F, pitch, 85.0F);
-  if (qFuzzyCompare(m_orbitPitch, clamped)) {
+  if (qFuzzyCompare(m_orbit_pitch, clamped)) {
     return;
   }
-  m_orbitPitch = clamped;
+  m_orbit_pitch = clamped;
   emit orbitPitchChanged();
   update();
 }
 
 void CampaignMapView::setOrbitDistance(float distance) {
   const float clamped = qBound(1.2F, distance, 5.0F);
-  if (qFuzzyCompare(m_orbitDistance, clamped)) {
+  if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
-  m_orbitDistance = clamped;
+  m_orbit_distance = clamped;
   emit orbitDistanceChanged();
   update();
 }
 
 void CampaignMapView::setHoverProvinceId(const QString &province_id) {
-  if (m_hoverProvinceId == province_id) {
+  if (m_hover_province_id == province_id) {
     return;
   }
-  m_hoverProvinceId = province_id;
+  m_hover_province_id = province_id;
   emit hoverProvinceIdChanged();
   update();
 }
