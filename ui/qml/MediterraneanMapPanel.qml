@@ -14,9 +14,49 @@ Rectangle {
     property string hover_province_owner: ""
     property real hover_mouse_x: 0
     property real hover_mouse_y: 0
+    property var province_labels: []
+    property int label_refresh: 0
+
+    function load_provinces() {
+        var labels = campaign_map.provinceLabels();
+        if (labels && labels.length > 0) {
+            province_labels = labels;
+            label_refresh += 1;
+        }
+    }
+
+    function label_uv_for(prov) {
+        if (prov && prov.label_uv && prov.label_uv.length === 2)
+            return prov.label_uv;
+
+        if (!prov || !prov.triangles || prov.triangles.length === 0)
+            return null;
+
+        var sum_u = 0;
+        var sum_v = 0;
+        var count = 0;
+        var step = Math.max(1, Math.floor(prov.triangles.length / 200));
+        for (var i = 0; i < prov.triangles.length; i += step) {
+            var pt = prov.triangles[i];
+            if (!pt || pt.length < 2)
+                continue;
+
+            sum_u += pt[0];
+            sum_v += pt[1];
+            count += 1;
+        }
+        if (count === 0)
+            return null;
+
+        return [sum_u / count, sum_v / count];
+    }
 
     color: "#1a1a1a"
     radius: Theme.radiusMedium
+
+    Component.onCompleted: {
+        load_provinces();
+    }
 
     onSelected_missionChanged: {
         // Reset camera when mission selection changes
@@ -33,6 +73,11 @@ Rectangle {
         orbitYaw: root.map_orbit_yaw
         orbitPitch: root.map_orbit_pitch
         orbitDistance: root.map_orbit_distance
+        onOrbitYawChanged: root.label_refresh += 1
+        onOrbitPitchChanged: root.label_refresh += 1
+        onOrbitDistanceChanged: root.label_refresh += 1
+        onWidthChanged: root.label_refresh += 1
+        onHeightChanged: root.label_refresh += 1
     }
 
     MouseArea {
@@ -82,6 +127,51 @@ Rectangle {
             var next_distance = root.map_orbit_distance * step;
             root.map_orbit_distance = Math.min(5, Math.max(1.2, next_distance));
             wheel.accepted = true;
+        }
+    }
+
+    // City markers
+    Repeater {
+        model: root.province_labels
+
+        delegate: Repeater {
+            property var _cities: (modelData && modelData.cities) ? modelData.cities : []
+
+            model: _cities
+
+            delegate: Item {
+                property var city_data: modelData
+                property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
+                property int _refresh: root.label_refresh
+                property var _pos: (_city_uv !== null && _refresh >= 0) ? campaign_map.screenPosForUv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+
+                visible: _city_uv !== null && city_data.name && city_data.name.length > 0
+                z: 4
+                x: _pos.x
+                y: _pos.y
+
+                Rectangle {
+                    width: 6
+                    height: 6
+                    radius: 3
+                    color: "#f2e6c8"
+                    border.color: "#2d241c"
+                    border.width: 1
+                    x: -width / 2
+                    y: -height / 2
+                }
+
+                Text {
+                    text: city_data.name
+                    color: "#111111"
+                    font.pointSize: Theme.fontSizeTiny
+                    font.bold: true
+                    style: Text.Outline
+                    styleColor: "#f2e6c8"
+                    x: 6
+                    y: -height / 2
+                }
+            }
         }
     }
 

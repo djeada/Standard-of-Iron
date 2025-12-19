@@ -21,6 +21,7 @@ Rectangle {
     border.color: is_selected ? Theme.selectedBr : Theme.cardBorder
     border.width: is_selected ? 2 : 1
     opacity: (mission_data && mission_data.unlocked === false) ? 0.5 : 1.0
+    clip: true
 
     Behavior on color {
         ColorAnimation { duration: Theme.animNormal }
