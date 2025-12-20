@@ -32,13 +32,13 @@ float noise21(vec2 p) {
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
 }
 
-float fbm2(vec2 p) {
+float fbm3(vec2 p) {
   float value = 0.0;
   float amplitude = 0.5;
-  for (int i = 0; i < 2; ++i) {
+  for (int i = 0; i < 3; ++i) {
     value += noise21(p) * amplitude;
-    p = p * 2.07 + 13.17;
-    amplitude *= 0.5;
+    p = p * 2.13 + 11.47;
+    amplitude *= 0.48;
   }
   return value;
 }
@@ -60,11 +60,13 @@ void main() {
 
   vec2 uv = rot2(angle) * (wp.xz + u_noiseOffset);
 
-  float h = fbm2(uv * u_heightNoiseFrequency) * 2.0 - 1.0;
+  float h1 = fbm3(uv * u_heightNoiseFrequency) * 2.0 - 1.0;
+  float h2 = fbm3(uv * u_heightNoiseFrequency * 2.7) * 2.0 - 1.0;
+  float h = mix(h1, h2, 0.35);
 
   float flatness = clamp(worldNormal.y, 0.0, 1.0);
 
-  float displacementFactor = mix(0.4, 1.0, flatness);
+  float displacementFactor = mix(0.35, 1.0, flatness * flatness);
 
   float heightAmp = clamp(u_heightNoiseStrength, 0.0, 0.20);
 
