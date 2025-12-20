@@ -6,7 +6,7 @@
     {
       "mission_id": "crossing_the_rhone",
       "order_index": 0,
-      "world_region_id": "gallia_narbonensis",
+      "world_region_id": "transalpine_gaul",
       "intro_text": "218 BC: Hannibal's army reaches the Rhône River. Roman forces block the crossing. Secure the river crossing and defeat the Roman advance guard to continue the march toward Italy.",
       "outro_text": "The Rhône is crossed! Your army marches onward, one step closer to Rome. The Republic now knows that Hannibal cannot be stopped by rivers alone."
     },
@@ -37,7 +37,7 @@
     {
       "mission_id": "battle_of_cannae",
       "order_index": 4,
-      "world_region_id": "apulia",
+      "world_region_id": "southern_italy",
       "intro_text": "216 BC: The decisive moment. Rome's largest army ever assembled stands before you at Cannae. Execute the double envelopment - your masterpiece of tactical warfare.",
       "outro_text": "Immortal victory! The Roman army is encircled and destroyed. 50,000 Romans lie dead. Your name will echo through history as the greatest tactical commander.",
       "difficulty_modifier": 1.5
@@ -45,7 +45,7 @@
     {
       "mission_id": "campania_campaign",
       "order_index": 5,
-      "world_region_id": "campania",
+      "world_region_id": "southern_italy",
       "intro_text": "215-212 BC: Control the rich region of Campania. Defend against Roman counterattacks while maintaining your army's strength. Hold the strategic cities and villages.",
       "outro_text": "Campania secured! Your army has resupplied and allies have joined your cause. But Rome refuses to surrender, and the war grinds on.",
       "difficulty_modifier": 1.4
@@ -61,7 +61,7 @@
     {
       "mission_id": "battle_of_zama",
       "order_index": 7,
-      "world_region_id": "africa",
+      "world_region_id": "carthage_core",
       "intro_text": "202 BC: Called back to Africa, you face Scipio Africanus - Rome's answer to your tactics. The final confrontation. Can you overcome Rome's best general?",
       "outro_text": "The war ends. Whether in victory or honorable defeat, Hannibal's campaign has changed warfare forever. Rome has survived its greatest test, but will never forget Hannibal's genius.",
       "difficulty_modifier": 1.6

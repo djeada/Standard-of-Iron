@@ -18,7 +18,7 @@ Rectangle {
     property var province_labels: []
     property int label_refresh: 0
     property var region_camera_positions: ({
-        "gallia_narbonensis": {
+        "transalpine_gaul": {
             "yaw": 200,
             "pitch": 50,
             "distance": 2.0
@@ -33,22 +33,12 @@ Rectangle {
             "pitch": 52,
             "distance": 1.8
         },
-        "apulia": {
+        "southern_italy": {
             "yaw": 175,
             "pitch": 50,
             "distance": 1.9
         },
-        "campania": {
-            "yaw": 178,
-            "pitch": 51,
-            "distance": 1.8
-        },
-        "alps": {
-            "yaw": 190,
-            "pitch": 45,
-            "distance": 2.1
-        },
-        "africa": {
+        "carthage_core": {
             "yaw": 170,
             "pitch": 55,
             "distance": 2.2
@@ -255,7 +245,7 @@ Rectangle {
 
     Repeater {
         property var mission_region_map: ({
-            "gallia_narbonensis": {
+            "transalpine_gaul": {
                 "uv": [0.28, 0.35],
                 "name": "Rhône"
             },
@@ -267,19 +257,11 @@ Rectangle {
                 "uv": [0.44, 0.48],
                 "name": "Trasimene"
             },
-            "apulia": {
-                "uv": [0.52, 0.55],
+            "southern_italy": {
+                "uv": [0.50, 0.53],
                 "name": "Cannae"
             },
-            "campania": {
-                "uv": [0.46, 0.53],
-                "name": "Campania"
-            },
-            "alps": {
-                "uv": [0.38, 0.32],
-                "name": "Alps"
-            },
-            "africa": {
+            "carthage_core": {
                 "uv": [0.40, 0.78],
                 "name": "Zama"
             }
