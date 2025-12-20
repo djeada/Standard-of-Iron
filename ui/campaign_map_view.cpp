@@ -22,6 +22,7 @@
 #include <QtMath>
 #include <cmath>
 #include <cstring>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -105,6 +106,59 @@ struct ProvinceLayer {
   GLuint vbo = 0;
   std::vector<ProvinceSpan> spans;
   bool ready = false;
+};
+
+// Hash function for QString to use in unordered_map
+struct QStringHash {
+  std::size_t operator()(const QString &s) const noexcept {
+    return qHash(s);
+  }
+};
+
+// Global texture cache to avoid reloading textures when renderer is recreated
+// This eliminates render-thread IO during normal frames
+struct CampaignMapTextureCache {
+  static CampaignMapTextureCache &instance() {
+    static CampaignMapTextureCache s_instance;
+    return s_instance;
+  }
+
+  QOpenGLTexture *get_or_load(const QString &resource_path) {
+    auto it = m_textures.find(resource_path);
+    if (it != m_textures.end() && it->second != nullptr) {
+      return it->second;
+    }
+
+    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    QImage image(path);
+    if (image.isNull()) {
+      qWarning() << "CampaignMapTextureCache: Failed to load texture" << path;
+      return nullptr;
+    }
+
+    QImage rgba = image.convertToFormat(QImage::Format_RGBA8888);
+    auto *texture = new QOpenGLTexture(rgba);
+    texture->setWrapMode(QOpenGLTexture::ClampToEdge);
+    texture->setMinMagFilters(QOpenGLTexture::Linear, QOpenGLTexture::Linear);
+    m_textures[resource_path] = texture;
+    return texture;
+  }
+
+  void clear() {
+    // Only delete textures if there's a valid OpenGL context
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    if (ctx != nullptr && ctx->isValid()) {
+      for (auto &pair : m_textures) {
+        delete pair.second;
+      }
+    }
+    m_textures.clear();
+  }
+
+private:
+  CampaignMapTextureCache() = default;
+  ~CampaignMapTextureCache() { clear(); }
+  std::unordered_map<QString, QOpenGLTexture *, QStringHash> m_textures;
 };
 
 class CampaignMapRenderer : public QQuickFramebufferObject::Renderer,
@@ -213,9 +267,11 @@ private:
     }
 
     init_quad();
-    m_waterTexture = load_texture(
+    // Use global texture cache to avoid reloading from disk on renderer recreation
+    auto &tex_cache = CampaignMapTextureCache::instance();
+    m_waterTexture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_water.png"));
-    m_baseTexture = load_texture(
+    m_baseTexture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
     init_land_mesh();
 
@@ -765,9 +821,8 @@ void main() {
       m_provinceLayer.vao = 0;
     }
 
-    delete m_baseTexture;
+    // Note: Textures are now owned by CampaignMapTextureCache and should not be deleted here
     m_baseTexture = nullptr;
-    delete m_waterTexture;
     m_waterTexture = nullptr;
   }
 };
