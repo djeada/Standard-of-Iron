@@ -77,6 +77,44 @@ auto compute_builder_exit_position(
           center_z + dir_z * final_scale};
 }
 
+// Find a guaranteed valid walkable position, searching outward from the
+// preferred exit position until a valid position is found.
+auto find_guaranteed_valid_exit(float exit_x, float exit_z,
+                                float unit_radius) -> QVector3D {
+  Pathfinding *pathfinder = CommandService::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return {exit_x, 0.0F, exit_z};
+  }
+
+  Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
+
+  // Check if initial position is valid
+  if (pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y,
+                                          unit_radius)) {
+    return {exit_x, 0.0F, exit_z};
+  }
+
+  // Search with an extended radius to guarantee finding a valid position.
+  // 50 tiles is large enough to escape any building footprint and find open
+  // terrain, ensuring builders never get permanently stuck.
+  constexpr int kMaxSearchRadius = 50;
+  Point const safe_grid = Pathfinding::find_nearest_walkable_point(
+      exit_grid, kMaxSearchRadius, *pathfinder, unit_radius);
+
+  return CommandService::grid_to_world(safe_grid);
+}
+
+// Activate bypass movement mode on a builder component
+void activate_bypass_movement(Engine::Core::BuilderProductionComponent *builder,
+                              float target_x, float target_z) {
+  if (builder == nullptr) {
+    return;
+  }
+  builder->bypass_movement_active = true;
+  builder->bypass_target_x = target_x;
+  builder->bypass_target_z = target_z;
+}
+
 } // namespace
 
 void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
@@ -194,39 +232,35 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         float dist_sq = dx * dx + dz * dz;
 
         if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
+          // Builder has arrived - teleport to exact center (intentional)
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
+          builder_prod->bypass_movement_active = false;
 
-          // Don't teleport the builder - they're already close enough.
-          // Just stop their movement and let them build from current position.
+          transform->position.x = builder_prod->construction_site_x;
+          transform->position.z = builder_prod->construction_site_z;
+
           if (movement != nullptr) {
-            movement->goal_x = transform->position.x;
-            movement->goal_y = transform->position.z;
-            movement->target_x = transform->position.x;
-            movement->target_y = transform->position.z;
+            movement->goal_x = builder_prod->construction_site_x;
+            movement->goal_y = builder_prod->construction_site_z;
+            movement->target_x = builder_prod->construction_site_x;
+            movement->target_y = builder_prod->construction_site_z;
             movement->has_target = false;
             movement->clear_path();
             movement->vx = 0.0F;
             movement->vz = 0.0F;
           }
         } else {
-
-          if (movement != nullptr) {
-            float goal_dx =
-                movement->goal_x - builder_prod->construction_site_x;
-            float goal_dz =
-                movement->goal_y - builder_prod->construction_site_z;
-            float goal_dist_sq = goal_dx * goal_dx + goal_dz * goal_dz;
-
-            if (goal_dist_sq > CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
-              builder_prod->has_construction_site = false;
-              builder_prod->at_construction_site = false;
-              builder_prod->in_progress = false;
-              builder_prod->construction_complete = false;
-              builder_prod->product_type = "";
-              continue;
-            }
+          // Enable bypass mode for walking TO construction site
+          // This prevents collision systems from interfering
+          if (!builder_prod->bypass_movement_active) {
+            activate_bypass_movement(builder_prod,
+                                     builder_prod->construction_site_x,
+                                     builder_prod->construction_site_z);
           }
+
+          // Once bypass mode starts, it cannot be cancelled until arrival
+          // New construction commands will reset has_construction_site anyway
         }
       }
       continue;
@@ -297,37 +331,25 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
               t != nullptr) {
             float const unit_radius =
                 CommandService::get_unit_radius(*world, e->get_id());
-            QVector3D exit_pos = compute_builder_exit_position(
+            QVector3D const preferred_exit = compute_builder_exit_position(
                 builder_prod->construction_site_x,
                 builder_prod->construction_site_z,
                 QVector3D(t->position.x, t->position.y, t->position.z),
                 unit_radius, builder_prod->product_type);
 
-            // Validate the exit position is walkable, find a safe one if not
-            Pathfinding *pathfinder = CommandService::get_pathfinder();
-            if (pathfinder != nullptr) {
-              Point const exit_grid =
-                  CommandService::world_to_grid(exit_pos.x(), exit_pos.z());
-              if (!pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y,
-                                                       unit_radius)) {
-                // Find nearest walkable point
-                constexpr int kExitSearchRadius = 8;
-                Point const safe_grid = Pathfinding::find_nearest_walkable_point(
-                    exit_grid, kExitSearchRadius, *pathfinder, unit_radius);
-                exit_pos = CommandService::grid_to_world(safe_grid);
-              }
-            }
+            // Find a guaranteed valid exit position (searches far if needed)
+            QVector3D const safe_exit = find_guaranteed_valid_exit(
+                preferred_exit.x(), preferred_exit.z(), unit_radius);
 
-            t->position.x = exit_pos.x();
-            t->position.z = exit_pos.z();
-            movement->goal_x = exit_pos.x();
-            movement->goal_y = exit_pos.z();
-            movement->target_x = exit_pos.x();
-            movement->target_y = exit_pos.z();
-            movement->has_target = false;
-            movement->clear_path();
-            movement->vx = 0.0F;
-            movement->vz = 0.0F;
+            // Activate bypass mode to walk away from construction site
+            // This bypasses normal collision checks to prevent deadlock
+            activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
+
+            // Set movement goal for consistency
+            movement->goal_x = safe_exit.x();
+            movement->goal_y = safe_exit.z();
+            movement->target_x = safe_exit.x();
+            movement->target_y = safe_exit.z();
           }
         }
       }
