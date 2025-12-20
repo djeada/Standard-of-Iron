@@ -28,6 +28,10 @@ namespace Render::GL {
 
 constexpr int k_sort_key_bucket_shift = 56;
 
+/// Threshold for considering an object opaque (for batching purposes).
+/// Objects with alpha >= this value can be batched together.
+constexpr float k_opaque_threshold = 0.999F;
+
 struct MeshCmd {
   Mesh *mesh = nullptr;
   Texture *texture = nullptr;
@@ -332,7 +336,6 @@ public:
     }
     const auto &mesh_a = std::get<MeshCmdIndex>(a);
     const auto &mesh_b = std::get<MeshCmdIndex>(b);
-    constexpr float k_opaque_threshold = 0.999F;
     if (mesh_a.alpha < k_opaque_threshold ||
         mesh_b.alpha < k_opaque_threshold) {
       return false;

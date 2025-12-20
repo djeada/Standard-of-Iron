@@ -82,8 +82,11 @@ void MeshInstancingPipeline::shutdown() {
 }
 
 void MeshInstancingPipeline::cache_uniforms() {
-  // Uniforms are cached per-shader in the character pipeline
-  // This pipeline delegates uniform handling to the existing infrastructure
+  // This pipeline uses per-instance vertex attributes for model/color/alpha,
+  // not uniforms. The view-projection uniform is set by the shader's existing
+  // uniform binding logic in the Backend. Only the u_viewProj and u_lightDir
+  // uniforms are needed for instanced shaders, and those are set when the
+  // shader is bound. No additional uniform caching is required here.
 }
 
 auto MeshInstancingPipeline::is_initialized() const -> bool {
@@ -151,11 +154,20 @@ void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
 }
 
 void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
-  if (m_instances.empty() || m_currentMesh == nullptr ||
-      m_currentShader == nullptr || !m_initialized) {
+  if (m_instances.empty()) {
+    return;
+  }
+  if (m_currentMesh == nullptr || m_currentShader == nullptr ||
+      !m_initialized) {
+    qWarning() << "MeshInstancingPipeline::flush called with invalid state:"
+               << "mesh=" << m_currentMesh << "shader=" << m_currentShader
+               << "initialized=" << m_initialized
+               << "instances=" << m_instances.size();
     m_instances.clear();
     return;
   }
+
+  Q_UNUSED(view_proj); // view_proj is set by shader's existing uniform binding
 
   const std::size_t count = m_instances.size();
 
@@ -208,19 +220,6 @@ auto MeshInstancingPipeline::instance_count() const -> std::size_t {
 
 auto MeshInstancingPipeline::has_pending() const -> bool {
   return !m_instances.empty();
-}
-
-void MeshInstancingPipeline::upload_instances() {
-  if (m_instances.empty()) {
-    return;
-  }
-
-  glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
-  glBufferSubData(
-      GL_ARRAY_BUFFER, 0,
-      static_cast<GLsizeiptr>(m_instances.size() * sizeof(MeshInstanceGpu)),
-      m_instances.data());
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void MeshInstancingPipeline::setup_instance_attributes() {

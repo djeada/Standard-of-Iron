@@ -71,6 +71,8 @@ private:
   std::unique_ptr<Buffer> m_ebo;
 
   void setup_buffers();
+  /// Prepare VAO and context for drawing. Returns false if context unavailable.
+  [[nodiscard]] auto prepare_draw(const char *caller_name) -> bool;
 };
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;

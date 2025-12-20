@@ -60,8 +60,7 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 /// They must have the same mesh, shader, and texture, and both must be opaque.
 [[nodiscard]] inline auto can_batch_mesh_cmds(const MeshCmd &a,
                                                const MeshCmd &b) -> bool {
-  // Both must be opaque (alpha >= 0.999) for batching
-  constexpr float k_opaque_threshold = 0.999F;
+  // Both must be opaque for batching (uses k_opaque_threshold from draw_queue.h)
   if (a.alpha < k_opaque_threshold || b.alpha < k_opaque_threshold) {
     return false;
   }

@@ -73,7 +73,6 @@ public:
   [[nodiscard]] auto has_pending() const -> bool;
 
 private:
-  void upload_instances();
   void setup_instance_attributes();
 
   GL::Backend *m_backend{nullptr};
