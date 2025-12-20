@@ -21,6 +21,24 @@ void update_combat_mode(Engine::Core::Entity *attacker,
     return;
   }
 
+  // Only update combat mode when already engaged in combat
+  // This prevents triggering attack mode when just moving near enemies
+  bool const in_melee_combat = attack_comp->in_melee_lock;
+  bool const has_attack_target = 
+      attacker->has_component<Engine::Core::AttackTargetComponent>();
+  
+  if (!in_melee_combat && !has_attack_target) {
+    // Not engaged in combat, keep default mode
+    if (attack_comp->can_ranged) {
+      attack_comp->current_mode =
+          Engine::Core::AttackComponent::CombatMode::Ranged;
+    } else {
+      attack_comp->current_mode =
+          Engine::Core::AttackComponent::CombatMode::Melee;
+    }
+    return;
+  }
+
   auto *attacker_transform =
       attacker->get_component<Engine::Core::TransformComponent>();
   if (attacker_transform == nullptr) {
@@ -50,6 +68,11 @@ void update_combat_mode(Engine::Core::Entity *attacker,
 
     if (owner_registry.are_allies(attacker_unit->owner_id,
                                   target_unit->owner_id)) {
+      continue;
+    }
+
+    // Exclude buildings from combat mode calculation
+    if (target->has_component<Engine::Core::BuildingComponent>()) {
       continue;
     }
 
