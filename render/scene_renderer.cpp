@@ -65,6 +65,7 @@ void Renderer::shutdown() { m_backend.reset(); }
 void Renderer::begin_frame() {
 
   advance_pose_cache_frame();
+  advance_horse_profile_cache_frame();
 
   reset_humanoid_render_stats();
   reset_horse_render_stats();

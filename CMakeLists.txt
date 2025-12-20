@@ -210,6 +210,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/ProductionPanel.qml
             ui/qml/SaveGamePanel.qml
             ui/qml/LoadGamePanel.qml
+            ui/qml/ObjectivesPanel.qml
             ui/qml/SettingsPanel.qml
             ui/qml/HUDVictory.qml
             ui/qml/BattleSummary.qml
