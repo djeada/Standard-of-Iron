@@ -12,6 +12,7 @@ struct CampaignMission {
   std::optional<QString> intro_text;
   std::optional<QString> outro_text;
   std::optional<float> difficulty_modifier;
+  std::optional<QString> world_region_id;
 };
 
 struct CampaignDefinition {

@@ -94,10 +94,15 @@ struct MissionDefinition {
   QString title;
   QString summary;
   QString map_path;
+  std::optional<QString> teaching_goal;
+  std::optional<QString> narrative_intent;
+  std::optional<QString> historical_context;
+  std::optional<QString> terrain_type;
   PlayerSetup player_setup;
   std::vector<AISetup> ai_setups;
   std::vector<Condition> victory_conditions;
   std::vector<Condition> defeat_conditions;
+  std::vector<Condition> optional_objectives;
   std::vector<GameEvent> events;
 };
 

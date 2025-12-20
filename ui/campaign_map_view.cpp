@@ -693,8 +693,8 @@ void main() {
       QVector4D color = span.color;
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
         color = QVector4D(
-            qMin(1.0F, color.x() + 0.42F), qMin(1.0F, color.y() + 0.42F),
-            qMin(1.0F, color.z() + 0.42F), qMin(1.0F, color.w() + 0.55F));
+            qMin(1.0F, color.x() + 0.65F), qMin(1.0F, color.y() + 0.65F),
+            qMin(1.0F, color.z() + 0.65F), qMin(1.0F, color.w() + 0.75F));
       }
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
