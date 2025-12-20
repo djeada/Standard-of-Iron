@@ -285,7 +285,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/maps/map_forest.json
             assets/maps/map_rivers.json
             assets/maps/map_mountain.json
-            assets/campaigns/tutorial_campaign.json
             assets/campaigns/second_punic_war.json
             assets/campaign_map/campaign_base_color.png
             assets/campaign_map/campaign_water.png

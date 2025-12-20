@@ -18,7 +18,7 @@ assets/
   │   ├── defend_outpost.json
   │   └── forest_ambush.json
   └── campaigns/     # Ordered mission collections
-      └── tutorial_campaign.json
+      └── second_punic_war.json
 ```
 
 ### Components
@@ -175,9 +175,9 @@ Timed or state-based triggers for dynamic gameplay:
 
 ```json
 {
-  "id": "tutorial_campaign",
-  "title": "Roman Conquest Tutorial",
-  "description": "Learn the basics of warfare",
+  "id": "second_punic_war",
+  "title": "Second Punic War",
+  "description": "Campaign across the Mediterranean",
   "missions": [
     {
       "mission_id": "forest_ambush",
@@ -275,7 +275,7 @@ Game::Campaign::CampaignDefinition campaign;
 QString error;
 
 if (!Game::Campaign::CampaignLoader::loadFromJsonFile(
-    ":/assets/campaigns/tutorial_campaign.json",
+    ":/assets/campaigns/second_punic_war.json",
     campaign,
     &error)) {
   qWarning() << "Failed to load campaign:" << error;
@@ -294,7 +294,7 @@ for (const auto& mission : campaign.missions) {
 // In GameEngine
 void GameEngine::start_campaign_mission(const QString &mission_path) {
   // mission_path format: "campaign_id/mission_id"
-  // Example: "tutorial_campaign/defend_outpost"
+  // Example: "second_punic_war/defend_outpost"
   
   // Mission loader parses JSON and configures:
   // - Player and AI setups
