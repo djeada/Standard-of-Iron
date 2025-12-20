@@ -142,8 +142,9 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
         QVector3D safe_pos = CommandService::grid_to_world(nearest);
         
         // Add small random offset to prevent multiple units from clustering
-        static std::random_device rd;
-        static std::mt19937 gen(rd());
+        // Use thread_local to ensure thread safety
+        thread_local std::random_device rd;
+        thread_local std::mt19937 gen(rd());
         std::uniform_real_distribution<float> dist(-kUnstuckOffsetRadius, kUnstuckOffsetRadius);
         
         float const offset_x = dist(gen);
