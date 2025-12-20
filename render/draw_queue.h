@@ -421,9 +421,13 @@ private:
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-
+      // Sort by shader first (bits 48-55), then texture (bits 0-47)
+      // This groups draws by shader to minimize shader rebinds
+      uint64_t const shader_ptr =
+          (reinterpret_cast<uintptr_t>(mesh.shader) >> 4) & 0xFFU;
       uint64_t const tex_ptr =
           reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
+      key |= shader_ptr << 48;
       key |= tex_ptr;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
