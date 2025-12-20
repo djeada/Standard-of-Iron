@@ -53,8 +53,8 @@ signals:
 
 private:
   float m_orbit_yaw = 180.0F;
-  float m_orbit_pitch = 55.0F;
-  float m_orbit_distance = 2.4F;
+  float m_orbit_pitch = 90.0F;
+  float m_orbit_distance = 1.2F;
   QString m_hover_province_id;
 
   struct ProvinceHit {

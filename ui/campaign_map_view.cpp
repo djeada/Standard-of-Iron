@@ -1069,7 +1069,7 @@ void CampaignMapView::setOrbitYaw(float yaw) {
 }
 
 void CampaignMapView::setOrbitPitch(float pitch) {
-  const float clamped = qBound(5.0F, pitch, 85.0F);
+  const float clamped = qBound(5.0F, pitch, 90.0F);
   if (qFuzzyCompare(m_orbit_pitch, clamped)) {
     return;
   }
