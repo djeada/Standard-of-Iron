@@ -4,8 +4,10 @@
 #include "game/core/component.h"
 #include "game/core/world.h"
 #include "game/map/map_transformer.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
@@ -17,12 +19,43 @@
 #include <QDebug>
 #include <QPointF>
 #include <algorithm>
+#include <cmath>
 
 ProductionManager::ProductionManager(
     Engine::Core::World *world, Game::Systems::PickingService *picking_service,
     Render::GL::Camera *camera, QObject *parent)
     : QObject(parent), m_world(world), m_picking_service(picking_service),
       m_camera(camera) {}
+
+namespace {
+
+// Check if a construction site position is valid for building placement
+auto is_construction_position_valid(float pos_x, float pos_z,
+                                    const std::string &building_type) -> bool {
+  auto &collision_registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto size = collision_registry.get_building_size(building_type);
+
+  // Check if the area overlaps with existing buildings
+  if (collision_registry.is_circle_overlapping_building(
+          pos_x, pos_z, std::max(size.width, size.depth) * 0.5F, 0)) {
+    return false;
+  }
+
+  // Check if the terrain is walkable at the construction position
+  Game::Systems::Pathfinding *pathfinder =
+      Game::Systems::CommandService::get_pathfinder();
+  if (pathfinder != nullptr) {
+    Game::Systems::Point const grid =
+        Game::Systems::CommandService::world_to_grid(pos_x, pos_z);
+    if (!pathfinder->is_walkable(grid.x, grid.y)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+} // namespace
 
 void ProductionManager::start_building_placement(const QString &building_type) {
   if (building_type.isEmpty()) {
@@ -107,6 +140,15 @@ void ProductionManager::on_construction_mouse_move(
 void ProductionManager::on_construction_confirm() {
   if (!m_is_placing_construction || m_pending_construction_builders.empty()) {
     on_construction_cancel();
+    return;
+  }
+
+  // Validate that the construction position is valid
+  if (!is_construction_position_valid(m_construction_placement_position.x(),
+                                      m_construction_placement_position.z(),
+                                      m_pending_construction_type.toStdString())) {
+    // Position is invalid - emit rejection signal but keep preview open
+    emit construction_placement_rejected();
     return;
   }
 
