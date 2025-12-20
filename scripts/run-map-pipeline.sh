@@ -2,11 +2,30 @@
 set -euo pipefail
 
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+map_output_dir="$root_dir/assets/campaign_map"
 
 venv_path="$root_dir/tools/map_pipeline/venv"
 requirements_path="$root_dir/tools/map_pipeline/requirements.txt"
 
 python_cmd="${PYTHON:-python3}"
+rebuild_maps="${map_pipeline_rebuild:-0}"
+
+for arg in "$@"; do
+  if [ "$arg" = "--rebuild" ] || [ "$arg" = "-f" ]; then
+    rebuild_maps=1
+  fi
+done
+
+map_has_output=false
+if [ -d "$map_output_dir" ] &&
+   [ -n "$(find "$map_output_dir" -mindepth 1 -print -quit)" ]; then
+  map_has_output=true
+fi
+
+if [ "$rebuild_maps" != "1" ] && [ "$map_has_output" = "true" ]; then
+  echo "Map pipeline output already present; skipping. Use --rebuild to force."
+  exit 0
+fi
 
 # Ensure Python exists
 if ! command -v "$python_cmd" >/dev/null 2>&1; then

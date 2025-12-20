@@ -21,7 +21,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   int const x0 = int(std::floor(x));
   int const z0 = int(std::floor(z));
   int const x1 = x0 + 1;

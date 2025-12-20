@@ -55,8 +55,8 @@ auto Renderer::initialize() -> bool {
   }
   m_backend->initialize();
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
-  registerBuiltInEntityRenderers(*m_entity_registry);
-  registerBuiltInEquipment();
+  register_built_in_entity_renderers(*m_entity_registry);
+  register_built_in_equipment();
   return true;
 }
 
@@ -90,7 +90,7 @@ void Renderer::end_frame() {
     std::swap(m_fill_queue_index, m_render_queue_index);
     DrawQueue &render_queue = m_queues[m_render_queue_index];
     render_queue.sort_for_batching();
-    m_backend->setAnimationTime(m_accumulated_time);
+    m_backend->set_animation_time(m_accumulated_time);
     m_backend->execute(render_queue, *m_camera);
   }
 }
@@ -99,7 +99,7 @@ void Renderer::set_camera(Camera *camera) { m_camera = camera; }
 
 void Renderer::set_clear_color(float r, float g, float b, float a) {
   if (m_backend) {
-    m_backend->setClearColor(r, g, b, a);
+    m_backend->set_clear_color(r, g, b, a);
   }
 }
 
@@ -107,7 +107,7 @@ void Renderer::set_viewport(int width, int height) {
   m_viewport_width = width;
   m_viewport_height = height;
   if (m_backend) {
-    m_backend->setViewport(width, height);
+    m_backend->set_viewport(width, height);
   }
   if ((m_camera != nullptr) && height > 0) {
     float const aspect = float(width) / float(height);

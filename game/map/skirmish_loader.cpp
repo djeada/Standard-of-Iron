@@ -495,7 +495,7 @@ auto SkirmishLoader::start(const QString &map_path,
   pump_events();
 
   if (m_biome != nullptr) {
-    m_biome->refreshGrass();
+    m_biome->refresh_grass();
   }
 
   m_renderer.unlock_world_for_modification();

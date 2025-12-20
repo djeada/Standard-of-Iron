@@ -95,7 +95,7 @@ void Shader::release() {
 }
 
 namespace {
-auto uniformHandleImpl(
+auto uniform_handle_impl(
     QOpenGLFunctions_3_3_Core &fn, GLuint program,
     std::unordered_map<std::string, Shader::UniformHandle> &cache,
     const char *name, bool warn) -> Shader::UniformHandle {
@@ -122,12 +122,12 @@ auto uniformHandleImpl(
 } // namespace
 
 auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
-  return uniformHandleImpl(*this, m_program, m_uniformCache, name, true);
+  return uniform_handle_impl(*this, m_program, m_uniformCache, name, true);
 }
 
 auto Shader::optional_uniform_handle(const char *name)
     -> Shader::UniformHandle {
-  return uniformHandleImpl(*this, m_program, m_uniformCache, name, false);
+  return uniform_handle_impl(*this, m_program, m_uniformCache, name, false);
 }
 
 void Shader::set_uniform(UniformHandle handle, float value) {

@@ -40,7 +40,7 @@ public:
 
   void lean(const QVector3D &direction, float amount);
 
-  void placeHandAt(bool is_left, const QVector3D &target_position);
+  void place_hand_at(bool is_left, const QVector3D &target_position);
 
   void aim_bow(float draw_phase);
   void meleeStrike(float strike_phase);

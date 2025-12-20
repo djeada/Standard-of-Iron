@@ -143,7 +143,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
 
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
 
-  controller.placeHandAt(false, target_position); // Right hand
+  controller.place_hand_at(false, target_position); // Right hand
 
   // Hand should be at target position
   EXPECT_TRUE(approxEqual(pose.hand_r, target_position));
@@ -155,7 +155,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
   QVector3D const original_elbow = pose.elbow_r;
 
-  controller.placeHandAt(false, target_position); // Right hand
+  controller.place_hand_at(false, target_position); // Right hand
 
   // Elbow should be recomputed (different from original)
   EXPECT_FALSE(approxEqual(pose.elbow_r, original_elbow));
@@ -227,7 +227,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
 
   QVector3D const target_position(-0.40F, 1.30F, 0.60F);
 
-  controller.placeHandAt(true, target_position); // Left hand
+  controller.place_hand_at(true, target_position); // Left hand
 
   // Left hand should be at target position
   EXPECT_TRUE(approxEqual(pose.hand_l, target_position));

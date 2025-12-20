@@ -12,15 +12,17 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <cmath>
 
-namespace Render::GL::Roman {
+namespace Render::GL::Carthage {
 namespace {
+
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
-struct RomanPalette {
+struct CarthagePalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};
   QVector3D stone_dark{0.50F, 0.48F, 0.46F};
   QVector3D stone_base{0.55F, 0.53F, 0.51F};
@@ -34,8 +36,8 @@ struct RomanPalette {
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto make_palette(const QVector3D &team) -> RomanPalette {
-  RomanPalette p;
+inline auto make_palette(const QVector3D &team) -> CarthagePalette {
+  CarthagePalette p;
   p.team = clampVec01(team);
   p.team_trim =
       clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
@@ -59,13 +61,13 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void drawHomeBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c) {
+                  Texture *white, const CarthagePalette &c) {
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.1F, 0.0F),
            QVector3D(1.0F, 0.1F, 1.0F), c.stone_base);
 }
 
 void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c, BuildingState state) {
+                   Texture *white, const CarthagePalette &c, BuildingState state) {
   float const wall_height = 0.8F;
   float height_multiplier = 1.0F;
 
@@ -94,7 +96,7 @@ void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawHomeRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c, BuildingState state) {
+                  Texture *white, const CarthagePalette &c, BuildingState state) {
   if (state == BuildingState::Destroyed) {
     return;
   }
@@ -109,7 +111,7 @@ void drawHomeRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawHomeDoor(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c) {
+                  Texture *white, const CarthagePalette &c) {
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.4F, 0.95F),
            QVector3D(0.3F, 0.4F, 0.05F), c.wood_dark);
 }
@@ -256,7 +258,7 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  RomanPalette const c = make_palette(team);
+  CarthagePalette const c = make_palette(team);
 
   drawHomeBase(p, out, unit, white, c);
   drawHomeWalls(p, out, unit, white, c, state);
@@ -269,7 +271,7 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
 } // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("troops/roman/home", draw_home);
+  registry.register_renderer("troops/carthage/home", draw_home);
 }
 
-} // namespace Render::GL::Roman
+} // namespace Render::GL::Carthage

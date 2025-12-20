@@ -3,7 +3,7 @@
 
 namespace Render::GL {
 
-auto RomanInfantryFormation::calculateOffset(
+auto RomanInfantryFormation::calculate_offset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 
@@ -13,7 +13,7 @@ auto RomanInfantryFormation::calculateOffset(
   return {offset_x, offset_z};
 }
 
-auto RomanCavalryFormation::calculateOffset(
+auto RomanCavalryFormation::calculate_offset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 
@@ -26,7 +26,7 @@ auto RomanCavalryFormation::calculateOffset(
   return {offset_x, offset_z};
 }
 
-auto CarthageInfantryFormation::calculateOffset(
+auto CarthageInfantryFormation::calculate_offset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 
@@ -70,7 +70,7 @@ auto CarthageInfantryFormation::calculateOffset(
   return {offset_x, offset_z};
 }
 
-auto CarthageCavalryFormation::calculateOffset(
+auto CarthageCavalryFormation::calculate_offset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 
@@ -105,7 +105,7 @@ auto CarthageCavalryFormation::calculateOffset(
   return {offset_x, offset_z};
 }
 
-auto BuilderCircleFormation::calculateOffset(
+auto BuilderCircleFormation::calculate_offset(
     int idx, int row, int col, int rows, int cols, float spacing,
     uint32_t seed) const -> FormationOffset {
 

@@ -11,8 +11,8 @@ namespace BackendPipelines {
 
 class WaterPipeline final : public IPipeline {
 public:
-  explicit WaterPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit WaterPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~WaterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

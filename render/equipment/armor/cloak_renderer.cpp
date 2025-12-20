@@ -14,9 +14,9 @@ namespace Render::GL {
 
 CloakRenderer::CloakRenderer(const CloakConfig &config) : m_config(config) {
 
-  m_back_mesh = createPlaneMesh(1.0F, 1.0F, 16);
+  m_back_mesh = create_plane_mesh(1.0F, 1.0F, 16);
 
-  m_shoulder_mesh = createPlaneMesh(1.0F, 1.0F, 12);
+  m_shoulder_mesh = create_plane_mesh(1.0F, 1.0F, 12);
 }
 
 void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
