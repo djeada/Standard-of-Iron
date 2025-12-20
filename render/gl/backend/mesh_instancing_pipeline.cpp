@@ -83,10 +83,9 @@ void MeshInstancingPipeline::shutdown() {
 
 void MeshInstancingPipeline::cache_uniforms() {
   // This pipeline uses per-instance vertex attributes for model/color/alpha,
-  // not uniforms. The view-projection uniform is set by the shader's existing
-  // uniform binding logic in the Backend. Only the u_viewProj and u_lightDir
-  // uniforms are needed for instanced shaders, and those are set when the
-  // shader is bound. No additional uniform caching is required here.
+  // not uniforms. The view-projection uniform (u_viewProj) is set by the
+  // shader's existing uniform binding logic in the Backend before flush is
+  // called. No additional uniform caching is required here.
 }
 
 auto MeshInstancingPipeline::is_initialized() const -> bool {
@@ -153,7 +152,7 @@ void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
   m_currentTexture = texture;
 }
 
-void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
+void MeshInstancingPipeline::flush() {
   if (m_instances.empty()) {
     return;
   }
@@ -166,8 +165,6 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
     m_instances.clear();
     return;
   }
-
-  Q_UNUSED(view_proj); // view_proj is set by shader's existing uniform binding
 
   const std::size_t count = m_instances.size();
 
@@ -204,12 +201,12 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
   // Draw instanced
   m_currentMesh->draw_instanced(count);
 
-  // Clean up instance attributes
+  // Clean up instance attributes - explicitly disable each location
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  for (GLuint loc = k_instance_model_col0_loc;
-       loc <= k_instance_color_alpha_loc; ++loc) {
-    glDisableVertexAttribArray(loc);
-  }
+  glDisableVertexAttribArray(k_instance_model_col0_loc);
+  glDisableVertexAttribArray(k_instance_model_col1_loc);
+  glDisableVertexAttribArray(k_instance_model_col2_loc);
+  glDisableVertexAttribArray(k_instance_color_alpha_loc);
 
   m_instances.clear();
 }

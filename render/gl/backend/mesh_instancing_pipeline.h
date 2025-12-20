@@ -63,8 +63,8 @@ public:
   void begin_batch(Mesh *mesh, Shader *shader, Texture *texture);
 
   /// Flush accumulated instances using instanced rendering.
-  /// @param view_proj View-projection matrix for the batch.
-  void flush(const QMatrix4x4 &view_proj);
+  /// The current shader must already be bound with view_proj uniform set.
+  void flush();
 
   /// Returns the number of instances in the current batch.
   [[nodiscard]] auto instance_count() const -> std::size_t;
@@ -90,15 +90,6 @@ private:
 
   // OpenGL resources for instance buffer
   GLuint m_instanceBuffer{0};
-  GLuint m_instanceVao{0};
-
-  // Uniform locations for instanced rendering
-  struct Uniforms {
-    Shader::UniformHandle view_proj{Shader::InvalidUniform};
-    Shader::UniformHandle texture{Shader::InvalidUniform};
-    Shader::UniformHandle useTexture{Shader::InvalidUniform};
-  };
-  Uniforms m_uniforms;
 };
 
 } // namespace Render::GL::BackendPipelines
