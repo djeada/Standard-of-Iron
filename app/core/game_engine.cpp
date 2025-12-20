@@ -1568,8 +1568,8 @@ void GameEngine::configure_rain_system() {
 void GameEngine::finalize_skirmish_load() {
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame = true;
-  m_loading_overlay_frames_remaining = 3;
-  m_loading_overlay_min_duration_ms = 1200;
+  m_loading_overlay_frames_remaining = 10;
+  m_loading_overlay_min_duration_ms = 1500;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();
@@ -1679,8 +1679,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame = true;
-  m_loading_overlay_frames_remaining = 3;
-  m_loading_overlay_min_duration_ms = 1200;
+  m_loading_overlay_frames_remaining = 10;
+  m_loading_overlay_min_duration_ms = 1500;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();
