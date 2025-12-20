@@ -9,6 +9,7 @@
 #include "building_collision_registry.h"
 #include "command_service.h"
 #include "nation_registry.h"
+#include "pathfinding.h"
 #include "troop_profile_service.h"
 #include "units/spawn_type.h"
 #include "units/unit.h"
@@ -196,14 +197,17 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
 
-          transform->position.x = builder_prod->construction_site_x;
-          transform->position.z = builder_prod->construction_site_z;
-
+          // Don't teleport the builder - they're already close enough.
+          // Just stop their movement and let them build from current position.
           if (movement != nullptr) {
-            movement->goal_x = builder_prod->construction_site_x;
-            movement->goal_y = builder_prod->construction_site_z;
-            movement->target_x = builder_prod->construction_site_x;
-            movement->target_y = builder_prod->construction_site_z;
+            movement->goal_x = transform->position.x;
+            movement->goal_y = transform->position.z;
+            movement->target_x = transform->position.x;
+            movement->target_y = transform->position.z;
+            movement->has_target = false;
+            movement->clear_path();
+            movement->vx = 0.0F;
+            movement->vz = 0.0F;
           }
         } else {
 
@@ -293,11 +297,26 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
               t != nullptr) {
             float const unit_radius =
                 CommandService::get_unit_radius(*world, e->get_id());
-            QVector3D const exit_pos = compute_builder_exit_position(
+            QVector3D exit_pos = compute_builder_exit_position(
                 builder_prod->construction_site_x,
                 builder_prod->construction_site_z,
                 QVector3D(t->position.x, t->position.y, t->position.z),
                 unit_radius, builder_prod->product_type);
+
+            // Validate the exit position is walkable, find a safe one if not
+            Pathfinding *pathfinder = CommandService::get_pathfinder();
+            if (pathfinder != nullptr) {
+              Point const exit_grid =
+                  CommandService::world_to_grid(exit_pos.x(), exit_pos.z());
+              if (!pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y,
+                                                       unit_radius)) {
+                // Find nearest walkable point
+                constexpr int kExitSearchRadius = 8;
+                Point const safe_grid = Pathfinding::find_nearest_walkable_point(
+                    exit_grid, kExitSearchRadius, *pathfinder, unit_radius);
+                exit_pos = CommandService::grid_to_world(safe_grid);
+              }
+            }
 
             t->position.x = exit_pos.x();
             t->position.z = exit_pos.z();
@@ -305,6 +324,10 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             movement->goal_y = exit_pos.z();
             movement->target_x = exit_pos.x();
             movement->target_y = exit_pos.z();
+            movement->has_target = false;
+            movement->clear_path();
+            movement->vx = 0.0F;
+            movement->vz = 0.0F;
           }
         }
       }
