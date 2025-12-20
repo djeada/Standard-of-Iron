@@ -26,6 +26,10 @@ public:
 
   void clear();
 
+  [[nodiscard]] bool is_gpu_ready() const {
+    return m_grassInstanceBuffer != nullptr || m_grassInstanceCount == 0;
+  }
+
 private:
   void generate_grass_instances();
 
