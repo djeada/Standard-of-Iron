@@ -9,8 +9,8 @@ Rectangle {
     property var selected_mission: null
     property string active_region_id: selected_mission && selected_mission.world_region_id ? selected_mission.world_region_id : ""
     property real map_orbit_yaw: 180
-    property real map_orbit_pitch: 55
-    property real map_orbit_distance: 2.4
+    property real map_orbit_pitch: 90
+    property real map_orbit_distance: 1.2
     property string hover_province_name: ""
     property string hover_province_owner: ""
     property real hover_mouse_x: 0
@@ -101,8 +101,8 @@ Rectangle {
             focus_on_region(selected_mission.world_region_id);
         } else {
             map_orbit_yaw = 180;
-            map_orbit_pitch = 55;
-            map_orbit_distance = 2.4;
+            map_orbit_pitch = 90;
+            map_orbit_distance = 1.2;
         }
     }
 
@@ -171,7 +171,7 @@ Rectangle {
                 last_x = mouse.x;
                 last_y = mouse.y;
                 root.map_orbit_yaw += dx * 0.4;
-                root.map_orbit_pitch = Math.max(5, Math.min(85, root.map_orbit_pitch + dy * 0.4));
+                root.map_orbit_pitch = Math.max(5, Math.min(90, root.map_orbit_pitch + dy * 0.4));
             }
             root.hover_mouse_x = mouse.x;
             root.hover_mouse_y = mouse.y;
