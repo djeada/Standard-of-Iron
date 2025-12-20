@@ -169,6 +169,12 @@ auto LevelOrchestrator::load_skirmish(
                << map_error;
   }
 
+  if (progress_tracker) {
+    progress_tracker->set_stage(
+        LoadingProgressTracker::LoadingStage::INITIALIZING_SYSTEMS);
+    QCoreApplication::processEvents();
+  }
+
   if (auto *ai_system = world.get_system<Game::Systems::AISystem>()) {
     ai_system->reinitialize();
   }
