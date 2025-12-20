@@ -714,8 +714,7 @@ void Camera::clamp_above_ground() {
   }
 }
 
-void Camera::compute_yaw_pitch_from_offset(const QVector3D &off,
-                                           float &yaw_deg,
+void Camera::compute_yaw_pitch_from_offset(const QVector3D &off, float &yaw_deg,
                                            float &pitch_deg) {
   QVector3D const dir = -off;
   if (dir.lengthSquared() < 1e-6F) {

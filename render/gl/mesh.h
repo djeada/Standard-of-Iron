@@ -72,6 +72,6 @@ private:
 auto create_quad_mesh() -> std::unique_ptr<Mesh>;
 auto create_cube_mesh() -> std::unique_ptr<Mesh>;
 auto create_plane_mesh(float width, float height,
-                     int subdivisions = 1) -> std::unique_ptr<Mesh>;
+                       int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
 } // namespace Render::GL

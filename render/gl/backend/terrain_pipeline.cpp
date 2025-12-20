@@ -182,7 +182,8 @@ void TerrainPipeline::cache_terrain_uniforms() {
 void TerrainPipeline::initialize_grass_geometry() {
   auto *gl = QOpenGLContext::currentContext()->extraFunctions();
   if (gl == nullptr) {
-    qWarning() << "TerrainPipeline::initialize_grass_geometry: no OpenGL context";
+    qWarning()
+        << "TerrainPipeline::initialize_grass_geometry: no OpenGL context";
     return;
   }
 

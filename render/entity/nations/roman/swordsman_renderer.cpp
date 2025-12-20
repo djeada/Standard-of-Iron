@@ -266,7 +266,8 @@ private:
 
     e.blade_ricasso =
         clampf(0.14F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
-    e.blade_taper_bias = clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
+    e.blade_taper_bias =
+        clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
 
     e.shieldCrossDecal = (hash_01(seed ^ 0xA11CU) > 0.55F);
     e.has_scabbard = (hash_01(seed ^ 0x5CABU) > 0.15F);

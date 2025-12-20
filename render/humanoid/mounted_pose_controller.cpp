@@ -14,14 +14,14 @@ namespace Render::GL {
 namespace {
 
 auto seat_relative(const MountedAttachmentFrame &mount, float forward,
-                  float right, float up) -> QVector3D {
+                   float right, float up) -> QVector3D {
   QVector3D const base = mount.seat_position + mount.ground_offset;
   return base + mount.seat_forward * forward + mount.seat_right * right +
          mount.seat_up * up;
 }
 
 auto rein_anchor(const MountedAttachmentFrame &mount, bool is_left, float slack,
-                float tension) -> QVector3D {
+                 float tension) -> QVector3D {
   return compute_rein_handle(mount, is_left, slack, tension) +
          mount.ground_offset;
 }
@@ -251,7 +251,8 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
   update_head_hierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
                         "applyPose_fixup");
 
-  const bool needs_weapon_right = request.weapon_pose != MountedWeaponPose::None;
+  const bool needs_weapon_right =
+      request.weapon_pose != MountedWeaponPose::None;
   const bool needs_weapon_left =
       request.weapon_pose == MountedWeaponPose::SpearGuard ||
       request.weapon_pose == MountedWeaponPose::SpearThrust ||
@@ -330,7 +331,8 @@ void MountedPoseController::apply_shield_defense(
                                 : seat_relative(mount, 0.05F, -0.16F, 0.22F);
   float const rein_slack = raised ? 0.15F : 0.30F;
   float const rein_tension = raised ? 0.45F : 0.25F;
-  QVector3D const rein_pos = rein_anchor(mount, false, rein_slack, rein_tension);
+  QVector3D const rein_pos =
+      rein_anchor(mount, false, rein_slack, rein_tension);
 
   get_hand(true) = shield_pos;
   get_hand(false) = rein_pos;
@@ -349,7 +351,7 @@ void MountedPoseController::apply_shield_stowed(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims) {
   QVector3D const rest =
       seat_relative(mount, dims.body_length * -0.05F, -dims.body_width * 0.55F,
-                   dims.saddle_thickness * 0.5F);
+                    dims.saddle_thickness * 0.5F);
   get_hand(true) = rest;
   const QVector3D left_outward = compute_outward_dir(true);
   get_elbow(true) = solve_elbow_ik(true, get_shoulder(true), rest, left_outward,
@@ -384,7 +386,8 @@ void MountedPoseController::apply_sword_strike(
   QVector3D const chamber_pos = seat_relative(mount, -0.05F, 0.25F, 0.40F);
   QVector3D const apex_pos = seat_relative(mount, -0.02F, 0.30F, 0.48F);
   QVector3D const strike_pos = seat_relative(mount, 0.45F, 0.35F, 0.0F);
-  QVector3D const followthrough_pos = seat_relative(mount, 0.55F, 0.25F, -0.10F);
+  QVector3D const followthrough_pos =
+      seat_relative(mount, 0.55F, 0.25F, -0.10F);
 
   QVector3D hand_r_target;
   QVector3D hand_l_target =

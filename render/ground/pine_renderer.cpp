@@ -230,7 +230,7 @@ void PineRenderer::generate_pine_instances() {
                               world_x, world_z);
 
       float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
-                                             m_noiseSeed ^ 0x7F8E9D0AU);
+                                              m_noiseSeed ^ 0x7F8E9D0AU);
 
       if (cluster_noise < 0.35F) {
         continue;

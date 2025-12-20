@@ -190,7 +190,7 @@ auto create_unit_cone_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
 }
 
 auto create_capsule_mesh(int radial_segments,
-                       int height_segments) -> std::unique_ptr<Mesh> {
+                         int height_segments) -> std::unique_ptr<Mesh> {
   constexpr float k_capsule_radius = 0.25F;
   const float radius = k_capsule_radius;
   const float half_h = k_half_scalar;

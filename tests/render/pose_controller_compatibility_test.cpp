@@ -201,10 +201,10 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateBowAimingPose) {
 
   // Position hands for bow
   float const lowered_shoulder_y = pose.shoulder_l.y();
-  controller.place_hand_at(true,
-                         QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
-  controller.place_hand_at(false,
-                         QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
+  controller.place_hand_at(
+      true, QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
+  controller.place_hand_at(
+      false, QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
 
   // Verify pose is in a reasonable configuration
   EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);     // Kneeling
@@ -228,7 +228,7 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
 
   // Support hand
   controller.place_hand_at(true,
-                         QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
+                           QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
 
   // Verify thrust pose characteristics
   EXPECT_GT(pose.hand_r.z(), 0.80F);                // Hand extended forward

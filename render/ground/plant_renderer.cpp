@@ -237,7 +237,7 @@ void PlantRenderer::generate_plant_instances() {
                               world_x, world_z);
 
       float const cluster_noise = value_noise(world_x * 0.05F, world_z * 0.05F,
-                                             m_noiseSeed ^ 0x4B9D2F1AU);
+                                              m_noiseSeed ^ 0x4B9D2F1AU);
 
       if (cluster_noise < 0.45F) {
         continue;

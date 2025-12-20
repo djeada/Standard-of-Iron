@@ -129,8 +129,8 @@ public:
   }
 
   void set_riverbank_visibility(bool enabled, Texture *texture,
-                              const QVector2D &size, float tile_size,
-                              float explored_alpha) {
+                                const QVector2D &size, float tile_size,
+                                float explored_alpha) {
     m_riverbankVisibility.enabled = enabled && (texture != nullptr);
     m_riverbankVisibility.texture = texture;
     m_riverbankVisibility.size = size;

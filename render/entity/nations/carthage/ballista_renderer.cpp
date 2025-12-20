@@ -105,7 +105,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthageBallistaPalette &c) {
+                     Texture *white, const CarthageBallistaPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.38F, 0.18F, 0.0F),
            QVector3D(0.06F, 0.12F, 0.28F), c.wood_frame);

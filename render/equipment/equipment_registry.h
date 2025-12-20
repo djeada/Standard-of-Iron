@@ -14,7 +14,7 @@ public:
   static auto instance() -> EquipmentRegistry &;
 
   void register_equipment(EquipmentCategory category, const std::string &id,
-                         std::shared_ptr<IEquipmentRenderer> renderer);
+                          std::shared_ptr<IEquipmentRenderer> renderer);
 
   auto get(EquipmentCategory category,
            const std::string &id) const -> std::shared_ptr<IEquipmentRenderer>;

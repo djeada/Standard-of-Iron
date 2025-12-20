@@ -382,8 +382,8 @@ public:
                    torso_depth * 0.84F * 1.45F, trim_gold * 0.85F, 0.015F);
 
     auto draw_sleeve = [&](const QVector3D &shoulder_pos,
-                          const QVector3D &outward,
-                          const QVector3D &elbow_pos) {
+                           const QVector3D &outward,
+                           const QVector3D &elbow_pos) {
       out.mesh(get_unit_sphere(),
                sphere_at(ctx.model, shoulder_pos + outward * 0.01F,
                          HP::UPPER_ARM_R * 1.6F),

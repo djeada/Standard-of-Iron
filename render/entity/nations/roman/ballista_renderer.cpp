@@ -118,7 +118,7 @@ void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                Texture *white, const RomanBallistaPalette &c) {
+                 Texture *white, const RomanBallistaPalette &c) {
 
   float wheel_radius = 0.14F;
   float wheel_thickness = 0.035F;

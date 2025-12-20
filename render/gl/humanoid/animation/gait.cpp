@@ -5,7 +5,7 @@
 namespace Render::GL {
 
 auto classify_motion_state(const AnimationInputs &anim,
-                         float move_speed) -> HumanoidMotionState {
+                           float move_speed) -> HumanoidMotionState {
   if (anim.is_in_hold_mode) {
     return HumanoidMotionState::Hold;
   }

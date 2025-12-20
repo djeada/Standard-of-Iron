@@ -95,9 +95,9 @@ void MountedKnightRendererBase::apply_riding_animation(
   pose_request.right_hand_on_reins = true;
   pose_request.clearance_forward = 1.15F;
   pose_request.clearance_up = 1.05F;
-  pose_request.seat_pose = (speed_norm > 0.55F)
-                              ? MountedPoseController::MountedSeatPose::Forward
-                              : MountedPoseController::MountedSeatPose::Neutral;
+  pose_request.seat_pose =
+      (speed_norm > 0.55F) ? MountedPoseController::MountedSeatPose::Forward
+                           : MountedPoseController::MountedSeatPose::Neutral;
   pose_request.torso_compression =
       std::clamp(0.18F + anim_ctx.variation.posture_slump * 0.9F, 0.0F, 0.55F);
   pose_request.torso_twist = anim_ctx.variation.shoulder_tilt * 3.0F;

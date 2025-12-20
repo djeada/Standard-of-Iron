@@ -167,7 +167,7 @@ public:
         float const offhand_drop = 0.10F + 0.02F * hold_t;
         QVector3D const hand_l_pos =
             compute_offhand_spear_grip(pose, anim_ctx, hand_r_pos, false,
-                                    offhand_along, offhand_drop, -0.08F);
+                                       offhand_along, offhand_drop, -0.08F);
 
         controller.place_hand_at(false, hand_r_pos);
         controller.place_hand_at(true, hand_l_pos);

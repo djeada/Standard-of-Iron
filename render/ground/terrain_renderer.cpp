@@ -569,7 +569,7 @@ void TerrainRenderer::build_meshes() {
         float const center_wx = (center_gx - half_width) * m_tile_size;
         float const center_wz = (center_gz - half_height) * m_tile_size;
         float const macro = value_noise(center_wx * 0.02F, center_wz * 0.02F,
-                                       m_noiseSeed ^ 0x51C3U);
+                                        m_noiseSeed ^ 0x51C3U);
         float const macro_shade = 0.9F + 0.2F * macro;
 
         float const ao_avg = (section.aoCount > 0)

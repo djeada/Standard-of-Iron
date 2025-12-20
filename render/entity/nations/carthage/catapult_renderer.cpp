@@ -104,7 +104,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthageCatapultPalette &c) {
+                     Texture *white, const CarthageCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.24F, -0.38F),
            QVector3D(0.52F, 0.06F, 0.06F), c.wood_dark);
@@ -128,7 +128,7 @@ void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                Texture *white, const CarthageCatapultPalette &c) {
+                 Texture *white, const CarthageCatapultPalette &c) {
 
   float wheel_radius = 0.20F;
   float wheel_thickness = 0.045F;

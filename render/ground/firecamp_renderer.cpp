@@ -326,7 +326,7 @@ void FireCampRenderer::generate_firecamp_instances() {
                               world_x, world_z);
 
       float const cluster_noise = value_noise(world_x * 0.02F, world_z * 0.02F,
-                                             m_noiseSeed ^ 0xCA3F12E0U);
+                                              m_noiseSeed ^ 0xCA3F12E0U);
 
       if (cluster_noise < 0.4F) {
         continue;

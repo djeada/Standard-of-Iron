@@ -178,7 +178,7 @@ void StoneRenderer::generate_stone_instances() {
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
       float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
-                                             m_noiseSeed ^ 0x7F3A9B2CU);
+                                              m_noiseSeed ^ 0x7F3A9B2CU);
 
       if (cluster_noise < 0.6F) {
         continue;

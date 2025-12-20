@@ -47,7 +47,8 @@ TEST_F(EquipmentRegistryTest, SingletonInstance) {
 
 TEST_F(EquipmentRegistryTest, RegisterAndGetHelmet) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("test_helmet");
-  registry->register_equipment(EquipmentCategory::Helmet, "iron_helmet", helmet);
+  registry->register_equipment(EquipmentCategory::Helmet, "iron_helmet",
+                               helmet);
 
   auto retrieved = registry->get(EquipmentCategory::Helmet, "iron_helmet");
 
@@ -85,7 +86,7 @@ TEST_F(EquipmentRegistryTest, GetNonExistentEquipment) {
 TEST_F(EquipmentRegistryTest, HasEquipment) {
   auto helmet = std::make_shared<MockEquipmentRenderer>("test_helmet");
   registry->register_equipment(EquipmentCategory::Helmet, "steel_helmet",
-                              helmet);
+                               helmet);
 
   EXPECT_TRUE(registry->has(EquipmentCategory::Helmet, "steel_helmet"));
   EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "bronze_helmet"));
@@ -127,7 +128,7 @@ TEST_F(EquipmentRegistryTest, RegisterAcrossDifferentCategories) {
 
 TEST_F(EquipmentRegistryTest, RegisterNullRenderer) {
   registry->register_equipment(EquipmentCategory::Helmet, "null_helmet",
-                              nullptr);
+                               nullptr);
 
   auto retrieved = registry->get(EquipmentCategory::Helmet, "null_helmet");
   EXPECT_EQ(retrieved, nullptr);
@@ -153,9 +154,9 @@ TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
   auto sword_roman = std::make_shared<MockEquipmentRenderer>("sword_roman");
 
   registry->register_equipment(EquipmentCategory::Weapon, "sword_carthage",
-                              sword_carthage);
+                               sword_carthage);
   registry->register_equipment(EquipmentCategory::Weapon, "sword_roman",
-                              sword_roman);
+                               sword_roman);
 
   EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_carthage"));
   EXPECT_TRUE(registry->has(EquipmentCategory::Weapon, "sword_roman"));
