@@ -4,6 +4,8 @@
   "summary": "Execute the legendary double envelopment - surround and destroy Rome's greatest army in the most famous tactical victory in history",
   "teaching_goal": "Advanced formation tactics and the double envelopment maneuver. Teaches players the pinnacle of tactical warfare - the perfect encirclement.",
   "narrative_intent": "The climax of Hannibal's tactical genius. Player must replicate history's most studied military maneuver.",
+  "historical_context": "Fought on August 2, 216 BC, the Battle of Cannae saw Hannibal's 50,000 troops completely destroy a Roman army of 86,000. Using his innovative double envelopment tactic, Hannibal encircled the Romans, inflicting approximately 50,000-70,000 casualties. It remains one of the greatest tactical victories in military history and is still studied in military academies worldwide.",
+  "terrain_type": "plains",
   "map_path": ":/assets/maps/map_battle_cannae.json",
   "player_setup": {
     "nation": "carthage",

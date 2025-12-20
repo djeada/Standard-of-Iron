@@ -7,6 +7,7 @@ Rectangle {
     id: root
 
     property var selected_mission: null
+    property string active_region_id: selected_mission && selected_mission.world_region_id ? selected_mission.world_region_id : ""
     property real map_orbit_yaw: 180
     property real map_orbit_pitch: 55
     property real map_orbit_distance: 2.4
@@ -16,6 +17,45 @@ Rectangle {
     property real hover_mouse_y: 0
     property var province_labels: []
     property int label_refresh: 0
+    property var region_camera_positions: ({
+        "transalpine_gaul": {
+            "yaw": 200,
+            "pitch": 50,
+            "distance": 2.0
+        },
+        "cisalpine_gaul": {
+            "yaw": 185,
+            "pitch": 48,
+            "distance": 1.9
+        },
+        "etruria": {
+            "yaw": 180,
+            "pitch": 52,
+            "distance": 1.8
+        },
+        "southern_italy": {
+            "yaw": 175,
+            "pitch": 50,
+            "distance": 1.9
+        },
+        "carthage_core": {
+            "yaw": 170,
+            "pitch": 55,
+            "distance": 2.2
+        }
+    })
+
+    function focus_on_region(region_id) {
+        if (!region_id || region_id === "")
+            return ;
+
+        var camera_pos = region_camera_positions[region_id];
+        if (camera_pos) {
+            map_orbit_yaw = camera_pos.yaw;
+            map_orbit_pitch = camera_pos.pitch;
+            map_orbit_distance = camera_pos.distance;
+        }
+    }
 
     function load_provinces() {
         var labels = campaign_map.provinceLabels;
@@ -57,9 +97,13 @@ Rectangle {
         load_provinces();
     }
     onSelected_missionChanged: {
-        map_orbit_yaw = 180;
-        map_orbit_pitch = 55;
-        map_orbit_distance = 2.4;
+        if (selected_mission && selected_mission.world_region_id) {
+            focus_on_region(selected_mission.world_region_id);
+        } else {
+            map_orbit_yaw = 180;
+            map_orbit_pitch = 55;
+            map_orbit_distance = 2.4;
+        }
     }
 
     CampaignMapView {
@@ -70,11 +114,43 @@ Rectangle {
         orbitYaw: root.map_orbit_yaw
         orbitPitch: root.map_orbit_pitch
         orbitDistance: root.map_orbit_distance
+        hoverProvinceId: {
+            if (root.active_region_id !== "")
+                return root.active_region_id;
+
+            var info = provinceInfoAtScreen(root.hover_mouse_x, root.hover_mouse_y);
+            return info && info.id ? info.id : "";
+        }
         onOrbitYawChanged: root.label_refresh += 1
         onOrbitPitchChanged: root.label_refresh += 1
         onOrbitDistanceChanged: root.label_refresh += 1
         onWidthChanged: root.label_refresh += 1
         onHeightChanged: root.label_refresh += 1
+
+        Behavior on orbitYaw {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
+        Behavior on orbitPitch {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
+        Behavior on orbitDistance {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
     }
 
     MouseArea {
@@ -99,16 +175,18 @@ Rectangle {
             }
             root.hover_mouse_x = mouse.x;
             root.hover_mouse_y = mouse.y;
-            var info = campaign_map.provinceInfoAtScreen(mouse.x, mouse.y);
-            var id = info && info.id ? info.id : "";
-            campaign_map.hoverProvinceId = id;
-            root.hover_province_name = info && info.name ? info.name : "";
-            root.hover_province_owner = info && info.owner ? info.owner : "";
+            if (root.active_region_id === "") {
+                var info = campaign_map.provinceInfoAtScreen(mouse.x, mouse.y);
+                var id = info && info.id ? info.id : "";
+                root.hover_province_name = info && info.name ? info.name : "";
+                root.hover_province_owner = info && info.owner ? info.owner : "";
+            }
         }
         onExited: {
-            campaign_map.hoverProvinceId = "";
-            root.hover_province_name = "";
-            root.hover_province_owner = "";
+            if (root.active_region_id === "") {
+                root.hover_province_name = "";
+                root.hover_province_owner = "";
+            }
         }
         onWheel: function(wheel) {
             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
@@ -165,10 +243,103 @@ Rectangle {
 
     }
 
+    Repeater {
+        property var mission_region_map: ({
+            "transalpine_gaul": {
+                "uv": [0.28, 0.35],
+                "name": "Rhône"
+            },
+            "cisalpine_gaul": {
+                "uv": [0.42, 0.38],
+                "name": "N. Italy"
+            },
+            "etruria": {
+                "uv": [0.44, 0.48],
+                "name": "Trasimene"
+            },
+            "southern_italy": {
+                "uv": [0.50, 0.53],
+                "name": "Cannae"
+            },
+            "carthage_core": {
+                "uv": [0.40, 0.78],
+                "name": "Zama"
+            }
+        })
+        model: root.selected_mission ? 1 : 0
+
+        delegate: Item {
+            property var region_info: parent.mission_region_map[root.active_region_id]
+            property var marker_uv: region_info ? region_info.uv : null
+            property int _refresh: root.label_refresh
+            property var _pos: (marker_uv !== null && _refresh >= 0) ? campaign_map.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
+
+            visible: marker_uv !== null && root.active_region_id !== ""
+            z: 6
+            x: _pos.x
+            y: _pos.y
+
+            Rectangle {
+                width: 24
+                height: 24
+                radius: 12
+                color: "#cc8f47"
+                border.color: "#ffffff"
+                border.width: 2
+                x: -width / 2
+                y: -height / 2
+                opacity: 0.9
+
+                SequentialAnimation on scale {
+                    loops: Animation.Infinite
+                    running: visible
+
+                    NumberAnimation {
+                        from: 1.0
+                        to: 1.15
+                        duration: 800
+                        easing.type: Easing.InOutQuad
+                    }
+
+                    NumberAnimation {
+                        from: 1.15
+                        to: 1.0
+                        duration: 800
+                        easing.type: Easing.InOutQuad
+                    }
+
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "⚔"
+                    color: "#ffffff"
+                    font.pointSize: Theme.fontSizeSmall
+                    font.bold: true
+                }
+
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: -24
+                text: region_info ? region_info.name : ""
+                color: "#ffffff"
+                font.pointSize: Theme.fontSizeSmall
+                font.bold: true
+                style: Text.Outline
+                styleColor: "#000000"
+            }
+
+        }
+
+    }
+
     Rectangle {
         id: hover_tooltip
 
-        visible: campaign_map.hoverProvinceId !== "" && root.hover_province_name !== ""
+        visible: (root.active_region_id !== "" || (campaign_map.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16
@@ -279,6 +450,34 @@ Rectangle {
         font.pointSize: Theme.fontSizeTiny
         style: Text.Outline
         styleColor: "#000000"
+    }
+
+    Rectangle {
+        visible: root.active_region_id !== ""
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Theme.spacingMedium
+        width: active_region_label.implicitWidth + 16
+        height: active_region_label.implicitHeight + 12
+        radius: 6
+        color: "#cc8f47"
+        border.color: "#8b6332"
+        border.width: 2
+        opacity: 0.95
+        z: 10
+
+        Label {
+            id: active_region_label
+
+            anchors.centerIn: parent
+            text: qsTr("📍 Mission Region")
+            color: "#ffffff"
+            font.pointSize: Theme.fontSizeSmall
+            font.bold: true
+            style: Text.Outline
+            styleColor: "#000000"
+        }
+
     }
 
 }
