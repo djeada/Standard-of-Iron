@@ -16,6 +16,7 @@
 #include "campaign_manager.h"
 #include "core/system.h"
 #include "game/audio/AudioSystem.h"
+#include "game/map/mission_context.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 #include "game_state_restorer.h"
@@ -1420,6 +1421,16 @@ void GameEngine::start_skirmish(const QString &map_path,
 
   m_level.map_path = map_path;
   m_level.map_name = map_path;
+
+  // Clear campaign context and set skirmish context
+  if (m_campaign_manager) {
+    Game::Mission::MissionContext skirmish_context;
+    skirmish_context.mode = "skirmish";
+    skirmish_context.campaign_id = "";
+    skirmish_context.mission_id = map_path; // Use map path as mission ID for skirmish
+    skirmish_context.difficulty = "normal";
+    m_campaign_manager->set_mission_context(skirmish_context);
+  }
 
   if (!m_runtime.victory_state.isEmpty()) {
     m_runtime.victory_state = "";
