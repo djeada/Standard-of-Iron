@@ -73,7 +73,7 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
   } else {
     auto pos = camera.get_position();
     auto tgt = camera.get_target();
-    camera.lookAt(pos, tgt, QVector3D(0, 1, 0));
+    camera.look_at(pos, tgt, QVector3D(0, 1, 0));
   }
 }
 

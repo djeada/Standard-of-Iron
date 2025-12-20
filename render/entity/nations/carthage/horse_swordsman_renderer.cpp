@@ -48,7 +48,7 @@ public:
 
     apply_color(style.cloth_color, v.palette.cloth);
     apply_color(style.leather_color, v.palette.leather);
-    apply_color(style.leather_dark_color, v.palette.leatherDark);
+    apply_color(style.leather_dark_color, v.palette.leather_dark);
     apply_color(style.metal_color, v.palette.metal);
   }
 

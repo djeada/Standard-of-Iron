@@ -477,7 +477,7 @@ private:
                 k_cloth_team_mix_weight, k_cloth_style_mix_weight);
     apply_color(style.leather_color, variant.palette.leather, k_team_mix_weight,
                 k_style_mix_weight);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark,
+    apply_color(style.leather_dark_color, variant.palette.leather_dark,
                 k_team_mix_weight, k_style_mix_weight);
     apply_color(style.metal_color, variant.palette.metal, k_team_mix_weight,
                 k_style_mix_weight);

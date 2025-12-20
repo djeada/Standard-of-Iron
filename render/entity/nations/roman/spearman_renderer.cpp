@@ -166,7 +166,7 @@ public:
         float const offhand_along = lerp(-0.06F, -0.02F, hold_t);
         float const offhand_drop = 0.10F + 0.02F * hold_t;
         QVector3D const hand_l_pos =
-            computeOffhandSpearGrip(pose, anim_ctx, hand_r_pos, false,
+            compute_offhand_spear_grip(pose, anim_ctx, hand_r_pos, false,
                                     offhand_along, offhand_drop, -0.08F);
 
         controller.place_hand_at(false, hand_r_pos);
@@ -181,7 +181,7 @@ public:
       QVector3D const idle_hand_r(0.28F + arm_asymmetry,
                                   HP::SHOULDER_Y - 0.02F + arm_height_jitter,
                                   0.30F);
-      QVector3D const idle_hand_l = computeOffhandSpearGrip(
+      QVector3D const idle_hand_l = compute_offhand_spear_grip(
           pose, anim_ctx, idle_hand_r, false, -0.04F, 0.10F, -0.08F);
 
       controller.place_hand_at(false, idle_hand_r);

@@ -105,7 +105,7 @@ void Backend::initialize() {
 
   qInfo() << "Backend: Creating ShaderCache...";
   m_shaderCache = std::make_unique<ShaderCache>();
-  m_shaderCache->initializeDefaults();
+  m_shaderCache->initialize_defaults();
   qInfo() << "Backend: ShaderCache created";
 
   qInfo() << "Backend: Creating CylinderPipeline...";
@@ -234,7 +234,7 @@ void Backend::begin_frame() {
   }
 }
 
-void Backend::setViewport(int w, int h) {
+void Backend::set_viewport(int w, int h) {
   m_viewportWidth = w;
   m_viewportHeight = h;
 }

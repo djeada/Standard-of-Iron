@@ -224,13 +224,13 @@ void MountedPoseController::stabilizeUpperBody(
 void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
                                        const MountedRiderPoseRequest &request) {
   mount_on_horse(mount);
-  apply_saddle_clearance(mount, request.dims, request.clearanceForward,
-                         request.clearanceUp);
+  apply_saddle_clearance(mount, request.dims, request.clearance_forward,
+                         request.clearance_up);
 
   stabilizeUpperBody(mount, request.dims);
 
   float forward = request.forward_bias;
-  switch (request.seatPose) {
+  switch (request.seat_pose) {
   case MountedSeatPose::Forward:
     forward += 0.35F;
     break;
@@ -241,13 +241,13 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
   default:
     break;
   }
-  apply_lean(mount, forward, request.sideBias);
+  apply_lean(mount, forward, request.side_bias);
 
-  apply_torso_sculpt(mount, request.torsoCompression, request.torsoTwist,
-                     request.shoulderDip);
+  apply_torso_sculpt(mount, request.torso_compression, request.torso_twist,
+                     request.shoulder_dip);
 
   float const clamped_forward = std::clamp(forward, -1.0F, 1.0F);
-  float const clamped_side = std::clamp(request.sideBias, -1.0F, 1.0F);
+  float const clamped_side = std::clamp(request.side_bias, -1.0F, 1.0F);
   update_head_hierarchy(mount, clamped_forward * 0.4F, clamped_side * 0.4F,
                         "applyPose_fixup");
 
@@ -261,12 +261,12 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
       request.shield_pose != MountedShieldPose::None ? true : false;
 
   bool apply_left_rein =
-      request.leftHandOnReins && !shield_claims_left && !needs_weapon_left;
-  bool apply_right_rein = request.rightHandOnReins && !needs_weapon_right;
+      request.left_hand_on_reins && !shield_claims_left && !needs_weapon_left;
+  bool apply_right_rein = request.right_hand_on_reins && !needs_weapon_right;
 
   if (apply_left_rein || apply_right_rein) {
-    holdReinsImpl(mount, request.reinSlackLeft, request.reinSlackRight,
-                  request.reinTensionLeft, request.reinTensionRight,
+    holdReinsImpl(mount, request.rein_slack_left, request.rein_slack_right,
+                  request.rein_tension_left, request.rein_tension_right,
                   apply_left_rein, apply_right_rein);
   }
 
@@ -290,17 +290,17 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
     apply_sword_idle_pose(mount, request.dims);
     break;
   case MountedWeaponPose::SwordStrike:
-    apply_sword_strike(mount, request.actionPhase,
+    apply_sword_strike(mount, request.action_phase,
                        request.shield_pose != MountedShieldPose::None);
     break;
   case MountedWeaponPose::SpearGuard:
     apply_spear_guard(mount, SpearGrip::OVERHAND);
     break;
   case MountedWeaponPose::SpearThrust:
-    apply_spear_thrust(mount, request.actionPhase);
+    apply_spear_thrust(mount, request.action_phase);
     break;
   case MountedWeaponPose::BowDraw:
-    apply_bow_draw(mount, request.actionPhase);
+    apply_bow_draw(mount, request.action_phase);
     break;
   case MountedWeaponPose::None:
   default:
@@ -684,10 +684,10 @@ void MountedPoseController::apply_bow_draw(const MountedAttachmentFrame &mount,
 
 void MountedPoseController::apply_torso_sculpt(
     const MountedAttachmentFrame &mount, float compression, float twist,
-    float shoulderDip) {
+    float shoulder_dip) {
   float const comp = std::clamp(compression, 0.0F, 1.0F);
   float const twist_amt = std::clamp(twist, -1.0F, 1.0F);
-  float const dip_amt = std::clamp(shoulderDip, -1.0F, 1.0F);
+  float const dip_amt = std::clamp(shoulder_dip, -1.0F, 1.0F);
 
   if (comp < 1e-3F && std::abs(twist_amt) < 1e-3F &&
       std::abs(dip_amt) < 1e-3F) {

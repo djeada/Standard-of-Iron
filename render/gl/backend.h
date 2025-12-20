@@ -50,7 +50,7 @@ public:
 
   void initialize();
   void begin_frame();
-  void setViewport(int w, int h);
+  void set_viewport(int w, int h);
   void set_clear_color(float r, float g, float b, float a);
   void set_animation_time(float time) { m_animationTime = time; }
   void execute(const DrawQueue &queue, const Camera &cam);

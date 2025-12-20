@@ -1113,7 +1113,7 @@ void GameEngine::on_minimap_left_click(qreal mx, qreal my, qreal minimap_width,
 
     const QVector3D offset = current_position - current_target;
 
-    m_camera->lookAt(new_target + offset, new_target,
+    m_camera->look_at(new_target + offset, new_target,
                      m_camera->get_up_vector());
   }
 

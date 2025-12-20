@@ -800,7 +800,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
            cylinder_between(ctx.model, pose.elbow_l, pose.hand_l, fore_arm_r),
            v.palette.skin * 0.95F, nullptr, 1.0F);
   out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_l, hand_r),
-           v.palette.leatherDark * 0.92F, nullptr, 1.0F);
+           v.palette.leather_dark * 0.92F, nullptr, 1.0F);
 
   out.mesh(
       get_unit_cylinder(),
@@ -812,7 +812,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
            cylinder_between(ctx.model, pose.elbow_r, pose.hand_r, fore_arm_r),
            v.palette.skin * 0.95F, nullptr, 1.0F);
   out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_r, hand_r),
-           v.palette.leatherDark * 0.92F, nullptr, 1.0F);
+           v.palette.leather_dark * 0.92F, nullptr, 1.0F);
 
   QVector3D const hip_l =
       pose.pelvis_pos +
@@ -878,7 +878,7 @@ void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
 
     foot_mat = foot_mat * scale_mat * shear_mat;
 
-    out.mesh(get_unit_capsule(), foot_mat, v.palette.leatherDark * 0.92F,
+    out.mesh(get_unit_capsule(), foot_mat, v.palette.leather_dark * 0.92F,
              nullptr, 1.0F);
   };
 
@@ -1403,8 +1403,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     int const c = idx % cols;
 
     FormationOffset const formation_offset =
-        formation_calculator->calculateOffset(idx, r, c, rows, cols,
-                                              formation.spacing, seed);
+        formation_calculator->calculate_offset(idx, r, c, rows, cols,
+                                               formation.spacing, seed);
 
     float offset_x = formation_offset.offset_x;
     float offset_z = formation_offset.offset_z;

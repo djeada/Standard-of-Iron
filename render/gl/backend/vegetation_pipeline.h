@@ -107,16 +107,16 @@ public:
   GLsizei m_firecampVertexCount{0};
 
 private:
-  void initializeStonePipeline();
-  void shutdownStonePipeline();
-  void initializePlantPipeline();
-  void shutdownPlantPipeline();
+  void initialize_stone_pipeline();
+  void shutdown_stone_pipeline();
+  void initialize_plant_pipeline();
+  void shutdown_plant_pipeline();
   void initialize_pine_pipeline();
-  void shutdownPinePipeline();
+  void shutdown_pine_pipeline();
   void initialize_olive_pipeline();
   void shutdown_olive_pipeline();
   void initialize_fire_camp_pipeline();
-  void shutdownFireCampPipeline();
+  void shutdown_fire_camp_pipeline();
 
   GL::ShaderCache *m_shaderCache;
   bool m_initialized{false};

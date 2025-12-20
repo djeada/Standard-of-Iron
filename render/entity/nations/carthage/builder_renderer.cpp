@@ -566,7 +566,7 @@ private:
     apply(style.cloth_color, v.palette.cloth, 0.0F, 1.0F);
     apply(style.leather_color, v.palette.leather, k_team_mix_weight,
           k_style_mix_weight);
-    apply(style.leather_dark_color, v.palette.leatherDark, k_team_mix_weight,
+    apply(style.leather_dark_color, v.palette.leather_dark, k_team_mix_weight,
           k_style_mix_weight);
     apply(style.metal_color, v.palette.metal, k_team_mix_weight,
           k_style_mix_weight);

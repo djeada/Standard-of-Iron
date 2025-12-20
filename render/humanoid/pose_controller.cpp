@@ -848,7 +848,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   float const along_offset = -0.08F + 0.04F * thrust_extent;
   float const y_drop = 0.08F + 0.03F * thrust_extent;
 
-  hand_l_target = computeOffhandSpearGrip(m_pose, m_anim_ctx, hand_r_target,
+  hand_l_target = compute_offhand_spear_grip(m_pose, m_anim_ctx, hand_r_target,
                                           false, along_offset, y_drop, -0.06F);
 
   place_hand_at(false, hand_r_target);
@@ -973,7 +973,7 @@ void HumanoidPoseController::spearThrustFromHold(float attack_phase,
   float const along_offset = -0.06F + 0.03F * thrust_extent;
   float const y_drop = 0.06F + 0.02F * thrust_extent;
 
-  hand_l_target = computeOffhandSpearGrip(m_pose, m_anim_ctx, hand_r_target,
+  hand_l_target = compute_offhand_spear_grip(m_pose, m_anim_ctx, hand_r_target,
                                           false, along_offset, y_drop, -0.05F);
 
   place_hand_at(false, hand_r_target);

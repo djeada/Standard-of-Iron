@@ -134,8 +134,8 @@ public:
     QVector3D const rest_hand(0.24F - asymmetry * 0.5F,
                               HP::WAIST_Y - 0.02F + arm_jitter * 0.5F, 0.08F);
 
-    controller.placeHandAt(true, hammer_hand);
-    controller.placeHandAt(false, rest_hand);
+    controller.place_hand_at(true, hammer_hand);
+    controller.place_hand_at(false, rest_hand);
   }
 
   void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
@@ -237,8 +237,8 @@ private:
     QVector3D const brace_hand(0.14F - asymmetry * 0.5F, brace_y,
                                brace_forward);
 
-    controller.placeHandAt(true, hammer_hand);
-    controller.placeHandAt(false, brace_hand);
+    controller.place_hand_at(true, hammer_hand);
+    controller.place_hand_at(false, brace_hand);
   }
 
   void apply_kneeling_work_pose(HumanoidPoseController &controller, float cycle,
@@ -258,8 +258,8 @@ private:
     float const brace_x = 0.18F - asymmetry * 0.5F;
     QVector3D const brace_hand(brace_x, HP::WAIST_Y * 0.25F, 0.20F);
 
-    controller.placeHandAt(true, tool_hand);
-    controller.placeHandAt(false, brace_hand);
+    controller.place_hand_at(true, tool_hand);
+    controller.place_hand_at(false, brace_hand);
   }
 
   void apply_sawing_pose(HumanoidPoseController &controller, float cycle,
@@ -277,8 +277,8 @@ private:
     QVector3D const left_hand(-0.08F + asymmetry, saw_y, saw_z);
     QVector3D const right_hand(0.08F - asymmetry, saw_y + 0.02F, saw_z);
 
-    controller.placeHandAt(true, left_hand);
-    controller.placeHandAt(false, right_hand);
+    controller.place_hand_at(true, left_hand);
+    controller.place_hand_at(false, right_hand);
   }
 
   void apply_lifting_pose(HumanoidPoseController &controller, float cycle,
@@ -313,8 +313,8 @@ private:
     QVector3D const left_hand(-0.12F + asymmetry, lift_height, 0.15F);
     QVector3D const right_hand(0.12F - asymmetry, lift_height, 0.15F);
 
-    controller.placeHandAt(true, left_hand);
-    controller.placeHandAt(false, right_hand);
+    controller.place_hand_at(true, left_hand);
+    controller.place_hand_at(false, right_hand);
 
     if (crouch > 0.0F) {
       controller.kneel(crouch);
@@ -536,7 +536,7 @@ private:
     };
     apply(style.cloth_color, variant.palette.cloth);
     apply(style.leather_color, variant.palette.leather);
-    apply(style.leather_dark_color, variant.palette.leatherDark);
+    apply(style.leather_dark_color, variant.palette.leather_dark);
     apply(style.metal_color, variant.palette.metal);
     apply(style.wood_color, variant.palette.wood);
   }

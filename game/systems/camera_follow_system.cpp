@@ -50,7 +50,7 @@ void CameraFollowSystem::snap_to_selection(Engine::Core::World &world,
   }
   if (count > 0) {
     QVector3D const target = sum / float(count);
-    camera.setTarget(target);
+    camera.set_target(target);
     camera.capture_follow_offset();
   }
 }

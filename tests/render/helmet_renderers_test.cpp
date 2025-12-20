@@ -105,7 +105,7 @@ HumanoidPalette createTestPalette() {
   palette.skin = QVector3D(0.8F, 0.6F, 0.5F);
   palette.cloth = QVector3D(0.7F, 0.3F, 0.2F);
   palette.leather = QVector3D(0.4F, 0.3F, 0.2F);
-  palette.leatherDark = QVector3D(0.3F, 0.2F, 0.1F);
+  palette.leather_dark = QVector3D(0.3F, 0.2F, 0.1F);
   palette.metal = QVector3D(0.7F, 0.7F, 0.7F);
   palette.wood = QVector3D(0.5F, 0.3F, 0.2F);
   return palette;
@@ -117,7 +117,7 @@ class HelmetRenderersTest : public ::testing::Test {
 protected:
   void SetUp() override {
     // Ensure built-in equipment is registered
-    registerBuiltInEquipment();
+    register_built_in_equipment();
 
     ctx = createTestContext();
     frames = createTestFrames();

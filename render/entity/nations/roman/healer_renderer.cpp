@@ -126,8 +126,8 @@ public:
                                   base_arm_height + sway_height + 0.01F,
                                   forward_reach * 0.95F);
 
-      controller.placeHandAt(true, heal_hand_l);
-      controller.placeHandAt(false, heal_hand_r);
+      controller.place_hand_at(true, heal_hand_l);
+      controller.place_hand_at(false, heal_hand_r);
 
       QVector3D const look_dir(target_dir_x, 0.0F, target_dir_z);
       QVector3D const head_focus =
@@ -144,8 +144,8 @@ public:
       QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.6F,
                                   hand_height + 0.01F, forward_offset * 0.9F);
 
-      controller.placeHandAt(true, idle_hand_l);
-      controller.placeHandAt(false, idle_hand_r);
+      controller.place_hand_at(true, idle_hand_l);
+      controller.place_hand_at(false, idle_hand_r);
     }
   }
 
@@ -485,7 +485,7 @@ private:
 
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
   }

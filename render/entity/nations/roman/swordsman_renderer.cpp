@@ -341,7 +341,7 @@ private:
 
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
   }
 
