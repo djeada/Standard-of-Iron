@@ -25,6 +25,10 @@ auto CampaignLoader::parseCampaignMission(const QJsonObject &obj)
         static_cast<float>(obj["difficulty_modifier"].toDouble());
   }
 
+  if (obj.contains("world_region_id")) {
+    mission.world_region_id = obj["world_region_id"].toString();
+  }
+
   return mission;
 }
 
