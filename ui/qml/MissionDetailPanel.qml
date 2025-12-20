@@ -9,6 +9,22 @@ Rectangle {
     property var mission_data: null
     property string campaign_id: ""
     property var mission_definition: null
+    property var terrain_icons: ({
+        "mountain": "⛰️",
+        "plains": "🌾",
+        "forest": "🌲",
+        "river": "🌊",
+        "desert": "🏜️",
+        "hills": "⛰️"
+    })
+    property var terrain_colors: ({
+        "mountain": "#8b7355",
+        "plains": "#9db68f",
+        "forest": "#4a7c59",
+        "river": "#4a90b5",
+        "desert": "#d4a574",
+        "hills": "#a89968"
+    })
 
     signal start_mission_clicked()
 
@@ -35,19 +51,111 @@ Rectangle {
             Layout.fillHeight: true
             spacing: Theme.spacingSmall
 
-            Label {
-                text: mission_data ? mission_data.mission_id : ""
-                color: Theme.textMain
-                font.pointSize: Theme.fontSizeTitle
-                font.bold: true
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Theme.spacingMedium
+
+                Label {
+                    text: mission_data ? mission_data.mission_id : ""
+                    color: Theme.textMain
+                    font.pointSize: Theme.fontSizeTitle
+                    font.bold: true
+                    Layout.fillWidth: true
+                }
+
+                Rectangle {
+                    visible: mission_definition && mission_definition.terrain_type
+                    Layout.preferredWidth: terrain_badge_layout.implicitWidth + 12
+                    Layout.preferredHeight: 24
+                    radius: Theme.radiusSmall
+                    color: {
+                        if (!mission_definition || !mission_definition.terrain_type)
+                            return Theme.disabledBg;
+
+                        return terrain_colors[mission_definition.terrain_type] || Theme.disabledBg;
+                    }
+                    border.color: Theme.border
+                    border.width: 1
+                    opacity: 0.85
+
+                    RowLayout {
+                        id: terrain_badge_layout
+
+                        anchors.centerIn: parent
+                        spacing: 4
+
+                        Label {
+                            text: {
+                                if (!mission_definition || !mission_definition.terrain_type)
+                                    return "";
+
+                                return terrain_icons[mission_definition.terrain_type] || "🗺️";
+                            }
+                            font.pointSize: Theme.fontSizeSmall
+                        }
+
+                        Label {
+                            text: {
+                                if (!mission_definition || !mission_definition.terrain_type)
+                                    return "";
+
+                                var terrain = mission_definition.terrain_type;
+                                return terrain.charAt(0).toUpperCase() + terrain.slice(1);
+                            }
+                            color: "#ffffff"
+                            font.pointSize: Theme.fontSizeTiny
+                            font.bold: true
+                        }
+
+                    }
+
+                }
+
             }
 
             Label {
+                visible: mission_definition && mission_definition.historical_context
                 text: mission_data && mission_data.intro_text ? mission_data.intro_text : ""
                 color: Theme.textSubLite
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 font.pointSize: Theme.fontSizeMedium
+            }
+
+            Rectangle {
+                visible: mission_definition && mission_definition.historical_context
+                Layout.fillWidth: true
+                Layout.preferredHeight: historical_context_text.implicitHeight + Theme.spacingSmall * 2
+                radius: Theme.radiusSmall
+                color: Theme.infoBg
+                border.color: Theme.infoBr
+                border.width: 1
+                opacity: 0.7
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingSmall
+                    spacing: Theme.spacingSmall
+
+                    Label {
+                        text: "📜"
+                        font.pointSize: Theme.fontSizeMedium
+                        Layout.alignment: Qt.AlignTop
+                    }
+
+                    Label {
+                        id: historical_context_text
+
+                        text: mission_definition && mission_definition.historical_context ? mission_definition.historical_context : ""
+                        color: Theme.textSubLite
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        font.pointSize: Theme.fontSizeTiny
+                        font.italic: true
+                    }
+
+                }
+
             }
 
             RowLayout {

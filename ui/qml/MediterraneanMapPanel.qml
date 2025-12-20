@@ -17,6 +17,55 @@ Rectangle {
     property real hover_mouse_y: 0
     property var province_labels: []
     property int label_refresh: 0
+    property var region_camera_positions: ({
+        "gallia_narbonensis": {
+            "yaw": 200,
+            "pitch": 50,
+            "distance": 2.0
+        },
+        "cisalpine_gaul": {
+            "yaw": 185,
+            "pitch": 48,
+            "distance": 1.9
+        },
+        "etruria": {
+            "yaw": 180,
+            "pitch": 52,
+            "distance": 1.8
+        },
+        "apulia": {
+            "yaw": 175,
+            "pitch": 50,
+            "distance": 1.9
+        },
+        "campania": {
+            "yaw": 178,
+            "pitch": 51,
+            "distance": 1.8
+        },
+        "alps": {
+            "yaw": 190,
+            "pitch": 45,
+            "distance": 2.1
+        },
+        "africa": {
+            "yaw": 170,
+            "pitch": 55,
+            "distance": 2.2
+        }
+    })
+
+    function focus_on_region(region_id) {
+        if (!region_id || region_id === "")
+            return ;
+
+        var camera_pos = region_camera_positions[region_id];
+        if (camera_pos) {
+            map_orbit_yaw = camera_pos.yaw;
+            map_orbit_pitch = camera_pos.pitch;
+            map_orbit_distance = camera_pos.distance;
+        }
+    }
 
     function load_provinces() {
         var labels = campaign_map.provinceLabels;
@@ -58,9 +107,13 @@ Rectangle {
         load_provinces();
     }
     onSelected_missionChanged: {
-        map_orbit_yaw = 180;
-        map_orbit_pitch = 55;
-        map_orbit_distance = 2.4;
+        if (selected_mission && selected_mission.world_region_id) {
+            focus_on_region(selected_mission.world_region_id);
+        } else {
+            map_orbit_yaw = 180;
+            map_orbit_pitch = 55;
+            map_orbit_distance = 2.4;
+        }
     }
 
     CampaignMapView {
@@ -83,6 +136,31 @@ Rectangle {
         onOrbitDistanceChanged: root.label_refresh += 1
         onWidthChanged: root.label_refresh += 1
         onHeightChanged: root.label_refresh += 1
+
+        Behavior on orbitYaw {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
+        Behavior on orbitPitch {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
+        Behavior on orbitDistance {
+            NumberAnimation {
+                duration: 600
+                easing.type: Easing.InOutQuad
+            }
+
+        }
+
     }
 
     MouseArea {
@@ -169,6 +247,107 @@ Rectangle {
                     y: -height / 2
                 }
 
+            }
+
+        }
+
+    }
+
+    Repeater {
+        property var mission_region_map: ({
+            "gallia_narbonensis": {
+                "uv": [0.28, 0.35],
+                "name": "Rhône"
+            },
+            "cisalpine_gaul": {
+                "uv": [0.42, 0.38],
+                "name": "N. Italy"
+            },
+            "etruria": {
+                "uv": [0.44, 0.48],
+                "name": "Trasimene"
+            },
+            "apulia": {
+                "uv": [0.52, 0.55],
+                "name": "Cannae"
+            },
+            "campania": {
+                "uv": [0.46, 0.53],
+                "name": "Campania"
+            },
+            "alps": {
+                "uv": [0.38, 0.32],
+                "name": "Alps"
+            },
+            "africa": {
+                "uv": [0.40, 0.78],
+                "name": "Zama"
+            }
+        })
+        model: root.selected_mission ? 1 : 0
+
+        delegate: Item {
+            property var region_info: parent.mission_region_map[root.active_region_id]
+            property var marker_uv: region_info ? region_info.uv : null
+            property int _refresh: root.label_refresh
+            property var _pos: (marker_uv !== null && _refresh >= 0) ? campaign_map.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
+
+            visible: marker_uv !== null && root.active_region_id !== ""
+            z: 6
+            x: _pos.x
+            y: _pos.y
+
+            Rectangle {
+                width: 24
+                height: 24
+                radius: 12
+                color: "#cc8f47"
+                border.color: "#ffffff"
+                border.width: 2
+                x: -width / 2
+                y: -height / 2
+                opacity: 0.9
+
+                SequentialAnimation on scale {
+                    loops: Animation.Infinite
+                    running: visible
+
+                    NumberAnimation {
+                        from: 1.0
+                        to: 1.15
+                        duration: 800
+                        easing.type: Easing.InOutQuad
+                    }
+
+                    NumberAnimation {
+                        from: 1.15
+                        to: 1.0
+                        duration: 800
+                        easing.type: Easing.InOutQuad
+                    }
+
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "⚔"
+                    color: "#ffffff"
+                    font.pointSize: Theme.fontSizeSmall
+                    font.bold: true
+                }
+
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.topMargin: -24
+                text: region_info ? region_info.name : ""
+                color: "#ffffff"
+                font.pointSize: Theme.fontSizeSmall
+                font.bold: true
+                style: Text.Outline
+                styleColor: "#000000"
             }
 
         }
