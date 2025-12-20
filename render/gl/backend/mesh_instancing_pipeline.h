@@ -18,16 +18,16 @@ class Texture;
 namespace Render::GL::BackendPipelines {
 
 /// Per-instance data for mesh instancing (model matrix + color/alpha).
-/// Layout matches shader attribute requirements.
+/// Layout matches the primitive_instanced.vert shader attribute pattern:
+/// - i_modelCol0 (location 3): xyz = col0, w = translation.x
+/// - i_modelCol1 (location 4): xyz = col1, w = translation.y
+/// - i_modelCol2 (location 5): xyz = col2, w = translation.z
+/// - i_colorAlpha (location 6): rgb = color, a = alpha
 struct MeshInstanceGpu {
-  float model_col0[4]{1, 0, 0, 0}; // Model matrix column 0
-  float model_col1[4]{0, 1, 0, 0}; // Model matrix column 1
-  float model_col2[4]{0, 0, 1, 0}; // Model matrix column 2
-  float model_col3[4]{0, 0, 0, 1}; // Model matrix column 3
-  float color[3]{1, 1, 1};         // RGB color
-  float alpha{1.0F};               // Alpha value
-  int material_id{0};              // Material ID
-  float padding[3]{0, 0, 0};       // Padding for alignment
+  float model_col0[4]{1, 0, 0, 0}; // xyz = mat col 0, w = translation.x
+  float model_col1[4]{0, 1, 0, 0}; // xyz = mat col 1, w = translation.y
+  float model_col2[4]{0, 0, 1, 0}; // xyz = mat col 2, w = translation.z
+  float color_alpha[4]{1, 1, 1, 1}; // rgb = color, a = alpha
 };
 
 /// Mesh instancing pipeline for batching repeated mesh+shader+texture draws.
@@ -55,9 +55,9 @@ public:
   /// @param model Model matrix for this instance.
   /// @param color RGB color for this instance.
   /// @param alpha Alpha value for this instance.
-  /// @param material_id Material ID for this instance.
+  /// @param material_id Material ID for this instance (currently unused).
   void accumulate(const QMatrix4x4 &model, const QVector3D &color, float alpha,
-                  int material_id);
+                  int material_id = 0);
 
   /// Start a new batch with the given mesh/shader/texture combo.
   void begin_batch(Mesh *mesh, Shader *shader, Texture *texture);

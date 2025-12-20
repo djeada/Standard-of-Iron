@@ -13,13 +13,11 @@ constexpr std::size_t k_initial_capacity = 256;
 constexpr std::size_t k_max_instances_per_batch = 4096;
 
 // Vertex attribute locations for instance data
-// These must match the shader layout
-constexpr GLuint k_instance_model_col0_loc = 4;
-constexpr GLuint k_instance_model_col1_loc = 5;
-constexpr GLuint k_instance_model_col2_loc = 6;
-constexpr GLuint k_instance_model_col3_loc = 7;
-constexpr GLuint k_instance_color_alpha_loc = 8;
-constexpr GLuint k_instance_material_loc = 9;
+// These match the primitive_instanced.vert shader layout
+constexpr GLuint k_instance_model_col0_loc = 3;
+constexpr GLuint k_instance_model_col1_loc = 4;
+constexpr GLuint k_instance_model_col2_loc = 5;
+constexpr GLuint k_instance_color_alpha_loc = 6;
 } // namespace
 
 MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend *backend,
@@ -113,33 +111,34 @@ auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
 
 void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
                                         const QVector3D &color, float alpha,
-                                        int material_id) {
+                                        int /*material_id*/) {
   MeshInstanceGpu inst{};
 
-  // Copy model matrix columns
+  // Pack model matrix columns with translation in w components
+  // This matches the primitive_instanced.vert layout:
+  // mat4 = mat4(vec4(col0.xyz, 0), vec4(col1.xyz, 0), vec4(col2.xyz, 0),
+  //             vec4(col0.w, col1.w, col2.w, 1))
   const float *data = model.constData();
+  // Column 0: rotation/scale column 0, translation.x
   inst.model_col0[0] = data[0];
   inst.model_col0[1] = data[1];
   inst.model_col0[2] = data[2];
-  inst.model_col0[3] = data[3];
+  inst.model_col0[3] = data[12]; // translation.x
+  // Column 1: rotation/scale column 1, translation.y
   inst.model_col1[0] = data[4];
   inst.model_col1[1] = data[5];
   inst.model_col1[2] = data[6];
-  inst.model_col1[3] = data[7];
+  inst.model_col1[3] = data[13]; // translation.y
+  // Column 2: rotation/scale column 2, translation.z
   inst.model_col2[0] = data[8];
   inst.model_col2[1] = data[9];
   inst.model_col2[2] = data[10];
-  inst.model_col2[3] = data[11];
-  inst.model_col3[0] = data[12];
-  inst.model_col3[1] = data[13];
-  inst.model_col3[2] = data[14];
-  inst.model_col3[3] = data[15];
+  inst.model_col2[3] = data[14]; // translation.z
 
-  inst.color[0] = color.x();
-  inst.color[1] = color.y();
-  inst.color[2] = color.z();
-  inst.alpha = alpha;
-  inst.material_id = material_id;
+  inst.color_alpha[0] = color.x();
+  inst.color_alpha[1] = color.y();
+  inst.color_alpha[2] = color.z();
+  inst.color_alpha[3] = alpha;
 
   m_instances.push_back(inst);
 }
@@ -195,8 +194,8 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
 
   // Clean up instance attributes
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  for (GLuint loc = k_instance_model_col0_loc; loc <= k_instance_material_loc;
-       ++loc) {
+  for (GLuint loc = k_instance_model_col0_loc;
+       loc <= k_instance_color_alpha_loc; ++loc) {
     glDisableVertexAttribArray(loc);
   }
 
@@ -229,47 +228,33 @@ void MeshInstancingPipeline::setup_instance_attributes() {
 
   const auto stride = static_cast<GLsizei>(sizeof(MeshInstanceGpu));
 
-  // Model matrix column 0
+  // Model matrix column 0 (xyz = rotation/scale col 0, w = translation.x)
   glEnableVertexAttribArray(k_instance_model_col0_loc);
   glVertexAttribPointer(
       k_instance_model_col0_loc, 4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col0)));
   glVertexAttribDivisor(k_instance_model_col0_loc, 1);
 
-  // Model matrix column 1
+  // Model matrix column 1 (xyz = rotation/scale col 1, w = translation.y)
   glEnableVertexAttribArray(k_instance_model_col1_loc);
   glVertexAttribPointer(
       k_instance_model_col1_loc, 4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col1)));
   glVertexAttribDivisor(k_instance_model_col1_loc, 1);
 
-  // Model matrix column 2
+  // Model matrix column 2 (xyz = rotation/scale col 2, w = translation.z)
   glEnableVertexAttribArray(k_instance_model_col2_loc);
   glVertexAttribPointer(
       k_instance_model_col2_loc, 4, GL_FLOAT, GL_FALSE, stride,
       reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col2)));
   glVertexAttribDivisor(k_instance_model_col2_loc, 1);
 
-  // Model matrix column 3
-  glEnableVertexAttribArray(k_instance_model_col3_loc);
-  glVertexAttribPointer(
-      k_instance_model_col3_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, model_col3)));
-  glVertexAttribDivisor(k_instance_model_col3_loc, 1);
-
   // Color and alpha packed together
   glEnableVertexAttribArray(k_instance_color_alpha_loc);
   glVertexAttribPointer(
       k_instance_color_alpha_loc, 4, GL_FLOAT, GL_FALSE, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, color)));
+      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, color_alpha)));
   glVertexAttribDivisor(k_instance_color_alpha_loc, 1);
-
-  // Material ID as integer attribute
-  glEnableVertexAttribArray(k_instance_material_loc);
-  glVertexAttribIPointer(
-      k_instance_material_loc, 1, GL_INT, stride,
-      reinterpret_cast<void *>(offsetof(MeshInstanceGpu, material_id)));
-  glVertexAttribDivisor(k_instance_material_loc, 1);
 }
 
 } // namespace Render::GL::BackendPipelines
