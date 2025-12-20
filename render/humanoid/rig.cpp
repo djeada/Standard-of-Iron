@@ -923,6 +923,25 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
     return;
   }
 
+  // Check if facial hair is enabled in graphics settings
+  const auto &gfx_settings = Render::GraphicsSettings::instance();
+  if (!gfx_settings.features().enable_facial_hair) {
+    return;
+  }
+
+  // Distance-based culling for facial hair (separate from LOD)
+  // Skip facial hair rendering beyond a certain distance to reduce CPU work
+  // This is the highest impact optimization for facial hair CPU usage
+  constexpr float k_facial_hair_max_distance = 25.0F;
+  if (ctx.camera != nullptr) {
+    QVector3D const soldier_world_pos = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    float const distance = (soldier_world_pos - ctx.camera->get_position()).length();
+    if (distance > k_facial_hair_max_distance) {
+      ++s_render_stats.facial_hair_skipped_distance;
+      return;
+    }
+  }
+
   const AttachmentFrame &frame = pose.body_frames.head;
   float const head_r = frame.radius;
   if (head_r <= 0.0F) {
