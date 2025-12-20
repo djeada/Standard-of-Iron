@@ -22,7 +22,13 @@ class OwnerRegistry;
 
 class VictoryService {
 public:
-  enum class VictoryType { Elimination, SurviveTime, Custom };
+  enum class VictoryType {
+    Elimination,
+    SurviveTime,
+    ControlStructures,
+    CaptureStructures,
+    Custom
+  };
 
   enum class DefeatCondition { NoUnits, NoKeyStructures, TimeExpired };
 
@@ -56,12 +62,15 @@ private:
 
   auto check_elimination(Engine::Core::World &world) -> bool;
   [[nodiscard]] auto check_survive_time() const -> bool;
+  auto check_control_structures(Engine::Core::World &world,
+                                bool require_captured) const -> bool;
   auto check_no_units(Engine::Core::World &world) const -> bool;
   auto check_no_key_structures(Engine::Core::World &world) -> bool;
 
   VictoryType m_victoryType = VictoryType::Elimination;
   std::vector<QString> m_keyStructures;
   std::vector<DefeatCondition> m_defeatConditions;
+  int m_requiredKeyStructures = 0;
 
   float m_survive_time_duration = 0.0F;
   float m_elapsed_time = 0.0F;

@@ -325,6 +325,11 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
           }
 
           QString db_error;
+          if (!ensure_campaign_in_db(campaign, &db_error)) {
+            qWarning() << "Failed to initialize campaign in DB for"
+                       << campaign.id << ":" << db_error;
+            continue;
+          }
           if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
             qWarning() << "Failed to initialize campaign missions in DB for"
                        << campaign.id << ":" << db_error;
@@ -421,6 +426,11 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
       }
 
       QString db_error;
+      if (!ensure_campaign_in_db(campaign, &db_error)) {
+        qWarning() << "Failed to initialize campaign in DB for" << campaign.id
+                   << ":" << db_error;
+        continue;
+      }
       if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
         qWarning() << "Failed to initialize campaign missions in DB for"
                    << campaign.id << ":" << db_error;
@@ -1122,6 +1132,48 @@ auto SaveStorage::ensure_campaign_missions_in_db(
         return false;
       }
     }
+  }
+
+  if (!transaction.commit(out_error)) {
+    return false;
+  }
+
+  return true;
+}
+
+auto SaveStorage::ensure_campaign_in_db(
+    const Game::Campaign::CampaignDefinition &campaign,
+    QString *out_error) -> bool {
+  if (!initialize(out_error)) {
+    return false;
+  }
+
+  TransactionGuard transaction(m_database);
+  if (!transaction.begin(out_error)) {
+    return false;
+  }
+
+  QSqlQuery insert_query(m_database);
+  insert_query.prepare(QStringLiteral(
+      "INSERT INTO campaigns (id, title, description, map_path, order_index) "
+      "VALUES (:id, :title, :description, :map_path, :order_index) "
+      "ON CONFLICT(id) DO UPDATE SET "
+      "title = excluded.title, "
+      "description = excluded.description"));
+  insert_query.bindValue(QStringLiteral(":id"), campaign.id);
+  insert_query.bindValue(QStringLiteral(":title"), campaign.title);
+  insert_query.bindValue(QStringLiteral(":description"), campaign.description);
+  insert_query.bindValue(QStringLiteral(":map_path"),
+                         QStringLiteral(":/assets/maps/map_rivers.json"));
+  insert_query.bindValue(QStringLiteral(":order_index"), 0);
+
+  if (!insert_query.exec()) {
+    if (out_error != nullptr) {
+      *out_error = QStringLiteral("Failed to insert campaign: %1")
+                       .arg(last_error_string(insert_query.lastError()));
+    }
+    transaction.rollback();
+    return false;
   }
 
   if (!transaction.commit(out_error)) {

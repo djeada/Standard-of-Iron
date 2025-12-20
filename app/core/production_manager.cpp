@@ -29,19 +29,17 @@ ProductionManager::ProductionManager(
 
 namespace {
 
-// Check if a construction site position is valid for building placement
 auto is_construction_position_valid(float pos_x, float pos_z,
                                     const std::string &building_type) -> bool {
-  auto &collision_registry = Game::Systems::BuildingCollisionRegistry::instance();
+  auto &collision_registry =
+      Game::Systems::BuildingCollisionRegistry::instance();
   auto size = collision_registry.get_building_size(building_type);
 
-  // Check if the area overlaps with existing buildings
   if (collision_registry.is_circle_overlapping_building(
           pos_x, pos_z, std::max(size.width, size.depth) * 0.5F, 0)) {
     return false;
   }
 
-  // Check if the terrain is walkable at the construction position
   Game::Systems::Pathfinding *pathfinder =
       Game::Systems::CommandService::get_pathfinder();
   if (pathfinder != nullptr) {
@@ -143,11 +141,11 @@ void ProductionManager::on_construction_confirm() {
     return;
   }
 
-  // Validate that the construction position is valid
-  if (!is_construction_position_valid(m_construction_placement_position.x(),
-                                      m_construction_placement_position.z(),
-                                      m_pending_construction_type.toStdString())) {
-    // Position is invalid - emit rejection signal but keep preview open
+  if (!is_construction_position_valid(
+          m_construction_placement_position.x(),
+          m_construction_placement_position.z(),
+          m_pending_construction_type.toStdString())) {
+
     emit construction_placement_rejected();
     return;
   }

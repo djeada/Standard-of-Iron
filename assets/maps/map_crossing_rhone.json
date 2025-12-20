@@ -1,91 +1,375 @@
 {
-  "name": "Crossing the Rhône",
-  "description": "The strategic river crossing where Hannibal's army must overcome Roman resistance",
+  "name": "Crossing the Rhone",
+  "description": "A wide river crossing with distant bridges and valley villages",
   "coordSystem": "grid",
-  "maxTroopsPerPlayer": 1500,
+  "maxTroopsPerPlayer": 2000,
   "grid": {
-    "width": 140,
-    "height": 120,
+    "width": 220,
+    "height": 180,
     "tileSize": 1.0
   },
   "biome": {
-    "groundType": "soil_rocky",
+    "groundType": "soil_fertile",
     "seed": 10001,
-    "patchDensity": 2.8,
-    "patchJitter": 0.85,
-    "plantDensity": 0.45,
+    "patchDensity": 3.4,
+    "patchJitter": 0.88,
+    "plantDensity": 0.62,
     "groundIrregularityEnabled": true,
-    "irregularityScale": 0.14,
-    "irregularityAmplitude": 0.08
+    "irregularityScale": 0.16,
+    "irregularityAmplitude": 0.1
   },
   "camera": {
-    "center": [70, 0, 60],
-    "distance": 30.0,
+    "center": [45, 0, 90],
+    "distance": 42.0,
     "tiltDeg": 45.0,
     "yaw": 225.0,
     "fovY": 45.0,
     "near": 1.0,
-    "far": 400.0
+    "far": 520.0
   },
-  "spawns": [],
+  "spawns": [
+    {
+      "type": "spearman",
+      "x": 45,
+      "z": 88,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 47,
+      "z": 92,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 42,
+      "z": 90,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 42,
+      "z": 86,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 50,
+      "z": 86,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 50,
+      "z": 96,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 46,
+      "z": 82,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 46,
+      "z": 98,
+      "playerId": 1
+    },
+    {
+      "type": "healer",
+      "x": 38,
+      "z": 88,
+      "playerId": 1
+    },
+    {
+      "type": "healer",
+      "x": 38,
+      "z": 92,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 175,
+      "z": 50,
+      "playerId": 2,
+      "maxPopulation": 150
+    },
+    {
+      "type": "barracks",
+      "x": 175,
+      "z": 130,
+      "playerId": 2,
+      "maxPopulation": 150
+    },
+    {
+      "type": "spearman",
+      "x": 170,
+      "z": 50,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 180,
+      "z": 50,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 173,
+      "z": 46,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 178,
+      "z": 54,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 170,
+      "z": 130,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 180,
+      "z": 130,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 173,
+      "z": 126,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 178,
+      "z": 134,
+      "playerId": 2
+    }
+  ],
   "firecamps": [
     {
-      "x": 35,
-      "z": 55,
+      "x": 48,
+      "z": 78,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 45,
-      "z": 65,
+      "x": 60,
+      "z": 104,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 95,
-      "z": 55,
+      "x": 88,
+      "z": 62,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 85,
-      "z": 65,
+      "x": 92,
+      "z": 118,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 160,
+      "z": 46,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 160,
+      "z": 134,
+      "intensity": 1.05,
+      "radius": 3.2
+    },
+    {
+      "x": 200,
+      "z": 60,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 200,
+      "z": 120,
       "intensity": 1.0,
       "radius": 3.0
     }
   ],
   "terrain": [
     {
-      "type": "river",
-      "path": [
-        {"x": 60, "z": 20},
-        {"x": 60, "z": 40},
-        {"x": 62, "z": 60},
-        {"x": 60, "z": 80},
-        {"x": 60, "z": 100}
-      ],
-      "width": 8.0,
-      "depth": 2.0,
-      "description": "The Rhône River"
-    },
-    {
-      "type": "crossing",
-      "x": 60,
-      "z": 60,
-      "width": 10,
-      "description": "Shallow crossing point"
+      "type": "hill",
+      "x": 52,
+      "z": 90,
+      "radius": 14,
+      "height": 3.2,
+      "description": "Carthaginian staging ground"
     },
     {
       "type": "hill",
-      "x": 85,
-      "z": 60,
+      "x": 96,
+      "z": 44,
+      "width": 30,
+      "depth": 12,
+      "height": 5.5,
+      "rotation": 18,
+      "description": "Mountain ridge",
+      "entrances": [
+        {"x": 84, "z": 44},
+        {"x": 108, "z": 44}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 96,
+      "z": 136,
+      "width": 30,
+      "depth": 12,
+      "height": 5.5,
+      "rotation": -18,
+      "description": "Mountain ridge",
+      "entrances": [
+        {"x": 84, "z": 136},
+        {"x": 108, "z": 136}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 120,
+      "z": 90,
+      "width": 26,
+      "depth": 70,
+      "height": 4.8,
+      "rotation": 90,
+      "description": "Central labyrinth wall",
+      "entrances": [
+        {"x": 120, "z": 60},
+        {"x": 120, "z": 120}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 88,
+      "z": 90,
+      "width": 20,
+      "depth": 60,
+      "height": 4.0,
+      "rotation": 90,
+      "description": "Central labyrinth wall",
+      "entrances": [
+        {"x": 88, "z": 70},
+        {"x": 88, "z": 110}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 70,
+      "z": 62,
       "radius": 10,
-      "height": 2.5,
-      "description": "Roman defensive position"
+      "height": 3.0,
+      "description": "Labyrinth spur"
+    },
+    {
+      "type": "hill",
+      "x": 70,
+      "z": 118,
+      "radius": 10,
+      "height": 3.0,
+      "description": "Labyrinth spur"
+    },
+    {
+      "type": "hill",
+      "x": 165,
+      "z": 50,
+      "radius": 12,
+      "height": 4.2,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 185,
+      "z": 50,
+      "radius": 12,
+      "height": 4.2,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 175,
+      "z": 38,
+      "radius": 11,
+      "height": 3.8,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 175,
+      "z": 62,
+      "radius": 11,
+      "height": 3.8,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 165,
+      "z": 130,
+      "radius": 12,
+      "height": 4.2,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 185,
+      "z": 130,
+      "radius": 12,
+      "height": 4.2,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 175,
+      "z": 118,
+      "radius": 11,
+      "height": 3.8,
+      "description": "Valley rim"
+    },
+    {
+      "type": "hill",
+      "x": 175,
+      "z": 142,
+      "radius": 11,
+      "height": 3.8,
+      "description": "Valley rim"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [110, 10],
+      "end": [110, 170],
+      "width": 6.0
+    }
+  ],
+  "bridges": [
+    {
+      "start": [108, 40],
+      "end": [112, 40],
+      "width": 5.0,
+      "height": 0.7
+    },
+    {
+      "start": [108, 140],
+      "end": [112, 140],
+      "width": 5.0,
+      "height": 0.7
     }
   ],
   "victory": {
     "type": "custom",
-    "description": "Control crossing and defeat enemies"
+    "description": "Capture both Roman villages across the river"
   }
 }

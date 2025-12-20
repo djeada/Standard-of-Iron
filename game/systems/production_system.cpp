@@ -77,8 +77,6 @@ auto compute_builder_exit_position(
           center_z + dir_z * final_scale};
 }
 
-// Find a guaranteed valid walkable position, searching outward from the
-// preferred exit position until a valid position is found.
 auto find_guaranteed_valid_exit(float exit_x, float exit_z,
                                 float unit_radius) -> QVector3D {
   Pathfinding *pathfinder = CommandService::get_pathfinder();
@@ -88,15 +86,11 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
 
   Point const exit_grid = CommandService::world_to_grid(exit_x, exit_z);
 
-  // Check if initial position is valid
   if (pathfinder->is_walkable_with_radius(exit_grid.x, exit_grid.y,
                                           unit_radius)) {
     return {exit_x, 0.0F, exit_z};
   }
 
-  // Search with an extended radius to guarantee finding a valid position.
-  // 50 tiles is large enough to escape any building footprint and find open
-  // terrain, ensuring builders never get permanently stuck.
   constexpr int kMaxSearchRadius = 50;
   Point const safe_grid = Pathfinding::find_nearest_walkable_point(
       exit_grid, kMaxSearchRadius, *pathfinder, unit_radius);
@@ -104,7 +98,6 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
   return CommandService::grid_to_world(safe_grid);
 }
 
-// Activate bypass movement mode on a builder component
 void activate_bypass_movement(Engine::Core::BuilderProductionComponent *builder,
                               float target_x, float target_z) {
   if (builder == nullptr) {
@@ -232,7 +225,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         float dist_sq = dx * dx + dz * dz;
 
         if (dist_sq < CONSTRUCTION_ARRIVAL_DISTANCE_SQ) {
-          // Builder has arrived - teleport to exact center (intentional)
+
           builder_prod->at_construction_site = true;
           builder_prod->in_progress = true;
           builder_prod->bypass_movement_active = false;
@@ -251,16 +244,12 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
             movement->vz = 0.0F;
           }
         } else {
-          // Enable bypass mode for walking TO construction site
-          // This prevents collision systems from interfering
+
           if (!builder_prod->bypass_movement_active) {
             activate_bypass_movement(builder_prod,
                                      builder_prod->construction_site_x,
                                      builder_prod->construction_site_z);
           }
-
-          // Once bypass mode starts, it cannot be cancelled until arrival
-          // New construction commands will reset has_construction_site anyway
         }
       }
       continue;
@@ -337,15 +326,12 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
                 QVector3D(t->position.x, t->position.y, t->position.z),
                 unit_radius, builder_prod->product_type);
 
-            // Find a guaranteed valid exit position (searches far if needed)
             QVector3D const safe_exit = find_guaranteed_valid_exit(
                 preferred_exit.x(), preferred_exit.z(), unit_radius);
 
-            // Activate bypass mode to walk away from construction site
-            // This bypasses normal collision checks to prevent deadlock
-            activate_bypass_movement(builder_prod, safe_exit.x(), safe_exit.z());
+            activate_bypass_movement(builder_prod, safe_exit.x(),
+                                     safe_exit.z());
 
-            // Set movement goal for consistency
             movement->goal_x = safe_exit.x();
             movement->goal_y = safe_exit.z();
             movement->target_x = safe_exit.x();

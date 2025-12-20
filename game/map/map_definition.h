@@ -53,6 +53,7 @@ struct VictoryConfig {
   std::vector<QString> keyStructures = {"barracks"};
   float surviveTimeDuration = 0.0F;
   std::vector<QString> defeatConditions = {"no_key_structures"};
+  int requiredKeyStructures = 0;
 };
 
 enum class WeatherType { Rain, Snow };

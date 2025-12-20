@@ -256,6 +256,10 @@ void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
       out.defeatConditions.push_back(val.toString());
     }
   }
+
+  if (obj.contains("min_count")) {
+    out.requiredKeyStructures = obj.value("min_count").toInt(0);
+  }
 }
 
 void readRainConfig(const QJsonObject &obj, RainSettings &out) {

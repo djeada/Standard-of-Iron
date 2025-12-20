@@ -5,6 +5,7 @@
 #include "game/core/world.h"
 #include "game/map/map_definition.h"
 #include "game/systems/global_stats_registry.h"
+#include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "units/spawn_type.h"
 #include <QDebug>
@@ -37,6 +38,7 @@ void VictoryService::reset() {
   m_victoryCallback = nullptr;
   m_keyStructures.clear();
   m_defeatConditions.clear();
+  m_requiredKeyStructures = 0;
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
@@ -48,6 +50,14 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
   if (config.victoryType == "elimination") {
     m_victoryType = VictoryType::Elimination;
     m_keyStructures = config.keyStructures;
+  } else if (config.victoryType == "control_structures") {
+    m_victoryType = VictoryType::ControlStructures;
+    m_keyStructures = config.keyStructures;
+    m_requiredKeyStructures = config.requiredKeyStructures;
+  } else if (config.victoryType == "capture_structures") {
+    m_victoryType = VictoryType::CaptureStructures;
+    m_keyStructures = config.keyStructures;
+    m_requiredKeyStructures = config.requiredKeyStructures;
   } else if (config.victoryType == "survive_time") {
     m_victoryType = VictoryType::SurviveTime;
     m_survive_time_duration = config.surviveTimeDuration;
@@ -122,6 +132,12 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
     break;
   case VictoryType::SurviveTime:
     victory = check_survive_time();
+    break;
+  case VictoryType::ControlStructures:
+    victory = check_control_structures(world, false);
+    break;
+  case VictoryType::CaptureStructures:
+    victory = check_control_structures(world, true);
     break;
   case VictoryType::Custom:
 
@@ -233,6 +249,61 @@ auto VictoryService::check_elimination(Engine::Core::World &world) -> bool {
 
 auto VictoryService::check_survive_time() const -> bool {
   return m_elapsed_time >= m_survive_time_duration;
+}
+
+auto VictoryService::check_control_structures(
+    Engine::Core::World &world, bool require_captured) const -> bool {
+  if (m_keyStructures.empty()) {
+    return false;
+  }
+
+  int required = m_requiredKeyStructures;
+  if (required <= 0) {
+    required = 1;
+  }
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  const auto *local_nation =
+      nation_registry.get_nation_for_player(m_local_owner_id);
+  const bool has_local_nation = (local_nation != nullptr);
+  const auto local_nation_id =
+      has_local_nation ? local_nation->id : nation_registry.default_nation_id();
+
+  int captured_count = 0;
+
+  auto entities = world.get_entities_with<Engine::Core::UnitComponent>();
+  for (auto *e : entities) {
+    auto *unit = e->get_component<Engine::Core::UnitComponent>();
+    if ((unit == nullptr) || unit->health <= 0) {
+      continue;
+    }
+
+    if (unit->owner_id != m_local_owner_id) {
+      continue;
+    }
+
+    const QString unit_type = QString::fromStdString(
+        Game::Units::spawn_typeToString(unit->spawn_type));
+    if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unit_type) ==
+        m_keyStructures.end()) {
+      continue;
+    }
+
+    if (require_captured && has_local_nation) {
+      auto *building = e->get_component<Engine::Core::BuildingComponent>();
+      if (building == nullptr ||
+          building->original_nation_id == local_nation_id) {
+        continue;
+      }
+    }
+
+    captured_count++;
+    if (captured_count >= required) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 auto VictoryService::check_no_units(Engine::Core::World &world) const -> bool {

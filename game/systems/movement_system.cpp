@@ -269,24 +269,21 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     return;
   }
 
-  // Check for builder bypass movement mode - bypasses collision checks
   auto *builder_prod =
       entity->get_component<Engine::Core::BuilderProductionComponent>();
   bool const bypass_mode =
       (builder_prod != nullptr) && builder_prod->bypass_movement_active;
 
   if (bypass_mode) {
-    // Direct movement to bypass target, ignoring collision systems
+
     float const dx = builder_prod->bypass_target_x - transform->position.x;
     float const dz = builder_prod->bypass_target_z - transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    // Arrival threshold: 0.5 units (squared = 0.25). Small enough for precise
-    // arrival but large enough to avoid floating point issues.
     constexpr float kBypassArrivalDistSq = 0.25F;
 
     if (dist_sq < kBypassArrivalDistSq) {
-      // Arrived at bypass target
+
       transform->position.x = builder_prod->bypass_target_x;
       transform->position.z = builder_prod->bypass_target_z;
       builder_prod->bypass_movement_active = false;
@@ -295,7 +292,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       movement->has_target = false;
       movement->clear_path();
     } else {
-      // Move directly toward bypass target
+
       float const dist = std::sqrt(std::max(dist_sq, 0.0001F));
       float const nx = dx / dist;
       float const nz = dz / dist;
@@ -306,10 +303,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       transform->position.x += movement->vx * delta_time;
       transform->position.z += movement->vz * delta_time;
 
-      // Update rotation while in bypass mode
-      float const target_yaw =
-          std::atan2(movement->vx, movement->vz) * 180.0F /
-          std::numbers::pi_v<float>;
+      float const target_yaw = std::atan2(movement->vx, movement->vz) * 180.0F /
+                               std::numbers::pi_v<float>;
       float const current = transform->rotation.y;
       float const diff =
           std::fmod((target_yaw - current + 540.0F), 360.0F) - 180.0F;

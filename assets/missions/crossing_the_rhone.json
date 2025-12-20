@@ -1,36 +1,15 @@
 {
   "id": "crossing_the_rhone",
   "title": "Crossing the Rhône",
-  "summary": "Secure the river crossing and defeat Roman forces blocking your path to Italy",
-  "teaching_goal": "Introduction to cavalry flanking and river crossing tactics. Teaches players to use terrain obstacles strategically.",
-  "narrative_intent": "First mission establishes Hannibal's determination and introduces the player to the campaign's tactical depth.",
+  "summary": "Capture the Roman villages across the Rhône to secure your march into Italy",
+  "teaching_goal": "Introduce bridge assaults and multi-pronged captures with cavalry and medics.",
+  "narrative_intent": "Hannibal pushes across the Rhône, forcing the Romans off their fortified villages.",
   "map_path": ":/assets/maps/map_crossing_rhone.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 20,
-        "position": {"x": 40, "z": 60}
-      },
-      {
-        "type": "swordsman",
-        "count": 15,
-        "position": {"x": 42, "z": 58}
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 8,
-        "position": {"x": 38, "z": 62}
-      },
-      {
-        "type": "archer",
-        "count": 10,
-        "position": {"x": 40, "z": 56}
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
       "gold": 300,
@@ -49,49 +28,16 @@
         "defense": 0.7,
         "harassment": 0.3
       },
-      "starting_units": [
-        {
-          "type": "spearman",
-          "count": 15,
-          "position": {"x": 80, "z": 60}
-        },
-        {
-          "type": "swordsman",
-          "count": 12,
-          "position": {"x": 82, "z": 58}
-        },
-        {
-          "type": "archer",
-          "count": 8,
-          "position": {"x": 84, "z": 62}
-        }
-      ],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {"x": 90, "z": 60},
-          "max_population": 150
-        }
-      ],
-      "reinforcement_phases": [
-        {
-          "trigger_time": 180.0,
-          "units": [
-            {"type": "spearman", "count": 8, "position": {"x": 95, "z": 60}}
-          ]
-        }
-      ]
+      "starting_units": [],
+      "starting_buildings": []
     }
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Eliminate all Roman forces"
-    },
-    {
-      "type": "control_area",
-      "area": "crossing_point",
-      "description": "Control the river crossing"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Capture both Roman villages across the river"
     }
   ],
   "defeat_conditions": [
