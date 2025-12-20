@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/map/mission_context.h"
 #include "game/map/mission_definition.h"
 #include <QObject>
 #include <QString>
@@ -43,6 +44,15 @@ public:
   void configure_mission_victory_conditions(
       Game::Systems::VictoryService *victory_service, int local_owner_id);
 
+  [[nodiscard]] const Game::Mission::MissionContext &
+  current_mission_context() const {
+    return m_current_mission_context;
+  }
+
+  void set_mission_context(const Game::Mission::MissionContext &context) {
+    m_current_mission_context = context;
+  }
+
 signals:
   void available_campaigns_changed();
   void current_campaign_changed();
@@ -53,4 +63,5 @@ private:
   QString m_current_campaign_id;
   QString m_current_mission_id;
   std::optional<Game::Mission::MissionDefinition> m_current_mission_definition;
+  Game::Mission::MissionContext m_current_mission_context;
 };
