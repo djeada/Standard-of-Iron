@@ -708,6 +708,84 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
       }
     }
   }
+  
+  // Precompute bridge lookup data after adding all bridges
+  precomputeBridgeData();
+}
+
+void TerrainHeightMap::precomputeBridgeData() {
+  // Precompute bridge grid data for fast per-frame lookups
+  const size_t grid_size = static_cast<size_t>(m_width * m_height);
+  m_onBridge.clear();
+  m_onBridge.resize(grid_size, false);
+  m_bridgeCenters.clear();
+  m_bridgeCenters.resize(grid_size, QVector3D(0.0F, 0.0F, 0.0F));
+  
+  constexpr float kConnectivityMargin = 0.5F;
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
+
+  for (const auto &bridge : m_bridges) {
+    QVector3D dir = bridge.end - bridge.start;
+    float const length = dir.length();
+    if (length < 0.01F) {
+      continue;
+    }
+    
+    dir.normalize();
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    
+    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
+    
+    for (int i = 0; i < steps; ++i) {
+      float const t =
+          static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
+      QVector3D const center_pos = bridge.start + dir * (length * t);
+      
+      float const grid_center_x =
+          (center_pos.x() / m_tile_size) + grid_half_width;
+      float const grid_center_z =
+          (center_pos.z() / m_tile_size) + grid_half_height;
+
+      float const half_width = bridge.width * 0.5F / m_tile_size;
+      float const half_width_with_margin = half_width + kConnectivityMargin;
+
+      int const min_x = std::max(
+          0, static_cast<int>(std::floor(grid_center_x - half_width_with_margin)));
+      int const max_x = std::min(
+          m_width - 1,
+          static_cast<int>(std::ceil(grid_center_x + half_width_with_margin)));
+      int const min_z = std::max(
+          0, static_cast<int>(std::floor(grid_center_z - half_width_with_margin)));
+      int const max_z =
+          std::min(m_height - 1,
+                   static_cast<int>(std::ceil(grid_center_z + half_width_with_margin)));
+
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
+          float const dx = static_cast<float>(x) - grid_center_x;
+          float const dz = static_cast<float>(z) - grid_center_z;
+
+          float const dist_along_perp =
+              std::abs(dx * perpendicular.x() + dz * perpendicular.z());
+
+          if (dist_along_perp <= half_width_with_margin) {
+            int const idx = indexAt(x, z);
+            
+            // Precompute bridge center for this grid cell
+            m_onBridge[idx] = true;
+            // Calculate center position along bridge axis for this grid cell
+            float const cell_world_x = (static_cast<float>(x) - grid_half_width) * m_tile_size;
+            float const cell_world_z = (static_cast<float>(z) - grid_half_height) * m_tile_size;
+            QVector3D const cell_point(cell_world_x, 0.0F, cell_world_z);
+            QVector3D const to_cell = cell_point - bridge.start;
+            float const along = QVector3D::dotProduct(to_cell, dir);
+            m_bridgeCenters[idx] = bridge.start + dir * along;
+          }
+        }
+      }
+    }
+  }
 }
 
 void TerrainHeightMap::restoreFromData(
@@ -739,6 +817,45 @@ void TerrainHeightMap::restoreFromData(
 
   m_riverSegments = rivers;
   m_bridges = bridges;
+  
+  // Precompute bridge data after restore
+  precomputeBridgeData();
+}
+
+auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
+  // Convert world coordinates to grid coordinates
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
+  const int grid_x = static_cast<int>(std::round((world_x / m_tile_size) + grid_half_width));
+  const int grid_z = static_cast<int>(std::round((world_z / m_tile_size) + grid_half_height));
+  
+  // Use precomputed lookup table
+  if (!inBounds(grid_x, grid_z)) {
+    return false;
+  }
+  return m_onBridge[indexAt(grid_x, grid_z)];
+}
+
+auto TerrainHeightMap::getBridgeCenterPosition(float world_x,
+                                                float world_z) const
+    -> std::optional<QVector3D> {
+  // Convert world coordinates to grid coordinates
+  const float grid_half_width = m_width * 0.5F - 0.5F;
+  const float grid_half_height = m_height * 0.5F - 0.5F;
+  const int grid_x = static_cast<int>(std::round((world_x / m_tile_size) + grid_half_width));
+  const int grid_z = static_cast<int>(std::round((world_z / m_tile_size) + grid_half_height));
+  
+  // Use precomputed lookup table
+  if (!inBounds(grid_x, grid_z)) {
+    return std::nullopt;
+  }
+  
+  const int idx = indexAt(grid_x, grid_z);
+  if (!m_onBridge[idx]) {
+    return std::nullopt;
+  }
+  
+  return m_bridgeCenters[idx];
 }
 
 } // namespace Game::Map
