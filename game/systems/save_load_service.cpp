@@ -241,9 +241,8 @@ auto SaveLoadService::save_mission_result(
                                         completion_time, out_error);
 }
 
-auto SaveLoadService::get_mission_progress(const QString &mission_id,
-                                           QString *out_error) const
-    -> QVariantMap {
+auto SaveLoadService::get_mission_progress(
+    const QString &mission_id, QString *out_error) const -> QVariantMap {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
@@ -253,9 +252,8 @@ auto SaveLoadService::get_mission_progress(const QString &mission_id,
   return m_storage->get_mission_progress(mission_id, out_error);
 }
 
-auto SaveLoadService::get_campaign_mission_progress(const QString &campaign_id,
-                                                    QString *out_error) const
-    -> QVariantList {
+auto SaveLoadService::get_campaign_mission_progress(
+    const QString &campaign_id, QString *out_error) const -> QVariantList {
   if (!m_storage) {
     if (out_error != nullptr) {
       *out_error = "Storage not initialized";
