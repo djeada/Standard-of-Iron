@@ -635,12 +635,17 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
+  // Calculate speed once for both terrain checks and rotation
+  float const speed2 = movement->vx * movement->vx + movement->vz * movement->vz;
+  bool const is_moving = speed2 > 1e-5F;
+
   // Handle bridge centering and hill entrance centering
+  // Only check units that are moving to avoid unnecessary overhead per frame
   // This ensures units stay centered on bridges and hill entrances for proper
   // navigation and visual consistency. Bridge centering uses gentle pull to
   // keep units on the bridge axis. Hill entrance centering helps units properly
   // enter/exit hills through designated entrances.
-  if (terrain.is_initialized()) {
+  if (terrain.is_initialized() && is_moving) {
     // Check if unit is on a bridge and center it
     if (terrain.is_on_bridge(transform->position.x, transform->position.z)) {
       auto bridge_center = terrain.get_bridge_center_position(
@@ -702,18 +707,16 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         terrain_ctx->is_at_hill_entrance = false;
       }
     }
-    
-    // Update audio cooldown
-    auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
-    if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
-      terrain_ctx->audio_cooldown = std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);
-    }
+  }
+  
+  // Update audio cooldown (always update for active components)
+  auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+  if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
+    terrain_ctx->audio_cooldown = std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);
   }
 
   if (!entity->has_component<Engine::Core::BuildingComponent>()) {
-    float const speed2 =
-        movement->vx * movement->vx + movement->vz * movement->vz;
-    if (speed2 > 1e-5F) {
+    if (is_moving) {
       float const target_yaw = std::atan2(movement->vx, movement->vz) * 180.0F /
                                std::numbers::pi_v<float>;
 
