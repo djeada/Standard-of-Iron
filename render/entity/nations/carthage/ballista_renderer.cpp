@@ -104,8 +104,8 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
-void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthageBallistaPalette &c) {
+void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                     Texture *white, const CarthageBallistaPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.38F, 0.18F, 0.0F),
            QVector3D(0.06F, 0.12F, 0.28F), c.wood_frame);
@@ -131,7 +131,7 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D left_pos(-0.40F, wheel_radius, 0.0F);
   QVector3D right_pos(0.40F, wheel_radius, 0.0F);
 
-  auto drawWheel = [&](const QVector3D &pos, float side_offset) {
+  auto draw_wheel = [&](const QVector3D &pos, float side_offset) {
     QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
     QVector3D outer =
         pos + QVector3D(side_offset * (wheel_thickness + 0.045F), 0, 0);
@@ -159,8 +159,8 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
     }
   };
 
-  drawWheel(left_pos, -1.0F);
-  drawWheel(right_pos, 1.0F);
+  draw_wheel(left_pos, -1.0F);
+  draw_wheel(right_pos, 1.0F);
 
   draw_cyl(out, p.model, QVector3D(-0.36F, wheel_radius, 0.0F),
            QVector3D(0.36F, wheel_radius, 0.0F), 0.020F, c.metal_bronze, white);
@@ -356,7 +356,7 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
         ctx.model = p.model;
         ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
-        drawBaseFrame(ctx, out, unit, white, c);
+        draw_base_frame(ctx, out, unit, white, c);
         drawWheels(ctx, out, unit, white, c);
         drawTorsionBundles(ctx, out, unit, white, c);
         drawArms(ctx, out, unit, white, c);

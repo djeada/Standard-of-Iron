@@ -129,7 +129,7 @@ inline auto smoothApproach(float current, float target,
 
 Camera::Camera() { update_vectors(); }
 
-void Camera::setPosition(const QVector3D &position) {
+void Camera::set_position(const QVector3D &position) {
   if (!finite(position)) {
     return;
   }
@@ -140,7 +140,7 @@ void Camera::setPosition(const QVector3D &position) {
   orthonormalize(new_front, m_front, m_right, m_up);
 }
 
-void Camera::setTarget(const QVector3D &target) {
+void Camera::set_target(const QVector3D &target) {
   if (!finite(target)) {
     return;
   }
@@ -157,7 +157,7 @@ void Camera::setTarget(const QVector3D &target) {
   orthonormalize(dir, m_front, m_right, m_up);
 }
 
-void Camera::setUp(const QVector3D &up) {
+void Camera::set_up(const QVector3D &up) {
   if (!finite(up)) {
     return;
   }
@@ -169,8 +169,8 @@ void Camera::setUp(const QVector3D &up) {
   orthonormalize(m_target - m_position, m_front, m_right, m_up);
 }
 
-void Camera::lookAt(const QVector3D &position, const QVector3D &target,
-                    const QVector3D &up) {
+void Camera::look_at(const QVector3D &position, const QVector3D &target,
+                     const QVector3D &up) {
   if (!finite(position) || !finite(target) || !finite(up)) {
     return;
   }
@@ -296,8 +296,8 @@ void Camera::zoom_distance(float delta) {
 
 void Camera::rotate(float yaw, float pitch) { orbit(yaw, pitch); }
 
-void Camera::pan(float right_dist, float forwardDist) {
-  if (!finite(right_dist) || !finite(forwardDist)) {
+void Camera::pan(float right_dist, float forward_dist) {
+  if (!finite(right_dist) || !finite(forward_dist)) {
     return;
   }
 
@@ -308,7 +308,7 @@ void Camera::pan(float right_dist, float forwardDist) {
     front.normalize();
   }
 
-  QVector3D const delta = right * right_dist + front * forwardDist;
+  QVector3D const delta = right * right_dist + front * forward_dist;
   if (!finite(delta)) {
     return;
   }
@@ -343,7 +343,7 @@ void Camera::orbit(float yaw_deg, float pitch_deg) {
   QVector3D const offset = m_position - m_target;
   float cur_yaw = 0.F;
   float cur_pitch = 0.F;
-  computeYawPitchFromOffset(offset, cur_yaw, cur_pitch);
+  compute_yaw_pitch_from_offset(offset, cur_yaw, cur_pitch);
 
   m_orbitStartYaw = cur_yaw;
   m_orbitStartPitch = cur_pitch;
@@ -714,8 +714,8 @@ void Camera::clamp_above_ground() {
   }
 }
 
-void Camera::computeYawPitchFromOffset(const QVector3D &off, float &yaw_deg,
-                                       float &pitch_deg) {
+void Camera::compute_yaw_pitch_from_offset(const QVector3D &off, float &yaw_deg,
+                                           float &pitch_deg) {
   QVector3D const dir = -off;
   if (dir.lengthSquared() < 1e-6F) {
     yaw_deg = 0.F;

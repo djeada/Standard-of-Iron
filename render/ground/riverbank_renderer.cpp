@@ -516,9 +516,9 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   }
 
   if (backend != nullptr) {
-    backend->setRiverbankVisibility(use_visibility && visibility_tex != nullptr,
-                                    visibility_tex, visibility_size,
-                                    m_tile_size, m_exploredDimFactor);
+    backend->set_riverbank_visibility(
+        use_visibility && visibility_tex != nullptr, visibility_tex,
+        visibility_size, m_tile_size, m_exploredDimFactor);
   }
 
   QMatrix4x4 model;

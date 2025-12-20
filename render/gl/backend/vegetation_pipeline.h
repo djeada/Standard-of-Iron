@@ -10,7 +10,7 @@ namespace Render::GL::BackendPipelines {
 
 class VegetationPipeline : public IPipeline {
 public:
-  explicit VegetationPipeline(GL::ShaderCache *shaderCache);
+  explicit VegetationPipeline(GL::ShaderCache *shader_cache);
   ~VegetationPipeline() override;
 
   auto initialize() -> bool override;
@@ -107,16 +107,16 @@ public:
   GLsizei m_firecampVertexCount{0};
 
 private:
-  void initializeStonePipeline();
-  void shutdownStonePipeline();
-  void initializePlantPipeline();
-  void shutdownPlantPipeline();
-  void initializePinePipeline();
-  void shutdownPinePipeline();
-  void initializeOlivePipeline();
-  void shutdownOlivePipeline();
-  void initializeFireCampPipeline();
-  void shutdownFireCampPipeline();
+  void initialize_stone_pipeline();
+  void shutdown_stone_pipeline();
+  void initialize_plant_pipeline();
+  void shutdown_plant_pipeline();
+  void initialize_pine_pipeline();
+  void shutdown_pine_pipeline();
+  void initialize_olive_pipeline();
+  void shutdown_olive_pipeline();
+  void initialize_fire_camp_pipeline();
+  void shutdown_fire_camp_pipeline();
 
   GL::ShaderCache *m_shaderCache;
   bool m_initialized{false};

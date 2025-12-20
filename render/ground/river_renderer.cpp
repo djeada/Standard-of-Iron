@@ -22,9 +22,9 @@ RiverRenderer::RiverRenderer() = default;
 RiverRenderer::~RiverRenderer() = default;
 
 void RiverRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &riverSegments,
+    const std::vector<Game::Map::RiverSegment> &river_segments,
     float tile_size) {
-  m_riverSegments = riverSegments;
+  m_riverSegments = river_segments;
   m_tile_size = tile_size;
   build_meshes();
 }

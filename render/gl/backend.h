@@ -50,9 +50,9 @@ public:
 
   void initialize();
   void begin_frame();
-  void setViewport(int w, int h);
-  void setClearColor(float r, float g, float b, float a);
-  void setAnimationTime(float time) { m_animationTime = time; }
+  void set_viewport(int w, int h);
+  void set_clear_color(float r, float g, float b, float a);
+  void set_animation_time(float time) { m_animationTime = time; }
   void execute(const DrawQueue &queue, const Camera &cam);
 
   [[nodiscard]] auto resources() const -> ResourceManager * {
@@ -62,12 +62,12 @@ public:
   [[nodiscard]] auto shader(const QString &name) const -> Shader * {
     return m_shaderCache ? m_shaderCache->get(name) : nullptr;
   }
-  auto get_or_load_shader(const QString &name, const QString &vertPath,
+  auto get_or_load_shader(const QString &name, const QString &vert_path,
                           const QString &fragPath) -> Shader * {
     if (!m_shaderCache) {
       return nullptr;
     }
-    return m_shaderCache->load(name, vertPath, fragPath);
+    return m_shaderCache->load(name, vert_path, fragPath);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh *;
@@ -105,8 +105,8 @@ public:
       glDisable(GL_DEPTH_TEST);
     }
   }
-  void setDepthFunc(GLenum func) { glDepthFunc(func); }
-  void setDepthMask(bool write) { glDepthMask(write ? GL_TRUE : GL_FALSE); }
+  void set_depth_func(GLenum func) { glDepthFunc(func); }
+  void set_depth_mask(bool write) { glDepthMask(write ? GL_TRUE : GL_FALSE); }
 
   void enable_blend(bool enable) {
     if (enable) {
@@ -115,7 +115,7 @@ public:
       glDisable(GL_BLEND);
     }
   }
-  void setBlendFunc(GLenum src, GLenum dst) { glBlendFunc(src, dst); }
+  void set_blend_func(GLenum src, GLenum dst) { glBlendFunc(src, dst); }
 
   void enable_polygon_offset(bool enable) {
     if (enable) {
@@ -124,13 +124,13 @@ public:
       glDisable(GL_POLYGON_OFFSET_FILL);
     }
   }
-  void setPolygonOffset(float factor, float units) {
+  void set_polygon_offset(float factor, float units) {
     glPolygonOffset(factor, units);
   }
 
-  void setRiverbankVisibility(bool enabled, Texture *texture,
-                              const QVector2D &size, float tile_size,
-                              float explored_alpha) {
+  void set_riverbank_visibility(bool enabled, Texture *texture,
+                                const QVector2D &size, float tile_size,
+                                float explored_alpha) {
     m_riverbankVisibility.enabled = enabled && (texture != nullptr);
     m_riverbankVisibility.texture = texture;
     m_riverbankVisibility.size = size;

@@ -13,8 +13,8 @@ class EquipmentRegistry {
 public:
   static auto instance() -> EquipmentRegistry &;
 
-  void registerEquipment(EquipmentCategory category, const std::string &id,
-                         std::shared_ptr<IEquipmentRenderer> renderer);
+  void register_equipment(EquipmentCategory category, const std::string &id,
+                          std::shared_ptr<IEquipmentRenderer> renderer);
 
   auto get(EquipmentCategory category,
            const std::string &id) const -> std::shared_ptr<IEquipmentRenderer>;
@@ -35,6 +35,6 @@ private:
       m_renderers;
 };
 
-void registerBuiltInEquipment();
+void register_built_in_equipment();
 
 } // namespace Render::GL

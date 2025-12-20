@@ -25,7 +25,7 @@ public:
   void clear();
 
 private:
-  void generatePlantInstances();
+  void generate_plant_instances();
 
   int m_width = 0;
   int m_height = 0;

@@ -15,9 +15,9 @@ using namespace Render::GL::RGBA;
 auto ResourceManager::initialize() -> bool {
   initializeOpenGLFunctions();
 
-  m_quadMesh = createQuadMesh();
-  m_groundMesh = createPlaneMesh(1.0F, 1.0F, GroundPlaneSubdivisions);
-  m_unitMesh = createCubeMesh();
+  m_quadMesh = create_quad_mesh();
+  m_groundMesh = create_plane_mesh(1.0F, 1.0F, GroundPlaneSubdivisions);
+  m_unitMesh = create_cube_mesh();
 
   m_whiteTexture = std::make_unique<Texture>();
   m_whiteTexture->create_empty(1, 1, Texture::Format::RGBA);

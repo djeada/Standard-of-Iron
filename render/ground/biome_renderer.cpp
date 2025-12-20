@@ -27,7 +27,7 @@ using std::uint32_t;
 using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
-inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   int const x0 = int(std::floor(x));
   int const z0 = int(std::floor(z));
   int const x1 = x0 + 1;
@@ -116,7 +116,7 @@ void BiomeRenderer::clear() {
   m_grassInstancesDirty = false;
 }
 
-void BiomeRenderer::refreshGrass() { generate_grass_instances(); }
+void BiomeRenderer::refresh_grass() { generate_grass_instances(); }
 
 void BiomeRenderer::generate_grass_instances() {
   QElapsedTimer timer;
@@ -204,9 +204,9 @@ void BiomeRenderer::generate_grass_instances() {
     float const slope = terrain_cache.get_slope_at(ix, iz);
 
     float const lush_noise =
-        valueNoise(world_x * 0.06F, world_z * 0.06F, m_noiseSeed ^ 0x9235U);
+        value_noise(world_x * 0.06F, world_z * 0.06F, m_noiseSeed ^ 0x9235U);
     float const dryness_noise =
-        valueNoise(world_x * 0.12F, world_z * 0.12F, m_noiseSeed ^ 0x47d2U);
+        value_noise(world_x * 0.12F, world_z * 0.12F, m_noiseSeed ^ 0x47d2U);
     float const dryness =
         std::clamp(dryness_noise * 0.6F + slope * 0.4F, 0.0F, 1.0F);
     QVector3D const lush_mix =

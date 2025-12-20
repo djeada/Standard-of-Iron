@@ -21,8 +21,8 @@ auto BannerPipeline::initialize() -> bool {
     return false;
   }
 
-  m_bannerMesh16 = GL::createPlaneMesh(1.0F, 1.0F, 16);
-  m_bannerMesh8 = GL::createPlaneMesh(1.0F, 1.0F, 8);
+  m_bannerMesh16 = GL::create_plane_mesh(1.0F, 1.0F, 16);
+  m_bannerMesh8 = GL::create_plane_mesh(1.0F, 1.0F, 8);
 
   cache_uniforms();
 
@@ -35,20 +35,20 @@ void BannerPipeline::shutdown() {
   m_bannerMesh8.reset();
 }
 
-void BannerPipeline::cache_uniforms() { cacheBannerUniforms(); }
+void BannerPipeline::cache_uniforms() { cache_banner_uniforms(); }
 
 auto BannerPipeline::is_initialized() const -> bool {
   return m_bannerShader != nullptr && m_bannerMesh16 != nullptr;
 }
 
-auto BannerPipeline::getBannerMesh(int subdivisions) -> GL::Mesh * {
+auto BannerPipeline::get_banner_mesh(int subdivisions) -> GL::Mesh * {
   if (subdivisions >= 12) {
     return m_bannerMesh16.get();
   }
   return m_bannerMesh8.get();
 }
 
-void BannerPipeline::cacheBannerUniforms() {
+void BannerPipeline::cache_banner_uniforms() {
   if (m_bannerShader == nullptr) {
     return;
   }

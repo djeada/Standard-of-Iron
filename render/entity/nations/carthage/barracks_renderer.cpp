@@ -5,7 +5,6 @@
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
-#include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
@@ -16,15 +15,16 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <cmath>
 
-namespace Render::GL::Roman {
+namespace Render::GL::Carthage {
 namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
-struct RomanPalette {
+struct CarthagePalette {
   QVector3D stone_light{0.62F, 0.60F, 0.58F};
   QVector3D stone_dark{0.50F, 0.48F, 0.46F};
   QVector3D stone_base{0.55F, 0.53F, 0.51F};
@@ -39,8 +39,8 @@ struct RomanPalette {
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto make_palette(const QVector3D &team) -> RomanPalette {
-  RomanPalette p;
+inline auto make_palette(const QVector3D &team) -> CarthagePalette {
+  CarthagePalette p;
   p.team = clampVec01(team);
   p.team_trim =
       clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
@@ -64,7 +64,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const RomanPalette &c) {
+                      Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.15F, 0.0F),
            QVector3D(1.8F, 0.15F, 1.5F), c.stone_base);
@@ -84,7 +84,7 @@ void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                       Texture *white, const RomanPalette &c,
+                       Texture *white, const CarthagePalette &c,
                        BuildingState state) {
   float const wall_height = 1.2F;
 
@@ -125,7 +125,7 @@ void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const RomanPalette &c,
+                      Texture *white, const CarthagePalette &c,
                       BuildingState state) {
   QVector3D corners[4] = {
       QVector3D(-1.5F, 0.0F, -1.2F), QVector3D(1.5F, 0.0F, -1.2F),
@@ -165,7 +165,7 @@ void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c) {
+                   Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.32F, 0.0F),
            QVector3D(1.2F, 0.02F, 0.9F), c.stone_base);
@@ -177,8 +177,8 @@ void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.35F, 0.35F, 0.08F), c.brick);
 }
 
-void drawRomanRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c, BuildingState state) {
+void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const CarthagePalette &c, BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
     return;
@@ -194,7 +194,7 @@ void drawRomanRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const RomanPalette &c) {
+              const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.6F, 1.35F),
            QVector3D(0.5F, 0.6F, 0.08F), c.wood_dark);
@@ -207,7 +207,7 @@ void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
 }
 
 void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanPalette &c,
+                   Texture *white, const CarthagePalette &c,
                    const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 2.0F;
   float const pole_z = -1.5F;
@@ -220,10 +220,10 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D const pole_size(pole_radius * 1.8F, pole_height / 2.0F,
                             pole_radius * 1.8F);
 
-  QMatrix4x4 poleTransform = p.model;
-  poleTransform.translate(pole_center);
-  poleTransform.scale(pole_size);
-  out.mesh(unit, poleTransform, c.wood, white, 1.0F);
+  QMatrix4x4 pole_transform = p.model;
+  pole_transform.translate(pole_center);
+  pole_transform.scale(pole_size);
+  out.mesh(unit, pole_transform, c.wood, white, 1.0F);
 
   float const beam_length = banner_width * 0.5F;
   float const max_lowering = pole_height * 0.85F;
@@ -274,7 +274,7 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
-                     const RomanPalette &c) {
+                     const CarthagePalette &c) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
                                           .teamTrim = c.team_trim,
                                           .timber = c.wood,
@@ -435,7 +435,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  RomanPalette const c = make_palette(team);
+  CarthagePalette const c = make_palette(team);
 
   BarracksFlagRenderer::ClothBannerResources cloth;
   if (p.backend != nullptr) {
@@ -447,7 +447,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   drawFortressWalls(p, out, unit, white, c, state);
   drawCornerTowers(p, out, unit, white, c, state);
   drawCourtyard(p, out, unit, white, c);
-  drawRomanRoof(p, out, unit, white, c, state);
+  drawCarthageRoof(p, out, unit, white, c, state);
   drawGate(p, out, unit, white, c);
   drawStandards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
@@ -458,7 +458,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 } // namespace
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("barracks_roman", draw_barracks);
+  registry.register_renderer("barracks_carthage", draw_barracks);
 }
 
-} // namespace Render::GL::Roman
+} // namespace Render::GL::Carthage

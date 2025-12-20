@@ -29,8 +29,8 @@ struct HealerAuraData {
 class HealerAuraPipeline final : public IPipeline {
 public:
   explicit HealerAuraPipeline(GL::Backend *backend,
-                              GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+                              GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~HealerAuraPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

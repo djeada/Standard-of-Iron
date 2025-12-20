@@ -38,7 +38,7 @@ auto TerrainPipeline::initialize() -> bool {
     qWarning() << "TerrainPipeline: Failed to load basic (terrain) shader";
   }
 
-  initializeGrassGeometry();
+  initialize_grass_geometry();
 
   cache_uniforms();
 
@@ -46,7 +46,7 @@ auto TerrainPipeline::initialize() -> bool {
 }
 
 void TerrainPipeline::shutdown() {
-  shutdownGrassGeometry();
+  shutdown_grass_geometry();
   m_grassShader = nullptr;
   m_groundShader = nullptr;
   m_terrainShader = nullptr;
@@ -179,14 +179,15 @@ void TerrainPipeline::cache_terrain_uniforms() {
   m_terrainUniforms.snow_color = m_terrainShader->uniform_handle("u_snowColor");
 }
 
-void TerrainPipeline::initializeGrassGeometry() {
+void TerrainPipeline::initialize_grass_geometry() {
   auto *gl = QOpenGLContext::currentContext()->extraFunctions();
   if (gl == nullptr) {
-    qWarning() << "TerrainPipeline::initializeGrassGeometry: no OpenGL context";
+    qWarning()
+        << "TerrainPipeline::initialize_grass_geometry: no OpenGL context";
     return;
   }
 
-  shutdownGrassGeometry();
+  shutdown_grass_geometry();
 
   struct GrassVertex {
     QVector3D position;
@@ -232,7 +233,7 @@ void TerrainPipeline::initializeGrassGeometry() {
   gl->glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TerrainPipeline::shutdownGrassGeometry() {
+void TerrainPipeline::shutdown_grass_geometry() {
   auto *gl = QOpenGLContext::currentContext()->extraFunctions();
   if (gl == nullptr) {
     return;

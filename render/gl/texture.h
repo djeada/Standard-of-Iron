@@ -23,8 +23,8 @@ public:
   void bind(int unit = 0);
   void unbind();
 
-  void set_filter(Filter minFilter, Filter magFilter);
-  void set_wrap(Wrap sWrap, Wrap tWrap);
+  void set_filter(Filter min_filter, Filter mag_filter);
+  void set_wrap(Wrap s_wrap, Wrap t_wrap);
 
   [[nodiscard]] auto get_width() const -> int { return m_width; }
   [[nodiscard]] auto get_height() const -> int { return m_height; }

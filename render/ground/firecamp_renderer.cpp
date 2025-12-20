@@ -24,7 +24,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-inline auto valueNoise(float x, float z, uint32_t seed) -> float {
+inline auto value_noise(float x, float z, uint32_t seed) -> float {
   int const ix = static_cast<int>(std::floor(x));
   int const iz = static_cast<int>(std::floor(z));
   float fx = x - static_cast<float>(ix);
@@ -325,8 +325,8 @@ void FireCampRenderer::generate_firecamp_instances() {
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
 
-      float const cluster_noise = valueNoise(world_x * 0.02F, world_z * 0.02F,
-                                             m_noiseSeed ^ 0xCA3F12E0U);
+      float const cluster_noise = value_noise(world_x * 0.02F, world_z * 0.02F,
+                                              m_noiseSeed ^ 0xCA3F12E0U);
 
       if (cluster_noise < 0.4F) {
         continue;
