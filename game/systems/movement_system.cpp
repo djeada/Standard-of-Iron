@@ -11,6 +11,7 @@
 #include <cmath>
 #include <numbers>
 #include <qvectornd.h>
+#include <random>
 #include <vector>
 
 namespace Game::Systems {
@@ -128,7 +129,7 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
     
     Pathfinding *pathfinder = CommandService::get_pathfinder();
     if (pathfinder != nullptr) {
-      // Try to find a nearby walkable position with a small random offset
+      // Find a nearby walkable position with a small random offset
       Point const current_grid = CommandService::world_to_grid(
           transform->position.x, transform->position.z);
       
@@ -137,8 +138,25 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
           current_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
       
       if (!(nearest == current_grid)) {
-        // Move to the nearest walkable point
-        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+        // Move to the nearest walkable point with a random offset to avoid clustering
+        QVector3D safe_pos = CommandService::grid_to_world(nearest);
+        
+        // Add small random offset to prevent multiple units from clustering
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> dist(-kUnstuckOffsetRadius, kUnstuckOffsetRadius);
+        
+        float const offset_x = dist(gen);
+        float const offset_z = dist(gen);
+        
+        QVector3D const offset_pos(safe_pos.x() + offset_x, safe_pos.y(), 
+                                   safe_pos.z() + offset_z);
+        
+        // Verify the offset position is still walkable
+        if (is_point_allowed(offset_pos, entity->get_id(), unit_radius)) {
+          safe_pos = offset_pos;
+        }
+        
         transform->position.x = safe_pos.x();
         transform->position.z = safe_pos.z();
         
