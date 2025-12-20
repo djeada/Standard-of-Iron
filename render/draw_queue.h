@@ -421,17 +421,11 @@ private:
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-      // Sort by shader (bits 48-55), then mesh (bits 24-47), then texture (bits 0-23)
-      // This groups draws by shader to minimize shader rebinds,
-      // then by mesh for potential instancing, then by texture to reduce texture binds
-      uint64_t const shader_ptr =
-          (reinterpret_cast<uintptr_t>(mesh.shader) >> 4) & 0xFFU;
-      uint64_t const mesh_ptr =
-          (reinterpret_cast<uintptr_t>(mesh.mesh) >> 4) & 0xFFFFFFU;
+      // Sort by texture pointer only - the backend compares actual shader/texture 
+      // pointers to decide when to rebind, so truncating pointers in the sort key
+      // could cause incorrect draw ordering without improving state locality
       uint64_t const tex_ptr =
-          (reinterpret_cast<uintptr_t>(mesh.texture) >> 4) & 0xFFFFFFU;
-      key |= shader_ptr << 48;
-      key |= mesh_ptr << 24;
+          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
       key |= tex_ptr;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
