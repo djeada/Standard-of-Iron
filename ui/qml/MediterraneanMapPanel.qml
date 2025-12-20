@@ -21,7 +21,7 @@ Rectangle {
         "transalpine_gaul": {
             "yaw": 200,
             "pitch": 50,
-            "distance": 2.0
+            "distance": 2
         },
         "cisalpine_gaul": {
             "yaw": 185,
@@ -258,14 +258,15 @@ Rectangle {
                 "name": "Trasimene"
             },
             "southern_italy": {
-                "uv": [0.50, 0.53],
+                "uv": [0.5, 0.53],
                 "name": "Cannae"
             },
             "carthage_core": {
-                "uv": [0.40, 0.78],
+                "uv": [0.4, 0.78],
                 "name": "Zama"
             }
         })
+
         model: root.selected_mission ? 1 : 0
 
         delegate: Item {
@@ -290,12 +291,20 @@ Rectangle {
                 y: -height / 2
                 opacity: 0.9
 
+                Text {
+                    anchors.centerIn: parent
+                    text: "⚔"
+                    color: "#ffffff"
+                    font.pointSize: Theme.fontSizeSmall
+                    font.bold: true
+                }
+
                 SequentialAnimation on scale {
                     loops: Animation.Infinite
                     running: visible
 
                     NumberAnimation {
-                        from: 1.0
+                        from: 1
                         to: 1.15
                         duration: 800
                         easing.type: Easing.InOutQuad
@@ -303,19 +312,11 @@ Rectangle {
 
                     NumberAnimation {
                         from: 1.15
-                        to: 1.0
+                        to: 1
                         duration: 800
                         easing.type: Easing.InOutQuad
                     }
 
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "⚔"
-                    color: "#ffffff"
-                    font.pointSize: Theme.fontSizeSmall
-                    font.bold: true
                 }
 
             }
