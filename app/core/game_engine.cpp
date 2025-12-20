@@ -958,7 +958,16 @@ void GameEngine::update_loading_overlay() {
       m_loading_overlay_timer.isValid() &&
       (m_loading_overlay_timer.elapsed() >= m_loading_overlay_min_duration_ms);
 
-  if (enough_time && m_loading_overlay_frames_remaining <= 0) {
+  // Check if all biome renderers have initialized their GPU buffers
+  const bool biome_gpu_ready =
+      (!m_biome || m_biome->is_gpu_ready()) &&
+      (!m_pine || m_pine->is_gpu_ready()) &&
+      (!m_olive || m_olive->is_gpu_ready()) &&
+      (!m_plant || m_plant->is_gpu_ready()) &&
+      (!m_stone || m_stone->is_gpu_ready()) &&
+      (!m_firecamp || m_firecamp->is_gpu_ready());
+
+  if (enough_time && m_loading_overlay_frames_remaining <= 0 && biome_gpu_ready) {
     m_loading_overlay_wait_for_first_frame = false;
     m_loading_overlay_active = false;
     if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
@@ -1568,8 +1577,8 @@ void GameEngine::configure_rain_system() {
 void GameEngine::finalize_skirmish_load() {
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame = true;
-  m_loading_overlay_frames_remaining = 10;
-  m_loading_overlay_min_duration_ms = 1500;
+  m_loading_overlay_frames_remaining = 5;
+  m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();
@@ -1679,8 +1688,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   m_runtime.loading = false;
   m_loading_overlay_wait_for_first_frame = true;
-  m_loading_overlay_frames_remaining = 10;
-  m_loading_overlay_min_duration_ms = 1500;
+  m_loading_overlay_frames_remaining = 5;
+  m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
   emit is_loading_changed();

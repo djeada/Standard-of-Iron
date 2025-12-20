@@ -32,6 +32,10 @@ public:
 
   void clear();
 
+  [[nodiscard]] bool is_gpu_ready() const {
+    return m_fireCampInstanceBuffer != nullptr || m_fireCampInstanceCount == 0;
+  }
+
 private:
   void generate_firecamp_instances();
   void add_explicit_firecamps(const Render::Ground::SpawnValidator &validator);

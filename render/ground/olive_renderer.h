@@ -24,6 +24,10 @@ public:
 
   void clear();
 
+  [[nodiscard]] bool is_gpu_ready() const {
+    return m_oliveInstanceBuffer != nullptr || m_oliveInstanceCount == 0;
+  }
+
 private:
   void generate_olive_instances();
 
