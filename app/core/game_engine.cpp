@@ -1464,6 +1464,56 @@ void GameEngine::mark_current_mission_completed() {
   }
 }
 
+QVariantMap GameEngine::get_current_mission_objectives() const {
+  QVariantMap result;
+
+  if (!m_campaign_manager) {
+    return result;
+  }
+
+  const auto &mission_def = m_campaign_manager->current_mission_definition();
+  if (!mission_def.has_value()) {
+    return result;
+  }
+
+  const auto &mission = *mission_def;
+
+  result["title"] = mission.title;
+  result["summary"] = mission.summary;
+
+  QVariantList victory_conditions;
+  for (const auto &condition : mission.victory_conditions) {
+    QVariantMap cond;
+    cond["type"] = condition.type;
+    cond["description"] = condition.description;
+    if (condition.duration.has_value()) {
+      cond["duration"] = condition.duration.value();
+    }
+    victory_conditions.append(cond);
+  }
+  result["victory_conditions"] = victory_conditions;
+
+  QVariantList defeat_conditions;
+  for (const auto &condition : mission.defeat_conditions) {
+    QVariantMap cond;
+    cond["type"] = condition.type;
+    cond["description"] = condition.description;
+    defeat_conditions.append(cond);
+  }
+  result["defeat_conditions"] = defeat_conditions;
+
+  QVariantList optional_objectives;
+  for (const auto &condition : mission.optional_objectives) {
+    QVariantMap cond;
+    cond["type"] = condition.type;
+    cond["description"] = condition.description;
+    optional_objectives.append(cond);
+  }
+  result["optional_objectives"] = optional_objectives;
+
+  return result;
+}
+
 void GameEngine::start_skirmish(const QString &map_path,
                                 const QVariantList &playerConfigs) {
 
