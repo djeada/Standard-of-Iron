@@ -9,6 +9,7 @@ Item {
 
     signal openSkirmish()
     signal openCampaign()
+    signal openObjectives()
     signal openSettings()
     signal loadSave()
     signal saveGame()
@@ -30,6 +31,8 @@ Item {
                 root.openSkirmish();
             else if (m.idStr === "campaign")
                 root.openCampaign();
+            else if (m.idStr === "objectives")
+                root.openObjectives();
             else if (m.idStr === "save")
                 root.saveGame();
             else if (m.idStr === "load")
@@ -117,6 +120,12 @@ Item {
                         idStr: "campaign"
                         title: QT_TR_NOOP("Play — Campaign")
                         subtitle: QT_TR_NOOP("Story missions and battles")
+                    }
+
+                    ListElement {
+                        idStr: "objectives"
+                        title: QT_TR_NOOP("Objectives")
+                        subtitle: QT_TR_NOOP("View current mission objectives")
                     }
 
                     ListElement {
@@ -234,6 +243,8 @@ Item {
                                     root.openSkirmish();
                                 else if (model.idStr === "campaign")
                                     root.openCampaign();
+                                else if (model.idStr === "objectives")
+                                    root.openObjectives();
                                 else if (model.idStr === "save")
                                     root.saveGame();
                                 else if (model.idStr === "load")
