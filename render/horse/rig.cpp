@@ -49,18 +49,24 @@ using HorseProfileCacheKey = uint64_t;
 static std::unordered_map<HorseProfileCacheKey, CachedHorseProfileEntry> s_horse_profile_cache;
 static uint32_t s_horse_cache_frame = 0;
 constexpr uint32_t k_horse_profile_cache_max_age = 600;
+// Cache cleanup runs every 512 frames (when frame & mask == 0)
+constexpr uint32_t k_cache_cleanup_interval_mask = 0x1FFU;
+// Multiplier for color component hash (0-1 range to 0-31 range for 5-bit slots)
+constexpr float k_color_hash_multiplier = 31.0F;
+// Tolerance for color vector comparison in cache validation
+constexpr float k_color_comparison_tolerance = 0.001F;
 
 inline auto make_horse_profile_cache_key(uint32_t seed,
                                          const QVector3D &leather_base,
                                          const QVector3D &cloth_base) -> HorseProfileCacheKey {
   // Combine seed with color hashes for unique key
   // Use all RGB components from both colors for better hash distribution
-  uint32_t color_hash = static_cast<uint32_t>(leather_base.x() * 31.0F);
-  color_hash ^= static_cast<uint32_t>(leather_base.y() * 31.0F) << 5;
-  color_hash ^= static_cast<uint32_t>(leather_base.z() * 31.0F) << 10;
-  color_hash ^= static_cast<uint32_t>(cloth_base.x() * 31.0F) << 15;
-  color_hash ^= static_cast<uint32_t>(cloth_base.y() * 31.0F) << 20;
-  color_hash ^= static_cast<uint32_t>(cloth_base.z() * 31.0F) << 25;
+  uint32_t color_hash = static_cast<uint32_t>(leather_base.x() * k_color_hash_multiplier);
+  color_hash ^= static_cast<uint32_t>(leather_base.y() * k_color_hash_multiplier) << 5;
+  color_hash ^= static_cast<uint32_t>(leather_base.z() * k_color_hash_multiplier) << 10;
+  color_hash ^= static_cast<uint32_t>(cloth_base.x() * k_color_hash_multiplier) << 15;
+  color_hash ^= static_cast<uint32_t>(cloth_base.y() * k_color_hash_multiplier) << 20;
+  color_hash ^= static_cast<uint32_t>(cloth_base.z() * k_color_hash_multiplier) << 25;
   return (static_cast<uint64_t>(seed) << 32) | static_cast<uint64_t>(color_hash);
 }
 
@@ -521,8 +527,8 @@ auto get_or_create_cached_horse_profile(uint32_t seed,
   if (cache_it != s_horse_profile_cache.end()) {
     // Validate cache entry
     CachedHorseProfileEntry &entry = cache_it->second;
-    if ((entry.leather_base - leather_base).lengthSquared() < 0.001F &&
-        (entry.cloth_base - cloth_base).lengthSquared() < 0.001F) {
+    if ((entry.leather_base - leather_base).lengthSquared() < k_color_comparison_tolerance &&
+        (entry.cloth_base - cloth_base).lengthSquared() < k_color_comparison_tolerance) {
       entry.frame_number = s_horse_cache_frame;
       ++s_horseRenderStats.profiles_cached;
       return entry.profile;
@@ -545,8 +551,8 @@ auto get_or_create_cached_horse_profile(uint32_t seed,
 void advance_horse_profile_cache_frame() {
   ++s_horse_cache_frame;
   
-  // Periodic cleanup of stale entries
-  if ((s_horse_cache_frame & 0x1FF) == 0) {
+  // Periodic cleanup of stale entries (runs every 512 frames)
+  if ((s_horse_cache_frame & k_cache_cleanup_interval_mask) == 0) {
     auto it = s_horse_profile_cache.begin();
     while (it != s_horse_profile_cache.end()) {
       if (s_horse_cache_frame - it->second.frame_number > k_horse_profile_cache_max_age) {
