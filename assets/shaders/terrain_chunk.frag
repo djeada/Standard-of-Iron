@@ -54,10 +54,20 @@ float noise21(vec2 p) {
 
 float fbm(vec2 p) {
   float v = 0.0, a = 0.5;
-  for (int i = 0; i < 4; ++i) {
+  for (int i = 0; i < 5; ++i) {
     v += noise21(p) * a;
     p = p * 2.07 + 13.17;
     a *= 0.5;
+  }
+  return v;
+}
+
+float fbmDetail(vec2 p) {
+  float v = 0.0, a = 0.5;
+  for (int i = 0; i < 6; ++i) {
+    v += noise21(p) * a;
+    p = p * 2.13 + 7.89;
+    a *= 0.52;
   }
   return v;
 }
@@ -145,6 +155,7 @@ void main() {
       triplanarNoise(v_worldPos, u_detailNoiseScale * 2.5 / tileScale);
   float erosionNoise =
       triplanarNoise(v_worldPos, u_detailNoiseScale * 4.0 / tileScale + 17.0);
+  float microVariation = fbmDetail(world_coord * u_macroNoiseScale * 8.0);
 
   float patchNoise = fbm(world_coord * u_macroNoiseScale * 0.4);
   float moistureVar = smoothstep(0.3, 0.7, patchNoise);
@@ -153,7 +164,11 @@ void main() {
   vec3 lushGrass = mix(u_grassPrimary, u_grassSecondary, lushFactor);
   float dryness = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
   dryness += moistureVar * 0.15;
-  vec3 grassColor = mix(lushGrass, u_grassDry, dryness);
+  
+  float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
+  float drynessByHeight = mix(dryness, dryness * 1.15, heightFade * 0.4);
+  vec3 grassColor = mix(lushGrass, u_grassDry, drynessByHeight);
+  grassColor *= (1.0 + microVariation * 0.08);
 
   float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
 
@@ -209,12 +224,15 @@ void main() {
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
-  rockColor = mix(rockColor, rockColor * 1.15,
-                  clamp(u_rockDetailStrength * 1.4, 0.0, 1.0));
+  
+  float rockDetailVariation = fbmDetail(world_coord * 0.15) * 0.5 + 0.5;
+  rockColor *= mix(0.92, 1.08, rockDetailVariation);
+  rockColor = mix(rockColor, rockColor * 1.12,
+                  clamp(u_rockDetailStrength * 1.3, 0.0, 1.0));
 
   vec3 microNormal = normal;
   float microDetailScale = u_detailNoiseScale * 8.0 / tileScale;
-  vec2 microOffset = vec2(0.01, 0.0);
+  vec2 microOffset = vec2(0.008, 0.0);
   float h0 = triplanarNoise(v_worldPos, microDetailScale);
   float hx = triplanarNoise(v_worldPos + vec3(microOffset.x, 0.0, 0.0),
                             microDetailScale);
@@ -222,8 +240,16 @@ void main() {
                             microDetailScale);
   vec3 microGrad =
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
-  float microAmp = 0.15 * u_rockDetailStrength * (0.2 + 0.8 * slope);
+  float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
   microNormal = normalize(normal + microGrad * microAmp);
+  
+  float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);
+  vec3 fineNormalPerturb = vec3(
+    (fineDetail - 0.5) * 0.03,
+    0.0,
+    (triplanarNoise(v_worldPos + vec3(0.1, 0.0, 0.0), microDetailScale * 2.5) - 0.5) * 0.03
+  );
+  microNormal = normalize(microNormal + fineNormalPerturb * (0.3 + 0.7 * rockMask));
 
   float isFlat = 1.0 - smoothstep(0.10, 0.25, slope);
   float isHigh = smoothstep(u_soilBlendHeight + 0.5, u_soilBlendHeight + 1.5,
@@ -284,17 +310,27 @@ void main() {
 
   vec3 L = normalize(u_lightDir);
   float ndl = max(dot(microNormal, L), 0.0);
-  float ambient = 0.35;
+  
+  float skyOcclusion = smoothstep(-0.03, 0.01, -curvature);
+  float ao = mix(1.0, 0.75, skyOcclusion * (1.0 - slope * 0.5));
+  
+  float ambient = 0.32 * ao;
   float fresnel =
-      pow(1.0 - max(dot(microNormal, vec3(0.0, 1.0, 0.0)), 0.0), 2.0);
+      pow(1.0 - max(dot(microNormal, vec3(0.0, 1.0, 0.0)), 0.0), 2.2);
 
   float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
-  surfaceRoughness = mix(surfaceRoughness, 0.45, u_moistureLevel * 0.5);
+  surfaceRoughness = mix(surfaceRoughness, 0.42, u_moistureLevel * 0.5);
+  
+  vec3 viewDir = normalize(vec3(0.0, 1.0, -0.5));
+  vec3 halfDir = normalize(L + viewDir);
+  float specAngle = max(dot(microNormal, halfDir), 0.0);
+  float specular = pow(specAngle, mix(4.0, 32.0, 1.0 - surfaceRoughness));
+  
   float specContrib =
-      fresnel * 0.12 * (1.0 - surfaceRoughness) * (1.0 - rockMask);
+      fresnel * 0.14 * (1.0 - surfaceRoughness) * (1.0 - rockMask) * specular;
 
-  specContrib += u_moistureLevel * 0.08 * fresnel * (1.0 - rockMask);
-  float shade = ambient + ndl * 0.75 + specContrib;
+  specContrib += u_moistureLevel * 0.10 * fresnel * (1.0 - rockMask);
+  float shade = ambient + ndl * 0.78 + specContrib;
 
   float plateauBrightness = 1.0 + plateauFactor * 0.05;
   float gullyDarkness = 1.0 - isGully * 0.04;
