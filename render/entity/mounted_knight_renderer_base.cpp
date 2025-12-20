@@ -86,45 +86,45 @@ void MountedKnightRendererBase::apply_riding_animation(
 
   MountedPoseController::MountedRiderPoseRequest pose_request;
   pose_request.dims = dims;
-  pose_request.forwardBias = forward_lean;
-  pose_request.reinSlackLeft = reins.slack;
-  pose_request.reinSlackRight = reins.slack;
-  pose_request.reinTensionLeft = reins.tension;
-  pose_request.reinTensionRight = reins.tension;
-  pose_request.leftHandOnReins = !m_config.has_cavalry_shield;
-  pose_request.rightHandOnReins = true;
-  pose_request.clearanceForward = 1.15F;
-  pose_request.clearanceUp = 1.05F;
-  pose_request.seatPose = (speed_norm > 0.55F)
-                              ? MountedPoseController::MountedSeatPose::Forward
-                              : MountedPoseController::MountedSeatPose::Neutral;
-  pose_request.torsoCompression =
+  pose_request.forward_bias = forward_lean;
+  pose_request.rein_slack_left = reins.slack;
+  pose_request.rein_slack_right = reins.slack;
+  pose_request.rein_tension_left = reins.tension;
+  pose_request.rein_tension_right = reins.tension;
+  pose_request.left_hand_on_reins = !m_config.has_cavalry_shield;
+  pose_request.right_hand_on_reins = true;
+  pose_request.clearance_forward = 1.15F;
+  pose_request.clearance_up = 1.05F;
+  pose_request.seat_pose =
+      (speed_norm > 0.55F) ? MountedPoseController::MountedSeatPose::Forward
+                           : MountedPoseController::MountedSeatPose::Neutral;
+  pose_request.torso_compression =
       std::clamp(0.18F + anim_ctx.variation.posture_slump * 0.9F, 0.0F, 0.55F);
-  pose_request.torsoTwist = anim_ctx.variation.shoulder_tilt * 3.0F;
-  pose_request.shoulderDip =
+  pose_request.torso_twist = anim_ctx.variation.shoulder_tilt * 3.0F;
+  pose_request.shoulder_dip =
       std::clamp(anim_ctx.variation.shoulder_tilt * 0.6F +
                      (m_config.has_cavalry_shield ? 0.18F : 0.08F),
                  -0.4F, 0.4F);
 
   if (m_config.has_cavalry_shield) {
-    pose_request.shieldPose = MountedPoseController::MountedShieldPose::Guard;
+    pose_request.shield_pose = MountedPoseController::MountedShieldPose::Guard;
   }
 
   if (anim.is_attacking && anim.is_melee) {
-    pose_request.weaponPose =
+    pose_request.weapon_pose =
         MountedPoseController::MountedWeaponPose::SwordStrike;
-    pose_request.actionPhase =
+    pose_request.action_phase =
         std::fmod(anim.time * MOUNTED_KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-    pose_request.rightHandOnReins = false;
+    pose_request.right_hand_on_reins = false;
     if (m_config.has_cavalry_shield) {
-      pose_request.shieldPose =
+      pose_request.shield_pose =
           MountedPoseController::MountedShieldPose::Stowed;
     }
   } else {
-    pose_request.weaponPose =
+    pose_request.weapon_pose =
         m_config.has_sword ? MountedPoseController::MountedWeaponPose::SwordIdle
                            : MountedPoseController::MountedWeaponPose::None;
-    pose_request.rightHandOnReins = !m_config.has_sword;
+    pose_request.right_hand_on_reins = !m_config.has_sword;
   }
 
   mounted_controller.apply_pose(mount, pose_request);

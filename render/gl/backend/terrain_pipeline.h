@@ -14,8 +14,8 @@ namespace BackendPipelines {
 
 class TerrainPipeline final : public IPipeline {
 public:
-  explicit TerrainPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit TerrainPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~TerrainPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -114,8 +114,8 @@ private:
   void cache_ground_uniforms();
   void cache_terrain_uniforms();
 
-  void initializeGrassGeometry();
-  void shutdownGrassGeometry();
+  void initialize_grass_geometry();
+  void shutdown_grass_geometry();
 };
 
 } // namespace BackendPipelines

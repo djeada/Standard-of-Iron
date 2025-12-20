@@ -9,7 +9,7 @@ struct HumanoidPalette {
   QVector3D cloth;
   QVector3D skin;
   QVector3D leather;
-  QVector3D leatherDark;
+  QVector3D leather_dark;
   QVector3D wood;
   QVector3D metal;
 };

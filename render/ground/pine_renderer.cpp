@@ -21,7 +21,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-inline auto valueNoise(float x, float z, uint32_t salt = 0U) -> float {
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   int const x0 = int(std::floor(x));
   int const z0 = int(std::floor(z));
   int const x1 = x0 + 1;
@@ -64,7 +64,7 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_pineParams.wind_strength = 0.3F;
   m_pineParams.wind_speed = 0.5F;
 
-  generatePineInstances();
+  generate_pine_instances();
 }
 
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
@@ -133,7 +133,7 @@ void PineRenderer::clear() {
   m_cachedVisibilityVersion = 0;
 }
 
-void PineRenderer::generatePineInstances() {
+void PineRenderer::generate_pine_instances() {
   m_pineInstances.clear();
 
   if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
@@ -229,8 +229,8 @@ void PineRenderer::generatePineInstances() {
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
 
-      float const cluster_noise = valueNoise(world_x * 0.03F, world_z * 0.03F,
-                                             m_noiseSeed ^ 0x7F8E9D0AU);
+      float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
+                                              m_noiseSeed ^ 0x7F8E9D0AU);
 
       if (cluster_noise < 0.35F) {
         continue;

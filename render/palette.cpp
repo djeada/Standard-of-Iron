@@ -28,7 +28,7 @@ auto make_humanoid_palette(const QVector3D &team_tint,
                               b * saturation +
                                   (1.0F - saturation) * brightness);
   p.leather = clampVec01(desaturated * (0.7F + leather_var));
-  p.leatherDark = p.leather * 0.85F;
+  p.leather_dark = p.leather * 0.85F;
 
   p.wood = QVector3D(0.16F, 0.10F, 0.05F);
 

@@ -121,8 +121,8 @@ void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.38F, 0.20F, 0.30F), 0.025F, c.wood_dark, white);
 }
 
-void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                Texture *white, const RomanCatapultPalette &c) {
+void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                 Texture *white, const RomanCatapultPalette &c) {
 
   float wheel_radius = 0.18F;
   float wheel_thickness = 0.04F;
@@ -133,7 +133,7 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D right_front(0.42F, wheel_radius, -0.25F);
   QVector3D right_back(0.42F, wheel_radius, 0.25F);
 
-  auto drawWheel = [&](const QVector3D &pos, float side_offset) {
+  auto draw_wheel = [&](const QVector3D &pos, float side_offset) {
     QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
     QVector3D outer =
         pos + QVector3D(side_offset * (wheel_thickness + 0.06F), 0, 0);
@@ -161,10 +161,10 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
     }
   };
 
-  drawWheel(left_front, -1.0F);
-  drawWheel(left_back, -1.0F);
-  drawWheel(right_front, 1.0F);
-  drawWheel(right_back, 1.0F);
+  draw_wheel(left_front, -1.0F);
+  draw_wheel(left_back, -1.0F);
+  draw_wheel(right_front, 1.0F);
+  draw_wheel(right_back, 1.0F);
 
   draw_cyl(out, p.model, QVector3D(-0.40F, wheel_radius, -0.25F),
            QVector3D(0.40F, wheel_radius, -0.25F), 0.025F, c.metal_iron, white);
@@ -306,7 +306,7 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
     auto anim_ctx = get_anim_context(p.entity);
 
     drawBaseFrame(p, out, unit_cube, white_tex, palette);
-    drawWheels(p, out, unit_cube, white_tex, palette);
+    draw_wheels(p, out, unit_cube, white_tex, palette);
     drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
     drawThrowingArm(p, out, unit_cube, white_tex, palette, anim_ctx);
     drawWindlass(p, out, unit_cube, white_tex, palette);

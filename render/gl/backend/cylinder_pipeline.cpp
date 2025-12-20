@@ -20,8 +20,8 @@ using namespace Render::GL::BufferCapacity;
 using namespace Render::GL::Geometry;
 using namespace Render::GL::Growth;
 
-CylinderPipeline::CylinderPipeline(ShaderCache *shaderCache)
-    : m_shaderCache(shaderCache) {}
+CylinderPipeline::CylinderPipeline(ShaderCache *shader_cache)
+    : m_shaderCache(shader_cache) {}
 
 CylinderPipeline::~CylinderPipeline() { shutdown(); }
 
@@ -83,8 +83,8 @@ void CylinderPipeline::initialize_cylinder_pipeline() {
     return;
   }
 
-  const auto &vertices = unit->getVertices();
-  const auto &indices = unit->getIndices();
+  const auto &vertices = unit->get_vertices();
+  const auto &indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }

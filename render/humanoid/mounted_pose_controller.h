@@ -54,23 +54,23 @@ public:
 
   struct MountedRiderPoseRequest {
     HorseDimensions dims{};
-    MountedSeatPose seatPose{MountedSeatPose::Neutral};
-    MountedWeaponPose weaponPose{MountedWeaponPose::None};
-    MountedShieldPose shieldPose{MountedShieldPose::None};
-    float actionPhase{0.0F};
-    float forwardBias{0.0F};
-    float sideBias{0.0F};
-    float torsoCompression{0.0F};
-    float torsoTwist{0.0F};
-    float shoulderDip{0.0F};
-    float clearanceForward{1.0F};
-    float clearanceUp{1.0F};
-    float reinSlackLeft{0.20F};
-    float reinSlackRight{0.20F};
-    float reinTensionLeft{0.25F};
-    float reinTensionRight{0.25F};
-    bool leftHandOnReins{true};
-    bool rightHandOnReins{true};
+    MountedSeatPose seat_pose{MountedSeatPose::Neutral};
+    MountedWeaponPose weapon_pose{MountedWeaponPose::None};
+    MountedShieldPose shield_pose{MountedShieldPose::None};
+    float action_phase{0.0F};
+    float forward_bias{0.0F};
+    float side_bias{0.0F};
+    float torso_compression{0.0F};
+    float torso_twist{0.0F};
+    float shoulder_dip{0.0F};
+    float clearance_forward{1.0F};
+    float clearance_up{1.0F};
+    float rein_slack_left{0.20F};
+    float rein_slack_right{0.20F};
+    float rein_tension_left{0.25F};
+    float rein_tension_right{0.25F};
+    bool left_hand_on_reins{true};
+    bool right_hand_on_reins{true};
   };
 
   void apply_pose(const MountedAttachmentFrame &mount,
@@ -122,7 +122,7 @@ private:
   void stabilizeUpperBody(const MountedAttachmentFrame &mount,
                           const HorseDimensions &dims);
   void apply_torso_sculpt(const MountedAttachmentFrame &mount,
-                          float compression, float twist, float shoulderDip);
+                          float compression, float twist, float shoulder_dip);
   void update_head_hierarchy(const MountedAttachmentFrame &mount,
                              float extra_forward_tilt, float extra_side_tilt,
                              std::string_view debug_label = "head_sync");

@@ -23,14 +23,14 @@ public:
 
   void draw();
 
-  [[nodiscard]] auto getVertices() const -> const std::vector<Vertex> & {
+  [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
     return m_vertices;
   }
-  [[nodiscard]] auto getIndices() const -> const std::vector<unsigned int> & {
+  [[nodiscard]] auto get_indices() const -> const std::vector<unsigned int> & {
     return m_indices;
   }
 
-  [[nodiscard]] auto cloneWithFilteredIndices(
+  [[nodiscard]] auto clone_with_filtered_indices(
       const std::function<bool(unsigned int, unsigned int, unsigned int,
                                const std::vector<Vertex> &)> &predicate) const
       -> std::unique_ptr<Mesh> {
@@ -66,12 +66,12 @@ private:
   std::unique_ptr<Buffer> m_vbo;
   std::unique_ptr<Buffer> m_ebo;
 
-  void setupBuffers();
+  void setup_buffers();
 };
 
-auto createQuadMesh() -> std::unique_ptr<Mesh>;
-auto createCubeMesh() -> std::unique_ptr<Mesh>;
-auto createPlaneMesh(float width, float height,
-                     int subdivisions = 1) -> std::unique_ptr<Mesh>;
+auto create_quad_mesh() -> std::unique_ptr<Mesh>;
+auto create_cube_mesh() -> std::unique_ptr<Mesh>;
+auto create_plane_mesh(float width, float height,
+                       int subdivisions = 1) -> std::unique_ptr<Mesh>;
 
 } // namespace Render::GL

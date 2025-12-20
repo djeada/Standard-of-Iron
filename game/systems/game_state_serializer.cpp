@@ -70,7 +70,7 @@ void GameStateSerializer::restore_camera_from_metadata(
       camera_obj.value("position"), camera->get_position());
   const QVector3D target = App::JsonUtils::jsonArrayToVec3(
       camera_obj.value("target"), camera->get_target());
-  camera->lookAt(position, target, QVector3D(0.0F, 1.0F, 0.0F));
+  camera->look_at(position, target, QVector3D(0.0F, 1.0F, 0.0F));
 
   const float near_plane =
       static_cast<float>(camera_obj.value("near").toDouble(camera->get_near()));

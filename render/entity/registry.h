@@ -62,6 +62,6 @@ private:
   std::unordered_map<std::string, RenderFunc> m_map;
 };
 
-void registerBuiltInEntityRenderers(EntityRendererRegistry &registry);
+void register_built_in_entity_renderers(EntityRendererRegistry &registry);
 
 } // namespace Render::GL

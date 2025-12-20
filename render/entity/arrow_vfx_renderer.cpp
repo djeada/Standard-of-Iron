@@ -58,7 +58,7 @@ struct HumanProportions {
 };
 
 struct ArcherColors {
-  QVector3D tunic, skin, leather, leatherDark, wood, metal, metalHead,
+  QVector3D tunic, skin, leather, leather_dark, wood, metal, metalHead,
       stringCol, fletch;
 };
 
@@ -130,7 +130,7 @@ static inline ArcherColors makeColors(const QVector3D &team_tint) {
   C.tunic = team_tint;
   C.skin = QVector3D(0.96F, 0.80F, 0.69F);
   C.leather = QVector3D(0.35F, 0.22F, 0.12F);
-  C.leatherDark = C.leather * 0.9F;
+  C.leather_dark = C.leather * 0.9F;
   C.wood = QVector3D(0.16F, 0.10F, 0.05F);
   C.metal = QVector3D(0.65F, 0.66F, 0.70F);
   C.metalHead = clampVec01(C.metal * 1.1F);
@@ -276,17 +276,17 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
            C.leather * 0.95F, nullptr, 1.0F);
 
   out.mesh(get_unit_cone(), cone_from_to(p.model, knee_l, P.foot_l, shinR),
-           C.leatherDark, nullptr, 1.0F);
+           C.leather_dark, nullptr, 1.0F);
   out.mesh(get_unit_cone(), cone_from_to(p.model, knee_r, P.foot_r, shinR),
-           C.leatherDark, nullptr, 1.0F);
+           C.leather_dark, nullptr, 1.0F);
 
   QVector3D down(0.0F, -0.02F, 0.0F);
   out.mesh(get_unit_cylinder(),
            cylinder_between(p.model, P.foot_l, P.foot_l + down, shinR * 1.1F),
-           C.leatherDark, nullptr, 1.0F);
+           C.leather_dark, nullptr, 1.0F);
   out.mesh(get_unit_cylinder(),
            cylinder_between(p.model, P.foot_r, P.foot_r + down, shinR * 1.1F),
-           C.leatherDark, nullptr, 1.0F);
+           C.leather_dark, nullptr, 1.0F);
 }
 
 static inline void drawQuiver(const DrawContext &p, ISubmitter &out,

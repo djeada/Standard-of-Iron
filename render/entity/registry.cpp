@@ -43,7 +43,7 @@ auto EntityRendererRegistry::get(const std::string &type) const -> RenderFunc {
   return {};
 }
 
-void registerBuiltInEntityRenderers(EntityRendererRegistry &registry) {
+void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
   Roman::register_archer_renderer(registry);
   Carthage::register_archer_renderer(registry);
 

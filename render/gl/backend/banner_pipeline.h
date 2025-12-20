@@ -12,8 +12,8 @@ namespace BackendPipelines {
 
 class BannerPipeline final : public IPipeline {
 public:
-  explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit BannerPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~BannerPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -21,7 +21,7 @@ public:
   void cache_uniforms() override;
   [[nodiscard]] auto is_initialized() const -> bool override;
 
-  auto getBannerMesh(int subdivisions = 16) -> GL::Mesh *;
+  auto get_banner_mesh(int subdivisions = 16) -> GL::Mesh *;
 
   struct BannerUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
@@ -45,7 +45,7 @@ private:
   std::unique_ptr<GL::Mesh> m_bannerMesh16;
   std::unique_ptr<GL::Mesh> m_bannerMesh8;
 
-  void cacheBannerUniforms();
+  void cache_banner_uniforms();
 };
 
 } // namespace BackendPipelines

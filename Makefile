@@ -122,7 +122,7 @@ all: build
 .PHONY: run-map-pipeline
 run-map-pipeline:
 	@echo "$(BOLD)$(BLUE)Running map pipeline preprocessing...$(RESET)"
-	@bash scripts/run-map-pipeline.sh
+	@bash scripts/run-map-pipeline.sh $(if $(map_pipeline_rebuild),--rebuild,)
 	@echo "$(GREEN)✓ Map pipeline complete$(RESET)"
 
 # Run the main application

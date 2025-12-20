@@ -25,7 +25,7 @@ public:
   void clear();
 
 private:
-  void generateStoneInstances();
+  void generate_stone_instances();
 
   int m_width = 0;
   int m_height = 0;

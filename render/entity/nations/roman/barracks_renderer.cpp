@@ -5,6 +5,7 @@
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
+#include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../submitter.h"
@@ -15,16 +16,15 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
-#include <cmath>
 
-namespace Render::GL::Carthage {
+namespace Render::GL::Roman {
 namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
 
-struct CarthagePalette {
+struct RomanPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
   QVector3D limestone_shade{0.88F, 0.85F, 0.78F};
   QVector3D limestone_dark{0.80F, 0.76F, 0.70F};
@@ -40,8 +40,8 @@ struct CarthagePalette {
   QVector3D team_trim{0.48F, 0.54F, 0.60F};
 };
 
-inline auto make_palette(const QVector3D &team) -> CarthagePalette {
-  CarthagePalette p;
+inline auto make_palette(const QVector3D &team) -> RomanPalette {
+  RomanPalette p;
   p.team = clampVec01(team);
   p.team_trim =
       clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
@@ -65,7 +65,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c) {
+                   Texture *white, const RomanPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.08F, 0.0F),
            QVector3D(2.0F, 0.08F, 1.8F), c.limestone_dark);
@@ -84,7 +84,7 @@ void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                    Texture *white, const CarthagePalette &c,
+                    Texture *white, const RomanPalette &c,
                     BuildingState state) {
   float const col_height = 1.6F;
   float const col_radius = 0.10F;
@@ -158,7 +158,7 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_central_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                            Texture *white, const CarthagePalette &c) {
+                            Texture *white, const RomanPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.22F, 0.0F),
            QVector3D(1.3F, 0.01F, 1.1F), c.limestone_shade);
@@ -178,7 +178,7 @@ void draw_central_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthagePalette &c) {
+                  Texture *white, const RomanPalette &c) {
   float const wall_h = 1.4F;
 
   draw_box(out, unit, white, p.model,
@@ -204,7 +204,7 @@ void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthagePalette &c,
+                  Texture *white, const RomanPalette &c,
                   BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
@@ -230,7 +230,7 @@ void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_trading_goods(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const CarthagePalette &c) {
+                        Texture *white, const RomanPalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-1.2F, 0.2F, 1.1F),
            QVector3D(-1.2F, 0.5F, 1.1F), 0.08F, c.terracotta_dark, white);
@@ -243,7 +243,7 @@ void draw_trading_goods(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
 void draw_phoenician_banner(
     const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-    const CarthagePalette &c,
+    const RomanPalette &c,
     const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 0.0F;
   float const pole_z = -2.0F;
@@ -256,10 +256,10 @@ void draw_phoenician_banner(
   QVector3D const pole_size(pole_radius * 1.8F, pole_height / 2.0F,
                             pole_radius * 1.8F);
 
-  QMatrix4x4 poleTransform = p.model;
-  poleTransform.translate(pole_center);
-  poleTransform.scale(pole_size);
-  out.mesh(unit, poleTransform, c.cedar, white, 1.0F);
+  QMatrix4x4 pole_transform = p.model;
+  pole_transform.translate(pole_center);
+  pole_transform.scale(pole_size);
+  out.mesh(unit, pole_transform, c.cedar, white, 1.0F);
 
   float const beam_length = banner_width * 0.5F;
   float const max_lowering = pole_height * 0.85F;
@@ -310,7 +310,7 @@ void draw_phoenician_banner(
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
-                     const CarthagePalette &c) {
+                     const RomanPalette &c) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
                                           .teamTrim = c.team_trim,
                                           .timber = c.cedar,
@@ -471,7 +471,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   Mesh *unit = p.resources->unit();
   Texture *white = p.resources->white();
   QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  CarthagePalette const c = make_palette(team);
+  RomanPalette const c = make_palette(team);
 
   BarracksFlagRenderer::ClothBannerResources cloth;
   if (p.backend != nullptr) {
@@ -494,7 +494,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 } // namespace
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("barracks_carthage", draw_barracks);
+  registry.register_renderer("barracks_roman", draw_barracks);
 }
 
-} // namespace Render::GL::Carthage
+} // namespace Render::GL::Roman

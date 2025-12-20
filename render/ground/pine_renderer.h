@@ -25,7 +25,7 @@ public:
   void clear();
 
 private:
-  void generatePineInstances();
+  void generate_pine_instances();
 
   int m_width = 0;
   int m_height = 0;

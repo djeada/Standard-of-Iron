@@ -131,8 +131,8 @@ public:
       QVector3D const blended_hand_l =
           normal_hand_l * (1.0F - t) + hold_hand_l * t;
 
-      controller.placeHandAt(false, blended_hand_r);
-      controller.placeHandAt(true, blended_hand_l);
+      controller.place_hand_at(false, blended_hand_r);
+      controller.place_hand_at(true, blended_hand_l);
     } else {
       QVector3D const idle_hand_r(bow_x + 0.03F - arm_asymmetry,
                                   HP::SHOULDER_Y + 0.05F + arm_height_jitter,
@@ -141,8 +141,8 @@ public:
           bow_x - 0.05F + arm_asymmetry * 0.5F,
           HP::SHOULDER_Y + 0.14F + arm_height_jitter * 0.8F, 0.48F);
 
-      controller.placeHandAt(false, idle_hand_r);
-      controller.placeHandAt(true, idle_hand_l);
+      controller.place_hand_at(false, idle_hand_r);
+      controller.place_hand_at(true, idle_hand_l);
     }
 
     if (anim.is_attacking && !anim.is_in_hold_mode) {
@@ -327,7 +327,7 @@ private:
 
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
   }

@@ -8,7 +8,7 @@
 #include <algorithm>
 
 namespace {
-auto mixColor(const QVector3D &a, const QVector3D &b, float t) -> QVector3D {
+auto mix_color(const QVector3D &a, const QVector3D &b, float t) -> QVector3D {
   return a * (1.0F - t) + b * t;
 }
 } // namespace
@@ -43,7 +43,7 @@ void CarthageHeavyHelmetRenderer::render(const DrawContext &ctx,
 
   QVector3D const base_color = m_config.bronze_color;
   QVector3D const accent =
-      mixColor(m_config.bronze_color, m_config.glow_color, 0.32F);
+      mix_color(m_config.bronze_color, m_config.glow_color, 0.32F);
 
   float base_r = R * 1.04f;
   QVector3D cone_base = head_point(QVector3D(0.0f, 0.58f, 0.0f));
@@ -62,7 +62,7 @@ void CarthageHeavyHelmetRenderer::render(const DrawContext &ctx,
   QMatrix4x4 tip_cap =
       sphere_at(ctx.model, tip_apex + head.up * (R * 0.015f), R * 0.06f);
   submitter.mesh(get_unit_sphere(), tip_cap,
-                 mixColor(accent, m_config.glow_color, 0.48F), nullptr, 1.0f,
+                 mix_color(accent, m_config.glow_color, 0.48F), nullptr, 1.0f,
                  2);
 }
 

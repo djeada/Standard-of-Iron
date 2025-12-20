@@ -171,8 +171,8 @@ public:
                                   extended_arm_height,
                                   0.40F + 0.03F * sway_phase_offset);
 
-      controller.placeHandAt(true, heal_hand_l);
-      controller.placeHandAt(false, heal_hand_r);
+      controller.place_hand_at(true, heal_hand_l);
+      controller.place_hand_at(false, heal_hand_r);
 
       float target_dir_x = 0.0F;
       float target_dir_z = 1.0F;
@@ -199,8 +199,8 @@ public:
           0.10F - arm_asymmetry * 0.5F,
           HP::SHOULDER_Y + 0.10F + arm_height_jitter * 0.8F, 0.45F);
 
-      controller.placeHandAt(true, idle_hand_l);
-      controller.placeHandAt(false, idle_hand_r);
+      controller.place_hand_at(true, idle_hand_l);
+      controller.place_hand_at(false, idle_hand_r);
     }
   }
 
@@ -477,7 +477,7 @@ private:
                 k_cloth_team_mix_weight, k_cloth_style_mix_weight);
     apply_color(style.leather_color, variant.palette.leather, k_team_mix_weight,
                 k_style_mix_weight);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark,
+    apply_color(style.leather_dark_color, variant.palette.leather_dark,
                 k_team_mix_weight, k_style_mix_weight);
     apply_color(style.metal_color, variant.palette.metal, k_team_mix_weight,
                 k_style_mix_weight);
