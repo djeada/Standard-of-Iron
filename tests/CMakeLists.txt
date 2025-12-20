@@ -6,6 +6,7 @@ add_executable(standard_of_iron_tests
     core/serialization_test.cpp
     core/ground_type_test.cpp
     db/save_storage_test.cpp
+    db/mission_progress_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/mission_loader_test.cpp
