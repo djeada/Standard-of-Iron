@@ -95,7 +95,7 @@ QString LoadingProgressTracker::stage_name(LoadingStage stage) const {
 
 float LoadingProgressTracker::stage_to_progress(LoadingStage stage) const {
 
-  const float total_stages = 13.0F;
+  const float total_stages = 14.0F;
 
   switch (stage) {
   case LoadingStage::NOT_STARTED:
