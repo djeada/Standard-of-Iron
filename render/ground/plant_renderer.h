@@ -25,8 +25,13 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return (m_plantInstanceBuffer != nullptr || m_plantInstanceCount == 0) &&
-           !m_visibilityDirty;
+    if (m_plantInstances.empty()) {
+      return true;
+    }
+    if (!m_visibilityDirty && m_visibleInstances.empty()) {
+      return true;
+    }
+    return (m_visibleInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
 private:
@@ -42,7 +47,6 @@ private:
   std::uint32_t m_noiseSeed = 0U;
 
   std::vector<PlantInstanceGpu> m_plantInstances;
-  std::unique_ptr<Buffer> m_plantInstanceBuffer;
   std::unique_ptr<Buffer> m_visibleInstanceBuffer;
   std::size_t m_plantInstanceCount = 0;
   PlantBatchParams m_plantParams;

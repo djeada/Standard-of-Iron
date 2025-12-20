@@ -131,12 +131,39 @@ void CampaignManager::configure_mission_victory_conditions(
                first_condition.duration.has_value()) {
       mission_victory_config.victoryType = "survive_time";
       mission_victory_config.surviveTimeDuration = *first_condition.duration;
+    } else if (first_condition.type == "control_structures" ||
+               first_condition.type == "capture_structures") {
+      mission_victory_config.victoryType = first_condition.type;
+      if (!first_condition.structure_types.empty()) {
+        mission_victory_config.keyStructures.clear();
+        for (const auto &structure_type : first_condition.structure_types) {
+          if (structure_type == "village") {
+            mission_victory_config.keyStructures.push_back("barracks");
+          } else {
+            mission_victory_config.keyStructures.push_back(structure_type);
+          }
+        }
+      } else if (first_condition.structure_type.has_value()) {
+        if (*first_condition.structure_type == "village") {
+          mission_victory_config.keyStructures = {"barracks"};
+        } else {
+          mission_victory_config.keyStructures = {
+              *first_condition.structure_type};
+        }
+      } else {
+        mission_victory_config.keyStructures = {"barracks"};
+      }
+      mission_victory_config.requiredKeyStructures =
+          first_condition.min_count.value_or(1);
     } else {
       mission_victory_config.victoryType = "elimination";
       mission_victory_config.keyStructures = {"barracks"};
     }
   }
 
+  if (!mission.defeat_conditions.empty()) {
+    mission_victory_config.defeatConditions.clear();
+  }
   for (const auto &defeat_condition : mission.defeat_conditions) {
     if (defeat_condition.type == "lose_structure" &&
         defeat_condition.structure_type.has_value()) {

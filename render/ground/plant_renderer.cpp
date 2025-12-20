@@ -55,7 +55,6 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_noiseSeed = biome_settings.seed;
 
   m_plantInstances.clear();
-  m_plantInstanceBuffer.reset();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
 
@@ -73,7 +72,6 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   m_plantInstanceCount = static_cast<uint32_t>(m_plantInstances.size());
 
   if (m_plantInstanceCount == 0) {
-    m_plantInstanceBuffer.reset();
     m_visibleInstances.clear();
     return;
   }
@@ -128,7 +126,6 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 void PlantRenderer::clear() {
   m_plantInstances.clear();
   m_visibleInstances.clear();
-  m_plantInstanceBuffer.reset();
   m_visibleInstanceBuffer.reset();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
