@@ -142,6 +142,17 @@ auto MissionLoader::parseCondition(const QJsonObject &obj) -> Condition {
     cond.structure_type = obj["structure_type"].toString();
   }
 
+  if (obj.contains("structure_types") && obj["structure_types"].isArray()) {
+    const QJsonArray types = obj["structure_types"].toArray();
+    for (const auto &type_val : types) {
+      cond.structure_types.push_back(type_val.toString());
+    }
+  }
+
+  if (obj.contains("min_count")) {
+    cond.min_count = obj["min_count"].toInt();
+  }
+
   return cond;
 }
 

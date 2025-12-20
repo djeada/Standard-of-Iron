@@ -73,6 +73,8 @@ private:
                           QString *out_error = nullptr) const -> bool;
   auto migrate_to_2(QString *out_error = nullptr) const -> bool;
   auto migrate_to_3(QString *out_error = nullptr) const -> bool;
+  auto ensure_campaign_in_db(const Game::Campaign::CampaignDefinition &campaign,
+                             QString *out_error = nullptr) -> bool;
 
   QString m_database_path;
   QString m_connection_name;

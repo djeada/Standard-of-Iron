@@ -5,6 +5,8 @@ Rectangle {
     id: load_screen
 
     property real progress: 0
+    property real display_progress: 0
+    property real target_progress: 0
     property bool is_loading: false
     property string stage_text: "Loading..."
     property bool use_real_progress: true
@@ -12,7 +14,8 @@ Rectangle {
     property int _bgIndex: 0
 
     function complete_loading() {
-        load_screen.progress = 1;
+        load_screen.target_progress = 1;
+        load_screen.display_progress = 1;
     }
 
     anchors.fill: parent
@@ -20,9 +23,37 @@ Rectangle {
     visible: is_loading
     onIs_loadingChanged: {
         if (is_loading) {
-            if (!use_real_progress)
-                progress = 0;
+            target_progress = 0;
+            display_progress = 0;
+        } else {
+            target_progress = 1;
+            display_progress = 1;
+        }
+    }
+    onProgressChanged: {
+        if (!use_real_progress)
+            return ;
 
+        target_progress = Math.max(target_progress, progress);
+    }
+
+    Timer {
+        id: progressTicker
+
+        interval: 16
+        running: is_loading
+        repeat: true
+        onTriggered: {
+            var target = target_progress;
+            if (use_real_progress && target < 0.98)
+                target = Math.min(0.98, Math.max(target, display_progress + 0.002));
+
+            var delta = target - display_progress;
+            var step = delta * 0.15;
+            if (step < 0.001 && delta > 0)
+                step = 0.001;
+
+            display_progress = Math.min(1, Math.max(0, display_progress + step));
         }
     }
 
@@ -78,7 +109,7 @@ Rectangle {
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 anchors.margins: 4
-                width: Math.max(0, Math.min(available_width, available_width * load_screen.progress))
+                width: Math.max(0, Math.min(available_width, available_width * load_screen.display_progress))
                 color: "#f39c12"
                 radius: 2
 
@@ -110,7 +141,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: Math.floor(load_screen.progress * 100) + "%"
+                text: Math.floor(load_screen.display_progress * 100) + "%"
                 color: "#ecf0f1"
                 font.pixelSize: 18
                 font.bold: true

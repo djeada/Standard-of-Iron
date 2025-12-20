@@ -108,6 +108,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Barracks;
     return true;
   }
+  if (lowered == QStringLiteral("village")) {
+    out = SpawnType::Barracks;
+    return true;
+  }
   if (lowered == QStringLiteral("defense_tower")) {
     out = SpawnType::DefenseTower;
     return true;
@@ -152,6 +156,9 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
     return SpawnType::Builder;
   }
   if (str == "barracks") {
+    return SpawnType::Barracks;
+  }
+  if (str == "village") {
     return SpawnType::Barracks;
   }
   if (str == "defense_tower") {

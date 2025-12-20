@@ -1,5 +1,7 @@
 #include "map_catalog.h"
+#include "campaign_loader.h"
 #include "json_keys.h"
+#include "mission_loader.h"
 #include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
@@ -32,10 +34,104 @@ namespace Game::Map {
 
 using namespace JsonKeys;
 
+namespace {
+
+auto resolve_mission_file_path(const QString &mission_id) -> QString {
+  const QStringList search_paths = {
+      QStringLiteral("assets/missions/%1.json"),
+      QStringLiteral("../assets/missions/%1.json"),
+      QStringLiteral("../../assets/missions/%1.json"),
+      QStringLiteral(":/assets/missions/%1.json"),
+      QStringLiteral("/assets/missions/%1.json"),
+      QStringLiteral("/../assets/missions/%1.json")};
+
+  for (const auto &pattern : search_paths) {
+    QString candidate = pattern.arg(mission_id);
+    candidate = Utils::Resources::resolveResourcePath(candidate);
+    if (QFileInfo::exists(candidate)) {
+      return candidate;
+    }
+  }
+  return {};
+}
+
+auto collect_campaign_files() -> QStringList {
+  const QStringList search_paths = {QStringLiteral("assets/campaigns"),
+                                    QStringLiteral("../assets/campaigns"),
+                                    QStringLiteral("../../assets/campaigns"),
+                                    QStringLiteral(":/assets/campaigns"),
+                                    QStringLiteral("/assets/campaigns"),
+                                    QStringLiteral("/../assets/campaigns")};
+
+  QStringList files;
+  QSet<QString> seen;
+  for (const auto &path : search_paths) {
+    const QString resolved = Utils::Resources::resolveResourcePath(path);
+    QDir campaigns_dir(resolved);
+    if (!campaigns_dir.exists()) {
+      continue;
+    }
+    const QStringList entries = campaigns_dir.entryList(
+        QStringList() << "*.json", QDir::Files, QDir::Name);
+    for (const auto &entry : entries) {
+      const QString campaign_path = campaigns_dir.filePath(entry);
+      if (!seen.contains(campaign_path)) {
+        seen.insert(campaign_path);
+        files.append(campaign_path);
+      }
+    }
+  }
+  return files;
+}
+
+auto load_campaign_map_paths() -> QSet<QString> {
+  QSet<QString> map_paths;
+  const QStringList campaign_files = collect_campaign_files();
+  for (const auto &campaign_path : campaign_files) {
+    Game::Campaign::CampaignDefinition campaign;
+    QString error;
+    if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path,
+                                                          campaign, &error)) {
+      qWarning() << "Failed to load campaign for map filtering:"
+                 << campaign_path << error;
+      continue;
+    }
+
+    for (const auto &mission : campaign.missions) {
+      const QString mission_file =
+          resolve_mission_file_path(mission.mission_id);
+      if (mission_file.isEmpty()) {
+        qWarning() << "Missing mission file for campaign map filtering:"
+                   << mission.mission_id;
+        continue;
+      }
+
+      Game::Mission::MissionDefinition mission_def;
+      if (!Game::Mission::MissionLoader::loadFromJsonFile(
+              mission_file, mission_def, &error)) {
+        qWarning() << "Failed to load mission for map filtering:"
+                   << mission_file << error;
+        continue;
+      }
+
+      const QString map_path =
+          Utils::Resources::resolveResourcePath(mission_def.map_path);
+      if (!map_path.isEmpty()) {
+        map_paths.insert(map_path);
+      }
+    }
+  }
+
+  return map_paths;
+}
+
+} // namespace
+
 MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
 auto MapCatalog::availableMaps() -> QVariantList {
   QVariantList list;
+  const QSet<QString> campaign_map_paths = load_campaign_map_paths();
   const QString maps_root =
       Utils::Resources::resolveResourcePath(QStringLiteral(":/assets/maps"));
   QDir const maps_dir(maps_root);
@@ -48,6 +144,9 @@ auto MapCatalog::availableMaps() -> QVariantList {
   for (const QString &f : files) {
     QString const path =
         Utils::Resources::resolveResourcePath(maps_dir.filePath(f));
+    if (campaign_map_paths.contains(path)) {
+      continue;
+    }
     QFile file(path);
     QString name = f;
     QString desc;
@@ -134,6 +233,7 @@ void MapCatalog::load_maps_async() {
 
   m_maps.clear();
   m_pendingFiles.clear();
+  ensure_campaign_map_paths_loaded();
   m_loading = true;
   emit loading_changed(true);
 
@@ -175,10 +275,12 @@ void MapCatalog::load_next_map() {
   QString const path =
       Utils::Resources::resolveResourcePath(maps_dir.filePath(file_name));
 
-  QVariantMap const entry = loadSingleMap(path);
-  if (!entry.isEmpty()) {
-    m_maps.append(entry);
-    emit map_loaded(entry);
+  if (!m_campaign_map_paths.contains(path)) {
+    QVariantMap const entry = loadSingleMap(path);
+    if (!entry.isEmpty()) {
+      m_maps.append(entry);
+      emit map_loaded(entry);
+    }
   }
 
   if (!m_pendingFiles.isEmpty()) {
@@ -269,6 +371,15 @@ auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
   entry["thumbnail"] = thumbnail;
 
   return entry;
+}
+
+void MapCatalog::ensure_campaign_map_paths_loaded() {
+  if (m_campaign_map_paths_loaded) {
+    return;
+  }
+
+  m_campaign_map_paths = load_campaign_map_paths();
+  m_campaign_map_paths_loaded = true;
 }
 
 } // namespace Game::Map
