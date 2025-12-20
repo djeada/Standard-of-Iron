@@ -19,6 +19,12 @@ static constexpr int max_waypoint_skip_count = 4;
 static constexpr float repath_cooldown_seconds = 0.4F;
 static constexpr int kNearestPointSearchRadius = 5;
 
+// Deadlock prevention constants
+static constexpr float kStuckDetectionThreshold = 0.1F;  // Distance threshold to consider stuck
+static constexpr float kStuckTimeThreshold = 2.0F;       // Time stuck before recovery kicks in
+static constexpr float kUnstuckCooldown = 1.5F;          // Cooldown between unstuck attempts
+static constexpr float kUnstuckOffsetRadius = 1.0F;      // Random offset radius for unstuck
+
 namespace {
 
 auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
@@ -86,6 +92,80 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
   }
 
   return end_allowed && exited_blocked_zone;
+}
+
+// Detect and recover from deadlock situations
+auto try_unstuck_unit(Engine::Core::Entity *entity, 
+                      Engine::Core::TransformComponent *transform,
+                      Engine::Core::MovementComponent *movement,
+                      float unit_radius,
+                      float delta_time) -> bool {
+  // Check if unit is making progress
+  float const dx = transform->position.x - movement->last_position_x;
+  float const dz = transform->position.z - movement->last_position_z;
+  float const distance_moved = std::sqrt(dx * dx + dz * dz);
+
+  // Update stuck tracking
+  if (distance_moved < kStuckDetectionThreshold && movement->has_target) {
+    movement->time_stuck += delta_time;
+  } else {
+    movement->time_stuck = 0.0F;
+  }
+
+  // Update position tracking
+  movement->last_position_x = transform->position.x;
+  movement->last_position_z = transform->position.z;
+
+  // Decrement unstuck cooldown
+  if (movement->unstuck_cooldown > 0.0F) {
+    movement->unstuck_cooldown -= delta_time;
+  }
+
+  // If stuck for too long and not in cooldown, apply recovery
+  if (movement->time_stuck > kStuckTimeThreshold && 
+      movement->unstuck_cooldown <= 0.0F &&
+      movement->has_target) {
+    
+    Pathfinding *pathfinder = CommandService::get_pathfinder();
+    if (pathfinder != nullptr) {
+      // Try to find a nearby walkable position with a small random offset
+      Point const current_grid = CommandService::world_to_grid(
+          transform->position.x, transform->position.z);
+      
+      // Search for a nearby walkable point
+      Point const nearest = Pathfinding::find_nearest_walkable_point(
+          current_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
+      
+      if (!(nearest == current_grid)) {
+        // Move to the nearest walkable point
+        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
+        transform->position.x = safe_pos.x();
+        transform->position.z = safe_pos.z();
+        
+        // Reset stuck state and set cooldown
+        movement->time_stuck = 0.0F;
+        movement->unstuck_cooldown = kUnstuckCooldown;
+        
+        // Clear path to force repath
+        movement->clear_path();
+        movement->has_target = false;
+        movement->repath_cooldown = 0.0F;
+        
+        return true;
+      }
+    }
+    
+    // If we couldn't find a better position, just reset the path
+    movement->time_stuck = 0.0F;
+    movement->unstuck_cooldown = kUnstuckCooldown;
+    movement->clear_path();
+    movement->has_target = false;
+    movement->repath_cooldown = 0.0F;
+    
+    return true;
+  }
+
+  return false;
 }
 
 } // namespace
@@ -268,6 +348,12 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   if (movement->time_since_last_path_request < 10.0F) {
     movement->time_since_last_path_request += delta_time;
+  }
+
+  // Automatic deadlock detection and recovery
+  if (try_unstuck_unit(entity, transform, movement, unit_radius, delta_time)) {
+    // Unit was unstuck, let it repath naturally on next frame
+    return;
   }
 
   float base_speed = std::max(0.1F, unit->speed);

@@ -106,6 +106,11 @@ public:
   float last_goal_x{0.0F}, last_goal_y{0.0F};
   float time_since_last_path_request{0.0F};
 
+  // Deadlock detection and recovery
+  float last_position_x{0.0F}, last_position_z{0.0F};
+  float time_stuck{0.0F};
+  float unstuck_cooldown{0.0F};
+
   void clear_path() {
     path.clear();
     path_index = 0;
