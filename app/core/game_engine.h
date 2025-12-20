@@ -360,6 +360,9 @@ private:
   [[nodiscard]] Game::Systems::RuntimeSnapshot to_runtime_snapshot() const;
   void apply_runtime_snapshot(const Game::Systems::RuntimeSnapshot &snapshot);
   [[nodiscard]] QByteArray capture_screenshot() const;
+  void start_skirmish_internal(const QString &map_path,
+                               const QVariantList &playerConfigs,
+                               bool set_skirmish_context);
   void perform_skirmish_load(const QString &map_path,
                              const QVariantList &playerConfigs);
   void apply_mission_setup();

@@ -185,9 +185,8 @@ auto TerrainService::is_on_bridge(float world_x, float world_z) const -> bool {
   return m_height_map->isOnBridge(world_x, world_z);
 }
 
-auto TerrainService::get_bridge_center_position(float world_x,
-                                                 float world_z) const
-    -> std::optional<QVector3D> {
+auto TerrainService::get_bridge_center_position(
+    float world_x, float world_z) const -> std::optional<QVector3D> {
   if (!m_height_map) {
     return std::nullopt;
   }

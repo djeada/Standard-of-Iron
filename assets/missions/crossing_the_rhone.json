@@ -1,9 +1,9 @@
 {
   "id": "crossing_the_rhone",
   "title": "Crossing the Rhône",
-  "summary": "Capture the Roman villages across the Rhône to secure your march into Italy",
-  "teaching_goal": "Introduce bridge assaults and multi-pronged captures with cavalry and medics.",
-  "narrative_intent": "Hannibal pushes across the Rhône, forcing the Romans off their fortified villages.",
+  "summary": "Navigate through a winding maze of hills and valleys, cross the Rhône at strategic bridges, and capture both Roman villages",
+  "teaching_goal": "Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.",
+  "narrative_intent": "Hannibal's forces must find their way through treacherous terrain to reach and overcome Roman settlements guarding the Rhône crossing.",
   "map_path": ":/assets/maps/map_crossing_rhone.json",
   "player_setup": {
     "nation": "carthage",
@@ -18,15 +18,29 @@
   },
   "ai_setups": [
     {
-      "id": "roman_blocking_force",
+      "id": "roman_village_defenders",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
       "difficulty": "medium",
       "personality": {
-        "aggression": 0.6,
-        "defense": 0.7,
-        "harassment": 0.3
+        "aggression": 0.4,
+        "defense": 0.9,
+        "harassment": 0.2
+      },
+      "starting_units": [],
+      "starting_buildings": []
+    },
+    {
+      "id": "roman_patrol_forces",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "darkred",
+      "difficulty": "medium",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.5,
+        "harassment": 0.6
       },
       "starting_units": [],
       "starting_buildings": []
@@ -57,12 +71,36 @@
     {
       "trigger": {
         "type": "timer",
-        "time": 30.0
+        "time": 20.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Use your cavalry to flank the Roman positions along the river!"
+          "text": "Navigate through the maze of hills and valleys. Watch for enemy patrols!"
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 60.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Two bridges cross the Rhône. Choose your path wisely - you may need both routes!"
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 120.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "The Roman villages are heavily defended. Coordinate your attacks!"
         }
       ]
     }

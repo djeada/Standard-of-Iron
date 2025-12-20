@@ -164,7 +164,7 @@ void main() {
   vec3 lushGrass = mix(u_grassPrimary, u_grassSecondary, lushFactor);
   float dryness = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
   dryness += moistureVar * 0.15;
-  
+
   float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
   float drynessByHeight = mix(dryness, dryness * 1.15, heightFade * 0.4);
   vec3 grassColor = mix(lushGrass, u_grassDry, drynessByHeight);
@@ -224,7 +224,7 @@ void main() {
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
-  
+
   float rockDetailVariation = fbmDetail(world_coord * 0.15) * 0.5 + 0.5;
   rockColor *= mix(0.92, 1.08, rockDetailVariation);
   rockColor = mix(rockColor, rockColor * 1.12,
@@ -242,14 +242,16 @@ void main() {
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
   float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
   microNormal = normalize(normal + microGrad * microAmp);
-  
+
   float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);
-  vec3 fineNormalPerturb = vec3(
-    (fineDetail - 0.5) * 0.03,
-    0.0,
-    (triplanarNoise(v_worldPos + vec3(0.1, 0.0, 0.0), microDetailScale * 2.5) - 0.5) * 0.03
-  );
-  microNormal = normalize(microNormal + fineNormalPerturb * (0.3 + 0.7 * rockMask));
+  vec3 fineNormalPerturb =
+      vec3((fineDetail - 0.5) * 0.03, 0.0,
+           (triplanarNoise(v_worldPos + vec3(0.1, 0.0, 0.0),
+                           microDetailScale * 2.5) -
+            0.5) *
+               0.03);
+  microNormal =
+      normalize(microNormal + fineNormalPerturb * (0.3 + 0.7 * rockMask));
 
   float isFlat = 1.0 - smoothstep(0.10, 0.25, slope);
   float isHigh = smoothstep(u_soilBlendHeight + 0.5, u_soilBlendHeight + 1.5,
@@ -310,22 +312,22 @@ void main() {
 
   vec3 L = normalize(u_lightDir);
   float ndl = max(dot(microNormal, L), 0.0);
-  
+
   float skyOcclusion = smoothstep(-0.03, 0.01, -curvature);
   float ao = mix(1.0, 0.75, skyOcclusion * (1.0 - slope * 0.5));
-  
+
   float ambient = 0.32 * ao;
   float fresnel =
       pow(1.0 - max(dot(microNormal, vec3(0.0, 1.0, 0.0)), 0.0), 2.2);
 
   float surfaceRoughness = mix(0.65, 0.95, u_soilRoughness);
   surfaceRoughness = mix(surfaceRoughness, 0.42, u_moistureLevel * 0.5);
-  
+
   vec3 viewDir = normalize(vec3(0.0, 1.0, -0.5));
   vec3 halfDir = normalize(L + viewDir);
   float specAngle = max(dot(microNormal, halfDir), 0.0);
   float specular = pow(specAngle, mix(4.0, 32.0, 1.0 - surfaceRoughness));
-  
+
   float specContrib =
       fresnel * 0.14 * (1.0 - surfaceRoughness) * (1.0 - rockMask) * specular;
 
