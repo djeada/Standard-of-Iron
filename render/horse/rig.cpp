@@ -60,13 +60,18 @@ inline auto make_horse_profile_cache_key(uint32_t seed,
                                          const QVector3D &leather_base,
                                          const QVector3D &cloth_base) -> HorseProfileCacheKey {
   // Combine seed with color hashes for unique key
-  // Use all RGB components from both colors for better hash distribution
-  uint32_t color_hash = static_cast<uint32_t>(leather_base.x() * k_color_hash_multiplier);
-  color_hash ^= static_cast<uint32_t>(leather_base.y() * k_color_hash_multiplier) << 5;
-  color_hash ^= static_cast<uint32_t>(leather_base.z() * k_color_hash_multiplier) << 10;
-  color_hash ^= static_cast<uint32_t>(cloth_base.x() * k_color_hash_multiplier) << 15;
-  color_hash ^= static_cast<uint32_t>(cloth_base.y() * k_color_hash_multiplier) << 20;
-  color_hash ^= static_cast<uint32_t>(cloth_base.z() * k_color_hash_multiplier) << 25;
+  // Use all RGB components from both colors with 5 bits per channel (0-31 range)
+  // Total: 6 channels * 5 bits = 30 bits, fits in 32-bit color_hash
+  auto color_to_5bit = [](float c) -> uint32_t {
+    return static_cast<uint32_t>(std::clamp(c, 0.0F, 1.0F) * k_color_hash_multiplier);
+  };
+  
+  uint32_t color_hash = color_to_5bit(leather_base.x());
+  color_hash |= color_to_5bit(leather_base.y()) << 5;
+  color_hash |= color_to_5bit(leather_base.z()) << 10;
+  color_hash |= color_to_5bit(cloth_base.x()) << 15;
+  color_hash |= color_to_5bit(cloth_base.y()) << 20;
+  color_hash |= color_to_5bit(cloth_base.z()) << 25;
   return (static_cast<uint64_t>(seed) << 32) | static_cast<uint64_t>(color_hash);
 }
 
