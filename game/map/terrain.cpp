@@ -675,15 +675,17 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
       float const half_width_with_margin = half_width + kConnectivityMargin;
 
       int const min_x = std::max(
-          0, static_cast<int>(std::floor(grid_center_x - half_width_with_margin)));
+          0,
+          static_cast<int>(std::floor(grid_center_x - half_width_with_margin)));
       int const max_x = std::min(
           m_width - 1,
           static_cast<int>(std::ceil(grid_center_x + half_width_with_margin)));
       int const min_z = std::max(
-          0, static_cast<int>(std::floor(grid_center_z - half_width_with_margin)));
-      int const max_z =
-          std::min(m_height - 1,
-                   static_cast<int>(std::ceil(grid_center_z + half_width_with_margin)));
+          0,
+          static_cast<int>(std::floor(grid_center_z - half_width_with_margin)));
+      int const max_z = std::min(
+          m_height - 1,
+          static_cast<int>(std::ceil(grid_center_z + half_width_with_margin)));
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {

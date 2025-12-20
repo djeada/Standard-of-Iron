@@ -60,8 +60,9 @@ void handle_move_command(Engine::Core::World *world,
           target_entity->get_component<Engine::Core::UnitComponent>();
       if (target_unit != nullptr) {
         bool const is_enemy = (target_unit->owner_id != local_owner_id);
-        // Don't auto-attack buildings on right-click - only attack units
-        bool const is_building = target_entity->has_component<Engine::Core::BuildingComponent>();
+
+        bool const is_building =
+            target_entity->has_component<Engine::Core::BuildingComponent>();
         if (is_enemy && !is_building) {
           Game::Systems::CommandService::attack_target(*world, selected,
                                                        target_id, true);

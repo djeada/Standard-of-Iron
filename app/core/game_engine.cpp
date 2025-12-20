@@ -360,7 +360,7 @@ GameEngine::GameEngine(QObject *parent)
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
             on_unit_died(e);
-            // Only count enemy troops (not buildings) defeated by the local player
+
             if (Game::Units::isTroopSpawn(e.spawn_type) &&
                 e.owner_id != m_runtime.local_owner_id &&
                 e.killer_owner_id == m_runtime.local_owner_id) {

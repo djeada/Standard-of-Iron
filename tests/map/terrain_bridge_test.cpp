@@ -92,8 +92,8 @@ TEST_F(TerrainBridgeTest, BridgeHasConnectivityMargin) {
 
   // With the connectivity margin (0.5 grid cells), we should have more
   // walkable cells than just the exact bridge width
-  float walkable_ratio = static_cast<float>(walkable_count) /
-                         static_cast<float>(checked_count);
+  float walkable_ratio =
+      static_cast<float>(walkable_count) / static_cast<float>(checked_count);
   EXPECT_GT(walkable_ratio, 0.3F)
       << "Bridge should have connectivity margin for pathfinding";
 }
