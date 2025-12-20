@@ -462,16 +462,8 @@ public:
     return m_bridges;
   }
 
-  /// Checks if a world position is on any bridge
-  /// @param world_x X coordinate in world space
-  /// @param world_z Z coordinate in world space
-  /// @return true if position is within bridge bounds (including tolerance margin)
   [[nodiscard]] auto isOnBridge(float world_x, float world_z) const -> bool;
-  
-  /// Gets the center position along the bridge axis for a given world position
-  /// @param world_x X coordinate in world space
-  /// @param world_z Z coordinate in world space
-  /// @return Center position on the bridge axis, or nullopt if not on any bridge
+
   [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
       -> std::optional<QVector3D>;
 
@@ -493,8 +485,7 @@ private:
   std::vector<bool> m_hillWalkable;
   std::vector<RiverSegment> m_riverSegments;
   std::vector<Bridge> m_bridges;
-  
-  // Precomputed bridge lookup for fast per-frame queries
+
   std::vector<bool> m_onBridge;
   std::vector<QVector3D> m_bridgeCenters;
 

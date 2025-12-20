@@ -36,10 +36,10 @@ struct LevelLoadResult {
 
 class LevelLoader {
 public:
-  static auto loadFromAssets(const QString &map_path,
-                             Engine::Core::World &world,
-                             Render::GL::Renderer &renderer,
-                             Render::GL::Camera &camera) -> LevelLoadResult;
+  static auto
+  loadFromAssets(const QString &map_path, Engine::Core::World &world,
+                 Render::GL::Renderer &renderer, Render::GL::Camera &camera,
+                 bool allow_default_player_barracks = true) -> LevelLoadResult;
 };
 
 } // namespace Game::Map

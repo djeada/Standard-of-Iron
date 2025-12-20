@@ -193,8 +193,7 @@ TEST_F(TerrainBridgeTest, GetBridgeCenterPositionReturnsCenterPoint) {
       << "Should return center position for point on bridge";
 
   // The center should be on the bridge axis (z = 0)
-  EXPECT_NEAR(center->z(), 0.0F, 0.01F)
-      << "Center z should be on bridge axis";
+  EXPECT_NEAR(center->z(), 0.0F, 0.01F) << "Center z should be on bridge axis";
   EXPECT_NEAR(center->x(), 2.0F, 0.01F)
       << "Center x should match query position along bridge";
 
@@ -228,4 +227,3 @@ TEST_F(TerrainBridgeTest, GetBridgeCenterPositionWorksForDiagonalBridge) {
   EXPECT_NEAR(center->x(), center->z(), 0.5F)
       << "Center should be on diagonal bridge axis";
 }
-
