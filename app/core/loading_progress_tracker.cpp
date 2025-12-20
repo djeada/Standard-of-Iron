@@ -94,8 +94,7 @@ QString LoadingProgressTracker::stage_name(LoadingStage stage) const {
 }
 
 float LoadingProgressTracker::stage_to_progress(LoadingStage stage) const {
-  // Total stages is 14 (not 13) to ensure FINALIZING shows ~93% progress.
-  // Only COMPLETED should show 100%, preventing premature completion appearance.
+
   const float total_stages = 14.0F;
 
   switch (stage) {

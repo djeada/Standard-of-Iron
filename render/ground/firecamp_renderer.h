@@ -33,8 +33,13 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return (m_fireCampInstanceBuffer != nullptr || m_fireCampInstanceCount == 0) &&
-           !m_visibilityDirty;
+    if (m_fireCampInstances.empty()) {
+      return true;
+    }
+    if (!m_visibilityDirty && m_visibleInstances.empty()) {
+      return true;
+    }
+    return (m_fireCampInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
 private:

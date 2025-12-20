@@ -361,6 +361,7 @@ private:
   [[nodiscard]] QByteArray capture_screenshot() const;
   void perform_skirmish_load(const QString &map_path,
                              const QVariantList &playerConfigs);
+  void apply_mission_setup();
   void configure_mission_victory_conditions();
   void configure_rain_system();
   void finalize_skirmish_load();

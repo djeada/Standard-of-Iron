@@ -321,9 +321,6 @@ public:
   bool at_construction_site{false};
   bool is_placement_preview{false};
 
-  // Bypass movement flags - when set, builder ignores collision checks
-  // These are used when walking TO or FROM construction sites to prevent
-  // deadlocks caused by the construction collision area
   bool bypass_movement_active{false};
   float bypass_target_x{0.0F};
   float bypass_target_z{0.0F};

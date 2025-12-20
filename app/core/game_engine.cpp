@@ -41,6 +41,7 @@
 #include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
+#include <cmath>
 #include <memory>
 #include <optional>
 #include <qbuffer.h>
@@ -115,6 +116,7 @@
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
+#include "game/visuals/team_colors.h"
 #include "render/entity/combat_dust_renderer.h"
 #include "render/entity/healer_aura_renderer.h"
 #include "render/entity/healing_beam_renderer.h"
@@ -147,6 +149,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSet>
+#include <QStringList>
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -953,24 +956,59 @@ void GameEngine::update_loading_overlay() {
     return;
   }
 
+  if (!m_renderer || !m_renderer->resources()) {
+    m_loading_overlay_frames_remaining = 5;
+    m_loading_overlay_timer.restart();
+    return;
+  }
+
   if (m_loading_overlay_frames_remaining > 0) {
     m_loading_overlay_frames_remaining--;
   }
 
-  const bool enough_time =
-      m_loading_overlay_timer.isValid() &&
-      (m_loading_overlay_timer.elapsed() >= m_loading_overlay_min_duration_ms);
+  constexpr qint64 k_loading_overlay_max_wait_ms = 15000;
+  const qint64 elapsed_ms =
+      m_loading_overlay_timer.isValid() ? m_loading_overlay_timer.elapsed() : 0;
+  const bool enough_time = m_loading_overlay_timer.isValid() &&
+                           (elapsed_ms >= m_loading_overlay_min_duration_ms);
+  const bool exceeded_max_wait = m_loading_overlay_timer.isValid() &&
+                                 (elapsed_ms >= k_loading_overlay_max_wait_ms);
 
-  // Check if all biome renderers have initialized their GPU buffers
-  const bool biome_gpu_ready =
-      (!m_biome || m_biome->is_gpu_ready()) &&
-      (!m_pine || m_pine->is_gpu_ready()) &&
-      (!m_olive || m_olive->is_gpu_ready()) &&
-      (!m_plant || m_plant->is_gpu_ready()) &&
-      (!m_stone || m_stone->is_gpu_ready()) &&
-      (!m_firecamp || m_firecamp->is_gpu_ready());
+  QStringList pending_components;
+  const bool biome_ready = !m_biome || m_biome->is_gpu_ready();
+  const bool pine_ready = !m_pine || m_pine->is_gpu_ready();
+  const bool olive_ready = !m_olive || m_olive->is_gpu_ready();
+  const bool plant_ready = !m_plant || m_plant->is_gpu_ready();
+  const bool stone_ready = !m_stone || m_stone->is_gpu_ready();
+  const bool firecamp_ready = !m_firecamp || m_firecamp->is_gpu_ready();
 
-  if (enough_time && m_loading_overlay_frames_remaining <= 0 && biome_gpu_ready) {
+  if (!biome_ready) {
+    pending_components << QStringLiteral("biome");
+  }
+  if (!pine_ready) {
+    pending_components << QStringLiteral("pine");
+  }
+  if (!olive_ready) {
+    pending_components << QStringLiteral("olive");
+  }
+  if (!plant_ready) {
+    pending_components << QStringLiteral("plant");
+  }
+  if (!stone_ready) {
+    pending_components << QStringLiteral("stone");
+  }
+  if (!firecamp_ready) {
+    pending_components << QStringLiteral("firecamp");
+  }
+
+  const bool biome_gpu_ready = pending_components.isEmpty();
+
+  if (enough_time && m_loading_overlay_frames_remaining <= 0 &&
+      (biome_gpu_ready || exceeded_max_wait)) {
+    if (exceeded_max_wait && !biome_gpu_ready) {
+      qWarning() << "Loading overlay timed out waiting for GPU readiness"
+                 << pending_components.join(", ");
+    }
     m_loading_overlay_wait_for_first_frame = false;
     m_loading_overlay_active = false;
     if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
@@ -1435,12 +1473,14 @@ void GameEngine::start_skirmish(const QString &map_path,
   m_level.map_name = map_path;
 
   if (m_campaign_manager) {
-    Game::Mission::MissionContext skirmish_context;
-    skirmish_context.mode = "skirmish";
-    skirmish_context.campaign_id = "";
-    skirmish_context.mission_id = map_path;
-    skirmish_context.difficulty = "normal";
-    m_campaign_manager->set_mission_context(skirmish_context);
+    if (!m_campaign_manager->current_mission_context().is_campaign()) {
+      Game::Mission::MissionContext skirmish_context;
+      skirmish_context.mode = "skirmish";
+      skirmish_context.campaign_id = "";
+      skirmish_context.mission_id = map_path;
+      skirmish_context.difficulty = "normal";
+      m_campaign_manager->set_mission_context(skirmish_context);
+    }
   }
 
   if (!m_runtime.victory_state.isEmpty()) {
@@ -1527,9 +1567,357 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 
   m_runtime.local_owner_id = load_result.updated_player_id;
 
+  apply_mission_setup();
   configure_mission_victory_conditions();
   configure_rain_system();
   finalize_skirmish_load();
+}
+
+void GameEngine::apply_mission_setup() {
+  if (!m_world || !m_campaign_manager) {
+    return;
+  }
+
+  if (!m_campaign_manager->current_mission_context().is_campaign()) {
+    return;
+  }
+
+  if (!m_campaign_manager->current_mission_definition().has_value()) {
+    return;
+  }
+
+  auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+  if (!reg) {
+    qWarning() << "Mission setup skipped: unit factory registry missing";
+    return;
+  }
+
+  const auto &mission = *m_campaign_manager->current_mission_definition();
+  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+
+  Game::Map::MapDefinition map_def;
+  QString map_error;
+  const QString resolved_map_path =
+      Utils::Resources::resolveResourcePath(m_level.map_path);
+  bool map_loaded = Game::Map::MapLoader::loadFromJsonFile(resolved_map_path,
+                                                           map_def, &map_error);
+  if (!map_loaded) {
+    qWarning() << "Mission setup: failed to load map definition for"
+               << m_level.map_path << "resolved to" << resolved_map_path << "-"
+               << map_error;
+  }
+
+  bool has_map_spawns = true;
+  if (map_loaded) {
+    has_map_spawns = !map_def.spawns.empty();
+  }
+
+  bool has_mission_spawns = !mission.player_setup.starting_units.empty() ||
+                            !mission.player_setup.starting_buildings.empty();
+  for (const auto &ai_setup : mission.ai_setups) {
+    if (!ai_setup.starting_units.empty() ||
+        !ai_setup.starting_buildings.empty()) {
+      has_mission_spawns = true;
+      break;
+    }
+  }
+
+  if (has_mission_spawns && !has_map_spawns) {
+    std::vector<Engine::Core::EntityID> to_remove;
+    auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
+    to_remove.reserve(entities.size());
+    for (auto *entity : entities) {
+      if (entity != nullptr) {
+        to_remove.push_back(entity->get_id());
+      }
+    }
+    for (const auto id : to_remove) {
+      m_world->destroy_entity(id);
+    }
+  }
+
+  auto resolve_nation_id = [&nation_registry](const QString &nation_str) {
+    const auto parsed =
+        Game::Systems::nation_id_from_string(nation_str.toStdString());
+    if (parsed.has_value()) {
+      return parsed.value();
+    }
+    return nation_registry.default_nation_id();
+  };
+
+  auto mission_position_to_world = [&](const Game::Mission::Position &pos) {
+    float world_x = pos.x;
+    float world_z = pos.z;
+    if (map_loaded && map_def.coordSystem == Game::Map::CoordSystem::Grid) {
+      const float tile = std::max(0.0001F, map_def.grid.tile_size);
+      world_x = (pos.x - (map_def.grid.width * 0.5F - 0.5F)) * tile;
+      world_z = (pos.z - (map_def.grid.height * 0.5F - 0.5F)) * tile;
+    } else if (!map_loaded) {
+      const float tile = std::max(0.0001F, m_level.tile_size);
+      world_x = (pos.x - (m_level.grid_width * 0.5F - 0.5F)) * tile;
+      world_z = (pos.z - (m_level.grid_height * 0.5F - 0.5F)) * tile;
+    }
+    return QVector3D(world_x, 0.0F, world_z);
+  };
+
+  auto apply_team_color = [&](Engine::Core::Entity *entity, int owner_id) {
+    if (entity == nullptr) {
+      return;
+    }
+    auto *renderable =
+        entity->get_component<Engine::Core::RenderableComponent>();
+    if (renderable == nullptr) {
+      return;
+    }
+    const QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
+    renderable->color[0] = team_color.x();
+    renderable->color[1] = team_color.y();
+    renderable->color[2] = team_color.z();
+  };
+
+  auto parse_color = [](const QString &color_name,
+                        std::array<float, 3> &out) -> bool {
+    if (color_name.isEmpty()) {
+      return false;
+    }
+
+    const QString trimmed = color_name.trimmed();
+    if (trimmed.startsWith('#') && trimmed.length() == 7) {
+      bool ok = false;
+      int r = trimmed.mid(1, 2).toInt(&ok, 16);
+      if (!ok) {
+        return false;
+      }
+      int g = trimmed.mid(3, 2).toInt(&ok, 16);
+      if (!ok) {
+        return false;
+      }
+      int b = trimmed.mid(5, 2).toInt(&ok, 16);
+      if (!ok) {
+        return false;
+      }
+      constexpr float scale = 255.0F;
+      out = {r / scale, g / scale, b / scale};
+      return true;
+    }
+
+    const QString lowered = trimmed.toLower();
+    if (lowered == "red") {
+      out = {1.00F, 0.30F, 0.30F};
+      return true;
+    }
+    if (lowered == "brown") {
+      out = {0.55F, 0.36F, 0.18F};
+      return true;
+    }
+    if (lowered == "blue") {
+      out = {0.20F, 0.55F, 1.00F};
+      return true;
+    }
+    if (lowered == "green") {
+      out = {0.20F, 0.80F, 0.40F};
+      return true;
+    }
+    if (lowered == "yellow") {
+      out = {1.00F, 0.80F, 0.20F};
+      return true;
+    }
+    if (lowered == "orange") {
+      out = {0.95F, 0.55F, 0.10F};
+      return true;
+    }
+    if (lowered == "white") {
+      out = {0.95F, 0.95F, 0.95F};
+      return true;
+    }
+    if (lowered == "black") {
+      out = {0.15F, 0.15F, 0.15F};
+      return true;
+    }
+
+    return false;
+  };
+
+  auto apply_owner_color = [&](int owner_id, const QString &color_name) {
+    std::array<float, 3> color;
+    if (!parse_color(color_name, color)) {
+      return;
+    }
+    owner_registry.set_owner_color(owner_id, color[0], color[1], color[2]);
+  };
+
+  auto spawn_units_for_owner =
+      [&](int owner_id, const Game::Systems::NationID nation_id,
+          const std::vector<Game::Mission::UnitSetup> &units) {
+        const bool ai_controlled = owner_registry.is_ai(owner_id);
+        for (const auto &unit_setup : units) {
+          const auto spawn_type =
+              Game::Units::spawn_typeFromString(unit_setup.type.toStdString());
+          if (!spawn_type.has_value()) {
+            qWarning() << "Mission setup: unknown unit type" << unit_setup.type;
+            continue;
+          }
+
+          const int count = std::max(1, unit_setup.count);
+          const int grid =
+              static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
+          const QVector3D base_pos =
+              mission_position_to_world(unit_setup.position);
+          float base_tile_size = m_level.tile_size;
+          if (map_loaded &&
+              map_def.coordSystem == Game::Map::CoordSystem::Grid) {
+            base_tile_size = map_def.grid.tile_size;
+          }
+          const float spacing = std::max(0.5F, base_tile_size * 1.2F);
+
+          for (int i = 0; i < count; ++i) {
+            const int row = i / grid;
+            const int col = i % grid;
+            const float offset_x = (float(col) - (grid - 1) * 0.5F) * spacing;
+            const float offset_z = (float(row) - (grid - 1) * 0.5F) * spacing;
+            const QVector3D pos = QVector3D(
+                base_pos.x() + offset_x, base_pos.y(), base_pos.z() + offset_z);
+
+            Game::Units::SpawnParams sp;
+            sp.position = pos;
+            sp.player_id = owner_id;
+            sp.spawn_type = spawn_type.value();
+            sp.ai_controlled = ai_controlled;
+            sp.nation_id = nation_id;
+
+            auto unit = reg->create(sp.spawn_type, *m_world, sp);
+            if (!unit) {
+              qWarning() << "Mission setup: failed to spawn unit"
+                         << unit_setup.type << "for owner" << owner_id;
+              continue;
+            }
+            apply_team_color(m_world->get_entity(unit->id()), owner_id);
+          }
+        }
+      };
+
+  auto spawn_buildings_for_owner =
+      [&](int owner_id, const Game::Systems::NationID nation_id,
+          const std::vector<Game::Mission::BuildingSetup> &buildings) {
+        const bool ai_controlled = owner_registry.is_ai(owner_id);
+        for (const auto &building_setup : buildings) {
+          const auto spawn_type = Game::Units::spawn_typeFromString(
+              building_setup.type.toStdString());
+          if (!spawn_type.has_value()) {
+            qWarning() << "Mission setup: unknown building type"
+                       << building_setup.type;
+            continue;
+          }
+
+          const QVector3D pos =
+              mission_position_to_world(building_setup.position);
+
+          Game::Units::SpawnParams sp;
+          sp.position = pos;
+          sp.player_id = owner_id;
+          sp.spawn_type = spawn_type.value();
+          sp.ai_controlled = ai_controlled;
+          sp.nation_id = nation_id;
+          sp.max_population = building_setup.max_population;
+
+          auto unit = reg->create(sp.spawn_type, *m_world, sp);
+          if (!unit) {
+            qWarning() << "Mission setup: failed to spawn building"
+                       << building_setup.type << "for owner" << owner_id;
+            continue;
+          }
+          apply_team_color(m_world->get_entity(unit->id()), owner_id);
+        }
+      };
+
+  const int local_owner_id = m_runtime.local_owner_id;
+  if (owner_registry.get_owner_type(local_owner_id) ==
+      Game::Systems::OwnerType::Neutral) {
+    owner_registry.register_owner_with_id(
+        local_owner_id, Game::Systems::OwnerType::Player,
+        "Player " + std::to_string(local_owner_id));
+  }
+  owner_registry.set_owner_team(local_owner_id, 0);
+
+  const auto player_nation_id = resolve_nation_id(mission.player_setup.nation);
+  nation_registry.set_player_nation(local_owner_id, player_nation_id);
+  apply_owner_color(local_owner_id, mission.player_setup.color);
+
+  spawn_units_for_owner(local_owner_id, player_nation_id,
+                        mission.player_setup.starting_units);
+  spawn_buildings_for_owner(local_owner_id, player_nation_id,
+                            mission.player_setup.starting_buildings);
+
+  int ai_owner_id = 2;
+  int team_id = 1;
+  for (const auto &ai_setup : mission.ai_setups) {
+    if (owner_registry.get_owner_type(ai_owner_id) ==
+        Game::Systems::OwnerType::Neutral) {
+      owner_registry.register_owner_with_id(
+          ai_owner_id, Game::Systems::OwnerType::AI,
+          "AI Player " + std::to_string(ai_owner_id));
+    }
+    owner_registry.set_owner_team(ai_owner_id, team_id);
+
+    const auto ai_nation_id = resolve_nation_id(ai_setup.nation);
+    nation_registry.set_player_nation(ai_owner_id, ai_nation_id);
+    apply_owner_color(ai_owner_id, ai_setup.color);
+
+    spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
+    spawn_buildings_for_owner(ai_owner_id, ai_nation_id,
+                              ai_setup.starting_buildings);
+    ai_owner_id++;
+    team_id++;
+  }
+
+  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
+  for (auto *entity : entities) {
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+    apply_team_color(entity, unit->owner_id);
+  }
+
+  if (mission.id == "crossing_the_rhone") {
+    std::vector<Engine::Core::EntityID> to_remove;
+    for (auto *entity : entities) {
+      if (entity == nullptr) {
+        continue;
+      }
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit == nullptr) {
+        continue;
+      }
+      if (unit->owner_id == local_owner_id &&
+          unit->spawn_type == Game::Units::SpawnType::Barracks) {
+        to_remove.push_back(entity->get_id());
+      }
+    }
+    for (const auto id : to_remove) {
+      m_world->destroy_entity(id);
+    }
+  }
+
+  if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
+    ai_system->reinitialize();
+  }
+
+  int prev_selected_player = m_selected_player_id;
+  GameStateRestorer::rebuild_registries_after_load(
+      m_world.get(), m_selected_player_id, m_level, m_runtime.local_owner_id);
+  GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
+                                          m_runtime.local_owner_id);
+
+  if (m_selected_player_id != prev_selected_player) {
+    emit selected_player_id_changed();
+  }
+  emit troop_count_changed();
+  emit owner_info_changed();
 }
 
 void GameEngine::configure_mission_victory_conditions() {

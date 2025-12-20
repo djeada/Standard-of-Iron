@@ -72,6 +72,8 @@ struct Condition {
   QString description;
   std::optional<float> duration;
   std::optional<QString> structure_type;
+  std::vector<QString> structure_types;
+  std::optional<int> min_count;
 };
 
 struct EventTrigger {
