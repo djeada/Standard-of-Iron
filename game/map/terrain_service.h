@@ -1,7 +1,9 @@
 #pragma once
 
 #include "terrain.h"
+#include <QVector3D>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Game::Map {
@@ -53,6 +55,12 @@ public:
 
   [[nodiscard]] auto is_point_on_road(float world_x,
                                       float world_z) const -> bool;
+
+  [[nodiscard]] auto is_on_bridge(float world_x, float world_z) const -> bool;
+
+  [[nodiscard]] auto get_bridge_center_position(float world_x,
+                                                 float world_z) const
+      -> std::optional<QVector3D>;
 
   [[nodiscard]] auto is_initialized() const -> bool {
     return m_height_map != nullptr;
