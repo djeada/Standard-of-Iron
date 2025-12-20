@@ -217,6 +217,22 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
   out_mission.summary = root["summary"].toString();
   out_mission.map_path = root["map_path"].toString();
 
+  if (root.contains("teaching_goal")) {
+    out_mission.teaching_goal = root["teaching_goal"].toString();
+  }
+
+  if (root.contains("narrative_intent")) {
+    out_mission.narrative_intent = root["narrative_intent"].toString();
+  }
+
+  if (root.contains("historical_context")) {
+    out_mission.historical_context = root["historical_context"].toString();
+  }
+
+  if (root.contains("terrain_type")) {
+    out_mission.terrain_type = root["terrain_type"].toString();
+  }
+
   if (root.contains("player_setup")) {
     out_mission.player_setup =
         parsePlayerSetup(root["player_setup"].toObject());
@@ -241,6 +257,14 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     const QJsonArray defeat = root["defeat_conditions"].toArray();
     for (const auto &cond_val : defeat) {
       out_mission.defeat_conditions.push_back(
+          parseCondition(cond_val.toObject()));
+    }
+  }
+
+  if (root.contains("optional_objectives")) {
+    const QJsonArray optional = root["optional_objectives"].toArray();
+    for (const auto &cond_val : optional) {
+      out_mission.optional_objectives.push_back(
           parseCondition(cond_val.toObject()));
     }
   }

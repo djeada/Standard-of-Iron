@@ -1,0 +1,89 @@
+{
+  "provinces": [
+    {
+      "id": "iberia_carthaginian",
+      "name": "Carthaginian Iberia",
+      "region": "iberia"
+    },
+    {
+      "id": "iberia_interior",
+      "name": "Iberian Interior",
+      "region": "iberia"
+    },
+    {
+      "id": "transalpine_gaul",
+      "name": "Transalpine Gaul",
+      "region": "gaul"
+    },
+    {
+      "id": "cisalpine_gaul",
+      "name": "Cisalpine Gaul",
+      "region": "northern_italy"
+    },
+    {
+      "id": "etruria",
+      "name": "Etruria",
+      "region": "central_italy"
+    },
+    {
+      "id": "roman_core",
+      "name": "Roman Core",
+      "region": "central_italy"
+    },
+    {
+      "id": "southern_italy",
+      "name": "Southern Italy",
+      "region": "southern_italy"
+    },
+    {
+      "id": "sicily_roman",
+      "name": "Sicily (Roman)",
+      "region": "sicily"
+    },
+    {
+      "id": "sicily_carthaginian",
+      "name": "Sicily (Carthage)",
+      "region": "sicily"
+    },
+    {
+      "id": "sardinia",
+      "name": "Sardinia",
+      "region": "islands"
+    },
+    {
+      "id": "corsica",
+      "name": "Corsica",
+      "region": "islands"
+    },
+    {
+      "id": "carthage_core",
+      "name": "Carthage Core",
+      "region": "africa"
+    },
+    {
+      "id": "numidia",
+      "name": "Numidia",
+      "region": "africa"
+    },
+    {
+      "id": "libya",
+      "name": "Libya",
+      "region": "africa"
+    },
+    {
+      "id": "illyria",
+      "name": "Illyria",
+      "region": "balkans"
+    }
+  ],
+  "mission_region_mapping": {
+    "crossing_the_rhone": "transalpine_gaul",
+    "battle_of_ticino": "cisalpine_gaul",
+    "battle_of_trebia": "cisalpine_gaul",
+    "battle_of_trasimene": "etruria",
+    "battle_of_cannae": "southern_italy",
+    "campania_campaign": "southern_italy",
+    "crossing_the_alps": "cisalpine_gaul",
+    "battle_of_zama": "carthage_core"
+  }
+}
