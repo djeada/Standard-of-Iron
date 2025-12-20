@@ -24,6 +24,10 @@ public:
 
   void clear();
 
+  [[nodiscard]] bool is_gpu_ready() const {
+    return m_stoneInstanceBuffer != nullptr || m_stoneInstanceCount == 0;
+  }
+
 private:
   void generate_stone_instances();
 

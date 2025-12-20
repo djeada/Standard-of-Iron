@@ -24,6 +24,11 @@ public:
 
   void clear();
 
+  [[nodiscard]] bool is_gpu_ready() const {
+    return (m_plantInstanceBuffer != nullptr || m_plantInstanceCount == 0) &&
+           !m_visibilityDirty;
+  }
+
 private:
   void generate_plant_instances();
 
