@@ -17,7 +17,6 @@
 namespace Render::GL::Carthage {
 namespace {
 
-
 using Render::Geom::clamp01;
 using Render::Geom::clampVec01;
 using Render::Geom::cylinder_between;
@@ -67,7 +66,8 @@ void drawHomeBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c, BuildingState state) {
+                   Texture *white, const CarthagePalette &c,
+                   BuildingState state) {
   float const wall_height = 0.8F;
   float height_multiplier = 1.0F;
 
@@ -96,7 +96,8 @@ void drawHomeWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawHomeRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthagePalette &c, BuildingState state) {
+                  Texture *white, const CarthagePalette &c,
+                  BuildingState state) {
   if (state == BuildingState::Destroyed) {
     return;
   }

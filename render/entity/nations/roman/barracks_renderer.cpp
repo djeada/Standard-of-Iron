@@ -204,8 +204,7 @@ void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c,
-                  BuildingState state) {
+                  Texture *white, const RomanPalette &c, BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
     return;

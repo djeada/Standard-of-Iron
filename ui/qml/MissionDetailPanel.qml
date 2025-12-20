@@ -29,13 +29,12 @@ Rectangle {
     signal start_mission_clicked()
 
     function load_mission_definition() {
-        if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition) {
+        if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition)
             mission_definition = game.get_mission_definition(mission_data.mission_id);
-        }
+
     }
 
     onMission_dataChanged: load_mission_definition()
-
     radius: Theme.radiusMedium
     color: Theme.panelBase
     border.color: Theme.panelBr
@@ -221,7 +220,8 @@ Rectangle {
                                     return [];
 
                                 var units = mission_definition.player_setup.starting_units;
-                                var grouped = {};
+                                var grouped = {
+                                };
                                 for (var i = 0; i < units.length; i++) {
                                     var unit = units[i];
                                     var type = unit.type || "unknown";

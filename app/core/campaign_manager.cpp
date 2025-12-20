@@ -71,11 +71,10 @@ void CampaignManager::start_campaign_mission(const QString &mission_path,
   m_current_mission_id = mission_id;
   m_current_mission_definition = mission;
 
-  // Set mission context for campaign mission
   m_current_mission_context.mode = "campaign";
   m_current_mission_context.campaign_id = campaign_id;
   m_current_mission_context.mission_id = mission_id;
-  m_current_mission_context.difficulty = "normal"; // Default difficulty
+  m_current_mission_context.difficulty = "normal";
 
   emit current_campaign_changed();
   emit current_mission_changed();
@@ -90,14 +89,10 @@ void CampaignManager::mark_current_mission_completed() {
   qInfo() << "Campaign mission" << m_current_campaign_id << "/"
           << m_current_mission_id << "marked as completed";
 
-  // Save to database
   auto *save_service = Game::Systems::SaveLoadService::instance();
   if (save_service != nullptr) {
     QString error;
-    // TODO: Track actual mission completion time instead of using 0.0F
-    // This could be useful for statistics and leaderboards
-    // Note: This is only called on victory (from victory callback),
-    // defeat scenarios don't call this method
+
     bool saved = save_service->save_mission_result(
         m_current_mission_id, m_current_mission_context.mode,
         m_current_campaign_id, true, "victory",
@@ -106,7 +101,7 @@ void CampaignManager::mark_current_mission_completed() {
     if (!saved) {
       qWarning() << "Failed to save mission result:" << error;
     } else {
-      // Unlock next mission if this was a campaign mission
+
       if (m_current_mission_context.is_campaign()) {
         bool unlocked = save_service->unlock_next_campaign_mission(
             m_current_campaign_id, m_current_mission_id, &error);

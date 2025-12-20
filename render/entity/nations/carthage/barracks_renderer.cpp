@@ -178,7 +178,8 @@ void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c, BuildingState state) {
+                      Texture *white, const CarthagePalette &c,
+                      BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
     return;
