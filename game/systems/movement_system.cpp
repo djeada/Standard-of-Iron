@@ -635,6 +635,77 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
+  // Handle bridge centering and hill entrance centering
+  if (terrain.is_initialized()) {
+    // Check if unit is on a bridge and center it
+    if (terrain.is_on_bridge(transform->position.x, transform->position.z)) {
+      auto bridge_center = terrain.get_bridge_center_position(
+          transform->position.x, transform->position.z);
+      if (bridge_center.has_value()) {
+        // Gently pull unit toward bridge center
+        constexpr float kBridgeCenteringStrength = 0.15F;
+        float const dx = bridge_center->x() - transform->position.x;
+        float const dz = bridge_center->z() - transform->position.z;
+        transform->position.x += dx * kBridgeCenteringStrength;
+        transform->position.z += dz * kBridgeCenteringStrength;
+        
+        // Track terrain context for audio
+        auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+        if (terrain_ctx == nullptr) {
+          terrain_ctx = entity->add_component<Engine::Core::TerrainContextComponent>();
+        }
+        
+        // Trigger bridge shout if just entered bridge
+        if (!terrain_ctx->is_on_bridge && terrain_ctx->audio_cooldown <= 0.0F) {
+          // Trigger audio event for bridge shout
+          Engine::Core::EventManager::getInstance().publish(
+              Engine::Core::AudioTriggerEvent("bridge_shout", 0.7F, false, 50));
+          terrain_ctx->audio_cooldown = Engine::Core::TerrainContextComponent::kAudioCooldownTime;
+        }
+        terrain_ctx->is_on_bridge = true;
+      }
+    } else {
+      // Not on bridge anymore
+      auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+      if (terrain_ctx != nullptr) {
+        terrain_ctx->is_on_bridge = false;
+      }
+    }
+    
+    // Check if unit is at a hill entrance and center it
+    int const grid_x = static_cast<int>(std::round(transform->position.x));
+    int const grid_z = static_cast<int>(std::round(transform->position.z));
+    if (terrain.is_hill_entrance(grid_x, grid_z)) {
+      // Center unit on hill entrance grid cell
+      constexpr float kHillEntranceCenteringStrength = 0.2F;
+      float const center_x = static_cast<float>(grid_x);
+      float const center_z = static_cast<float>(grid_z);
+      float const dx = center_x - transform->position.x;
+      float const dz = center_z - transform->position.z;
+      transform->position.x += dx * kHillEntranceCenteringStrength;
+      transform->position.z += dz * kHillEntranceCenteringStrength;
+      
+      // Track terrain context
+      auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+      if (terrain_ctx == nullptr) {
+        terrain_ctx = entity->add_component<Engine::Core::TerrainContextComponent>();
+      }
+      terrain_ctx->is_at_hill_entrance = true;
+    } else {
+      // Not at hill entrance
+      auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+      if (terrain_ctx != nullptr) {
+        terrain_ctx->is_at_hill_entrance = false;
+      }
+    }
+    
+    // Update audio cooldown
+    auto *terrain_ctx = entity->get_component<Engine::Core::TerrainContextComponent>();
+    if (terrain_ctx != nullptr && terrain_ctx->audio_cooldown > 0.0F) {
+      terrain_ctx->audio_cooldown = std::max(0.0F, terrain_ctx->audio_cooldown - delta_time);
+    }
+  }
+
   if (!entity->has_component<Engine::Core::BuildingComponent>()) {
     float const speed2 =
         movement->vx * movement->vx + movement->vz * movement->vz;

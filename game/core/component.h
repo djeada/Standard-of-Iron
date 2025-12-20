@@ -469,6 +469,17 @@ public:
   }
 };
 
+class TerrainContextComponent : public Component {
+public:
+  TerrainContextComponent() = default;
+
+  bool is_on_bridge{false};
+  bool is_at_hill_entrance{false};
+  float audio_cooldown{0.0F};
+  
+  static constexpr float kAudioCooldownTime = 5.0F; // 5 seconds between shouts
+};
+
 class HomeComponent : public Component {
 public:
   HomeComponent() = default;

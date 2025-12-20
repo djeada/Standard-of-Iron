@@ -739,4 +739,70 @@ void TerrainHeightMap::restoreFromData(
   m_bridges = bridges;
 }
 
+auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
+  constexpr float kToleranceMargin = 0.5F;
+
+  for (const auto &bridge : m_bridges) {
+    QVector3D const dir = bridge.end - bridge.start;
+    float const length = dir.length();
+    if (length < 0.01F) {
+      continue;
+    }
+
+    QVector3D const normalized_dir = dir / length;
+    QVector3D const perpendicular(-normalized_dir.z(), 0.0F,
+                                  normalized_dir.x());
+
+    QVector3D const point(world_x, 0.0F, world_z);
+    QVector3D const to_point = point - bridge.start;
+
+    float const along = QVector3D::dotProduct(to_point, normalized_dir);
+    if (along < -kToleranceMargin || along > length + kToleranceMargin) {
+      continue;
+    }
+
+    float const across = QVector3D::dotProduct(to_point, perpendicular);
+    float const half_width = bridge.width * 0.5F;
+    if (std::abs(across) <= half_width + kToleranceMargin) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto TerrainHeightMap::getBridgeCenterPosition(float world_x,
+                                                float world_z) const
+    -> std::optional<QVector3D> {
+  constexpr float kToleranceMargin = 0.5F;
+
+  for (const auto &bridge : m_bridges) {
+    QVector3D const dir = bridge.end - bridge.start;
+    float const length = dir.length();
+    if (length < 0.01F) {
+      continue;
+    }
+
+    QVector3D const normalized_dir = dir / length;
+    QVector3D const perpendicular(-normalized_dir.z(), 0.0F,
+                                  normalized_dir.x());
+
+    QVector3D const point(world_x, 0.0F, world_z);
+    QVector3D const to_point = point - bridge.start;
+
+    float const along = QVector3D::dotProduct(to_point, normalized_dir);
+    if (along < -kToleranceMargin || along > length + kToleranceMargin) {
+      continue;
+    }
+
+    float const across = QVector3D::dotProduct(to_point, perpendicular);
+    float const half_width = bridge.width * 0.5F;
+    if (std::abs(across) <= half_width + kToleranceMargin) {
+      QVector3D const center_on_bridge =
+          bridge.start + normalized_dir * along;
+      return center_on_bridge;
+    }
+  }
+  return std::nullopt;
+}
+
 } // namespace Game::Map

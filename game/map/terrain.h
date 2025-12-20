@@ -462,6 +462,11 @@ public:
     return m_bridges;
   }
 
+  [[nodiscard]] auto isOnBridge(float world_x, float world_z) const -> bool;
+  
+  [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
+      -> std::optional<QVector3D>;
+
   void applyBiomeVariation(const BiomeSettings &settings);
 
   void restoreFromData(const std::vector<float> &heights,
