@@ -118,8 +118,7 @@ TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
 
   // Since building is excluded, should use ranged mode (default for
   // ranged-capable units)
-  EXPECT_EQ(attacker_attack->current_mode,
-            AttackComponent::CombatMode::Ranged);
+  EXPECT_EQ(attacker_attack->current_mode, AttackComponent::CombatMode::Ranged);
 }
 
 TEST_F(CombatModeTest, RangedUnitUsesRangedModeWhenNotEngaged) {
@@ -146,7 +145,6 @@ TEST_F(CombatModeTest, RangedUnitUsesRangedModeWhenNotEngaged) {
   Combat::update_combat_mode(attacker, world.get(), attacker_attack);
 
   // Ranged unit should be in ranged mode
-  EXPECT_EQ(attacker_attack->current_mode,
-            AttackComponent::CombatMode::Ranged);
+  EXPECT_EQ(attacker_attack->current_mode, AttackComponent::CombatMode::Ranged);
   EXPECT_FALSE(attacker_attack->in_melee_lock);
 }
