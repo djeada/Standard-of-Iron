@@ -237,8 +237,8 @@ Item {
 
         property var campaignData: null
         property real mapOrbitYaw: 180
-        property real mapOrbitPitch: 55
-        property real mapOrbitDistance: 2.4
+        property real mapOrbitPitch: 90
+        property real mapOrbitDistance: 1.2
         property var provinceLabels: []
         property string hoverProvinceName: ""
         property string hoverProvinceOwner: ""
@@ -352,8 +352,8 @@ Item {
         }
         onCampaignDataChanged: {
             mapOrbitYaw = 180;
-            mapOrbitPitch = 55;
-            mapOrbitDistance = 2.4;
+            mapOrbitPitch = 90;
+            mapOrbitDistance = 1.2;
         }
         visible: false
         anchors.fill: parent
@@ -446,7 +446,7 @@ Item {
                             lastX = mouse.x;
                             lastY = mouse.y;
                             missionDetailPanel.mapOrbitYaw += dx * 0.4;
-                            missionDetailPanel.mapOrbitPitch = Math.max(5, Math.min(85, missionDetailPanel.mapOrbitPitch + dy * 0.4));
+                            missionDetailPanel.mapOrbitPitch = Math.max(5, Math.min(90, missionDetailPanel.mapOrbitPitch + dy * 0.4));
                         }
                         onMouseXChanged: function() {
                             if (!hoverEnabled)
