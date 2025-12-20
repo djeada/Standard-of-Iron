@@ -8,7 +8,7 @@ auto EquipmentRegistry::instance() -> EquipmentRegistry & {
   return registry;
 }
 
-void EquipmentRegistry::registerEquipment(
+void EquipmentRegistry::register_equipment(
     EquipmentCategory category, const std::string &id,
     std::shared_ptr<IEquipmentRenderer> renderer) {
   if (renderer == nullptr) {

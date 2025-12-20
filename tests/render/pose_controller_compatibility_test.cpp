@@ -80,7 +80,7 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
 }
 
 TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
-  // Verify that placeHandAt uses the same IK as direct manipulation
+  // Verify that place_hand_at uses the same IK as direct manipulation
 
   // Create a copy for legacy approach
   HumanoidPose legacy_pose = pose;
@@ -98,7 +98,7 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
 
   // New controller approach
   HumanoidPoseController controller(pose, anim_ctx);
-  controller.placeHandAt(false, target_hand);
+  controller.place_hand_at(false, target_hand);
 
   // Hand should be at target
   EXPECT_TRUE(approxEqual(pose.hand_r, target_hand, 0.001F));
@@ -201,10 +201,10 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateBowAimingPose) {
 
   // Position hands for bow
   float const lowered_shoulder_y = pose.shoulder_l.y();
-  controller.placeHandAt(true,
-                         QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
-  controller.placeHandAt(false,
-                         QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
+  controller.place_hand_at(
+      true, QVector3D(-0.15F, lowered_shoulder_y + 0.30F, 0.55F));
+  controller.place_hand_at(
+      false, QVector3D(0.12F, pose.shoulder_r.y() + 0.15F, 0.10F));
 
   // Verify pose is in a reasonable configuration
   EXPECT_LT(pose.pelvis_pos.y(), HP::WAIST_Y);     // Kneeling
@@ -224,11 +224,11 @@ TEST_F(PoseControllerCompatibilityTest, CanRecreateMeleeAttackPose) {
 
   // Thrust position
   QVector3D const thrust_hand(0.32F, HP::SHOULDER_Y + 0.10F, 0.90F);
-  controller.placeHandAt(false, thrust_hand);
+  controller.place_hand_at(false, thrust_hand);
 
   // Support hand
-  controller.placeHandAt(true,
-                         QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
+  controller.place_hand_at(true,
+                           QVector3D(-0.05F, HP::SHOULDER_Y + 0.03F, 0.53F));
 
   // Verify thrust pose characteristics
   EXPECT_GT(pose.hand_r.z(), 0.80F);                // Hand extended forward

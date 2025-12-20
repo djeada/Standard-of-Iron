@@ -11,8 +11,8 @@ namespace BackendPipelines {
 
 class EffectsPipeline final : public IPipeline {
 public:
-  explicit EffectsPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit EffectsPipeline(GL::Backend *backend, GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~EffectsPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;

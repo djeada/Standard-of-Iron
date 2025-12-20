@@ -48,7 +48,7 @@ public:
 
     apply_color(style.cloth_color, v.palette.cloth);
     apply_color(style.leather_color, v.palette.leather);
-    apply_color(style.leather_dark_color, v.palette.leatherDark);
+    apply_color(style.leather_dark_color, v.palette.leather_dark);
     apply_color(style.metal_color, v.palette.metal);
   }
 
@@ -61,7 +61,7 @@ public:
   }
 };
 
-auto makeMountedKnightConfig() -> MountedKnightRendererConfig {
+auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
   config.sword_equipment_id = "sword_carthage";
   config.shield_equipment_id = "shield_carthage_cavalry";
@@ -84,7 +84,7 @@ void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
       "troops/carthage/horse_swordsman",
       [](const DrawContext &ctx, ISubmitter &out) {
         static CarthageMountedKnightRenderer const static_renderer(
-            makeMountedKnightConfig());
+            make_mounted_knight_config());
         Shader *horse_swordsman_shader = nullptr;
         if (ctx.backend != nullptr) {
           QString shader_key = static_renderer.resolve_shader_key(ctx);

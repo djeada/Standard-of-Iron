@@ -17,7 +17,7 @@ void initialize_cylinder_pipeline(Backend *backend);
 
 void shutdown_cylinder_pipeline(Backend *backend);
 
-void cacheCylinderUniforms(Backend *backend);
+void cache_cylinder_uniforms(Backend *backend);
 
 void upload_cylinder_instances(Backend *backend, std::size_t count);
 
@@ -27,7 +27,7 @@ void initialize_fog_pipeline(Backend *backend);
 
 void shutdown_fog_pipeline(Backend *backend);
 
-void cacheFogUniforms(Backend *backend);
+void cache_fog_uniforms(Backend *backend);
 
 void upload_fog_instances(Backend *backend, std::size_t count);
 

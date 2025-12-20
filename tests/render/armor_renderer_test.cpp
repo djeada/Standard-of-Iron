@@ -12,7 +12,7 @@ using namespace Render::GL;
 class ArmorRendererTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    registerBuiltInEquipment();
+    register_built_in_equipment();
     registry = &EquipmentRegistry::instance();
   }
 

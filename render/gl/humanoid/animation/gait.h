@@ -4,7 +4,7 @@
 
 namespace Render::GL {
 
-auto classifyMotionState(const AnimationInputs &anim,
-                         float move_speed) -> HumanoidMotionState;
+auto classify_motion_state(const AnimationInputs &anim,
+                           float move_speed) -> HumanoidMotionState;
 
 }

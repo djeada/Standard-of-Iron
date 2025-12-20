@@ -12,8 +12,9 @@ namespace BackendPipelines {
 
 class CharacterPipeline final : public IPipeline {
 public:
-  explicit CharacterPipeline(GL::Backend *backend, GL::ShaderCache *shaderCache)
-      : m_backend(backend), m_shaderCache(shaderCache) {}
+  explicit CharacterPipeline(GL::Backend *backend,
+                             GL::ShaderCache *shader_cache)
+      : m_backend(backend), m_shaderCache(shader_cache) {}
   ~CharacterPipeline() override { shutdown(); }
 
   auto initialize() -> bool override;
@@ -53,7 +54,7 @@ private:
   void cache_knight_uniforms();
   void cache_spearman_uniforms();
   BasicUniforms buildUniformSet(GL::Shader *shader) const;
-  void cache_nation_variants(const QString &baseKey);
+  void cache_nation_variants(const QString &base_key);
 };
 
 } // namespace BackendPipelines

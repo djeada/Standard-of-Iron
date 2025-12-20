@@ -13,7 +13,7 @@ namespace Render::GL::BackendPipelines {
 
 class PrimitiveBatchPipeline : public IPipeline {
 public:
-  explicit PrimitiveBatchPipeline(GL::ShaderCache *shaderCache);
+  explicit PrimitiveBatchPipeline(GL::ShaderCache *shader_cache);
   ~PrimitiveBatchPipeline() override;
 
   auto initialize() -> bool override;

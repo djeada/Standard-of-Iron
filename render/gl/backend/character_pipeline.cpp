@@ -112,14 +112,14 @@ auto CharacterPipeline::buildUniformSet(GL::Shader *shader) const
   return uniforms;
 }
 
-void CharacterPipeline::cache_nation_variants(const QString &baseKey) {
+void CharacterPipeline::cache_nation_variants(const QString &base_key) {
   if (m_shaderCache == nullptr) {
     return;
   }
   static const QStringList nations{QStringLiteral("roman_republic"),
                                    QStringLiteral("carthage")};
   for (const QString &nation : nations) {
-    const QString shaderName = baseKey + QStringLiteral("_") + nation;
+    const QString shaderName = base_key + QStringLiteral("_") + nation;
     if (GL::Shader *variant = m_shaderCache->get(shaderName)) {
       m_uniformCache.emplace(variant, buildUniformSet(variant));
     }

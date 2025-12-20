@@ -13,8 +13,8 @@ namespace Render::GL::BackendPipelines {
 using namespace Render::GL::VertexAttrib;
 using namespace Render::GL::ComponentCount;
 
-PrimitiveBatchPipeline::PrimitiveBatchPipeline(ShaderCache *shaderCache)
-    : m_shader_cache(shaderCache) {}
+PrimitiveBatchPipeline::PrimitiveBatchPipeline(ShaderCache *shader_cache)
+    : m_shader_cache(shader_cache) {}
 
 PrimitiveBatchPipeline::~PrimitiveBatchPipeline() { shutdown(); }
 
@@ -94,8 +94,8 @@ void PrimitiveBatchPipeline::initialize_sphere_vao() {
     return;
   }
 
-  const auto &vertices = unit->getVertices();
-  const auto &indices = unit->getIndices();
+  const auto &vertices = unit->get_vertices();
+  const auto &indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }
@@ -141,8 +141,8 @@ void PrimitiveBatchPipeline::initialize_cylinder_vao() {
     return;
   }
 
-  const auto &vertices = unit->getVertices();
-  const auto &indices = unit->getIndices();
+  const auto &vertices = unit->get_vertices();
+  const auto &indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }
@@ -188,8 +188,8 @@ void PrimitiveBatchPipeline::initialize_cone_vao() {
     return;
   }
 
-  const auto &vertices = unit->getVertices();
-  const auto &indices = unit->getIndices();
+  const auto &vertices = unit->get_vertices();
+  const auto &indices = unit->get_indices();
   if (vertices.empty() || indices.empty()) {
     return;
   }

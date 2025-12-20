@@ -126,8 +126,8 @@ public:
                                   base_arm_height + sway_height + 0.01F,
                                   forward_reach * 0.95F);
 
-      controller.placeHandAt(true, heal_hand_l);
-      controller.placeHandAt(false, heal_hand_r);
+      controller.place_hand_at(true, heal_hand_l);
+      controller.place_hand_at(false, heal_hand_r);
 
       QVector3D const look_dir(target_dir_x, 0.0F, target_dir_z);
       QVector3D const head_focus =
@@ -144,8 +144,8 @@ public:
       QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.6F,
                                   hand_height + 0.01F, forward_offset * 0.9F);
 
-      controller.placeHandAt(true, idle_hand_l);
-      controller.placeHandAt(false, idle_hand_r);
+      controller.place_hand_at(true, idle_hand_l);
+      controller.place_hand_at(false, idle_hand_r);
     }
   }
 
@@ -381,9 +381,9 @@ public:
     drawFabricRing(hem_y - 0.012F, torso_r * 0.90F * 1.45F,
                    torso_depth * 0.84F * 1.45F, trim_gold * 0.85F, 0.015F);
 
-    auto drawSleeve = [&](const QVector3D &shoulder_pos,
-                          const QVector3D &outward,
-                          const QVector3D &elbow_pos) {
+    auto draw_sleeve = [&](const QVector3D &shoulder_pos,
+                           const QVector3D &outward,
+                           const QVector3D &elbow_pos) {
       out.mesh(get_unit_sphere(),
                sphere_at(ctx.model, shoulder_pos + outward * 0.01F,
                          HP::UPPER_ARM_R * 1.6F),
@@ -404,8 +404,8 @@ public:
                sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.25F),
                tunic_cream * 0.95F, nullptr, 1.0F);
     };
-    drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
-    drawSleeve(frames.shoulder_r.origin, right, pose.elbow_r);
+    draw_sleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
+    draw_sleeve(frames.shoulder_r.origin, right, pose.elbow_r);
 
     QVector3D const satchel_pos = origin + right * (torso_r * 0.75F) +
                                   up * (y_waist - 0.08F - origin.y()) +
@@ -485,7 +485,7 @@ private:
 
     apply_color(style.cloth_color, variant.palette.cloth);
     apply_color(style.leather_color, variant.palette.leather);
-    apply_color(style.leather_dark_color, variant.palette.leatherDark);
+    apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
     apply_color(style.wood_color, variant.palette.wood);
   }

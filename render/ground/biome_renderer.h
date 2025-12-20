@@ -22,7 +22,7 @@ public:
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
-  void refreshGrass();
+  void refresh_grass();
 
   void clear();
 
