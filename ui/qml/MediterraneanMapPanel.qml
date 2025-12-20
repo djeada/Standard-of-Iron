@@ -7,6 +7,7 @@ Rectangle {
     id: root
 
     property var selected_mission: null
+    property string active_region_id: selected_mission && selected_mission.world_region_id ? selected_mission.world_region_id : ""
     property real map_orbit_yaw: 180
     property real map_orbit_pitch: 55
     property real map_orbit_distance: 2.4
@@ -70,6 +71,13 @@ Rectangle {
         orbitYaw: root.map_orbit_yaw
         orbitPitch: root.map_orbit_pitch
         orbitDistance: root.map_orbit_distance
+        hoverProvinceId: {
+            if (root.active_region_id !== "")
+                return root.active_region_id;
+
+            var info = provinceInfoAtScreen(root.hover_mouse_x, root.hover_mouse_y);
+            return info && info.id ? info.id : "";
+        }
         onOrbitYawChanged: root.label_refresh += 1
         onOrbitPitchChanged: root.label_refresh += 1
         onOrbitDistanceChanged: root.label_refresh += 1
@@ -99,16 +107,18 @@ Rectangle {
             }
             root.hover_mouse_x = mouse.x;
             root.hover_mouse_y = mouse.y;
-            var info = campaign_map.provinceInfoAtScreen(mouse.x, mouse.y);
-            var id = info && info.id ? info.id : "";
-            campaign_map.hoverProvinceId = id;
-            root.hover_province_name = info && info.name ? info.name : "";
-            root.hover_province_owner = info && info.owner ? info.owner : "";
+            if (root.active_region_id === "") {
+                var info = campaign_map.provinceInfoAtScreen(mouse.x, mouse.y);
+                var id = info && info.id ? info.id : "";
+                root.hover_province_name = info && info.name ? info.name : "";
+                root.hover_province_owner = info && info.owner ? info.owner : "";
+            }
         }
         onExited: {
-            campaign_map.hoverProvinceId = "";
-            root.hover_province_name = "";
-            root.hover_province_owner = "";
+            if (root.active_region_id === "") {
+                root.hover_province_name = "";
+                root.hover_province_owner = "";
+            }
         }
         onWheel: function(wheel) {
             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
@@ -168,7 +178,7 @@ Rectangle {
     Rectangle {
         id: hover_tooltip
 
-        visible: campaign_map.hoverProvinceId !== "" && root.hover_province_name !== ""
+        visible: (root.active_region_id !== "" || (campaign_map.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16
@@ -279,6 +289,34 @@ Rectangle {
         font.pointSize: Theme.fontSizeTiny
         style: Text.Outline
         styleColor: "#000000"
+    }
+
+    Rectangle {
+        visible: root.active_region_id !== ""
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: Theme.spacingMedium
+        width: active_region_label.implicitWidth + 16
+        height: active_region_label.implicitHeight + 12
+        radius: 6
+        color: "#cc8f47"
+        border.color: "#8b6332"
+        border.width: 2
+        opacity: 0.95
+        z: 10
+
+        Label {
+            id: active_region_label
+
+            anchors.centerIn: parent
+            text: qsTr("📍 Mission Region")
+            color: "#ffffff"
+            font.pointSize: Theme.fontSizeSmall
+            font.bold: true
+            style: Text.Outline
+            styleColor: "#000000"
+        }
+
     }
 
 }

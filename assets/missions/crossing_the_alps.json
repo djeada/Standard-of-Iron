@@ -4,6 +4,8 @@
   "summary": "Lead your army through the treacherous Alpine passes, surviving harsh weather and hostile mountain tribes",
   "teaching_goal": "Survival and attrition management. Teaches players to manage limited resources, preserve units, and overcome environmental hazards.",
   "narrative_intent": "A flashback mission showing Hannibal's legendary feat. The player experiences the cost of the impossible crossing.",
+  "historical_context": "In 218 BC, Hannibal Barca achieved one of history's most remarkable military feats by crossing the Alps with an army of approximately 38,000 infantry, 8,000 cavalry, and 37 war elephants. The journey through the snow-covered passes claimed nearly half his men and most of his elephants, but the psychological impact on Rome was immense.",
+  "terrain_type": "mountain",
   "map_path": ":/assets/maps/map_crossing_alps.json",
   "player_setup": {
     "nation": "carthage",
