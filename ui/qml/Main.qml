@@ -171,6 +171,10 @@ ApplicationWindow {
             settingsPanel.visible = true;
             mainWindow.menuVisible = false;
         }
+        onOpenObjectives: function() {
+            objectivesPanel.visible = true;
+            mainWindow.menuVisible = false;
+        }
         onExitRequested: function() {
             if (typeof game !== 'undefined' && game.exit_game)
                 game.exit_game();
@@ -305,6 +309,24 @@ ApplicationWindow {
         }
         onCancelled: function() {
             settingsPanel.visible = false;
+            mainWindow.menuVisible = true;
+        }
+    }
+
+    ObjectivesPanel {
+        id: objectivesPanel
+
+        anchors.fill: parent
+        z: 22
+        visible: false
+        onVisibleChanged: {
+            if (visible) {
+                objectivesPanel.forceActiveFocus();
+                gameViewItem.focus = false;
+            }
+        }
+        onCloseRequested: function() {
+            objectivesPanel.visible = false;
             mainWindow.menuVisible = true;
         }
     }
