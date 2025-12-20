@@ -317,6 +317,30 @@ public:
     }
   }
 
+  /// Check if two sorted indices refer to MeshCmds that can be batched together.
+  /// Returns true if both are MeshCmds with matching mesh, shader, texture,
+  /// and both are opaque (alpha >= 0.999).
+  [[nodiscard]] auto can_batch_mesh(std::size_t sorted_idx_a,
+                                    std::size_t sorted_idx_b) const -> bool {
+    if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
+      return false;
+    }
+    const auto &a = m_items[m_sort_indices[sorted_idx_a]];
+    const auto &b = m_items[m_sort_indices[sorted_idx_b]];
+    if (a.index() != MeshCmdIndex || b.index() != MeshCmdIndex) {
+      return false;
+    }
+    const auto &mesh_a = std::get<MeshCmdIndex>(a);
+    const auto &mesh_b = std::get<MeshCmdIndex>(b);
+    constexpr float k_opaque_threshold = 0.999F;
+    if (mesh_a.alpha < k_opaque_threshold ||
+        mesh_b.alpha < k_opaque_threshold) {
+      return false;
+    }
+    return mesh_a.mesh == mesh_b.mesh && mesh_a.shader == mesh_b.shader &&
+           mesh_a.texture == mesh_b.texture;
+  }
+
 private:
   void radix_sort_two_pass(std::size_t count) {
     constexpr int BUCKETS = 256;
@@ -420,13 +444,17 @@ private:
     uint64_t key = static_cast<uint64_t>(type_order) << 56;
 
     if (cmd.index() == MeshCmdIndex) {
-      const auto &mesh = std::get<MeshCmdIndex>(cmd);
-      // Sort by texture pointer only - the backend compares actual shader/texture 
-      // pointers to decide when to rebind, so truncating pointers in the sort key
-      // could cause incorrect draw ordering without improving state locality
-      uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
-      key |= tex_ptr;
+      const auto &m = std::get<MeshCmdIndex>(cmd);
+      // Sort by shader (highest priority), then mesh, then texture
+      // to group identical mesh+shader+texture combos for instancing.
+      // Use bits 48-55 for shader hash, 32-47 for mesh hash, 0-31 for texture hash.
+      auto const shader_hash = static_cast<uint64_t>(
+          (reinterpret_cast<uintptr_t>(m.shader) >> 3) & 0xFFU);
+      auto const mesh_hash = static_cast<uint64_t>(
+          (reinterpret_cast<uintptr_t>(m.mesh) >> 3) & 0xFFFFU);
+      auto const tex_hash = static_cast<uint64_t>(
+          (reinterpret_cast<uintptr_t>(m.texture) >> 3) & 0xFFFFFFFFU);
+      key |= (shader_hash << 48) | (mesh_hash << 32) | tex_hash;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =

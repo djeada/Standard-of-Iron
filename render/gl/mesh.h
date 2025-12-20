@@ -23,6 +23,10 @@ public:
 
   void draw();
 
+  /// Draw multiple instances of the mesh using glDrawElementsInstanced.
+  /// @param instance_count Number of instances to draw.
+  void draw_instanced(std::size_t instance_count);
+
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
     return m_vertices;
   }

@@ -74,6 +74,39 @@ void Mesh::draw() {
   }
 }
 
+void Mesh::draw_instanced(std::size_t instance_count) {
+  if (instance_count == 0) {
+    return;
+  }
+  if (!m_vao) {
+    setup_buffers();
+  }
+  if (QOpenGLContext::currentContext() == nullptr) {
+    qWarning()
+        << "Mesh::draw_instanced called without current GL context; skipping";
+    return;
+  }
+  m_vao->bind();
+
+  initializeOpenGLFunctions();
+  GLenum preErr = glGetError();
+  if (preErr != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw_instanced pre-draw GL error" << preErr << "vao"
+               << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
+  }
+  glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
+                          GL_UNSIGNED_INT, nullptr,
+                          static_cast<GLsizei>(instance_count));
+
+  m_vao->unbind();
+
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw_instanced GL error" << err << "indices"
+               << m_indices.size() << "instances" << instance_count;
+  }
+}
+
 auto create_quad_mesh() -> std::unique_ptr<Mesh> {
   std::vector<Vertex> const vertices = {
 
