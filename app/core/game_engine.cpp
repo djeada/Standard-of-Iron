@@ -357,7 +357,9 @@ GameEngine::GameEngine(QObject *parent)
       Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>(
           [this](const Engine::Core::UnitDiedEvent &e) {
             on_unit_died(e);
-            if (e.owner_id != m_runtime.local_owner_id) {
+            // Only count enemy troops defeated by the local player
+            if (e.owner_id != m_runtime.local_owner_id &&
+                e.killer_owner_id == m_runtime.local_owner_id) {
 
               int const production_cost =
                   Game::Units::TroopConfig::instance().getProductionCost(
@@ -1448,6 +1450,7 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_victoryService->reset();
   }
   m_enemyTroopsDefeated = 0;
+  emit enemy_troops_defeated_changed();
 
   if (!m_runtime.initialized) {
     ensure_initialized();
