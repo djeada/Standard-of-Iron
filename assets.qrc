@@ -105,7 +105,6 @@
         <file>assets/missions/forest_ambush.json</file>
 
         <!-- Campaign files -->
-        <file>assets/campaigns/tutorial_campaign.json</file>
         <file>assets/campaigns/second_punic_war.json</file>
 
         <!-- Visual config -->
