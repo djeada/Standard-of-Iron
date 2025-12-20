@@ -1450,7 +1450,6 @@ void GameEngine::start_skirmish(const QString &map_path,
     m_victoryService->reset();
   }
   m_enemyTroopsDefeated = 0;
-  emit enemy_troops_defeated_changed();
 
   if (!m_runtime.initialized) {
     ensure_initialized();
