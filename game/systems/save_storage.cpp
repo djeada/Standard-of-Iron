@@ -324,16 +324,14 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
             continue;
           }
 
-          // Ensure campaign missions are in the database
           QString db_error;
           if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
             qWarning() << "Failed to initialize campaign missions in DB for"
                        << campaign.id << ":" << db_error;
-            // Continue with next campaign rather than failing completely
+
             continue;
           }
 
-          // Load progress from database
           QVariantList missions_progress =
               get_campaign_mission_progress(campaign.id);
 
@@ -344,7 +342,6 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
                               campaign.description);
           campaign_map.insert(QStringLiteral("unlocked"), true);
 
-          // Check if campaign is completed
           bool all_completed = true;
           QVariantList missions_list;
           for (const auto &mission : campaign.missions) {
@@ -366,7 +363,6 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
                                  *mission.difficulty_modifier);
             }
 
-            // Find progress for this mission
             bool unlocked = mission.order_index == 0;
             bool completed = false;
             for (const QVariant &progress_var : missions_progress) {
@@ -424,16 +420,14 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
         continue;
       }
 
-      // Ensure campaign missions are in the database
       QString db_error;
       if (!ensure_campaign_missions_in_db(campaign, &db_error)) {
         qWarning() << "Failed to initialize campaign missions in DB for"
                    << campaign.id << ":" << db_error;
-        // Continue with next campaign rather than failing completely
+
         continue;
       }
 
-      // Load progress from database
       QVariantList missions_progress =
           get_campaign_mission_progress(campaign.id);
 
@@ -443,7 +437,6 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
       campaign_map.insert(QStringLiteral("description"), campaign.description);
       campaign_map.insert(QStringLiteral("unlocked"), true);
 
-      // Check if campaign is completed
       bool all_completed = true;
       QVariantList missions_list;
       for (const auto &mission : campaign.missions) {
@@ -461,7 +454,6 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
                              *mission.difficulty_modifier);
         }
 
-        // Find progress for this mission
         bool unlocked = mission.order_index == 0;
         bool completed = false;
         for (const QVariant &progress_var : missions_progress) {
@@ -859,23 +851,23 @@ auto SaveStorage::migrate_to_2(QString *out_error) const -> bool {
 }
 
 auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
-  // Create mission_progress table
+
   QSqlQuery query(m_database);
-  const QString create_mission_progress_sql = QStringLiteral(
-      "CREATE TABLE IF NOT EXISTS mission_progress ("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-      "mission_id TEXT NOT NULL, "
-      "mode TEXT NOT NULL, "
-      "campaign_id TEXT, "
-      "completed INTEGER NOT NULL DEFAULT 0, "
-      "completion_time REAL, "
-      "difficulty TEXT, "
-      "result TEXT, "
-      "completed_at TEXT, "
-      "created_at TEXT NOT NULL, "
-      "updated_at TEXT NOT NULL, "
-      "UNIQUE(mission_id, mode, campaign_id)"
-      ")");
+  const QString create_mission_progress_sql =
+      QStringLiteral("CREATE TABLE IF NOT EXISTS mission_progress ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                     "mission_id TEXT NOT NULL, "
+                     "mode TEXT NOT NULL, "
+                     "campaign_id TEXT, "
+                     "completed INTEGER NOT NULL DEFAULT 0, "
+                     "completion_time REAL, "
+                     "difficulty TEXT, "
+                     "result TEXT, "
+                     "completed_at TEXT, "
+                     "created_at TEXT NOT NULL, "
+                     "updated_at TEXT NOT NULL, "
+                     "UNIQUE(mission_id, mode, campaign_id)"
+                     ")");
 
   if (!query.exec(create_mission_progress_sql)) {
     if (out_error != nullptr) {
@@ -885,19 +877,18 @@ auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
     return false;
   }
 
-  // Create campaign_missions table
   QSqlQuery missions_query(m_database);
-  const QString create_campaign_missions_sql = QStringLiteral(
-      "CREATE TABLE IF NOT EXISTS campaign_missions ("
-      "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-      "campaign_id TEXT NOT NULL, "
-      "mission_id TEXT NOT NULL, "
-      "order_index INTEGER NOT NULL, "
-      "unlocked INTEGER NOT NULL DEFAULT 0, "
-      "completed INTEGER NOT NULL DEFAULT 0, "
-      "completed_at TEXT, "
-      "UNIQUE(campaign_id, mission_id)"
-      ")");
+  const QString create_campaign_missions_sql =
+      QStringLiteral("CREATE TABLE IF NOT EXISTS campaign_missions ("
+                     "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+                     "campaign_id TEXT NOT NULL, "
+                     "mission_id TEXT NOT NULL, "
+                     "order_index INTEGER NOT NULL, "
+                     "unlocked INTEGER NOT NULL DEFAULT 0, "
+                     "completed INTEGER NOT NULL DEFAULT 0, "
+                     "completed_at TEXT, "
+                     "UNIQUE(campaign_id, mission_id)"
+                     ")");
 
   if (!missions_query.exec(create_campaign_missions_sql)) {
     if (out_error != nullptr) {
@@ -908,7 +899,6 @@ auto SaveStorage::migrate_to_3(QString *out_error) const -> bool {
     return false;
   }
 
-  // Create indexes for performance
   QSqlQuery index_query(m_database);
   if (!index_query.exec(QStringLiteral(
           "CREATE INDEX IF NOT EXISTS idx_mission_progress_mission_id ON "
@@ -1007,9 +997,8 @@ auto SaveStorage::save_mission_result(
   return true;
 }
 
-auto SaveStorage::get_mission_progress(const QString &mission_id,
-                                       QString *out_error) const
-    -> QVariantMap {
+auto SaveStorage::get_mission_progress(
+    const QString &mission_id, QString *out_error) const -> QVariantMap {
   QVariantMap result;
   if (!initialize(out_error)) {
     return result;
@@ -1043,9 +1032,8 @@ auto SaveStorage::get_mission_progress(const QString &mission_id,
   return result;
 }
 
-auto SaveStorage::get_campaign_mission_progress(const QString &campaign_id,
-                                                QString *out_error) const
-    -> QVariantList {
+auto SaveStorage::get_campaign_mission_progress(
+    const QString &campaign_id, QString *out_error) const -> QVariantList {
   QVariantList result;
   if (!initialize(out_error)) {
     return result;
@@ -1060,9 +1048,8 @@ auto SaveStorage::get_campaign_mission_progress(const QString &campaign_id,
 
   if (!query.exec()) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to get campaign mission progress: %1")
-              .arg(last_error_string(query.lastError()));
+      *out_error = QStringLiteral("Failed to get campaign mission progress: %1")
+                       .arg(last_error_string(query.lastError()));
     }
     return result;
   }
@@ -1081,8 +1068,8 @@ auto SaveStorage::get_campaign_mission_progress(const QString &campaign_id,
 }
 
 auto SaveStorage::ensure_campaign_missions_in_db(
-    const Game::Campaign::CampaignDefinition &campaign, QString *out_error)
-    -> bool {
+    const Game::Campaign::CampaignDefinition &campaign,
+    QString *out_error) -> bool {
   if (!initialize(out_error)) {
     return false;
   }
@@ -1112,26 +1099,24 @@ auto SaveStorage::ensure_campaign_missions_in_db(
 
     int count = check_query.value(0).toInt();
     if (count == 0) {
-      // Insert the mission
+
       QSqlQuery insert_query(m_database);
       insert_query.prepare(QStringLiteral(
           "INSERT INTO campaign_missions (campaign_id, mission_id, "
           "order_index, unlocked, completed) "
           "VALUES (:campaign_id, :mission_id, :order_index, :unlocked, 0)"));
       insert_query.bindValue(QStringLiteral(":campaign_id"), campaign.id);
-      insert_query.bindValue(QStringLiteral(":mission_id"),
-                             mission.mission_id);
+      insert_query.bindValue(QStringLiteral(":mission_id"), mission.mission_id);
       insert_query.bindValue(QStringLiteral(":order_index"),
                              mission.order_index);
-      // First mission is unlocked by default
+
       insert_query.bindValue(QStringLiteral(":unlocked"),
                              mission.order_index == 0 ? 1 : 0);
 
       if (!insert_query.exec()) {
         if (out_error != nullptr) {
-          *out_error =
-              QStringLiteral("Failed to insert campaign mission: %1")
-                  .arg(last_error_string(insert_query.lastError()));
+          *out_error = QStringLiteral("Failed to insert campaign mission: %1")
+                           .arg(last_error_string(insert_query.lastError()));
         }
         transaction.rollback();
         return false;
@@ -1161,10 +1146,10 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
   const QString now_iso =
       QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);
 
-  // Mark the completed mission as completed
   QSqlQuery update_query(m_database);
   update_query.prepare(QStringLiteral(
-      "UPDATE campaign_missions SET completed = 1, completed_at = :completed_at "
+      "UPDATE campaign_missions SET completed = 1, completed_at = "
+      ":completed_at "
       "WHERE campaign_id = :campaign_id AND mission_id = :mission_id"));
   update_query.bindValue(QStringLiteral(":completed_at"), now_iso);
   update_query.bindValue(QStringLiteral(":campaign_id"), campaign_id);
@@ -1179,7 +1164,6 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
     return false;
   }
 
-  // Get the order_index of the completed mission
   QSqlQuery order_query(m_database);
   order_query.prepare(QStringLiteral(
       "SELECT order_index FROM campaign_missions "
@@ -1189,9 +1173,8 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
 
   if (!order_query.exec() || !order_query.next()) {
     if (out_error != nullptr) {
-      *out_error =
-          QStringLiteral("Failed to find completed mission order: %1")
-              .arg(last_error_string(order_query.lastError()));
+      *out_error = QStringLiteral("Failed to find completed mission order: %1")
+                       .arg(last_error_string(order_query.lastError()));
     }
     transaction.rollback();
     return false;
@@ -1199,7 +1182,6 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
 
   int completed_order = order_query.value(0).toInt();
 
-  // Unlock the next mission
   QSqlQuery unlock_query(m_database);
   unlock_query.prepare(
       QStringLiteral("UPDATE campaign_missions SET unlocked = 1 "
