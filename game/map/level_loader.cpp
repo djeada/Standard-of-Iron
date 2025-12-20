@@ -26,8 +26,8 @@ namespace Game::Map {
 
 auto LevelLoader::loadFromAssets(
     const QString &map_path, Engine::Core::World &world,
-    Render::GL::Renderer &renderer,
-    Render::GL::Camera &camera) -> LevelLoadResult {
+    Render::GL::Renderer &renderer, Render::GL::Camera &camera,
+    bool allow_default_player_barracks) -> LevelLoadResult {
   LevelLoadResult res;
 
   auto &owners = Game::Systems::OwnerRegistry::instance();
@@ -106,32 +106,34 @@ auto LevelLoader::loadFromAssets(
       }
     }
 
-    bool has_barracks = false;
-    for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
-      if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
-        if (u->spawn_type == Game::Units::SpawnType::Barracks &&
-            owners.is_player(u->owner_id)) {
-          has_barracks = true;
-          break;
+    if (allow_default_player_barracks) {
+      bool has_barracks = false;
+      for (auto *e : world.get_entities_with<Engine::Core::UnitComponent>()) {
+        if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
+          if (u->spawn_type == Game::Units::SpawnType::Barracks &&
+              owners.is_player(u->owner_id)) {
+            has_barracks = true;
+            break;
+          }
         }
       }
-    }
-    if (!has_barracks) {
-      auto &nationRegistry = Game::Systems::NationRegistry::instance();
-      auto reg2 = Game::Map::MapTransformer::getFactoryRegistry();
-      if (reg2) {
-        Game::Units::SpawnParams sp;
-        sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
-        sp.player_id = owners.get_local_player_id();
-        sp.spawn_type = Game::Units::SpawnType::Barracks;
-        sp.ai_controlled = !owners.is_player(sp.player_id);
-        if (const auto *nation =
-                nationRegistry.get_nation_for_player(sp.player_id)) {
-          sp.nation_id = nation->id;
-        } else {
-          sp.nation_id = nationRegistry.default_nation_id();
+      if (!has_barracks) {
+        auto &nationRegistry = Game::Systems::NationRegistry::instance();
+        auto reg2 = Game::Map::MapTransformer::getFactoryRegistry();
+        if (reg2) {
+          Game::Units::SpawnParams sp;
+          sp.position = QVector3D(-4.0F, 0.0F, -3.0F);
+          sp.player_id = owners.get_local_player_id();
+          sp.spawn_type = Game::Units::SpawnType::Barracks;
+          sp.ai_controlled = !owners.is_player(sp.player_id);
+          if (const auto *nation =
+                  nationRegistry.get_nation_for_player(sp.player_id)) {
+            sp.nation_id = nation->id;
+          } else {
+            sp.nation_id = nationRegistry.default_nation_id();
+          }
+          reg2->create(Game::Units::SpawnType::Barracks, world, sp);
         }
-        reg2->create(Game::Units::SpawnType::Barracks, world, sp);
       }
     }
   } else {

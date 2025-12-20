@@ -109,6 +109,7 @@ void SkirmishLoader::reset_game_state() {
 auto SkirmishLoader::start(const QString &map_path,
                            const QVariantList &playerConfigs,
                            int selected_player_id,
+                           bool allow_default_player_barracks,
                            int &out_selected_player_id) -> SkirmishLoadResult {
   SkirmishLoadResult result;
 
@@ -263,7 +264,7 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   auto level_result = Game::Map::LevelLoader::loadFromAssets(
-      map_path, m_world, m_renderer, m_camera);
+      map_path, m_world, m_renderer, m_camera, allow_default_player_barracks);
   pump_events();
 
   if (!level_result.ok && !level_result.errorMessage.isEmpty()) {

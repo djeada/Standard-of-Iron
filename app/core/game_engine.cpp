@@ -1434,7 +1434,7 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     player_id++;
   }
 
-  start_skirmish(mission.map_path, playerConfigs);
+  start_skirmish_internal(mission.map_path, playerConfigs, false);
 }
 
 void GameEngine::mark_current_mission_completed() {
@@ -1516,21 +1516,20 @@ QVariantMap GameEngine::get_current_mission_objectives() const {
 
 void GameEngine::start_skirmish(const QString &map_path,
                                 const QVariantList &playerConfigs) {
+  start_skirmish_internal(map_path, playerConfigs, true);
+}
+
+void GameEngine::start_skirmish_internal(const QString &map_path,
+                                         const QVariantList &playerConfigs,
+                                         bool set_skirmish_context) {
 
   clear_error();
 
   m_level.map_path = map_path;
   m_level.map_name = map_path;
 
-  if (m_campaign_manager) {
-    if (!m_campaign_manager->current_mission_context().is_campaign()) {
-      Game::Mission::MissionContext skirmish_context;
-      skirmish_context.mode = "skirmish";
-      skirmish_context.campaign_id = "";
-      skirmish_context.mission_id = map_path;
-      skirmish_context.difficulty = "normal";
-      m_campaign_manager->set_mission_context(skirmish_context);
-    }
+  if (m_campaign_manager && set_skirmish_context) {
+    m_campaign_manager->set_skirmish_context(map_path);
   }
 
   if (!m_runtime.victory_state.isEmpty()) {
@@ -1595,10 +1594,15 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 
   auto owner_update = [this]() { emit owner_info_changed(); };
 
+  const bool allow_default_player_barracks =
+      !m_campaign_manager ||
+      !m_campaign_manager->current_mission_context().is_campaign();
+
   auto load_result = orchestrator.load_skirmish(
       map_path, playerConfigs, m_selected_player_id, *m_world, renderers,
       m_level, m_entity_cache, m_victoryService.get(), m_minimap_manager.get(),
-      visibility_ready, owner_update, m_loading_progress_tracker.get());
+      visibility_ready, owner_update, allow_default_player_barracks,
+      m_loading_progress_tracker.get());
 
   if (load_result.updated_player_id != m_selected_player_id) {
     m_selected_player_id = load_result.updated_player_id;
@@ -1931,26 +1935,6 @@ void GameEngine::apply_mission_setup() {
       continue;
     }
     apply_team_color(entity, unit->owner_id);
-  }
-
-  if (mission.id == "crossing_the_rhone") {
-    std::vector<Engine::Core::EntityID> to_remove;
-    for (auto *entity : entities) {
-      if (entity == nullptr) {
-        continue;
-      }
-      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      if (unit == nullptr) {
-        continue;
-      }
-      if (unit->owner_id == local_owner_id &&
-          unit->spawn_type == Game::Units::SpawnType::Barracks) {
-        to_remove.push_back(entity->get_id());
-      }
-    }
-    for (const auto id : to_remove) {
-      m_world->destroy_entity(id);
-    }
   }
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {

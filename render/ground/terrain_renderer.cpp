@@ -682,9 +682,9 @@ void TerrainRenderer::build_meshes() {
 
         params.ambient_boost =
             m_biome_settings.terrain_ambient_boost *
-            ((chunk.type == Game::Map::TerrainType::Hill) ? 0.97F
-             : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F 
-             : 0.95F);
+            ((chunk.type == Game::Map::TerrainType::Hill)       ? 0.97F
+             : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F
+                                                                : 0.95F);
         params.rock_detail_strength =
             m_biome_settings.terrain_rock_detail_strength *
             (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
@@ -714,21 +714,22 @@ auto TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
   case Game::Map::TerrainType::Hill: {
     float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
     float const t_smooth = t * t * (3.0F - 2.0F * t);
-    
-    QVector3D const grass_low = m_biome_settings.grass_primary * 0.3F + 
+
+    QVector3D const grass_low = m_biome_settings.grass_primary * 0.3F +
                                 m_biome_settings.grass_secondary * 0.7F;
     QVector3D const grass_high = m_biome_settings.grass_secondary * 0.6F +
                                  m_biome_settings.grass_dry * 0.4F;
-    QVector3D const grass = grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
-    
-    QVector3D const rock =
-        m_biome_settings.rock_low * (1.0F - t_smooth) + 
-        m_biome_settings.rock_high * t_smooth;
-    
+    QVector3D const grass =
+        grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
+
+    QVector3D const rock = m_biome_settings.rock_low * (1.0F - t_smooth) +
+                           m_biome_settings.rock_high * t_smooth;
+
     float const rock_blend_base = 0.15F + 0.45F * t_smooth;
     float const height_factor = std::clamp((height - 0.5F) * 0.3F, 0.0F, 0.25F);
-    float const rock_blend = std::clamp(rock_blend_base + height_factor, 0.0F, 0.70F);
-    
+    float const rock_blend =
+        std::clamp(rock_blend_base + height_factor, 0.0F, 0.70F);
+
     return grass * (1.0F - rock_blend) + rock * rock_blend;
   }
   case Game::Map::TerrainType::Flat:

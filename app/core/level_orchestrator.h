@@ -74,6 +74,6 @@ public:
       const RendererRefs &renderers, Game::Systems::LevelSnapshot &level,
       EntityCache &entity_cache, Game::Systems::VictoryService *victory_service,
       MinimapManager *minimap_manager, VisibilityReadyCallback visibility_ready,
-      OwnerUpdateCallback owner_update,
+      OwnerUpdateCallback owner_update, bool allow_default_player_barracks,
       LoadingProgressTracker *progress_tracker = nullptr);
 };

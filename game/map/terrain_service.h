@@ -58,9 +58,9 @@ public:
 
   [[nodiscard]] auto is_on_bridge(float world_x, float world_z) const -> bool;
 
-  [[nodiscard]] auto get_bridge_center_position(float world_x,
-                                                 float world_z) const
-      -> std::optional<QVector3D>;
+  [[nodiscard]] auto
+  get_bridge_center_position(float world_x,
+                             float world_z) const -> std::optional<QVector3D>;
 
   [[nodiscard]] auto is_initialized() const -> bool {
     return m_height_map != nullptr;
