@@ -17,6 +17,7 @@
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
+#include <unordered_map>
 
 namespace Render::GL {
 
@@ -35,6 +36,33 @@ using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 
 namespace {
+
+// Horse profile cache - caches computed dimensions, variants and gait params
+struct CachedHorseProfileEntry {
+  HorseProfile profile;
+  QVector3D leather_base;
+  QVector3D cloth_base;
+  uint32_t frame_number{0};
+};
+
+using HorseProfileCacheKey = uint64_t;
+static std::unordered_map<HorseProfileCacheKey, CachedHorseProfileEntry> s_horse_profile_cache;
+static uint32_t s_horse_cache_frame = 0;
+constexpr uint32_t k_horse_profile_cache_max_age = 600;
+
+inline auto make_horse_profile_cache_key(uint32_t seed,
+                                         const QVector3D &leather_base,
+                                         const QVector3D &cloth_base) -> HorseProfileCacheKey {
+  // Combine seed with color hashes for unique key
+  // Use all RGB components from both colors for better hash distribution
+  uint32_t color_hash = static_cast<uint32_t>(leather_base.x() * 31.0F);
+  color_hash ^= static_cast<uint32_t>(leather_base.y() * 31.0F) << 5;
+  color_hash ^= static_cast<uint32_t>(leather_base.z() * 31.0F) << 10;
+  color_hash ^= static_cast<uint32_t>(cloth_base.x() * 31.0F) << 15;
+  color_hash ^= static_cast<uint32_t>(cloth_base.y() * 31.0F) << 20;
+  color_hash ^= static_cast<uint32_t>(cloth_base.z() * 31.0F) << 25;
+  return (static_cast<uint64_t>(seed) << 32) | static_cast<uint64_t>(color_hash);
+}
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 
@@ -482,6 +510,52 @@ auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
       rand_between(seed, kSaltStrideLift, kStrideLiftMin, kStrideLiftMax);
 
   return profile;
+}
+
+auto get_or_create_cached_horse_profile(uint32_t seed,
+                                        const QVector3D &leather_base,
+                                        const QVector3D &cloth_base) -> HorseProfile {
+  HorseProfileCacheKey cache_key = make_horse_profile_cache_key(seed, leather_base, cloth_base);
+  
+  auto cache_it = s_horse_profile_cache.find(cache_key);
+  if (cache_it != s_horse_profile_cache.end()) {
+    // Validate cache entry
+    CachedHorseProfileEntry &entry = cache_it->second;
+    if ((entry.leather_base - leather_base).lengthSquared() < 0.001F &&
+        (entry.cloth_base - cloth_base).lengthSquared() < 0.001F) {
+      entry.frame_number = s_horse_cache_frame;
+      ++s_horseRenderStats.profiles_cached;
+      return entry.profile;
+    }
+  }
+  
+  // Create new profile and cache it
+  ++s_horseRenderStats.profiles_computed;
+  HorseProfile profile = make_horse_profile(seed, leather_base, cloth_base);
+  
+  CachedHorseProfileEntry &new_entry = s_horse_profile_cache[cache_key];
+  new_entry.profile = profile;
+  new_entry.leather_base = leather_base;
+  new_entry.cloth_base = cloth_base;
+  new_entry.frame_number = s_horse_cache_frame;
+  
+  return profile;
+}
+
+void advance_horse_profile_cache_frame() {
+  ++s_horse_cache_frame;
+  
+  // Periodic cleanup of stale entries
+  if ((s_horse_cache_frame & 0x1FF) == 0) {
+    auto it = s_horse_profile_cache.begin();
+    while (it != s_horse_profile_cache.end()) {
+      if (s_horse_cache_frame - it->second.frame_number > k_horse_profile_cache_max_age) {
+        it = s_horse_profile_cache.erase(it);
+      } else {
+        ++it;
+      }
+    }
+  }
 }
 
 auto MountedAttachmentFrame::stirrup_attach(bool is_left) const

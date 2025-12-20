@@ -143,6 +143,7 @@ struct HumanoidRenderStats {
   uint32_t soldiers_skipped_lod{0};
   uint32_t poses_computed{0};
   uint32_t poses_cached{0};
+  uint32_t facial_hair_skipped_distance{0};
   uint32_t lod_full{0};
   uint32_t lod_reduced{0};
   uint32_t lod_minimal{0};
@@ -154,13 +155,12 @@ struct HumanoidRenderStats {
     soldiers_skipped_lod = 0;
     poses_computed = 0;
     poses_cached = 0;
+    facial_hair_skipped_distance = 0;
     lod_full = 0;
     lod_reduced = 0;
     lod_minimal = 0;
   }
 };
-
-void advance_pose_cache_frame();
 
 auto get_humanoid_render_stats() -> const HumanoidRenderStats &;
 
