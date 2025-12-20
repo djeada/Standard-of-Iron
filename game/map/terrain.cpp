@@ -620,6 +620,7 @@ void TerrainHeightMap::addRiverSegments(
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   constexpr float kBridgeSinkMin = 0.25F;
   constexpr float kBridgeSinkMax = 0.65F;
+  constexpr float kConnectivityMargin = 0.5F;
 
   m_bridges.clear();
   m_bridges.reserve(bridges.size());
@@ -671,16 +672,18 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
           (center_pos.z() / m_tile_size) + grid_half_height;
 
       float const half_width = stored_bridge.width * 0.5F / m_tile_size;
+      float const half_width_with_margin = half_width + kConnectivityMargin;
 
-      int const min_x =
-          std::max(0, static_cast<int>(std::floor(grid_center_x - half_width)));
+      int const min_x = std::max(
+          0, static_cast<int>(std::floor(grid_center_x - half_width_with_margin)));
       int const max_x = std::min(
-          m_width - 1, static_cast<int>(std::ceil(grid_center_x + half_width)));
-      int const min_z =
-          std::max(0, static_cast<int>(std::floor(grid_center_z - half_width)));
+          m_width - 1,
+          static_cast<int>(std::ceil(grid_center_x + half_width_with_margin)));
+      int const min_z = std::max(
+          0, static_cast<int>(std::floor(grid_center_z - half_width_with_margin)));
       int const max_z =
           std::min(m_height - 1,
-                   static_cast<int>(std::ceil(grid_center_z + half_width)));
+                   static_cast<int>(std::ceil(grid_center_z + half_width_with_margin)));
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -690,7 +693,7 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
           float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (dist_along_perp <= half_width) {
+          if (dist_along_perp <= half_width_with_margin) {
             int const idx = indexAt(x, z);
 
             if (m_terrain_types[idx] == TerrainType::River) {
