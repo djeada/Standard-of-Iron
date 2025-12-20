@@ -137,3 +137,95 @@ TEST_F(TerrainBridgeTest, BridgeConvertsRiverToFlatTerrain) {
   EXPECT_TRUE(has_flat_terrain)
       << "Bridge should convert river cells to flat terrain";
 }
+
+TEST_F(TerrainBridgeTest, IsOnBridgeDetectsUnitsOnBridge) {
+  TerrainHeightMap heightMap(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
+
+  // Create a bridge
+  std::vector<Bridge> bridges;
+  Bridge bridge;
+  bridge.start = QVector3D(-5.0F, 0.5F, 0.0F);
+  bridge.end = QVector3D(5.0F, 0.5F, 0.0F);
+  bridge.width = 3.0F;
+  bridge.height = 0.5F;
+  bridges.push_back(bridge);
+
+  heightMap.addBridges(bridges);
+
+  // Test position on bridge center
+  EXPECT_TRUE(heightMap.isOnBridge(0.0F, 0.0F))
+      << "Position at bridge center should be detected";
+
+  // Test position on bridge edge (within width)
+  EXPECT_TRUE(heightMap.isOnBridge(0.0F, 1.4F))
+      << "Position within bridge width should be detected";
+
+  // Test position outside bridge width
+  EXPECT_FALSE(heightMap.isOnBridge(0.0F, 2.5F))
+      << "Position outside bridge width should not be detected";
+
+  // Test position outside bridge length
+  EXPECT_FALSE(heightMap.isOnBridge(10.0F, 0.0F))
+      << "Position outside bridge length should not be detected";
+
+  // Test position slightly off bridge (within tolerance)
+  EXPECT_TRUE(heightMap.isOnBridge(0.0F, 1.8F))
+      << "Position within tolerance margin should be detected";
+}
+
+TEST_F(TerrainBridgeTest, GetBridgeCenterPositionReturnsCenterPoint) {
+  TerrainHeightMap heightMap(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
+
+  // Create a horizontal bridge
+  std::vector<Bridge> bridges;
+  Bridge bridge;
+  bridge.start = QVector3D(-5.0F, 0.5F, 0.0F);
+  bridge.end = QVector3D(5.0F, 0.5F, 0.0F);
+  bridge.width = 3.0F;
+  bridge.height = 0.5F;
+  bridges.push_back(bridge);
+
+  heightMap.addBridges(bridges);
+
+  // Test getting center for a position on the side of the bridge
+  auto center = heightMap.getBridgeCenterPosition(2.0F, 1.0F);
+  ASSERT_TRUE(center.has_value())
+      << "Should return center position for point on bridge";
+
+  // The center should be on the bridge axis (z = 0)
+  EXPECT_NEAR(center->z(), 0.0F, 0.01F)
+      << "Center z should be on bridge axis";
+  EXPECT_NEAR(center->x(), 2.0F, 0.01F)
+      << "Center x should match query position along bridge";
+
+  // Test position outside bridge
+  auto outside = heightMap.getBridgeCenterPosition(10.0F, 5.0F);
+  EXPECT_FALSE(outside.has_value())
+      << "Should return nullopt for position outside bridge";
+}
+
+TEST_F(TerrainBridgeTest, GetBridgeCenterPositionWorksForDiagonalBridge) {
+  TerrainHeightMap heightMap(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
+
+  // Create a diagonal bridge
+  std::vector<Bridge> bridges;
+  Bridge bridge;
+  bridge.start = QVector3D(0.0F, 0.5F, 0.0F);
+  bridge.end = QVector3D(10.0F, 0.5F, 10.0F);
+  bridge.width = 3.0F;
+  bridge.height = 0.5F;
+  bridges.push_back(bridge);
+
+  heightMap.addBridges(bridges);
+
+  // Test getting center for a position on the side of the diagonal bridge
+  auto center = heightMap.getBridgeCenterPosition(5.0F, 6.0F);
+  ASSERT_TRUE(center.has_value())
+      << "Should return center position for point on diagonal bridge";
+
+  // The center should be on the bridge axis (diagonal line)
+  // For a 45-degree diagonal bridge, x and z should be equal along the axis
+  EXPECT_NEAR(center->x(), center->z(), 0.5F)
+      << "Center should be on diagonal bridge axis";
+}
+

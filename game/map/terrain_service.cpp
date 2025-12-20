@@ -4,9 +4,11 @@
 #include "map_definition.h"
 #include "terrain.h"
 
+#include <QVector3D>
 #include <algorithm>
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace Game::Map {
@@ -174,6 +176,22 @@ auto TerrainService::is_point_on_road(float world_x,
     }
   }
   return false;
+}
+
+auto TerrainService::is_on_bridge(float world_x, float world_z) const -> bool {
+  if (!m_height_map) {
+    return false;
+  }
+  return m_height_map->isOnBridge(world_x, world_z);
+}
+
+auto TerrainService::get_bridge_center_position(float world_x,
+                                                 float world_z) const
+    -> std::optional<QVector3D> {
+  if (!m_height_map) {
+    return std::nullopt;
+  }
+  return m_height_map->getBridgeCenterPosition(world_x, world_z);
 }
 
 } // namespace Game::Map
