@@ -26,6 +26,7 @@ public:
   void start_campaign_mission(const QString &mission_path,
                               int &selected_player_id);
   void mark_current_mission_completed();
+  void set_skirmish_context(const QString &map_path);
 
   [[nodiscard]] QVariantList available_campaigns() const {
     return m_available_campaigns;

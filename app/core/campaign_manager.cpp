@@ -113,9 +113,24 @@ void CampaignManager::mark_current_mission_completed() {
   }
 }
 
+void CampaignManager::set_skirmish_context(const QString &map_path) {
+  m_current_campaign_id.clear();
+  m_current_mission_id.clear();
+  m_current_mission_definition.reset();
+
+  m_current_mission_context.mode = "skirmish";
+  m_current_mission_context.campaign_id = "";
+  m_current_mission_context.mission_id = map_path;
+  m_current_mission_context.difficulty = "normal";
+
+  emit current_campaign_changed();
+  emit current_mission_changed();
+}
+
 void CampaignManager::configure_mission_victory_conditions(
     Game::Systems::VictoryService *victory_service, int local_owner_id) {
-  if (!victory_service || !m_current_mission_definition.has_value()) {
+  if (!victory_service || !m_current_mission_context.is_campaign() ||
+      !m_current_mission_definition.has_value()) {
     return;
   }
 

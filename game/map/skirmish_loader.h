@@ -97,7 +97,7 @@ public:
   }
 
   auto start(const QString &map_path, const QVariantList &playerConfigs,
-             int selected_player_id,
+             int selected_player_id, bool allow_default_player_barracks,
              int &out_selected_player_id) -> SkirmishLoadResult;
 
 private:

@@ -292,7 +292,7 @@
       "z": 5,
       "width": 20,
       "depth": 15,
-      "height": 8.0,
+      "height": 4.0,
       "rotation": -10,
       "description": "Northern mountain range"
     },
@@ -302,7 +302,7 @@
       "z": 3,
       "width": 25,
       "depth": 12,
-      "height": 9.0,
+      "height": 4.5,
       "rotation": 5,
       "description": "Northern mountain range"
     },
@@ -312,7 +312,7 @@
       "z": 4,
       "width": 20,
       "depth": 14,
-      "height": 8.5,
+      "height": 4.25,
       "rotation": -5,
       "description": "Northern mountain range"
     },
@@ -322,7 +322,7 @@
       "z": 5,
       "width": 30,
       "depth": 12,
-      "height": 9.5,
+      "height": 4.75,
       "rotation": 8,
       "description": "Northern mountain range"
     },
@@ -332,7 +332,7 @@
       "z": 75,
       "width": 20,
       "depth": 15,
-      "height": 8.0,
+      "height": 4.0,
       "rotation": 10,
       "description": "Southern mountain range"
     },
@@ -342,7 +342,7 @@
       "z": 77,
       "width": 25,
       "depth": 12,
-      "height": 9.0,
+      "height": 4.5,
       "rotation": -5,
       "description": "Southern mountain range"
     },
@@ -352,7 +352,7 @@
       "z": 76,
       "width": 20,
       "depth": 14,
-      "height": 8.5,
+      "height": 4.25,
       "rotation": 5,
       "description": "Southern mountain range"
     },
@@ -362,7 +362,7 @@
       "z": 75,
       "width": 30,
       "depth": 12,
-      "height": 9.5,
+      "height": 4.75,
       "rotation": -8,
       "description": "Southern mountain range"
     },
@@ -372,7 +372,7 @@
       "z": 40,
       "width": 12,
       "depth": 30,
-      "height": 6.0,
+      "height": 3.0,
       "rotation": 0,
       "description": "Central ridge dividing paths"
     },
@@ -382,7 +382,7 @@
       "z": 40,
       "width": 10,
       "depth": 25,
-      "height": 5.5,
+      "height": 2.75,
       "rotation": 0,
       "description": "Second ridge near river"
     },
@@ -392,7 +392,7 @@
       "z": 40,
       "width": 15,
       "depth": 25,
-      "height": 7.0,
+      "height": 3.5,
       "rotation": 0,
       "description": "Eastern divide between villages"
     },
