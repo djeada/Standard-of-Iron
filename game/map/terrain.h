@@ -493,9 +493,15 @@ private:
   std::vector<bool> m_hillWalkable;
   std::vector<RiverSegment> m_riverSegments;
   std::vector<Bridge> m_bridges;
+  
+  // Precomputed bridge lookup for fast per-frame queries
+  std::vector<bool> m_onBridge;
+  std::vector<QVector3D> m_bridgeCenters;
 
   [[nodiscard]] auto indexAt(int x, int z) const -> int;
   [[nodiscard]] auto inBounds(int x, int z) const -> bool;
+
+  void precomputeBridgeData();
 
   [[nodiscard]] static auto
   calculateFeatureHeight(const TerrainFeature &feature, float world_x,
