@@ -169,6 +169,6 @@ Example mission and campaign files are provided:
 
 - `missions/defend_outpost.json` - Survival mission
 - `missions/forest_ambush.json` - Elimination mission
-- `campaigns/tutorial_campaign.json` - Two-mission campaign
+- `campaigns/second_punic_war.json` - Multi-mission campaign
 
 Use these as templates for creating new content.

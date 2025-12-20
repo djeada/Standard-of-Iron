@@ -403,8 +403,7 @@ auto SaveStorage::list_campaigns(QString *out_error) -> QVariantList {
 
     qInfo() << "Loading campaigns from Qt resources";
 
-    QStringList known_campaigns = {QStringLiteral("tutorial_campaign"),
-                                   QStringLiteral("second_punic_war")};
+    QStringList known_campaigns = {QStringLiteral("second_punic_war")};
 
     for (const auto &campaign_name : known_campaigns) {
       const QString campaign_path =
