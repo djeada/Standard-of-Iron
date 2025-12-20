@@ -25,7 +25,8 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return m_oliveInstanceBuffer != nullptr || m_oliveInstanceCount == 0;
+    return (m_oliveInstanceBuffer != nullptr || m_oliveInstanceCount == 0) &&
+           !m_visibilityDirty;
   }
 
 private:

@@ -25,7 +25,8 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return m_pineInstanceBuffer != nullptr || m_pineInstanceCount == 0;
+    return (m_pineInstanceBuffer != nullptr || m_pineInstanceCount == 0) &&
+           !m_visibilityDirty;
   }
 
 private:
