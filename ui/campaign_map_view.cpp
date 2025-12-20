@@ -123,8 +123,7 @@ struct CampaignMapTextureCache {
     return s_instance;
   }
 
-  QOpenGLTexture *get_or_load(const QString &resource_path,
-                               QOpenGLFunctions_3_3_Core *gl_funcs) {
+  QOpenGLTexture *get_or_load(const QString &resource_path) {
     auto it = m_textures.find(resource_path);
     if (it != m_textures.end() && it->second != nullptr) {
       return it->second;
@@ -146,8 +145,12 @@ struct CampaignMapTextureCache {
   }
 
   void clear() {
-    for (auto &pair : m_textures) {
-      delete pair.second;
+    // Only delete textures if there's a valid OpenGL context
+    QOpenGLContext *ctx = QOpenGLContext::currentContext();
+    if (ctx != nullptr && ctx->isValid()) {
+      for (auto &pair : m_textures) {
+        delete pair.second;
+      }
     }
     m_textures.clear();
   }
@@ -267,9 +270,9 @@ private:
     // Use global texture cache to avoid reloading from disk on renderer recreation
     auto &tex_cache = CampaignMapTextureCache::instance();
     m_waterTexture = tex_cache.get_or_load(
-        QStringLiteral(":/assets/campaign_map/campaign_water.png"), this);
+        QStringLiteral(":/assets/campaign_map/campaign_water.png"));
     m_baseTexture = tex_cache.get_or_load(
-        QStringLiteral(":/assets/campaign_map/campaign_base_color.png"), this);
+        QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
     init_land_mesh();
 
     init_line_layer(m_coastLayer,
