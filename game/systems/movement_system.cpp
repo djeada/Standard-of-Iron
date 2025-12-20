@@ -636,6 +636,10 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   }
 
   // Handle bridge centering and hill entrance centering
+  // This ensures units stay centered on bridges and hill entrances for proper
+  // navigation and visual consistency. Bridge centering uses gentle pull to
+  // keep units on the bridge axis. Hill entrance centering helps units properly
+  // enter/exit hills through designated entrances.
   if (terrain.is_initialized()) {
     // Check if unit is on a bridge and center it
     if (terrain.is_on_bridge(transform->position.x, transform->position.z)) {

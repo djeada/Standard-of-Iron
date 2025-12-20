@@ -469,15 +469,17 @@ public:
   }
 };
 
+/// Component for tracking a unit's terrain context (bridges, hill entrances)
+/// Used for centering behavior and audio event triggering
 class TerrainContextComponent : public Component {
 public:
   TerrainContextComponent() = default;
 
-  bool is_on_bridge{false};
-  bool is_at_hill_entrance{false};
-  float audio_cooldown{0.0F};
+  bool is_on_bridge{false};          ///< True when unit is on a bridge
+  bool is_at_hill_entrance{false};   ///< True when unit is at a hill entrance
+  float audio_cooldown{0.0F};        ///< Cooldown timer for terrain audio events
   
-  static constexpr float kAudioCooldownTime = 5.0F; // 5 seconds between shouts
+  static constexpr float kAudioCooldownTime = 5.0F; ///< 5 seconds between shouts
 };
 
 class HomeComponent : public Component {
