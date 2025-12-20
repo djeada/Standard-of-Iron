@@ -58,6 +58,7 @@ public:
 
 signals:
   void placing_construction_changed();
+  void construction_placement_rejected();
 
 private:
   std::vector<Engine::Core::EntityID> collect_available_builders();
