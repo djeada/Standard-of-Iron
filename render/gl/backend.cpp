@@ -11,6 +11,7 @@
 #include "backend/effects_pipeline.h"
 #include "backend/healer_aura_pipeline.h"
 #include "backend/healing_beam_pipeline.h"
+#include "backend/mesh_instancing_pipeline.h"
 #include "backend/mode_indicator_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
@@ -54,7 +55,19 @@ using namespace Render::GL::ComponentCount;
 namespace {
 
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
+
+/// Check if two MeshCmd items can be batched together for instanced rendering.
+/// They must have the same mesh, shader, and texture, and both must be opaque.
+[[nodiscard]] inline auto can_batch_mesh_cmds(const MeshCmd &a,
+                                               const MeshCmd &b) -> bool {
+  // Both must be opaque for batching (uses k_opaque_threshold from draw_queue.h)
+  if (a.alpha < k_opaque_threshold || b.alpha < k_opaque_threshold) {
+    return false;
+  }
+  return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture;
 }
+
+} // namespace
 
 Backend::Backend() = default;
 
@@ -68,6 +81,7 @@ Backend::~Backend() {
     (void)m_characterPipeline.release();
     (void)m_waterPipeline.release();
     (void)m_effectsPipeline.release();
+    (void)m_meshInstancingPipeline.release();
   } else {
 
     m_cylinderPipeline.reset();
@@ -76,6 +90,7 @@ Backend::~Backend() {
     m_characterPipeline.reset();
     m_waterPipeline.reset();
     m_effectsPipeline.reset();
+    m_meshInstancingPipeline.reset();
   }
 }
 
@@ -189,6 +204,13 @@ void Backend::initialize() {
   m_modeIndicatorPipeline->initialize();
   qInfo() << "Backend: ModeIndicatorPipeline initialized";
 
+  qInfo() << "Backend: Creating MeshInstancingPipeline...";
+  m_meshInstancingPipeline =
+      std::make_unique<BackendPipelines::MeshInstancingPipeline>(
+          this, m_shaderCache.get());
+  m_meshInstancingPipeline->initialize();
+  qInfo() << "Backend: MeshInstancingPipeline initialized";
+
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
   m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
@@ -231,6 +253,9 @@ void Backend::begin_frame() {
 
   if (m_cylinderPipeline) {
     m_cylinderPipeline->begin_frame();
+  }
+  if (m_meshInstancingPipeline) {
+    m_meshInstancingPipeline->begin_frame();
   }
 }
 
