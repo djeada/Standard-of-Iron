@@ -12,6 +12,7 @@ add_executable(standard_of_iron_tests
     map/mission_loader_test.cpp
     map/campaign_loader_test.cpp
     map/terrain_bridge_test.cpp
+    map/terrain_hill_test.cpp
     systems/rain_manager_test.cpp
     systems/patrol_system_test.cpp
     systems/formation_system_test.cpp
