@@ -12,21 +12,25 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 16;
-// Lower exponent creates gentler curves; 0.25 provides ultra-gentle ascent
-constexpr float k_hill_ramp_steepness_exponent = 0.25F;
+constexpr int k_hill_ramp_extra_steps = 10;
+// Higher exponent slows early rise for a gentler, longer entry ramp
+constexpr float k_hill_ramp_steepness_exponent = 1.4F;
 // Maximum allowed slope angle to prevent cliff-like appearance (in grid units per height unit)
-constexpr float k_max_slope_ratio = 6.0F; // ~10 degrees maximum
-// Width of the entry ramp to create natural, wide transitions
-constexpr float k_entry_ramp_width = 5.0F;
+constexpr float k_max_slope_ratio = 3.5F; // ~16 degrees maximum
+// Base width of the entry ramp; actual width is clamped per-hill
+constexpr float k_entry_ramp_width = 3.5F;
 // Quadratic falloff exponent for smooth width transitions (value of 2 = quadratic)
-constexpr float k_width_falloff_exponent = 2.0F;
+constexpr float k_width_falloff_exponent = 2.2F;
 // Smooth width falloff adjustment (prevents division by width at edges)
 constexpr float k_width_falloff_padding = 1.0F;
 // Height blending tolerance multiplier (allows slight overshoot for smoother transitions)
 constexpr float k_height_blend_tolerance = 1.5F;
 // Minimum width factor for cells to be marked as walkable
 constexpr float k_walkable_width_threshold = 0.5F;
+// Limit how far into the hill the entry can carve down.
+constexpr float k_entry_carve_progress = 0.45F;
+constexpr float k_entry_carve_width_threshold = 0.45F;
+constexpr float k_entry_carve_width_exponent = 1.6F;
 
 // Multi-stage transition thresholds and heights (flat → gentle → medium → steep)
 constexpr float k_stage1_threshold = 0.4F;  // End of very gentle start phase (extended to 40%)
@@ -292,7 +296,14 @@ void TerrainHeightMap::buildFromFeatures(
           }
         }
 
-        const int ramp_steps = std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
+        const int ramp_steps =
+            std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
+
+        // Clamp entry width so it doesn't overwhelm small hills.
+        float const hill_min_extent =
+            std::min(plateau_width, plateau_depth);
+        float const entry_width =
+            std::max(1.5F, std::min(k_entry_ramp_width, hill_min_extent * 0.35F));
         
         // Create perpendicular vector for widening the entry
         // This is a 90-degree counter-clockwise rotation of (dir_x, dir_z)
@@ -351,16 +362,12 @@ void TerrainHeightMap::buildFromFeatures(
           // Calculate max height per step for slope bounding (reused in width loop)
           float const max_height_per_step = feature.height / (ramp_steps * k_max_slope_ratio);
           
-          // Apply slope bound check to prevent steep cliffs
-          float bounded_height = target_height;
-          if (ramp_step > 0) {
-            bounded_height = std::min(target_height, ramp_step * max_height_per_step);
-          }
+          float const bounded_height = target_height;
           
           ++ramp_step;
 
           // Widen the entry by affecting cells perpendicular to the path
-          for (int w = -int(k_entry_ramp_width); w <= int(k_entry_ramp_width); ++w) {
+          for (int w = -int(entry_width); w <= int(entry_width); ++w) {
             float const offset_x = cur_x + perp_x * float(w);
             float const offset_z = cur_z + perp_z * float(w);
             int const ix = int(std::round(offset_x));
@@ -372,7 +379,9 @@ void TerrainHeightMap::buildFromFeatures(
             
             // Calculate distance from center line for smooth width falloff
             // Denominator is guaranteed > 0 due to k_entry_ramp_width (3.0) + k_width_falloff_padding (1.0) = 4.0
-            float const width_factor = 1.0F - std::abs(float(w)) / (k_entry_ramp_width + k_width_falloff_padding);
+            float const width_factor = 1.0F - std::abs(float(w)) /
+                                                  (entry_width +
+                                                   k_width_falloff_padding);
             float const blended_height = bounded_height * std::pow(width_factor, k_width_falloff_exponent);
             
             int const ramp_idx = indexAt(ix, iz);
@@ -384,10 +393,22 @@ void TerrainHeightMap::buildFromFeatures(
                 walkable_mask[ramp_idx] = 1;
                 entrance_line_mask[ramp_idx] = 1;
               }
-              // Blend with existing height to avoid sharp discontinuities
+              // Only carve a shallow parabola near the marked entry.
               float const existing_h = m_heights[ramp_idx];
-              m_heights[ramp_idx] = std::max(existing_h, 
-                  std::min(blended_height, existing_h + max_height_per_step * k_height_blend_tolerance));
+              bool const allow_carve =
+                  (ramp_progress <= k_entry_carve_progress) &&
+                  (width_factor >= k_entry_carve_width_threshold);
+              if (allow_carve) {
+                float const parabola_h =
+                    feature.height * (ramp_progress * ramp_progress);
+                if (parabola_h < existing_h) {
+                  float const width_scale =
+                      std::pow(width_factor, k_entry_carve_width_exponent);
+                  float const carved =
+                      existing_h - (existing_h - parabola_h) * width_scale;
+                  m_heights[ramp_idx] = carved;
+                }
+              }
             }
           }
 
