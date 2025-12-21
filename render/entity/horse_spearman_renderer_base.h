@@ -68,7 +68,14 @@ protected:
                       ISubmitter &out) const override;
 
 private:
+  void cache_equipment();
+
   HorseSpearmanRendererConfig m_config;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_spear;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shield;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
 };
 
 } // namespace Render::GL
