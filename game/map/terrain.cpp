@@ -12,9 +12,13 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 4;
-// Lower exponent creates gentler curves; 0.7 provides smooth ascent vs steep 1.2
-constexpr float k_hill_ramp_steepness_exponent = 0.7F;
+constexpr int k_hill_ramp_extra_steps = 8;
+// Lower exponent creates gentler curves; 0.4 provides very smooth ascent
+constexpr float k_hill_ramp_steepness_exponent = 0.4F;
+// Maximum allowed slope angle to prevent cliff-like appearance (in grid units per height unit)
+constexpr float k_max_slope_ratio = 3.5F; // ~15-20 degrees
+// Width of the entry ramp to create natural, wide transitions
+constexpr float k_entry_ramp_width = 3.0F;
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -274,16 +278,21 @@ void TerrainHeightMap::buildFromFeatures(
         }
 
         const int ramp_steps = std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
+        
+        // Create perpendicular vector for widening the entry
+        float const perp_x = -dir_z;
+        float const perp_z = dir_x;
+        
         int ramp_step = 0;
         for (int step = 0; step < steps && ramp_step < ramp_steps; ++step) {
-          int const ix = int(std::round(cur_x));
-          int const iz = int(std::round(cur_z));
-          if (!inBounds(ix, iz)) {
+          int const center_ix = int(std::round(cur_x));
+          int const center_iz = int(std::round(cur_z));
+          if (!inBounds(center_ix, center_iz)) {
             break;
           }
 
-          const float cell_dx = float(ix) - grid_center_x;
-          const float cell_dz = float(iz) - grid_center_z;
+          const float cell_dx = float(center_ix) - grid_center_x;
+          const float cell_dz = float(center_iz) - grid_center_z;
           const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
           const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
           const float cell_norm_dist = std::sqrt(
@@ -299,21 +308,67 @@ void TerrainHeightMap::buildFromFeatures(
             continue;
           }
 
+          // Calculate target height with multi-stage transition
           float const ramp_progress =
               (ramp_steps > 1) ? (float(ramp_step) / float(ramp_steps - 1))
                                : 1.0F;
-          float const ramp_height =
-              feature.height * std::pow(smoothstep(ramp_progress), k_hill_ramp_steepness_exponent);
+          
+          // Multi-stage interpolation: flat → gentle → medium → steep
+          float height_factor;
+          if (ramp_progress < 0.3F) {
+            // Very gentle start (0-30%)
+            float const local_t = ramp_progress / 0.3F;
+            height_factor = 0.15F * smoothstep(local_t);
+          } else if (ramp_progress < 0.6F) {
+            // Gentle middle section (30-60%)
+            float const local_t = (ramp_progress - 0.3F) / 0.3F;
+            height_factor = 0.15F + 0.35F * smoothstep(local_t);
+          } else {
+            // Final approach to plateau (60-100%)
+            float const local_t = (ramp_progress - 0.6F) / 0.4F;
+            height_factor = 0.5F + 0.5F * smoothstep(local_t);
+          }
+          
+          float const target_height = feature.height * 
+              std::pow(height_factor, k_hill_ramp_steepness_exponent);
+          
+          // Apply slope bound check
+          float const max_height_delta = (ramp_step > 0) ? 
+              (feature.height / (ramp_steps * k_max_slope_ratio)) : target_height;
+          float const bounded_height = std::min(target_height, 
+              (ramp_step > 0 ? ramp_step * max_height_delta : target_height));
+          
           ++ramp_step;
 
-          int const ramp_idx = indexAt(ix, iz);
-          if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
-            if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
-              m_terrain_types[ramp_idx] = TerrainType::Hill;
+          // Widen the entry by affecting cells perpendicular to the path
+          for (int w = -int(k_entry_ramp_width); w <= int(k_entry_ramp_width); ++w) {
+            float const offset_x = cur_x + perp_x * float(w);
+            float const offset_z = cur_z + perp_z * float(w);
+            int const ix = int(std::round(offset_x));
+            int const iz = int(std::round(offset_z));
+            
+            if (!inBounds(ix, iz)) {
+              continue;
             }
-            walkable_mask[ramp_idx] = 1;
-            entrance_line_mask[ramp_idx] = 1;
-            m_heights[ramp_idx] = std::max(m_heights[ramp_idx], ramp_height);
+            
+            // Calculate distance from center line for smooth width falloff
+            float const width_factor = 1.0F - std::abs(float(w)) / (k_entry_ramp_width + 1.0F);
+            float const blended_height = bounded_height * width_factor * width_factor;
+            
+            int const ramp_idx = indexAt(ix, iz);
+            if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
+              if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
+                m_terrain_types[ramp_idx] = TerrainType::Hill;
+              }
+              if (width_factor > 0.5F) {
+                walkable_mask[ramp_idx] = 1;
+                entrance_line_mask[ramp_idx] = 1;
+              }
+              // Blend with existing height to avoid sharp discontinuities
+              float const existing_h = m_heights[ramp_idx];
+              m_heights[ramp_idx] = std::max(existing_h, 
+                  std::min(blended_height, existing_h + max_height_delta * 1.5F));
+            }
           }
 
           cur_x += dir_x;
