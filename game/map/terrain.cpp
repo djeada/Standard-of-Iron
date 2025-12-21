@@ -19,6 +19,8 @@ constexpr float k_hill_ramp_steepness_exponent = 0.4F;
 constexpr float k_max_slope_ratio = 3.5F; // ~15-20 degrees
 // Width of the entry ramp to create natural, wide transitions
 constexpr float k_entry_ramp_width = 3.0F;
+// Quadratic falloff exponent for smooth width transitions (value of 2 = quadratic)
+constexpr float k_width_falloff_exponent = 2.0F;
 // Smooth width falloff adjustment (prevents division by width at edges)
 constexpr float k_width_falloff_padding = 1.0F;
 // Height blending tolerance multiplier (allows slight overshoot for smoother transitions)
@@ -336,10 +338,12 @@ void TerrainHeightMap::buildFromFeatures(
           float const target_height = feature.height * 
               std::pow(height_factor, k_hill_ramp_steepness_exponent);
           
+          // Calculate max height per step for slope bounding (reused in width loop)
+          float const max_height_per_step = feature.height / (ramp_steps * k_max_slope_ratio);
+          
           // Apply slope bound check to prevent steep cliffs
           float bounded_height = target_height;
           if (ramp_step > 0) {
-            float const max_height_per_step = feature.height / (ramp_steps * k_max_slope_ratio);
             bounded_height = std::min(target_height, ramp_step * max_height_per_step);
           }
           
@@ -358,7 +362,7 @@ void TerrainHeightMap::buildFromFeatures(
             
             // Calculate distance from center line for smooth width falloff
             float const width_factor = 1.0F - std::abs(float(w)) / (k_entry_ramp_width + k_width_falloff_padding);
-            float const blended_height = bounded_height * width_factor * width_factor;
+            float const blended_height = bounded_height * std::pow(width_factor, k_width_falloff_exponent);
             
             int const ramp_idx = indexAt(ix, iz);
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
@@ -371,7 +375,6 @@ void TerrainHeightMap::buildFromFeatures(
               }
               // Blend with existing height to avoid sharp discontinuities
               float const existing_h = m_heights[ramp_idx];
-              float const max_height_per_step = feature.height / (ramp_steps * k_max_slope_ratio);
               m_heights[ramp_idx] = std::max(existing_h, 
                   std::min(blended_height, existing_h + max_height_per_step * k_height_blend_tolerance));
             }
