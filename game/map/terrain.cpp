@@ -12,7 +12,7 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 4;
+constexpr int k_hill_ramp_extra_steps = 8;
 // Controls the vertical profile of the entry: 1.0 is a neutral S-curve, >1 keeps the base flatter.
 constexpr float k_hill_ramp_steepness_exponent = 1.0F;
 // Nominal maximum half-width (in cells) for entry edits; actual width is clamped per-hill.
@@ -25,9 +25,11 @@ constexpr float k_entry_bowl_exponent = 2.0F;
 constexpr float k_entry_base_width_scale = 1.55F;
 constexpr float k_entry_top_width_scale = 0.70F;
 // Pull the mid-section down a bit to create an S-curve silhouette.
-constexpr float k_entry_mid_dip_strength = 0.12F;
+constexpr float k_entry_mid_dip_strength = 0.28F;
+// Pull the ramp down overall around the mid-section (deeper carved feel).
+constexpr float k_entry_mid_depth_strength = 0.22F;
 // Slightly lift the toe (base) outward so the hill meets the ground less abruptly.
-constexpr float k_entry_toe_height_fraction = 0.08F;
+constexpr float k_entry_toe_height_fraction = 0.02F;
 // Minimum fraction of the current entry radius considered walkable.
 constexpr float k_walkable_width_threshold = 0.38F;
 
@@ -348,8 +350,10 @@ void TerrainHeightMap::buildFromFeatures(
             // Small toe lift near the base pushes the lower edge outward gently.
             float const toe_frac =
               k_entry_toe_height_fraction * (1.0F - s) * (1.0F - s);
-            float const center_ramp_height =
-              feature.height * std::max(height_frac, toe_frac);
+              float center_ramp_height =
+                feature.height * std::max(height_frac, toe_frac);
+              center_ramp_height *=
+                std::clamp(1.0F - k_entry_mid_depth_strength * mid, 0.0F, 1.0F);
 
             // Width taper: wider at base, narrower at the top.
             float const width_scale =
