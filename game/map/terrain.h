@@ -453,6 +453,10 @@ public:
     return m_terrain_types;
   }
   [[nodiscard]] auto
+  getHillEntrances() const -> const std::vector<bool> & {
+    return m_hillEntrances;
+  }
+  [[nodiscard]] auto
   getRiverSegments() const -> const std::vector<RiverSegment> & {
     return m_riverSegments;
   }

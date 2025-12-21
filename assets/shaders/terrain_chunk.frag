@@ -4,6 +4,7 @@ in vec3 v_worldPos;
 in vec3 v_normal;
 in vec2 v_uv;
 in float v_vertexDisplacement;
+in float v_entryMask;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -105,6 +106,25 @@ float sampleHeight(vec2 uv) {
 
 vec2 uvToWorld(vec2 duv) { return duv / max(abs(u_heightUVScale), vec2(1e-6)); }
 
+vec3 heightmapNormal(vec2 uv) {
+  // Central differences in heightmap space, converted to world-space x/z gradients.
+  vec2 du = vec2(u_heightTexelSize.x, 0.0);
+  vec2 dv = vec2(0.0, u_heightTexelSize.y);
+
+  float hL = sampleHeight(uv - du);
+  float hR = sampleHeight(uv + du);
+  float hD = sampleHeight(uv - dv);
+  float hU = sampleHeight(uv + dv);
+
+  float dxW = max(1e-6, abs(uvToWorld(du).x));
+  float dzW = max(1e-6, abs(uvToWorld(dv).y));
+
+  float dhdx = (hR - hL) / (2.0 * dxW);
+  float dhdz = (hU - hD) / (2.0 * dzW);
+
+  return normalize(vec3(-dhdx, 1.0, -dhdz));
+}
+
 float avgWorldPerTexel() {
   vec2 wpt = abs(uvToWorld(u_heightTexelSize));
   return 0.5 * (wpt.x + wpt.y);
@@ -143,8 +163,27 @@ float minCliffDistanceRadial(vec2 uv, int r, float riseDelta) {
 }
 
 void main() {
+  float entryMask = clamp(v_entryMask, 0.0, 1.0);
   vec3 normal = geomNormal();
+  // Gently blend toward interpolated normals at entries
+  normal = normalize(mix(normal, normalize(v_normal), entryMask * 0.5));
+
+  // Smooth lighting faceting on hills by using heightmap-derived normals.
+  // This keeps visual continuity across large triangles and chunk seams.
+  if (u_hasHeightTex == 1) {
+    vec2 huv = v_worldPos.xz * u_heightUVScale + u_heightUVOffset;
+    vec3 hmN = heightmapNormal(huv);
+    float slope0 = 1.0 - clamp(normal.y, 0.0, 1.0);
+    // Preserve very steep cliffs; smooth everything else.
+    float w = 0.70 * (1.0 - smoothstep(0.70, 0.95, slope0));
+    // Keep entry zones a bit crisper.
+    w *= (1.0 - 0.50 * entryMask);
+    normal = normalize(mix(normal, hmN, w));
+  }
+
   float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
+  // Slightly reduce perceived slope at entry zones
+  slope *= (1.0 - 0.25 * entryMask);
   float curvature = computeCurvature();
 
   float tileScale = max(u_tileSize, 0.0001);
@@ -221,6 +260,8 @@ void main() {
                              (erosionNoise - 0.5) * u_rockDetailStrength,
                          0.0, 1.0);
   rockMask *= 1.0 - soilMix * 0.75;
+  // Slightly reduce rock at entry zones
+  rockMask *= (1.0 - 0.3 * entryMask);
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
@@ -334,7 +375,15 @@ void main() {
   specContrib += u_moistureLevel * 0.10 * fresnel * (1.0 - rockMask);
   float shade = ambient + ndl * 0.78 + specContrib;
 
-  float plateauBrightness = 1.0 + plateauFactor * 0.05;
+  // Plateau tops tend to read too bright/saturated; mute them toward gray and slightly darken.
+  float plateauMuted = plateauFactor * (1.0 - 0.70 * entryMask);
+  float plateauDesat = clamp(0.75 * plateauMuted, 0.0, 0.75);
+  float plateauDim = clamp(0.25 * plateauMuted, 0.0, 0.25);
+
+  float lumaP = dot(terrainColor, vec3(0.299, 0.587, 0.114));
+  terrainColor = mix(terrainColor, vec3(lumaP), plateauDesat);
+
+  float plateauBrightness = 1.0 - plateauDim;
   float gullyDarkness = 1.0 - isGully * 0.04;
   float rimContrast = 1.0 + rimFactor * 0.03;
 
