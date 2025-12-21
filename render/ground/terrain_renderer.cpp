@@ -747,14 +747,12 @@ void TerrainRenderer::build_meshes() {
         QVector3D const aspect_tint =
             cool_tint * northness + warm_tint * (1.0F - northness);
 
-        // Hill tops (plateaus) were reading too bright and saturated because they inherit
-        // biome colors. Keep the biome hue, but dilute/desaturate plateau areas.
         float const feature_bright =
-          1.0F - 0.01F * plateau_factor - 0.05F * entrance_factor;
+            1.0F + 0.08F * plateau_factor - 0.05F * entrance_factor;
         QVector3D const feature_tint =
-          QVector3D(1.0F + 0.01F * plateau_factor - 0.03F * entrance_factor,
-                1.0F + 0.00F * plateau_factor - 0.01F * entrance_factor,
-                1.0F - 0.01F * plateau_factor + 0.03F * entrance_factor);
+            QVector3D(1.0F + 0.03F * plateau_factor - 0.03F * entrance_factor,
+                      1.0F + 0.01F * plateau_factor - 0.01F * entrance_factor,
+                      1.0F - 0.02F * plateau_factor + 0.03F * entrance_factor);
 
         chunk.tint = section.tint;
 
@@ -767,21 +765,6 @@ void TerrainRenderer::build_meshes() {
         color.setZ(color.z() * aspect_tint.z() * feature_tint.z());
         color *= ao_shade * feature_bright;
 
-        // Desaturate/dilute plateau tops toward gray, but keep entrances readable.
-        float const plateau_desat = plateau_factor * (1.0F - 0.7F * entrance_factor);
-        if (plateau_desat > 0.0F &&
-          (chunk.type == Game::Map::TerrainType::Hill ||
-           chunk.type == Game::Map::TerrainType::Mountain)) {
-          float const luma =
-            0.2126F * color.x() + 0.7152F * color.y() + 0.0722F * color.z();
-          QVector3D const gray(luma, luma, luma);
-          float const t = std::clamp(0.60F * plateau_desat, 0.0F, 0.60F);
-          color = color * (1.0F - t) + gray * t;
-
-          // Also dim plateau tops slightly so they don't pop versus the biome base.
-          float const dim = std::clamp(0.22F * plateau_desat, 0.0F, 0.22F);
-          color *= (1.0F - dim);
-        }
         color = color * 0.96F + QVector3D(0.04F, 0.04F, 0.04F);
         chunk.color = clamp01(color);
 

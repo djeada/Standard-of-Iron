@@ -342,7 +342,15 @@ void main() {
   specContrib += u_moistureLevel * 0.10 * fresnel * (1.0 - rockMask);
   float shade = ambient + ndl * 0.78 + specContrib;
 
-  float plateauBrightness = 1.0 + plateauFactor * 0.05;
+  // Plateau tops tend to read too bright/saturated; mute them toward gray and slightly darken.
+  float plateauMuted = plateauFactor * (1.0 - 0.70 * entryMask);
+  float plateauDesat = clamp(0.75 * plateauMuted, 0.0, 0.75);
+  float plateauDim = clamp(0.25 * plateauMuted, 0.0, 0.25);
+
+  float lumaP = dot(terrainColor, vec3(0.299, 0.587, 0.114));
+  terrainColor = mix(terrainColor, vec3(lumaP), plateauDesat);
+
+  float plateauBrightness = 1.0 - plateauDim;
   float gullyDarkness = 1.0 - isGully * 0.04;
   float rimContrast = 1.0 + rimFactor * 0.03;
 
