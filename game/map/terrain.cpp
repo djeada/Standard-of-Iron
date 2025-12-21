@@ -9,6 +9,34 @@
 
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
+
+// Hill entry rendering parameters for smoother transitions
+// Extra steps extend the ramp beyond the plateau for gentler slope transitions
+constexpr int k_hill_ramp_extra_steps = 12;
+// Controls the vertical profile of the entry: 1.0 is a neutral S-curve, >1 keeps the base flatter.
+constexpr float k_hill_ramp_steepness_exponent = 1.25F;
+// Nominal maximum half-width (in cells) for entry edits; actual width is clamped per-hill.
+constexpr float k_entry_ramp_width = 3.0F;
+// Padding to avoid division-by-zero and to keep edges stable.
+constexpr float k_width_falloff_padding = 0.75F;
+// Cross-section bowl exponent (2 = quadratic bowl; larger = sharper channel).
+constexpr float k_entry_bowl_exponent = 2.0F;
+// Entry is wider at the base and narrows as it climbs.
+constexpr float k_entry_base_width_scale = 1.55F;
+constexpr float k_entry_top_width_scale = 0.70F;
+// Extend the entry corridor outward (away from the hill) to reduce steepness.
+constexpr float k_entry_outward_steps_fraction = 0.65F;
+constexpr int k_entry_outward_steps_min = 4;
+constexpr int k_entry_outward_steps_max = 18;
+// Pull the mid-section down a bit to create an S-curve silhouette.
+constexpr float k_entry_mid_dip_strength = 0.40F;
+// Pull the ramp down overall around the mid-section (deeper carved feel).
+constexpr float k_entry_mid_depth_strength = 0.34F;
+// Slightly lift the toe (base) outward so the hill meets the ground less abruptly.
+constexpr float k_entry_toe_height_fraction = 0.01F;
+// Minimum fraction of the current entry radius considered walkable.
+constexpr float k_walkable_width_threshold = 0.38F;
+
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
   std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
@@ -220,7 +248,7 @@ void TerrainHeightMap::buildFromFeatures(
           entrance_line_mask[entrance_idx] = 1;
           m_hillWalkable[entrance_idx] = true;
           m_heights[entrance_idx] =
-              std::max(m_heights[entrance_idx], feature.height * 0.05F);
+              std::max(m_heights[entrance_idx], 0.0F);
         }
 
         float dir_x = grid_center_x - float(ex);
@@ -239,6 +267,10 @@ void TerrainHeightMap::buildFromFeatures(
         auto smoothstep = [](float t) {
           t = std::clamp(t, 0.0F, 1.0F);
           return t * t * (3.0F - 2.0F * t);
+        };
+        auto smootherstep = [](float t) {
+          t = std::clamp(t, 0.0F, 1.0F);
+          return t * t * t * (t * (t * 6.0F - 15.0F) + 10.0F);
         };
         int plateau_steps = steps;
         {
@@ -266,17 +298,39 @@ void TerrainHeightMap::buildFromFeatures(
           }
         }
 
-        const int ramp_steps = std::min(steps, plateau_steps + 2);
-        int ramp_step = 0;
-        for (int step = 0; step < steps && ramp_step < ramp_steps; ++step) {
-          int const ix = int(std::round(cur_x));
-          int const iz = int(std::round(cur_z));
-          if (!inBounds(ix, iz)) {
+        const int ramp_steps =
+            std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
+
+        int const outward_steps = std::clamp(
+          int(std::round(float(ramp_steps) * k_entry_outward_steps_fraction)),
+          k_entry_outward_steps_min, k_entry_outward_steps_max);
+        int const total_ramp_steps = outward_steps + ramp_steps;
+
+        // Clamp entry width so it doesn't overwhelm small hills.
+        float const hill_min_extent = std::min(plateau_width, plateau_depth);
+        float const entry_width =
+          std::max(1.5F, std::min(k_entry_ramp_width, hill_min_extent * 0.35F));
+        
+        // Create perpendicular vector for widening the entry
+        // This is a 90-degree counter-clockwise rotation of (dir_x, dir_z)
+        float const perp_x = -dir_z;
+        float const perp_z = dir_x;
+        
+        // Start the ramp corridor *in front* of the entrance (away from the hill) so steep cases
+        // get stretched out.
+        cur_x = float(ex) - dir_x * float(outward_steps);
+        cur_z = float(ez) - dir_z * float(outward_steps);
+
+        for (int ramp_step = 0; ramp_step < total_ramp_steps; ++ramp_step) {
+          bool const is_outward = ramp_step < outward_steps;
+          int const center_ix = int(std::round(cur_x));
+          int const center_iz = int(std::round(cur_z));
+          if (!inBounds(center_ix, center_iz)) {
             break;
           }
 
-          const float cell_dx = float(ix) - grid_center_x;
-          const float cell_dz = float(iz) - grid_center_z;
+          const float cell_dx = float(center_ix) - grid_center_x;
+          const float cell_dz = float(center_iz) - grid_center_z;
           const float cell_rot_x = cell_dx * cos_a + cell_dz * sin_a;
           const float cell_rot_z = -cell_dx * sin_a + cell_dz * cos_a;
           const float cell_norm_dist = std::sqrt(
@@ -286,27 +340,98 @@ void TerrainHeightMap::buildFromFeatures(
               (cell_rot_x * cell_rot_x) / (plateau_width * plateau_width) +
               (cell_rot_z * cell_rot_z) / (plateau_depth * plateau_depth));
 
-          if (cell_norm_dist > 1.1F) {
+          // Don't skip the outward segment: it exists specifically outside the hill bounds.
+          if (!is_outward && cell_norm_dist > 1.1F) {
             cur_x += dir_x;
             cur_z += dir_z;
             continue;
           }
 
-          float const ramp_progress =
-              (ramp_steps > 1) ? (float(ramp_step) / float(ramp_steps - 1))
-                               : 1.0F;
-          float const ramp_height =
-              feature.height * std::pow(smoothstep(ramp_progress), 1.2F);
-          ++ramp_step;
+          // Calculate target height with smooth ramp progression
+          float const ramp_progress = (total_ramp_steps > 1)
+                                          ? (float(ramp_step) /
+                                             float(total_ramp_steps - 1))
+                                          : 1.0F;
 
-          int const ramp_idx = indexAt(ix, iz);
-          if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
-            if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
-              m_terrain_types[ramp_idx] = TerrainType::Hill;
+            // Vertical profile:
+            // - S-curve (smootherstep) to avoid planar/linear faces
+            // - pull down the mid-section a bit to create an S-curve silhouette
+            float const s = smootherstep(ramp_progress);
+            float const mid = 4.0F * ramp_progress * (1.0F - ramp_progress);
+            // Keep an immediate rise from the start (avoid a flat apron), then pull the mid down.
+            float const height_base = std::pow(s, k_hill_ramp_steepness_exponent);
+            float const height_frac =
+                std::clamp(height_base * (1.0F - k_entry_mid_dip_strength * mid), 0.0F, 1.0F);
+
+            // Small toe lift near the base pushes the lower edge outward gently.
+            float const toe_frac =
+              k_entry_toe_height_fraction * (1.0F - s) * (1.0F - s);
+              float center_ramp_height =
+                feature.height * std::max(height_frac, toe_frac);
+              center_ramp_height *=
+                std::clamp(1.0F - k_entry_mid_depth_strength * mid, 0.0F, 1.0F);
+
+            // Width taper: wider at base, narrower at the top.
+            float const width_scale =
+              (1.0F - s) * k_entry_base_width_scale + s * k_entry_top_width_scale;
+            float tapered_width = std::max(1.0F, entry_width * width_scale);
+
+            // The outward extension is only there to stretch steep entries; keep it narrower so it
+            // doesn't read as a giant flat rectangle in front of the hill.
+            if (is_outward && outward_steps > 0) {
+              float const outward_t = float(ramp_step) / float(std::max(1, outward_steps));
+              float const outward_width_mul = 0.55F + 0.45F * std::clamp(outward_t, 0.0F, 1.0F);
+              tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
             }
-            walkable_mask[ramp_idx] = 1;
-            entrance_line_mask[ramp_idx] = 1;
-            m_heights[ramp_idx] = std::max(m_heights[ramp_idx], ramp_height);
+          
+          // Widen the entry by affecting cells perpendicular to the path.
+          // Cross-section is a concave/bowl shape: lowest on the centerline, blending back to
+          // existing terrain at the edges.
+          int const width_radius = int(std::ceil(tapered_width));
+          for (int w = -width_radius; w <= width_radius; ++w) {
+            float const offset_x = cur_x + perp_x * float(w);
+            float const offset_z = cur_z + perp_z * float(w);
+            int const ix = int(std::round(offset_x));
+            int const iz = int(std::round(offset_z));
+            
+            if (!inBounds(ix, iz)) {
+              continue;
+            }
+            
+            float const edge_t = std::clamp(
+              std::abs(float(w)) / (tapered_width + k_width_falloff_padding), 0.0F, 1.0F);
+            
+            int const ramp_idx = indexAt(ix, iz);
+            if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
+              float const width_factor = 1.0F - edge_t;
+              if (!is_outward) {
+                // Only mark/paint the actual hill entry (not the outward stretch), otherwise it
+                // becomes a big flat-looking slab.
+                if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
+                  m_terrain_types[ramp_idx] = TerrainType::Hill;
+                }
+                if (width_factor > k_walkable_width_threshold) {
+                  walkable_mask[ramp_idx] = 1;
+                  entrance_line_mask[ramp_idx] = 1;
+                  m_hillEntrances[ramp_idx] = true;
+                }
+              }
+
+              float const existing_height = m_heights[ramp_idx];
+
+              // Concave bowl across width: center goes toward the entry surface,
+              // edges blend back to existing height.
+              float const bowl = std::pow(edge_t, k_entry_bowl_exponent);
+              float const target_height =
+                  (1.0F - bowl) * center_ramp_height + bowl * existing_height;
+
+              // Along the ramp direction, blend from carving (base) to joining (top).
+              // Delay the join so the entry stays deeper/lower for longer.
+              float const along = smootherstep(std::clamp((s - 0.20F) / 0.80F, 0.0F, 1.0F));
+              float const carved = std::min(existing_height, target_height);
+              float const joined = std::max(existing_height, target_height);
+              m_heights[ramp_idx] = (1.0F - along) * carved + along * joined;
+            }
           }
 
           cur_x += dir_x;

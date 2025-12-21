@@ -14,6 +14,7 @@ out vec3 v_worldPos;
 out vec3 v_normal;
 out vec2 v_uv;
 out float v_vertexDisplacement;
+out float v_entryMask;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -77,6 +78,7 @@ void main() {
   v_normal = worldNormal;
   v_uv = a_uv;
   v_vertexDisplacement = displacement;
+  v_entryMask = clamp(a_uv.y, 0.0, 1.0);
 
   gl_Position = u_mvp * vec4(wp, 1.0);
 }
