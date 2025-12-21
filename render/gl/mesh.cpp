@@ -46,22 +46,30 @@ void Mesh::setup_buffers() {
   }
 }
 
-void Mesh::draw() {
+auto Mesh::prepare_draw(const char *caller_name) -> bool {
   if (!m_vao) {
     setup_buffers();
   }
   if (QOpenGLContext::currentContext() == nullptr) {
-    qWarning() << "Mesh::draw called without current GL context; skipping draw"
+    qWarning() << caller_name
+               << "called without current GL context; skipping draw"
                << "indices" << m_indices.size();
-    return;
+    return false;
   }
   m_vao->bind();
 
   initializeOpenGLFunctions();
   GLenum preErr = glGetError();
   if (preErr != GL_NO_ERROR) {
-    qWarning() << "Mesh::draw pre-draw GL error" << preErr << "vao"
+    qWarning() << caller_name << "pre-draw GL error" << preErr << "vao"
                << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
+  }
+  return true;
+}
+
+void Mesh::draw() {
+  if (!prepare_draw("Mesh::draw")) {
+    return;
   }
   glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
                  GL_UNSIGNED_INT, nullptr);
@@ -71,6 +79,26 @@ void Mesh::draw() {
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw GL error" << err << "indices" << m_indices.size();
+  }
+}
+
+void Mesh::draw_instanced(std::size_t instance_count) {
+  if (instance_count == 0) {
+    return;
+  }
+  if (!prepare_draw("Mesh::draw_instanced")) {
+    return;
+  }
+  glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
+                          GL_UNSIGNED_INT, nullptr,
+                          static_cast<GLsizei>(instance_count));
+
+  m_vao->unbind();
+
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw_instanced GL error" << err << "indices"
+               << m_indices.size() << "instances" << instance_count;
   }
 }
 
