@@ -127,7 +127,7 @@ struct CampaignMapTextureCache {
     // Only allow texture loading during initialization, not from render thread
     if (!m_allow_loading) {
       qWarning() << "CampaignMapTextureCache: Attempted to load texture after "
-                    "initialization";
+                    "initialization:" << resource_path;
       return nullptr;
     }
 
