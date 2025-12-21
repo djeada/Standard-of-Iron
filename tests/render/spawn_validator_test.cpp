@@ -196,7 +196,7 @@ TEST_F(SpawnValidatorTest, MakePlantSpawnConfigDefaults) {
   SpawnValidationConfig config = make_plant_spawn_config();
 
   EXPECT_TRUE(config.allow_flat);
-  EXPECT_TRUE(config.allow_hill);
+  EXPECT_FALSE(config.allow_hill);
   EXPECT_FALSE(config.allow_mountain);
   EXPECT_FALSE(config.allow_river);
   EXPECT_TRUE(config.check_buildings);
@@ -225,6 +225,8 @@ TEST_F(SpawnValidatorTest, MakeTreeSpawnConfigDefaults) {
   EXPECT_FALSE(config.allow_river);
   EXPECT_TRUE(config.check_buildings);
   EXPECT_TRUE(config.check_roads);
+  EXPECT_TRUE(config.check_river_margin);
+  EXPECT_EQ(config.river_margin, 1);
 }
 
 TEST_F(SpawnValidatorTest, MakeFirecampSpawnConfigDefaults) {
@@ -247,4 +249,50 @@ TEST_F(SpawnValidatorTest, MakeGrassSpawnConfigDefaults) {
   EXPECT_FALSE(config.allow_river);
   EXPECT_TRUE(config.check_buildings);
   EXPECT_TRUE(config.check_roads);
+}
+
+TEST_F(SpawnValidatorTest, PlantSpawnConfigBlocksHills) {
+  // Make center a hill
+  terrain_types[static_cast<size_t>(5 * width + 5)] = TerrainType::Hill;
+  build_cache();
+
+  SpawnValidationConfig config = make_plant_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  // Hill should not be valid for plant spawning
+  EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
+  
+  // But flat terrain should be valid
+  EXPECT_TRUE(validator.can_spawn_at_grid(0.0F, 0.0F));
+}
+
+TEST_F(SpawnValidatorTest, TreeSpawnConfigRespectsRiverMargin) {
+  // Make center a river
+  terrain_types[static_cast<size_t>(5 * width + 5)] = TerrainType::River;
+  build_cache();
+
+  SpawnValidationConfig config = make_tree_spawn_config();
+  config.grid_width = width;
+  config.grid_height = height;
+  config.tile_size = tile_size;
+  config.edge_padding = 0.0F;
+
+  SpawnValidator validator(terrain_cache, config);
+
+  // River should not be valid for tree spawning
+  EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 5.0F));
+  
+  // Adjacent cells should also be blocked due to river margin
+  EXPECT_FALSE(validator.can_spawn_at_grid(4.0F, 5.0F));
+  EXPECT_FALSE(validator.can_spawn_at_grid(6.0F, 5.0F));
+  EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 4.0F));
+  EXPECT_FALSE(validator.can_spawn_at_grid(5.0F, 6.0F));
+
+  // Cell far from river should be valid
+  EXPECT_TRUE(validator.can_spawn_at_grid(0.0F, 0.0F));
 }
