@@ -985,6 +985,10 @@ auto TerrainHeightMap::getBridgeDeckHeight(
 
 auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
 
+  if (m_onBridge.empty()) {
+    return false;
+  }
+
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
   const int grid_x =
@@ -1000,6 +1004,10 @@ auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
 
 auto TerrainHeightMap::getBridgeCenterPosition(
     float world_x, float world_z) const -> std::optional<QVector3D> {
+
+  if (m_onBridge.empty()) {
+    return std::nullopt;
+  }
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
