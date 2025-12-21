@@ -28,8 +28,6 @@ namespace Render::GL {
 
 constexpr int k_sort_key_bucket_shift = 56;
 
-/// Threshold for considering an object opaque (for batching purposes).
-/// Objects with alpha >= this value can be batched together.
 constexpr float k_opaque_threshold = 0.999F;
 
 struct MeshCmd {
@@ -321,9 +319,6 @@ public:
     }
   }
 
-  /// Check if two sorted indices refer to MeshCmds that can be batched together.
-  /// Returns true if both are MeshCmds with matching mesh, shader, texture,
-  /// and both are opaque (alpha >= 0.999).
   [[nodiscard]] auto can_batch_mesh(std::size_t sorted_idx_a,
                                     std::size_t sorted_idx_b) const -> bool {
     if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
@@ -448,10 +443,7 @@ private:
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-      // Sort by texture pointer only - the backend compares actual shader/texture
-      // pointers to decide when to rebind, so truncating pointers in the sort key
-      // could cause incorrect draw ordering without improving state locality.
-      // Batching decisions must compare actual pointers, not sort key bits.
+
       uint64_t const tex_ptr =
           reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
       key |= tex_ptr;

@@ -113,8 +113,8 @@ Rectangle {
 
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
-        // Only load the campaign map when visible (not in battle)
         active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+
         sourceComponent: Component {
             CampaignMapView {
                 id: campaign_map
@@ -127,7 +127,6 @@ Rectangle {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
 
-                    // Call the method directly on this instance
                     var info = provinceInfoAtScreen(root.hover_mouse_x, root.hover_mouse_y);
                     return info && info.id ? info.id : "";
                 }
