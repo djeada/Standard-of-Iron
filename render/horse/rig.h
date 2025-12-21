@@ -168,9 +168,9 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseVariant;
 auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseProfile;
-auto get_or_create_cached_horse_profile(uint32_t seed,
-                                        const QVector3D &leather_base,
-                                        const QVector3D &cloth_base) -> HorseProfile;
+auto get_or_create_cached_horse_profile(
+    uint32_t seed, const QVector3D &leather_base,
+    const QVector3D &cloth_base) -> HorseProfile;
 void advance_horse_profile_cache_frame();
 auto compute_mount_frame(const HorseProfile &profile) -> MountedAttachmentFrame;
 auto compute_rein_state(uint32_t horse_seed,
