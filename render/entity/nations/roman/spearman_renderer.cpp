@@ -106,6 +106,8 @@ struct SpearmanExtras {
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
+  SpearmanRenderer() { cache_equipment(); }
+
   auto get_proportion_scaling() const -> QVector3D override {
 
     return {0.90F, 0.80F, 0.76F};
@@ -215,10 +217,7 @@ public:
 
     bool const is_attacking = anim.is_attacking && anim.is_melee;
 
-    auto &registry = EquipmentRegistry::instance();
-
-    auto spear = registry.get(EquipmentCategory::Weapon, "spear");
-    if (spear) {
+    if (m_cached_spear) {
       SpearRenderConfig spear_config;
       spear_config.shaft_color = extras.spearShaftColor;
       spear_config.spearhead_color = extras.spearhead_color;
@@ -226,22 +225,21 @@ public:
       spear_config.shaft_radius = extras.spear_shaft_radius;
       spear_config.spearhead_length = extras.spearhead_length;
 
-      auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
+      auto *spear_renderer =
+          dynamic_cast<SpearRenderer *>(m_cached_spear.get());
       if (spear_renderer) {
         spear_renderer->set_config(spear_config);
       }
-      spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      m_cached_spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
 
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
-    if (helmet) {
+    if (m_cached_helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      m_cached_helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -249,25 +247,37 @@ public:
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
-    if (armor) {
-      armor->render(ctx, pose.body_frames, v.palette, anim, out);
+    if (m_cached_armor) {
+      m_cached_armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
 
-    auto shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
-    if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
+    if (m_cached_shoulder_cover) {
+      m_cached_shoulder_cover->render(ctx, pose.body_frames, v.palette, anim,
+                                      out);
     }
 
-    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-    if (greaves) {
-      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
+    if (m_cached_greaves) {
+      m_cached_greaves->render(ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
 private:
+  void cache_equipment() {
+    auto &registry = EquipmentRegistry::instance();
+    m_cached_spear = registry.get(EquipmentCategory::Weapon, "spear");
+    m_cached_helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
+    m_cached_armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
+    m_cached_shoulder_cover =
+        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
+    m_cached_greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
+  }
+
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_spear;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder_cover;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_greaves;
+
   static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
       -> SpearmanExtras {
     SpearmanExtras e;

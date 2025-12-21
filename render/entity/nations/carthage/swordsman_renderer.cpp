@@ -97,6 +97,8 @@ struct KnightExtras {
 
 class KnightRenderer : public HumanoidRendererBase {
 public:
+  KnightRenderer() { cache_equipment(); }
+
   static constexpr float kLimbWidthScale = 0.90F;
   static constexpr float kTorsoWidthScale = 0.75F;
   static constexpr float kHeightScale = 1.03F;
@@ -175,10 +177,7 @@ public:
 
     bool const is_attacking = anim.is_attacking && anim.is_melee;
 
-    auto &registry = EquipmentRegistry::instance();
-
-    auto sword = registry.get(EquipmentCategory::Weapon, "sword_carthage");
-    if (sword) {
+    if (m_cached_sword) {
       SwordRenderConfig sword_config;
       sword_config.metal_color = extras.metal_color;
       sword_config.sword_length = extras.sword_length;
@@ -190,16 +189,16 @@ public:
       sword_config.blade_taper_bias = extras.blade_taper_bias;
       sword_config.has_scabbard = extras.has_scabbard;
 
-      auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get());
+      auto *sword_renderer =
+          dynamic_cast<SwordRenderer *>(m_cached_sword.get());
       if (sword_renderer) {
         sword_renderer->set_config(sword_config);
       }
-      sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      m_cached_sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
-    auto shield = registry.get(EquipmentCategory::Weapon, "shield_carthage");
-    if (shield) {
-      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    if (m_cached_shield) {
+      m_cached_shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     if (!is_attacking && extras.has_scabbard) {
@@ -210,11 +209,9 @@ public:
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
 
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
-    if (helmet) {
+    if (m_cached_helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      m_cached_helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -222,20 +219,34 @@ public:
                   const HumanoidPose &pose,
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "armor_heavy_carthage");
-    if (armor) {
-      armor->render(ctx, pose.body_frames, v.palette, anim, out);
+    if (m_cached_armor) {
+      m_cached_armor->render(ctx, pose.body_frames, v.palette, anim, out);
     }
 
-    auto shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "carthage_shoulder_cover");
-    if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
+    if (m_cached_shoulder_cover) {
+      m_cached_shoulder_cover->render(ctx, pose.body_frames, v.palette, anim,
+                                      out);
     }
   }
 
 private:
+  void cache_equipment() {
+    auto &registry = EquipmentRegistry::instance();
+    m_cached_sword = registry.get(EquipmentCategory::Weapon, "sword_carthage");
+    m_cached_shield = registry.get(EquipmentCategory::Weapon, "shield_carthage");
+    m_cached_helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
+    m_cached_armor =
+        registry.get(EquipmentCategory::Armor, "armor_heavy_carthage");
+    m_cached_shoulder_cover =
+        registry.get(EquipmentCategory::Armor, "carthage_shoulder_cover");
+  }
+
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_sword;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shield;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder_cover;
+
   static auto computeKnightExtras(uint32_t seed,
                                   const HumanoidVariant &v) -> KnightExtras {
     KnightExtras e;
