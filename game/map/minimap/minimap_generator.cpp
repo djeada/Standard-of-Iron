@@ -180,6 +180,15 @@ void MinimapGenerator::render_terrain_features(QImage &image,
   QPainter painter(&image);
   painter.setRenderHint(QPainter::Antialiasing, true);
 
+  auto grid_to_world = [&](float grid_x,
+                           float grid_z) -> std::pair<float, float> {
+    const float half_w = map_def.grid.width * 0.5F - 0.5F;
+    const float half_h = map_def.grid.height * 0.5F - 0.5F;
+    const float world_x = (grid_x - half_w) * map_def.grid.tile_size;
+    const float world_z = (grid_z - half_h) * map_def.grid.tile_size;
+    return {world_x, world_z};
+  };
+
   for (const auto &feature : map_def.terrain) {
     const auto [px, py] =
         world_to_pixel(feature.center_x, feature.center_z, map_def.grid);
@@ -195,6 +204,22 @@ void MinimapGenerator::render_terrain_features(QImage &image,
       draw_mountain_symbol(painter, px, py, pixel_width, pixel_depth);
     } else if (feature.type == TerrainType::Hill) {
       draw_hill_symbol(painter, px, py, pixel_width, pixel_depth);
+      if (!feature.entrances.empty()) {
+        painter.setBrush(QColor(200, 40, 40));
+        painter.setPen(QPen(QColor(80, 15, 15), 1.0));
+        const float radius = std::max(2.0F, m_config.pixels_per_tile * 0.6F);
+        for (const auto &entrance : feature.entrances) {
+          float ex = entrance.x();
+          float ez = entrance.z();
+          if (map_def.coordSystem == CoordSystem::Grid) {
+            const auto [wx, wz] = grid_to_world(ex, ez);
+            ex = wx;
+            ez = wz;
+          }
+          const auto [epx, epy] = world_to_pixel(ex, ez, map_def.grid);
+          painter.drawEllipse(QPointF(epx, epy), radius, radius);
+        }
+      }
     }
   }
 }

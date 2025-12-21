@@ -3,6 +3,7 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <cstdint>
+#include <vector>
 
 #include "../../game/map/terrain.h"
 #include "../../game/map/terrain_service.h"
