@@ -273,7 +273,11 @@ void TerrainHeightMap::buildFromFeatures(
                   std::sqrt((n_rot_x * n_rot_x) / (slope_width * slope_width) +
                             (n_rot_z * n_rot_z) / (slope_depth * slope_depth));
 
-              if (neighbor_norm_dist <= 1.05F) {
+              const float neighbor_plateau_dist = std::sqrt(
+                  (n_rot_x * n_rot_x) / (plateau_width * plateau_width) +
+                  (n_rot_z * n_rot_z) / (plateau_depth * plateau_depth));
+
+              if (neighbor_plateau_dist <= 1.05F) {
                 int const n_idx = indexAt(nx, nz);
                 if (m_terrain_types[n_idx] != TerrainType::Mountain) {
                   m_hillWalkable[n_idx] = true;
