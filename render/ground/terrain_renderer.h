@@ -63,6 +63,7 @@ private:
 
   std::vector<float> m_heightData;
   std::vector<Game::Map::TerrainType> m_terrain_types;
+  std::vector<bool> m_hillEntrances;
   std::vector<ChunkMesh> m_chunks;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
