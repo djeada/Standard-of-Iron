@@ -74,6 +74,8 @@ using Render::GL::Humanoid::saturate_color;
 
 class BuilderRenderer : public HumanoidRendererBase {
 public:
+  BuilderRenderer() { cache_equipment(); }
+
   friend void
   register_builder_renderer(Render::GL::EntityRendererRegistry &registry);
 
@@ -164,23 +166,19 @@ public:
                        const HumanoidPose &pose,
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-
-    auto work_apron =
-        registry.get(EquipmentCategory::Armor, "work_apron_carthage");
-    if (work_apron) {
-      work_apron->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    if (m_cached_work_apron) {
+      m_cached_work_apron->render(ctx, pose.body_frames, v.palette, anim_ctx,
+                                  out);
     }
 
-    auto tool_belt =
-        registry.get(EquipmentCategory::Armor, "tool_belt_carthage");
-    if (tool_belt) {
-      tool_belt->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    if (m_cached_tool_belt) {
+      m_cached_tool_belt->render(ctx, pose.body_frames, v.palette, anim_ctx,
+                                 out);
     }
 
-    auto arm_guards = registry.get(EquipmentCategory::Armor, "arm_guards");
-    if (arm_guards) {
-      arm_guards->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    if (m_cached_arm_guards) {
+      m_cached_arm_guards->render(ctx, pose.body_frames, v.palette, anim_ctx,
+                                  out);
     }
 
     draw_stone_hammer(ctx, v, pose, anim_ctx, out);
@@ -201,6 +199,19 @@ public:
   }
 
 private:
+  void cache_equipment() {
+    auto &registry = EquipmentRegistry::instance();
+    m_cached_work_apron =
+        registry.get(EquipmentCategory::Armor, "work_apron_carthage");
+    m_cached_tool_belt =
+        registry.get(EquipmentCategory::Armor, "tool_belt_carthage");
+    m_cached_arm_guards = registry.get(EquipmentCategory::Armor, "arm_guards");
+  }
+
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_work_apron;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_tool_belt;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_arm_guards;
+
   static constexpr uint32_t KNEEL_SEED_OFFSET = 0x5678U;
 
   void apply_hammering_pose(HumanoidPoseController &controller,
