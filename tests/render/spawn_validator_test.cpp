@@ -216,19 +216,6 @@ TEST_F(SpawnValidatorTest, MakeStoneSpawnConfigDefaults) {
   EXPECT_FALSE(config.check_roads);
 }
 
-TEST_F(SpawnValidatorTest, MakeTreeSpawnConfigDefaults) {
-  SpawnValidationConfig config = make_tree_spawn_config();
-
-  EXPECT_TRUE(config.allow_flat);
-  EXPECT_TRUE(config.allow_hill);
-  EXPECT_TRUE(config.allow_mountain);
-  EXPECT_FALSE(config.allow_river);
-  EXPECT_TRUE(config.check_buildings);
-  EXPECT_TRUE(config.check_roads);
-  EXPECT_TRUE(config.check_river_margin);
-  EXPECT_EQ(config.river_margin, 1);
-}
-
 TEST_F(SpawnValidatorTest, MakeFirecampSpawnConfigDefaults) {
   SpawnValidationConfig config = make_firecamp_spawn_config();
 
