@@ -97,6 +97,7 @@
         <file>assets/campaign_map/rivers_uv.json</file>
         <file>assets/campaign_map/land_mesh.bin</file>
         <file>assets/campaign_map/hannibal_path.json</file>
+        <file>assets/campaign_map/campaign_state.json</file>
         <file>assets/campaign_map/provinces.json</file>
         <file>assets/campaign_map/valid_provinces.json</file>
 
