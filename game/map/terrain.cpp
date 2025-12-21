@@ -220,7 +220,7 @@ void TerrainHeightMap::buildFromFeatures(
           entrance_line_mask[entrance_idx] = 1;
           m_hillWalkable[entrance_idx] = true;
           m_heights[entrance_idx] =
-              std::max(m_heights[entrance_idx], feature.height * 0.05F);
+              std::max(m_heights[entrance_idx], 0.0F);
         }
 
         float dir_x = grid_center_x - float(ex);
@@ -266,7 +266,7 @@ void TerrainHeightMap::buildFromFeatures(
           }
         }
 
-        const int ramp_steps = std::min(steps, plateau_steps + 2);
+        const int ramp_steps = std::min(steps, plateau_steps + 4);
         int ramp_step = 0;
         for (int step = 0; step < steps && ramp_step < ramp_steps; ++step) {
           int const ix = int(std::round(cur_x));
@@ -296,7 +296,7 @@ void TerrainHeightMap::buildFromFeatures(
               (ramp_steps > 1) ? (float(ramp_step) / float(ramp_steps - 1))
                                : 1.0F;
           float const ramp_height =
-              feature.height * std::pow(smoothstep(ramp_progress), 1.2F);
+              feature.height * std::pow(smoothstep(ramp_progress), 0.7F);
           ++ramp_step;
 
           int const ramp_idx = indexAt(ix, iz);
