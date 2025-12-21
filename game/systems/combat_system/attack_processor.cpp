@@ -180,6 +180,7 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
             att_u->spawn_type);
     // Increase arrow count: at least 2/3 of troop size for more impressive volley
+    // Ensure minimum of 2 arrows to maintain valid distribution range
     int const max_arrows = std::max(2, (troop_size * 2) / 3);
 
     static thread_local std::mt19937 arrow_gen(std::random_device{}());
