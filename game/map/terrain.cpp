@@ -12,9 +12,9 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 8;
+constexpr int k_hill_ramp_extra_steps = 12;
 // Controls the vertical profile of the entry: 1.0 is a neutral S-curve, >1 keeps the base flatter.
-constexpr float k_hill_ramp_steepness_exponent = 1.0F;
+constexpr float k_hill_ramp_steepness_exponent = 1.25F;
 // Nominal maximum half-width (in cells) for entry edits; actual width is clamped per-hill.
 constexpr float k_entry_ramp_width = 3.0F;
 // Padding to avoid division-by-zero and to keep edges stable.
@@ -25,11 +25,11 @@ constexpr float k_entry_bowl_exponent = 2.0F;
 constexpr float k_entry_base_width_scale = 1.55F;
 constexpr float k_entry_top_width_scale = 0.70F;
 // Pull the mid-section down a bit to create an S-curve silhouette.
-constexpr float k_entry_mid_dip_strength = 0.28F;
+constexpr float k_entry_mid_dip_strength = 0.40F;
 // Pull the ramp down overall around the mid-section (deeper carved feel).
-constexpr float k_entry_mid_depth_strength = 0.22F;
+constexpr float k_entry_mid_depth_strength = 0.34F;
 // Slightly lift the toe (base) outward so the hill meets the ground less abruptly.
-constexpr float k_entry_toe_height_fraction = 0.02F;
+constexpr float k_entry_toe_height_fraction = 0.01F;
 // Minimum fraction of the current entry radius considered walkable.
 constexpr float k_walkable_width_threshold = 0.38F;
 
@@ -400,9 +400,9 @@ void TerrainHeightMap::buildFromFeatures(
               float const target_height =
                   (1.0F - bowl) * center_ramp_height + bowl * existing_height;
 
-              // Along the ramp direction, blend from carving (base) to joining (top)
-              // so the entry reads as a carved path and then naturally becomes the hill.
-              float const along = s;
+              // Along the ramp direction, blend from carving (base) to joining (top).
+              // Delay the join so the entry stays deeper/lower for longer.
+              float const along = smootherstep(std::clamp((s - 0.20F) / 0.80F, 0.0F, 1.0F));
               float const carved = std::min(existing_height, target_height);
               float const joined = std::max(existing_height, target_height);
               m_heights[ramp_idx] = (1.0F - along) * carved + along * joined;
