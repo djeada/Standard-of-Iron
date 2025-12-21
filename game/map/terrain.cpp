@@ -9,8 +9,13 @@
 
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
+
+// Hill entry rendering parameters for smoother transitions
+// Extra steps extend the ramp beyond the plateau for gentler slope transitions
 constexpr int k_hill_ramp_extra_steps = 4;
+// Lower exponent creates gentler curves; 0.7 provides smooth ascent vs steep 1.2
 constexpr float k_hill_ramp_steepness_exponent = 0.7F;
+
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
   std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
