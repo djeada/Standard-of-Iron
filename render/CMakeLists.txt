@@ -22,6 +22,7 @@ add_library(render_gl STATIC
     gl/backend/combat_dust_pipeline.cpp
     gl/backend/mode_indicator_pipeline.cpp
     gl/backend/rain_pipeline.cpp
+    gl/backend/mesh_instancing_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
