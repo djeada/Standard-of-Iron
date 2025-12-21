@@ -119,10 +119,11 @@ struct CampaignMapTextureCache {
   }
 
   QOpenGLTexture *get_or_load(const QString &resource_path) {
-    // Only allow texture loading during initialization, not from render thread
+
     if (!m_allow_loading) {
       qWarning() << "CampaignMapTextureCache: Attempted to load texture after "
-                    "initialization:" << resource_path;
+                    "initialization:"
+                 << resource_path;
       return nullptr;
     }
 
@@ -272,8 +273,6 @@ private:
     }
 
     init_quad();
-    // Use global texture cache to avoid reloading from disk on renderer recreation
-    // Allow loading during initialization
 
     auto &tex_cache = CampaignMapTextureCache::instance();
     tex_cache.set_loading_allowed(true);
@@ -281,7 +280,7 @@ private:
         QStringLiteral(":/assets/campaign_map/campaign_water.png"));
     m_baseTexture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
-    // Prevent loading from render thread after initialization
+
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 

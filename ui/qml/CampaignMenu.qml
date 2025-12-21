@@ -420,8 +420,8 @@ Item {
 
                         anchors.fill: parent
                         anchors.margins: Theme.spacingSmall
-                        // Only load the campaign map when visible (not in battle)
                         active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+
                         sourceComponent: Component {
                             CampaignMapView {
                                 id: campaignMap
@@ -488,9 +488,9 @@ Item {
                             missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
                         }
                         onExited: {
-                            if (campaignMapLoader.item) {
+                            if (campaignMapLoader.item)
                                 campaignMapLoader.item.hoverProvinceId = "";
-                            }
+
                             missionDetailPanel.hoverProvinceName = "";
                             missionDetailPanel.hoverProvinceOwner = "";
                         }
