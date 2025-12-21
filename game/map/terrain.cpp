@@ -25,6 +25,15 @@ constexpr float k_width_falloff_exponent = 2.0F;
 constexpr float k_width_falloff_padding = 1.0F;
 // Height blending tolerance multiplier (allows slight overshoot for smoother transitions)
 constexpr float k_height_blend_tolerance = 1.5F;
+// Minimum width factor for cells to be marked as walkable
+constexpr float k_walkable_width_threshold = 0.5F;
+
+// Multi-stage transition thresholds and heights (flat → gentle → medium → steep)
+constexpr float k_stage1_threshold = 0.3F;  // End of very gentle start phase
+constexpr float k_stage2_threshold = 0.6F;  // End of gentle middle phase
+constexpr float k_stage1_height = 0.15F;    // Height gained in stage 1
+constexpr float k_stage2_height = 0.35F;    // Additional height in stage 2
+constexpr float k_stage3_height = 0.5F;     // Final height in stage 3
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -286,6 +295,7 @@ void TerrainHeightMap::buildFromFeatures(
         const int ramp_steps = std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
         
         // Create perpendicular vector for widening the entry
+        // This is a 90-degree counter-clockwise rotation of (dir_x, dir_z)
         float const perp_x = -dir_z;
         float const perp_z = dir_x;
         
@@ -321,18 +331,18 @@ void TerrainHeightMap::buildFromFeatures(
           
           // Multi-stage interpolation: flat → gentle → medium → steep
           float height_factor;
-          if (ramp_progress < 0.3F) {
+          if (ramp_progress < k_stage1_threshold) {
             // Very gentle start (0-30%)
-            float const local_t = ramp_progress / 0.3F;
-            height_factor = 0.15F * smoothstep(local_t);
-          } else if (ramp_progress < 0.6F) {
+            float const local_t = ramp_progress / k_stage1_threshold;
+            height_factor = k_stage1_height * smoothstep(local_t);
+          } else if (ramp_progress < k_stage2_threshold) {
             // Gentle middle section (30-60%)
-            float const local_t = (ramp_progress - 0.3F) / 0.3F;
-            height_factor = 0.15F + 0.35F * smoothstep(local_t);
+            float const local_t = (ramp_progress - k_stage1_threshold) / (k_stage2_threshold - k_stage1_threshold);
+            height_factor = k_stage1_height + k_stage2_height * smoothstep(local_t);
           } else {
             // Final approach to plateau (60-100%)
-            float const local_t = (ramp_progress - 0.6F) / 0.4F;
-            height_factor = 0.5F + 0.5F * smoothstep(local_t);
+            float const local_t = (ramp_progress - k_stage2_threshold) / (1.0F - k_stage2_threshold);
+            height_factor = k_stage1_height + k_stage2_height + k_stage3_height * smoothstep(local_t);
           }
           
           float const target_height = feature.height * 
@@ -361,6 +371,7 @@ void TerrainHeightMap::buildFromFeatures(
             }
             
             // Calculate distance from center line for smooth width falloff
+            // Denominator is guaranteed > 0 due to k_entry_ramp_width (3.0) + k_width_falloff_padding (1.0) = 4.0
             float const width_factor = 1.0F - std::abs(float(w)) / (k_entry_ramp_width + k_width_falloff_padding);
             float const blended_height = bounded_height * std::pow(width_factor, k_width_falloff_exponent);
             
@@ -369,7 +380,7 @@ void TerrainHeightMap::buildFromFeatures(
               if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
                 m_terrain_types[ramp_idx] = TerrainType::Hill;
               }
-              if (width_factor > 0.5F) {
+              if (width_factor > k_walkable_width_threshold) {
                 walkable_mask[ramp_idx] = 1;
                 entrance_line_mask[ramp_idx] = 1;
               }
