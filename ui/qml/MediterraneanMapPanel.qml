@@ -11,12 +11,21 @@ Rectangle {
     property real map_orbit_yaw: 180
     property real map_orbit_pitch: 90
     property real map_orbit_distance: 1.2
+    property real map_pan_u: 0
+    property real map_pan_v: 0
     property string hover_province_name: ""
     property string hover_province_owner: ""
     property real hover_mouse_x: 0
     property real hover_mouse_y: 0
     property var province_labels: []
     property int label_refresh: 0
+    property var campaign_state: null
+    property var campaign_state_sources: ["assets/campaign_map/campaign_state.json", "qrc:/assets/campaign_map/campaign_state.json", "qrc:/StandardOfIron/assets/campaign_map/campaign_state.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/campaign_state.json"]
+    property var owner_color_map: ({
+        "rome": [0.82, 0.12, 0.1, 0.45],
+        "carthage": [0.8, 0.56, 0.28, 0.45],
+        "neutral": [0.25, 0.25, 0.25, 0.25]
+    })
     property var region_camera_positions: ({
         "transalpine_gaul": {
             "yaw": 200,
@@ -45,6 +54,8 @@ Rectangle {
         }
     })
 
+    signal regionSelected(string region_id)
+
     function focus_on_region(region_id) {
         if (!region_id || region_id === "")
             return ;
@@ -54,6 +65,8 @@ Rectangle {
             map_orbit_yaw = camera_pos.yaw;
             map_orbit_pitch = camera_pos.pitch;
             map_orbit_distance = camera_pos.distance;
+            map_pan_u = 0;
+            map_pan_v = 0;
         }
     }
 
@@ -63,8 +76,114 @@ Rectangle {
             if (labels && labels.length > 0) {
                 province_labels = labels;
                 label_refresh += 1;
+                apply_campaign_state();
             }
         }
+    }
+
+    function load_campaign_state() {
+        if (campaign_state)
+            return ;
+
+        load_campaign_state_from(0);
+    }
+
+    function load_campaign_state_from(index) {
+        if (index >= campaign_state_sources.length)
+            return ;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", campaign_state_sources[index]);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState !== XMLHttpRequest.DONE)
+                return ;
+
+            if (xhr.status !== 200 && xhr.status !== 0) {
+                load_campaign_state_from(index + 1);
+                return ;
+            }
+            try {
+                var data = JSON.parse(xhr.responseText);
+                if (data && data.provinces && data.provinces.length > 0) {
+                    if (!campaign_state) {
+                        campaign_state = data;
+                        apply_campaign_state();
+                    }
+                }
+            } catch (e) {
+                load_campaign_state_from(index + 1);
+            }
+        };
+        xhr.send();
+    }
+
+    function owner_color_for(owner) {
+        var key = owner ? owner.toLowerCase() : "neutral";
+        if (owner_color_map[key])
+            return owner_color_map[key];
+
+        return owner_color_map.neutral;
+    }
+
+    function owner_flag_label(owner) {
+        var key = owner ? owner.toLowerCase() : "neutral";
+        if (key === "rome")
+            return "R";
+
+        if (key === "carthage")
+            return "C";
+
+        return "N";
+    }
+
+    function apply_campaign_state() {
+        if (!campaignMapLoader.item)
+            return ;
+
+        if (!campaign_state || !campaign_state.provinces)
+            return ;
+
+        var owner_by_id = {
+        };
+        for (var i = 0; i < campaign_state.provinces.length; i++) {
+            var entry = campaign_state.provinces[i];
+            if (entry && entry.id)
+                owner_by_id[entry.id] = entry.owner || "neutral";
+
+        }
+        var entries = [];
+        if (province_labels && province_labels.length > 0) {
+            for (var j = 0; j < province_labels.length; j++) {
+                var prov = province_labels[j];
+                if (!prov || !prov.id)
+                    continue;
+
+                var owner = owner_by_id[prov.id] || prov.owner || "neutral";
+                var color = owner_color_for(owner);
+                entries.push({
+                    "id": prov.id,
+                    "owner": owner,
+                    "color": color
+                });
+            }
+        } else {
+            for (var k = 0; k < campaign_state.provinces.length; k++) {
+                var state_prov = campaign_state.provinces[k];
+                if (!state_prov || !state_prov.id)
+                    continue;
+
+                var fallback_owner = state_prov.owner || "neutral";
+                var fallback_color = owner_color_for(fallback_owner);
+                entries.push({
+                    "id": state_prov.id,
+                    "owner": fallback_owner,
+                    "color": fallback_color
+                });
+            }
+        }
+        if (entries.length > 0)
+            campaignMapLoader.item.applyProvinceState(entries);
+
     }
 
     function label_uv_for(prov) {
@@ -97,6 +216,7 @@ Rectangle {
     radius: Theme.radiusMedium
     Component.onCompleted: {
         load_provinces();
+        load_campaign_state();
     }
     onSelected_missionChanged: {
         if (selected_mission && selected_mission.world_region_id) {
@@ -105,7 +225,12 @@ Rectangle {
             map_orbit_yaw = 180;
             map_orbit_pitch = 90;
             map_orbit_distance = 1.2;
+            map_pan_u = 0;
+            map_pan_v = 0;
         }
+    }
+    onCampaign_stateChanged: {
+        apply_campaign_state();
     }
 
     Loader {
@@ -114,6 +239,12 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+        onStatusChanged: {
+            if (status === Loader.Ready) {
+                root.load_provinces();
+                root.apply_campaign_state();
+            }
+        }
 
         sourceComponent: Component {
             CampaignMapView {
@@ -123,6 +254,8 @@ Rectangle {
                 orbitYaw: root.map_orbit_yaw
                 orbitPitch: root.map_orbit_pitch
                 orbitDistance: root.map_orbit_distance
+                panU: root.map_pan_u
+                panV: root.map_pan_v
                 hoverProvinceId: {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
@@ -133,6 +266,8 @@ Rectangle {
                 onOrbitYawChanged: root.label_refresh += 1
                 onOrbitPitchChanged: root.label_refresh += 1
                 onOrbitDistanceChanged: root.label_refresh += 1
+                onPanUChanged: root.label_refresh += 1
+                onPanVChanged: root.label_refresh += 1
                 onWidthChanged: root.label_refresh += 1
                 onHeightChanged: root.label_refresh += 1
 
@@ -169,23 +304,30 @@ Rectangle {
     MouseArea {
         property real last_x: 0
         property real last_y: 0
+        property real drag_distance: 0
 
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.LeftButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         onPressed: function(mouse) {
             last_x = mouse.x;
             last_y = mouse.y;
+            drag_distance = 0;
         }
         onPositionChanged: function(mouse) {
-            if (mouse.buttons & Qt.LeftButton) {
-                var dx = mouse.x - last_x;
-                var dy = mouse.y - last_y;
-                last_x = mouse.x;
-                last_y = mouse.y;
+            var dx = mouse.x - last_x;
+            var dy = mouse.y - last_y;
+            if ((mouse.buttons & Qt.RightButton) || (mouse.buttons & Qt.LeftButton && (mouse.modifiers & Qt.ShiftModifier))) {
+                var pan_scale = 0.0015 * root.map_orbit_distance;
+                root.map_pan_u -= dx * pan_scale;
+                root.map_pan_v += dy * pan_scale;
+            } else if (mouse.buttons & Qt.LeftButton) {
                 root.map_orbit_yaw += dx * 0.4;
                 root.map_orbit_pitch = Math.max(5, Math.min(90, root.map_orbit_pitch + dy * 0.4));
             }
+            drag_distance += Math.abs(dx) + Math.abs(dy);
+            last_x = mouse.x;
+            last_y = mouse.y;
             root.hover_mouse_x = mouse.x;
             root.hover_mouse_y = mouse.y;
             if (root.active_region_id === "" && campaignMapLoader.item) {
@@ -200,6 +342,22 @@ Rectangle {
                 root.hover_province_name = "";
                 root.hover_province_owner = "";
             }
+        }
+        onReleased: function(mouse) {
+            if (mouse.button !== Qt.LeftButton)
+                return ;
+
+            if (drag_distance > 6)
+                return ;
+
+            if (!campaignMapLoader.item)
+                return ;
+
+            var info = campaignMapLoader.item.provinceInfoAtScreen(mouse.x, mouse.y);
+            var id = info && info.id ? info.id : "";
+            if (id !== "")
+                root.regionSelected(id);
+
         }
         onWheel: function(wheel) {
             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
@@ -250,6 +408,43 @@ Rectangle {
                     y: -height / 2
                 }
 
+            }
+
+        }
+
+    }
+
+    Repeater {
+        model: root.province_labels
+
+        delegate: Item {
+            property var _uv: modelData && modelData.label_uv && modelData.label_uv.length === 2 ? modelData.label_uv : null
+            property int _refresh: root.label_refresh
+            property var _pos: (_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(_uv[0], _uv[1]) : Qt.point(0, 0)
+            property var _color: root.owner_color_for(modelData && modelData.owner ? modelData.owner : "neutral")
+
+            visible: _uv !== null
+            z: 5
+            x: _pos.x
+            y: _pos.y
+
+            Rectangle {
+                width: 14
+                height: 10
+                radius: 2
+                color: Qt.rgba(_color[0], _color[1], _color[2], 0.85)
+                border.color: "#1b1b1b"
+                border.width: 1
+                x: -width / 2
+                y: -height / 2
+            }
+
+            Text {
+                text: root.owner_flag_label(modelData && modelData.owner ? modelData.owner : "neutral")
+                color: "#f6f1e6"
+                font.pointSize: Theme.fontSizeTiny
+                font.bold: true
+                anchors.centerIn: parent
             }
 
         }
@@ -459,7 +654,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: Theme.spacingMedium
-        text: qsTr("🖱️ Drag to rotate • Scroll to zoom")
+        text: qsTr("🖱️ Drag to rotate • Shift/Right-drag to pan • Scroll to zoom")
         color: Theme.textDim
         font.pointSize: Theme.fontSizeTiny
         style: Text.Outline
