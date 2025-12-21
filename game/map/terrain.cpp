@@ -12,13 +12,13 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 8;
-// Lower exponent creates gentler curves; 0.4 provides very smooth ascent
-constexpr float k_hill_ramp_steepness_exponent = 0.4F;
+constexpr int k_hill_ramp_extra_steps = 16;
+// Lower exponent creates gentler curves; 0.25 provides ultra-gentle ascent
+constexpr float k_hill_ramp_steepness_exponent = 0.25F;
 // Maximum allowed slope angle to prevent cliff-like appearance (in grid units per height unit)
-constexpr float k_max_slope_ratio = 3.5F; // ~15-20 degrees
+constexpr float k_max_slope_ratio = 6.0F; // ~10 degrees maximum
 // Width of the entry ramp to create natural, wide transitions
-constexpr float k_entry_ramp_width = 3.0F;
+constexpr float k_entry_ramp_width = 5.0F;
 // Quadratic falloff exponent for smooth width transitions (value of 2 = quadratic)
 constexpr float k_width_falloff_exponent = 2.0F;
 // Smooth width falloff adjustment (prevents division by width at edges)
@@ -29,11 +29,11 @@ constexpr float k_height_blend_tolerance = 1.5F;
 constexpr float k_walkable_width_threshold = 0.5F;
 
 // Multi-stage transition thresholds and heights (flat → gentle → medium → steep)
-constexpr float k_stage1_threshold = 0.3F;  // End of very gentle start phase
-constexpr float k_stage2_threshold = 0.6F;  // End of gentle middle phase
-constexpr float k_stage1_height = 0.15F;    // Height gained in stage 1
-constexpr float k_stage2_height = 0.35F;    // Additional height in stage 2
-constexpr float k_stage3_height = 0.5F;     // Final height in stage 3
+constexpr float k_stage1_threshold = 0.4F;  // End of very gentle start phase (extended to 40%)
+constexpr float k_stage2_threshold = 0.7F;  // End of gentle middle phase (extended to 70%)
+constexpr float k_stage1_height = 0.10F;    // Height gained in stage 1 (reduced to 10%)
+constexpr float k_stage2_height = 0.25F;    // Additional height in stage 2 (reduced to 25%)
+constexpr float k_stage3_height = 0.65F;    // Final height in stage 3
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
