@@ -8,7 +8,8 @@ namespace Render {
 namespace Geom {
 class Arrow {
 public:
-  static auto get() -> GL::Mesh *;
+  static auto get_shaft() -> GL::Mesh *;
+  static auto get_tip() -> GL::Mesh *;
 };
 } // namespace Geom
 
