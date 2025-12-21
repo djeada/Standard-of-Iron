@@ -108,15 +108,10 @@ struct ProvinceLayer {
   bool ready = false;
 };
 
-// Hash function for QString to use in unordered_map
 struct QStringHash {
-  std::size_t operator()(const QString &s) const noexcept {
-    return qHash(s);
-  }
+  std::size_t operator()(const QString &s) const noexcept { return qHash(s); }
 };
 
-// Global texture cache to avoid reloading textures when renderer is recreated
-// This eliminates render-thread IO during normal frames
 struct CampaignMapTextureCache {
   static CampaignMapTextureCache &instance() {
     static CampaignMapTextureCache s_instance;
@@ -154,7 +149,7 @@ struct CampaignMapTextureCache {
   void set_loading_allowed(bool allowed) { m_allow_loading = allowed; }
 
   void clear() {
-    // Only delete textures if there's a valid OpenGL context
+
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
     if (ctx != nullptr && ctx->isValid()) {
       for (auto &pair : m_textures) {
@@ -279,6 +274,7 @@ private:
     init_quad();
     // Use global texture cache to avoid reloading from disk on renderer recreation
     // Allow loading during initialization
+
     auto &tex_cache = CampaignMapTextureCache::instance();
     tex_cache.set_loading_allowed(true);
     m_waterTexture = tex_cache.get_or_load(
@@ -835,7 +831,6 @@ void main() {
       m_provinceLayer.vao = 0;
     }
 
-    // Note: Textures are now owned by CampaignMapTextureCache and should not be deleted here
     m_baseTexture = nullptr;
     m_waterTexture = nullptr;
   }

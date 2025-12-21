@@ -31,6 +31,7 @@ class HealerAuraPipeline;
 class CombatDustPipeline;
 class RainPipeline;
 class ModeIndicatorPipeline;
+class MeshInstancingPipeline;
 } // namespace Render::GL::BackendPipelines
 
 namespace Render::GL {
@@ -159,6 +160,8 @@ private:
   std::unique_ptr<BackendPipelines::RainPipeline> m_rainPipeline;
   std::unique_ptr<BackendPipelines::ModeIndicatorPipeline>
       m_modeIndicatorPipeline;
+  std::unique_ptr<BackendPipelines::MeshInstancingPipeline>
+      m_meshInstancingPipeline;
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;
