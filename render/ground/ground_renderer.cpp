@@ -12,7 +12,6 @@ namespace Render::GL {
 
 namespace {
 const QMatrix4x4 k_identity_matrix;
-
 inline auto saturate(const QVector3D &c) -> QVector3D {
   return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
