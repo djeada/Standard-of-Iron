@@ -54,7 +54,7 @@ TEST_F(TerrainBridgeTest, BridgeCreatesWalkablePathAcrossRiver) {
       << "Bridge should create a walkable path with connectivity margin";
 }
 
-TEST_F(TerrainBridgeTest, BridgeHasConnectivityMargin) {
+TEST_F(TerrainBridgeTest, BridgeIsSingleCellWide) {
   TerrainHeightMap heightMap(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
 
   // Create a narrow river
@@ -90,12 +90,10 @@ TEST_F(TerrainBridgeTest, BridgeHasConnectivityMargin) {
     }
   }
 
-  // With the connectivity margin (0.5 grid cells), we should have more
-  // walkable cells than just the exact bridge width
-  float walkable_ratio =
-      static_cast<float>(walkable_count) / static_cast<float>(checked_count);
-  EXPECT_GT(walkable_ratio, 0.3F)
-      << "Bridge should have connectivity margin for pathfinding";
+  // Bridge walkability should be a narrow center line.
+  EXPECT_GT(walkable_count, 0) << "Bridge should create a walkable center line";
+  EXPECT_LT(walkable_count, checked_count / 2)
+      << "Bridge walkability should be narrow";
 }
 
 TEST_F(TerrainBridgeTest, BridgeConvertsRiverToFlatTerrain) {
@@ -157,8 +155,8 @@ TEST_F(TerrainBridgeTest, IsOnBridgeDetectsUnitsOnBridge) {
       << "Position at bridge center should be detected";
 
   // Test position on bridge edge (within width)
-  EXPECT_TRUE(heightMap.isOnBridge(0.0F, 1.4F))
-      << "Position within bridge width should be detected";
+  EXPECT_FALSE(heightMap.isOnBridge(0.0F, 1.4F))
+      << "Position off the center line should not be detected";
 
   // Test position outside bridge width
   EXPECT_FALSE(heightMap.isOnBridge(0.0F, 2.5F))
@@ -168,9 +166,9 @@ TEST_F(TerrainBridgeTest, IsOnBridgeDetectsUnitsOnBridge) {
   EXPECT_FALSE(heightMap.isOnBridge(10.0F, 0.0F))
       << "Position outside bridge length should not be detected";
 
-  // Test position slightly off bridge (within tolerance)
-  EXPECT_TRUE(heightMap.isOnBridge(0.0F, 1.8F))
-      << "Position within tolerance margin should be detected";
+  // Test position slightly off bridge
+  EXPECT_FALSE(heightMap.isOnBridge(0.0F, 1.8F))
+      << "Position outside the center line should not be detected";
 }
 
 TEST_F(TerrainBridgeTest, GetBridgeCenterPositionReturnsCenterPoint) {
@@ -187,8 +185,8 @@ TEST_F(TerrainBridgeTest, GetBridgeCenterPositionReturnsCenterPoint) {
 
   heightMap.addBridges(bridges);
 
-  // Test getting center for a position on the side of the bridge
-  auto center = heightMap.getBridgeCenterPosition(2.0F, 1.0F);
+  // Test getting center for a position on the bridge center line
+  auto center = heightMap.getBridgeCenterPosition(2.0F, 0.0F);
   ASSERT_TRUE(center.has_value())
       << "Should return center position for point on bridge";
 
@@ -217,8 +215,8 @@ TEST_F(TerrainBridgeTest, GetBridgeCenterPositionWorksForDiagonalBridge) {
 
   heightMap.addBridges(bridges);
 
-  // Test getting center for a position on the side of the diagonal bridge
-  auto center = heightMap.getBridgeCenterPosition(5.0F, 6.0F);
+  // Test getting center for a position on the diagonal bridge center line
+  auto center = heightMap.getBridgeCenterPosition(5.0F, 5.0F);
   ASSERT_TRUE(center.has_value())
       << "Should return center position for point on diagonal bridge";
 

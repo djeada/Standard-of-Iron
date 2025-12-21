@@ -53,41 +53,8 @@ auto Pathfinding::is_walkable(int x, int y) const -> bool {
 
 auto Pathfinding::is_walkable_with_radius(int x, int y,
                                           float unit_radius) const -> bool {
-  if (unit_radius <= 0.5F) {
-    return is_walkable(x, y);
-  }
-
-  const Game::Map::TerrainHeightMap *height_map = nullptr;
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  if (terrain_service.is_initialized()) {
-    height_map = terrain_service.get_height_map();
-  }
-
-  int const radius_cells = static_cast<int>(std::ceil(unit_radius));
-
-  for (int dy = -radius_cells; dy <= radius_cells; ++dy) {
-    for (int dx = -radius_cells; dx <= radius_cells; ++dx) {
-      int const check_x = x + dx;
-      int const check_y = y + dy;
-
-      float const dist_sq = static_cast<float>(dx * dx + dy * dy);
-      if (dist_sq > unit_radius * unit_radius) {
-        continue;
-      }
-
-      if (!is_walkable(check_x, check_y)) {
-        if (height_map != nullptr &&
-            height_map->getTerrainType(check_x, check_y) ==
-                Game::Map::TerrainType::River &&
-            (dx != 0 || dy != 0)) {
-          continue;
-        }
-        return false;
-      }
-    }
-  }
-
-  return true;
+  (void)unit_radius;
+  return is_walkable(x, y);
 }
 
 void Pathfinding::mark_obstacles_dirty() {

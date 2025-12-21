@@ -27,6 +27,7 @@ constexpr float same_target_threshold_sq = 0.01F;
 constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
+
 } // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
@@ -278,12 +279,9 @@ void CommandService::move_units(
       int const dx = std::abs(end.x - start.x);
       int const dz = std::abs(end.y - start.y);
       bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-      if (!options.allow_direct_fallback) {
-        use_direct_path = false;
-      }
+      use_direct_path = false;
 
       if (use_direct_path) {
-
         mv->target_x = target_x;
         mv->target_y = target_z;
         mv->has_target = true;
@@ -335,7 +333,7 @@ void CommandService::move_units(
             s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
         mv->pending_request_id = request_id;
 
-        float const unit_radius = get_unit_radius(world, units[i]);
+        float const unit_radius = 1.0F;
 
         {
           std::lock_guard<std::mutex> const lock(s_pendingMutex);
@@ -695,9 +693,7 @@ void CommandService::move_group(
   int const dx = std::abs(end.x - start.x);
   int const dz = std::abs(end.y - start.y);
   bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-  if (!options.allow_direct_fallback) {
-    use_direct_path = false;
-  }
+  use_direct_path = false;
 
   if (use_direct_path) {
     for (auto *member : units_needing_new_path) {
@@ -724,7 +720,7 @@ void CommandService::move_group(
     member->movement->last_goal_y = member->target.z();
   }
 
-  float const unit_radius = get_unit_radius(world, leader.id);
+  float const unit_radius = 1.0F;
 
   PendingPathRequest pending;
   pending.entity_id = leader.id;
