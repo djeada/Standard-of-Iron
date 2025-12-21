@@ -10,22 +10,25 @@ Campaign map plan and current status for the QML/OpenGL widget with a Mediterran
   * Visualization helpers: `campaign_preview.png`, OBJ exports for mesh/rivers/coastlines
 * Scripts: `preprocess_map.py`, `render_textures.py`, `render_preview.py`, `export_all_obj.py`
 * Manual validation: OBJ overlay aligns in Blender; preview looks correct.
+* Runtime integration:
+  * Assets wired into qrc/resources and loaded at runtime.
+  * QQuickFramebufferObject renderer draws water/base/land, coast/rivers, provinces, borders, and Hannibal path.
+  * Provinces are loaded for hit-test; hover tooltip + highlight works.
+  * Mission selection can drive a map focus camera target.
 
-## Next immediate tasks
-1. Integrate assets into runtime:
-   * Add to resources/qrc and load `campaign_base_color.png` / `campaign_water.png`
-   * Implement QQuickFramebufferObject renderer that draws base quad + line layers (coast/rivers) from UV data
-2. Province data path:
-   * Author/import provinces GeoJSON → convert to `assets/campaign_map/provinces.json` (UV polygons + anchors)
-   * CPU hit-test and VBO packing for per-province tinting
-3. Interaction:
-   * Pan/zoom within UV bounds
-   * Hover/click highlight + tooltip; mission list ↔ map selection sync
-4. Overlays:
-   * Flags/ownership tint updates from JSON state
-   * Hannibal path polyline + animated marker
-5. Polish/stylization:
-   * Optional relief/paper layers; line weights/palette tuning; pulse/hover outline animation
+## Next steps (clear plan)
+1. Interaction completion:
+   * Add map panning (translate camera target; clamp to UV bounds).
+   * Click selection should update mission list (map → UI sync).
+2. Dynamic ownership/flags:
+   * Load `campaign_state.json` (or similar) and apply per-province tints at runtime.
+   * Add flag/marker overlays for ownership changes.
+3. Hannibal path polish:
+   * Animate a marker along `hannibal_path.json`.
+   * Optional: pulse or waypoint labels for key cities.
+4. Stylization pass:
+   * Add relief/paper layers if desired.
+   * Tune line widths/palette, add subtle hover pulse/outline.
 
 ---
 
@@ -46,10 +49,10 @@ Campaign map plan and current status for the QML/OpenGL widget with a Mediterran
 
 ## Milestones (updated)
 1. Offline pipeline outputs verified (done)
-2. Base textures + lines integrated in QML renderer
-3. Province data import/render + hit-testing
-4. Interaction sync with mission list + tooltips
-5. Ownership/flags animations; Hannibal path overlay
+2. Base textures + lines integrated in QML renderer (done)
+3. Province data import/render + hit-testing (done)
+4. Interaction sync with mission list + tooltips (partial)
+5. Ownership/flags animations; Hannibal path overlay (partial)
 6. Stylization polish (relief/paper, hover pulse, labels)
 
 ---

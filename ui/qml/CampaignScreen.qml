@@ -9,6 +9,7 @@ Item {
     property var current_campaign: null
     property var campaigns: []
     property int selected_mission_index: -1
+    property var campaign_map_state: null
 
     signal mission_selected(string campaign_id, string mission_id)
     signal cancelled()
@@ -20,6 +21,7 @@ Item {
                 current_campaign = campaigns[0];
 
         }
+        build_campaign_state();
     }
 
     function select_next_unlocked_mission() {
@@ -36,12 +38,70 @@ Item {
         }
     }
 
+    function select_mission_by_region(region_id) {
+        if (!current_campaign || !current_campaign.missions || !region_id)
+            return ;
+
+        for (var i = 0; i < current_campaign.missions.length; i++) {
+            var mission = current_campaign.missions[i];
+            if (mission.world_region_id === region_id) {
+                selected_mission_index = i;
+                mission_list_view.currentIndex = i;
+                return ;
+            }
+        }
+    }
+
+    function build_campaign_state() {
+        if (!current_campaign || !current_campaign.missions) {
+            campaign_map_state = null;
+            return ;
+        }
+        var region_stats = {
+        };
+        for (var i = 0; i < current_campaign.missions.length; i++) {
+            var mission = current_campaign.missions[i];
+            if (!mission || !mission.world_region_id)
+                continue;
+
+            var region_id = mission.world_region_id;
+            if (!region_stats[region_id])
+                region_stats[region_id] = {
+                    "completed": false,
+                    "unlocked": false
+                };
+
+            if (mission.completed)
+                region_stats[region_id].completed = true;
+
+            if (mission.unlocked)
+                region_stats[region_id].unlocked = true;
+
+        }
+        var provinces = [];
+        for (var key in region_stats) {
+            if (!region_stats.hasOwnProperty(key))
+                continue;
+
+            var state = region_stats[key];
+            var owner = state.completed ? "carthage" : (state.unlocked ? "neutral" : "rome");
+            provinces.push({
+                "id": key,
+                "owner": owner
+            });
+        }
+        campaign_map_state = {
+            "provinces": provinces
+        };
+    }
+
     onVisibleChanged: {
         if (visible && typeof game !== "undefined" && game.load_campaigns) {
             game.load_campaigns();
             refresh_campaigns();
         }
     }
+    onCurrent_campaignChanged: build_campaign_state()
     anchors.fill: parent
     focus: true
     Keys.onPressed: function(event) {
@@ -293,6 +353,10 @@ Item {
                             Layout.fillWidth: true
                             Layout.fillHeight: true
                             selected_mission: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
+                            campaign_state: root.campaign_map_state
+                            onRegionSelected: function(region_id) {
+                                select_mission_by_region(region_id);
+                            }
                         }
 
                     }

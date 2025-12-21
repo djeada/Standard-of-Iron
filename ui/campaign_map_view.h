@@ -1,11 +1,13 @@
 #pragma once
 
+#include <QHash>
 #include <QPointF>
 #include <QQuickFramebufferObject>
 #include <QString>
 #include <QVariantList>
 #include <QVariantMap>
 #include <QVector2D>
+#include <QVector4D>
 #include <vector>
 
 class CampaignMapView : public QQuickFramebufferObject {
@@ -16,11 +18,19 @@ class CampaignMapView : public QQuickFramebufferObject {
                  orbitPitchChanged)
   Q_PROPERTY(float orbitDistance READ orbitDistance WRITE setOrbitDistance
                  NOTIFY orbitDistanceChanged)
+  Q_PROPERTY(float panU READ panU WRITE setPanU NOTIFY panUChanged)
+  Q_PROPERTY(float panV READ panV WRITE setPanV NOTIFY panVChanged)
   Q_PROPERTY(QString hoverProvinceId READ hoverProvinceId WRITE
                  setHoverProvinceId NOTIFY hoverProvinceIdChanged)
   Q_PROPERTY(QVariantList provinceLabels READ provinceLabels NOTIFY
                  provinceLabelsChanged)
 public:
+  struct ProvinceVisual {
+    QString owner;
+    QVector4D color;
+    bool has_color = false;
+  };
+
   CampaignMapView();
 
   [[nodiscard]] auto createRenderer() const -> Renderer * override;
@@ -29,6 +39,15 @@ public:
   Q_INVOKABLE QVariantMap provinceInfoAtScreen(float x, float y);
   Q_INVOKABLE QPointF screenPosForUv(float u, float v);
   Q_INVOKABLE QVariantList provinceLabels();
+  Q_INVOKABLE void applyProvinceState(const QVariantList &states);
+
+  [[nodiscard]] auto provinceStateVersion() const -> int {
+    return m_province_state_version;
+  }
+  [[nodiscard]] auto
+  provinceOverrides() const -> const QHash<QString, ProvinceVisual> & {
+    return m_province_overrides;
+  }
 
   [[nodiscard]] auto orbitYaw() const -> float { return m_orbit_yaw; }
   void setOrbitYaw(float yaw);
@@ -39,6 +58,12 @@ public:
   [[nodiscard]] auto orbitDistance() const -> float { return m_orbit_distance; }
   void setOrbitDistance(float distance);
 
+  [[nodiscard]] auto panU() const -> float { return m_pan_u; }
+  void setPanU(float pan);
+
+  [[nodiscard]] auto panV() const -> float { return m_pan_v; }
+  void setPanV(float pan);
+
   [[nodiscard]] auto hoverProvinceId() const -> QString {
     return m_hover_province_id;
   }
@@ -48,6 +73,8 @@ signals:
   void orbitYawChanged();
   void orbitPitchChanged();
   void orbitDistanceChanged();
+  void panUChanged();
+  void panVChanged();
   void hoverProvinceIdChanged();
   void provinceLabelsChanged();
 
@@ -55,6 +82,8 @@ private:
   float m_orbit_yaw = 180.0F;
   float m_orbit_pitch = 90.0F;
   float m_orbit_distance = 1.2F;
+  float m_pan_u = 0.0F;
+  float m_pan_v = 0.0F;
   QString m_hover_province_id;
 
   struct ProvinceHit {
@@ -72,4 +101,9 @@ private:
   bool m_province_labels_loaded = false;
   QVariantList m_province_labels;
   void load_province_labels();
+
+  QHash<QString, ProvinceVisual> m_province_overrides;
+  int m_province_state_version = 0;
+
+  friend class CampaignMapRenderer;
 };

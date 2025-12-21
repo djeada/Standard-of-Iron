@@ -29,7 +29,7 @@
 namespace {
 
 auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
-                      float distance) -> QMatrix4x4 {
+                      float distance, float pan_u, float pan_v) -> QMatrix4x4 {
   const float view_w = qMax(1.0F, width);
   const float view_h = qMax(1.0F, height);
   const float aspect = view_w / view_h;
@@ -37,7 +37,9 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   QMatrix4x4 projection;
   projection.perspective(45.0F, aspect, 0.1F, 10.0F);
 
-  const QVector3D center(0.5F, 0.0F, 0.5F);
+  const float clamped_pan_u = qBound(-0.5F, pan_u, 0.5F);
+  const float clamped_pan_v = qBound(-0.5F, pan_v, 0.5F);
+  const QVector3D center(0.5F + clamped_pan_u, 0.0F, 0.5F + clamped_pan_v);
   const float yaw_rad = qDegreesToRadians(yaw_deg);
   const float pitch_rad = qDegreesToRadians(pitch_deg);
   const float clamped_distance = qMax(1.0F, distance);
@@ -98,6 +100,7 @@ struct ProvinceSpan {
   int start = 0;
   int count = 0;
   QVector4D color = QVector4D(0.0F, 0.0F, 0.0F, 0.0F);
+  QVector4D base_color = QVector4D(0.0F, 0.0F, 0.0F, 0.0F);
   QString id;
 };
 
@@ -224,7 +227,15 @@ public:
     m_orbit_yaw = view->orbitYaw();
     m_orbit_pitch = view->orbitPitch();
     m_orbit_distance = view->orbitDistance();
+    m_pan_u = view->panU();
+    m_pan_v = view->panV();
     m_hover_province_id = view->hoverProvinceId();
+
+    if (m_province_state_version != view->provinceStateVersion() &&
+        m_provinceLayer.ready) {
+      apply_province_overrides(view->provinceOverrides());
+      m_province_state_version = view->provinceStateVersion();
+    }
   }
 
 private:
@@ -253,7 +264,10 @@ private:
   float m_orbit_yaw = 180.0F;
   float m_orbit_pitch = 55.0F;
   float m_orbit_distance = 2.4F;
+  float m_pan_u = 0.0F;
+  float m_pan_v = 0.0F;
   QString m_hover_province_id;
+  int m_province_state_version = 0;
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -582,7 +596,7 @@ void main() {
                             static_cast<float>(color_arr.at(2).toDouble()),
                             static_cast<float>(color_arr.at(3).toDouble()));
         }
-        spans.push_back({start, count, color, province_id});
+        spans.push_back({start, count, color, color, province_id});
       }
     }
 
@@ -692,9 +706,9 @@ void main() {
   }
 
   void compute_mvp(QMatrix4x4 &out_mvp) const {
-    out_mvp = build_mvp_matrix(static_cast<float>(m_size.width()),
-                               static_cast<float>(m_size.height()), m_orbit_yaw,
-                               m_orbit_pitch, m_orbit_distance);
+    out_mvp = build_mvp_matrix(
+        static_cast<float>(m_size.width()), static_cast<float>(m_size.height()),
+        m_orbit_yaw, m_orbit_pitch, m_orbit_distance, m_pan_u, m_pan_v);
   }
 
   void draw_textured_layer(QOpenGLTexture *texture, GLuint vao,
@@ -738,6 +752,22 @@ void main() {
     }
     glBindVertexArray(0);
     m_lineProgram.release();
+  }
+
+  void apply_province_overrides(
+      const QHash<QString, CampaignMapView::ProvinceVisual> &overrides) {
+    if (!m_provinceLayer.ready || m_provinceLayer.spans.empty()) {
+      return;
+    }
+
+    for (auto &span : m_provinceLayer.spans) {
+      const auto it = overrides.find(span.id);
+      if (it != overrides.end() && it->has_color) {
+        span.color = it->color;
+      } else {
+        span.color = span.base_color;
+      }
+    }
   }
 
   void draw_province_layer(const ProvinceLayer &layer, const QMatrix4x4 &mvp,
@@ -897,6 +927,15 @@ void CampaignMapView::load_provinces_for_hit_test() {
       m_provinces.push_back(std::move(province));
     }
   }
+
+  if (!m_province_overrides.isEmpty()) {
+    for (auto &province : m_provinces) {
+      const auto it = m_province_overrides.find(province.id);
+      if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
+        province.owner = it->owner;
+      }
+    }
+  }
 }
 
 void CampaignMapView::load_province_labels() {
@@ -961,12 +1000,85 @@ void CampaignMapView::load_province_labels() {
     m_province_labels.push_back(entry);
   }
 
+  if (!m_province_overrides.isEmpty()) {
+    QVariantList updated;
+    updated.reserve(m_province_labels.size());
+    for (const auto &entry_val : m_province_labels) {
+      QVariantMap entry = entry_val.toMap();
+      const QString id = entry.value(QStringLiteral("id")).toString();
+      const auto it = m_province_overrides.find(id);
+      if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
+        entry.insert(QStringLiteral("owner"), it->owner);
+      }
+      updated.push_back(entry);
+    }
+    m_province_labels = std::move(updated);
+  }
+
   emit provinceLabelsChanged();
 }
 
 QVariantList CampaignMapView::provinceLabels() {
   load_province_labels();
   return m_province_labels;
+}
+
+void CampaignMapView::applyProvinceState(const QVariantList &states) {
+  QHash<QString, ProvinceVisual> next_overrides;
+  next_overrides.reserve(states.size());
+
+  for (const auto &state_val : states) {
+    const QVariantMap state = state_val.toMap();
+    const QString id = state.value(QStringLiteral("id")).toString();
+    if (id.isEmpty()) {
+      continue;
+    }
+
+    ProvinceVisual visual;
+    visual.owner = state.value(QStringLiteral("owner")).toString();
+
+    const QVariantList color_list =
+        state.value(QStringLiteral("color")).toList();
+    if (color_list.size() >= 4) {
+      visual.color = QVector4D(static_cast<float>(color_list.at(0).toDouble()),
+                               static_cast<float>(color_list.at(1).toDouble()),
+                               static_cast<float>(color_list.at(2).toDouble()),
+                               static_cast<float>(color_list.at(3).toDouble()));
+      visual.has_color = true;
+    }
+
+    next_overrides.insert(id, visual);
+  }
+
+  m_province_overrides = std::move(next_overrides);
+  ++m_province_state_version;
+
+  if (m_provinces_loaded) {
+    for (auto &province : m_provinces) {
+      const auto it = m_province_overrides.find(province.id);
+      if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
+        province.owner = it->owner;
+      }
+    }
+  }
+
+  if (m_province_labels_loaded) {
+    QVariantList updated;
+    updated.reserve(m_province_labels.size());
+    for (const auto &entry_val : m_province_labels) {
+      QVariantMap entry = entry_val.toMap();
+      const QString id = entry.value(QStringLiteral("id")).toString();
+      const auto it = m_province_overrides.find(id);
+      if (it != m_province_overrides.end() && !it->owner.isEmpty()) {
+        entry.insert(QStringLiteral("owner"), it->owner);
+      }
+      updated.push_back(entry);
+    }
+    m_province_labels = std::move(updated);
+    emit provinceLabelsChanged();
+  }
+
+  update();
 }
 
 QString CampaignMapView::provinceAtScreen(float x, float y) {
@@ -984,8 +1096,8 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp =
-      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
+                                          m_orbit_distance, m_pan_u, m_pan_v);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -1047,8 +1159,8 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   const float ndc_x = (2.0F * x / w) - 1.0F;
   const float ndc_y = 1.0F - (2.0F * y / h);
 
-  const QMatrix4x4 mvp =
-      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
+                                          m_orbit_distance, m_pan_u, m_pan_v);
   bool inverted = false;
   const QMatrix4x4 inv = mvp.inverted(&inverted);
   if (!inverted) {
@@ -1107,8 +1219,8 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
   const float clamped_u = qBound(0.0F, u, 1.0F);
   const float clamped_v = qBound(0.0F, v, 1.0F);
 
-  const QMatrix4x4 mvp =
-      build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch, m_orbit_distance);
+  const QMatrix4x4 mvp = build_mvp_matrix(w, h, m_orbit_yaw, m_orbit_pitch,
+                                          m_orbit_distance, m_pan_u, m_pan_v);
   const QVector4D world(1.0F - clamped_u, 0.0F, clamped_v, 1.0F);
   const QVector4D clip = mvp * world;
   if (qFuzzyIsNull(clip.w())) {
@@ -1148,6 +1260,26 @@ void CampaignMapView::setOrbitDistance(float distance) {
   }
   m_orbit_distance = clamped;
   emit orbitDistanceChanged();
+  update();
+}
+
+void CampaignMapView::setPanU(float pan) {
+  const float clamped = qBound(-0.5F, pan, 0.5F);
+  if (qFuzzyCompare(m_pan_u, clamped)) {
+    return;
+  }
+  m_pan_u = clamped;
+  emit panUChanged();
+  update();
+}
+
+void CampaignMapView::setPanV(float pan) {
+  const float clamped = qBound(-0.5F, pan, 0.5F);
+  if (qFuzzyCompare(m_pan_v, clamped)) {
+    return;
+  }
+  m_pan_v = clamped;
+  emit panVChanged();
   update();
 }
 

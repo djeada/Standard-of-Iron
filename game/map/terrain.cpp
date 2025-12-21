@@ -145,8 +145,9 @@ void TerrainHeightMap::buildFromFeatures(
       const int max_z = std::min(
           m_height - 1, int(std::ceil(grid_center_z + max_extent + 1.0F)));
 
-      std::vector<int> plateau_cells;
-      plateau_cells.reserve(int(M_PI * plateau_width * plateau_depth));
+      const int map_cell_count = m_width * m_height;
+      std::vector<std::uint8_t> walkable_mask(map_cell_count, 0);
+      std::vector<int> entrance_indices;
 
       const float angle_rad = feature.rotationDeg * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
@@ -176,7 +177,6 @@ void TerrainHeightMap::buildFromFeatures(
           float height = 0.0F;
           if (norm_plateau_dist <= 1.0F) {
             height = feature.height;
-            plateau_cells.push_back(idx);
           } else {
             float const t = std::clamp((norm_slope_dist - norm_plateau_dist) /
                                            (1.0F - norm_plateau_dist),
@@ -190,11 +190,11 @@ void TerrainHeightMap::buildFromFeatures(
             m_heights[idx] = height;
             m_terrain_types[idx] = TerrainType::Hill;
           }
+          if (norm_plateau_dist <= 1.0F &&
+              m_terrain_types[idx] == TerrainType::Hill) {
+            walkable_mask[idx] = 1;
+          }
         }
-      }
-
-      for (int const idx : plateau_cells) {
-        m_hillWalkable[idx] = true;
       }
 
       for (const auto &entrance : feature.entrances) {
@@ -206,7 +206,7 @@ void TerrainHeightMap::buildFromFeatures(
 
         const int entrance_idx = indexAt(ex, ez);
         m_hillEntrances[entrance_idx] = true;
-        m_hillWalkable[entrance_idx] = true;
+        entrance_indices.push_back(entrance_idx);
 
         float dir_x = grid_center_x - float(ex);
         float dir_z = grid_center_z - float(ez);
@@ -243,9 +243,9 @@ void TerrainHeightMap::buildFromFeatures(
             break;
           }
 
-          m_hillWalkable[idx] = true;
           if (m_terrain_types[idx] != TerrainType::Mountain) {
             m_terrain_types[idx] = TerrainType::Hill;
+            walkable_mask[idx] = 1;
           }
 
           if (m_heights[idx] < feature.height * 0.25F) {
@@ -280,10 +280,10 @@ void TerrainHeightMap::buildFromFeatures(
               if (neighbor_plateau_dist <= 1.05F) {
                 int const n_idx = indexAt(nx, nz);
                 if (m_terrain_types[n_idx] != TerrainType::Mountain) {
-                  m_hillWalkable[n_idx] = true;
                   if (m_terrain_types[n_idx] == TerrainType::Flat) {
                     m_terrain_types[n_idx] = TerrainType::Hill;
                   }
+                  walkable_mask[n_idx] = 1;
                   if (m_heights[n_idx] < m_heights[idx] * 0.8F) {
                     m_heights[n_idx] =
                         std::max(m_heights[n_idx], m_heights[idx] * 0.7F);
@@ -302,6 +302,75 @@ void TerrainHeightMap::buildFromFeatures(
 
           cur_x += dir_x;
           cur_z += dir_z;
+        }
+      }
+
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
+          const int idx = indexAt(x, z);
+          if (walkable_mask[idx] == 0 || m_hillEntrances[idx]) {
+            continue;
+          }
+
+          bool touches_flat = false;
+          constexpr int k_dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+          for (const auto &dir : k_dirs) {
+            int const nx = x + dir[0];
+            int const nz = z + dir[1];
+            if (!inBounds(nx, nz)) {
+              continue;
+            }
+            TerrainType const neighbor_type = m_terrain_types[indexAt(nx, nz)];
+            if (neighbor_type == TerrainType::Flat ||
+                neighbor_type == TerrainType::River) {
+              touches_flat = true;
+              break;
+            }
+          }
+
+          if (touches_flat) {
+            walkable_mask[idx] = 0;
+          }
+        }
+      }
+
+      if (!entrance_indices.empty()) {
+        std::vector<std::uint8_t> visited(map_cell_count, 0);
+        std::vector<int> queue;
+        queue.reserve(entrance_indices.size());
+
+        for (int const entrance_idx : entrance_indices) {
+          if (visited[entrance_idx] || walkable_mask[entrance_idx] == 0) {
+            continue;
+          }
+          visited[entrance_idx] = 1;
+          m_hillWalkable[entrance_idx] = true;
+          queue.push_back(entrance_idx);
+
+          while (!queue.empty()) {
+            int const idx = queue.back();
+            queue.pop_back();
+
+            int const cx = idx % m_width;
+            int const cz = idx / m_width;
+
+            constexpr int k_dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+            for (const auto &dir : k_dirs) {
+              int const nx = cx + dir[0];
+              int const nz = cz + dir[1];
+              if (!inBounds(nx, nz)) {
+                continue;
+              }
+              int const n_idx = indexAt(nx, nz);
+              if (visited[n_idx] || walkable_mask[n_idx] == 0) {
+                continue;
+              }
+
+              visited[n_idx] = 1;
+              m_hillWalkable[n_idx] = true;
+              queue.push_back(n_idx);
+            }
+          }
         }
       }
 
@@ -625,6 +694,7 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   constexpr float kBridgeSinkMin = 0.25F;
   constexpr float kBridgeSinkMax = 0.65F;
   constexpr float kConnectivityMargin = 0.5F;
+  constexpr float kEntryMarginTiles = 1.0F;
 
   m_bridges.clear();
   m_bridges.reserve(bridges.size());
@@ -655,14 +725,20 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
 
-    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
+    float const entry_margin = m_tile_size * kEntryMarginTiles;
+    float const extended_length = length + (entry_margin * 2.0F);
+    int const steps =
+        static_cast<int>(std::ceil(extended_length / m_tile_size)) + 1;
 
     for (int i = 0; i < steps; ++i) {
       float const t =
           static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
-      QVector3D const center_pos = stored_bridge.start + dir * (length * t);
+      float const along = -entry_margin + extended_length * t;
+      float const t_curve =
+          std::clamp(along / std::max(length, 0.01F), 0.0F, 1.0F);
+      QVector3D const center_pos = stored_bridge.start + dir * along;
 
-      float const arch_curve = 4.0F * t * (1.0F - t);
+      float const arch_curve = 4.0F * t_curve * (1.0F - t_curve);
       float const arch_height = stored_bridge.height * arch_curve * 0.8F;
       float const base_deck_height =
           stored_bridge.start.y() + stored_bridge.height + arch_height * 0.5F;
@@ -725,6 +801,7 @@ void TerrainHeightMap::precomputeBridgeData() {
   m_bridgeCenters.resize(grid_size, QVector3D(0.0F, 0.0F, 0.0F));
 
   constexpr float kConnectivityMargin = 0.5F;
+  constexpr float kEntryMarginTiles = 1.0F;
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
 
@@ -738,12 +815,16 @@ void TerrainHeightMap::precomputeBridgeData() {
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
 
-    int const steps = static_cast<int>(std::ceil(length / m_tile_size)) + 1;
+    float const entry_margin = m_tile_size * kEntryMarginTiles;
+    float const extended_length = length + (entry_margin * 2.0F);
+    int const steps =
+        static_cast<int>(std::ceil(extended_length / m_tile_size)) + 1;
 
     for (int i = 0; i < steps; ++i) {
       float const t =
           static_cast<float>(i) / std::max(1.0F, static_cast<float>(steps - 1));
-      QVector3D const center_pos = bridge.start + dir * (length * t);
+      float const along = -entry_margin + extended_length * t;
+      QVector3D const center_pos = bridge.start + dir * along;
 
       float const grid_center_x =
           (center_pos.x() / m_tile_size) + grid_half_width;
@@ -785,8 +866,9 @@ void TerrainHeightMap::precomputeBridgeData() {
                 (static_cast<float>(z) - grid_half_height) * m_tile_size;
             QVector3D const cell_point(cell_world_x, 0.0F, cell_world_z);
             QVector3D const to_cell = cell_point - bridge.start;
-            float const along = QVector3D::dotProduct(to_cell, dir);
-            m_bridgeCenters[idx] = bridge.start + dir * along;
+            float const center_along = QVector3D::dotProduct(to_cell, dir);
+            float const clamped_along = std::clamp(center_along, 0.0F, length);
+            m_bridgeCenters[idx] = bridge.start + dir * clamped_along;
           }
         }
       }
@@ -836,6 +918,13 @@ auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
   const int grid_z =
       static_cast<int>(std::round((world_z / m_tile_size) + grid_half_height));
 
+  if (!inBounds(grid_x, grid_z)) {
+    return false;
+  }
+  return m_onBridge[indexAt(grid_x, grid_z)];
+}
+
+auto TerrainHeightMap::isOnBridgeGrid(int grid_x, int grid_z) const -> bool {
   if (!inBounds(grid_x, grid_z)) {
     return false;
   }
