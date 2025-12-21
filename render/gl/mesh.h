@@ -23,8 +23,6 @@ public:
 
   void draw();
 
-  /// Draw multiple instances of the mesh using glDrawElementsInstanced.
-  /// @param instance_count Number of instances to draw.
   void draw_instanced(std::size_t instance_count);
 
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
@@ -71,7 +69,7 @@ private:
   std::unique_ptr<Buffer> m_ebo;
 
   void setup_buffers();
-  /// Prepare VAO and context for drawing. Returns false if context unavailable.
+
   [[nodiscard]] auto prepare_draw(const char *caller_name) -> bool;
 };
 
