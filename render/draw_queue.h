@@ -421,9 +421,7 @@ private:
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-      // Sort by texture pointer only - the backend compares actual shader/texture 
-      // pointers to decide when to rebind, so truncating pointers in the sort key
-      // could cause incorrect draw ordering without improving state locality
+
       uint64_t const tex_ptr =
           reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
       key |= tex_ptr;

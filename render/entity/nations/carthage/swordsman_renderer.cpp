@@ -233,7 +233,8 @@ private:
   void cache_equipment() {
     auto &registry = EquipmentRegistry::instance();
     m_cached_sword = registry.get(EquipmentCategory::Weapon, "sword_carthage");
-    m_cached_shield = registry.get(EquipmentCategory::Weapon, "shield_carthage");
+    m_cached_shield =
+        registry.get(EquipmentCategory::Weapon, "shield_carthage");
     m_cached_helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     m_cached_armor =
         registry.get(EquipmentCategory::Armor, "armor_heavy_carthage");

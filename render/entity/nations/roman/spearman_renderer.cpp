@@ -266,7 +266,8 @@ private:
     auto &registry = EquipmentRegistry::instance();
     m_cached_spear = registry.get(EquipmentCategory::Weapon, "spear");
     m_cached_helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
-    m_cached_armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
+    m_cached_armor =
+        registry.get(EquipmentCategory::Armor, "roman_light_armor");
     m_cached_shoulder_cover =
         registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
     m_cached_greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
