@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../equipment/horse/i_horse_equipment_renderer.h"
+#include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QString>
@@ -72,7 +73,14 @@ protected:
                       ISubmitter &out) const override;
 
 private:
+  void cache_equipment();
+
   HorseArcherRendererConfig m_config;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_bow;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_quiver;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_cloak;
 };
 
 } // namespace Render::GL

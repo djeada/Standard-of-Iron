@@ -45,6 +45,8 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
   }
 
   m_horseRenderer.set_attachments(m_config.horse_attachments);
+
+  cache_equipment();
 }
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
@@ -103,8 +105,6 @@ void HorseSpearmanRendererBase::apply_riding_animation(
 void HorseSpearmanRendererBase::draw_equipment(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
-  auto &registry = EquipmentRegistry::instance();
-
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
@@ -115,39 +115,28 @@ void HorseSpearmanRendererBase::draw_equipment(
   float spear_shaft_radius =
       0.018F + (hash_01(horse_seed ^ 0x7777U) - 0.5F) * 0.003F;
 
-  if (m_config.has_spear && !m_config.spear_equipment_id.empty()) {
-    auto spear =
-        registry.get(EquipmentCategory::Weapon, m_config.spear_equipment_id);
-    if (spear) {
-      SpearRenderConfig spear_config;
-      spear_config.shaft_color =
-          v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
-      spear_config.spearhead_color = m_config.metal_color;
-      spear_config.spear_length = spear_length;
-      spear_config.shaft_radius = spear_shaft_radius;
-      spear_config.spearhead_length = 0.18F;
+  if (m_config.has_spear && m_cached_spear) {
+    SpearRenderConfig spear_config;
+    spear_config.shaft_color =
+        v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
+    spear_config.spearhead_color = m_config.metal_color;
+    spear_config.spear_length = spear_length;
+    spear_config.shaft_radius = spear_shaft_radius;
+    spear_config.spearhead_length = 0.18F;
 
-      if (auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get())) {
-        spear_renderer->set_config(spear_config);
-      }
-      spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+    if (auto *spear_renderer =
+            dynamic_cast<SpearRenderer *>(m_cached_spear.get())) {
+      spear_renderer->set_config(spear_config);
     }
+    m_cached_spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
   }
 
-  if (m_config.has_shield && !m_config.shield_equipment_id.empty()) {
-    auto shield =
-        registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
-    if (shield) {
-      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
+  if (m_config.has_shield && m_cached_shield) {
+    m_cached_shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
   }
 
-  if (m_config.has_shoulder && !m_config.shoulder_equipment_id.empty()) {
-    auto shoulder_cover =
-        registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
-    if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
+  if (m_config.has_shoulder && m_cached_shoulder) {
+    m_cached_shoulder->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
   }
 }
 
@@ -159,10 +148,7 @@ void HorseSpearmanRendererBase::draw_helmet(const DrawContext &ctx,
     return;
   }
 
-  auto &registry = EquipmentRegistry::instance();
-  auto helmet =
-      registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
-  if (helmet) {
+  if (m_cached_helmet) {
     HumanoidAnimationContext anim_ctx{};
     BodyFrames frames = pose.body_frames;
     if (ctx.entity != nullptr) {
@@ -175,7 +161,7 @@ void HorseSpearmanRendererBase::draw_helmet(const DrawContext &ctx,
         }
       }
     }
-    helmet->render(ctx, frames, v.palette, anim_ctx, out);
+    m_cached_helmet->render(ctx, frames, v.palette, anim_ctx, out);
   }
 }
 
@@ -188,11 +174,37 @@ void HorseSpearmanRendererBase::draw_armor(const DrawContext &ctx,
     return;
   }
 
+  if (m_cached_armor) {
+    m_cached_armor->render(ctx, pose.body_frames, v.palette, anim, out);
+  }
+}
+
+void HorseSpearmanRendererBase::cache_equipment() {
   auto &registry = EquipmentRegistry::instance();
-  auto armor =
-      registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
-  if (armor) {
-    armor->render(ctx, pose.body_frames, v.palette, anim, out);
+
+  if (!m_config.spear_equipment_id.empty()) {
+    m_cached_spear =
+        registry.get(EquipmentCategory::Weapon, m_config.spear_equipment_id);
+  }
+
+  if (!m_config.shield_equipment_id.empty()) {
+    m_cached_shield =
+        registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
+  }
+
+  if (!m_config.shoulder_equipment_id.empty()) {
+    m_cached_shoulder =
+        registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
+  }
+
+  if (!m_config.helmet_equipment_id.empty()) {
+    m_cached_helmet =
+        registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
+  }
+
+  if (!m_config.armor_equipment_id.empty()) {
+    m_cached_armor =
+        registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
   }
 }
 
