@@ -315,7 +315,7 @@
       "entrances": [
         {
           "x": 5,
-          "z": 13
+          "z": 11
         }
       ],
       "description": "Northern mountain range"
@@ -331,7 +331,7 @@
       "entrances": [
         {
           "x": 25,
-          "z": 9
+          "z": 8
         }
       ],
       "description": "Northern mountain range"
@@ -459,7 +459,7 @@
       "entrances": [
         {
           "x": 55,
-          "z": 27
+          "z": 28
         }
       ],
       "description": "Second ridge near river"
@@ -475,7 +475,7 @@
       "entrances": [
         {
           "x": 95,
-          "z": 27
+          "z": 28
         }
       ],
       "description": "Eastern divide between villages"
@@ -491,7 +491,7 @@
       "entrances": [
         {
           "x": 110,
-          "z": 12
+          "z": 14
         }
       ],
       "description": "Eastern outcrop north"
