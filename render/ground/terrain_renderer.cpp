@@ -87,6 +87,7 @@ void TerrainRenderer::configure(
 
   m_heightData = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
+  m_hillEntrances = height_map.getHillEntrances();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
   build_meshes();
@@ -150,9 +151,48 @@ void TerrainRenderer::build_meshes() {
     return;
   }
 
+  std::vector<float> height_data = m_heightData;
+  std::vector<float> entry_weight;
+  if (!m_hillEntrances.empty() &&
+      m_hillEntrances.size() == height_data.size()) {
+    constexpr int k_entry_radius = 4;
+    entry_weight.assign(height_data.size(), 0.0F);
+    for (int z = 0; z < m_height; ++z) {
+      for (int x = 0; x < m_width; ++x) {
+        int const idx = z * m_width + x;
+        if (m_terrain_types[idx] != Game::Map::TerrainType::Hill) {
+          continue;
+        }
+        float min_dist = float(k_entry_radius + 1);
+        for (int dz = -k_entry_radius; dz <= k_entry_radius; ++dz) {
+          int const nz = z + dz;
+          if (nz < 0 || nz >= m_height) {
+            continue;
+          }
+          for (int dx = -k_entry_radius; dx <= k_entry_radius; ++dx) {
+            int const nx = x + dx;
+            if (nx < 0 || nx >= m_width) {
+              continue;
+            }
+            int const n_idx = nz * m_width + nx;
+            if (!m_hillEntrances[n_idx]) {
+              continue;
+            }
+            float const dist = std::sqrt(float(dx * dx + dz * dz));
+            min_dist = std::min(min_dist, dist);
+          }
+        }
+        if (min_dist <= k_entry_radius) {
+          float const t = 1.0F - (min_dist / float(k_entry_radius));
+          entry_weight[idx] = t * t;
+        }
+      }
+    }
+  }
+
   float min_h = std::numeric_limits<float>::infinity();
   float max_h = -std::numeric_limits<float>::infinity();
-  for (float const h : m_heightData) {
+  for (float const h : height_data) {
     min_h = std::min(min_h, h);
     max_h = std::max(max_h, h);
   }
@@ -171,19 +211,9 @@ void TerrainRenderer::build_meshes() {
       int const idx = z * m_width + x;
       float const world_x = (x - half_width) * m_tile_size;
       float const world_z = (z - half_height) * m_tile_size;
-      positions[idx] = QVector3D(world_x, m_heightData[idx], world_z);
+      positions[idx] = QVector3D(world_x, height_data[idx], world_z);
     }
   }
-
-  auto accumulate_normal = [&](int i0, int i1, int i2) {
-    const QVector3D &v0 = positions[i0];
-    const QVector3D &v1 = positions[i1];
-    const QVector3D &v2 = positions[i2];
-    QVector3D const normal = QVector3D::crossProduct(v1 - v0, v2 - v0);
-    normals[i0] += normal;
-    normals[i1] += normal;
-    normals[i2] += normal;
-  };
 
   auto sample_height_at = [&](float gx, float gz) {
     gx = std::clamp(gx, 0.0F, float(m_width - 1));
@@ -194,13 +224,34 @@ void TerrainRenderer::build_meshes() {
     int const z1 = std::min(z0 + 1, m_height - 1);
     float const tx = gx - float(x0);
     float const tz = gz - float(z0);
-    float const h00 = m_heightData[z0 * m_width + x0];
-    float const h10 = m_heightData[z0 * m_width + x1];
-    float const h01 = m_heightData[z1 * m_width + x0];
-    float const h11 = m_heightData[z1 * m_width + x1];
+    float const h00 = height_data[z0 * m_width + x0];
+    float const h10 = height_data[z0 * m_width + x1];
+    float const h01 = height_data[z1 * m_width + x0];
+    float const h11 = height_data[z1 * m_width + x1];
     float const h0 = h00 * (1.0F - tx) + h10 * tx;
     float const h1 = h01 * (1.0F - tx) + h11 * tx;
     return h0 * (1.0F - tz) + h1 * tz;
+  };
+
+  auto sample_entry_at = [&](float gx, float gz) {
+    if (entry_weight.empty()) {
+      return 0.0F;
+    }
+    gx = std::clamp(gx, 0.0F, float(m_width - 1));
+    gz = std::clamp(gz, 0.0F, float(m_height - 1));
+    int const x0 = int(std::floor(gx));
+    int const z0 = int(std::floor(gz));
+    int const x1 = std::min(x0 + 1, m_width - 1);
+    int const z1 = std::min(z0 + 1, m_height - 1);
+    float const tx = gx - float(x0);
+    float const tz = gz - float(z0);
+    float const e00 = entry_weight[z0 * m_width + x0];
+    float const e10 = entry_weight[z0 * m_width + x1];
+    float const e01 = entry_weight[z1 * m_width + x0];
+    float const e11 = entry_weight[z1 * m_width + x1];
+    float const e0 = e00 * (1.0F - tx) + e10 * tx;
+    float const e1 = e01 * (1.0F - tx) + e11 * tx;
+    return e0 * (1.0F - tz) + e1 * tz;
   };
 
   auto normal_from_heights_at = [&](float gx, float gz) {
@@ -221,22 +272,10 @@ void TerrainRenderer::build_meshes() {
     return n.isNull() ? QVector3D(0, 1, 0) : n;
   };
 
-  for (int z = 0; z < m_height - 1; ++z) {
-    for (int x = 0; x < m_width - 1; ++x) {
-      int const idx0 = z * m_width + x;
-      int const idx1 = idx0 + 1;
-      int const idx2 = (z + 1) * m_width + x;
-      int const idx3 = idx2 + 1;
-      accumulate_normal(idx0, idx1, idx2);
-      accumulate_normal(idx2, idx1, idx3);
-    }
-  }
-
   for (int i = 0; i < vertex_count; ++i) {
-    normals[i].normalize();
-    if (normals[i].isNull()) {
-      normals[i] = QVector3D(0.0F, 1.0F, 0.0F);
-    }
+    int const x = i % m_width;
+    int const z = i / m_width;
+    normals[i] = normal_from_heights_at(float(x), float(z));
     face_accum[i] = normals[i];
   }
 
@@ -249,13 +288,13 @@ void TerrainRenderer::build_meshes() {
     for (int z = 1; z < m_height - 1; ++z) {
       for (int x = 1; x < m_width - 1; ++x) {
         const int idx = z * m_width + x;
-        const float h0 = m_heightData[idx];
+        const float h0 = height_data[idx];
         const float nh = (h0 - min_h) / height_range;
 
-        const float h_l = m_heightData[z * m_width + (x - 1)];
-        const float h_r = m_heightData[z * m_width + (x + 1)];
-        const float h_d = m_heightData[(z - 1) * m_width + x];
-        const float h_u = m_heightData[(z + 1) * m_width + x];
+        const float h_l = height_data[z * m_width + (x - 1)];
+        const float h_r = height_data[z * m_width + (x + 1)];
+        const float h_d = height_data[(z - 1) * m_width + x];
+        const float h_u = height_data[(z + 1) * m_width + x];
         const float avg_nbr = 0.25F * (h_l + h_r + h_d + h_u);
         const float convexity = h0 - avg_nbr;
 
@@ -276,7 +315,7 @@ void TerrainRenderer::build_meshes() {
             const int nz = z + dz;
             const int n_idx = nz * m_width + nx;
 
-            const float dh = std::abs(m_heightData[n_idx] - h0);
+            const float dh = std::abs(height_data[n_idx] - h0);
             const QVector3D nn = get_n(nx, nz);
             const float ndot = std::max(0.0F, QVector3D::dotProduct(n0, nn));
 
@@ -416,7 +455,8 @@ void TerrainRenderer::build_meshes() {
           break;
         }
         v.tex_coord[0] = ru;
-        v.tex_coord[1] = rv;
+        v.tex_coord[1] =
+            entry_weight.empty() ? 0.0F : entry_weight[globalIndex];
 
         section.vertices.push_back(v);
         auto const local_index =
@@ -424,6 +464,63 @@ void TerrainRenderer::build_meshes() {
         section.remap.emplace(globalIndex, local_index);
         section.normalSum += normal;
         return local_index;
+      };
+
+      auto add_vertex = [&](SectionData &section, const QVector3D &pos,
+                            const QVector3D &normal,
+                            float entry_mask) -> unsigned int {
+        Vertex v{};
+        v.position[0] = pos.x();
+        v.position[1] = pos.y();
+        v.position[2] = pos.z();
+        v.normal[0] = normal.x();
+        v.normal[1] = normal.y();
+        v.normal[2] = normal.z();
+
+        float const tex_scale = 0.2F / std::max(1.0F, m_tile_size);
+        float uu = pos.x() * tex_scale;
+        float const vv = pos.z() * tex_scale;
+        if (section.flipU) {
+          uu = -uu;
+        }
+        float ru = uu;
+        float rv = vv;
+        switch (static_cast<int>(section.rotationDeg)) {
+        case 90: {
+          float const t = ru;
+          ru = -rv;
+          rv = t;
+        } break;
+        case 180:
+          ru = -ru;
+          rv = -rv;
+          break;
+        case 270: {
+          float const t = ru;
+          ru = rv;
+          rv = -t;
+        } break;
+        default:
+          break;
+        }
+        v.tex_coord[0] = ru;
+        v.tex_coord[1] = entry_weight.empty() ? 0.0F : entry_mask;
+
+        section.vertices.push_back(v);
+        auto const local_index =
+            static_cast<unsigned int>(section.vertices.size() - 1);
+        section.normalSum += normal;
+        return local_index;
+      };
+
+      auto add_vertex_at_grid = [&](SectionData &section, float gx, float gz,
+                                    float entry_mask) -> unsigned int {
+        float const world_x = (gx - half_width) * m_tile_size;
+        float const world_z = (gz - half_height) * m_tile_size;
+        float const h = sample_height_at(gx, gz);
+        QVector3D const pos(world_x, h, world_z);
+        QVector3D const normal = normal_from_heights_at(gx, gz);
+        return add_vertex(section, pos, normal, entry_mask);
       };
 
       for (int z = chunk_z; z < chunk_max_z; ++z) {
@@ -443,16 +540,77 @@ void TerrainRenderer::build_meshes() {
             unsigned int const v1 = ensure_vertex(section, idx1);
             unsigned int const v2 = ensure_vertex(section, idx2);
             unsigned int const v3 = ensure_vertex(section, idx3);
-            section.indices.push_back(v0);
-            section.indices.push_back(v1);
-            section.indices.push_back(v2);
-            section.indices.push_back(v2);
-            section.indices.push_back(v1);
-            section.indices.push_back(v3);
+
+            float entry_factor = 0.0F;
+            if (!entry_weight.empty()) {
+              entry_factor = 0.25F * (entry_weight[idx0] +
+                                      entry_weight[idx1] +
+                                      entry_weight[idx2] +
+                                      entry_weight[idx3]);
+            }
+            bool const subdivide = entry_factor > 0.25F;
+
+            if (subdivide) {
+              float const gx = float(x);
+              float const gz = float(z);
+              unsigned int const v00 = v0;
+              unsigned int const v20 = v1;
+              unsigned int const v02 = v2;
+              unsigned int const v22 = v3;
+
+              unsigned int const v10 = add_vertex_at_grid(
+                  section, gx + 0.5F, gz, sample_entry_at(gx + 0.5F, gz));
+              unsigned int const v01 = add_vertex_at_grid(
+                  section, gx, gz + 0.5F, sample_entry_at(gx, gz + 0.5F));
+              unsigned int const v21 = add_vertex_at_grid(
+                  section, gx + 1.0F, gz + 0.5F,
+                  sample_entry_at(gx + 1.0F, gz + 0.5F));
+              unsigned int const v12 = add_vertex_at_grid(
+                  section, gx + 0.5F, gz + 1.0F,
+                  sample_entry_at(gx + 0.5F, gz + 1.0F));
+              unsigned int const v11 = add_vertex_at_grid(
+                  section, gx + 0.5F, gz + 0.5F,
+                  sample_entry_at(gx + 0.5F, gz + 0.5F));
+
+              section.indices.push_back(v00);
+              section.indices.push_back(v10);
+              section.indices.push_back(v01);
+              section.indices.push_back(v10);
+              section.indices.push_back(v11);
+              section.indices.push_back(v01);
+
+              section.indices.push_back(v10);
+              section.indices.push_back(v20);
+              section.indices.push_back(v11);
+              section.indices.push_back(v20);
+              section.indices.push_back(v21);
+              section.indices.push_back(v11);
+
+              section.indices.push_back(v01);
+              section.indices.push_back(v11);
+              section.indices.push_back(v02);
+              section.indices.push_back(v11);
+              section.indices.push_back(v12);
+              section.indices.push_back(v02);
+
+              section.indices.push_back(v11);
+              section.indices.push_back(v21);
+              section.indices.push_back(v12);
+              section.indices.push_back(v21);
+              section.indices.push_back(v22);
+              section.indices.push_back(v12);
+            } else {
+              section.indices.push_back(v0);
+              section.indices.push_back(v1);
+              section.indices.push_back(v2);
+              section.indices.push_back(v2);
+              section.indices.push_back(v1);
+              section.indices.push_back(v3);
+            }
 
             float const quad_height =
-                (m_heightData[idx0] + m_heightData[idx1] + m_heightData[idx2] +
-                 m_heightData[idx3]) *
+                (height_data[idx0] + height_data[idx1] + height_data[idx2] +
+                 height_data[idx3]) *
                 0.25F;
             section.heightSum += quad_height;
             section.heightCount += 1;
@@ -464,18 +622,18 @@ void TerrainRenderer::build_meshes() {
             section.slopeSum += slope;
 
             float const hmin =
-                std::min(std::min(m_heightData[idx0], m_heightData[idx1]),
-                         std::min(m_heightData[idx2], m_heightData[idx3]));
+                std::min(std::min(height_data[idx0], height_data[idx1]),
+                         std::min(height_data[idx2], height_data[idx3]));
             float const hmax =
-                std::max(std::max(m_heightData[idx0], m_heightData[idx1]),
-                         std::max(m_heightData[idx2], m_heightData[idx3]));
+                std::max(std::max(height_data[idx0], height_data[idx1]),
+                         std::max(height_data[idx2], height_data[idx3]));
             section.heightVarSum += (hmax - hmin);
             section.statCount += 1;
 
             auto h = [&](int gx, int gz) {
               gx = std::clamp(gx, 0, m_width - 1);
               gz = std::clamp(gz, 0, m_height - 1);
-              return m_heightData[gz * m_width + gx];
+              return height_data[gz * m_width + gx];
             };
             int const cx = x;
             int const cz = z;
@@ -532,7 +690,7 @@ void TerrainRenderer::build_meshes() {
         auto hgrid = [&](int gx, int gz) {
           gx = std::clamp(gx, 0, m_width - 1);
           gz = std::clamp(gz, 0, m_height - 1);
-          return m_heightData[gz * m_width + gx];
+          return height_data[gz * m_width + gx];
         };
         const int cxi = int(center_gx);
         const int czi = int(center_gz);

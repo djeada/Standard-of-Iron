@@ -4,6 +4,7 @@ in vec3 v_worldPos;
 in vec3 v_normal;
 in vec2 v_uv;
 in float v_vertexDisplacement;
+in float v_entryMask;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -143,8 +144,11 @@ float minCliffDistanceRadial(vec2 uv, int r, float riseDelta) {
 }
 
 void main() {
+  float entryMask = clamp(v_entryMask, 0.0, 1.0);
   vec3 normal = geomNormal();
+  normal = normalize(mix(normal, normalize(v_normal), entryMask * 0.75));
   float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
+  slope *= (1.0 - 0.35 * entryMask);
   float curvature = computeCurvature();
 
   float tileScale = max(u_tileSize, 0.0001);
@@ -221,6 +225,7 @@ void main() {
                              (erosionNoise - 0.5) * u_rockDetailStrength,
                          0.0, 1.0);
   rockMask *= 1.0 - soilMix * 0.75;
+  rockMask = mix(rockMask, rockMask * 0.6, entryMask);
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
@@ -240,7 +245,9 @@ void main() {
                             microDetailScale);
   vec3 microGrad =
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
-  float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
+  float microAmp =
+      0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope) *
+      (1.0 - 0.6 * entryMask);
   microNormal = normalize(normal + microGrad * microAmp);
 
   float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);
