@@ -358,10 +358,10 @@ void TerrainHeightMap::buildFromFeatures(
             // - pull down the mid-section a bit to create an S-curve silhouette
             float const s = smootherstep(ramp_progress);
             float const mid = 4.0F * ramp_progress * (1.0F - ramp_progress);
-            float const height_frac = std::clamp(
-              std::pow(std::clamp(s - k_entry_mid_dip_strength * mid, 0.0F, 1.0F),
-                   k_hill_ramp_steepness_exponent),
-              0.0F, 1.0F);
+            // Keep an immediate rise from the start (avoid a flat apron), then pull the mid down.
+            float const height_base = std::pow(s, k_hill_ramp_steepness_exponent);
+            float const height_frac =
+                std::clamp(height_base * (1.0F - k_entry_mid_dip_strength * mid), 0.0F, 1.0F);
 
             // Small toe lift near the base pushes the lower edge outward gently.
             float const toe_frac =
@@ -374,8 +374,15 @@ void TerrainHeightMap::buildFromFeatures(
             // Width taper: wider at base, narrower at the top.
             float const width_scale =
               (1.0F - s) * k_entry_base_width_scale + s * k_entry_top_width_scale;
-            float const tapered_width =
-              std::max(1.0F, entry_width * width_scale);
+            float tapered_width = std::max(1.0F, entry_width * width_scale);
+
+            // The outward extension is only there to stretch steep entries; keep it narrower so it
+            // doesn't read as a giant flat rectangle in front of the hill.
+            if (is_outward && outward_steps > 0) {
+              float const outward_t = float(ramp_step) / float(std::max(1, outward_steps));
+              float const outward_width_mul = 0.55F + 0.45F * std::clamp(outward_t, 0.0F, 1.0F);
+              tapered_width = std::max(1.0F, tapered_width * outward_width_mul);
+            }
           
           // Widen the entry by affecting cells perpendicular to the path.
           // Cross-section is a concave/bowl shape: lowest on the centerline, blending back to
@@ -396,14 +403,18 @@ void TerrainHeightMap::buildFromFeatures(
             
             int const ramp_idx = indexAt(ix, iz);
             if (m_terrain_types[ramp_idx] != TerrainType::Mountain) {
-              if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
-                m_terrain_types[ramp_idx] = TerrainType::Hill;
-              }
               float const width_factor = 1.0F - edge_t;
-              if (width_factor > k_walkable_width_threshold) {
-                walkable_mask[ramp_idx] = 1;
-                entrance_line_mask[ramp_idx] = 1;
-                m_hillEntrances[ramp_idx] = true;
+              if (!is_outward) {
+                // Only mark/paint the actual hill entry (not the outward stretch), otherwise it
+                // becomes a big flat-looking slab.
+                if (m_terrain_types[ramp_idx] == TerrainType::Flat) {
+                  m_terrain_types[ramp_idx] = TerrainType::Hill;
+                }
+                if (width_factor > k_walkable_width_threshold) {
+                  walkable_mask[ramp_idx] = 1;
+                  entrance_line_mask[ramp_idx] = 1;
+                  m_hillEntrances[ramp_idx] = true;
+                }
               }
 
               float const existing_height = m_heights[ramp_idx];
