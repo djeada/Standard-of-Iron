@@ -419,6 +419,8 @@ void TerrainHeightMap::buildFromFeatures(
         }
       }
 
+      // Block all slope cells to create tight borders around the hill
+      // Only entrance ramps (marked in entrance_line_mask) should be walkable on slopes
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
           int const idx = indexAt(x, z);
@@ -426,6 +428,7 @@ void TerrainHeightMap::buildFromFeatures(
             continue;
           }
 
+          // Skip cells that are part of entrance ramps
           if (entrance_line_mask[idx] == 1) {
             continue;
           }
@@ -437,9 +440,34 @@ void TerrainHeightMap::buildFromFeatures(
           const float norm_plateau_dist = std::sqrt(
               (rotated_x * rotated_x) / (plateau_width * plateau_width) +
               (rotated_z * rotated_z) / (plateau_depth * plateau_depth));
-
+          
+          // Block all slope cells (outside plateau)
           if (norm_plateau_dist > 1.0F) {
             walkable_mask[idx] = 0;
+          }
+          
+          // Additionally block cells near the slope boundary to ensure tight borders
+          // Check if cell is adjacent to non-hill terrain on slopes
+          if (norm_plateau_dist > 0.85F) {  // Near or outside plateau
+            bool adjacent_to_non_hill = false;
+            constexpr int k_dirs[8][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1},
+                                           {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+            for (const auto &dir : k_dirs) {
+              int const nx = x + dir[0];
+              int const nz = z + dir[1];
+              if (!inBounds(nx, nz)) {
+                adjacent_to_non_hill = true;
+                break;
+              }
+              int const n_idx = indexAt(nx, nz);
+              if (m_terrain_types[n_idx] != TerrainType::Hill) {
+                adjacent_to_non_hill = true;
+                break;
+              }
+            }
+            if (adjacent_to_non_hill) {
+              walkable_mask[idx] = 0;
+            }
           }
         }
       }
