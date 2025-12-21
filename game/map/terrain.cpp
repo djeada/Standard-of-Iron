@@ -12,17 +12,17 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 6;
+constexpr int k_hill_ramp_extra_steps = 4;
 // Steepness exponent controls curve shape (1.0 = linear, >1 = slow start, <1 = fast start)
-constexpr float k_hill_ramp_steepness_exponent = 1.5F;
+constexpr float k_hill_ramp_steepness_exponent = 1.0F;
 // Base width of the entry ramp; actual width is clamped per-hill
-constexpr float k_entry_ramp_width = 2.5F;
+constexpr float k_entry_ramp_width = 3.0F;
 // Quadratic falloff exponent for smooth width transitions
-constexpr float k_width_falloff_exponent = 2.0F;
+constexpr float k_width_falloff_exponent = 1.5F;
 // Smooth width falloff adjustment (prevents division by width at edges)
 constexpr float k_width_falloff_padding = 1.0F;
 // Minimum width factor for cells to be marked as walkable
-constexpr float k_walkable_width_threshold = 0.5F;
+constexpr float k_walkable_width_threshold = 0.4F;
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -357,9 +357,17 @@ void TerrainHeightMap::buildFromFeatures(
               if (width_factor > k_walkable_width_threshold) {
                 walkable_mask[ramp_idx] = 1;
                 entrance_line_mask[ramp_idx] = 1;
+                m_hillEntrances[ramp_idx] = true;
               }
-              // Use max to build up the ramp, never carve down
-              m_heights[ramp_idx] = std::max(m_heights[ramp_idx], blended_height);
+              // Replace height directly to carve smooth entry path into hill
+              // Use min with existing height near the base, blend to full ramp height higher up
+              float const existing_height = m_heights[ramp_idx];
+              // Near the start of ramp (low ramp_progress), prefer lower of existing or ramp
+              // Near the end (high ramp_progress), use the ramp height to connect to plateau
+              float const base_blend = ramp_progress;
+              float const final_height = (1.0F - base_blend) * std::min(existing_height, blended_height)
+                                       + base_blend * std::max(existing_height, blended_height);
+              m_heights[ramp_idx] = final_height;
             }
           }
 
