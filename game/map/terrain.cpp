@@ -314,6 +314,35 @@ void TerrainHeightMap::buildFromFeatures(
         }
       }
 
+      // Mark all slope cells (non-plateau, non-entrance cells) as blocked
+      // to ensure hills are only accessible via entrance ramps
+      for (int z = min_z; z <= max_z; ++z) {
+        for (int x = min_x; x <= max_x; ++x) {
+          int const idx = indexAt(x, z);
+          if (m_terrain_types[idx] != TerrainType::Hill) {
+            continue;
+          }
+          
+          // Skip if already marked as entrance line
+          if (entrance_line_mask[idx] == 1) {
+            continue;
+          }
+          
+          const float dx = float(x) - grid_center_x;
+          const float dz = float(z) - grid_center_z;
+          const float rotated_x = dx * cos_a + dz * sin_a;
+          const float rotated_z = -dx * sin_a + dz * cos_a;
+          const float norm_plateau_dist = std::sqrt(
+              (rotated_x * rotated_x) / (plateau_width * plateau_width) +
+              (rotated_z * rotated_z) / (plateau_depth * plateau_depth));
+          
+          // If on slope (not on plateau), ensure it's blocked
+          if (norm_plateau_dist > 1.0F) {
+            walkable_mask[idx] = 0;
+          }
+        }
+      }
+
       if (!entrance_line_mask.empty()) {
         for (int z = min_z; z <= max_z; ++z) {
           for (int x = min_x; x <= max_x; ++x) {
