@@ -250,7 +250,7 @@ auto make_plant_spawn_config() -> SpawnValidationConfig {
   config.max_slope = 0.65F;
   config.river_margin = 1;
   config.allow_flat = true;
-  config.allow_hill = true;
+  config.allow_hill = false;
   config.allow_mountain = false;
   config.allow_river = false;
   config.check_buildings = true;
@@ -280,7 +280,7 @@ auto make_tree_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
   config.max_slope = 0.75F;
-  config.river_margin = 0;
+  config.river_margin = 1;
   config.allow_flat = true;
   config.allow_hill = true;
   config.allow_mountain = true;
@@ -288,7 +288,7 @@ auto make_tree_spawn_config() -> SpawnValidationConfig {
   config.check_buildings = true;
   config.check_roads = true;
   config.check_slope = true;
-  config.check_river_margin = false;
+  config.check_river_margin = true;
   return config;
 }
 
