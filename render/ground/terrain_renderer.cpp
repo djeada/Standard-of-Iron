@@ -543,10 +543,8 @@ void TerrainRenderer::build_meshes() {
 
             float entry_factor = 0.0F;
             if (!entry_weight.empty()) {
-              entry_factor = 0.25F * (entry_weight[idx0] +
-                                      entry_weight[idx1] +
-                                      entry_weight[idx2] +
-                                      entry_weight[idx3]);
+              entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
+                                      entry_weight[idx2] + entry_weight[idx3]);
             }
             bool const subdivide = entry_factor > 0.25F;
 
@@ -562,15 +560,15 @@ void TerrainRenderer::build_meshes() {
                   section, gx + 0.5F, gz, sample_entry_at(gx + 0.5F, gz));
               unsigned int const v01 = add_vertex_at_grid(
                   section, gx, gz + 0.5F, sample_entry_at(gx, gz + 0.5F));
-              unsigned int const v21 = add_vertex_at_grid(
-                  section, gx + 1.0F, gz + 0.5F,
-                  sample_entry_at(gx + 1.0F, gz + 0.5F));
-              unsigned int const v12 = add_vertex_at_grid(
-                  section, gx + 0.5F, gz + 1.0F,
-                  sample_entry_at(gx + 0.5F, gz + 1.0F));
-              unsigned int const v11 = add_vertex_at_grid(
-                  section, gx + 0.5F, gz + 0.5F,
-                  sample_entry_at(gx + 0.5F, gz + 0.5F));
+              unsigned int const v21 =
+                  add_vertex_at_grid(section, gx + 1.0F, gz + 0.5F,
+                                     sample_entry_at(gx + 1.0F, gz + 0.5F));
+              unsigned int const v12 =
+                  add_vertex_at_grid(section, gx + 0.5F, gz + 1.0F,
+                                     sample_entry_at(gx + 0.5F, gz + 1.0F));
+              unsigned int const v11 =
+                  add_vertex_at_grid(section, gx + 0.5F, gz + 0.5F,
+                                     sample_entry_at(gx + 0.5F, gz + 0.5F));
 
               section.indices.push_back(v00);
               section.indices.push_back(v10);
@@ -608,10 +606,9 @@ void TerrainRenderer::build_meshes() {
               section.indices.push_back(v3);
             }
 
-            float const quad_height =
-                (height_data[idx0] + height_data[idx1] + height_data[idx2] +
-                 height_data[idx3]) *
-                0.25F;
+            float const quad_height = (height_data[idx0] + height_data[idx1] +
+                                       height_data[idx2] + height_data[idx3]) *
+                                      0.25F;
             section.heightSum += quad_height;
             section.heightCount += 1;
 
@@ -757,7 +754,7 @@ void TerrainRenderer::build_meshes() {
         chunk.tint = section.tint;
 
         QVector3D color =
-          base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
+            base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
         color = applyTint(color, chunk.tint);
         color *= macro_shade;
         color.setX(color.x() * aspect_tint.x() * feature_tint.x());

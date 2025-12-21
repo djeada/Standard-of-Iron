@@ -101,7 +101,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+                                   transform->position.z)) {
       continue;
     }
 
@@ -146,7 +146,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+                                   transform->position.z)) {
       continue;
     }
 
@@ -191,7 +191,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+                                   transform->position.z)) {
       continue;
     }
 

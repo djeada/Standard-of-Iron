@@ -452,8 +452,7 @@ public:
   getTerrainTypes() const -> const std::vector<TerrainType> & {
     return m_terrain_types;
   }
-  [[nodiscard]] auto
-  getHillEntrances() const -> const std::vector<bool> & {
+  [[nodiscard]] auto getHillEntrances() const -> const std::vector<bool> & {
     return m_hillEntrances;
   }
   [[nodiscard]] auto
@@ -471,8 +470,8 @@ public:
   [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
       -> std::optional<QVector3D>;
 
-  [[nodiscard]] auto getBridgeDeckHeight(float world_x,
-                                         float world_z) const -> std::optional<float>;
+  [[nodiscard]] auto getBridgeDeckHeight(float world_x, float world_z) const
+      -> std::optional<float>;
 
   void applyBiomeVariation(const BiomeSettings &settings);
 

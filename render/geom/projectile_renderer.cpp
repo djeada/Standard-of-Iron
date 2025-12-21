@@ -80,8 +80,7 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
         QVector3D(std::clamp(wood_color.x() * 1.15F, 0.0F, 1.0F),
                   std::clamp(wood_color.y() * 1.10F, 0.0F, 1.0F),
                   std::clamp(wood_color.z() * 0.95F, 0.0F, 1.0F));
-    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr,
-                   0.7F);
+    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr, 0.7F);
 
     if (arrow.get_progress() > 0.15F) {
       float trail_opacity =
