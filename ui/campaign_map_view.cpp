@@ -124,6 +124,13 @@ struct CampaignMapTextureCache {
   }
 
   QOpenGLTexture *get_or_load(const QString &resource_path) {
+    // Only allow texture loading during initialization, not from render thread
+    if (!m_allow_loading) {
+      qWarning() << "CampaignMapTextureCache: Attempted to load texture after "
+                    "initialization";
+      return nullptr;
+    }
+
     auto it = m_textures.find(resource_path);
     if (it != m_textures.end() && it->second != nullptr) {
       return it->second;
@@ -144,6 +151,8 @@ struct CampaignMapTextureCache {
     return texture;
   }
 
+  void set_loading_allowed(bool allowed) { m_allow_loading = allowed; }
+
   void clear() {
     // Only delete textures if there's a valid OpenGL context
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
@@ -159,6 +168,7 @@ private:
   CampaignMapTextureCache() = default;
   ~CampaignMapTextureCache() { clear(); }
   std::unordered_map<QString, QOpenGLTexture *, QStringHash> m_textures;
+  bool m_allow_loading = true;
 };
 
 class CampaignMapRenderer : public QQuickFramebufferObject::Renderer,
@@ -268,11 +278,15 @@ private:
 
     init_quad();
     // Use global texture cache to avoid reloading from disk on renderer recreation
+    // Allow loading during initialization
     auto &tex_cache = CampaignMapTextureCache::instance();
+    tex_cache.set_loading_allowed(true);
     m_waterTexture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_water.png"));
     m_baseTexture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
+    // Prevent loading from render thread after initialization
+    tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
     init_line_layer(m_coastLayer,
@@ -1152,7 +1166,30 @@ void CampaignMapView::setHoverProvinceId(const QString &province_id) {
   update();
 }
 
+void CampaignMapView::setRenderingEnabled(bool enabled) {
+  if (m_rendering_enabled == enabled) {
+    return;
+  }
+  m_rendering_enabled = enabled;
+  emit renderingEnabledChanged();
+  
+  // When disabling, also hide and disable updates
+  if (!enabled) {
+    setVisible(false);
+    setFlag(QQuickItem::ItemHasContents, false);
+  } else {
+    setVisible(true);
+    setFlag(QQuickItem::ItemHasContents, true);
+  }
+  update();
+}
+
 auto CampaignMapView::createRenderer() const -> Renderer * {
+  // Don't create renderer if rendering is disabled (e.g., in battle mode)
+  if (!m_rendering_enabled) {
+    return nullptr;
+  }
+
   QOpenGLContext *ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical()

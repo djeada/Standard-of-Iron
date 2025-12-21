@@ -20,6 +20,8 @@ class CampaignMapView : public QQuickFramebufferObject {
                  setHoverProvinceId NOTIFY hoverProvinceIdChanged)
   Q_PROPERTY(QVariantList provinceLabels READ provinceLabels NOTIFY
                  provinceLabelsChanged)
+  Q_PROPERTY(bool renderingEnabled READ renderingEnabled WRITE
+                 setRenderingEnabled NOTIFY renderingEnabledChanged)
 public:
   CampaignMapView();
 
@@ -44,18 +46,25 @@ public:
   }
   void setHoverProvinceId(const QString &province_id);
 
+  [[nodiscard]] auto renderingEnabled() const -> bool {
+    return m_rendering_enabled;
+  }
+  void setRenderingEnabled(bool enabled);
+
 signals:
   void orbitYawChanged();
   void orbitPitchChanged();
   void orbitDistanceChanged();
   void hoverProvinceIdChanged();
   void provinceLabelsChanged();
+  void renderingEnabledChanged();
 
 private:
   float m_orbit_yaw = 180.0F;
   float m_orbit_pitch = 90.0F;
   float m_orbit_distance = 1.2F;
   QString m_hover_province_id;
+  bool m_rendering_enabled = true;
 
   struct ProvinceHit {
     QString id;
