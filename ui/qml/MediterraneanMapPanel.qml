@@ -123,7 +123,6 @@ Rectangle {
                 orbitYaw: root.map_orbit_yaw
                 orbitPitch: root.map_orbit_pitch
                 orbitDistance: root.map_orbit_distance
-                renderingEnabled: campaignMapLoader.active
                 hoverProvinceId: {
                     if (root.active_region_id !== "")
                         return root.active_region_id;

@@ -430,7 +430,6 @@ Item {
                                 orbitYaw: missionDetailPanel.mapOrbitYaw
                                 orbitPitch: missionDetailPanel.mapOrbitPitch
                                 orbitDistance: missionDetailPanel.mapOrbitDistance
-                                renderingEnabled: campaignMapLoader.active
                                 onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
                                 onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
                                 onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1

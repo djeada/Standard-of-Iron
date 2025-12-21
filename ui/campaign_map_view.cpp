@@ -1166,30 +1166,7 @@ void CampaignMapView::setHoverProvinceId(const QString &province_id) {
   update();
 }
 
-void CampaignMapView::setRenderingEnabled(bool enabled) {
-  if (m_rendering_enabled == enabled) {
-    return;
-  }
-  m_rendering_enabled = enabled;
-  emit renderingEnabledChanged();
-  
-  // When disabling, also hide and disable updates
-  if (!enabled) {
-    setVisible(false);
-    setFlag(QQuickItem::ItemHasContents, false);
-  } else {
-    setVisible(true);
-    setFlag(QQuickItem::ItemHasContents, true);
-  }
-  update();
-}
-
 auto CampaignMapView::createRenderer() const -> Renderer * {
-  // Don't create renderer if rendering is disabled (e.g., in battle mode)
-  if (!m_rendering_enabled) {
-    return nullptr;
-  }
-
   QOpenGLContext *ctx = QOpenGLContext::currentContext();
   if ((ctx == nullptr) || !ctx->isValid()) {
     qCritical()
