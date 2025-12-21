@@ -450,7 +450,17 @@ auto TerrainHeightMap::getHeightAt(float world_x,
   float const h0 = h00 * (1.0F - tx) + h10 * tx;
   float const h1 = h01 * (1.0F - tx) + h11 * tx;
 
-  return h0 * (1.0F - tz) + h1 * tz;
+  float base_height = h0 * (1.0F - tz) + h1 * tz;
+
+  // Check if position is on a bridge and adjust height accordingly
+  if (isOnBridge(world_x, world_z)) {
+    auto bridge_height_opt = getBridgeDeckHeight(world_x, world_z);
+    if (bridge_height_opt.has_value()) {
+      return bridge_height_opt.value();
+    }
+  }
+
+  return base_height;
 }
 
 auto TerrainHeightMap::getHeightAtGrid(int grid_x, int grid_z) const -> float {
@@ -919,7 +929,65 @@ void TerrainHeightMap::restoreFromData(
   precomputeBridgeData();
 }
 
+auto TerrainHeightMap::getBridgeDeckHeight(
+    float world_x, float world_z) const -> std::optional<float> {
+
+  constexpr float kBridgeWalkableHalfWidth = 0.45F;
+
+  for (const auto &bridge : m_bridges) {
+    QVector3D dir = bridge.end - bridge.start;
+    float const length = dir.length();
+    if (length < 0.01F) {
+      continue;
+    }
+
+    dir.normalize();
+    QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+
+    // Calculate position relative to bridge start
+    QVector3D const query_point(world_x, 0.0F, world_z);
+    QVector3D const to_query = query_point - bridge.start;
+
+    // Calculate distance along the bridge axis
+    float const along = QVector3D::dotProduct(to_query, dir);
+
+    // Check if position is within bridge length (with small margin)
+    if (along < -0.5F || along > length + 0.5F) {
+      continue;
+    }
+
+    // Calculate perpendicular distance from bridge center line
+    float const perp_dist =
+        std::abs(QVector3D::dotProduct(to_query, perpendicular));
+
+    // Check if position is within bridge width
+    if (perp_dist > kBridgeWalkableHalfWidth) {
+      continue;
+    }
+
+    // Calculate parameter t along bridge length
+    float const t = std::clamp(along / length, 0.0F, 1.0F);
+
+    // Calculate arch curve (parabolic curve peaking at center)
+    float const arch_curve = 4.0F * t * (1.0F - t);
+    float const arch_height = bridge.height * arch_curve * 0.8F;
+
+    // Calculate deck height at this position
+    // This matches the formula used in bridge_renderer.cpp
+    float const deck_height =
+        bridge.start.y() + bridge.height + arch_height * 0.3F;
+
+    return deck_height;
+  }
+
+  return std::nullopt;
+}
+
 auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
+
+  if (m_onBridge.empty()) {
+    return false;
+  }
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -936,6 +1004,10 @@ auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
 
 auto TerrainHeightMap::getBridgeCenterPosition(
     float world_x, float world_z) const -> std::optional<QVector3D> {
+
+  if (m_onBridge.empty()) {
+    return std::nullopt;
+  }
 
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
