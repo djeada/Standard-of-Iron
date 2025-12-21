@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../equipment/horse/i_horse_equipment_renderer.h"
+#include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QString>
