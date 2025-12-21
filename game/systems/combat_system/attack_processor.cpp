@@ -179,10 +179,12 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
     int const troop_size =
         Game::Units::TroopConfig::instance().getIndividualsPerUnit(
             att_u->spawn_type);
-    int const max_arrows = std::max(1, troop_size / 3);
+    // Increase arrow count: at least 2/3 of troop size for more impressive volley
+    // Ensure minimum of 2 arrows to maintain valid distribution range
+    int const max_arrows = std::max(2, (troop_size * 2) / 3);
 
     static thread_local std::mt19937 arrow_gen(std::random_device{}());
-    std::uniform_int_distribution<> dist(1, max_arrows);
+    std::uniform_int_distribution<> dist(max_arrows / 2, max_arrows);
     arrow_count = dist(arrow_gen);
   }
 
