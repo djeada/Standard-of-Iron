@@ -43,7 +43,17 @@ auto TerrainService::get_terrain_height(float world_x,
   if (!m_height_map) {
     return 0.0F;
   }
-  return m_height_map->getHeightAt(world_x, world_z);
+  
+  float height = m_height_map->getHeightAt(world_x, world_z);
+  
+  // Check if position is on a road and add road offset
+  // Note: Bridge height is already handled in getHeightAt()
+  if (!is_on_bridge(world_x, world_z) && is_point_on_road(world_x, world_z)) {
+    constexpr float k_road_y_offset = 0.02F;
+    height += k_road_y_offset;
+  }
+  
+  return height;
 }
 
 auto TerrainService::get_terrain_height_grid(int grid_x,
