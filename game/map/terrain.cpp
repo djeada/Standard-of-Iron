@@ -9,6 +9,8 @@
 
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
+constexpr int k_hill_ramp_extra_steps = 4;
+constexpr float k_hill_ramp_steepness_exponent = 0.7F;
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
   std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
@@ -266,7 +268,7 @@ void TerrainHeightMap::buildFromFeatures(
           }
         }
 
-        const int ramp_steps = std::min(steps, plateau_steps + 4);
+        const int ramp_steps = std::min(steps, plateau_steps + k_hill_ramp_extra_steps);
         int ramp_step = 0;
         for (int step = 0; step < steps && ramp_step < ramp_steps; ++step) {
           int const ix = int(std::round(cur_x));
@@ -296,7 +298,7 @@ void TerrainHeightMap::buildFromFeatures(
               (ramp_steps > 1) ? (float(ramp_step) / float(ramp_steps - 1))
                                : 1.0F;
           float const ramp_height =
-              feature.height * std::pow(smoothstep(ramp_progress), 0.7F);
+              feature.height * std::pow(smoothstep(ramp_progress), k_hill_ramp_steepness_exponent);
           ++ramp_step;
 
           int const ramp_idx = indexAt(ix, iz);
