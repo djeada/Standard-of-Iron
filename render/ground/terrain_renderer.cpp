@@ -750,7 +750,7 @@ void TerrainRenderer::build_meshes() {
         // Hill tops (plateaus) were reading too bright and saturated because they inherit
         // biome colors. Keep the biome hue, but dilute/desaturate plateau areas.
         float const feature_bright =
-          1.0F + 0.02F * plateau_factor - 0.05F * entrance_factor;
+          1.0F - 0.01F * plateau_factor - 0.05F * entrance_factor;
         QVector3D const feature_tint =
           QVector3D(1.0F + 0.01F * plateau_factor - 0.03F * entrance_factor,
                 1.0F + 0.00F * plateau_factor - 0.01F * entrance_factor,
@@ -775,8 +775,12 @@ void TerrainRenderer::build_meshes() {
           float const luma =
             0.2126F * color.x() + 0.7152F * color.y() + 0.0722F * color.z();
           QVector3D const gray(luma, luma, luma);
-          float const t = std::clamp(0.35F * plateau_desat, 0.0F, 0.35F);
+          float const t = std::clamp(0.60F * plateau_desat, 0.0F, 0.60F);
           color = color * (1.0F - t) + gray * t;
+
+          // Also dim plateau tops slightly so they don't pop versus the biome base.
+          float const dim = std::clamp(0.22F * plateau_desat, 0.0F, 0.22F);
+          color *= (1.0F - dim);
         }
         color = color * 0.96F + QVector3D(0.04F, 0.04F, 0.04F);
         chunk.color = clamp01(color);
