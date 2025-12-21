@@ -17,7 +17,7 @@
 namespace Render {
 namespace Geom {
 
-static auto createArrowMesh() -> std::unique_ptr<GL::Mesh> {
+static auto createArrowShaftMesh() -> std::unique_ptr<GL::Mesh> {
   using GL::Vertex;
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
@@ -25,9 +25,6 @@ static auto createArrowMesh() -> std::unique_ptr<GL::Mesh> {
   constexpr int k_arrow_radial_segments = 12;
   const float shaft_radius = 0.05F;
   const float shaft_len = 0.85F;
-  const float tip_len = 0.15F;
-  const float tip_start_z = shaft_len;
-  const float tip_end_z = shaft_len + tip_len;
 
   int const base_index = 0;
   for (int ring = 0; ring < 2; ++ring) {
@@ -58,7 +55,22 @@ static auto createArrowMesh() -> std::unique_ptr<GL::Mesh> {
     idx.push_back(a);
   }
 
-  int const ring_start = verts.size();
+  return std::make_unique<GL::Mesh>(verts, idx);
+}
+
+static auto createArrowTipMesh() -> std::unique_ptr<GL::Mesh> {
+  using GL::Vertex;
+  std::vector<GL::Vertex> verts;
+  std::vector<unsigned int> idx;
+
+  constexpr int k_arrow_radial_segments = 12;
+  const float shaft_radius = 0.05F;
+  const float shaft_len = 0.85F;
+  const float tip_len = 0.15F;
+  const float tip_start_z = shaft_len;
+  const float tip_end_z = shaft_len + tip_len;
+
+  int const ring_start = 0;
   for (int i = 0; i < k_arrow_radial_segments; ++i) {
     float const a = (float(i) / k_arrow_radial_segments) * 6.2831853F;
     float x = std::cos(a) * shaft_radius * 1.4F;
@@ -82,8 +94,13 @@ static auto createArrowMesh() -> std::unique_ptr<GL::Mesh> {
   return std::make_unique<GL::Mesh>(verts, idx);
 }
 
-auto Arrow::get() -> GL::Mesh * {
-  static std::unique_ptr<GL::Mesh> const mesh = createArrowMesh();
+auto Arrow::get_shaft() -> GL::Mesh * {
+  static std::unique_ptr<GL::Mesh> const mesh = createArrowShaftMesh();
+  return mesh.get();
+}
+
+auto Arrow::get_tip() -> GL::Mesh * {
+  static std::unique_ptr<GL::Mesh> const mesh = createArrowTipMesh();
   return mesh.get();
 }
 
@@ -96,8 +113,9 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }
-  auto *arrow_mesh = Render::GL::ResourceManager::arrow();
-  if (arrow_mesh == nullptr) {
+  auto *arrow_shaft_mesh = Render::Geom::Arrow::get_shaft();
+  auto *arrow_tip_mesh = Render::Geom::Arrow::get_tip();
+  if ((arrow_shaft_mesh == nullptr) || (arrow_tip_mesh == nullptr)) {
     return;
   }
 
@@ -137,7 +155,13 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
     model.scale(arrow_xy_scale, arrow_xy_scale, arrow_z_scale);
 
-    renderer->mesh(arrow_mesh, model, arrow.color, nullptr, 1.0F);
+    // Wooden shaft - darker brown color
+    QVector3D wood_color(0.35F, 0.25F, 0.15F);
+    renderer->mesh(arrow_shaft_mesh, model, wood_color, nullptr, 1.0F);
+
+    // Metal tip - silvery gray color
+    QVector3D metal_color(0.70F, 0.72F, 0.75F);
+    renderer->mesh(arrow_tip_mesh, model, metal_color, nullptr, 1.0F);
   }
 }
 
