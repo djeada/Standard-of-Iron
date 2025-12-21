@@ -19,9 +19,6 @@ public:
   [[nodiscard]] auto quad() const -> Mesh * { return m_quadMesh.get(); }
   [[nodiscard]] auto ground() const -> Mesh * { return m_groundMesh.get(); }
   [[nodiscard]] auto unit() const -> Mesh * { return m_unitMesh.get(); }
-  [[nodiscard]] static auto arrow() -> Mesh * {
-    return Render::Geom::Arrow::get();
-  }
   [[nodiscard]] auto white() const -> Texture * { return m_whiteTexture.get(); }
 
 private:
