@@ -12,32 +12,33 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 // Hill entry rendering parameters for smoother transitions
 // Extra steps extend the ramp beyond the plateau for gentler slope transitions
-constexpr int k_hill_ramp_extra_steps = 10;
-// Higher exponent slows early rise for a gentler, longer entry ramp
-constexpr float k_hill_ramp_steepness_exponent = 1.4F;
-// Maximum allowed slope angle to prevent cliff-like appearance (in grid units per height unit)
-constexpr float k_max_slope_ratio = 3.5F; // ~16 degrees maximum
+constexpr int k_hill_ramp_extra_steps = 18;
+// Lower exponent creates more linear, gentle progression (was 1.4, now 0.6)
+constexpr float k_hill_ramp_steepness_exponent = 0.6F;
+// Maximum allowed slope angle to prevent cliff-like appearance (higher = gentler)
+constexpr float k_max_slope_ratio = 8.0F; // ~7 degrees maximum - very gentle
 // Base width of the entry ramp; actual width is clamped per-hill
-constexpr float k_entry_ramp_width = 3.5F;
-// Quadratic falloff exponent for smooth width transitions (value of 2 = quadratic)
-constexpr float k_width_falloff_exponent = 2.2F;
+constexpr float k_entry_ramp_width = 5.0F;
+// Cubic falloff exponent for ultra-smooth width transitions
+constexpr float k_width_falloff_exponent = 3.0F;
 // Smooth width falloff adjustment (prevents division by width at edges)
-constexpr float k_width_falloff_padding = 1.0F;
+constexpr float k_width_falloff_padding = 1.5F;
 // Height blending tolerance multiplier (allows slight overshoot for smoother transitions)
-constexpr float k_height_blend_tolerance = 1.5F;
+constexpr float k_height_blend_tolerance = 2.0F;
 // Minimum width factor for cells to be marked as walkable
-constexpr float k_walkable_width_threshold = 0.5F;
+constexpr float k_walkable_width_threshold = 0.4F;
 // Limit how far into the hill the entry can carve down.
-constexpr float k_entry_carve_progress = 0.45F;
-constexpr float k_entry_carve_width_threshold = 0.45F;
-constexpr float k_entry_carve_width_exponent = 1.6F;
+constexpr float k_entry_carve_progress = 0.55F;
+constexpr float k_entry_carve_width_threshold = 0.35F;
+constexpr float k_entry_carve_width_exponent = 2.0F;
 
-// Multi-stage transition thresholds and heights (flat → gentle → medium → steep)
-constexpr float k_stage1_threshold = 0.4F;  // End of very gentle start phase (extended to 40%)
-constexpr float k_stage2_threshold = 0.7F;  // End of gentle middle phase (extended to 70%)
-constexpr float k_stage1_height = 0.10F;    // Height gained in stage 1 (reduced to 10%)
-constexpr float k_stage2_height = 0.25F;    // Additional height in stage 2 (reduced to 25%)
-constexpr float k_stage3_height = 0.65F;    // Final height in stage 3
+// Multi-stage transition thresholds and heights (flat → ultra-gentle → gentle → medium)
+// Most of the ramp (75%) is at very gentle grades for natural appearance
+constexpr float k_stage1_threshold = 0.45F;  // End of ultra-gentle start phase (45%)
+constexpr float k_stage2_threshold = 0.75F;  // End of gentle middle phase (75%)
+constexpr float k_stage1_height = 0.08F;     // Height gained in stage 1 (only 8%)
+constexpr float k_stage2_height = 0.22F;     // Additional height in stage 2 (22%)
+constexpr float k_stage3_height = 0.70F;     // Final height in stage 3 (70%)
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
