@@ -127,6 +127,7 @@ Rectangle {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
 
+                    // Call the method directly on this instance
                     var info = provinceInfoAtScreen(root.hover_mouse_x, root.hover_mouse_y);
                     return info && info.id ? info.id : "";
                 }
