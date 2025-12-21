@@ -1,6 +1,7 @@
 #include "combat_dust_renderer.h"
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/projectile_system.h"
 #include "../../game/systems/stone_projectile.h"
@@ -74,6 +75,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   float animation_time = renderer->get_animation_time();
   auto &visibility = Game::Systems::CameraVisibilityService::instance();
+  auto &fog_of_war = Game::Map::VisibilityService::instance();
 
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();
 
@@ -95,6 +97,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     if (!attack->in_melee_lock) {
+      continue;
+    }
+
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
@@ -138,6 +145,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
+      continue;
+    }
+
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
                                       kVisibilityCheckRadius)) {
@@ -175,6 +187,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
                          static_cast<float>(unit_comp->max_health);
 
     if (health_ratio > kBuildingHealthThreshold) {
+      continue;
+    }
+
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
@@ -221,6 +238,10 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
       QVector3D impact_pos = stone_proj->get_end();
 
+      if (!fog_of_war.isVisibleWorld(impact_pos.x(), impact_pos.z())) {
+        continue;
+      }
+
       if (!visibility.is_entity_visible(impact_pos.x(), impact_pos.z(),
                                         kVisibilityCheckRadius * 2.0F)) {
         continue;
@@ -251,6 +272,10 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   QVector3D color(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);
   for (const auto &impact : impact_tracker.impacts()) {
+    if (!fog_of_war.isVisibleWorld(impact.position.x(), impact.position.z())) {
+      continue;
+    }
+
     if (!visibility.is_entity_visible(impact.position.x(), impact.position.z(),
                                       impact.radius)) {
       continue;
