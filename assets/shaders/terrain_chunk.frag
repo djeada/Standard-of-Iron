@@ -145,17 +145,13 @@ float minCliffDistanceRadial(vec2 uv, int r, float riseDelta) {
 
 void main() {
   float entryMask = clamp(v_entryMask, 0.0, 1.0);
-  // Cubic smoothing for gentler entry transition
-  float smoothEntry = entryMask * entryMask * (3.0 - 2.0 * entryMask);
   vec3 normal = geomNormal();
-  // Blend more strongly toward interpolated normals at entries for smoother appearance
-  normal = normalize(mix(normal, normalize(v_normal), smoothEntry * 0.85));
+  // Gently blend toward interpolated normals at entries
+  normal = normalize(mix(normal, normalize(v_normal), entryMask * 0.5));
   float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
-  // Significantly reduce perceived slope at entry zones for natural grass coverage
-  slope *= (1.0 - 0.55 * smoothEntry);
+  // Slightly reduce perceived slope at entry zones
+  slope *= (1.0 - 0.25 * entryMask);
   float curvature = computeCurvature();
-  // Reduce curvature influence at entries for smoother lighting
-  curvature *= (1.0 - 0.4 * smoothEntry);
 
   float tileScale = max(u_tileSize, 0.0001);
   vec2 world_coord = (v_worldPos.xz / tileScale) + u_noiseOffset;
@@ -171,19 +167,14 @@ void main() {
   float moistureVar = smoothstep(0.3, 0.7, patchNoise);
   float lushFactor = smoothstep(0.2, 0.8, macroNoise);
   lushFactor = mix(lushFactor, moistureVar, 0.3);
-  // Boost lush grass at entry zones for natural ground-to-hill blend
-  lushFactor = mix(lushFactor, 0.7, smoothEntry * 0.4);
   vec3 lushGrass = mix(u_grassPrimary, u_grassSecondary, lushFactor);
   float dryness = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
   dryness += moistureVar * 0.15;
-  // Reduce dryness at entries for fresher, greener appearance
-  dryness *= (1.0 - 0.45 * smoothEntry);
 
   float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
   float drynessByHeight = mix(dryness, dryness * 1.15, heightFade * 0.4);
   vec3 grassColor = mix(lushGrass, u_grassDry, drynessByHeight);
-  // Slightly brighter grass at entries to emphasize smooth transition
-  grassColor *= (1.0 + microVariation * 0.08 + smoothEntry * 0.06);
+  grassColor *= (1.0 + microVariation * 0.08);
 
   float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
 
@@ -223,14 +214,10 @@ void main() {
   float soilMix = 1.0 - smoothstep(soilHeight - bandWidth,
                                    soilHeight + bandWidth, v_worldPos.y);
   soilMix = clamp(soilMix, 0.0, 1.0);
-  // Reduce soil visibility at entry zones for cleaner grass-to-hill transition
-  soilMix *= (1.0 - 0.5 * smoothEntry);
 
   float mudPatch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
   mudPatch = smoothstep(0.65, 0.75, mudPatch);
-  // Reduce mud patches at entries for cleaner appearance
-  float mudFactor = mudPatch * 0.85 * (1.0 - slope * 0.6) * (1.0 - 0.7 * smoothEntry);
-  soilMix = max(soilMix, mudFactor);
+  soilMix = max(soilMix, mudPatch * 0.85 * (1.0 - slope * 0.6));
 
   vec3 soilBlend = mix(grassColor, u_soilColor, soilMix);
 
@@ -240,8 +227,8 @@ void main() {
                              (erosionNoise - 0.5) * u_rockDetailStrength,
                          0.0, 1.0);
   rockMask *= 1.0 - soilMix * 0.75;
-  // Strongly reduce rock exposure at hill entries for natural grass transition
-  rockMask = mix(rockMask, rockMask * 0.35, smoothEntry);
+  // Slightly reduce rock at entry zones
+  rockMask *= (1.0 - 0.3 * entryMask);
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
@@ -261,10 +248,7 @@ void main() {
                             microDetailScale);
   vec3 microGrad =
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
-  // Significantly reduce surface detail at entry zones for smooth, natural grass
-  float microAmp =
-      0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope) *
-      (1.0 - 0.75 * smoothEntry);
+  float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
   microNormal = normalize(normal + microGrad * microAmp);
 
   float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);

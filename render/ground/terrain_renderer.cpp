@@ -701,11 +701,11 @@ void TerrainRenderer::build_meshes() {
         const float h_u = hgrid(cxi, czi + 1);
         const float convexity = h_c - 0.25F * (h_l + h_r + h_d + h_u);
 
-        const float edge_factor = smooth(0.20F, 0.50F, avg_slope);
+        const float edge_factor = smooth(0.25F, 0.55F, avg_slope);
         const float entrance_factor =
-            (1.0F - edge_factor) * smooth(-0.04F, 0.22F, -convexity);
-        const float plateau_flat = 1.0F - smooth(0.08F, 0.22F, avg_slope);
-        const float plateau_height = smooth(0.55F, 0.75F, nh_chunk);
+            (1.0F - edge_factor) * smooth(0.00F, 0.15F, -convexity);
+        const float plateau_flat = 1.0F - smooth(0.10F, 0.25F, avg_slope);
+        const float plateau_height = smooth(0.60F, 0.80F, nh_chunk);
         const float plateau_factor = plateau_flat * plateau_height;
 
         QVector3D const base_color =
@@ -719,9 +719,9 @@ void TerrainRenderer::build_meshes() {
                              : 0.90F),
             0.0F, 1.0F);
 
-        slope_mix += 0.12F * edge_factor;
-        slope_mix -= 0.18F * entrance_factor;
-        slope_mix -= 0.10F * plateau_factor;
+        slope_mix += 0.15F * edge_factor;
+        slope_mix -= 0.10F * entrance_factor;
+        slope_mix -= 0.08F * plateau_factor;
         slope_mix = std::clamp(slope_mix, 0.0F, 1.0F);
 
         float const center_wx = (center_gx - half_width) * m_tile_size;
@@ -747,14 +747,12 @@ void TerrainRenderer::build_meshes() {
         QVector3D const aspect_tint =
             cool_tint * northness + warm_tint * (1.0F - northness);
 
-        // Enhanced brightness and tint for natural entry appearance
         float const feature_bright =
-            1.0F + 0.10F * plateau_factor + 0.04F * entrance_factor;
-        // Warmer, greener tint at entries for natural grass transition
+            1.0F + 0.08F * plateau_factor - 0.05F * entrance_factor;
         QVector3D const feature_tint =
-            QVector3D(1.0F + 0.03F * plateau_factor + 0.02F * entrance_factor,
-                      1.0F + 0.02F * plateau_factor + 0.04F * entrance_factor,
-                      1.0F - 0.02F * plateau_factor - 0.01F * entrance_factor);
+            QVector3D(1.0F + 0.03F * plateau_factor - 0.03F * entrance_factor,
+                      1.0F + 0.01F * plateau_factor - 0.01F * entrance_factor,
+                      1.0F - 0.02F * plateau_factor + 0.03F * entrance_factor);
 
         chunk.tint = section.tint;
 
@@ -787,14 +785,14 @@ void TerrainRenderer::build_meshes() {
         float slope_threshold = m_biome_settings.terrain_rock_threshold;
         float sharpness_mul = 1.0F;
         if (chunk.type == Game::Map::TerrainType::Hill) {
-          slope_threshold -= 0.04F;
-          sharpness_mul = 1.05F;
+          slope_threshold -= 0.06F;
+          sharpness_mul = 1.15F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           slope_threshold -= 0.16F;
           sharpness_mul = 1.60F;
         }
-        slope_threshold -= 0.04F * edge_factor;
-        slope_threshold += 0.10F * entrance_factor;
+        slope_threshold -= 0.05F * edge_factor;
+        slope_threshold += 0.04F * entrance_factor;
         slope_threshold = std::clamp(
             slope_threshold - std::clamp(avg_slope * 0.20F, 0.0F, 0.12F), 0.05F,
             0.9F);
@@ -805,11 +803,11 @@ void TerrainRenderer::build_meshes() {
 
         float soil_height = m_biome_settings.terrain_soil_height;
         if (chunk.type == Game::Map::TerrainType::Hill) {
-          soil_height -= 0.02F;
+          soil_height -= 0.04F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           soil_height -= 0.12F;
         }
-        soil_height += 0.12F * entrance_factor - 0.04F * plateau_factor;
+        soil_height += 0.05F * entrance_factor - 0.03F * plateau_factor;
         params.soil_blend_height = soil_height;
 
         params.soil_blend_sharpness =
@@ -831,12 +829,12 @@ void TerrainRenderer::build_meshes() {
             m_biome_settings.height_noise_amplitude *
             (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));
         if (chunk.type == Game::Map::TerrainType::Hill) {
-          base_amp *= 1.05F;
+          base_amp *= 1.12F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           base_amp *= 1.25F;
         }
-        base_amp *= (1.0F + 0.08F * edge_factor - 0.10F * plateau_factor -
-                     0.15F * entrance_factor);
+        base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
+                     0.06F * entrance_factor);
         params.height_noise_strength = base_amp;
         params.height_noise_frequency = m_biome_settings.height_noise_frequency;
 
@@ -872,27 +870,23 @@ auto TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
     }
     return m_biome_settings.rock_low;
   case Game::Map::TerrainType::Hill: {
-    // Use smoother height interpolation for gentler color transitions
-    float const t = std::clamp(height / 3.5F, 0.0F, 1.0F);
-    // Quintic smoothstep for ultra-smooth color blending (6t^5 - 15t^4 + 10t^3)
-    float const t_smooth = t * t * t * (t * (t * 6.0F - 15.0F) + 10.0F);
+    float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
+    float const t_smooth = t * t * (3.0F - 2.0F * t);
 
-    // More grass-dominant at lower heights for natural entry appearance
-    QVector3D const grass_low = m_biome_settings.grass_primary * 0.4F +
-                                m_biome_settings.grass_secondary * 0.6F;
-    QVector3D const grass_high = m_biome_settings.grass_secondary * 0.7F +
-                                 m_biome_settings.grass_dry * 0.3F;
+    QVector3D const grass_low = m_biome_settings.grass_primary * 0.3F +
+                                m_biome_settings.grass_secondary * 0.7F;
+    QVector3D const grass_high = m_biome_settings.grass_secondary * 0.6F +
+                                 m_biome_settings.grass_dry * 0.4F;
     QVector3D const grass =
         grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
 
     QVector3D const rock = m_biome_settings.rock_low * (1.0F - t_smooth) +
                            m_biome_settings.rock_high * t_smooth;
 
-    // Reduced rock blending at low heights for smoother hill entries
-    float const rock_blend_base = 0.10F + 0.35F * t_smooth;
-    float const height_factor = std::clamp((height - 0.8F) * 0.25F, 0.0F, 0.20F);
+    float const rock_blend_base = 0.15F + 0.45F * t_smooth;
+    float const height_factor = std::clamp((height - 0.5F) * 0.3F, 0.0F, 0.25F);
     float const rock_blend =
-        std::clamp(rock_blend_base + height_factor, 0.0F, 0.60F);
+        std::clamp(rock_blend_base + height_factor, 0.0F, 0.70F);
 
     return grass * (1.0F - rock_blend) + rock * rock_blend;
   }
