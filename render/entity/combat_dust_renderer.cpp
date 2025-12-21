@@ -100,14 +100,14 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!visibility.is_entity_visible(transform->position.x,
-                                      transform->position.z,
-                                      kVisibilityCheckRadius)) {
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+    if (!visibility.is_entity_visible(transform->position.x,
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
       continue;
     }
 
@@ -145,14 +145,14 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!visibility.is_entity_visible(transform->position.x,
-                                      transform->position.z,
-                                      kVisibilityCheckRadius)) {
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+    if (!visibility.is_entity_visible(transform->position.x,
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
       continue;
     }
 
@@ -190,14 +190,14 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!visibility.is_entity_visible(transform->position.x,
-                                      transform->position.z,
-                                      kVisibilityCheckRadius)) {
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                    transform->position.z)) {
+    if (!visibility.is_entity_visible(transform->position.x,
+                                      transform->position.z,
+                                      kVisibilityCheckRadius)) {
       continue;
     }
 
@@ -238,12 +238,12 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
       QVector3D impact_pos = stone_proj->get_end();
 
-      if (!visibility.is_entity_visible(impact_pos.x(), impact_pos.z(),
-                                        kVisibilityCheckRadius * 2.0F)) {
+      if (!fog_of_war.isVisibleWorld(impact_pos.x(), impact_pos.z())) {
         continue;
       }
 
-      if (!fog_of_war.isVisibleWorld(impact_pos.x(), impact_pos.z())) {
+      if (!visibility.is_entity_visible(impact_pos.x(), impact_pos.z(),
+                                        kVisibilityCheckRadius * 2.0F)) {
         continue;
       }
 
@@ -272,12 +272,12 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   QVector3D color(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);
   for (const auto &impact : impact_tracker.impacts()) {
-    if (!visibility.is_entity_visible(impact.position.x(), impact.position.z(),
-                                      impact.radius)) {
+    if (!fog_of_war.isVisibleWorld(impact.position.x(), impact.position.z())) {
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(impact.position.x(), impact.position.z())) {
+    if (!visibility.is_entity_visible(impact.position.x(), impact.position.z(),
+                                      impact.radius)) {
       continue;
     }
 
