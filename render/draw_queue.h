@@ -447,17 +447,14 @@ private:
     uint64_t key = static_cast<uint64_t>(type_order) << 56;
 
     if (cmd.index() == MeshCmdIndex) {
-      const auto &m = std::get<MeshCmdIndex>(cmd);
-      // Sort by shader (highest priority), then mesh, then texture
-      // to group identical mesh+shader+texture combos for instancing.
-      // Use bits 48-55 for shader hash, 32-47 for mesh hash, 0-31 for texture hash.
-      auto const shader_hash = static_cast<uint64_t>(
-          (reinterpret_cast<uintptr_t>(m.shader) >> 3) & 0xFFU);
-      auto const mesh_hash = static_cast<uint64_t>(
-          (reinterpret_cast<uintptr_t>(m.mesh) >> 3) & 0xFFFFU);
-      auto const tex_hash = static_cast<uint64_t>(
-          (reinterpret_cast<uintptr_t>(m.texture) >> 3) & 0xFFFFFFFFU);
-      key |= (shader_hash << 48) | (mesh_hash << 32) | tex_hash;
+      const auto &mesh = std::get<MeshCmdIndex>(cmd);
+      // Sort by texture pointer only - the backend compares actual shader/texture
+      // pointers to decide when to rebind, so truncating pointers in the sort key
+      // could cause incorrect draw ordering without improving state locality.
+      // Batching decisions must compare actual pointers, not sort key bits.
+      uint64_t const tex_ptr =
+          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
+      key |= tex_ptr;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =
