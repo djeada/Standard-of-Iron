@@ -67,9 +67,9 @@ Item {
             var region_id = mission.world_region_id;
             if (!region_stats[region_id])
                 region_stats[region_id] = {
-                    "completed": false,
-                    "unlocked": false
-                };
+                "completed": false,
+                "unlocked": false
+            };
 
             if (mission.completed)
                 region_stats[region_id].completed = true;

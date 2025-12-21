@@ -1,13 +1,11 @@
 #include "movement_system.h"
 #include "../map/terrain_service.h"
 #include "../units/troop_config.h"
-#include "building_collision_registry.h"
 #include "command_service.h"
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "map/terrain.h"
 #include "pathfinding.h"
-#include "spatial_grid.h"
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
@@ -27,42 +25,23 @@ static constexpr float kStuckTimeThreshold = 2.0F;
 static constexpr float kUnstuckCooldown = 1.5F;
 static constexpr float kUnstuckOffsetRadius = 1.0F;
 
-// Unit separation constants for bridge/narrow passage crossing
-static constexpr float kUnitSeparationRadius = 3.0F;
-static constexpr float kMinUnitDistance = 0.8F;
-static constexpr float kBridgeSeparationStrength = 0.4F;
-static constexpr float kNormalSeparationStrength = 0.15F;
-
-// Thread-local spatial grid for unit separation queries
-thread_local SpatialGrid t_movement_grid(10.0F);
-
 namespace {
 
 auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
                       float unit_radius = 0.5F) -> bool {
-  auto &registry = BuildingCollisionRegistry::instance();
   auto &terrain_service = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::get_pathfinder();
 
-  if (registry.is_circle_overlapping_building(pos.x(), pos.z(), unit_radius,
-                                              ignoreEntity)) {
-    return false;
-  }
+  (void)ignoreEntity;
+  (void)unit_radius;
 
   if (pathfinder != nullptr) {
-    int const grid_x =
-        static_cast<int>(std::round(pos.x() - pathfinder->get_grid_offset_x()));
-    int const grid_z =
-        static_cast<int>(std::round(pos.z() - pathfinder->get_grid_offset_z()));
-    if (!pathfinder->is_walkable_with_radius(grid_x, grid_z, unit_radius)) {
-      return false;
-    }
+    Point const grid = CommandService::world_to_grid(pos.x(), pos.z());
+    return pathfinder->is_walkable(grid.x, grid.y);
   } else if (terrain_service.is_initialized()) {
     int const grid_x = static_cast<int>(std::round(pos.x()));
     int const grid_z = static_cast<int>(std::round(pos.z()));
-    if (!terrain_service.is_walkable(grid_x, grid_z)) {
-      return false;
-    }
+    return terrain_service.is_walkable(grid_x, grid_z);
   }
 
   return true;
@@ -71,38 +50,11 @@ auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
 auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
                          Engine::Core::EntityID ignoreEntity,
                          float unit_radius = 0.5F) -> bool {
-  QVector3D const delta = to - from;
-  float const distance_squared = delta.lengthSquared();
-
-  bool const start_allowed = is_point_allowed(from, ignoreEntity, unit_radius);
-  bool const end_allowed = is_point_allowed(to, ignoreEntity, unit_radius);
-
-  if (distance_squared < 0.000001F) {
-    return end_allowed;
-  }
-
-  float const distance = std::sqrt(distance_squared);
-  int const steps = std::max(1, static_cast<int>(std::ceil(distance)) * 2);
-  QVector3D const step = delta / static_cast<float>(steps);
-  bool exited_blocked_zone = start_allowed;
-
-  for (int i = 1; i <= steps; ++i) {
-    QVector3D const pos = from + step * static_cast<float>(i);
-    bool const allowed = is_point_allowed(pos, ignoreEntity, unit_radius);
-
-    if (!exited_blocked_zone) {
-      if (allowed) {
-        exited_blocked_zone = true;
-      }
-      continue;
-    }
-
-    if (!allowed) {
-      return false;
-    }
-  }
-
-  return end_allowed && exited_blocked_zone;
+  (void)from;
+  (void)to;
+  (void)ignoreEntity;
+  (void)unit_radius;
+  return true;
 }
 
 auto try_unstuck_unit(Engine::Core::World &world, Engine::Core::Entity *entity,
@@ -110,13 +62,11 @@ auto try_unstuck_unit(Engine::Core::World &world, Engine::Core::Entity *entity,
                       Engine::Core::MovementComponent *movement,
                       float unit_radius, float delta_time) -> bool {
 
-  // Check if on bridge for faster unstuck on narrow passages
   auto &terrain = Game::Map::TerrainService::instance();
   bool const on_bridge =
       terrain.is_initialized() &&
       terrain.is_on_bridge(transform->position.x, transform->position.z);
 
-  // Use faster unstuck thresholds on bridges to prevent deadlocks
   float const stuck_threshold = on_bridge ? 1.0F : kStuckTimeThreshold;
   float const unstuck_cooldown = on_bridge ? 0.8F : kUnstuckCooldown;
 
@@ -227,17 +177,6 @@ auto try_unstuck_unit(Engine::Core::World &world, Engine::Core::Entity *entity,
 void MovementSystem::update(Engine::Core::World *world, float delta_time) {
   CommandService::process_path_results(*world);
   auto entities = world->get_entities_with<Engine::Core::MovementComponent>();
-
-  // Build spatial grid for unit separation
-  t_movement_grid.clear();
-  for (auto *entity : entities) {
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if (transform != nullptr && unit_comp != nullptr && unit_comp->health > 0) {
-      t_movement_grid.insert(entity->get_id(), transform->position.x,
-                             transform->position.z);
-    }
-  }
 
   for (auto *entity : entities) {
     move_unit(entity, world, delta_time);
@@ -369,25 +308,6 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   QVector3D const current_pos_3d(transform->position.x, 0.0F,
                                  transform->position.z);
-  bool const current_pos_valid =
-      is_point_allowed(current_pos_3d, entity->get_id(), unit_radius);
-
-  if (!current_pos_valid && !movement->path_pending) {
-    Pathfinding *pathfinder = CommandService::get_pathfinder();
-    if (pathfinder != nullptr) {
-      Point const current_grid = CommandService::world_to_grid(
-          transform->position.x, transform->position.z);
-      Point const nearest = Pathfinding::find_nearest_walkable_point(
-          current_grid, 10, *pathfinder, unit_radius);
-
-      if (!(nearest == current_grid)) {
-        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
-        transform->position.x = safe_pos.x();
-        transform->position.z = safe_pos.z();
-      }
-    }
-  }
-
   bool const destination_allowed =
       is_point_allowed(final_goal, entity->get_id(), unit_radius);
 
@@ -408,12 +328,6 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   if (movement->time_since_last_path_request < 10.0F) {
     movement->time_since_last_path_request += delta_time;
-  }
-
-  if (try_unstuck_unit(*world, entity, transform, movement, unit_radius,
-                       delta_time)) {
-
-    return;
   }
 
   float base_speed = std::max(0.1F, unit->speed);
@@ -551,30 +465,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
         }
       }
 
-      QVector3D const target_pos(movement->target_x, 0.0F, movement->target_y);
-      auto &registry = BuildingCollisionRegistry::instance();
-      if (!registry.is_circle_overlapping_building(
-              target_pos.x(), target_pos.z(), unit_radius, entity->get_id())) {
-
-        transform->position.x = movement->target_x;
-        transform->position.z = movement->target_y;
-      } else {
-
-        Pathfinding *pathfinder = CommandService::get_pathfinder();
-        if (pathfinder != nullptr) {
-          Point const target_grid =
-              CommandService::world_to_grid(target_pos.x(), target_pos.z());
-          Point const nearest = Pathfinding::find_nearest_walkable_point(
-              target_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
-          QVector3D const safe_pos = CommandService::grid_to_world(nearest);
-
-          if (!registry.is_circle_overlapping_building(
-                  safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
-            transform->position.x = safe_pos.x();
-            transform->position.z = safe_pos.z();
-          }
-        }
-      }
+      transform->position.x = movement->target_x;
+      transform->position.z = movement->target_y;
       movement->has_target = false;
       movement->vx = movement->vz = 0.0F;
 
@@ -600,6 +492,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       if (distance < slow_radius) {
         desired_speed = max_speed * (distance / slow_radius);
       }
+
       float const desired_vx = nx * desired_speed;
       float const desired_vz = nz * desired_speed;
 
@@ -613,48 +506,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
-  float const old_x = transform->position.x;
-  float const old_z = transform->position.z;
-
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
-
-  {
-    auto &registry = BuildingCollisionRegistry::instance();
-    QVector3D const new_pos_3d(transform->position.x, 0.0F,
-                               transform->position.z);
-
-    if (registry.is_circle_overlapping_building(
-            new_pos_3d.x(), new_pos_3d.z(), unit_radius, entity->get_id())) {
-
-      Pathfinding *pathfinder = CommandService::get_pathfinder();
-      if (pathfinder != nullptr) {
-        Point const new_grid =
-            CommandService::world_to_grid(new_pos_3d.x(), new_pos_3d.z());
-        Point const nearest = Pathfinding::find_nearest_walkable_point(
-            new_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
-
-        QVector3D const safe_pos = CommandService::grid_to_world(nearest);
-
-        if (!registry.is_circle_overlapping_building(
-                safe_pos.x(), safe_pos.z(), unit_radius, entity->get_id())) {
-          transform->position.x = safe_pos.x();
-          transform->position.z = safe_pos.z();
-        } else {
-
-          transform->position.x = old_x;
-          transform->position.z = old_z;
-        }
-      } else {
-
-        transform->position.x = old_x;
-        transform->position.z = old_z;
-      }
-
-      movement->vx = 0.0F;
-      movement->vz = 0.0F;
-    }
-  }
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
@@ -681,173 +534,11 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   bool const is_moving = speed2 > 1e-5F;
 
   if (terrain.is_initialized() && is_moving) {
-
-    if (terrain.is_on_bridge(transform->position.x, transform->position.z)) {
-      auto bridge_center = terrain.get_bridge_center_position(
-          transform->position.x, transform->position.z);
-      if (bridge_center.has_value()) {
-
-        constexpr float kBridgeCenteringStrength = 0.15F;
-        float const dx = bridge_center->x() - transform->position.x;
-        float const dz = bridge_center->z() - transform->position.z;
-        transform->position.x += dx * kBridgeCenteringStrength;
-        transform->position.z += dz * kBridgeCenteringStrength;
-
-        auto *terrain_ctx =
-            entity->get_component<Engine::Core::TerrainContextComponent>();
-        if (terrain_ctx == nullptr) {
-          terrain_ctx =
-              entity->add_component<Engine::Core::TerrainContextComponent>();
-        }
-
-        if (!terrain_ctx->is_on_bridge && terrain_ctx->audio_cooldown <= 0.0F) {
-
-          Engine::Core::EventManager::instance().publish(
-              Engine::Core::AudioTriggerEvent("bridge_shout", 0.7F, false, 50));
-          terrain_ctx->audio_cooldown =
-              Engine::Core::TerrainContextComponent::kAudioCooldownTime;
-        }
-        terrain_ctx->is_on_bridge = true;
-      }
-    } else {
-
-      auto *terrain_ctx =
-          entity->get_component<Engine::Core::TerrainContextComponent>();
-      if (terrain_ctx != nullptr) {
-        terrain_ctx->is_on_bridge = false;
-      }
-    }
-
-    int const grid_x = static_cast<int>(std::round(transform->position.x));
-    int const grid_z = static_cast<int>(std::round(transform->position.z));
-    if (terrain.is_hill_entrance(grid_x, grid_z)) {
-
-      constexpr float kHillEntranceCenteringStrength = 0.2F;
-      float const center_x = static_cast<float>(grid_x);
-      float const center_z = static_cast<float>(grid_z);
-      float const dx = center_x - transform->position.x;
-      float const dz = center_z - transform->position.z;
-      transform->position.x += dx * kHillEntranceCenteringStrength;
-      transform->position.z += dz * kHillEntranceCenteringStrength;
-
-      auto *terrain_ctx =
-          entity->get_component<Engine::Core::TerrainContextComponent>();
-      if (terrain_ctx == nullptr) {
-        terrain_ctx =
-            entity->add_component<Engine::Core::TerrainContextComponent>();
-      }
-      terrain_ctx->is_at_hill_entrance = true;
-    } else {
-
-      auto *terrain_ctx =
-          entity->get_component<Engine::Core::TerrainContextComponent>();
-      if (terrain_ctx != nullptr) {
-        terrain_ctx->is_at_hill_entrance = false;
-      }
-    }
-  }
-
-  // Unit separation to prevent deadlocks on bridges and narrow passages
-  {
     auto *terrain_ctx =
         entity->get_component<Engine::Core::TerrainContextComponent>();
-    bool const on_bridge = (terrain_ctx != nullptr) && terrain_ctx->is_on_bridge;
-    bool const at_hill_entrance =
-        (terrain_ctx != nullptr) && terrain_ctx->is_at_hill_entrance;
-
-    // Use stronger separation on bridges and hill entrances
-    float const separation_strength =
-        (on_bridge || at_hill_entrance) ? kBridgeSeparationStrength
-                                        : kNormalSeparationStrength;
-
-    // Only apply separation if the unit is moving or stuck
-    bool const should_separate =
-        is_moving || (movement->has_target && movement->time_stuck > 0.5F);
-
-    if (should_separate) {
-      auto nearby_ids = t_movement_grid.get_entities_in_range(
-          transform->position.x, transform->position.z, kUnitSeparationRadius);
-
-      float sep_x = 0.0F;
-      float sep_z = 0.0F;
-      int neighbor_count = 0;
-
-      for (Engine::Core::EntityID neighbor_id : nearby_ids) {
-        if (neighbor_id == entity->get_id()) {
-          continue;
-        }
-
-        auto *neighbor = world->get_entity(neighbor_id);
-        if (neighbor == nullptr) {
-          continue;
-        }
-
-        auto *neighbor_transform =
-            neighbor->get_component<Engine::Core::TransformComponent>();
-        auto *neighbor_unit =
-            neighbor->get_component<Engine::Core::UnitComponent>();
-
-        if (neighbor_transform == nullptr || neighbor_unit == nullptr) {
-          continue;
-        }
-
-        if (neighbor_unit->health <= 0) {
-          continue;
-        }
-
-        float const dx = transform->position.x - neighbor_transform->position.x;
-        float const dz = transform->position.z - neighbor_transform->position.z;
-        float const dist_sq = dx * dx + dz * dz;
-
-        if (dist_sq < 0.0001F) {
-          // Units are on top of each other - push in random direction
-          thread_local std::random_device rd;
-          thread_local std::mt19937 gen(rd());
-          std::uniform_real_distribution<float> angle_dist(
-              0.0F, 2.0F * std::numbers::pi_v<float>);
-          float const angle = angle_dist(gen);
-          sep_x += std::cos(angle) * 0.5F;
-          sep_z += std::sin(angle) * 0.5F;
-          neighbor_count++;
-          continue;
-        }
-
-        float const dist = std::sqrt(dist_sq);
-
-        if (dist < kMinUnitDistance * 2.5F) {
-          // Calculate repulsion force - stronger when closer
-          float const overlap = kMinUnitDistance * 2.5F - dist;
-          float const force = overlap / (kMinUnitDistance * 2.5F);
-
-          // Normalize direction and add to separation vector
-          float const nx = dx / dist;
-          float const nz = dz / dist;
-          sep_x += nx * force;
-          sep_z += nz * force;
-          neighbor_count++;
-        }
-      }
-
-      if (neighbor_count > 0) {
-        // Normalize and apply separation
-        float const sep_len = std::sqrt(sep_x * sep_x + sep_z * sep_z);
-        if (sep_len > 0.001F) {
-          sep_x /= sep_len;
-          sep_z /= sep_len;
-
-          // Scale by strength and delta_time for smooth movement
-          float const sep_scale =
-              separation_strength * std::min(1.0F, float(neighbor_count) * 0.5F);
-          transform->position.x += sep_x * sep_scale * delta_time * 3.0F;
-          transform->position.z += sep_z * sep_scale * delta_time * 3.0F;
-
-          // If stuck on bridge, also nudge velocity to help unstick
-          if (on_bridge && movement->time_stuck > 1.0F) {
-            movement->vx += sep_x * separation_strength * 0.5F;
-            movement->vz += sep_z * separation_strength * 0.5F;
-          }
-        }
-      }
+    if (terrain_ctx != nullptr) {
+      terrain_ctx->is_on_bridge = false;
+      terrain_ctx->is_at_hill_entrance = false;
     }
   }
 

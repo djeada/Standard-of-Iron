@@ -410,8 +410,19 @@ void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
         auto entrance_obj = entrance_val.toObject();
         const float entrance_x = float(entrance_obj.value("x").toDouble(0.0));
         const float entrance_z = float(entrance_obj.value("z").toDouble(0.0));
+        float world_x = entrance_x;
+        float world_z = entrance_z;
+        if (coordSys == CoordSystem::Grid) {
+          const float tile = std::max(min_tile_size, grid.tile_size);
+          world_x = (entrance_x -
+                     (grid.width * grid_center_offset - grid_center_offset)) *
+                    tile;
+          world_z = (entrance_z -
+                     (grid.height * grid_center_offset - grid_center_offset)) *
+                    tile;
+        }
 
-        feature.entrances.emplace_back(entrance_x, 0.0F, entrance_z);
+        feature.entrances.emplace_back(world_x, 0.0F, world_z);
       }
     }
 
