@@ -1,6 +1,7 @@
 #include "combat_dust_renderer.h"
 #include "../../game/core/component.h"
 #include "../../game/core/world.h"
+#include "../../game/map/visibility_service.h"
 #include "../../game/systems/camera_visibility_service.h"
 #include "../../game/systems/projectile_system.h"
 #include "../../game/systems/stone_projectile.h"
@@ -74,6 +75,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   float animation_time = renderer->get_animation_time();
   auto &visibility = Game::Systems::CameraVisibilityService::instance();
+  auto &fog_of_war = Game::Map::VisibilityService::instance();
 
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();
 
@@ -101,6 +103,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
                                       kVisibilityCheckRadius)) {
+      continue;
+    }
+
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
@@ -144,6 +151,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
+      continue;
+    }
+
     QVector3D position(transform->position.x, kDustYOffset,
                        transform->position.z);
     QVector3D color(kDustColorR, kDustColorG, kDustColorB);
@@ -181,6 +193,11 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     if (!visibility.is_entity_visible(transform->position.x,
                                       transform->position.z,
                                       kVisibilityCheckRadius)) {
+      continue;
+    }
+
+    if (!fog_of_war.isVisibleWorld(transform->position.x,
+                                    transform->position.z)) {
       continue;
     }
 
@@ -226,6 +243,10 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
         continue;
       }
 
+      if (!fog_of_war.isVisibleWorld(impact_pos.x(), impact_pos.z())) {
+        continue;
+      }
+
       QVector3D position(impact_pos.x(), impact_pos.y() + kStoneImpactYOffset,
                          impact_pos.z());
 
@@ -253,6 +274,10 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
   for (const auto &impact : impact_tracker.impacts()) {
     if (!visibility.is_entity_visible(impact.position.x(), impact.position.z(),
                                       impact.radius)) {
+      continue;
+    }
+
+    if (!fog_of_war.isVisibleWorld(impact.position.x(), impact.position.z())) {
       continue;
     }
 
