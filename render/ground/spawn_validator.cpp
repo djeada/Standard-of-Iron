@@ -152,6 +152,10 @@ auto SpawnValidator::can_spawn_at_grid(float gx, float gz) const -> bool {
     return false;
   }
 
+  if (m_config.check_bridges && !check_bridge_collision(world_x, world_z)) {
+    return false;
+  }
+
   return true;
 }
 
@@ -244,6 +248,12 @@ auto SpawnValidator::check_road_collision(float world_x,
   return !terrain_service.is_point_on_road(world_x, world_z);
 }
 
+auto SpawnValidator::check_bridge_collision(float world_x,
+                                            float world_z) const -> bool {
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  return !terrain_service.is_on_bridge(world_x, world_z);
+}
+
 auto make_plant_spawn_config() -> SpawnValidationConfig {
   SpawnValidationConfig config;
   config.edge_padding = 0.08F;
@@ -282,8 +292,8 @@ auto make_tree_spawn_config() -> SpawnValidationConfig {
   config.max_slope = 0.75F;
   config.river_margin = 1;
   config.allow_flat = true;
-  config.allow_hill = true;
-  config.allow_mountain = true;
+  config.allow_hill = false;
+  config.allow_mountain = false;
   config.allow_river = false;
   config.check_buildings = true;
   config.check_roads = true;

@@ -463,6 +463,7 @@ public:
   }
 
   [[nodiscard]] auto isOnBridge(float world_x, float world_z) const -> bool;
+  [[nodiscard]] auto isOnBridgeGrid(int grid_x, int grid_z) const -> bool;
 
   [[nodiscard]] auto getBridgeCenterPosition(float world_x, float world_z) const
       -> std::optional<QVector3D>;

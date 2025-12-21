@@ -95,7 +95,7 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
   return end_allowed && exited_blocked_zone;
 }
 
-auto try_unstuck_unit(Engine::Core::Entity *entity,
+auto try_unstuck_unit(Engine::Core::World &world, Engine::Core::Entity *entity,
                       Engine::Core::TransformComponent *transform,
                       Engine::Core::MovementComponent *movement,
                       float unit_radius, float delta_time) -> bool {
@@ -119,6 +119,8 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
 
   if (movement->time_stuck > kStuckTimeThreshold &&
       movement->unstuck_cooldown <= 0.0F && movement->has_target) {
+    bool const had_target = movement->has_target;
+    QVector3D const goal_pos(movement->goal_x, 0.0F, movement->goal_y);
 
     Pathfinding *pathfinder = CommandService::get_pathfinder();
     if (pathfinder != nullptr) {
@@ -155,8 +157,21 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
         movement->unstuck_cooldown = kUnstuckCooldown;
 
         movement->clear_path();
+        movement->path_pending = false;
+        movement->pending_request_id = 0;
         movement->has_target = false;
+        movement->vx = 0.0F;
+        movement->vz = 0.0F;
         movement->repath_cooldown = 0.0F;
+
+        if (had_target) {
+          CommandService::MoveOptions opts;
+          opts.clear_attack_intent = false;
+          opts.allow_direct_fallback = false;
+          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+          std::vector<QVector3D> const targets = {goal_pos};
+          CommandService::move_units(world, ids, targets, opts);
+        }
 
         return true;
       }
@@ -165,8 +180,21 @@ auto try_unstuck_unit(Engine::Core::Entity *entity,
     movement->time_stuck = 0.0F;
     movement->unstuck_cooldown = kUnstuckCooldown;
     movement->clear_path();
+    movement->path_pending = false;
+    movement->pending_request_id = 0;
     movement->has_target = false;
+    movement->vx = 0.0F;
+    movement->vz = 0.0F;
     movement->repath_cooldown = 0.0F;
+
+    if (had_target) {
+      CommandService::MoveOptions opts;
+      opts.clear_attack_intent = false;
+      opts.allow_direct_fallback = false;
+      std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+      std::vector<QVector3D> const targets = {goal_pos};
+      CommandService::move_units(world, ids, targets, opts);
+    }
 
     return true;
   }
@@ -351,7 +379,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     movement->time_since_last_path_request += delta_time;
   }
 
-  if (try_unstuck_unit(entity, transform, movement, unit_radius, delta_time)) {
+  if (try_unstuck_unit(*world, entity, transform, movement, unit_radius,
+                       delta_time)) {
 
     return;
   }

@@ -26,6 +26,7 @@ struct SpawnValidationConfig {
 
   bool check_buildings = true;
   bool check_roads = true;
+  bool check_bridges = true;
   bool check_slope = true;
   bool check_river_margin = true;
 };
@@ -88,6 +89,9 @@ private:
 
   [[nodiscard]] auto check_road_collision(float world_x,
                                           float world_z) const -> bool;
+
+  [[nodiscard]] auto check_bridge_collision(float world_x,
+                                            float world_z) const -> bool;
 };
 
 [[nodiscard]] auto make_plant_spawn_config() -> SpawnValidationConfig;
