@@ -1,8 +1,11 @@
 #include "attack_behavior.h"
+#include "../../formation_system.h"
+#include "../../nation_registry.h"
 #include "../ai_tactical.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 
+#include <QVector3D>
 #include <cmath>
 #include <limits>
 #include <utility>
@@ -103,15 +106,36 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       }
 
       std::vector<Engine::Core::EntityID> unit_ids;
+      unit_ids.reserve(ready_units.size());
+      for (const auto *unit : ready_units) {
+        unit_ids.push_back(unit->id);
+      }
+
+      // Use nation-specific formation for scouting movement
+      const Nation *nation =
+          NationRegistry::instance().get_nation_for_player(context.player_id);
+      FormationType formation_type = FormationType::Roman;
+      if (nation != nullptr) {
+        formation_type = nation->formation_type;
+      }
+
+      QVector3D const scout_center(scout_x, 0.0F, scout_z);
+      auto formation_positions =
+          FormationSystem::instance().get_formation_positions(
+              formation_type, static_cast<int>(ready_units.size()), scout_center,
+              1.4F);
+
       std::vector<float> target_x;
       std::vector<float> target_y;
       std::vector<float> target_z;
+      target_x.reserve(ready_units.size());
+      target_y.reserve(ready_units.size());
+      target_z.reserve(ready_units.size());
 
-      for (const auto *unit : ready_units) {
-        unit_ids.push_back(unit->id);
-        target_x.push_back(scout_x);
-        target_y.push_back(0.0F);
-        target_z.push_back(scout_z);
+      for (size_t i = 0; i < ready_units.size(); ++i) {
+        target_x.push_back(formation_positions[i].x());
+        target_y.push_back(formation_positions[i].y());
+        target_z.push_back(formation_positions[i].z());
       }
 
       AICommand cmd;
@@ -192,15 +216,36 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
         if (needs_new_command) {
           std::vector<Engine::Core::EntityID> unit_ids;
+          unit_ids.reserve(ready_units.size());
+          for (const auto *unit : ready_units) {
+            unit_ids.push_back(unit->id);
+          }
+
+          // Use nation-specific formation when advancing to attack
+          const Nation *nation =
+              NationRegistry::instance().get_nation_for_player(context.player_id);
+          FormationType formation_type = FormationType::Roman;
+          if (nation != nullptr) {
+            formation_type = nation->formation_type;
+          }
+
+          QVector3D const attack_center(attack_pos_x, 0.0F, attack_pos_z);
+          auto formation_positions =
+              FormationSystem::instance().get_formation_positions(
+                  formation_type, static_cast<int>(ready_units.size()),
+                  attack_center, 1.4F);
+
           std::vector<float> target_x;
           std::vector<float> target_y;
           std::vector<float> target_z;
+          target_x.reserve(ready_units.size());
+          target_y.reserve(ready_units.size());
+          target_z.reserve(ready_units.size());
 
-          for (const auto *unit : ready_units) {
-            unit_ids.push_back(unit->id);
-            target_x.push_back(attack_pos_x);
-            target_y.push_back(0.0F);
-            target_z.push_back(attack_pos_z);
+          for (size_t i = 0; i < ready_units.size(); ++i) {
+            target_x.push_back(formation_positions[i].x());
+            target_y.push_back(formation_positions[i].y());
+            target_z.push_back(formation_positions[i].z());
           }
 
           AICommand cmd;
