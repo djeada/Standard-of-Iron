@@ -4,6 +4,7 @@
 #include "../game/systems/stone_projectile.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
+#include "arrow.h"
 #include "stone.h"
 #include <algorithm>
 #include <cmath>
@@ -19,8 +20,9 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
     return;
   }
 
-  auto *arrow_mesh = ResourceManager::arrow();
-  if (!arrow_mesh) {
+  auto *arrow_shaft_mesh = Geom::Arrow::get_shaft();
+  auto *arrow_tip_mesh = Geom::Arrow::get_tip();
+  if (!arrow_shaft_mesh || !arrow_tip_mesh) {
     return;
   }
 
@@ -60,7 +62,7 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
                   std::clamp(base_color.y() * 0.55F + 0.30F, 0.0F, 1.0F),
                   std::clamp(base_color.z() * 0.5F + 0.15F, 0.0F, 1.0F));
 
-    renderer->mesh(arrow_mesh, bolt_model, wood_color, nullptr, 1.0F);
+    renderer->mesh(arrow_shaft_mesh, bolt_model, wood_color, nullptr, 1.0F);
 
     QMatrix4x4 tip_model = bolt_model;
 
@@ -68,7 +70,7 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
     tip_model.scale(0.85F, 0.85F, 0.2F);
 
     QVector3D iron_color = QVector3D(0.25F, 0.24F, 0.22F);
-    renderer->mesh(arrow_mesh, tip_model, iron_color, nullptr, 1.0F);
+    renderer->mesh(arrow_tip_mesh, tip_model, iron_color, nullptr, 1.0F);
 
     QMatrix4x4 fletch_model = bolt_model;
     fletch_model.translate(0.0F, 0.0F, -bolt_z_scale * 0.2F);
@@ -78,7 +80,7 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
         QVector3D(std::clamp(wood_color.x() * 1.15F, 0.0F, 1.0F),
                   std::clamp(wood_color.y() * 1.10F, 0.0F, 1.0F),
                   std::clamp(wood_color.z() * 0.95F, 0.0F, 1.0F));
-    renderer->mesh(arrow_mesh, fletch_model, fletch_color, nullptr, 0.7F);
+    renderer->mesh(arrow_shaft_mesh, fletch_model, fletch_color, nullptr, 0.7F);
 
     if (arrow.get_progress() > 0.15F) {
       float trail_opacity =
@@ -112,7 +114,7 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
                             bolt_z_scale * trail_scale_factor);
 
           QVector3D trail_color = wood_color * (1.0F - trail_opacity * 0.4F);
-          renderer->mesh(arrow_mesh, trail_model, trail_color, nullptr,
+          renderer->mesh(arrow_shaft_mesh, trail_model, trail_color, nullptr,
                          1.0F - (trail_opacity * 0.7F));
         }
       }
@@ -124,7 +126,14 @@ void render_arrow_projectile(Renderer *renderer, ResourceManager *resources,
     constexpr float arrow_z_translate_factor = 0.5F;
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
     model.scale(arrow_xy_scale, arrow_xy_scale, arrow_z_scale);
-    renderer->mesh(arrow_mesh, model, arrow.get_color(), nullptr, 1.0F);
+    QVector3D wood_color =
+        QVector3D(std::clamp(arrow.get_color().x() * 0.6F + 0.35F, 0.0F, 1.0F),
+                  std::clamp(arrow.get_color().y() * 0.55F + 0.30F, 0.0F, 1.0F),
+                  std::clamp(arrow.get_color().z() * 0.5F + 0.15F, 0.0F, 1.0F));
+    renderer->mesh(arrow_shaft_mesh, model, wood_color, nullptr, 1.0F);
+
+    QVector3D tip_color(0.70F, 0.72F, 0.75F);
+    renderer->mesh(arrow_tip_mesh, model, tip_color, nullptr, 1.0F);
   }
 }
 
