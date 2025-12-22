@@ -94,6 +94,13 @@ void process_melee_lock(Engine::Core::Entity *attacker,
     return;
   }
 
+  // Exit melee lock if attacker is in hold mode
+  if (is_unit_in_hold_mode(attacker)) {
+    attack_comp->in_melee_lock = false;
+    attack_comp->melee_lock_target_id = 0;
+    return;
+  }
+
   auto *lock_target = world->get_entity(attack_comp->melee_lock_target_id);
   if ((lock_target == nullptr) ||
       lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -710,6 +717,11 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
       if ((attacker_atk != nullptr) &&
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
+        // Melee units in hold mode should not attack
+        if (is_unit_in_hold_mode(attacker)) {
+          attacker->remove_component<Engine::Core::AttackTargetComponent>();
+          continue;
+        }
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 

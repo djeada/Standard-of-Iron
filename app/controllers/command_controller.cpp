@@ -188,6 +188,13 @@ auto CommandController::on_hold_command() -> CommandResult {
       reset_movement(entity);
       entity->remove_component<Engine::Core::AttackTargetComponent>();
 
+      // Clear melee lock to prevent auto-attacking while in hold mode
+      auto *attack_comp = entity->get_component<Engine::Core::AttackComponent>();
+      if (attack_comp != nullptr) {
+        attack_comp->in_melee_lock = false;
+        attack_comp->melee_lock_target_id = 0;
+      }
+
       if (auto *patrol =
               entity->get_component<Engine::Core::PatrolComponent>()) {
         patrol->patrolling = false;
