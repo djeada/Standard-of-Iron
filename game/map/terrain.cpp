@@ -10,9 +10,9 @@
 namespace {
 constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
-constexpr int k_hill_ramp_extra_steps = 12;
+constexpr int k_hill_ramp_extra_steps = 18;
 
-constexpr float k_hill_ramp_steepness_exponent = 1.25F;
+constexpr float k_hill_ramp_steepness_exponent = 0.90F;
 
 constexpr float k_entry_ramp_width = 3.0F;
 
@@ -23,9 +23,9 @@ constexpr float k_entry_bowl_exponent = 2.0F;
 constexpr float k_entry_base_width_scale = 1.55F;
 constexpr float k_entry_top_width_scale = 0.70F;
 
-constexpr float k_entry_outward_steps_fraction = 0.65F;
-constexpr int k_entry_outward_steps_min = 4;
-constexpr int k_entry_outward_steps_max = 18;
+constexpr float k_entry_outward_steps_fraction = 0.50F;
+constexpr int k_entry_outward_steps_min = 6;
+constexpr int k_entry_outward_steps_max = 16;
 
 constexpr float k_entry_mid_dip_strength = 0.40F;
 
