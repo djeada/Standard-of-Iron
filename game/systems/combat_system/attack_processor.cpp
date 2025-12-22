@@ -138,17 +138,60 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
     return;
   }
 
-  if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
+  if (unit_comp->spawn_type == Game::Units::SpawnType::Archer ||
+      unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
     range *= Constants::kRangeMultiplierHold;
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierArcherHold);
-  } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
-    damage = static_cast<int>(static_cast<float>(damage) *
-                              Constants::kDamageMultiplierSpearmanHold);
+    
+    // Apply health bonus in hold mode
+    int const max_health_bonus = static_cast<int>(
+        static_cast<float>(unit_comp->max_health) * Constants::kHealthMultiplierHold);
+    if (unit_comp->max_health < max_health_bonus) {
+      int const health_percentage = (unit_comp->health * 100) / unit_comp->max_health;
+      unit_comp->max_health = max_health_bonus;
+      unit_comp->health = (max_health_bonus * health_percentage) / 100;
+    }
   } else {
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierDefaultHold);
   }
+}
+
+auto calculate_tactical_damage_multiplier(
+    Engine::Core::Entity *attacker,
+    Engine::Core::Entity *target,
+    Engine::Core::UnitComponent *attacker_unit,
+    Engine::Core::UnitComponent *target_unit) -> float {
+  float multiplier = 1.0F;
+  
+  // Spearman bonus vs cavalry units
+  if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
+    if (target_unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
+        target_unit->spawn_type == Game::Units::SpawnType::HorseSpearman ||
+        target_unit->spawn_type == Game::Units::SpawnType::MountedKnight) {
+      multiplier *= Constants::kSpearmanVsCavalryMultiplier;
+    }
+  }
+  
+  // Archer bonus on high ground
+  if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer) {
+    auto *attacker_transform =
+        attacker->get_component<Engine::Core::TransformComponent>();
+    auto *target_transform =
+        target->get_component<Engine::Core::TransformComponent>();
+    
+    if (attacker_transform != nullptr && target_transform != nullptr) {
+      float const height_diff =
+          attacker_transform->position.y - target_transform->position.y;
+      // Archer gets bonus when attacking from higher ground
+      if (height_diff > 0.5F) {
+        multiplier *= Constants::kArcherHighGroundMultiplier;
+      }
+    }
+  }
+  
+  return multiplier;
 }
 
 void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
@@ -599,6 +642,14 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
+      }
+
+      // Apply tactical damage multipliers
+      auto *target_unit = best_target->get_component<Engine::Core::UnitComponent>();
+      if (target_unit != nullptr) {
+        float const tactical_multiplier = calculate_tactical_damage_multiplier(
+            attacker, best_target, attacker_unit, target_unit);
+        damage = static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
       }
 
       deal_damage(world, best_target, damage, attacker->get_id());
