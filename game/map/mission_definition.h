@@ -61,6 +61,7 @@ struct AISetup {
   QString faction;
   QString color;
   QString difficulty;
+  std::optional<int> team_id;
   AIPersonality personality;
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
