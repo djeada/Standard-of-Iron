@@ -720,6 +720,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         // Melee units in hold mode should not attack
         if (is_unit_in_hold_mode(attacker)) {
           attacker->remove_component<Engine::Core::AttackTargetComponent>();
+          attacker_atk->in_melee_lock = false;
+          attacker_atk->melee_lock_target_id = 0;
           continue;
         }
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
