@@ -1428,15 +1428,19 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     ai_player.insert("player_id", player_id);
     ai_player.insert("playerName", ai_setup.nation);
     ai_player.insert("colorIndex", player_id - 1);
-    int team_id = ai_setup.team_id.value_or(default_team_id);
+    
+    int team_id;
+    if (ai_setup.team_id.has_value()) {
+      team_id = ai_setup.team_id.value();
+    } else {
+      team_id = default_team_id++;
+    }
+    
     ai_player.insert("team_id", team_id);
     ai_player.insert("nationId", ai_setup.nation);
     ai_player.insert("isHuman", false);
     playerConfigs.append(ai_player);
     player_id++;
-    if (!ai_setup.team_id.has_value()) {
-      default_team_id++;
-    }
   }
 
   start_skirmish_internal(mission.map_path, playerConfigs, false);
@@ -1917,7 +1921,14 @@ void GameEngine::apply_mission_setup() {
           ai_owner_id, Game::Systems::OwnerType::AI,
           "AI Player " + std::to_string(ai_owner_id));
     }
-    int team_id = ai_setup.team_id.value_or(default_team_id);
+    
+    int team_id;
+    if (ai_setup.team_id.has_value()) {
+      team_id = ai_setup.team_id.value();
+    } else {
+      team_id = default_team_id++;
+    }
+    
     owner_registry.set_owner_team(ai_owner_id, team_id);
 
     const auto ai_nation_id = resolve_nation_id(ai_setup.nation);
@@ -1928,9 +1939,6 @@ void GameEngine::apply_mission_setup() {
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id,
                               ai_setup.starting_buildings);
     ai_owner_id++;
-    if (!ai_setup.team_id.has_value()) {
-      default_team_id++;
-    }
   }
 
   auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
