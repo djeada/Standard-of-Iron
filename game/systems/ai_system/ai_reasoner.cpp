@@ -31,6 +31,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.combat_units = 0;
   ctx.melee_count = 0;
   ctx.ranged_count = 0;
+  ctx.builder_count = 0;
   ctx.damaged_units_count = 0;
   ctx.average_health = 1.0F;
   ctx.rally_x = 0.0F;
@@ -93,7 +94,9 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
           Game::Units::spawn_typeToTroopType(entity.spawn_type);
       if (troop_type_opt) {
         auto troop_type = *troop_type_opt;
-        if (ctx.nation->is_ranged_unit(troop_type)) {
+        if (troop_type == Game::Units::TroopType::Builder) {
+          ctx.builder_count++;
+        } else if (ctx.nation->is_ranged_unit(troop_type)) {
           ctx.ranged_count++;
         } else if (ctx.nation->is_melee_unit(troop_type)) {
           ctx.melee_count++;

@@ -28,26 +28,52 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  bool produce_ranged = true;
-
-  if (context.barracks_under_threat || context.state == AIState::Defending) {
-    produce_ranged = (context.melee_count > context.ranged_count);
-  } else {
-
-    float const ranged_ratio =
-        (context.total_units > 0)
-            ? static_cast<float>(context.ranged_count) / context.total_units
-            : 0.0F;
-    produce_ranged = (ranged_ratio < 0.6F);
+  // Prioritize builder production
+  // Always try to maintain a minimum number of builders
+  constexpr int MIN_BUILDERS = 2;
+  constexpr int DESIRED_BUILDERS = 4;
+  
+  bool should_produce_builder = false;
+  
+  // High priority: we have very few builders
+  if (context.builder_count < MIN_BUILDERS) {
+    should_produce_builder = true;
+  }
+  // Medium priority: we don't have desired amount and occasionally produce more
+  else if (context.builder_count < DESIRED_BUILDERS && 
+           (m_productionCounter % 3 == 0)) {
+    should_produce_builder = true;
   }
 
-  const Game::Systems::TroopType *troop_type =
-      produce_ranged ? nation->get_best_ranged_troop()
-                     : nation->get_best_melee_troop();
+  const Game::Systems::TroopType *troop_type = nullptr;
 
+  if (should_produce_builder) {
+    // Try to produce a builder
+    troop_type = nation->get_troop(Game::Units::TroopType::Builder);
+  }
+
+  // If not producing builder or builder not available, produce military units
   if (troop_type == nullptr) {
-    troop_type = produce_ranged ? nation->get_best_melee_troop()
-                                : nation->get_best_ranged_troop();
+    bool produce_ranged = true;
+
+    if (context.barracks_under_threat || context.state == AIState::Defending) {
+      produce_ranged = (context.melee_count > context.ranged_count);
+    } else {
+
+      float const ranged_ratio =
+          (context.total_units > 0)
+              ? static_cast<float>(context.ranged_count) / context.total_units
+              : 0.0F;
+      produce_ranged = (ranged_ratio < 0.6F);
+    }
+
+    troop_type = produce_ranged ? nation->get_best_ranged_troop()
+                                : nation->get_best_melee_troop();
+
+    if (troop_type == nullptr) {
+      troop_type = produce_ranged ? nation->get_best_melee_troop()
+                                  : nation->get_best_ranged_troop();
+    }
   }
 
   if (troop_type == nullptr) {

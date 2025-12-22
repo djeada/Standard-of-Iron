@@ -129,6 +129,7 @@ struct AIContext {
 
   int melee_count = 0;
   int ranged_count = 0;
+  int builder_count = 0;
   int damaged_units_count = 0;
 
   int visible_enemy_count = 0;
