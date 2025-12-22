@@ -192,8 +192,7 @@ inline auto can_use_guard_mode(SpawnType type) -> bool {
 }
 
 inline auto can_use_hold_mode(SpawnType type) -> bool {
-  return type == SpawnType::Archer || type == SpawnType::Knight ||
-         type == SpawnType::Spearman;
+  return type == SpawnType::Archer || type == SpawnType::Spearman;
 }
 
 inline auto can_use_patrol_mode(SpawnType type) -> bool {

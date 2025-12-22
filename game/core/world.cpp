@@ -71,11 +71,17 @@ auto World::create_entity_with_id(EntityID entity_id) -> Entity * {
 void World::destroy_entity(EntityID entity_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
 
+  auto it = m_entities.find(entity_id);
+
   for (auto &[type, entity_set] : m_component_index) {
     entity_set.erase(entity_id);
   }
 
-  m_entities.erase(entity_id);
+  if (it != m_entities.end()) {
+    m_entities.erase(it);
+  } else {
+    m_entities.erase(entity_id);
+  }
 }
 
 void World::clear() {
