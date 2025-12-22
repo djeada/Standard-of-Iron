@@ -1418,6 +1418,8 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     return;
   }
 
+  m_selected_player_id = 1;
+
   m_campaign_manager->start_campaign_mission(mission_path,
                                              m_selected_player_id);
 

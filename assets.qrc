@@ -88,7 +88,16 @@
         <file>assets/shaders/rain.vert</file>
         
         <!-- Map files -->
+        <file>assets/maps/map_battle_trebia.json</file>
+        <file>assets/maps/map_battle_ticino.json</file>
+        <file>assets/maps/map_battle_cannae.json</file>
+        <file>assets/maps/map_battle_trasimene.json</file>
+        <file>assets/maps/map_battle_zama.json</file>
+        <file>assets/maps/map_campania_campaign.json</file>
+        <file>assets/maps/map_crossing_alps.json</file>
+        <file>assets/maps/map_crossing_rhone.json</file>
         <file>assets/maps/map_forest.json</file>
+        <file>assets/maps/map_spanish_grove.json</file>
         <file>assets/maps/map_rivers.json</file>
         <file>assets/maps/map_mountain.json</file>
         <file>assets/campaign_map/campaign_base_color.png</file>
@@ -102,8 +111,14 @@
         <file>assets/campaign_map/valid_provinces.json</file>
 
         <!-- Mission files -->
-        <file>assets/missions/defend_outpost.json</file>
-        <file>assets/missions/forest_ambush.json</file>
+        <file>assets/missions/battle_of_trebia.json</file>
+        <file>assets/missions/battle_of_ticino.json</file>
+        <file>assets/missions/battle_of_cannae.json</file>
+        <file>assets/missions/battle_of_trasimene.json</file>
+        <file>assets/missions/battle_of_zama.json</file>
+        <file>assets/missions/campania_campaign.json</file>
+        <file>assets/missions/crossing_the_alps.json</file>
+        <file>assets/missions/crossing_the_rhone.json</file>
 
         <!-- Campaign files -->
         <file>assets/campaigns/second_punic_war.json</file>
