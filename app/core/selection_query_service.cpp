@@ -78,10 +78,12 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
 auto SelectionQueryService::get_selected_units_mode_availability() const
     -> QVariantMap {
   QVariantMap result;
-  result["canAttack"] = true;
-  result["canGuard"] = true;
-  result["canHold"] = true;
-  result["canPatrol"] = true;
+  result["canAttack"] = false;
+  result["canGuard"] = false;
+  result["canHold"] = false;
+  result["canPatrol"] = false;
+  result["canHeal"] = false;
+  result["canBuild"] = false;
 
   if (!m_world) {
     return result;
@@ -97,13 +99,18 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
     return result;
   }
 
-  bool can_attack = true;
-  bool can_guard = true;
-  bool can_hold = true;
-  bool can_patrol = true;
+  // Use superset logic: show mode if ANY selected unit supports it
+  bool can_attack = false;
+  bool can_guard = false;
+  bool can_hold = false;
+  bool can_patrol = false;
+  bool can_heal = false;
+  bool can_build = false;
 
   for (auto id : sel) {
-    if (!can_attack && !can_guard && !can_hold && !can_patrol) {
+    // Early exit if all modes are already available
+    if (can_attack && can_guard && can_hold && can_patrol && can_heal &&
+        can_build) {
       break;
     }
 
@@ -117,17 +124,23 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
       continue;
     }
 
-    if (can_attack && !Game::Units::can_use_attack_mode(u->spawn_type)) {
-      can_attack = false;
+    if (!can_attack && Game::Units::can_use_attack_mode(u->spawn_type)) {
+      can_attack = true;
     }
-    if (can_guard && !Game::Units::can_use_guard_mode(u->spawn_type)) {
-      can_guard = false;
+    if (!can_guard && Game::Units::can_use_guard_mode(u->spawn_type)) {
+      can_guard = true;
     }
-    if (can_hold && !Game::Units::can_use_hold_mode(u->spawn_type)) {
-      can_hold = false;
+    if (!can_hold && Game::Units::can_use_hold_mode(u->spawn_type)) {
+      can_hold = true;
     }
-    if (can_patrol && !Game::Units::can_use_patrol_mode(u->spawn_type)) {
-      can_patrol = false;
+    if (!can_patrol && Game::Units::can_use_patrol_mode(u->spawn_type)) {
+      can_patrol = true;
+    }
+    if (!can_heal && u->spawn_type == Game::Units::SpawnType::Healer) {
+      can_heal = true;
+    }
+    if (!can_build && u->spawn_type == Game::Units::SpawnType::Builder) {
+      can_build = true;
     }
   }
 
@@ -135,6 +148,8 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   result["canGuard"] = can_guard;
   result["canHold"] = can_hold;
   result["canPatrol"] = can_patrol;
+  result["canHeal"] = can_heal;
+  result["canBuild"] = can_build;
 
   return result;
 }
