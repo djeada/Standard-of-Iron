@@ -2,7 +2,15 @@
 
 #include <QString>
 
-enum class CursorMode { Normal, Patrol, Attack, Guard, PlaceBuilding, Heal, Build };
+enum class CursorMode {
+  Normal,
+  Patrol,
+  Attack,
+  Guard,
+  PlaceBuilding,
+  Heal,
+  Build
+};
 
 namespace CursorModeUtils {
 

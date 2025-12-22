@@ -398,7 +398,7 @@ private:
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
-  std::unique_ptr<CursorManager> m_cursorManager;
+  std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   std::unique_ptr<Game::Systems::SelectionController> m_selectionController;

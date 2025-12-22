@@ -148,7 +148,6 @@ auto CommandController::on_hold_command() -> CommandResult {
       continue;
     }
 
-    // Only count units that can use hold mode
     if (!Game::Units::can_use_hold_mode(unit->spawn_type)) {
       continue;
     }
@@ -178,7 +177,6 @@ auto CommandController::on_hold_command() -> CommandResult {
       continue;
     }
 
-    // Only apply hold mode to units that support it
     if (!Game::Units::can_use_hold_mode(unit->spawn_type)) {
       continue;
     }

@@ -99,7 +99,6 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
     return result;
   }
 
-  // Use union logic: show mode if ANY selected unit supports it
   bool can_attack = false;
   bool can_guard = false;
   bool can_hold = false;
@@ -108,7 +107,7 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
   bool can_build = false;
 
   for (auto id : sel) {
-    // Early exit if all modes are already available
+
     if (can_attack && can_guard && can_hold && can_patrol && can_heal &&
         can_build) {
       break;
