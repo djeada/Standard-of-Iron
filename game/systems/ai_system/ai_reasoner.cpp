@@ -77,7 +77,6 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
     if (entity.is_building) {
       ctx.buildings.push_back(entity.id);
 
-      // Count building types
       if (entity.spawn_type == Game::Units::SpawnType::Home) {
         ctx.home_count++;
       } else if (entity.spawn_type == Game::Units::SpawnType::DefenseTower) {

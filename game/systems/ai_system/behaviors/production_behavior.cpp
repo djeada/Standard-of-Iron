@@ -28,20 +28,17 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  // Prioritize builder production
-  // Always try to maintain a minimum number of builders
   constexpr int MIN_BUILDERS = 2;
   constexpr int DESIRED_BUILDERS = 4;
   constexpr int BUILDER_PRODUCTION_INTERVAL = 3;
-  
+
   bool should_produce_builder = false;
-  
-  // High priority: we have very few builders
+
   if (context.builder_count < MIN_BUILDERS) {
     should_produce_builder = true;
   }
-  // Medium priority: we don't have desired amount and occasionally produce more
-  else if (context.builder_count < DESIRED_BUILDERS && 
+
+  else if (context.builder_count < DESIRED_BUILDERS &&
            (m_productionCounter % BUILDER_PRODUCTION_INTERVAL == 0)) {
     should_produce_builder = true;
   }
@@ -49,11 +46,10 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   const Game::Systems::TroopType *troop_type = nullptr;
 
   if (should_produce_builder) {
-    // Try to produce a builder
+
     troop_type = nation->get_troop(Game::Units::TroopType::Builder);
   }
 
-  // If not producing builder or builder not available, produce military units
   if (troop_type == nullptr) {
     bool produce_ranged = true;
 

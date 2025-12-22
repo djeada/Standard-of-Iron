@@ -218,8 +218,8 @@ Start- und Endpunkte anklicken.</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="66" />
-        <source>Your barracks was destroyed!</source>
-        <translation>Deine Kaserne wurde zerstört!</translation>
+        <source>Your army was crushed</source>
+        <translation>Deine Armee wurde zerschlagen</translation>
     </message>
     <message>
         <location filename="../ui/qml/HUDVictory.qml" line="73" />
