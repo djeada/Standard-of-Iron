@@ -209,7 +209,7 @@ GameEngine::GameEngine(QObject *parent)
   m_commandController = std::make_unique<App::Controllers::CommandController>(
       m_world.get(), selection_system, m_pickingService.get());
 
-  m_cursorManager = std::make_unique<CursorManager>();
+  m_cursor_manager = std::make_unique<CursorManager>();
   m_hoverTracker = std::make_unique<HoverTracker>(m_pickingService.get());
 
   m_mapCatalog = std::make_unique<Game::Map::MapCatalog>(this);
@@ -240,7 +240,7 @@ GameEngine::GameEngine(QObject *parent)
 
   m_input_handler = std::make_unique<InputCommandHandler>(
       m_world.get(), m_selectionController.get(), m_commandController.get(),
-      m_cursorManager.get(), m_hoverTracker.get(), m_pickingService.get(),
+      m_cursor_manager.get(), m_hoverTracker.get(), m_pickingService.get(),
       m_camera.get());
 
   m_camera_controller = std::make_unique<CameraController>(
@@ -286,13 +286,13 @@ GameEngine::GameEngine(QObject *parent)
     qWarning() << "Failed to initialize AudioEventHandler";
   }
 
-  connect(m_cursorManager.get(), &CursorManager::mode_changed, this, [this]() {
-    if (m_cursorManager && m_window) {
-      m_cursorManager->update_cursor_shape(m_window);
+  connect(m_cursor_manager.get(), &CursorManager::mode_changed, this, [this]() {
+    if (m_cursor_manager && m_window) {
+      m_cursor_manager->update_cursor_shape(m_window);
     }
     emit cursor_mode_changed();
   });
-  connect(m_cursorManager.get(), &CursorManager::global_cursor_changed, this,
+  connect(m_cursor_manager.get(), &CursorManager::global_cursor_changed, this,
           &GameEngine::global_cursor_changed);
 
   connect(m_selectionController.get(),
@@ -515,6 +515,22 @@ void GameEngine::on_run_command() {
   m_input_handler->on_run_command();
 }
 
+void GameEngine::on_heal_command() {
+  if (!m_cursor_manager) {
+    return;
+  }
+  ensure_initialized();
+  m_cursor_manager->set_mode(CursorMode::Heal);
+}
+
+void GameEngine::on_build_command() {
+  if (!m_cursor_manager) {
+    return;
+  }
+  ensure_initialized();
+  m_cursor_manager->set_mode(CursorMode::Build);
+}
+
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
   if (!m_input_handler || !m_camera) {
     return;
@@ -642,11 +658,11 @@ void GameEngine::set_error(const QString &errorMessage) {
 }
 
 void GameEngine::set_cursor_mode(CursorMode mode) {
-  if (!m_cursorManager) {
+  if (!m_cursor_manager) {
     return;
   }
-  m_cursorManager->set_mode(mode);
-  m_cursorManager->update_cursor_shape(m_window);
+  m_cursor_manager->set_mode(mode);
+  m_cursor_manager->update_cursor_shape(m_window);
 }
 
 void GameEngine::set_cursor_mode(const QString &mode) {
@@ -654,24 +670,24 @@ void GameEngine::set_cursor_mode(const QString &mode) {
 }
 
 auto GameEngine::cursor_mode() const -> QString {
-  if (!m_cursorManager) {
+  if (!m_cursor_manager) {
     return "normal";
   }
-  return m_cursorManager->mode_string();
+  return m_cursor_manager->mode_string();
 }
 
 auto GameEngine::global_cursor_x() const -> qreal {
-  if (!m_cursorManager) {
+  if (!m_cursor_manager) {
     return 0;
   }
-  return m_cursorManager->global_cursor_x(m_window);
+  return m_cursor_manager->global_cursor_x(m_window);
 }
 
 auto GameEngine::global_cursor_y() const -> qreal {
-  if (!m_cursorManager) {
+  if (!m_cursor_manager) {
     return 0;
   }
-  return m_cursorManager->global_cursor_y(m_window);
+  return m_cursor_manager->global_cursor_y(m_window);
 }
 
 void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
@@ -1057,7 +1073,7 @@ void GameEngine::sync_selection_flags() {
   App::Utils::sanitize_selection(m_world.get(), selection_system);
 
   if (selection_system->get_selected_units().empty()) {
-    if (m_cursorManager && m_cursorManager->mode() != CursorMode::Normal) {
+    if (m_cursor_manager && m_cursor_manager->mode() != CursorMode::Normal) {
       set_cursor_mode(CursorMode::Normal);
     }
   }
@@ -2215,8 +2231,8 @@ void GameEngine::apply_runtime_snapshot(
   m_followSelectionEnabled = snapshot.follow_selection;
 
   m_runtime.cursor_mode = static_cast<CursorMode>(snapshot.cursor_mode);
-  if (m_cursorManager) {
-    m_cursorManager->set_mode(m_runtime.cursor_mode);
+  if (m_cursor_manager) {
+    m_cursor_manager->set_mode(m_runtime.cursor_mode);
   }
 }
 

@@ -2,7 +2,15 @@
 
 #include <QString>
 
-enum class CursorMode { Normal, Patrol, Attack, Guard, PlaceBuilding };
+enum class CursorMode {
+  Normal,
+  Patrol,
+  Attack,
+  Guard,
+  PlaceBuilding,
+  Heal,
+  Build
+};
 
 namespace CursorModeUtils {
 
@@ -18,6 +26,10 @@ inline auto toString(CursorMode mode) -> QString {
     return "guard";
   case CursorMode::PlaceBuilding:
     return "place_building";
+  case CursorMode::Heal:
+    return "heal";
+  case CursorMode::Build:
+    return "build";
   }
   return "normal";
 }
@@ -34,6 +46,12 @@ inline auto fromString(const QString &str) -> CursorMode {
   }
   if (str == "place_building") {
     return CursorMode::PlaceBuilding;
+  }
+  if (str == "heal") {
+    return CursorMode::Heal;
+  }
+  if (str == "build") {
+    return CursorMode::Build;
   }
   return CursorMode::Normal;
 }
@@ -52,6 +70,10 @@ inline auto fromInt(int value) -> CursorMode {
     return CursorMode::Guard;
   case 4:
     return CursorMode::PlaceBuilding;
+  case 5:
+    return CursorMode::Heal;
+  case 6:
+    return CursorMode::Build;
   default:
     return CursorMode::Normal;
   }

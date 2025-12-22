@@ -181,6 +181,8 @@ public:
   Q_INVOKABLE void on_guard_command();
   Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE void on_run_command();
+  Q_INVOKABLE void on_heal_command();
+  Q_INVOKABLE void on_build_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
@@ -396,7 +398,7 @@ private:
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
-  std::unique_ptr<CursorManager> m_cursorManager;
+  std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   std::unique_ptr<Game::Systems::SelectionController> m_selectionController;

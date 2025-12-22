@@ -106,6 +106,10 @@ void ProjectileSystem::apply_impact_damage(Engine::Core::World *world,
     return;
   }
 
+  auto *hold_mode = target->get_component<Engine::Core::HoldModeComponent>();
+  auto *transform = target->get_component<Engine::Core::TransformComponent>();
+  bool const hold_active = (hold_mode != nullptr) && hold_mode->active;
+
   auto *target_transform =
       target->get_component<Engine::Core::TransformComponent>();
   if (target_transform != nullptr) {

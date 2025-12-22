@@ -27,7 +27,6 @@
 #include "humanoid/rig.h"
 #include "primitive_batch.h"
 #include "submitter.h"
-#include <QDebug>
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
