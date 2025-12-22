@@ -9,6 +9,19 @@
 
 namespace Game::Systems::AI {
 
+namespace {
+// Building type constants
+constexpr const char *BUILDING_TYPE_HOME = "home";
+constexpr const char *BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
+constexpr const char *BUILDING_TYPE_BARRACKS = "barracks";
+
+// Building thresholds for AI construction priorities
+constexpr int MIN_HOMES = 2;
+constexpr int DESIRED_HOMES = 5;
+constexpr int MIN_DEFENSE_TOWERS = 1;
+constexpr int DESIRED_DEFENSE_TOWERS = 3;
+} // namespace
+
 void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                               float delta_time,
                               std::vector<AICommand> &outCommands) {
@@ -25,8 +38,8 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Check if builder is idle
-    if (!entity.movement.has_component || !entity.movement.has_target) {
+    // Check if builder is idle (has movement but no target)
+    if (entity.movement.has_component && !entity.movement.has_target) {
       available_builders.push_back(entity.id);
     }
   }
@@ -38,19 +51,15 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   // Determine what to build based on current building counts
   // Priority order: Home > Defense Tower > Barracks (for expansion)
   std::string building_to_construct;
-  constexpr int MIN_HOMES = 2;
-  constexpr int DESIRED_HOMES = 5;
-  constexpr int MIN_DEFENSE_TOWERS = 1;
-  constexpr int DESIRED_DEFENSE_TOWERS = 3;
 
   if (context.home_count < MIN_HOMES) {
-    building_to_construct = "home";
+    building_to_construct = BUILDING_TYPE_HOME;
   } else if (context.defense_tower_count < MIN_DEFENSE_TOWERS) {
-    building_to_construct = "defense_tower";
+    building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
   } else if (context.home_count < DESIRED_HOMES) {
-    building_to_construct = "home";
+    building_to_construct = BUILDING_TYPE_HOME;
   } else if (context.defense_tower_count < DESIRED_DEFENSE_TOWERS) {
-    building_to_construct = "defense_tower";
+    building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
   }
 
   if (building_to_construct.empty()) {
@@ -94,9 +103,6 @@ auto BuilderBehavior::should_execute(const AISnapshot &snapshot,
   }
 
   // Build if we need more homes or defense towers
-  constexpr int DESIRED_HOMES = 5;
-  constexpr int DESIRED_DEFENSE_TOWERS = 3;
-
   return context.home_count < DESIRED_HOMES ||
          context.defense_tower_count < DESIRED_DEFENSE_TOWERS;
 }

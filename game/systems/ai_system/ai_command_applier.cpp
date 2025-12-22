@@ -16,6 +16,19 @@
 
 namespace Game::Systems::AI {
 
+namespace {
+// Building type constants matching builder_behavior
+constexpr const char *BUILDING_TYPE_HOME = "home";
+constexpr const char *BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
+constexpr const char *BUILDING_TYPE_BARRACKS = "barracks";
+
+// Build time constants for different building types
+constexpr float BUILD_TIME_HOME = 20.0F;
+constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
+constexpr float BUILD_TIME_BARRACKS = 30.0F;
+constexpr float BUILD_TIME_DEFAULT = 20.0F;
+} // namespace
+
 void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
                              const std::vector<AICommand> &commands) {
 
@@ -188,14 +201,14 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         builder_prod->is_placement_preview = false;
 
         // Set build time based on building type
-        if (command.construction_type == "home") {
-          builder_prod->build_time = 20.0F;
-        } else if (command.construction_type == "defense_tower") {
-          builder_prod->build_time = 25.0F;
-        } else if (command.construction_type == "barracks") {
-          builder_prod->build_time = 30.0F;
+        if (command.construction_type == BUILDING_TYPE_HOME) {
+          builder_prod->build_time = BUILD_TIME_HOME;
+        } else if (command.construction_type == BUILDING_TYPE_DEFENSE_TOWER) {
+          builder_prod->build_time = BUILD_TIME_DEFENSE_TOWER;
+        } else if (command.construction_type == BUILDING_TYPE_BARRACKS) {
+          builder_prod->build_time = BUILD_TIME_BARRACKS;
         } else {
-          builder_prod->build_time = 20.0F;
+          builder_prod->build_time = BUILD_TIME_DEFAULT;
         }
         builder_prod->time_remaining = builder_prod->build_time;
       }
