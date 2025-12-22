@@ -36,7 +36,7 @@
       "id": "roman_patrol_forces",
       "nation": "roman_republic",
       "faction": "roman",
-      "color": "darkred",
+      "color": "blue",
       "team_id": 1,
       "difficulty": "medium",
       "personality": {

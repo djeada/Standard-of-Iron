@@ -1418,10 +1418,6 @@ void GameEngine::start_campaign_mission(const QString &mission_path) {
     return;
   }
 
-  // Campaign missions assume a stable owner-id layout (player=1, AI=2..).
-  // If we carry a previous skirmish's selected player id into campaign, the
-  // skirmish loader can remap the human player onto an AI slot (often 2),
-  // causing the AI to inherit the human nation.
   m_selected_player_id = 1;
 
   m_campaign_manager->start_campaign_mission(mission_path,

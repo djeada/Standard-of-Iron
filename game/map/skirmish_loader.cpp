@@ -32,6 +32,7 @@
 #include "render/scene_renderer.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
+#include "utils/resource_utils.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QEventLoop>
@@ -121,7 +122,9 @@ auto SkirmishLoader::start(const QString &map_path,
   pump_events();
 
   QSet<int> map_player_ids;
-  QFile map_file(map_path);
+  const QString resolved_map_path =
+      Utils::Resources::resolveResourcePath(map_path);
+  QFile map_file(resolved_map_path);
   if (map_file.open(QIODevice::ReadOnly)) {
     const QByteArray data = map_file.readAll();
     map_file.close();
@@ -145,7 +148,8 @@ auto SkirmishLoader::start(const QString &map_path,
       }
     }
   } else {
-    qWarning() << "Could not open map file for reading player IDs:" << map_path;
+    qWarning() << "Could not open map file for reading player IDs:"
+               << resolved_map_path;
   }
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
