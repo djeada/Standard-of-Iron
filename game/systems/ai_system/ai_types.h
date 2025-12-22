@@ -25,7 +25,12 @@ enum class AIState {
   Expanding
 };
 
-enum class AICommandType { MoveUnits, AttackTarget, StartProduction };
+enum class AICommandType {
+  MoveUnits,
+  AttackTarget,
+  StartProduction,
+  StartBuilderConstruction
+};
 
 enum class BehaviorPriority {
   VeryLow = 0,
@@ -129,12 +134,18 @@ struct AIContext {
 
   int melee_count = 0;
   int ranged_count = 0;
+  int builder_count = 0;
   int damaged_units_count = 0;
 
   int visible_enemy_count = 0;
   int enemy_buildings_count = 0;
   int neutral_barracks_count = 0;
   float average_enemy_distance = 0.0F;
+
+  // Building counts for AI
+  int home_count = 0;
+  int defense_tower_count = 0;
+  int barracks_count = 0;
 
   int max_troops_per_player = 500;
 
@@ -168,6 +179,11 @@ struct AICommand {
   bool should_chase = false;
   Engine::Core::EntityID building_id = 0;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
+
+  // For builder construction
+  std::string construction_type;
+  float construction_site_x = 0.0F;
+  float construction_site_z = 0.0F;
 };
 
 struct AIResult {

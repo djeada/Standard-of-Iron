@@ -1,6 +1,7 @@
 #include "ai_system.h"
 #include "../core/world.h"
 #include "ai_system/behaviors/attack_behavior.h"
+#include "ai_system/behaviors/builder_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
 #include "ai_system/behaviors/expand_behavior.h"
 #include "ai_system/behaviors/gather_behavior.h"
@@ -27,6 +28,8 @@ AISystem::AISystem() {
 
   m_behaviorRegistry.register_behavior(
       std::make_unique<AI::ProductionBehavior>());
+
+  m_behaviorRegistry.register_behavior(std::make_unique<AI::BuilderBehavior>());
 
   m_behaviorRegistry.register_behavior(std::make_unique<AI::ExpandBehavior>());
 
