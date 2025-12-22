@@ -99,7 +99,7 @@ auto SelectionQueryService::get_selected_units_mode_availability() const
     return result;
   }
 
-  // Use superset logic: show mode if ANY selected unit supports it
+  // Use union logic: show mode if ANY selected unit supports it
   bool can_attack = false;
   bool can_guard = false;
   bool can_hold = false;
