@@ -38,12 +38,18 @@ public:
   auto on_guard_command() -> CommandResult;
   auto on_formation_command() -> CommandResult;
   auto on_run_command() -> CommandResult;
+  auto on_heal_command() -> CommandResult;
+  auto on_build_command() -> CommandResult;
   void enable_run_mode_for_selected();
   void disable_run_mode_for_selected();
   auto on_guard_click(qreal sx, qreal sy, int viewport_width,
                       int viewport_height, void *camera) -> CommandResult;
   auto on_patrol_click(qreal sx, qreal sy, int viewport_width,
                        int viewport_height, void *camera) -> CommandResult;
+  auto on_heal_click(qreal sx, qreal sy, int viewport_width,
+                     int viewport_height, void *camera) -> CommandResult;
+  auto on_build_click(qreal sx, qreal sy, int viewport_width,
+                      int viewport_height, void *camera) -> CommandResult;
   auto set_rally_at_screen(qreal sx, qreal sy, int viewport_width,
                            int viewport_height, void *camera,
                            int local_owner_id) -> CommandResult;

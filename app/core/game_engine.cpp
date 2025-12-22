@@ -499,6 +499,22 @@ void GameEngine::on_guard_command() {
   m_input_handler->on_guard_command();
 }
 
+void GameEngine::on_heal_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_heal_command();
+}
+
+void GameEngine::on_build_command() {
+  if (!m_input_handler) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_build_command();
+}
+
 void GameEngine::on_formation_command() {
   if (!m_input_handler) {
     return;
@@ -521,6 +537,22 @@ void GameEngine::on_guard_click(qreal sx, qreal sy) {
   }
   ensure_initialized();
   m_input_handler->on_guard_click(sx, sy, m_viewport);
+}
+
+void GameEngine::on_heal_click(qreal sx, qreal sy) {
+  if (!m_input_handler || !m_camera) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_heal_click(sx, sy, m_viewport);
+}
+
+void GameEngine::on_build_click(qreal sx, qreal sy) {
+  if (!m_input_handler || !m_camera) {
+    return;
+  }
+  ensure_initialized();
+  m_input_handler->on_build_click(sx, sy, m_viewport);
 }
 
 auto GameEngine::any_selected_in_hold_mode() const -> bool {

@@ -263,6 +263,38 @@ void InputCommandHandler::on_guard_command() {
   }
 }
 
+void InputCommandHandler::on_heal_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_cursor_manager) {
+    return;
+  }
+
+  auto result = m_command_controller->on_heal_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  } else {
+    m_cursor_manager->set_mode(CursorMode::Heal);
+  }
+}
+
+void InputCommandHandler::on_build_command() {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_cursor_manager) {
+    return;
+  }
+
+  auto result = m_command_controller->on_build_command();
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  } else {
+    m_cursor_manager->set_mode(CursorMode::Build);
+  }
+}
+
 void InputCommandHandler::on_formation_command() {
   if (m_is_spectator_mode) {
     return;
@@ -301,6 +333,38 @@ void InputCommandHandler::on_guard_click(qreal sx, qreal sy,
   }
 
   auto result = m_command_controller->on_guard_click(sx, sy, viewport.width,
+                                                     viewport.height, m_camera);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_heal_click(qreal sx, qreal sy,
+                                        const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_camera) {
+    return;
+  }
+
+  auto result = m_command_controller->on_heal_click(sx, sy, viewport.width,
+                                                    viewport.height, m_camera);
+  if (result.reset_cursor_to_normal) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+  }
+}
+
+void InputCommandHandler::on_build_click(qreal sx, qreal sy,
+                                         const ViewportState &viewport) {
+  if (m_is_spectator_mode) {
+    return;
+  }
+  if (!m_command_controller || !m_camera) {
+    return;
+  }
+
+  auto result = m_command_controller->on_build_click(sx, sy, viewport.width,
                                                      viewport.height, m_camera);
   if (result.reset_cursor_to_normal) {
     m_cursor_manager->set_mode(CursorMode::Normal);

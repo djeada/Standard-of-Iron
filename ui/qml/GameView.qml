@@ -342,6 +342,18 @@ Item {
 
                         return ;
                     }
+                    if (gameView.cursorMode === "heal") {
+                        if (typeof game !== 'undefined' && game.on_heal_click)
+                            game.on_heal_click(mouse.x, mouse.y);
+
+                        return ;
+                    }
+                    if (gameView.cursorMode === "build") {
+                        if (typeof game !== 'undefined' && game.on_build_click)
+                            game.on_build_click(mouse.x, mouse.y);
+
+                        return ;
+                    }
                     if (gameView.cursorMode === "patrol") {
                         if (typeof game !== 'undefined' && game.on_patrol_click)
                             game.on_patrol_click(mouse.x, mouse.y);

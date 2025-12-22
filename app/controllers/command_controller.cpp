@@ -14,6 +14,7 @@
 #include "units/spawn_type.h"
 #include <QPointF>
 #include <cmath>
+#include <limits>
 #include <numbers>
 #include <qglobal.h>
 #include <qobject.h>
@@ -1001,6 +1002,233 @@ void CommandController::disable_run_mode_for_selected() {
   }
 
   emit run_mode_changed(false);
+}
+
+auto CommandController::on_heal_command() -> CommandResult {
+  CommandResult result;
+  result.input_consumed = false;
+  result.reset_cursor_to_normal = false;
+  return result;
+}
+
+auto CommandController::on_build_command() -> CommandResult {
+  CommandResult result;
+  result.input_consumed = false;
+  result.reset_cursor_to_normal = false;
+  return result;
+}
+
+auto CommandController::on_heal_click(qreal sx, qreal sy, int viewport_width,
+                                      int viewport_height,
+                                      void *camera) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr) ||
+      (m_picking_service == nullptr) || (camera == nullptr)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto *cam = static_cast<Render::GL::Camera *>(camera);
+  QVector3D hit;
+  if (!Game::Systems::PickingService::screen_to_ground(
+          QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  std::vector<QVector3D> targets;
+  for (size_t i = 0; i < selected.size(); ++i) {
+    targets.push_back(hit);
+  }
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (unit->spawn_type != Game::Units::SpawnType::Healer) {
+      continue;
+    }
+
+    reset_movement(entity);
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
+
+    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
+      patrol->patrolling = false;
+      patrol->waypoints.clear();
+    }
+
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_mode->active = false;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+    }
+  }
+
+  std::vector<Engine::Core::EntityID> healers_only;
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Healer) {
+      healers_only.push_back(id);
+    }
+  }
+
+  if (!healers_only.empty()) {
+    Game::Systems::CommandService::move_units(*m_world, healers_only, targets);
+  }
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
+}
+
+auto CommandController::on_build_click(qreal sx, qreal sy, int viewport_width,
+                                       int viewport_height,
+                                       void *camera) -> CommandResult {
+  CommandResult result;
+  if ((m_selection_system == nullptr) || (m_world == nullptr) ||
+      (m_picking_service == nullptr) || (camera == nullptr)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto *cam = static_cast<Render::GL::Camera *>(camera);
+  QVector3D hit;
+  if (!Game::Systems::PickingService::screen_to_ground(
+          QPointF(sx, sy), *cam, viewport_width, viewport_height, hit)) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto all_buildings = m_world->get_entities_with<Engine::Core::BuildingComponent>();
+  
+  Engine::Core::EntityID nearest_damaged_building = 0;
+  float min_distance_sq = std::numeric_limits<float>::max();
+
+  for (auto *building : all_buildings) {
+    if (building->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    auto *unit = building->get_component<Engine::Core::UnitComponent>();
+    auto *transform = building->get_component<Engine::Core::TransformComponent>();
+    
+    if (unit == nullptr || transform == nullptr) {
+      continue;
+    }
+
+    if (unit->health >= unit->max_health) {
+      continue;
+    }
+
+    float const dx = transform->position.x - hit.x();
+    float const dz = transform->position.z - hit.z();
+    float const dist_sq = dx * dx + dz * dz;
+
+    if (dist_sq < min_distance_sq) {
+      min_distance_sq = dist_sq;
+      nearest_damaged_building = building->get_id();
+    }
+  }
+
+  if (nearest_damaged_building == 0) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto *target_building = m_world->get_entity(nearest_damaged_building);
+  if (target_building == nullptr) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  auto *target_transform = target_building->get_component<Engine::Core::TransformComponent>();
+  if (target_transform == nullptr) {
+    result.reset_cursor_to_normal = true;
+    return result;
+  }
+
+  QVector3D target_pos(target_transform->position.x, target_transform->position.y, 
+                       target_transform->position.z);
+  
+  std::vector<QVector3D> targets;
+  for (size_t i = 0; i < selected.size(); ++i) {
+    targets.push_back(target_pos);
+  }
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (unit->spawn_type != Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
+    reset_movement(entity);
+    entity->remove_component<Engine::Core::AttackTargetComponent>();
+
+    if (auto *patrol = entity->get_component<Engine::Core::PatrolComponent>()) {
+      patrol->patrolling = false;
+      patrol->waypoints.clear();
+    }
+
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    if ((hold_mode != nullptr) && hold_mode->active) {
+      hold_mode->active = false;
+      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+    }
+  }
+
+  std::vector<Engine::Core::EntityID> builders_only;
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr && unit->spawn_type == Game::Units::SpawnType::Builder) {
+      builders_only.push_back(id);
+    }
+  }
+
+  if (!builders_only.empty()) {
+    Game::Systems::CommandService::move_units(*m_world, builders_only, targets);
+  }
+
+  result.input_consumed = true;
+  result.reset_cursor_to_normal = true;
+  return result;
 }
 
 } // namespace App::Controllers

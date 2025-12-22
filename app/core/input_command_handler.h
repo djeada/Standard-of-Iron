@@ -51,9 +51,13 @@ public:
   void on_stop_command();
   void on_hold_command();
   void on_guard_command();
+  void on_heal_command();
+  void on_build_command();
   void on_formation_command();
   void on_run_command();
   void on_guard_click(qreal sx, qreal sy, const ViewportState &viewport);
+  void on_heal_click(qreal sx, qreal sy, const ViewportState &viewport);
+  void on_build_click(qreal sx, qreal sy, const ViewportState &viewport);
   [[nodiscard]] bool any_selected_in_hold_mode() const;
   [[nodiscard]] bool any_selected_in_guard_mode() const;
   [[nodiscard]] bool any_selected_in_formation_mode() const;
