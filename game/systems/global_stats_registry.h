@@ -13,6 +13,7 @@ namespace Game::Systems {
 struct PlayerStats {
   int troops_recruited = 0;
   int enemies_killed = 0;
+  int losses = 0;
   int barracks_owned = 0;
   std::chrono::steady_clock::time_point game_start_time;
   std::chrono::steady_clock::time_point game_end_time;

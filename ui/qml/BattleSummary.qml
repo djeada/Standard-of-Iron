@@ -74,7 +74,7 @@ Rectangle {
                     "isWinner": isWinner,
                     "bannerColor": bannerColor,
                     "kills": stats.enemiesKilled,
-                    "losses": stats.troopsRecruited - stats.enemiesKilled,
+                    "losses": stats.losses,
                     "unitsTrained": stats.troopsRecruited,
                     "villages": stats.barracksOwned,
                     "playTime": playTimeFormatted,

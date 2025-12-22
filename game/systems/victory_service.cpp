@@ -160,6 +160,7 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
     if (stats != nullptr) {
       qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
               << "Enemies Killed:" << stats->enemies_killed
+              << "Losses:" << stats->losses
               << "Barracks Owned:" << stats->barracks_owned
               << "Play Time:" << stats->play_time_sec << "seconds";
     }
@@ -202,6 +203,7 @@ void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
       if (stats != nullptr) {
         qInfo() << "Final Stats - Troops Recruited:" << stats->troops_recruited
                 << "Enemies Killed:" << stats->enemies_killed
+                << "Losses:" << stats->losses
                 << "Barracks Owned:" << stats->barracks_owned
                 << "Play Time:" << stats->play_time_sec << "seconds";
       }
