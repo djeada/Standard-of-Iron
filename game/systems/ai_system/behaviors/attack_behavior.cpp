@@ -13,6 +13,17 @@
 
 namespace Game::Systems::AI {
 
+namespace {
+auto get_formation_type_for_player(int player_id) -> FormationType {
+  const Nation *nation =
+      NationRegistry::instance().get_nation_for_player(player_id);
+  if (nation != nullptr) {
+    return nation->formation_type;
+  }
+  return FormationType::Roman;
+}
+} // namespace
+
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
                              std::vector<AICommand> &outCommands) {
@@ -112,12 +123,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       }
 
       // Use nation-specific formation for scouting movement
-      const Nation *nation =
-          NationRegistry::instance().get_nation_for_player(context.player_id);
-      FormationType formation_type = FormationType::Roman;
-      if (nation != nullptr) {
-        formation_type = nation->formation_type;
-      }
+      FormationType formation_type =
+          get_formation_type_for_player(context.player_id);
 
       QVector3D const scout_center(scout_x, 0.0F, scout_z);
       auto formation_positions =
@@ -222,12 +229,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           }
 
           // Use nation-specific formation when advancing to attack
-          const Nation *nation =
-              NationRegistry::instance().get_nation_for_player(context.player_id);
-          FormationType formation_type = FormationType::Roman;
-          if (nation != nullptr) {
-            formation_type = nation->formation_type;
-          }
+          FormationType formation_type =
+              get_formation_type_for_player(context.player_id);
 
           QVector3D const attack_center(attack_pos_x, 0.0F, attack_pos_z);
           auto formation_positions =
