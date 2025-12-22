@@ -17,12 +17,11 @@
 namespace Game::Systems::AI {
 
 namespace {
-// Building type constants matching builder_behavior
+
 constexpr const char *BUILDING_TYPE_HOME = "home";
 constexpr const char *BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char *BUILDING_TYPE_BARRACKS = "barracks";
 
-// Build time constants for different building types
 constexpr float BUILD_TIME_HOME = 20.0F;
 constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
 constexpr float BUILD_TIME_BARRACKS = 30.0F;
@@ -179,7 +178,6 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
           continue;
         }
 
-        // Check if this is actually a builder
         if (unit->spawn_type != Game::Units::SpawnType::Builder) {
           continue;
         }
@@ -190,7 +188,6 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
           continue;
         }
 
-        // Set up the construction task
         builder_prod->product_type = command.construction_type;
         builder_prod->has_construction_site = true;
         builder_prod->construction_site_x = command.construction_site_x;
@@ -200,7 +197,6 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         builder_prod->construction_complete = false;
         builder_prod->is_placement_preview = false;
 
-        // Set build time based on building type
         if (command.construction_type == BUILDING_TYPE_HOME) {
           builder_prod->build_time = BUILD_TIME_HOME;
         } else if (command.construction_type == BUILDING_TYPE_DEFENSE_TOWER) {

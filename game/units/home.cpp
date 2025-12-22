@@ -66,9 +66,8 @@ void Home::init(const SpawnParams &params) {
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
 
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type,
-                                      params.is_initial_spawn));
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(
+      m_id, m_u->owner_id, m_u->spawn_type, params.is_initial_spawn));
 }
 
 } // namespace Game::Units

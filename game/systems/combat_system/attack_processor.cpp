@@ -7,6 +7,7 @@
 #include "../arrow_system.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
+#include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
 #include "combat_types.h"
 #include "combat_utils.h"
@@ -15,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <numbers>
+#include <optional>
 #include <qvectornd.h>
 #include <random>
 
@@ -58,6 +60,31 @@ auto is_ranged_mode(Engine::Core::AttackComponent *attack_comp) -> bool {
   return (attack_comp != nullptr) && attack_comp->can_ranged &&
          attack_comp->current_mode ==
              Engine::Core::AttackComponent::CombatMode::Ranged;
+}
+
+auto get_base_max_health(const Engine::Core::UnitComponent *unit)
+    -> std::optional<int> {
+  if (unit == nullptr) {
+    return std::nullopt;
+  }
+  auto troop_type_opt = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+  if (!troop_type_opt) {
+    return std::nullopt;
+  }
+  auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+      unit->nation_id, *troop_type_opt);
+  return profile.combat.max_health;
+}
+
+auto is_high_ground_advantage(
+    const Engine::Core::TransformComponent *high_transform,
+    const Engine::Core::TransformComponent *low_transform) -> bool {
+  if ((high_transform == nullptr) || (low_transform == nullptr)) {
+    return false;
+  }
+  float const height_diff =
+      high_transform->position.y - low_transform->position.y;
+  return height_diff > Constants::kHighGroundHeightThreshold;
 }
 
 void process_melee_lock(Engine::Core::Entity *attacker,
@@ -143,12 +170,13 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
     range *= Constants::kRangeMultiplierHold;
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierArcherHold);
-    
-    // Apply health bonus in hold mode
-    int const max_health_bonus = static_cast<int>(
-        static_cast<float>(unit_comp->max_health) * Constants::kHealthMultiplierHold);
+
+    int const max_health_bonus =
+        static_cast<int>(static_cast<float>(unit_comp->max_health) *
+                         Constants::kHealthMultiplierHold);
     if (unit_comp->max_health < max_health_bonus) {
-      int const health_percentage = (unit_comp->health * 100) / unit_comp->max_health;
+      int const health_percentage =
+          (unit_comp->health * 100) / unit_comp->max_health;
       unit_comp->max_health = max_health_bonus;
       unit_comp->health = (max_health_bonus * health_percentage) / 100;
     }
@@ -158,14 +186,52 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
   }
 }
 
+void apply_high_ground_defense_bonuses(Engine::Core::Entity *attacker,
+                                       Engine::Core::Entity *target,
+                                       Engine::Core::UnitComponent *target_unit,
+                                       int &damage) {
+  if (target_unit == nullptr) {
+    return;
+  }
+
+  if (target_unit->spawn_type != Game::Units::SpawnType::Archer &&
+      target_unit->spawn_type != Game::Units::SpawnType::Spearman) {
+    return;
+  }
+
+  auto *attacker_transform =
+      attacker->get_component<Engine::Core::TransformComponent>();
+  auto *target_transform =
+      target->get_component<Engine::Core::TransformComponent>();
+  if (!is_high_ground_advantage(target_transform, attacker_transform)) {
+    return;
+  }
+
+  damage = std::max(1, static_cast<int>(static_cast<float>(damage) *
+                                        Constants::kHighGroundArmorMultiplier));
+
+  auto base_max_health_opt = get_base_max_health(target_unit);
+  if (!base_max_health_opt || *base_max_health_opt <= 0) {
+    return;
+  }
+
+  int const max_health_bonus =
+      static_cast<int>(static_cast<float>(*base_max_health_opt) *
+                       Constants::kHighGroundHealthMultiplier);
+  if (target_unit->max_health < max_health_bonus) {
+    int const safe_max_health = std::max(1, target_unit->max_health);
+    int const health_percentage = (target_unit->health * 100) / safe_max_health;
+    target_unit->max_health = max_health_bonus;
+    target_unit->health = (max_health_bonus * health_percentage) / 100;
+  }
+}
+
 auto calculate_tactical_damage_multiplier(
-    Engine::Core::Entity *attacker,
-    Engine::Core::Entity *target,
+    Engine::Core::Entity *attacker, Engine::Core::Entity *target,
     Engine::Core::UnitComponent *attacker_unit,
     Engine::Core::UnitComponent *target_unit) -> float {
   float multiplier = 1.0F;
-  
-  // Spearman bonus vs cavalry units
+
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
     if (target_unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
         target_unit->spawn_type == Game::Units::SpawnType::HorseSpearman ||
@@ -173,24 +239,27 @@ auto calculate_tactical_damage_multiplier(
       multiplier *= Constants::kSpearmanVsCavalryMultiplier;
     }
   }
-  
-  // Archer bonus on high ground
+
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer) {
     auto *attacker_transform =
         attacker->get_component<Engine::Core::TransformComponent>();
     auto *target_transform =
         target->get_component<Engine::Core::TransformComponent>();
-    
-    if (attacker_transform != nullptr && target_transform != nullptr) {
-      float const height_diff =
-          attacker_transform->position.y - target_transform->position.y;
-      // Archer gets bonus when attacking from higher ground
-      if (height_diff > 0.5F) {
-        multiplier *= Constants::kArcherHighGroundMultiplier;
-      }
+
+    if (is_high_ground_advantage(attacker_transform, target_transform)) {
+      multiplier *= Constants::kArcherHighGroundMultiplier;
+    }
+  } else if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
+    auto *attacker_transform =
+        attacker->get_component<Engine::Core::TransformComponent>();
+    auto *target_transform =
+        target->get_component<Engine::Core::TransformComponent>();
+
+    if (is_high_ground_advantage(attacker_transform, target_transform)) {
+      multiplier *= Constants::kSpearmanHighGroundMultiplier;
     }
   }
-  
+
   return multiplier;
 }
 
@@ -644,12 +713,15 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 
-      // Apply tactical damage multipliers
-      auto *target_unit = best_target->get_component<Engine::Core::UnitComponent>();
+      auto *target_unit =
+          best_target->get_component<Engine::Core::UnitComponent>();
       if (target_unit != nullptr) {
         float const tactical_multiplier = calculate_tactical_damage_multiplier(
             attacker, best_target, attacker_unit, target_unit);
-        damage = static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
+        damage =
+            static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
+        apply_high_ground_defense_bonuses(attacker, best_target, target_unit,
+                                          damage);
       }
 
       deal_damage(world, best_target, damage, attacker->get_id());
