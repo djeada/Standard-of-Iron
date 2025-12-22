@@ -515,6 +515,22 @@ void GameEngine::on_run_command() {
   m_input_handler->on_run_command();
 }
 
+void GameEngine::on_heal_command() {
+  if (!m_cursor_manager) {
+    return;
+  }
+  ensure_initialized();
+  m_cursor_manager->set_mode(CursorMode::Heal);
+}
+
+void GameEngine::on_build_command() {
+  if (!m_cursor_manager) {
+    return;
+  }
+  ensure_initialized();
+  m_cursor_manager->set_mode(CursorMode::Build);
+}
+
 void GameEngine::on_guard_click(qreal sx, qreal sy) {
   if (!m_input_handler || !m_camera) {
     return;

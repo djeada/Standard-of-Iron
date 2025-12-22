@@ -181,6 +181,8 @@ public:
   Q_INVOKABLE void on_guard_command();
   Q_INVOKABLE void on_formation_command();
   Q_INVOKABLE void on_run_command();
+  Q_INVOKABLE void on_heal_command();
+  Q_INVOKABLE void on_build_command();
   Q_INVOKABLE void on_guard_click(qreal sx, qreal sy);
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_hold_mode() const;
   Q_INVOKABLE [[nodiscard]] bool any_selected_in_guard_mode() const;
