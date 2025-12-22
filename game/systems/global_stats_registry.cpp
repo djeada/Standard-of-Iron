@@ -73,9 +73,8 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
 void GlobalStatsRegistry::on_unit_spawned(
     const Engine::Core::UnitSpawnedEvent &event) {
 
-  // Skip initial spawns - we only count recruited troops
   if (event.is_initial_spawn) {
-    // But still track barracks ownership for initial barracks
+
     if (event.spawn_type == Game::Units::SpawnType::Barracks) {
       auto &stats = m_player_stats[event.owner_id];
       stats.barracks_owned++;
@@ -85,12 +84,11 @@ void GlobalStatsRegistry::on_unit_spawned(
 
   auto &stats = m_player_stats[event.owner_id];
 
-  // Don't count barracks, defense towers, or homes as recruited troops
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     stats.barracks_owned++;
   } else if (event.spawn_type != Game::Units::SpawnType::DefenseTower &&
              event.spawn_type != Game::Units::SpawnType::Home) {
-    // Count all other units (troops, catapult, ballista, builder) as recruited
+
     int const production_cost =
         Game::Units::TroopConfig::instance().getProductionCost(
             event.spawn_type);
@@ -101,8 +99,6 @@ void GlobalStatsRegistry::on_unit_spawned(
 void GlobalStatsRegistry::on_unit_died(
     const Engine::Core::UnitDiedEvent &event) {
 
-  // Track losses for the owner of the dead unit
-  // Only count troops (including catapult and ballista), not buildings
   if (event.spawn_type != Game::Units::SpawnType::Barracks &&
       event.spawn_type != Game::Units::SpawnType::DefenseTower &&
       event.spawn_type != Game::Units::SpawnType::Home) {
@@ -115,7 +111,6 @@ void GlobalStatsRegistry::on_unit_died(
     }
   }
 
-  // Track barracks destruction separately
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
@@ -126,7 +121,6 @@ void GlobalStatsRegistry::on_unit_died(
     }
   }
 
-  // Track kills for the killer (only if they are enemies)
   if (event.killer_owner_id != 0 && event.killer_owner_id != event.owner_id) {
 
     auto &owner_registry = OwnerRegistry::instance();
@@ -134,7 +128,6 @@ void GlobalStatsRegistry::on_unit_died(
     if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
       auto &stats = m_player_stats[event.killer_owner_id];
 
-      // Count kills for troops only (including catapult and ballista), not buildings
       if (event.spawn_type != Game::Units::SpawnType::Barracks &&
           event.spawn_type != Game::Units::SpawnType::DefenseTower &&
           event.spawn_type != Game::Units::SpawnType::Home) {

@@ -201,7 +201,7 @@ public:
 class UnitSpawnedEvent : public Event {
 public:
   UnitSpawnedEvent(EntityID unit_id, int owner_id,
-                   Game::Units::SpawnType spawn_type, 
+                   Game::Units::SpawnType spawn_type,
                    bool is_initial_spawn = true)
       : unit_id(unit_id), owner_id(owner_id), spawn_type(spawn_type),
         is_initial_spawn(is_initial_spawn) {}
