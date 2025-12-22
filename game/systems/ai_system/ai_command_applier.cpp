@@ -6,6 +6,7 @@
 #include "../command_service.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
+#include "units/spawn_type.h"
 #include "units/troop_type.h"
 
 #include <QVector3D>
@@ -145,6 +146,59 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
 
       production->time_remaining = production->build_time;
       production->in_progress = true;
+
+      break;
+    }
+
+    case AICommandType::StartBuilderConstruction: {
+      if (command.units.empty() || command.construction_type.empty()) {
+        break;
+      }
+
+      for (auto entity_id : command.units) {
+        auto *entity = world.get_entity(entity_id);
+        if (entity == nullptr) {
+          continue;
+        }
+
+        auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
+          continue;
+        }
+
+        // Check if this is actually a builder
+        if (unit->spawn_type != Game::Units::SpawnType::Builder) {
+          continue;
+        }
+
+        auto *builder_prod =
+            entity->get_component<Engine::Core::BuilderProductionComponent>();
+        if (builder_prod == nullptr) {
+          continue;
+        }
+
+        // Set up the construction task
+        builder_prod->product_type = command.construction_type;
+        builder_prod->has_construction_site = true;
+        builder_prod->construction_site_x = command.construction_site_x;
+        builder_prod->construction_site_z = command.construction_site_z;
+        builder_prod->at_construction_site = false;
+        builder_prod->in_progress = false;
+        builder_prod->construction_complete = false;
+        builder_prod->is_placement_preview = false;
+
+        // Set build time based on building type
+        if (command.construction_type == "home") {
+          builder_prod->build_time = 20.0F;
+        } else if (command.construction_type == "defense_tower") {
+          builder_prod->build_time = 25.0F;
+        } else if (command.construction_type == "barracks") {
+          builder_prod->build_time = 30.0F;
+        } else {
+          builder_prod->build_time = 20.0F;
+        }
+        builder_prod->time_remaining = builder_prod->build_time;
+      }
 
       break;
     }

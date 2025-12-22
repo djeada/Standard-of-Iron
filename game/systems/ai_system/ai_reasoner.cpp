@@ -46,6 +46,9 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   ctx.enemy_buildings_count = 0;
   ctx.neutral_barracks_count = 0;
   ctx.average_enemy_distance = 0.0F;
+  ctx.home_count = 0;
+  ctx.defense_tower_count = 0;
+  ctx.barracks_count = 0;
   ctx.max_troops_per_player =
       Game::GameConfig::instance().get_max_troops_per_player();
 
@@ -73,6 +76,15 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
   for (const auto &entity : snapshot.friendly_units) {
     if (entity.is_building) {
       ctx.buildings.push_back(entity.id);
+
+      // Count building types
+      if (entity.spawn_type == Game::Units::SpawnType::Home) {
+        ctx.home_count++;
+      } else if (entity.spawn_type == Game::Units::SpawnType::DefenseTower) {
+        ctx.defense_tower_count++;
+      } else if (entity.spawn_type == Game::Units::SpawnType::Barracks) {
+        ctx.barracks_count++;
+      }
 
       if (entity.spawn_type == Game::Units::SpawnType::Barracks &&
           ctx.primary_barracks == 0) {
