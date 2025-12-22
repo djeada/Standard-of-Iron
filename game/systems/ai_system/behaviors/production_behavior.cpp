@@ -32,6 +32,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   // Always try to maintain a minimum number of builders
   constexpr int MIN_BUILDERS = 2;
   constexpr int DESIRED_BUILDERS = 4;
+  constexpr int BUILDER_PRODUCTION_INTERVAL = 3;
   
   bool should_produce_builder = false;
   
@@ -41,7 +42,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
   // Medium priority: we don't have desired amount and occasionally produce more
   else if (context.builder_count < DESIRED_BUILDERS && 
-           (m_productionCounter % 3 == 0)) {
+           (m_productionCounter % BUILDER_PRODUCTION_INTERVAL == 0)) {
     should_produce_builder = true;
   }
 
