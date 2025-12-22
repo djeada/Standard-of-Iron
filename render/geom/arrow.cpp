@@ -155,11 +155,9 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
     model.scale(arrow_xy_scale, arrow_xy_scale, arrow_z_scale);
 
-    // Wooden shaft - darker brown color
     QVector3D wood_color(0.35F, 0.25F, 0.15F);
     renderer->mesh(arrow_shaft_mesh, model, wood_color, nullptr, 1.0F);
 
-    // Metal tip - silvery gray color
     QVector3D metal_color(0.70F, 0.72F, 0.75F);
     renderer->mesh(arrow_tip_mesh, model, metal_color, nullptr, 1.0F);
   }
