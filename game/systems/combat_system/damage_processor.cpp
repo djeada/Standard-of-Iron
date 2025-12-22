@@ -17,8 +17,11 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
     return;
   }
 
-  bool const is_killing_blow = (unit->health > 0 && unit->health <= damage);
-  unit->health = std::max(0, unit->health - damage);
+  int const prev_health = unit->health;
+  int const new_health = std::max(0, prev_health - damage);
+  bool const is_killing_blow = (prev_health > 0 && prev_health <= damage);
+
+  unit->health = new_health;
 
   int attacker_owner_id = 0;
   std::optional<Game::Units::SpawnType> attacker_type_opt;

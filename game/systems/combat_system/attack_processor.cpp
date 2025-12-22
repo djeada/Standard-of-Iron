@@ -94,6 +94,12 @@ void process_melee_lock(Engine::Core::Entity *attacker,
     return;
   }
 
+  if (is_unit_in_hold_mode(attacker)) {
+    attack_comp->in_melee_lock = false;
+    attack_comp->melee_lock_target_id = 0;
+    return;
+  }
+
   auto *lock_target = world->get_entity(attack_comp->melee_lock_target_id);
   if ((lock_target == nullptr) ||
       lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -171,12 +177,14 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierArcherHold);
 
-    int const max_health_bonus =
-        static_cast<int>(static_cast<float>(unit_comp->max_health) *
-                         Constants::kHealthMultiplierHold);
+    auto base_max_health_opt = get_base_max_health(unit_comp);
+    int const base_max_health =
+        base_max_health_opt.value_or(std::max(1, unit_comp->max_health));
+    int const max_health_bonus = static_cast<int>(
+        static_cast<float>(base_max_health) * Constants::kHealthMultiplierHold);
     if (unit_comp->max_health < max_health_bonus) {
-      int const health_percentage =
-          (unit_comp->health * 100) / unit_comp->max_health;
+      int const safe_max_health = std::max(1, unit_comp->max_health);
+      int const health_percentage = (unit_comp->health * 100) / safe_max_health;
       unit_comp->max_health = max_health_bonus;
       unit_comp->health = (max_health_bonus * health_percentage) / 100;
     }
@@ -710,6 +718,13 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
       if ((attacker_atk != nullptr) &&
           attacker_atk->current_mode ==
               Engine::Core::AttackComponent::CombatMode::Melee) {
+
+        if (is_unit_in_hold_mode(attacker)) {
+          attacker->remove_component<Engine::Core::AttackTargetComponent>();
+          attacker_atk->in_melee_lock = false;
+          attacker_atk->melee_lock_target_id = 0;
+          continue;
+        }
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 
