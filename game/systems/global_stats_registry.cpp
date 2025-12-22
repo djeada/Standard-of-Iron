@@ -73,21 +73,49 @@ void GlobalStatsRegistry::mark_game_end(int owner_id) {
 void GlobalStatsRegistry::on_unit_spawned(
     const Engine::Core::UnitSpawnedEvent &event) {
 
+  // Skip initial spawns - we only count recruited troops
+  if (event.is_initial_spawn) {
+    // But still track barracks ownership for initial barracks
+    if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+      auto &stats = m_player_stats[event.owner_id];
+      stats.barracks_owned++;
+    }
+    return;
+  }
+
   auto &stats = m_player_stats[event.owner_id];
 
-  if (event.spawn_type != Game::Units::SpawnType::Barracks) {
+  // Don't count barracks, defense towers, or homes as recruited troops
+  if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+    stats.barracks_owned++;
+  } else if (event.spawn_type != Game::Units::SpawnType::DefenseTower &&
+             event.spawn_type != Game::Units::SpawnType::Home) {
+    // Count all other units (troops, catapult, ballista, builder) as recruited
     int const production_cost =
         Game::Units::TroopConfig::instance().getProductionCost(
             event.spawn_type);
     stats.troops_recruited += production_cost;
-  } else {
-    stats.barracks_owned++;
   }
 }
 
 void GlobalStatsRegistry::on_unit_died(
     const Engine::Core::UnitDiedEvent &event) {
 
+  // Track losses for the owner of the dead unit
+  // Only count troops (including catapult and ballista), not buildings
+  if (event.spawn_type != Game::Units::SpawnType::Barracks &&
+      event.spawn_type != Game::Units::SpawnType::DefenseTower &&
+      event.spawn_type != Game::Units::SpawnType::Home) {
+    auto it = m_player_stats.find(event.owner_id);
+    if (it != m_player_stats.end()) {
+      int const production_cost =
+          Game::Units::TroopConfig::instance().getProductionCost(
+              event.spawn_type);
+      it->second.losses += production_cost;
+    }
+  }
+
+  // Track barracks destruction separately
   if (event.spawn_type == Game::Units::SpawnType::Barracks) {
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
@@ -98,6 +126,7 @@ void GlobalStatsRegistry::on_unit_died(
     }
   }
 
+  // Track kills for the killer (only if they are enemies)
   if (event.killer_owner_id != 0 && event.killer_owner_id != event.owner_id) {
 
     auto &owner_registry = OwnerRegistry::instance();
@@ -105,7 +134,10 @@ void GlobalStatsRegistry::on_unit_died(
     if (owner_registry.are_enemies(event.killer_owner_id, event.owner_id)) {
       auto &stats = m_player_stats[event.killer_owner_id];
 
-      if (event.spawn_type != Game::Units::SpawnType::Barracks) {
+      // Count kills for troops only (including catapult and ballista), not buildings
+      if (event.spawn_type != Game::Units::SpawnType::Barracks &&
+          event.spawn_type != Game::Units::SpawnType::DefenseTower &&
+          event.spawn_type != Game::Units::SpawnType::Home) {
         int const production_cost =
             Game::Units::TroopConfig::instance().getProductionCost(
                 event.spawn_type);
@@ -135,10 +167,12 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
   std::unordered_map<int, std::chrono::steady_clock::time_point> start_times;
   std::unordered_map<int, int> troops_recruited_values;
   std::unordered_map<int, int> enemies_killed_values;
+  std::unordered_map<int, int> losses_values;
   for (auto &[owner_id, stats] : m_player_stats) {
     start_times[owner_id] = stats.game_start_time;
     troops_recruited_values[owner_id] = stats.troops_recruited;
     enemies_killed_values[owner_id] = stats.enemies_killed;
+    losses_values[owner_id] = stats.losses;
   }
 
   m_player_stats.clear();
@@ -148,6 +182,7 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
     m_player_stats[owner_id].troops_recruited =
         troops_recruited_values[owner_id];
     m_player_stats[owner_id].enemies_killed = enemies_killed_values[owner_id];
+    m_player_stats[owner_id].losses = losses_values[owner_id];
   }
 
   auto entities = world.get_entities_with<Engine::Core::UnitComponent>();

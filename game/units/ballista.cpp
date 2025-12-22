@@ -99,6 +99,10 @@ void Ballista::init(const SpawnParams &params) {
                             : Engine::Core::AttackComponent::CombatMode::Melee;
   m_atk->can_ranged = profile.combat.can_ranged;
   m_atk->can_melee = profile.combat.can_melee;
+
+  Engine::Core::EventManager::instance().publish(
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type,
+                                      params.is_initial_spawn));
 }
 
 } // namespace Game::Units

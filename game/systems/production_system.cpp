@@ -175,6 +175,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           sp.ai_controlled =
               e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = nation_id;
+          sp.is_initial_spawn = false;
           auto unit = reg->create(sp.spawn_type, *world, sp);
 
           if (unit && prod->rally_set) {
@@ -296,6 +297,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           sp.ai_controlled =
               e->has_component<Engine::Core::AIControlledComponent>();
           sp.nation_id = u->nation_id;
+          sp.is_initial_spawn = false;
 
           if (builder_prod->product_type == "catapult") {
             sp.spawn_type = Game::Units::SpawnType::Catapult;
