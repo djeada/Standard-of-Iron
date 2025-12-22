@@ -743,12 +743,14 @@ auto GameEngine::get_player_stats(int owner_id) -> QVariantMap {
   if (stats != nullptr) {
     result["troopsRecruited"] = stats->troops_recruited;
     result["enemiesKilled"] = stats->enemies_killed;
+    result["losses"] = stats->losses;
     result["barracksOwned"] = stats->barracks_owned;
     result["playTimeSec"] = stats->play_time_sec;
     result["gameEnded"] = stats->game_ended;
   } else {
     result["troopsRecruited"] = 0;
     result["enemiesKilled"] = 0;
+    result["losses"] = 0;
     result["barracksOwned"] = 0;
     result["playTimeSec"] = 0.0F;
     result["gameEnded"] = false;
