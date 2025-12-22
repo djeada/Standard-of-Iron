@@ -100,6 +100,10 @@ auto MissionLoader::parseAISetup(const QJsonObject &obj) -> AISetup {
   setup.color = obj["color"].toString();
   setup.difficulty = obj["difficulty"].toString();
 
+  if (obj.contains("team_id")) {
+    setup.team_id = obj["team_id"].toInt();
+  }
+
   if (obj.contains("personality")) {
     setup.personality = parseAIPersonality(obj["personality"].toObject());
   }

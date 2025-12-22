@@ -88,6 +88,7 @@ Defines AI opponents with personality and behavior:
     "faction": "carthaginian",
     "color": "blue",
     "difficulty": "medium",
+    "team_id": 1,
     "personality": {
       "aggression": 0.7,
       "defense": 0.3,
@@ -103,6 +104,28 @@ Defines AI opponents with personality and behavior:
         "entry_point": {"x": 190, "z": 190}
       }
     ]
+  }
+]
+```
+
+#### Team ID (Optional)
+
+AI opponents can be assigned to teams using the `team_id` field. AI players with the same `team_id` will be allied and won't attack each other. If `team_id` is not specified, each AI player will be on their own team (enemies to all other AI players).
+
+Example with allied AI opponents:
+```json
+"ai_setups": [
+  {
+    "id": "roman_legion_1",
+    "nation": "roman_republic",
+    "team_id": 1,
+    ...
+  },
+  {
+    "id": "roman_legion_2",
+    "nation": "roman_republic",
+    "team_id": 1,
+    ...
   }
 ]
 ```

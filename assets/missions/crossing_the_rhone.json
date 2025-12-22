@@ -22,6 +22,7 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
+      "team_id": 1,
       "difficulty": "medium",
       "personality": {
         "aggression": 0.4,
@@ -36,6 +37,7 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "darkred",
+      "team_id": 1,
       "difficulty": "medium",
       "personality": {
         "aggression": 0.7,

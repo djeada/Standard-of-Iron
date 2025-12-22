@@ -50,6 +50,7 @@
       "nation": "gauls",
       "faction": "gallic",
       "color": "green",
+      "team_id": 1,
       "difficulty": "medium",
       "personality": {
         "aggression": 0.6,
@@ -74,6 +75,7 @@
       "nation": "gauls",
       "faction": "gallic",
       "color": "green",
+      "team_id": 1,
       "difficulty": "medium",
       "personality": {
         "aggression": 0.6,
