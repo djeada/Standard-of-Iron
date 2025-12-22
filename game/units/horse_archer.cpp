@@ -102,9 +102,8 @@ void HorseArcher::init(const SpawnParams &params) {
   m_atk->can_melee = profile.combat.can_melee;
   m_atk->max_height_difference = 2.0F;
 
-  Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type,
-                                      params.is_initial_spawn));
+  Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(
+      m_id, m_u->owner_id, m_u->spawn_type, params.is_initial_spawn));
 }
 
 } // namespace Game::Units
