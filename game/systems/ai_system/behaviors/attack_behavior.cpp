@@ -130,7 +130,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       auto formation_positions =
           FormationSystem::instance().get_formation_positions(
               formation_type, static_cast<int>(ready_units.size()), scout_center,
-              1.4F);
+              2.5F);
 
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -236,7 +236,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           auto formation_positions =
               FormationSystem::instance().get_formation_positions(
                   formation_type, static_cast<int>(ready_units.size()),
-                  attack_center, 1.4F);
+                  attack_center, 2.5F);
 
           std::vector<float> target_x;
           std::vector<float> target_y;
