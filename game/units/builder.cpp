@@ -105,7 +105,8 @@ void Builder::init(const SpawnParams &params) {
   e->add_component<Engine::Core::BuilderProductionComponent>();
 
   Engine::Core::EventManager::instance().publish(
-      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type));
+      Engine::Core::UnitSpawnedEvent(m_id, m_u->owner_id, m_u->spawn_type,
+                                      params.is_initial_spawn));
 }
 
 } // namespace Game::Units
