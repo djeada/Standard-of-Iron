@@ -1,6 +1,6 @@
 {
   "name": "Crossing the Rhone",
-  "description": "A river valley with two bridge crossings leading to fortified Roman villages",
+  "description": "A wide Rhone river cuts the full valley; two crossings lead toward fortified Roman barracks in the far north corners.",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 1200,
   "grid": {
@@ -19,13 +19,13 @@
     "irregularityAmplitude": 0.08
   },
   "camera": {
-    "center": [25, 0, 40],
-    "distance": 35.0,
-    "tiltDeg": 50.0,
-    "yaw": 200.0,
+    "center": [75, 0, 75],
+    "distance": 85.0,
+    "tiltDeg": 55.0,
+    "yaw": 210.0,
     "fovY": 45.0,
     "near": 1.0,
-    "far": 350.0
+    "far": 500.0
   },
   "spawns": [
     {
@@ -100,62 +100,108 @@
       "z": 40,
       "playerId": 1
     },
+
     {
       "type": "barracks",
-      "x": 88,
-      "z": 20,
+      "x": 18,
+      "z": 128,
       "playerId": 2,
-      "maxPopulation": 100
+      "maxPopulation": 500
     },
     {
       "type": "barracks",
-      "x": 88,
-      "z": 60,
+      "x": 132,
+      "z": 125,
       "playerId": 2,
-      "maxPopulation": 100
+      "maxPopulation": 800
     },
+
     {
       "type": "spearman",
-      "x": 85,
-      "z": 18,
+      "x": 15,
+      "z": 126,
       "playerId": 2
     },
     {
       "type": "spearman",
-      "x": 91,
-      "z": 18,
+      "x": 21,
+      "z": 126,
       "playerId": 2
     },
     {
       "type": "spearman",
-      "x": 88,
-      "z": 15,
+      "x": 18,
+      "z": 124,
       "playerId": 2
     },
     {
       "type": "swordsman",
-      "x": 85,
-      "z": 22,
+      "x": 15,
+      "z": 130,
       "playerId": 2
     },
     {
       "type": "swordsman",
-      "x": 91,
-      "z": 22,
+      "x": 21,
+      "z": 130,
       "playerId": 2
     },
     {
       "type": "archer",
-      "x": 88,
-      "z": 24,
+      "x": 18,
+      "z": 132,
       "playerId": 2
     },
     {
       "type": "archer",
-      "x": 88,
-      "z": 64,
+      "x": 22,
+      "z": 129,
       "playerId": 2
     },
+
+    {
+      "type": "spearman",
+      "x": 129,
+      "z": 123,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 135,
+      "z": 123,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 132,
+      "z": 121,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 129,
+      "z": 127,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 135,
+      "z": 127,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 132,
+      "z": 129,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 136,
+      "z": 126,
+      "playerId": 2
+    },
+
     {
       "type": "spearman",
       "x": 28,
@@ -221,6 +267,119 @@
       "x": 58,
       "z": 60,
       "playerId": 3
+    },
+
+    {
+      "type": "spearman",
+      "x": 60,
+      "z": 85,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 62,
+      "z": 87,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 58,
+      "z": 88,
+      "playerId": 3
+    },
+    {
+      "type": "spearman",
+      "x": 70,
+      "z": 95,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 72,
+      "z": 97,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 68,
+      "z": 98,
+      "playerId": 3
+    },
+
+    {
+      "type": "spearman",
+      "x": 92,
+      "z": 118,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 90,
+      "z": 120,
+      "playerId": 3
+    },
+    {
+      "type": "spearman",
+      "x": 98,
+      "z": 118,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 100,
+      "z": 120,
+      "playerId": 3
+    },
+
+    {
+      "type": "horse_swordsman",
+      "x": 40,
+      "z": 110,
+      "playerId": 3
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 110,
+      "z": 112,
+      "playerId": 3
+    },
+
+    {
+      "type": "spearman",
+      "x": 30,
+      "z": 125,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 32,
+      "z": 127,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 28,
+      "z": 127,
+      "playerId": 3
+    },
+
+    {
+      "type": "spearman",
+      "x": 120,
+      "z": 122,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 122,
+      "z": 124,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 118,
+      "z": 124,
+      "playerId": 3
     }
   ],
   "firecamps": [
@@ -231,40 +390,46 @@
       "radius": 3.0
     },
     {
-      "x": 85,
-      "z": 20,
-      "intensity": 1.0,
+      "x": 18,
+      "z": 128,
+      "intensity": 1.1,
+      "radius": 3.0
+    },
+    {
+      "x": 132,
+      "z": 125,
+      "intensity": 1.1,
+      "radius": 3.0
+    },
+    {
+      "x": 95,
+      "z": 92,
+      "intensity": 0.9,
       "radius": 2.5
     },
     {
-      "x": 91,
-      "z": 20,
-      "intensity": 1.0,
+      "x": 95,
+      "z": 120,
+      "intensity": 0.9,
       "radius": 2.5
     },
     {
-      "x": 85,
-      "z": 60,
-      "intensity": 1.0,
-      "radius": 2.5
+      "x": 60,
+      "z": 86,
+      "intensity": 0.85,
+      "radius": 2.2
     },
     {
-      "x": 91,
-      "z": 60,
-      "intensity": 1.0,
-      "radius": 2.5
+      "x": 120,
+      "z": 123,
+      "intensity": 0.85,
+      "radius": 2.2
     },
     {
-      "x": 110,
-      "z": 20,
-      "intensity": 1.0,
-      "radius": 2.5
-    },
-    {
-      "x": 110,
-      "z": 60,
-      "intensity": 1.0,
-      "radius": 2.5
+      "x": 30,
+      "z": 126,
+      "intensity": 0.85,
+      "radius": 2.2
     }
   ],
   "terrain": [
@@ -539,108 +704,243 @@
       "radius": 6,
       "density": 0.45,
       "description": "Eastern thicket south"
+    },
+
+    {
+      "type": "hill",
+      "x": 10,
+      "z": 142,
+      "width": 28,
+      "depth": 16,
+      "height": 4.6,
+      "rotation": 6,
+      "entrances": [
+        {
+          "x": 10,
+          "z": 135
+        }
+      ],
+      "description": "Far southern mountain range"
+    },
+    {
+      "type": "hill",
+      "x": 45,
+      "z": 145,
+      "width": 30,
+      "depth": 18,
+      "height": 5.0,
+      "rotation": -4,
+      "entrances": [
+        {
+          "x": 45,
+          "z": 137
+        }
+      ],
+      "description": "Far southern mountain range"
+    },
+    {
+      "type": "hill",
+      "x": 80,
+      "z": 143,
+      "width": 34,
+      "depth": 16,
+      "height": 4.8,
+      "rotation": 8,
+      "entrances": [
+        {
+          "x": 80,
+          "z": 136
+        }
+      ],
+      "description": "Far southern mountain range"
+    },
+    {
+      "type": "hill",
+      "x": 118,
+      "z": 145,
+      "width": 26,
+      "depth": 18,
+      "height": 4.4,
+      "rotation": -7,
+      "entrances": [
+        {
+          "x": 118,
+          "z": 137
+        }
+      ],
+      "description": "Far southern mountain range"
+    },
+
+    {
+      "type": "hill",
+      "x": 92,
+      "z": 120,
+      "width": 40,
+      "depth": 20,
+      "height": 5.5,
+      "rotation": 18,
+      "entrances": [
+        {
+          "x": 85,
+          "z": 120
+        },
+        {
+          "x": 100,
+          "z": 120
+        }
+      ],
+      "description": "High ridge crossing the Rhone (bridge sits on the crest)"
+    },
+
+    {
+      "type": "forest",
+      "x": 25,
+      "z": 105,
+      "radius": 10,
+      "density": 0.55,
+      "description": "Lower valley forest west"
+    },
+    {
+      "type": "forest",
+      "x": 110,
+      "z": 105,
+      "radius": 10,
+      "density": 0.55,
+      "description": "Lower valley forest east"
+    },
+    {
+      "type": "forest",
+      "x": 25,
+      "z": 125,
+      "radius": 7,
+      "density": 0.45,
+      "description": "Upper-left riverside woods"
+    },
+    {
+      "type": "forest",
+      "x": 125,
+      "z": 120,
+      "radius": 7,
+      "density": 0.45,
+      "description": "Upper-right riverside woods"
+    },
+    {
+      "type": "forest",
+      "x": 70,
+      "z": 132,
+      "radius": 8,
+      "density": 0.4,
+      "description": "Northern floodplain thicket"
     }
   ],
   "rivers": [
     {
-      "start": [68, 0],
-      "end": [68, 80],
-      "width": 6.0
+      "start": [95, 0],
+      "end": [95, 149],
+      "width": 7.0
     },
     {
-      "start": [118, 10],
-      "end": [126, 30],
-      "width": 2.5
+      "start": [0, 149],
+      "end": [40, 125],
+      "width": 3.0
     },
     {
-      "start": [116, 70],
-      "end": [126, 50],
-      "width": 2.5
+      "start": [149, 149],
+      "end": [118, 120],
+      "width": 3.2
+    },
+    {
+      "start": [60, 90],
+      "end": [85, 110],
+      "width": 2.2
     }
   ],
   "bridges": [
     {
-      "start": [62, 20],
-      "end": [74, 20],
+      "start": [89, 92],
+      "end": [101, 92],
       "width": 5.0,
-      "height": 0.8
+      "height": 0.9
     },
     {
-      "start": [62, 60],
-      "end": [74, 60],
-      "width": 5.0,
-      "height": 0.8
+      "start": [89, 120],
+      "end": [101, 120],
+      "width": 5.5,
+      "height": 1.2
     }
   ],
   "roads": [
     {
       "waypoints": [
         [8, 40],
-        [18, 40],
-        [22, 32],
-        [25, 25],
-        [35, 22],
-        [45, 20],
-        [55, 20],
-        [62, 20]
+        [18, 45],
+        [30, 55],
+        [40, 68],
+        [55, 80],
+        [70, 88],
+        [89, 92]
       ],
       "width": 3.0
     },
     {
       "waypoints": [
-        [18, 40],
-        [22, 48],
-        [25, 55],
-        [35, 58],
-        [45, 60],
-        [55, 60],
-        [62, 60]
+        [8, 40],
+        [18, 50],
+        [28, 62],
+        [35, 78],
+        [45, 95],
+        [60, 108],
+        [75, 116],
+        [89, 120]
       ],
       "width": 3.0
     },
     {
       "waypoints": [
-        [74, 20],
-        [78, 20],
-        [88, 20],
-        [98, 20],
-        [108, 30]
+        [101, 92],
+        [110, 95],
+        [120, 105],
+        [128, 115],
+        [132, 125]
       ],
       "width": 3.0
     },
     {
       "waypoints": [
-        [74, 60],
-        [78, 60],
-        [88, 60],
-        [98, 60],
-        [108, 50]
+        [101, 120],
+        [112, 121],
+        [120, 122],
+        [126, 123],
+        [132, 125]
       ],
       "width": 3.0
     },
     {
       "waypoints": [
-        [88, 20],
-        [96, 30],
-        [100, 40],
-        [96, 50],
-        [88, 60]
+        [89, 120],
+        [75, 121],
+        [60, 123],
+        [45, 126],
+        [30, 128],
+        [18, 128]
       ],
-      "width": 2.5
+      "width": 3.0
     },
     {
       "waypoints": [
-        [108, 30],
-        [118, 30],
-        [124, 40],
-        [118, 50],
-        [108, 50]
+        [89, 92],
+        [75, 95],
+        [60, 100],
+        [45, 110],
+        [35, 118],
+        [25, 125],
+        [18, 128]
       ],
-      "width": 3.0
+      "width": 2.6
     }
   ],
   "victory": {
     "type": "custom",
-    "description": "Capture both Roman villages across the river"
+    "description": "Capture both Roman barracks in the upper corners across the Rhone."
   }
 }
