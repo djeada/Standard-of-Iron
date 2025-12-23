@@ -45,6 +45,7 @@
 #include <qstringliteral.h>
 #include <qvectornd.h>
 #include <vector>
+#include <utility>
 
 namespace Render::GL {
 
@@ -62,7 +63,50 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
   if (a.alpha < k_opaque_threshold || b.alpha < k_opaque_threshold) {
     return false;
   }
-  return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture;
+  return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture &&
+         a.material_id == b.material_id;
+}
+
+// Check if a shader is one of the special-case shaders that cannot be instanced.
+// Special cases: water, banner, shadow, transparent draws.
+[[nodiscard]] inline auto is_special_case_shader(
+    Shader *shader, Shader *shadow_shader, Shader *river_shader,
+    Shader *riverbank_shader, Shader *bridge_shader, Shader *road_shader,
+    Shader *banner_shader) -> bool {
+  return shader == shadow_shader || shader == river_shader ||
+         shader == riverbank_shader || shader == bridge_shader ||
+         shader == road_shader || shader == banner_shader;
+}
+
+// Lookup the instanced shader for a given base shader.
+// Returns nullptr if no instanced shader is available for this shader type.
+[[nodiscard]] inline auto lookup_instanced_shader(Shader *base_shader,
+                                                   ShaderCache *cache) -> Shader * {
+  if (base_shader == nullptr || cache == nullptr) {
+    return nullptr;
+  }
+
+  // Map base shader names to instanced shader names.
+  // For unit types like spearman, map to spearman_instanced.
+  static const std::pair<QString, QString> k_instanced_mappings[] = {
+      {QStringLiteral("spearman"), QStringLiteral("spearman_instanced")},
+      {QStringLiteral("archer"), QStringLiteral("archer_instanced")},
+      {QStringLiteral("swordsman"), QStringLiteral("swordsman_instanced")},
+      {QStringLiteral("horse_swordsman"),
+       QStringLiteral("horse_swordsman_instanced")},
+      {QStringLiteral("healer"), QStringLiteral("healer_instanced")},
+  };
+
+  // Check if the base shader matches any of the unit shaders.
+  for (const auto &[base_name, instanced_name] : k_instanced_mappings) {
+    Shader *base = cache->get(base_name);
+    if (base == base_shader) {
+      // Return the instanced version if it exists.
+      return cache->get(instanced_name);
+    }
+  }
+
+  return nullptr;
 }
 
 } // namespace
@@ -1247,13 +1291,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       break;
     }
     case MeshCmdIndex: {
-      const auto &it = std::get<MeshCmdIndex>(cmd);
-      if (it.mesh == nullptr) {
+      const auto &first_cmd = std::get<MeshCmdIndex>(cmd);
+      if (first_cmd.mesh == nullptr) {
         break;
       }
 
       Shader *active_shader =
-          (it.shader != nullptr) ? it.shader : m_basicShader;
+          (first_cmd.shader != nullptr) ? first_cmd.shader : m_basicShader;
       if (active_shader == nullptr) {
         break;
       }
@@ -1262,10 +1306,102 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDisable(GL_POLYGON_OFFSET_FILL);
       }
 
+      // Cache special-case shaders for checking.
       Shader *shadowShader =
           m_shaderCache ? m_shaderCache->get(QStringLiteral("troop_shadow"))
                         : nullptr;
+      Shader *riverShader = m_waterPipeline ? m_waterPipeline->m_riverShader
+                                            : nullptr;
+      Shader *riverbankShader = m_waterPipeline
+                                    ? m_waterPipeline->m_riverbankShader
+                                    : nullptr;
+      Shader *bridgeShader = m_waterPipeline ? m_waterPipeline->m_bridgeShader
+                                             : nullptr;
+      Shader *roadShader = m_waterPipeline ? m_waterPipeline->m_road_shader
+                                           : nullptr;
+      Shader *bannerShader =
+          m_bannerPipeline ? m_bannerPipeline->m_bannerShader : nullptr;
+
       bool const isShadowShader = (active_shader == shadowShader);
+      bool const isTransparent =
+          (!isShadowShader) && (first_cmd.alpha < k_opaque_threshold);
+      bool const isSpecialCase = is_special_case_shader(
+          active_shader, shadowShader, riverShader, riverbankShader,
+          bridgeShader, roadShader, bannerShader);
+
+      // Try instanced batching if:
+      // - Not a special-case shader (water, banner, shadow, etc.)
+      // - Not transparent
+      // - Instanced shader is available
+      // - MeshInstancingPipeline is initialized
+      Shader *instanced_shader =
+          lookup_instanced_shader(active_shader, m_shaderCache.get());
+      bool const can_use_instancing =
+          !isSpecialCase && !isTransparent && !isShadowShader &&
+          (instanced_shader != nullptr) &&
+          (m_meshInstancingPipeline != nullptr) &&
+          m_meshInstancingPipeline->is_initialized();
+
+      if (can_use_instancing) {
+        // Count consecutive batchable commands.
+        std::size_t batch_end = i + 1;
+        while (batch_end < count) {
+          const auto &next_cmd = queue.get_sorted(batch_end);
+          if (next_cmd.index() != MeshCmdIndex) {
+            break;
+          }
+          const auto &next_mesh_cmd = std::get<MeshCmdIndex>(next_cmd);
+          if (!can_batch_mesh_cmds(first_cmd, next_mesh_cmd)) {
+            break;
+          }
+          ++batch_end;
+        }
+
+        const std::size_t batch_size = batch_end - i;
+        (void)batch_size; // Suppress unused variable warning.
+
+        // Use instanced rendering for batches.
+        m_meshInstancingPipeline->begin_batch(first_cmd.mesh, instanced_shader,
+                                              first_cmd.texture);
+        instanced_shader->use();
+        m_lastBoundShader = instanced_shader;
+
+        // Set batch-level uniforms once.
+        instanced_shader->set_uniform(QStringLiteral("u_viewProj"), view_proj);
+        instanced_shader->set_uniform(QStringLiteral("u_useTexture"),
+                                      first_cmd.texture != nullptr);
+        instanced_shader->set_uniform(QStringLiteral("u_materialId"),
+                                      first_cmd.material_id);
+
+        Texture *tex_to_use =
+            (first_cmd.texture != nullptr)
+                ? first_cmd.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if (tex_to_use != nullptr) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          instanced_shader->set_uniform(QStringLiteral("u_texture"), 0);
+        }
+
+        // Accumulate all instances in the batch.
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &batch_cmd =
+              std::get<MeshCmdIndex>(queue.get_sorted(j));
+          m_meshInstancingPipeline->accumulate(
+              batch_cmd.model, batch_cmd.color, batch_cmd.alpha,
+              batch_cmd.material_id);
+        }
+
+        // Flush the batch.
+        m_meshInstancingPipeline->flush();
+
+        // Skip to the end of the batch.
+        i = batch_end;
+        continue;
+      }
+
+      // Fall back to per-draw logic for special cases, transparent, or
+      // non-instanced draws.
       std::unique_ptr<DepthMaskScope> shadow_depth_scope;
       std::unique_ptr<BlendScope> shadow_blend_scope;
       if (isShadowShader) {
@@ -1275,7 +1411,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         glDepthMask(GL_TRUE);
       }
 
-      bool const isTransparent = (!isShadowShader) && (it.alpha < 0.999F);
       std::unique_ptr<DepthMaskScope> transparent_depth_scope;
       std::unique_ptr<BlendScope> transparent_blend_scope;
       GLint prev_depth_func = GL_LESS;
@@ -1293,7 +1428,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.model,
-                                   it.model);
+                                   first_cmd.model);
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.view,
                                    cam.get_view_matrix());
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.projection,
@@ -1301,7 +1436,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.time,
                                    m_animationTime);
 
-        it.mesh->draw();
+        first_cmd.mesh->draw();
         break;
       }
 
@@ -1312,7 +1447,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.model,
-                                   it.model);
+                                   first_cmd.model);
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.view,
                                    cam.get_view_matrix());
         active_shader->set_uniform(
@@ -1325,7 +1460,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             Shader::InvalidUniform) {
           active_shader->set_uniform(
               m_waterPipeline->m_riverbankUniforms.segment_visibility,
-              it.alpha);
+              first_cmd.alpha);
         }
 
         if (m_waterPipeline->m_riverbankUniforms.has_visibility !=
@@ -1366,7 +1501,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_lastBoundTexture = m_riverbankVisibility.texture;
         }
 
-        it.mesh->draw();
+        first_cmd.mesh->draw();
         break;
       }
 
@@ -1377,17 +1512,17 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.mvp,
-                                   it.mvp);
+                                   first_cmd.mvp);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.model,
-                                   it.model);
+                                   first_cmd.model);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.color,
-                                   it.color);
+                                   first_cmd.color);
 
         QVector3D const light_dir(0.35F, 0.8F, 0.45F);
         active_shader->set_uniform(
             m_waterPipeline->m_bridgeUniforms.light_direction, light_dir);
 
-        it.mesh->draw();
+        first_cmd.mesh->draw();
         break;
       }
 
@@ -1398,19 +1533,19 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.mvp,
-                                   it.mvp);
+                                   first_cmd.mvp);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.model,
-                                   it.model);
+                                   first_cmd.model);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.color,
-                                   it.color);
+                                   first_cmd.color);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.alpha,
-                                   it.alpha);
+                                   first_cmd.alpha);
 
         QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
         active_shader->set_uniform(
             m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
 
-        it.mesh->draw();
+        first_cmd.mesh->draw();
         break;
       }
 
@@ -1422,10 +1557,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         QMatrix4x4 mvp =
-            cam.get_projection_matrix() * cam.get_view_matrix() * it.model;
+            cam.get_projection_matrix() * cam.get_view_matrix() * first_cmd.model;
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.mvp, mvp);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.model,
-                                   it.model);
+                                   first_cmd.model);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
                                    m_animationTime);
 
@@ -1433,20 +1568,20 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(
             m_bannerPipeline->m_bannerUniforms.windStrength, windStrength);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
-                                   it.color);
+                                   first_cmd.color);
 
-        QVector3D trimColor = it.color * 0.7F;
+        QVector3D trimColor = first_cmd.color * 0.7F;
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.trimColor,
                                    trimColor);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.alpha,
-                                   it.alpha);
+                                   first_cmd.alpha);
         active_shader->set_uniform(
             m_bannerPipeline->m_bannerUniforms.useTexture,
-            it.texture != nullptr);
+            first_cmd.texture != nullptr);
 
         Texture *tex_to_use =
-            (it.texture != nullptr)
-                ? it.texture
+            (first_cmd.texture != nullptr)
+                ? first_cmd.texture
                 : (m_resources ? m_resources->white() : nullptr);
         if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
           tex_to_use->bind(0);
@@ -1455,7 +1590,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                      0);
         }
 
-        it.mesh->draw();
+        first_cmd.mesh->draw();
         break;
       }
 
@@ -1471,12 +1606,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_lastBoundShader = active_shader;
       }
 
-      active_shader->set_uniform(uniforms->mvp, it.mvp);
-      active_shader->set_uniform(uniforms->model, it.model);
+      active_shader->set_uniform(uniforms->mvp, first_cmd.mvp);
+      active_shader->set_uniform(uniforms->model, first_cmd.model);
 
       Texture *tex_to_use =
-          (it.texture != nullptr)
-              ? it.texture
+          (first_cmd.texture != nullptr)
+              ? first_cmd.texture
               : (m_resources ? m_resources->white() : nullptr);
       if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
         tex_to_use->bind(0);
@@ -1484,11 +1619,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(uniforms->texture, 0);
       }
 
-      active_shader->set_uniform(uniforms->useTexture, it.texture != nullptr);
-      active_shader->set_uniform(uniforms->color, it.color);
-      active_shader->set_uniform(uniforms->alpha, it.alpha);
-      active_shader->set_uniform(uniforms->materialId, it.material_id);
-      it.mesh->draw();
+      active_shader->set_uniform(uniforms->useTexture, first_cmd.texture != nullptr);
+      active_shader->set_uniform(uniforms->color, first_cmd.color);
+      active_shader->set_uniform(uniforms->alpha, first_cmd.alpha);
+      active_shader->set_uniform(uniforms->materialId, first_cmd.material_id);
+      first_cmd.mesh->draw();
 
       if (isTransparent) {
         glDepthFunc(static_cast<GLenum>(prev_depth_func));

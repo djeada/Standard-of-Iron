@@ -336,7 +336,8 @@ public:
       return false;
     }
     return mesh_a.mesh == mesh_b.mesh && mesh_a.shader == mesh_b.shader &&
-           mesh_a.texture == mesh_b.texture;
+           mesh_a.texture == mesh_b.texture &&
+           mesh_a.material_id == mesh_b.material_id;
   }
 
 private:
@@ -442,11 +443,20 @@ private:
     uint64_t key = static_cast<uint64_t>(type_order) << 56;
 
     if (cmd.index() == MeshCmdIndex) {
-      const auto &mesh = std::get<MeshCmdIndex>(cmd);
+      const auto &mesh_cmd = std::get<MeshCmdIndex>(cmd);
 
+      // Combine mesh, shader, texture, and material_id for batching grouping.
+      // Use lower bits of each pointer to create a unique batch key.
+      uint64_t const mesh_ptr =
+          reinterpret_cast<uintptr_t>(mesh_cmd.mesh) & 0xFFFFU;
+      uint64_t const shader_ptr =
+          reinterpret_cast<uintptr_t>(mesh_cmd.shader) & 0xFFFFU;
       uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
-      key |= tex_ptr;
+          reinterpret_cast<uintptr_t>(mesh_cmd.texture) & 0xFFFFU;
+      uint64_t const mat_id = static_cast<uint64_t>(mesh_cmd.material_id) & 0xFFU;
+
+      // Layout: [mesh:16][shader:16][texture:16][material_id:8]
+      key |= (mesh_ptr << 40) | (shader_ptr << 24) | (tex_ptr << 8) | mat_id;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =
