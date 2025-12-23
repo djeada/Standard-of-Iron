@@ -18,11 +18,11 @@ private:
   void process_charge_attack(Engine::Core::Entity *elephant,
                              Engine::Core::World *world, float delta_time);
   void process_trample_damage(Engine::Core::Entity *elephant,
-                             Engine::Core::World *world, float delta_time);
+                              Engine::Core::World *world, float delta_time);
   void process_panic_mechanic(Engine::Core::Entity *elephant,
-                             Engine::Core::World *world, float delta_time);
+                              Engine::Core::World *world, float delta_time);
   void process_melee_attack(Engine::Core::Entity *elephant,
-                           Engine::Core::World *world, float delta_time);
+                            Engine::Core::World *world, float delta_time);
 };
 
 } // namespace Game::Systems
