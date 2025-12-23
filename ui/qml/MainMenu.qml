@@ -23,12 +23,10 @@ Item {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
             var newIndex = container.selectedIndex + 1;
-            var foundEnabled = false;
             while (newIndex < menuModel.count) {
                 var m = menuModel.get(newIndex);
                 if (!m.requiresGame || root.gameStarted) {
                     container.selectedIndex = newIndex;
-                    foundEnabled = true;
                     break;
                 }
                 newIndex++;
@@ -37,12 +35,10 @@ Item {
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
             var newIndex = container.selectedIndex - 1;
-            var foundEnabled = false;
             while (newIndex >= 0) {
                 var m = menuModel.get(newIndex);
                 if (!m.requiresGame || root.gameStarted) {
                     container.selectedIndex = newIndex;
-                    foundEnabled = true;
                     break;
                 }
                 newIndex--;
@@ -278,7 +274,6 @@ Item {
                             onEntered: {
                                 if (itemEnabled)
                                     container.selectedIndex = idx;
-
                             }
                             onClicked: {
                                 if (!itemEnabled)
