@@ -7,6 +7,8 @@ import StandardOfIron 1.0
 Item {
     id: root
 
+    property bool gameStarted: false
+
     signal openSkirmish()
     signal openCampaign()
     signal openObjectives()
@@ -20,13 +22,35 @@ Item {
     focus: true
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
-            container.selectedIndex = Math.min(container.selectedIndex + 1, menuModel.count - 1);
+            var newIndex = container.selectedIndex + 1;
+            while (newIndex < menuModel.count) {
+                var m = menuModel.get(newIndex);
+                if (!m.requiresGame || root.gameStarted) {
+                    container.selectedIndex = newIndex;
+                    break;
+                }
+                newIndex++;
+            }
+            // If no enabled item found below, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            container.selectedIndex = Math.max(container.selectedIndex - 1, 0);
+            var newIndex = container.selectedIndex - 1;
+            while (newIndex >= 0) {
+                var m = menuModel.get(newIndex);
+                if (!m.requiresGame || root.gameStarted) {
+                    container.selectedIndex = newIndex;
+                    break;
+                }
+                newIndex--;
+            }
+            // If no enabled item found above, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             var m = menuModel.get(container.selectedIndex);
+            if (m.requiresGame && !root.gameStarted) {
+                event.accepted = true;
+                return;
+            }
             if (m.idStr === "skirmish")
                 root.openSkirmish();
             else if (m.idStr === "campaign")
@@ -114,42 +138,49 @@ Item {
                         idStr: "skirmish"
                         title: QT_TR_NOOP("Play — Skirmish")
                         subtitle: QT_TR_NOOP("Select a map and start")
+                        requiresGame: false
                     }
 
                     ListElement {
                         idStr: "campaign"
                         title: QT_TR_NOOP("Play — Campaign")
                         subtitle: QT_TR_NOOP("Story missions and battles")
+                        requiresGame: false
                     }
 
                     ListElement {
                         idStr: "objectives"
                         title: QT_TR_NOOP("Objectives")
                         subtitle: QT_TR_NOOP("View current mission objectives")
+                        requiresGame: true
                     }
 
                     ListElement {
                         idStr: "save"
                         title: QT_TR_NOOP("Save Game")
                         subtitle: QT_TR_NOOP("Save your current progress")
+                        requiresGame: true
                     }
 
                     ListElement {
                         idStr: "load"
                         title: QT_TR_NOOP("Load Game")
                         subtitle: QT_TR_NOOP("Resume a previous game")
+                        requiresGame: false
                     }
 
                     ListElement {
                         idStr: "settings"
                         title: QT_TR_NOOP("Settings")
                         subtitle: QT_TR_NOOP("Adjust graphics & controls")
+                        requiresGame: false
                     }
 
                     ListElement {
                         idStr: "exit"
                         title: QT_TR_NOOP("Exit")
                         subtitle: QT_TR_NOOP("Quit the game")
+                        requiresGame: false
                     }
 
                 }
@@ -161,6 +192,7 @@ Item {
                         id: menuItem
 
                         property int idx: index
+                        property bool itemEnabled: !model.requiresGame || root.gameStarted
 
                         Layout.fillWidth: true
                         Layout.preferredHeight: container.width > 900 ? 64 : 56
@@ -172,6 +204,7 @@ Item {
                             color: container.selectedIndex === idx ? Theme.selectedBg : menuItemMouse.containsPress ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             border.width: 1
                             border.color: container.selectedIndex === idx ? Theme.selectedBr : Theme.cardBorder
+                            opacity: itemEnabled ? 1 : 0.4
 
                             RowLayout {
                                 anchors.fill: parent
@@ -191,7 +224,7 @@ Item {
                                         text: qsTr(model.title)
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
-                                        color: container.selectedIndex === idx ? Theme.textMain : Theme.textBright
+                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textBright) : Theme.textDim
                                         font.pointSize: Theme.fontSizeLarge
                                         font.bold: container.selectedIndex === idx
                                     }
@@ -200,7 +233,7 @@ Item {
                                         text: qsTr(model.subtitle)
                                         Layout.fillWidth: true
                                         elide: Text.ElideRight
-                                        color: container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite
+                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite) : Theme.textHint
                                         font.pointSize: Theme.fontSizeSmall
                                     }
 
@@ -209,7 +242,8 @@ Item {
                                 Text {
                                     text: "›"
                                     font.pointSize: Theme.fontSizeTitle
-                                    color: container.selectedIndex === idx ? Theme.textMain : Theme.textHint
+                                    color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textDim
+                                    opacity: itemEnabled ? 1 : 0.3
                                 }
 
                             }
@@ -236,9 +270,15 @@ Item {
                             anchors.fill: parent
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton
-                            cursorShape: Qt.PointingHandCursor
-                            onEntered: container.selectedIndex = idx
+                            cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                            onEntered: {
+                                if (itemEnabled)
+                                    container.selectedIndex = idx;
+                            }
                             onClicked: {
+                                if (!itemEnabled)
+                                    return;
+
                                 if (model.idStr === "skirmish")
                                     root.openSkirmish();
                                 else if (model.idStr === "campaign")
