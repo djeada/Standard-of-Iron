@@ -124,7 +124,7 @@ void process_melee_lock(Engine::Core::Entity *attacker,
   float const dist = std::sqrt(dx * dx + dz * dz);
 
   if (dist > Constants::kMaxMeleeSeparation) {
-    if (!is_unit_in_hold_mode(attacker)) {
+    if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
       float const pull_amount = (dist - Constants::kIdealMeleeDistance) *
                                 Constants::kMeleePullFactor * delta_time *
                                 Constants::kMeleePullSpeed;
@@ -389,12 +389,12 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
       if (dist > Constants::kMinDistance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
-        if (!is_unit_in_hold_mode(attacker)) {
+        if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
           att_t->position.x += direction.x() * move_amount;
           att_t->position.z += direction.z() * move_amount;
         }
 
-        if (!is_unit_in_hold_mode(target)) {
+        if (!is_unit_in_hold_mode(target) && !is_building(target)) {
           tgt_t->position.x -= direction.x() * move_amount;
           tgt_t->position.z -= direction.z() * move_amount;
         }
