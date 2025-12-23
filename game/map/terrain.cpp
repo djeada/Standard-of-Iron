@@ -870,7 +870,6 @@ void TerrainHeightMap::addRiverSegments(
 void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
   constexpr float kBridgeSinkMin = 0.25F;
   constexpr float kBridgeSinkMax = 0.65F;
-  constexpr float kBridgeWalkableHalfWidth = 0.45F;
   constexpr float kBridgeEntryMarginTiles = 1.0F;
 
   m_bridges.clear();
@@ -901,6 +900,7 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    float const bridge_half_width = stored_bridge.width * 0.5F;
 
     float const entry_margin = m_tile_size * kBridgeEntryMarginTiles;
     float const extended_length = length + (entry_margin * 2.0F);
@@ -930,16 +930,16 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
 
       int const min_x =
           std::max(0, static_cast<int>(std::floor(grid_center_x -
-                                                  kBridgeWalkableHalfWidth)));
+                                                  bridge_half_width)));
       int const max_x =
           std::min(m_width - 1, static_cast<int>(std::ceil(
-                                    grid_center_x + kBridgeWalkableHalfWidth)));
+                                    grid_center_x + bridge_half_width)));
       int const min_z =
           std::max(0, static_cast<int>(std::floor(grid_center_z -
-                                                  kBridgeWalkableHalfWidth)));
+                                                  bridge_half_width)));
       int const max_z = std::min(
           m_height - 1, static_cast<int>(std::ceil(grid_center_z +
-                                                   kBridgeWalkableHalfWidth)));
+                                                   bridge_half_width)));
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -949,7 +949,7 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
           float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (dist_along_perp <= kBridgeWalkableHalfWidth) {
+          if (dist_along_perp <= bridge_half_width) {
             int const idx = indexAt(x, z);
 
             if (m_terrain_types[idx] == TerrainType::River) {
@@ -974,7 +974,6 @@ void TerrainHeightMap::precomputeBridgeData() {
   m_bridgeCenters.clear();
   m_bridgeCenters.resize(grid_size, QVector3D(0.0F, 0.0F, 0.0F));
 
-  constexpr float kBridgeWalkableHalfWidth = 0.45F;
   constexpr float kBridgeEntryMarginTiles = 1.0F;
   const float grid_half_width = m_width * 0.5F - 0.5F;
   const float grid_half_height = m_height * 0.5F - 0.5F;
@@ -988,6 +987,7 @@ void TerrainHeightMap::precomputeBridgeData() {
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    float const bridge_half_width = bridge.width * 0.5F;
 
     float const entry_margin = m_tile_size * kBridgeEntryMarginTiles;
     float const extended_length = length + (entry_margin * 2.0F);
@@ -1007,16 +1007,16 @@ void TerrainHeightMap::precomputeBridgeData() {
 
       int const min_x =
           std::max(0, static_cast<int>(std::floor(grid_center_x -
-                                                  kBridgeWalkableHalfWidth)));
+                                                  bridge_half_width)));
       int const max_x =
           std::min(m_width - 1, static_cast<int>(std::ceil(
-                                    grid_center_x + kBridgeWalkableHalfWidth)));
+                                    grid_center_x + bridge_half_width)));
       int const min_z =
           std::max(0, static_cast<int>(std::floor(grid_center_z -
-                                                  kBridgeWalkableHalfWidth)));
+                                                  bridge_half_width)));
       int const max_z = std::min(
           m_height - 1, static_cast<int>(std::ceil(grid_center_z +
-                                                   kBridgeWalkableHalfWidth)));
+                                                   bridge_half_width)));
 
       for (int z = min_z; z <= max_z; ++z) {
         for (int x = min_x; x <= max_x; ++x) {
@@ -1026,7 +1026,7 @@ void TerrainHeightMap::precomputeBridgeData() {
           float const dist_along_perp =
               std::abs(dx * perpendicular.x() + dz * perpendicular.z());
 
-          if (dist_along_perp <= kBridgeWalkableHalfWidth) {
+          if (dist_along_perp <= bridge_half_width) {
             int const idx = indexAt(x, z);
 
             m_onBridge[idx] = true;
@@ -1083,8 +1083,6 @@ void TerrainHeightMap::restoreFromData(
 auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
     -> std::optional<float> {
 
-  constexpr float kBridgeWalkableHalfWidth = 0.45F;
-
   for (const auto &bridge : m_bridges) {
     QVector3D dir = bridge.end - bridge.start;
     float const length = dir.length();
@@ -1094,6 +1092,7 @@ auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
 
     dir.normalize();
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
+    float const bridge_half_width = bridge.width * 0.5F;
 
     QVector3D const query_point(world_x, 0.0F, world_z);
     QVector3D const to_query = query_point - bridge.start;
@@ -1107,7 +1106,7 @@ auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
     float const perp_dist =
         std::abs(QVector3D::dotProduct(to_query, perpendicular));
 
-    if (perp_dist > kBridgeWalkableHalfWidth) {
+    if (perp_dist > bridge_half_width) {
       continue;
     }
 
