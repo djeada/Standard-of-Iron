@@ -1163,6 +1163,113 @@ Rectangle {
 
                         }
 
+                        Rectangle {
+                            property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                            property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
+                            property var unitInfo: productionPanel.getUnitProductionInfo("elephant")
+                            property bool isHovered: elephantMouseArea.containsMouse
+
+                            width: 110
+                            height: 80
+                            radius: 6
+                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            border.width: isHovered && isEnabled ? 4 : 2
+                            opacity: isEnabled ? 1 : 0.5
+                            scale: isHovered && isEnabled ? 1.1 : 1
+                            visible: unitGridContent.prod.nation_id === "carthage"
+
+                            Image {
+                                id: elephantRecruitIcon
+
+                                anchors.fill: parent
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                source: productionPanel.unitIconSource("elephant", unitGridContent.prod.nation_id)
+                                visible: source !== ""
+                                opacity: parent.isEnabled ? 1 : 0.35
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !elephantRecruitIcon.visible
+                                text: productionPanel.unitIconEmoji("elephant")
+                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                font.pointSize: 42
+                                opacity: parent.isEnabled ? 0.9 : 0.4
+                            }
+
+                            Rectangle {
+                                id: elephantCostBadge
+
+                                width: elephantCostText.implicitWidth + 12
+                                height: elephantCostText.implicitHeight + 6
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                anchors.bottom: parent.bottom
+                                anchors.bottomMargin: 6
+                                radius: 8
+                                color: parent.isEnabled ? "#000000b3" : "#00000066"
+                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                border.width: 1
+
+                                Text {
+                                    id: elephantCostText
+
+                                    anchors.centerIn: parent
+                                    text: parent.parent.unitInfo.cost || 250
+                                    color: elephantCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    font.pointSize: 16
+                                    font.bold: true
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: elephantMouseArea
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    if (parent.isEnabled)
+                                        productionPanel.recruitUnit("elephant");
+
+                                }
+                                cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                ToolTip.visible: containsMouse
+                                ToolTip.text: parent.isEnabled ? qsTr("Recruit War Elephant\nCost: %1 villagers\nBuild time: %2s\nCarthage exclusive").arg(parent.unitInfo.cost || 250).arg((parent.unitInfo.build_time || 20).toFixed(0)) : (parent.queueTotal >= 5 ? qsTr("Queue is full (5/5)") : (unitGridContent.prod.produced_count >= unitGridContent.prod.max_units ? qsTr("Unit cap reached") : qsTr("Cannot recruit")))
+                                ToolTip.delay: 300
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                color: "#ffffff"
+                                opacity: elephantMouseArea.pressed ? 0.2 : 0
+                                radius: parent.radius
+                            }
+
+                            Behavior on color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on border.color {
+                                ColorAnimation {
+                                    duration: 150
+                                }
+
+                            }
+
+                            Behavior on scale {
+                                NumberAnimation {
+                                    duration: 100
+                                }
+
+                            }
+
+                        }
+
                     }
 
                 }

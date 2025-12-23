@@ -4,8 +4,10 @@
 #include "barracks_renderer.h"
 #include "catapult_renderer.h"
 #include "defense_tower_renderer.h"
+#include "elephant_renderer.h"
 #include "home_renderer.h"
 #include "nations/carthage/archer_renderer.h"
+#include "nations/carthage/elephant_renderer.h"
 #include "nations/carthage/ballista_renderer.h"
 #include "nations/carthage/builder_renderer.h"
 #include "nations/carthage/catapult_renderer.h"
@@ -69,6 +71,8 @@ void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
   Carthage::register_builder_renderer(registry);
 
   register_catapult_renderer(registry);
+
+  register_elephant_renderer(registry);
 
   register_ballista_renderer(registry);
 
