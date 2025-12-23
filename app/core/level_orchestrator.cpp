@@ -15,6 +15,7 @@
 #include "minimap_manager.h"
 #include "render/gl/camera.h"
 #include "render/scene_renderer.h"
+#include "utils/resource_utils.h"
 #include <QCoreApplication>
 #include <QDebug>
 
@@ -161,7 +162,10 @@ auto LevelOrchestrator::load_skirmish(
 
   Game::Map::MapDefinition map_def;
   QString map_error;
-  if (Game::Map::MapLoader::loadFromJsonFile(map_path, map_def, &map_error)) {
+  const QString resolved_map_path =
+      Utils::Resources::resolveResourcePath(map_path);
+  if (Game::Map::MapLoader::loadFromJsonFile(resolved_map_path, map_def,
+                                             &map_error)) {
     if (minimap_manager) {
       minimap_manager->generate_for_map(map_def);
     }
