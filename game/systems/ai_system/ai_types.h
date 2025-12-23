@@ -59,6 +59,13 @@ struct ProductionSnapshot {
   int queue_size = 0;
 };
 
+struct BuilderProductionSnapshot {
+  bool has_component = false;
+  bool has_construction_site = false;
+  bool in_progress = false;
+  bool at_construction_site = false;
+};
+
 struct EntitySnapshot {
   Engine::Core::EntityID id = 0;
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
@@ -73,6 +80,7 @@ struct EntitySnapshot {
 
   MovementSnapshot movement;
   ProductionSnapshot production;
+  BuilderProductionSnapshot builder_production;
 };
 
 struct ContactSnapshot {
