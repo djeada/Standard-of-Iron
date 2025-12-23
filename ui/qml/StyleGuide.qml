@@ -134,6 +134,7 @@ QtObject {
         "builder": "🔨",
         "catapult": "🛞",
         "ballista": "🎯",
+        "elephant": "🐘",
         "defense_tower": "🏰",
         "wall": "🧱",
         "home": "🏠",
@@ -189,6 +190,11 @@ QtObject {
             "default": root.iconPath("ballista_rome.png"),
             "roman_republic": root.iconPath("ballista_rome.png"),
             "carthage": root.iconPath("ballista_cartaghe.png")
+        }),
+        "elephant": ({
+            "default": root.iconPath("elephant_cartaghe.png"),
+            "roman_republic": root.iconPath("elephant_cartaghe.png"),
+            "carthage": root.iconPath("elephant_cartaghe.png")
         }),
         "defense_tower": ({
             "default": root.iconPath("defense_tower_rome.png"),
