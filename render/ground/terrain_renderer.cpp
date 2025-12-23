@@ -890,14 +890,16 @@ auto TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
     return grass * (1.0F - rock_blend) + rock * rock_blend;
   }
   case Game::Map::TerrainType::Forest: {
-    // Forests get a darker, more saturated green color
+
     float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
     QVector3D const base = m_biome_settings.grass_primary * (1.0F - moisture) +
                            m_biome_settings.grass_secondary * moisture;
     float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
-    QVector3D const with_dry = base * (1.0F - dry_blend) + m_biome_settings.grass_dry * dry_blend;
-    // Darken and add more green for forest
-    return QVector3D(with_dry.x() * 0.7F, with_dry.y() * 0.9F, with_dry.z() * 0.6F);
+    QVector3D const with_dry =
+        base * (1.0F - dry_blend) + m_biome_settings.grass_dry * dry_blend;
+
+    return QVector3D(with_dry.x() * 0.7F, with_dry.y() * 0.9F,
+                     with_dry.z() * 0.6F);
   }
   case Game::Map::TerrainType::Flat:
   default: {
