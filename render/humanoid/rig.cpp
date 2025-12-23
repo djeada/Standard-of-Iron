@@ -22,6 +22,7 @@
 #include "../palette.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
+#include "../visibility_budget.h"
 #include "formation_calculator.h"
 #include "humanoid_math.h"
 #include "pose_controller.h"
@@ -1500,6 +1501,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         ++s_render_stats.soldiers_skipped_lod;
         continue;
       }
+
+      soldier_lod =
+          Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
+              soldier_lod);
     }
 
     ++s_render_stats.soldiers_rendered;
