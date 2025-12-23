@@ -1042,6 +1042,12 @@ void GameEngine::update_loading_overlay() {
     }
     m_finalize_progress_after_overlay = false;
     emit is_loading_changed();
+    
+    // Emit campaign_mission_changed after loading completes to trigger objectives display
+    if (m_show_objectives_after_loading) {
+      m_show_objectives_after_loading = false;
+      emit campaign_mission_changed();
+    }
   }
 }
 
@@ -2049,6 +2055,10 @@ void GameEngine::finalize_skirmish_load() {
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
+  
+  // Set flag to show objectives after loading if this is a campaign mission
+  m_show_objectives_after_loading = is_campaign_mission();
+  
   emit is_loading_changed();
 
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
@@ -2068,7 +2078,6 @@ void GameEngine::finalize_skirmish_load() {
 
   emit owner_info_changed();
   emit spectator_mode_changed();
-  emit campaign_mission_changed();
 }
 
 void GameEngine::open_settings() {
