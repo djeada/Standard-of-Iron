@@ -1043,7 +1043,7 @@ void GameEngine::update_loading_overlay() {
     m_finalize_progress_after_overlay = false;
     emit is_loading_changed();
     
-    // Emit campaign_mission_changed after loading completes to trigger objectives display
+    // Emit campaign_mission_changed now that loading is complete and QML !game.is_loading check will pass
     if (m_show_objectives_after_loading) {
       m_show_objectives_after_loading = false;
       emit campaign_mission_changed();
@@ -2057,7 +2057,7 @@ void GameEngine::finalize_skirmish_load() {
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
   
-  // Set flag to show objectives after loading if this is a campaign mission
+  // Set flag to show objectives after loading completes, since QML checks !game.is_loading
   m_show_objectives_after_loading = is_campaign_mission();
   
   emit is_loading_changed();
