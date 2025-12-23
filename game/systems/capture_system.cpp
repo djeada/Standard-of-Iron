@@ -101,6 +101,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
   } else if (Game::Core::isNeutralOwner(new_owner_id) && (prod != nullptr)) {
     barrack->remove_component<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
+    prod->produced_count = 0;
     const auto profile = TroopProfileService::instance().get_profile(
         unit->nation_id, prod->product_type);
     prod->build_time = profile.production.build_time;
