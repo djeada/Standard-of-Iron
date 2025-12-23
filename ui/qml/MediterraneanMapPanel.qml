@@ -478,7 +478,7 @@ Rectangle {
         model: root.selected_mission ? 1 : 0
 
         delegate: Item {
-            property var region_info: parent.mission_region_map[root.active_region_id]
+            property var region_info: parent.mission_region_map[root.active_region_id] || null
             property var marker_uv: region_info ? region_info.uv : null
             property int _refresh: root.label_refresh
             property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)

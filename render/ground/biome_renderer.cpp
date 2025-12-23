@@ -49,6 +49,7 @@ inline auto section_for(Game::Map::TerrainType type) -> int {
     return 2;
   case Game::Map::TerrainType::Hill:
     return 1;
+  case Game::Map::TerrainType::Forest:
   case Game::Map::TerrainType::Flat:
   default:
     return 0;

@@ -10,7 +10,7 @@
 
 namespace Game::Map {
 
-enum class TerrainType { Flat, Hill, Mountain, River };
+enum class TerrainType { Flat, Hill, Mountain, River, Forest };
 
 enum class GroundType {
   ForestMud,
@@ -85,6 +85,8 @@ inline auto terrainTypeToQString(TerrainType type) -> QString {
     return QStringLiteral("mountain");
   case TerrainType::River:
     return QStringLiteral("river");
+  case TerrainType::Forest:
+    return QStringLiteral("forest");
   }
   return QStringLiteral("flat");
 }
@@ -110,6 +112,10 @@ inline auto tryParseTerrainType(const QString &value,
   }
   if (lowered == QStringLiteral("river")) {
     out = TerrainType::River;
+    return true;
+  }
+  if (lowered == QStringLiteral("forest")) {
+    out = TerrainType::Forest;
     return true;
   }
   return false;
