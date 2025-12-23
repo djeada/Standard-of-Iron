@@ -329,10 +329,8 @@ auto FogOfWarMask::generate_mask(int target_width,
       const uint8_t final_alpha =
           static_cast<uint8_t>(std::clamp(alpha, 0.0F, 255.0F));
 
-      scanline[x] = (static_cast<uint32_t>(final_alpha) << 24) |
-                    (static_cast<uint32_t>(m_config.fog_color_b) << 16) |
-                    (static_cast<uint32_t>(m_config.fog_color_g) << 8) |
-                    static_cast<uint32_t>(m_config.fog_color_r);
+      scanline[x] = qRgba(m_config.fog_color_r, m_config.fog_color_g,
+                          m_config.fog_color_b, final_alpha);
     }
   }
 
