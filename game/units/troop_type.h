@@ -19,6 +19,7 @@ enum class TroopType {
   Healer,
   Catapult,
   Ballista,
+  Elephant,
   Builder
 };
 
@@ -42,6 +43,8 @@ inline auto troop_typeToQString(TroopType type) -> QString {
     return QStringLiteral("catapult");
   case TroopType::Ballista:
     return QStringLiteral("ballista");
+  case TroopType::Elephant:
+    return QStringLiteral("elephant");
   case TroopType::Builder:
     return QStringLiteral("builder");
   }
@@ -92,6 +95,10 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
   }
   if (lowered == QStringLiteral("ballista")) {
     out = TroopType::Ballista;
+    return true;
+  }
+  if (lowered == QStringLiteral("elephant")) {
+    out = TroopType::Elephant;
     return true;
   }
   if (lowered == QStringLiteral("builder")) {
