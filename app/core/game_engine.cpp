@@ -1657,6 +1657,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     m_loading_overlay_active = false;
     m_loading_overlay_wait_for_first_frame = false;
     m_finalize_progress_after_overlay = false;
+    m_show_objectives_after_loading = false;
     emit is_loading_changed();
     return;
   }
@@ -2117,6 +2118,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     m_loading_overlay_active = false;
     m_loading_overlay_wait_for_first_frame = false;
     m_finalize_progress_after_overlay = false;
+    m_show_objectives_after_loading = false;
     emit is_loading_changed();
     return false;
   }
