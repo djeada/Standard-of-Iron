@@ -141,7 +141,7 @@ auto TacticalUtils::select_focus_fire_target(
     // Give high priority to hold-mode units - they must be engaged first
     // to prevent bypassing them
     if (enemy->is_in_hold_mode) {
-      score += 15.0F;
+      score += Combat::Constants::kHoldModePriorityBonus;
     }
 
     if (score > best_target.score) {
@@ -209,7 +209,7 @@ auto TacticalUtils::select_focus_fire_target(
       // If we found a blocking enemy, target them instead
       if (blocking_enemy != nullptr) {
         best_target.target_id = blocking_enemy->id;
-        best_target.score += 20.0F; // High priority for blocker
+        best_target.score += Combat::Constants::kBlockingEnemyPriorityBonus;
         best_target.distance_to_group = blocking_dist;
         best_target.is_low_health =
             (blocking_enemy->max_health > 0 &&

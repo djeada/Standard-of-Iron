@@ -35,6 +35,10 @@ inline constexpr float kArrowTargetOffset = 0.5F;
 inline constexpr float kArrowSpeed = 14.0F;
 // Radius for hold mode blocking zone - how close a unit must be to the path
 inline constexpr float kHoldModeBlockingRadius = 2.0F;
+// Priority bonus for targeting hold-mode units blocking the path
+inline constexpr float kBlockingEnemyPriorityBonus = 20.0F;
+// Priority bonus for any unit in hold mode during targeting
+inline constexpr float kHoldModePriorityBonus = 15.0F;
 } // namespace Constants
 
 } // namespace Game::Systems::Combat

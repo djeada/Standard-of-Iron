@@ -171,7 +171,7 @@ auto find_nearest_enemy_from_list(
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
 
-  // First pass: find nearest enemy (original logic)
+  // First pass: find nearest enemy using distance-based scoring
   for (auto *target : all_units) {
     if (target == unit) {
       continue;
@@ -322,7 +322,7 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
 
-  // First pass: find nearest enemy
+  // First pass: find nearest enemy using distance-based scoring
   for (Engine::Core::EntityID target_id : nearby_ids) {
     if (target_id == unit->get_id()) {
       continue;
