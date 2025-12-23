@@ -142,70 +142,70 @@ constexpr int kMaterialElephantTusk = 10;        // Smooth ivory
 namespace ElephantDimensionRange {
 
 // Issue #: Flatten and lengthen the torso
-constexpr float kBodyLengthMin = 2.60F;
-constexpr float kBodyLengthMax = 3.00F;
-constexpr float kBodyWidthMin = 0.85F;
-constexpr float kBodyWidthMax = 1.00F;
-constexpr float kBodyHeightMin = 1.00F;
-constexpr float kBodyHeightMax = 1.25F;
+constexpr float kBodyLengthMin = 1.30F;  // Was 2.60F (2x smaller)
+constexpr float kBodyLengthMax = 1.50F;  // Was 3.00F (2x smaller)
+constexpr float kBodyWidthMin = 0.425F;  // Was 0.85F (2x smaller)
+constexpr float kBodyWidthMax = 0.50F;   // Was 1.00F (2x smaller)
+constexpr float kBodyHeightMin = 0.50F;  // Was 1.00F (2x smaller)
+constexpr float kBodyHeightMax = 0.625F; // Was 1.25F (2x smaller)
 
 // Issue #: Carve a neck transition
-constexpr float kNeckLengthMin = 0.35F;
-constexpr float kNeckLengthMax = 0.50F;
-constexpr float kNeckWidthMin = 0.35F;
-constexpr float kNeckWidthMax = 0.45F;
+constexpr float kNeckLengthMin = 0.175F; // Was 0.35F (2x smaller)
+constexpr float kNeckLengthMax = 0.25F;  // Was 0.50F (2x smaller)
+constexpr float kNeckWidthMin = 0.175F;  // Was 0.35F (2x smaller)
+constexpr float kNeckWidthMax = 0.225F;  // Was 0.45F (2x smaller)
 
-constexpr float kHeadLengthMin = 0.50F;
-constexpr float kHeadLengthMax = 0.65F;
-constexpr float kHeadWidthMin = 0.55F;
-constexpr float kHeadWidthMax = 0.70F;
-constexpr float kHeadHeightMin = 0.50F;
-constexpr float kHeadHeightMax = 0.65F;
+constexpr float kHeadLengthMin = 0.25F;  // Was 0.50F (2x smaller)
+constexpr float kHeadLengthMax = 0.325F; // Was 0.65F (2x smaller)
+constexpr float kHeadWidthMin = 0.275F;  // Was 0.55F (2x smaller)
+constexpr float kHeadWidthMax = 0.35F;   // Was 0.70F (2x smaller)
+constexpr float kHeadHeightMin = 0.25F;  // Was 0.50F (2x smaller)
+constexpr float kHeadHeightMax = 0.325F; // Was 0.65F (2x smaller)
 
 // Issue #: Fix trunk proportions - thicker base, more taper
-constexpr float kTrunkLengthMin = 1.50F;
-constexpr float kTrunkLengthMax = 1.90F;
-constexpr float kTrunkBaseRadiusMin = 0.18F;
-constexpr float kTrunkBaseRadiusMax = 0.25F;
-constexpr float kTrunkTipRadiusMin = 0.03F;
-constexpr float kTrunkTipRadiusMax = 0.05F;
+constexpr float kTrunkLengthMin = 0.75F;      // Was 1.50F (2x smaller)
+constexpr float kTrunkLengthMax = 0.95F;      // Was 1.90F (2x smaller)
+constexpr float kTrunkBaseRadiusMin = 0.09F;  // Was 0.18F (2x smaller)
+constexpr float kTrunkBaseRadiusMax = 0.125F; // Was 0.25F (2x smaller)
+constexpr float kTrunkTipRadiusMin = 0.015F;  // Was 0.03F (2x smaller)
+constexpr float kTrunkTipRadiusMax = 0.025F;  // Was 0.05F (2x smaller)
 
 // Issue #: Make ears bigger and thinner
-constexpr float kEarWidthMin = 0.75F;
-constexpr float kEarWidthMax = 1.00F;
-constexpr float kEarHeightMin = 0.80F;
-constexpr float kEarHeightMax = 1.05F;
-constexpr float kEarThicknessMin = 0.02F;
-constexpr float kEarThicknessMax = 0.035F;
+constexpr float kEarWidthMin = 0.375F;    // Was 0.75F (2x smaller)
+constexpr float kEarWidthMax = 0.50F;     // Was 1.00F (2x smaller)
+constexpr float kEarHeightMin = 0.40F;    // Was 0.80F (2x smaller)
+constexpr float kEarHeightMax = 0.525F;   // Was 1.05F (2x smaller)
+constexpr float kEarThicknessMin = 0.01F; // Was 0.02F (2x smaller)
+constexpr float kEarThicknessMax = 0.0175F; // Was 0.035F (2x smaller)
 
 // Issue #: Rebuild legs with joints - add knee/ankle dimensions
-constexpr float kLegLengthMin = 1.20F;
-constexpr float kLegLengthMax = 1.50F;
-constexpr float kLegRadiusMin = 0.16F;
-constexpr float kLegRadiusMax = 0.22F;
+constexpr float kLegLengthMin = 0.60F; // Was 1.20F (2x smaller)
+constexpr float kLegLengthMax = 0.75F; // Was 1.50F (2x smaller)
+constexpr float kLegRadiusMin = 0.08F; // Was 0.16F (2x smaller)
+constexpr float kLegRadiusMax = 0.11F; // Was 0.22F (2x smaller)
 // Issue #: Replace cuff-feet with real feet - wider foot base
-constexpr float kFootRadiusMin = 0.26F;
-constexpr float kFootRadiusMax = 0.34F;
+constexpr float kFootRadiusMin = 0.13F; // Was 0.26F (2x smaller)
+constexpr float kFootRadiusMax = 0.17F; // Was 0.34F (2x smaller)
 
-constexpr float kTailLengthMin = 0.60F;
-constexpr float kTailLengthMax = 0.85F;
+constexpr float kTailLengthMin = 0.30F;  // Was 0.60F (2x smaller)
+constexpr float kTailLengthMax = 0.425F; // Was 0.85F (2x smaller)
 
-constexpr float kTuskLengthMin = 0.50F;
-constexpr float kTuskLengthMax = 0.80F;
-constexpr float kTuskRadiusMin = 0.04F;
-constexpr float kTuskRadiusMax = 0.07F;
+constexpr float kTuskLengthMin = 0.25F;  // Was 0.50F (2x smaller)
+constexpr float kTuskLengthMax = 0.40F;  // Was 0.80F (2x smaller)
+constexpr float kTuskRadiusMin = 0.02F;  // Was 0.04F (2x smaller)
+constexpr float kTuskRadiusMax = 0.035F; // Was 0.07F (2x smaller)
 
-constexpr float kHowdahWidthMin = 0.75F;
-constexpr float kHowdahWidthMax = 0.95F;
-constexpr float kHowdahLengthMin = 0.90F;
-constexpr float kHowdahLengthMax = 1.20F;
-constexpr float kHowdahHeightMin = 0.45F;
-constexpr float kHowdahHeightMax = 0.60F;
+constexpr float kHowdahWidthMin = 0.375F;  // Was 0.75F (2x smaller)
+constexpr float kHowdahWidthMax = 0.475F;  // Was 0.95F (2x smaller)
+constexpr float kHowdahLengthMin = 0.45F;  // Was 0.90F (2x smaller)
+constexpr float kHowdahLengthMax = 0.60F;  // Was 1.20F (2x smaller)
+constexpr float kHowdahHeightMin = 0.225F; // Was 0.45F (2x smaller)
+constexpr float kHowdahHeightMax = 0.30F;  // Was 0.60F (2x smaller)
 
-constexpr float kIdleBobAmplitudeMin = 0.008F;
-constexpr float kIdleBobAmplitudeMax = 0.015F;
-constexpr float kMoveBobAmplitudeMin = 0.035F;
-constexpr float kMoveBobAmplitudeMax = 0.055F;
+constexpr float kIdleBobAmplitudeMin = 0.004F;  // Was 0.008F (2x smaller)
+constexpr float kIdleBobAmplitudeMax = 0.0075F; // Was 0.015F (2x smaller)
+constexpr float kMoveBobAmplitudeMin = 0.0175F; // Was 0.035F (2x smaller)
+constexpr float kMoveBobAmplitudeMax = 0.0275F; // Was 0.055F (2x smaller)
 
 constexpr float kBarrelHeightScale = 0.55F;
 
@@ -400,10 +400,6 @@ auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
   using namespace ElephantGaitConstants;
   ElephantProfile profile;
   profile.dims = make_elephant_dimensions(seed);
-  
-  // Scale elephant to be 2x smaller (0.5x scale)
-  scale_elephant_dimensions(profile.dims, 0.5F);
-  
   profile.variant = make_elephant_variant(seed, fabric_base, metal_base);
 
   profile.gait.cycle_time =
