@@ -122,15 +122,14 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
         unit_ids.push_back(unit->id);
       }
 
-      // Use nation-specific formation for scouting movement
       FormationType formation_type =
           get_formation_type_for_player(context.player_id);
 
       QVector3D const scout_center(scout_x, 0.0F, scout_z);
       auto formation_positions =
           FormationSystem::instance().get_formation_positions(
-              formation_type, static_cast<int>(ready_units.size()), scout_center,
-              2.5F);
+              formation_type, static_cast<int>(ready_units.size()),
+              scout_center, 2.5F);
 
       std::vector<float> target_x;
       std::vector<float> target_y;
@@ -228,7 +227,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
             unit_ids.push_back(unit->id);
           }
 
-          // Use nation-specific formation when advancing to attack
           FormationType formation_type =
               get_formation_type_for_player(context.player_id);
 
@@ -309,7 +307,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     m_targetLockDuration = 0.0F;
   }
 
-  // Find the target's position from nearby_enemies
   const ContactSnapshot *target_snapshot = nullptr;
   for (const auto *enemy : nearby_enemies) {
     if (enemy->id == target_info.target_id) {
@@ -335,15 +332,15 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  // Use formation positions to spread units out when engaging nearby enemies
   FormationType formation_type =
       get_formation_type_for_player(context.player_id);
 
-  QVector3D const attack_center(target_snapshot->posX, 0.0F, target_snapshot->posZ);
+  QVector3D const attack_center(target_snapshot->posX, 0.0F,
+                                target_snapshot->posZ);
   auto formation_positions =
       FormationSystem::instance().get_formation_positions(
-          formation_type, static_cast<int>(claimed_units.size()),
-          attack_center, 2.5F);
+          formation_type, static_cast<int>(claimed_units.size()), attack_center,
+          2.5F);
 
   std::vector<float> target_x;
   std::vector<float> target_y;
@@ -367,8 +364,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   outCommands.push_back(std::move(move_command));
 
-  // Set attack target so units engage when in range, but don't chase
-  // This prevents units from moving and breaking formation
   AICommand attack_command;
   attack_command.type = AICommandType::AttackTarget;
   attack_command.units = std::move(claimed_units);
