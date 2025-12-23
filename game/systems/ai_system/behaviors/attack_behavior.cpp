@@ -309,6 +309,19 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     m_targetLockDuration = 0.0F;
   }
 
+  // Find the target's position from nearby_enemies
+  const ContactSnapshot *target_snapshot = nullptr;
+  for (const auto *enemy : nearby_enemies) {
+    if (enemy->id == target_info.target_id) {
+      target_snapshot = enemy;
+      break;
+    }
+  }
+
+  if (target_snapshot == nullptr) {
+    return;
+  }
+
   std::vector<Engine::Core::EntityID> unit_ids;
   unit_ids.reserve(ready_units.size());
   for (const auto *unit : ready_units) {
@@ -322,18 +335,47 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  AICommand command;
-  command.type = AICommandType::AttackTarget;
-  command.units = std::move(claimed_units);
-  command.target_id = target_info.target_id;
+  // Use formation positions to spread units out when engaging nearby enemies
+  FormationType formation_type =
+      get_formation_type_for_player(context.player_id);
 
-  bool const should_chase_aggressive =
-      (context.state == AIState::Attacking || context.barracks_under_threat) &&
-      assessment.force_ratio >= 0.8F;
+  QVector3D const attack_center(target_snapshot->posX, 0.0F, target_snapshot->posZ);
+  auto formation_positions =
+      FormationSystem::instance().get_formation_positions(
+          formation_type, static_cast<int>(claimed_units.size()),
+          attack_center, 2.5F);
 
-  command.should_chase = should_chase_aggressive;
+  std::vector<float> target_x;
+  std::vector<float> target_y;
+  std::vector<float> target_z;
+  target_x.reserve(claimed_units.size());
+  target_y.reserve(claimed_units.size());
+  target_z.reserve(claimed_units.size());
 
-  outCommands.push_back(std::move(command));
+  for (size_t i = 0; i < claimed_units.size(); ++i) {
+    target_x.push_back(formation_positions[i].x());
+    target_y.push_back(formation_positions[i].y());
+    target_z.push_back(formation_positions[i].z());
+  }
+
+  AICommand move_command;
+  move_command.type = AICommandType::MoveUnits;
+  move_command.units = claimed_units;
+  move_command.move_target_x = std::move(target_x);
+  move_command.move_target_y = std::move(target_y);
+  move_command.move_target_z = std::move(target_z);
+
+  outCommands.push_back(std::move(move_command));
+
+  // Set attack target so units engage when in range, but don't chase
+  // This prevents units from moving and breaking formation
+  AICommand attack_command;
+  attack_command.type = AICommandType::AttackTarget;
+  attack_command.units = std::move(claimed_units);
+  attack_command.target_id = target_info.target_id;
+  attack_command.should_chase = false;
+
+  outCommands.push_back(std::move(attack_command));
 }
 auto AttackBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {
