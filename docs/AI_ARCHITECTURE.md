@@ -2,7 +2,7 @@
 
 ## Overview
 
-The RTS AI system is designed for scalability, performance, and strategic behavior in large-scale battles. It uses a multi-threaded, behavior-based architecture with centralized decision-making.
+The RTS AI system is designed for scalability, performance, and strategic behavior in large-scale battles. It uses a multi-threaded, behavior-based architecture with centralized decision-making and **configurable AI strategies** that allow different AI personalities and behaviors.
 
 ## Core Design Principles
 
@@ -11,7 +11,8 @@ The RTS AI system is designed for scalability, performance, and strategic behavi
 3. **Asynchronous Processing**: AI reasoning runs on background threads to avoid blocking the main game loop
 4. **Behavior-Based Actions**: Modular behaviors with priority system allow concurrent execution
 5. **Deadlock Prevention**: Built-in timeout and recovery mechanisms prevent stuck states
-6. **Snake Case Naming**: All code follows snake_case conventions for consistency
+6. **Strategy-Based Behavior**: Configurable AI strategies modify decision-making parameters
+7. **Snake Case Naming**: All code follows snake_case conventions for consistency
 
 ## Architecture Components
 
@@ -57,6 +58,36 @@ Priority-based modular behaviors:
 - **GatherBehavior** (Low, Exclusive): Unit consolidation
 - **RetreatBehavior** (Critical, Exclusive): Tactical withdrawal
 
+### 5. AI Strategies
+
+**Location**: `game/systems/ai_system/ai_strategy.h`
+
+AI strategies allow different behaviors and personalities for AI opponents:
+
+**Available Strategies**:
+- **Balanced** (Default): Standard balanced approach for skirmish mode
+- **Aggressive**: Early aggression, attacks with fewer units, lower retreat threshold
+- **Defensive**: Focuses on base defense, builds larger armies before attacking
+- **Expansionist**: Prioritizes capturing neutral buildings
+- **Economic**: Focuses on production, builds massive armies before engaging
+- **Harasser**: Hit-and-run tactics with small groups, retreats often
+- **Rusher**: Ultra-aggressive early game with minimal units
+
+**Strategy Configuration**:
+Each strategy has modifiers that affect AI behavior:
+- `aggression_modifier`: Affects attack timing and frequency
+- `defense_modifier`: Affects defensive stance and retreat thresholds
+- `expansion_priority`: Priority for capturing neutral buildings
+- `production_rate_modifier`: Speed of unit production
+- `min_attack_force`: Minimum force required before attacking
+- `retreat_threshold`: Health percentage when AI retreats
+
+**Personality System**:
+Strategies are further customized by personality values (0.0-1.0):
+- `aggression`: Additional aggression factor
+- `defense`: Additional defensive stance
+- `harassment`: Enables harassing behavior at range
+
 ## Performance Characteristics
 
 - **Update Frequency**: 300ms default (3.33 Hz per AI)
@@ -73,10 +104,51 @@ Priority-based modular behaviors:
 
 ## Configuration
 
+### Update Interval
+
 Update interval can be adjusted:
 ```cpp
 ai_system.set_update_interval(0.5f); // Reduce to 2 Hz for performance
 ```
+
+### AI Strategy Configuration
+
+Set AI strategy for a specific player:
+```cpp
+// Set aggressive strategy with high aggression personality
+ai_system.set_ai_strategy(player_id, AIStrategy::Aggressive, 
+                         0.9f, // aggression
+                         0.3f, // defense
+                         0.2f); // harassment
+
+// Set defensive strategy
+ai_system.set_ai_strategy(player_id, AIStrategy::Defensive,
+                         0.4f, 0.9f, 0.2f);
+```
+
+### Mission Configuration
+
+In mission JSON files, specify strategy for AI opponents:
+```json
+{
+  "ai_setups": [
+    {
+      "id": "aggressive_enemy",
+      "nation": "roman_republic",
+      "strategy": "aggressive",
+      "personality": {
+        "aggression": 0.9,
+        "defense": 0.3,
+        "harassment": 0.2
+      }
+    }
+  ]
+}
+```
+
+**Strategy values**: `"balanced"`, `"aggressive"`, `"defensive"`, `"expansionist"`, `"economic"`, `"harasser"`, `"rusher"`
+
+**Note**: Skirmish mode uses the default `"balanced"` strategy if no strategy is specified.
 
 ## Debugging
 
@@ -100,5 +172,37 @@ Potential improvements:
 3. Active scouting behavior
 4. Economic management
 5. Team coordination
+6. Dynamic strategy switching based on game state
+7. More granular personality controls
+
+## Implementation Details
+
+### Strategy Impact on State Machine
+
+Strategies modify the thresholds used in the state machine transitions:
+
+```cpp
+// Example: Aggressive AI attacks with fewer units
+int MIN_UNITS_FOR_ATTACK = static_cast<int>(4.0F * strategy.min_attack_force);
+// With aggressive strategy (min_attack_force = 0.6), needs only ~2 units
+// With defensive strategy (min_attack_force = 1.5), needs ~6 units
+
+// Example: Retreat threshold
+if (ctx.average_health < ctx.strategy_config.retreat_threshold) {
+  ctx.state = AIState::Retreating;
+}
+// Aggressive: retreats at 15% health
+// Defensive: retreats at 40% health
+```
+
+### Production Rate Modifier
+
+Economic strategies produce units faster:
+```cpp
+float production_interval = 1.5F / strategy_config.production_rate_modifier;
+// Economic strategy (1.5x): produces every 1.0s
+// Balanced (1.0x): produces every 1.5s
+// Rusher (0.9x): produces every 1.67s
+```
 
 See the full implementation in `game/systems/ai_system/` directory.

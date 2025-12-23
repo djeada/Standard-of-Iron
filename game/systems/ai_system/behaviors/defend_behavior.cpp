@@ -61,6 +61,11 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
+    // Don't use builders for defense - they should be building
+    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
     if (isEntityEngaged(entity, snapshot.visible_enemies)) {
       engaged_defenders.push_back(&entity);
     } else {

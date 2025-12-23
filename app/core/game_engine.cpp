@@ -83,6 +83,7 @@
 #include "game/map/visibility_service.h"
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/ai_system/ai_strategy.h"
 #include "game/systems/arrow_system.h"
 #include "game/systems/ballista_attack_system.h"
 #include "game/systems/building_collision_registry.h"
@@ -1989,6 +1990,23 @@ void GameEngine::apply_mission_setup() {
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     ai_system->reinitialize();
+    
+    // Apply AI strategies from mission setup
+    int ai_id = 2;
+    for (const auto &ai_setup : mission.ai_setups) {
+      Game::Systems::AI::AIStrategy strategy = Game::Systems::AI::AIStrategy::Balanced;
+      
+      if (ai_setup.strategy.has_value()) {
+        strategy = Game::Systems::AI::AIStrategyFactory::parse_strategy(
+            ai_setup.strategy.value());
+      }
+      
+      ai_system->set_ai_strategy(ai_id, strategy,
+                                ai_setup.personality.aggression,
+                                ai_setup.personality.defense,
+                                ai_setup.personality.harassment);
+      ai_id++;
+    }
   }
 
   int prev_selected_player = m_selected_player_id;
