@@ -19,6 +19,7 @@ enum class SpawnType : std::uint8_t {
   Healer,
   Catapult,
   Ballista,
+  Elephant,
   Builder,
   Barracks,
   DefenseTower,
@@ -45,6 +46,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("catapult");
   case SpawnType::Ballista:
     return QStringLiteral("ballista");
+  case SpawnType::Elephant:
+    return QStringLiteral("elephant");
   case SpawnType::Builder:
     return QStringLiteral("builder");
   case SpawnType::Barracks:
@@ -100,6 +103,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Ballista;
     return true;
   }
+  if (lowered == QStringLiteral("elephant")) {
+    out = SpawnType::Elephant;
+    return true;
+  }
   if (lowered == QStringLiteral("builder")) {
     out = SpawnType::Builder;
     return true;
@@ -151,6 +158,9 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   }
   if (str == "ballista") {
     return SpawnType::Ballista;
+  }
+  if (str == "elephant") {
+    return SpawnType::Elephant;
   }
   if (str == "builder") {
     return SpawnType::Builder;
@@ -241,6 +251,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Catapult;
   case SpawnType::Ballista:
     return TroopType::Ballista;
+  case SpawnType::Elephant:
+    return TroopType::Elephant;
   case SpawnType::Builder:
     return TroopType::Builder;
   case SpawnType::Barracks:
@@ -273,6 +285,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Catapult;
   case TroopType::Ballista:
     return SpawnType::Ballista;
+  case TroopType::Elephant:
+    return SpawnType::Elephant;
   case TroopType::Builder:
     return SpawnType::Builder;
   }
