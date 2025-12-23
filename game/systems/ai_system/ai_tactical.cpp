@@ -1,5 +1,7 @@
 #include "ai_tactical.h"
 #include "../../units/troop_type.h"
+#include "../combat_system/combat_types.h"
+#include "../combat_system/combat_utils.h"
 #include "../nation_registry.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
@@ -166,7 +168,6 @@ auto TacticalUtils::select_focus_fire_target(
     if (selected_enemy != nullptr && !selected_enemy->is_in_hold_mode) {
       // Check if any hold-mode enemy is blocking the path to the selected
       // target
-      constexpr float kBlockingRadius = 2.0F;
       const ContactSnapshot *blocking_enemy = nullptr;
       float blocking_dist = best_target.distance_to_group;
 
@@ -192,36 +193,11 @@ auto TacticalUtils::select_focus_fire_target(
           continue;
         }
 
-        // Check if blocker is on the path to target
-        float const to_target_x = selected_enemy->posX - group_center_x;
-        float const to_target_z = selected_enemy->posZ - group_center_z;
-        float const dist_to_target_sq =
-            to_target_x * to_target_x + to_target_z * to_target_z;
-
-        if (dist_to_target_sq < 0.01F) {
-          continue;
-        }
-
-        float const dist_to_target = std::sqrt(dist_to_target_sq);
-        float const dir_x = to_target_x / dist_to_target;
-        float const dir_z = to_target_z / dist_to_target;
-
-        float const to_blocker_x = potential_blocker->posX - group_center_x;
-        float const to_blocker_z = potential_blocker->posZ - group_center_z;
-
-        // Project blocker onto path direction
-        float const projection = to_blocker_x * dir_x + to_blocker_z * dir_z;
-        if (projection <= 0.0F) {
-          continue; // Blocker is behind the group
-        }
-
-        float const proj_x = projection * dir_x;
-        float const proj_z = projection * dir_z;
-        float const perp_x = to_blocker_x - proj_x;
-        float const perp_z = to_blocker_z - proj_z;
-        float const perp_dist_sq = perp_x * perp_x + perp_z * perp_z;
-
-        if (perp_dist_sq <= kBlockingRadius * kBlockingRadius) {
+        // Use shared is_blocking_path function to check if blocker is on path
+        if (Combat::is_blocking_path(
+                group_center_x, group_center_z, selected_enemy->posX,
+                selected_enemy->posZ, potential_blocker->posX,
+                potential_blocker->posZ)) {
           // This hold-mode enemy is blocking the path
           if (blocker_dist < blocking_dist) {
             blocking_dist = blocker_dist;

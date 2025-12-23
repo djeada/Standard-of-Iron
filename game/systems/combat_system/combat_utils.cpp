@@ -4,6 +4,7 @@
 #include "../../units/spawn_type.h"
 #include "../owner_registry.h"
 #include "../spatial_grid.h"
+#include "combat_types.h"
 
 #include <cmath>
 
@@ -11,9 +12,7 @@ namespace Game::Systems::Combat {
 
 namespace {
 thread_local SpatialGrid t_unit_grid(15.0F);
-
-// Radius for hold mode blocking zone - how close a unit must be to the path
-constexpr float kHoldModeBlockingRadius = 2.0F;
+}
 
 // Check if a hold-mode unit is blocking the path from attacker to target
 // Returns true if the blocker is between attacker and target and close to
@@ -24,7 +23,8 @@ auto is_blocking_path(float attacker_x, float attacker_z, float target_x,
   // Vector from attacker to target
   float const to_target_x = target_x - attacker_x;
   float const to_target_z = target_z - attacker_z;
-  float const dist_to_target_sq = to_target_x * to_target_x + to_target_z * to_target_z;
+  float const dist_to_target_sq =
+      to_target_x * to_target_x + to_target_z * to_target_z;
 
   if (dist_to_target_sq < 0.01F) {
     return false; // Target is at attacker position
@@ -33,7 +33,8 @@ auto is_blocking_path(float attacker_x, float attacker_z, float target_x,
   // Vector from attacker to blocker
   float const to_blocker_x = blocker_x - attacker_x;
   float const to_blocker_z = blocker_z - attacker_z;
-  float const dist_to_blocker_sq = to_blocker_x * to_blocker_x + to_blocker_z * to_blocker_z;
+  float const dist_to_blocker_sq =
+      to_blocker_x * to_blocker_x + to_blocker_z * to_blocker_z;
 
   // Blocker must be closer than target
   if (dist_to_blocker_sq >= dist_to_target_sq) {
@@ -61,8 +62,8 @@ auto is_blocking_path(float attacker_x, float attacker_z, float target_x,
   float const perp_dist_sq = perp_x * perp_x + perp_z * perp_z;
 
   // Check if blocker is within blocking radius of the path
-  return perp_dist_sq <= kHoldModeBlockingRadius * kHoldModeBlockingRadius;
-}
+  return perp_dist_sq <=
+         Constants::kHoldModeBlockingRadius * Constants::kHoldModeBlockingRadius;
 }
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {

@@ -29,4 +29,11 @@ auto find_nearest_enemy_from_list(
 
 auto should_auto_engage_melee(Engine::Core::Entity *unit) -> bool;
 
+// Check if a unit at blocker position is blocking the path from attacker to
+// target Returns true if the blocker is between attacker and target and close
+// to the path
+auto is_blocking_path(float attacker_x, float attacker_z, float target_x,
+                      float target_z, float blocker_x,
+                      float blocker_z) -> bool;
+
 } // namespace Game::Systems::Combat
