@@ -327,7 +327,7 @@ ApplicationWindow {
         }
         onCloseRequested: function() {
             objectivesPanel.visible = false;
-            if (typeof game !== 'undefined' && game.is_campaign_mission && mainWindow.gameStarted) {
+            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.gameStarted) {
                 mainWindow.gamePaused = false;
                 gameViewItem.setPaused(false);
                 gameViewItem.forceActiveFocus();
@@ -525,7 +525,7 @@ ApplicationWindow {
 
     Connections {
         function onCampaign_mission_changed() {
-            if (typeof game !== 'undefined' && game.is_campaign_mission && !game.is_loading) {
+            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && !game.is_loading) {
                 mainWindow.gamePaused = true;
                 gameViewItem.setPaused(true);
                 objectivesPanel.visible = true;
