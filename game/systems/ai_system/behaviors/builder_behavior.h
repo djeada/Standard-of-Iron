@@ -14,7 +14,7 @@ public:
                  const AIContext &context) const -> bool override;
 
   [[nodiscard]] auto get_priority() const -> BehaviorPriority override {
-    return BehaviorPriority::Normal;
+    return BehaviorPriority::High;
   }
 
   [[nodiscard]] auto can_run_concurrently() const -> bool override {

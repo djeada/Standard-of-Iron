@@ -16,6 +16,16 @@ struct Nation;
 
 namespace Game::Systems::AI {
 
+enum class AIStrategy {
+  Balanced,
+  Aggressive,
+  Defensive,
+  Expansionist,
+  Economic,
+  Harasser,
+  Rusher
+};
+
 enum class AIState {
   Idle,
   Gathering,
@@ -105,6 +115,18 @@ struct AISnapshot {
   float game_time = 0.0F;
 };
 
+struct AIStrategyConfig {
+  AIStrategy strategy = AIStrategy::Balanced;
+
+  float aggression_modifier = 1.0F;
+  float defense_modifier = 1.0F;
+  float expansion_priority = 1.0F;
+  float production_rate_modifier = 1.0F;
+  float min_attack_force = 1.0F;
+  float retreat_threshold = 0.25F;
+  float harassment_range = 0.0F;
+};
+
 struct AIContext {
   int player_id = 0;
   AIState state = AIState::Idle;
@@ -112,6 +134,8 @@ struct AIContext {
   float decision_timer = 0.0F;
 
   const Game::Systems::Nation *nation = nullptr;
+
+  AIStrategyConfig strategy_config;
 
   std::vector<Engine::Core::EntityID> military_units;
   std::vector<Engine::Core::EntityID> buildings;
