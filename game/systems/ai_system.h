@@ -32,11 +32,10 @@ public:
 
   void set_update_interval(float interval) { m_update_interval = interval; }
   float get_update_interval() const { return m_update_interval; }
-  
-  // Set AI strategy for a specific player
+
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
-                      float aggression = 0.5F, float defense = 0.5F,
-                      float harassment = 0.5F);
+                       float aggression = 0.5F, float defense = 0.5F,
+                       float harassment = 0.5F);
 
 private:
   struct AIInstance {

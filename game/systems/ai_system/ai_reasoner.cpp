@@ -285,18 +285,22 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     if (ctx.idle_units >= 1) {
 
       ctx.state = AIState::Gathering;
-    } else if (ctx.average_health < (0.40F * ctx.strategy_config.defense_modifier) && 
+    } else if (ctx.average_health <
+                   (0.40F * ctx.strategy_config.defense_modifier) &&
                ctx.total_units > 0) {
 
       ctx.state = AIState::Defending;
-    } else if (ctx.neutral_barracks_count > 0 && 
-               ctx.total_units >= static_cast<int>(3.0F / ctx.strategy_config.expansion_priority) &&
+    } else if (ctx.neutral_barracks_count > 0 &&
+               ctx.total_units >=
+                   static_cast<int>(3.0F /
+                                    ctx.strategy_config.expansion_priority) &&
                ctx.strategy_config.expansion_priority > 0.8F) {
 
       ctx.state = AIState::Expanding;
     } else if (ctx.total_units >= 1 && ctx.visible_enemy_count > 0) {
 
-      if (ctx.total_units >= static_cast<int>(2.0F / ctx.strategy_config.min_attack_force) || 
+      if (ctx.total_units >=
+              static_cast<int>(2.0F / ctx.strategy_config.min_attack_force) ||
           ctx.barracks_under_threat) {
         ctx.state = AIState::Attacking;
       }
@@ -306,13 +310,12 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
   case AIState::Gathering: {
 
     const auto &strategy = ctx.strategy_config;
-    
-    // Apply strategy modifiers to thresholds
-    const int MIN_UNITS_FOR_REACTIVE_ATTACK = 
+
+    const int MIN_UNITS_FOR_REACTIVE_ATTACK =
         static_cast<int>(2.0F / strategy.min_attack_force);
-    const int MIN_UNITS_FOR_PROACTIVE_ATTACK = 
+    const int MIN_UNITS_FOR_PROACTIVE_ATTACK =
         static_cast<int>(4.0F * strategy.min_attack_force);
-    const int MIN_UNITS_FOR_EXPANSION = 
+    const int MIN_UNITS_FOR_EXPANSION =
         static_cast<int>(3.0F / strategy.expansion_priority);
 
     if (ctx.total_units < 1) {
@@ -346,7 +349,8 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
     } else if (ctx.visible_enemy_count == 0 && ctx.state_timer > 15.0F) {
 
       ctx.state = AIState::Idle;
-    } else if (ctx.average_health < (0.50F * ctx.strategy_config.defense_modifier) &&
+    } else if (ctx.average_health <
+                   (0.50F * ctx.strategy_config.defense_modifier) &&
                ctx.damaged_units_count * 2 > ctx.total_units) {
 
       if (!ctx.barracks_under_threat) {
@@ -360,11 +364,15 @@ void AIReasoner::update_state_machine(const AISnapshot &snapshot,
 
     if (ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) {
 
-    } else if (ctx.total_units >= static_cast<int>(4.0F * ctx.strategy_config.min_attack_force) && 
-               ctx.average_health > (0.65F / ctx.strategy_config.defense_modifier)) {
+    } else if (ctx.total_units >=
+                   static_cast<int>(4.0F *
+                                    ctx.strategy_config.min_attack_force) &&
+               ctx.average_health >
+                   (0.65F / ctx.strategy_config.defense_modifier)) {
 
       ctx.state = AIState::Attacking;
-    } else if (ctx.average_health > (0.80F / ctx.strategy_config.defense_modifier) && 
+    } else if (ctx.average_health >
+                   (0.80F / ctx.strategy_config.defense_modifier) &&
                ctx.visible_enemy_count == 0) {
 
       ctx.state = AIState::Idle;

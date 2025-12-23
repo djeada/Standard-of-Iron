@@ -17,13 +17,13 @@ struct Nation;
 namespace Game::Systems::AI {
 
 enum class AIStrategy {
-  Balanced,      // Default behavior - balanced approach
-  Aggressive,    // Focuses on attacking, early rushes
-  Defensive,     // Focuses on defense, turtling
-  Expansionist,  // Prioritizes capturing neutral buildings
-  Economic,      // Focuses on production and unit building
-  Harasser,      // Hit-and-run tactics, guerrilla warfare
-  Rusher         // Early game aggression with minimal units
+  Balanced,
+  Aggressive,
+  Defensive,
+  Expansionist,
+  Economic,
+  Harasser,
+  Rusher
 };
 
 enum class AIState {
@@ -117,15 +117,14 @@ struct AISnapshot {
 
 struct AIStrategyConfig {
   AIStrategy strategy = AIStrategy::Balanced;
-  
-  // Thresholds modified by strategy
-  float aggression_modifier = 1.0F;      // Affects attack timing
-  float defense_modifier = 1.0F;         // Affects defensive stance
-  float expansion_priority = 1.0F;       // Priority for capturing neutrals
-  float production_rate_modifier = 1.0F; // Unit production speed
-  float min_attack_force = 1.0F;         // Minimum force before attacking
-  float retreat_threshold = 0.25F;       // Health % to retreat
-  float harassment_range = 0.0F;         // Range for harassment tactics
+
+  float aggression_modifier = 1.0F;
+  float defense_modifier = 1.0F;
+  float expansion_priority = 1.0F;
+  float production_rate_modifier = 1.0F;
+  float min_attack_force = 1.0F;
+  float retreat_threshold = 0.25F;
+  float harassment_range = 0.0F;
 };
 
 struct AIContext {
@@ -135,8 +134,7 @@ struct AIContext {
   float decision_timer = 0.0F;
 
   const Game::Systems::Nation *nation = nullptr;
-  
-  // AI Strategy configuration
+
   AIStrategyConfig strategy_config;
 
   std::vector<Engine::Core::EntityID> military_units;

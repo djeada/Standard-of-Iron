@@ -58,27 +58,25 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
     return true;
   }
 
-  // Check if destination is walkable
   Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
   if (!pathfinder->is_walkable(end_grid.x, end_grid.y)) {
     return false;
   }
 
-  // Sample points along the segment to check for obstacles
   QVector3D const direction = to - from;
   float const length = direction.length();
   if (length < 0.5F) {
-    return true;  // Very short segment, destination check is sufficient
+    return true;
   }
 
-  // Sample every 0.5 units along the path
   constexpr float sample_interval = 0.5F;
   int const num_samples = static_cast<int>(length / sample_interval);
-  
+
   for (int i = 1; i <= num_samples; ++i) {
     float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
     QVector3D const sample_pos = from + direction * t;
-    Point const sample_grid = CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
+    Point const sample_grid =
+        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
     if (!pathfinder->is_walkable(sample_grid.x, sample_grid.y)) {
       return false;
     }
@@ -539,27 +537,24 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
 
-  // Validate new position is walkable - if not, revert the movement
   Pathfinding *pathfinder_check = CommandService::get_pathfinder();
   if (pathfinder_check != nullptr) {
-    Point const new_grid = CommandService::world_to_grid(transform->position.x, 
+    Point const new_grid = CommandService::world_to_grid(transform->position.x,
                                                          transform->position.z);
     if (!pathfinder_check->is_walkable(new_grid.x, new_grid.y)) {
-      // Revert movement - position is not walkable
+
       transform->position.x -= movement->vx * delta_time;
       transform->position.z -= movement->vz * delta_time;
-      
-      // Stop movement and clear target
+
       movement->vx = 0.0F;
       movement->vz = 0.0F;
       movement->has_target = false;
       movement->clear_path();
       movement->path_pending = false;
-      
-      // Try to find a valid path to the goal
+
       if (movement->goal_x != 0.0F || movement->goal_y != 0.0F) {
-        Point const goal_grid = CommandService::world_to_grid(movement->goal_x, 
-                                                              movement->goal_y);
+        Point const goal_grid =
+            CommandService::world_to_grid(movement->goal_x, movement->goal_y);
         if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
           CommandService::MoveOptions opts;
           opts.clear_attack_intent = false;

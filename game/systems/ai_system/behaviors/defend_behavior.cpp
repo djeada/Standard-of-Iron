@@ -61,7 +61,6 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Don't use builders for defense - they should be building
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }

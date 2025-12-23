@@ -67,11 +67,12 @@ void GuardSystem::update(Engine::Core::World *world, float) {
                 std::abs(movement->goal_y - new_guard_z) < 0.5F;
 
             if (!already_moving_to_target) {
-              // Use pathfinding instead of direct movement
+
               CommandService::MoveOptions opts;
               opts.clear_attack_intent = false;
               opts.allow_direct_fallback = true;
-              std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+              std::vector<Engine::Core::EntityID> const ids = {
+                  entity->get_id()};
               std::vector<QVector3D> const targets = {
                   QVector3D(new_guard_x, 0.0F, new_guard_z)};
               CommandService::move_units(*world, ids, targets, opts);
@@ -92,14 +93,14 @@ void GuardSystem::update(Engine::Core::World *world, float) {
             Engine::Core::Defaults::kGuardReturnThreshold;
 
         if (dist_sq > kReturnThresholdSq) {
-          // Use pathfinding instead of direct movement
+
           CommandService::MoveOptions opts;
           opts.clear_attack_intent = false;
           opts.allow_direct_fallback = true;
           std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
           std::vector<QVector3D> const targets = {
-              QVector3D(guard_mode->guard_position_x, 0.0F, 
-                       guard_mode->guard_position_z)};
+              QVector3D(guard_mode->guard_position_x, 0.0F,
+                        guard_mode->guard_position_z)};
           CommandService::move_units(*world, ids, targets, opts);
           guard_mode->returning_to_guard_position = true;
         }

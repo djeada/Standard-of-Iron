@@ -12,10 +12,10 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                                  float delta_time,
                                  std::vector<AICommand> &outCommands) {
   m_productionTimer += delta_time;
-  
-  // Apply production rate modifier from strategy
-  float production_interval = 1.5F / context.strategy_config.production_rate_modifier;
-  
+
+  float production_interval =
+      1.5F / context.strategy_config.production_rate_modifier;
+
   if (m_productionTimer < production_interval) {
     return;
   }

@@ -7,6 +7,7 @@
 #include "../arrow_system.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
+#include "../pathfinding.h"
 #include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
 #include "combat_types.h"
@@ -133,8 +134,7 @@ void process_melee_lock(Engine::Core::Entity *attacker,
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
         float const new_x = att_t->position.x + direction.x() * pull_amount;
         float const new_z = att_t->position.z + direction.z() * pull_amount;
-        
-        // Check if the new position is walkable before moving
+
         auto *pathfinder = CommandService::get_pathfinder();
         if (pathfinder != nullptr) {
           Point const new_grid = CommandService::world_to_grid(new_x, new_z);
@@ -142,12 +142,12 @@ void process_melee_lock(Engine::Core::Entity *attacker,
             att_t->position.x = new_x;
             att_t->position.z = new_z;
           } else {
-            // Can't reach target through terrain - break melee lock
+
             attack_comp->in_melee_lock = false;
             attack_comp->melee_lock_target_id = 0;
           }
         } else {
-          // No pathfinder available - allow movement
+
           att_t->position.x = new_x;
           att_t->position.z = new_z;
         }

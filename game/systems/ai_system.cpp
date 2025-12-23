@@ -1,5 +1,6 @@
 #include "ai_system.h"
 #include "../core/world.h"
+#include "ai_system/ai_strategy.h"
 #include "ai_system/behaviors/attack_behavior.h"
 #include "ai_system/behaviors/builder_behavior.h"
 #include "ai_system/behaviors/defend_behavior.h"
@@ -7,7 +8,6 @@
 #include "ai_system/behaviors/gather_behavior.h"
 #include "ai_system/behaviors/production_behavior.h"
 #include "ai_system/behaviors/retreat_behavior.h"
-#include "ai_system/ai_strategy.h"
 #include "core/event_manager.h"
 #include "owner_registry.h"
 #include "systems/ai_system/ai_command_applier.h"
@@ -80,9 +80,10 @@ void AISystem::set_ai_strategy(int player_id, AI::AIStrategy strategy,
                                float harassment) {
   for (auto &ai : m_aiInstances) {
     if (ai.context.player_id == player_id) {
-      ai.context.strategy_config = AI::AIStrategyFactory::create_config(strategy);
+      ai.context.strategy_config =
+          AI::AIStrategyFactory::create_config(strategy);
       AI::AIStrategyFactory::apply_personality(ai.context.strategy_config,
-                                              aggression, defense, harassment);
+                                               aggression, defense, harassment);
       break;
     }
   }

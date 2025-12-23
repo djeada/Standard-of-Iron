@@ -1043,8 +1043,7 @@ void GameEngine::update_loading_overlay() {
     }
     m_finalize_progress_after_overlay = false;
     emit is_loading_changed();
-    
-    // Emit campaign_mission_changed now that loading is complete and QML !game.is_loading check will pass
+
     if (m_show_objectives_after_loading) {
       m_show_objectives_after_loading = false;
       emit campaign_mission_changed();
@@ -1990,21 +1989,20 @@ void GameEngine::apply_mission_setup() {
 
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     ai_system->reinitialize();
-    
-    // Apply AI strategies from mission setup
+
     int ai_id = 2;
     for (const auto &ai_setup : mission.ai_setups) {
-      Game::Systems::AI::AIStrategy strategy = Game::Systems::AI::AIStrategy::Balanced;
-      
+      Game::Systems::AI::AIStrategy strategy =
+          Game::Systems::AI::AIStrategy::Balanced;
+
       if (ai_setup.strategy.has_value()) {
         strategy = Game::Systems::AI::AIStrategyFactory::parse_strategy(
             ai_setup.strategy.value());
       }
-      
-      ai_system->set_ai_strategy(ai_id, strategy,
-                                ai_setup.personality.aggression,
-                                ai_setup.personality.defense,
-                                ai_setup.personality.harassment);
+
+      ai_system->set_ai_strategy(
+          ai_id, strategy, ai_setup.personality.aggression,
+          ai_setup.personality.defense, ai_setup.personality.harassment);
       ai_id++;
     }
   }
@@ -2074,10 +2072,9 @@ void GameEngine::finalize_skirmish_load() {
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
-  
-  // Set flag to show objectives after loading completes, since QML checks !game.is_loading
+
   m_show_objectives_after_loading = is_campaign_mission();
-  
+
   emit is_loading_changed();
 
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,

@@ -36,7 +36,6 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Builders retreat separately if needed - don't include in main retreat
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }

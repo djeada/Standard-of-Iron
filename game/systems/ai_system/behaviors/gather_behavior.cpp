@@ -37,7 +37,6 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Don't gather builders - they have their own behavior
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }

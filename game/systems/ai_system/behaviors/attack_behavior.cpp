@@ -49,7 +49,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    // Don't send builders to attack - they should be building
     if (entity.spawn_type == Game::Units::SpawnType::Builder) {
       continue;
     }
