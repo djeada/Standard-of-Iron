@@ -151,36 +151,6 @@
       "playerId": 2
     },
     {
-      "type": "spearman",
-      "x": 85,
-      "z": 58,
-      "playerId": 2
-    },
-    {
-      "type": "spearman",
-      "x": 91,
-      "z": 58,
-      "playerId": 2
-    },
-    {
-      "type": "spearman",
-      "x": 88,
-      "z": 55,
-      "playerId": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 85,
-      "z": 62,
-      "playerId": 2
-    },
-    {
-      "type": "swordsman",
-      "x": 91,
-      "z": 62,
-      "playerId": 2
-    },
-    {
       "type": "archer",
       "x": 88,
       "z": 64,
@@ -252,12 +222,6 @@
       "z": 60,
       "playerId": 3
     },
-    {
-      "type": "spearman",
-      "x": 56,
-      "z": 58,
-      "playerId": 3
-    }
   ],
   "firecamps": [
     {

@@ -78,6 +78,19 @@ static HumanoidRenderStats s_render_stats;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 constexpr QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
+
+constexpr float k_temporal_skip_distance_reduced = 35.0F;
+constexpr float k_temporal_skip_distance_minimal = 45.0F;
+constexpr uint32_t k_temporal_skip_period_reduced = 2;
+constexpr uint32_t k_temporal_skip_period_minimal = 3;
+
+inline auto should_render_temporal(uint32_t frame, uint32_t seed,
+                                   uint32_t period) -> bool {
+  if (period <= 1) {
+    return true;
+  }
+  return ((frame + seed) % period) == 0U;
+}
 } // namespace
 
 void advance_pose_cache_frame() {
@@ -1505,6 +1518,25 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       soldier_lod =
           Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
               soldier_lod);
+    }
+
+    if (soldier_distance > 0.0F) {
+      if (soldier_lod == HumanoidLOD::Reduced &&
+          soldier_distance > k_temporal_skip_distance_reduced) {
+        if (!should_render_temporal(s_current_frame, inst_seed,
+                                    k_temporal_skip_period_reduced)) {
+          ++s_render_stats.soldiers_skipped_temporal;
+          continue;
+        }
+      }
+      if (soldier_lod == HumanoidLOD::Minimal &&
+          soldier_distance > k_temporal_skip_distance_minimal) {
+        if (!should_render_temporal(s_current_frame, inst_seed,
+                                    k_temporal_skip_period_minimal)) {
+          ++s_render_stats.soldiers_skipped_temporal;
+          continue;
+        }
+      }
     }
 
     ++s_render_stats.soldiers_rendered;
