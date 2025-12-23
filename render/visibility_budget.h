@@ -29,13 +29,9 @@ public:
       return distance_lod;
     }
 
-    int const current =
-        m_full_detail_count.fetch_add(1, std::memory_order_relaxed);
-    if (current < budget.max_full_detail_units) {
+    if (try_consume_budget(budget.max_full_detail_units)) {
       return GL::HumanoidLOD::Full;
     }
-
-    m_full_detail_count.fetch_sub(1, std::memory_order_relaxed);
     return GL::HumanoidLOD::Reduced;
   }
 
@@ -50,13 +46,9 @@ public:
       return distance_lod;
     }
 
-    int const current =
-        m_full_detail_count.fetch_add(1, std::memory_order_relaxed);
-    if (current < budget.max_full_detail_units) {
+    if (try_consume_budget(budget.max_full_detail_units)) {
       return GL::HorseLOD::Full;
     }
-
-    m_full_detail_count.fetch_sub(1, std::memory_order_relaxed);
     return GL::HorseLOD::Reduced;
   }
 
@@ -66,6 +58,18 @@ public:
 
 private:
   VisibilityBudgetTracker() = default;
+
+  [[nodiscard]] auto try_consume_budget(int max_units) noexcept -> bool {
+    int current = m_full_detail_count.load(std::memory_order_relaxed);
+    while (current < max_units) {
+      if (m_full_detail_count.compare_exchange_weak(
+              current, current + 1, std::memory_order_relaxed,
+              std::memory_order_relaxed)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   std::atomic<int> m_full_detail_count{0};
 };
