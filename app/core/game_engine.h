@@ -434,6 +434,7 @@ private:
   qint64 m_loading_overlay_min_duration_ms = 0;
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;
+  bool m_show_objectives_after_loading = false;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
