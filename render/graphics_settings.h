@@ -44,6 +44,11 @@ struct BatchingConfig {
   float batching_zoom_full;
 };
 
+struct VisibilityBudget {
+  int max_full_detail_units;
+  bool enabled;
+};
+
 class GraphicsSettings {
 public:
   static auto instance() noexcept -> GraphicsSettings & {
@@ -72,6 +77,11 @@ public:
   [[nodiscard]] auto
   batching_config() const noexcept -> const BatchingConfig & {
     return m_batching_config;
+  }
+
+  [[nodiscard]] auto
+  visibility_budget() const noexcept -> const VisibilityBudget & {
+    return m_visibility_budget;
   }
 
   [[nodiscard]] auto
@@ -174,6 +184,7 @@ private:
                            .batching_unit_threshold = 0,
                            .batching_zoom_start = 0.0F,
                            .batching_zoom_full = 0.0F};
+      m_visibility_budget = {.max_full_detail_units = 150, .enabled = true};
       break;
 
     case GraphicsQuality::Medium:
@@ -201,6 +212,7 @@ private:
                            .batching_unit_threshold = 30,
                            .batching_zoom_start = 60.0F,
                            .batching_zoom_full = 90.0F};
+      m_visibility_budget = {.max_full_detail_units = 300, .enabled = true};
       break;
 
     case GraphicsQuality::High:
@@ -228,6 +240,7 @@ private:
                            .batching_unit_threshold = 50,
                            .batching_zoom_start = 80.0F,
                            .batching_zoom_full = 120.0F};
+      m_visibility_budget = {.max_full_detail_units = 900, .enabled = true};
       break;
 
     case GraphicsQuality::Ultra:
@@ -255,6 +268,7 @@ private:
                            .batching_unit_threshold = 999999,
                            .batching_zoom_start = 999999.0F,
                            .batching_zoom_full = 999999.0F};
+      m_visibility_budget = {.max_full_detail_units = 5000, .enabled = false};
       break;
     }
   }
@@ -273,6 +287,7 @@ private:
   LODMultipliers m_lod_multipliers{};
   GraphicsFeatures m_features{};
   BatchingConfig m_batching_config{};
+  VisibilityBudget m_visibility_budget{};
 };
 
 } // namespace Render
