@@ -59,6 +59,7 @@
       "color": "red",
       "team_id": 1,
       "difficulty": "hard",
+      "strategy": "expansionist",
       "personality": {
         "aggression": 0.7,
         "defense": 0.5,

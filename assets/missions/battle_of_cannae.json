@@ -61,6 +61,7 @@
       "faction": "roman",
       "color": "red",
       "difficulty": "very_hard",
+      "strategy": "aggressive",
       "personality": {
         "aggression": 0.9,
         "defense": 0.3,

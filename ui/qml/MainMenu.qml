@@ -31,7 +31,6 @@ Item {
                 }
                 newIndex++;
             }
-            // If no enabled item found below, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
             var newIndex = container.selectedIndex - 1;
@@ -43,13 +42,12 @@ Item {
                 }
                 newIndex--;
             }
-            // If no enabled item found above, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             var m = menuModel.get(container.selectedIndex);
             if (m.requiresGame && !root.gameStarted) {
                 event.accepted = true;
-                return;
+                return ;
             }
             if (m.idStr === "skirmish")
                 root.openSkirmish();
@@ -274,10 +272,11 @@ Item {
                             onEntered: {
                                 if (itemEnabled)
                                     container.selectedIndex = idx;
+
                             }
                             onClicked: {
                                 if (!itemEnabled)
-                                    return;
+                                    return ;
 
                                 if (model.idStr === "skirmish")
                                     root.openSkirmish();

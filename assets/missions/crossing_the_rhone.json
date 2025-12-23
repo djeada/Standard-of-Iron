@@ -24,6 +24,7 @@
       "color": "red",
       "team_id": 1,
       "difficulty": "medium",
+      "strategy": "defensive",
       "personality": {
         "aggression": 0.4,
         "defense": 0.9,
@@ -39,6 +40,7 @@
       "color": "blue",
       "team_id": 1,
       "difficulty": "medium",
+      "strategy": "harasser",
       "personality": {
         "aggression": 0.7,
         "defense": 0.5,

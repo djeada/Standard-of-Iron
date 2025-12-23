@@ -1,8 +1,8 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
-#include "systems/combat_system/combat_mode_processor.h"
 #include "systems/combat_system/attack_processor.h"
+#include "systems/combat_system/combat_mode_processor.h"
 #include "systems/owner_registry.h"
 #include <gtest/gtest.h>
 
@@ -234,4 +234,3 @@ TEST_F(CombatModeTest, HomeDoesNotMoveInMeleeLock) {
   // Home building should NOT have moved
   EXPECT_EQ(home_transform->position.x, initial_home_x);
 }
-

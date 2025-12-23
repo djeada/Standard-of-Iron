@@ -30,6 +30,7 @@ add_library(game_systems STATIC
     systems/ai_system/ai_executor.cpp
     systems/ai_system/ai_worker.cpp
     systems/ai_system/ai_tactical.cpp
+    systems/ai_system/ai_strategy.cpp
     systems/ai_system/behaviors/production_behavior.cpp
     systems/ai_system/behaviors/gather_behavior.cpp
     systems/ai_system/behaviors/attack_behavior.cpp
