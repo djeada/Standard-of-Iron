@@ -1,6 +1,8 @@
 #include "guard_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "command_service.h"
+#include <QVector3D>
 #include <cmath>
 
 namespace Game::Systems {
@@ -65,11 +67,15 @@ void GuardSystem::update(Engine::Core::World *world, float) {
                 std::abs(movement->goal_y - new_guard_z) < 0.5F;
 
             if (!already_moving_to_target) {
-              movement->has_target = true;
-              movement->target_x = new_guard_x;
-              movement->target_y = new_guard_z;
-              movement->goal_x = new_guard_x;
-              movement->goal_y = new_guard_z;
+
+              CommandService::MoveOptions opts;
+              opts.clear_attack_intent = false;
+              opts.allow_direct_fallback = true;
+              std::vector<Engine::Core::EntityID> const ids = {
+                  entity->get_id()};
+              std::vector<QVector3D> const targets = {
+                  QVector3D(new_guard_x, 0.0F, new_guard_z)};
+              CommandService::move_units(*world, ids, targets, opts);
               guard_mode->returning_to_guard_position = true;
             }
           }
@@ -87,11 +93,15 @@ void GuardSystem::update(Engine::Core::World *world, float) {
             Engine::Core::Defaults::kGuardReturnThreshold;
 
         if (dist_sq > kReturnThresholdSq) {
-          movement->has_target = true;
-          movement->target_x = guard_mode->guard_position_x;
-          movement->target_y = guard_mode->guard_position_z;
-          movement->goal_x = guard_mode->guard_position_x;
-          movement->goal_y = guard_mode->guard_position_z;
+
+          CommandService::MoveOptions opts;
+          opts.clear_attack_intent = false;
+          opts.allow_direct_fallback = true;
+          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+          std::vector<QVector3D> const targets = {
+              QVector3D(guard_mode->guard_position_x, 0.0F,
+                        guard_mode->guard_position_z)};
+          CommandService::move_units(*world, ids, targets, opts);
           guard_mode->returning_to_guard_position = true;
         }
       }

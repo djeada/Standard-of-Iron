@@ -36,6 +36,10 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
+    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
     if (entity.max_health <= 0) {
       continue;
     }

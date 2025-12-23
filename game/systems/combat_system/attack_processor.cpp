@@ -7,6 +7,7 @@
 #include "../arrow_system.h"
 #include "../command_service.h"
 #include "../owner_registry.h"
+#include "../pathfinding.h"
 #include "../troop_profile_service.h"
 #include "combat_mode_processor.h"
 #include "combat_types.h"
@@ -131,8 +132,25 @@ void process_melee_lock(Engine::Core::Entity *attacker,
 
       if (dist > Constants::kMinDistance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
-        att_t->position.x += direction.x() * pull_amount;
-        att_t->position.z += direction.z() * pull_amount;
+        float const new_x = att_t->position.x + direction.x() * pull_amount;
+        float const new_z = att_t->position.z + direction.z() * pull_amount;
+
+        auto *pathfinder = CommandService::get_pathfinder();
+        if (pathfinder != nullptr) {
+          Point const new_grid = CommandService::world_to_grid(new_x, new_z);
+          if (pathfinder->is_walkable(new_grid.x, new_grid.y)) {
+            att_t->position.x = new_x;
+            att_t->position.z = new_z;
+          } else {
+
+            attack_comp->in_melee_lock = false;
+            attack_comp->melee_lock_target_id = 0;
+          }
+        } else {
+
+          att_t->position.x = new_x;
+          att_t->position.z = new_z;
+        }
       }
     }
   }
