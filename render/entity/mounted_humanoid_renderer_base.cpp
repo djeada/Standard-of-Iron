@@ -136,8 +136,8 @@ void MountedHumanoidRendererBase::add_attachments(
     float const distance =
         (horse_world_pos - ctx.camera->get_position()).length();
     horse_lod = calculate_horse_lod(distance);
-    horse_lod =
-        Render::VisibilityBudgetTracker::instance().request_horse_lod(horse_lod);
+    horse_lod = Render::VisibilityBudgetTracker::instance().request_horse_lod(
+        horse_lod);
   }
 
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
