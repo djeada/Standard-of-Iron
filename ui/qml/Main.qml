@@ -327,7 +327,13 @@ ApplicationWindow {
         }
         onCloseRequested: function() {
             objectivesPanel.visible = false;
-            mainWindow.menuVisible = true;
+            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.gameStarted) {
+                mainWindow.gamePaused = false;
+                gameViewItem.setPaused(false);
+                gameViewItem.forceActiveFocus();
+            } else {
+                mainWindow.menuVisible = true;
+            }
         }
     }
 
@@ -512,6 +518,18 @@ ApplicationWindow {
             if (game.last_error !== "")
                 errorDialog.open();
 
+        }
+
+        target: game
+    }
+
+    Connections {
+        function onCampaign_mission_changed() {
+            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && !game.is_loading) {
+                mainWindow.gamePaused = true;
+                gameViewItem.setPaused(true);
+                objectivesPanel.visible = true;
+            }
         }
 
         target: game
