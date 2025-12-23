@@ -108,9 +108,10 @@ auto is_blocked_by_hold_mode_unit(
   auto *target_transform =
       target->get_component<Engine::Core::TransformComponent>();
   auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+  auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
 
   if ((attacker_transform == nullptr) || (target_transform == nullptr) ||
-      (attacker_unit == nullptr)) {
+      (attacker_unit == nullptr) || (target_unit == nullptr)) {
     return false;
   }
 
@@ -149,11 +150,9 @@ auto is_blocked_by_hold_mode_unit(
       continue;
     }
 
-    if (blocker_unit->owner_id == attacker_unit->owner_id) {
-      continue;
-    }
-    if (owner_registry.are_allies(attacker_unit->owner_id,
-                                   blocker_unit->owner_id)) {
+    if (blocker_unit->owner_id != target_unit->owner_id &&
+        !owner_registry.are_allies(blocker_unit->owner_id,
+                                    target_unit->owner_id)) {
       continue;
     }
 
