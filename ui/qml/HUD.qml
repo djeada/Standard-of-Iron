@@ -31,7 +31,7 @@ Item {
             selectionTick += 1;
             var hasTroops = false;
             if (typeof game !== 'undefined' && game.has_units_selected && game.has_selected_type) {
-                var troopTypes = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman"];
+                var troopTypes = ["warrior", "archer", "swordsman", "spearman", "healer", "catapult", "ballista", "horse_archer", "horse_swordsman", "horse_spearman", "elephant"];
                 for (var i = 0; i < troopTypes.length; i++) {
                     if (game.has_selected_type(troopTypes[i])) {
                         hasTroops = true;
