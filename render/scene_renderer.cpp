@@ -27,6 +27,7 @@
 #include "humanoid/rig.h"
 #include "primitive_batch.h"
 #include "submitter.h"
+#include "visibility_budget.h"
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
@@ -68,6 +69,8 @@ void Renderer::begin_frame() {
 
   reset_humanoid_render_stats();
   reset_horse_render_stats();
+
+  Render::VisibilityBudgetTracker::instance().reset_frame();
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
