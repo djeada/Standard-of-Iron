@@ -574,6 +574,13 @@ auto GameEngine::is_placing_formation() const -> bool {
   return false;
 }
 
+bool GameEngine::is_campaign_mission() const {
+  if (!m_campaign_manager) {
+    return false;
+  }
+  return m_campaign_manager->current_mission_context().is_campaign();
+}
+
 void GameEngine::on_formation_mouse_move(qreal sx, qreal sy) {
   if (!m_input_handler) {
     return;
@@ -2061,6 +2068,7 @@ void GameEngine::finalize_skirmish_load() {
 
   emit owner_info_changed();
   emit spectator_mode_changed();
+  emit campaign_mission_changed();
 }
 
 void GameEngine::open_settings() {
