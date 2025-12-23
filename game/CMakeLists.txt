@@ -50,6 +50,7 @@ add_library(game_systems STATIC
     systems/stone_projectile.cpp
     systems/catapult_attack_system.cpp
     systems/ballista_attack_system.cpp
+    systems/elephant_attack_system.cpp
     systems/camera_follow_system.cpp
     systems/camera_controller.cpp
     systems/camera_service.cpp
@@ -107,6 +108,7 @@ add_library(game_systems STATIC
     units/builder.cpp
     units/catapult.cpp
     units/ballista.cpp
+    units/elephant.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     units/factory.cpp

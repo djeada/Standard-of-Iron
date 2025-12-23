@@ -476,6 +476,22 @@ public:
   static constexpr float kAudioCooldownTime = 5.0F;
 };
 
+class ElephantComponent : public Component {
+public:
+  enum class ChargeState { Idle, Charging, Trampling, Recovering };
+
+  ElephantComponent() = default;
+
+  ChargeState charge_state{ChargeState::Idle};
+  float charge_speed_multiplier{1.8F};
+  float charge_duration{0.0F};
+  float charge_cooldown{0.0F};
+  float trample_radius{2.5F};
+  int trample_damage{40};
+  bool is_panicked{false};
+  float panic_duration{0.0F};
+};
+
 class HomeComponent : public Component {
 public:
   HomeComponent() = default;
