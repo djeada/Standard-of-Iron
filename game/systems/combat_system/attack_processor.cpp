@@ -94,12 +94,6 @@ void process_melee_lock(Engine::Core::Entity *attacker,
     return;
   }
 
-  if (is_unit_in_hold_mode(attacker)) {
-    attack_comp->in_melee_lock = false;
-    attack_comp->melee_lock_target_id = 0;
-    return;
-  }
-
   auto *lock_target = world->get_entity(attack_comp->melee_lock_target_id);
   if ((lock_target == nullptr) ||
       lock_target->has_component<Engine::Core::PendingRemovalComponent>()) {
