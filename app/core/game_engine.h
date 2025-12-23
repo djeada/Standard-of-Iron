@@ -165,6 +165,8 @@ public:
                  placing_formation_changed)
   Q_PROPERTY(bool is_placing_construction READ is_placing_construction NOTIFY
                  placing_construction_changed)
+  Q_PROPERTY(bool is_campaign_mission READ is_campaign_mission NOTIFY
+                 campaign_mission_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -307,6 +309,8 @@ public:
 
   [[nodiscard]] float loading_progress() const;
   [[nodiscard]] QString loading_stage_text() const;
+
+  [[nodiscard]] bool is_campaign_mission() const;
 
   QObject *audio_system();
 
@@ -462,4 +466,5 @@ signals:
   void loading_stage_changed(QString stage_text);
   void placing_formation_changed();
   void placing_construction_changed();
+  void campaign_mission_changed();
 };
