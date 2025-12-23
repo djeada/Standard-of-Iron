@@ -107,6 +107,9 @@ void CampaignManager::mark_current_mission_completed() {
             m_current_campaign_id, m_current_mission_id, &error);
         if (!unlocked) {
           qWarning() << "Failed to unlock next mission:" << error;
+        } else {
+          qInfo() << "Next mission unlocked successfully, reloading campaigns";
+          emit available_campaigns_changed();
         }
       }
     }
