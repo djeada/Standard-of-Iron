@@ -27,6 +27,13 @@ auto is_unit_in_guard_mode(Engine::Core::Entity *entity) -> bool {
   return (guard_mode != nullptr) && guard_mode->active;
 }
 
+auto is_building(Engine::Core::Entity *entity) -> bool {
+  if (entity == nullptr) {
+    return false;
+  }
+  return entity->has_component<Engine::Core::BuildingComponent>();
+}
+
 auto is_in_range(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                  float range) -> bool {
   auto *attacker_transform =
