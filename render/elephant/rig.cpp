@@ -537,7 +537,7 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 body = elephant_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width, d.body_height * 0.85F, d.body_length * 0.55F);
+    body.scale(d.body_width * 0.5F, d.body_height * 0.425F, d.body_length * 0.275F);
     out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F,
              kMaterialElephantBody);
   }
@@ -548,8 +548,8 @@ void ElephantRendererBase::render_full(
         QVector3D(0.0F, d.body_height * 0.25F, d.body_length * 0.20F);
     QMatrix4x4 hump = elephant_ctx.model;
     hump.translate(hump_pos);
-    hump.scale(d.body_width * 0.85F, d.body_height * 0.35F,
-               d.body_length * 0.25F);
+    hump.scale(d.body_width * 0.425F, d.body_height * 0.175F,
+               d.body_length * 0.125F);
     out.mesh(get_unit_sphere(), hump, v.skin_highlight, nullptr, 1.0F,
              kMaterialElephantBody);
   }
@@ -560,8 +560,8 @@ void ElephantRendererBase::render_full(
         QVector3D(0.0F, -d.body_height * 0.08F, -d.body_length * 0.35F);
     QMatrix4x4 rump = elephant_ctx.model;
     rump.translate(rump_pos);
-    rump.scale(d.body_width * 0.90F, d.body_height * 0.78F,
-               d.body_length * 0.32F);
+    rump.scale(d.body_width * 0.45F, d.body_height * 0.39F,
+               d.body_length * 0.16F);
     out.mesh(get_unit_sphere(), rump, v.skin_shadow, nullptr, 1.0F,
              kMaterialElephantBody);
   }
@@ -572,8 +572,8 @@ void ElephantRendererBase::render_full(
         QVector3D(0.0F, d.body_height * 0.15F, d.body_length * 0.30F);
     QMatrix4x4 chest = elephant_ctx.model;
     chest.translate(chest_pos);
-    chest.scale(d.body_width * 0.90F, d.body_height * 0.85F,
-                d.body_length * 0.25F);
+    chest.scale(d.body_width * 0.45F, d.body_height * 0.425F,
+                d.body_length * 0.125F);
     out.mesh(get_unit_sphere(), chest, v.skin_highlight, nullptr, 1.0F,
              kMaterialElephantBody);
   }
