@@ -335,10 +335,6 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     return;
   }
 
-  bool const should_chase_aggressive =
-      (context.state == AIState::Attacking || context.barracks_under_threat) &&
-      assessment.force_ratio >= 0.8F;
-
   // Use formation positions to spread units out when engaging nearby enemies
   FormationType formation_type =
       get_formation_type_for_player(context.player_id);
@@ -362,14 +358,24 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     target_z.push_back(formation_positions[i].z());
   }
 
-  AICommand command;
-  command.type = AICommandType::MoveUnits;
-  command.units = std::move(claimed_units);
-  command.move_target_x = std::move(target_x);
-  command.move_target_y = std::move(target_y);
-  command.move_target_z = std::move(target_z);
+  AICommand move_command;
+  move_command.type = AICommandType::MoveUnits;
+  move_command.units = claimed_units;
+  move_command.move_target_x = std::move(target_x);
+  move_command.move_target_y = std::move(target_y);
+  move_command.move_target_z = std::move(target_z);
 
-  outCommands.push_back(std::move(command));
+  outCommands.push_back(std::move(move_command));
+
+  // Set attack target so units engage when in range, but don't chase
+  // This prevents units from moving and breaking formation
+  AICommand attack_command;
+  attack_command.type = AICommandType::AttackTarget;
+  attack_command.units = std::move(claimed_units);
+  attack_command.target_id = target_info.target_id;
+  attack_command.should_chase = false;
+
+  outCommands.push_back(std::move(attack_command));
 }
 auto AttackBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {
