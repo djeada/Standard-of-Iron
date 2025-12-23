@@ -1337,7 +1337,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       Shader *instanced_shader =
           lookup_instanced_shader(active_shader, m_shaderCache.get());
       bool const can_use_instancing =
-          !isSpecialCase && !isTransparent && !isShadowShader &&
+          !isSpecialCase && !isTransparent &&
           (instanced_shader != nullptr) &&
           (m_meshInstancingPipeline != nullptr) &&
           m_meshInstancingPipeline->is_initialized();
@@ -1356,9 +1356,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
           ++batch_end;
         }
-
-        const std::size_t batch_size = batch_end - i;
-        (void)batch_size; // Suppress unused variable warning.
 
         // Use instanced rendering for batches.
         m_meshInstancingPipeline->begin_batch(first_cmd.mesh, instanced_shader,

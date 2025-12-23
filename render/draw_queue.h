@@ -446,17 +446,22 @@ private:
       const auto &mesh_cmd = std::get<MeshCmdIndex>(cmd);
 
       // Combine mesh, shader, texture, and material_id for batching grouping.
-      // Use lower bits of each pointer to create a unique batch key.
-      uint64_t const mesh_ptr =
-          reinterpret_cast<uintptr_t>(mesh_cmd.mesh) & 0xFFFFU;
-      uint64_t const shader_ptr =
-          reinterpret_cast<uintptr_t>(mesh_cmd.shader) & 0xFFFFU;
-      uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh_cmd.texture) & 0xFFFFU;
-      uint64_t const mat_id = static_cast<uint64_t>(mesh_cmd.material_id) & 0xFFU;
+      // Use XOR mixing with bit shifts to create a well-distributed hash key.
+      // This reduces collision risk compared to simple bit concatenation.
+      uint64_t const mesh_ptr = reinterpret_cast<uintptr_t>(mesh_cmd.mesh);
+      uint64_t const shader_ptr = reinterpret_cast<uintptr_t>(mesh_cmd.shader);
+      uint64_t const tex_ptr = reinterpret_cast<uintptr_t>(mesh_cmd.texture);
+      uint64_t const mat_id =
+          static_cast<uint64_t>(mesh_cmd.material_id) & 0xFFFFU;
 
-      // Layout: [mesh:16][shader:16][texture:16][material_id:8]
-      key |= (mesh_ptr << 40) | (shader_ptr << 24) | (tex_ptr << 8) | mat_id;
+      // XOR mix the pointers with different bit rotations to spread entropy.
+      uint64_t hash = mesh_ptr;
+      hash ^= (shader_ptr << 13) | (shader_ptr >> 51);
+      hash ^= (tex_ptr << 29) | (tex_ptr >> 35);
+      hash ^= mat_id;
+
+      // Mask to 56 bits (preserve 8-bit type order in upper bits).
+      key |= (hash & 0x00FFFFFFFFFFFFFFULL);
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =
