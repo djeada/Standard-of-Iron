@@ -128,8 +128,7 @@ void MinimapGenerator::render_parchment_background(QImage &image) {
       const int g = std::clamp(BASE_G + static_cast<int>(noise * 18), 0, 255);
       const int b = std::clamp(BASE_B + static_cast<int>(noise * 15), 0, 255);
 
-      scanline[x] = (255U << 24) | (static_cast<uint32_t>(b) << 16) |
-                    (static_cast<uint32_t>(g) << 8) | static_cast<uint32_t>(r);
+      scanline[x] = qRgba(r, g, b, 255);
     }
   }
 
