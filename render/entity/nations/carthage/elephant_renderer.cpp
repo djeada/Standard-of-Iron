@@ -2,9 +2,9 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../elephant/rig.h"
-#include "../../../gl/humanoid/humanoid_types.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
+#include "../../../gl/humanoid/humanoid_types.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../scene_renderer.h"
@@ -61,9 +61,6 @@ public:
   CarthageElephantRenderer() = default;
 
 protected:
-  // Issue #9: Remove attachments - howdah is no longer rendered
-  // The base class has an empty draw_howdah implementation, so we don't
-  // override it to avoid drawing the war platform attachment
 };
 
 } // namespace
@@ -90,8 +87,8 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
         QVector3D const fabric_base(0.45F, 0.18F, 0.55F);
         QVector3D const metal_base(0.70F, 0.50F, 0.28F);
 
-        ElephantProfile profile =
-            get_or_create_cached_elephant_profile(seed, fabric_base, metal_base);
+        ElephantProfile profile = get_or_create_cached_elephant_profile(
+            seed, fabric_base, metal_base);
 
         AnimationInputs anim;
         anim.time = 0.0F;
