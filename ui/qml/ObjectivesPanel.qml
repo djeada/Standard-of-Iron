@@ -10,6 +10,13 @@ Item {
 
     signal closeRequested()
 
+    function refreshObjectives() {
+        if (typeof game !== 'undefined' && game.get_current_mission_objectives)
+            mission_objectives = game.get_current_mission_objectives();
+        else
+            mission_objectives = null;
+    }
+
     anchors.fill: parent
     z: 10
     focus: true
@@ -20,8 +27,11 @@ Item {
         }
     }
     Component.onCompleted: {
-        if (typeof game !== 'undefined' && game.get_current_mission_objectives)
-            mission_objectives = game.get_current_mission_objectives();
+        refreshObjectives();
+    }
+    onVisibleChanged: {
+        if (visible)
+            refreshObjectives();
 
     }
 
@@ -75,12 +85,15 @@ Item {
             }
 
             ScrollView {
+                id: objectivesScroll
+
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
+                contentWidth: objectivesScroll.availableWidth
 
                 ColumnLayout {
-                    width: parent.width
+                    width: objectivesScroll.availableWidth
                     spacing: Theme.spacingLarge
 
                     ColumnLayout {
@@ -169,7 +182,7 @@ Item {
 
                         Label {
                             text: qsTr("Defeat Conditions")
-                            color: Theme.dangerText
+                            color: Theme.removeColor
                             font.pointSize: Theme.fontSizeLarge
                             font.bold: true
                             Layout.fillWidth: true
@@ -195,7 +208,7 @@ Item {
 
                                     Label {
                                         text: "✗"
-                                        color: Theme.dangerText
+                                        color: Theme.removeColor
                                         font.pointSize: Theme.fontSizeLarge
                                         font.bold: true
                                         Layout.alignment: Qt.AlignTop
@@ -203,7 +216,7 @@ Item {
 
                                     Label {
                                         text: modelData.description || qsTr("Avoid this condition")
-                                        color: Theme.textMain
+                                        color: Theme.removeColor
                                         font.pointSize: Theme.fontSizeMedium
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
