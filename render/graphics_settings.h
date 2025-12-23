@@ -184,7 +184,7 @@ private:
                            .batching_unit_threshold = 0,
                            .batching_zoom_start = 0.0F,
                            .batching_zoom_full = 0.0F};
-      m_visibility_budget = {.max_full_detail_units = 50, .enabled = true};
+      m_visibility_budget = {.max_full_detail_units = 150, .enabled = true};
       break;
 
     case GraphicsQuality::Medium:
@@ -212,7 +212,7 @@ private:
                            .batching_unit_threshold = 30,
                            .batching_zoom_start = 60.0F,
                            .batching_zoom_full = 90.0F};
-      m_visibility_budget = {.max_full_detail_units = 100, .enabled = true};
+      m_visibility_budget = {.max_full_detail_units = 300, .enabled = true};
       break;
 
     case GraphicsQuality::High:
@@ -240,7 +240,7 @@ private:
                            .batching_unit_threshold = 50,
                            .batching_zoom_start = 80.0F,
                            .batching_zoom_full = 120.0F};
-      m_visibility_budget = {.max_full_detail_units = 200, .enabled = true};
+      m_visibility_budget = {.max_full_detail_units = 900, .enabled = true};
       break;
 
     case GraphicsQuality::Ultra:
@@ -268,7 +268,7 @@ private:
                            .batching_unit_threshold = 999999,
                            .batching_zoom_start = 999999.0F,
                            .batching_zoom_full = 999999.0F};
-      m_visibility_budget = {.max_full_detail_units = 999999, .enabled = false};
+      m_visibility_budget = {.max_full_detail_units = 5000, .enabled = false};
       break;
     }
   }
