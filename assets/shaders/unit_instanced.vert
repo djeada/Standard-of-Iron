@@ -27,7 +27,12 @@ void main() {
     vec4(i_model_col0.w, i_model_col1.w, i_model_col2.w, 1.0)
   );
 
-  v_normal = mat3(transpose(inverse(model))) * a_normal;
+  // For normal transformation, extract 3x3 rotation/scale part
+  // For uniform scaling, we can just use the upper 3x3 directly
+  // This is faster than transpose(inverse(model)) and correct for most cases
+  mat3 normalMatrix = mat3(i_model_col0.xyz, i_model_col1.xyz, i_model_col2.xyz);
+  v_normal = normalize(normalMatrix * a_normal);
+  
   v_texCoord = a_texCoord;
   v_worldPos = vec3(model * vec4(a_position, 1.0));
   v_color = i_color_alpha.rgb;

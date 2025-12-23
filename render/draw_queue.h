@@ -30,6 +30,12 @@ constexpr int k_sort_key_bucket_shift = 56;
 
 constexpr float k_opaque_threshold = 0.999F;
 
+// Masks for batching sort key components
+constexpr uint64_t k_mesh_ptr_mask = 0xFFFFU;
+constexpr uint64_t k_shader_ptr_mask = 0xFFFFU;
+constexpr uint64_t k_texture_ptr_mask = 0xFFFFU;
+constexpr uint64_t k_material_id_mask = 0xFFU;
+
 struct MeshCmd {
   Mesh *mesh = nullptr;
   Texture *texture = nullptr;
@@ -449,13 +455,13 @@ private:
       // Combine mesh, shader, texture, and material_id for batching grouping.
       // This ensures identical units are adjacent in the sorted list.
       uint64_t const mesh_ptr =
-          reinterpret_cast<uintptr_t>(mesh.mesh) & 0xFFFFU;
+          reinterpret_cast<uintptr_t>(mesh.mesh) & k_mesh_ptr_mask;
       uint64_t const shader_ptr =
-          reinterpret_cast<uintptr_t>(mesh.shader) & 0xFFFFU;
+          reinterpret_cast<uintptr_t>(mesh.shader) & k_shader_ptr_mask;
       uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh.texture) & 0xFFFFU;
+          reinterpret_cast<uintptr_t>(mesh.texture) & k_texture_ptr_mask;
       uint64_t const mat_id =
-          static_cast<uint64_t>(mesh.material_id) & 0xFFU;
+          static_cast<uint64_t>(mesh.material_id) & k_material_id_mask;
       
       // Layout in lower 56 bits: [mesh:16][shader:16][texture:16][material:8]
       key |= (mesh_ptr << 40) | (shader_ptr << 24) | (tex_ptr << 8) | mat_id;
