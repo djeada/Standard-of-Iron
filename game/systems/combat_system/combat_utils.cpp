@@ -100,100 +100,6 @@ auto is_unit_idle(Engine::Core::Entity *unit) -> bool {
   return (patrol == nullptr) || !patrol->patrolling;
 }
 
-auto is_blocked_by_hold_mode_unit(
-    Engine::Core::Entity *attacker, Engine::Core::Entity *target,
-    const std::vector<Engine::Core::Entity *> &all_units) -> bool {
-  auto *attacker_transform =
-      attacker->get_component<Engine::Core::TransformComponent>();
-  auto *target_transform =
-      target->get_component<Engine::Core::TransformComponent>();
-  auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-  auto *target_unit = target->get_component<Engine::Core::UnitComponent>();
-
-  if ((attacker_transform == nullptr) || (target_transform == nullptr) ||
-      (attacker_unit == nullptr) || (target_unit == nullptr)) {
-    return false;
-  }
-
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-
-  float const ax = attacker_transform->position.x;
-  float const az = attacker_transform->position.z;
-  float const tx = target_transform->position.x;
-  float const tz = target_transform->position.z;
-
-  float const dx = tx - ax;
-  float const dz = tz - az;
-  float const line_length_sq = dx * dx + dz * dz;
-
-  if (line_length_sq < 0.01F) {
-    return false;
-  }
-
-  float const line_length = std::sqrt(line_length_sq);
-  float const ndx = dx / line_length;
-  float const ndz = dz / line_length;
-
-  constexpr float kBlockRadius = 1.5F;
-
-  for (auto *blocker : all_units) {
-    if (blocker == attacker || blocker == target) {
-      continue;
-    }
-
-    if (blocker->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto *blocker_unit = blocker->get_component<Engine::Core::UnitComponent>();
-    if ((blocker_unit == nullptr) || blocker_unit->health <= 0) {
-      continue;
-    }
-
-    if (blocker_unit->owner_id != target_unit->owner_id &&
-        !owner_registry.are_allies(blocker_unit->owner_id,
-                                    target_unit->owner_id)) {
-      continue;
-    }
-
-    auto *hold_mode =
-        blocker->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode == nullptr) || !hold_mode->active) {
-      continue;
-    }
-
-    auto *blocker_transform =
-        blocker->get_component<Engine::Core::TransformComponent>();
-    if (blocker_transform == nullptr) {
-      continue;
-    }
-
-    float const bx = blocker_transform->position.x;
-    float const bz = blocker_transform->position.z;
-
-    float const abx = bx - ax;
-    float const abz = bz - az;
-    float const projection = abx * ndx + abz * ndz;
-
-    if (projection < 0.0F || projection > line_length) {
-      continue;
-    }
-
-    float const closest_x = ax + ndx * projection;
-    float const closest_z = az + ndz * projection;
-
-    float const dist_x = bx - closest_x;
-    float const dist_z = bz - closest_z;
-    float const dist_sq = dist_x * dist_x + dist_z * dist_z;
-
-    if (dist_sq < kBlockRadius * kBlockRadius) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 auto find_nearest_enemy_from_list(
     Engine::Core::Entity *unit,
     const std::vector<Engine::Core::Entity *> &all_units, Engine::Core::World *,
@@ -246,10 +152,8 @@ auto find_nearest_enemy_from_list(
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq < nearest_dist_sq) {
-      if (!is_blocked_by_hold_mode_unit(unit, target, all_units)) {
-        nearest_dist_sq = dist_sq;
-        nearest_enemy = target;
-      }
+      nearest_dist_sq = dist_sq;
+      nearest_enemy = target;
     }
   }
 
@@ -325,10 +229,8 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq < nearest_dist_sq) {
-      if (!is_blocked_by_hold_mode_unit(unit, target, units)) {
-        nearest_dist_sq = dist_sq;
-        nearest_enemy = target;
-      }
+      nearest_dist_sq = dist_sq;
+      nearest_enemy = target;
     }
   }
 

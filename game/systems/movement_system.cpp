@@ -5,7 +5,6 @@
 #include "core/component.h"
 #include "core/event_manager.h"
 #include "map/terrain.h"
-#include "owner_registry.h"
 #include "pathfinding.h"
 #include <QVector3D>
 #include <algorithm>
@@ -27,66 +26,6 @@ static constexpr float kUnstuckCooldown = 1.5F;
 static constexpr float kUnstuckOffsetRadius = 1.0F;
 
 namespace {
-
-auto check_collision_with_hold_mode_units(
-    Engine::Core::World &world, Engine::Core::Entity *moving_entity,
-    float new_x, float new_z, float collision_radius = 0.8F) -> bool {
-  auto *moving_unit =
-      moving_entity->get_component<Engine::Core::UnitComponent>();
-  if (moving_unit == nullptr) {
-    return false;
-  }
-
-  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-  auto all_units = world.get_entities_with<Engine::Core::UnitComponent>();
-
-  for (auto *other_entity : all_units) {
-    if (other_entity == moving_entity) {
-      continue;
-    }
-
-    if (other_entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto *other_unit =
-        other_entity->get_component<Engine::Core::UnitComponent>();
-    if ((other_unit == nullptr) || other_unit->health <= 0) {
-      continue;
-    }
-
-    if (other_unit->owner_id == moving_unit->owner_id) {
-      continue;
-    }
-    if (owner_registry.are_allies(moving_unit->owner_id,
-                                   other_unit->owner_id)) {
-      continue;
-    }
-
-    auto *hold_mode =
-        other_entity->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode == nullptr) || !hold_mode->active) {
-      continue;
-    }
-
-    auto *other_transform =
-        other_entity->get_component<Engine::Core::TransformComponent>();
-    if (other_transform == nullptr) {
-      continue;
-    }
-
-    float const dx = new_x - other_transform->position.x;
-    float const dz = new_z - other_transform->position.z;
-    float const dist_sq = dx * dx + dz * dz;
-    float const collision_dist = collision_radius * 2.0F;
-
-    if (dist_sq < collision_dist * collision_dist) {
-      return true;
-    }
-  }
-
-  return false;
-}
 
 auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
                       float unit_radius = 0.5F) -> bool {
@@ -567,20 +506,8 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     }
   }
 
-  float const old_x = transform->position.x;
-  float const old_z = transform->position.z;
-
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
-
-  if (check_collision_with_hold_mode_units(*world, entity,
-                                            transform->position.x,
-                                            transform->position.z)) {
-    transform->position.x = old_x;
-    transform->position.z = old_z;
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
-  }
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
