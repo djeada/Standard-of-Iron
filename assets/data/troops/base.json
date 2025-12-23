@@ -313,6 +313,41 @@
       }
     },
     {
+      "id": "elephant",
+      "display_name": "War Elephant",
+      "production": {
+        "cost": 350,
+        "build_time": 20.0,
+        "priority": 2,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 8000,
+        "max_health": 8000,
+        "speed": 2.2,
+        "vision_range": 16.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 0,
+        "ranged_cooldown": 2.0,
+        "melee_range": 3.5,
+        "melee_damage": 80,
+        "melee_cooldown": 1.8,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 2.0,
+        "selection_ring_size": 3.0,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/elephant"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
       "id": "builder",
       "display_name": "Builder",
       "production": {
