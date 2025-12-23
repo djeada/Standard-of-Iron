@@ -73,6 +73,16 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
           static_cast<int>(production->production_queue.size());
     }
 
+    if (auto *builder_prod =
+            entity->get_component<Engine::Core::BuilderProductionComponent>()) {
+      data.builder_production.has_component = true;
+      data.builder_production.has_construction_site =
+          builder_prod->has_construction_site;
+      data.builder_production.in_progress = builder_prod->in_progress;
+      data.builder_production.at_construction_site =
+          builder_prod->at_construction_site;
+    }
+
     snapshot.friendly_units.push_back(std::move(data));
     added++;
   }

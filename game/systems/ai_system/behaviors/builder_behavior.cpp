@@ -36,6 +36,12 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
+    // Skip builders that already have a construction assignment
+    if (entity.builder_production.has_component &&
+        entity.builder_production.has_construction_site) {
+      continue;
+    }
+
     if (entity.movement.has_component && !entity.movement.has_target) {
       available_builders.push_back(entity.id);
     }
