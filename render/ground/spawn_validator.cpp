@@ -204,6 +204,8 @@ auto SpawnValidator::check_terrain_type(int grid_x, int grid_z) const -> bool {
     return m_config.allow_mountain;
   case Game::Map::TerrainType::River:
     return m_config.allow_river;
+  case Game::Map::TerrainType::Forest:
+    return m_config.allow_flat; // Treat forest like flat terrain for spawning
   }
   return m_config.allow_flat;
 }
