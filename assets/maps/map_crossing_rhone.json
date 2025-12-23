@@ -4,8 +4,8 @@
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 1200,
   "grid": {
-    "width": 130,
-    "height": 80,
+    "width": 150,
+    "height": 150,
     "tileSize": 1.0
   },
   "biome": {
