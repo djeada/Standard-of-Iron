@@ -400,6 +400,10 @@ auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
   using namespace ElephantGaitConstants;
   ElephantProfile profile;
   profile.dims = make_elephant_dimensions(seed);
+  
+  // Scale elephant to be 2x smaller (0.5x scale)
+  scale_elephant_dimensions(profile.dims, 0.5F);
+  
   profile.variant = make_elephant_variant(seed, fabric_base, metal_base);
 
   profile.gait.cycle_time =
@@ -471,7 +475,14 @@ auto compute_howdah_frame(const ElephantProfile &profile)
   frame.seat_forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.seat_right = QVector3D(1.0F, 0.0F, 0.0F);
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
-  frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
+  
+  // Fix ground positioning: raise elephant so feet don't go below ground
+  // The feet extend down from shoulder by leg_length + foot_radius
+  // Shoulder is at barrel_center - body_height * 0.38
+  // Total depth = body_height * 0.38 + leg_length + foot_radius * 0.4
+  // But barrel_center_y already includes leg_length, so we need to add the extra depth
+  float const foot_depth = d.foot_radius * 0.4F; // foot pad extension below leg
+  frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y + foot_depth, 0.0F);
 
   frame.howdah_center =
       QVector3D(0.0F, d.barrel_center_y + d.body_height * 0.55F,
