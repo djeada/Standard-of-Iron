@@ -37,6 +37,10 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
+    if (entity.spawn_type == Game::Units::SpawnType::Builder) {
+      continue;
+    }
+
     if (isEntityEngaged(entity, snapshot.visible_enemies)) {
       continue;
     }

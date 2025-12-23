@@ -50,10 +50,38 @@ auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
 auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
                          Engine::Core::EntityID ignoreEntity,
                          float unit_radius = 0.5F) -> bool {
-  (void)from;
-  (void)to;
   (void)ignoreEntity;
   (void)unit_radius;
+
+  Pathfinding *pathfinder = CommandService::get_pathfinder();
+  if (pathfinder == nullptr) {
+    return true;
+  }
+
+  Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
+  if (!pathfinder->is_walkable(end_grid.x, end_grid.y)) {
+    return false;
+  }
+
+  QVector3D const direction = to - from;
+  float const length = direction.length();
+  if (length < 0.5F) {
+    return true;
+  }
+
+  constexpr float sample_interval = 0.5F;
+  int const num_samples = static_cast<int>(length / sample_interval);
+
+  for (int i = 1; i <= num_samples; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
+    QVector3D const sample_pos = from + direction * t;
+    Point const sample_grid =
+        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
+    if (!pathfinder->is_walkable(sample_grid.x, sample_grid.y)) {
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -508,6 +536,37 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
 
   transform->position.x += movement->vx * delta_time;
   transform->position.z += movement->vz * delta_time;
+
+  Pathfinding *pathfinder_check = CommandService::get_pathfinder();
+  if (pathfinder_check != nullptr) {
+    Point const new_grid = CommandService::world_to_grid(transform->position.x,
+                                                         transform->position.z);
+    if (!pathfinder_check->is_walkable(new_grid.x, new_grid.y)) {
+
+      transform->position.x -= movement->vx * delta_time;
+      transform->position.z -= movement->vz * delta_time;
+
+      movement->vx = 0.0F;
+      movement->vz = 0.0F;
+      movement->has_target = false;
+      movement->clear_path();
+      movement->path_pending = false;
+
+      if (movement->goal_x != 0.0F || movement->goal_y != 0.0F) {
+        Point const goal_grid =
+            CommandService::world_to_grid(movement->goal_x, movement->goal_y);
+        if (pathfinder_check->is_walkable(goal_grid.x, goal_grid.y)) {
+          CommandService::MoveOptions opts;
+          opts.clear_attack_intent = false;
+          opts.allow_direct_fallback = false;
+          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
+          std::vector<QVector3D> const targets = {
+              QVector3D(movement->goal_x, 0.0F, movement->goal_y)};
+          CommandService::move_units(*world, ids, targets, opts);
+        }
+      }
+    }
+  }
 
   auto &terrain = Game::Map::TerrainService::instance();
   if (terrain.is_initialized()) {
