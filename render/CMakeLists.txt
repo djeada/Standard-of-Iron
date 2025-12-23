@@ -96,6 +96,9 @@ add_library(render_gl STATIC
     entity/ballista_renderer.cpp
     entity/nations/roman/ballista_renderer.cpp
     entity/nations/carthage/ballista_renderer.cpp
+    elephant/rig.cpp
+    entity/elephant_renderer.cpp
+    entity/nations/carthage/elephant_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
     geom/selection_ring.cpp
     geom/selection_disc.cpp
