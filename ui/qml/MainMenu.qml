@@ -242,7 +242,7 @@ Item {
                                 Text {
                                     text: "›"
                                     font.pointSize: Theme.fontSizeTitle
-                                    color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textHint
+                                    color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textDim
                                     opacity: itemEnabled ? 1 : 0.3
                                 }
 
