@@ -144,8 +144,8 @@ void draw_tower_top(const DrawContext &p, ISubmitter &out, Mesh *unit,
   draw_box(out, unit, white, p.model, QVector3D(0.12F, 2.75F, 0.0F),
            QVector3D(0.22F, 0.15F, 0.025F), c.team);
 
-  for (int i = 0; i < 4; ++i) {
-    float ring_y = 2.45F + static_cast<float>(i) * 0.25F;
+  for (int i = 0; i < 2; ++i) {
+    float ring_y = 2.65F + static_cast<float>(i) * 0.30F;
     out.mesh(get_unit_cylinder(),
              p.model * Render::Geom::cylinder_between(
                            QVector3D(0.0F, ring_y, 0.0F),
@@ -155,9 +155,6 @@ void draw_tower_top(const DrawContext &p, ISubmitter &out, Mesh *unit,
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 3.15F, 0.0F),
            QVector3D(0.08F, 0.06F, 0.08F), c.bronze);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.18F, 3.08F, 0.0F),
-           QVector3D(0.3F, 0.025F, 0.015F), c.gold);
 }
 
 void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
