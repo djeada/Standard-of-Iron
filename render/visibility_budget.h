@@ -35,8 +35,8 @@ public:
     return GL::HumanoidLOD::Reduced;
   }
 
-  [[nodiscard]] auto request_horse_lod(GL::HorseLOD distance_lod) noexcept
-      -> GL::HorseLOD {
+  [[nodiscard]] auto
+  request_horse_lod(GL::HorseLOD distance_lod) noexcept -> GL::HorseLOD {
     const auto &budget = GraphicsSettings::instance().visibility_budget();
     if (!budget.enabled) {
       return distance_lod;
