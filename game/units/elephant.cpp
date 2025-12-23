@@ -101,7 +101,6 @@ void Elephant::init(const SpawnParams &params) {
   m_atk->can_melee = profile.combat.can_melee;
   m_atk->max_height_difference = 5.0F;
 
-  // Add elephant-specific component
   e->add_component<Engine::Core::ElephantComponent>();
 
   Engine::Core::EventManager::instance().publish(Engine::Core::UnitSpawnedEvent(
