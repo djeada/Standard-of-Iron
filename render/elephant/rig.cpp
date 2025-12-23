@@ -129,21 +129,31 @@ inline void draw_cone(ISubmitter &out, const QMatrix4x4 &model,
            nullptr, alpha, material_id);
 }
 
+// Issue #8: Material IDs for varying surface roughness (wrinkle normals)
+// Higher material IDs = rougher surfaces with more visible wrinkles
+constexpr int kMaterialElephantBody = 6;         // Base elephant skin
+constexpr int kMaterialElephantTrunk = 7;        // Rougher trunk with wrinkles
+constexpr int kMaterialElephantLegs = 8;         // Very rough legs
+constexpr int kMaterialElephantEars = 9;         // Thin membrane, less rough
+constexpr int kMaterialElephantTusk = 10;        // Smooth ivory
+
 } // namespace
 
 namespace ElephantDimensionRange {
 
-constexpr float kBodyLengthMin = 2.20F;
-constexpr float kBodyLengthMax = 2.60F;
-constexpr float kBodyWidthMin = 0.90F;
-constexpr float kBodyWidthMax = 1.10F;
-constexpr float kBodyHeightMin = 1.20F;
-constexpr float kBodyHeightMax = 1.50F;
+// Issue #: Flatten and lengthen the torso
+constexpr float kBodyLengthMin = 2.60F;
+constexpr float kBodyLengthMax = 3.00F;
+constexpr float kBodyWidthMin = 0.85F;
+constexpr float kBodyWidthMax = 1.00F;
+constexpr float kBodyHeightMin = 1.00F;
+constexpr float kBodyHeightMax = 1.25F;
 
-constexpr float kNeckLengthMin = 0.30F;
-constexpr float kNeckLengthMax = 0.45F;
-constexpr float kNeckWidthMin = 0.45F;
-constexpr float kNeckWidthMax = 0.55F;
+// Issue #: Carve a neck transition
+constexpr float kNeckLengthMin = 0.35F;
+constexpr float kNeckLengthMax = 0.50F;
+constexpr float kNeckWidthMin = 0.35F;
+constexpr float kNeckWidthMax = 0.45F;
 
 constexpr float kHeadLengthMin = 0.50F;
 constexpr float kHeadLengthMax = 0.65F;
@@ -152,26 +162,30 @@ constexpr float kHeadWidthMax = 0.70F;
 constexpr float kHeadHeightMin = 0.50F;
 constexpr float kHeadHeightMax = 0.65F;
 
-constexpr float kTrunkLengthMin = 1.40F;
-constexpr float kTrunkLengthMax = 1.80F;
-constexpr float kTrunkBaseRadiusMin = 0.12F;
-constexpr float kTrunkBaseRadiusMax = 0.18F;
+// Issue #: Fix trunk proportions - thicker base, more taper
+constexpr float kTrunkLengthMin = 1.50F;
+constexpr float kTrunkLengthMax = 1.90F;
+constexpr float kTrunkBaseRadiusMin = 0.18F;
+constexpr float kTrunkBaseRadiusMax = 0.25F;
 constexpr float kTrunkTipRadiusMin = 0.03F;
 constexpr float kTrunkTipRadiusMax = 0.05F;
 
-constexpr float kEarWidthMin = 0.55F;
-constexpr float kEarWidthMax = 0.75F;
-constexpr float kEarHeightMin = 0.60F;
-constexpr float kEarHeightMax = 0.80F;
-constexpr float kEarThicknessMin = 0.04F;
-constexpr float kEarThicknessMax = 0.06F;
+// Issue #: Make ears bigger and thinner
+constexpr float kEarWidthMin = 0.75F;
+constexpr float kEarWidthMax = 1.00F;
+constexpr float kEarHeightMin = 0.80F;
+constexpr float kEarHeightMax = 1.05F;
+constexpr float kEarThicknessMin = 0.02F;
+constexpr float kEarThicknessMax = 0.035F;
 
+// Issue #: Rebuild legs with joints - add knee/ankle dimensions
 constexpr float kLegLengthMin = 1.20F;
 constexpr float kLegLengthMax = 1.50F;
-constexpr float kLegRadiusMin = 0.18F;
-constexpr float kLegRadiusMax = 0.24F;
-constexpr float kFootRadiusMin = 0.22F;
-constexpr float kFootRadiusMax = 0.28F;
+constexpr float kLegRadiusMin = 0.16F;
+constexpr float kLegRadiusMax = 0.22F;
+// Issue #: Replace cuff-feet with real feet - wider foot base
+constexpr float kFootRadiusMin = 0.26F;
+constexpr float kFootRadiusMax = 0.34F;
 
 constexpr float kTailLengthMin = 0.60F;
 constexpr float kTailLengthMax = 0.85F;
@@ -526,23 +540,37 @@ void ElephantRendererBase::render_full(
 
   QVector3D const barrel_center(0.0F, d.barrel_center_y + bob, 0.0F);
 
-  // Main body
+  // Issue #1: Flatten and lengthen the torso with shoulder hump
+  // Issue #8: Using material IDs for surface roughness variation
+  // Main body - flatter, longer torso
   {
     QMatrix4x4 body = elephant_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width, d.body_height, d.body_length * 0.5F);
-    out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
+    body.scale(d.body_width, d.body_height * 0.85F, d.body_length * 0.55F);
+    out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
   }
 
-  // Rump
+  // Shoulder hump - raised area at shoulders
+  {
+    QVector3D const hump_pos =
+        barrel_center + QVector3D(0.0F, d.body_height * 0.25F,
+                                  d.body_length * 0.20F);
+    QMatrix4x4 hump = elephant_ctx.model;
+    hump.translate(hump_pos);
+    hump.scale(d.body_width * 0.85F, d.body_height * 0.35F,
+               d.body_length * 0.25F);
+    out.mesh(get_unit_sphere(), hump, v.skin_highlight, nullptr, 1.0F, kMaterialElephantBody);
+  }
+
+  // Rump - slopes down from shoulders toward hips
   {
     QVector3D const rump_pos =
-        barrel_center + QVector3D(0.0F, 0.0F, -d.body_length * 0.35F);
+        barrel_center + QVector3D(0.0F, -d.body_height * 0.08F, -d.body_length * 0.35F);
     QMatrix4x4 rump = elephant_ctx.model;
     rump.translate(rump_pos);
-    rump.scale(d.body_width * 0.95F, d.body_height * 0.90F,
-               d.body_length * 0.30F);
-    out.mesh(get_unit_sphere(), rump, v.skin_shadow, nullptr, 1.0F, 6);
+    rump.scale(d.body_width * 0.90F, d.body_height * 0.78F,
+               d.body_length * 0.32F);
+    out.mesh(get_unit_sphere(), rump, v.skin_shadow, nullptr, 1.0F, kMaterialElephantBody);
   }
 
   // Shoulders/chest
@@ -554,80 +582,147 @@ void ElephantRendererBase::render_full(
     chest.translate(chest_pos);
     chest.scale(d.body_width * 0.90F, d.body_height * 0.85F,
                 d.body_length * 0.25F);
-    out.mesh(get_unit_sphere(), chest, v.skin_highlight, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), chest, v.skin_highlight, nullptr, 1.0F, kMaterialElephantBody);
   }
 
-  // Neck
+  // Issue #2: Carve a neck transition - narrowing behind the head
+  // Neck base (thicker, connects to shoulders)
   QVector3D const neck_base =
       barrel_center + QVector3D(0.0F, d.body_height * 0.40F,
                                 d.body_length * 0.40F);
+  // Neck mid (narrower transition zone)
+  QVector3D const neck_mid =
+      neck_base + QVector3D(0.0F, d.neck_length * 0.35F, d.neck_length * 0.40F);
   QVector3D const neck_top =
-      neck_base + QVector3D(0.0F, d.neck_length * 0.5F, d.neck_length * 0.6F);
-  draw_cylinder(out, elephant_ctx.model, neck_base, neck_top, d.neck_width,
-                v.skin_color, 1.0F);
+      neck_mid + QVector3D(0.0F, d.neck_length * 0.25F, d.neck_length * 0.25F);
 
+  // Draw neck with taper: base thicker, narrowing toward head
+  draw_cylinder(out, elephant_ctx.model, neck_base, neck_mid, d.neck_width * 1.1F,
+                v.skin_color, 1.0F, kMaterialElephantBody);
+  draw_cylinder(out, elephant_ctx.model, neck_mid, neck_top, d.neck_width * 0.85F,
+                v.skin_color, 1.0F, kMaterialElephantBody);
+
+  // Issue #5: Shape skull planes - brow ridge, cheek bulge, forehead-to-trunk break
   // Head
   QVector3D const head_center =
-      neck_top + QVector3D(0.0F, d.head_height * 0.3F, d.head_length * 0.3F);
+      neck_top + QVector3D(0.0F, d.head_height * 0.35F, d.head_length * 0.25F);
   {
+    // Main skull
     QMatrix4x4 head = elephant_ctx.model;
     head.translate(head_center);
-    head.scale(d.head_width, d.head_height, d.head_length);
-    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
+    head.scale(d.head_width, d.head_height * 0.90F, d.head_length * 0.95F);
+    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
   }
 
-  // Trunk
+  // Brow ridge - pronounced ridge above eyes
+  {
+    QVector3D const brow_pos =
+        head_center + QVector3D(0.0F, d.head_height * 0.35F, d.head_length * 0.15F);
+    QMatrix4x4 brow = elephant_ctx.model;
+    brow.translate(brow_pos);
+    brow.scale(d.head_width * 0.95F, d.head_height * 0.18F, d.head_length * 0.25F);
+    out.mesh(get_unit_sphere(), brow, v.skin_highlight, nullptr, 1.0F, kMaterialElephantBody);
+  }
+
+  // Cheek bulges - sides of face
+  for (int side = -1; side <= 1; side += 2) {
+    float const side_f = static_cast<float>(side);
+    QVector3D const cheek_pos =
+        head_center + QVector3D(side_f * d.head_width * 0.55F,
+                                -d.head_height * 0.05F, d.head_length * 0.20F);
+    QMatrix4x4 cheek = elephant_ctx.model;
+    cheek.translate(cheek_pos);
+    cheek.scale(d.head_width * 0.30F, d.head_height * 0.40F, d.head_length * 0.30F);
+    out.mesh(get_unit_sphere(), cheek, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
+  }
+
+  // Forehead-to-trunk break - depression between forehead and trunk base
+  {
+    QVector3D const break_pos =
+        head_center + QVector3D(0.0F, d.head_height * 0.10F, d.head_length * 0.50F);
+    QMatrix4x4 forehead_break = elephant_ctx.model;
+    forehead_break.translate(break_pos);
+    forehead_break.scale(d.head_width * 0.45F, d.head_height * 0.22F, d.head_length * 0.20F);
+    out.mesh(get_unit_sphere(), forehead_break, v.skin_shadow, nullptr, 1.0F, kMaterialElephantBody);
+  }
+
+  // Issue #7: Fix trunk proportions and flow - thicker base, natural downward curve
+  // Issue #8: Trunk uses rougher material for wrinkle effect
+  // Trunk with muscular base and gradual taper
   {
     QVector3D const trunk_base =
-        head_center + QVector3D(0.0F, -d.head_height * 0.3F,
-                                d.head_length * 0.7F);
-    QVector3D trunk_tip = trunk_base + QVector3D(trunk_swing * 0.3F,
-                                                  -d.trunk_length * 0.8F,
-                                                  d.trunk_length * 0.4F);
+        head_center + QVector3D(0.0F, -d.head_height * 0.25F,
+                                d.head_length * 0.65F);
+    // Natural downward curve - trunk hangs more vertically with slight forward reach
+    QVector3D trunk_tip = trunk_base + QVector3D(trunk_swing * 0.25F,
+                                                  -d.trunk_length * 0.85F,
+                                                  d.trunk_length * 0.25F);
 
-    constexpr int k_trunk_segments = 8;
+    constexpr int k_trunk_segments = 10;
     QVector3D prev = trunk_base;
     for (int i = 1; i <= k_trunk_segments; ++i) {
       float const t = static_cast<float>(i) / static_cast<float>(k_trunk_segments);
+      // Non-linear taper: thick at base, gradual narrow
+      float const taper = 1.0F - std::pow(t, 0.7F);
       float const radius =
-          lerp(d.trunk_base_radius, d.trunk_tip_radius, t);
-      QVector3D const swing_offset =
-          QVector3D(std::sin(t * k_pi + trunk_swing * 2.0F) * 0.1F, 0.0F, 0.0F);
-      QVector3D const next = lerp3(trunk_base, trunk_tip, t) + swing_offset;
+          d.trunk_tip_radius + (d.trunk_base_radius - d.trunk_tip_radius) * taper;
+      // Natural S-curve: forward at base, down in middle, slight curl at tip
+      float const curve_x = std::sin(t * k_pi * 1.5F + trunk_swing * 2.5F) * 0.08F;
+      float const curve_z = std::sin(t * k_pi * 0.8F) * d.trunk_length * 0.05F;
+      QVector3D const curve_offset = QVector3D(curve_x, 0.0F, curve_z);
+      QVector3D const next = lerp3(trunk_base, trunk_tip, t) + curve_offset;
       draw_cylinder(out, elephant_ctx.model, prev, next, radius, v.skin_color,
-                    1.0F, 6);
+                    1.0F, kMaterialElephantTrunk);
       prev = next;
     }
   }
 
-  // Ears
+  // Issue #6: Make ears bigger and thinner - like flexible membranes with thin rim
+  // Issue #8: Ears use thinner, less rough material
   for (int side = -1; side <= 1; side += 2) {
     float const side_f = static_cast<float>(side);
     float const flap_angle = ear_flap * side_f;
 
     QVector3D const ear_base =
-        head_center + QVector3D(side_f * d.head_width * 0.8F,
-                                d.head_height * 0.2F, -d.head_length * 0.2F);
+        head_center + QVector3D(side_f * d.head_width * 0.85F,
+                                d.head_height * 0.15F, -d.head_length * 0.18F);
     QVector3D ear_outer =
-        ear_base + QVector3D(side_f * d.ear_width * (0.8F + flap_angle),
-                             d.ear_height * 0.3F, 0.0F);
+        ear_base + QVector3D(side_f * d.ear_width * (0.95F + flap_angle),
+                             d.ear_height * 0.35F, -d.ear_width * 0.1F);
 
+    // Main ear membrane - larger and thinner
     QMatrix4x4 ear = elephant_ctx.model;
     ear.translate((ear_base + ear_outer) * 0.5F);
-    ear.scale(d.ear_width * 0.5F, d.ear_height * 0.5F, d.ear_thickness);
-    out.mesh(get_unit_sphere(), ear, v.skin_shadow, nullptr, 1.0F, 6);
+    ear.scale(d.ear_width * 0.60F, d.ear_height * 0.58F, d.ear_thickness * 0.7F);
+    out.mesh(get_unit_sphere(), ear, v.skin_shadow, nullptr, 1.0F, kMaterialElephantEars);
 
-    // Inner ear
+    // Thin outer rim of ear
+    QVector3D const rim_center = (ear_base + ear_outer) * 0.5F +
+        QVector3D(side_f * d.ear_width * 0.30F, d.ear_height * 0.05F, 0.0F);
+    QMatrix4x4 rim = elephant_ctx.model;
+    rim.translate(rim_center);
+    rim.scale(d.ear_width * 0.15F, d.ear_height * 0.55F, d.ear_thickness * 0.4F);
+    out.mesh(get_unit_sphere(), rim, v.skin_color, nullptr, 1.0F, kMaterialElephantEars);
+
+    // Gentle fold in ear
+    QVector3D const fold_pos = (ear_base + ear_outer) * 0.5F +
+        QVector3D(side_f * d.ear_width * -0.10F, d.ear_height * 0.08F, d.ear_thickness * 0.3F);
+    QMatrix4x4 fold = elephant_ctx.model;
+    fold.translate(fold_pos);
+    fold.scale(d.ear_width * 0.25F, d.ear_height * 0.20F, d.ear_thickness * 0.3F);
+    out.mesh(get_unit_sphere(), fold, v.skin_highlight, nullptr, 1.0F, kMaterialElephantEars);
+
+    // Inner ear coloring - larger
     QMatrix4x4 ear_inner = elephant_ctx.model;
     ear_inner.translate((ear_base + ear_outer) * 0.5F +
-                        QVector3D(side_f * d.ear_thickness * 0.5F, 0.0F,
-                                  d.ear_thickness * 0.2F));
-    ear_inner.scale(d.ear_width * 0.35F, d.ear_height * 0.35F,
-                    d.ear_thickness * 0.5F);
-    out.mesh(get_unit_sphere(), ear_inner, v.ear_inner_color, nullptr, 1.0F, 6);
+                        QVector3D(side_f * d.ear_thickness * 0.3F, 0.0F,
+                                  d.ear_thickness * 0.15F));
+    ear_inner.scale(d.ear_width * 0.42F, d.ear_height * 0.40F,
+                    d.ear_thickness * 0.35F);
+    out.mesh(get_unit_sphere(), ear_inner, v.ear_inner_color, nullptr, 1.0F, kMaterialElephantEars);
   }
 
-  // Tusks
+  // Tusks - smooth ivory material
   for (int side = -1; side <= 1; side += 2) {
     float const side_f = static_cast<float>(side);
     QVector3D const tusk_base =
@@ -637,7 +732,7 @@ void ElephantRendererBase::render_full(
         tusk_base + QVector3D(side_f * d.tusk_length * 0.2F,
                               -d.tusk_length * 0.3F, d.tusk_length * 0.7F);
     draw_cone(out, elephant_ctx.model, tusk_tip, tusk_base, d.tusk_radius,
-              v.tusk_color, 1.0F, 8);
+              v.tusk_color, 1.0F, kMaterialElephantTusk);
   }
 
   // Eyes
@@ -650,61 +745,110 @@ void ElephantRendererBase::render_full(
     eye.translate(eye_pos);
     eye.scale(d.head_width * 0.08F);
     out.mesh(get_unit_sphere(), eye, QVector3D(0.1F, 0.08F, 0.06F), nullptr,
-             1.0F, 6);
+             1.0F, kMaterialElephantBody);
   }
 
-  // Legs
-  auto draw_leg = [&](float x_offset, float z_offset, float phase_offset) {
+  // Issue #3, #4, #10: Rebuild legs with joints, real feet, and realistic movement
+  // Issue #8: Legs use rougher material for stronger wrinkle effect
+  auto draw_leg = [&](float x_offset, float z_offset, float phase_offset, bool is_front) {
     float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
     float stride = 0.0F;
     float lift = 0.0F;
+    float knee_bend = 0.0F;
+    float ankle_bend = 0.0F;
 
     if (is_moving) {
       float const angle = leg_phase * 2.0F * k_pi;
       stride = std::sin(angle) * profile.gait.stride_swing;
       float const lift_raw = std::sin(angle);
       lift = lift_raw > 0.0F ? lift_raw * profile.gait.stride_lift : 0.0F;
+
+      // Issue #10: Realistic leg movement with joint articulation
+      knee_bend = lift_raw > 0.0F ? lift_raw * 0.12F : -0.03F;
+      ankle_bend = lift_raw > 0.0F ? -lift_raw * 0.08F : 0.02F;
     }
 
+    float const upper_leg_length = d.leg_length * 0.45F;
+    float const lower_leg_length = d.leg_length * 0.40F;
+    float const ankle_length = d.leg_length * 0.15F;
+
+    // Shoulder/hip joint
     QVector3D const shoulder =
-        barrel_center + QVector3D(x_offset, -d.body_height * 0.4F,
-                                  z_offset + stride);
-    QVector3D const foot = shoulder + QVector3D(0.0F, -d.leg_length + lift, 0.0F);
+        barrel_center + QVector3D(x_offset, -d.body_height * 0.38F,
+                                  z_offset + stride * 0.5F);
 
-    draw_cylinder(out, elephant_ctx.model, shoulder, foot, d.leg_radius,
-                  v.skin_color, 1.0F, 6);
+    // Issue #3: Knee with forward bulge (S-like silhouette)
+    QVector3D const knee = shoulder + QVector3D(
+        stride * 0.3F,
+        -upper_leg_length + lift * 0.4F,
+        (is_front ? 0.08F : -0.06F) + knee_bend);
+    // Knee bulge
+    QMatrix4x4 knee_bulge = elephant_ctx.model;
+    knee_bulge.translate(knee);
+    knee_bulge.scale(d.leg_radius * 1.15F, d.leg_radius * 0.9F, d.leg_radius * 1.1F);
+    out.mesh(get_unit_sphere(), knee_bulge, v.skin_color, nullptr, 1.0F, kMaterialElephantLegs);
 
-    // Foot
+    // Issue #3: Ankle with backward mass (heel)
+    QVector3D const ankle = knee + QVector3D(
+        stride * 0.4F,
+        -lower_leg_length + lift * 0.5F,
+        (is_front ? -0.05F : 0.04F) + ankle_bend);
+    // Ankle/heel bulge
+    QMatrix4x4 ankle_bulge = elephant_ctx.model;
+    ankle_bulge.translate(ankle + QVector3D(0.0F, 0.0F, is_front ? -0.03F : 0.04F));
+    ankle_bulge.scale(d.leg_radius * 0.95F, d.leg_radius * 0.75F, d.leg_radius * 1.0F);
+    out.mesh(get_unit_sphere(), ankle_bulge, v.skin_shadow, nullptr, 1.0F, kMaterialElephantLegs);
+
+    // Foot position
+    QVector3D const foot = ankle + QVector3D(stride * 0.2F, -ankle_length + lift * 0.1F, 0.0F);
+
+    // Draw leg segments with varying radii
+    draw_cylinder(out, elephant_ctx.model, shoulder, knee, d.leg_radius * 1.05F,
+                  v.skin_color, 1.0F, kMaterialElephantLegs);
+    draw_cylinder(out, elephant_ctx.model, knee, ankle, d.leg_radius * 0.92F,
+                  v.skin_color, 1.0F, kMaterialElephantLegs);
+    draw_cylinder(out, elephant_ctx.model, ankle, foot, d.leg_radius * 0.85F,
+                  v.skin_shadow, 1.0F, kMaterialElephantLegs);
+
+    // Issue #4: Replace cuff-feet with real feet - wide base with thick pad
+    // Foot pad - wider and flatter
     QMatrix4x4 foot_mesh = elephant_ctx.model;
     foot_mesh.translate(foot);
-    foot_mesh.scale(d.foot_radius, d.foot_radius * 0.4F, d.foot_radius);
-    out.mesh(get_unit_cylinder(), foot_mesh, v.skin_shadow, nullptr, 1.0F, 6);
+    foot_mesh.scale(d.foot_radius * 1.1F, d.foot_radius * 0.30F, d.foot_radius * 1.05F);
+    out.mesh(get_unit_cylinder(), foot_mesh, v.skin_shadow, nullptr, 1.0F, kMaterialElephantLegs);
 
-    // Toenails
-    for (int i = -1; i <= 1; ++i) {
-      float const angle_offset = static_cast<float>(i) * 0.4F;
+    // Thick pad cushion underneath
+    QMatrix4x4 pad = elephant_ctx.model;
+    pad.translate(foot + QVector3D(0.0F, -d.foot_radius * 0.15F, 0.0F));
+    pad.scale(d.foot_radius * 0.95F, d.foot_radius * 0.18F, d.foot_radius * 0.90F);
+    out.mesh(get_unit_cylinder(), pad, darken(v.skin_shadow, 0.85F), nullptr, 1.0F, kMaterialElephantLegs);
+
+    // Issue #4: 4 toenail bumps arranged in an arc at the front
+    constexpr int num_toenails = 4;
+    for (int i = 0; i < num_toenails; ++i) {
+      float const angle_offset = (static_cast<float>(i) - 1.5F) * 0.35F;
       QVector3D const nail_pos =
-          foot + QVector3D(d.foot_radius * 0.7F * std::sin(angle_offset),
-                           d.foot_radius * 0.1F,
-                           d.foot_radius * 0.7F * std::cos(angle_offset));
+          foot + QVector3D(d.foot_radius * 0.80F * std::sin(angle_offset),
+                           d.foot_radius * 0.08F,
+                           d.foot_radius * 0.75F * std::cos(angle_offset));
       QMatrix4x4 nail = elephant_ctx.model;
       nail.translate(nail_pos);
-      nail.scale(d.foot_radius * 0.15F);
-      out.mesh(get_unit_sphere(), nail, v.toenail_color, nullptr, 1.0F, 8);
+      nail.scale(d.foot_radius * 0.14F, d.foot_radius * 0.12F, d.foot_radius * 0.16F);
+      out.mesh(get_unit_sphere(), nail, v.toenail_color, nullptr, 1.0F, kMaterialElephantTusk);
     }
   };
 
   // Front legs
   draw_leg(d.body_width * 0.45F, d.body_length * 0.30F,
-           profile.gait.front_leg_phase);
+           profile.gait.front_leg_phase, true);
   draw_leg(-d.body_width * 0.45F, d.body_length * 0.30F,
-           profile.gait.front_leg_phase + 0.5F);
+           profile.gait.front_leg_phase + 0.5F, true);
 
   // Rear legs
   draw_leg(d.body_width * 0.45F, -d.body_length * 0.30F,
-           profile.gait.rear_leg_phase);
+           profile.gait.rear_leg_phase, false);
   draw_leg(-d.body_width * 0.45F, -d.body_length * 0.30F,
-           profile.gait.rear_leg_phase + 0.5F);
+           profile.gait.rear_leg_phase + 0.5F, false);
 
   // Tail
   {
@@ -723,7 +867,7 @@ void ElephantRendererBase::render_full(
       float const radius = d.leg_radius * 0.15F * (1.0F - t * 0.6F);
       QVector3D const next = lerp3(tail_base, tail_tip, t);
       draw_cylinder(out, elephant_ctx.model, prev, next, radius, v.skin_shadow,
-                    1.0F, 6);
+                    1.0F, kMaterialElephantBody);
       prev = next;
     }
 
@@ -732,7 +876,7 @@ void ElephantRendererBase::render_full(
     tuft.translate(tail_tip);
     tuft.scale(d.leg_radius * 0.25F, d.leg_radius * 0.35F, d.leg_radius * 0.25F);
     out.mesh(get_unit_sphere(), tuft, darken(v.skin_shadow, 0.6F), nullptr,
-             1.0F, 6);
+             1.0F, kMaterialElephantBody);
   }
 
   // Howdah (war platform)
@@ -775,7 +919,7 @@ void ElephantRendererBase::render_simplified(
     body.translate(barrel_center);
     body.scale(d.body_width * 1.1F, d.body_height * 0.95F,
                d.body_length * 0.65F);
-    out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
+    out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
   }
 
   // Head
@@ -787,7 +931,7 @@ void ElephantRendererBase::render_simplified(
     head.translate(head_center);
     head.scale(d.head_width * 0.9F, d.head_height * 0.85F,
                d.head_length * 0.75F);
-    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
+    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
   }
 
   // Simple legs
@@ -802,7 +946,7 @@ void ElephantRendererBase::render_simplified(
     QVector3D const bottom = top + QVector3D(0.0F, -d.leg_length * 0.90F, 0.0F);
 
     draw_cylinder(out, elephant_ctx.model, top, bottom, d.leg_radius * 0.9F,
-                  v.skin_color, 1.0F, 6);
+                  v.skin_color, 1.0F, kMaterialElephantLegs);
   }
 }
 
@@ -827,7 +971,7 @@ void ElephantRendererBase::render_minimal(
   QMatrix4x4 body = elephant_ctx.model;
   body.translate(center);
   body.scale(d.body_width * 1.3F, d.body_height * 1.2F, d.body_length * 0.8F);
-  out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
+  out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, kMaterialElephantBody);
 
   // Minimal legs
   for (int i = 0; i < 4; ++i) {
@@ -840,7 +984,7 @@ void ElephantRendererBase::render_minimal(
     QVector3D const bottom = top + QVector3D(0.0F, -d.leg_length * 0.70F, 0.0F);
 
     draw_cylinder(out, elephant_ctx.model, top, bottom, d.leg_radius * 0.7F,
-                  v.skin_color * 0.85F, 1.0F, 6);
+                  v.skin_color * 0.85F, 1.0F, kMaterialElephantLegs);
   }
 }
 
