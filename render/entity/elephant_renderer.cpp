@@ -27,7 +27,7 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
           renderer_key = "troops/carthage/elephant";
           break;
         case Game::Systems::NationID::RomanRepublic:
-          // Romans didn't use war elephants historically, default to Carthage
+
           renderer_key = "troops/carthage/elephant";
           break;
         default:
