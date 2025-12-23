@@ -1042,6 +1042,12 @@ void GameEngine::update_loading_overlay() {
     }
     m_finalize_progress_after_overlay = false;
     emit is_loading_changed();
+    
+    // Emit campaign_mission_changed now that loading is complete and QML !game.is_loading check will pass
+    if (m_show_objectives_after_loading) {
+      m_show_objectives_after_loading = false;
+      emit campaign_mission_changed();
+    }
   }
 }
 
@@ -1651,6 +1657,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     m_loading_overlay_active = false;
     m_loading_overlay_wait_for_first_frame = false;
     m_finalize_progress_after_overlay = false;
+    m_show_objectives_after_loading = false;
     emit is_loading_changed();
     return;
   }
@@ -2049,6 +2056,10 @@ void GameEngine::finalize_skirmish_load() {
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
   m_finalize_progress_after_overlay = true;
+  
+  // Set flag to show objectives after loading completes, since QML checks !game.is_loading
+  m_show_objectives_after_loading = is_campaign_mission();
+  
   emit is_loading_changed();
 
   GameStateRestorer::rebuild_entity_cache(m_world.get(), m_entity_cache,
@@ -2068,7 +2079,6 @@ void GameEngine::finalize_skirmish_load() {
 
   emit owner_info_changed();
   emit spectator_mode_changed();
-  emit campaign_mission_changed();
 }
 
 void GameEngine::open_settings() {
@@ -2108,6 +2118,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     m_loading_overlay_active = false;
     m_loading_overlay_wait_for_first_frame = false;
     m_finalize_progress_after_overlay = false;
+    m_show_objectives_after_loading = false;
     emit is_loading_changed();
     return false;
   }
