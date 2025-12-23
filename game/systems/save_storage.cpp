@@ -1251,6 +1251,17 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
     return false;
   }
 
+  if (unlock_query.numRowsAffected() == 0) {
+    if (out_error != nullptr) {
+      *out_error =
+          QStringLiteral("No next mission found to unlock (completed mission "
+                         "order: %1)")
+              .arg(completed_order);
+    }
+    transaction.rollback();
+    return false;
+  }
+
   if (!transaction.commit(out_error)) {
     return false;
   }
