@@ -12,6 +12,7 @@ inline constexpr float kMoveAmountFactor = 0.5F;
 inline constexpr float kMinDistance = 0.001F;
 inline constexpr float kMaxDisplacementPerFrame = 0.02F;
 inline constexpr float kRangeMultiplierHold = 1.5F;
+inline constexpr float kRangeMultiplierSpearmanHold = 2.0F;
 inline constexpr float kDamageMultiplierArcherHold = 1.5F;
 inline constexpr float kDamageMultiplierSpearmanHold = 1.5F;
 inline constexpr float kDamageMultiplierDefaultHold = 1.75F;

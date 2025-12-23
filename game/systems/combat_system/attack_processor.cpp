@@ -157,6 +157,20 @@ void sync_melee_lock_target(Engine::Core::Entity *attacker,
   }
 }
 
+void apply_health_bonus(Engine::Core::UnitComponent *unit_comp) {
+  auto base_max_health_opt = get_base_max_health(unit_comp);
+  int const base_max_health =
+      base_max_health_opt.value_or(std::max(1, unit_comp->max_health));
+  int const max_health_bonus = static_cast<int>(
+      static_cast<float>(base_max_health) * Constants::kHealthMultiplierHold);
+  if (unit_comp->max_health < max_health_bonus) {
+    int const safe_max_health = std::max(1, unit_comp->max_health);
+    int const health_percentage = (unit_comp->health * 100) / safe_max_health;
+    unit_comp->max_health = max_health_bonus;
+    unit_comp->health = (max_health_bonus * health_percentage) / 100;
+  }
+}
+
 void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
                              Engine::Core::UnitComponent *unit_comp,
                              float &range, int &damage) {
@@ -165,23 +179,16 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
     return;
   }
 
-  if (unit_comp->spawn_type == Game::Units::SpawnType::Archer ||
-      unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
+  if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
     range *= Constants::kRangeMultiplierHold;
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierArcherHold);
-
-    auto base_max_health_opt = get_base_max_health(unit_comp);
-    int const base_max_health =
-        base_max_health_opt.value_or(std::max(1, unit_comp->max_health));
-    int const max_health_bonus = static_cast<int>(
-        static_cast<float>(base_max_health) * Constants::kHealthMultiplierHold);
-    if (unit_comp->max_health < max_health_bonus) {
-      int const safe_max_health = std::max(1, unit_comp->max_health);
-      int const health_percentage = (unit_comp->health * 100) / safe_max_health;
-      unit_comp->max_health = max_health_bonus;
-      unit_comp->health = (max_health_bonus * health_percentage) / 100;
-    }
+    apply_health_bonus(unit_comp);
+  } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
+    range *= Constants::kRangeMultiplierSpearmanHold;
+    damage = static_cast<int>(static_cast<float>(damage) *
+                              Constants::kDamageMultiplierSpearmanHold);
+    apply_health_bonus(unit_comp);
   } else {
     damage = static_cast<int>(static_cast<float>(damage) *
                               Constants::kDamageMultiplierDefaultHold);
