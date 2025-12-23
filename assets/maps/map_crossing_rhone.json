@@ -65,7 +65,7 @@
       "playerId": 1
     },
     {
-      "type": "horse_swordsman",
+      "type": "elephant",
       "x": 12,
       "z": 34,
       "playerId": 1
@@ -106,14 +106,14 @@
       "x": 18,
       "z": 128,
       "playerId": 2,
-      "maxPopulation": 500
+      "maxPopulation": 120
     },
     {
       "type": "barracks",
       "x": 132,
       "z": 125,
       "playerId": 2,
-      "maxPopulation": 800
+      "maxPopulation": 120
     },
 
     {

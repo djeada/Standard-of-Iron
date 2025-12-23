@@ -2,6 +2,7 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../elephant/rig.h"
+#include "../../../gl/humanoid/humanoid_types.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
