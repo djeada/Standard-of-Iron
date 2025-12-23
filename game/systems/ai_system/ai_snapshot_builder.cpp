@@ -104,6 +104,10 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     contact.max_health = unit->max_health;
     contact.spawn_type = unit->spawn_type;
 
+    // Check if enemy is in hold mode
+    auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
+    contact.is_in_hold_mode = (hold_mode != nullptr) && hold_mode->active;
+
     snapshot.visible_enemies.push_back(std::move(contact));
   }
 

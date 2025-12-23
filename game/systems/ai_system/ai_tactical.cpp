@@ -136,6 +136,12 @@ auto TacticalUtils::select_focus_fire_target(
       score += 3.0F;
     }
 
+    // Give high priority to hold-mode units - they must be engaged first
+    // to prevent bypassing them
+    if (enemy->is_in_hold_mode) {
+      score += 15.0F;
+    }
+
     if (score > best_target.score) {
       best_target.target_id = enemy->id;
       best_target.score = score;
@@ -143,6 +149,98 @@ auto TacticalUtils::select_focus_fire_target(
       best_target.is_low_health =
           (enemy->max_health > 0 && enemy->health < enemy->max_health / 2);
       best_target.is_isolated = isolated;
+    }
+  }
+
+  // After selecting best target, check if a hold-mode enemy is blocking path
+  // If so, prioritize that blocking enemy instead
+  if (best_target.target_id != 0) {
+    const ContactSnapshot *selected_enemy = nullptr;
+    for (const auto *e : enemies) {
+      if (e->id == best_target.target_id) {
+        selected_enemy = e;
+        break;
+      }
+    }
+
+    if (selected_enemy != nullptr && !selected_enemy->is_in_hold_mode) {
+      // Check if any hold-mode enemy is blocking the path to the selected
+      // target
+      constexpr float kBlockingRadius = 2.0F;
+      const ContactSnapshot *blocking_enemy = nullptr;
+      float blocking_dist = best_target.distance_to_group;
+
+      for (const auto *potential_blocker : enemies) {
+        if (potential_blocker->id == best_target.target_id) {
+          continue;
+        }
+        if (!potential_blocker->is_in_hold_mode) {
+          continue;
+        }
+        if (potential_blocker->is_building) {
+          continue;
+        }
+
+        // Check if blocker is between group and target
+        float const blocker_dist =
+            distance(potential_blocker->posX, potential_blocker->posY,
+                     potential_blocker->posZ, group_center_x, group_center_y,
+                     group_center_z);
+
+        // Blocker must be closer than target
+        if (blocker_dist >= best_target.distance_to_group) {
+          continue;
+        }
+
+        // Check if blocker is on the path to target
+        float const to_target_x = selected_enemy->posX - group_center_x;
+        float const to_target_z = selected_enemy->posZ - group_center_z;
+        float const dist_to_target_sq =
+            to_target_x * to_target_x + to_target_z * to_target_z;
+
+        if (dist_to_target_sq < 0.01F) {
+          continue;
+        }
+
+        float const dist_to_target = std::sqrt(dist_to_target_sq);
+        float const dir_x = to_target_x / dist_to_target;
+        float const dir_z = to_target_z / dist_to_target;
+
+        float const to_blocker_x = potential_blocker->posX - group_center_x;
+        float const to_blocker_z = potential_blocker->posZ - group_center_z;
+
+        // Project blocker onto path direction
+        float const projection = to_blocker_x * dir_x + to_blocker_z * dir_z;
+        if (projection <= 0.0F) {
+          continue; // Blocker is behind the group
+        }
+
+        float const proj_x = projection * dir_x;
+        float const proj_z = projection * dir_z;
+        float const perp_x = to_blocker_x - proj_x;
+        float const perp_z = to_blocker_z - proj_z;
+        float const perp_dist_sq = perp_x * perp_x + perp_z * perp_z;
+
+        if (perp_dist_sq <= kBlockingRadius * kBlockingRadius) {
+          // This hold-mode enemy is blocking the path
+          if (blocker_dist < blocking_dist) {
+            blocking_dist = blocker_dist;
+            blocking_enemy = potential_blocker;
+          }
+        }
+      }
+
+      // If we found a blocking enemy, target them instead
+      if (blocking_enemy != nullptr) {
+        best_target.target_id = blocking_enemy->id;
+        best_target.score += 20.0F; // High priority for blocker
+        best_target.distance_to_group = blocking_dist;
+        best_target.is_low_health =
+            (blocking_enemy->max_health > 0 &&
+             blocking_enemy->health < blocking_enemy->max_health / 2);
+        best_target.is_isolated =
+            is_target_isolated(*blocking_enemy, enemies, 8.0F);
+      }
     }
   }
 

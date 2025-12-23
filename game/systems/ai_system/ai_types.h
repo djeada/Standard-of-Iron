@@ -87,6 +87,7 @@ struct ContactSnapshot {
   int health = 0;
   int max_health = 0;
   Game::Units::SpawnType spawn_type = Game::Units::SpawnType::Archer;
+  bool is_in_hold_mode = false;
 };
 
 struct AISnapshot {

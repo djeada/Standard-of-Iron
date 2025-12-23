@@ -5,10 +5,64 @@
 #include "../owner_registry.h"
 #include "../spatial_grid.h"
 
+#include <cmath>
+
 namespace Game::Systems::Combat {
 
 namespace {
 thread_local SpatialGrid t_unit_grid(15.0F);
+
+// Radius for hold mode blocking zone - how close a unit must be to the path
+constexpr float kHoldModeBlockingRadius = 2.0F;
+
+// Check if a hold-mode unit is blocking the path from attacker to target
+// Returns true if the blocker is between attacker and target and close to
+// the path
+auto is_blocking_path(float attacker_x, float attacker_z, float target_x,
+                      float target_z, float blocker_x,
+                      float blocker_z) -> bool {
+  // Vector from attacker to target
+  float const to_target_x = target_x - attacker_x;
+  float const to_target_z = target_z - attacker_z;
+  float const dist_to_target_sq = to_target_x * to_target_x + to_target_z * to_target_z;
+
+  if (dist_to_target_sq < 0.01F) {
+    return false; // Target is at attacker position
+  }
+
+  // Vector from attacker to blocker
+  float const to_blocker_x = blocker_x - attacker_x;
+  float const to_blocker_z = blocker_z - attacker_z;
+  float const dist_to_blocker_sq = to_blocker_x * to_blocker_x + to_blocker_z * to_blocker_z;
+
+  // Blocker must be closer than target
+  if (dist_to_blocker_sq >= dist_to_target_sq) {
+    return false;
+  }
+
+  // Project blocker position onto the line from attacker to target
+  float const dist_to_target = std::sqrt(dist_to_target_sq);
+  float const dir_x = to_target_x / dist_to_target;
+  float const dir_z = to_target_z / dist_to_target;
+
+  // Dot product gives projection length along the path
+  float const projection = to_blocker_x * dir_x + to_blocker_z * dir_z;
+
+  // Blocker must be in front of attacker (positive projection)
+  if (projection < 0.0F) {
+    return false;
+  }
+
+  // Calculate perpendicular distance from blocker to the path line
+  float const proj_x = projection * dir_x;
+  float const proj_z = projection * dir_z;
+  float const perp_x = to_blocker_x - proj_x;
+  float const perp_z = to_blocker_z - proj_z;
+  float const perp_dist_sq = perp_x * perp_x + perp_z * perp_z;
+
+  // Check if blocker is within blocking radius of the path
+  return perp_dist_sq <= kHoldModeBlockingRadius * kHoldModeBlockingRadius;
+}
 }
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {
@@ -116,6 +170,7 @@ auto find_nearest_enemy_from_list(
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
 
+  // First pass: find nearest enemy (original logic)
   for (auto *target : all_units) {
     if (target == unit) {
       continue;
@@ -157,6 +212,84 @@ auto find_nearest_enemy_from_list(
     }
   }
 
+  // Second pass: check if a hold-mode enemy is blocking the path to the target
+  // If so, prioritize the hold-mode enemy instead
+  if (nearest_enemy != nullptr) {
+    auto *target_transform =
+        nearest_enemy->get_component<Engine::Core::TransformComponent>();
+    if (target_transform != nullptr) {
+      Engine::Core::Entity *blocking_enemy = nullptr;
+      float blocking_dist_sq = nearest_dist_sq;
+
+      for (auto *potential_blocker : all_units) {
+        if (potential_blocker == unit || potential_blocker == nearest_enemy) {
+          continue;
+        }
+
+        if (potential_blocker
+                ->has_component<Engine::Core::PendingRemovalComponent>()) {
+          continue;
+        }
+
+        // Check if this is an enemy unit in hold mode
+        if (!is_unit_in_hold_mode(potential_blocker)) {
+          continue;
+        }
+
+        auto *blocker_unit =
+            potential_blocker->get_component<Engine::Core::UnitComponent>();
+        if ((blocker_unit == nullptr) || blocker_unit->health <= 0) {
+          continue;
+        }
+
+        if (blocker_unit->owner_id == unit_comp->owner_id) {
+          continue;
+        }
+        if (owner_registry.are_allies(unit_comp->owner_id,
+                                      blocker_unit->owner_id)) {
+          continue;
+        }
+
+        if (potential_blocker
+                ->has_component<Engine::Core::BuildingComponent>()) {
+          continue;
+        }
+
+        auto *blocker_transform =
+            potential_blocker
+                ->get_component<Engine::Core::TransformComponent>();
+        if (blocker_transform == nullptr) {
+          continue;
+        }
+
+        // Check if this hold-mode enemy is blocking the path to target
+        if (is_blocking_path(unit_transform->position.x,
+                             unit_transform->position.z,
+                             target_transform->position.x,
+                             target_transform->position.z,
+                             blocker_transform->position.x,
+                             blocker_transform->position.z)) {
+          float const dx =
+              blocker_transform->position.x - unit_transform->position.x;
+          float const dz =
+              blocker_transform->position.z - unit_transform->position.z;
+          float const dist_sq = dx * dx + dz * dz;
+
+          // Prefer the closest blocking enemy
+          if (dist_sq < blocking_dist_sq) {
+            blocking_dist_sq = dist_sq;
+            blocking_enemy = potential_blocker;
+          }
+        }
+      }
+
+      // If we found a blocking enemy, target them instead
+      if (blocking_enemy != nullptr) {
+        return blocking_enemy;
+      }
+    }
+  }
+
   return nearest_enemy;
 }
 
@@ -188,6 +321,7 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
 
+  // First pass: find nearest enemy
   for (Engine::Core::EntityID target_id : nearby_ids) {
     if (target_id == unit->get_id()) {
       continue;
@@ -231,6 +365,90 @@ auto find_nearest_enemy(Engine::Core::Entity *unit, Engine::Core::World *world,
     if (dist_sq < nearest_dist_sq) {
       nearest_dist_sq = dist_sq;
       nearest_enemy = target;
+    }
+  }
+
+  // Second pass: check if a hold-mode enemy is blocking the path to the target
+  // If so, prioritize the hold-mode enemy instead
+  if (nearest_enemy != nullptr) {
+    auto *target_transform =
+        nearest_enemy->get_component<Engine::Core::TransformComponent>();
+    if (target_transform != nullptr) {
+      Engine::Core::Entity *blocking_enemy = nullptr;
+      float blocking_dist_sq = nearest_dist_sq;
+
+      for (Engine::Core::EntityID blocker_id : nearby_ids) {
+        if (blocker_id == unit->get_id() ||
+            blocker_id == nearest_enemy->get_id()) {
+          continue;
+        }
+
+        auto *potential_blocker = world->get_entity(blocker_id);
+        if (potential_blocker == nullptr) {
+          continue;
+        }
+
+        if (potential_blocker
+                ->has_component<Engine::Core::PendingRemovalComponent>()) {
+          continue;
+        }
+
+        // Check if this is an enemy unit in hold mode
+        if (!is_unit_in_hold_mode(potential_blocker)) {
+          continue;
+        }
+
+        auto *blocker_unit =
+            potential_blocker->get_component<Engine::Core::UnitComponent>();
+        if ((blocker_unit == nullptr) || blocker_unit->health <= 0) {
+          continue;
+        }
+
+        if (blocker_unit->owner_id == unit_comp->owner_id) {
+          continue;
+        }
+        if (owner_registry.are_allies(unit_comp->owner_id,
+                                      blocker_unit->owner_id)) {
+          continue;
+        }
+
+        if (potential_blocker
+                ->has_component<Engine::Core::BuildingComponent>()) {
+          continue;
+        }
+
+        auto *blocker_transform =
+            potential_blocker
+                ->get_component<Engine::Core::TransformComponent>();
+        if (blocker_transform == nullptr) {
+          continue;
+        }
+
+        // Check if this hold-mode enemy is blocking the path to target
+        if (is_blocking_path(unit_transform->position.x,
+                             unit_transform->position.z,
+                             target_transform->position.x,
+                             target_transform->position.z,
+                             blocker_transform->position.x,
+                             blocker_transform->position.z)) {
+          float const dx =
+              blocker_transform->position.x - unit_transform->position.x;
+          float const dz =
+              blocker_transform->position.z - unit_transform->position.z;
+          float const dist_sq = dx * dx + dz * dz;
+
+          // Prefer the closest blocking enemy
+          if (dist_sq < blocking_dist_sq) {
+            blocking_dist_sq = dist_sq;
+            blocking_enemy = potential_blocker;
+          }
+        }
+      }
+
+      // If we found a blocking enemy, target them instead
+      if (blocking_enemy != nullptr) {
+        return blocking_enemy;
+      }
     }
   }
 
