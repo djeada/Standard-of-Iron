@@ -23,31 +23,37 @@ Item {
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
             var newIndex = container.selectedIndex + 1;
+            var foundEnabled = false;
             while (newIndex < menuModel.count) {
                 var m = menuModel.get(newIndex);
                 if (!m.requiresGame || root.gameStarted) {
                     container.selectedIndex = newIndex;
+                    foundEnabled = true;
                     break;
                 }
                 newIndex++;
             }
+            // If no enabled item found below, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
             var newIndex = container.selectedIndex - 1;
+            var foundEnabled = false;
             while (newIndex >= 0) {
                 var m = menuModel.get(newIndex);
                 if (!m.requiresGame || root.gameStarted) {
                     container.selectedIndex = newIndex;
+                    foundEnabled = true;
                     break;
                 }
                 newIndex--;
             }
+            // If no enabled item found above, stay on current
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
             var m = menuModel.get(container.selectedIndex);
             if (m.requiresGame && !root.gameStarted) {
                 event.accepted = true;
-                return ;
+                return;
             }
             if (m.idStr === "skirmish")
                 root.openSkirmish();
@@ -269,10 +275,14 @@ Item {
                             hoverEnabled: true
                             acceptedButtons: Qt.LeftButton
                             cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                            onEntered: container.selectedIndex = idx
+                            onEntered: {
+                                if (itemEnabled)
+                                    container.selectedIndex = idx;
+
+                            }
                             onClicked: {
                                 if (!itemEnabled)
-                                    return ;
+                                    return;
 
                                 if (model.idStr === "skirmish")
                                     root.openSkirmish();
