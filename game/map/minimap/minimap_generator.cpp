@@ -34,6 +34,8 @@ constexpr QColor WATER_DARK{55, 95, 130};
 constexpr QColor WATER_MAIN{75, 120, 160};
 constexpr QColor WATER_LIGHT{100, 145, 180};
 
+constexpr QColor FOREST_BASE{100, 130, 90};
+
 constexpr QColor ROAD_MAIN{130, 105, 75};
 constexpr QColor ROAD_HIGHLIGHT{165, 140, 110};
 
@@ -668,6 +670,8 @@ auto MinimapGenerator::terrain_feature_color(TerrainType type) -> QColor {
     return Palette::HILL_BASE;
   case TerrainType::River:
     return Palette::WATER_MAIN;
+  case TerrainType::Forest:
+    return Palette::FOREST_BASE;
   case TerrainType::Flat:
   default:
     return Palette::PARCHMENT_DARK;

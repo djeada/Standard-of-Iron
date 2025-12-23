@@ -84,6 +84,23 @@ TEST_F(MinimapGeneratorTest, RendersTerrainFeatures) {
   EXPECT_FALSE(result.isNull());
 }
 
+TEST_F(MinimapGeneratorTest, RendersForestFeatures) {
+  // Add a forest
+  TerrainFeature forest;
+  forest.type = TerrainType::Forest;
+  forest.center_x = 30.0F;
+  forest.center_z = 30.0F;
+  forest.width = 8.0F;
+  forest.depth = 8.0F;
+  forest.height = 2.0F;
+  test_map.terrain.push_back(forest);
+
+  MinimapGenerator generator;
+  QImage result = generator.generate(test_map);
+
+  EXPECT_FALSE(result.isNull());
+}
+
 TEST_F(MinimapGeneratorTest, RendersRoads) {
   // Add a road
   RoadSegment road;
