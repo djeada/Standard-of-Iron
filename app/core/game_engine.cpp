@@ -93,6 +93,7 @@
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
 #include "game/systems/command_service.h"
+#include "game/systems/elephant_attack_system.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/game_state_serializer.h"
 #include "game/systems/global_stats_registry.h"

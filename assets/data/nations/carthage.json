@@ -280,6 +280,41 @@
         "individuals_per_unit": 12,
         "max_units_per_row": 4
       }
+    },
+    {
+      "id": "elephant",
+      "display_name": "African War Elephant",
+      "production": {
+        "cost": 350,
+        "build_time": 18.0,
+        "priority": 2,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 8500,
+        "max_health": 8500,
+        "speed": 2.5,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 0,
+        "ranged_cooldown": 2.0,
+        "melee_range": 3.8,
+        "melee_damage": 90,
+        "melee_cooldown": 1.6,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 2.1,
+        "selection_ring_size": 3.2,
+        "selection_ring_y_offset": 0.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/elephant"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
     }
   ]
 }

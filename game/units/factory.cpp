@@ -5,6 +5,7 @@
 #include "builder.h"
 #include "catapult.h"
 #include "defense_tower.h"
+#include "elephant.h"
 #include "healer.h"
 #include "home.h"
 #include "horse_archer.h"
@@ -61,6 +62,11 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   reg.registerFactory(SpawnType::Ballista, [](Engine::Core::World &world,
                                               const SpawnParams &params) {
     return Ballista::Create(world, params);
+  });
+
+  reg.registerFactory(SpawnType::Elephant, [](Engine::Core::World &world,
+                                              const SpawnParams &params) {
+    return Elephant::Create(world, params);
   });
 
   reg.registerFactory(SpawnType::Builder, [](Engine::Core::World &world,
