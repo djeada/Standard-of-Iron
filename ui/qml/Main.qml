@@ -136,6 +136,7 @@ ApplicationWindow {
         anchors.fill: parent
         z: 20
         visible: mainWindow.menuVisible
+        gameStarted: mainWindow.gameStarted
         Component.onCompleted: {
             if (mainWindow.menuVisible)
                 mainMenu.forceActiveFocus();
