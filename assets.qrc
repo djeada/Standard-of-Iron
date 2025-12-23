@@ -86,6 +86,8 @@
         <file>assets/shaders/mode_indicator.vert</file>
         <file>assets/shaders/rain.frag</file>
         <file>assets/shaders/rain.vert</file>
+        <file>assets/shaders/unit_instanced.frag</file>
+        <file>assets/shaders/unit_instanced.vert</file>
         
         <!-- Map files -->
         <file>assets/maps/map_battle_trebia.json</file>

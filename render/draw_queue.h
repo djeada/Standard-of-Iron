@@ -331,12 +331,14 @@ public:
     }
     const auto &mesh_a = std::get<MeshCmdIndex>(a);
     const auto &mesh_b = std::get<MeshCmdIndex>(b);
+    // Both must be opaque for batching
     if (mesh_a.alpha < k_opaque_threshold ||
         mesh_b.alpha < k_opaque_threshold) {
       return false;
     }
     return mesh_a.mesh == mesh_b.mesh && mesh_a.shader == mesh_b.shader &&
-           mesh_a.texture == mesh_b.texture;
+           mesh_a.texture == mesh_b.texture &&
+           mesh_a.material_id == mesh_b.material_id;
   }
 
 private:
@@ -444,9 +446,19 @@ private:
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
 
+      // Combine mesh, shader, texture, and material_id for batching grouping.
+      // This ensures identical units are adjacent in the sorted list.
+      uint64_t const mesh_ptr =
+          reinterpret_cast<uintptr_t>(mesh.mesh) & 0xFFFFU;
+      uint64_t const shader_ptr =
+          reinterpret_cast<uintptr_t>(mesh.shader) & 0xFFFFU;
       uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
-      key |= tex_ptr;
+          reinterpret_cast<uintptr_t>(mesh.texture) & 0xFFFFU;
+      uint64_t const mat_id =
+          static_cast<uint64_t>(mesh.material_id) & 0xFFU;
+      
+      // Layout in lower 56 bits: [mesh:16][shader:16][texture:16][material:8]
+      key |= (mesh_ptr << 40) | (shader_ptr << 24) | (tex_ptr << 8) | mat_id;
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =

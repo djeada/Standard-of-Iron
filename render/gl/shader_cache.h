@@ -256,6 +256,13 @@ public:
                 horseKnightFrag);
     loadVariant(QStringLiteral("horse_spearman"), horseKnightVert,
                 horseKnightFrag);
+
+    // Load instanced unit shader for batched rendering
+    const QString unitInstancedVert =
+        resolve(kShaderBase + QStringLiteral("unit_instanced.vert"));
+    const QString unitInstancedFrag =
+        resolve(kShaderBase + QStringLiteral("unit_instanced.frag"));
+    load(QStringLiteral("unit_instanced"), unitInstancedVert, unitInstancedFrag);
   }
 
   void clear() {

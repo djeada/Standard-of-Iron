@@ -58,11 +58,48 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 
 [[nodiscard]] inline auto can_batch_mesh_cmds(const MeshCmd &a,
                                               const MeshCmd &b) -> bool {
-
+  // Both must be opaque for batching
   if (a.alpha < k_opaque_threshold || b.alpha < k_opaque_threshold) {
     return false;
   }
-  return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture;
+  return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture &&
+         a.material_id == b.material_id;
+}
+
+// Check if a shader is a unit shader eligible for instanced batching
+[[nodiscard]] inline auto is_unit_shader(Shader *shader,
+                                          ShaderCache *cache) -> bool {
+  if (shader == nullptr || cache == nullptr) {
+    return false;
+  }
+  // Check against known unit shaders
+  static const QString k_unit_shader_names[] = {
+      QStringLiteral("spearman"),
+      QStringLiteral("archer"),
+      QStringLiteral("swordsman"),
+      QStringLiteral("healer"),
+      QStringLiteral("horse_swordsman"),
+      QStringLiteral("spearman_roman_republic"),
+      QStringLiteral("spearman_carthage"),
+      QStringLiteral("archer_roman_republic"),
+      QStringLiteral("archer_carthage"),
+      QStringLiteral("swordsman_roman_republic"),
+      QStringLiteral("swordsman_carthage"),
+      QStringLiteral("healer_roman_republic"),
+      QStringLiteral("healer_carthage"),
+      QStringLiteral("horse_swordsman_roman_republic"),
+      QStringLiteral("horse_swordsman_carthage"),
+      QStringLiteral("horse_archer_roman_republic"),
+      QStringLiteral("horse_archer_carthage"),
+      QStringLiteral("horse_spearman_roman_republic"),
+      QStringLiteral("horse_spearman_carthage"),
+  };
+  for (const auto &name : k_unit_shader_names) {
+    if (cache->get(name) == shader) {
+      return true;
+    }
+  }
+  return false;
 }
 
 } // namespace
@@ -1266,6 +1303,77 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_shaderCache ? m_shaderCache->get(QStringLiteral("troop_shadow"))
                         : nullptr;
       bool const isShadowShader = (active_shader == shadowShader);
+      
+      // Check for instanced batching eligibility:
+      // - Not a shadow shader
+      // - Opaque (alpha >= threshold)
+      // - Is a unit shader
+      // - Instanced shader exists
+      // - Pipeline is initialized
+      bool const isOpaque = it.alpha >= k_opaque_threshold;
+      Shader *instancedShader =
+          m_shaderCache ? m_shaderCache->get(QStringLiteral("unit_instanced"))
+                        : nullptr;
+      bool const canUseInstancing =
+          !isShadowShader && isOpaque &&
+          is_unit_shader(active_shader, m_shaderCache.get()) &&
+          instancedShader != nullptr && m_meshInstancingPipeline != nullptr &&
+          m_meshInstancingPipeline->is_initialized();
+
+      if (canUseInstancing) {
+        // Count consecutive batchable commands
+        std::size_t batch_end = i + 1;
+        while (batch_end < count) {
+          const auto &next_cmd = queue.get_sorted(batch_end);
+          if (next_cmd.index() != MeshCmdIndex) {
+            break;
+          }
+          const auto &next_mesh = std::get<MeshCmdIndex>(next_cmd);
+          if (!can_batch_mesh_cmds(it, next_mesh)) {
+            break;
+          }
+          ++batch_end;
+        }
+
+        // Begin instanced batch
+        m_meshInstancingPipeline->begin_batch(it.mesh, instancedShader,
+                                              it.texture);
+        instancedShader->use();
+        m_lastBoundShader = instancedShader;
+
+        // Set batch-level uniforms once
+        instancedShader->set_uniform(QStringLiteral("u_viewProj"), view_proj);
+        instancedShader->set_uniform(QStringLiteral("u_useTexture"),
+                                     it.texture != nullptr);
+
+        Texture *tex_to_use =
+            (it.texture != nullptr)
+                ? it.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if (tex_to_use != nullptr) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          instancedShader->set_uniform(QStringLiteral("u_texture"), 0);
+        }
+
+        // Accumulate all instances in the batch
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &batch_cmd =
+              std::get<MeshCmdIndex>(queue.get_sorted(j));
+          m_meshInstancingPipeline->accumulate(batch_cmd.model, batch_cmd.color,
+                                               batch_cmd.alpha,
+                                               batch_cmd.material_id);
+        }
+
+        // Flush the batch
+        m_meshInstancingPipeline->flush();
+
+        // Skip to end of batch
+        i = batch_end;
+        continue;
+      }
+
+      // Fall back to per-draw logic for non-batchable draws
       std::unique_ptr<DepthMaskScope> shadow_depth_scope;
       std::unique_ptr<BlendScope> shadow_blend_scope;
       if (isShadowShader) {
