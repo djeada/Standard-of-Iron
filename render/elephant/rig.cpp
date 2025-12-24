@@ -399,16 +399,19 @@ auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
 
 namespace ElephantGaitConstants {
 
-constexpr float kCycleTimeMin = 1.20F;
-constexpr float kCycleTimeMax = 1.50F;
+// Slower cycle for ponderous elephant walk
+constexpr float kCycleTimeMin = 2.20F;
+constexpr float kCycleTimeMax = 2.80F;
 constexpr float kFrontLegPhaseMin = 0.0F;
 constexpr float kFrontLegPhaseMax = 0.10F;
 constexpr float kDiagonalLeadMin = 0.48F;
 constexpr float kDiagonalLeadMax = 0.52F;
-constexpr float kStrideSwingMin = 0.20F;
-constexpr float kStrideSwingMax = 0.30F;
-constexpr float kStrideLiftMin = 0.08F;
-constexpr float kStrideLiftMax = 0.14F;
+// Much longer stride for visible leg movement
+constexpr float kStrideSwingMin = 0.55F;
+constexpr float kStrideSwingMax = 0.75F;
+// Higher foot lift for clear swing arc
+constexpr float kStrideLiftMin = 0.18F;
+constexpr float kStrideLiftMax = 0.26F;
 
 constexpr uint32_t kSaltCycleTime = 0x657U;
 constexpr uint32_t kSaltFrontLegPhase = 0x768U;
@@ -571,9 +574,9 @@ constexpr float kLegPhaseRR = 0.25F;   // Rear-Right
 // Swing duration as fraction of cycle (rest is stance)
 constexpr float kSwingDuration = 0.25F;
 
-// Swing arc parameters
-constexpr float kSwingLiftPeak = 0.12F;        // Max lift height as fraction of leg length
-constexpr float kSwingForwardReach = 0.35F;    // How far ahead to place foot
+// Swing arc parameters - larger for visible, weighty movement
+constexpr float kSwingLiftPeak = 0.22F;        // Max lift height as fraction of leg length
+constexpr float kSwingForwardReach = 0.60F;    // How far ahead to place foot
 
 // Weight transfer parameters
 constexpr float kWeightShiftLateral = 0.025F;  // Side-to-side shift amplitude
@@ -706,11 +709,12 @@ inline auto get_default_foot_position(const ElephantDimensions &d,
   bool const is_front = (leg_index < 2);
   bool const is_left = (leg_index == 0 || leg_index == 2);
   float const lateral_sign = is_left ? 1.0F : -1.0F;
-  float const forward_offset = is_front ? d.body_length * 0.38F : -d.body_length * 0.38F;
+  // Wider fore-aft spread for more visible stride
+  float const forward_offset = is_front ? d.body_length * 0.48F : -d.body_length * 0.48F;
 
-  // Hip position
+  // Hip position - wider lateral stance for elephants
   QVector3D const hip = barrel_center +
-      QVector3D(lateral_sign * d.body_width * 0.36F,
+      QVector3D(lateral_sign * d.body_width * 0.52F,
                 -d.body_height * 0.42F,
                 forward_offset);
 
@@ -762,7 +766,8 @@ void update_elephant_gait(ElephantGaitState &state,
   }
 
   QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
-  float const stride_length = g.stride_swing * 0.8F;
+  // Use full stride swing value for meaningful leg travel
+  float const stride_length = g.stride_swing * 1.8F;
 
   // Update each leg
   for (int i = 0; i < 4; ++i) {
@@ -1088,12 +1093,13 @@ void ElephantRendererBase::render_full(
     bool const is_front = (leg_index < 2);
     bool const is_left = (leg_index == 0 || leg_index == 2);
     float const lateral_sign = is_left ? 1.0F : -1.0F;
-    float const forward_bias = is_front ? d.body_length * 0.38F : -d.body_length * 0.38F;
+    // Wider fore-aft spread to match foot positions
+    float const forward_bias = is_front ? d.body_length * 0.48F : -d.body_length * 0.48F;
 
-    // Hip position (attached to body with weight transfer)
+    // Hip position (attached to body with weight transfer) - wider stance
     QVector3D const hip =
         barrel_center +
-        QVector3D(lateral_sign * d.body_width * 0.36F + gait_state.weight_shift_x,
+        QVector3D(lateral_sign * d.body_width * 0.52F + gait_state.weight_shift_x,
                   -d.body_height * 0.42F,
                   forward_bias + gait_state.weight_shift_z +
                   (is_front ? gait_state.shoulder_lag : gait_state.hip_lag));
