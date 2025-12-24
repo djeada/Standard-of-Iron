@@ -47,11 +47,13 @@ This script uses hardcoded city lon/lat coordinates from `provinces.py` and conv
 Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. 
 
 **Coastline-Aware Features:**
-- Routes follow Mediterranean coastlines with smooth, curved paths instead of rigid straight lines
+- Routes follow the North African coast westward before crossing at Gibraltar
+- Coastal segments along Spanish, French, and Italian coasts use smooth curves
 - Each segment is classified as 'coastal', 'land', or 'open_sea'
-- Open-sea crossings only occur on explicitly defined segments (Africa → Spain, Sicily → Carthage)
+- Open-sea crossings only occur at Gibraltar (Africa→Spain) and Sicily→Carthage
 - Intermediate waypoints create natural, organic appearance along shores
-- The C++ renderer in `CampaignMapView` displays these paths with progressive styling and a subtle glow effect
-- Current mission path is bright red (3.5px width) with glow, previous paths are dimmed based on age
+- The C++ renderer uses a three-pass system (dark border, gold highlight, red core)
+- Line widths: 10px border, 6.5px highlight, 3.5px core for high visibility
+- Historical map styling with gold/amber tones for authenticity
 
 **Note**: This script does NOT require `provinces.json` - it calculates UV coordinates directly from lon/lat. If you need to generate `provinces.json` for the full campaign map visualization, run `provinces.py` after running the full pipeline.

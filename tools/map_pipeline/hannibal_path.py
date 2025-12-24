@@ -139,11 +139,17 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     city_coords = {
         "Carthage": (10.3, 36.85),
         "Cirta": (6.6, 36.4),
-        "Tingis": (-5.8, 35.8),
+        # Additional waypoints along North African coast before crossing
+        "Hippo_Regius": (7.8, 36.9),  # Modern Annaba, Algeria
+        "Icosium": (3.0, 36.8),  # Modern Algiers
+        "Caesarea": (2.2, 36.6),  # Modern Cherchell, Algeria
+        "Tingis": (-5.8, 35.8),  # Tangier, Morocco - crossing point to Spain
         "New Carthage": (-0.98, 37.6),
         "Saguntum": (-0.3, 39.7),
         "Tarraco": (1.25, 41.1),
         "Emporiae": (3.1, 42.1),
+        # Additional waypoint along southern French coast
+        "Narbo": (3.0, 43.2),  # Narbonne, between Emporiae and Massalia
         "Massalia": (5.4, 43.3),
         "Mediolanum": (9.2, 45.5),
         "Placentia": (9.7, 45.0),
@@ -162,12 +168,16 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     # "open_sea": explicit sea crossing
     segment_types = {
         ("Carthage", "Cirta"): "coastal",
-        ("Cirta", "Tingis"): "open_sea",  # Africa to Spain crossing
-        ("Tingis", "New Carthage"): "coastal",
+        ("Cirta", "Hippo_Regius"): "coastal",
+        ("Hippo_Regius", "Icosium"): "coastal",
+        ("Icosium", "Caesarea"): "coastal",
+        ("Caesarea", "Tingis"): "coastal",
+        ("Tingis", "New Carthage"): "open_sea",  # Gibraltar crossing - Africa to Spain
         ("New Carthage", "Saguntum"): "coastal",
         ("Saguntum", "Tarraco"): "coastal",
         ("Tarraco", "Emporiae"): "coastal",
-        ("Emporiae", "Massalia"): "coastal",
+        ("Emporiae", "Narbo"): "coastal",
+        ("Narbo", "Massalia"): "coastal",
         ("Massalia", "Mediolanum"): "land",  # Through the Alps
         ("Mediolanum", "Placentia"): "land",
         ("Placentia", "Ariminum"): "coastal",
@@ -187,32 +197,32 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         city_uv[name] = (float(u), float(v))
 
     # Define the route for each mission (cumulative)
-    # Historical route: Carthage → North Africa/Numidia → Iberia → Gaul → Alps → Italy → back to Carthage
-    # Routes now include coastline awareness with intermediate waypoints
+    # Historical route: Carthage → North Africa coast → Gibraltar → Iberia → Gaul → Alps → Italy → back to Carthage
+    # Routes now follow the African coast west before crossing at Gibraltar
     mission_routes = [
-        # Mission 0: Crossing the Rhône (From North Africa through Iberia to Gaul)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia"],
+        # Mission 0: Crossing the Rhône (From North Africa along coast, then through Iberia to Gaul)
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia"],
         
         # Mission 1: Battle of Ticino (Cross Alps, enter Italy)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
         
         # Mission 2: Battle of Trebia (Consolidate in Cisalpine Gaul)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia"],
         
         # Mission 3: Battle of Trasimene (Move through Etruria)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii"],
         
         # Mission 4: Battle of Cannae (Advance to Southern Italy)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
         
         # Mission 5: Campania Campaign (Consolidate in Campania, extend to Tarentum)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
         
         # Mission 6: Crossing the Alps (Flashback - the mountain crossing with more detail)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
         
         # Mission 7: Battle of Zama (Return to Africa for final battle - complete journey)
-        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
     ]
 
     lines: List[List[List[float]]] = []

@@ -326,10 +326,12 @@ private:
                     QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
 
     // Hannibal's campaign path with coastline-aware routing
-    // The path data includes many intermediate waypoints that follow
-    // the Mediterranean coastline, creating smooth curves instead of
-    // rigid straight lines. Open sea crossings only occur on specific
-    // segments (Africa → Spain, Sicily → Carthage).
+    // The path data follows the North African coast west to Gibraltar
+    // before crossing to Spain, then follows the European coast north.
+    // Routes use smooth curves with many intermediate waypoints.
+    // Open sea crossings only occur at Gibraltar and Sicily-Carthage.
+    // Rendered with three-pass system: dark border, gold highlight, red core
+    // for a historically accurate, highly visible campaign route.
     init_line_layer(m_pathLayer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                     QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
@@ -796,7 +798,7 @@ void main() {
 
     glBindVertexArray(layer.vao);
 
-    // First pass: Draw glow/outline for visual emphasis
+    // First pass: Draw thick outer border for historical map appearance
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.spans.size())) {
         break;
@@ -804,31 +806,63 @@ void main() {
 
       const auto &span = layer.spans[static_cast<size_t>(i)];
 
-      QVector4D glow_color;
-      float glow_width;
+      QVector4D border_color;
+      float border_width;
 
       if (i == max_mission) {
-        // Bright glow for current mission
-        glow_color = QVector4D(0.95F, 0.25F, 0.15F, 0.25F);
-        glow_width = 6.0F;
+        // Dark border for current mission route
+        border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.85F);
+        border_width = 10.0F;
       } else if (i == max_mission - 1) {
-        // Subtle glow for recent mission
-        glow_color = QVector4D(0.75F, 0.22F, 0.14F, 0.20F);
-        glow_width = 5.0F;
+        // Medium border for recent mission
+        border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.70F);
+        border_width = 8.5F;
       } else {
-        // Faint glow for older missions
+        // Subtle border for historical missions
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        glow_color = QVector4D(0.55F * age_factor, 0.18F * age_factor,
-                              0.12F * age_factor, 0.15F * age_factor);
-        glow_width = 4.5F;
+        border_color = QVector4D(0.15F * age_factor, 0.08F * age_factor,
+                                0.05F * age_factor, 0.55F * age_factor);
+        border_width = 7.5F;
       }
 
-      glLineWidth(glow_width);
-      m_lineProgram.setUniformValue("u_color", glow_color);
+      glLineWidth(border_width);
+      m_lineProgram.setUniformValue("u_color", border_color);
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
 
-    // Second pass: Draw main line with enhanced appearance
+    // Second pass: Draw bright highlight for depth and visibility
+    for (int i = 0; i <= max_mission; ++i) {
+      if (i >= static_cast<int>(layer.spans.size())) {
+        break;
+      }
+
+      const auto &span = layer.spans[static_cast<size_t>(i)];
+
+      QVector4D highlight_color;
+      float highlight_width;
+
+      if (i == max_mission) {
+        // Bright gold/yellow highlight for current mission (historical map ink color)
+        highlight_color = QVector4D(0.95F, 0.75F, 0.35F, 0.90F);
+        highlight_width = 6.5F;
+      } else if (i == max_mission - 1) {
+        // Warm gold for recent mission
+        highlight_color = QVector4D(0.85F, 0.65F, 0.30F, 0.80F);
+        highlight_width = 5.5F;
+      } else {
+        // Faded gold for historical missions
+        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
+        highlight_color = QVector4D(0.70F * age_factor, 0.50F * age_factor,
+                                   0.25F * age_factor, 0.65F * age_factor);
+        highlight_width = 4.8F;
+      }
+
+      glLineWidth(highlight_width);
+      m_lineProgram.setUniformValue("u_color", highlight_color);
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
+
+    // Third pass: Draw core red line for traditional campaign route appearance
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.spans.size())) {
         break;
@@ -840,19 +874,19 @@ void main() {
       float width;
 
       if (i == max_mission) {
-        // Current mission: vibrant red with full opacity
-        color = QVector4D(0.95F, 0.25F, 0.15F, 1.0F);
+        // Deep red core for current mission
+        color = QVector4D(0.80F, 0.15F, 0.10F, 1.0F);
         width = 3.5F;
       } else if (i == max_mission - 1) {
-        // Recent mission: slightly dimmed
-        color = QVector4D(0.75F, 0.22F, 0.14F, 0.90F);
-        width = 2.8F;
+        // Medium red for recent mission
+        color = QVector4D(0.70F, 0.15F, 0.10F, 0.95F);
+        width = 3.0F;
       } else {
-        // Historical missions: fade based on age
+        // Darker red for historical missions
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        color = QVector4D(0.55F * age_factor, 0.18F * age_factor,
-                          0.12F * age_factor, 0.70F * age_factor);
-        width = 2.2F;
+        color = QVector4D(0.55F * age_factor, 0.12F * age_factor,
+                          0.08F * age_factor, 0.85F * age_factor);
+        width = 2.5F;
       }
 
       glLineWidth(width);
