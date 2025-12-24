@@ -125,17 +125,6 @@ Rectangle {
         return owner_color_map.neutral;
     }
 
-    function owner_flag_label(owner) {
-        var key = owner ? owner.toLowerCase() : "neutral";
-        if (key === "rome")
-            return "R";
-
-        if (key === "carthage")
-            return "C";
-
-        return "N";
-    }
-
     function apply_campaign_state() {
         if (!campaignMapLoader.item)
             return ;
@@ -411,43 +400,6 @@ Rectangle {
                     y: -height / 2
                 }
 
-            }
-
-        }
-
-    }
-
-    Repeater {
-        model: root.province_labels
-
-        delegate: Item {
-            property var _uv: modelData && modelData.label_uv && modelData.label_uv.length === 2 ? modelData.label_uv : null
-            property int _refresh: root.label_refresh
-            property var _pos: (_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(_uv[0], _uv[1]) : Qt.point(0, 0)
-            property var _color: root.owner_color_for(modelData && modelData.owner ? modelData.owner : "neutral")
-
-            visible: _uv !== null
-            z: 5
-            x: _pos.x
-            y: _pos.y
-
-            Rectangle {
-                width: 14
-                height: 10
-                radius: 2
-                color: Qt.rgba(_color[0], _color[1], _color[2], 0.85)
-                border.color: "#5a4a3a"
-                border.width: 1
-                x: -width / 2
-                y: -height / 2
-            }
-
-            Text {
-                text: root.owner_flag_label(modelData && modelData.owner ? modelData.owner : "neutral")
-                color: "#f6f1e6"
-                font.pointSize: Theme.fontSizeTiny
-                font.bold: true
-                anchors.centerIn: parent
             }
 
         }
