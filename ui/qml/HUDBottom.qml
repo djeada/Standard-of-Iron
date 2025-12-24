@@ -142,13 +142,17 @@ RowLayout {
                         }
 
                         Row {
-                            anchors.fill: parent
-                            anchors.margins: 6
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
                             spacing: 8
+                            height: 28
 
                             Item {
                                 width: 32
-                                height: parent.height
+                                height: 28
 
                                 Image {
                                     id: selectedUnitIcon
@@ -234,7 +238,7 @@ RowLayout {
                                 font.pointSize: 8
                                 font.bold: false
                                 elide: Text.ElideRight
-                                width: parent.width - 120
+                                width: parent.width - 108
                             }
 
                         }
