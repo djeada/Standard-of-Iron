@@ -210,9 +210,13 @@ public:
     draw_line_layer(m_riverLayer, mvp, 0.003F);
     draw_progressive_path_layers(m_pathLayer, mvp, 0.006F);
     
-    // Request continuous updates when hovering for animation
+    // Throttle updates to 60 FPS when hovering for animation
     if (!m_hover_province_id.isEmpty()) {
-      update();
+      qint64 now = QDateTime::currentMSecsSinceEpoch();
+      if (now - m_last_update_time >= 16) { // ~60 FPS (16.67ms per frame)
+        m_last_update_time = now;
+        update();
+      }
     }
   }
 
@@ -285,6 +289,7 @@ private:
   int m_province_state_version = 0;
   int m_current_mission = 7; // Default to last mission
   qint64 m_hover_start_time = 0; // Track when hover started for pulse animation
+  qint64 m_last_update_time = 0; // Track last update for throttling
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
