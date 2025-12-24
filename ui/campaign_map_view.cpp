@@ -2,6 +2,7 @@
 
 #include "../utils/resource_utils.h"
 
+#include <QDateTime>
 #include <QDebug>
 #include <QFile>
 #include <QJsonArray>
@@ -187,7 +188,8 @@ public:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glClearColor(0.05F, 0.1F, 0.16F, 1.0F);
+    // Warm parchment-like background color for traditional map aesthetic
+    glClearColor(0.93F, 0.89F, 0.82F, 1.0F);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     QMatrix4x4 mvp;
@@ -207,6 +209,11 @@ public:
     draw_line_layer(m_coastLayer, mvp, 0.004F);
     draw_line_layer(m_riverLayer, mvp, 0.003F);
     draw_progressive_path_layers(m_pathLayer, mvp, 0.006F);
+    
+    // Request continuous updates when hovering for animation
+    if (!m_hover_province_id.isEmpty()) {
+      update();
+    }
   }
 
   auto createFramebufferObject(const QSize &size)
@@ -229,7 +236,14 @@ public:
     m_orbit_distance = view->orbitDistance();
     m_pan_u = view->panU();
     m_pan_v = view->panV();
-    m_hover_province_id = view->hoverProvinceId();
+    
+    // Track hover state changes for animation
+    QString new_hover_id = view->hoverProvinceId();
+    if (m_hover_province_id != new_hover_id) {
+      m_hover_start_time = QDateTime::currentMSecsSinceEpoch();
+      m_hover_province_id = new_hover_id;
+    }
+    
     m_current_mission = view->currentMission();
 
     if (m_province_state_version != view->provinceStateVersion() &&
@@ -270,6 +284,7 @@ private:
   QString m_hover_province_id;
   int m_province_state_version = 0;
   int m_current_mission = 7; // Default to last mission
+  qint64 m_hover_start_time = 0; // Track when hover started for pulse animation
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -300,20 +315,24 @@ private:
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
+    // Coastlines: darker, more prominent for traditional map style
     init_line_layer(m_coastLayer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
-                    QVector4D(0.22F, 0.19F, 0.16F, 1.0F), 1.4F);
+                    QVector4D(0.15F, 0.13F, 0.11F, 1.0F), 2.0F);
+    // Rivers: subtle blue-grey, medium width
     init_line_layer(m_riverLayer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
-                    QVector4D(0.33F, 0.49F, 0.61F, 0.9F), 1.2F);
+                    QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
+    // Hannibal's path: vibrant red for visibility
     init_line_layer(m_pathLayer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                     QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
     init_province_layer(m_provinceLayer,
                         QStringLiteral(":/assets/campaign_map/provinces.json"));
+    // Province borders: thinner, lighter for subtle separation
     init_borders_layer(m_provinceBorderLayer,
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
-                       QVector4D(0.18F, 0.16F, 0.14F, 0.85F), 1.6F);
+                       QVector4D(0.25F, 0.22F, 0.20F, 0.65F), 1.2F);
 
     m_initialized = true;
     return true;
@@ -841,9 +860,18 @@ void main() {
       }
       QVector4D color = span.color;
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
+        // Animated pulse effect on hover
+        qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
+        float pulse_cycle = 1200.0F; // 1.2 second cycle
+        float pulse = 0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
+        
+        // Subtle brightness increase with pulse
+        float brightness_boost = 0.3F + 0.15F * pulse;
         color = QVector4D(
-            qMin(1.0F, color.x() + 0.65F), qMin(1.0F, color.y() + 0.65F),
-            qMin(1.0F, color.z() + 0.65F), qMin(1.0F, color.w() + 0.75F));
+            qMin(1.0F, color.x() + brightness_boost), 
+            qMin(1.0F, color.y() + brightness_boost),
+            qMin(1.0F, color.z() + brightness_boost), 
+            qMin(1.0F, color.w() + 0.2F));
       }
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
