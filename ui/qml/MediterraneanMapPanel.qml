@@ -212,7 +212,8 @@ Rectangle {
         return [sum_u / count, sum_v / count];
     }
 
-    color: "#1a1a1a"
+    // Warm parchment-like background matching the map
+    color: "#ede4d1"
     radius: Theme.radiusMedium
     Component.onCompleted: {
         load_provinces();
@@ -435,7 +436,7 @@ Rectangle {
                 height: 10
                 radius: 2
                 color: Qt.rgba(_color[0], _color[1], _color[2], 0.85)
-                border.color: "#1b1b1b"
+                border.color: "#5a4a3a"
                 border.width: 1
                 x: -width / 2
                 y: -height / 2
@@ -665,10 +666,10 @@ Rectangle {
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16
         height: tooltip_layout.implicitHeight + 16
-        radius: 6
-        color: "#1a1a1a"
-        border.color: "#2c2c2c"
-        border.width: 1
+        radius: 4
+        color: "#f5f0e6"
+        border.color: "#8b7355"
+        border.width: 2
         opacity: 0.95
         z: 10
 
@@ -680,18 +681,14 @@ Rectangle {
 
             Label {
                 text: root.hover_province_name
-                color: "#ffffff"
-                style: Text.Outline
-                styleColor: "#000000"
+                color: "#2d241c"
                 font.bold: true
                 font.pointSize: Theme.fontSizeSmall
             }
 
             Label {
                 text: qsTr("Control: ") + root.hover_province_owner
-                color: "#ffffff"
-                style: Text.Outline
-                styleColor: "#000000"
+                color: "#4a3f32"
                 font.pointSize: Theme.fontSizeTiny
             }
 
@@ -705,11 +702,11 @@ Rectangle {
         anchors.margins: Theme.spacingMedium
         width: legend_layout.implicitWidth + 16
         height: legend_layout.implicitHeight + 16
-        radius: 6
-        color: "#1a1a1a"
-        border.color: "#2c2c2c"
-        border.width: 1
-        opacity: 0.9
+        radius: 4
+        color: "#f5f0e6"
+        border.color: "#8b7355"
+        border.width: 2
+        opacity: 0.95
 
         ColumnLayout {
             id: legend_layout
@@ -719,7 +716,7 @@ Rectangle {
 
             Label {
                 text: qsTr("Legend")
-                color: Theme.textMain
+                color: "#2d241c"
                 font.pointSize: Theme.fontSizeSmall
                 font.bold: true
             }
@@ -744,13 +741,13 @@ Rectangle {
                         height: 12
                         radius: 2
                         color: modelData.color
-                        border.color: Theme.border
+                        border.color: "#5a4a3a"
                         border.width: 1
                     }
 
                     Label {
                         text: modelData.name
-                        color: Theme.textSubLite
+                        color: "#4a3f32"
                         font.pointSize: Theme.fontSizeTiny
                     }
 
@@ -767,10 +764,10 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.margins: Theme.spacingMedium
         text: qsTr("🖱️ Drag to rotate • Shift/Right-drag to pan • Scroll to zoom")
-        color: Theme.textDim
+        color: "#4a3f32"
         font.pointSize: Theme.fontSizeTiny
         style: Text.Outline
-        styleColor: "#000000"
+        styleColor: "#f5f0e6"
     }
 
     Rectangle {
@@ -780,7 +777,7 @@ Rectangle {
         anchors.margins: Theme.spacingMedium
         width: active_region_label.implicitWidth + 16
         height: active_region_label.implicitHeight + 12
-        radius: 6
+        radius: 4
         color: "#cc8f47"
         border.color: "#8b6332"
         border.width: 2
@@ -792,11 +789,9 @@ Rectangle {
 
             anchors.centerIn: parent
             text: qsTr("📍 Mission Region")
-            color: "#ffffff"
+            color: "#2d241c"
             font.pointSize: Theme.fontSizeSmall
             font.bold: true
-            style: Text.Outline
-            styleColor: "#000000"
         }
 
     }
