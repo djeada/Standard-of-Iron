@@ -13,6 +13,20 @@ OUT_PATH = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
 
 
 def build_hannibal_path(provinces: List[dict]) -> List[List[List[float]]]:
+    """Build 8 progressive paths for Hannibal's campaign, one for each mission.
+    
+    Each path builds upon the previous one, with the final path being the longest
+    and covering all previous paths. This aligns with the 8 campaign missions:
+    
+    Mission 0: Crossing the Rhône
+    Mission 1: Battle of Ticino
+    Mission 2: Battle of Trebia
+    Mission 3: Battle of Trasimene
+    Mission 4: Battle of Cannae
+    Mission 5: Campania Campaign
+    Mission 6: Crossing the Alps (flashback)
+    Mission 7: Battle of Zama (final confrontation)
+    """
     city_uv: dict[str, List[float]] = {}
     for prov in provinces:
         for city in prov.get("cities", []):
@@ -22,26 +36,53 @@ def build_hannibal_path(provinces: List[dict]) -> List[List[List[float]]]:
                 continue
             city_uv[name] = [float(uv[0]), float(uv[1])]
 
-    route_names = [
-        "New Carthage",
-        "Massalia",
-        "Mediolanum",
-        "Rome",
-        "Capua",
+    # Define the route for each mission (cumulative)
+    mission_routes = [
+        # Mission 0: Crossing the Rhône (New Carthage to Massalia)
+        ["New Carthage", "Massalia"],
+        
+        # Mission 1: Battle of Ticino (continue to Mediolanum)
+        ["New Carthage", "Massalia", "Mediolanum"],
+        
+        # Mission 2: Battle of Trebia (same path, battle location in Cisalpine Gaul)
+        ["New Carthage", "Massalia", "Mediolanum"],
+        
+        # Mission 3: Battle of Trasimene (through Etruria toward Rome)
+        ["New Carthage", "Massalia", "Mediolanum", "Veii"],
+        
+        # Mission 4: Battle of Cannae (to Southern Italy)
+        ["New Carthage", "Massalia", "Mediolanum", "Veii", "Capua"],
+        
+        # Mission 5: Campania Campaign (consolidate in Capua region)
+        ["New Carthage", "Massalia", "Mediolanum", "Veii", "Capua"],
+        
+        # Mission 6: Crossing the Alps (flashback - special path through mountains)
+        ["New Carthage", "Massalia", "Mediolanum"],
+        
+        # Mission 7: Battle of Zama (complete journey - return to Carthage)
+        ["New Carthage", "Massalia", "Mediolanum", "Veii", "Capua", "Syracuse", "Carthage"],
     ]
 
-    line: List[List[float]] = []
-    for name in route_names:
-        uv = city_uv.get(name)
-        if uv is None:
-            print(f"Warning: Hannibal path city '{name}' not found in provinces.")
-            continue
-        line.append(uv)
+    lines: List[List[List[float]]] = []
+    for idx, route_names in enumerate(mission_routes):
+        line: List[List[float]] = []
+        for name in route_names:
+            uv = city_uv.get(name)
+            if uv is None:
+                print(f"Warning: Mission {idx} - Hannibal path city '{name}' not found in provinces.")
+                continue
+            line.append(uv)
 
-    if len(line) < 2:
+        if len(line) >= 2:
+            lines.append(line)
+        else:
+            print(f"Warning: Mission {idx} has insufficient waypoints ({len(line)}), skipping.")
+
+    if not lines:
+        print("Warning: No valid paths generated for Hannibal's campaign.")
         return []
 
-    return [line]
+    return lines
 
 
 def main() -> None:
