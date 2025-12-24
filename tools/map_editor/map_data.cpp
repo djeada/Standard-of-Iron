@@ -326,13 +326,21 @@ QJsonArray MapData::terrainToJson() const {
     obj["z"] = static_cast<double>(elem.z);
 
     if (elem.type == "hill") {
-      if (elem.width > 0) {
-        obj["width"] = static_cast<double>(elem.width);
-      }
-      if (elem.depth > 0) {
-        obj["depth"] = static_cast<double>(elem.depth);
-      }
-      if (elem.radius > 0 && elem.width == 0 && elem.depth == 0) {
+      // Hills can use either radius or width/depth for sizing
+      // Write width/depth if they differ from default (10.0F)
+      bool hasCustomDimensions =
+          (elem.width != 10.0F && elem.width > 0.0F) ||
+          (elem.depth != 10.0F && elem.depth > 0.0F);
+
+      if (hasCustomDimensions) {
+        if (elem.width > 0.0F) {
+          obj["width"] = static_cast<double>(elem.width);
+        }
+        if (elem.depth > 0.0F) {
+          obj["depth"] = static_cast<double>(elem.depth);
+        }
+      } else if (elem.radius > 0.0F) {
+        // Use radius if no custom dimensions
         obj["radius"] = static_cast<double>(elem.radius);
       }
     } else {

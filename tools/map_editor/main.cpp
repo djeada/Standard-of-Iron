@@ -4,6 +4,7 @@
 #include <QTimer>
 
 auto main(int argc, char *argv[]) -> int {
+  // Note: Cannot be const because parser.process() modifies app's arguments
   QApplication app(argc, argv);
   QApplication::setApplicationName("Standard of Iron Map Editor");
   QApplication::setApplicationVersion("1.0");

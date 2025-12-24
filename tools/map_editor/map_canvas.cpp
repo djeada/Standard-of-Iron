@@ -393,7 +393,11 @@ void MapCanvas::wheelEvent(QWheelEvent *event) {
   m_zoom = std::clamp(m_zoom, 0.1F, 5.0F);
 
   // Zoom towards cursor position
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
   QPointF cursorPos = event->position();
+#else
+  QPointF cursorPos = event->posF();
+#endif
   m_panOffset = cursorPos - (cursorPos - m_panOffset) * (m_zoom / oldZoom);
 
   update();
@@ -455,11 +459,18 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     QVector2D b = elem.end;
 
     QVector2D ab = b - a;
-    float t = std::clamp(QVector2D::dotProduct(p - a, ab) /
-                             QVector2D::dotProduct(ab, ab),
-                         0.0F, 1.0F);
-    QVector2D closest = a + t * ab;
-    float dist = (p - closest).length();
+    float abLengthSq = QVector2D::dotProduct(ab, ab);
+
+    float dist;
+    if (abLengthSq < 0.0001F) {
+      // Start and end points are identical, treat as point
+      dist = (p - a).length();
+    } else {
+      float t = std::clamp(QVector2D::dotProduct(p - a, ab) / abLengthSq, 0.0F,
+                           1.0F);
+      QVector2D closest = a + t * ab;
+      dist = (p - closest).length();
+    }
 
     if (dist <= elem.width + 2.0F) {
       result.elementType = 2;
