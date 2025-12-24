@@ -67,6 +67,7 @@ assets/campaign_map/
 # But keep validation and documentation files
 !assets/campaign_map/valid_provinces.json
 !assets/campaign_map/README.md
+!assets/campaign_map/hannibal_path.json
 
 # Local virtualenvs
 venv/

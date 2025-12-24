@@ -206,7 +206,7 @@ public:
     draw_line_layer(m_provinceBorderLayer, mvp, 0.0045F);
     draw_line_layer(m_coastLayer, mvp, 0.004F);
     draw_line_layer(m_riverLayer, mvp, 0.003F);
-    draw_line_layer(m_pathLayer, mvp, 0.006F);
+    draw_progressive_path_layers(m_pathLayer, mvp, 0.006F);
   }
 
   auto createFramebufferObject(const QSize &size)
@@ -230,6 +230,7 @@ public:
     m_pan_u = view->panU();
     m_pan_v = view->panV();
     m_hover_province_id = view->hoverProvinceId();
+    m_current_mission = view->currentMission();
 
     if (m_province_state_version != view->provinceStateVersion() &&
         m_provinceLayer.ready) {
@@ -268,6 +269,7 @@ private:
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
   int m_province_state_version = 0;
+  int m_current_mission = 7; // Default to last mission
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -754,6 +756,58 @@ void main() {
     m_lineProgram.release();
   }
 
+  void draw_progressive_path_layers(const LineLayer &layer,
+                                    const QMatrix4x4 &mvp, float z_offset) {
+    if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
+      return;
+    }
+
+    const int max_mission = qBound(0, m_current_mission, static_cast<int>(layer.spans.size()) - 1);
+    
+    m_lineProgram.bind();
+    m_lineProgram.setUniformValue("u_mvp", mvp);
+    m_lineProgram.setUniformValue("u_z", z_offset);
+
+    glBindVertexArray(layer.vao);
+    
+    // Draw all paths up to and including the current mission
+    // Previous paths are drawn with dimmed color to show progression
+    for (int i = 0; i <= max_mission; ++i) {
+      if (i >= static_cast<int>(layer.spans.size())) {
+        break;
+      }
+      
+      const auto &span = layer.spans[static_cast<size_t>(i)];
+      
+      // Color and width based on whether this is the current mission
+      QVector4D color;
+      float width;
+      
+      if (i == max_mission) {
+        // Current mission path: bright red with glow
+        color = QVector4D(0.95F, 0.25F, 0.15F, 1.0F);
+        width = 3.5F;
+      } else if (i == max_mission - 1) {
+        // Previous mission: medium brightness
+        color = QVector4D(0.75F, 0.22F, 0.14F, 0.85F);
+        width = 2.8F;
+      } else {
+        // Older missions: dimmed
+        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
+        color = QVector4D(0.55F * age_factor, 0.18F * age_factor, 
+                         0.12F * age_factor, 0.65F * age_factor);
+        width = 2.2F;
+      }
+      
+      glLineWidth(width);
+      m_lineProgram.setUniformValue("u_color", color);
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
+    
+    glBindVertexArray(0);
+    m_lineProgram.release();
+  }
+
   void apply_province_overrides(
       const QHash<QString, CampaignMapView::ProvinceVisual> &overrides) {
     if (!m_provinceLayer.ready || m_provinceLayer.spans.empty()) {
@@ -1234,6 +1288,68 @@ QPointF CampaignMapView::screenPosForUv(float u, float v) {
   return QPointF(screen_x, screen_y);
 }
 
+void CampaignMapView::load_hannibal_paths() {
+  if (m_hannibal_paths_loaded) {
+    return;
+  }
+
+  m_hannibal_paths_loaded = true;
+  m_hannibal_paths.clear();
+
+  const QString path = Utils::Resources::resolveResourcePath(
+      QStringLiteral(":/assets/campaign_map/hannibal_path.json"));
+  QFile file(path);
+  if (!file.open(QIODevice::ReadOnly)) {
+    qWarning() << "Failed to load Hannibal paths from" << path;
+    return;
+  }
+
+  const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+  if (!doc.isObject()) {
+    return;
+  }
+
+  const QJsonArray lines = doc.object().value("lines").toArray();
+  for (const auto &line_val : lines) {
+    const QJsonArray line = line_val.toArray();
+    std::vector<QVector2D> path;
+    path.reserve(static_cast<size_t>(line.size()));
+    
+    for (const auto &pt_val : line) {
+      const QJsonArray pt = pt_val.toArray();
+      if (pt.size() < 2) {
+        continue;
+      }
+      path.emplace_back(static_cast<float>(pt.at(0).toDouble()),
+                       static_cast<float>(pt.at(1).toDouble()));
+    }
+    
+    if (!path.empty()) {
+      m_hannibal_paths.push_back(std::move(path));
+    }
+  }
+}
+
+QPointF CampaignMapView::hannibalIconPosition() {
+  load_hannibal_paths();
+  
+  if (m_hannibal_paths.empty()) {
+    return {};
+  }
+
+  const int mission_idx = qBound(0, m_current_mission, 
+                                 static_cast<int>(m_hannibal_paths.size()) - 1);
+  const auto &path = m_hannibal_paths[static_cast<size_t>(mission_idx)];
+  
+  if (path.empty()) {
+    return {};
+  }
+
+  // Get the last point of the current mission path
+  const QVector2D &endpoint = path.back();
+  return screenPosForUv(endpoint.x(), endpoint.y());
+}
+
 void CampaignMapView::setOrbitYaw(float yaw) {
   if (qFuzzyCompare(m_orbit_yaw, yaw)) {
     return;
@@ -1289,6 +1405,16 @@ void CampaignMapView::setHoverProvinceId(const QString &province_id) {
   }
   m_hover_province_id = province_id;
   emit hoverProvinceIdChanged();
+  update();
+}
+
+void CampaignMapView::setCurrentMission(int mission) {
+  const int clamped = qBound(0, mission, 7);
+  if (m_current_mission == clamped) {
+    return;
+  }
+  m_current_mission = clamped;
+  emit currentMissionChanged();
   update();
 }
 

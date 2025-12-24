@@ -27,3 +27,23 @@ Generate a gameplay-focused `provinces.json` with hand-authored boundaries (requ
 ./tools/map_pipeline/provinces.py
 ```
 This writes `assets/campaign_map/provinces.json` (triangulated UVs + colors).
+
+### Hannibal's Campaign Path
+Generate progressive path lines for Hannibal's 8-mission campaign:
+```bash
+./tools/map_pipeline/hannibal_path.py
+```
+This script uses hardcoded city lon/lat coordinates from `provinces.py` and converts them to UV space using `map_bounds.json`. It generates `assets/campaign_map/hannibal_path.json` containing 8 progressive path lines, one for each campaign mission:
+
+- **Mission 0**: Crossing the Rhône (New Carthage → Massalia)
+- **Mission 1**: Battle of Ticino (+ Mediolanum)
+- **Mission 2**: Battle of Trebia (consolidates in Cisalpine Gaul)
+- **Mission 3**: Battle of Trasimene (+ Veii through Etruria)
+- **Mission 4**: Battle of Cannae (+ Capua in Southern Italy)
+- **Mission 5**: Campania Campaign (maintains Capua position)
+- **Mission 6**: Crossing the Alps (flashback - path through mountains)
+- **Mission 7**: Battle of Zama (final - + Syracuse → Carthage)
+
+Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. The visualization in `CampaignMapView` displays these paths with progressive styling - the current mission path is bright red (3.5px width), previous paths are dimmed based on age, creating a professional visual narrative of Hannibal's campaign progression.
+
+**Note**: This script does NOT require `provinces.json` - it calculates UV coordinates directly from lon/lat. If you need to generate `provinces.json` for the full campaign map visualization, run `provinces.py` after running the full pipeline.
