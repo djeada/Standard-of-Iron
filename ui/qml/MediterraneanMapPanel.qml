@@ -554,6 +554,8 @@ Rectangle {
 
         property int _refresh: root.label_refresh
         property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+        property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+        property int _iconIndex: 0
         
         visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
         z: 10
@@ -585,7 +587,7 @@ Rectangle {
 
         // Hannibal portrait
         Image {
-            source: "qrc:/assets/visuals/hannibal.png"
+            source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
             width: 36
             height: 36
             x: -width / 2
@@ -593,6 +595,14 @@ Rectangle {
             smooth: true
             mipmap: true
             fillMode: Image.PreserveAspectFit
+            cache: true
+            asynchronous: false
+            onStatusChanged: {
+                if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
+                    hannibalIcon._iconIndex += 1;
+                    source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                }
+            }
         }
 
         // Animated pulse effect
