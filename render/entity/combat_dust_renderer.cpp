@@ -268,6 +268,50 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     return true;
   });
 
+  auto elephants =
+      world->get_entities_with<Engine::Core::ElephantStompImpactComponent>();
+  for (auto *elephant : elephants) {
+    auto *stomp_impact =
+        elephant->get_component<Engine::Core::ElephantStompImpactComponent>();
+    auto *transform =
+        elephant->get_component<Engine::Core::TransformComponent>();
+
+    if (stomp_impact == nullptr || transform == nullptr) {
+      continue;
+    }
+
+    for (auto &impact : stomp_impact->impacts) {
+      if (impact.time < 0.0F) {
+        continue;
+      }
+
+      QVector3D position(impact.x, transform->position.y + kStoneImpactYOffset,
+                         impact.z);
+
+      if (!fog_of_war.isVisibleWorld(position.x(), position.z())) {
+        impact.time = -1.0F;
+        continue;
+      }
+
+      if (!visibility.is_entity_visible(position.x(), position.z(),
+                                        kVisibilityCheckRadius * 2.0F)) {
+        impact.time = -1.0F;
+        continue;
+      }
+
+      impact_tracker.add_impact(position, animation_time, kStoneImpactRadius,
+                                kStoneImpactIntensity);
+      impact.time = -1.0F;
+    }
+
+    stomp_impact->impacts.erase(
+        std::remove_if(stomp_impact->impacts.begin(),
+                       stomp_impact->impacts.end(),
+                       [](const Engine::Core::ElephantStompImpactComponent::
+                              ImpactRecord &impact) { return impact.time < 0.0F; }),
+        stomp_impact->impacts.end());
+  }
+
   impact_tracker.update(animation_time);
 
   QVector3D color(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);

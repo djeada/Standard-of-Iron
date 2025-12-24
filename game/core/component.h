@@ -492,6 +492,19 @@ public:
   float panic_duration{0.0F};
 };
 
+class ElephantStompImpactComponent : public Component {
+public:
+  struct ImpactRecord {
+    float x;
+    float z;
+    float time;
+  };
+
+  ElephantStompImpactComponent() = default;
+
+  std::vector<ImpactRecord> impacts;
+};
+
 class HomeComponent : public Component {
 public:
   HomeComponent() = default;
