@@ -256,6 +256,7 @@ Item {
         }]
         property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
         property int labelRefresh: 0
+        property int currentMissionIndex: 7 // Default to last mission (full path)
 
         function loadProvinces() {
             loadProvincesFrom(0);
@@ -430,9 +431,11 @@ Item {
                                 orbitYaw: missionDetailPanel.mapOrbitYaw
                                 orbitPitch: missionDetailPanel.mapOrbitPitch
                                 orbitDistance: missionDetailPanel.mapOrbitDistance
+                                currentMission: missionDetailPanel.currentMissionIndex
                                 onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
                                 onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
                                 onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1
+                                onCurrentMissionChanged: missionDetailPanel.labelRefresh += 1
                                 onWidthChanged: missionDetailPanel.labelRefresh += 1
                                 onHeightChanged: missionDetailPanel.labelRefresh += 1
                             }
@@ -499,6 +502,105 @@ Item {
                             var nextDistance = missionDetailPanel.mapOrbitDistance * step;
                             missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(1.2, nextDistance));
                             wheel.accepted = true;
+                        }
+                    }
+
+                    // Hannibal icon at the end of the current path
+                    Item {
+                        id: hannibalIcon
+
+                        property int _refresh: missionDetailPanel.labelRefresh
+                        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+                        
+                        visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0
+                        z: 10
+                        x: _pos.x
+                        y: _pos.y
+
+                        // Frame background
+                        Rectangle {
+                            width: 44
+                            height: 44
+                            x: -width / 2
+                            y: -height / 2
+                            radius: 6
+                            color: "#2a1f1a"
+                            border.color: "#d4a857"
+                            border.width: 2
+                            opacity: 0.95
+
+                            // Inner glow
+                            Rectangle {
+                                anchors.fill: parent
+                                anchors.margins: 2
+                                radius: 4
+                                color: "transparent"
+                                border.color: "#6b4423"
+                                border.width: 1
+                            }
+                        }
+
+                        // Hannibal portrait
+                        Image {
+                            source: "qrc:/assets/visuals/hannibal.png"
+                            width: 36
+                            height: 36
+                            x: -width / 2
+                            y: -height / 2
+                            smooth: true
+                            mipmap: true
+                            fillMode: Image.PreserveAspectFit
+                        }
+
+                        // Animated pulse effect
+                        Rectangle {
+                            width: 50
+                            height: 50
+                            x: -width / 2
+                            y: -height / 2
+                            radius: width / 2
+                            color: "transparent"
+                            border.color: "#d4a857"
+                            border.width: 2
+                            opacity: 0.4
+
+                            SequentialAnimation on opacity {
+                                loops: Animation.Infinite
+                                running: hannibalIcon.visible
+                                
+                                NumberAnimation {
+                                    from: 0.4
+                                    to: 0.0
+                                    duration: 1500
+                                    easing.type: Easing.OutCubic
+                                }
+                                
+                                PauseAnimation {
+                                    duration: 500
+                                }
+                            }
+
+                            SequentialAnimation on scale {
+                                loops: Animation.Infinite
+                                running: hannibalIcon.visible
+                                
+                                NumberAnimation {
+                                    from: 1.0
+                                    to: 1.3
+                                    duration: 1500
+                                    easing.type: Easing.OutCubic
+                                }
+                                
+                                NumberAnimation {
+                                    from: 1.3
+                                    to: 1.0
+                                    duration: 0
+                                }
+                                
+                                PauseAnimation {
+                                    duration: 500
+                                }
+                            }
                         }
                     }
 
@@ -694,6 +796,13 @@ Item {
                                     if (missionDetailPanel.campaignData && modelData.mission_id)
                                         root.missionSelected(missionDetailPanel.campaignData.id + "/" + modelData.mission_id);
 
+                                }
+                                onContainsMouseChanged: {
+                                    if (containsMouse && modelData.order_index !== undefined) {
+                                        missionDetailPanel.currentMissionIndex = modelData.order_index;
+                                    } else if (!containsMouse) {
+                                        missionDetailPanel.currentMissionIndex = 7; // Reset to full path
+                                    }
                                 }
                             }
 
