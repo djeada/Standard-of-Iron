@@ -24,6 +24,8 @@ class CampaignMapView : public QQuickFramebufferObject {
                  setHoverProvinceId NOTIFY hoverProvinceIdChanged)
   Q_PROPERTY(QVariantList provinceLabels READ provinceLabels NOTIFY
                  provinceLabelsChanged)
+  Q_PROPERTY(int currentMission READ currentMission WRITE setCurrentMission
+                 NOTIFY currentMissionChanged)
 public:
   struct ProvinceVisual {
     QString owner;
@@ -40,6 +42,7 @@ public:
   Q_INVOKABLE QPointF screenPosForUv(float u, float v);
   Q_INVOKABLE QVariantList provinceLabels();
   Q_INVOKABLE void applyProvinceState(const QVariantList &states);
+  Q_INVOKABLE QPointF hannibalIconPosition();
 
   [[nodiscard]] auto provinceStateVersion() const -> int {
     return m_province_state_version;
@@ -69,6 +72,9 @@ public:
   }
   void setHoverProvinceId(const QString &province_id);
 
+  [[nodiscard]] auto currentMission() const -> int { return m_current_mission; }
+  void setCurrentMission(int mission);
+
 signals:
   void orbitYawChanged();
   void orbitPitchChanged();
@@ -77,6 +83,7 @@ signals:
   void panVChanged();
   void hoverProvinceIdChanged();
   void provinceLabelsChanged();
+  void currentMissionChanged();
 
 private:
   float m_orbit_yaw = 180.0F;
@@ -85,6 +92,7 @@ private:
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
+  int m_current_mission = 7; // Default to last mission (full path)
 
   struct ProvinceHit {
     QString id;
@@ -101,6 +109,10 @@ private:
   bool m_province_labels_loaded = false;
   QVariantList m_province_labels;
   void load_province_labels();
+
+  bool m_hannibal_paths_loaded = false;
+  std::vector<std::vector<QVector2D>> m_hannibal_paths;
+  void load_hannibal_paths();
 
   QHash<QString, ProvinceVisual> m_province_overrides;
   int m_province_state_version = 0;

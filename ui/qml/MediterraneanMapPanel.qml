@@ -256,6 +256,7 @@ Rectangle {
                 orbitDistance: root.map_orbit_distance
                 panU: root.map_pan_u
                 panV: root.map_pan_v
+                currentMission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
                 hoverProvinceId: {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
@@ -268,6 +269,7 @@ Rectangle {
                 onOrbitDistanceChanged: root.label_refresh += 1
                 onPanUChanged: root.label_refresh += 1
                 onPanVChanged: root.label_refresh += 1
+                onCurrentMissionChanged: root.label_refresh += 1
                 onWidthChanged: root.label_refresh += 1
                 onHeightChanged: root.label_refresh += 1
 
@@ -452,6 +454,7 @@ Rectangle {
     }
 
     Repeater {
+        id: missionMarkerRepeater
         property var mission_region_map: ({
             "transalpine_gaul": {
                 "uv": [0.28, 0.35],
@@ -478,7 +481,7 @@ Rectangle {
         model: root.selected_mission ? 1 : 0
 
         delegate: Item {
-            property var region_info: parent.mission_region_map[root.active_region_id] || null
+            property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
             property var marker_uv: region_info ? region_info.uv : null
             property int _refresh: root.label_refresh
             property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
@@ -545,10 +548,119 @@ Rectangle {
 
     }
 
+    // Hannibal icon at the end of the current path
+    Item {
+        id: hannibalIcon
+
+        property int _refresh: root.label_refresh
+        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+        property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+        property int _iconIndex: 0
+        
+        visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
+        z: 10
+        x: _pos.x
+        y: _pos.y
+
+        // Frame background
+        Rectangle {
+            width: 44
+            height: 44
+            x: -width / 2
+            y: -height / 2
+            radius: 6
+            color: "#2a1f1a"
+            border.color: "#d4a857"
+            border.width: 2
+            opacity: 0.95
+
+            // Inner glow
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 2
+                radius: 4
+                color: "transparent"
+                border.color: "#6b4423"
+                border.width: 1
+            }
+        }
+
+        // Hannibal portrait
+        Image {
+            source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
+            width: 36
+            height: 36
+            x: -width / 2
+            y: -height / 2
+            smooth: true
+            mipmap: true
+            fillMode: Image.PreserveAspectFit
+            cache: true
+            asynchronous: false
+            onStatusChanged: {
+                if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
+                    hannibalIcon._iconIndex += 1;
+                    source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                }
+            }
+        }
+
+        // Animated pulse effect
+        Rectangle {
+            width: 50
+            height: 50
+            x: -width / 2
+            y: -height / 2
+            radius: width / 2
+            color: "transparent"
+            border.color: "#d4a857"
+            border.width: 2
+            opacity: 0.4
+
+            SequentialAnimation on opacity {
+                loops: Animation.Infinite
+                running: hannibalIcon.visible
+                
+                NumberAnimation {
+                    from: 0.4
+                    to: 0.0
+                    duration: 1500
+                    easing.type: Easing.OutCubic
+                }
+                
+                PauseAnimation {
+                    duration: 500
+                }
+            }
+
+            SequentialAnimation on scale {
+                loops: Animation.Infinite
+                running: hannibalIcon.visible
+                
+                NumberAnimation {
+                    from: 1.0
+                    to: 1.3
+                    duration: 1500
+                    easing.type: Easing.OutCubic
+                }
+                
+                NumberAnimation {
+                    from: 1.3
+                    to: 1.0
+                    duration: 0
+                }
+                
+                PauseAnimation {
+                    duration: 500
+                }
+            }
+        }
+    }
+
     Rectangle {
         id: hover_tooltip
 
-        visible: (root.active_region_id !== "" || (campaign_map.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+        visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16

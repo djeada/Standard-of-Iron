@@ -168,6 +168,9 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.02,
             "cities": [
                 {"name": "New Carthage", "lonlat": (-0.98, 37.6)},
+                {"name": "Saguntum", "lonlat": (-0.3, 39.7)},
+                {"name": "Tarraco", "lonlat": (1.25, 41.1)},
+                {"name": "Emporiae", "lonlat": (3.1, 42.1)},
             ],
             "lonlat": [
                 (-6.5, 40.5),
@@ -230,6 +233,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.01,
             "cities": [
                 {"name": "Mediolanum", "lonlat": (9.2, 45.5)},
+                {"name": "Placentia", "lonlat": (9.7, 45.0)},
             ],
             "lonlat": [
                 (6.0, 46.6),
@@ -249,6 +253,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.03,
             "cities": [
                 {"name": "Veii", "lonlat": (12.3, 42.0)},
+                {"name": "Ariminum", "lonlat": (12.6, 44.0)},
             ],
             "lonlat": [
                 (8.6, 44.4),
@@ -287,6 +292,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.03,
             "cities": [
                 {"name": "Capua", "lonlat": (14.3, 41.1)},
+                {"name": "Tarentum", "lonlat": (17.2, 40.5)},
             ],
             "lonlat": [
                 (11.6, 41.2),
@@ -399,6 +405,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.02,
             "cities": [
                 {"name": "Cirta", "lonlat": (6.6, 36.4)},
+                {"name": "Tingis", "lonlat": (-5.8, 35.8)},
             ],
             "lonlat": [
                 (-10.0, 37.4),
