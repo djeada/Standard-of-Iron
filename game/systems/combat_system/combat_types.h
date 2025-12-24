@@ -18,6 +18,7 @@ inline constexpr float kDamageMultiplierSpearmanHold = 1.5F;
 inline constexpr float kDamageMultiplierDefaultHold = 1.75F;
 inline constexpr float kHealthMultiplierHold = 1.2F;
 inline constexpr float kSpearmanVsCavalryMultiplier = 2.5F;
+inline constexpr float kArcherVsElephantMultiplier = 2.0F;
 inline constexpr float kArcherHighGroundMultiplier = 1.8F;
 inline constexpr float kSpearmanHighGroundMultiplier = 1.8F;
 inline constexpr float kHighGroundArmorMultiplier = 0.85F;
