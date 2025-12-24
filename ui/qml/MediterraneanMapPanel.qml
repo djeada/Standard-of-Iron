@@ -201,7 +201,7 @@ Rectangle {
         return [sum_u / count, sum_v / count];
     }
 
-    color: "#ede4d1"
+    color: "#28445C"
     radius: Theme.radiusMedium
     Component.onCompleted: {
         load_provinces();
