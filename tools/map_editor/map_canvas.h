@@ -41,7 +41,6 @@ private:
 
   // Drawing helpers
   void drawGrid(QPainter &painter);
-  void drawAxes(QPainter &painter);
   void drawTerrainElements(QPainter &painter);
   void drawFirecamps(QPainter &painter);
   void drawStructures(QPainter &painter);
@@ -54,6 +53,7 @@ private:
   struct HitResult {
     int elementType = -1; // 0=terrain, 1=firecamp, 2=linear, 3=structure
     int index = -1;
+    int endpoint = -1; // For linear elements: -1=line, 0=start, 1=end
   };
   [[nodiscard]] HitResult hitTest(const QPoint &pos) const;
 
@@ -80,6 +80,7 @@ private:
   int m_selectedType = -1;
   int m_selectedIndex = -1;
   bool m_isDragging = false;
+  int m_draggedEndpoint = -1; // -1=none/whole, 0=start, 1=end (for linear elements)
 
   // Current structure placement player
   int m_currentPlayerId = 0;
@@ -87,6 +88,7 @@ private:
   static constexpr int GRID_CELL_SIZE = 8;   // Pixels per grid unit at zoom 1.0
   static constexpr int ICON_SIZE = 16;       // Fixed icon size for all elements
   static constexpr float HIT_RADIUS = 5.0F;  // Fixed hit radius for point elements
+  static constexpr float ENDPOINT_HIT_RADIUS = 3.0F; // Hit radius for linear element endpoints
   static constexpr int MIN_PLAYER_ID = 0;    // Neutral
   static constexpr int MAX_PLAYER_ID = 4;    // Maximum player ID
   static constexpr int DEFAULT_MAX_POPULATION = 150;
