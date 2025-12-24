@@ -26,7 +26,7 @@ void CameraViewportLayer::init(int width, int height, float world_width,
   m_offset_x = world_width * 0.5F;
   m_offset_y = world_height * 0.5F;
 
-  m_image = QImage(width, height, QImage::Format_ARGB32);
+  m_image = QImage(width, height, QImage::Format_RGBA8888);
   m_image.fill(Qt::transparent);
 }
 
