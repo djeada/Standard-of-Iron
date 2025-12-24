@@ -4,8 +4,8 @@
 #include "../../../elephant/rig.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
-#include "../../../gl/humanoid/humanoid_types.h"
 #include "../../../gl/humanoid/animation/animation_inputs.h"
+#include "../../../gl/humanoid/humanoid_types.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
 #include "../../../scene_renderer.h"
@@ -93,12 +93,10 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
 
         AnimationInputs anim = sample_anim_state(p);
 
-        // Elephants can be in a combat state even if movement/attack heuristics
-        // differ from humanoids. If a combat phase is active (or melee lock is
-        // held), force the combat trigger for visuals.
         if (p.entity != nullptr) {
           if (auto *combat_state =
-                  p.entity->get_component<Engine::Core::CombatStateComponent>()) {
+                  p.entity
+                      ->get_component<Engine::Core::CombatStateComponent>()) {
             if (combat_state->animation_state !=
                 Engine::Core::CombatAnimationState::Idle) {
               anim.is_attacking = true;

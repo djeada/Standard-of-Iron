@@ -61,13 +61,13 @@ TEST_F(ArcherBonusTest, ElephantComponentExistsOnElephantUnit) {
 
 TEST_F(ArcherBonusTest, NonElephantUnitsDoNotHaveElephantComponent) {
   // Verify that non-elephant units don't have ElephantComponent
-  auto *swordsman = world->create_entity();
-  swordsman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *swordsman_unit =
-      swordsman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
-  swordsman_unit->spawn_type = Game::Units::SpawnType::Swordsman;
+  auto *spearman = world->create_entity();
+  spearman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *spearman_unit =
+      spearman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
+  spearman_unit->spawn_type = Game::Units::SpawnType::Spearman;
 
-  EXPECT_FALSE(swordsman->has_component<ElephantComponent>());
+  EXPECT_FALSE(spearman->has_component<ElephantComponent>());
 }
 
 TEST_F(ArcherBonusTest, ExpectedDamageCalculation) {
