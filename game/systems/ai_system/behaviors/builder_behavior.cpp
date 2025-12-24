@@ -14,11 +14,15 @@ namespace {
 constexpr const char *BUILDING_TYPE_HOME = "home";
 constexpr const char *BUILDING_TYPE_DEFENSE_TOWER = "defense_tower";
 constexpr const char *BUILDING_TYPE_BARRACKS = "barracks";
+constexpr const char *BUILDING_TYPE_CATAPULT = "catapult";
 
 constexpr int MIN_HOMES = 2;
-constexpr int DESIRED_HOMES = 5;
+constexpr int MAX_HOMES = 20;
 constexpr int MIN_DEFENSE_TOWERS = 1;
-constexpr int DESIRED_DEFENSE_TOWERS = 3;
+constexpr int MAX_DEFENSE_TOWERS = 10;
+constexpr int MAX_CATAPULTS = 5;
+
+constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
 } // namespace
 
 void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
@@ -51,15 +55,31 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   std::string building_to_construct;
+  
+  int catapult_count = 0;
+  for (const auto &entity : snapshot.friendly_units) {
+    if (entity.spawn_type == Game::Units::SpawnType::Catapult) {
+      catapult_count++;
+    }
+  }
 
   if (context.home_count < MIN_HOMES) {
     building_to_construct = BUILDING_TYPE_HOME;
   } else if (context.defense_tower_count < MIN_DEFENSE_TOWERS) {
     building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
-  } else if (context.home_count < DESIRED_HOMES) {
+  } else if (context.home_count < MAX_HOMES && context.defense_tower_count < MAX_DEFENSE_TOWERS) {
+    int const target_defense_towers = context.home_count / 2;
+    if (context.defense_tower_count < target_defense_towers) {
+      building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
+    } else {
+      building_to_construct = BUILDING_TYPE_HOME;
+    }
+  } else if (context.home_count < MAX_HOMES) {
     building_to_construct = BUILDING_TYPE_HOME;
-  } else if (context.defense_tower_count < DESIRED_DEFENSE_TOWERS) {
+  } else if (context.defense_tower_count < MAX_DEFENSE_TOWERS) {
     building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
+  } else if (catapult_count < MAX_CATAPULTS) {
+    building_to_construct = BUILDING_TYPE_CATAPULT;
   }
 
   if (building_to_construct.empty()) {
@@ -70,9 +90,13 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   float construction_z = context.base_pos_z;
 
   if (context.primary_barracks != 0) {
-
-    float const angle = m_construction_counter * 0.8F;
-    float const radius = 15.0F + (m_construction_counter % 3) * 5.0F;
+    float angle = m_construction_counter * 0.8F;
+    float radius = 15.0F + (m_construction_counter % 3) * 5.0F;
+    
+    if (building_to_construct == BUILDING_TYPE_DEFENSE_TOWER) {
+      radius = std::min(radius, DEFENSE_TOWER_CLOSE_RADIUS);
+    }
+    
     construction_x += radius * std::cos(angle);
     construction_z += radius * std::sin(angle);
   }
@@ -98,8 +122,8 @@ auto BuilderBehavior::should_execute(const AISnapshot &snapshot,
     return false;
   }
 
-  return context.home_count < DESIRED_HOMES ||
-         context.defense_tower_count < DESIRED_DEFENSE_TOWERS;
+  return context.home_count < MAX_HOMES ||
+         context.defense_tower_count < MAX_DEFENSE_TOWERS;
 }
 
 } // namespace Game::Systems::AI
