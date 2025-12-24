@@ -39,6 +39,13 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
   if (role == UnitIdRole) {
     return QVariant::fromValue<int>(static_cast<int>(id));
   }
+  if (role == UnitTypeRole) {
+    QString type_key;
+    if (m_engine->get_unit_type_key(id, type_key)) {
+      return type_key;
+    }
+    return {};
+  }
   if (!m_engine->get_unit_info(id, name, hp, max_hp, is_b, alive, nation)) {
     return {};
   }
@@ -79,6 +86,7 @@ auto SelectedUnitsModel::data(const QModelIndex &index,
 
 auto SelectedUnitsModel::roleNames() const -> QHash<int, QByteArray> {
   return {{UnitIdRole, "unit_id"},
+          {UnitTypeRole, "unit_type"},
           {NameRole, "name"},
           {HealthRole, "health"},
           {max_healthRole, "max_health"},
