@@ -339,7 +339,7 @@
         "render_scale": 2.0,
         "selection_ring_size": 3.0,
         "selection_ring_y_offset": 0.0,
-        "selection_ring_ground_offset": 0.0,
+        "selection_ring_ground_offset": 0.6,
         "renderer_id": "troops/carthage/elephant"
       },
       "formation": {
