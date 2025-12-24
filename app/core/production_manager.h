@@ -50,8 +50,9 @@ public:
   [[nodiscard]] QVariantMap
   get_selected_production_state(int local_owner_id) const;
   [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
-  [[nodiscard]] static QVariantMap
-  get_unit_production_info(const QString &unit_type);
+  [[nodiscard]] QVariantMap
+  get_unit_production_info(const QString &unit_type,
+                           const QString &nation_id) const;
 
   void set_rally_at_screen(qreal sx, qreal sy, int local_owner_id,
                            const ViewportState &viewport);
