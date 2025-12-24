@@ -1076,48 +1076,76 @@ void ElephantRendererBase::render_full(
   }
 
   // ========================================================================
-  // New Gait System: Stance/Swing with IK-based leg posing
+  // Simplified Phase-Driven Leg Animation (stateless, smooth motion)
   // ========================================================================
-
-  // Create gait state and update based on current animation
-  ElephantGaitState gait_state{};
-  update_elephant_gait(gait_state, profile, anim, QVector3D(0.0F, 0.0F, 0.0F), 0.0F);
 
   // Leg segment lengths
   float const upper_len = d.leg_length * 0.55F;
   float const lower_len = d.leg_length * 0.45F;
-  float const lift_height = d.leg_length * GaitSystemConstants::kSwingLiftPeak;
 
-  auto draw_leg_ik = [&](int leg_index) {
-    const ElephantLegState &leg = gait_state.legs[leg_index];
+  // Full stride distance (how far each foot travels front-to-back)
+  float const full_stride = g.stride_swing * 1.2F;
+  // Lift height during swing
+  float const lift_height = d.leg_length * 0.18F;
+
+  auto draw_leg_phase = [&](int leg_index) {
     bool const is_front = (leg_index < 2);
     bool const is_left = (leg_index == 0 || leg_index == 2);
     float const lateral_sign = is_left ? 1.0F : -1.0F;
-    // Wider fore-aft spread to match foot positions
-    float const forward_bias = is_front ? d.body_length * 0.48F : -d.body_length * 0.48F;
 
-    // Hip position (attached to body with weight transfer) - wider stance
+    // Wider stance - front legs slightly forward, rear slightly back
+    float const base_forward = is_front ? d.body_length * 0.42F : -d.body_length * 0.42F;
+
+    // Phase offset for lateral sequence gait (one leg at a time, rolling pattern)
+    // FL=0.0, RR=0.25, FR=0.5, RL=0.75
+    float phase_offset = 0.0F;
+    switch (leg_index) {
+      case 0: phase_offset = 0.00F; break;  // Front-Left
+      case 1: phase_offset = 0.50F; break;  // Front-Right
+      case 2: phase_offset = 0.75F; break;  // Rear-Left
+      case 3: phase_offset = 0.25F; break;  // Rear-Right
+    }
+
+    // Compute this leg's phase in cycle [0, 1)
+    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
+
+    // Smooth sinusoidal motion for foot position
+    // leg_phase 0.0 = foot at front, 0.5 = foot at back, 1.0 = foot at front again
+    float const stride_angle = leg_phase * 2.0F * k_pi;
+    float const stride_offset = std::sin(stride_angle) * full_stride * 0.5F;
+
+    // Lift happens only during forward swing (when foot is moving forward, i.e., stride increasing)
+    // cos(stride_angle) > 0 means we're in first half of cycle (moving forward)
+    float const forward_velocity = std::cos(stride_angle);
+    float lift = 0.0F;
+    if (is_moving && forward_velocity > 0.0F) {
+      // Smooth lift arc during forward swing
+      // Peak lift at phase 0.25 (middle of forward swing)
+      float const swing_t = leg_phase * 4.0F;  // 0 to 1 during first quarter
+      if (leg_phase < 0.25F) {
+        // Rising: smooth ease
+        float const t = leg_phase / 0.25F;
+        lift = std::sin(t * k_pi * 0.5F) * lift_height;
+      } else if (leg_phase < 0.50F) {
+        // Falling: smooth ease
+        float const t = (leg_phase - 0.25F) / 0.25F;
+        lift = std::cos(t * k_pi * 0.5F) * lift_height;
+      }
+      // else: stance phase, foot on ground (lift = 0)
+    }
+
+    // Hip position (wider lateral stance)
     QVector3D const hip =
         barrel_center +
-        QVector3D(lateral_sign * d.body_width * 0.52F + gait_state.weight_shift_x,
-                  -d.body_height * 0.42F,
-                  forward_bias + gait_state.weight_shift_z +
-                  (is_front ? gait_state.shoulder_lag : gait_state.hip_lag));
+        QVector3D(lateral_sign * d.body_width * 0.48F,
+                  -d.body_height * 0.40F,
+                  base_forward);
 
-    // Foot position: either locked (stance) or interpolating (swing)
-    QVector3D foot_target;
-    if (leg.in_swing) {
-      foot_target = evaluate_swing_position(leg, lift_height);
-    } else {
-      // Stance: foot is locked at planted position
-      // Add subtle settle compression at start of stance
-      float const stance_time = 1.0F - leg.swing_progress;
-      float const settle = stance_time < GaitSystemConstants::kFootSettleDuration
-          ? (1.0F - stance_time / GaitSystemConstants::kFootSettleDuration) *
-            GaitSystemConstants::kFootSettleDepth * d.leg_length
-          : 0.0F;
-      foot_target = leg.planted_foot + QVector3D(0.0F, -settle, 0.0F);
-    }
+    // Foot position with stride and lift
+    QVector3D const foot_target(
+        hip.x(),
+        lift,  // Ground level + lift
+        hip.z() + (is_moving ? stride_offset : 0.0F));
 
     // Solve IK to find knee position
     ElephantLegPose pose = solve_elephant_leg_ik(hip, foot_target, upper_len, lower_len, lateral_sign);
@@ -1185,11 +1213,11 @@ void ElephantRendererBase::render_full(
     }
   };
 
-  // Draw all 4 legs using the new IK-based gait system
-  draw_leg_ik(0);  // Front-Left
-  draw_leg_ik(1);  // Front-Right
-  draw_leg_ik(2);  // Rear-Left
-  draw_leg_ik(3);  // Rear-Right
+  // Draw all 4 legs using phase-driven animation
+  draw_leg_phase(0);  // Front-Left
+  draw_leg_phase(1);  // Front-Right
+  draw_leg_phase(2);  // Rear-Left
+  draw_leg_phase(3);  // Rear-Right
 
   QVector3D const tail_base =
       rump_center +
