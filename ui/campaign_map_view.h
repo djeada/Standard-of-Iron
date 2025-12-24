@@ -92,7 +92,7 @@ private:
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
-  int m_current_mission = 7; // Default to last mission (full path)
+  int m_current_mission = 7;
 
   struct ProvinceHit {
     QString id;
