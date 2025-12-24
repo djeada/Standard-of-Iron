@@ -2140,6 +2140,16 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
+  // Restore mission context (campaign vs skirmish)
+  if (m_campaign_manager && meta.contains("mission_mode")) {
+    Game::Mission::MissionContext mission_context;
+    mission_context.mode = meta["mission_mode"].toString();
+    mission_context.campaign_id = meta["mission_campaign_id"].toString();
+    mission_context.mission_id = meta["mission_id"].toString();
+    mission_context.difficulty = meta["mission_difficulty"].toString();
+    m_campaign_manager->set_mission_context(mission_context);
+  }
+
   Game::Systems::GameStateSerializer::restore_level_from_metadata(meta,
                                                                   m_level);
   Game::Systems::GameStateSerializer::restore_camera_from_metadata(
@@ -2205,6 +2215,16 @@ auto GameEngine::save_to_slot(const QString &slot,
   QJsonObject meta = Game::Systems::GameStateSerializer::build_metadata(
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
+
+  // Add mission context (campaign vs skirmish)
+  if (m_campaign_manager) {
+    const auto &mission_context = m_campaign_manager->current_mission_context();
+    meta["mission_mode"] = mission_context.mode;
+    meta["mission_campaign_id"] = mission_context.campaign_id;
+    meta["mission_id"] = mission_context.mission_id;
+    meta["mission_difficulty"] = mission_context.difficulty;
+  }
+
   const QByteArray screenshot = capture_screenshot();
   if (!m_saveLoadService->save_game_to_slot(
           *m_world, slot, title, m_level.map_name, meta, screenshot)) {
