@@ -112,17 +112,23 @@ def add_coastal_waypoints(start: Tuple[float, float], end: Tuple[float, float],
         perp_v /= length
         
         # Offset magnitude based on segment length (smaller for short segments)
-        offset = min(0.02, length * 0.15)
-        
-        # Bias toward the coast (negative for Mediterranean north coast)
+        # For coastal segments, use MUCH smaller offset to avoid going over water
         if segment_type == "coastal":
-            # Curve slightly toward the sea side for coastal routes
-            curve_u = mid_u + perp_u * offset * 0.5
-            curve_v = mid_v + perp_v * offset * 0.5
-        else:  # land
-            # Gentler curve for inland segments
+            # Coastal: very subtle curve, stay close to direct path
+            offset = min(0.008, length * 0.05)
+        else:
+            # Land: can use slightly larger curve
+            offset = min(0.015, length * 0.10)
+        
+        # Bias toward the coast
+        if segment_type == "coastal":
+            # Coastal: very subtle curve to avoid crossing water
             curve_u = mid_u + perp_u * offset * 0.3
             curve_v = mid_v + perp_v * offset * 0.3
+        else:  # land
+            # Gentler curve for inland segments
+            curve_u = mid_u + perp_u * offset * 0.4
+            curve_v = mid_v + perp_v * offset * 0.4
         
         # Add two intermediate points for smoother curve
         quarter_u = (su + curve_u) / 2.0
@@ -162,6 +168,9 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         "Hippo_Regius": (7.8, 36.9),  # Modern Annaba, Algeria
         "Icosium": (3.0, 36.8),  # Modern Algiers
         "Caesarea": (2.2, 36.6),  # Modern Cherchell, Algeria
+        # More waypoints along Moroccan coast (critical for coastline following)
+        "Saldae": (5.1, 36.75),  # Between Cirta and Icosium
+        "Rusaddir": (-2.9, 35.3),  # Melilla area, Morocco
         "Tingis": (-5.8, 35.8),  # Tangier, Morocco - crossing point to Spain
         "New Carthage": (-0.98, 37.6),
         "Saguntum": (-0.3, 39.7),
@@ -188,9 +197,11 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     segment_types = {
         ("Carthage", "Cirta"): "coastal",
         ("Cirta", "Hippo_Regius"): "coastal",
-        ("Hippo_Regius", "Icosium"): "coastal",
+        ("Hippo_Regius", "Saldae"): "coastal",
+        ("Saldae", "Icosium"): "coastal",
         ("Icosium", "Caesarea"): "coastal",
-        ("Caesarea", "Tingis"): "coastal",
+        ("Caesarea", "Rusaddir"): "coastal",
+        ("Rusaddir", "Tingis"): "coastal",
         ("Tingis", "New Carthage"): "open_sea",  # Gibraltar crossing - Africa to Spain
         ("New Carthage", "Saguntum"): "coastal",
         ("Saguntum", "Tarraco"): "coastal",
@@ -217,31 +228,31 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
 
     # Define the route for each mission (cumulative)
     # Historical route: Carthage → North Africa coast → Gibraltar → Iberia → Gaul → Alps → Italy → back to Carthage
-    # Routes now follow the African coast west before crossing at Gibraltar
+    # Routes now follow the African coast west with more waypoints before crossing at Gibraltar
     mission_routes = [
         # Mission 0: Crossing the Rhône (From North Africa along coast, then through Iberia to Gaul)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia"],
         
         # Mission 1: Battle of Ticino (Cross Alps, enter Italy)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
         
         # Mission 2: Battle of Trebia (Consolidate in Cisalpine Gaul)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia"],
         
         # Mission 3: Battle of Trasimene (Move through Etruria)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii"],
         
         # Mission 4: Battle of Cannae (Advance to Southern Italy)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
         
         # Mission 5: Campania Campaign (Consolidate in Campania, extend to Tarentum)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
         
         # Mission 6: Crossing the Alps (Flashback - the mountain crossing with more detail)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum"],
         
         # Mission 7: Battle of Zama (Return to Africa for final battle - complete journey)
-        ["Carthage", "Cirta", "Hippo_Regius", "Icosium", "Caesarea", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
+        ["Carthage", "Cirta", "Hippo_Regius", "Saldae", "Icosium", "Caesarea", "Rusaddir", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Narbo", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
     ]
 
     lines: List[List[List[float]]] = []
