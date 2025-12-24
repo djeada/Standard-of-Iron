@@ -16,6 +16,8 @@ enum class ToolType {
   Road,
   Bridge,
   Firecamp,
+  Barracks,
+  Village,
   Eraser
 };
 
@@ -29,6 +31,7 @@ public:
   explicit ToolPanel(QWidget *parent = nullptr);
 
   [[nodiscard]] ToolType currentTool() const { return m_currentTool; }
+  void clearSelection();
 
 signals:
   void toolSelected(ToolType tool);

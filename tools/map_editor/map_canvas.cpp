@@ -1,4 +1,5 @@
 #include "map_canvas.h"
+#include <QInputDialog>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QWheelEvent>
@@ -33,6 +34,13 @@ void MapCanvas::setCurrentTool(ToolType tool) {
   update();
 }
 
+void MapCanvas::clearTool() {
+  m_currentTool = ToolType::Select;
+  m_isPlacingLinear = false;
+  emit toolCleared();
+  update();
+}
+
 QPointF MapCanvas::mapToGrid(const QPoint &widgetPos) const {
   float x =
       (widgetPos.x() - m_panOffset.x()) / (GRID_CELL_SIZE * m_zoom);
@@ -61,9 +69,11 @@ void MapCanvas::paintEvent(QPaintEvent * /*event*/) {
   }
 
   drawGrid(painter);
+  drawAxes(painter);
   drawLinearElements(painter);
   drawTerrainElements(painter);
   drawFirecamps(painter);
+  drawStructures(painter);
   drawCurrentPlacement(painter);
 }
 
@@ -109,6 +119,69 @@ void MapCanvas::drawGrid(QPainter &painter) {
                    grid.height * cellSize);
 }
 
+void MapCanvas::drawAxes(QPainter &painter) {
+  if (!m_mapData) {
+    return;
+  }
+
+  const GridSettings &grid = m_mapData->grid();
+  int cellSize = static_cast<int>(GRID_CELL_SIZE * m_zoom);
+  int startX = static_cast<int>(m_panOffset.x());
+  int startY = static_cast<int>(m_panOffset.y());
+  int endX = startX + grid.width * cellSize;
+  int endY = startY + grid.height * cellSize;
+
+  // Draw X axis (red) along top
+  painter.setPen(QPen(QColor(255, 100, 100), 2));
+  painter.drawLine(startX, startY - 5, endX, startY - 5);
+
+  // Draw Z axis (blue) along left
+  painter.setPen(QPen(QColor(100, 100, 255), 2));
+  painter.drawLine(startX - 5, startY, startX - 5, endY);
+
+  // Draw axis labels
+  QFont font = painter.font();
+  font.setPointSize(10);
+  font.setBold(true);
+  painter.setFont(font);
+
+  // X axis label and dimension
+  painter.setPen(QColor(255, 100, 100));
+  painter.drawText(endX + 10, startY, "X");
+  painter.drawText(startX + grid.width * cellSize / 2 - 20, startY - 15,
+                   QString::number(grid.width));
+
+  // Z axis label and dimension
+  painter.setPen(QColor(100, 100, 255));
+  painter.drawText(startX - 15, endY + 15, "Z");
+  painter.drawText(startX - 35, startY + grid.height * cellSize / 2,
+                   QString::number(grid.height));
+
+  // Draw tick marks with values every 50 units
+  font.setPointSize(8);
+  font.setBold(false);
+  painter.setFont(font);
+
+  // X axis ticks
+  painter.setPen(QColor(200, 200, 200));
+  for (int i = 0; i <= grid.width; i += 50) {
+    int x = startX + i * cellSize;
+    if (x >= 0 && x <= width()) {
+      painter.drawLine(x, startY - 8, x, startY - 2);
+      painter.drawText(x - 10, startY - 12, QString::number(i));
+    }
+  }
+
+  // Z axis ticks
+  for (int i = 0; i <= grid.height; i += 50) {
+    int y = startY + i * cellSize;
+    if (y >= 0 && y <= height()) {
+      painter.drawLine(startX - 8, y, startX - 2, y);
+      painter.drawText(startX - 30, y + 4, QString::number(i));
+    }
+  }
+}
+
 void MapCanvas::drawTerrainElements(QPainter &painter) {
   if (!m_mapData) {
     return;
@@ -118,7 +191,6 @@ void MapCanvas::drawTerrainElements(QPainter &painter) {
   for (int i = 0; i < terrain.size(); ++i) {
     const auto &elem = terrain[i];
     QPoint pos = gridToWidget(elem.x, elem.z);
-    float displayRadius = std::max(elem.radius, std::max(elem.width, elem.depth));
 
     bool isSelected = (m_selectedType == 0 && m_selectedIndex == i);
     if (isSelected) {
@@ -127,7 +199,7 @@ void MapCanvas::drawTerrainElements(QPainter &painter) {
       painter.setPen(QPen(Qt::white, 1));
     }
 
-    drawElement(painter, elem.type, pos, displayRadius);
+    drawElement(painter, elem.type, pos);
   }
 }
 
@@ -148,7 +220,28 @@ void MapCanvas::drawFirecamps(QPainter &painter) {
       painter.setPen(QPen(Qt::white, 1));
     }
 
-    drawElement(painter, "firecamp", pos, elem.radius);
+    drawElement(painter, "firecamp", pos);
+  }
+}
+
+void MapCanvas::drawStructures(QPainter &painter) {
+  if (!m_mapData) {
+    return;
+  }
+
+  const auto &structures = m_mapData->structures();
+  for (int i = 0; i < structures.size(); ++i) {
+    const auto &elem = structures[i];
+    QPoint pos = gridToWidget(elem.x, elem.z);
+
+    bool isSelected = (m_selectedType == 3 && m_selectedIndex == i);
+    if (isSelected) {
+      painter.setPen(QPen(Qt::yellow, 2));
+    } else {
+      painter.setPen(QPen(Qt::white, 1));
+    }
+
+    drawElement(painter, elem.type, pos, elem.playerId);
   }
 }
 
@@ -166,8 +259,8 @@ void MapCanvas::drawLinearElements(QPainter &painter) {
     bool isSelected = (m_selectedType == 2 && m_selectedIndex == i);
 
     QColor color;
-    int width = static_cast<int>(elem.width * m_zoom);
-    width = std::max(2, std::min(width, 20));
+    int lineWidth = static_cast<int>(elem.width * m_zoom);
+    lineWidth = std::max(2, std::min(lineWidth, 20));
 
     if (elem.type == "river") {
       color = QColor(70, 130, 200);
@@ -178,11 +271,11 @@ void MapCanvas::drawLinearElements(QPainter &painter) {
     }
 
     if (isSelected) {
-      painter.setPen(QPen(Qt::yellow, width + 2));
+      painter.setPen(QPen(Qt::yellow, lineWidth + 2));
       painter.drawLine(startPos, endPos);
     }
 
-    painter.setPen(QPen(color, width));
+    painter.setPen(QPen(color, lineWidth));
     painter.drawLine(startPos, endPos);
 
     // Draw endpoints
@@ -232,21 +325,27 @@ void MapCanvas::drawCurrentPlacement(QPainter &painter) {
   case ToolType::Firecamp:
     type = "firecamp";
     break;
+  case ToolType::Barracks:
+    type = "barracks";
+    break;
+  case ToolType::Village:
+    type = "village";
+    break;
   default:
     break;
   }
 
   if (!type.isEmpty()) {
-    drawElement(painter, type, widgetPos, 10.0F);
+    drawElement(painter, type, widgetPos);
   }
 
   painter.setOpacity(1.0);
 }
 
 void MapCanvas::drawElement(QPainter &painter, const QString &type,
-                            const QPoint &pos, float radius) {
-  int size = static_cast<int>(radius * GRID_CELL_SIZE * m_zoom / 2);
-  size = std::max(8, size);
+                            const QPoint &pos, int playerId) {
+  // Use fixed icon size for all elements
+  int size = ICON_SIZE;
 
   QColor fillColor;
   QString symbol;
@@ -260,6 +359,29 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
   } else if (type == "firecamp") {
     fillColor = QColor(255, 140, 0);
     symbol = "🔥";
+  } else if (type == "barracks") {
+    // Color based on player
+    if (playerId == 0) {
+      fillColor = QColor(180, 180, 180); // Neutral - gray
+    } else if (playerId == 1) {
+      fillColor = QColor(100, 150, 255); // Player 1 - blue
+    } else if (playerId == 2) {
+      fillColor = QColor(255, 100, 100); // Player 2 - red
+    } else {
+      fillColor = QColor(100, 255, 100); // Other - green
+    }
+    symbol = "🏛";
+  } else if (type == "village") {
+    if (playerId == 0) {
+      fillColor = QColor(180, 180, 180);
+    } else if (playerId == 1) {
+      fillColor = QColor(100, 150, 255);
+    } else if (playerId == 2) {
+      fillColor = QColor(255, 100, 100);
+    } else {
+      fillColor = QColor(100, 255, 100);
+    }
+    symbol = "🏘";
   } else {
     fillColor = QColor(128, 128, 128);
     symbol = "?";
@@ -270,15 +392,31 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
 
   // Draw symbol
   QFont font = painter.font();
-  font.setPointSize(std::max(8, size / 2));
+  font.setPointSize(12);
   painter.setFont(font);
   painter.setPen(Qt::white);
   painter.drawText(QRect(pos.x() - size, pos.y() - size, size * 2, size * 2),
                    Qt::AlignCenter, symbol);
+
+  // Draw player indicator for structures
+  if ((type == "barracks" || type == "village") && playerId >= 0) {
+    QString playerText = playerId == 0 ? "N" : QString::number(playerId);
+    font.setPointSize(8);
+    font.setBold(true);
+    painter.setFont(font);
+    painter.setPen(Qt::black);
+    painter.drawText(pos.x() + size - 6, pos.y() - size + 10, playerText);
+  }
 }
 
 void MapCanvas::mousePressEvent(QMouseEvent *event) {
   m_lastMousePos = event->pos();
+
+  // Right-click clears tool selection
+  if (event->button() == Qt::RightButton) {
+    clearTool();
+    return;
+  }
 
   if (event->button() == Qt::MiddleButton ||
       (event->button() == Qt::LeftButton &&
@@ -305,6 +443,8 @@ void MapCanvas::mousePressEvent(QMouseEvent *event) {
     case ToolType::Hill:
     case ToolType::Mountain:
     case ToolType::Firecamp:
+    case ToolType::Barracks:
+    case ToolType::Village:
       placeElement(gridPos);
       break;
     case ToolType::River:
@@ -363,6 +503,14 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event) {
         elem.z = static_cast<float>(gridPos.y());
         m_mapData->updateFirecamp(m_selectedIndex, elem);
       }
+    } else if (m_selectedType == 3) {
+      auto structures = m_mapData->structures();
+      if (m_selectedIndex < structures.size()) {
+        StructureElement elem = structures[m_selectedIndex];
+        elem.x = static_cast<float>(gridPos.x());
+        elem.z = static_cast<float>(gridPos.y());
+        m_mapData->updateStructure(m_selectedIndex, elem);
+      }
     }
   }
 
@@ -377,6 +525,9 @@ void MapCanvas::mouseDoubleClickEvent(QMouseEvent *event) {
     HitResult hit = hitTest(event->pos());
     if (hit.elementType >= 0 && hit.index >= 0) {
       emit elementDoubleClicked(hit.elementType, hit.index);
+    } else {
+      // Double-click on empty space to edit grid dimensions
+      emit gridDoubleClicked();
     }
   }
 }
@@ -417,6 +568,21 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
   }
 
   QPointF gridPos = mapToGrid(pos);
+  float hitRadius = 5.0F; // Fixed hit radius for all elements
+
+  // Check structures first (they appear on top)
+  const auto &structures = m_mapData->structures();
+  for (int i = 0; i < structures.size(); ++i) {
+    const auto &elem = structures[i];
+    float dx = static_cast<float>(gridPos.x()) - elem.x;
+    float dz = static_cast<float>(gridPos.y()) - elem.z;
+    float dist = std::sqrt(dx * dx + dz * dz);
+    if (dist <= hitRadius) {
+      result.elementType = 3;
+      result.index = i;
+      return result;
+    }
+  }
 
   // Check terrain elements
   const auto &terrain = m_mapData->terrainElements();
@@ -425,7 +591,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     float dx = static_cast<float>(gridPos.x()) - elem.x;
     float dz = static_cast<float>(gridPos.y()) - elem.z;
     float dist = std::sqrt(dx * dx + dz * dz);
-    float hitRadius = std::max(elem.radius, std::max(elem.width, elem.depth));
     if (dist <= hitRadius) {
       result.elementType = 0;
       result.index = i;
@@ -440,7 +605,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     float dx = static_cast<float>(gridPos.x()) - elem.x;
     float dz = static_cast<float>(gridPos.y()) - elem.z;
     float dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= elem.radius + 2.0F) {
+    if (dist <= hitRadius) {
       result.elementType = 1;
       result.index = i;
       return result;
@@ -502,6 +667,28 @@ void MapCanvas::placeElement(const QPointF &gridPos) {
     elem.intensity = 1.0F;
     elem.radius = 3.0F;
     m_mapData->addFirecamp(elem);
+  } else if (m_currentTool == ToolType::Barracks ||
+             m_currentTool == ToolType::Village) {
+    // Ask for player assignment
+    bool ok;
+    int playerId = QInputDialog::getInt(
+        this, "Assign Team",
+        "Enter player ID (0 = neutral, 1-4 = players):",
+        m_currentPlayerId, 0, 4, 1, &ok);
+
+    if (ok) {
+      m_currentPlayerId = playerId; // Remember for next placement
+
+      StructureElement elem;
+      elem.type =
+          (m_currentTool == ToolType::Barracks) ? "barracks" : "village";
+      elem.x = static_cast<float>(gridPos.x());
+      elem.z = static_cast<float>(gridPos.y());
+      elem.playerId = playerId;
+      elem.maxPopulation = 150;
+      elem.nation = "roman_republic";
+      m_mapData->addStructure(elem);
+    }
   }
 }
 
@@ -558,6 +745,8 @@ void MapCanvas::eraseAtPosition(const QPointF &gridPos) {
     m_mapData->removeFirecamp(hit.index);
   } else if (hit.elementType == 2) {
     m_mapData->removeLinearElement(hit.index);
+  } else if (hit.elementType == 3) {
+    m_mapData->removeStructure(hit.index);
   }
 }
 

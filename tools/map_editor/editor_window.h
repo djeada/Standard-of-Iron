@@ -25,9 +25,15 @@ private slots:
   void saveMap();
   void saveMapAs();
   void resizeMap();
+  void undo();
+  void redo();
   void onToolSelected(ToolType tool);
+  void onToolCleared();
   void onElementDoubleClicked(int elementType, int index);
+  void onGridDoubleClicked();
   void onModifiedChanged(bool modified);
+  void onUndoRedoChanged();
+  void updateDimensionsLabel();
 
 private:
   void setupUI();
@@ -40,7 +46,11 @@ private:
   MapCanvas *m_canvas = nullptr;
   ToolPanel *m_toolPanel = nullptr;
   QLabel *m_statusLabel = nullptr;
+  QLabel *m_dimensionsLabel = nullptr;
   QString m_currentFilePath;
+
+  QAction *m_undoAction = nullptr;
+  QAction *m_redoAction = nullptr;
 };
 
 } // namespace MapEditor

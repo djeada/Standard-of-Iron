@@ -29,6 +29,8 @@ void ToolPanel::setupUI() {
   addToolItem("Road", "═", ToolType::Road);
   addToolItem("Bridge", "🌉", ToolType::Bridge);
   addToolItem("Firecamp", "🔥", ToolType::Firecamp);
+  addToolItem("Barracks", "🏛", ToolType::Barracks);
+  addToolItem("Village", "🏘", ToolType::Village);
   addToolItem("Eraser", "🗑", ToolType::Eraser);
 
   connect(m_toolList, &QListWidget::itemClicked, this,
@@ -50,6 +52,12 @@ void ToolPanel::addToolItem(const QString &name, const QString &iconChar,
 
 void ToolPanel::onItemClicked(QListWidgetItem *item) {
   m_currentTool = static_cast<ToolType>(item->data(Qt::UserRole).toInt());
+  emit toolSelected(m_currentTool);
+}
+
+void ToolPanel::clearSelection() {
+  m_currentTool = ToolType::Select;
+  m_toolList->setCurrentRow(0); // Select first item (Select tool)
   emit toolSelected(m_currentTool);
 }
 

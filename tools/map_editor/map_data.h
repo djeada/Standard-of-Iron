@@ -4,8 +4,11 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
+#include <QStack>
 #include <QVector>
 #include <QVector2D>
+#include <memory>
+#include <variant>
 
 namespace MapEditor {
 
@@ -50,12 +53,38 @@ struct LinearElement {
 };
 
 /**
+ * @brief Represents a structure element (barracks, village)
+ */
+struct StructureElement {
+  QString type; // "barracks", "village"
+  float x = 0.0F;
+  float z = 0.0F;
+  int playerId = 0;        // 0 = neutral
+  int maxPopulation = 150;
+  QString nation;
+  QJsonObject extraFields;
+};
+
+/**
  * @brief Grid settings for the map
  */
 struct GridSettings {
   int width = 100;
   int height = 100;
   float tileSize = 1.0F;
+};
+
+// Forward declaration
+class MapData;
+
+/**
+ * @brief Command interface for undo/redo
+ */
+class Command {
+public:
+  virtual ~Command() = default;
+  virtual void execute() = 0;
+  virtual void undo() = 0;
 };
 
 /**
@@ -102,6 +131,21 @@ public:
   void updateLinearElement(int index, const LinearElement &element);
   void removeLinearElement(int index);
 
+  // Structures (barracks, villages)
+  [[nodiscard]] const QVector<StructureElement> &structures() const {
+    return m_structures;
+  }
+  void addStructure(const StructureElement &element);
+  void updateStructure(int index, const StructureElement &element);
+  void removeStructure(int index);
+
+  // Undo/Redo support
+  void executeCommand(std::unique_ptr<Command> cmd);
+  void undo();
+  void redo();
+  [[nodiscard]] bool canUndo() const { return !m_undoStack.isEmpty(); }
+  [[nodiscard]] bool canRedo() const { return !m_redoStack.isEmpty(); }
+
   // Clear all data for new map
   void clear();
 
@@ -112,6 +156,7 @@ public:
 signals:
   void dataChanged();
   void modifiedChanged(bool modified);
+  void undoRedoChanged();
 
 private:
   QString m_name;
@@ -119,6 +164,7 @@ private:
   QVector<TerrainElement> m_terrain;
   QVector<FirecampElement> m_firecamps;
   QVector<LinearElement> m_linearElements;
+  QVector<StructureElement> m_structures;
 
   // Passthrough data (preserved but not edited)
   QJsonObject m_biome;
@@ -132,18 +178,24 @@ private:
 
   bool m_modified = false;
 
+  // Undo/redo stacks
+  QStack<std::unique_ptr<Command>> m_undoStack;
+  QStack<std::unique_ptr<Command>> m_redoStack;
+
   // Helper methods
   void parseTerrainArray(const QJsonArray &arr);
   void parseFirecampsArray(const QJsonArray &arr);
   void parseRiversArray(const QJsonArray &arr);
   void parseRoadsArray(const QJsonArray &arr);
   void parseBridgesArray(const QJsonArray &arr);
+  void parseStructuresFromSpawns(const QJsonArray &arr);
 
   [[nodiscard]] QJsonArray terrainToJson() const;
   [[nodiscard]] QJsonArray firecampsToJson() const;
   [[nodiscard]] QJsonArray riversToJson() const;
   [[nodiscard]] QJsonArray roadsToJson() const;
   [[nodiscard]] QJsonArray bridgesToJson() const;
+  [[nodiscard]] QJsonArray structuresToSpawnsJson() const;
 };
 
 } // namespace MapEditor

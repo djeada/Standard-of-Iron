@@ -18,9 +18,12 @@ public:
 
   void setMapData(MapData *data);
   void setCurrentTool(ToolType tool);
+  void clearTool();
 
 signals:
   void elementDoubleClicked(int elementType, int index);
+  void gridDoubleClicked();
+  void toolCleared();
 
 protected:
   void paintEvent(QPaintEvent *event) override;
@@ -38,16 +41,18 @@ private:
 
   // Drawing helpers
   void drawGrid(QPainter &painter);
+  void drawAxes(QPainter &painter);
   void drawTerrainElements(QPainter &painter);
   void drawFirecamps(QPainter &painter);
+  void drawStructures(QPainter &painter);
   void drawLinearElements(QPainter &painter);
   void drawCurrentPlacement(QPainter &painter);
   void drawElement(QPainter &painter, const QString &type, const QPoint &pos,
-                   float radius);
+                   int playerId = 0);
 
   // Hit testing
   struct HitResult {
-    int elementType = -1; // 0=terrain, 1=firecamp, 2=linear
+    int elementType = -1; // 0=terrain, 1=firecamp, 2=linear, 3=structure
     int index = -1;
   };
   [[nodiscard]] HitResult hitTest(const QPoint &pos) const;
@@ -76,7 +81,11 @@ private:
   int m_selectedIndex = -1;
   bool m_isDragging = false;
 
-  static constexpr int GRID_CELL_SIZE = 8; // Pixels per grid unit at zoom 1.0
+  // Current structure placement player
+  int m_currentPlayerId = 0;
+
+  static constexpr int GRID_CELL_SIZE = 8;   // Pixels per grid unit at zoom 1.0
+  static constexpr int ICON_SIZE = 16;       // Fixed icon size for all elements
 };
 
 } // namespace MapEditor

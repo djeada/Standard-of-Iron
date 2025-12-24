@@ -17,6 +17,7 @@ void MapData::clear() {
   m_terrain.clear();
   m_firecamps.clear();
   m_linearElements.clear();
+  m_structures.clear();
 
   m_biome = QJsonObject();
   m_camera = QJsonObject();
@@ -24,8 +25,17 @@ void MapData::clear() {
   m_victory = QJsonObject();
   m_rain = QJsonObject();
 
+  // Clear undo/redo stacks
+  while (!m_undoStack.isEmpty()) {
+    m_undoStack.pop();
+  }
+  while (!m_redoStack.isEmpty()) {
+    m_redoStack.pop();
+  }
+
   setModified(false);
   emit dataChanged();
+  emit undoRedoChanged();
 }
 
 void MapData::setName(const QString &name) {
@@ -47,6 +57,43 @@ void MapData::setModified(bool modified) {
     m_modified = modified;
     emit modifiedChanged(modified);
   }
+}
+
+void MapData::executeCommand(std::unique_ptr<Command> cmd) {
+  cmd->execute();
+  m_undoStack.push(std::move(cmd));
+  // Clear redo stack when new command is executed
+  while (!m_redoStack.isEmpty()) {
+    m_redoStack.pop();
+  }
+  setModified(true);
+  emit undoRedoChanged();
+}
+
+void MapData::undo() {
+  if (m_undoStack.isEmpty()) {
+    return;
+  }
+  auto cmd = std::move(m_undoStack.top());
+  m_undoStack.pop();
+  cmd->undo();
+  m_redoStack.push(std::move(cmd));
+  setModified(true);
+  emit dataChanged();
+  emit undoRedoChanged();
+}
+
+void MapData::redo() {
+  if (m_redoStack.isEmpty()) {
+    return;
+  }
+  auto cmd = std::move(m_redoStack.top());
+  m_redoStack.pop();
+  cmd->execute();
+  m_undoStack.push(std::move(cmd));
+  setModified(true);
+  emit dataChanged();
+  emit undoRedoChanged();
 }
 
 bool MapData::loadFromJson(const QString &filePath) {
@@ -91,6 +138,7 @@ bool MapData::loadFromJson(const QString &filePath) {
   m_terrain.clear();
   m_firecamps.clear();
   m_linearElements.clear();
+  m_structures.clear();
 
   if (root.contains("terrain")) {
     parseTerrainArray(root["terrain"].toArray());
@@ -107,9 +155,22 @@ bool MapData::loadFromJson(const QString &filePath) {
   if (root.contains("bridges")) {
     parseBridgesArray(root["bridges"].toArray());
   }
+  // Parse structures from spawns (barracks, villages)
+  if (root.contains("spawns")) {
+    parseStructuresFromSpawns(root["spawns"].toArray());
+  }
+
+  // Clear undo/redo stacks on load
+  while (!m_undoStack.isEmpty()) {
+    m_undoStack.pop();
+  }
+  while (!m_redoStack.isEmpty()) {
+    m_redoStack.pop();
+  }
 
   setModified(false);
   emit dataChanged();
+  emit undoRedoChanged();
   return true;
 }
 
@@ -137,9 +198,6 @@ bool MapData::saveToJson(const QString &filePath) const {
   }
   if (!m_camera.isEmpty()) {
     root["camera"] = m_camera;
-  }
-  if (!m_spawns.isEmpty()) {
-    root["spawns"] = m_spawns;
   }
   if (!m_victory.isEmpty()) {
     root["victory"] = m_victory;
@@ -172,6 +230,20 @@ bool MapData::saveToJson(const QString &filePath) const {
   QJsonArray bridgesArr = bridgesToJson();
   if (!bridgesArr.isEmpty()) {
     root["bridges"] = bridgesArr;
+  }
+
+  // Merge structures into spawns
+  QJsonArray spawnsArr = structuresToSpawnsJson();
+  // Add non-structure spawns from original data
+  for (const auto &spawn : m_spawns) {
+    QJsonObject spawnObj = spawn.toObject();
+    QString type = spawnObj["type"].toString();
+    if (type != "barracks" && type != "village") {
+      spawnsArr.append(spawn);
+    }
+  }
+  if (!spawnsArr.isEmpty()) {
+    root["spawns"] = spawnsArr;
   }
 
   QJsonDocument doc(root);
@@ -516,6 +588,80 @@ void MapData::removeLinearElement(int index) {
     setModified(true);
     emit dataChanged();
   }
+}
+
+void MapData::addStructure(const StructureElement &element) {
+  m_structures.append(element);
+  setModified(true);
+  emit dataChanged();
+}
+
+void MapData::updateStructure(int index, const StructureElement &element) {
+  if (index >= 0 && index < m_structures.size()) {
+    m_structures[index] = element;
+    setModified(true);
+    emit dataChanged();
+  }
+}
+
+void MapData::removeStructure(int index) {
+  if (index >= 0 && index < m_structures.size()) {
+    m_structures.removeAt(index);
+    setModified(true);
+    emit dataChanged();
+  }
+}
+
+void MapData::parseStructuresFromSpawns(const QJsonArray &arr) {
+  for (const auto &val : arr) {
+    QJsonObject obj = val.toObject();
+    QString type = obj["type"].toString();
+
+    // Only extract barracks and villages as editable structures
+    if (type == "barracks" || type == "village") {
+      StructureElement elem;
+      elem.type = type;
+      elem.x = static_cast<float>(obj["x"].toDouble());
+      elem.z = static_cast<float>(obj["z"].toDouble());
+      elem.playerId = obj["playerId"].toInt(0);
+      elem.maxPopulation = obj["maxPopulation"].toInt(150);
+      elem.nation = obj["nation"].toString();
+
+      QStringList knownKeys = {"type", "x", "z", "playerId", "maxPopulation",
+                               "nation"};
+      for (const QString &key : obj.keys()) {
+        if (!knownKeys.contains(key)) {
+          elem.extraFields[key] = obj[key];
+        }
+      }
+
+      m_structures.append(elem);
+    }
+  }
+}
+
+QJsonArray MapData::structuresToSpawnsJson() const {
+  QJsonArray arr;
+  for (const auto &elem : m_structures) {
+    QJsonObject obj;
+    obj["type"] = elem.type;
+    obj["x"] = static_cast<double>(elem.x);
+    obj["z"] = static_cast<double>(elem.z);
+    if (elem.playerId > 0) {
+      obj["playerId"] = elem.playerId;
+    }
+    obj["maxPopulation"] = elem.maxPopulation;
+    if (!elem.nation.isEmpty()) {
+      obj["nation"] = elem.nation;
+    }
+
+    for (const QString &key : elem.extraFields.keys()) {
+      obj[key] = elem.extraFields[key];
+    }
+
+    arr.append(obj);
+  }
+  return arr;
 }
 
 } // namespace MapEditor
