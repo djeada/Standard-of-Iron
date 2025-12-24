@@ -305,10 +305,10 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     }
 
     stomp_impact->impacts.erase(
-        std::remove_if(stomp_impact->impacts.begin(),
-                       stomp_impact->impacts.end(),
-                       [](const Engine::Core::ElephantStompImpactComponent::
-                              ImpactRecord &impact) { return impact.time < 0.0F; }),
+        std::remove_if(
+            stomp_impact->impacts.begin(), stomp_impact->impacts.end(),
+            [](const Engine::Core::ElephantStompImpactComponent::ImpactRecord
+                   &impact) { return impact.time < 0.0F; }),
         stomp_impact->impacts.end());
   }
 

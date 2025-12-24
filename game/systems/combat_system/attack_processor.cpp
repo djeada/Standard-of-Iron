@@ -269,7 +269,7 @@ auto calculate_tactical_damage_multiplier(
 
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer ||
       attacker_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
-    // Archer bonus against elephants
+
     if (target->has_component<Engine::Core::ElephantComponent>()) {
       multiplier *= Constants::kArcherVsElephantMultiplier;
     }

@@ -537,7 +537,8 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 body = elephant_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width * 0.5F, d.body_height * 0.425F, d.body_length * 0.275F);
+    body.scale(d.body_width * 0.5F, d.body_height * 0.425F,
+               d.body_length * 0.275F);
     out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F,
              kMaterialElephantBody);
   }

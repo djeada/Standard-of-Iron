@@ -29,40 +29,36 @@ constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
 
-// Threshold for determining if a unit should use radius-aware walkability checks
 constexpr float kUnitRadiusThreshold = 0.5F;
 
-// Jitter distance for moving unit out of invalid position (in world units)
 constexpr float kJitterDistance = 1.5F;
 
-// Check if all surrounding cells (8 neighbors) are invalid/unwalkable
 auto are_all_surrounding_cells_invalid(const Point &position,
                                        const Pathfinding &pathfinder,
                                        float unit_radius) -> bool {
-  // Check all 8 neighboring cells
+
   for (int dy = -1; dy <= 1; ++dy) {
     for (int dx = -1; dx <= 1; ++dx) {
       if (dx == 0 && dy == 0) {
-        continue; // Skip the center cell
+        continue;
       }
-      
+
       int const check_x = position.x + dx;
       int const check_y = position.y + dy;
-      
-      // Use is_walkable_with_radius for proper unit size checking
+
       if (unit_radius <= kUnitRadiusThreshold) {
         if (pathfinder.is_walkable(check_x, check_y)) {
-          return false; // Found at least one walkable neighbor
+          return false;
         }
       } else {
         if (pathfinder.is_walkable_with_radius(check_x, check_y, unit_radius)) {
-          return false; // Found at least one walkable neighbor
+          return false;
         }
       }
     }
   }
-  
-  return true; // All surrounding cells are invalid
+
+  return true;
 }
 
 } // namespace
@@ -879,34 +875,28 @@ void CommandService::process_path_results(Engine::Core::World &world) {
         }
       }
 
-      // If path is null/empty, check if unit is surrounded by invalid cells
       if (!has_path && s_pathfinder) {
-        Point const current_grid = world_to_grid(
-            member_transform->position.x, member_transform->position.z);
-        
-        // Check if all surrounding cells are invalid
-        if (are_all_surrounding_cells_invalid(
-                current_grid, *s_pathfinder, request_info.unit_radius)) {
-          // Move unit with random jitter to get out of invalid position
+        Point const current_grid = world_to_grid(member_transform->position.x,
+                                                 member_transform->position.z);
+
+        if (are_all_surrounding_cells_invalid(current_grid, *s_pathfinder,
+                                              request_info.unit_radius)) {
+
           thread_local std::random_device rd;
           thread_local std::mt19937 gen(rd());
-          std::uniform_real_distribution<float> dist(-kJitterDistance, 
+          std::uniform_real_distribution<float> dist(-kJitterDistance,
                                                      kJitterDistance);
-          
+
           float const jitter_x = dist(gen);
           float const jitter_z = dist(gen);
-          
-          // Apply jitter to move unit slightly out
+
           member_transform->position.x += jitter_x;
           member_transform->position.z += jitter_z;
-          
-          // Clear movement state
+
           movement_component->has_target = false;
           movement_component->vx = 0.0F;
           movement_component->vz = 0.0F;
-          
-          // The movement system will pick up the goal and attempt pathing
-          // on the next update cycle from the new position
+
           return;
         }
       }
