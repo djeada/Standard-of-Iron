@@ -62,30 +62,31 @@ def build_hannibal_path(provinces: List[dict]) -> List[List[List[float]]]:
 
     # Define the route for each mission (cumulative)
     # Historical route: Carthage → North Africa/Numidia → Iberia → Gaul → Alps → Italy → back to Carthage
+    # Added intermediate waypoints to avoid path going through sea
     mission_routes = [
-        # Mission 0: Crossing the Rhône (From Iberia through Gaul)
-        ["Carthage", "Cirta", "New Carthage", "Massalia"],
+        # Mission 0: Crossing the Rhône (From North Africa through Iberia to Gaul)
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia"],
         
         # Mission 1: Battle of Ticino (Cross Alps, enter Italy)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum"],
         
         # Mission 2: Battle of Trebia (Consolidate in Cisalpine Gaul)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum"],
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia"],
         
         # Mission 3: Battle of Trasimene (Move through Etruria)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum", "Veii"],
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii"],
         
         # Mission 4: Battle of Cannae (Advance to Southern Italy)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum", "Veii", "Capua"],
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
         
-        # Mission 5: Campania Campaign (Consolidate in Campania)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum", "Veii", "Capua"],
+        # Mission 5: Campania Campaign (Consolidate in Campania, extend to Tarentum)
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
         
-        # Mission 6: Crossing the Alps (Flashback - the mountain crossing)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum"],
+        # Mission 6: Crossing the Alps (Flashback - the mountain crossing with more detail)
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum"],
         
-        # Mission 7: Battle of Zama (Return to Africa for final battle)
-        ["Carthage", "Cirta", "New Carthage", "Massalia", "Mediolanum", "Veii", "Capua", "Syracuse", "Carthage"],
+        # Mission 7: Battle of Zama (Return to Africa for final battle - complete journey)
+        ["Carthage", "Cirta", "Tingis", "New Carthage", "Saguntum", "Tarraco", "Emporiae", "Massalia", "Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
     ]
 
     lines: List[List[List[float]]] = []

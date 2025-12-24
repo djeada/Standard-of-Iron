@@ -454,6 +454,7 @@ Rectangle {
     }
 
     Repeater {
+        id: missionMarkerRepeater
         property var mission_region_map: ({
             "transalpine_gaul": {
                 "uv": [0.28, 0.35],
@@ -480,7 +481,7 @@ Rectangle {
         model: root.selected_mission ? 1 : 0
 
         delegate: Item {
-            property var region_info: parent.mission_region_map[root.active_region_id] || null
+            property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
             property var marker_uv: region_info ? region_info.uv : null
             property int _refresh: root.label_refresh
             property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
@@ -649,7 +650,7 @@ Rectangle {
     Rectangle {
         id: hover_tooltip
 
-        visible: (root.active_region_id !== "" || (campaign_map.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+        visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16
