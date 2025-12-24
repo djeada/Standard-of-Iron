@@ -44,6 +44,29 @@ This script uses hardcoded city lon/lat coordinates from `provinces.py` and conv
 - **Mission 6**: Crossing the Alps (flashback - path through mountains)
 - **Mission 7**: Battle of Zama (final - + Syracuse → Carthage)
 
-Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. The visualization in `CampaignMapView` displays these paths with progressive styling - the current mission path is bright red (3.5px width), previous paths are dimmed based on age, creating a professional visual narrative of Hannibal's campaign progression.
+Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. 
+
+**Coastline-Aware Features:**
+- Routes follow the North African coast westward before crossing at Gibraltar
+- Coastal segments along Spanish, French, and Italian coasts use smooth curves
+- Each segment is classified as 'coastal', 'land', or 'open_sea'
+- Open-sea crossings only occur at Gibraltar (Africa→Spain) and Sicily→Carthage
+- Intermediate waypoints create natural, organic appearance along shores
+- The C++ renderer uses a three-pass system (dark border, gold highlight, red core)
+- Line widths: 10px border, 6.5px highlight, 3.5px core for high visibility
+- Historical map styling with gold/amber tones for authenticity
+
+**Validation System:**
+The script includes comprehensive validation that ensures:
+- **Path Continuity**: All segments are continuous with no gaps (max 0.25 UV distance between waypoints)
+- **Sea Crossing Validation**: Only authorized sea crossings are allowed (Gibraltar and Sicily-Carthage)
+- **Rendering Simulation**: Simulates C++ GL_LINE_STRIP rendering to verify paths will display correctly
+- **Exit on Error**: Script exits with error code 1 if any validation fails, ensuring only valid paths are generated
+
+The validation output shows for each mission:
+- Total waypoints and segments
+- Authorized sea crossings detected
+- Path length and average segment size
+- Confirmation that path will render as continuous GL_LINE_STRIP in C++
 
 **Note**: This script does NOT require `provinces.json` - it calculates UV coordinates directly from lon/lat. If you need to generate `provinces.json` for the full campaign map visualization, run `provinces.py` after running the full pipeline.
