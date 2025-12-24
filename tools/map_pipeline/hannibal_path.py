@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""Generate hannibal_path.json with coastline-aware routing.
+"""Generate hannibal_path.json with coastline-aware routing and validation.
 
 This script generates 8 progressive paths for Hannibal's campaign, one for each
 mission in the Second Punic War campaign. Each path builds upon the previous,
 with the final path being the longest and covering all previous waypoints.
 
-Key improvements:
+Key features:
 - Routes follow coastlines with curved paths instead of rigid straight lines
 - Each segment is classified as 'coastal', 'land', or 'open_sea'
 - Open-sea crossings only occur on explicit segments (Africa → Spain, Sicily → Carthage)
 - Coastal segments include intermediate waypoints for smooth, organic appearance
 - Paths visually follow Mediterranean shorelines where applicable
+
+Validation system:
+- Validates path continuity (no gaps or discontinuities)
+- Ensures sea crossings only occur in authorized regions
+- Simulates C++ GL_LINE_STRIP rendering to verify visual continuity
+- Script exits with error if validation fails
 
 The paths are designed to align with the campaign mission structure:
 - Mission 0: Crossing the Rhône
@@ -32,17 +38,30 @@ Requires:
 
 Outputs:
     - assets/campaign_map/hannibal_path.json (with enhanced coastline-aware paths)
+    
+Exit codes:
+    0: Success - all paths validated
+    1: Failure - validation errors detected
 """
 
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 BOUNDS_PATH = ROOT / "tools" / "map_pipeline" / "map_bounds.json"
 OUT_PATH = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
+
+# Validation constants
+MAX_SEGMENT_DISTANCE = 0.25  # Maximum UV distance for a single segment (to detect discontinuities)
+SEA_CROSSING_THRESHOLD = 0.10  # Minimum distance to be considered a sea crossing
+ALLOWED_SEA_CROSSINGS = {
+    "Gibraltar": (0.10, 0.40),  # Tingis to New Carthage (Africa to Spain) - wider range for curve
+    "Sicily-Carthage": (0.75, 0.95),  # Sicily to Carthage crossing - adjusted for actual position
+}
 
 
 def lon_lat_to_uv(lon: float, lat: float, bounds: dict) -> Tuple[float, float]:
@@ -276,12 +295,238 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     return lines
 
 
+def validate_path_continuity(path: List[List[float]], mission_idx: int) -> bool:
+    """Validate that a path is continuous without gaps.
+    
+    Args:
+        path: List of [u, v] waypoints
+        mission_idx: Mission index for error reporting
+        
+    Returns:
+        True if path is continuous, False otherwise
+    """
+    if len(path) < 2:
+        print(f"ERROR: Mission {mission_idx} has too few waypoints ({len(path)})")
+        return False
+    
+    for i in range(len(path) - 1):
+        p1 = path[i]
+        p2 = path[i + 1]
+        
+        # Calculate Euclidean distance
+        distance = ((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)**0.5
+        
+        if distance > MAX_SEGMENT_DISTANCE:
+            print(f"ERROR: Mission {mission_idx}, segment {i}->{i+1}: "
+                  f"Discontinuity detected! Distance={distance:.4f} (max allowed={MAX_SEGMENT_DISTANCE})")
+            print(f"  Point {i}: [{p1[0]:.4f}, {p1[1]:.4f}]")
+            print(f"  Point {i+1}: [{p2[0]:.4f}, {p2[1]:.4f}]")
+            return False
+    
+    return True
+
+
+def validate_sea_crossings(path: List[List[float]], mission_idx: int) -> bool:
+    """Validate that sea crossings only occur in allowed regions.
+    
+    Args:
+        path: List of [u, v] waypoints
+        mission_idx: Mission index for error reporting
+        
+    Returns:
+        True if all sea crossings are in allowed regions, False otherwise
+    """
+    crossings_found = []
+    
+    for i in range(len(path) - 1):
+        p1 = path[i]
+        p2 = path[i + 1]
+        
+        # Calculate distance
+        distance = ((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)**0.5
+        
+        # Check if this is a potential sea crossing
+        if distance >= SEA_CROSSING_THRESHOLD:
+            # Determine midpoint position
+            mid_u = (p1[0] + p2[0]) / 2
+            mid_v = (p1[1] + p2[1]) / 2
+            
+            # Check if this crossing is in an allowed region
+            is_allowed = False
+            crossing_name = None
+            
+            for name, (u_range_start, u_range_end) in ALLOWED_SEA_CROSSINGS.items():
+                if u_range_start <= mid_u <= u_range_end:
+                    is_allowed = True
+                    crossing_name = name
+                    break
+            
+            if is_allowed:
+                crossings_found.append({
+                    "segment": f"{i}->{i+1}",
+                    "distance": distance,
+                    "midpoint": (mid_u, mid_v),
+                    "name": crossing_name,
+                    "allowed": True
+                })
+            else:
+                print(f"ERROR: Mission {mission_idx}, segment {i}->{i+1}: "
+                      f"Unauthorized sea crossing detected!")
+                print(f"  Distance: {distance:.4f} (threshold={SEA_CROSSING_THRESHOLD})")
+                print(f"  Start: [{p1[0]:.4f}, {p1[1]:.4f}]")
+                print(f"  End: [{p2[0]:.4f}, {p2[1]:.4f}]")
+                print(f"  Midpoint: u={mid_u:.4f}, v={mid_v:.4f}")
+                print(f"  Allowed crossing regions: {list(ALLOWED_SEA_CROSSINGS.keys())}")
+                return False
+    
+    # Report authorized crossings
+    if crossings_found:
+        print(f"Mission {mission_idx}: Found {len(crossings_found)} authorized sea crossing(s):")
+        for crossing in crossings_found:
+            print(f"  - {crossing['name']} crossing at segment {crossing['segment']}: "
+                  f"{crossing['distance']:.4f} UV distance")
+    
+    return True
+
+
+def validate_all_paths(lines: List[List[List[float]]]) -> bool:
+    """Validate all generated paths for continuity and sea crossings.
+    
+    Args:
+        lines: List of paths, where each path is a list of [u, v] waypoints
+        
+    Returns:
+        True if all paths are valid, False otherwise
+    """
+    print("\n" + "=" * 70)
+    print("VALIDATING GENERATED PATHS")
+    print("=" * 70)
+    
+    all_valid = True
+    
+    for idx, path in enumerate(lines):
+        print(f"\nValidating Mission {idx} ({len(path)} waypoints)...")
+        
+        # Check continuity
+        if not validate_path_continuity(path, idx):
+            all_valid = False
+            continue
+        else:
+            print(f"  ✓ Path is continuous (all segments < {MAX_SEGMENT_DISTANCE} UV distance)")
+        
+        # Check sea crossings
+        if not validate_sea_crossings(path, idx):
+            all_valid = False
+            continue
+        else:
+            print(f"  ✓ All sea crossings are in authorized regions")
+    
+    print("\n" + "=" * 70)
+    if all_valid:
+        print("✓ ALL PATHS VALIDATED SUCCESSFULLY")
+        print("=" * 70)
+    else:
+        print("✗ VALIDATION FAILED - See errors above")
+        print("=" * 70)
+    
+    return all_valid
+
+
+def simulate_cpp_rendering(lines: List[List[List[float]]]) -> bool:
+    """Simulate C++ GL_LINE_STRIP rendering to verify paths will render correctly.
+    
+    In C++, paths are rendered using GL_LINE_STRIP which connects consecutive
+    vertices with line segments. This function verifies that:
+    1. Each path can be rendered as a single GL_LINE_STRIP
+    2. No gaps exist that would break the visual continuity
+    
+    Args:
+        lines: List of paths to validate
+        
+    Returns:
+        True if all paths will render correctly
+    """
+    print("\n" + "=" * 70)
+    print("SIMULATING C++ RENDERING (GL_LINE_STRIP)")
+    print("=" * 70)
+    
+    all_valid = True
+    
+    for idx, path in enumerate(lines):
+        if len(path) < 2:
+            print(f"\nERROR: Mission {idx} cannot be rendered - need at least 2 vertices")
+            all_valid = False
+            continue
+        
+        # GL_LINE_STRIP creates line segments between consecutive vertices
+        # Verify each segment is renderable
+        max_gap = 0.0
+        total_length = 0.0
+        
+        for i in range(len(path) - 1):
+            p1 = path[i]
+            p2 = path[i + 1]
+            segment_length = ((p2[0] - p1[0])**2 + (p2[1] - p1[1])**2)**0.5
+            total_length += segment_length
+            max_gap = max(max_gap, segment_length)
+        
+        print(f"\nMission {idx} rendering analysis:")
+        print(f"  Vertices: {len(path)}")
+        print(f"  Line segments: {len(path) - 1}")
+        print(f"  Total path length: {total_length:.4f} UV units")
+        print(f"  Average segment: {total_length/(len(path)-1):.4f} UV units")
+        print(f"  Max segment: {max_gap:.4f} UV units")
+        
+        if max_gap > MAX_SEGMENT_DISTANCE:
+            print(f"  ✗ WARNING: Large gap detected (may appear discontinuous)")
+            all_valid = False
+        else:
+            print(f"  ✓ Will render as continuous GL_LINE_STRIP")
+    
+    print("\n" + "=" * 70)
+    if all_valid:
+        print("✓ ALL PATHS WILL RENDER CORRECTLY IN C++")
+    else:
+        print("✗ SOME PATHS MAY HAVE RENDERING ISSUES")
+    print("=" * 70)
+    
+    return all_valid
+
+
 def main() -> None:
+    """Generate and validate Hannibal's campaign paths."""
+    print("Generating Hannibal's campaign paths...")
+    print()
+    
+    # Load map bounds
     bounds = json.loads(BOUNDS_PATH.read_text())
+    
+    # Generate paths
     lines = build_hannibal_path(bounds)
+    
+    if not lines:
+        print("ERROR: Failed to generate any paths!")
+        sys.exit(1)
+    
+    # Validate paths
+    if not validate_all_paths(lines):
+        print("\nERROR: Path validation failed!")
+        print("Please fix the route definitions and try again.")
+        sys.exit(1)
+    
+    # Simulate C++ rendering
+    if not simulate_cpp_rendering(lines):
+        print("\nWARNING: Some paths may have rendering issues in C++")
+        print("Review the warnings above and consider adjusting waypoint density.")
+        # Don't exit on rendering warnings, just inform
+    
+    # Write validated paths to file
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(json.dumps({"lines": lines}, indent=2))
-    print(f"Wrote Hannibal path to {OUT_PATH}")
+    
+    print(f"\n✓ Successfully wrote validated paths to {OUT_PATH}")
+    print(f"  Total missions: {len(lines)}")
+    print(f"  Total waypoints: {sum(len(line) for line in lines)}")
 
 
 if __name__ == "__main__":
