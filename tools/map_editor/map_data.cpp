@@ -60,6 +60,9 @@ void MapData::setModified(bool modified) {
 }
 
 void MapData::executeCommand(std::unique_ptr<Command> cmd) {
+  if (!cmd) {
+    return;
+  }
   cmd->execute();
   m_undoStack.push(std::move(cmd));
   // Clear redo stack when new command is executed

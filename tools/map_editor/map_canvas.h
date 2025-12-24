@@ -86,6 +86,11 @@ private:
 
   static constexpr int GRID_CELL_SIZE = 8;   // Pixels per grid unit at zoom 1.0
   static constexpr int ICON_SIZE = 16;       // Fixed icon size for all elements
+  static constexpr float HIT_RADIUS = 5.0F;  // Fixed hit radius for point elements
+  static constexpr int MIN_PLAYER_ID = 0;    // Neutral
+  static constexpr int MAX_PLAYER_ID = 4;    // Maximum player ID
+  static constexpr int DEFAULT_MAX_POPULATION = 150;
+  static inline const QString DEFAULT_NATION = "roman_republic";
 };
 
 } // namespace MapEditor

@@ -78,7 +78,11 @@ struct GridSettings {
 class MapData;
 
 /**
- * @brief Command interface for undo/redo
+ * @brief Abstract command interface for undo/redo operations.
+ *
+ * Implementations should store the necessary state to both execute
+ * and undo an operation. The execute() method performs the action,
+ * while undo() reverts it to the previous state.
  */
 class Command {
 public:

@@ -568,7 +568,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
   }
 
   QPointF gridPos = mapToGrid(pos);
-  float hitRadius = 5.0F; // Fixed hit radius for all elements
 
   // Check structures first (they appear on top)
   const auto &structures = m_mapData->structures();
@@ -577,7 +576,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     float dx = static_cast<float>(gridPos.x()) - elem.x;
     float dz = static_cast<float>(gridPos.y()) - elem.z;
     float dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hitRadius) {
+    if (dist <= HIT_RADIUS) {
       result.elementType = 3;
       result.index = i;
       return result;
@@ -591,7 +590,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     float dx = static_cast<float>(gridPos.x()) - elem.x;
     float dz = static_cast<float>(gridPos.y()) - elem.z;
     float dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hitRadius) {
+    if (dist <= HIT_RADIUS) {
       result.elementType = 0;
       result.index = i;
       return result;
@@ -605,7 +604,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     float dx = static_cast<float>(gridPos.x()) - elem.x;
     float dz = static_cast<float>(gridPos.y()) - elem.z;
     float dist = std::sqrt(dx * dx + dz * dz);
-    if (dist <= hitRadius) {
+    if (dist <= HIT_RADIUS) {
       result.elementType = 1;
       result.index = i;
       return result;
@@ -673,8 +672,11 @@ void MapCanvas::placeElement(const QPointF &gridPos) {
     bool ok;
     int playerId = QInputDialog::getInt(
         this, "Assign Team",
-        "Enter player ID (0 = neutral, 1-4 = players):",
-        m_currentPlayerId, 0, 4, 1, &ok);
+        QString("Enter player ID (%1 = neutral, %2-%3 = players):")
+            .arg(MIN_PLAYER_ID)
+            .arg(MIN_PLAYER_ID + 1)
+            .arg(MAX_PLAYER_ID),
+        m_currentPlayerId, MIN_PLAYER_ID, MAX_PLAYER_ID, 1, &ok);
 
     if (ok) {
       m_currentPlayerId = playerId; // Remember for next placement
@@ -685,8 +687,8 @@ void MapCanvas::placeElement(const QPointF &gridPos) {
       elem.x = static_cast<float>(gridPos.x());
       elem.z = static_cast<float>(gridPos.y());
       elem.playerId = playerId;
-      elem.maxPopulation = 150;
-      elem.nation = "roman_republic";
+      elem.maxPopulation = DEFAULT_MAX_POPULATION;
+      elem.nation = DEFAULT_NATION;
       m_mapData->addStructure(elem);
     }
   }
