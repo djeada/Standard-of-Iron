@@ -188,7 +188,7 @@ public:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glClearColor(0.93F, 0.89F, 0.82F, 1.0F);
+    glClearColor(0.157F, 0.267F, 0.361F, 1.0F);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     QMatrix4x4 mvp;
