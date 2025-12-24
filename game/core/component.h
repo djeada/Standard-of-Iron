@@ -488,6 +488,7 @@ public:
   float charge_cooldown{0.0F};
   float trample_radius{2.5F};
   int trample_damage{40};
+  float trample_damage_accumulator{0.0F};
   bool is_panicked{false};
   float panic_duration{0.0F};
 };
