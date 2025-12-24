@@ -28,6 +28,31 @@ constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
 
+constexpr int kSafeSpaceSearchRadius = 10;
+
+// Check if all surrounding cells (8 neighbors) are invalid/unwalkable
+auto are_all_surrounding_cells_invalid(const Point &position,
+                                       const Pathfinding &pathfinder,
+                                       float unit_radius = 0.5F) -> bool {
+  // Check all 8 neighboring cells
+  for (int dy = -1; dy <= 1; ++dy) {
+    for (int dx = -1; dx <= 1; ++dx) {
+      if (dx == 0 && dy == 0) {
+        continue; // Skip the center cell
+      }
+      
+      int const check_x = position.x + dx;
+      int const check_y = position.y + dy;
+      
+      if (pathfinder.is_walkable(check_x, check_y)) {
+        return false; // Found at least one walkable neighbor
+      }
+    }
+  }
+  
+  return true; // All surrounding cells are invalid
+}
+
 } // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
@@ -839,6 +864,34 @@ void CommandService::process_path_results(Engine::Core::World &world) {
           movement_component->target_y = wp.second;
           movement_component->has_target = true;
           return;
+        }
+      }
+
+      // If path is null/empty, check if unit is surrounded by invalid cells
+      if (!has_path && s_pathfinder) {
+        Point const current_grid = world_to_grid(
+            member_transform->position.x, member_transform->position.z);
+        
+        // Check if all surrounding cells are invalid
+        if (are_all_surrounding_cells_invalid(current_grid, *s_pathfinder, 
+                                              request_info.unit_radius)) {
+          // Find nearest safe space and teleport there
+          Point const safe_point = Pathfinding::find_nearest_walkable_point(
+              current_grid, kSafeSpaceSearchRadius, *s_pathfinder,
+              request_info.unit_radius);
+          
+          // If we found a safe point different from current position, teleport
+          if (!(safe_point == current_grid)) {
+            QVector3D const safe_world_pos = grid_to_world(safe_point);
+            
+            // Teleport the unit to the safe space
+            member_transform->position.x = safe_world_pos.x();
+            member_transform->position.z = safe_world_pos.z();
+            
+            // Now try to move from the safe space to the target
+            movement_component->has_target = false;
+            return;
+          }
         }
       }
 
