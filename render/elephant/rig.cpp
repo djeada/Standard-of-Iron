@@ -175,65 +175,65 @@ inline auto skin_gradient(const QVector3D &skin, float vertical_factor,
 
 namespace ElephantDimensionRange {
 
-constexpr float kBodyLengthMin = 2.20F;
-constexpr float kBodyLengthMax = 2.60F;
-constexpr float kBodyWidthMin = 0.90F;
-constexpr float kBodyWidthMax = 1.10F;
-constexpr float kBodyHeightMin = 1.20F;
-constexpr float kBodyHeightMax = 1.50F;
+constexpr float kBodyLengthMin = 1.10F;
+constexpr float kBodyLengthMax = 1.30F;
+constexpr float kBodyWidthMin = 0.45F;
+constexpr float kBodyWidthMax = 0.55F;
+constexpr float kBodyHeightMin = 0.60F;
+constexpr float kBodyHeightMax = 0.75F;
 
-constexpr float kNeckLengthMin = 0.35F;
-constexpr float kNeckLengthMax = 0.50F;
-constexpr float kNeckWidthMin = 0.45F;
-constexpr float kNeckWidthMax = 0.55F;
+constexpr float kNeckLengthMin = 0.175F;
+constexpr float kNeckLengthMax = 0.25F;
+constexpr float kNeckWidthMin = 0.225F;
+constexpr float kNeckWidthMax = 0.275F;
 
-constexpr float kHeadLengthMin = 0.55F;
-constexpr float kHeadLengthMax = 0.70F;
-constexpr float kHeadWidthMin = 0.50F;
-constexpr float kHeadWidthMax = 0.65F;
-constexpr float kHeadHeightMin = 0.55F;
-constexpr float kHeadHeightMax = 0.70F;
+constexpr float kHeadLengthMin = 0.275F;
+constexpr float kHeadLengthMax = 0.35F;
+constexpr float kHeadWidthMin = 0.25F;
+constexpr float kHeadWidthMax = 0.325F;
+constexpr float kHeadHeightMin = 0.275F;
+constexpr float kHeadHeightMax = 0.35F;
 
-constexpr float kTrunkLengthMin = 1.60F;
-constexpr float kTrunkLengthMax = 2.00F;
-constexpr float kTrunkBaseRadiusMin = 0.18F;
-constexpr float kTrunkBaseRadiusMax = 0.24F;
-constexpr float kTrunkTipRadiusMin = 0.04F;
-constexpr float kTrunkTipRadiusMax = 0.07F;
+constexpr float kTrunkLengthMin = 0.80F;
+constexpr float kTrunkLengthMax = 1.00F;
+constexpr float kTrunkBaseRadiusMin = 0.09F;
+constexpr float kTrunkBaseRadiusMax = 0.12F;
+constexpr float kTrunkTipRadiusMin = 0.02F;
+constexpr float kTrunkTipRadiusMax = 0.035F;
 
-constexpr float kEarWidthMin = 0.70F;
-constexpr float kEarWidthMax = 0.90F;
-constexpr float kEarHeightMin = 0.80F;
-constexpr float kEarHeightMax = 1.00F;
-constexpr float kEarThicknessMin = 0.04F;
-constexpr float kEarThicknessMax = 0.08F;
+constexpr float kEarWidthMin = 0.35F;
+constexpr float kEarWidthMax = 0.45F;
+constexpr float kEarHeightMin = 0.40F;
+constexpr float kEarHeightMax = 0.50F;
+constexpr float kEarThicknessMin = 0.02F;
+constexpr float kEarThicknessMax = 0.04F;
 
-constexpr float kLegLengthMin = 1.40F;
-constexpr float kLegLengthMax = 1.70F;
-constexpr float kLegRadiusMin = 0.18F;
-constexpr float kLegRadiusMax = 0.25F;
-constexpr float kFootRadiusMin = 0.22F;
-constexpr float kFootRadiusMax = 0.30F;
+constexpr float kLegLengthMin = 0.70F;
+constexpr float kLegLengthMax = 0.85F;
+constexpr float kLegRadiusMin = 0.09F;
+constexpr float kLegRadiusMax = 0.125F;
+constexpr float kFootRadiusMin = 0.11F;
+constexpr float kFootRadiusMax = 0.15F;
 
-constexpr float kTailLengthMin = 0.70F;
-constexpr float kTailLengthMax = 0.95F;
+constexpr float kTailLengthMin = 0.35F;
+constexpr float kTailLengthMax = 0.475F;
 
-constexpr float kTuskLengthMin = 0.50F;
-constexpr float kTuskLengthMax = 0.85F;
-constexpr float kTuskRadiusMin = 0.04F;
-constexpr float kTuskRadiusMax = 0.07F;
+constexpr float kTuskLengthMin = 0.25F;
+constexpr float kTuskLengthMax = 0.425F;
+constexpr float kTuskRadiusMin = 0.02F;
+constexpr float kTuskRadiusMax = 0.035F;
 
-constexpr float kHowdahWidthMin = 0.80F;
-constexpr float kHowdahWidthMax = 1.00F;
-constexpr float kHowdahLengthMin = 1.00F;
-constexpr float kHowdahLengthMax = 1.30F;
-constexpr float kHowdahHeightMin = 0.40F;
-constexpr float kHowdahHeightMax = 0.55F;
+constexpr float kHowdahWidthMin = 0.40F;
+constexpr float kHowdahWidthMax = 0.50F;
+constexpr float kHowdahLengthMin = 0.50F;
+constexpr float kHowdahLengthMax = 0.65F;
+constexpr float kHowdahHeightMin = 0.20F;
+constexpr float kHowdahHeightMax = 0.275F;
 
-constexpr float kIdleBobAmplitudeMin = 0.008F;
-constexpr float kIdleBobAmplitudeMax = 0.015F;
-constexpr float kMoveBobAmplitudeMin = 0.035F;
-constexpr float kMoveBobAmplitudeMax = 0.055F;
+constexpr float kIdleBobAmplitudeMin = 0.004F;
+constexpr float kIdleBobAmplitudeMax = 0.0075F;
+constexpr float kMoveBobAmplitudeMin = 0.0175F;
+constexpr float kMoveBobAmplitudeMax = 0.0275F;
 
 constexpr uint32_t kSaltBodyLength = 0x12U;
 constexpr uint32_t kSaltBodyWidth = 0x34U;
@@ -326,7 +326,7 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   d.move_bob_amplitude =
       rand_between(seed, kSaltMoveBob, kMoveBobAmplitudeMin, kMoveBobAmplitudeMax);
 
-  d.barrel_center_y = d.leg_length + d.body_height * 0.4F;
+  d.barrel_center_y = d.leg_length;
 
   return d;
 }
