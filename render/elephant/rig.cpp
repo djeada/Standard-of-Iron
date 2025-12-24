@@ -205,8 +205,8 @@ constexpr float kEarWidthMin = 0.35F;
 constexpr float kEarWidthMax = 0.45F;
 constexpr float kEarHeightMin = 0.40F;
 constexpr float kEarHeightMax = 0.50F;
-constexpr float kEarThicknessMin = 0.02F;
-constexpr float kEarThicknessMax = 0.04F;
+constexpr float kEarThicknessMin = 0.012F;
+constexpr float kEarThicknessMax = 0.022F;
 
 constexpr float kLegLengthMin = 0.70F;
 constexpr float kLegLengthMax = 0.85F;
@@ -592,8 +592,8 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 body_main = elephant_ctx.model;
     body_main.translate(barrel_center);
-    body_main.scale(d.body_width * 1.10F, d.body_height * 0.95F,
-                    d.body_length * 0.48F);
+    body_main.scale(d.body_width * 1.05F, d.body_height * 0.95F,
+                    d.body_length * 0.55F);
     QVector3D const body_color =
         skin_gradient(v.skin_color, 0.60F, 0.0F, skin_seed_a);
     out.mesh(get_unit_sphere(), body_main, body_color, nullptr, 1.0F, 6);
@@ -601,12 +601,12 @@ void ElephantRendererBase::render_full(
 
   QVector3D const chest_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.08F, d.body_length * 0.38F);
+      QVector3D(0.0F, d.body_height * 0.10F, d.body_length * 0.30F);
   {
     QMatrix4x4 chest = elephant_ctx.model;
     chest.translate(chest_center);
-    chest.scale(d.body_width * 1.05F, d.body_height * 0.90F,
-                d.body_length * 0.32F);
+    chest.scale(d.body_width * 1.18F, d.body_height * 1.00F,
+                d.body_length * 0.36F);
     out.mesh(get_unit_sphere(), chest,
              skin_gradient(v.skin_color, 0.70F, 0.15F, skin_seed_a), nullptr,
              1.0F, 6);
@@ -614,14 +614,24 @@ void ElephantRendererBase::render_full(
 
   QVector3D const rump_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.05F, -d.body_length * 0.40F);
+      QVector3D(0.0F, d.body_height * 0.02F, -d.body_length * 0.32F);
   {
     QMatrix4x4 rump = elephant_ctx.model;
     rump.translate(rump_center);
-    rump.scale(d.body_width * 1.15F, d.body_height * 1.00F,
-               d.body_length * 0.35F);
+    rump.scale(d.body_width * 1.10F, d.body_height * 0.98F,
+               d.body_length * 0.34F);
     out.mesh(get_unit_sphere(), rump,
              skin_gradient(v.skin_color, 0.55F, -0.20F, skin_seed_b), nullptr,
+             1.0F, 6);
+  }
+
+  QVector3D const belly_center =
+      barrel_center + QVector3D(0.0F, -d.body_height * 0.22F, d.body_length * 0.05F);
+  {
+    QMatrix4x4 belly = elephant_ctx.model;
+    belly.translate(belly_center);
+    belly.scale(d.body_width * 1.00F, d.body_height * 0.70F, d.body_length * 0.55F);
+    out.mesh(get_unit_sphere(), belly, darken(v.skin_color, 0.92F), nullptr,
              1.0F, 6);
   }
 
@@ -719,8 +729,8 @@ void ElephantRendererBase::render_full(
       QVector3D const ear_center = (ear_base + ear_tip + ear_top) * 0.33F;
       ear_main.translate(ear_center);
       ear_main.rotate(side * (15.0F + flap_angle * 20.0F), 0.0F, 0.0F, 1.0F);
-      ear_main.scale(d.ear_width * 0.50F, d.ear_height * 0.45F,
-                     d.ear_thickness * 0.60F);
+      ear_main.scale(d.ear_width * 0.70F, d.ear_height * 0.65F,
+                     d.ear_thickness * 0.25F);
       out.mesh(get_unit_sphere(), ear_main, v.skin_color, nullptr, 1.0F, 6);
     }
 
@@ -731,8 +741,8 @@ void ElephantRendererBase::render_full(
           QVector3D(side * d.ear_thickness * 0.5F, 0.0F, d.ear_thickness);
       ear_inner.translate(inner_center);
       ear_inner.rotate(side * (15.0F + flap_angle * 20.0F), 0.0F, 0.0F, 1.0F);
-      ear_inner.scale(d.ear_width * 0.40F, d.ear_height * 0.38F,
-                      d.ear_thickness * 0.20F);
+      ear_inner.scale(d.ear_width * 0.62F, d.ear_height * 0.55F,
+              d.ear_thickness * 0.10F);
       out.mesh(get_unit_sphere(), ear_inner, v.ear_inner_color, nullptr, 1.0F,
                6);
     }
@@ -807,8 +817,8 @@ void ElephantRendererBase::render_full(
 
     QVector3D const hip =
         barrel_center +
-        QVector3D(lateral_sign * d.body_width * 0.42F,
-                  -d.body_height * 0.35F + lift * 0.03F,
+      QVector3D(lateral_sign * d.body_width * 0.36F,
+            -d.body_height * 0.42F + lift * 0.03F,
                   forward_bias + stride);
 
     float const upper_len = d.leg_length * 0.55F;
@@ -821,8 +831,8 @@ void ElephantRendererBase::render_full(
     QVector3D const foot =
         knee + QVector3D(0.0F, -lower_len + lift, stride * 0.2F);
 
-    float const upper_radius = d.leg_radius * (is_front ? 1.0F : 1.05F);
-    float const lower_radius = d.leg_radius * (is_front ? 0.90F : 0.95F);
+    float const upper_radius = d.leg_radius * (is_front ? 1.05F : 1.10F);
+    float const lower_radius = d.leg_radius * (is_front ? 0.80F : 0.85F);
 
     draw_cylinder(out, elephant_ctx.model, hip, knee, upper_radius,
                   skin_gradient(v.skin_color, 0.45F, forward_bias > 0 ? 0.1F : -0.1F,
@@ -842,10 +852,19 @@ void ElephantRendererBase::render_full(
                   6);
 
     {
+      QVector3D const ankle = foot + QVector3D(0.0F, d.foot_radius * 0.15F, 0.0F);
+      QMatrix4x4 ankle_joint = elephant_ctx.model;
+      ankle_joint.translate(ankle);
+      ankle_joint.scale(lower_radius * 1.10F);
+      out.mesh(get_unit_sphere(), ankle_joint, darken(v.skin_color, 0.90F),
+               nullptr, 1.0F, 6);
+    }
+
+    {
       QMatrix4x4 foot_pad = elephant_ctx.model;
-      foot_pad.translate(foot + QVector3D(0.0F, -d.foot_radius * 0.3F, 0.0F));
-      foot_pad.scale(d.foot_radius * 1.1F, d.foot_radius * 0.50F,
-                     d.foot_radius * 1.2F);
+      foot_pad.translate(foot + QVector3D(0.0F, -d.foot_radius * 0.18F, 0.0F));
+      foot_pad.scale(d.foot_radius * 1.10F, d.foot_radius * 0.70F,
+                     d.foot_radius * 1.20F);
       out.mesh(get_unit_sphere(), foot_pad, darken(v.skin_color, 0.80F),
                nullptr, 1.0F, 8);
     }
@@ -1011,10 +1030,10 @@ void ElephantRendererBase::render_simplified(
 
     {
       QMatrix4x4 foot_pad = elephant_ctx.model;
-      foot_pad.translate(foot);
-      foot_pad.scale(d.foot_radius * 0.95F, d.foot_radius * 0.40F,
-                     d.foot_radius * 1.0F);
-      out.mesh(get_unit_cylinder(), foot_pad, darken(v.skin_color, 0.75F),
+      foot_pad.translate(foot + QVector3D(0.0F, -d.foot_radius * 0.18F, 0.0F));
+      foot_pad.scale(d.foot_radius * 1.00F, d.foot_radius * 0.65F,
+                     d.foot_radius * 1.10F);
+      out.mesh(get_unit_sphere(), foot_pad, darken(v.skin_color, 0.75F),
                nullptr, 1.0F, 8);
     }
   };
