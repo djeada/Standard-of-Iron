@@ -147,6 +147,13 @@ void ElephantAttackSystem::process_trample_damage(
     return;
   }
 
+  auto *stomp_impact =
+      elephant->get_component<Engine::Core::ElephantStompImpactComponent>();
+  if (stomp_impact == nullptr) {
+    stomp_impact =
+        elephant->add_component<Engine::Core::ElephantStompImpactComponent>();
+  }
+
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
   for (auto *other_entity : entities) {
     if (other_entity == elephant) {
@@ -175,10 +182,19 @@ void ElephantAttackSystem::process_trample_damage(
     float const dist = std::sqrt(dx * dx + dz * dz);
 
     if (dist <= elephant_comp->trample_radius) {
+      int const old_health = other_unit->health;
       other_unit->health -= static_cast<int>(
           static_cast<float>(elephant_comp->trample_damage) * delta_time);
       if (other_unit->health < 0) {
         other_unit->health = 0;
+      }
+
+      if (old_health > 0 && other_unit->health < old_health) {
+        Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
+        impact.x = other_transform->position.x;
+        impact.z = other_transform->position.z;
+        impact.time = 0.0F;
+        stomp_impact->impacts.push_back(impact);
       }
     }
   }
