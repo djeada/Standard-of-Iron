@@ -25,6 +25,7 @@
 #include "ground/terrain_gpu.h"
 #include "horse/rig.h"
 #include "humanoid/rig.h"
+#include "elephant/rig.h"
 #include "primitive_batch.h"
 #include "submitter.h"
 #include "visibility_budget.h"
@@ -66,9 +67,11 @@ void Renderer::begin_frame() {
 
   advance_pose_cache_frame();
   advance_horse_profile_cache_frame();
+  advance_elephant_profile_cache_frame();
 
   reset_humanoid_render_stats();
   reset_horse_render_stats();
+  reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
 
