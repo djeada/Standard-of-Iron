@@ -341,9 +341,8 @@ auto ProductionManager::get_selected_builder_production_state() const
   return m;
 }
 
-auto ProductionManager::get_unit_production_info(const QString &unit_type,
-                                                 const QString &nation_id) const
-    -> QVariantMap {
+auto ProductionManager::get_unit_production_info(
+    const QString &unit_type, const QString &nation_id) const -> QVariantMap {
   QVariantMap info;
   const auto &config = Game::Units::TroopConfig::instance();
   std::string type_str = unit_type.toStdString();
@@ -352,16 +351,17 @@ auto ProductionManager::get_unit_production_info(const QString &unit_type,
   info["build_time"] = static_cast<double>(config.getBuildTime(type_str));
   info["individuals_per_unit"] = config.getIndividualsPerUnit(type_str);
 
-  // Try to get the nation-specific display name
-  auto troop_type_opt = Game::Units::stringToTroopType(type_str);
+  auto troop_type_opt = Game::Units::tryParseTroopType(type_str);
   if (troop_type_opt.has_value()) {
-    auto nation_id_enum =
-        Game::Systems::string_to_nation_id(nation_id.toStdString());
+    auto nation_id_opt =
+        Game::Systems::nation_id_from_string(nation_id.toStdString());
+    auto nation_id_enum = nation_id_opt.value_or(
+        Game::Systems::NationRegistry::instance().default_nation_id());
     auto profile = Game::Systems::TroopProfileService::instance().get_profile(
         nation_id_enum, *troop_type_opt);
     info["display_name"] = QString::fromStdString(profile.display_name);
   } else {
-    // Fallback to unit type if not a troop
+
     info["display_name"] = unit_type;
   }
 
