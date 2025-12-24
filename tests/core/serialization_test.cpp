@@ -1450,3 +1450,117 @@ TEST_F(SerializationTest, NationIdentityPreserved) {
             Game::Systems::NationID::Carthage);
   EXPECT_EQ(restored_carthage_comp->spawn_type, Game::Units::SpawnType::Archer);
 }
+
+TEST_F(SerializationTest, ElephantComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *elephant = entity->add_component<ElephantComponent>();
+
+  elephant->charge_state = ElephantComponent::ChargeState::Charging;
+  elephant->charge_speed_multiplier = 2.0F;
+  elephant->charge_duration = 3.5F;
+  elephant->charge_cooldown = 5.0F;
+  elephant->trample_radius = 3.0F;
+  elephant->trample_damage = 50;
+  elephant->trample_damage_accumulator = 1.5F;
+  elephant->is_panicked = true;
+  elephant->panic_duration = 2.0F;
+
+  QJsonObject json = Serialization::serialize_entity(entity);
+
+  ASSERT_TRUE(json.contains("elephant"));
+  QJsonObject elephant_obj = json["elephant"].toObject();
+
+  EXPECT_EQ(elephant_obj["charge_state"].toInt(),
+            static_cast<int>(ElephantComponent::ChargeState::Charging));
+  EXPECT_FLOAT_EQ(elephant_obj["charge_speed_multiplier"].toDouble(), 2.0);
+  EXPECT_FLOAT_EQ(elephant_obj["charge_duration"].toDouble(), 3.5);
+  EXPECT_FLOAT_EQ(elephant_obj["charge_cooldown"].toDouble(), 5.0);
+  EXPECT_FLOAT_EQ(elephant_obj["trample_radius"].toDouble(), 3.0);
+  EXPECT_EQ(elephant_obj["trample_damage"].toInt(), 50);
+  EXPECT_FLOAT_EQ(elephant_obj["trample_damage_accumulator"].toDouble(), 1.5);
+  EXPECT_TRUE(elephant_obj["is_panicked"].toBool());
+  EXPECT_FLOAT_EQ(elephant_obj["panic_duration"].toDouble(), 2.0);
+}
+
+TEST_F(SerializationTest, ElephantComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *elephant = original_entity->add_component<ElephantComponent>();
+  elephant->charge_state = ElephantComponent::ChargeState::Trampling;
+  elephant->charge_speed_multiplier = 1.9F;
+  elephant->charge_duration = 4.0F;
+  elephant->charge_cooldown = 6.0F;
+  elephant->trample_radius = 2.8F;
+  elephant->trample_damage = 45;
+  elephant->trample_damage_accumulator = 2.0F;
+  elephant->is_panicked = false;
+  elephant->panic_duration = 0.0F;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<ElephantComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->charge_state,
+            ElephantComponent::ChargeState::Trampling);
+  EXPECT_FLOAT_EQ(deserialized->charge_speed_multiplier, 1.9F);
+  EXPECT_FLOAT_EQ(deserialized->charge_duration, 4.0F);
+  EXPECT_FLOAT_EQ(deserialized->charge_cooldown, 6.0F);
+  EXPECT_FLOAT_EQ(deserialized->trample_radius, 2.8F);
+  EXPECT_EQ(deserialized->trample_damage, 45);
+  EXPECT_FLOAT_EQ(deserialized->trample_damage_accumulator, 2.0F);
+  EXPECT_FALSE(deserialized->is_panicked);
+  EXPECT_FLOAT_EQ(deserialized->panic_duration, 0.0F);
+}
+
+TEST_F(SerializationTest, ElephantStompImpactComponentSerialization) {
+  auto *entity = world->create_entity();
+  auto *stomp_impact = entity->add_component<ElephantStompImpactComponent>();
+
+  stomp_impact->impacts.push_back({10.0F, 20.0F, 1.5F});
+  stomp_impact->impacts.push_back({30.0F, 40.0F, 2.5F});
+  stomp_impact->impacts.push_back({50.0F, 60.0F, 3.5F});
+
+  QJsonObject json = Serialization::serialize_entity(entity);
+
+  ASSERT_TRUE(json.contains("elephant_stomp_impacts"));
+  QJsonArray impacts_array = json["elephant_stomp_impacts"].toArray();
+
+  EXPECT_EQ(impacts_array.size(), 3);
+
+  QJsonObject impact0 = impacts_array[0].toObject();
+  EXPECT_FLOAT_EQ(impact0["x"].toDouble(), 10.0);
+  EXPECT_FLOAT_EQ(impact0["z"].toDouble(), 20.0);
+  EXPECT_FLOAT_EQ(impact0["time"].toDouble(), 1.5);
+
+  QJsonObject impact1 = impacts_array[1].toObject();
+  EXPECT_FLOAT_EQ(impact1["x"].toDouble(), 30.0);
+  EXPECT_FLOAT_EQ(impact1["z"].toDouble(), 40.0);
+  EXPECT_FLOAT_EQ(impact1["time"].toDouble(), 2.5);
+}
+
+TEST_F(SerializationTest, ElephantStompImpactComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *stomp_impact =
+      original_entity->add_component<ElephantStompImpactComponent>();
+
+  stomp_impact->impacts.push_back({15.0F, 25.0F, 1.0F});
+  stomp_impact->impacts.push_back({35.0F, 45.0F, 2.0F});
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized =
+      new_entity->get_component<ElephantStompImpactComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  ASSERT_EQ(deserialized->impacts.size(), 2UL);
+  EXPECT_FLOAT_EQ(deserialized->impacts[0].x, 15.0F);
+  EXPECT_FLOAT_EQ(deserialized->impacts[0].z, 25.0F);
+  EXPECT_FLOAT_EQ(deserialized->impacts[0].time, 1.0F);
+  EXPECT_FLOAT_EQ(deserialized->impacts[1].x, 35.0F);
+  EXPECT_FLOAT_EQ(deserialized->impacts[1].z, 45.0F);
+  EXPECT_FLOAT_EQ(deserialized->impacts[1].time, 2.0F);
+}
