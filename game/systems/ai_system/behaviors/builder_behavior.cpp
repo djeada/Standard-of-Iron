@@ -68,7 +68,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   } else if (context.defense_tower_count < MIN_DEFENSE_TOWERS) {
     building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
   } else if (context.home_count < MAX_HOMES && context.defense_tower_count < MAX_DEFENSE_TOWERS) {
-    int const target_defense_towers = context.home_count / 2;
+    int const target_defense_towers = (context.home_count + 1) / 2;
     if (context.defense_tower_count < target_defense_towers) {
       building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
     } else {
