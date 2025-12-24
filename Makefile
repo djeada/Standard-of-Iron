@@ -174,7 +174,7 @@ run-headless: build
 .PHONY: editor
 editor: build
 	@echo "$(BOLD)$(BLUE)Running Map Editor...$(RESET)"
-	@cd $(BUILD_DIR) && ./tools/map_editor/$(MAP_EDITOR_BINARY)
+	@cd $(BUILD_DIR) && ./bin/$(MAP_EDITOR_BINARY)
 
 # Clean build directory
 .PHONY: clean

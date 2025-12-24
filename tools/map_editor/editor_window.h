@@ -1,5 +1,9 @@
 #pragma once
 
+#include "map_canvas.h"
+#include "map_data.h"
+#include "tool_panel.h"
+#include <QLabel>
 #include <QMainWindow>
 #include <QWidget>
 
@@ -9,19 +13,44 @@ class EditorWindow : public QMainWindow {
   Q_OBJECT
 
 public:
-  EditorWindow(QWidget *parent = nullptr);
+  explicit EditorWindow(QWidget *parent = nullptr);
   ~EditorWindow() override;
+
+  // Public method to load a file (for command-line support)
+  bool loadFile(const QString &filePath);
 
 private slots:
   void newMap();
   void openMap();
   void saveMap();
-
-  void setupUI();
-  void setupMenus();
+  void saveMapAs();
+  void resizeMap();
+  void undo();
+  void redo();
+  void onToolSelected(ToolType tool);
+  void onToolCleared();
+  void onElementDoubleClicked(int elementType, int index);
+  void onGridDoubleClicked();
+  void onModifiedChanged(bool modified);
+  void onUndoRedoChanged();
+  void updateDimensionsLabel();
 
 private:
-  QWidget *m_renderWidget{};
+  void setupUI();
+  void setupMenus();
+  void updateWindowTitle();
+  bool maybeSave();
+  void closeEvent(QCloseEvent *event) override;
+
+  MapData *m_mapData = nullptr;
+  MapCanvas *m_canvas = nullptr;
+  ToolPanel *m_toolPanel = nullptr;
+  QLabel *m_statusLabel = nullptr;
+  QLabel *m_dimensionsLabel = nullptr;
+  QString m_currentFilePath;
+
+  QAction *m_undoAction = nullptr;
+  QAction *m_redoAction = nullptr;
 };
 
 } // namespace MapEditor
