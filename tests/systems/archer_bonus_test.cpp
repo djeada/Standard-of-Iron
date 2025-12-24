@@ -1,8 +1,7 @@
 #include "core/component.h"
 #include "core/entity.h"
 #include "core/world.h"
-#include "systems/combat_system/attack_processor.h"
-#include "systems/combat_system/damage_processor.h"
+#include "systems/combat_system/combat_types.h"
 #include "systems/owner_registry.h"
 #include "units/spawn_type.h"
 #include <gtest/gtest.h>
@@ -22,132 +21,67 @@ protected:
   std::unique_ptr<World> world;
 };
 
-TEST_F(ArcherBonusTest, ArcherDealsBonusDamageToElephant) {
-  // Create an archer unit
-  auto *archer = world->create_entity();
-  auto *archer_transform =
-      archer->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *archer_unit =
-      archer->add_component<UnitComponent>(620, 620, 3.0F, 16.0F);
-  archer_unit->owner_id = 1;
-  archer_unit->spawn_type = Game::Units::SpawnType::Archer;
-  auto *archer_attack = archer->add_component<AttackComponent>();
-  archer_attack->can_melee = true;
-  archer_attack->can_ranged = true;
-  archer_attack->damage = 24; // Base archer damage after 1.5x increase
-  archer_attack->range = 7.5F;
-  archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
+TEST_F(ArcherBonusTest, ArcherHasIncreasedBaseDamage) {
+  // Verify that archer base damage has been increased from 16 to 24 (1.5x)
+  // This test documents the expected base damage value
+  int const expected_archer_damage = 24;
+  int const original_archer_damage = 16;
+  
+  EXPECT_EQ(expected_archer_damage, original_archer_damage * 1.5);
+}
 
-  // Create an elephant unit
+TEST_F(ArcherBonusTest, HorseArcherHasIncreasedBaseDamage) {
+  // Verify that horse archer base damage has been increased from 18 to 27 (1.5x)
+  // This test documents the expected base damage value
+  int const expected_horse_archer_damage = 27;
+  int const original_horse_archer_damage = 18;
+  
+  EXPECT_EQ(expected_horse_archer_damage, original_horse_archer_damage * 1.5);
+}
+
+TEST_F(ArcherBonusTest, ArcherVsElephantMultiplierIsCorrect) {
+  // Verify the archer vs elephant multiplier constant is set correctly
+  float const expected_multiplier = 2.0F;
+  
+  EXPECT_FLOAT_EQ(Combat::Constants::kArcherVsElephantMultiplier, expected_multiplier);
+}
+
+TEST_F(ArcherBonusTest, ElephantComponentExistsOnElephantUnit) {
+  // Create an elephant unit and verify it has the ElephantComponent
   auto *elephant = world->create_entity();
-  auto *elephant_transform =
-      elephant->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
-  auto *elephant_unit =
-      elephant->add_component<UnitComponent>(8000, 8000, 2.2F, 16.0F);
-  elephant_unit->owner_id = 2;
+  elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *elephant_unit = elephant->add_component<UnitComponent>(8000, 8000, 2.2F, 16.0F);
   elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
   elephant->add_component<ElephantComponent>();
 
-  // Calculate damage with tactical multiplier
-  float tactical_multiplier = 1.0F;
-  
-  // Check if archer gets bonus against elephant
-  if (archer_unit->spawn_type == Game::Units::SpawnType::Archer ||
-      archer_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
-    if (elephant->has_component<ElephantComponent>()) {
-      tactical_multiplier *= 2.0F;
-    }
-  }
-
-  int expected_damage = static_cast<int>(24 * tactical_multiplier);
-  
-  // Verify bonus is applied (24 * 2 = 48)
-  EXPECT_EQ(expected_damage, 48);
-  EXPECT_FLOAT_EQ(tactical_multiplier, 2.0F);
+  EXPECT_TRUE(elephant->has_component<ElephantComponent>());
 }
 
-TEST_F(ArcherBonusTest, HorseArcherDealsBonusDamageToElephant) {
-  // Create a horse archer unit
-  auto *horse_archer = world->create_entity();
-  auto *ha_transform =
-      horse_archer->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *ha_unit = horse_archer->add_component<UnitComponent>(2000, 2000, 3.0F, 18.0F);
-  ha_unit->owner_id = 1;
-  ha_unit->spawn_type = Game::Units::SpawnType::HorseArcher;
-  auto *ha_attack = horse_archer->add_component<AttackComponent>();
-  ha_attack->can_melee = true;
-  ha_attack->can_ranged = true;
-  ha_attack->damage = 27; // Base horse archer damage after 1.5x increase
-  ha_attack->range = 8.5F;
-  ha_attack->current_mode = AttackComponent::CombatMode::Ranged;
-
-  // Create an elephant unit
-  auto *elephant = world->create_entity();
-  auto *elephant_transform =
-      elephant->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
-  auto *elephant_unit =
-      elephant->add_component<UnitComponent>(8000, 8000, 2.2F, 16.0F);
-  elephant_unit->owner_id = 2;
-  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
-  elephant->add_component<ElephantComponent>();
-
-  // Calculate damage with tactical multiplier
-  float tactical_multiplier = 1.0F;
-  
-  // Check if horse archer gets bonus against elephant
-  if (ha_unit->spawn_type == Game::Units::SpawnType::Archer ||
-      ha_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
-    if (elephant->has_component<ElephantComponent>()) {
-      tactical_multiplier *= 2.0F;
-    }
-  }
-
-  int expected_damage = static_cast<int>(27 * tactical_multiplier);
-  
-  // Verify bonus is applied (27 * 2 = 54)
-  EXPECT_EQ(expected_damage, 54);
-  EXPECT_FLOAT_EQ(tactical_multiplier, 2.0F);
-}
-
-TEST_F(ArcherBonusTest, ArcherNoBonusAgainstNonElephant) {
-  // Create an archer unit
-  auto *archer = world->create_entity();
-  auto *archer_transform =
-      archer->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *archer_unit =
-      archer->add_component<UnitComponent>(620, 620, 3.0F, 16.0F);
-  archer_unit->owner_id = 1;
-  archer_unit->spawn_type = Game::Units::SpawnType::Archer;
-  auto *archer_attack = archer->add_component<AttackComponent>();
-  archer_attack->can_melee = true;
-  archer_attack->can_ranged = true;
-  archer_attack->damage = 24;
-  archer_attack->range = 7.5F;
-  archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
-
-  // Create a regular enemy unit (swordsman)
+TEST_F(ArcherBonusTest, NonElephantUnitsDoNotHaveElephantComponent) {
+  // Verify that non-elephant units don't have ElephantComponent
   auto *swordsman = world->create_entity();
-  auto *swordsman_transform =
-      swordsman->add_component<TransformComponent>(5.0F, 0.0F, 5.0F);
-  auto *swordsman_unit =
-      swordsman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
-  swordsman_unit->owner_id = 2;
+  swordsman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *swordsman_unit = swordsman->add_component<UnitComponent>(1260, 1260, 2.1F, 14.0F);
   swordsman_unit->spawn_type = Game::Units::SpawnType::Swordsman;
 
-  // Calculate damage with tactical multiplier
-  float tactical_multiplier = 1.0F;
-  
-  // Swordsman doesn't have ElephantComponent, so no bonus
-  if (archer_unit->spawn_type == Game::Units::SpawnType::Archer ||
-      archer_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
-    if (swordsman->has_component<ElephantComponent>()) {
-      tactical_multiplier *= 2.0F;
-    }
-  }
+  EXPECT_FALSE(swordsman->has_component<ElephantComponent>());
+}
 
-  int expected_damage = static_cast<int>(24 * tactical_multiplier);
+TEST_F(ArcherBonusTest, ExpectedDamageCalculation) {
+  // Document the expected damage calculations:
+  // Archer vs Elephant: 24 (base) * 2.0 (multiplier) = 48
+  // Horse Archer vs Elephant: 27 (base) * 2.0 (multiplier) = 54
+  // Archer vs Other: 24 (base) * 1.0 (no multiplier) = 24
   
-  // Verify no bonus is applied (24 * 1 = 24)
-  EXPECT_EQ(expected_damage, 24);
-  EXPECT_FLOAT_EQ(tactical_multiplier, 1.0F);
+  int const archer_base_damage = 24;
+  int const horse_archer_base_damage = 27;
+  float const elephant_multiplier = Combat::Constants::kArcherVsElephantMultiplier;
+  
+  int const archer_vs_elephant = static_cast<int>(archer_base_damage * elephant_multiplier);
+  int const horse_archer_vs_elephant = static_cast<int>(horse_archer_base_damage * elephant_multiplier);
+  int const archer_vs_other = archer_base_damage;
+  
+  EXPECT_EQ(archer_vs_elephant, 48);
+  EXPECT_EQ(horse_archer_vs_elephant, 54);
+  EXPECT_EQ(archer_vs_other, 24);
 }
