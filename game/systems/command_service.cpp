@@ -44,8 +44,15 @@ auto are_all_surrounding_cells_invalid(const Point &position,
       int const check_x = position.x + dx;
       int const check_y = position.y + dy;
       
-      if (pathfinder.is_walkable(check_x, check_y)) {
-        return false; // Found at least one walkable neighbor
+      // Use is_walkable_with_radius for proper unit size checking
+      if (unit_radius <= 0.5F) {
+        if (pathfinder.is_walkable(check_x, check_y)) {
+          return false; // Found at least one walkable neighbor
+        }
+      } else {
+        if (pathfinder.is_walkable_with_radius(check_x, check_y, unit_radius)) {
+          return false; // Found at least one walkable neighbor
+        }
       }
     }
   }
@@ -888,18 +895,15 @@ void CommandService::process_path_results(Engine::Core::World &world) {
             member_transform->position.x = safe_world_pos.x();
             member_transform->position.z = safe_world_pos.z();
             
-            // Clear movement state after teleporting
+            // Set up movement state to allow normal movement system to retry
+            // The goal is preserved, so the unit will naturally attempt to move
+            // toward the target from its new safe position
             movement_component->has_target = false;
             movement_component->vx = 0.0F;
             movement_component->vz = 0.0F;
             
-            // Request a new path from the safe space to the target
-            std::vector<Engine::Core::EntityID> const unit_ids = {member_id};
-            std::vector<QVector3D> const targets = {target};
-            MoveOptions retry_options = request_info.options;
-            retry_options.allow_direct_fallback = true;
-            move_units(world, unit_ids, targets, retry_options);
-            
+            // The movement system will pick up the goal and attempt pathing
+            // on the next update cycle
             return;
           }
         }
