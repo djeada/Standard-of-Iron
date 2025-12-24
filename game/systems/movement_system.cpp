@@ -18,12 +18,6 @@ namespace Game::Systems {
 
 static constexpr int max_waypoint_skip_count = 4;
 static constexpr float repath_cooldown_seconds = 0.4F;
-static constexpr int kNearestPointSearchRadius = 5;
-
-static constexpr float kStuckDetectionThreshold = 0.1F;
-static constexpr float kStuckTimeThreshold = 2.0F;
-static constexpr float kUnstuckCooldown = 1.5F;
-static constexpr float kUnstuckOffsetRadius = 1.0F;
 
 namespace {
 
@@ -83,121 +77,6 @@ auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
   }
 
   return true;
-}
-
-auto try_unstuck_unit(Engine::Core::World &world, Engine::Core::Entity *entity,
-                      Engine::Core::TransformComponent *transform,
-                      Engine::Core::MovementComponent *movement,
-                      float unit_radius, float delta_time) -> bool {
-
-  auto &terrain = Game::Map::TerrainService::instance();
-  bool const on_bridge =
-      terrain.is_initialized() &&
-      terrain.is_on_bridge(transform->position.x, transform->position.z);
-
-  float const stuck_threshold = on_bridge ? 1.0F : kStuckTimeThreshold;
-  float const unstuck_cooldown = on_bridge ? 0.8F : kUnstuckCooldown;
-
-  float const dx = transform->position.x - movement->last_position_x;
-  float const dz = transform->position.z - movement->last_position_z;
-  float const distance_moved = std::sqrt(dx * dx + dz * dz);
-
-  if (distance_moved < kStuckDetectionThreshold && movement->has_target) {
-    movement->time_stuck += delta_time;
-  } else {
-    movement->time_stuck = 0.0F;
-  }
-
-  movement->last_position_x = transform->position.x;
-  movement->last_position_z = transform->position.z;
-
-  if (movement->unstuck_cooldown > 0.0F) {
-    movement->unstuck_cooldown -= delta_time;
-  }
-
-  if (movement->time_stuck > stuck_threshold &&
-      movement->unstuck_cooldown <= 0.0F && movement->has_target) {
-    bool const had_target = movement->has_target;
-    QVector3D const goal_pos(movement->goal_x, 0.0F, movement->goal_y);
-
-    Pathfinding *pathfinder = CommandService::get_pathfinder();
-    if (pathfinder != nullptr) {
-
-      Point const current_grid = CommandService::world_to_grid(
-          transform->position.x, transform->position.z);
-
-      Point const nearest = Pathfinding::find_nearest_walkable_point(
-          current_grid, kNearestPointSearchRadius, *pathfinder, unit_radius);
-
-      if (!(nearest == current_grid)) {
-
-        QVector3D safe_pos = CommandService::grid_to_world(nearest);
-
-        thread_local std::random_device rd;
-        thread_local std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> dist(-kUnstuckOffsetRadius,
-                                                   kUnstuckOffsetRadius);
-
-        float const offset_x = dist(gen);
-        float const offset_z = dist(gen);
-
-        QVector3D const offset_pos(safe_pos.x() + offset_x, safe_pos.y(),
-                                   safe_pos.z() + offset_z);
-
-        if (is_point_allowed(offset_pos, entity->get_id(), unit_radius)) {
-          safe_pos = offset_pos;
-        }
-
-        transform->position.x = safe_pos.x();
-        transform->position.z = safe_pos.z();
-
-        movement->time_stuck = 0.0F;
-        movement->unstuck_cooldown = unstuck_cooldown;
-
-        movement->clear_path();
-        movement->path_pending = false;
-        movement->pending_request_id = 0;
-        movement->has_target = false;
-        movement->vx = 0.0F;
-        movement->vz = 0.0F;
-        movement->repath_cooldown = 0.0F;
-
-        if (had_target) {
-          CommandService::MoveOptions opts;
-          opts.clear_attack_intent = false;
-          opts.allow_direct_fallback = false;
-          std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-          std::vector<QVector3D> const targets = {goal_pos};
-          CommandService::move_units(world, ids, targets, opts);
-        }
-
-        return true;
-      }
-    }
-
-    movement->time_stuck = 0.0F;
-    movement->unstuck_cooldown = unstuck_cooldown;
-    movement->clear_path();
-    movement->path_pending = false;
-    movement->pending_request_id = 0;
-    movement->has_target = false;
-    movement->vx = 0.0F;
-    movement->vz = 0.0F;
-    movement->repath_cooldown = 0.0F;
-
-    if (had_target) {
-      CommandService::MoveOptions opts;
-      opts.clear_attack_intent = false;
-      opts.allow_direct_fallback = false;
-      std::vector<Engine::Core::EntityID> const ids = {entity->get_id()};
-      std::vector<QVector3D> const targets = {goal_pos};
-      CommandService::move_units(world, ids, targets, opts);
-    }
-
-    return true;
-  }
-
-  return false;
 }
 
 } // namespace
