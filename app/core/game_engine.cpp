@@ -2342,6 +2342,23 @@ void GameEngine::get_selected_unit_ids(
   m_selectionController->get_selected_unit_ids(out);
 }
 
+auto GameEngine::get_unit_type_key(Engine::Core::EntityID id,
+                                   QString &type_key) const -> bool {
+  type_key.clear();
+  if (!m_world) {
+    return false;
+  }
+  auto *e = m_world->get_entity(id);
+  if (e == nullptr) {
+    return false;
+  }
+  if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
+    type_key = Game::Units::spawn_typeToQString(u->spawn_type);
+    return true;
+  }
+  return false;
+}
+
 auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
                                int &health, int &max_health, bool &is_building,
                                bool &alive, QString &nation) const -> bool {

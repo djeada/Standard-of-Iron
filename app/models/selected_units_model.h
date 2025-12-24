@@ -11,6 +11,7 @@ class SelectedUnitsModel : public QAbstractListModel {
 public:
   enum Roles {
     UnitIdRole = Qt::UserRole + 1,
+    UnitTypeRole,
     NameRole,
     HealthRole,
     max_healthRole,
