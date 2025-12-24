@@ -119,7 +119,7 @@ RowLayout {
                         property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
 
                         width: selectedUnitsList.width - 10
-                        height: 28
+                        height: 36
                         color: isHovered ? "#243346" : "#1a252f"
                         radius: 4
                         border.color: isHovered ? "#4aa3ff" : "#34495e"
@@ -142,14 +142,13 @@ RowLayout {
                         }
 
                         Row {
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
+                            anchors.fill: parent
                             anchors.margins: 6
                             spacing: 8
 
                             Item {
                                 width: 32
-                                height: 24
+                                height: parent.height
 
                                 Image {
                                     id: selectedUnitIcon
@@ -173,6 +172,7 @@ RowLayout {
                             }
 
                             Column {
+                                anchors.verticalCenter: parent.verticalCenter
                                 spacing: 2
 
                                 Rectangle {
@@ -234,7 +234,7 @@ RowLayout {
                                 font.pointSize: 8
                                 font.bold: false
                                 elide: Text.ElideRight
-                                width: 80
+                                width: parent.width - 120
                             }
 
                         }
