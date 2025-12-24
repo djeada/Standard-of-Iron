@@ -115,7 +115,6 @@
       "playerId": 2,
       "maxPopulation": 120
     },
-
     {
       "type": "spearman",
       "x": 15,
