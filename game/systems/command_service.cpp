@@ -888,8 +888,18 @@ void CommandService::process_path_results(Engine::Core::World &world) {
             member_transform->position.x = safe_world_pos.x();
             member_transform->position.z = safe_world_pos.z();
             
-            // Now try to move from the safe space to the target
+            // Clear movement state after teleporting
             movement_component->has_target = false;
+            movement_component->vx = 0.0F;
+            movement_component->vz = 0.0F;
+            
+            // Request a new path from the safe space to the target
+            std::vector<Engine::Core::EntityID> const unit_ids = {member_id};
+            std::vector<QVector3D> const targets = {target};
+            MoveOptions retry_options = request_info.options;
+            retry_options.allow_direct_fallback = true;
+            move_units(world, unit_ids, targets, retry_options);
+            
             return;
           }
         }
