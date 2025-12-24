@@ -465,21 +465,18 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event) {
         m_mapData->updateFirecamp(m_selectedIndex, elem);
       }
     } else if (m_selectedType == 2) {
-      // Linear element - drag endpoint or whole element
+      // Linear element - drag endpoint only (clicking on line body selects but doesn't move)
       auto linear = m_mapData->linearElements();
-      if (m_selectedIndex < linear.size()) {
+      if (m_selectedIndex < linear.size() && m_draggedEndpoint >= 0) {
         LinearElement elem = linear[m_selectedIndex];
         QVector2D newPos(static_cast<float>(gridPos.x()),
                          static_cast<float>(gridPos.y()));
 
         if (m_draggedEndpoint == 0) {
-          // Drag start endpoint
           elem.start = newPos;
         } else if (m_draggedEndpoint == 1) {
-          // Drag end endpoint
           elem.end = newPos;
         }
-        // Note: if m_draggedEndpoint == -1 (clicked on line), we don't move
 
         m_mapData->updateLinearElement(m_selectedIndex, elem);
       }
@@ -591,7 +588,9 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     }
   }
 
-  // Check linear elements - first check endpoints (for dragging), then line
+  // Check linear elements - FIRST pass: check all endpoints
+  // Endpoints are checked first across ALL elements to allow grabbing endpoints
+  // even when they overlap with another element's line body
   const auto &linear = m_mapData->linearElements();
   for (int i = 0; i < linear.size(); ++i) {
     const auto &elem = linear[i];
@@ -603,7 +602,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     if (startDist <= ENDPOINT_HIT_RADIUS) {
       result.elementType = 2;
       result.index = i;
-      result.endpoint = 0; // Start endpoint
+      result.endpoint = 0;
       return result;
     }
 
@@ -612,27 +611,23 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     if (endDist <= ENDPOINT_HIT_RADIUS) {
       result.elementType = 2;
       result.index = i;
-      result.endpoint = 1; // End endpoint
+      result.endpoint = 1;
       return result;
     }
   }
 
-  // Check linear elements - now check line body
+  // Check linear elements - SECOND pass: check line bodies
   for (int i = 0; i < linear.size(); ++i) {
     const auto &elem = linear[i];
-
-    // Point-to-line-segment distance
     QVector2D p(static_cast<float>(gridPos.x()),
                 static_cast<float>(gridPos.y()));
     QVector2D a = elem.start;
     QVector2D b = elem.end;
-
     QVector2D ab = b - a;
     float abLengthSq = QVector2D::dotProduct(ab, ab);
 
     float dist;
     if (abLengthSq < 0.0001F) {
-      // Start and end points are identical, treat as point
       dist = (p - a).length();
     } else {
       float t = std::clamp(QVector2D::dotProduct(p - a, ab) / abLengthSq, 0.0F,
@@ -644,7 +639,7 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     if (dist <= elem.width + 2.0F) {
       result.elementType = 2;
       result.index = i;
-      result.endpoint = -1; // Line body, not an endpoint
+      result.endpoint = -1;
       return result;
     }
   }
