@@ -322,6 +322,7 @@ public:
   void render(int pixelWidth, int pixelHeight);
 
   void get_selected_unit_ids(std::vector<Engine::Core::EntityID> &out) const;
+  bool get_unit_type_key(Engine::Core::EntityID id, QString &type_key) const;
   bool get_unit_info(Engine::Core::EntityID id, QString &name, int &health,
                      int &max_health, bool &is_building, bool &alive,
                      QString &nation) const;

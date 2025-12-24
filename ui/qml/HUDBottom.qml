@@ -50,20 +50,10 @@ RowLayout {
         if (!displayName)
             return "";
 
+        // Fallback only: if the model doesn't provide a stable unit_type.
         var s = displayName.toString().trim().toLowerCase();
         s = s.replace(/[^a-z0-9]+/g, "_");
         s = s.replace(/^_+|_+$/g, "");
-
-        // Map user-facing display names to internal keys used by StyleGuide.
-        // This keeps icons working even if profiles expose prettier names.
-        var aliasMap = {
-            "knight": "swordsman",
-            "mounted_knight": "horse_swordsman",
-            "mountedknight": "horse_swordsman",
-            "horseman": "horse_swordsman"
-        };
-        if (aliasMap[s])
-            s = aliasMap[s];
         return s;
     }
 
@@ -137,7 +127,7 @@ RowLayout {
 
                         property bool isHovered: false
                         property string unitDisplayName: (typeof name !== "undefined") ? name : ""
-                        property string unitTypeKey: bottomRoot.unitTypeKeyFromDisplayName(unitDisplayName)
+                        property string unitTypeKey: (typeof unit_type !== "undefined" && unit_type !== "") ? unit_type : bottomRoot.unitTypeKeyFromDisplayName(unitDisplayName)
                         property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
 
                         width: selectedUnitsList.width - 10
