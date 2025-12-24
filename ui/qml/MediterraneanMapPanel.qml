@@ -256,6 +256,7 @@ Rectangle {
                 orbitDistance: root.map_orbit_distance
                 panU: root.map_pan_u
                 panV: root.map_pan_v
+                currentMission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
                 hoverProvinceId: {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
@@ -268,6 +269,7 @@ Rectangle {
                 onOrbitDistanceChanged: root.label_refresh += 1
                 onPanUChanged: root.label_refresh += 1
                 onPanVChanged: root.label_refresh += 1
+                onCurrentMissionChanged: root.label_refresh += 1
                 onWidthChanged: root.label_refresh += 1
                 onHeightChanged: root.label_refresh += 1
 
@@ -543,6 +545,105 @@ Rectangle {
 
         }
 
+    }
+
+    // Hannibal icon at the end of the current path
+    Item {
+        id: hannibalIcon
+
+        property int _refresh: root.label_refresh
+        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+        
+        visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
+        z: 10
+        x: _pos.x
+        y: _pos.y
+
+        // Frame background
+        Rectangle {
+            width: 44
+            height: 44
+            x: -width / 2
+            y: -height / 2
+            radius: 6
+            color: "#2a1f1a"
+            border.color: "#d4a857"
+            border.width: 2
+            opacity: 0.95
+
+            // Inner glow
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 2
+                radius: 4
+                color: "transparent"
+                border.color: "#6b4423"
+                border.width: 1
+            }
+        }
+
+        // Hannibal portrait
+        Image {
+            source: "qrc:/assets/visuals/hannibal.png"
+            width: 36
+            height: 36
+            x: -width / 2
+            y: -height / 2
+            smooth: true
+            mipmap: true
+            fillMode: Image.PreserveAspectFit
+        }
+
+        // Animated pulse effect
+        Rectangle {
+            width: 50
+            height: 50
+            x: -width / 2
+            y: -height / 2
+            radius: width / 2
+            color: "transparent"
+            border.color: "#d4a857"
+            border.width: 2
+            opacity: 0.4
+
+            SequentialAnimation on opacity {
+                loops: Animation.Infinite
+                running: hannibalIcon.visible
+                
+                NumberAnimation {
+                    from: 0.4
+                    to: 0.0
+                    duration: 1500
+                    easing.type: Easing.OutCubic
+                }
+                
+                PauseAnimation {
+                    duration: 500
+                }
+            }
+
+            SequentialAnimation on scale {
+                loops: Animation.Infinite
+                running: hannibalIcon.visible
+                
+                NumberAnimation {
+                    from: 1.0
+                    to: 1.3
+                    duration: 1500
+                    easing.type: Easing.OutCubic
+                }
+                
+                NumberAnimation {
+                    from: 1.3
+                    to: 1.0
+                    duration: 0
+                }
+                
+                PauseAnimation {
+                    duration: 500
+                }
+            }
+        }
     }
 
     Rectangle {
