@@ -172,17 +172,18 @@ RowLayout {
 
                             }
 
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitType)
+                                color: "#ecf0f1"
+                                font.pointSize: 8
+                                font.bold: false
+                                elide: Text.ElideRight
+                                width: 80
+                            }
+
                             Column {
                                 spacing: 2
-
-                                Text {
-                                    text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitType)
-                                    color: "#ecf0f1"
-                                    font.pointSize: 8
-                                    font.bold: false
-                                    elide: Text.ElideRight
-                                    width: 120
-                                }
 
                                 Rectangle {
                                     width: 60
