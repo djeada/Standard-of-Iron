@@ -267,7 +267,13 @@ auto calculate_tactical_damage_multiplier(
     }
   }
 
-  if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer) {
+  if (attacker_unit->spawn_type == Game::Units::SpawnType::Archer ||
+      attacker_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
+
+    if (target->has_component<Engine::Core::ElephantComponent>()) {
+      multiplier *= Constants::kArcherVsElephantMultiplier;
+    }
+
     auto *attacker_transform =
         attacker->get_component<Engine::Core::TransformComponent>();
     auto *target_transform =

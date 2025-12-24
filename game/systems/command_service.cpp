@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <qvectornd.h>
+#include <random>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -27,6 +28,38 @@ constexpr float same_target_threshold_sq = 0.01F;
 constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
+
+constexpr float kUnitRadiusThreshold = 0.5F;
+
+constexpr float kJitterDistance = 1.5F;
+
+auto are_all_surrounding_cells_invalid(const Point &position,
+                                       const Pathfinding &pathfinder,
+                                       float unit_radius) -> bool {
+
+  for (int dy = -1; dy <= 1; ++dy) {
+    for (int dx = -1; dx <= 1; ++dx) {
+      if (dx == 0 && dy == 0) {
+        continue;
+      }
+
+      int const check_x = position.x + dx;
+      int const check_y = position.y + dy;
+
+      if (unit_radius <= kUnitRadiusThreshold) {
+        if (pathfinder.is_walkable(check_x, check_y)) {
+          return false;
+        }
+      } else {
+        if (pathfinder.is_walkable_with_radius(check_x, check_y, unit_radius)) {
+          return false;
+        }
+      }
+    }
+  }
+
+  return true;
+}
 
 } // namespace
 
@@ -838,6 +871,32 @@ void CommandService::process_path_results(Engine::Core::World &world) {
           movement_component->target_x = wp.first;
           movement_component->target_y = wp.second;
           movement_component->has_target = true;
+          return;
+        }
+      }
+
+      if (!has_path && s_pathfinder) {
+        Point const current_grid = world_to_grid(member_transform->position.x,
+                                                 member_transform->position.z);
+
+        if (are_all_surrounding_cells_invalid(current_grid, *s_pathfinder,
+                                              request_info.unit_radius)) {
+
+          thread_local std::random_device rd;
+          thread_local std::mt19937 gen(rd());
+          std::uniform_real_distribution<float> dist(-kJitterDistance,
+                                                     kJitterDistance);
+
+          float const jitter_x = dist(gen);
+          float const jitter_z = dist(gen);
+
+          member_transform->position.x += jitter_x;
+          member_transform->position.z += jitter_z;
+
+          movement_component->has_target = false;
+          movement_component->vx = 0.0F;
+          movement_component->vz = 0.0F;
+
           return;
         }
       }
