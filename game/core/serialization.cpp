@@ -301,6 +301,39 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["catapult_loading"] = catapult_obj;
   }
 
+  if (const auto *elephant = entity->get_component<ElephantComponent>()) {
+    QJsonObject elephant_obj;
+    elephant_obj["charge_state"] = static_cast<int>(elephant->charge_state);
+    elephant_obj["charge_speed_multiplier"] =
+        static_cast<double>(elephant->charge_speed_multiplier);
+    elephant_obj["charge_duration"] =
+        static_cast<double>(elephant->charge_duration);
+    elephant_obj["charge_cooldown"] =
+        static_cast<double>(elephant->charge_cooldown);
+    elephant_obj["trample_radius"] =
+        static_cast<double>(elephant->trample_radius);
+    elephant_obj["trample_damage"] = elephant->trample_damage;
+    elephant_obj["trample_damage_accumulator"] =
+        static_cast<double>(elephant->trample_damage_accumulator);
+    elephant_obj["is_panicked"] = elephant->is_panicked;
+    elephant_obj["panic_duration"] =
+        static_cast<double>(elephant->panic_duration);
+    entity_obj["elephant"] = elephant_obj;
+  }
+
+  if (const auto *stomp_impact =
+          entity->get_component<ElephantStompImpactComponent>()) {
+    QJsonArray impacts_array;
+    for (const auto &impact : stomp_impact->impacts) {
+      QJsonObject impact_obj;
+      impact_obj["x"] = static_cast<double>(impact.x);
+      impact_obj["z"] = static_cast<double>(impact.z);
+      impact_obj["time"] = static_cast<double>(impact.time);
+      impacts_array.append(impact_obj);
+    }
+    entity_obj["elephant_stomp_impacts"] = impacts_array;
+  }
+
   return entity_obj;
 }
 
@@ -594,6 +627,43 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(catapult_obj["target_locked_z"].toDouble(0.0));
     catapult->target_position_locked =
         catapult_obj["target_position_locked"].toBool(false);
+  }
+
+  if (json.contains("elephant")) {
+    const auto elephant_obj = json["elephant"].toObject();
+    auto *elephant = entity->add_component<ElephantComponent>();
+    elephant->charge_state = static_cast<ElephantComponent::ChargeState>(
+        elephant_obj["charge_state"].toInt(
+            static_cast<int>(ElephantComponent::ChargeState::Idle)));
+    elephant->charge_speed_multiplier = static_cast<float>(
+        elephant_obj["charge_speed_multiplier"].toDouble(1.8));
+    elephant->charge_duration =
+        static_cast<float>(elephant_obj["charge_duration"].toDouble(0.0));
+    elephant->charge_cooldown =
+        static_cast<float>(elephant_obj["charge_cooldown"].toDouble(0.0));
+    elephant->trample_radius =
+        static_cast<float>(elephant_obj["trample_radius"].toDouble(2.5));
+    elephant->trample_damage = elephant_obj["trample_damage"].toInt(40);
+    elephant->trample_damage_accumulator = static_cast<float>(
+        elephant_obj["trample_damage_accumulator"].toDouble(0.0));
+    elephant->is_panicked = elephant_obj["is_panicked"].toBool(false);
+    elephant->panic_duration =
+        static_cast<float>(elephant_obj["panic_duration"].toDouble(0.0));
+  }
+
+  if (json.contains("elephant_stomp_impacts")) {
+    const auto impacts_array = json["elephant_stomp_impacts"].toArray();
+    auto *stomp_impact = entity->add_component<ElephantStompImpactComponent>();
+    stomp_impact->impacts.clear();
+    stomp_impact->impacts.reserve(impacts_array.size());
+    for (const auto &value : impacts_array) {
+      const auto impact_obj = value.toObject();
+      ElephantStompImpactComponent::ImpactRecord impact;
+      impact.x = static_cast<float>(impact_obj["x"].toDouble(0.0));
+      impact.z = static_cast<float>(impact_obj["z"].toDouble(0.0));
+      impact.time = static_cast<float>(impact_obj["time"].toDouble(0.0));
+      stomp_impact->impacts.push_back(impact);
+    }
   }
 }
 
