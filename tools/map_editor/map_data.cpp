@@ -26,12 +26,8 @@ void MapData::clear() {
   m_rain = QJsonObject();
 
   // Clear undo/redo stacks
-  while (!m_undoStack.isEmpty()) {
-    m_undoStack.pop();
-  }
-  while (!m_redoStack.isEmpty()) {
-    m_redoStack.pop();
-  }
+  m_undoStack.clear();
+  m_redoStack.clear();
 
   setModified(false);
   emit dataChanged();
@@ -64,36 +60,34 @@ void MapData::executeCommand(std::unique_ptr<Command> cmd) {
     return;
   }
   cmd->execute();
-  m_undoStack.push(std::move(cmd));
+  m_undoStack.push_back(std::move(cmd));
   // Clear redo stack when new command is executed
-  while (!m_redoStack.isEmpty()) {
-    m_redoStack.pop();
-  }
+  m_redoStack.clear();
   setModified(true);
   emit undoRedoChanged();
 }
 
 void MapData::undo() {
-  if (m_undoStack.isEmpty()) {
+  if (m_undoStack.empty()) {
     return;
   }
-  auto cmd = std::move(m_undoStack.top());
-  m_undoStack.pop();
+  auto cmd = std::move(m_undoStack.back());
+  m_undoStack.pop_back();
   cmd->undo();
-  m_redoStack.push(std::move(cmd));
+  m_redoStack.push_back(std::move(cmd));
   setModified(true);
   emit dataChanged();
   emit undoRedoChanged();
 }
 
 void MapData::redo() {
-  if (m_redoStack.isEmpty()) {
+  if (m_redoStack.empty()) {
     return;
   }
-  auto cmd = std::move(m_redoStack.top());
-  m_redoStack.pop();
+  auto cmd = std::move(m_redoStack.back());
+  m_redoStack.pop_back();
   cmd->execute();
-  m_undoStack.push(std::move(cmd));
+  m_undoStack.push_back(std::move(cmd));
   setModified(true);
   emit dataChanged();
   emit undoRedoChanged();
@@ -164,12 +158,8 @@ bool MapData::loadFromJson(const QString &filePath) {
   }
 
   // Clear undo/redo stacks on load
-  while (!m_undoStack.isEmpty()) {
-    m_undoStack.pop();
-  }
-  while (!m_redoStack.isEmpty()) {
-    m_redoStack.pop();
-  }
+  m_undoStack.clear();
+  m_redoStack.clear();
 
   setModified(false);
   emit dataChanged();

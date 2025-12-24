@@ -4,11 +4,11 @@
 #include <QJsonObject>
 #include <QObject>
 #include <QString>
-#include <QStack>
 #include <QVector>
 #include <QVector2D>
 #include <memory>
 #include <variant>
+#include <vector>
 
 namespace MapEditor {
 
@@ -147,8 +147,8 @@ public:
   void executeCommand(std::unique_ptr<Command> cmd);
   void undo();
   void redo();
-  [[nodiscard]] bool canUndo() const { return !m_undoStack.isEmpty(); }
-  [[nodiscard]] bool canRedo() const { return !m_redoStack.isEmpty(); }
+  [[nodiscard]] bool canUndo() const { return !m_undoStack.empty(); }
+  [[nodiscard]] bool canRedo() const { return !m_redoStack.empty(); }
 
   // Clear all data for new map
   void clear();
@@ -183,8 +183,10 @@ private:
   bool m_modified = false;
 
   // Undo/redo stacks
-  QStack<std::unique_ptr<Command>> m_undoStack;
-  QStack<std::unique_ptr<Command>> m_redoStack;
+  // Qt containers are implicitly shared and may require copyable value types.
+  // std::unique_ptr is move-only, so use std::vector for the stacks.
+  std::vector<std::unique_ptr<Command>> m_undoStack;
+  std::vector<std::unique_ptr<Command>> m_redoStack;
 
   // Helper methods
   void parseTerrainArray(const QJsonArray &arr);
