@@ -299,6 +299,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
             assets/visuals/load_screen.png
+            assets/visuals/hannibal.png
             assets/visuals/icons/archer_rome.png
             assets/visuals/icons/archer_cartaghe.png
             assets/visuals/icons/swordsman_rome.png
@@ -317,6 +318,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/visuals/icons/catapult_cartaghe.png
             assets/visuals/icons/ballista_rome.png
             assets/visuals/icons/ballista_cartaghe.png
+            assets/visuals/icons/elephant_cartaghe.png
             assets/visuals/icons/builder_rome.png
             assets/visuals/icons/builder_cartaghe.png
             assets/visuals/icons/defense_tower_rome.png
