@@ -46,6 +46,17 @@ RowLayout {
         return "👤";
     }
 
+    function unitTypeKeyFromDisplayName(displayName) {
+        if (!displayName)
+            return "";
+
+        // Fallback only: if the model doesn't provide a stable unit_type.
+        var s = displayName.toString().trim().toLowerCase();
+        s = s.replace(/[^a-z0-9]+/g, "_");
+        s = s.replace(/^_+|_+$/g, "");
+        return s;
+    }
+
     function commandIcon(filename) {
         if (typeof StyleGuide === "undefined" || !filename)
             return "";
@@ -115,11 +126,12 @@ RowLayout {
                         id: selectedUnitItem
 
                         property bool isHovered: false
-                        property string unitType: (typeof name !== "undefined") ? name : ""
+                        property string unitDisplayName: (typeof name !== "undefined") ? name : ""
+                        property string unitTypeKey: (typeof unit_type !== "undefined" && unit_type !== "") ? unit_type : bottomRoot.unitTypeKeyFromDisplayName(unitDisplayName)
                         property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
 
                         width: selectedUnitsList.width - 10
-                        height: 28
+                        height: 36
                         color: isHovered ? "#243346" : "#1a252f"
                         radius: 4
                         border.color: isHovered ? "#4aa3ff" : "#34495e"
@@ -143,13 +155,16 @@ RowLayout {
 
                         Row {
                             anchors.left: parent.left
+                            anchors.right: parent.right
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.margins: 6
+                            anchors.leftMargin: 6
+                            anchors.rightMargin: 6
                             spacing: 8
+                            height: 28
 
                             Item {
                                 width: 32
-                                height: 24
+                                height: 28
 
                                 Image {
                                     id: selectedUnitIcon
@@ -158,31 +173,22 @@ RowLayout {
                                     width: 24
                                     height: 24
                                     fillMode: Image.PreserveAspectFit
-                                    source: bottomRoot.unitIconSource(selectedUnitItem.unitType, selectedUnitItem.nationKey)
-                                    visible: source !== ""
+                                    source: bottomRoot.unitIconSource(selectedUnitItem.unitTypeKey, selectedUnitItem.nationKey)
+                                    visible: source !== "" && status !== Image.Error
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: bottomRoot.unitIconEmoji(selectedUnitItem.unitType)
+                                    text: bottomRoot.unitIconEmoji(selectedUnitItem.unitTypeKey)
                                     color: "#ecf0f1"
                                     font.pixelSize: 16
-                                    visible: selectedUnitIcon.source === ""
+                                    visible: selectedUnitIcon.source === "" || selectedUnitIcon.status === Image.Error
                                 }
 
                             }
 
-                            Text {
-                                anchors.verticalCenter: parent.verticalCenter
-                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitType)
-                                color: "#ecf0f1"
-                                font.pointSize: 8
-                                font.bold: false
-                                elide: Text.ElideRight
-                                width: 80
-                            }
-
                             Column {
+                                anchors.verticalCenter: parent.verticalCenter
                                 spacing: 2
 
                                 Rectangle {
@@ -235,6 +241,16 @@ RowLayout {
 
                                 }
 
+                            }
+
+                            Text {
+                                anchors.verticalCenter: parent.verticalCenter
+                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitDisplayName)
+                                color: "#ecf0f1"
+                                font.pointSize: 8
+                                font.bold: false
+                                elide: Text.ElideRight
+                                width: parent.width - 108 // icon(32) + bars(60) + spacing(8*2)
                             }
 
                         }
