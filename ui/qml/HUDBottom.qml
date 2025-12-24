@@ -53,6 +53,17 @@ RowLayout {
         var s = displayName.toString().trim().toLowerCase();
         s = s.replace(/[^a-z0-9]+/g, "_");
         s = s.replace(/^_+|_+$/g, "");
+
+        // Map user-facing display names to internal keys used by StyleGuide.
+        // This keeps icons working even if profiles expose prettier names.
+        var aliasMap = {
+            "knight": "swordsman",
+            "mounted_knight": "horse_swordsman",
+            "mountedknight": "horse_swordsman",
+            "horseman": "horse_swordsman"
+        };
+        if (aliasMap[s])
+            s = aliasMap[s];
         return s;
     }
 
@@ -173,7 +184,7 @@ RowLayout {
                                     height: 24
                                     fillMode: Image.PreserveAspectFit
                                     source: bottomRoot.unitIconSource(selectedUnitItem.unitTypeKey, selectedUnitItem.nationKey)
-                                    visible: source !== "" && status === Image.Ready
+                                    visible: source !== "" && status !== Image.Error
                                 }
 
                                 Text {
