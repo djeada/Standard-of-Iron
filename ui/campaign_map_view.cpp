@@ -325,6 +325,11 @@ private:
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                     QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
 
+    // Hannibal's campaign path with coastline-aware routing
+    // The path data includes many intermediate waypoints that follow
+    // the Mediterranean coastline, creating smooth curves instead of
+    // rigid straight lines. Open sea crossings only occur on specific
+    // segments (Africa → Spain, Sicily → Carthage).
     init_line_layer(m_pathLayer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                     QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
@@ -791,6 +796,39 @@ void main() {
 
     glBindVertexArray(layer.vao);
 
+    // First pass: Draw glow/outline for visual emphasis
+    for (int i = 0; i <= max_mission; ++i) {
+      if (i >= static_cast<int>(layer.spans.size())) {
+        break;
+      }
+
+      const auto &span = layer.spans[static_cast<size_t>(i)];
+
+      QVector4D glow_color;
+      float glow_width;
+
+      if (i == max_mission) {
+        // Bright glow for current mission
+        glow_color = QVector4D(0.95F, 0.25F, 0.15F, 0.25F);
+        glow_width = 6.0F;
+      } else if (i == max_mission - 1) {
+        // Subtle glow for recent mission
+        glow_color = QVector4D(0.75F, 0.22F, 0.14F, 0.20F);
+        glow_width = 5.0F;
+      } else {
+        // Faint glow for older missions
+        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
+        glow_color = QVector4D(0.55F * age_factor, 0.18F * age_factor,
+                              0.12F * age_factor, 0.15F * age_factor);
+        glow_width = 4.5F;
+      }
+
+      glLineWidth(glow_width);
+      m_lineProgram.setUniformValue("u_color", glow_color);
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
+
+    // Second pass: Draw main line with enhanced appearance
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.spans.size())) {
         break;
@@ -802,18 +840,18 @@ void main() {
       float width;
 
       if (i == max_mission) {
-
+        // Current mission: vibrant red with full opacity
         color = QVector4D(0.95F, 0.25F, 0.15F, 1.0F);
         width = 3.5F;
       } else if (i == max_mission - 1) {
-
-        color = QVector4D(0.75F, 0.22F, 0.14F, 0.85F);
+        // Recent mission: slightly dimmed
+        color = QVector4D(0.75F, 0.22F, 0.14F, 0.90F);
         width = 2.8F;
       } else {
-
+        // Historical missions: fade based on age
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         color = QVector4D(0.55F * age_factor, 0.18F * age_factor,
-                          0.12F * age_factor, 0.65F * age_factor);
+                          0.12F * age_factor, 0.70F * age_factor);
         width = 2.2F;
       }
 

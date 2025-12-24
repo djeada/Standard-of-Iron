@@ -44,6 +44,14 @@ This script uses hardcoded city lon/lat coordinates from `provinces.py` and conv
 - **Mission 6**: Crossing the Alps (flashback - path through mountains)
 - **Mission 7**: Battle of Zama (final - + Syracuse → Carthage)
 
-Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. The visualization in `CampaignMapView` displays these paths with progressive styling - the current mission path is bright red (3.5px width), previous paths are dimmed based on age, creating a professional visual narrative of Hannibal's campaign progression.
+Each successive path builds upon the previous one, with the last path being the longest and covering all previous waypoints. 
+
+**Coastline-Aware Features:**
+- Routes follow Mediterranean coastlines with smooth, curved paths instead of rigid straight lines
+- Each segment is classified as 'coastal', 'land', or 'open_sea'
+- Open-sea crossings only occur on explicitly defined segments (Africa → Spain, Sicily → Carthage)
+- Intermediate waypoints create natural, organic appearance along shores
+- The C++ renderer in `CampaignMapView` displays these paths with progressive styling and a subtle glow effect
+- Current mission path is bright red (3.5px width) with glow, previous paths are dimmed based on age
 
 **Note**: This script does NOT require `provinces.json` - it calculates UV coordinates directly from lon/lat. If you need to generate `provinces.json` for the full campaign map visualization, run `provinces.py` after running the full pipeline.
