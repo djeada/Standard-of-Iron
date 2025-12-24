@@ -175,12 +175,12 @@ inline auto skin_gradient(const QVector3D &skin, float vertical_factor,
 
 namespace ElephantDimensionRange {
 
-constexpr float kBodyLengthMin = 1.10F;
-constexpr float kBodyLengthMax = 1.30F;
-constexpr float kBodyWidthMin = 0.45F;
-constexpr float kBodyWidthMax = 0.55F;
-constexpr float kBodyHeightMin = 0.60F;
-constexpr float kBodyHeightMax = 0.75F;
+constexpr float kBodyLengthMin = 0.7333333F;
+constexpr float kBodyLengthMax = 0.8666667F;
+constexpr float kBodyWidthMin = 0.30F;
+constexpr float kBodyWidthMax = 0.3666667F;
+constexpr float kBodyHeightMin = 0.40F;
+constexpr float kBodyHeightMax = 0.50F;
 
 constexpr float kNeckLengthMin = 0.175F;
 constexpr float kNeckLengthMax = 0.25F;
@@ -326,7 +326,11 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   d.move_bob_amplitude =
       rand_between(seed, kSaltMoveBob, kMoveBobAmplitudeMin, kMoveBobAmplitudeMax);
 
-  d.barrel_center_y = d.leg_length;
+  // Keep the lowest foot pad on the ground (y=0) in the neutral stance.
+  // In `draw_leg`, the hip is offset down by `d.body_height * 0.35F` and the
+  // leg reaches down by `d.leg_length`. The foot pad extends below `foot` by
+  // roughly `d.foot_radius * (0.3F + 0.5F) = d.foot_radius * 0.8F`.
+  d.barrel_center_y = d.leg_length + d.body_height * 0.35F + d.foot_radius * 0.8F;
 
   return d;
 }
