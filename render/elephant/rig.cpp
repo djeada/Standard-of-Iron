@@ -491,6 +491,7 @@ namespace HowdahFrameConstants {
 constexpr float kHowdahBodyHeightOffset = 0.55F;
 constexpr float kHowdahBodyLengthOffset = -0.10F;
 constexpr float kSeatHeightOffset = 0.15F;
+constexpr float kLegRevealLiftScale = 0.75F;
 
 } // namespace HowdahFrameConstants
 
@@ -503,7 +504,10 @@ auto compute_howdah_frame(const ElephantProfile &profile)
   frame.seat_forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.seat_right = QVector3D(1.0F, 0.0F, 0.0F);
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
-  frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
+
+  // Lift the whole rig up so legs/feet are clearly visible.
+  frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y + d.leg_length * kLegRevealLiftScale,
+                                 0.0F);
 
   frame.howdah_center = QVector3D(
       0.0F, d.barrel_center_y + d.body_height * kHowdahBodyHeightOffset,
