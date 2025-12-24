@@ -1114,50 +1114,71 @@ void ElephantRendererBase::render_full(
     float forward_bias = 0.0F;
 
     if (is_fighting) {
-      // Combat: stomp/brace cycle (stationary)
-      float const stomp_period = 0.95F;
+      // BRUTAL COMBAT STOMP: All legs participate in violent stomping
+      // Fast cycle - elephants rage-stomp to crush enemies underfoot
+      float const stomp_period = 0.55F;  // Fast, aggressive stomping
       float const t = std::fmod(anim.time / stomp_period + phase_offset, 1.0F);
 
-      float intensity = 0.55F;
+      // Combat phase intensity - max violence during strike/impact
+      float intensity = 0.70F;
       switch (anim.combat_phase) {
       case CombatAnimPhase::WindUp:
-        intensity = 0.65F;
+        intensity = 0.85F;
         break;
       case CombatAnimPhase::Strike:
       case CombatAnimPhase::Impact:
         intensity = 1.0F;
         break;
       case CombatAnimPhase::Recover:
-        intensity = 0.75F;
+        intensity = 0.80F;
         break;
       default:
         break;
       }
 
-      bool const stomp_is_left = (t < 0.5F);
-      bool const stomp_leg = is_front && (is_left == stomp_is_left);
-      float const local = (t < 0.5F) ? (t * 2.0F) : ((t - 0.5F) * 2.0F);
+      // ALL legs stomp - front legs more aggressively, rear legs support
+      // Each leg stomps on its own phase offset for continuous trampling
+      float const local = t;  // Full cycle per leg
 
-      float const stomp_height = d.leg_length * (0.10F + 0.06F * intensity);
-      float const stomp_stride = full_stride * (0.10F + 0.05F * intensity);
+      // MASSIVE lift heights - raise legs HIGH to crush down
+      float const base_stomp_height = d.leg_length * 0.45F;  // Nearly half leg length!
+      float const stomp_height = base_stomp_height * (0.7F + 0.3F * intensity);
+      
+      // Front legs stomp harder and higher
+      float const leg_multiplier = is_front ? 1.0F : 0.75F;
+      float const final_stomp_height = stomp_height * leg_multiplier;
+      
+      // Forward reach during stomp - thrust forward then slam down
+      float const stomp_reach = full_stride * 0.4F * intensity;
 
-      if (stomp_leg) {
-        if (local < 0.35F) {
-          float const u = local / 0.35F;
-          lift = std::sin(u * k_pi * 0.5F) * stomp_height;
-          stride_offset = stomp_stride * u;
-        } else {
-          float const u = (local - 0.35F) / 0.65F;
-          lift = std::cos(u * k_pi * 0.5F) * stomp_height;
-          stride_offset = stomp_stride * (1.0F - u);
-        }
-        forward_bias = (local < 0.5F) ? 1.0F : -1.0F;
+      // Stomp phases: QUICK lift (0-0.25), PAUSE at top (0.25-0.35), VIOLENT slam (0.35-0.65), ground contact (0.65-1.0)
+      if (local < 0.25F) {
+        // QUICK LIFT - leg rises fast
+        float const u = local / 0.25F;
+        float const ease = u * u;  // Accelerate upward
+        lift = ease * final_stomp_height;
+        stride_offset = stomp_reach * ease * 0.5F;
+        forward_bias = 1.0F;
+      } else if (local < 0.35F) {
+        // PAUSE AT TOP - leg held high, threatening
+        lift = final_stomp_height;
+        stride_offset = stomp_reach * 0.5F;
+        forward_bias = 1.0F;
+      } else if (local < 0.65F) {
+        // VIOLENT SLAM DOWN - fast, crushing descent
+        float const u = (local - 0.35F) / 0.30F;
+        float const slam = 1.0F - (u * u);  // Decelerate = impact feel
+        lift = slam * final_stomp_height;
+        // Foot drives forward during slam for maximum crush
+        stride_offset = stomp_reach * (0.5F + u * 0.5F);
+        forward_bias = -1.0F;  // Driving down
       } else {
-        float const wobble =
-            std::sin((t + (is_left ? 0.0F : 0.5F)) * 2.0F * k_pi);
-        stride_offset =
-            -wobble * stomp_stride * (is_front ? 0.20F : 0.15F);
-        forward_bias = wobble;
+        // GROUND CONTACT - foot planted, scraping/grinding
+        float const u = (local - 0.65F) / 0.35F;
+        lift = 0.0F;  // Foot on ground
+        // Drag back slightly as if grinding enemy into dirt
+        stride_offset = stomp_reach * (1.0F - u * 0.3F);
+        forward_bias = -0.5F;
       }
 
     } else {
@@ -1382,52 +1403,53 @@ void ElephantRendererBase::render_simplified(
   auto draw_simple_leg = [&](float lateral_sign, float forward_bias,
                              float phase_offset) {
     float const leg_phase =
-        is_fighting ? std::fmod(anim.time / 0.95F + phase_offset, 1.0F)
+        is_fighting ? std::fmod(anim.time / 0.55F + phase_offset, 1.0F)
                     : std::fmod(phase + phase_offset, 1.0F);
     float stride = 0.0F;
     float lift = 0.0F;
 
     if (is_fighting) {
+      // BRUTAL STOMP - simplified LOD version
       bool const is_front = (forward_bias > 0.0F);
-      bool const is_left = (lateral_sign > 0.0F);
-      bool const stomp_is_left = (leg_phase < 0.5F);
-      bool const stomp_leg = is_front && (is_left == stomp_is_left);
-      float const local = (leg_phase < 0.5F) ? (leg_phase * 2.0F)
-                                             : ((leg_phase - 0.5F) * 2.0F);
+      float const local = leg_phase;
 
-      float intensity = 0.55F;
+      float intensity = 0.70F;
       switch (anim.combat_phase) {
       case CombatAnimPhase::WindUp:
-        intensity = 0.65F;
+        intensity = 0.85F;
         break;
       case CombatAnimPhase::Strike:
       case CombatAnimPhase::Impact:
         intensity = 1.0F;
         break;
       case CombatAnimPhase::Recover:
-        intensity = 0.75F;
+        intensity = 0.80F;
         break;
       default:
         break;
       }
 
-      float const stomp_height = d.leg_length * (0.08F + 0.05F * intensity);
-      float const stomp_stride = g.stride_swing * (0.08F + 0.04F * intensity);
+      // High stomp for all legs
+      float const base_stomp = d.leg_length * 0.40F;
+      float const stomp_height = base_stomp * (0.7F + 0.3F * intensity) * (is_front ? 1.0F : 0.75F);
+      float const stomp_stride = g.stride_swing * 0.35F * intensity;
 
-      if (stomp_leg) {
-        if (local < 0.35F) {
-          float const u = local / 0.35F;
-          lift = std::sin(u * k_pi * 0.5F) * stomp_height;
-          stride = stomp_stride * u;
-        } else {
-          float const u = (local - 0.35F) / 0.65F;
-          lift = std::cos(u * k_pi * 0.5F) * stomp_height;
-          stride = stomp_stride * (1.0F - u);
-        }
+      // Quick lift, pause, violent slam, ground
+      if (local < 0.25F) {
+        float const u = local / 0.25F;
+        lift = u * u * stomp_height;
+        stride = stomp_stride * u * 0.5F;
+      } else if (local < 0.35F) {
+        lift = stomp_height;
+        stride = stomp_stride * 0.5F;
+      } else if (local < 0.65F) {
+        float const u = (local - 0.35F) / 0.30F;
+        lift = (1.0F - u * u) * stomp_height;
+        stride = stomp_stride * (0.5F + u * 0.5F);
       } else {
-        float const wobble = std::sin(leg_phase * 2.0F * k_pi);
-        stride = -wobble * stomp_stride * 0.20F;
+        float const u = (local - 0.65F) / 0.35F;
         lift = 0.0F;
+        stride = stomp_stride * (1.0F - u * 0.3F);
       }
 
     } else if (is_moving) {
