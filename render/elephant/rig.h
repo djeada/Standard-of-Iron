@@ -153,6 +153,39 @@ struct ElephantMotionSample {
   float ear_flap = 0.0F;
 };
 
+// Leg indices for the 4-leg gait system
+enum class LegIndex : int { FrontLeft = 0, FrontRight = 1, RearLeft = 2, RearRight = 3 };
+
+// Per-leg state for stance/swing animation
+struct ElephantLegState {
+  QVector3D planted_foot{0.0F, 0.0F, 0.0F};  // World-space foot plant position
+  QVector3D swing_start{0.0F, 0.0F, 0.0F};   // Where swing began
+  QVector3D swing_target{0.0F, 0.0F, 0.0F};  // Where swing will land
+  float swing_progress = 0.0F;                // 0 = just lifted, 1 = just planted
+  bool in_swing = false;                      // true = swinging, false = stance
+};
+
+// Complete gait state for all 4 legs
+struct ElephantGaitState {
+  ElephantLegState legs[4]{};
+  float cycle_phase = 0.0F;         // Overall gait cycle [0,1)
+  float weight_shift_x = 0.0F;      // Lateral weight shift for balance
+  float weight_shift_z = 0.0F;      // Fore-aft weight shift
+  float shoulder_lag = 0.0F;        // Secondary motion: shoulder rotation lag
+  float hip_lag = 0.0F;             // Secondary motion: hip rotation lag
+  bool initialized = false;
+};
+
+// Solved leg pose from IK
+struct ElephantLegPose {
+  QVector3D hip;
+  QVector3D knee;
+  QVector3D ankle;
+  QVector3D foot;
+  float upper_radius;
+  float lower_radius;
+};
+
 auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions;
 auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantVariant;
@@ -168,6 +201,20 @@ auto evaluate_elephant_motion(ElephantProfile &profile,
                               const AnimationInputs &anim)
     -> ElephantMotionSample;
 void apply_howdah_vertical_offset(HowdahAttachmentFrame &frame, float bob);
+
+// Gait system functions
+void update_elephant_gait(ElephantGaitState &state,
+                          const ElephantProfile &profile,
+                          const AnimationInputs &anim,
+                          const QVector3D &body_world_pos,
+                          float body_forward_z);
+
+auto solve_elephant_leg_ik(const QVector3D &hip, const QVector3D &foot_target,
+                           float upper_len, float lower_len,
+                           float lateral_sign) -> ElephantLegPose;
+
+auto evaluate_swing_position(const ElephantLegState &leg,
+                             float lift_height) -> QVector3D;
 
 inline void scale_elephant_dimensions(ElephantDimensions &dims, float scale) {
   dims.body_length *= scale;
