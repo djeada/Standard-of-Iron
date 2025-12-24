@@ -114,6 +114,7 @@
 #include "game/systems/selection_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/systems/victory_service.h"
 #include "game/units/factory.h"
 #include "game/units/troop_config.h"
@@ -1324,9 +1325,13 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
              : QVariantMap();
 }
 
-auto GameEngine::get_unit_production_info(const QString &unit_type) const
+auto GameEngine::get_unit_production_info(const QString &unit_type,
+                                         const QString &nation_id) const
     -> QVariantMap {
-  return ProductionManager::get_unit_production_info(unit_type);
+  return m_production_manager
+             ? m_production_manager->get_unit_production_info(unit_type,
+                                                              nation_id)
+             : QVariantMap();
 }
 
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
@@ -2353,8 +2358,16 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   }
   is_building = e->has_component<Engine::Core::BuildingComponent>();
   if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
-    name =
-        QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));
+    // Try to get the nation-specific display name
+    auto troop_type_opt = Game::Units::spawn_typeToTroopType(u->spawn_type);
+    if (troop_type_opt.has_value()) {
+      auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          u->nation_id, *troop_type_opt);
+      name = QString::fromStdString(profile.display_name);
+    } else {
+      // Fallback to spawn type string for non-troop units
+      name = QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));
+    }
     health = u->health;
     max_health = u->max_health;
     alive = (u->health > 0);
