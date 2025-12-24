@@ -11,6 +11,7 @@
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
@@ -340,7 +341,8 @@ auto ProductionManager::get_selected_builder_production_state() const
   return m;
 }
 
-auto ProductionManager::get_unit_production_info(const QString &unit_type)
+auto ProductionManager::get_unit_production_info(const QString &unit_type,
+                                                 const QString &nation_id) const
     -> QVariantMap {
   QVariantMap info;
   const auto &config = Game::Units::TroopConfig::instance();
@@ -349,6 +351,19 @@ auto ProductionManager::get_unit_production_info(const QString &unit_type)
   info["cost"] = config.getProductionCost(type_str);
   info["build_time"] = static_cast<double>(config.getBuildTime(type_str));
   info["individuals_per_unit"] = config.getIndividualsPerUnit(type_str);
+
+  // Try to get the nation-specific display name
+  auto troop_type_opt = Game::Units::stringToTroopType(type_str);
+  if (troop_type_opt.has_value()) {
+    auto nation_id_enum =
+        Game::Systems::string_to_nation_id(nation_id.toStdString());
+    auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+        nation_id_enum, *troop_type_opt);
+    info["display_name"] = QString::fromStdString(profile.display_name);
+  } else {
+    // Fallback to unit type if not a troop
+    info["display_name"] = unit_type;
+  }
 
   return info;
 }
