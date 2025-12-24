@@ -306,6 +306,9 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   d.foot_radius =
       rand_between(seed, kSaltFootRadius, kFootRadiusMin, kFootRadiusMax);
 
+    // User tuning: feet diameter 1.2x smaller (so radius scales by 1/1.2).
+    d.foot_radius *= (1.0F / 1.2F);
+
   d.tail_length =
       rand_between(seed, kSaltTailLength, kTailLengthMin, kTailLengthMax);
 
@@ -868,8 +871,9 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 body_main = elephant_ctx.model;
     body_main.translate(barrel_center);
-    body_main.scale(d.body_width * 1.05F, d.body_height * 0.95F,
-                    d.body_length * 0.55F);
+    // User tuning: middle torso sphere 1.2x bigger.
+    body_main.scale(d.body_width * 1.05F * 1.2F, d.body_height * 0.95F * 1.2F,
+                    d.body_length * 0.55F * 1.2F);
     QVector3D const body_color =
         skin_gradient(v.skin_color, 0.60F, 0.0F, skin_seed_a);
     out.mesh(get_unit_sphere(), body_main, body_color, nullptr, 1.0F, 6);
@@ -881,8 +885,9 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 chest = elephant_ctx.model;
     chest.translate(chest_center);
-    chest.scale(d.body_width * 1.18F, d.body_height * 1.00F,
-                d.body_length * 0.36F);
+    // User tuning: other torso spheres 1.1x bigger.
+    chest.scale(d.body_width * 1.18F * 1.1F, d.body_height * 1.00F * 1.1F,
+                d.body_length * 0.36F * 1.1F);
     out.mesh(get_unit_sphere(), chest,
              skin_gradient(v.skin_color, 0.70F, 0.15F, skin_seed_a), nullptr,
              1.0F, 6);
@@ -894,8 +899,9 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 rump = elephant_ctx.model;
     rump.translate(rump_center);
-    rump.scale(d.body_width * 1.10F, d.body_height * 0.98F,
-               d.body_length * 0.34F);
+    // User tuning: other torso spheres 1.1x bigger.
+    rump.scale(d.body_width * 1.10F * 1.1F, d.body_height * 0.98F * 1.1F,
+               d.body_length * 0.34F * 1.1F);
     out.mesh(get_unit_sphere(), rump,
              skin_gradient(v.skin_color, 0.55F, -0.20F, skin_seed_b), nullptr,
              1.0F, 6);
