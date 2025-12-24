@@ -238,7 +238,7 @@ RowLayout {
                                 font.pointSize: 8
                                 font.bold: false
                                 elide: Text.ElideRight
-                                width: parent.width - 108
+                                width: parent.width - 108 // icon(32) + bars(60) + spacing(8*2)
                             }
 
                         }
