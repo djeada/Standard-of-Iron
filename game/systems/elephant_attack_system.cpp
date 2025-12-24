@@ -2,10 +2,56 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/spawn_type.h"
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdlib>
 #include <vector>
 
 namespace Game::Systems {
+
+namespace {
+
+struct FootOffset {
+  float x;
+  float z;
+};
+
+constexpr float k_pi = 3.14159265F;
+
+auto pick_stomp_position(Engine::Core::TransformComponent *transform,
+                         Engine::Core::ElephantComponent *elephant_comp)
+    -> FootOffset {
+  float scale =
+      std::max(1.0F, (transform->scale.x + transform->scale.z) * 0.5F);
+  float forward = 0.6F * scale;
+  float side = 0.45F * scale;
+  float const max_offset = elephant_comp->trample_radius * 0.95F;
+  if (max_offset > 0.0F) {
+    forward = std::min(forward, max_offset);
+    side = std::min(side, max_offset);
+  }
+
+  std::array<FootOffset, 4> const offsets = {
+      FootOffset{side, forward},
+      FootOffset{-side, forward},
+      FootOffset{side, -forward},
+      FootOffset{-side, -forward},
+  };
+
+  int const index = std::rand() % static_cast<int>(offsets.size());
+  FootOffset const local = offsets[index];
+
+  float const yaw = transform->rotation.y * (k_pi / 180.0F);
+  float const cos_y = std::cos(yaw);
+  float const sin_y = std::sin(yaw);
+  FootOffset world;
+  world.x = transform->position.x + local.x * cos_y + local.z * sin_y;
+  world.z = transform->position.z - local.x * sin_y + local.z * cos_y;
+  return world;
+}
+
+} // namespace
 
 void ElephantAttackSystem::update(Engine::Core::World *world,
                                   float delta_time) {
@@ -133,6 +179,9 @@ void ElephantAttackSystem::process_trample_damage(
   auto *unit = elephant->get_component<Engine::Core::UnitComponent>();
   auto *transform = elephant->get_component<Engine::Core::TransformComponent>();
   auto *movement = elephant->get_component<Engine::Core::MovementComponent>();
+  auto *attack = elephant->get_component<Engine::Core::AttackComponent>();
+  auto *attack_target =
+      elephant->get_component<Engine::Core::AttackTargetComponent>();
 
   if (elephant_comp == nullptr || unit == nullptr || transform == nullptr ||
       movement == nullptr) {
@@ -143,7 +192,35 @@ void ElephantAttackSystem::process_trample_damage(
   bool const is_moving = (std::abs(movement->vx) > k_movement_threshold ||
                           std::abs(movement->vz) > k_movement_threshold);
 
-  if (!is_moving) {
+  bool has_close_target = false;
+  if (!is_moving && attack_target != nullptr && attack_target->target_id != 0) {
+    auto *target = world->get_entity(attack_target->target_id);
+    if (target != nullptr) {
+      auto *target_transform =
+          target->get_component<Engine::Core::TransformComponent>();
+      if (target_transform != nullptr) {
+        float const dx = target_transform->position.x - transform->position.x;
+        float const dz = target_transform->position.z - transform->position.z;
+        float const dist = std::sqrt(dx * dx + dz * dz);
+        float const engage_range =
+            (attack != nullptr)
+                ? std::max(elephant_comp->trample_radius, attack->melee_range)
+                : elephant_comp->trample_radius;
+        has_close_target = (dist <= engage_range);
+      }
+    }
+  }
+
+  if (!is_moving && !has_close_target) {
+    elephant_comp->trample_damage_accumulator = 0.0F;
+    return;
+  }
+
+  elephant_comp->trample_damage_accumulator +=
+      static_cast<float>(elephant_comp->trample_damage) * delta_time;
+  int const damage =
+      static_cast<int>(elephant_comp->trample_damage_accumulator);
+  if (damage <= 0) {
     return;
   }
 
@@ -154,6 +231,7 @@ void ElephantAttackSystem::process_trample_damage(
         elephant->add_component<Engine::Core::ElephantStompImpactComponent>();
   }
 
+  bool hit_any = false;
   auto entities = world->get_entities_with<Engine::Core::UnitComponent>();
   for (auto *other_entity : entities) {
     if (other_entity == elephant) {
@@ -183,20 +261,28 @@ void ElephantAttackSystem::process_trample_damage(
 
     if (dist <= elephant_comp->trample_radius) {
       int const old_health = other_unit->health;
-      other_unit->health -= static_cast<int>(
-          static_cast<float>(elephant_comp->trample_damage) * delta_time);
+      other_unit->health -= damage;
       if (other_unit->health < 0) {
         other_unit->health = 0;
       }
 
       if (old_health > 0 && other_unit->health < old_health) {
+        FootOffset const stomp_pos =
+            pick_stomp_position(transform, elephant_comp);
         Engine::Core::ElephantStompImpactComponent::ImpactRecord impact;
-        impact.x = other_transform->position.x;
-        impact.z = other_transform->position.z;
+        impact.x = stomp_pos.x;
+        impact.z = stomp_pos.z;
         impact.time = 0.0F;
         stomp_impact->impacts.push_back(impact);
+        hit_any = true;
       }
     }
+  }
+
+  if (hit_any) {
+    elephant_comp->trample_damage_accumulator -= damage;
+  } else {
+    elephant_comp->trample_damage_accumulator = 0.0F;
   }
 }
 
