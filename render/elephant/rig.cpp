@@ -840,6 +840,9 @@ void ElephantRendererBase::render_full(
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
+
+  bool const is_fighting =
+      anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
   float const trunk_swing = motion.trunk_swing;
   float const ear_flap = motion.ear_flap;
 
@@ -1088,6 +1091,9 @@ void ElephantRendererBase::render_full(
   // Lift height during swing
   float const lift_height = d.leg_length * 0.18F;
 
+  bool const is_fighting =
+      anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
+
   auto draw_leg_phase = [&](int leg_index) {
     bool const is_front = (leg_index < 2);
     bool const is_left = (leg_index == 0 || leg_index == 2);
@@ -1106,32 +1112,76 @@ void ElephantRendererBase::render_full(
       case 3: phase_offset = 0.25F; break;  // Rear-Right
     }
 
-    // Compute this leg's phase in cycle [0, 1)
-    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
-
-    // Smooth sinusoidal motion for foot position
-    // leg_phase 0.0 = foot at front, 0.5 = foot at back, 1.0 = foot at front again
-    float const stride_angle = leg_phase * 2.0F * k_pi;
-    float const stride_offset = std::sin(stride_angle) * full_stride * 0.5F;
-
-    // Lift happens only during forward swing (when foot is moving forward, i.e., stride increasing)
-    // cos(stride_angle) > 0 means we're in first half of cycle (moving forward)
-    float const forward_velocity = std::cos(stride_angle);
+    float stride_offset = 0.0F;
     float lift = 0.0F;
-    if (is_moving && forward_velocity > 0.0F) {
-      // Smooth lift arc during forward swing
-      // Peak lift at phase 0.25 (middle of forward swing)
-      float const swing_t = leg_phase * 4.0F;  // 0 to 1 during first quarter
-      if (leg_phase < 0.25F) {
-        // Rising: smooth ease
-        float const t = leg_phase / 0.25F;
-        lift = std::sin(t * k_pi * 0.5F) * lift_height;
-      } else if (leg_phase < 0.50F) {
-        // Falling: smooth ease
-        float const t = (leg_phase - 0.25F) / 0.25F;
-        lift = std::cos(t * k_pi * 0.5F) * lift_height;
+    float forward_bias = 0.0F;
+
+    if (is_fighting) {
+      // Combat: stomp/brace cycle (stationary)
+      float const stomp_period = 0.95F;
+      float const t = std::fmod(anim.time / stomp_period + phase_offset, 1.0F);
+
+      float intensity = 0.55F;
+      switch (anim.combat_phase) {
+      case CombatAnimPhase::WindUp:
+        intensity = 0.65F;
+        break;
+      case CombatAnimPhase::Strike:
+      case CombatAnimPhase::Impact:
+        intensity = 1.0F;
+        break;
+      case CombatAnimPhase::Recover:
+        intensity = 0.75F;
+        break;
+      default:
+        break;
       }
-      // else: stance phase, foot on ground (lift = 0)
+
+      bool const stomp_is_left = (t < 0.5F);
+      bool const stomp_leg = is_front && (is_left == stomp_is_left);
+      float const local = (t < 0.5F) ? (t * 2.0F) : ((t - 0.5F) * 2.0F);
+
+      float const stomp_height = d.leg_length * (0.10F + 0.06F * intensity);
+      float const stomp_stride = full_stride * (0.10F + 0.05F * intensity);
+
+      if (stomp_leg) {
+        if (local < 0.35F) {
+          float const u = local / 0.35F;
+          lift = std::sin(u * k_pi * 0.5F) * stomp_height;
+          stride_offset = stomp_stride * u;
+        } else {
+          float const u = (local - 0.35F) / 0.65F;
+          lift = std::cos(u * k_pi * 0.5F) * stomp_height;
+          stride_offset = stomp_stride * (1.0F - u);
+        }
+        forward_bias = (local < 0.5F) ? 1.0F : -1.0F;
+      } else {
+        float const wobble =
+            std::sin((t + (is_left ? 0.0F : 0.5F)) * 2.0F * k_pi);
+        stride_offset =
+            -wobble * stomp_stride * (is_front ? 0.20F : 0.15F);
+        forward_bias = wobble;
+      }
+
+    } else {
+      // Walk gait
+      float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
+
+      float const stride_angle = leg_phase * 2.0F * k_pi;
+      stride_offset = std::sin(stride_angle) * full_stride * 0.5F;
+
+      float const forward_velocity = std::cos(stride_angle);
+      forward_bias = forward_velocity;
+
+      if (is_moving && forward_velocity > 0.0F) {
+        if (leg_phase < 0.25F) {
+          float const u = leg_phase / 0.25F;
+          lift = std::sin(u * k_pi * 0.5F) * lift_height;
+        } else if (leg_phase < 0.50F) {
+          float const u = (leg_phase - 0.25F) / 0.25F;
+          lift = std::cos(u * k_pi * 0.5F) * lift_height;
+        }
+      }
     }
 
     // Hip position (wider lateral stance)
@@ -1145,7 +1195,7 @@ void ElephantRendererBase::render_full(
     QVector3D const foot_target(
         hip.x(),
         lift,  // Ground level + lift
-        hip.z() + (is_moving ? stride_offset : 0.0F));
+      hip.z() + ((is_moving || is_fighting) ? stride_offset : 0.0F));
 
     // Solve IK to find knee position
     ElephantLegPose pose = solve_elephant_leg_ik(hip, foot_target, upper_len, lower_len, lateral_sign);
@@ -1156,7 +1206,7 @@ void ElephantRendererBase::render_full(
     // Draw upper leg (hip to knee)
     draw_cylinder(out, elephant_ctx.model, pose.hip, pose.knee, upper_radius,
                   skin_gradient(v.skin_color, 0.45F,
-                                forward_velocity > 0.0F ? 0.1F : -0.1F,
+                                forward_bias > 0.0F ? 0.1F : -0.1F,
                                 skin_seed_a),
                   1.0F, 6);
 
@@ -1331,11 +1381,56 @@ void ElephantRendererBase::render_simplified(
 
   auto draw_simple_leg = [&](float lateral_sign, float forward_bias,
                              float phase_offset) {
-    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
+    float const leg_phase =
+        is_fighting ? std::fmod(anim.time / 0.95F + phase_offset, 1.0F)
+                    : std::fmod(phase + phase_offset, 1.0F);
     float stride = 0.0F;
     float lift = 0.0F;
 
-    if (is_moving) {
+    if (is_fighting) {
+      bool const is_front = (forward_bias > 0.0F);
+      bool const is_left = (lateral_sign > 0.0F);
+      bool const stomp_is_left = (leg_phase < 0.5F);
+      bool const stomp_leg = is_front && (is_left == stomp_is_left);
+      float const local = (leg_phase < 0.5F) ? (leg_phase * 2.0F)
+                                             : ((leg_phase - 0.5F) * 2.0F);
+
+      float intensity = 0.55F;
+      switch (anim.combat_phase) {
+      case CombatAnimPhase::WindUp:
+        intensity = 0.65F;
+        break;
+      case CombatAnimPhase::Strike:
+      case CombatAnimPhase::Impact:
+        intensity = 1.0F;
+        break;
+      case CombatAnimPhase::Recover:
+        intensity = 0.75F;
+        break;
+      default:
+        break;
+      }
+
+      float const stomp_height = d.leg_length * (0.08F + 0.05F * intensity);
+      float const stomp_stride = g.stride_swing * (0.08F + 0.04F * intensity);
+
+      if (stomp_leg) {
+        if (local < 0.35F) {
+          float const u = local / 0.35F;
+          lift = std::sin(u * k_pi * 0.5F) * stomp_height;
+          stride = stomp_stride * u;
+        } else {
+          float const u = (local - 0.35F) / 0.65F;
+          lift = std::cos(u * k_pi * 0.5F) * stomp_height;
+          stride = stomp_stride * (1.0F - u);
+        }
+      } else {
+        float const wobble = std::sin(leg_phase * 2.0F * k_pi);
+        stride = -wobble * stomp_stride * 0.20F;
+        lift = 0.0F;
+      }
+
+    } else if (is_moving) {
       float const angle = leg_phase * 2.0F * k_pi;
       stride = std::sin(angle) * g.stride_swing * 0.6F;
       float const lift_raw = std::sin(angle);
