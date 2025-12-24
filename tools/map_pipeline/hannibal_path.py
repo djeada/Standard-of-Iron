@@ -1,5 +1,29 @@
 #!/usr/bin/env python3
-"""Generate hannibal_path.json from provinces.json city UVs."""
+"""Generate hannibal_path.json from provinces.json city UVs.
+
+This script generates 8 progressive paths for Hannibal's campaign, one for each
+mission in the Second Punic War campaign. Each path builds upon the previous,
+with the final path being the longest and covering all previous waypoints.
+
+The paths are designed to align with the campaign mission structure:
+- Mission 0: Crossing the Rhône
+- Mission 1: Battle of Ticino  
+- Mission 2: Battle of Trebia
+- Mission 3: Battle of Trasimene
+- Mission 4: Battle of Cannae
+- Mission 5: Campania Campaign
+- Mission 6: Crossing the Alps (flashback)
+- Mission 7: Battle of Zama (final confrontation)
+
+Usage:
+    python3 tools/map_pipeline/hannibal_path.py
+
+Requires:
+    - assets/campaign_map/provinces.json with city UV data
+
+Outputs:
+    - assets/campaign_map/hannibal_path.json
+"""
 
 from __future__ import annotations
 
