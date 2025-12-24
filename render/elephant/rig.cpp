@@ -1091,9 +1091,6 @@ void ElephantRendererBase::render_full(
   // Lift height during swing
   float const lift_height = d.leg_length * 0.18F;
 
-  bool const is_fighting =
-      anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
-
   auto draw_leg_phase = [&](int leg_index) {
     bool const is_front = (leg_index < 2);
     bool const is_left = (leg_index == 0 || leg_index == 2);
@@ -1336,6 +1333,9 @@ void ElephantRendererBase::render_simplified(
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
+
+  bool const is_fighting =
+      anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
 
   HowdahAttachmentFrame howdah =
       shared_howdah ? *shared_howdah : compute_howdah_frame(profile);
