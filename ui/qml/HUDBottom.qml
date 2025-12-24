@@ -46,6 +46,16 @@ RowLayout {
         return "👤";
     }
 
+    function unitTypeKeyFromDisplayName(displayName) {
+        if (!displayName)
+            return "";
+
+        var s = displayName.toString().trim().toLowerCase();
+        s = s.replace(/[^a-z0-9]+/g, "_");
+        s = s.replace(/^_+|_+$/g, "");
+        return s;
+    }
+
     function commandIcon(filename) {
         if (typeof StyleGuide === "undefined" || !filename)
             return "";
@@ -115,7 +125,8 @@ RowLayout {
                         id: selectedUnitItem
 
                         property bool isHovered: false
-                        property string unitType: (typeof name !== "undefined") ? name : ""
+                        property string unitDisplayName: (typeof name !== "undefined") ? name : ""
+                        property string unitTypeKey: bottomRoot.unitTypeKeyFromDisplayName(unitDisplayName)
                         property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
 
                         width: selectedUnitsList.width - 10
@@ -161,16 +172,16 @@ RowLayout {
                                     width: 24
                                     height: 24
                                     fillMode: Image.PreserveAspectFit
-                                    source: bottomRoot.unitIconSource(selectedUnitItem.unitType, selectedUnitItem.nationKey)
-                                    visible: source !== ""
+                                    source: bottomRoot.unitIconSource(selectedUnitItem.unitTypeKey, selectedUnitItem.nationKey)
+                                    visible: source !== "" && status === Image.Ready
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: bottomRoot.unitIconEmoji(selectedUnitItem.unitType)
+                                    text: bottomRoot.unitIconEmoji(selectedUnitItem.unitTypeKey)
                                     color: "#ecf0f1"
                                     font.pixelSize: 16
-                                    visible: selectedUnitIcon.source === ""
+                                    visible: selectedUnitIcon.source === "" || selectedUnitIcon.status === Image.Error
                                 }
 
                             }
@@ -233,7 +244,7 @@ RowLayout {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitType)
+                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitDisplayName)
                                 color: "#ecf0f1"
                                 font.pointSize: 8
                                 font.bold: false
