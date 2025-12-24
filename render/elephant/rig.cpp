@@ -1155,7 +1155,8 @@ void ElephantRendererBase::render_full(
 
     // Draw upper leg (hip to knee)
     draw_cylinder(out, elephant_ctx.model, pose.hip, pose.knee, upper_radius,
-                  skin_gradient(v.skin_color, 0.45F, forward_bias > 0 ? 0.1F : -0.1F,
+                  skin_gradient(v.skin_color, 0.45F,
+                                forward_velocity > 0.0F ? 0.1F : -0.1F,
                                 skin_seed_a),
                   1.0F, 6);
 
