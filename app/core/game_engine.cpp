@@ -1325,13 +1325,11 @@ auto GameEngine::get_selected_production_state() const -> QVariantMap {
              : QVariantMap();
 }
 
-auto GameEngine::get_unit_production_info(const QString &unit_type,
-                                         const QString &nation_id) const
-    -> QVariantMap {
-  return m_production_manager
-             ? m_production_manager->get_unit_production_info(unit_type,
-                                                              nation_id)
-             : QVariantMap();
+auto GameEngine::get_unit_production_info(
+    const QString &unit_type, const QString &nation_id) const -> QVariantMap {
+  return m_production_manager ? m_production_manager->get_unit_production_info(
+                                    unit_type, nation_id)
+                              : QVariantMap();
 }
 
 auto GameEngine::get_selected_builder_production_state() const -> QVariantMap {
@@ -2145,7 +2143,6 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
 
   const QJsonObject meta = m_saveLoadService->get_last_metadata();
 
-  // Restore mission context (campaign vs skirmish)
   if (m_campaign_manager && meta.contains("mission_mode")) {
     Game::Mission::MissionContext mission_context;
     mission_context.mode = meta["mission_mode"].toString();
@@ -2221,7 +2218,6 @@ auto GameEngine::save_to_slot(const QString &slot,
       *m_world, m_camera.get(), m_level, runtime_snap);
   meta["title"] = title;
 
-  // Add mission context (campaign vs skirmish)
   if (m_campaign_manager) {
     const auto &mission_context = m_campaign_manager->current_mission_context();
     meta["mission_mode"] = mission_context.mode;
@@ -2358,15 +2354,16 @@ auto GameEngine::get_unit_info(Engine::Core::EntityID id, QString &name,
   }
   is_building = e->has_component<Engine::Core::BuildingComponent>();
   if (auto *u = e->get_component<Engine::Core::UnitComponent>()) {
-    // Try to get the nation-specific display name
+
     auto troop_type_opt = Game::Units::spawn_typeToTroopType(u->spawn_type);
     if (troop_type_opt.has_value()) {
       auto profile = Game::Systems::TroopProfileService::instance().get_profile(
           u->nation_id, *troop_type_opt);
       name = QString::fromStdString(profile.display_name);
     } else {
-      // Fallback to spawn type string for non-troop units
-      name = QString::fromStdString(Game::Units::spawn_typeToString(u->spawn_type));
+
+      name = QString::fromStdString(
+          Game::Units::spawn_typeToString(u->spawn_type));
     }
     health = u->health;
     max_health = u->max_health;

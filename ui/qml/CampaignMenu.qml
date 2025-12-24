@@ -256,7 +256,7 @@ Item {
         }]
         property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
         property int labelRefresh: 0
-        property int currentMissionIndex: 7 // Default to last mission (full path)
+        property int currentMissionIndex: 7
 
         function loadProvinces() {
             loadProvincesFrom(0);
@@ -505,7 +505,6 @@ Item {
                         }
                     }
 
-                    // Hannibal icon at the end of the current path
                     Item {
                         id: hannibalIcon
 
@@ -513,13 +512,12 @@ Item {
                         property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
                         property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
                         property int _iconIndex: 0
-                        
+
                         visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0
                         z: 10
                         x: _pos.x
                         y: _pos.y
 
-                        // Frame background
                         Rectangle {
                             width: 44
                             height: 44
@@ -531,7 +529,6 @@ Item {
                             border.width: 2
                             opacity: 0.95
 
-                            // Inner glow
                             Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: 2
@@ -540,9 +537,9 @@ Item {
                                 border.color: "#6b4423"
                                 border.width: 1
                             }
+
                         }
 
-                        // Hannibal portrait
                         Image {
                             source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
                             width: 36
@@ -562,7 +559,6 @@ Item {
                             }
                         }
 
-                        // Animated pulse effect
                         Rectangle {
                             width: 50
                             height: 50
@@ -577,41 +573,45 @@ Item {
                             SequentialAnimation on opacity {
                                 loops: Animation.Infinite
                                 running: hannibalIcon.visible
-                                
+
                                 NumberAnimation {
                                     from: 0.4
-                                    to: 0.0
+                                    to: 0
                                     duration: 1500
                                     easing.type: Easing.OutCubic
                                 }
-                                
+
                                 PauseAnimation {
                                     duration: 500
                                 }
+
                             }
 
                             SequentialAnimation on scale {
                                 loops: Animation.Infinite
                                 running: hannibalIcon.visible
-                                
+
                                 NumberAnimation {
-                                    from: 1.0
+                                    from: 1
                                     to: 1.3
                                     duration: 1500
                                     easing.type: Easing.OutCubic
                                 }
-                                
+
                                 NumberAnimation {
                                     from: 1.3
-                                    to: 1.0
+                                    to: 1
                                     duration: 0
                                 }
-                                
+
                                 PauseAnimation {
                                     duration: 500
                                 }
+
                             }
+
                         }
+
                     }
 
                     Repeater {
@@ -808,11 +808,10 @@ Item {
 
                                 }
                                 onContainsMouseChanged: {
-                                    if (containsMouse && modelData.order_index !== undefined) {
+                                    if (containsMouse && modelData.order_index !== undefined)
                                         missionDetailPanel.currentMissionIndex = modelData.order_index;
-                                    } else if (!containsMouse) {
-                                        missionDetailPanel.currentMissionIndex = 7; // Reset to full path
-                                    }
+                                    else if (!containsMouse)
+                                        missionDetailPanel.currentMissionIndex = 7;
                                 }
                             }
 

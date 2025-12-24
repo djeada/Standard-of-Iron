@@ -188,7 +188,6 @@ public:
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // Warm parchment-like background color for traditional map aesthetic
     glClearColor(0.93F, 0.89F, 0.82F, 1.0F);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -209,11 +208,10 @@ public:
     draw_line_layer(m_coastLayer, mvp, 0.004F);
     draw_line_layer(m_riverLayer, mvp, 0.003F);
     draw_progressive_path_layers(m_pathLayer, mvp, 0.006F);
-    
-    // Throttle updates to 60 FPS when hovering for animation
+
     if (!m_hover_province_id.isEmpty()) {
       qint64 now = QDateTime::currentMSecsSinceEpoch();
-      if (now - m_last_update_time >= 16) { // ~60 FPS (16.67ms per frame)
+      if (now - m_last_update_time >= 16) {
         m_last_update_time = now;
         update();
       }
@@ -240,14 +238,13 @@ public:
     m_orbit_distance = view->orbitDistance();
     m_pan_u = view->panU();
     m_pan_v = view->panV();
-    
-    // Track hover state changes for animation
+
     QString new_hover_id = view->hoverProvinceId();
     if (m_hover_province_id != new_hover_id) {
       m_hover_start_time = QDateTime::currentMSecsSinceEpoch();
       m_hover_province_id = new_hover_id;
     }
-    
+
     m_current_mission = view->currentMission();
 
     if (m_province_state_version != view->provinceStateVersion() &&
@@ -287,9 +284,9 @@ private:
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
   int m_province_state_version = 0;
-  int m_current_mission = 7; // Default to last mission
-  qint64 m_hover_start_time = 0; // Track when hover started for pulse animation
-  qint64 m_last_update_time = 0; // Track last update for throttling
+  int m_current_mission = 7;
+  qint64 m_hover_start_time = 0;
+  qint64 m_last_update_time = 0;
 
   auto ensure_initialized() -> bool {
     if (m_initialized) {
@@ -320,21 +317,20 @@ private:
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
-    // Coastlines: darker, more prominent for traditional map style
     init_line_layer(m_coastLayer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
                     QVector4D(0.15F, 0.13F, 0.11F, 1.0F), 2.0F);
-    // Rivers: subtle blue-grey, medium width
+
     init_line_layer(m_riverLayer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                     QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
-    // Hannibal's path: vibrant red for visibility
+
     init_line_layer(m_pathLayer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                     QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
     init_province_layer(m_provinceLayer,
                         QStringLiteral(":/assets/campaign_map/provinces.json"));
-    // Province borders: thinner, lighter for subtle separation
+
     init_borders_layer(m_provinceBorderLayer,
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
                        QVector4D(0.25F, 0.22F, 0.20F, 0.65F), 1.2F);
@@ -786,48 +782,46 @@ void main() {
       return;
     }
 
-    const int max_mission = qBound(0, m_current_mission, static_cast<int>(layer.spans.size()) - 1);
-    
+    const int max_mission =
+        qBound(0, m_current_mission, static_cast<int>(layer.spans.size()) - 1);
+
     m_lineProgram.bind();
     m_lineProgram.setUniformValue("u_mvp", mvp);
     m_lineProgram.setUniformValue("u_z", z_offset);
 
     glBindVertexArray(layer.vao);
-    
-    // Draw all paths up to and including the current mission
-    // Previous paths are drawn with dimmed color to show progression
+
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.spans.size())) {
         break;
       }
-      
+
       const auto &span = layer.spans[static_cast<size_t>(i)];
-      
-      // Color and width based on whether this is the current mission
+
       QVector4D color;
       float width;
-      
+
       if (i == max_mission) {
-        // Current mission path: bright red with glow
+
         color = QVector4D(0.95F, 0.25F, 0.15F, 1.0F);
         width = 3.5F;
       } else if (i == max_mission - 1) {
-        // Previous mission: medium brightness
+
         color = QVector4D(0.75F, 0.22F, 0.14F, 0.85F);
         width = 2.8F;
       } else {
-        // Older missions: dimmed
+
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        color = QVector4D(0.55F * age_factor, 0.18F * age_factor, 
-                         0.12F * age_factor, 0.65F * age_factor);
+        color = QVector4D(0.55F * age_factor, 0.18F * age_factor,
+                          0.12F * age_factor, 0.65F * age_factor);
         width = 2.2F;
       }
-      
+
       glLineWidth(width);
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
-    
+
     glBindVertexArray(0);
     m_lineProgram.release();
   }
@@ -865,18 +859,18 @@ void main() {
       }
       QVector4D color = span.color;
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
-        // Animated pulse effect on hover
-        qint64 elapsed = QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
-        float pulse_cycle = 1200.0F; // 1.2 second cycle
-        float pulse = 0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
-        
-        // Subtle brightness increase with pulse
+
+        qint64 elapsed =
+            QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
+        float pulse_cycle = 1200.0F;
+        float pulse =
+            0.5F + 0.5F * std::sin(elapsed * 2.0F * M_PI / pulse_cycle);
+
         float brightness_boost = 0.3F + 0.15F * pulse;
-        color = QVector4D(
-            qMin(1.0F, color.x() + brightness_boost), 
-            qMin(1.0F, color.y() + brightness_boost),
-            qMin(1.0F, color.z() + brightness_boost), 
-            qMin(1.0F, color.w() + 0.2F));
+        color = QVector4D(qMin(1.0F, color.x() + brightness_boost),
+                          qMin(1.0F, color.y() + brightness_boost),
+                          qMin(1.0F, color.z() + brightness_boost),
+                          qMin(1.0F, color.w() + 0.2F));
       }
       m_lineProgram.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
@@ -1347,16 +1341,16 @@ void CampaignMapView::load_hannibal_paths() {
     const QJsonArray line = line_val.toArray();
     std::vector<QVector2D> path;
     path.reserve(static_cast<size_t>(line.size()));
-    
+
     for (const auto &pt_val : line) {
       const QJsonArray pt = pt_val.toArray();
       if (pt.size() < 2) {
         continue;
       }
       path.emplace_back(static_cast<float>(pt.at(0).toDouble()),
-                       static_cast<float>(pt.at(1).toDouble()));
+                        static_cast<float>(pt.at(1).toDouble()));
     }
-    
+
     if (!path.empty()) {
       m_hannibal_paths.push_back(std::move(path));
     }
@@ -1365,20 +1359,19 @@ void CampaignMapView::load_hannibal_paths() {
 
 QPointF CampaignMapView::hannibalIconPosition() {
   load_hannibal_paths();
-  
+
   if (m_hannibal_paths.empty()) {
     return {};
   }
 
-  const int mission_idx = qBound(0, m_current_mission, 
+  const int mission_idx = qBound(0, m_current_mission,
                                  static_cast<int>(m_hannibal_paths.size()) - 1);
   const auto &path = m_hannibal_paths[static_cast<size_t>(mission_idx)];
-  
+
   if (path.empty()) {
     return {};
   }
 
-  // Get the last point of the current mission path
   const QVector2D &endpoint = path.back();
   return screenPosForUv(endpoint.x(), endpoint.y());
 }

@@ -879,7 +879,6 @@ void CommandService::process_path_results(Engine::Core::World &world) {
         Point const current_grid = world_to_grid(member_transform->position.x,
                                                  member_transform->position.z);
 
-        // Check if unit is currently on an invalid cell (pushed there during combat)
         bool const current_cell_invalid =
             request_info.unit_radius <= kUnitRadiusThreshold
                 ? !s_pathfinder->is_walkable(current_grid.x, current_grid.y)
@@ -887,14 +886,14 @@ void CommandService::process_path_results(Engine::Core::World &world) {
                       current_grid.x, current_grid.y, request_info.unit_radius);
 
         if (current_cell_invalid) {
-          // Unit is on invalid cell - find nearest walkable point and move there
+
           constexpr int kNearestPointSearchRadius = 5;
           Point const nearest = Pathfinding::find_nearest_walkable_point(
               current_grid, kNearestPointSearchRadius, *s_pathfinder,
               request_info.unit_radius);
 
           if (!(nearest == current_grid)) {
-            // Found a valid nearby cell - teleport with jitter
+
             QVector3D safe_pos = grid_to_world(nearest);
 
             thread_local std::random_device rd;
@@ -908,7 +907,7 @@ void CommandService::process_path_results(Engine::Core::World &world) {
             member_transform->position.x = safe_pos.x() + jitter_x;
             member_transform->position.z = safe_pos.z() + jitter_z;
           } else {
-            // No walkable cell found nearby - apply random jitter as last resort
+
             thread_local std::random_device rd;
             thread_local std::mt19937 gen(rd());
             std::uniform_real_distribution<float> dist(-kJitterDistance,
@@ -925,7 +924,6 @@ void CommandService::process_path_results(Engine::Core::World &world) {
           return;
         }
 
-        // Fallback: all surrounding cells invalid (completely trapped)
         if (are_all_surrounding_cells_invalid(current_grid, *s_pathfinder,
                                               request_info.unit_radius)) {
 
