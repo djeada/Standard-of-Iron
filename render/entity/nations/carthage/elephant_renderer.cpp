@@ -91,7 +91,7 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
             seed, fabric_base, metal_base);
 
         AnimationInputs anim;
-        anim.time = 0.0F;
+        anim.time = p.animation_time;
         anim.is_moving = false;
 
         if (p.entity != nullptr) {
