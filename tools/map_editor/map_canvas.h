@@ -7,9 +7,6 @@
 
 namespace MapEditor {
 
-/**
- * @brief Canvas widget for rendering and editing the map
- */
 class MapCanvas : public QWidget {
   Q_OBJECT
 
@@ -35,11 +32,9 @@ protected:
   void resizeEvent(QResizeEvent *event) override;
 
 private:
-  // Coordinate conversion
   [[nodiscard]] QPointF mapToGrid(const QPoint &widgetPos) const;
   [[nodiscard]] QPoint gridToWidget(float gridX, float gridZ) const;
 
-  // Drawing helpers
   void drawGrid(QPainter &painter);
   void drawTerrainElements(QPainter &painter);
   void drawFirecamps(QPainter &painter);
@@ -49,15 +44,13 @@ private:
   void drawElement(QPainter &painter, const QString &type, const QPoint &pos,
                    int playerId = 0);
 
-  // Hit testing
   struct HitResult {
-    int elementType = -1; // 0=terrain, 1=firecamp, 2=linear, 3=structure
+    int elementType = -1;
     int index = -1;
-    int endpoint = -1; // For linear elements: -1=line, 0=start, 1=end
+    int endpoint = -1;
   };
   [[nodiscard]] HitResult hitTest(const QPoint &pos) const;
 
-  // Element placement
   void placeElement(const QPointF &gridPos);
   void startLinearElement(const QPointF &gridPos);
   void finishLinearElement(const QPointF &gridPos);
@@ -66,31 +59,27 @@ private:
   MapData *m_mapData = nullptr;
   ToolType m_currentTool = ToolType::Select;
 
-  // View state
   float m_zoom = 1.0F;
   QPointF m_panOffset{0, 0};
 
-  // Interaction state
   bool m_isPanning = false;
   QPoint m_lastMousePos;
   bool m_isPlacingLinear = false;
   QPointF m_linearStart;
 
-  // Selection state
   int m_selectedType = -1;
   int m_selectedIndex = -1;
   bool m_isDragging = false;
-  int m_draggedEndpoint = -1; // -1=none/whole, 0=start, 1=end (for linear elements)
+  int m_draggedEndpoint = -1;
 
-  // Current structure placement player
   int m_currentPlayerId = 0;
 
-  static constexpr int GRID_CELL_SIZE = 8;   // Pixels per grid unit at zoom 1.0
-  static constexpr int ICON_SIZE = 16;       // Fixed icon size for all elements
-  static constexpr float HIT_RADIUS = 5.0F;  // Fixed hit radius for point elements
-  static constexpr float ENDPOINT_HIT_RADIUS = 3.0F; // Hit radius for linear element endpoints
-  static constexpr int MIN_PLAYER_ID = 0;    // Neutral
-  static constexpr int MAX_PLAYER_ID = 4;    // Maximum player ID
+  static constexpr int GRID_CELL_SIZE = 8;
+  static constexpr int ICON_SIZE = 16;
+  static constexpr float HIT_RADIUS = 5.0F;
+  static constexpr float ENDPOINT_HIT_RADIUS = 3.0F;
+  static constexpr int MIN_PLAYER_ID = 0;
+  static constexpr int MAX_PLAYER_ID = 4;
   static constexpr int DEFAULT_MAX_POPULATION = 150;
   static inline const QString DEFAULT_NATION = "roman_republic";
 };

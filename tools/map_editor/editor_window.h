@@ -16,7 +16,6 @@ public:
   explicit EditorWindow(QWidget *parent = nullptr);
   ~EditorWindow() override;
 
-  // Public method to load a file (for command-line support)
   bool loadFile(const QString &filePath);
 
 private slots:

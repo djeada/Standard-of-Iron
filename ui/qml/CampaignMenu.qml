@@ -500,7 +500,9 @@ Item {
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                             var nextDistance = missionDetailPanel.mapOrbitDistance * step;
-                            missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(1.2, nextDistance));
+                            if (campaignMapLoader.item)
+                                missionDetailPanel.mapOrbitDistance = Math.min(campaignMapLoader.item.maxOrbitDistance, Math.max(campaignMapLoader.item.minOrbitDistance, nextDistance));
+
                             wheel.accepted = true;
                         }
                     }
