@@ -4,6 +4,8 @@
 
 Standard of Iron delivers a complete game engine stack—rendering, audio, AI, and gameplay—purpose-built for large-scale tactical battles between Rome and Carthage. The project supports persistent campaigns with full save/load functionality, multiple playable factions with distinct unit rosters, and deep troop customization through data-driven configuration. Written in C++20, it uses OpenGL 3.3 for rendering and Qt 6 for the interface layer.
 
+-> Main focus: army managment and tactical strategy
+
 ---
 
 ## Engine Systems
