@@ -55,7 +55,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   std::string building_to_construct;
-  
+
   int catapult_count = 0;
   for (const auto &entity : snapshot.friendly_units) {
     if (entity.spawn_type == Game::Units::SpawnType::Catapult) {
@@ -67,7 +67,8 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     building_to_construct = BUILDING_TYPE_HOME;
   } else if (context.defense_tower_count < MIN_DEFENSE_TOWERS) {
     building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
-  } else if (context.home_count < MAX_HOMES && context.defense_tower_count < MAX_DEFENSE_TOWERS) {
+  } else if (context.home_count < MAX_HOMES &&
+             context.defense_tower_count < MAX_DEFENSE_TOWERS) {
     int const target_defense_towers = (context.home_count + 1) / 2;
     if (context.defense_tower_count < target_defense_towers) {
       building_to_construct = BUILDING_TYPE_DEFENSE_TOWER;
@@ -92,11 +93,11 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (context.primary_barracks != 0) {
     float angle = m_construction_counter * 0.8F;
     float radius = 15.0F + (m_construction_counter % 3) * 5.0F;
-    
+
     if (building_to_construct == BUILDING_TYPE_DEFENSE_TOWER) {
       radius = std::min(radius, DEFENSE_TOWER_CLOSE_RADIUS);
     }
-    
+
     construction_x += radius * std::cos(angle);
     construction_z += radius * std::sin(angle);
   }

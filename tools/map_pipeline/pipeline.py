@@ -101,7 +101,7 @@ def ensure_dataset(dataset: str, work_dir: Path) -> Path:
                     out.write(resp.read())
                 last_error = None
                 break
-            except Exception as exc:  # noqa: BLE001
+            except Exception as exc:
                 last_error = exc
                 logging.warning("  download failed: %s", exc)
         if last_error:
@@ -445,6 +445,6 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         sys.stderr.write(f"Error: {exc}\n")
         sys.exit(1)

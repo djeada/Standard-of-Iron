@@ -12,7 +12,6 @@ MapCanvas::MapCanvas(QWidget *parent) : QWidget(parent) {
   setFocusPolicy(Qt::StrongFocus);
   setMinimumSize(400, 400);
 
-  // Set background
   setAutoFillBackground(true);
   QPalette pal = palette();
   pal.setColor(QPalette::Window, QColor(40, 50, 60));
@@ -42,24 +41,23 @@ void MapCanvas::clearTool() {
 }
 
 QPointF MapCanvas::mapToGrid(const QPoint &widgetPos) const {
-  float x =
-      (widgetPos.x() - m_panOffset.x()) / (GRID_CELL_SIZE * m_zoom);
-  float z =
-      (widgetPos.y() - m_panOffset.y()) / (GRID_CELL_SIZE * m_zoom);
+  float x = (widgetPos.x() - m_panOffset.x()) / (GRID_CELL_SIZE * m_zoom);
+  float z = (widgetPos.y() - m_panOffset.y()) / (GRID_CELL_SIZE * m_zoom);
   return QPointF(x, z);
 }
 
 QPoint MapCanvas::gridToWidget(float gridX, float gridZ) const {
-  float x = gridX * GRID_CELL_SIZE * m_zoom + static_cast<float>(m_panOffset.x());
-  float y = gridZ * GRID_CELL_SIZE * m_zoom + static_cast<float>(m_panOffset.y());
+  float x =
+      gridX * GRID_CELL_SIZE * m_zoom + static_cast<float>(m_panOffset.x());
+  float y =
+      gridZ * GRID_CELL_SIZE * m_zoom + static_cast<float>(m_panOffset.y());
   return QPoint(static_cast<int>(x), static_cast<int>(y));
 }
 
-void MapCanvas::paintEvent(QPaintEvent * /*event*/) {
+void MapCanvas::paintEvent(QPaintEvent *) {
   QPainter painter(this);
   painter.setRenderHint(QPainter::Antialiasing);
 
-  // Draw background
   painter.fillRect(rect(), QColor(40, 50, 60));
 
   if (!m_mapData) {
@@ -84,7 +82,6 @@ void MapCanvas::drawGrid(QPainter &painter) {
   const GridSettings &grid = m_mapData->grid();
   float cellSize = GRID_CELL_SIZE * m_zoom;
 
-  // Only draw grid if zoom is sufficient
   if (cellSize < 2) {
     return;
   }
@@ -96,16 +93,15 @@ void MapCanvas::drawGrid(QPainter &painter) {
   float endX = startX + grid.width * cellSize;
   float endY = startY + grid.height * cellSize;
 
-  // Draw vertical lines every 10 units
   for (int i = 0; i <= grid.width; i += 10) {
     float x = startX + i * cellSize;
     if (x >= 0 && x <= width()) {
-      painter.drawLine(QPointF(x, std::max(0.0F, startY)),
-                       QPointF(x, std::min(static_cast<float>(height()), endY)));
+      painter.drawLine(
+          QPointF(x, std::max(0.0F, startY)),
+          QPointF(x, std::min(static_cast<float>(height()), endY)));
     }
   }
 
-  // Draw horizontal lines every 10 units
   for (int i = 0; i <= grid.height; i += 10) {
     float y = startY + i * cellSize;
     if (y >= 0 && y <= height()) {
@@ -114,29 +110,23 @@ void MapCanvas::drawGrid(QPainter &painter) {
     }
   }
 
-  // Draw map boundary
   painter.setPen(QPen(QColor(100, 120, 140), 2));
-  painter.drawRect(QRectF(startX, startY, grid.width * cellSize,
-                          grid.height * cellSize));
+  painter.drawRect(
+      QRectF(startX, startY, grid.width * cellSize, grid.height * cellSize));
 
-  // Draw coordinate labels at corners for orientation
   QFont font = painter.font();
   font.setPointSize(9);
   painter.setFont(font);
   painter.setPen(QColor(180, 180, 180));
 
-  // Origin label (0, 0)
   painter.drawText(QPointF(startX + 2, startY + 12), "0,0");
 
-  // Top-right corner (width, 0)
   QString topRight = QString("%1,0").arg(grid.width);
   painter.drawText(QPointF(endX - 30, startY + 12), topRight);
 
-  // Bottom-left corner (0, height)
   QString bottomLeft = QString("0,%1").arg(grid.height);
   painter.drawText(QPointF(startX + 2, endY - 4), bottomLeft);
 
-  // Bottom-right corner (width, height)
   QString bottomRight = QString("%1,%2").arg(grid.width).arg(grid.height);
   painter.drawText(QPointF(endX - 40, endY - 4), bottomRight);
 }
@@ -237,7 +227,6 @@ void MapCanvas::drawLinearElements(QPainter &painter) {
     painter.setPen(QPen(color, lineWidth));
     painter.drawLine(startPos, endPos);
 
-    // Draw endpoints
     int endpointSize = 6;
     painter.setBrush(color.lighter());
     painter.setPen(Qt::white);
@@ -245,11 +234,9 @@ void MapCanvas::drawLinearElements(QPainter &painter) {
     painter.drawEllipse(endPos, endpointSize, endpointSize);
   }
 
-  // Draw in-progress linear element
   if (m_isPlacingLinear) {
-    QPoint startPos =
-        gridToWidget(static_cast<float>(m_linearStart.x()),
-                     static_cast<float>(m_linearStart.y()));
+    QPoint startPos = gridToWidget(static_cast<float>(m_linearStart.x()),
+                                   static_cast<float>(m_linearStart.y()));
     QPointF currentGrid = mapToGrid(m_lastMousePos);
     QPoint endPos = gridToWidget(static_cast<float>(currentGrid.x()),
                                  static_cast<float>(currentGrid.y()));
@@ -265,7 +252,6 @@ void MapCanvas::drawCurrentPlacement(QPainter &painter) {
     return;
   }
 
-  // Draw ghost of element at cursor position
   QPointF gridPos = mapToGrid(m_lastMousePos);
   QPoint widgetPos = gridToWidget(static_cast<float>(gridPos.x()),
                                   static_cast<float>(gridPos.y()));
@@ -303,7 +289,7 @@ void MapCanvas::drawCurrentPlacement(QPainter &painter) {
 
 void MapCanvas::drawElement(QPainter &painter, const QString &type,
                             const QPoint &pos, int playerId) {
-  // Use fixed icon size for all elements
+
   int size = ICON_SIZE;
 
   QColor fillColor;
@@ -319,15 +305,15 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
     fillColor = QColor(255, 140, 0);
     symbol = "🔥";
   } else if (type == "barracks") {
-    // Color based on player
+
     if (playerId == 0) {
-      fillColor = QColor(180, 180, 180); // Neutral - gray
+      fillColor = QColor(180, 180, 180);
     } else if (playerId == 1) {
-      fillColor = QColor(100, 150, 255); // Player 1 - blue
+      fillColor = QColor(100, 150, 255);
     } else if (playerId == 2) {
-      fillColor = QColor(255, 100, 100); // Player 2 - red
+      fillColor = QColor(255, 100, 100);
     } else {
-      fillColor = QColor(100, 255, 100); // Other - green
+      fillColor = QColor(100, 255, 100);
     }
     symbol = "🏛";
   } else if (type == "village") {
@@ -349,7 +335,6 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
   painter.setBrush(fillColor);
   painter.drawEllipse(pos, size, size);
 
-  // Draw symbol
   QFont font = painter.font();
   font.setPointSize(12);
   painter.setFont(font);
@@ -357,7 +342,6 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
   painter.drawText(QRect(pos.x() - size, pos.y() - size, size * 2, size * 2),
                    Qt::AlignCenter, symbol);
 
-  // Draw player indicator for structures
   if ((type == "barracks" || type == "village") && playerId >= 0) {
     QString playerText = playerId == 0 ? "N" : QString::number(playerId);
     font.setPointSize(8);
@@ -371,7 +355,6 @@ void MapCanvas::drawElement(QPainter &painter, const QString &type,
 void MapCanvas::mousePressEvent(QMouseEvent *event) {
   m_lastMousePos = event->pos();
 
-  // Right-click clears tool selection
   if (event->button() == Qt::RightButton) {
     clearTool();
     return;
@@ -393,7 +376,7 @@ void MapCanvas::mousePressEvent(QMouseEvent *event) {
       HitResult hit = hitTest(event->pos());
       m_selectedType = hit.elementType;
       m_selectedIndex = hit.index;
-      m_draggedEndpoint = hit.endpoint; // Track which endpoint if linear element
+      m_draggedEndpoint = hit.endpoint;
       if (hit.elementType >= 0) {
         m_isDragging = true;
       }
@@ -465,7 +448,7 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event) {
         m_mapData->updateFirecamp(m_selectedIndex, elem);
       }
     } else if (m_selectedType == 2) {
-      // Linear element - drag endpoint only (clicking on line body selects but doesn't move)
+
       auto linear = m_mapData->linearElements();
       if (m_selectedIndex < linear.size() && m_draggedEndpoint >= 0) {
         LinearElement elem = linear[m_selectedIndex];
@@ -491,7 +474,6 @@ void MapCanvas::mouseMoveEvent(QMouseEvent *event) {
     }
   }
 
-  // Update for ghost preview
   if (m_currentTool != ToolType::Select) {
     update();
   }
@@ -503,7 +485,7 @@ void MapCanvas::mouseDoubleClickEvent(QMouseEvent *event) {
     if (hit.elementType >= 0 && hit.index >= 0) {
       emit elementDoubleClicked(hit.elementType, hit.index);
     } else {
-      // Double-click on empty space to edit grid dimensions
+
       emit gridDoubleClicked();
     }
   }
@@ -520,7 +502,6 @@ void MapCanvas::wheelEvent(QWheelEvent *event) {
 
   m_zoom = std::clamp(m_zoom, 0.1F, 5.0F);
 
-  // Zoom towards cursor position
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
   QPointF cursorPos = event->position();
 #else
@@ -531,8 +512,8 @@ void MapCanvas::wheelEvent(QWheelEvent *event) {
   update();
 }
 
-void MapCanvas::resizeEvent(QResizeEvent * /*event*/) {
-  // Center the map on first resize if needed
+void MapCanvas::resizeEvent(QResizeEvent *) {
+
   if (m_panOffset.isNull() && m_mapData) {
     m_panOffset = QPointF(50, 50);
   }
@@ -546,7 +527,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
 
   QPointF gridPos = mapToGrid(pos);
 
-  // Check structures first (they appear on top)
   const auto &structures = m_mapData->structures();
   for (int i = 0; i < structures.size(); ++i) {
     const auto &elem = structures[i];
@@ -560,7 +540,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     }
   }
 
-  // Check terrain elements
   const auto &terrain = m_mapData->terrainElements();
   for (int i = 0; i < terrain.size(); ++i) {
     const auto &elem = terrain[i];
@@ -574,7 +553,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     }
   }
 
-  // Check firecamps
   const auto &firecamps = m_mapData->firecamps();
   for (int i = 0; i < firecamps.size(); ++i) {
     const auto &elem = firecamps[i];
@@ -588,16 +566,12 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     }
   }
 
-  // Check linear elements - FIRST pass: check all endpoints
-  // Endpoints are checked first across ALL elements to allow grabbing endpoints
-  // even when they overlap with another element's line body
   const auto &linear = m_mapData->linearElements();
   for (int i = 0; i < linear.size(); ++i) {
     const auto &elem = linear[i];
     QVector2D p(static_cast<float>(gridPos.x()),
                 static_cast<float>(gridPos.y()));
 
-    // Check start endpoint
     float startDist = (p - elem.start).length();
     if (startDist <= ENDPOINT_HIT_RADIUS) {
       result.elementType = 2;
@@ -606,7 +580,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
       return result;
     }
 
-    // Check end endpoint
     float endDist = (p - elem.end).length();
     if (endDist <= ENDPOINT_HIT_RADIUS) {
       result.elementType = 2;
@@ -616,7 +589,6 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     }
   }
 
-  // Check linear elements - SECOND pass: check line bodies
   for (int i = 0; i < linear.size(); ++i) {
     const auto &elem = linear[i];
     QVector2D p(static_cast<float>(gridPos.x()),
@@ -630,8 +602,8 @@ MapCanvas::HitResult MapCanvas::hitTest(const QPoint &pos) const {
     if (abLengthSq < 0.0001F) {
       dist = (p - a).length();
     } else {
-      float t = std::clamp(QVector2D::dotProduct(p - a, ab) / abLengthSq, 0.0F,
-                           1.0F);
+      float t =
+          std::clamp(QVector2D::dotProduct(p - a, ab) / abLengthSq, 0.0F, 1.0F);
       QVector2D closest = a + t * ab;
       dist = (p - closest).length();
     }
@@ -669,7 +641,7 @@ void MapCanvas::placeElement(const QPointF &gridPos) {
     m_mapData->addFirecamp(elem);
   } else if (m_currentTool == ToolType::Barracks ||
              m_currentTool == ToolType::Village) {
-    // Ask for player assignment
+
     bool ok;
     int playerId = QInputDialog::getInt(
         this, "Assign Team",
@@ -680,7 +652,7 @@ void MapCanvas::placeElement(const QPointF &gridPos) {
         m_currentPlayerId, MIN_PLAYER_ID, MAX_PLAYER_ID, 1, &ok);
 
     if (ok) {
-      m_currentPlayerId = playerId; // Remember for next placement
+      m_currentPlayerId = playerId;
 
       StructureElement elem;
       elem.type =

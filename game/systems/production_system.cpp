@@ -100,7 +100,7 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
 
   constexpr int kMaxSearchRadius = 50;
   Point safe_grid = exit_grid;
-  
+
   for (int radius = 1; radius <= kMaxSearchRadius; ++radius) {
     for (int dy = -radius; dy <= radius; ++dy) {
       for (int dx = -radius; dx <= radius; ++dx) {
@@ -111,7 +111,8 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
         int const check_x = exit_grid.x + dx;
         int const check_y = exit_grid.y + dy;
 
-        bool valid = pathfinder->is_walkable_with_radius(check_x, check_y, unit_radius);
+        bool valid =
+            pathfinder->is_walkable_with_radius(check_x, check_y, unit_radius);
         if (valid && terrain_service.is_initialized()) {
           valid = terrain_service.is_walkable(check_x, check_y);
         }
