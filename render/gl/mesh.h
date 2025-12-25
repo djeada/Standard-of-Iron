@@ -21,6 +21,12 @@ public:
        const std::vector<unsigned int> &indices);
   ~Mesh() override;
 
+  // Binds the VAO (and creates GPU buffers if needed). Useful for pipelines
+  // that need to configure additional vertex attributes (e.g. instancing).
+  [[nodiscard]] auto bind(const char *caller_name) -> bool;
+
+  void unbind();
+
   void draw();
 
   void draw_instanced(std::size_t instance_count);

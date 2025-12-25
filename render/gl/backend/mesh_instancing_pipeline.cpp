@@ -249,6 +249,15 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
                   static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu)),
                   m_instances.data());
 
+  // IMPORTANT: instance attribute pointers are VAO state.
+  // Bind the mesh VAO before calling setup_instance_attributes(), otherwise
+  // the attributes get installed on VAO=0 and the instanced draw reads zeros.
+  if (!m_currentMesh->bind("MeshInstancingPipeline::flush")) {
+    m_instances.clear();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    return;
+  }
+
   // Use the instanced shader
   active_shader->use();
 
@@ -276,13 +285,25 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
 
   setup_instance_attributes();
 
-  m_currentMesh->draw_instanced(count);
+  glDrawElementsInstanced(
+      GL_TRIANGLES,
+      static_cast<GLsizei>(m_currentMesh->get_indices().size()),
+      GL_UNSIGNED_INT,
+      nullptr,
+      static_cast<GLsizei>(count));
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // Clean up per-instance attribs on this VAO
+  glVertexAttribDivisor(k_instance_model_col0_loc, 0);
+  glVertexAttribDivisor(k_instance_model_col1_loc, 0);
+  glVertexAttribDivisor(k_instance_model_col2_loc, 0);
+  glVertexAttribDivisor(k_instance_color_alpha_loc, 0);
   glDisableVertexAttribArray(k_instance_model_col0_loc);
   glDisableVertexAttribArray(k_instance_model_col1_loc);
   glDisableVertexAttribArray(k_instance_model_col2_loc);
   glDisableVertexAttribArray(k_instance_color_alpha_loc);
+
+  m_currentMesh->unbind();
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_instances.clear();
 }

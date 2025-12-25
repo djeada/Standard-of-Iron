@@ -67,6 +67,16 @@ auto Mesh::prepare_draw(const char *caller_name) -> bool {
   return true;
 }
 
+auto Mesh::bind(const char *caller_name) -> bool {
+  return prepare_draw(caller_name);
+}
+
+void Mesh::unbind() {
+  if (m_vao) {
+    m_vao->unbind();
+  }
+}
+
 void Mesh::draw() {
   if (!prepare_draw("Mesh::draw")) {
     return;
