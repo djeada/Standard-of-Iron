@@ -87,4 +87,4 @@ void renderFormationArrow(Renderer *renderer, ResourceManager *resources,
   }
 }
 
-} // namespace Render::GL
+} 

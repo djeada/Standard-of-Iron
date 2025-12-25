@@ -41,4 +41,4 @@ private:
   ToolType m_currentTool = ToolType::Select;
 };
 
-} // namespace MapEditor
+} 

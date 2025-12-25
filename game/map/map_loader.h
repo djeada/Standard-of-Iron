@@ -11,4 +11,4 @@ public:
                                QString *out_error = nullptr) -> bool;
 };
 
-} // namespace Game::Map
+} 

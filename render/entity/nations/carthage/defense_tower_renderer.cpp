@@ -201,7 +201,7 @@ void draw_defense_tower(const DrawContext &p, ISubmitter &out) {
   draw_selection(p, out);
 }
 
-} // namespace
+} 
 
 void register_defense_tower_renderer(
     Render::GL::EntityRendererRegistry &registry) {
@@ -209,4 +209,4 @@ void register_defense_tower_renderer(
                              draw_defense_tower);
 }
 
-} // namespace Render::GL::Carthage
+} 

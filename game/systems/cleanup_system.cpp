@@ -26,4 +26,4 @@ void CleanupSystem::remove_dead_entities(Engine::Core::World *world) {
   }
 }
 
-} // namespace Game::Systems
+} 

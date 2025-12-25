@@ -14,4 +14,4 @@ struct MissionContext {
   [[nodiscard]] bool is_skirmish() const { return mode == "skirmish"; }
 };
 
-} // namespace Game::Mission
+} 

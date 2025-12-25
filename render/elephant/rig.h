@@ -298,4 +298,4 @@ inline auto calculate_elephant_lod(float distance) -> HorseLOD {
   return HorseLOD::Billboard;
 }
 
-} // namespace Render::GL
+} 

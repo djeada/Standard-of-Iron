@@ -84,4 +84,4 @@ void FogRenderer::build_chunks() {
   }
 }
 
-} // namespace Render::GL
+} 

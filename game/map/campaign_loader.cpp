@@ -80,4 +80,4 @@ auto CampaignLoader::loadFromJsonFile(const QString &file_path,
   return true;
 }
 
-} // namespace Game::Campaign
+} 

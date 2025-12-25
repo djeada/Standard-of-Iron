@@ -5,7 +5,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Engine::Core
+} 
 
 namespace App::Controllers {
 
@@ -15,4 +15,4 @@ public:
                                Engine::Core::EntityID target_id);
 };
 
-} // namespace App::Controllers
+} 

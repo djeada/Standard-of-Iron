@@ -15,7 +15,7 @@ constexpr QVector3D k_roman_bronze{0.72F, 0.55F, 0.35F};
 constexpr QVector3D k_roman_wood{0.52F, 0.42F, 0.28F};
 
 constexpr QVector3D k_roman_apron{0.45F, 0.38F, 0.28F};
-} // namespace
+} 
 
 namespace Render::GL::Roman {
 
@@ -37,4 +37,4 @@ void register_roman_builder_style() {
   register_builder_style("roman_republic", style);
 }
 
-} // namespace Render::GL::Roman
+} 

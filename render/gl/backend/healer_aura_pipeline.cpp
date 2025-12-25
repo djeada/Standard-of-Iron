@@ -31,7 +31,7 @@ auto check_gl_error(const char *operation) -> bool {
   }
   return true;
 }
-} // namespace
+} 
 
 auto HealerAuraPipeline::initialize() -> bool {
   if (m_shaderCache == nullptr) {
@@ -396,4 +396,4 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   }
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

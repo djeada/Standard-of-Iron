@@ -170,4 +170,4 @@ auto FormationCalculatorFactory::getCalculator(
   return &s_romanInfantry;
 }
 
-} // namespace Render::GL
+} 

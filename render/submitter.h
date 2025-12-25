@@ -9,7 +9,7 @@
 namespace Render::GL {
 class Mesh;
 class Texture;
-} // namespace Render::GL
+} 
 
 namespace Render::GL {
 
@@ -51,7 +51,7 @@ inline auto decompose_unit_cylinder(const QMatrix4x4 &model, QVector3D &start,
   radius = 0.5F * (sx.length() + sz.length());
   return radius > 0.0F;
 }
-} // namespace detail
+} 
 
 class QueueSubmitter : public ISubmitter {
 public:
@@ -322,4 +322,4 @@ private:
   bool m_enabled = true;
 };
 
-} // namespace Render::GL
+} 

@@ -23,12 +23,12 @@ class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
-} // namespace Render::GL
+} 
 
 namespace Game::Systems {
 struct LevelSnapshot;
 struct RuntimeSnapshot;
-} // namespace Game::Systems
+} 
 
 class EntityCache;
 

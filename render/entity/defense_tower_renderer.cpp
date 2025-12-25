@@ -43,4 +43,4 @@ void register_defense_tower_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 

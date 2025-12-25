@@ -84,4 +84,4 @@ private:
   static constexpr float k_growth_factor = 1.5F;
 };
 
-} // namespace Render::GL::BackendPipelines
+} 

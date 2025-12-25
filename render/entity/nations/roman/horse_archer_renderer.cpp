@@ -33,7 +33,7 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
   return config;
 }
 
-} // namespace
+} 
 
 void register_horse_archer_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -60,4 +60,4 @@ void register_horse_archer_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Roman
+} 

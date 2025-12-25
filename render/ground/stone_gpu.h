@@ -23,4 +23,4 @@ struct StoneBatchParams {
   float time = 0.0F;
 };
 
-} // namespace Render::GL
+} 

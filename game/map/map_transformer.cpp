@@ -28,7 +28,7 @@ namespace Game::Map {
 namespace {
 std::shared_ptr<Game::Units::UnitFactoryRegistry> s_registry;
 std::unordered_map<int, int> s_player_team_overrides;
-} // namespace
+} 
 
 void MapTransformer::setFactoryRegistry(
     std::shared_ptr<Game::Units::UnitFactoryRegistry> reg) {
@@ -233,4 +233,4 @@ auto MapTransformer::apply_to_world(
   return rt;
 }
 
-} // namespace Game::Map
+} 

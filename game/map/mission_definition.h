@@ -110,4 +110,4 @@ struct MissionDefinition {
   std::vector<GameEvent> events;
 };
 
-} // namespace Game::Mission
+} 

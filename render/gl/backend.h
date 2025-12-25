@@ -32,7 +32,7 @@ class CombatDustPipeline;
 class RainPipeline;
 class ModeIndicatorPipeline;
 class MeshInstancingPipeline;
-} // namespace Render::GL::BackendPipelines
+} 
 
 namespace Render::GL {
 
@@ -181,4 +181,4 @@ private:
   } m_riverbankVisibility;
 };
 
-} // namespace Render::GL
+} 

@@ -12,4 +12,4 @@ void CombatSystem::update(Engine::Core::World *world, float delta_time) {
   m_auto_engagement.process(world, delta_time);
 }
 
-} // namespace Game::Systems
+} 

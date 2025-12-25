@@ -348,4 +348,4 @@ auto VictoryService::check_no_key_structures(Engine::Core::World &world)
   return true;
 }
 
-} // namespace Game::Systems
+} 

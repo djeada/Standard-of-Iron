@@ -290,4 +290,4 @@ private:
   VisibilityBudget m_visibility_budget{};
 };
 
-} // namespace Render
+} 

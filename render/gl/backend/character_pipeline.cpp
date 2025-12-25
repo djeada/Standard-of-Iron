@@ -139,4 +139,4 @@ auto CharacterPipeline::resolveUniforms(GL::Shader *shader) -> BasicUniforms * {
   return &inserted->second;
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

@@ -57,5 +57,5 @@ private:
   void cache_nation_variants(const QString &base_key);
 };
 
-} // namespace BackendPipelines
-} // namespace Render::GL
+} 
+} 

@@ -45,4 +45,4 @@ private:
   auto calculate_ring_color(float x, float y, float z) const -> QVector3D;
 };
 
-} // namespace Render::GL
+} 

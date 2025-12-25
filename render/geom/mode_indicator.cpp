@@ -471,4 +471,4 @@ auto ModeIndicator::get_patrol_mode_mesh() -> Render::GL::Mesh * {
   return s_patrol_mesh.get();
 }
 
-} // namespace Render::Geom
+} 

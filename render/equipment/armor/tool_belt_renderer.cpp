@@ -197,4 +197,4 @@ void ToolBeltRenderer::renderPouches(const DrawContext &ctx,
   }
 }
 
-} // namespace Render::GL
+} 

@@ -79,4 +79,4 @@ private:
   mutable bool m_composite_dirty = true;
 };
 
-} // namespace Game::Map::Minimap
+} 

@@ -17,7 +17,7 @@ constexpr QVector3D k_carthage_bronze{0.70F, 0.52F, 0.32F};
 constexpr QVector3D k_carthage_wood{0.45F, 0.35F, 0.22F};
 
 constexpr QVector3D k_carthage_purple{0.04F, 0.04F, 0.045F};
-} // namespace
+} 
 
 namespace Render::GL::Carthage {
 
@@ -42,4 +42,4 @@ void register_carthage_healer_style() {
   register_healer_style("carthage", style);
 }
 
-} // namespace Render::GL::Carthage
+} 

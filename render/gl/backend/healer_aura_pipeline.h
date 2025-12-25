@@ -77,5 +77,5 @@ private:
   AuraUniforms m_uniforms;
 };
 
-} // namespace BackendPipelines
-} // namespace Render::GL
+} 
+} 

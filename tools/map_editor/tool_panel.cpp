@@ -59,4 +59,4 @@ void ToolPanel::clearSelection() {
   emit toolSelected(m_currentTool);
 }
 
-} // namespace MapEditor
+} 

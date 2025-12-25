@@ -54,7 +54,7 @@ auto is_construction_position_valid(float pos_x, float pos_z,
   return true;
 }
 
-} // namespace
+} 
 
 void ProductionManager::start_building_placement(const QString &building_type) {
   if (building_type.isEmpty()) {

@@ -408,4 +408,4 @@ void CylinderPipeline::draw_fog(std::size_t count) {
   glBindVertexArray(0);
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

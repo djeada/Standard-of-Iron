@@ -25,4 +25,4 @@ private:
   float m_expand_timer = 0.0F;
 };
 
-} // namespace Game::Systems::AI
+} 

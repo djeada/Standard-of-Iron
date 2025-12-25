@@ -511,4 +511,4 @@ private:
                          float world_z) -> float;
 };
 
-} // namespace Game::Map
+} 

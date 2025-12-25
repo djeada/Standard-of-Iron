@@ -29,4 +29,4 @@ struct OliveBatchParams {
   float wind_speed = kDefaultWindSpeed;
 };
 
-} // namespace Render::GL
+} 

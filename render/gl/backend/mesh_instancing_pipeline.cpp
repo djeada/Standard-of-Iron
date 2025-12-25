@@ -16,7 +16,7 @@ constexpr GLuint k_instance_model_col0_loc = 3;
 constexpr GLuint k_instance_model_col1_loc = 4;
 constexpr GLuint k_instance_model_col2_loc = 5;
 constexpr GLuint k_instance_color_alpha_loc = 6;
-} // namespace
+} 
 
 MeshInstancingPipeline::MeshInstancingPipeline(GL::Backend *backend,
                                                GL::ShaderCache *shader_cache)
@@ -230,4 +230,4 @@ void MeshInstancingPipeline::setup_instance_attributes() {
   glVertexAttribDivisor(k_instance_color_alpha_loc, 1);
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

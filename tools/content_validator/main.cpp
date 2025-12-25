@@ -199,7 +199,7 @@ void printResults(const ValidationResult &result, const QString &file_name) {
   }
 }
 
-} // namespace
+} 
 
 auto main(int argc, char *argv[]) -> int {
   QCoreApplication app(argc, argv);

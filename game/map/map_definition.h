@@ -85,4 +85,4 @@ struct MapDefinition {
   RainSettings rain;
 };
 
-} // namespace Game::Map
+} 

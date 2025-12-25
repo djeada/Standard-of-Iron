@@ -58,7 +58,7 @@ void ensure_swordsman_styles_registered() {
   (void)registered;
 }
 
-} // namespace
+} 
 
 void register_swordsman_style(const std::string &nation_id,
                               const KnightStyleConfig &style) {
@@ -405,4 +405,4 @@ void register_knight_renderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Roman
+} 

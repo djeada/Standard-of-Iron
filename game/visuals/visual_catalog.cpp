@@ -113,4 +113,4 @@ void apply_to_renderable(const VisualDef &def,
   }
 }
 
-} // namespace Game::Visuals
+} 

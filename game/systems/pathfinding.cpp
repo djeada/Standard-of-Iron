@@ -671,4 +671,4 @@ auto Pathfinding::find_nearest_walkable_point(const Point &point,
   return point;
 }
 
-} // namespace Game::Systems
+} 

@@ -43,4 +43,4 @@ void register_home_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL
+} 

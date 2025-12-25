@@ -22,4 +22,4 @@ struct SpearmanStyleConfig {
 
 void register_carthage_spearman_style();
 
-} // namespace Render::GL::Carthage
+} 

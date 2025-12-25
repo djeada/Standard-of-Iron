@@ -319,7 +319,7 @@ void drawCarthageOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.02F, 0.01F, 0.25F), c.purple_accent);
 }
 
-} // namespace
+} 
 
 void register_ballista_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -367,4 +367,4 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Carthage
+} 

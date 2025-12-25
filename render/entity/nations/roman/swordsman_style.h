@@ -24,4 +24,4 @@ struct KnightStyleConfig {
 
 void register_roman_swordsman_style();
 
-} // namespace Render::GL::Roman
+} 

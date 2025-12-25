@@ -83,4 +83,4 @@ void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
   register_home_renderer(registry);
 }
 
-} // namespace Render::GL
+} 

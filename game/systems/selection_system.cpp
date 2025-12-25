@@ -225,4 +225,4 @@ void SelectionController::sync_selection_flags() {
   App::Utils::sanitize_selection(m_world, m_selection_system);
 }
 
-} // namespace Game::Systems
+} 

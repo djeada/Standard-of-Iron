@@ -10,7 +10,7 @@ constexpr QVector3D k_carthage_leather_dark{0.22F, 0.16F, 0.10F};
 constexpr QVector3D k_carthage_metal{0.75F, 0.66F, 0.42F};
 constexpr QVector3D k_carthage_spear_shaft{0.38F, 0.28F, 0.18F};
 constexpr QVector3D k_carthage_spearhead{0.90F, 0.88F, 0.70F};
-} // namespace
+} 
 
 namespace Render::GL::Carthage {
 
@@ -30,4 +30,4 @@ void register_carthage_spearman_style() {
   register_spearman_style("carthage", style);
 }
 
-} // namespace Render::GL::Carthage
+} 

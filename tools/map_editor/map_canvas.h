@@ -84,4 +84,4 @@ private:
   static inline const QString DEFAULT_NATION = "roman_republic";
 };
 
-} // namespace MapEditor
+} 

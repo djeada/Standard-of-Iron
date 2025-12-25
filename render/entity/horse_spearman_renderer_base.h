@@ -79,4 +79,4 @@ private:
   mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
 };
 
-} // namespace Render::GL
+} 

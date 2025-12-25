@@ -27,4 +27,4 @@ auto get_unit_torso(int radial_segments = k_default_radial_segments,
                     int height_segments = k_default_torso_height_segments)
     -> Mesh *;
 
-} // namespace Render::GL
+} 

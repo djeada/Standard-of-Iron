@@ -33,4 +33,4 @@ inline auto is_roman_healing_color(const QVector3D &color) -> bool {
           std::abs(color.z() - roman_color.z()) < tolerance);
 }
 
-} // namespace Game::Systems
+} 

@@ -5,7 +5,7 @@
 namespace Engine::Core {
 class World;
 class Entity;
-} // namespace Engine::Core
+} 
 
 namespace Game::Systems {
 
@@ -25,4 +25,4 @@ private:
                             Engine::Core::World *world, float delta_time);
 };
 
-} // namespace Game::Systems
+} 

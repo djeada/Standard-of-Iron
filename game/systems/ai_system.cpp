@@ -164,4 +164,4 @@ void AISystem::on_building_attacked(
   }
 }
 
-} // namespace Game::Systems
+} 

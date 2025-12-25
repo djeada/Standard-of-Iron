@@ -26,7 +26,7 @@ constexpr float BUILD_TIME_HOME = 20.0F;
 constexpr float BUILD_TIME_DEFENSE_TOWER = 25.0F;
 constexpr float BUILD_TIME_BARRACKS = 30.0F;
 constexpr float BUILD_TIME_DEFAULT = 20.0F;
-} // namespace
+} 
 
 void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
                              const std::vector<AICommand> &commands) {
@@ -215,4 +215,4 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
   }
 }
 
-} // namespace Game::Systems::AI
+} 

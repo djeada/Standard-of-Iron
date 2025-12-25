@@ -114,4 +114,4 @@ void WaterPipeline::cache_road_uniforms() {
   m_road_uniforms.alpha = m_road_shader->uniform_handle("u_alpha");
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

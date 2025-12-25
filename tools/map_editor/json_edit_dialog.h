@@ -30,4 +30,4 @@ private:
   bool m_isValid = false;
 };
 
-} // namespace MapEditor
+} 

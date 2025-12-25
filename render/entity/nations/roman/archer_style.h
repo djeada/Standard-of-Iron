@@ -27,4 +27,4 @@ struct ArcherStyleConfig {
 
 void register_roman_archer_style();
 
-} // namespace Render::GL::Roman
+} 

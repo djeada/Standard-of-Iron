@@ -32,4 +32,4 @@ private:
   QuiverRenderConfig m_config;
 };
 
-} // namespace Render::GL
+} 

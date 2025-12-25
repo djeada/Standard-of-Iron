@@ -126,4 +126,4 @@ struct TerrainChunkParams {
   QVector3D snow_color = default_snow_color();
 };
 
-} // namespace Render::GL
+} 

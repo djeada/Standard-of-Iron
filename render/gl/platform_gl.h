@@ -126,4 +126,4 @@ public:
   }
 };
 
-} // namespace Render::GL::Platform
+} 

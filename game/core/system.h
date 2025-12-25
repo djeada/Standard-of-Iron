@@ -17,4 +17,4 @@ public:
   virtual void update(World *world, float delta_time) = 0;
 };
 
-} // namespace Engine::Core
+} 

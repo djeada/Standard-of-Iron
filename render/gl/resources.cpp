@@ -28,4 +28,4 @@ auto ResourceManager::initialize() -> bool {
   return true;
 }
 
-} // namespace Render::GL
+} 

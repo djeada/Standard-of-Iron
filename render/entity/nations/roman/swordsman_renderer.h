@@ -12,4 +12,4 @@ void register_swordsman_style(const std::string &nation_id,
 
 void register_knight_renderer(EntityRendererRegistry &registry);
 
-} // namespace Render::GL::Roman
+} 

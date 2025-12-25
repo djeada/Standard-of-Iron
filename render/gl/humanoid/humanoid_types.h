@@ -215,4 +215,4 @@ struct HumanoidAnimationContext {
   auto is_attacking() const -> bool { return gait.is_attacking(); }
 };
 
-} // namespace Render::GL
+} 

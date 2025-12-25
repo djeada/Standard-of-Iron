@@ -61,4 +61,4 @@ private:
   static constexpr float k_intensity_lerp_speed = 2.0F;
 };
 
-} // namespace Render::GL
+} 

@@ -45,7 +45,7 @@ constexpr GaitParameters getGaitParams(GaitType gait) {
   return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
 }
 
-} // namespace
+} 
 
 HorseAnimationController::HorseAnimationController(
     HorseProfile &profile, const AnimationInputs &anim,
@@ -286,4 +286,4 @@ void HorseAnimationController::update_gait_parameters() {
   m_rein_slack = std::max(0.01F, m_rein_slack * (1.0F - rein_tension));
 }
 
-} // namespace Render::GL
+} 

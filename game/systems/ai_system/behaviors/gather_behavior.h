@@ -25,4 +25,4 @@ private:
   float m_gatherTimer = 0.0F;
 };
 
-} // namespace Game::Systems::AI
+} 

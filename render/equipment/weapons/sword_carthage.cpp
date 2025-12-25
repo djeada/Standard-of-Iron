@@ -18,4 +18,4 @@ CarthageSwordRenderer::CarthageSwordRenderer() {
   set_config(config);
 }
 
-} // namespace Render::GL
+} 

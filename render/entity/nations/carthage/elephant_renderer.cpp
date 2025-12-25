@@ -64,7 +64,7 @@ public:
 protected:
 };
 
-} // namespace
+} 
 
 void register_elephant_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -117,4 +117,4 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Carthage
+} 

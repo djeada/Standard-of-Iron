@@ -37,4 +37,4 @@ void HealingBeam::update(float delta_time) {
   m_intensity = fade * (0.8F + 0.2F * std::sin(m_progress * 20.0F));
 }
 
-} // namespace Game::Systems
+} 

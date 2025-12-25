@@ -32,4 +32,4 @@ private:
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> m_attachments;
 };
 
-} // namespace Render::GL
+} 

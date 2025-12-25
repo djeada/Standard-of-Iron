@@ -40,4 +40,4 @@ private:
   std::vector<FogInstance> m_instances;
 };
 
-} // namespace Render::GL
+} 

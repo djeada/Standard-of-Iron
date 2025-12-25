@@ -18,4 +18,4 @@ public:
                                 float defense, float harassment);
 };
 
-} // namespace Game::Systems::AI
+} 

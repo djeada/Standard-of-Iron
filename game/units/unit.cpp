@@ -308,4 +308,4 @@ auto Unit::can_run() const -> bool {
          Game::Units::can_use_run_mode(unit_comp->spawn_type);
 }
 
-} // namespace Game::Units
+} 

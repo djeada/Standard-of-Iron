@@ -15,7 +15,7 @@ namespace Render::GL {
 class Mesh;
 class Texture;
 class Buffer;
-} // namespace Render::GL
+} 
 
 namespace Render::GL {
 
@@ -193,4 +193,4 @@ private:
   std::vector<TerrainChunkCmd> m_terrain_chunk_cmds;
 };
 
-} // namespace Render::GL
+} 

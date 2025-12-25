@@ -10,7 +10,7 @@ constexpr QVector3D k_carthage_leather_dark{0.20F, 0.14F, 0.09F};
 constexpr QVector3D k_carthage_metal{0.70F, 0.68F, 0.52F};
 constexpr QVector3D k_carthage_shield{0.20F, 0.46F, 0.62F};
 constexpr QVector3D k_carthage_trim{0.76F, 0.68F, 0.42F};
-} // namespace
+} 
 
 namespace Render::GL::Carthage {
 
@@ -31,4 +31,4 @@ void register_carthage_swordsman_style() {
   register_swordsman_style("carthage", style);
 }
 
-} // namespace Render::GL::Carthage
+} 

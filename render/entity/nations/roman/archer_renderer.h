@@ -12,4 +12,4 @@ void register_archer_style(const std::string &nation_id,
 
 void register_archer_renderer(EntityRendererRegistry &registry);
 
-} // namespace Render::GL::Roman
+} 

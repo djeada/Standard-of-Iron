@@ -19,4 +19,4 @@ public:
                   std::vector<AICommand> &outCommands);
 };
 
-} // namespace Game::Systems::AI
+} 

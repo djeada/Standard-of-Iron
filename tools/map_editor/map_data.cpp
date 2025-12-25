@@ -639,4 +639,4 @@ QJsonArray MapData::structuresToSpawnsJson() const {
   return arr;
 }
 
-} // namespace MapEditor
+} 

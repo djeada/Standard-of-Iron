@@ -23,7 +23,7 @@ auto check_gl_error(const char *operation) -> bool {
   }
   return true;
 }
-} // namespace
+} 
 
 auto ModeIndicatorPipeline::initialize() -> bool {
   if (m_shaderCache == nullptr) {
@@ -93,4 +93,4 @@ void ModeIndicatorPipeline::render_indicator(Mesh *mesh,
   check_gl_error("render_indicator");
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

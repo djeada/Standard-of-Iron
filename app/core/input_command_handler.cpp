@@ -106,7 +106,7 @@ void handle_move_command(Engine::Core::World *world,
                                               formation_result.positions, opts);
   }
 }
-} // namespace
+} 
 
 void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {

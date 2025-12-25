@@ -39,7 +39,7 @@ auto get_hit_sound_for_type(Game::Units::SpawnType type) -> std::string {
   }
 }
 
-} // namespace
+} 
 
 AudioEventHandler::AudioEventHandler(Engine::Core::World *world)
     : m_world(world) {}
@@ -192,4 +192,4 @@ void AudioEventHandler::onCombatHit(const Engine::Core::CombatHitEvent &event) {
   }
 }
 
-} // namespace Game::Audio
+} 

@@ -29,7 +29,7 @@ inline constexpr float k_noise_frequency_x = 127.1F;
 inline constexpr float k_noise_frequency_y = 311.7F;
 inline constexpr float k_noise_amplitude = 43758.5453123F;
 inline constexpr float k_temporal_variation_frequency = 37.0F;
-} // namespace HashConstants
+} 
 
 inline auto hash_coords(int x, int z, uint32_t salt = 0U) -> uint32_t {
   auto const ux =
@@ -71,4 +71,4 @@ inline auto noise_hash(float x, float y) -> float {
   return n - std::floor(n);
 }
 
-} // namespace Render::Ground
+} 

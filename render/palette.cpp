@@ -38,4 +38,4 @@ auto make_humanoid_palette(const QVector3D &team_tint,
   return p;
 }
 
-} // namespace Render::GL
+} 

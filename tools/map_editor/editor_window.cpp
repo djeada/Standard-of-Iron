@@ -533,4 +533,4 @@ void EditorWindow::closeEvent(QCloseEvent *event) {
   }
 }
 
-} // namespace MapEditor
+} 

@@ -231,4 +231,4 @@ void ChainmailArmorRenderer::renderRingDetails(
   }
 }
 
-} // namespace Render::GL
+} 

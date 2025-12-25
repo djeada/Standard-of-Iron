@@ -40,4 +40,4 @@ private:
   BowRenderConfig m_config;
 };
 
-} // namespace Render::GL
+} 

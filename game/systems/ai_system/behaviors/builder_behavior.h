@@ -26,4 +26,4 @@ private:
   int m_construction_counter = 0;
 };
 
-} // namespace Game::Systems::AI
+} 

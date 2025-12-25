@@ -5,7 +5,7 @@
 namespace Engine::Core {
 class World;
 class AttackComponent;
-} // namespace Engine::Core
+} 
 
 namespace Game::Systems::Combat {
 

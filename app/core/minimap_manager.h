@@ -9,13 +9,13 @@ struct MapDefinition;
 namespace Minimap {
 class UnitLayer;
 class CameraViewportLayer;
-} // namespace Minimap
-} // namespace Game::Map
+} 
+} 
 
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} // namespace Engine::Core
+} 
 
 namespace Game::Systems {
 class SelectionSystem;

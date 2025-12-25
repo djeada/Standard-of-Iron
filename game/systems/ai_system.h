@@ -66,4 +66,4 @@ private:
   void on_building_attacked(const Engine::Core::BuildingAttackedEvent &event);
 };
 
-} // namespace Game::Systems
+} 

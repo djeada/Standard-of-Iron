@@ -11,4 +11,4 @@ public:
   static auto resolve_data_path(const QString &relative) -> QString;
 };
 
-} // namespace Game::Units
+} 

@@ -20,7 +20,7 @@ constexpr float BASE_SIZE = 16.0F;
 constexpr float INNER_SIZE_RATIO = 0.35F;
 constexpr float INNER_OFFSET_RATIO = 0.3F;
 
-} // namespace
+} 
 
 MapPreviewGenerator::MapPreviewGenerator()
     : m_minimap_generator(std::make_unique<MinimapGenerator>()) {}
@@ -153,4 +153,4 @@ auto MapPreviewGenerator::world_to_pixel(
   return {px, py};
 }
 
-} // namespace Game::Map::Minimap
+} 

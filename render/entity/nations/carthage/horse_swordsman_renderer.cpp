@@ -77,7 +77,7 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   return config;
 }
 
-} // namespace
+} 
 
 void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
@@ -106,4 +106,4 @@ void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} // namespace Render::GL::Carthage
+} 

@@ -293,7 +293,7 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
   return SpawnType::Archer;
 }
 
-} // namespace Game::Units
+} 
 
 namespace std {
 template <> struct hash<Game::Units::SpawnType> {
@@ -301,4 +301,4 @@ template <> struct hash<Game::Units::SpawnType> {
     return hash<std::uint8_t>()(static_cast<std::uint8_t>(type));
   }
 };
-} // namespace std
+} 

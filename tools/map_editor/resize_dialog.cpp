@@ -49,4 +49,4 @@ int ResizeDialog::newWidth() const { return m_widthSpinBox->value(); }
 
 int ResizeDialog::newHeight() const { return m_heightSpinBox->value(); }
 
-} // namespace MapEditor
+} 

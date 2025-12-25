@@ -48,5 +48,5 @@ private:
   void cache_banner_uniforms();
 };
 
-} // namespace BackendPipelines
-} // namespace Render::GL
+} 
+} 

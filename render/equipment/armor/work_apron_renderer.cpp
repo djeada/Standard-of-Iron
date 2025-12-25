@@ -187,4 +187,4 @@ void WorkApronRenderer::renderPockets(const DrawContext &ctx,
   }
 }
 
-} // namespace Render::GL
+} 

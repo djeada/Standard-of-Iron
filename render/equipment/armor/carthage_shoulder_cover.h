@@ -20,4 +20,4 @@ private:
   float m_outward_scale = 1.0F;
 };
 
-} // namespace Render::GL
+} 

@@ -22,7 +22,7 @@ constexpr float k_ribbon_radius = 0.08F;
 constexpr int k_segments_per_wave = 10;
 constexpr float k_spiral_twist_rate = 8.0F;
 constexpr float k_edge_fade_factor = 1.5F;
-} // namespace
+} 
 
 void render_healing_waves(Renderer *renderer, ResourceManager *,
                           const Game::Systems::HealingBeamSystem &beam_system) {
@@ -140,4 +140,4 @@ void render_healing_waves(Renderer *renderer, ResourceManager *,
   }
 }
 
-} // namespace Render::GL
+} 

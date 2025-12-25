@@ -10,7 +10,7 @@ inline auto clamp01(float value) -> float {
   return std::clamp(value, 0.0F, 1.0F);
 }
 
-} // namespace
+} 
 
 auto saturate_color(const QVector3D &value) -> QVector3D {
   return {clamp01(value.x()), clamp01(value.y()), clamp01(value.z())};
@@ -45,4 +45,4 @@ auto mix_palette_color(const QVector3D &base_color,
   return saturate_color(mixed);
 }
 
-} // namespace Render::GL::Humanoid
+} 

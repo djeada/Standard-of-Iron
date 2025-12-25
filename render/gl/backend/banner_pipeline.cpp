@@ -65,4 +65,4 @@ void BannerPipeline::cache_banner_uniforms() {
   m_bannerUniforms.alpha = m_bannerShader->uniform_handle("u_alpha");
 }
 
-} // namespace Render::GL::BackendPipelines
+} 

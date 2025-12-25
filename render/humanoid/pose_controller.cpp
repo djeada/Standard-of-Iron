@@ -23,7 +23,7 @@ constexpr float kSeedOffsetDivisor = 50.0F;
 constexpr float kBaseCyclePeriod = 25.0F;
 constexpr float kCyclePeriodRange = 15.0F;
 constexpr float kTapFrequencyMultiplier = 6.0F;
-} // namespace
+} 
 
 auto HumanoidPoseController::get_ambient_idle_type(
     float time, std::uint32_t seed, float idle_duration) -> AmbientIdleType {
@@ -1471,4 +1471,4 @@ void HumanoidPoseController::tilt_torso(float side_tilt, float forward_tilt) {
   m_pose.body_frames.head.origin += offset * 1.5F;
 }
 
-} // namespace Render::GL
+} 

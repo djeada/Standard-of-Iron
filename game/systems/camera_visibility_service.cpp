@@ -78,4 +78,4 @@ auto CameraVisibilityService::has_camera() const -> bool {
   return m_camera != nullptr;
 }
 
-} // namespace Game::Systems
+} 
