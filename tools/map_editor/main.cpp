@@ -4,7 +4,7 @@
 #include <QTimer>
 
 auto main(int argc, char *argv[]) -> int {
-  // Note: Cannot be const because parser.process() modifies app's arguments
+
   QApplication app(argc, argv);
   QApplication::setApplicationName("Standard of Iron Map Editor");
   QApplication::setApplicationVersion("1.0");
@@ -20,7 +20,6 @@ auto main(int argc, char *argv[]) -> int {
   MapEditor::EditorWindow window;
   window.show();
 
-  // Open file if provided as argument (after window is shown)
   const QStringList args = parser.positionalArguments();
   if (!args.isEmpty()) {
     const QString &filePath = args.first();

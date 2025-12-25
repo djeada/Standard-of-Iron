@@ -27,13 +27,13 @@ import math
 
 try:
     import mapbox_earcut as earcut
-except ImportError:  # pragma: no cover
+except ImportError:
     earcut = None
 
 try:
     from shapely.geometry import shape, Polygon, Point
     from shapely.ops import unary_union
-except ImportError:  # pragma: no cover
+except ImportError:
     shape = None
     Polygon = None
     Point = None
@@ -185,7 +185,6 @@ def build_region_masks(bounds: MapBounds) -> dict[str, Polygon]:
     Adjust corners if your map bounds differ a lot.
     """
     region_masks_lonlat = {
-        # Italian peninsula + Po valley (includes N Italy)
         "italy": [
             (6.0, 47.8),
             (19.2, 47.8),
@@ -193,7 +192,6 @@ def build_region_masks(bounds: MapBounds) -> dict[str, Polygon]:
             (6.0, 36.0),
             (6.0, 47.8),
         ],
-        # Balkans / Illyria / Greece-side (east of Adriatic)
         "balkans": [
             (12.8, 47.8),
             (26.0, 47.8),
@@ -201,7 +199,6 @@ def build_region_masks(bounds: MapBounds) -> dict[str, Polygon]:
             (12.8, 36.0),
             (12.8, 47.8),
         ],
-        # North Africa theatre
         "africa": [
             (-11.0, 38.8),
             (26.0, 38.8),
@@ -209,7 +206,6 @@ def build_region_masks(bounds: MapBounds) -> dict[str, Polygon]:
             (-11.0, 20.0),
             (-11.0, 38.8),
         ],
-        # Iberia theatre
         "iberia": [
             (-11.0, 45.5),
             (5.5, 45.5),
@@ -217,7 +213,6 @@ def build_region_masks(bounds: MapBounds) -> dict[str, Polygon]:
             (-11.0, 34.5),
             (-11.0, 45.5),
         ],
-        # Gaul / southern France theatre
         "gaul": [
             (-6.0, 50.5),
             (16.0, 50.5),
@@ -367,9 +362,10 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "cities": [{"name": "Rome", "lonlat": (12.5, 41.9)}],
             "lonlat": [
                 (9.9, 42.7),
-                (13.3, 42.6),
-                (13.8, 41.0),
-                (12.2, 40.2),
+                (14.8, 42.6),
+                (15.6, 41.6),
+                (15.2, 41.0),
+                (13.2, 40.2),
                 (10.2, 40.6),
                 (9.9, 42.7),
             ],
@@ -666,7 +662,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
 
     print(f"Prepared province shapes: {len(province_defs)}")
 
-    # Step 1: Clip each province to land + drop cross-sea fragments + theatre mask
     province_clipped = {}
     for prov in province_defs:
         clipped = prov["poly"].intersection(land_union)
@@ -678,7 +673,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         else:
             print(f"Warning: Province {prov['id']} has no land intersection")
 
-    # Step 2: Resolve overlaps by explicit priority (then by area)
     prov_meta = {p["id"]: p for p in province_defs if p["id"] in province_clipped}
     province_priority = {
         pid: (prov_meta[pid]["priority"], prov_meta[pid]["poly"].area)
@@ -702,7 +696,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         if not current_geom.is_empty:
             resolved_provinces[prov_id] = current_geom
 
-    # Step 3: Gap fill (restricted to same land component AND same region)
     def get_uncovered_land():
         if not resolved_provinces:
             return land_union
@@ -801,7 +794,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                 print(f"Warning: Could not fill all gaps after {iteration} iterations")
                 break
 
-    # Step 4: Final pass - assign remaining uncovered land to nearest province (same comp + same region)
     uncovered = get_uncovered_land()
     if not uncovered.is_empty and uncovered.area > MIN_GAP_AREA:
         print(f"Final pass: {uncovered.area:.6f} uncovered area remaining")
@@ -841,7 +833,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
                     claim
                 )
 
-    # Step 5: Re-resolve overlaps (priority order)
     final_provinces = {}
     for i, (prov_id, _) in enumerate(sorted_provs):
         if prov_id not in resolved_provinces:
@@ -860,7 +851,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
 
     resolved_provinces = final_provinces
 
-    # Report coverage
     final_uncovered = get_uncovered_land()
     if final_uncovered.is_empty or final_uncovered.area < MIN_GAP_AREA:
         print("100% land coverage achieved")
@@ -869,7 +859,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
         coverage = (total_land - final_uncovered.area) / total_land * 100
         print(f"Land coverage: {coverage:.2f}% ({final_uncovered.area:.6f} uncovered)")
 
-    # Step 6: Triangulate
     province_triangles = {}
     for prov_id, geom in resolved_provinces.items():
         tris = []
@@ -877,7 +866,6 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             tris.extend(triangulate_polygon(poly))
         province_triangles[prov_id] = tris
 
-    # Step 7: Output
     output: List[dict] = []
     borders: List[List[List[float]]] = []
 

@@ -8,12 +8,12 @@ import os
 import re
 import sys
 
-# Configuration
+
 SHADER_DIR = "assets/shaders"
 STYLE_DIR = "render/entity/nations"
 
 NATIONS = {
-    # Maps directory name to nation ID used in shader naming
+    
     "roman": "roman_republic",
     "carthage": "carthage"
 }
@@ -53,7 +53,7 @@ def check_style_configs():
             with open(style_file, 'r') as f:
                 content = f.read()
             
-            # Look for shader_id assignment
+            
             shader_id_pattern = r'shader_id\s*=\s*"([^"]+)"'
             matches = re.findall(shader_id_pattern, content)
             
@@ -74,7 +74,7 @@ def main():
     print("=" * 80)
     print()
     
-    # Check shader files
+    
     print("Checking shader files...")
     missing_shaders = check_shader_files()
     
@@ -87,7 +87,7 @@ def main():
     
     print()
     
-    # Check style configurations
+    
     print("Checking style configurations...")
     config_issues = check_style_configs()
     
@@ -101,7 +101,7 @@ def main():
     print()
     print("=" * 80)
     
-    # Summary
+    
     total_issues = len(missing_shaders) + len(config_issues)
     total_combinations = len(TROOPS) * len(NATIONS)
     

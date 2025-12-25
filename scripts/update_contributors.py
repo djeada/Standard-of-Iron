@@ -3,7 +3,7 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
-# Path to CONTRIBUTORS.md (in repository root)
+
 contributors_file = Path(__file__).parent.parent / "CONTRIBUTORS.md"
 
 def run_git(command):
@@ -33,21 +33,21 @@ def parse_existing_references():
         lines = content.split("\n")
         
         for line in lines:
-            # Skip header, separator, and empty lines
+            
             if not line.strip() or line.startswith("#") or "---" in line or line.startswith("This file"):
                 continue
-            # Check if it's a table row (starts with |)
+            
             if line.startswith("|") and line.count("|") >= 6:
                 parts = [p.strip() for p in line.split("|")]
-                # parts[0] is empty (before first |), parts[1] is Name, parts[6] is Reference
+                
                 if len(parts) >= 7:
                     name = parts[1]
                     reference = parts[6]
-                    # Only store non-empty references
+                    
                     if name and reference:
                         references[name] = reference
     except Exception:
-        # If parsing fails, just return empty dict
+        
         pass
     
     return references
@@ -87,9 +87,9 @@ def generate_table(contributors, existing_references):
     rows = []
     for name, info in sorted(contributors.items(), key=lambda x: x[0].lower()):
         emails = ", ".join(sorted(info["emails"]))
-        # Preserve existing reference if it exists, otherwise leave empty
+        
         reference = existing_references.get(name, "")
-        # Use proper pluralization for commits
+        
         commit_text = f"{info['count']} commit" if info['count'] == 1 else f"{info['count']} commits"
         rows.append(f"| {name} | {emails} | {commit_text} | {info['first']} | {info['last']} | {reference} |")
     return "\n".join(header + rows) + "\n"
