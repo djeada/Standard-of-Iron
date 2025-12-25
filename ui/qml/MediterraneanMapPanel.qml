@@ -353,7 +353,9 @@ Rectangle {
         onWheel: function(wheel) {
             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
             var next_distance = root.map_orbit_distance * step;
-            root.map_orbit_distance = Math.min(5, Math.max(0.6, next_distance));
+            if (campaignMapLoader.item) {
+                root.map_orbit_distance = Math.min(campaignMapLoader.item.maxOrbitDistance, Math.max(campaignMapLoader.item.minOrbitDistance, next_distance));
+            }
             wheel.accepted = true;
         }
     }
