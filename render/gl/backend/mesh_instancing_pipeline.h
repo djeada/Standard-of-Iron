@@ -38,8 +38,8 @@ public:
 
   void begin_frame();
 
-  [[nodiscard]] auto can_batch(Mesh *mesh, Shader *shader,
-                               Texture *texture) const -> bool;
+  [[nodiscard]] auto can_batch(Mesh *mesh, Shader *shader, Texture *texture,
+                               int material_id) const -> bool;
 
   void accumulate(const QMatrix4x4 &model, const QVector3D &color, float alpha,
                   int material_id = 0);
@@ -76,6 +76,7 @@ private:
   Mesh *m_currentMesh{nullptr};
   Shader *m_currentShader{nullptr};
   Texture *m_currentTexture{nullptr};
+  int m_currentMaterialId{0};
 
   // Map from original shader to instanced shader + uniforms
   struct InstancedShaderInfo {

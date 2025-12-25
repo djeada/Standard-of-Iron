@@ -1462,6 +1462,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       // Check if this mesh command can be batched using instanced rendering
       // Batch opaque mesh commands with the same mesh/shader/texture
       // Only batch if we have an instanced shader for this specific shader
+      bool used_instancing = false;
       if (!isTransparent && !isShadowShader && m_meshInstancingPipeline &&
           m_meshInstancingPipeline->is_initialized() &&
           m_meshInstancingPipeline->has_instanced_shaders() &&
@@ -1470,7 +1471,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         // Check if we can batch with upcoming commands
         bool start_new_batch = !m_meshInstancingPipeline->has_pending() ||
                                !m_meshInstancingPipeline->can_batch(
-                                   it.mesh, it.shader, it.texture);
+                                   it.mesh, it.shader, it.texture, it.material_id);
 
         if (start_new_batch && m_meshInstancingPipeline->has_pending()) {
           // Flush the previous batch before starting a new one
@@ -1505,6 +1506,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_lastBoundTexture = nullptr;
         }
 
+        used_instancing = true;
+      }
+      
+      // If we used instancing for this mesh, skip the regular rendering path
+      if (used_instancing) {
         break;
       }
 

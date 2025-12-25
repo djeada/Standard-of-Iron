@@ -142,11 +142,12 @@ void MeshInstancingPipeline::begin_frame() {
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
+  m_currentMaterialId = 0;
   m_activeInstancedShader = nullptr;
 }
 
 auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
-                                       Texture *texture) const -> bool {
+                                       Texture *texture, int material_id) const -> bool {
   if (m_instances.empty()) {
     return true;
   }
@@ -154,12 +155,12 @@ auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
     return false;
   }
   return mesh == m_currentMesh && shader == m_currentShader &&
-         texture == m_currentTexture;
+         texture == m_currentTexture && material_id == m_currentMaterialId;
 }
 
 void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
                                         const QVector3D &color, float alpha,
-                                        int) {
+                                        int material_id) {
   MeshInstanceGpu inst{};
 
   const float *data = model.constData();
@@ -185,6 +186,9 @@ void MeshInstancingPipeline::accumulate(const QMatrix4x4 &model,
   inst.color_alpha[3] = alpha;
 
   m_instances.push_back(inst);
+  
+  // Store material_id for this batch (all instances in a batch share the same material_id)
+  m_currentMaterialId = material_id;
 }
 
 void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
@@ -263,6 +267,11 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
     if (m_activeUniforms.texture != Shader::InvalidUniform) {
       active_shader->set_uniform(m_activeUniforms.texture, 0);
     }
+  }
+  
+  // Set material_id uniform
+  if (m_activeUniforms.material_id != Shader::InvalidUniform) {
+    active_shader->set_uniform(m_activeUniforms.material_id, m_currentMaterialId);
   }
 
   setup_instance_attributes();
