@@ -61,11 +61,19 @@ BOUNDS_PATH = ROOT / "tools" / "map_pipeline" / "map_bounds.json"
 OUT_PATH = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
 
 # Validation constants
-MAX_SEGMENT_DISTANCE = 0.25  # Maximum UV distance for a single segment (to detect discontinuities)
+MAX_SEGMENT_DISTANCE = (
+    0.25  # Maximum UV distance for a single segment (to detect discontinuities)
+)
 SEA_CROSSING_THRESHOLD = 0.10  # Minimum distance to be considered a sea crossing
 ALLOWED_SEA_CROSSINGS = {
-    "Gibraltar": (0.10, 0.40),  # Tingis to Carteia (Africa to Spain) - wider range for curve
-    "Sicily-Carthage": (0.75, 0.95),  # Sicily to Carthage crossing - adjusted for actual position
+    "Gibraltar": (
+        0.10,
+        0.40,
+    ),  # Tingis to Carteia (Africa to Spain) - wider range for curve
+    "Sicily-Carthage": (
+        0.75,
+        0.95,
+    ),  # Sicily to Carthage crossing - adjusted for actual position
 }
 
 
@@ -178,18 +186,15 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     segment_types = {
         # FIX: reorder Africa start to avoid backtracking near Carthage
         ("Carthage", "Hippo_Regius"): "coastal",
-        ("Hippo_Regius", "Cirta"): "land",   # Cirta is inland; keep this as land
-        ("Cirta", "Saldae"): "land",         # back to the coast at Saldae
-
+        ("Hippo_Regius", "Cirta"): "land",  # Cirta is inland; keep this as land
+        ("Cirta", "Saldae"): "land",  # back to the coast at Saldae
         # North Africa westbound coast after returning to Saldae
         ("Saldae", "Icosium"): "coastal",
         ("Icosium", "Caesarea"): "coastal",
         ("Caesarea", "Rusaddir"): "coastal",
         ("Rusaddir", "Tingis"): "coastal",
-
         # Gibraltar crossing
         ("Tingis", "Carteia"): "open_sea",
-
         # Spanish coast to Gaul
         ("Carteia", "Malaca"): "coastal",
         ("Malaca", "Abdera"): "coastal",
@@ -199,7 +204,6 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         ("Tarraco", "Emporiae"): "coastal",
         ("Emporiae", "Narbo"): "coastal",
         ("Narbo", "Massalia"): "coastal",
-
         # Alps / Italy
         ("Massalia", "Mediolanum"): "land",
         ("Mediolanum", "Placentia"): "land",
@@ -208,7 +212,6 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         ("Veii", "Rome"): "land",
         ("Rome", "Capua"): "land",
         ("Capua", "Tarentum"): "coastal",
-
         # Return to Africa
         ("Tarentum", "Syracuse"): "coastal",
         ("Syracuse", "Lilybaeum"): "open_sea",
@@ -245,28 +248,34 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     mission_routes = [
         # Mission 0: Crossing the Rhône (to Massalia)
         BASE_AFRICA_TO_MASSALIA,
-
         # Mission 1: Battle of Ticino
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum"],
-
         # Mission 2: Battle of Trebia
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia"],
-
         # Mission 3: Battle of Trasimene
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii"],
-
         # Mission 4: Battle of Cannae
-        BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
-
+        BASE_AFRICA_TO_MASSALIA
+        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
         # Mission 5: Campania Campaign
-        BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
-
+        BASE_AFRICA_TO_MASSALIA
+        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
         # Mission 6: Crossing the Alps (flashback - ends at Mediolanum)
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum"],
-
         # Mission 7: Battle of Zama (complete journey)
         BASE_AFRICA_TO_MASSALIA
-        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
+        + [
+            "Mediolanum",
+            "Placentia",
+            "Ariminum",
+            "Veii",
+            "Rome",
+            "Capua",
+            "Tarentum",
+            "Syracuse",
+            "Lilybaeum",
+            "Carthage",
+        ],
     ]
 
     lines: List[List[List[float]]] = []
@@ -278,12 +287,16 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         for name in route_names:
             uv = city_uv.get(name)
             if uv is None:
-                print(f"Warning: Mission {idx} - Hannibal path city '{name}' not found.")
+                print(
+                    f"Warning: Mission {idx} - Hannibal path city '{name}' not found."
+                )
                 continue
             city_waypoints.append(uv)
 
         if len(city_waypoints) < 2:
-            print(f"Warning: Mission {idx} has insufficient waypoints ({len(city_waypoints)}), skipping.")
+            print(
+                f"Warning: Mission {idx} has insufficient waypoints ({len(city_waypoints)}), skipping."
+            )
             continue
 
         # Generate smooth path with intermediate waypoints
@@ -304,7 +317,9 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         if len(line) >= 2:
             lines.append(line)
         else:
-            print(f"Warning: Mission {idx} final path has insufficient points ({len(line)}), skipping.")
+            print(
+                f"Warning: Mission {idx} final path has insufficient points ({len(line)}), skipping."
+            )
 
     if not lines:
         print("Warning: No valid paths generated for Hannibal's campaign.")
@@ -373,15 +388,21 @@ def validate_sea_crossings(path: List[List[float]], mission_idx: int) -> bool:
                     f"ERROR: Mission {mission_idx}, segment {i}->{i+1}: "
                     f"Unauthorized sea crossing detected!"
                 )
-                print(f"  Distance: {distance:.4f} (threshold={SEA_CROSSING_THRESHOLD})")
+                print(
+                    f"  Distance: {distance:.4f} (threshold={SEA_CROSSING_THRESHOLD})"
+                )
                 print(f"  Start: [{p1[0]:.4f}, {p1[1]:.4f}]")
                 print(f"  End: [{p2[0]:.4f}, {p2[1]:.4f}]")
                 print(f"  Midpoint: u={mid_u:.4f}, v={mid_v:.4f}")
-                print(f"  Allowed crossing regions: {list(ALLOWED_SEA_CROSSINGS.keys())}")
+                print(
+                    f"  Allowed crossing regions: {list(ALLOWED_SEA_CROSSINGS.keys())}"
+                )
                 return False
 
     if crossings_found:
-        print(f"Mission {mission_idx}: Found {len(crossings_found)} authorized sea crossing(s):")
+        print(
+            f"Mission {mission_idx}: Found {len(crossings_found)} authorized sea crossing(s):"
+        )
         for crossing in crossings_found:
             print(
                 f"  - {crossing['name']} crossing at segment {crossing['segment']}: "
@@ -406,7 +427,9 @@ def validate_all_paths(lines: List[List[List[float]]]) -> bool:
             all_valid = False
             continue
         else:
-            print(f"  ✓ Path is continuous (all segments < {MAX_SEGMENT_DISTANCE} UV distance)")
+            print(
+                f"  ✓ Path is continuous (all segments < {MAX_SEGMENT_DISTANCE} UV distance)"
+            )
 
         if not validate_sea_crossings(path, idx):
             all_valid = False
@@ -435,7 +458,9 @@ def simulate_cpp_rendering(lines: List[List[List[float]]]) -> bool:
 
     for idx, path in enumerate(lines):
         if len(path) < 2:
-            print(f"\nERROR: Mission {idx} cannot be rendered - need at least 2 vertices")
+            print(
+                f"\nERROR: Mission {idx} cannot be rendered - need at least 2 vertices"
+            )
             all_valid = False
             continue
 
