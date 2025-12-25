@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # scripts/remove-comments.sh
-# Remove comments from C/C++ source files in-place.
+# Remove comments from C/C++, Python, and shader source files in-place.
 
 set -Eeuo pipefail
 trap 'echo "error: line $LINENO: $BASH_COMMAND" >&2' ERR
 
-EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl"
+EXTS_DEFAULT="c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py"
 ROOTS=(".")
 DRY_RUN=0
 BACKUP=0          # OFF by default
@@ -14,13 +14,13 @@ EXTS="$EXTS_DEFAULT"
 
 usage() {
   cat <<'USAGE'
-remove-comments.sh - strip comments from C/C++ and shader files.
+remove-comments.sh - strip comments from C/C++, Python, and shader files.
 
 Usage:
   scripts/remove-comments.sh [options] [PATH ...]
 
 Options:
-  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl)
+  -x, --ext       Comma-separated extensions to scan (default: c,cc,cpp,cxx,h,hh,hpp,hxx,ipp,inl,tpp,qml,vert,frag,glsl,py)
   -n, --dry-run   Show files that would be modified; don't write changes
   --backup        Create FILE.bak before writing (default: OFF)
   -q, --quiet     Less output
@@ -75,19 +75,22 @@ fi
 
 # Python filter as a literal (processes BYTES; preserves UTF-8/Unicode)
 PY_FILTER=$(cat <<'PYCODE'
-import sys, re
+import sys, re, os
 
 # Read raw bytes and operate purely on bytes so UTF-8 (and any other) is preserved.
 path = sys.argv[1]
 with open(path, 'rb') as f:
     data = f.read()
 
+# Detect file type based on extension
+is_python = path.lower().endswith('.py')
+
 RAW_PREFIX = re.compile(rb'(?:u8|u|U|L)?R"([^\s()\\]{0,16})\(')
 
 def isspace(b):  # b is an int 0..255
     return b in b' \t\r\n\v\f'
 
-def strip_comments(b: bytes) -> bytes:
+def strip_cpp_comments(b: bytes) -> bytes:
     out = bytearray()
     i = 0
     n = len(b)
@@ -132,7 +135,7 @@ def strip_comments(b: bytes) -> bytes:
                     i += 1
                 if i < n and b[i] == 0x0A:
                     # Preserve CRLF if present
-                    if i-1 >= 0 and b[i-1] == 0x0D:
+                    if i > 0 and b[i-1] == 0x0D:
                         out += b'\r\n'
                     else:
                         out += b'\n'
@@ -165,7 +168,85 @@ def strip_comments(b: bytes) -> bytes:
 
     return bytes(out)
 
-sys.stdout.buffer.write(strip_comments(data))
+def strip_python_comments(b: bytes) -> bytes:
+    out = bytearray()
+    i = 0
+    n = len(b)
+
+    # Preserve shebang line if present at start of file
+    if n > 2 and b[0] == 0x23 and b[1] == 0x21:  # '#!'
+        while i < n and b[i] != 0x0A:
+            out.append(b[i])
+            i += 1
+        if i < n and b[i] == 0x0A:
+            out.append(b[i])
+            i += 1
+
+    while i < n:
+        c = b[i]
+
+        # String literals (single, double, and triple-quoted)
+        if c == 0x22 or c == 0x27:  # " or '
+            quote = c
+            # Check for triple-quote
+            if i + 2 < n and b[i+1] == quote and b[i+2] == quote:
+                # Triple-quoted string
+                out.append(c); out.append(c); out.append(c)
+                i += 3
+                while i < n:
+                    ch = b[i]
+                    out.append(ch)
+                    i += 1
+                    if ch == 0x5C and i < n:  # backslash escape
+                        out.append(b[i])
+                        i += 1
+                    elif ch == quote and i + 1 < n and b[i] == quote and i + 2 < n and b[i+1] == quote:
+                        # Found closing triple-quote
+                        out.append(b[i])
+                        out.append(b[i+1])
+                        i += 2
+                        break
+            else:
+                # Single or double quoted string
+                out.append(c)
+                i += 1
+                while i < n:
+                    ch = b[i]
+                    out.append(ch)
+                    i += 1
+                    if ch == 0x5C and i < n:  # backslash escape
+                        out.append(b[i])
+                        i += 1
+                    elif ch == quote:
+                        break
+                    elif ch == 0x0A:  # newline ends unclosed string
+                        break
+            continue
+
+        # # comment
+        if c == 0x23:  # '#'
+            i += 1
+            while i < n and b[i] != 0x0A:
+                i += 1
+            if i < n and b[i] == 0x0A:
+                # Preserve line ending
+                if i > 0 and b[i-1] == 0x0D:
+                    out += b'\r\n'
+                else:
+                    out += b'\n'
+                i += 1
+            continue
+
+        # Default: copy byte verbatim
+        out.append(c)
+        i += 1
+
+    return bytes(out)
+
+if is_python:
+    sys.stdout.buffer.write(strip_python_comments(data))
+else:
+    sys.stdout.buffer.write(strip_cpp_comments(data))
 PYCODE
 )
 
