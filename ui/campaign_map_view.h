@@ -26,7 +26,12 @@ class CampaignMapView : public QQuickFramebufferObject {
                  provinceLabelsChanged)
   Q_PROPERTY(int currentMission READ currentMission WRITE setCurrentMission
                  NOTIFY currentMissionChanged)
+  Q_PROPERTY(float minOrbitDistance READ minOrbitDistance CONSTANT)
+  Q_PROPERTY(float maxOrbitDistance READ maxOrbitDistance CONSTANT)
 public:
+  static constexpr float kMinOrbitDistance = 0.3F;
+  static constexpr float kMaxOrbitDistance = 5.0F;
+
   struct ProvinceVisual {
     QString owner;
     QVector4D color;
@@ -60,6 +65,13 @@ public:
 
   [[nodiscard]] auto orbitDistance() const -> float { return m_orbit_distance; }
   void setOrbitDistance(float distance);
+
+  [[nodiscard]] auto minOrbitDistance() const -> float {
+    return kMinOrbitDistance;
+  }
+  [[nodiscard]] auto maxOrbitDistance() const -> float {
+    return kMaxOrbitDistance;
+  }
 
   [[nodiscard]] auto panU() const -> float { return m_pan_u; }
   void setPanU(float pan);
