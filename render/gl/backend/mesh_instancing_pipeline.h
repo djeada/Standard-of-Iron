@@ -45,11 +45,23 @@ public:
 
   void begin_batch(Mesh *mesh, Shader *shader, Texture *texture);
 
-  void flush();
+  void flush(const QMatrix4x4 &view_proj);
 
   [[nodiscard]] auto instance_count() const -> std::size_t;
 
   [[nodiscard]] auto has_pending() const -> bool;
+
+  [[nodiscard]] auto instanced_shader() const -> Shader * {
+    return m_instancedShader;
+  }
+
+  struct Uniforms {
+    GLint view_proj{Shader::InvalidUniform};
+    GLint texture{Shader::InvalidUniform};
+    GLint use_texture{Shader::InvalidUniform};
+  };
+
+  Uniforms m_uniforms;
 
 private:
   void setup_instance_attributes();
@@ -61,6 +73,8 @@ private:
   Mesh *m_currentMesh{nullptr};
   Shader *m_currentShader{nullptr};
   Texture *m_currentTexture{nullptr};
+
+  Shader *m_instancedShader{nullptr};
 
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instanceCapacity{0};

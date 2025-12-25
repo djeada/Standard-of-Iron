@@ -213,6 +213,9 @@ public:
     const auto [healerVert, healerFrag] =
         loadBaseShader(QStringLiteral("healer"));
 
+    // Load instanced shader for spearman (used for mesh batching)
+    loadBaseShader(QStringLiteral("spearman_instanced"));
+
     const QStringList nationVariants = {QStringLiteral("roman_republic"),
                                         QStringLiteral("carthage")};
 

@@ -4,6 +4,7 @@
 #include "../texture.h"
 #include <QDebug>
 #include <QOpenGLContext>
+#include <QStringLiteral>
 #include <cstring>
 
 namespace Render::GL::BackendPipelines {
@@ -53,6 +54,19 @@ auto MeshInstancingPipeline::initialize() -> bool {
       nullptr, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+  // Load the instanced shader for mesh batching
+  if (m_shaderCache != nullptr) {
+    m_instancedShader =
+        m_shaderCache->get(QStringLiteral("spearman_instanced"));
+    if (m_instancedShader != nullptr) {
+      cache_uniforms();
+      qInfo() << "MeshInstancingPipeline: loaded instanced shader";
+    } else {
+      qWarning()
+          << "MeshInstancingPipeline: spearman_instanced shader not found";
+    }
+  }
+
   m_initialized = true;
   qInfo() << "MeshInstancingPipeline initialized with capacity"
           << m_instanceCapacity;
@@ -75,10 +89,22 @@ void MeshInstancingPipeline::shutdown() {
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
+  m_instancedShader = nullptr;
   m_initialized = false;
 }
 
-void MeshInstancingPipeline::cache_uniforms() {}
+void MeshInstancingPipeline::cache_uniforms() {
+  if (m_instancedShader == nullptr) {
+    return;
+  }
+
+  m_uniforms.view_proj =
+      m_instancedShader->uniform_location(QStringLiteral("u_viewProj"));
+  m_uniforms.texture =
+      m_instancedShader->uniform_location(QStringLiteral("u_texture"));
+  m_uniforms.use_texture =
+      m_instancedShader->uniform_location(QStringLiteral("u_useTexture"));
+}
 
 auto MeshInstancingPipeline::is_initialized() const -> bool {
   return m_initialized;
@@ -140,16 +166,25 @@ void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
   m_currentTexture = texture;
 }
 
-void MeshInstancingPipeline::flush() {
+void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
   if (m_instances.empty()) {
     return;
   }
-  if (m_currentMesh == nullptr || m_currentShader == nullptr ||
-      !m_initialized) {
+  if (m_currentMesh == nullptr || !m_initialized) {
     qWarning() << "MeshInstancingPipeline::flush called with invalid state:"
-               << "mesh=" << m_currentMesh << "shader=" << m_currentShader
+               << "mesh=" << m_currentMesh
                << "initialized=" << m_initialized
                << "instances=" << m_instances.size();
+    m_instances.clear();
+    return;
+  }
+
+  // Use the instanced shader if available, otherwise fall back
+  Shader *active_shader =
+      (m_instancedShader != nullptr) ? m_instancedShader : m_currentShader;
+  if (active_shader == nullptr) {
+    qWarning()
+        << "MeshInstancingPipeline::flush: no shader available for instancing";
     m_instances.clear();
     return;
   }
@@ -175,11 +210,27 @@ void MeshInstancingPipeline::flush() {
                   static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu)),
                   m_instances.data());
 
-  setup_instance_attributes();
+  // Use the instanced shader
+  active_shader->use();
 
-  if (m_currentTexture != nullptr) {
-    m_currentTexture->bind(0);
+  // Set shared view-projection uniform
+  if (m_uniforms.view_proj != Shader::InvalidUniform) {
+    active_shader->set_uniform(m_uniforms.view_proj, view_proj);
   }
+
+  // Set texture uniforms
+  bool has_texture = (m_currentTexture != nullptr);
+  if (m_uniforms.use_texture != Shader::InvalidUniform) {
+    active_shader->set_uniform(m_uniforms.use_texture, has_texture);
+  }
+  if (has_texture) {
+    m_currentTexture->bind(0);
+    if (m_uniforms.texture != Shader::InvalidUniform) {
+      active_shader->set_uniform(m_uniforms.texture, 0);
+    }
+  }
+
+  setup_instance_attributes();
 
   m_currentMesh->draw_instanced(count);
 

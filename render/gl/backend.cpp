@@ -1459,6 +1459,53 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
+      // Check if this mesh command can be batched using instanced rendering
+      // Batch opaque mesh commands with the same mesh/shader/texture
+      if (!isTransparent && !isShadowShader && m_meshInstancingPipeline &&
+          m_meshInstancingPipeline->is_initialized() &&
+          m_meshInstancingPipeline->instanced_shader() != nullptr) {
+
+        // Check if we can batch with upcoming commands
+        bool start_new_batch = !m_meshInstancingPipeline->has_pending() ||
+                               !m_meshInstancingPipeline->can_batch(
+                                   it.mesh, it.shader, it.texture);
+
+        if (start_new_batch && m_meshInstancingPipeline->has_pending()) {
+          // Flush the previous batch before starting a new one
+          m_meshInstancingPipeline->flush(view_proj);
+          m_lastBoundShader = nullptr;
+          m_lastBoundTexture = nullptr;
+        }
+
+        if (start_new_batch) {
+          m_meshInstancingPipeline->begin_batch(it.mesh, it.shader, it.texture);
+        }
+
+        // Add this instance to the batch
+        m_meshInstancingPipeline->accumulate(it.model, it.color, it.alpha,
+                                             it.material_id);
+
+        // Look ahead: if next command is not batchable, flush now
+        bool should_flush = true;
+        if (i + 1 < count) {
+          const auto &next_cmd = queue.get_sorted(i + 1);
+          if (next_cmd.index() == MeshCmdIndex) {
+            const auto &next_mesh = std::get<MeshCmdIndex>(next_cmd);
+            if (can_batch_mesh_cmds(it, next_mesh)) {
+              should_flush = false;
+            }
+          }
+        }
+
+        if (should_flush && m_meshInstancingPipeline->has_pending()) {
+          m_meshInstancingPipeline->flush(view_proj);
+          m_lastBoundShader = nullptr;
+          m_lastBoundTexture = nullptr;
+        }
+
+        break;
+      }
+
       auto *uniforms = m_characterPipeline
                            ? m_characterPipeline->resolveUniforms(active_shader)
                            : nullptr;
@@ -1737,6 +1784,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     }
     ++i;
   }
+
+  // Flush any pending mesh instances at the end of the frame
+  if (m_meshInstancingPipeline && m_meshInstancingPipeline->has_pending()) {
+    m_meshInstancingPipeline->flush(view_proj);
+  }
+
   if (m_lastBoundShader != nullptr) {
     m_lastBoundShader->release();
     m_lastBoundShader = nullptr;
