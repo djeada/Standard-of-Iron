@@ -64,14 +64,15 @@ auto MeshInstancingPipeline::initialize() -> bool {
     if (carthageOriginal != nullptr && carthageInstanced != nullptr) {
       InstancedShaderInfo info;
       info.shader = carthageInstanced;
+      carthageInstanced->use();
       info.uniforms.view_proj =
-          carthageInstanced->uniform_location(QStringLiteral("u_viewProj"));
+          carthageInstanced->optional_uniform_handle("u_viewProj");
       info.uniforms.texture =
-          carthageInstanced->uniform_location(QStringLiteral("u_texture"));
+          carthageInstanced->optional_uniform_handle("u_texture");
       info.uniforms.use_texture =
-          carthageInstanced->uniform_location(QStringLiteral("u_useTexture"));
+          carthageInstanced->optional_uniform_handle("u_useTexture");
       info.uniforms.material_id =
-          carthageInstanced->uniform_location(QStringLiteral("u_materialId"));
+          carthageInstanced->optional_uniform_handle("u_materialId");
       m_shaderMap[carthageOriginal] = info;
       qInfo() << "MeshInstancingPipeline: mapped spearman_carthage -> "
                  "spearman_instanced_carthage";
@@ -85,14 +86,15 @@ auto MeshInstancingPipeline::initialize() -> bool {
     if (romeOriginal != nullptr && romeInstanced != nullptr) {
       InstancedShaderInfo info;
       info.shader = romeInstanced;
+      romeInstanced->use();
       info.uniforms.view_proj =
-          romeInstanced->uniform_location(QStringLiteral("u_viewProj"));
+          romeInstanced->optional_uniform_handle("u_viewProj");
       info.uniforms.texture =
-          romeInstanced->uniform_location(QStringLiteral("u_texture"));
+          romeInstanced->optional_uniform_handle("u_texture");
       info.uniforms.use_texture =
-          romeInstanced->uniform_location(QStringLiteral("u_useTexture"));
+          romeInstanced->optional_uniform_handle("u_useTexture");
       info.uniforms.material_id =
-          romeInstanced->uniform_location(QStringLiteral("u_materialId"));
+          romeInstanced->optional_uniform_handle("u_materialId");
       m_shaderMap[romeOriginal] = info;
       qInfo() << "MeshInstancingPipeline: mapped spearman_roman_republic -> "
                  "spearman_instanced_roman_republic";
