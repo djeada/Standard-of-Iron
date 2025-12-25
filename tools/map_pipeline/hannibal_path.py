@@ -85,10 +85,12 @@ def add_coastal_waypoints(
     start: Tuple[float, float],
     end: Tuple[float, float],
     segment_type: str,
+    curve_direction: int = 1,
 ) -> List[Tuple[float, float]]:
     """Add intermediate waypoints for coastal/land segments to create curved paths.
 
     For open sea segments, uses a straight line.
+    curve_direction: 1 for standard perpendicular, -1 for opposite direction
     """
     if segment_type == "open_sea":
         return [start, end]
@@ -103,23 +105,23 @@ def add_coastal_waypoints(
     # Perpendicular offset to create a gentle curve
     du = eu - su
     dv = ev - sv
-    perp_u = -dv
-    perp_v = du
+    perp_u = -dv * curve_direction
+    perp_v = du * curve_direction
 
     length = (perp_u**2 + perp_v**2) ** 0.5
     if length > 0.001:
         perp_u /= length
         perp_v /= length
 
-        # Keep coastal curvature subtle to reduce unintended “cutting across water”
+        # Further reduced coastal curvature to avoid cutting across water
         if segment_type == "coastal":
-            offset = min(0.008, length * 0.05)
-            curve_u = mid_u + perp_u * offset * 0.3
-            curve_v = mid_v + perp_v * offset * 0.3
+            offset = min(0.004, length * 0.03)  # Reduced from 0.008 and 0.05
+            curve_u = mid_u + perp_u * offset * 0.2  # Reduced from 0.3
+            curve_v = mid_v + perp_v * offset * 0.2
         else:  # land
-            offset = min(0.015, length * 0.10)
-            curve_u = mid_u + perp_u * offset * 0.4
-            curve_v = mid_v + perp_v * offset * 0.4
+            offset = min(0.010, length * 0.08)  # Slightly reduced from 0.015 and 0.10
+            curve_u = mid_u + perp_u * offset * 0.3  # Reduced from 0.4
+            curve_v = mid_v + perp_v * offset * 0.3
 
         # Two extra points for smoother curve
         quarter_u = (su + curve_u) / 2.0
