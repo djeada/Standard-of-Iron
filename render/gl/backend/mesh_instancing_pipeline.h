@@ -55,6 +55,9 @@ public:
     return m_instancedShader;
   }
 
+private:
+  void setup_instance_attributes();
+
   struct Uniforms {
     GLint view_proj{Shader::InvalidUniform};
     GLint texture{Shader::InvalidUniform};
@@ -62,9 +65,6 @@ public:
   };
 
   Uniforms m_uniforms;
-
-private:
-  void setup_instance_attributes();
 
   GL::Backend *m_backend{nullptr};
   GL::ShaderCache *m_shaderCache{nullptr};
