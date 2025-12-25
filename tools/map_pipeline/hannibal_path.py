@@ -8,32 +8,21 @@ with the final path being the longest and covering all previous waypoints.
 Key features:
 - Routes follow coastlines with curved paths instead of rigid straight lines
 - Each segment is classified as 'coastal', 'land', or 'open_sea'
-- Open-sea crossings only occur on explicit segments (Africa → Spain, Sicily → Carthage)
-- Coastal segments include intermediate waypoints for smooth, organic appearance
-- Paths visually follow Mediterranean shorelines where applicable
+- Open-sea crossings only occur on explicit segments:
+  - Africa → Spain (Tingis → Carteia)
+  - Messina Strait (Rhegium → Messana) [short crossing]
+  - Sicily → Carthage (Lilybaeum → Carthage)
+- Coastal/land segments include intermediate waypoints for smooth appearance
+- Extra "steering" waypoints added in problem areas to avoid cutting across water:
+  - North Africa: insert Oran between Caesarea and Rusaddir
+  - Italy→Sicily: route via Calabria + Messina Strait
+  - Sicily traversal: route Syracuse → Gela → Agrigentum → Lilybaeum
 
 Validation system:
 - Validates path continuity (no gaps or discontinuities)
 - Ensures sea crossings only occur in authorized regions
 - Simulates C++ GL_LINE_STRIP rendering to verify visual continuity
 - Script exits with error if validation fails
-
-The paths are designed to align with the campaign mission structure:
-- Mission 0: Crossing the Rhône
-- Mission 1: Battle of Ticino
-- Mission 2: Battle of Trebia
-- Mission 3: Battle of Trasimene
-- Mission 4: Battle of Cannae
-- Mission 5: Campania Campaign
-- Mission 6: Crossing the Alps (flashback)
-- Mission 7: Battle of Zama (final confrontation)
-
-City coordinates are taken from provinces.py definitions and converted to UV space.
-
-Fix applied:
-- Reordered early North Africa waypoints to remove “back-and-forth” near Carthage.
-  Previously: Carthage → Cirta → Hippo_Regius (eastward backtrack)
-  Now:        Carthage → Hippo_Regius → Cirta → Saldae (monotonic west)
 
 Usage:
     python3 tools/map_pipeline/hannibal_path.py
@@ -60,12 +49,12 @@ ROOT = Path(__file__).resolve().parents[2]
 BOUNDS_PATH = ROOT / "tools" / "map_pipeline" / "map_bounds.json"
 OUT_PATH = ROOT / "assets" / "campaign_map" / "hannibal_path.json"
 
-# Validation constants
-MAX_SEGMENT_DISTANCE = 0.25  # Maximum UV distance for a single segment (to detect discontinuities)
-SEA_CROSSING_THRESHOLD = 0.10  # Minimum distance to be considered a sea crossing
+
+MAX_SEGMENT_DISTANCE = 0.25
+SEA_CROSSING_THRESHOLD = 0.10
 ALLOWED_SEA_CROSSINGS = {
-    "Gibraltar": (0.10, 0.40),  # Tingis to Carteia (Africa to Spain) - wider range for curve
-    "Sicily-Carthage": (0.75, 0.95),  # Sicily to Carthage crossing - adjusted for actual position
+    "Gibraltar": (0.10, 0.40),
+    "Sicily-Channel": (0.72, 0.96),
 }
 
 
@@ -98,11 +87,9 @@ def add_coastal_waypoints(
     su, sv = start
     eu, ev = end
 
-    # Midpoint
     mid_u = (su + eu) / 2.0
     mid_v = (sv + ev) / 2.0
 
-    # Perpendicular offset to create a gentle curve
     du = eu - su
     dv = ev - sv
     perp_u = -dv * curve_direction
@@ -113,17 +100,15 @@ def add_coastal_waypoints(
         perp_u /= length
         perp_v /= length
 
-        # Further reduced coastal curvature to avoid cutting across water
         if segment_type == "coastal":
-            offset = min(0.004, length * 0.03)  # Reduced from 0.008 and 0.05
-            curve_u = mid_u + perp_u * offset * 0.2  # Reduced from 0.3
+            offset = min(0.004, length * 0.03)
+            curve_u = mid_u + perp_u * offset * 0.2
             curve_v = mid_v + perp_v * offset * 0.2
-        else:  # land
-            offset = min(0.010, length * 0.08)  # Slightly reduced from 0.015 and 0.10
-            curve_u = mid_u + perp_u * offset * 0.3  # Reduced from 0.4
+        else:
+            offset = min(0.010, length * 0.08)
+            curve_u = mid_u + perp_u * offset * 0.3
             curve_v = mid_v + perp_v * offset * 0.3
 
-        # Two extra points for smoother curve
         quarter_u = (su + curve_u) / 2.0
         quarter_v = (sv + curve_v) / 2.0
         three_quarter_u = (curve_u + eu) / 2.0
@@ -142,90 +127,85 @@ def add_coastal_waypoints(
 
 def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     """Build 8 progressive paths for Hannibal's campaign with coastline awareness."""
-    # City coordinates (lon, lat) from provinces.py
+
     city_coords = {
-        "Carthage": (10.3, 36.85),
+        "Carthage": (10.3, 36.65),
+        "Hippo_Regius": (7.8, 36.7),
         "Cirta": (6.6, 36.4),
-        # Additional waypoints along North African coast before crossing
-        "Hippo_Regius": (7.8, 36.9),  # Modern Annaba, Algeria (coast)
-        "Icosium": (3.0, 36.8),  # Modern Algiers
-        "Caesarea": (2.2, 36.6),  # Modern Cherchell, Algeria
-        "Saldae": (5.1, 36.75),  # Coastal Bejaia area
-        "Rusaddir": (-2.9, 35.3),  # Melilla area, Morocco
-        "Tingis": (-5.8, 35.8),  # Tangier, Morocco - crossing point to Spain
-        # Spanish south coast cities
-        "Carteia": (-5.4, 36.2),  # Near Gibraltar on Spanish side
-        "Malaca": (-4.4, 36.7),  # Málaga
-        "Abdera": (-3.0, 36.75),  # Between Málaga and Almería
-        "New Carthage": (-0.98, 37.6),  # Cartagena area
-        "Saguntum": (-0.3, 39.7),
-        "Tarraco": (1.25, 41.1),
-        "Emporiae": (3.1, 42.1),
-        # Southern French coast
-        "Narbo": (3.0, 43.2),  # Narbonne
-        "Massalia": (5.4, 43.3),
-        # Italy
-        "Mediolanum": (9.2, 45.5),
-        "Placentia": (9.7, 45.0),
-        "Ariminum": (12.6, 44.0),
+        "Saldae": (5.1, 36.55),
+        "Icosium": (3.0, 36.6),
+        "Caesarea": (2.2, 36.5),
+        "Oran": (-0.62, 35.50),
+        "tmp_001": (-3.0, 34.8),
+        "Rusaddir": (-5.2, 34.2),
+        "Tingis": (-5.8, 35.8),
+        "Carteia": (-5.4, 36.4),
+        "Malaca": (-4.4, 36.9),
+        "Abdera": (-3.0, 36.95),
+        "New Carthage": (-1.3, 37.8),
+        "Saguntum": (-0.8, 39.7),
+        "Tarraco": (0.8, 41.1),
+        "Emporiae": (2.8, 42.2),
+        "Narbo": (3.0, 43.8),
+        "Massalia": (5.1, 43.5),
+        "Mediolanum": (9.0, 45.7),
+        "Placentia": (9.5, 45.1),
+        "Ariminum": (12.4, 44.2),
         "Veii": (12.3, 42.0),
         "Rome": (12.5, 41.9),
         "Capua": (14.3, 41.1),
-        "Tarentum": (17.2, 40.5),
-        "Syracuse": (15.3, 37.1),
-        "Lilybaeum": (12.5, 37.8),
+        "Tarentum": (16.8, 40.6),
+        "Croton": (16.3, 39.2),
+        "Rhegium": (15.65, 38.11),
+        "Messana": (15.55, 38.19),
+        "Catana": (15.09, 37.50),
+        "Syracuse": (15.1, 37.3),
+        "Gela": (14.25, 37.07),
+        "Agrigentum": (13.58, 37.31),
+        "Lilybaeum": (12.7, 37.8),
     }
 
-    # Segment classification with curve directions
-    # Format: (city1, city2): (segment_type, curve_direction)
-    # curve_direction: 1 = standard (curves to the right), -1 = opposite (curves to the left)
     segment_types = {
-        # FIX: reorder Africa start to avoid backtracking near Carthage
-        ("Carthage", "Hippo_Regius"): ("land", 1),  # Changed to land to hug the coast better
+        ("Carthage", "Hippo_Regius"): ("land", 1),
         ("Hippo_Regius", "Cirta"): ("land", 1),
         ("Cirta", "Saldae"): ("land", 1),
-
-        # North Africa westbound coast after returning to Saldae
-        ("Saldae", "Icosium"): ("land", -1),  # Changed to land, curve inland
-        ("Icosium", "Caesarea"): ("land", -1),  # Changed to land, curve inland
-        ("Caesarea", "Rusaddir"): ("land", -1),  # Changed to land, curve inland
-        ("Rusaddir", "Tingis"): ("coastal", -1),  # Keep coastal but curve inland
-
-        # Gibraltar crossing
+        ("Saldae", "Icosium"): ("land", 1),
+        ("Icosium", "Caesarea"): ("land", 1),
+        ("Caesarea", "Oran"): ("land", 1),
+        ("Oran", "Rusaddir"): ("land", 1),
+        ("Rusaddir", "Tingis"): ("coastal", 1),
         ("Tingis", "Carteia"): ("open_sea", 1),
-
-        # Spanish coast to Gaul
-        ("Carteia", "Malaca"): ("land", 1),  # Changed to land to follow coast closely
-        ("Malaca", "Abdera"): ("land", 1),  # Changed to land
-        ("Abdera", "New Carthage"): ("land", 1),  # Changed to land
-        ("New Carthage", "Saguntum"): ("land", 1),  # Changed to land
-        ("Saguntum", "Tarraco"): ("land", 1),  # Changed to land
+        ("Carteia", "Malaca"): ("land", 1),
+        ("Malaca", "Abdera"): ("land", 1),
+        ("Abdera", "New Carthage"): ("land", 1),
+        ("New Carthage", "Saguntum"): ("land", 1),
+        ("Saguntum", "Tarraco"): ("land", 1),
         ("Tarraco", "Emporiae"): ("coastal", 1),
         ("Emporiae", "Narbo"): ("coastal", 1),
         ("Narbo", "Massalia"): ("coastal", 1),
-
-        # Alps / Italy
         ("Massalia", "Mediolanum"): ("land", 1),
         ("Mediolanum", "Placentia"): ("land", 1),
-        ("Placentia", "Ariminum"): ("land", -1),  # Changed to land, curve away from sea
+        ("Placentia", "Ariminum"): ("land", -1),
         ("Ariminum", "Veii"): ("land", 1),
         ("Veii", "Rome"): ("land", 1),
         ("Rome", "Capua"): ("land", 1),
-        ("Capua", "Tarentum"): ("land", -1),  # Changed to land, curve inland
-
-        # Return to Africa
-        ("Tarentum", "Syracuse"): ("land", -1),  # Changed to land to follow coast
-        ("Syracuse", "Lilybaeum"): ("open_sea", 1),
+        ("Capua", "Tarentum"): ("land", -1),
+        ("Tarentum", "Croton"): ("coastal", -1),
+        ("Croton", "Rhegium"): ("coastal", -1),
+        ("Rhegium", "Messana"): ("open_sea", 1),
+        ("Messana", "Catana"): ("coastal", 1),
+        ("Catana", "Syracuse"): ("coastal", 1),
+        ("Syracuse", "Gela"): ("coastal", 1),
+        ("Gela", "Agrigentum"): ("coastal", 1),
+        ("Agrigentum", "Lilybaeum"): ("coastal", 1),
         ("Lilybaeum", "Carthage"): ("open_sea", 1),
     }
 
-    # Convert to UV coordinates
     city_uv: dict[str, Tuple[float, float]] = {}
     for name, (lon, lat) in city_coords.items():
         u, v = lon_lat_to_uv(lon, lat, bounds)
         city_uv[name] = (float(u), float(v))
 
-    # Shared base route (prevents copy/paste drift across missions)
     BASE_AFRICA_TO_MASSALIA = [
         "Carthage",
         "Hippo_Regius",
@@ -233,6 +213,7 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         "Saldae",
         "Icosium",
         "Caesarea",
+        "Oran",
         "Rusaddir",
         "Tingis",
         "Carteia",
@@ -247,50 +228,56 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
     ]
 
     mission_routes = [
-        # Mission 0: Crossing the Rhône (to Massalia)
         BASE_AFRICA_TO_MASSALIA,
-
-        # Mission 1: Battle of Ticino
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum"],
-
-        # Mission 2: Battle of Trebia
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia"],
-
-        # Mission 3: Battle of Trasimene
         BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii"],
-
-        # Mission 4: Battle of Cannae
-        BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
-
-        # Mission 5: Campania Campaign
-        BASE_AFRICA_TO_MASSALIA + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
-
-        # Mission 6: Crossing the Alps (flashback - ends at Mediolanum)
-        BASE_AFRICA_TO_MASSALIA + ["Mediolanum"],
-
-        # Mission 7: Battle of Zama (complete journey)
         BASE_AFRICA_TO_MASSALIA
-        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum", "Syracuse", "Lilybaeum", "Carthage"],
+        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua"],
+        BASE_AFRICA_TO_MASSALIA
+        + ["Mediolanum", "Placentia", "Ariminum", "Veii", "Rome", "Capua", "Tarentum"],
+        BASE_AFRICA_TO_MASSALIA + ["Mediolanum"],
+        BASE_AFRICA_TO_MASSALIA
+        + [
+            "Mediolanum",
+            "Placentia",
+            "Ariminum",
+            "Veii",
+            "Rome",
+            "Capua",
+            "Tarentum",
+            "Croton",
+            "Rhegium",
+            "Messana",
+            "Catana",
+            "Syracuse",
+            "Gela",
+            "Agrigentum",
+            "Lilybaeum",
+            "Carthage",
+        ],
     ]
 
     lines: List[List[List[float]]] = []
     for idx, route_names in enumerate(mission_routes):
         path_points: List[Tuple[float, float]] = []
 
-        # Collect city waypoints
         city_waypoints: List[Tuple[float, float]] = []
         for name in route_names:
             uv = city_uv.get(name)
             if uv is None:
-                print(f"Warning: Mission {idx} - Hannibal path city '{name}' not found.")
+                print(
+                    f"Warning: Mission {idx} - Hannibal path city '{name}' not found."
+                )
                 continue
             city_waypoints.append(uv)
 
         if len(city_waypoints) < 2:
-            print(f"Warning: Mission {idx} has insufficient waypoints ({len(city_waypoints)}), skipping.")
+            print(
+                f"Warning: Mission {idx} has insufficient waypoints ({len(city_waypoints)}), skipping."
+            )
             continue
 
-        # Generate smooth path with intermediate waypoints
         for i in range(len(city_waypoints) - 1):
             start = city_waypoints[i]
             end = city_waypoints[i + 1]
@@ -298,16 +285,17 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
             start_city = route_names[i]
             end_city = route_names[i + 1]
             segment_info = segment_types.get((start_city, end_city), ("land", 1))
-            
-            # Handle both old format (string) and new format (tuple)
+
             if isinstance(segment_info, tuple):
                 segment_type, curve_direction = segment_info
             else:
                 segment_type = segment_info
                 curve_direction = 1
 
-            segment_points = add_coastal_waypoints(start, end, segment_type, curve_direction)
-            path_points.extend(segment_points[:-1])  # avoid duplication
+            segment_points = add_coastal_waypoints(
+                start, end, segment_type, curve_direction
+            )
+            path_points.extend(segment_points[:-1])
 
         path_points.append(city_waypoints[-1])
 
@@ -315,7 +303,9 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         if len(line) >= 2:
             lines.append(line)
         else:
-            print(f"Warning: Mission {idx} final path has insufficient points ({len(line)}), skipping.")
+            print(
+                f"Warning: Mission {idx} final path has insufficient points ({len(line)}), skipping."
+            )
 
     if not lines:
         print("Warning: No valid paths generated for Hannibal's campaign.")
@@ -384,15 +374,21 @@ def validate_sea_crossings(path: List[List[float]], mission_idx: int) -> bool:
                     f"ERROR: Mission {mission_idx}, segment {i}->{i+1}: "
                     f"Unauthorized sea crossing detected!"
                 )
-                print(f"  Distance: {distance:.4f} (threshold={SEA_CROSSING_THRESHOLD})")
+                print(
+                    f"  Distance: {distance:.4f} (threshold={SEA_CROSSING_THRESHOLD})"
+                )
                 print(f"  Start: [{p1[0]:.4f}, {p1[1]:.4f}]")
-                print(f"  End: [{p2[0]:.4f}, {p2[1]:.4f}]")
+                print(f"  End:   [{p2[0]:.4f}, {p2[1]:.4f}]")
                 print(f"  Midpoint: u={mid_u:.4f}, v={mid_v:.4f}")
-                print(f"  Allowed crossing regions: {list(ALLOWED_SEA_CROSSINGS.keys())}")
+                print(
+                    f"  Allowed crossing regions: {list(ALLOWED_SEA_CROSSINGS.keys())}"
+                )
                 return False
 
     if crossings_found:
-        print(f"Mission {mission_idx}: Found {len(crossings_found)} authorized sea crossing(s):")
+        print(
+            f"Mission {mission_idx}: Found {len(crossings_found)} authorized sea crossing(s):"
+        )
         for crossing in crossings_found:
             print(
                 f"  - {crossing['name']} crossing at segment {crossing['segment']}: "
@@ -417,7 +413,9 @@ def validate_all_paths(lines: List[List[List[float]]]) -> bool:
             all_valid = False
             continue
         else:
-            print(f"  ✓ Path is continuous (all segments < {MAX_SEGMENT_DISTANCE} UV distance)")
+            print(
+                f"  ✓ Path is continuous (all segments < {MAX_SEGMENT_DISTANCE} UV distance)"
+            )
 
         if not validate_sea_crossings(path, idx):
             all_valid = False
@@ -446,7 +444,9 @@ def simulate_cpp_rendering(lines: List[List[List[float]]]) -> bool:
 
     for idx, path in enumerate(lines):
         if len(path) < 2:
-            print(f"\nERROR: Mission {idx} cannot be rendered - need at least 2 vertices")
+            print(
+                f"\nERROR: Mission {idx} cannot be rendered - need at least 2 vertices"
+            )
             all_valid = False
             continue
 
