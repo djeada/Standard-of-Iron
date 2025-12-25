@@ -43,7 +43,7 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   const QVector3D center(0.5F + clamped_pan_u, 0.0F, 0.5F + clamped_pan_v);
   const float yaw_rad = qDegreesToRadians(yaw_deg);
   const float pitch_rad = qDegreesToRadians(pitch_deg);
-  const float clamped_distance = qMax(1.0F, distance);
+  const float clamped_distance = qMax(0.3F, distance);
 
   const float cos_pitch = std::cos(pitch_rad);
   const float sin_pitch = std::sin(pitch_rad);
@@ -1476,7 +1476,7 @@ void CampaignMapView::setOrbitPitch(float pitch) {
 }
 
 void CampaignMapView::setOrbitDistance(float distance) {
-  const float clamped = qBound(0.6F, distance, 5.0F);
+  const float clamped = qBound(0.3F, distance, 5.0F);
   if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
