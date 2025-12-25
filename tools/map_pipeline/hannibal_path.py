@@ -174,45 +174,47 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
         "Lilybaeum": (12.5, 37.8),
     }
 
-    # Segment classification
+    # Segment classification with curve directions
+    # Format: (city1, city2): (segment_type, curve_direction)
+    # curve_direction: 1 = standard (curves to the right), -1 = opposite (curves to the left)
     segment_types = {
         # FIX: reorder Africa start to avoid backtracking near Carthage
-        ("Carthage", "Hippo_Regius"): "coastal",
-        ("Hippo_Regius", "Cirta"): "land",   # Cirta is inland; keep this as land
-        ("Cirta", "Saldae"): "land",         # back to the coast at Saldae
+        ("Carthage", "Hippo_Regius"): ("land", 1),  # Changed to land to hug the coast better
+        ("Hippo_Regius", "Cirta"): ("land", 1),
+        ("Cirta", "Saldae"): ("land", 1),
 
         # North Africa westbound coast after returning to Saldae
-        ("Saldae", "Icosium"): "coastal",
-        ("Icosium", "Caesarea"): "coastal",
-        ("Caesarea", "Rusaddir"): "coastal",
-        ("Rusaddir", "Tingis"): "coastal",
+        ("Saldae", "Icosium"): ("land", -1),  # Changed to land, curve inland
+        ("Icosium", "Caesarea"): ("land", -1),  # Changed to land, curve inland
+        ("Caesarea", "Rusaddir"): ("land", -1),  # Changed to land, curve inland
+        ("Rusaddir", "Tingis"): ("coastal", -1),  # Keep coastal but curve inland
 
         # Gibraltar crossing
-        ("Tingis", "Carteia"): "open_sea",
+        ("Tingis", "Carteia"): ("open_sea", 1),
 
         # Spanish coast to Gaul
-        ("Carteia", "Malaca"): "coastal",
-        ("Malaca", "Abdera"): "coastal",
-        ("Abdera", "New Carthage"): "coastal",
-        ("New Carthage", "Saguntum"): "coastal",
-        ("Saguntum", "Tarraco"): "coastal",
-        ("Tarraco", "Emporiae"): "coastal",
-        ("Emporiae", "Narbo"): "coastal",
-        ("Narbo", "Massalia"): "coastal",
+        ("Carteia", "Malaca"): ("land", 1),  # Changed to land to follow coast closely
+        ("Malaca", "Abdera"): ("land", 1),  # Changed to land
+        ("Abdera", "New Carthage"): ("land", 1),  # Changed to land
+        ("New Carthage", "Saguntum"): ("land", 1),  # Changed to land
+        ("Saguntum", "Tarraco"): ("land", 1),  # Changed to land
+        ("Tarraco", "Emporiae"): ("coastal", 1),
+        ("Emporiae", "Narbo"): ("coastal", 1),
+        ("Narbo", "Massalia"): ("coastal", 1),
 
         # Alps / Italy
-        ("Massalia", "Mediolanum"): "land",
-        ("Mediolanum", "Placentia"): "land",
-        ("Placentia", "Ariminum"): "coastal",
-        ("Ariminum", "Veii"): "land",
-        ("Veii", "Rome"): "land",
-        ("Rome", "Capua"): "land",
-        ("Capua", "Tarentum"): "coastal",
+        ("Massalia", "Mediolanum"): ("land", 1),
+        ("Mediolanum", "Placentia"): ("land", 1),
+        ("Placentia", "Ariminum"): ("land", -1),  # Changed to land, curve away from sea
+        ("Ariminum", "Veii"): ("land", 1),
+        ("Veii", "Rome"): ("land", 1),
+        ("Rome", "Capua"): ("land", 1),
+        ("Capua", "Tarentum"): ("land", -1),  # Changed to land, curve inland
 
         # Return to Africa
-        ("Tarentum", "Syracuse"): "coastal",
-        ("Syracuse", "Lilybaeum"): "open_sea",
-        ("Lilybaeum", "Carthage"): "open_sea",
+        ("Tarentum", "Syracuse"): ("land", -1),  # Changed to land to follow coast
+        ("Syracuse", "Lilybaeum"): ("open_sea", 1),
+        ("Lilybaeum", "Carthage"): ("open_sea", 1),
     }
 
     # Convert to UV coordinates
@@ -293,9 +295,16 @@ def build_hannibal_path(bounds: dict) -> List[List[List[float]]]:
 
             start_city = route_names[i]
             end_city = route_names[i + 1]
-            segment_type = segment_types.get((start_city, end_city), "land")
+            segment_info = segment_types.get((start_city, end_city), ("land", 1))
+            
+            # Handle both old format (string) and new format (tuple)
+            if isinstance(segment_info, tuple):
+                segment_type, curve_direction = segment_info
+            else:
+                segment_type = segment_info
+                curve_direction = 1
 
-            segment_points = add_coastal_waypoints(start, end, segment_type)
+            segment_points = add_coastal_waypoints(start, end, segment_type, curve_direction)
             path_points.extend(segment_points[:-1])  # avoid duplication
 
         path_points.append(city_waypoints[-1])
