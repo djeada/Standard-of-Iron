@@ -817,17 +817,17 @@ void main() {
       if (i == max_mission) {
         // Dark border for current mission route (increased width)
         border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.85F);
-        border_width = 14.0F;
+        border_width = 18.0F;
       } else if (i == max_mission - 1) {
         // Medium border for recent mission
         border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.70F);
-        border_width = 12.0F;
+        border_width = 16.0F;
       } else {
         // Subtle border for historical missions
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         border_color = QVector4D(0.15F * age_factor, 0.08F * age_factor,
                                 0.05F * age_factor, 0.55F * age_factor);
-        border_width = 10.0F;
+        border_width = 14.0F;
       }
 
       glLineWidth(border_width);
@@ -849,17 +849,17 @@ void main() {
       if (i == max_mission) {
         // Bright gold/yellow highlight for current mission (increased width)
         highlight_color = QVector4D(0.95F, 0.75F, 0.35F, 0.90F);
-        highlight_width = 9.0F;
+        highlight_width = 12.0F;
       } else if (i == max_mission - 1) {
         // Warm gold for recent mission
         highlight_color = QVector4D(0.85F, 0.65F, 0.30F, 0.80F);
-        highlight_width = 7.5F;
+        highlight_width = 10.0F;
       } else {
         // Faded gold for historical missions
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         highlight_color = QVector4D(0.70F * age_factor, 0.50F * age_factor,
                                    0.25F * age_factor, 0.65F * age_factor);
-        highlight_width = 6.5F;
+        highlight_width = 8.5F;
       }
 
       glLineWidth(highlight_width);
@@ -881,17 +881,17 @@ void main() {
       if (i == max_mission) {
         // Deep red core for current mission (increased width)
         color = QVector4D(0.80F, 0.15F, 0.10F, 1.0F);
-        width = 5.0F;
+        width = 7.0F;
       } else if (i == max_mission - 1) {
         // Medium red for recent mission
         color = QVector4D(0.70F, 0.15F, 0.10F, 0.95F);
-        width = 4.2F;
+        width = 6.0F;
       } else {
         // Darker red for historical missions
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         color = QVector4D(0.55F * age_factor, 0.12F * age_factor,
                           0.08F * age_factor, 0.85F * age_factor);
-        width = 3.5F;
+        width = 5.0F;
       }
 
       glLineWidth(width);
@@ -1476,7 +1476,7 @@ void CampaignMapView::setOrbitPitch(float pitch) {
 }
 
 void CampaignMapView::setOrbitDistance(float distance) {
-  const float clamped = qBound(1.2F, distance, 5.0F);
+  const float clamped = qBound(0.6F, distance, 5.0F);
   if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
