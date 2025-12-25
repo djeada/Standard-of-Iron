@@ -6,6 +6,7 @@ from pathlib import Path
 
 contributors_file = Path(__file__).parent.parent / "CONTRIBUTORS.md"
 
+
 def run_git(command):
     """Run a git command and return the output as a list of lines."""
     try:
@@ -22,40 +23,49 @@ def run_git(command):
         print("❌ Error: Git is not installed or not found in PATH.")
         raise SystemExit(1)
 
+
 def parse_existing_references():
     """Parse existing CONTRIBUTORS.md to extract manual Reference values."""
     references = {}
     if not contributors_file.exists():
         return references
-    
+
     try:
         content = contributors_file.read_text(encoding="utf-8")
         lines = content.split("\n")
-        
+
         for line in lines:
-            
-            if not line.strip() or line.startswith("#") or "---" in line or line.startswith("This file"):
+
+            if (
+                not line.strip()
+                or line.startswith("#")
+                or "---" in line
+                or line.startswith("This file")
+            ):
                 continue
-            
+
             if line.startswith("|") and line.count("|") >= 6:
                 parts = [p.strip() for p in line.split("|")]
-                
+
                 if len(parts) >= 7:
                     name = parts[1]
                     reference = parts[6]
-                    
+
                     if name and reference:
                         references[name] = reference
     except Exception:
-        
+
         pass
-    
+
     return references
+
 
 def get_contributors():
     """Extract contributors from git log."""
     log_lines = run_git(["log", "--format=%aN|%aE|%ad", "--date=short"])
-    contributors = defaultdict(lambda: {"emails": set(), "first": None, "last": None, "count": 0})
+    contributors = defaultdict(
+        lambda: {"emails": set(), "first": None, "last": None, "count": 0}
+    )
 
     for line in log_lines:
         if "|" not in line:
@@ -73,6 +83,7 @@ def get_contributors():
 
     return contributors
 
+
 def generate_table(contributors, existing_references):
     """Generate markdown table, preserving manual Reference values."""
     header = [
@@ -87,12 +98,19 @@ def generate_table(contributors, existing_references):
     rows = []
     for name, info in sorted(contributors.items(), key=lambda x: x[0].lower()):
         emails = ", ".join(sorted(info["emails"]))
-        
+
         reference = existing_references.get(name, "")
-        
-        commit_text = f"{info['count']} commit" if info['count'] == 1 else f"{info['count']} commits"
-        rows.append(f"| {name} | {emails} | {commit_text} | {info['first']} | {info['last']} | {reference} |")
+
+        commit_text = (
+            f"{info['count']} commit"
+            if info["count"] == 1
+            else f"{info['count']} commits"
+        )
+        rows.append(
+            f"| {name} | {emails} | {commit_text} | {info['first']} | {info['last']} | {reference} |"
+        )
     return "\n".join(header + rows) + "\n"
+
 
 def main():
     existing_references = parse_existing_references()
@@ -100,6 +118,7 @@ def main():
     md = generate_table(contributors, existing_references)
     contributors_file.write_text(md, encoding="utf-8")
     print(f"✅ Updated {contributors_file} with {len(contributors)} contributors.")
+
 
 if __name__ == "__main__":
     main()
