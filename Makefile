@@ -241,11 +241,11 @@ EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*")
 
 format:
-	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... tools/... ui/... assets/shaders/...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... scripts/... tools/... ui/... assets/shaders/...$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
-		./scripts/remove-comments.sh app/ game/ render/ tools/ ui/ assets/shaders/; \
+		./scripts/remove-comments.sh app/ game/ render/ scripts/ tools/ ui/ assets/shaders/; \
 	elif [ -f scripts/remove-comments.sh ]; then \
-		bash scripts/remove-comments.sh app/ game/ render/ tools/ ui/ assets/shaders/; \
+		bash scripts/remove-comments.sh app/ game/ render/ scripts/ tools/ ui/ assets/shaders/; \
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
