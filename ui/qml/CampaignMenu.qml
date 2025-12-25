@@ -500,7 +500,7 @@ Item {
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                             var nextDistance = missionDetailPanel.mapOrbitDistance * step;
-                            missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(1.2, nextDistance));
+                            missionDetailPanel.mapOrbitDistance = Math.min(5, Math.max(0.3, nextDistance));
                             wheel.accepted = true;
                         }
                     }
