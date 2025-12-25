@@ -404,7 +404,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "expand_factor": 1.02,
             "cities": [
                 {"name": "Syracuse", "lonlat": (15.3, 37.1)},
-                {"name": "Lilybaeum", "lonlat": (12.8, 38.6)},
+                {"name": "Lilybaeum", "lonlat": (13.1, 37.6)},
             ],
             "lonlat": [
                 (12.4, 38.3),
@@ -465,7 +465,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "priority": 700,
             "jitter_amplitude": 0.05,
             "expand_factor": 1.03,
-            "cities": [{"name": "Carthage", "lonlat": (10.3, 36.85)}],
+            "cities": [{"name": "Carthage", "lonlat": (10.6, 36.45)}],
             "lonlat": [
                 (7.6, 37.6),
                 (12.4, 37.6),
@@ -486,7 +486,7 @@ def build_provinces(bounds: MapBounds) -> tuple[List[dict], List[List[List[float
             "jitter_amplitude": 0.06,
             "expand_factor": 1.02,
             "cities": [
-                {"name": "Cirta", "lonlat": (6.6, 36.4)},
+                {"name": "Cirta", "lonlat": (6.6, 36.2)},
                 {"name": "Tingis", "lonlat": (-5.5, 35.2)},
             ],
             "lonlat": [
