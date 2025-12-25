@@ -9,7 +9,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Render::GL {
 class Camera;

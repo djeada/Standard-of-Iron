@@ -42,4 +42,4 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

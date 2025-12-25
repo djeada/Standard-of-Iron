@@ -101,4 +101,4 @@ void AIWorker::worker_loop() {
   m_workerBusy.store(false, std::memory_order_release);
 }
 
-} 
+} // namespace Game::Systems::AI

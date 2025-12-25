@@ -725,4 +725,4 @@ void MapCanvas::eraseAtPosition(const QPointF &gridPos) {
   }
 }
 
-} 
+} // namespace MapEditor

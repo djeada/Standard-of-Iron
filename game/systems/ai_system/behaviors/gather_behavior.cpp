@@ -161,4 +161,4 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
   return false;
 }
 
-} 
+} // namespace Game::Systems::AI

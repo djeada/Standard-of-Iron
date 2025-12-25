@@ -41,4 +41,4 @@ void WorldBootstrap::ensure_initialized(bool &initialized,
   }
 }
 
-} 
+} // namespace Game::Map

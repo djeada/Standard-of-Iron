@@ -29,4 +29,4 @@ private:
   std::unique_ptr<Texture> m_whiteTexture;
 };
 
-} 
+} // namespace Render::GL

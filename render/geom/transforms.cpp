@@ -11,7 +11,7 @@ namespace {
 const float k_epsilon = 1e-6F;
 const float k_epsilon_sq = k_epsilon * k_epsilon;
 constexpr float k_flip_rotation_degrees = 180.0F;
-} 
+} // namespace
 
 auto cylinder_between(const QVector3D &a, const QVector3D &b,
                       float radius) -> QMatrix4x4 {
@@ -103,4 +103,4 @@ auto capsule_between(const QMatrix4x4 &parent, const QVector3D &a,
   return cylinder_between(parent, a, b, radius);
 }
 
-} 
+} // namespace Render::Geom

@@ -66,4 +66,4 @@ void ReinsRenderer::render(const DrawContext &ctx,
                variant.tack_color, 1.0F);
 }
 
-} 
+} // namespace Render::GL

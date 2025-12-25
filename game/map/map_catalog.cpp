@@ -125,7 +125,7 @@ auto load_campaign_map_paths() -> QSet<QString> {
   return map_paths;
 }
 
-} 
+} // namespace
 
 MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
@@ -382,4 +382,4 @@ void MapCatalog::ensure_campaign_map_paths_loaded() {
   m_campaign_map_paths_loaded = true;
 }
 
-} 
+} // namespace Game::Map

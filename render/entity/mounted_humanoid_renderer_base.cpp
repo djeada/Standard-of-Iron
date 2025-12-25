@@ -149,4 +149,4 @@ void MountedHumanoidRendererBase::add_attachments(
   draw_equipment(ctx, v, pose, anim_ctx, out);
 }
 
-} 
+} // namespace Render::GL

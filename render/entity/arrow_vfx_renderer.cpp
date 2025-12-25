@@ -413,4 +413,4 @@ void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL

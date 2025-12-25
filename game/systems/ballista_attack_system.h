@@ -5,7 +5,7 @@
 namespace Engine::Core {
 class World;
 class Entity;
-} 
+} // namespace Engine::Core
 
 namespace Game::Systems {
 
@@ -23,4 +23,4 @@ private:
   void update_firing(Engine::Core::Entity *ballista, float delta_time);
 };
 
-} 
+} // namespace Game::Systems

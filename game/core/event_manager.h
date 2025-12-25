@@ -290,4 +290,4 @@ public:
   }
 };
 
-} 
+} // namespace Engine::Core

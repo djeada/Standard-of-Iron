@@ -24,4 +24,4 @@ struct BuilderStyleConfig {
 
 void register_roman_builder_style();
 
-} 
+} // namespace Render::GL::Roman

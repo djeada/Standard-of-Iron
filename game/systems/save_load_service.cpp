@@ -289,4 +289,4 @@ void SaveLoadService::exit_game() {
   QCoreApplication::quit();
 }
 
-} 
+} // namespace Game::Systems

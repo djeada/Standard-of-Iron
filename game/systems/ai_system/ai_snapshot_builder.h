@@ -20,4 +20,4 @@ public:
                                   int aiOwnerId) -> AISnapshot;
 };
 
-} 
+} // namespace Game::Systems::AI

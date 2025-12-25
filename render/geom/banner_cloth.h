@@ -46,4 +46,4 @@ public:
       const QVector3D &trim_color) -> std::vector<EmbroideryLayer>;
 };
 
-} 
+} // namespace Render::Geom

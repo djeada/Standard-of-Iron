@@ -54,7 +54,7 @@ auto color_from_json(const QJsonArray &array) -> std::array<float, 3> {
   return color;
 }
 
-} 
+} // namespace
 
 namespace Game::Systems {
 
@@ -346,4 +346,4 @@ void OwnerRegistry::from_json(const QJsonObject &json) {
   }
 }
 
-} 
+} // namespace Game::Systems

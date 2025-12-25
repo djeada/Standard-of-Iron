@@ -16,4 +16,4 @@ private:
   static auto parseCampaignMission(const QJsonObject &obj) -> CampaignMission;
 };
 
-} 
+} // namespace Game::Campaign

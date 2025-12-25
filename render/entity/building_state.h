@@ -57,7 +57,7 @@ inline const QVector3D SEGMENT{0.35F, 0.35F, 0.40F};
 inline const QVector3D SEGMENT_HIGHLIGHT{0.55F, 0.55F, 0.60F};
 inline const QVector3D SHINE{1.0F, 1.0F, 1.0F};
 inline const QVector3D GLOW_ATTACK{0.9F, 0.2F, 0.2F};
-} 
+} // namespace HealthBarColors
 
 inline auto get_building_state(float health_ratio) -> BuildingState {
   if (health_ratio >= HEALTH_THRESHOLD_NORMAL) {
@@ -69,4 +69,4 @@ inline auto get_building_state(float health_ratio) -> BuildingState {
   }
 }
 
-} 
+} // namespace Render::GL

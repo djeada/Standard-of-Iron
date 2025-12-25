@@ -46,7 +46,7 @@ auto check_gl_error(const char *operation) -> bool {
   }
   return true;
 }
-} 
+} // namespace
 
 auto CombatDustPipeline::initialize() -> bool {
   if (m_shader_cache == nullptr) {
@@ -643,4 +643,4 @@ void CombatDustPipeline::render_single_stone_impact(
   }
 }
 
-} 
+} // namespace Render::GL::BackendPipelines

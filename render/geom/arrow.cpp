@@ -104,7 +104,7 @@ auto Arrow::get_tip() -> GL::Mesh * {
   return mesh.get();
 }
 
-} 
+} // namespace Geom
 
 namespace GL {
 
@@ -163,5 +163,5 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
   }
 }
 
-} 
-} 
+} // namespace GL
+} // namespace Render

@@ -65,7 +65,7 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
   return a.mesh == b.mesh && a.shader == b.shader && a.texture == b.texture;
 }
 
-} 
+} // namespace
 
 Backend::Backend() = default;
 
@@ -1743,4 +1743,4 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   }
 }
 
-} 
+} // namespace Render::GL

@@ -40,4 +40,4 @@ void ActionVFX::spawnAttackArrow(Engine::Core::World *world,
                             Game::GameConfig::instance().arrow().speed_attack);
 }
 
-} 
+} // namespace App::Controllers

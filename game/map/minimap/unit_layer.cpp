@@ -138,4 +138,4 @@ void UnitLayer::draw_building_marker(QPainter &painter, float px, float py,
   painter.drawRect(QRectF(px - inner, py - inner, inner * 2.0, inner * 2.0));
 }
 
-} 
+} // namespace Game::Map::Minimap

@@ -20,7 +20,7 @@ class World;
 class Entity;
 class TransformComponent;
 class UnitComponent;
-} 
+} // namespace Engine::Core
 
 namespace Game::Map {
 class VisibilityService;
@@ -214,4 +214,4 @@ struct FrameScope {
   ~FrameScope() { r.end_frame(); }
 };
 
-} 
+} // namespace Render::GL

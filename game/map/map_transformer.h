@@ -7,7 +7,7 @@
 namespace Engine::Core {
 class World;
 using EntityID = unsigned int;
-} 
+} // namespace Engine::Core
 
 namespace Game::Units {
 class UnitFactoryRegistry;
@@ -38,4 +38,4 @@ public:
   static void clearPlayerTeamOverrides();
 };
 
-} 
+} // namespace Game::Map

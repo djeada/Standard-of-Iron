@@ -129,4 +129,4 @@ void CameraService::update_follow(Render::GL::Camera &camera,
   }
 }
 
-} 
+} // namespace Game::Systems

@@ -264,4 +264,4 @@ inline auto calculate_horse_lod(float distance) -> HorseLOD {
   return HorseLOD::Billboard;
 }
 
-} 
+} // namespace Render::GL

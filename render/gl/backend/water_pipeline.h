@@ -75,5 +75,5 @@ private:
   void cache_road_uniforms();
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

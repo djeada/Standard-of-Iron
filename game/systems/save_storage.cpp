@@ -92,7 +92,7 @@ private:
   QSqlDatabase &m_database;
   bool m_active = false;
 };
-} 
+} // namespace
 
 SaveStorage::SaveStorage(QString database_path)
     : m_database_path(std::move(database_path)),
@@ -1269,4 +1269,4 @@ auto SaveStorage::unlock_next_mission(const QString &campaign_id,
   return true;
 }
 
-} 
+} // namespace Game::Systems

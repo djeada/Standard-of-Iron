@@ -149,4 +149,4 @@ void ProjectileSystem::apply_impact_damage(Engine::Core::World *world,
   }
 }
 
-} 
+} // namespace Game::Systems

@@ -18,4 +18,4 @@ public:
   [[nodiscard]] virtual auto is_initialized() const -> bool = 0;
 };
 
-} 
+} // namespace Render::GL::BackendPipelines

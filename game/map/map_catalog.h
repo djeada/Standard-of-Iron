@@ -36,4 +36,4 @@ private:
   bool m_loading = false;
 };
 
-} 
+} // namespace Game::Map

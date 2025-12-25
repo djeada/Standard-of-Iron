@@ -36,4 +36,4 @@ private:
   std::unique_ptr<Mesh> m_shoulder_mesh;
 };
 
-} 
+} // namespace Render::GL

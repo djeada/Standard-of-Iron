@@ -12,4 +12,4 @@ void register_builder_style(const std::string &nation_id,
 
 void register_builder_renderer(EntityRendererRegistry &registry);
 
-} 
+} // namespace Render::GL::Carthage

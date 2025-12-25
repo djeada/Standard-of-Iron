@@ -11,13 +11,13 @@ public:
   static auto get_shaft() -> GL::Mesh *;
   static auto get_tip() -> GL::Mesh *;
 };
-} 
+} // namespace Geom
 
 namespace GL {
 class Renderer;
 class ResourceManager;
-} 
-} 
+} // namespace GL
+} // namespace Render
 
 namespace Game::Systems {
 class ArrowSystem;

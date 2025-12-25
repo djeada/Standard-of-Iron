@@ -10,7 +10,7 @@
 namespace Game::Systems {
 class HealingBeamSystem;
 class HealingBeam;
-} 
+} // namespace Game::Systems
 
 namespace Render::GL {
 class ShaderCache;
@@ -68,5 +68,5 @@ private:
   BeamUniforms m_uniforms;
 };
 
-} 
-} 
+} // namespace BackendPipelines
+} // namespace Render::GL

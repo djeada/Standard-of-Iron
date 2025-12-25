@@ -22,4 +22,4 @@ private:
   QSpinBox *m_heightSpinBox = nullptr;
 };
 
-} 
+} // namespace MapEditor

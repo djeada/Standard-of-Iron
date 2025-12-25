@@ -71,7 +71,7 @@ auto get_unit_hemisphere_mesh() -> Mesh * {
   return mesh.get();
 }
 
-} 
+} // namespace
 
 CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
     : m_scale_multiplier(scale_multiplier) {
@@ -199,4 +199,4 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
                  palette.leather, nullptr, 1.0F, 4);
 }
 
-} 
+} // namespace Render::GL

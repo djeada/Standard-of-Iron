@@ -23,7 +23,7 @@ constexpr int MAX_DEFENSE_TOWERS = 10;
 constexpr int MAX_CATAPULTS = 5;
 
 constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
-} 
+} // namespace
 
 void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                               float delta_time,
@@ -127,4 +127,4 @@ auto BuilderBehavior::should_execute(const AISnapshot &snapshot,
          context.defense_tower_count < MAX_DEFENSE_TOWERS;
 }
 
-} 
+} // namespace Game::Systems::AI

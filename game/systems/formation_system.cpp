@@ -76,7 +76,7 @@ auto calculate_balanced_rows(int total_units, int max_per_row,
 
   return row_sizes;
 }
-} 
+} // namespace
 
 auto RomanFormation::calculate_positions(
     int unit_count, const QVector3D &center,
@@ -625,4 +625,4 @@ auto FormationSystem::get_formation(FormationType type) const
   return it->second.get();
 }
 
-} 
+} // namespace Game::Systems

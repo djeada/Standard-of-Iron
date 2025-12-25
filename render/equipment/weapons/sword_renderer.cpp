@@ -208,4 +208,4 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   }
 }
 
-} 
+} // namespace Render::GL

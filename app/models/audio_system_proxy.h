@@ -22,4 +22,4 @@ public:
   Q_INVOKABLE [[nodiscard]] static float getVoiceVolume();
 };
 
-} 
+} // namespace App::Models

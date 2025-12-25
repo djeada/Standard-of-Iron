@@ -10,4 +10,4 @@ void Entity::set_component_change_callback(ComponentChangeCallback callback) {
   m_component_change_callback = std::move(callback);
 }
 
-} 
+} // namespace Engine::Core

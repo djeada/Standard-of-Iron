@@ -164,4 +164,4 @@ private:
   [[nodiscard]] QJsonArray structuresToSpawnsJson() const;
 };
 
-} 
+} // namespace MapEditor

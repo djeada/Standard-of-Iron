@@ -61,4 +61,4 @@ private:
       m_barrack_captured_subscription;
 };
 
-} 
+} // namespace Game::Systems

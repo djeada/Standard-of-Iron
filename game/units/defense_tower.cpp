@@ -72,4 +72,4 @@ void DefenseTower::init(const SpawnParams &params) {
       m_id, m_u->owner_id, m_u->spawn_type, params.is_initial_spawn));
 }
 
-} 
+} // namespace Game::Units

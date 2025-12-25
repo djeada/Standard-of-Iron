@@ -74,4 +74,4 @@ private:
   std::atomic<int> m_full_detail_count{0};
 };
 
-} 
+} // namespace Render

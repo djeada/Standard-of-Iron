@@ -119,4 +119,4 @@ void HealingSystem::process_healing(Engine::Core::World *world,
   }
 }
 
-} 
+} // namespace Game::Systems

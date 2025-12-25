@@ -35,4 +35,4 @@ private:
   std::vector<std::unique_ptr<HealingBeam>> m_beams;
 };
 
-} 
+} // namespace Game::Systems

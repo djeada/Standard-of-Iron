@@ -222,4 +222,4 @@ auto HorseSpearmanRendererBase::resolve_shader_key(const DrawContext &ctx) const
   return QStringLiteral("horse_spearman");
 }
 
-} 
+} // namespace Render::GL

@@ -20,4 +20,4 @@ public:
   static void validate_state(AIContext &ctx);
 };
 
-} 
+} // namespace Game::Systems::AI

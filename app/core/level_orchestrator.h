@@ -28,12 +28,12 @@ class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
-} 
+} // namespace Render::GL
 
 namespace Game::Systems {
 struct LevelSnapshot;
 class VictoryService;
-} 
+} // namespace Game::Systems
 
 class MinimapManager;
 class EntityCache;

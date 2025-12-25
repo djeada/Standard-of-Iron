@@ -53,4 +53,4 @@ private:
   std::unordered_map<Engine::Core::EntityID, CellKey> m_entity_cells;
 };
 
-} 
+} // namespace Game::Systems

@@ -37,7 +37,7 @@ inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
   return nx0 * (1 - tz) + nx1 * tz;
 }
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -264,4 +264,4 @@ void PlantRenderer::generate_plant_instances() {
   m_plantInstancesDirty = m_plantInstanceCount > 0;
 }
 
-} 
+} // namespace Render::GL

@@ -6,7 +6,7 @@ namespace Render::GL {
 class Renderer;
 class Camera;
 class GroundRenderer;
-} 
+} // namespace Render::GL
 
 namespace Game::Map {
 
@@ -24,4 +24,4 @@ public:
                                  QString *out_error = nullptr);
 };
 
-} 
+} // namespace Game::Map

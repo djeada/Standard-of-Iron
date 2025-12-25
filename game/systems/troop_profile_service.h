@@ -38,4 +38,4 @@ private:
       m_cache;
 };
 
-} 
+} // namespace Game::Systems

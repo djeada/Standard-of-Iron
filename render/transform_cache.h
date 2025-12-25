@@ -89,4 +89,4 @@ private:
   std::uint32_t m_maxFrameAge{300};
 };
 
-} 
+} // namespace Render

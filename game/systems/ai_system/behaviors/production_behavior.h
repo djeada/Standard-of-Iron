@@ -26,4 +26,4 @@ private:
   int m_productionCounter = 0;
 };
 
-} 
+} // namespace Game::Systems::AI

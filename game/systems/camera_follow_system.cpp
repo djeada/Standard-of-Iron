@@ -55,4 +55,4 @@ void CameraFollowSystem::snap_to_selection(Engine::Core::World &world,
   }
 }
 
-} 
+} // namespace Game::Systems

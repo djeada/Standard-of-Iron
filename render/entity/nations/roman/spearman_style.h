@@ -20,4 +20,4 @@ struct SpearmanStyleConfig {
 
 void register_roman_spearman_style();
 
-} 
+} // namespace Render::GL::Roman

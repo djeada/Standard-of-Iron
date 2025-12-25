@@ -71,4 +71,4 @@ QString GraphicsSettingsProxy::get_quality_description() const {
   return QString();
 }
 
-} 
+} // namespace App::Models

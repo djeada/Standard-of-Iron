@@ -90,4 +90,4 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
   });
 }
 
-} 
+} // namespace Game::Units

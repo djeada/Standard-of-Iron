@@ -61,7 +61,7 @@ auto are_all_surrounding_cells_invalid(const Point &position,
   return true;
 }
 
-} 
+} // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
 std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
@@ -1121,4 +1121,4 @@ void CommandService::attack_target(
   }
 }
 
-} 
+} // namespace Game::Systems

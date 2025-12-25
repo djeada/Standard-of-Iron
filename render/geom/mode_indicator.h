@@ -41,4 +41,4 @@ private:
   static std::unique_ptr<Render::GL::Mesh> s_patrol_mesh;
 };
 
-} 
+} // namespace Render::Geom

@@ -176,4 +176,4 @@ void MinimapManager::regenerate_base(const MapDefinition &map_def) {
   m_composite_dirty = true;
 }
 
-} 
+} // namespace Game::Map::Minimap

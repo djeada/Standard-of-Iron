@@ -37,7 +37,7 @@ auto worldToGridStatic(float world_coord, float half, float tile_size) -> int {
   return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
 }
 
-} 
+} // namespace
 
 auto VisibilityService::instance() -> VisibilityService & {
   static VisibilityService s_instance;
@@ -405,4 +405,4 @@ auto VisibilityService::shouldStartNewJob() const -> bool {
 
 void VisibilityService::resetThrottle() { m_lastJobStartTime = {}; }
 
-} 
+} // namespace Game::Map

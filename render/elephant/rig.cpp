@@ -171,7 +171,7 @@ inline auto skin_gradient(const QVector3D &skin, float vertical_factor,
   return shadow * (1.0F - highlight) + bright * highlight;
 }
 
-} 
+} // namespace
 
 namespace ElephantDimensionRange {
 
@@ -261,7 +261,7 @@ constexpr uint32_t kSaltHowdahHeight = 0xF01U;
 constexpr uint32_t kSaltIdleBob = 0x102U;
 constexpr uint32_t kSaltMoveBob = 0x213U;
 
-} 
+} // namespace ElephantDimensionRange
 
 auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   using namespace ElephantDimensionRange;
@@ -366,7 +366,7 @@ constexpr uint32_t kSaltSkinVariation = 0x324U;
 constexpr uint32_t kSaltHighlight = 0x435U;
 constexpr uint32_t kSaltShadow = 0x546U;
 
-} 
+} // namespace ElephantVariantConstants
 
 auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantVariant {
@@ -418,7 +418,7 @@ constexpr uint32_t kSaltDiagonalLead = 0x879U;
 constexpr uint32_t kSaltStrideSwing = 0x98AU;
 constexpr uint32_t kSaltStrideLift = 0xA9BU;
 
-} 
+} // namespace ElephantGaitConstants
 
 auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantProfile {
@@ -496,7 +496,7 @@ constexpr float kHowdahBodyLengthOffset = -0.10F;
 constexpr float kSeatHeightOffset = 0.15F;
 constexpr float kLegRevealLiftScale = 0.75F;
 
-} 
+} // namespace HowdahFrameConstants
 
 auto compute_howdah_frame(const ElephantProfile &profile)
     -> HowdahAttachmentFrame {
@@ -577,7 +577,7 @@ constexpr float kHipLagFactor = 0.06F;
 constexpr float kFootSettleDepth = 0.015F;
 constexpr float kFootSettleDuration = 0.10F;
 
-} 
+} // namespace GaitSystemConstants
 
 inline auto swing_ease(float t) -> float { return t * t * (3.0F - 2.0F * t); }
 
@@ -1528,4 +1528,4 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   render(ctx, anim, profile, shared_howdah, shared_motion, out, HorseLOD::Full);
 }
 
-} 
+} // namespace Render::GL

@@ -296,4 +296,4 @@ void TroopCatalog::register_defaults() {
   register_class(std::move(builder));
 }
 
-} 
+} // namespace Game::Units

@@ -31,7 +31,7 @@ auto check_gl_error(const char *operation) -> bool {
   }
   return true;
 }
-} 
+} // namespace
 
 auto HealingBeamPipeline::initialize() -> bool {
   if (m_shaderCache == nullptr) {
@@ -351,4 +351,4 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
   }
 }
 
-} 
+} // namespace Render::GL::BackendPipelines

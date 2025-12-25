@@ -11,7 +11,7 @@ namespace {
 auto mix_color(const QVector3D &a, const QVector3D &b, float t) -> QVector3D {
   return a * (1.0F - t) + b * t;
 }
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -66,4 +66,4 @@ void CarthageHeavyHelmetRenderer::render(const DrawContext &ctx,
                  2);
 }
 
-} 
+} // namespace Render::GL

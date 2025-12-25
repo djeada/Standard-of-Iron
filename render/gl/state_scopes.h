@@ -67,4 +67,4 @@ struct DepthTestScope {
     }
   }
 };
-} 
+} // namespace Render::GL

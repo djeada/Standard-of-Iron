@@ -269,10 +269,10 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
   draw_selection(p, out);
 }
 
-} 
+} // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry &registry) {
   registry.register_renderer("troops/carthage/home", draw_home);
 }
 
-} 
+} // namespace Render::GL::Carthage

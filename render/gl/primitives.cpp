@@ -613,7 +613,7 @@ auto create_unit_torso_mesh(int radial_segments,
   return std::make_unique<Mesh>(v, idx);
 }
 
-} 
+} // namespace
 
 auto get_unit_cylinder(int radial_segments) -> Mesh * {
   static std::unique_ptr<Mesh> const s_mesh(
@@ -650,4 +650,4 @@ auto get_unit_torso(int radial_segments, int height_segments) -> Mesh * {
   return s_mesh.get();
 }
 
-} 
+} // namespace Render::GL

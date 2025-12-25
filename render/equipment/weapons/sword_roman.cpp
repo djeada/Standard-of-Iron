@@ -18,4 +18,4 @@ RomanSwordRenderer::RomanSwordRenderer() {
   set_config(config);
 }
 
-} 
+} // namespace Render::GL

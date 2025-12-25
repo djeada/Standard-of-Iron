@@ -69,4 +69,4 @@ inline auto compute_offhand_spear_grip(
   return offhand;
 }
 
-} 
+} // namespace Render::GL

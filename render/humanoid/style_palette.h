@@ -15,4 +15,4 @@ auto mix_palette_color(const QVector3D &base_color,
                        const QVector3D &team_tint, float team_weight,
                        float style_weight) -> QVector3D;
 
-} 
+} // namespace Render::GL::Humanoid

@@ -83,4 +83,4 @@ private:
   TroopClass m_fallback{};
 };
 
-} 
+} // namespace Game::Units

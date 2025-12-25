@@ -12,7 +12,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-} 
+} // namespace
 
 namespace Render::GL {
 
@@ -170,4 +170,4 @@ void RainRenderer::generate_rain_drops() {
   m_instance_count = m_rain_drops.size();
 }
 
-} 
+} // namespace Render::GL

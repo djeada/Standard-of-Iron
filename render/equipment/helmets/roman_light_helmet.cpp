@@ -87,4 +87,4 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                  helmet_accent, nullptr, 1.0F, 2);
 }
 
-} 
+} // namespace Render::GL

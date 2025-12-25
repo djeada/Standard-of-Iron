@@ -64,7 +64,7 @@ void ensure_archer_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
-} 
+} // namespace
 
 void register_archer_style(const std::string &nation_id,
                            const ArcherStyleConfig &style) {
@@ -358,4 +358,4 @@ void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
       });
 }
 
-} 
+} // namespace Render::GL::Roman

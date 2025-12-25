@@ -83,4 +83,4 @@ private:
   mutable std::shared_ptr<IEquipmentRenderer> m_cached_cloak;
 };
 
-} 
+} // namespace Render::GL

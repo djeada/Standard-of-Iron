@@ -250,4 +250,4 @@ void TerrainPipeline::shutdown_grass_geometry() {
   m_grassVertexCount = 0;
 }
 
-} 
+} // namespace Render::GL::BackendPipelines

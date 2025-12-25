@@ -572,4 +572,4 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   renderer.set_current_shader(nullptr);
 }
 
-} 
+} // namespace Render::GL

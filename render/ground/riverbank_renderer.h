@@ -41,4 +41,4 @@ private:
   float m_exploredDimFactor = 0.6F;
 };
 
-} 
+} // namespace Render::GL

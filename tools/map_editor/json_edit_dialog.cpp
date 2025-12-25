@@ -80,4 +80,4 @@ void JsonEditDialog::onAccepted() {
 
 QJsonObject JsonEditDialog::getJson() const { return m_result; }
 
-} 
+} // namespace MapEditor

@@ -28,4 +28,4 @@ private:
   QImage m_image;
 };
 
-} 
+} // namespace Game::Map::Minimap

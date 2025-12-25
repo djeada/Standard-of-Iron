@@ -71,7 +71,7 @@ inline auto valueNoise2D(float x, float z, std::uint32_t seed) -> float {
   float const nx1 = n01 * (1.0F - tx) + n11 * tx;
   return nx0 * (1.0F - tz) + nx1 * tz;
 }
-} 
+} // namespace
 
 namespace Game::Map {
 
@@ -1165,4 +1165,4 @@ auto TerrainHeightMap::getBridgeCenterPosition(
   return m_bridgeCenters[idx];
 }
 
-} 
+} // namespace Game::Map

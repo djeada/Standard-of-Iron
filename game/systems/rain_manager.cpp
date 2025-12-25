@@ -110,4 +110,4 @@ void RainManager::update_intensity(float) {
   }
 }
 
-} 
+} // namespace Game::Systems

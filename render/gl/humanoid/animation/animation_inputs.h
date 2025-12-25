@@ -12,7 +12,7 @@ class AttackTargetComponent;
 class HoldModeComponent;
 class PendingRemovalComponent;
 class BuildingComponent;
-} 
+} // namespace Engine::Core
 
 namespace Render::GL {
 
@@ -20,4 +20,4 @@ struct DrawContext;
 
 auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs;
 
-} 
+} // namespace Render::GL

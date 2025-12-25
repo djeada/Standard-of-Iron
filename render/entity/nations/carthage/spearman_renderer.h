@@ -11,4 +11,4 @@ void register_spearman_style(const std::string &nation_id,
 
 void register_spearman_renderer(EntityRendererRegistry &registry);
 
-} 
+} // namespace Render::GL::Carthage

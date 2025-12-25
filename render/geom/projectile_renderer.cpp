@@ -207,4 +207,4 @@ void render_projectiles(
   }
 }
 
-} 
+} // namespace Render::GL

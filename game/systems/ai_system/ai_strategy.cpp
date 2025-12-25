@@ -166,4 +166,4 @@ void AIStrategyFactory::apply_personality(AIStrategyConfig &config,
       std::max(0.0F, std::min(100.0F, config.harassment_range));
 }
 
-} 
+} // namespace Game::Systems::AI

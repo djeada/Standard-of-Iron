@@ -85,4 +85,4 @@ public:
   }
 };
 
-} 
+} // namespace Render::GL

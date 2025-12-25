@@ -25,4 +25,4 @@ public:
                       ISubmitter &out) const = 0;
 };
 
-} 
+} // namespace Render::GL

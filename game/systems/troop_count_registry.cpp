@@ -81,4 +81,4 @@ void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
   }
 }
 
-} 
+} // namespace Game::Systems

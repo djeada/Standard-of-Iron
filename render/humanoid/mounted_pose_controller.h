@@ -134,4 +134,4 @@ private:
                               std::string_view debug_label);
 };
 
-} 
+} // namespace Render::GL

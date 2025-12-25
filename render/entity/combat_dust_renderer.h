@@ -38,4 +38,4 @@ private:
 void render_combat_dust(Renderer *renderer, ResourceManager *resources,
                         Engine::Core::World *world);
 
-} 
+} // namespace Render::GL

@@ -48,4 +48,4 @@ auto SelectionRing::get() -> Render::GL::Mesh * {
   return s_mesh.get();
 }
 
-} 
+} // namespace Render::Geom

@@ -265,4 +265,4 @@ auto PickingService::pick_in_rect(
   return picked;
 }
 
-} 
+} // namespace Game::Systems

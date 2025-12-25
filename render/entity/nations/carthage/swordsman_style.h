@@ -24,4 +24,4 @@ struct KnightStyleConfig {
 
 void register_carthage_swordsman_style();
 
-} 
+} // namespace Render::GL::Carthage

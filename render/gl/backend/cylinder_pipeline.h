@@ -92,4 +92,4 @@ private:
   GL::PersistentRingBuffer<FogInstanceGpu> m_fogPersistentBuffer;
 };
 
-} 
+} // namespace Render::GL::BackendPipelines

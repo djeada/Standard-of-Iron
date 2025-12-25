@@ -52,4 +52,4 @@ public:
       const Game::Systems::Nation *nation = nullptr) -> float;
 };
 
-} 
+} // namespace Game::Systems::AI

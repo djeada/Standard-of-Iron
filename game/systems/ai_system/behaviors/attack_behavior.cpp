@@ -22,7 +22,7 @@ auto get_formation_type_for_player(int player_id) -> FormationType {
   }
   return FormationType::Roman;
 }
-} 
+} // namespace
 
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
@@ -415,4 +415,4 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
   return ready_units >= 1;
 }
 
-} 
+} // namespace Game::Systems::AI

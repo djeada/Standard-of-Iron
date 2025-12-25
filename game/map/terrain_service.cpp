@@ -201,4 +201,4 @@ auto TerrainService::get_bridge_center_position(
   return m_height_map->getBridgeCenterPosition(world_x, world_z);
 }
 
-} 
+} // namespace Game::Map

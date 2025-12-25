@@ -42,4 +42,4 @@ void BridleRenderer::render(const DrawContext &ctx,
                1.0F);
 }
 
-} 
+} // namespace Render::GL

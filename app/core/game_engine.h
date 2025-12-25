@@ -41,7 +41,7 @@ using EntityID = unsigned int;
 struct MovementComponent;
 struct TransformComponent;
 struct RenderableComponent;
-} 
+} // namespace Engine::Core
 
 namespace Render::GL {
 class Renderer;
@@ -62,7 +62,7 @@ class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
 struct IRenderPass;
-} 
+} // namespace Render::GL
 
 namespace Game {
 namespace Map::Minimap {
@@ -77,12 +77,12 @@ class VictoryService;
 class CameraService;
 class SaveLoadService;
 class RainManager;
-} 
+} // namespace Systems
 namespace Map {
 class MapCatalog;
 struct MapDefinition;
-} 
-} 
+} // namespace Map
+} // namespace Game
 
 namespace App {
 namespace Controllers {
@@ -91,7 +91,7 @@ class CommandController;
 namespace Models {
 class AudioSystemProxy;
 }
-} 
+} // namespace App
 
 class QQuickWindow;
 class LoadingProgressTracker;

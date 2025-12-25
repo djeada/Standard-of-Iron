@@ -62,7 +62,7 @@ namespace {
   return obj.value(key).toBool(fallback);
 }
 
-} 
+} // namespace
 
 namespace Game::Units {
 
@@ -238,4 +238,4 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
   return true;
 }
 
-} 
+} // namespace Game::Units

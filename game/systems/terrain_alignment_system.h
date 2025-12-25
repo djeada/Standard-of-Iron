@@ -16,4 +16,4 @@ private:
   static void align_entity_to_terrain(Engine::Core::Entity *entity);
 };
 
-} 
+} // namespace Game::Systems

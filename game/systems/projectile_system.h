@@ -36,4 +36,4 @@ private:
   ArrowConfig m_arrow_config;
 };
 
-} 
+} // namespace Game::Systems

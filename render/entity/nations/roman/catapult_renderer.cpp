@@ -277,7 +277,7 @@ void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.15F, 0.22F, 0.30F), 0.06F, c.rope, white);
 }
 
-} 
+} // namespace
 
 void register_catapult_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer("troops/roman/catapult", [](const DrawContext &p,
@@ -314,4 +314,4 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
   });
 }
 
-} 
+} // namespace Render::GL::Roman

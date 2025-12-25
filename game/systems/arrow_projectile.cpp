@@ -22,4 +22,4 @@ void ArrowProjectile::update(float delta_time) {
   }
 }
 
-} 
+} // namespace Game::Systems

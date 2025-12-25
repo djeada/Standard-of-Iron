@@ -13,7 +13,7 @@ namespace Render::GL {
 class Backend;
 class Mesh;
 class Texture;
-} 
+} // namespace Render::GL
 
 namespace Render::GL::BackendPipelines {
 
@@ -68,4 +68,4 @@ private:
   GLuint m_instanceBuffer{0};
 };
 
-} 
+} // namespace Render::GL::BackendPipelines

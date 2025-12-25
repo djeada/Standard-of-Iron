@@ -34,4 +34,4 @@ private:
   ShieldRenderConfig m_config;
 };
 
-} 
+} // namespace Render::GL

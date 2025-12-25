@@ -138,7 +138,7 @@ void activate_bypass_movement(Engine::Core::BuilderProductionComponent *builder,
   builder->bypass_target_z = target_z;
 }
 
-} 
+} // namespace
 
 void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
@@ -381,4 +381,4 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
   }
 }
 
-} 
+} // namespace Game::Systems

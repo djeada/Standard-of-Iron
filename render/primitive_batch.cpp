@@ -59,4 +59,4 @@ auto get_primitive_batch_stats() -> const PrimitiveBatchStats & {
 
 void reset_primitive_batch_stats() { s_batchStats.reset(); }
 
-} 
+} // namespace Render::GL

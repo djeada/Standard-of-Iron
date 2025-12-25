@@ -91,7 +91,7 @@ inline auto should_render_temporal(uint32_t frame, uint32_t seed,
   }
   return ((frame + seed) % period) == 0U;
 }
-} 
+} // namespace
 
 void advance_pose_cache_frame() {
   ++s_current_frame;
@@ -2040,4 +2040,4 @@ auto get_humanoid_render_stats() -> const HumanoidRenderStats & {
 
 void reset_humanoid_render_stats() { s_render_stats.reset(); }
 
-} 
+} // namespace Render::GL

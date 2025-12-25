@@ -52,4 +52,4 @@ private:
   QAction *m_redoAction = nullptr;
 };
 
-} 
+} // namespace MapEditor

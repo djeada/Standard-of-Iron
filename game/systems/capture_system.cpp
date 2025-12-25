@@ -204,4 +204,4 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
   }
 }
 
-} 
+} // namespace Game::Systems

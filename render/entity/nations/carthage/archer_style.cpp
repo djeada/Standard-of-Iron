@@ -14,7 +14,7 @@ constexpr QVector3D k_carthage_wood{0.38F, 0.28F, 0.18F};
 constexpr QVector3D k_carthage_fletch{0.90F, 0.82F, 0.28F};
 constexpr QVector3D k_carthage_string{0.32F, 0.30F, 0.26F};
 constexpr QVector3D k_carthage_cape{0.14F, 0.38F, 0.54F};
-} 
+} // namespace
 
 namespace Render::GL::Carthage {
 
@@ -40,4 +40,4 @@ void register_carthage_archer_style() {
   register_archer_style("carthage", style);
 }
 
-} 
+} // namespace Render::GL::Carthage

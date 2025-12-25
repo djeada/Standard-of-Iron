@@ -34,4 +34,4 @@ void ChampionRenderer::render(const DrawContext &ctx,
            1);
 }
 
-} 
+} // namespace Render::GL

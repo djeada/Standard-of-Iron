@@ -58,4 +58,4 @@ inline auto to_qvector3d(const Render::Math::Vec3 &v) -> QVector3D {
   return {v.x, v.y, v.z};
 }
 
-} 
+} // namespace Render::Geom

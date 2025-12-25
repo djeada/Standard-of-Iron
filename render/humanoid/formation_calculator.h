@@ -95,4 +95,4 @@ private:
   static BuilderCircleFormation s_builderCircle;
 };
 
-} 
+} // namespace Render::GL

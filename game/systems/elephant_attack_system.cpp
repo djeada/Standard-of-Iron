@@ -51,7 +51,7 @@ auto pick_stomp_position(Engine::Core::TransformComponent *transform,
   return world;
 }
 
-} 
+} // namespace
 
 void ElephantAttackSystem::update(Engine::Core::World *world,
                                   float delta_time) {
@@ -330,4 +330,4 @@ void ElephantAttackSystem::process_melee_attack(Engine::Core::Entity *elephant,
                                                 Engine::Core::World *world,
                                                 float delta_time) {}
 
-} 
+} // namespace Game::Systems
