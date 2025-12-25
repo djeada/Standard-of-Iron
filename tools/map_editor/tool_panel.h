@@ -5,9 +5,6 @@
 
 namespace MapEditor {
 
-/**
- * @brief Tool types available in the editor
- */
 enum class ToolType {
   Select,
   Hill,
@@ -21,9 +18,6 @@ enum class ToolType {
   Eraser
 };
 
-/**
- * @brief Panel containing draggable tool elements
- */
 class ToolPanel : public QWidget {
   Q_OBJECT
 

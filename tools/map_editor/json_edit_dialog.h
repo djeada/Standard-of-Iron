@@ -7,9 +7,6 @@
 
 namespace MapEditor {
 
-/**
- * @brief Dialog for editing element JSON properties
- */
 class JsonEditDialog : public QDialog {
   Q_OBJECT
 

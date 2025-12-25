@@ -16,12 +16,10 @@ void ToolPanel::setupUI() {
   m_toolList->setDragEnabled(true);
   m_toolList->setDragDropMode(QAbstractItemView::DragOnly);
 
-  // Use a larger font for emoji icons
   QFont font = m_toolList->font();
   font.setPointSize(16);
   m_toolList->setFont(font);
 
-  // Add tools with emoji-like characters as simple icons
   addToolItem("Select", "⬚", ToolType::Select);
   addToolItem("Hill", "⛰", ToolType::Hill);
   addToolItem("Mountain", "🏔", ToolType::Mountain);
@@ -57,7 +55,7 @@ void ToolPanel::onItemClicked(QListWidgetItem *item) {
 
 void ToolPanel::clearSelection() {
   m_currentTool = ToolType::Select;
-  m_toolList->setCurrentRow(0); // Select first item (Select tool)
+  m_toolList->setCurrentRow(0);
   emit toolSelected(m_currentTool);
 }
 
