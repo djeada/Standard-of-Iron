@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/remove-comments.sh
-# Remove comments from C/C++ source files in-place.
+# Remove comments from C/C++, Python, and shader source files in-place.
 
 set -Eeuo pipefail
 trap 'echo "error: line $LINENO: $BASH_COMMAND" >&2' ERR
@@ -135,7 +135,7 @@ def strip_cpp_comments(b: bytes) -> bytes:
                     i += 1
                 if i < n and b[i] == 0x0A:
                     # Preserve CRLF if present
-                    if i-1 >= 0 and b[i-1] == 0x0D:
+                    if i > 0 and b[i-1] == 0x0D:
                         out += b'\r\n'
                     else:
                         out += b'\n'
@@ -230,7 +230,7 @@ def strip_python_comments(b: bytes) -> bytes:
                 i += 1
             if i < n and b[i] == 0x0A:
                 # Preserve line ending
-                if i-1 >= 0 and b[i-1] == 0x0D:
+                if i > 0 and b[i-1] == 0x0D:
                     out += b'\r\n'
                 else:
                     out += b'\n'
