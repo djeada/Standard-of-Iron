@@ -19,13 +19,13 @@ from pathlib import Path
 from typing import Dict, List, Set, Tuple
 from collections import defaultdict
 
-# ANSI color codes
+
 class Colors:
     RED = '\033[0;31m'
     GREEN = '\033[0;32m'
     YELLOW = '\033[1;33m'
     BLUE = '\033[0;34m'
-    NC = '\033[0m'  # No Color
+    NC = '\033[0m'  
     BOLD = '\033[1m'
 
 def find_shader_uniforms(shader_path: Path) -> Set[str]:
@@ -35,8 +35,8 @@ def find_shader_uniforms(shader_path: Path) -> Set[str]:
     with open(shader_path, 'r') as f:
         content = f.read()
         
-    # Match patterns like: uniform mat4 u_viewProj;
-    # This regex captures the variable name after the type
+    
+    
     pattern = r'uniform\s+\w+\s+(\w+)\s*;'
     matches = re.findall(pattern, content)
     uniforms.update(matches)
@@ -53,7 +53,7 @@ def find_backend_uniform_calls(backend_path: Path) -> Dict[str, List[Tuple[int, 
     with open(backend_path, 'r') as f:
         lines = f.readlines()
         
-    # Match patterns like: uniformHandle("u_viewProj")
+    
     pattern = r'uniformHandle\s*\(\s*"([^"]+)"\s*\)'
     
     for line_num, line in enumerate(lines, start=1):
@@ -65,11 +65,11 @@ def find_backend_uniform_calls(backend_path: Path) -> Dict[str, List[Tuple[int, 
 
 def convert_to_snake_case(name: str) -> str:
     """Convert camelCase to snake_case."""
-    # Handle already snake_case names
+    
     if '_' in name and not any(c.isupper() for c in name):
         return name
         
-    # Insert underscore before uppercase letters
+    
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
@@ -81,19 +81,19 @@ def find_naming_mismatches(shader_uniforms: Dict[str, Set[str]],
     """
     mismatches = []
     
-    # Build reverse index: what shaders use each uniform
+    
     uniform_to_shaders = defaultdict(list)
     for shader, uniforms in shader_uniforms.items():
         for uniform in uniforms:
             uniform_to_shaders[uniform].append(shader)
     
-    # Check each backend uniform call
+    
     for backend_name, locations in backend_uniforms.items():
-        # Check if this exact name exists in any shader
+        
         if backend_name not in uniform_to_shaders:
-            # Try to find similar names in shaders (potential mismatch)
+            
             for shader_name in uniform_to_shaders.keys():
-                # Check if one is snake_case version of the other
+                
                 if (convert_to_snake_case(shader_name) == backend_name or
                     convert_to_snake_case(backend_name) == shader_name or
                     backend_name.replace('_', '') == shader_name.replace('_', '')):
@@ -127,11 +127,11 @@ def main():
     print(f"Backend file: {backend_file}")
     print()
     
-    # Find all shader files
+    
     shader_files = list(shader_dir.glob("*.frag")) + list(shader_dir.glob("*.vert"))
     print(f"Found {len(shader_files)} shader files")
     
-    # Extract uniforms from all shaders
+    
     shader_uniforms = {}
     all_shader_uniform_names = set()
     
@@ -144,19 +144,19 @@ def main():
     
     print(f"\nTotal unique uniforms in shaders: {len(all_shader_uniform_names)}")
     
-    # Extract uniform calls from backend
+    
     backend_uniforms = find_backend_uniform_calls(backend_file)
     print(f"Found {len(backend_uniforms)} unique uniformHandle() calls in backend.cpp")
     print()
     
-    # Find mismatches
+    
     mismatches = find_naming_mismatches(shader_uniforms, backend_uniforms)
     
     if not mismatches:
         print(f"{Colors.GREEN}✓ All uniform names match between shaders and backend!{Colors.NC}")
         return 0
     
-    # Report mismatches
+    
     print(f"{Colors.RED}Found {len(mismatches)} naming mismatches:{Colors.NC}\n")
     
     for i, mismatch in enumerate(mismatches, 1):
@@ -165,13 +165,13 @@ def main():
         print(f"  Shader has:    {Colors.GREEN}\"{mismatch['shader_name']}\"{Colors.NC}")
         print(f"  Affected shaders: {', '.join(mismatch['shaders'])}")
         print(f"  Locations in backend.cpp:")
-        for line_num, line in mismatch['locations'][:3]:  # Show first 3 locations
+        for line_num, line in mismatch['locations'][:3]:  
             print(f"    Line {line_num}: {line}")
         if len(mismatch['locations']) > 3:
             print(f"    ... and {len(mismatch['locations']) - 3} more")
         print()
     
-    # Summary
+    
     print(f"{Colors.BOLD}=== Summary ==={Colors.NC}")
     print(f"  {Colors.RED}Errors: {len(mismatches)}{Colors.NC}")
     print()

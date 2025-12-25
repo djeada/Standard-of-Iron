@@ -25,7 +25,6 @@ void JsonEditDialog::setupUI(const QString &title, const QJsonObject &json) {
   m_editor = new QPlainTextEdit(this);
   m_editor->setFont(QFont("Monospace", 10));
 
-  // Format JSON nicely
   QJsonDocument doc(json);
   m_editor->setPlainText(doc.toJson(QJsonDocument::Indented));
   layout->addWidget(m_editor);
@@ -33,7 +32,6 @@ void JsonEditDialog::setupUI(const QString &title, const QJsonObject &json) {
   connect(m_editor, &QPlainTextEdit::textChanged, this,
           &JsonEditDialog::validateJson);
 
-  // Buttons
   auto *buttonLayout = new QHBoxLayout();
   auto *cancelButton = new QPushButton("Cancel", this);
   m_okButton = new QPushButton("OK", this);

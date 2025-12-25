@@ -31,7 +31,6 @@ void ResizeDialog::setupUI(int currentWidth, int currentHeight) {
 
   layout->addLayout(formLayout);
 
-  // Buttons
   auto *buttonLayout = new QHBoxLayout();
   auto *cancelButton = new QPushButton("Cancel", this);
   auto *okButton = new QPushButton("OK", this);

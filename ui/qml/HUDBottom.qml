@@ -50,7 +50,6 @@ RowLayout {
         if (!displayName)
             return "";
 
-        // Fallback only: if the model doesn't provide a stable unit_type.
         var s = displayName.toString().trim().toLowerCase();
         s = s.replace(/[^a-z0-9]+/g, "_");
         s = s.replace(/^_+|_+$/g, "");
@@ -250,7 +249,7 @@ RowLayout {
                                 font.pointSize: 8
                                 font.bold: false
                                 elide: Text.ElideRight
-                                width: parent.width - 108 // icon(32) + bars(60) + spacing(8*2)
+                                width: parent.width - 108
                             }
 
                         }

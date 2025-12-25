@@ -34,7 +34,6 @@ EditorWindow::EditorWindow(QWidget *parent) : QMainWindow(parent) {
   setWindowTitle("Standard of Iron - Map Editor");
   resize(1400, 900);
 
-  // Start with a new empty map
   newMap();
 }
 
@@ -48,12 +47,10 @@ void EditorWindow::setupUI() {
   mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->setSpacing(0);
 
-  // Left panel - tools
   m_toolPanel = new ToolPanel(this);
   connect(m_toolPanel, &ToolPanel::toolSelected, this,
           &EditorWindow::onToolSelected);
 
-  // Main canvas
   m_canvas = new MapCanvas(this);
   m_canvas->setMapData(m_mapData);
   connect(m_canvas, &MapCanvas::elementDoubleClicked, this,
@@ -63,7 +60,6 @@ void EditorWindow::setupUI() {
   connect(m_canvas, &MapCanvas::toolCleared, this,
           &EditorWindow::onToolCleared);
 
-  // Use a splitter for resizable panels
   auto *splitter = new QSplitter(Qt::Horizontal, this);
   splitter->addWidget(m_toolPanel);
   splitter->addWidget(m_canvas);
@@ -72,16 +68,16 @@ void EditorWindow::setupUI() {
 
   mainLayout->addWidget(splitter);
 
-  // Status bar with dimensions
   m_statusLabel = new QLabel("Ready", this);
   m_dimensionsLabel = new QLabel("", this);
-  m_dimensionsLabel->setToolTip("Double-click on empty canvas area to edit dimensions");
+  m_dimensionsLabel->setToolTip(
+      "Double-click on empty canvas area to edit dimensions");
   statusBar()->addWidget(m_statusLabel);
   statusBar()->addPermanentWidget(m_dimensionsLabel);
 }
 
 void EditorWindow::setupMenus() {
-  // File menu
+
   auto *fileMenu = menuBar()->addMenu("&File");
 
   auto *newAction = new QAction("&New", this);
@@ -113,7 +109,6 @@ void EditorWindow::setupMenus() {
   connect(exitAction, &QAction::triggered, this, &QWidget::close);
   fileMenu->addAction(exitAction);
 
-  // Edit menu
   auto *editMenu = menuBar()->addMenu("&Edit");
 
   m_undoAction = new QAction("&Undo", this);
@@ -134,7 +129,6 @@ void EditorWindow::setupMenus() {
   connect(resizeAction, &QAction::triggered, this, &EditorWindow::resizeMap);
   editMenu->addAction(resizeAction);
 
-  // Toolbar
   auto *toolbar = addToolBar("Main");
   toolbar->addAction(newAction);
   toolbar->addAction(openAction);
@@ -186,8 +180,7 @@ bool EditorWindow::loadFile(const QString &filePath) {
     m_statusLabel->setText("Loaded: " + filePath);
     return true;
   }
-  QMessageBox::critical(this, "Error",
-                        "Failed to load map file: " + filePath);
+  QMessageBox::critical(this, "Error", "Failed to load map file: " + filePath);
   return false;
 }
 
@@ -238,9 +231,8 @@ void EditorWindow::resizeMap() {
     newGrid.height = dialog.newHeight();
     m_mapData->setGrid(newGrid);
     m_canvas->update();
-    m_statusLabel->setText(QString("Map resized to %1x%2")
-                               .arg(newGrid.width)
-                               .arg(newGrid.height));
+    m_statusLabel->setText(
+        QString("Map resized to %1x%2").arg(newGrid.width).arg(newGrid.height));
   }
 }
 
@@ -299,9 +291,7 @@ void EditorWindow::onToolCleared() {
   m_statusLabel->setText("Tool: Select");
 }
 
-void EditorWindow::onGridDoubleClicked() {
-  resizeMap();
-}
+void EditorWindow::onGridDoubleClicked() { resizeMap(); }
 
 void EditorWindow::onUndoRedoChanged() {
   m_undoAction->setEnabled(m_mapData->canUndo());
@@ -310,7 +300,8 @@ void EditorWindow::onUndoRedoChanged() {
 
 void EditorWindow::updateDimensionsLabel() {
   const GridSettings &grid = m_mapData->grid();
-  m_dimensionsLabel->setText(QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
+  m_dimensionsLabel->setText(
+      QString("Map: %1 x %2").arg(grid.width).arg(grid.height));
 }
 
 void EditorWindow::onElementDoubleClicked(int elementType, int index) {
@@ -318,7 +309,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
   QString title;
 
   if (elementType == 0) {
-    // Terrain element
+
     const auto &terrain = m_mapData->terrainElements();
     if (index < 0 || index >= terrain.size()) {
       return;
@@ -342,7 +333,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
 
     title = "Edit Terrain: " + elem.type;
   } else if (elementType == 1) {
-    // Firecamp
+
     const auto &firecamps = m_mapData->firecamps();
     if (index < 0 || index >= firecamps.size()) {
       return;
@@ -359,7 +350,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
 
     title = "Edit Firecamp";
   } else if (elementType == 2) {
-    // Linear element
+
     const auto &linear = m_mapData->linearElements();
     if (index < 0 || index >= linear.size()) {
       return;
@@ -384,7 +375,7 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
 
     title = "Edit " + elem.type;
   } else if (elementType == 3) {
-    // Structure
+
     const auto &structures = m_mapData->structures();
     if (index < 0 || index >= structures.size()) {
       return;
@@ -424,9 +415,9 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
       elem.rotation = static_cast<float>(newJson["rotation"].toDouble(0.0));
       elem.entrances = newJson["entrances"].toArray();
 
-      QStringList knownKeys = {"type",      "x",         "z",        "radius",
-                               "width",     "depth",     "height",   "rotation",
-                               "entrances"};
+      QStringList knownKeys = {"type",   "x",        "z",
+                               "radius", "width",    "depth",
+                               "height", "rotation", "entrances"};
       for (const QString &key : newJson.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = newJson[key];
@@ -465,8 +456,8 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
       elem.height = static_cast<float>(newJson["height"].toDouble(0.5));
       elem.style = newJson["style"].toString("default");
 
-      QStringList knownKeys = {"type", "start", "end", "width", "height",
-                               "style"};
+      QStringList knownKeys = {"type",  "start",  "end",
+                               "width", "height", "style"};
       for (const QString &key : newJson.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = newJson[key];
@@ -483,8 +474,8 @@ void EditorWindow::onElementDoubleClicked(int elementType, int index) {
       elem.maxPopulation = newJson["maxPopulation"].toInt(150);
       elem.nation = newJson["nation"].toString();
 
-      QStringList knownKeys = {"type", "x", "z", "playerId", "maxPopulation",
-                               "nation"};
+      QStringList knownKeys = {"type",          "x",     "z", "playerId",
+                               "maxPopulation", "nation"};
       for (const QString &key : newJson.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = newJson[key];

@@ -5,9 +5,6 @@
 
 namespace MapEditor {
 
-/**
- * @brief Dialog for resizing the map
- */
 class ResizeDialog : public QDialog {
   Q_OBJECT
 

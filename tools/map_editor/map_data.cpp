@@ -25,7 +25,6 @@ void MapData::clear() {
   m_victory = QJsonObject();
   m_rain = QJsonObject();
 
-  // Clear undo/redo stacks
   m_undoStack.clear();
   m_redoStack.clear();
 
@@ -61,7 +60,7 @@ void MapData::executeCommand(std::unique_ptr<Command> cmd) {
   }
   cmd->execute();
   m_undoStack.push_back(std::move(cmd));
-  // Clear redo stack when new command is executed
+
   m_redoStack.clear();
   setModified(true);
   emit undoRedoChanged();
@@ -110,13 +109,11 @@ bool MapData::loadFromJson(const QString &filePath) {
 
   QJsonObject root = doc.object();
 
-  // Parse basic properties
   m_name = root["name"].toString("Untitled Map");
   m_description = root["description"].toString();
   m_coordSystem = root["coordSystem"].toString("grid");
   m_maxTroopsPerPlayer = root["maxTroopsPerPlayer"].toInt(2000);
 
-  // Parse grid
   if (root.contains("grid")) {
     QJsonObject gridObj = root["grid"].toObject();
     m_grid.width = gridObj["width"].toInt(100);
@@ -124,14 +121,12 @@ bool MapData::loadFromJson(const QString &filePath) {
     m_grid.tileSize = static_cast<float>(gridObj["tileSize"].toDouble(1.0));
   }
 
-  // Store passthrough data
   m_biome = root["biome"].toObject();
   m_camera = root["camera"].toObject();
   m_spawns = root["spawns"].toArray();
   m_victory = root["victory"].toObject();
   m_rain = root["rain"].toObject();
 
-  // Parse editable elements
   m_terrain.clear();
   m_firecamps.clear();
   m_linearElements.clear();
@@ -152,12 +147,11 @@ bool MapData::loadFromJson(const QString &filePath) {
   if (root.contains("bridges")) {
     parseBridgesArray(root["bridges"].toArray());
   }
-  // Parse structures from spawns (barracks, villages)
+
   if (root.contains("spawns")) {
     parseStructuresFromSpawns(root["spawns"].toArray());
   }
 
-  // Clear undo/redo stacks on load
   m_undoStack.clear();
   m_redoStack.clear();
 
@@ -170,7 +164,6 @@ bool MapData::loadFromJson(const QString &filePath) {
 bool MapData::saveToJson(const QString &filePath) const {
   QJsonObject root;
 
-  // Basic properties
   root["name"] = m_name;
   if (!m_description.isEmpty()) {
     root["description"] = m_description;
@@ -178,14 +171,12 @@ bool MapData::saveToJson(const QString &filePath) const {
   root["coordSystem"] = m_coordSystem;
   root["maxTroopsPerPlayer"] = m_maxTroopsPerPlayer;
 
-  // Grid
   QJsonObject gridObj;
   gridObj["width"] = m_grid.width;
   gridObj["height"] = m_grid.height;
   gridObj["tileSize"] = static_cast<double>(m_grid.tileSize);
   root["grid"] = gridObj;
 
-  // Passthrough data
   if (!m_biome.isEmpty()) {
     root["biome"] = m_biome;
   }
@@ -199,7 +190,6 @@ bool MapData::saveToJson(const QString &filePath) const {
     root["rain"] = m_rain;
   }
 
-  // Editable elements
   QJsonArray terrainArr = terrainToJson();
   if (!terrainArr.isEmpty()) {
     root["terrain"] = terrainArr;
@@ -225,9 +215,8 @@ bool MapData::saveToJson(const QString &filePath) const {
     root["bridges"] = bridgesArr;
   }
 
-  // Merge structures into spawns
   QJsonArray spawnsArr = structuresToSpawnsJson();
-  // Add non-structure spawns from original data
+
   for (const auto &spawn : m_spawns) {
     QJsonObject spawnObj = spawn.toObject();
     QString type = spawnObj["type"].toString();
@@ -265,10 +254,8 @@ void MapData::parseTerrainArray(const QJsonArray &arr) {
     elem.rotation = static_cast<float>(obj["rotation"].toDouble(0.0));
     elem.entrances = obj["entrances"].toArray();
 
-    // Store extra fields
-    QStringList knownKeys = {"type",     "x",         "z",     "radius",
-                             "width",    "depth",     "height", "rotation",
-                             "entrances"};
+    QStringList knownKeys = {"type",  "x",      "z",        "radius",   "width",
+                             "depth", "height", "rotation", "entrances"};
     for (const QString &key : obj.keys()) {
       if (!knownKeys.contains(key)) {
         elem.extraFields[key] = obj[key];
@@ -391,11 +378,9 @@ QJsonArray MapData::terrainToJson() const {
     obj["z"] = static_cast<double>(elem.z);
 
     if (elem.type == "hill") {
-      // Hills can use either radius or width/depth for sizing
-      // Write width/depth if they differ from default (10.0F)
-      bool hasCustomDimensions =
-          (elem.width != 10.0F && elem.width > 0.0F) ||
-          (elem.depth != 10.0F && elem.depth > 0.0F);
+
+      bool hasCustomDimensions = (elem.width != 10.0F && elem.width > 0.0F) ||
+                                 (elem.depth != 10.0F && elem.depth > 0.0F);
 
       if (hasCustomDimensions) {
         if (elem.width > 0.0F) {
@@ -405,7 +390,7 @@ QJsonArray MapData::terrainToJson() const {
           obj["depth"] = static_cast<double>(elem.depth);
         }
       } else if (elem.radius > 0.0F) {
-        // Use radius if no custom dimensions
+
         obj["radius"] = static_cast<double>(elem.radius);
       }
     } else {
@@ -420,7 +405,6 @@ QJsonArray MapData::terrainToJson() const {
       obj["entrances"] = elem.entrances;
     }
 
-    // Add extra fields
     for (const QString &key : elem.extraFields.keys()) {
       obj[key] = elem.extraFields[key];
     }
@@ -516,7 +500,6 @@ QJsonArray MapData::bridgesToJson() const {
   return arr;
 }
 
-// Element manipulation methods
 void MapData::addTerrainElement(const TerrainElement &element) {
   m_terrain.append(element);
   setModified(true);
@@ -610,7 +593,6 @@ void MapData::parseStructuresFromSpawns(const QJsonArray &arr) {
     QJsonObject obj = val.toObject();
     QString type = obj["type"].toString();
 
-    // Only extract barracks and villages as editable structures
     if (type == "barracks" || type == "village") {
       StructureElement elem;
       elem.type = type;
@@ -620,8 +602,8 @@ void MapData::parseStructuresFromSpawns(const QJsonArray &arr) {
       elem.maxPopulation = obj["maxPopulation"].toInt(150);
       elem.nation = obj["nation"].toString();
 
-      QStringList knownKeys = {"type", "x", "z", "playerId", "maxPopulation",
-                               "nation"};
+      QStringList knownKeys = {"type",          "x",     "z", "playerId",
+                               "maxPopulation", "nation"};
       for (const QString &key : obj.keys()) {
         if (!knownKeys.contains(key)) {
           elem.extraFields[key] = obj[key];
