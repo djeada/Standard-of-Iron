@@ -54,22 +54,55 @@ auto MeshInstancingPipeline::initialize() -> bool {
       nullptr, GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-  // Load the instanced shader for mesh batching
+  // Load nation-specific instanced shaders and map them to original shaders
   if (m_shaderCache != nullptr) {
-    m_instancedShader =
-        m_shaderCache->get(QStringLiteral("spearman_instanced"));
-    if (m_instancedShader != nullptr) {
-      cache_uniforms();
-      qInfo() << "MeshInstancingPipeline: loaded instanced shader";
-    } else {
-      qWarning()
-          << "MeshInstancingPipeline: spearman_instanced shader not found";
+    // Carthage spearman mapping
+    Shader *carthageOriginal =
+        m_shaderCache->get(QStringLiteral("spearman_carthage"));
+    Shader *carthageInstanced =
+        m_shaderCache->get(QStringLiteral("spearman_instanced_carthage"));
+    if (carthageOriginal != nullptr && carthageInstanced != nullptr) {
+      InstancedShaderInfo info;
+      info.shader = carthageInstanced;
+      info.uniforms.view_proj =
+          carthageInstanced->uniform_location(QStringLiteral("u_viewProj"));
+      info.uniforms.texture =
+          carthageInstanced->uniform_location(QStringLiteral("u_texture"));
+      info.uniforms.use_texture =
+          carthageInstanced->uniform_location(QStringLiteral("u_useTexture"));
+      info.uniforms.material_id =
+          carthageInstanced->uniform_location(QStringLiteral("u_materialId"));
+      m_shaderMap[carthageOriginal] = info;
+      qInfo() << "MeshInstancingPipeline: mapped spearman_carthage -> "
+                 "spearman_instanced_carthage";
+    }
+
+    // Roman Republic spearman mapping
+    Shader *romeOriginal =
+        m_shaderCache->get(QStringLiteral("spearman_roman_republic"));
+    Shader *romeInstanced =
+        m_shaderCache->get(QStringLiteral("spearman_instanced_roman_republic"));
+    if (romeOriginal != nullptr && romeInstanced != nullptr) {
+      InstancedShaderInfo info;
+      info.shader = romeInstanced;
+      info.uniforms.view_proj =
+          romeInstanced->uniform_location(QStringLiteral("u_viewProj"));
+      info.uniforms.texture =
+          romeInstanced->uniform_location(QStringLiteral("u_texture"));
+      info.uniforms.use_texture =
+          romeInstanced->uniform_location(QStringLiteral("u_useTexture"));
+      info.uniforms.material_id =
+          romeInstanced->uniform_location(QStringLiteral("u_materialId"));
+      m_shaderMap[romeOriginal] = info;
+      qInfo() << "MeshInstancingPipeline: mapped spearman_roman_republic -> "
+                 "spearman_instanced_roman_republic";
     }
   }
 
   m_initialized = true;
   qInfo() << "MeshInstancingPipeline initialized with capacity"
-          << m_instanceCapacity;
+          << m_instanceCapacity << "and" << m_shaderMap.size()
+          << "shader mappings";
   return true;
 }
 
@@ -89,21 +122,13 @@ void MeshInstancingPipeline::shutdown() {
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
-  m_instancedShader = nullptr;
+  m_shaderMap.clear();
+  m_activeInstancedShader = nullptr;
   m_initialized = false;
 }
 
 void MeshInstancingPipeline::cache_uniforms() {
-  if (m_instancedShader == nullptr) {
-    return;
-  }
-
-  m_uniforms.view_proj =
-      m_instancedShader->uniform_location(QStringLiteral("u_viewProj"));
-  m_uniforms.texture =
-      m_instancedShader->uniform_location(QStringLiteral("u_texture"));
-  m_uniforms.use_texture =
-      m_instancedShader->uniform_location(QStringLiteral("u_useTexture"));
+  // Uniforms are cached per-shader in the shader map during initialize()
 }
 
 auto MeshInstancingPipeline::is_initialized() const -> bool {
@@ -115,6 +140,7 @@ void MeshInstancingPipeline::begin_frame() {
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
+  m_activeInstancedShader = nullptr;
 }
 
 auto MeshInstancingPipeline::can_batch(Mesh *mesh, Shader *shader,
@@ -164,6 +190,15 @@ void MeshInstancingPipeline::begin_batch(Mesh *mesh, Shader *shader,
   m_currentMesh = mesh;
   m_currentShader = shader;
   m_currentTexture = texture;
+
+  // Look up the instanced shader for this original shader
+  auto it = m_shaderMap.find(shader);
+  if (it != m_shaderMap.end()) {
+    m_activeInstancedShader = it->second.shader;
+    m_activeUniforms = it->second.uniforms;
+  } else {
+    m_activeInstancedShader = nullptr;
+  }
 }
 
 void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
@@ -172,19 +207,17 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
   }
   if (m_currentMesh == nullptr || !m_initialized) {
     qWarning() << "MeshInstancingPipeline::flush called with invalid state:"
-               << "mesh=" << m_currentMesh
-               << "initialized=" << m_initialized
+               << "mesh=" << m_currentMesh << "initialized=" << m_initialized
                << "instances=" << m_instances.size();
     m_instances.clear();
     return;
   }
 
-  // Use the instanced shader if available, otherwise fall back
-  Shader *active_shader =
-      (m_instancedShader != nullptr) ? m_instancedShader : m_currentShader;
+  // Use the mapped instanced shader, or fall back
+  Shader *active_shader = m_activeInstancedShader;
   if (active_shader == nullptr) {
     qWarning()
-        << "MeshInstancingPipeline::flush: no shader available for instancing";
+        << "MeshInstancingPipeline::flush: no instanced shader for original";
     m_instances.clear();
     return;
   }
@@ -214,19 +247,19 @@ void MeshInstancingPipeline::flush(const QMatrix4x4 &view_proj) {
   active_shader->use();
 
   // Set shared view-projection uniform
-  if (m_uniforms.view_proj != Shader::InvalidUniform) {
-    active_shader->set_uniform(m_uniforms.view_proj, view_proj);
+  if (m_activeUniforms.view_proj != Shader::InvalidUniform) {
+    active_shader->set_uniform(m_activeUniforms.view_proj, view_proj);
   }
 
   // Set texture uniforms
   bool has_texture = (m_currentTexture != nullptr);
-  if (m_uniforms.use_texture != Shader::InvalidUniform) {
-    active_shader->set_uniform(m_uniforms.use_texture, has_texture);
+  if (m_activeUniforms.use_texture != Shader::InvalidUniform) {
+    active_shader->set_uniform(m_activeUniforms.use_texture, has_texture);
   }
   if (has_texture) {
     m_currentTexture->bind(0);
-    if (m_uniforms.texture != Shader::InvalidUniform) {
-      active_shader->set_uniform(m_uniforms.texture, 0);
+    if (m_activeUniforms.texture != Shader::InvalidUniform) {
+      active_shader->set_uniform(m_activeUniforms.texture, 0);
     }
   }
 
@@ -249,6 +282,16 @@ auto MeshInstancingPipeline::instance_count() const -> std::size_t {
 
 auto MeshInstancingPipeline::has_pending() const -> bool {
   return !m_instances.empty();
+}
+
+auto MeshInstancingPipeline::get_instanced_shader(Shader *original_shader) const
+    -> Shader * {
+  auto it = m_shaderMap.find(original_shader);
+  return (it != m_shaderMap.end()) ? it->second.shader : nullptr;
+}
+
+auto MeshInstancingPipeline::has_instanced_shaders() const -> bool {
+  return !m_shaderMap.empty();
 }
 
 void MeshInstancingPipeline::setup_instance_attributes() {

@@ -1461,9 +1461,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       // Check if this mesh command can be batched using instanced rendering
       // Batch opaque mesh commands with the same mesh/shader/texture
+      // Only batch if we have an instanced shader for this specific shader
       if (!isTransparent && !isShadowShader && m_meshInstancingPipeline &&
           m_meshInstancingPipeline->is_initialized() &&
-          m_meshInstancingPipeline->instanced_shader() != nullptr) {
+          m_meshInstancingPipeline->has_instanced_shaders() &&
+          m_meshInstancingPipeline->get_instanced_shader(it.shader) != nullptr) {
 
         // Check if we can batch with upcoming commands
         bool start_new_batch = !m_meshInstancingPipeline->has_pending() ||

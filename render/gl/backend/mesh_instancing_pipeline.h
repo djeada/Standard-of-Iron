@@ -7,6 +7,7 @@
 #include <QVector3D>
 #include <cstddef>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace Render::GL {
@@ -51,9 +52,12 @@ public:
 
   [[nodiscard]] auto has_pending() const -> bool;
 
-  [[nodiscard]] auto instanced_shader() const -> Shader * {
-    return m_instancedShader;
-  }
+  // Get instanced shader for a given original shader (nation-specific)
+  [[nodiscard]] auto get_instanced_shader(Shader *original_shader) const
+      -> Shader *;
+
+  // Check if instancing is available for any shader
+  [[nodiscard]] auto has_instanced_shaders() const -> bool;
 
 private:
   void setup_instance_attributes();
@@ -62,9 +66,8 @@ private:
     GLint view_proj{Shader::InvalidUniform};
     GLint texture{Shader::InvalidUniform};
     GLint use_texture{Shader::InvalidUniform};
+    GLint material_id{Shader::InvalidUniform};
   };
-
-  Uniforms m_uniforms;
 
   GL::Backend *m_backend{nullptr};
   GL::ShaderCache *m_shaderCache{nullptr};
@@ -74,7 +77,16 @@ private:
   Shader *m_currentShader{nullptr};
   Texture *m_currentTexture{nullptr};
 
-  Shader *m_instancedShader{nullptr};
+  // Map from original shader to instanced shader + uniforms
+  struct InstancedShaderInfo {
+    Shader *shader{nullptr};
+    Uniforms uniforms;
+  };
+  std::unordered_map<Shader *, InstancedShaderInfo> m_shaderMap;
+
+  // Current instanced shader being used
+  Shader *m_activeInstancedShader{nullptr};
+  Uniforms m_activeUniforms;
 
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instanceCapacity{0};

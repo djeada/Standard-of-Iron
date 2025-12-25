@@ -68,8 +68,10 @@
         <file>assets/shaders/riverbank.vert</file>
         <file>assets/shaders/spearman.frag</file>
         <file>assets/shaders/spearman.vert</file>
-        <file>assets/shaders/spearman_instanced.frag</file>
-        <file>assets/shaders/spearman_instanced.vert</file>
+        <file>assets/shaders/spearman_instanced_carthage.frag</file>
+        <file>assets/shaders/spearman_instanced_carthage.vert</file>
+        <file>assets/shaders/spearman_instanced_roman_republic.frag</file>
+        <file>assets/shaders/spearman_instanced_roman_republic.vert</file>
         <file>assets/shaders/spearman_roman_republic.frag</file>
         <file>assets/shaders/spearman_roman_republic.vert</file>
         <file>assets/shaders/spearman_carthage.frag</file>
