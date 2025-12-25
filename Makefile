@@ -58,7 +58,7 @@ help:
 	@echo "  $(GREEN)test$(RESET)          - Run tests (if any)"
 	@echo "  $(GREEN)validate-content$(RESET) - Validate mission and campaign JSON files"
 	@echo "  $(GREEN)test-validator$(RESET) - Run validator integration tests"
-	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders)"
+	@echo "  $(GREEN)format$(RESET)        - Format all code (C++, QML, shaders, Python)"
 	@echo "  $(GREEN)format-check$(RESET)  - Verify formatting (CI-friendly, no changes)"
 	@echo "  $(GREEN)tidy$(RESET)          - Run clang-tidy fixes on changed files (git diff vs origin/main)"
 	@echo "  $(GREEN)tidy-all$(RESET)      - Run clang-tidy fixes on the whole project"
@@ -280,6 +280,15 @@ format:
 		echo "$(YELLOW)⚠ clang-format not found. Shader files not formatted.$(RESET)"; \
 	fi
 
+	@echo "$(BOLD)$(BLUE)Formatting Python files with black...$(RESET)"
+	@if command -v black >/dev/null 2>&1; then \
+		find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
+		| xargs -0 -r black --quiet || true; \
+		echo "$(GREEN)✓ Python formatting complete$(RESET)"; \
+	else \
+		echo "$(YELLOW)⚠ black not found. Skipping Python formatting.$(RESET)"; \
+	fi
+
 	@echo "$(GREEN)✓ All formatting complete$(RESET)"
 
 format-check:
@@ -303,6 +312,14 @@ format-check:
 			fi; \
 		done; \
 		rm -f /tmp/qmlformat_check.tmp; \
+	fi; \
+	if command -v black >/dev/null 2>&1; then \
+		echo "$(BLUE)Checking Python files...$(RESET)"; \
+		if ! find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
+			| xargs -0 -r black --check --quiet; then \
+			echo "$(RED)Python files need formatting$(RESET)"; \
+			FAILED=1; \
+		fi; \
 	fi; \
 	if [ $$FAILED -eq 0 ]; then \
 		echo "$(GREEN)✓ All formatting checks passed$(RESET)"; \
