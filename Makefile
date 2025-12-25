@@ -283,7 +283,7 @@ format:
 	@echo "$(BOLD)$(BLUE)Formatting Python files with black...$(RESET)"
 	@if command -v black >/dev/null 2>&1; then \
 		find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
-		| xargs -0 -r black --quiet 2>/dev/null || true; \
+		| xargs -0 -r black --quiet || true; \
 		echo "$(GREEN)✓ Python formatting complete$(RESET)"; \
 	else \
 		echo "$(YELLOW)⚠ black not found. Skipping Python formatting.$(RESET)"; \
@@ -316,7 +316,7 @@ format-check:
 	if command -v black >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking Python files...$(RESET)"; \
 		if ! find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
-			| xargs -0 -r black --check --quiet 2>/dev/null; then \
+			| xargs -0 -r black --check --quiet; then \
 			echo "$(RED)Python files need formatting$(RESET)"; \
 			FAILED=1; \
 		fi; \
