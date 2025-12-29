@@ -886,11 +886,11 @@ void Renderer::render_construction_previews(
     float preview_x = transform->position.x;
     float preview_z = transform->position.z;
 
-    if (builder_prod->has_construction_site) {
+    if (builder_prod->is_placement_preview && builder_prod->has_construction_site) {
       show_preview = true;
       preview_x = builder_prod->construction_site_x;
       preview_z = builder_prod->construction_site_z;
-    } else if (builder_prod->in_progress) {
+    } else if (builder_prod->is_placement_preview && builder_prod->in_progress) {
       show_preview = true;
     }
 

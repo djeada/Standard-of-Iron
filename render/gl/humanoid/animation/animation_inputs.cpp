@@ -92,11 +92,16 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
 
   auto *builder_prod =
       ctx.entity->get_component<Engine::Core::BuilderProductionComponent>();
-  if (builder_prod != nullptr && builder_prod->in_progress) {
-    anim.is_constructing = true;
-    if (builder_prod->build_time > 0.0F) {
-      anim.construction_progress =
-          1.0F - (builder_prod->time_remaining / builder_prod->build_time);
+  if (builder_prod != nullptr) {
+    if (builder_prod->bypass_movement_active) {
+      anim.is_moving = true;
+    }
+    if (builder_prod->in_progress) {
+      anim.is_constructing = true;
+      if (builder_prod->build_time > 0.0F) {
+        anim.construction_progress =
+            1.0F - (builder_prod->time_remaining / builder_prod->build_time);
+      }
     }
   }
 

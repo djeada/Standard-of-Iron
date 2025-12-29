@@ -1,4 +1,5 @@
 #include "builder_behavior.h"
+#include "../../../map/terrain_service.h"
 #include "../ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -23,6 +24,43 @@ constexpr int MAX_DEFENSE_TOWERS = 10;
 constexpr int MAX_CATAPULTS = 5;
 
 constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
+constexpr float MAP_EDGE_PADDING = 5.0F;
+
+// Offset to center the grid coordinate system at the map center
+constexpr float GRID_CENTER_OFFSET = 0.5F;
+
+// Clamps world coordinates to valid map bounds with padding from edges.
+// The map uses a centered coordinate system where (0,0) is the map center.
+// Applies MAP_EDGE_PADDING to keep buildings away from map boundaries.
+void clamp_to_map_bounds(float &x, float &z) {
+  auto &terrain = Game::Map::TerrainService::instance();
+  if (!terrain.is_initialized()) {
+    return;
+  }
+
+  const Game::Map::TerrainHeightMap *hm = terrain.get_height_map();
+  if (hm == nullptr) {
+    return;
+  }
+
+  const float tile = hm->getTileSize();
+  const int w = hm->getWidth();
+  const int h = hm->getHeight();
+  if (w <= 0 || h <= 0) {
+    return;
+  }
+
+  const float half_w = w * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
+  const float half_h = h * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
+  const float min_x = -half_w * tile + MAP_EDGE_PADDING;
+  const float max_x = half_w * tile - MAP_EDGE_PADDING;
+  const float min_z = -half_h * tile + MAP_EDGE_PADDING;
+  const float max_z = half_h * tile - MAP_EDGE_PADDING;
+
+  x = std::clamp(x, min_x, max_x);
+  z = std::clamp(z, min_z, max_z);
+}
+
 } // namespace
 
 void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
@@ -101,6 +139,8 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     construction_x += radius * std::cos(angle);
     construction_z += radius * std::sin(angle);
   }
+
+  clamp_to_map_bounds(construction_x, construction_z);
 
   if (!available_builders.empty()) {
     AICommand command;
