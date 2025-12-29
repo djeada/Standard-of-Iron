@@ -7,6 +7,7 @@
 #include <QVector3D>
 #include <cstddef>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace Render::GL {
@@ -37,22 +38,36 @@ public:
 
   void begin_frame();
 
-  [[nodiscard]] auto can_batch(Mesh *mesh, Shader *shader,
-                               Texture *texture) const -> bool;
+  [[nodiscard]] auto can_batch(Mesh *mesh, Shader *shader, Texture *texture,
+                               int material_id) const -> bool;
 
   void accumulate(const QMatrix4x4 &model, const QVector3D &color, float alpha,
                   int material_id = 0);
 
   void begin_batch(Mesh *mesh, Shader *shader, Texture *texture);
 
-  void flush();
+  void flush(const QMatrix4x4 &view_proj);
 
   [[nodiscard]] auto instance_count() const -> std::size_t;
 
   [[nodiscard]] auto has_pending() const -> bool;
 
+  // Get instanced shader for a given original shader (nation-specific)
+  [[nodiscard]] auto get_instanced_shader(Shader *original_shader) const
+      -> Shader *;
+
+  // Check if instancing is available for any shader
+  [[nodiscard]] auto has_instanced_shaders() const -> bool;
+
 private:
   void setup_instance_attributes();
+
+  struct Uniforms {
+    GLint view_proj{Shader::InvalidUniform};
+    GLint texture{Shader::InvalidUniform};
+    GLint use_texture{Shader::InvalidUniform};
+    GLint material_id{Shader::InvalidUniform};
+  };
 
   GL::Backend *m_backend{nullptr};
   GL::ShaderCache *m_shaderCache{nullptr};
@@ -61,6 +76,18 @@ private:
   Mesh *m_currentMesh{nullptr};
   Shader *m_currentShader{nullptr};
   Texture *m_currentTexture{nullptr};
+  int m_currentMaterialId{0};
+
+  // Map from original shader to instanced shader + uniforms
+  struct InstancedShaderInfo {
+    Shader *shader{nullptr};
+    Uniforms uniforms;
+  };
+  std::unordered_map<Shader *, InstancedShaderInfo> m_shaderMap;
+
+  // Current instanced shader being used
+  Shader *m_activeInstancedShader{nullptr};
+  Uniforms m_activeUniforms;
 
   std::vector<MeshInstanceGpu> m_instances;
   std::size_t m_instanceCapacity{0};
