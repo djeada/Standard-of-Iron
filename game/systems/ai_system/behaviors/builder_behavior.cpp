@@ -26,6 +26,12 @@ constexpr int MAX_CATAPULTS = 5;
 constexpr float DEFENSE_TOWER_CLOSE_RADIUS = 25.0F;
 constexpr float MAP_EDGE_PADDING = 5.0F;
 
+// Offset to center the grid coordinate system at the map center
+constexpr float GRID_CENTER_OFFSET = 0.5F;
+
+// Clamps world coordinates to valid map bounds with padding from edges.
+// The map uses a centered coordinate system where (0,0) is the map center.
+// Applies MAP_EDGE_PADDING to keep buildings away from map boundaries.
 void clamp_to_map_bounds(float &x, float &z) {
   auto &terrain = Game::Map::TerrainService::instance();
   if (!terrain.is_initialized()) {
@@ -44,8 +50,8 @@ void clamp_to_map_bounds(float &x, float &z) {
     return;
   }
 
-  const float half_w = w * 0.5F - 0.5F;
-  const float half_h = h * 0.5F - 0.5F;
+  const float half_w = w * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
+  const float half_h = h * GRID_CENTER_OFFSET - GRID_CENTER_OFFSET;
   const float min_x = -half_w * tile + MAP_EDGE_PADDING;
   const float max_x = half_w * tile - MAP_EDGE_PADDING;
   const float min_z = -half_h * tile + MAP_EDGE_PADDING;
