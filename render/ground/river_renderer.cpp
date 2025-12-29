@@ -193,6 +193,7 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     if (use_visibility) {
       int max_visibility_state = 0;
+      bool any_sample_in_bounds = false;
       dir.normalize();
 
       int const samples_per_segment = 5;
@@ -203,11 +204,19 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
         if (visibility.isVisibleWorld(pos.x(), pos.z())) {
           max_visibility_state = 2;
+          any_sample_in_bounds = true;
           break;
         }
         if (visibility.isExploredWorld(pos.x(), pos.z())) {
           max_visibility_state = std::max(max_visibility_state, 1);
+          any_sample_in_bounds = true;
         }
+      }
+
+      // If no samples were in bounds, default to visible (consistent with
+      // riverbank renderer behavior when samples are empty)
+      if (!any_sample_in_bounds) {
+        max_visibility_state = 2;
       }
 
       if (max_visibility_state == 0) {
