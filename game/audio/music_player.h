@@ -1,6 +1,6 @@
 #pragma once
-#include "AudioConstants.h"
-#include "MiniaudioBackend.h"
+#include "audio_constants.h"
+#include "miniaudio_backend.h"
 #include <QObject>
 #include <QPointer>
 #include <QString>
