@@ -1,5 +1,5 @@
 #include "audio_system_proxy.h"
-#include "game/audio/AudioSystem.h"
+#include "game/audio/audio_system.h"
 #include <qobject.h>
 
 namespace App::Models {

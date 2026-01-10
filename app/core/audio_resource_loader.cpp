@@ -1,6 +1,6 @@
 #include "audio_resource_loader.h"
 
-#include "game/audio/AudioSystem.h"
+#include "game/audio/audio_system.h"
 #include <QCoreApplication>
 #include <QDebug>
 #include <QDir>
