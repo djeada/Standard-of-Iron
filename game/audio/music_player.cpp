@@ -1,6 +1,6 @@
-#include "MusicPlayer.h"
-#include "AudioConstants.h"
-#include "MiniaudioBackend.h"
+#include "music_player.h"
+#include "audio_constants.h"
+#include "miniaudio_backend.h"
 #include <QCoreApplication>
 #include <QFileInfo>
 #include <QMetaObject>
