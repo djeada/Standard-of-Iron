@@ -1,8 +1,8 @@
-#include "AudioEventHandler.h"
+#include "audio_event_handler.h"
 #include "../core/component.h"
 #include "../core/entity.h"
 #include "../core/world.h"
-#include "AudioSystem.h"
+#include "audio_system.h"
 #include "core/event_manager.h"
 #include "units/spawn_type.h"
 #include <chrono>

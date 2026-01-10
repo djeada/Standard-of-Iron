@@ -9,7 +9,7 @@
 #include "../utils/selection_utils.h"
 #include "ambient_state_manager.h"
 #include "camera_controller.h"
-#include "game/audio/AudioEventHandler.h"
+#include "game/audio/audio_event_handler.h"
 #include "game/core/event_manager.h"
 #include "game/map/mission_definition.h"
 #include "game/systems/game_state_serializer.h"

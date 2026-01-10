@@ -1,8 +1,8 @@
-#include "AudioSystem.h"
+#include "audio_system.h"
 
-#include "MiniaudioBackend.h"
-#include "MusicPlayer.h"
-#include "Sound.h"
+#include "miniaudio_backend.h"
+#include "music_player.h"
+#include "sound.h"
 #include <QDebug>
 #include <algorithm>
 #include <chrono>

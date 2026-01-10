@@ -1,5 +1,5 @@
-#include "Sound.h"
-#include "MiniaudioBackend.h"
+#include "sound.h"
+#include "miniaudio_backend.h"
 #include <QCryptographicHash>
 #include <QDebug>
 #include <QFileInfo>

@@ -1,9 +1,9 @@
 add_library(audio_system STATIC
-    AudioSystem.cpp
-    Sound.cpp
-    MusicPlayer.cpp
-    MiniaudioBackend.cpp
-    AudioEventHandler.cpp
+    audio_system.cpp
+    sound.cpp
+    music_player.cpp
+    miniaudio_backend.cpp
+    audio_event_handler.cpp
 )
 
 target_include_directories(audio_system PUBLIC .)
