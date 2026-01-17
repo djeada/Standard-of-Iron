@@ -76,6 +76,7 @@ struct Condition {
   std::optional<QString> structure_type;
   std::vector<QString> structure_types;
   std::optional<int> min_count;
+  std::optional<int> wave_count;
 };
 
 struct EventTrigger {
