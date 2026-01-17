@@ -1,6 +1,6 @@
 {
   "name": "Battle of Cannae",
-  "description": "The legendary battlefield where the greatest double envelopment in history took place",
+  "description": "The legendary battlefield where the greatest double envelopment in history took place - encircle and destroy Rome's greatest army",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 3000,
   "grid": {
@@ -27,44 +27,299 @@
     "near": 1.0,
     "far": 500.0
   },
-  "spawns": [],
+  "spawns": [
+    {
+      "type": "spearman",
+      "x": 55,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 58,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 52,
+      "z": 52,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 55,
+      "z": 65,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 58,
+      "z": 68,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 60,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 63,
+      "z": 57,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 57,
+      "z": 63,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 35,
+      "z": 60,
+      "playerId": 1,
+      "description": "Left flank cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 38,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 32,
+      "z": 62,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 85,
+      "z": 60,
+      "playerId": 1,
+      "description": "Right flank cavalry"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 88,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 82,
+      "z": 62,
+      "playerId": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 30,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 90,
+      "z": 65,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 50,
+      "z": 70,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 70,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 60,
+      "z": 75,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 50,
+      "z": 90,
+      "playerId": 1,
+      "maxPopulation": 200,
+      "nation": "carthage"
+    },
+    {
+      "type": "spearman",
+      "x": 120,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 123,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 117,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 126,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 114,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 120,
+      "z": 65,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 123,
+      "z": 68,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 117,
+      "z": 62,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 130,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 133,
+      "z": 57,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 127,
+      "z": 63,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 130,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 130,
+      "z": 68,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 105,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 108,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 145,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 148,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 125,
+      "z": 70,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 128,
+      "z": 72,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 122,
+      "z": 74,
+      "playerId": 2
+    },
+    {
+      "type": "barracks",
+      "x": 155,
+      "z": 60,
+      "playerId": 2,
+      "maxPopulation": 250,
+      "nation": "roman_republic"
+    }
+  ],
   "firecamps": [
     {
-      "x": 55,
-      "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 45,
+      "z": 85,
+      "intensity": 1.2,
+      "radius": 3.5
     },
     {
       "x": 55,
+      "z": 88,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 160,
+      "z": 55,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 165,
       "z": 65,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 135,
-      "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 30,
+      "z": 50,
+      "intensity": 0.9,
+      "radius": 2.8
     },
     {
-      "x": 135,
-      "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 95,
+      "z": 50,
+      "intensity": 0.9,
+      "radius": 2.8
     }
   ],
   "terrain": [
-    {
-      "type": "river",
-      "path": [
-        {"x": 90, "z": 15},
-        {"x": 90, "z": 35}
-      ],
-      "width": 8.0,
-      "depth": 1.5,
-      "description": "Aufidus River in background"
-    },
     {
       "type": "plain",
       "x": 90,
@@ -72,10 +327,110 @@
       "width": 140,
       "depth": 80,
       "description": "Open plain - perfect for the double envelopment"
+    },
+    {
+      "type": "hill",
+      "x": 50,
+      "z": 100,
+      "width": 25,
+      "depth": 12,
+      "height": 2.5,
+      "description": "Carthaginian command position",
+      "entrances": [
+        {"x": 38, "z": 100},
+        {"x": 62, "z": 100},
+        {"x": 50, "z": 88}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 160,
+      "z": 60,
+      "radius": 10,
+      "height": 2.0,
+      "description": "Roman camp elevation",
+      "entrances": [
+        {"x": 150, "z": 60},
+        {"x": 160, "z": 50},
+        {"x": 160, "z": 70}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 15,
+      "z": 60,
+      "radius": 8,
+      "height": 2.0,
+      "description": "Western flank anchor"
+    },
+    {
+      "type": "hill",
+      "x": 90,
+      "z": 10,
+      "width": 40,
+      "depth": 10,
+      "height": 3.0,
+      "description": "Northern ridge - prevents flanking from north"
+    },
+    {
+      "type": "village",
+      "x": 20,
+      "z": 100,
+      "description": "Cannae village ruins"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [80, 0],
+      "end": [100, 25],
+      "width": 10,
+      "description": "Aufidus River - northern boundary"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [5, 60],
+        [30, 58],
+        [60, 60],
+        [90, 60],
+        [120, 60],
+        [150, 58],
+        [175, 60]
+      ],
+      "description": "Main east-west Roman road - Appian Way"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [50, 90],
+        [50, 75],
+        [55, 60]
+      ],
+      "description": "Path from Carthaginian camp to battle line"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [155, 60],
+        [155, 45],
+        [160, 30]
+      ],
+      "description": "Roman supply route"
     }
   ],
   "victory": {
     "type": "encirclement",
-    "description": "Execute the double envelopment"
+    "description": "Execute the legendary double envelopment - surround and destroy Rome's greatest army"
   }
 }

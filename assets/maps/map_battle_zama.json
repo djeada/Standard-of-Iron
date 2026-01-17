@@ -1,6 +1,6 @@
 {
   "name": "Battle of Zama",
-  "description": "The final confrontation in Africa - Hannibal faces Scipio Africanus",
+  "description": "The final confrontation in Africa - Hannibal faces Scipio Africanus on the open plains of Zama. Rome's greatest general has learned your tactics.",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 2800,
   "grid": {
@@ -11,12 +11,12 @@
   "biome": {
     "groundType": "grass_dry",
     "seed": 10008,
-    "patchDensity": 2.6,
-    "patchJitter": 0.8,
-    "plantDensity": 0.38,
+    "patchDensity": 2.3,
+    "patchJitter": 0.75,
+    "plantDensity": 0.28,
     "groundIrregularityEnabled": true,
-    "irregularityScale": 0.12,
-    "irregularityAmplitude": 0.06
+    "irregularityScale": 0.1,
+    "irregularityAmplitude": 0.04
   },
   "camera": {
     "center": [110, 0, 60],
@@ -27,37 +27,320 @@
     "near": 1.0,
     "far": 600.0
   },
-  "spawns": [],
+  "spawns": [
+    {
+      "type": "spearman",
+      "x": 50,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 53,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 47,
+      "z": 52,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 56,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 44,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 50,
+      "z": 65,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 53,
+      "z": 68,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 55,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 58,
+      "z": 57,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 52,
+      "z": 63,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 35,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 38,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 70,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 73,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 45,
+      "z": 72,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 55,
+      "z": 72,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 50,
+      "z": 75,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 40,
+      "z": 50,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 45,
+      "z": 48,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 55,
+      "z": 48,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 60,
+      "z": 50,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 30,
+      "z": 60,
+      "playerId": 1,
+      "maxPopulation": 180,
+      "nation": "carthage"
+    },
+    {
+      "type": "spearman",
+      "x": 165,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 168,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 162,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 171,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 159,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 165,
+      "z": 65,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 168,
+      "z": 68,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 162,
+      "z": 62,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 170,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 173,
+      "z": 57,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 167,
+      "z": 63,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 176,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 145,
+      "z": 55,
+      "playerId": 2,
+      "description": "Roman cavalry - former Numidian allies"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 148,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 142,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 190,
+      "z": 55,
+      "playerId": 2,
+      "description": "Roman cavalry flanking force"
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 193,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 187,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 160,
+      "z": 70,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 165,
+      "z": 72,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 170,
+      "z": 70,
+      "playerId": 2
+    },
+    {
+      "type": "barracks",
+      "x": 200,
+      "z": 60,
+      "playerId": 2,
+      "maxPopulation": 220,
+      "nation": "roman_republic"
+    }
+  ],
   "firecamps": [
     {
-      "x": 55,
+      "x": 25,
       "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "intensity": 1.2,
+      "radius": 3.5
     },
     {
-      "x": 55,
-      "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 35,
+      "z": 70,
+      "intensity": 1.1,
+      "radius": 3.2
     },
     {
-      "x": 165,
+      "x": 195,
       "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "intensity": 1.2,
+      "radius": 3.5
     },
     {
-      "x": 165,
-      "z": 65,
+      "x": 185,
+      "z": 70,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 110,
+      "z": 60,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
       "x": 110,
-      "z": 60,
-      "intensity": 1.1,
-      "radius": 3.2
+      "z": 15,
+      "intensity": 0.8,
+      "radius": 2.5
+    },
+    {
+      "x": 110,
+      "z": 105,
+      "intensity": 0.8,
+      "radius": 2.5
     }
   ],
   "terrain": [
@@ -67,27 +350,141 @@
       "z": 60,
       "width": 180,
       "depth": 90,
-      "description": "Open battlefield - no terrain advantage"
+      "description": "Open African plain - no terrain advantage for either side"
+    },
+    {
+      "type": "hill",
+      "x": 30,
+      "z": 60,
+      "radius": 12,
+      "height": 2.5,
+      "description": "Carthaginian camp elevation",
+      "entrances": [
+        {"x": 42, "z": 60},
+        {"x": 30, "z": 48},
+        {"x": 30, "z": 72}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 200,
+      "z": 60,
+      "radius": 12,
+      "height": 2.5,
+      "description": "Roman camp elevation",
+      "entrances": [
+        {"x": 188, "z": 60},
+        {"x": 200, "z": 48},
+        {"x": 200, "z": 72}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 110,
+      "z": 110,
+      "width": 40,
+      "depth": 10,
+      "height": 3.0,
+      "description": "Southern ridge - observation position"
+    },
+    {
+      "type": "hill",
+      "x": 110,
+      "z": 10,
+      "width": 40,
+      "depth": 10,
+      "height": 3.0,
+      "description": "Northern ridge"
     },
     {
       "type": "hill",
       "x": 60,
-      "z": 30,
-      "radius": 10,
+      "z": 20,
+      "radius": 8,
       "height": 2.0,
-      "description": "Minor elevation"
+      "description": "Minor southern elevation"
     },
     {
       "type": "hill",
       "x": 160,
-      "z": 90,
-      "radius": 10,
+      "z": 100,
+      "radius": 8,
       "height": 2.0,
-      "description": "Minor elevation"
+      "description": "Minor northern elevation"
+    },
+    {
+      "type": "village",
+      "x": 15,
+      "z": 90,
+      "description": "African village - Carthaginian supply"
+    },
+    {
+      "type": "village",
+      "x": 210,
+      "z": 30,
+      "description": "African village - Roman supply"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 4.5,
+      "style": "default",
+      "waypoints": [
+        [5, 60],
+        [30, 58],
+        [60, 60],
+        [90, 60],
+        [110, 60],
+        [130, 60],
+        [160, 60],
+        [190, 58],
+        [215, 60]
+      ],
+      "description": "Main battlefield road - ancient African trade route"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [15, 90],
+        [20, 75],
+        [25, 60]
+      ],
+      "description": "Path to Carthaginian supply village"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.0,
+      "style": "default",
+      "waypoints": [
+        [210, 30],
+        [205, 45],
+        [200, 60]
+      ],
+      "description": "Path to Roman supply village"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [110, 15],
+        [110, 40],
+        [110, 60],
+        [110, 80],
+        [110, 105]
+      ],
+      "description": "North-south crossing route"
     }
   ],
   "victory": {
     "type": "elimination",
-    "description": "Defeat Scipio's Roman army"
+    "description": "Defeat Scipio's Roman army and secure Carthage's future"
   }
 }

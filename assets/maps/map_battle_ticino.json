@@ -1,6 +1,6 @@
 {
   "name": "Battle of Ticino",
-  "description": "First clash on Italian soil - cavalry battle on fertile farmland",
+  "description": "First clash on Italian soil - cavalry battle on fertile Po Valley farmland near the Ticino River",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 1800,
   "grid": {
@@ -27,56 +27,327 @@
     "near": 1.0,
     "far": 500.0
   },
-  "spawns": [],
-  "firecamps": [
+  "spawns": [
     {
+      "type": "horse_swordsman",
       "x": 45,
       "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "playerId": 1
     },
     {
+      "type": "horse_swordsman",
+      "x": 48,
+      "z": 58,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 42,
+      "z": 52,
+      "playerId": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 40,
+      "z": 60,
+      "playerId": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 38,
+      "z": 55,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
       "x": 50,
       "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
+      "playerId": 1
     },
     {
+      "type": "spearman",
+      "x": 52,
+      "z": 68,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 46,
+      "z": 70,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 30,
+      "z": 60,
+      "playerId": 1,
+      "maxPopulation": 150,
+      "nation": "carthage"
+    },
+    {
+      "type": "horse_swordsman",
       "x": 155,
       "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 158,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 152,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 160,
+      "z": 60,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 162,
+      "z": 63,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 165,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 150,
+      "z": 65,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 153,
+      "z": 68,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 158,
+      "z": 70,
+      "playerId": 2
+    },
+    {
+      "type": "barracks",
+      "x": 175,
+      "z": 60,
+      "playerId": 2,
+      "maxPopulation": 180,
+      "nation": "roman_republic"
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 35,
+      "z": 55,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 40,
+      "z": 68,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
       "x": 165,
-      "z": 65,
+      "z": 50,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 170,
+      "z": 68,
       "intensity": 1.0,
       "radius": 3.0
+    },
+    {
+      "x": 100,
+      "z": 20,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 100,
+      "z": 100,
+      "intensity": 0.9,
+      "radius": 2.8
     }
   ],
   "terrain": [
     {
-      "type": "river",
-      "path": [
-        {"x": 100, "z": 30},
-        {"x": 100, "z": 50},
-        {"x": 102, "z": 70},
-        {"x": 100, "z": 90}
-      ],
-      "width": 6.0,
-      "depth": 1.5,
-      "description": "Ticino River in background"
-    },
-    {
       "type": "hill",
       "x": 50,
       "z": 60,
+      "radius": 10,
+      "height": 2.5,
+      "description": "Carthaginian observation point",
+      "entrances": [
+        {"x": 50, "z": 50},
+        {"x": 60, "z": 60},
+        {"x": 50, "z": 70}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 150,
+      "z": 60,
       "radius": 8,
-      "height": 2.0
+      "height": 2.0,
+      "description": "Roman defensive position",
+      "entrances": [
+        {"x": 150, "z": 52},
+        {"x": 142, "z": 60},
+        {"x": 150, "z": 68}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 100,
+      "z": 110,
+      "width": 30,
+      "depth": 12,
+      "height": 3.0,
+      "description": "Southern ridge overlooking valley",
+      "entrances": [
+        {"x": 85, "z": 110},
+        {"x": 115, "z": 110}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 100,
+      "z": 10,
+      "width": 35,
+      "depth": 10,
+      "height": 3.5,
+      "description": "Northern foothills",
+      "entrances": [
+        {"x": 82, "z": 10},
+        {"x": 118, "z": 10}
+      ]
+    },
+    {
+      "type": "forest",
+      "x": 25,
+      "z": 30,
+      "radius": 12,
+      "density": 0.5,
+      "description": "Dense grove for flanking maneuvers"
+    },
+    {
+      "type": "forest",
+      "x": 175,
+      "z": 90,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Roman retreat cover"
+    },
+    {
+      "type": "forest",
+      "x": 80,
+      "z": 80,
+      "radius": 8,
+      "density": 0.4,
+      "description": "Central copse"
+    },
+    {
+      "type": "plain",
+      "x": 100,
+      "z": 60,
+      "width": 80,
+      "depth": 50,
+      "description": "Open cavalry battlefield"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [188, 0],
+      "end": [192, 120],
+      "width": 8,
+      "description": "Ticino River - eastern boundary"
+    },
+    {
+      "start": [0, 25],
+      "end": [60, 20],
+      "width": 4,
+      "description": "Small tributary stream"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [186, 40],
+      "end": [194, 40],
+      "width": 5,
+      "height": 0.8,
+      "description": "Roman supply bridge"
+    },
+    {
+      "start": [186, 80],
+      "end": [194, 80],
+      "width": 5,
+      "height": 0.8,
+      "description": "Southern crossing"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.5,
+      "style": "default",
+      "waypoints": [
+        [10, 60],
+        [30, 58],
+        [50, 55],
+        [80, 58],
+        [100, 60],
+        [120, 58],
+        [150, 55],
+        [170, 58],
+        [190, 60]
+      ],
+      "description": "Main east-west road through valley"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [175, 60],
+        [180, 50],
+        [185, 40],
+        [190, 40]
+      ],
+      "description": "Road to Roman camp"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [30, 60],
+        [28, 45],
+        [25, 30]
+      ],
+      "description": "Path to Carthaginian flanking position"
     }
   ],
   "victory": {
     "type": "elimination",
-    "description": "Defeat Roman cavalry forces"
+    "description": "Defeat Roman cavalry forces and capture their camp"
   }
 }

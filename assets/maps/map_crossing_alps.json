@@ -1,6 +1,6 @@
 {
   "name": "Crossing the Alps",
-  "description": "The legendary Alpine crossing - survive treacherous mountain passes and hostile tribes",
+  "description": "The legendary Alpine crossing - survive treacherous mountain passes, avalanche zones, and hostile mountain tribes on the journey to Italy",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 2000,
   "grid": {
@@ -27,102 +27,438 @@
     "near": 1.0,
     "far": 550.0
   },
-  "spawns": [],
-  "firecamps": [
+  "spawns": [
     {
-      "x": 35,
-      "z": 35,
-      "intensity": 1.2,
-      "radius": 3.5
+      "type": "spearman",
+      "x": 25,
+      "z": 25,
+      "playerId": 1
     },
     {
-      "x": 65,
-      "z": 65,
+      "type": "spearman",
+      "x": 28,
+      "z": 28,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 22,
+      "z": 22,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 30,
+      "z": 25,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 25,
+      "z": 30,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 32,
+      "z": 28,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 28,
+      "z": 32,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 35,
+      "z": 30,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 20,
+      "z": 30,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 30,
+      "z": 20,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 25,
+      "z": 35,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 35,
+      "z": 25,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 28,
+      "z": 22,
+      "playerId": 1
+    },
+    {
+      "type": "elephant",
+      "x": 22,
+      "z": 28,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 15,
+      "z": 15,
+      "playerId": 1,
+      "maxPopulation": 150,
+      "nation": "carthage",
+      "description": "Starting camp"
+    },
+    {
+      "type": "spearman",
+      "x": 75,
+      "z": 55,
+      "playerId": 2,
+      "description": "First mountain tribe ambush"
+    },
+    {
+      "type": "spearman",
+      "x": 78,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 72,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 80,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 105,
+      "z": 85,
+      "playerId": 2,
+      "description": "Second mountain tribe ambush"
+    },
+    {
+      "type": "spearman",
+      "x": 108,
+      "z": 88,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 102,
+      "z": 82,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 110,
+      "z": 85,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 100,
+      "z": 88,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 105,
+      "z": 90,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 125,
+      "z": 115,
+      "playerId": 2,
+      "description": "Third mountain tribe - final pass defense"
+    },
+    {
+      "type": "spearman",
+      "x": 128,
+      "z": 118,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 122,
+      "z": 112,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 130,
+      "z": 115,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 120,
+      "z": 115,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 125,
+      "z": 120,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 125,
+      "z": 110,
+      "playerId": 2
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 20,
+      "z": 20,
+      "intensity": 1.3,
+      "radius": 4.0
+    },
+    {
+      "x": 50,
+      "z": 45,
       "intensity": 1.1,
       "radius": 3.2
     },
     {
-      "x": 95,
-      "z": 95,
+      "x": 75,
+      "z": 65,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 125,
-      "z": 125,
+      "x": 100,
+      "z": 95,
       "intensity": 1.1,
       "radius": 3.2
     },
     {
-      "x": 155,
+      "x": 130,
+      "z": 125,
+      "intensity": 1.0,
+      "radius": 3.0
+    },
+    {
+      "x": 160,
       "z": 155,
-      "intensity": 1.2,
-      "radius": 3.5
+      "intensity": 1.3,
+      "radius": 4.0
     }
   ],
   "terrain": [
     {
       "type": "mountain",
-      "x": 60,
-      "z": 50,
-      "radius": 20,
-      "height": 8.0,
-      "description": "First major peak"
+      "x": 50,
+      "z": 35,
+      "radius": 22,
+      "height": 12.0,
+      "description": "First major peak - blocks direct route"
     },
     {
       "type": "mountain",
       "x": 90,
-      "z": 80,
-      "radius": 25,
-      "height": 10.0,
-      "description": "Highest peak - most dangerous"
+      "z": 70,
+      "radius": 28,
+      "height": 15.0,
+      "description": "Highest peak - most dangerous avalanche zone"
     },
     {
       "type": "mountain",
       "x": 120,
-      "z": 110,
-      "radius": 22,
+      "z": 100,
+      "radius": 25,
+      "height": 13.0,
+      "description": "Second major peak - final obstacle"
+    },
+    {
+      "type": "mountain",
+      "x": 30,
+      "z": 60,
+      "radius": 15,
       "height": 9.0,
-      "description": "Second major peak"
+      "description": "Western barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 60,
+      "z": 90,
+      "radius": 18,
+      "height": 10.0,
+      "description": "Central barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 145,
+      "z": 80,
+      "radius": 20,
+      "height": 11.0,
+      "description": "Eastern barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 100,
+      "z": 40,
+      "radius": 16,
+      "height": 10.0,
+      "description": "Northern peak"
+    },
+    {
+      "type": "mountain",
+      "x": 40,
+      "z": 120,
+      "radius": 14,
+      "height": 9.0,
+      "description": "Southern barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 150,
+      "z": 130,
+      "radius": 18,
+      "height": 10.0,
+      "description": "Final descent peak"
+    },
+    {
+      "type": "hill",
+      "x": 25,
+      "z": 25,
+      "radius": 15,
+      "height": 3.0,
+      "description": "Starting camp elevation",
+      "entrances": [
+        {"x": 40, "z": 25},
+        {"x": 25, "z": 40}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 160,
+      "z": 160,
+      "radius": 15,
+      "height": 3.0,
+      "description": "Italian side - destination",
+      "entrances": [
+        {"x": 145, "z": 160},
+        {"x": 160, "z": 145}
+      ]
     },
     {
       "type": "pass",
       "path": [
-        {"x": 40, "z": 40},
-        {"x": 60, "z": 55},
-        {"x": 75, "z": 70},
-        {"x": 95, "z": 90},
-        {"x": 110, "z": 105},
-        {"x": 130, "z": 125},
-        {"x": 150, "z": 150}
+        {"x": 35, "z": 35},
+        {"x": 55, "z": 50},
+        {"x": 70, "z": 60},
+        {"x": 85, "z": 80},
+        {"x": 100, "z": 95},
+        {"x": 115, "z": 110},
+        {"x": 135, "z": 130},
+        {"x": 155, "z": 155}
       ],
-      "width": 8.0,
-      "description": "Treacherous mountain pass"
+      "width": 10.0,
+      "description": "Treacherous mountain pass through the Alps"
     },
     {
       "type": "avalanche_zone",
-      "x": 90,
-      "z": 70,
-      "radius": 20,
-      "description": "Dangerous avalanche area"
+      "x": 75,
+      "z": 55,
+      "radius": 18,
+      "description": "First avalanche danger zone - tribes ambush here"
     },
     {
       "type": "avalanche_zone",
-      "x": 120,
-      "z": 110,
-      "radius": 25,
-      "description": "Dangerous avalanche area"
+      "x": 105,
+      "z": 85,
+      "radius": 22,
+      "description": "Major avalanche zone - highest danger"
+    },
+    {
+      "type": "avalanche_zone",
+      "x": 125,
+      "z": 115,
+      "radius": 15,
+      "description": "Final pass avalanche risk"
+    },
+    {
+      "type": "forest",
+      "x": 45,
+      "z": 55,
+      "radius": 10,
+      "density": 0.4,
+      "description": "Alpine forest - shelter"
+    },
+    {
+      "type": "forest",
+      "x": 135,
+      "z": 140,
+      "radius": 12,
+      "density": 0.5,
+      "description": "Italian side forest - journey's end"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [20, 20],
+        [35, 35],
+        [50, 48],
+        [65, 58],
+        [80, 75],
+        [95, 90],
+        [110, 105],
+        [130, 125],
+        [150, 150],
+        [165, 165]
+      ],
+      "description": "Main mountain pass route through the Alps"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [20, 20],
+        [15, 35],
+        [20, 50],
+        [35, 65],
+        [50, 80]
+      ],
+      "description": "Alternative western route - longer but safer"
     }
   ],
   "victory": {
     "type": "reach_destination",
-    "destination": {"x": 150, "z": 150},
-    "description": "Reach the Italian side of the Alps"
+    "destination": {"x": 160, "z": 160},
+    "description": "Lead your army through the Alps to the Italian side while preserving at least 20 units"
   },
   "weather": {
     "type": "snow",
-    "intensity": 0.8,
+    "intensity": 0.85,
     "temperature": "extreme_cold",
-    "description": "Harsh Alpine winter"
+    "description": "Harsh Alpine winter - the cold claims lives every moment"
   }
 }

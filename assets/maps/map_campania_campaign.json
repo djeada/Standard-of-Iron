@@ -1,6 +1,6 @@
 {
   "name": "Campania Campaign",
-  "description": "Defend the rich Campanian territories against Roman counteroffensives",
+  "description": "Defend the rich Campanian territories against Roman counteroffensives - hold strategic villages while repelling attacks from multiple directions",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 2500,
   "grid": {
@@ -9,11 +9,11 @@
     "tileSize": 1.0
   },
   "biome": {
-    "groundType": "soil_rocky",
+    "groundType": "soil_fertile",
     "seed": 10006,
     "patchDensity": 3.0,
     "patchJitter": 0.86,
-    "plantDensity": 0.5,
+    "plantDensity": 0.55,
     "groundIrregularityEnabled": true,
     "irregularityScale": 0.13,
     "irregularityAmplitude": 0.07
@@ -27,68 +27,430 @@
     "near": 1.0,
     "far": 480.0
   },
-  "spawns": [],
-  "firecamps": [
+  "spawns": [
     {
-      "x": 55,
-      "z": 55,
-      "intensity": 1.0,
-      "radius": 3.0
+      "type": "spearman",
+      "x": 65,
+      "z": 75,
+      "playerId": 1
     },
     {
+      "type": "spearman",
+      "x": 68,
+      "z": 78,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 62,
+      "z": 72,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 70,
+      "z": 80,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 73,
+      "z": 77,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 55,
+      "z": 80,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 85,
+      "z": 80,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
       "x": 65,
-      "z": 65,
-      "intensity": 1.0,
-      "radius": 3.0
+      "z": 85,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 75,
+      "z": 85,
+      "playerId": 1
+    },
+    {
+      "type": "barracks",
+      "x": 70,
+      "z": 80,
+      "playerId": 1,
+      "maxPopulation": 200,
+      "nation": "carthage"
+    },
+    {
+      "type": "village",
+      "x": 40,
+      "z": 95,
+      "playerId": 1,
+      "description": "Western Campanian village"
+    },
+    {
+      "type": "village",
+      "x": 100,
+      "z": 95,
+      "playerId": 1,
+      "description": "Eastern Campanian village"
+    },
+    {
+      "type": "village",
+      "x": 70,
+      "z": 50,
+      "playerId": 1,
+      "description": "Forward observation village"
+    },
+    {
+      "type": "spearman",
+      "x": 70,
+      "z": 145,
+      "playerId": 2,
+      "description": "Northern Roman force"
+    },
+    {
+      "type": "spearman",
+      "x": 73,
+      "z": 148,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 67,
+      "z": 142,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 75,
+      "z": 145,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 65,
+      "z": 145,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 150,
+      "playerId": 2
+    },
+    {
+      "type": "barracks",
+      "x": 70,
+      "z": 155,
+      "playerId": 2,
+      "maxPopulation": 180,
+      "nation": "roman_republic"
+    },
+    {
+      "type": "spearman",
+      "x": 70,
+      "z": 15,
+      "playerId": 3,
+      "description": "Southern Roman force"
+    },
+    {
+      "type": "spearman",
+      "x": 73,
+      "z": 12,
+      "playerId": 3
+    },
+    {
+      "type": "spearman",
+      "x": 67,
+      "z": 18,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 75,
+      "z": 15,
+      "playerId": 3
+    },
+    {
+      "type": "swordsman",
+      "x": 65,
+      "z": 15,
+      "playerId": 3
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 10,
+      "playerId": 3
+    },
+    {
+      "type": "barracks",
+      "x": 70,
+      "z": 5,
+      "playerId": 3,
+      "maxPopulation": 180,
+      "nation": "roman_republic"
+    }
+  ],
+  "firecamps": [
+    {
+      "x": 65,
+      "z": 75,
+      "intensity": 1.2,
+      "radius": 3.5
     },
     {
       "x": 75,
-      "z": 75,
+      "z": 85,
       "intensity": 1.1,
       "radius": 3.2
     },
     {
-      "x": 85,
-      "z": 85,
+      "x": 40,
+      "z": 90,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 35,
-      "z": 75,
+      "x": 100,
+      "z": 90,
       "intensity": 1.0,
       "radius": 3.0
+    },
+    {
+      "x": 70,
+      "z": 55,
+      "intensity": 0.9,
+      "radius": 2.8
+    },
+    {
+      "x": 15,
+      "z": 80,
+      "intensity": 0.8,
+      "radius": 2.5
+    },
+    {
+      "x": 125,
+      "z": 80,
+      "intensity": 0.8,
+      "radius": 2.5
     }
   ],
   "terrain": [
     {
       "type": "hill",
-      "x": 60,
-      "z": 60,
-      "radius": 12,
-      "height": 3.0,
-      "description": "Central defensive position"
-    },
-    {
-      "type": "hill",
-      "x": 80,
+      "x": 70,
       "z": 80,
-      "radius": 10,
-      "height": 2.5,
-      "description": "Eastern village position"
+      "width": 25,
+      "depth": 18,
+      "height": 4.0,
+      "description": "Central Carthaginian defensive stronghold",
+      "entrances": [
+        {"x": 55, "z": 80},
+        {"x": 85, "z": 80},
+        {"x": 70, "z": 70},
+        {"x": 70, "z": 90}
+      ]
     },
     {
       "type": "hill",
       "x": 40,
-      "z": 80,
+      "z": 95,
+      "radius": 12,
+      "height": 3.0,
+      "description": "Western village defensive position",
+      "entrances": [
+        {"x": 30, "z": 95},
+        {"x": 50, "z": 95},
+        {"x": 40, "z": 85}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 100,
+      "z": 95,
+      "radius": 12,
+      "height": 3.0,
+      "description": "Eastern village defensive position",
+      "entrances": [
+        {"x": 90, "z": 95},
+        {"x": 110, "z": 95},
+        {"x": 100, "z": 85}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 70,
+      "z": 50,
       "radius": 10,
       "height": 2.5,
-      "description": "Western village position"
+      "description": "Forward observation position",
+      "entrances": [
+        {"x": 60, "z": 50},
+        {"x": 80, "z": 50},
+        {"x": 70, "z": 60}
+      ]
+    },
+    {
+      "type": "mountain",
+      "x": 10,
+      "z": 40,
+      "radius": 12,
+      "height": 8.0,
+      "description": "Western mountain barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 130,
+      "z": 40,
+      "radius": 12,
+      "height": 8.0,
+      "description": "Eastern mountain barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 10,
+      "z": 120,
+      "radius": 10,
+      "height": 7.0,
+      "description": "Northwestern mountain"
+    },
+    {
+      "type": "mountain",
+      "x": 130,
+      "z": 120,
+      "radius": 10,
+      "height": 7.0,
+      "description": "Northeastern mountain"
+    },
+    {
+      "type": "forest",
+      "x": 25,
+      "z": 70,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Western patrol forest"
+    },
+    {
+      "type": "forest",
+      "x": 115,
+      "z": 70,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Eastern patrol forest"
+    },
+    {
+      "type": "forest",
+      "x": 70,
+      "z": 110,
+      "radius": 8,
+      "density": 0.4,
+      "description": "Northern approach cover"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 60],
+      "end": [30, 55],
+      "width": 5,
+      "description": "Western stream"
+    },
+    {
+      "start": [110, 55],
+      "end": [140, 60],
+      "width": 5,
+      "description": "Eastern stream"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [28, 53],
+      "end": [32, 57],
+      "width": 4,
+      "height": 0.6,
+      "description": "Western stream crossing"
+    },
+    {
+      "start": [108, 53],
+      "end": [112, 57],
+      "width": 4,
+      "height": 0.6,
+      "description": "Eastern stream crossing"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 4.0,
+      "style": "default",
+      "waypoints": [
+        [70, 0],
+        [70, 30],
+        [70, 50],
+        [70, 80],
+        [70, 110],
+        [70, 140],
+        [70, 160]
+      ],
+      "description": "Main north-south road through Campania"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.5,
+      "style": "default",
+      "waypoints": [
+        [0, 80],
+        [25, 82],
+        [40, 85],
+        [70, 80],
+        [100, 85],
+        [115, 82],
+        [140, 80]
+      ],
+      "description": "East-west supply road connecting villages"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [40, 95],
+        [45, 88],
+        [55, 82],
+        [70, 80]
+      ],
+      "description": "Path to western village"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [100, 95],
+        [95, 88],
+        [85, 82],
+        [70, 80]
+      ],
+      "description": "Path to eastern village"
     }
   ],
   "victory": {
     "type": "defend_duration",
     "duration": 720.0,
-    "description": "Hold territory for 12 minutes"
+    "description": "Hold Campania for 12 minutes while maintaining control of at least 2 villages"
   }
 }

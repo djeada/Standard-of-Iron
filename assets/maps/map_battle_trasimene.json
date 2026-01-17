@@ -1,6 +1,6 @@
 {
   "name": "Battle of Lake Trasimene",
-  "description": "The perfect ambush - trap the Roman legion along the narrow lakeside road",
+  "description": "The perfect ambush - trap the Roman legion along the narrow lakeside road between water and hills in the morning mist",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 2500,
   "grid": {
@@ -27,82 +27,334 @@
     "near": 1.0,
     "far": 450.0
   },
-  "spawns": [],
+  "spawns": [
+    {
+      "type": "spearman",
+      "x": 65,
+      "z": 38,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 70,
+      "z": 40,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 90,
+      "z": 55,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 95,
+      "z": 58,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 88,
+      "z": 52,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 115,
+      "z": 75,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 120,
+      "z": 78,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 80,
+      "z": 35,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 85,
+      "z": 38,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 100,
+      "z": 80,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 105,
+      "z": 82,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "barracks",
+      "x": 130,
+      "z": 85,
+      "playerId": 1,
+      "maxPopulation": 120,
+      "nation": "carthage"
+    },
+    {
+      "type": "spearman",
+      "x": 20,
+      "z": 50,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 25,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 22,
+      "z": 48,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 28,
+      "z": 50,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 18,
+      "z": 50,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 30,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 32,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 35,
+      "z": 48,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 38,
+      "z": 52,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 15,
+      "z": 55,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 18,
+      "z": 58,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 12,
+      "z": 45,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 10,
+      "z": 55,
+      "playerId": 2
+    }
+  ],
   "firecamps": [
     {
-      "x": 65,
-      "z": 35,
+      "x": 125,
+      "z": 80,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 135,
+      "z": 88,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
-      "x": 85,
-      "z": 35,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 75,
+      "z": 40,
+      "intensity": 0.8,
+      "radius": 2.5
     },
     {
-      "x": 105,
-      "z": 75,
-      "intensity": 1.0,
-      "radius": 3.0
+      "x": 100,
+      "z": 60,
+      "intensity": 0.8,
+      "radius": 2.5
     }
   ],
   "terrain": [
     {
       "type": "lake",
       "x": 75,
-      "z": 20,
-      "width": 80,
-      "depth": 25,
-      "description": "Lake Trasimene"
+      "z": 15,
+      "width": 100,
+      "depth": 28,
+      "description": "Lake Trasimene - traps Romans against the water"
     },
     {
-      "type": "road",
-      "path": [
-        {"x": 20, "z": 50},
-        {"x": 50, "z": 52},
-        {"x": 80, "z": 55},
-        {"x": 110, "z": 52},
-        {"x": 130, "z": 50}
-      ],
-      "width": 6.0,
-      "description": "Narrow lakeside road - Roman march route"
+      "type": "hill",
+      "x": 45,
+      "z": 60,
+      "radius": 14,
+      "height": 4.0,
+      "description": "Western blocking hill - cuts off Roman retreat",
+      "entrances": [
+        {"x": 45, "z": 46},
+        {"x": 35, "z": 60},
+        {"x": 55, "z": 60}
+      ]
     },
     {
       "type": "hill",
       "x": 75,
-      "z": 70,
-      "width": 60,
-      "depth": 20,
+      "z": 65,
+      "width": 40,
+      "depth": 18,
       "height": 3.5,
-      "description": "Hills for Carthaginian ambush positions"
-    },
-    {
-      "type": "hill",
-      "x": 40,
-      "z": 60,
-      "radius": 12,
-      "height": 3.0,
-      "description": "Western ambush hill"
+      "description": "Central ridge for Carthaginian ambush positions",
+      "entrances": [
+        {"x": 55, "z": 65},
+        {"x": 95, "z": 65},
+        {"x": 75, "z": 56}
+      ]
     },
     {
       "type": "hill",
       "x": 110,
-      "z": 65,
-      "radius": 12,
+      "z": 70,
+      "radius": 15,
+      "height": 4.5,
+      "description": "Eastern hill - cavalry staging area",
+      "entrances": [
+        {"x": 110, "z": 55},
+        {"x": 95, "z": 70},
+        {"x": 125, "z": 70}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 130,
+      "z": 50,
+      "radius": 10,
       "height": 3.0,
-      "description": "Eastern ambush hill"
+      "description": "Far eastern position - blocks Roman escape east"
+    },
+    {
+      "type": "forest",
+      "x": 70,
+      "z": 42,
+      "radius": 12,
+      "density": 0.6,
+      "description": "Concealment for infantry ambush"
+    },
+    {
+      "type": "forest",
+      "x": 95,
+      "z": 55,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Concealment for flanking force"
+    },
+    {
+      "type": "forest",
+      "x": 118,
+      "z": 70,
+      "radius": 8,
+      "density": 0.5,
+      "description": "Cavalry concealment"
+    },
+    {
+      "type": "mountain",
+      "x": 20,
+      "z": 85,
+      "radius": 12,
+      "height": 8.0,
+      "description": "Northwestern mountain barrier"
+    },
+    {
+      "type": "mountain",
+      "x": 140,
+      "z": 90,
+      "radius": 10,
+      "height": 7.0,
+      "description": "Northeastern mountain barrier"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 5.0,
+      "style": "default",
+      "waypoints": [
+        [5, 50],
+        [25, 48],
+        [50, 45],
+        [75, 42],
+        [100, 45],
+        [125, 48],
+        [145, 50]
+      ],
+      "description": "Narrow lakeside road - Roman march route into the trap"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [100, 45],
+        [110, 55],
+        [118, 70],
+        [130, 85]
+      ],
+      "description": "Path to Carthaginian staging area"
     }
   ],
   "victory": {
     "type": "elimination",
-    "description": "Annihilate the Roman legion"
+    "description": "Annihilate the Roman legion - leave no survivors"
   },
   "weather": {
     "type": "fog",
-    "intensity": 0.8,
+    "intensity": 0.85,
     "duration": 180.0,
-    "description": "Dense morning mist"
+    "description": "Dense morning mist - essential for concealing the ambush"
   }
 }
