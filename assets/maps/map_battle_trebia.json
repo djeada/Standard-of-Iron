@@ -1,6 +1,6 @@
 {
   "name": "Battle of Trebia",
-  "description": "Winter ambush at the frozen Trebia River - trap the Romans in icy waters",
+  "description": "Winter ambush at the frozen Trebia River - trap the Romans in icy waters and strike from concealment",
   "coordSystem": "grid",
   "maxTroopsPerPlayer": 2200,
   "grid": {
@@ -27,80 +27,373 @@
     "near": 1.0,
     "far": 400.0
   },
-  "spawns": [],
+  "spawns": [
+    {
+      "type": "spearman",
+      "x": 60,
+      "z": 85,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 63,
+      "z": 88,
+      "playerId": 1
+    },
+    {
+      "type": "spearman",
+      "x": 57,
+      "z": 82,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 65,
+      "z": 80,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 55,
+      "z": 80,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 50,
+      "z": 90,
+      "playerId": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 70,
+      "z": 90,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 60,
+      "z": 78,
+      "playerId": 1
+    },
+    {
+      "type": "archer",
+      "x": 58,
+      "z": 76,
+      "playerId": 1
+    },
+    {
+      "type": "swordsman",
+      "x": 25,
+      "z": 50,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 28,
+      "z": 52,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "spearman",
+      "x": 30,
+      "z": 48,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 95,
+      "z": 50,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 98,
+      "z": 48,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "swordsman",
+      "x": 92,
+      "z": 52,
+      "playerId": 1,
+      "hidden": true
+    },
+    {
+      "type": "barracks",
+      "x": 60,
+      "z": 100,
+      "playerId": 1,
+      "maxPopulation": 150,
+      "nation": "carthage"
+    },
+    {
+      "type": "spearman",
+      "x": 60,
+      "z": 25,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 63,
+      "z": 22,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 57,
+      "z": 28,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 66,
+      "z": 25,
+      "playerId": 2
+    },
+    {
+      "type": "spearman",
+      "x": 54,
+      "z": 25,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 65,
+      "z": 30,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 55,
+      "z": 30,
+      "playerId": 2
+    },
+    {
+      "type": "swordsman",
+      "x": 60,
+      "z": 32,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 58,
+      "z": 35,
+      "playerId": 2
+    },
+    {
+      "type": "archer",
+      "x": 62,
+      "z": 35,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 50,
+      "z": 20,
+      "playerId": 2
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 70,
+      "z": 20,
+      "playerId": 2
+    },
+    {
+      "type": "barracks",
+      "x": 60,
+      "z": 10,
+      "playerId": 2,
+      "maxPopulation": 200,
+      "nation": "roman_republic"
+    }
+  ],
   "firecamps": [
     {
       "x": 55,
-      "z": 75,
+      "z": 95,
+      "intensity": 1.2,
+      "radius": 3.5
+    },
+    {
+      "x": 65,
+      "z": 95,
+      "intensity": 1.1,
+      "radius": 3.2
+    },
+    {
+      "x": 55,
+      "z": 15,
       "intensity": 1.1,
       "radius": 3.2
     },
     {
       "x": 65,
-      "z": 85,
+      "z": 15,
       "intensity": 1.0,
       "radius": 3.0
     },
     {
       "x": 25,
-      "z": 45,
-      "intensity": 0.9,
-      "radius": 2.8
+      "z": 55,
+      "intensity": 0.8,
+      "radius": 2.5
     },
     {
       "x": 95,
-      "z": 45,
-      "intensity": 0.9,
-      "radius": 2.8
+      "z": 55,
+      "intensity": 0.8,
+      "radius": 2.5
     }
   ],
   "terrain": [
     {
-      "type": "river",
-      "path": [
-        {"x": 20, "z": 55},
-        {"x": 40, "z": 55},
-        {"x": 60, "z": 57},
-        {"x": 80, "z": 55},
-        {"x": 100, "z": 55},
-        {"x": 120, "z": 55}
-      ],
-      "width": 10.0,
-      "depth": 2.5,
-      "description": "The freezing Trebia River"
+      "type": "forest",
+      "x": 25,
+      "z": 50,
+      "radius": 18,
+      "density": 0.7,
+      "description": "Western ambush forest - hidden Carthaginian infantry"
+    },
+    {
+      "type": "forest",
+      "x": 95,
+      "z": 50,
+      "radius": 18,
+      "density": 0.7,
+      "description": "Eastern ambush forest - hidden Carthaginian cavalry"
+    },
+    {
+      "type": "forest",
+      "x": 45,
+      "z": 80,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Reserve forest"
+    },
+    {
+      "type": "forest",
+      "x": 75,
+      "z": 80,
+      "radius": 10,
+      "density": 0.5,
+      "description": "Reserve forest"
+    },
+    {
+      "type": "hill",
+      "x": 60,
+      "z": 90,
+      "width": 30,
+      "depth": 15,
+      "height": 2.5,
+      "description": "Carthaginian command position overlooking river",
+      "entrances": [
+        {"x": 45, "z": 90},
+        {"x": 75, "z": 90},
+        {"x": 60, "z": 82}
+      ]
+    },
+    {
+      "type": "hill",
+      "x": 15,
+      "z": 60,
+      "radius": 8,
+      "height": 3.0,
+      "description": "Western high ground"
+    },
+    {
+      "type": "hill",
+      "x": 105,
+      "z": 60,
+      "radius": 8,
+      "height": 3.0,
+      "description": "Eastern high ground"
     },
     {
       "type": "crossing",
       "x": 60,
       "z": 55,
-      "width": 12,
-      "description": "Main crossing point"
+      "width": 15,
+      "description": "Main river ford - treacherous in winter"
     },
     {
-      "type": "forest",
+      "type": "crossing",
       "x": 30,
-      "z": 50,
-      "radius": 15,
-      "density": 0.6,
-      "description": "Ambush forest west"
+      "z": 55,
+      "width": 8,
+      "description": "Secondary ford"
     },
     {
-      "type": "forest",
+      "type": "crossing",
       "x": 90,
-      "z": 50,
-      "radius": 15,
-      "density": 0.6,
-      "description": "Ambush forest east"
+      "z": 55,
+      "width": 8,
+      "description": "Secondary ford"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 55],
+      "end": [140, 55],
+      "width": 12,
+      "description": "The freezing Trebia River"
+    }
+  ],
+  "roads": [
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 3.5,
+      "style": "default",
+      "waypoints": [
+        [60, 5],
+        [60, 20],
+        [60, 35],
+        [60, 55],
+        [60, 70],
+        [60, 85],
+        [60, 110]
+      ],
+      "description": "Main north-south road through river ford"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [10, 55],
+        [25, 50],
+        [35, 55]
+      ],
+      "description": "Western flanking path"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [130, 55],
+        [95, 50],
+        [85, 55]
+      ],
+      "description": "Eastern flanking path"
     }
   ],
   "victory": {
     "type": "elimination",
-    "description": "Destroy the Roman army"
+    "description": "Destroy the Roman army as they cross the freezing river"
   },
   "weather": {
     "type": "snow",
-    "intensity": 0.6,
+    "intensity": 0.7,
     "temperature": "freezing",
-    "description": "Heavy winter conditions"
+    "description": "Heavy winter conditions - Romans suffer attrition crossing the icy river"
   }
 }

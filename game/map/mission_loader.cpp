@@ -161,6 +161,10 @@ auto MissionLoader::parseCondition(const QJsonObject &obj) -> Condition {
     cond.min_count = obj["min_count"].toInt();
   }
 
+  if (obj.contains("wave_count")) {
+    cond.wave_count = obj["wave_count"].toInt();
+  }
+
   return cond;
 }
 
