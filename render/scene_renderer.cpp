@@ -5,6 +5,7 @@
 #include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
 #include "../game/units/troop_config.h"
+#include "battle_render_optimizer.h"
 #include "draw_queue.h"
 #include "elephant/rig.h"
 #include "entity/registry.h"
@@ -74,6 +75,7 @@ void Renderer::begin_frame() {
   reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
+  Render::BattleRenderOptimizer::instance().begin_frame();
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
@@ -626,8 +628,14 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
   }
 
+  auto &battleOptimizer = Render::BattleRenderOptimizer::instance();
+  battleOptimizer.set_visible_unit_count(visibleUnitCount);
+
   float batching_ratio =
       gfxSettings.calculate_batching_ratio(visibleUnitCount, cameraHeight);
+
+  float batching_boost = battleOptimizer.get_batching_boost();
+  batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
   PrimitiveBatcher batcher;
   if (batching_ratio > 0.0F) {
@@ -697,6 +705,22 @@ void Renderer::render_world(Engine::Core::World *world) {
         (m_selected_ids.find(entity->get_id()) != m_selected_ids.end());
     bool const is_hovered = (entity->get_id() == m_hovered_entity_id);
 
+    bool is_moving = false;
+    if (unit_comp != nullptr) {
+      auto *move_comp =
+          entity->get_component<Engine::Core::MovementComponent>();
+      is_moving = (move_comp != nullptr) &&
+                  (move_comp->has_target ||
+                   (std::abs(move_comp->vx) > 0.01F) ||
+                   (std::abs(move_comp->vz) > 0.01F));
+    }
+
+    if (unit_comp != nullptr &&
+        !battleOptimizer.should_render_unit(entity->get_id(), is_moving,
+                                            is_selected, is_hovered)) {
+      continue;
+    }
+
     QMatrix4x4 model_matrix;
     model_matrix.translate(transform->position.x, transform->position.y,
                            transform->position.z);
@@ -724,6 +748,8 @@ void Renderer::render_world(Engine::Core::World *world) {
         ctx.renderer_id = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
+        ctx.animation_throttled = !battleOptimizer.should_update_animation(
+            entity->get_id(), distanceToCamera, is_selected);
 
         bool useBatching = (batching_ratio > 0.0F) &&
                            (distanceToCamera > fullShaderMaxDistance) &&
