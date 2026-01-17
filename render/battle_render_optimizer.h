@@ -1,8 +1,8 @@
 #pragma once
 
-#include <QVector3D>
 #include <atomic>
 #include <cstdint>
+#include <mutex>
 
 namespace Render {
 
@@ -33,14 +33,17 @@ public:
   }
 
   void set_config(const BattleRenderConfig &config) noexcept {
+    std::lock_guard<std::mutex> lock(m_config_mutex);
     m_config = config;
   }
 
-  [[nodiscard]] auto config() const noexcept -> const BattleRenderConfig & {
+  [[nodiscard]] auto config() const noexcept -> BattleRenderConfig {
+    std::lock_guard<std::mutex> lock(m_config_mutex);
     return m_config;
   }
 
   [[nodiscard]] auto is_battle_mode() const noexcept -> bool {
+    std::lock_guard<std::mutex> lock(m_config_mutex);
     return m_config.enabled &&
            m_visible_unit_count.load(std::memory_order_relaxed) >=
                m_config.temporal_culling_threshold;
@@ -74,12 +77,18 @@ public:
                                              float distance_to_camera,
                                              bool is_selected) const noexcept
       -> bool {
-    if (!m_config.enabled) {
+    BattleRenderConfig cfg;
+    {
+      std::lock_guard<std::mutex> lock(m_config_mutex);
+      cfg = m_config;
+    }
+
+    if (!cfg.enabled) {
       return true;
     }
 
     int visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
-    if (visible_count < m_config.animation_throttle_threshold) {
+    if (visible_count < cfg.animation_throttle_threshold) {
       return true;
     }
 
@@ -87,14 +96,14 @@ public:
       return true;
     }
 
-    if (distance_to_camera < m_config.animation_throttle_distance) {
+    if (distance_to_camera < cfg.animation_throttle_distance) {
       return true;
     }
 
     uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
     bool update =
         ((entity_id + frame) % static_cast<uint32_t>(
-                                   m_config.animation_skip_frames + 1)) == 0;
+                                   cfg.animation_skip_frames + 1)) == 0;
 
     if (!update) {
       m_animations_throttled.fetch_add(1, std::memory_order_relaxed);
@@ -104,18 +113,24 @@ public:
   }
 
   [[nodiscard]] auto get_batching_boost() const noexcept -> float {
-    if (!m_config.enabled) {
+    BattleRenderConfig cfg;
+    {
+      std::lock_guard<std::mutex> lock(m_config_mutex);
+      cfg = m_config;
+    }
+
+    if (!cfg.enabled) {
       return 1.0F;
     }
 
     int visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
-    if (visible_count < m_config.temporal_culling_threshold) {
+    if (visible_count < cfg.temporal_culling_threshold) {
       return 1.0F;
     }
 
     float excess_ratio =
-        static_cast<float>(visible_count - m_config.temporal_culling_threshold) /
-        static_cast<float>(m_config.temporal_culling_threshold);
+        static_cast<float>(visible_count - cfg.temporal_culling_threshold) /
+        static_cast<float>(cfg.temporal_culling_threshold);
     return 1.0F + excess_ratio * 0.5F;
   }
 
@@ -138,6 +153,7 @@ public:
 private:
   BattleRenderOptimizer() = default;
 
+  mutable std::mutex m_config_mutex;
   BattleRenderConfig m_config;
   std::atomic<uint32_t> m_frame_counter{0};
   std::atomic<int> m_visible_unit_count{0};
