@@ -21,7 +21,17 @@ MinimapManager::MinimapManager() = default;
 
 MinimapManager::~MinimapManager() = default;
 
+bool MinimapManager::consume_dirty_flag() {
+  bool was_dirty = m_dirty;
+  m_dirty = false;
+  return was_dirty;
+}
+
 void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
+  // Set minimap orientation from the map's camera yaw
+  Game::Map::Minimap::MinimapOrientation::instance().set_yaw_degrees(
+      map_def.camera.yaw_deg);
+
   Game::Map::Minimap::MinimapGenerator generator;
   m_minimap_base_image = generator.generate(map_def);
 
@@ -53,6 +63,7 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
     m_minimap_fog_version = 0;
     m_minimap_update_timer = MINIMAP_UPDATE_INTERVAL;
     update_fog(0.0F, 1);
+    mark_dirty();
   } else {
     qWarning() << "MinimapManager: Failed to generate minimap";
   }
@@ -84,6 +95,7 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
     return;
   }
   m_minimap_fog_version = current_version;
+  mark_dirty(); // Fog changed
 
   const int vis_width = visibility_service.getWidth();
   const int vis_height = visibility_service.getHeight();
@@ -99,8 +111,11 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const int img_width = m_minimap_fog_image.width();
   const int img_height = m_minimap_fog_image.height();
 
-  constexpr float k_inv_cos = -0.70710678118F;
-  constexpr float k_inv_sin = 0.70710678118F;
+  // Use the orientation's inverse rotation for fog mapping
+  const auto &orient = Game::Map::Minimap::MinimapOrientation::instance();
+  // Inverse rotation: swap sign of sin
+  const float k_inv_cos = orient.cos_yaw();
+  const float k_inv_sin = -orient.sin_yaw();
 
   const float scale_x =
       static_cast<float>(vis_width) / static_cast<float>(img_width);
@@ -189,7 +204,7 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
 
 void MinimapManager::update_units(
     Engine::Core::World *world,
-    Game::Systems::SelectionSystem *selection_system) {
+    Game::Systems::SelectionSystem *selection_system, int local_owner_id) {
   if (m_minimap_fog_image.isNull() || !m_unit_layer || !world) {
     return;
   }
@@ -206,6 +221,9 @@ void MinimapManager::update_units(
     const auto &sel = selection_system->get_selected_units();
     selected_ids.insert(sel.begin(), sel.end());
   }
+
+  // Compute a hash of unit state for change detection
+  std::uint64_t unit_hash = 0;
 
   {
     const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
@@ -235,10 +253,39 @@ void MinimapManager::update_units(
       marker.is_building = Game::Units::is_building_spawn(unit->spawn_type);
 
       markers.push_back(marker);
+
+      // Simple hash: combine position and state
+      unit_hash ^= static_cast<std::uint64_t>(entity_id);
+      unit_hash ^= static_cast<std::uint64_t>(
+                       *reinterpret_cast<const std::uint32_t *>(&marker.world_x))
+                   << 1;
+      unit_hash ^= static_cast<std::uint64_t>(
+                       *reinterpret_cast<const std::uint32_t *>(&marker.world_z))
+                   << 2;
+      unit_hash ^= static_cast<std::uint64_t>(marker.is_selected) << 3;
     }
   }
 
-  m_unit_layer->update(markers);
+  // Only update if units changed
+  if (unit_hash != m_last_unit_hash) {
+    m_last_unit_hash = unit_hash;
+    mark_dirty();
+  }
+
+  // Create visibility check callback using VisibilityService
+  auto &visibility_service = Game::Map::VisibilityService::instance();
+  Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
+
+  if (visibility_service.is_initialized()) {
+    visibility_check = [&visibility_service](float world_x,
+                                             float world_z) -> bool {
+      // Check if position is visible or explored (revealed)
+      return visibility_service.isVisibleWorld(world_x, world_z) ||
+             visibility_service.isExploredWorld(world_x, world_z);
+    };
+  }
+
+  m_unit_layer->update(markers, local_owner_id, visibility_check, nullptr);
 
   const QImage &unit_overlay = m_unit_layer->get_image();
   if (!unit_overlay.isNull()) {
@@ -268,8 +315,23 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera *camera,
   const float viewport_width = viewport_half_width * 2.0F / m_tile_size;
   const float viewport_height = viewport_half_height * 2.0F / m_tile_size;
 
-  m_camera_viewport_layer->update(target.x() / m_tile_size,
-                                  target.z() / m_tile_size, viewport_width,
+  const float camera_x = target.x() / m_tile_size;
+  const float camera_z = target.z() / m_tile_size;
+
+  // Check if camera viewport changed
+  constexpr float EPSILON = 0.01F;
+  if (std::abs(camera_x - m_last_camera_x) > EPSILON ||
+      std::abs(camera_z - m_last_camera_z) > EPSILON ||
+      std::abs(viewport_width - m_last_viewport_w) > EPSILON ||
+      std::abs(viewport_height - m_last_viewport_h) > EPSILON) {
+    m_last_camera_x = camera_x;
+    m_last_camera_z = camera_z;
+    m_last_viewport_w = viewport_width;
+    m_last_viewport_h = viewport_height;
+    mark_dirty();
+  }
+
+  m_camera_viewport_layer->update(camera_x, camera_z, viewport_width,
                                   viewport_height);
 
   const QImage &viewport_overlay = m_camera_viewport_layer->get_image();
