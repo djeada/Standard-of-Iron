@@ -1,4 +1,5 @@
 #include "campaign_map_view.h"
+#include "campaign_map_render_utils.h"
 
 #include "../utils/resource_utils.h"
 
@@ -96,6 +97,13 @@ struct LineLayer {
   QVector4D color = QVector4D(1.0F, 1.0F, 1.0F, 1.0F);
   float width = 1.0F;
   bool ready = false;
+
+  // Double-stroke support for cartographic coastline rendering
+  bool double_stroke = false;
+  QVector4D outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);  // Dark outer
+  QVector4D inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);  // Light inner
+  float outer_width_ratio = 1.8F;  // Outer width as ratio of base width
+  float inner_width_ratio = 1.0F;  // Inner width as ratio of base width
 };
 
 struct StrokeMesh {
@@ -298,9 +306,10 @@ private:
   LineLayer m_province_border_layer;
   ProvinceLayer m_province_layer;
 
-  float m_orbit_yaw = 180.0F;
-  float m_orbit_pitch = 55.0F;
-  float m_orbit_distance = 2.4F;
+  // Cinematic camera defaults - showcases relief and depth
+  float m_orbit_yaw = 185.0F;     // Slight northwest tilt
+  float m_orbit_pitch = 52.0F;    // More oblique for terrain visibility
+  float m_orbit_distance = 1.35F; // Closer for detail
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
@@ -338,13 +347,18 @@ private:
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
+    // Initialize coastline with double-stroke cartographic style
     init_line_layer(m_coast_layer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
-                    QVector4D(0.15F, 0.13F, 0.11F, 1.0F), 2.0F);
+                    QVector4D(0.12F, 0.10F, 0.08F, 0.95F), 2.5F);
+    // Enable double-stroke for printed-map legibility
+    m_coast_layer.double_stroke = true;
+    m_coast_layer.outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);  // Dark outer
+    m_coast_layer.inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);  // Light inner
 
     init_line_layer(m_river_layer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
-                    QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
+                    QVector4D(0.35F, 0.48F, 0.58F, 0.90F), 1.5F);
 
     init_path_layer(m_path_layer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"));
@@ -753,16 +767,30 @@ void main() {
         continue;
       }
 
-      PathLine entry;
-      entry.points.reserve(static_cast<size_t>(line.size()));
+      // Parse raw points from JSON
+      std::vector<QVector2D> raw_points;
+      raw_points.reserve(static_cast<size_t>(line.size()));
       for (const auto &pt_val : line) {
         const QJsonArray pt = pt_val.toArray();
         if (pt.size() < 2) {
           continue;
         }
-        entry.points.emplace_back(static_cast<float>(pt.at(0).toDouble()),
-                                  static_cast<float>(pt.at(1).toDouble()));
+        raw_points.emplace_back(static_cast<float>(pt.at(0).toDouble()),
+                                static_cast<float>(pt.at(1).toDouble()));
       }
+
+      if (raw_points.size() < 2) {
+        continue;
+      }
+
+      PathLine entry;
+
+      // Apply Catmull-Rom spline smoothing for curved, coastline-hugging trajectories
+      // Use 8 samples per segment for smooth curves without excessive vertex count
+      constexpr int k_spline_samples_per_segment = 8;
+      entry.points = CampaignMapRender::smooth_catmull_rom(
+          raw_points, k_spline_samples_per_segment);
+
       if (entry.points.size() >= 2) {
         layer.lines.push_back(std::move(entry));
       }
@@ -820,18 +848,43 @@ void main() {
       return;
     }
 
-    glLineWidth(layer.width);
-
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
-    m_line_program.setUniformValue("u_z", z_offset);
-    m_line_program.setUniformValue("u_color", layer.color);
 
-    glBindVertexArray(layer.vao);
-    for (const auto &span : layer.spans) {
-      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    if (layer.double_stroke) {
+      // Double-stroke rendering for cartographic coastline look
+      // Pass 1: Draw outer (dark) stroke - wider
+      glLineWidth(layer.width * layer.outer_width_ratio);
+      m_line_program.setUniformValue("u_z", z_offset);
+      m_line_program.setUniformValue("u_color", layer.outer_color);
+
+      glBindVertexArray(layer.vao);
+      for (const auto &span : layer.spans) {
+        glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      }
+
+      // Pass 2: Draw inner (light) stroke - narrower, on top
+      glLineWidth(layer.width * layer.inner_width_ratio);
+      m_line_program.setUniformValue("u_z", z_offset + 0.001F);
+      m_line_program.setUniformValue("u_color", layer.inner_color);
+
+      for (const auto &span : layer.spans) {
+        glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      }
+      glBindVertexArray(0);
+    } else {
+      // Standard single-stroke rendering
+      glLineWidth(layer.width);
+      m_line_program.setUniformValue("u_z", z_offset);
+      m_line_program.setUniformValue("u_color", layer.color);
+
+      glBindVertexArray(layer.vao);
+      for (const auto &span : layer.spans) {
+        glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      }
+      glBindVertexArray(0);
     }
-    glBindVertexArray(0);
+
     m_line_program.release();
   }
 
@@ -927,8 +980,17 @@ void main() {
       return;
     }
 
-    std::vector<QVector2D> strip;
-    build_path_strip(points, width * 0.5F, strip);
+    // Use improved stroke mesh generation with round caps for inked cartography look
+    CampaignMapRender::StrokeMeshConfig config;
+    config.width = width;
+    config.start_cap = CampaignMapRender::CapStyle::Round;
+    config.end_cap = CampaignMapRender::CapStyle::Round;
+    config.join_style = CampaignMapRender::JoinStyle::Miter;
+    config.cap_segments = 6;
+    config.miter_params.max_miter_ratio = 3.0F;
+
+    std::vector<QVector2D> strip = CampaignMapRender::build_stroke_mesh(points, config);
+
     if (strip.size() < 4) {
       mesh.ready = false;
       mesh.vertex_count = 0;
@@ -990,8 +1052,9 @@ void main() {
 
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
-    m_line_program.setUniformValue("u_z", z_offset);
 
+    // Render all passes for each line in correct order for proper layering
+    // Pass 1: All borders (darkest, widest - underneath)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -999,31 +1062,28 @@ void main() {
 
       auto &line = layer.lines[static_cast<size_t>(i)];
 
-      QVector4D border_color;
-      float border_width_px;
+      // Get cartographic style passes for inked route look
+      const int age = max_mission - i;
+      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
+          1.0F, age);
 
-      if (i == max_mission) {
+      // Outer border pass (darkest)
+      if (!passes.empty()) {
+        const auto &border_pass = passes[0];
+        float border_width_px = 18.0F * border_pass.width_multiplier;
+        if (i != max_mission) {
+          border_width_px *= 0.85F; // Slightly thinner for older paths
+        }
 
-        border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.85F);
-        border_width_px = 18.0F;
-      } else if (i == max_mission - 1) {
-
-        border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.70F);
-        border_width_px = 16.0F;
-      } else {
-
-        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        border_color = QVector4D(0.15F * age_factor, 0.08F * age_factor,
-                                 0.05F * age_factor, 0.55F * age_factor);
-        border_width_px = 14.0F;
+        m_line_program.setUniformValue("u_z", z_offset + border_pass.z_offset);
+        update_path_mesh(line.border, line.points,
+                         uv_width_for_pixels(border_width_px));
+        m_line_program.setUniformValue("u_color", border_pass.color);
+        draw_path_mesh(line.border);
       }
-
-      update_path_mesh(line.border, line.points,
-                       uv_width_for_pixels(border_width_px));
-      m_line_program.setUniformValue("u_color", border_color);
-      draw_path_mesh(line.border);
     }
 
+    // Pass 2: All highlights (golden middle layer)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -1031,31 +1091,27 @@ void main() {
 
       auto &line = layer.lines[static_cast<size_t>(i)];
 
-      QVector4D highlight_color;
-      float highlight_width_px;
+      const int age = max_mission - i;
+      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
+          1.0F, age);
 
-      if (i == max_mission) {
+      // Golden highlight pass
+      if (passes.size() > 2) {
+        const auto &highlight_pass = passes[2];
+        float highlight_width_px = 12.0F * highlight_pass.width_multiplier;
+        if (i != max_mission) {
+          highlight_width_px *= 0.8F;
+        }
 
-        highlight_color = QVector4D(0.95F, 0.75F, 0.35F, 0.90F);
-        highlight_width_px = 12.0F;
-      } else if (i == max_mission - 1) {
-
-        highlight_color = QVector4D(0.85F, 0.65F, 0.30F, 0.80F);
-        highlight_width_px = 10.0F;
-      } else {
-
-        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        highlight_color = QVector4D(0.70F * age_factor, 0.50F * age_factor,
-                                    0.25F * age_factor, 0.65F * age_factor);
-        highlight_width_px = 8.5F;
+        m_line_program.setUniformValue("u_z", z_offset + highlight_pass.z_offset);
+        update_path_mesh(line.highlight, line.points,
+                         uv_width_for_pixels(highlight_width_px));
+        m_line_program.setUniformValue("u_color", highlight_pass.color);
+        draw_path_mesh(line.highlight);
       }
-
-      update_path_mesh(line.highlight, line.points,
-                       uv_width_for_pixels(highlight_width_px));
-      m_line_program.setUniformValue("u_color", highlight_color);
-      draw_path_mesh(line.highlight);
     }
 
+    // Pass 3: All cores (red center - on top)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -1063,27 +1119,25 @@ void main() {
 
       auto &line = layer.lines[static_cast<size_t>(i)];
 
-      QVector4D color;
-      float width_px;
+      const int age = max_mission - i;
+      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
+          1.0F, age);
 
-      if (i == max_mission) {
+      // Core red pass
+      if (passes.size() > 3) {
+        const auto &core_pass = passes[3];
+        float core_width_px = 7.0F * core_pass.width_multiplier;
+        if (i != max_mission) {
+          core_width_px *= 0.75F;
+        }
 
-        color = QVector4D(0.80F, 0.15F, 0.10F, 1.0F);
-        width_px = 7.0F;
-      } else if (i == max_mission - 1) {
-
-        color = QVector4D(0.70F, 0.15F, 0.10F, 0.95F);
-        width_px = 6.0F;
-      } else {
-
-        const float age_factor = 1.0F - (max_mission - i) * 0.08F;
-        color = QVector4D(0.55F * age_factor, 0.12F * age_factor,
-                          0.08F * age_factor, 0.85F * age_factor);
-        width_px = 5.0F;
+        m_line_program.setUniformValue("u_z", z_offset + core_pass.z_offset);
+        update_path_mesh(line.core, line.points,
+                         uv_width_for_pixels(core_width_px));
+        m_line_program.setUniformValue("u_color", core_pass.color);
+        draw_path_mesh(line.core);
       }
-
-      update_path_mesh(line.core, line.points, uv_width_for_pixels(width_px));
-      m_line_program.setUniformValue("u_color", color);
+    }
       draw_path_mesh(line.core);
     }
 
@@ -1122,8 +1176,17 @@ void main() {
         continue;
       }
       QVector4D color = span.color;
-      if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
 
+      // Apply parchment texture effect to province fill
+      // This creates a faint ink/parchment mask feel
+      // The parchment pattern multiplies with the owner tint color
+      const float parchment_tint = 0.92F; // Slightly muted for aged paper look
+      color.setX(color.x() * parchment_tint);
+      color.setY(color.y() * parchment_tint);
+      color.setZ(color.z() * parchment_tint * 0.98F); // Slight warm tint
+
+      if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
+        // Animated hover highlight with pulsing brightness
         qint64 elapsed =
             QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
         float pulse_cycle = 1200.0F;
