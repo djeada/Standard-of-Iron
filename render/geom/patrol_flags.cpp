@@ -14,7 +14,7 @@ namespace Render::GL {
 constexpr float k_position_grid_precision = 10.0F;
 constexpr int k_position_hash_shift = 32;
 
-void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
+void render_patrol_flags(Renderer *renderer, ResourceManager *resources,
                        Engine::Core::World &world,
                        const std::optional<QVector3D> &preview_waypoint) {
   if ((renderer == nullptr) || (resources == nullptr)) {
@@ -28,11 +28,11 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
                                    QVector3D(0.4F, 1.0F, 0.5F),
                                    QVector3D(0.35F, 0.25F, 0.15F), 1.5F);
 
-    renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
+    renderer->mesh(resources->unit(), flag.pole, flag.pole_color,
                    resources->white(), 1.0F);
-    renderer->mesh(resources->unit(), flag.pennant, flag.pennantColor,
+    renderer->mesh(resources->unit(), flag.pennant, flag.pennant_color,
                    resources->white(), 1.0F);
-    renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
+    renderer->mesh(resources->unit(), flag.finial, flag.pennant_color,
                    resources->white(), 1.0F);
 
     auto const grid_x =
@@ -78,11 +78,11 @@ void renderPatrolFlags(Renderer *renderer, ResourceManager *resources,
                                      QVector3D(0.3F, 1.0F, 0.4F),
                                      QVector3D(0.35F, 0.25F, 0.15F), 1.4F);
 
-      renderer->mesh(resources->unit(), flag.pole, flag.poleColor,
+      renderer->mesh(resources->unit(), flag.pole, flag.pole_color,
                      resources->white(), 1.0F);
-      renderer->mesh(resources->unit(), flag.pennant, flag.pennantColor,
+      renderer->mesh(resources->unit(), flag.pennant, flag.pennant_color,
                      resources->white(), 1.0F);
-      renderer->mesh(resources->unit(), flag.finial, flag.pennantColor,
+      renderer->mesh(resources->unit(), flag.finial, flag.pennant_color,
                      resources->white(), 1.0F);
     }
   }
