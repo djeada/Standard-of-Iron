@@ -1,8 +1,5 @@
 #version 330 core
 
-in vec3 v_worldPos;
-in vec3 v_normal;
-in vec2 v_texCoord;
 in float v_distFromCenter;
 
 uniform vec3 u_modeColor;
