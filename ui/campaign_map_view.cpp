@@ -420,8 +420,8 @@ private:
   QString m_hover_province_id;
   int m_province_state_version = 0;
   int m_current_mission = 7;
-  float m_terrain_height_scale = 1.5F;
-  bool m_show_province_fills = false;
+  float m_terrain_height_scale = 1.0F;
+  bool m_show_province_fills = true;
   qint64 m_hover_start_time = 0;
   qint64 m_last_update_time = 0;
 
@@ -1566,24 +1566,24 @@ void main() {
                                           m_terrain_height_scale);
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
     m_terrain_program.setUniformValue("u_light_direction",
-                                      QVector3D(0.45F, 0.75F, 0.50F));
-    m_terrain_program.setUniformValue("u_ambient_strength", 0.25F);
-    m_terrain_program.setUniformValue("u_hillshade_strength", 0.75F);
-    m_terrain_program.setUniformValue("u_ao_strength", 0.50F);
+                                      QVector3D(0.35F, 0.85F, 0.40F));
+    m_terrain_program.setUniformValue("u_ambient_strength", 0.45F);
+    m_terrain_program.setUniformValue("u_hillshade_strength", 0.35F);
+    m_terrain_program.setUniformValue("u_ao_strength", 0.25F);
     m_terrain_program.setUniformValue("u_use_hillshade", true);
     m_terrain_program.setUniformValue("u_use_parchment", false);
     m_terrain_program.setUniformValue("u_use_lighting", true);
     m_terrain_program.setUniformValue("u_water_deep_color",
-                                      QVector3D(0.08F, 0.18F, 0.28F));
+                                      QVector3D(0.10F, 0.22F, 0.30F));
     m_terrain_program.setUniformValue("u_water_shallow_color",
-                                      QVector3D(0.22F, 0.38F, 0.48F));
+                                      QVector3D(0.26F, 0.42F, 0.52F));
     m_terrain_program.setUniformValue("u_lowland_tint",
-                                      QVector3D(0.92F, 0.88F, 0.78F));
+                                      QVector3D(0.96F, 0.92F, 0.86F));
     m_terrain_program.setUniformValue("u_highland_tint",
-                                      QVector3D(0.75F, 0.65F, 0.55F));
+                                      QVector3D(0.82F, 0.74F, 0.64F));
     m_terrain_program.setUniformValue("u_mountain_tint",
-                                      QVector3D(0.60F, 0.52F, 0.45F));
-    m_terrain_program.setUniformValue("u_elevation_scale", 1.5F);
+                                      QVector3D(0.70F, 0.62F, 0.55F));
+    m_terrain_program.setUniformValue("u_elevation_scale", 1.2F);
 
     m_terrain_program.setUniformValue("u_base_texture", 0);
     glActiveTexture(GL_TEXTURE0);
@@ -2041,9 +2041,8 @@ void main() {
       color.setY(color.y() * parchment_tint);
       color.setZ(color.z() * parchment_tint * 0.98F);
       if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
-        // Very aggressive fade for 3D terrain - province fills barely visible
-        float fade = 1.0F / (1.0F + 15.0F * m_terrain_height_scale);
-        color.setW(color.w() * fade * 0.3F);
+        float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
+        color.setW(color.w() * fade);
       }
 
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {

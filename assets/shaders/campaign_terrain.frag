@@ -61,46 +61,34 @@ float fbm(vec2 p, int octaves) {
 }
 
 float computeAO(vec3 normal) {
-  // Enhanced ambient occlusion based on slope and height
+
   float ao = clamp(normal.y * 0.5 + 0.5, 0.0, 1.0);
-  // Add extra darkening in valleys based on slope steepness
-  float slope = 1.0 - abs(normal.y);
-  ao *= 1.0 - slope * 0.3;
+
   return mix(1.0, ao, u_ao_strength);
 }
 
 float computeHillshade(vec3 normal, vec3 lightDir) {
   float ndotl = max(0.0, dot(normal, lightDir));
-  // Enhanced hillshade with rim lighting for depth
-  float rimLight = pow(1.0 - abs(dot(normal, vec3(0.0, 1.0, 0.0))), 2.0) * 0.15;
-  float shade = u_ambient_strength + (1.0 - u_ambient_strength) * ndotl;
-  return shade + rimLight;
+  return u_ambient_strength + (1.0 - u_ambient_strength) * ndotl;
 }
 
 vec3 getElevationTint(float height) {
   if (height < 0.0) {
-    // Water - deeper contrast
+
     float depth = clamp(-height, 0.0, 1.0);
-    depth = pow(depth, 0.8); // Non-linear depth curve for visual interest
     return mix(u_water_shallow_color, u_water_deep_color, depth);
-  } else if (height < 0.15) {
-    // Coastal lowlands - warmer tones
-    float t = height / 0.15;
-    vec3 coastTint = u_lowland_tint * vec3(1.02, 1.0, 0.96);
-    return mix(coastTint, u_lowland_tint, t);
-  } else if (height < 0.45) {
-    // Lowlands to highlands transition
-    float t = (height - 0.15) / 0.30;
+  } else if (height < 0.25) {
+
+    float t = height / 0.25;
+    return mix(u_lowland_tint, vec3(1.0), 1.0 - t * 0.1);
+  } else if (height < 0.6) {
+
+    float t = (height - 0.25) / 0.35;
     return mix(u_lowland_tint, u_highland_tint, t);
-  } else if (height < 0.75) {
-    // Highlands
-    float t = (height - 0.45) / 0.30;
-    return mix(u_highland_tint, u_mountain_tint, t);
   } else {
-    // High mountains - cooler tones with snow hints
-    float t = clamp((height - 0.75) / 0.25, 0.0, 1.0);
-    vec3 snowTint = u_mountain_tint * vec3(1.1, 1.12, 1.15);
-    return mix(u_mountain_tint, snowTint, t * 0.5);
+
+    float t = (height - 0.6) / 0.4;
+    return mix(u_highland_tint, u_mountain_tint, t);
   }
 }
 
@@ -121,58 +109,35 @@ void main() {
 
   vec3 color = baseColor.rgb;
 
-  // Apply elevation-based coloring with enhanced contrast
   vec3 elevationTint = getElevationTint(v_height * u_elevation_scale);
   color *= elevationTint;
 
-  // Pre-compute slope for reuse
-  float slope = 1.0 - abs(v_normal.y);
-
-  // Enhanced hillshading for dramatic 3D effect
   if (u_use_hillshade) {
+
     float hillshade = computeHillshade(v_normal, normalize(u_light_direction));
-    // Apply hillshade with enhanced contrast
+
     color *= mix(1.0, hillshade, u_hillshade_strength);
-    
-    // Add subtle height-based brightness for peaks
-    if (v_height > 0.5) {
-      float peakBrightness = (v_height - 0.5) * 0.1;
-      color += vec3(peakBrightness);
-    }
   }
 
   if (u_use_lighting) {
+
     vec3 lightDir = normalize(u_light_direction);
     float diffuse = max(0.0, dot(v_normal, lightDir));
-    
-    // Add half-lambert for softer shadow transitions
-    float halfLambert = diffuse * 0.5 + 0.5;
-    halfLambert = halfLambert * halfLambert;
-    
-    float lighting = u_ambient_strength + (1.0 - u_ambient_strength) * mix(diffuse, halfLambert, 0.4);
+    float lighting = u_ambient_strength + (1.0 - u_ambient_strength) * diffuse;
 
     float ao = computeAO(v_normal);
-    
-    // Apply lighting with height-based adjustment
-    float heightFactor = clamp(v_height * 0.3 + 0.85, 0.7, 1.0);
-    color *= lighting * ao * heightFactor;
+
+    color *= lighting * ao;
   }
 
   if (u_use_parchment) {
     float parchment = getParchmentPattern(v_uv);
+
     color *= parchment;
+
     color = mix(color, color * vec3(1.02, 1.0, 0.96), 0.3);
   }
 
-  // Height-based fog/atmosphere for depth perception
-  float atmosphereStrength = clamp((1.0 - v_height) * 0.12, 0.0, 0.15);
-  vec3 fogColor = vec3(0.75, 0.78, 0.82);
-  color = mix(color, fogColor, atmosphereStrength);
-
-  // Reuse pre-computed slope for edge darkening
-  color *= 1.0 - slope * 0.15;
-
-  // Vignette
   vec2 vignetteCoord = v_uv * 2.0 - 1.0;
   float vignette = 1.0 - dot(vignetteCoord, vignetteCoord) * 0.15;
   color *= vignette;
