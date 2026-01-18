@@ -16,7 +16,9 @@ ComboBox {
     property color highlightBorder: Theme.selectedBr
     property color itemBackground: Theme.cardBase
     property color itemBorder: Theme.cardBorder
-    property var delegateText: function(data) { return data; }
+    property var delegateText: function(data) {
+        return data;
+    }
 
     function resolveDelegateText(data) {
         return (typeof delegateText === "function") ? delegateText(data) : data;
@@ -43,12 +45,12 @@ ComboBox {
 
     indicator: Canvas {
         id: rootIndicator
+
         width: 12
         height: 8
         anchors.right: parent.right
         anchors.rightMargin: Theme.spacingSmall
         anchors.verticalCenter: parent.verticalCenter
-
         onPaint: {
             var ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
@@ -60,14 +62,18 @@ ComboBox {
             ctx.closePath();
             ctx.fill();
         }
-
         Component.onCompleted: requestPaint()
         onWidthChanged: requestPaint()
         onHeightChanged: requestPaint()
+
         Connections {
+            function onTextColorChanged() {
+                rootIndicator.requestPaint();
+            }
+
             target: root
-            function onTextColorChanged() { rootIndicator.requestPaint(); }
         }
+
     }
 
     popup: Popup {
@@ -89,6 +95,7 @@ ComboBox {
             border.color: root.popupBorder
             border.width: 1
         }
+
     }
 
     delegate: ItemDelegate {
@@ -109,5 +116,7 @@ ComboBox {
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
+
     }
+
 }

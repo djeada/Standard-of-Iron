@@ -746,8 +746,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       auto *move_comp =
           entity->get_component<Engine::Core::MovementComponent>();
       is_moving = (move_comp != nullptr) &&
-                  (move_comp->has_target ||
-                   (std::abs(move_comp->vx) > 0.01F) ||
+                  (move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
                    (std::abs(move_comp->vz) > 0.01F));
     }
 
@@ -792,9 +791,9 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         float animation_time = m_accumulated_time;
         if (unit_comp != nullptr) {
-          animation_time = resolve_animation_time(
-              entity->get_id(), should_update_animation, m_accumulated_time,
-              optimizer_frame);
+          animation_time =
+              resolve_animation_time(entity->get_id(), should_update_animation,
+                                     m_accumulated_time, optimizer_frame);
         }
 
         ctx.animation_time = animation_time;
@@ -965,11 +964,13 @@ void Renderer::render_construction_previews(
     float preview_x = transform->position.x;
     float preview_z = transform->position.z;
 
-    if (builder_prod->is_placement_preview && builder_prod->has_construction_site) {
+    if (builder_prod->is_placement_preview &&
+        builder_prod->has_construction_site) {
       show_preview = true;
       preview_x = builder_prod->construction_site_x;
       preview_z = builder_prod->construction_site_z;
-    } else if (builder_prod->is_placement_preview && builder_prod->in_progress) {
+    } else if (builder_prod->is_placement_preview &&
+               builder_prod->in_progress) {
       show_preview = true;
     }
 

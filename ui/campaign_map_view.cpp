@@ -398,13 +398,13 @@ void main() {
 )";
 
     if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                                  kTexVert)) {
+                                                   kTexVert)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture vertex shader";
       return false;
     }
     if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                                  kTexFrag)) {
+                                                   kTexFrag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture fragment shader";
       return false;
@@ -415,12 +415,12 @@ void main() {
     }
 
     if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
-                                               kLineVert)) {
+                                                kLineVert)) {
       qWarning() << "CampaignMapRenderer: Failed to compile line vertex shader";
       return false;
     }
     if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
-                                               kLineFrag)) {
+                                                kLineFrag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile line fragment shader";
       return false;
@@ -1464,7 +1464,8 @@ void CampaignMapView::set_orbit_pitch(float pitch) {
 }
 
 void CampaignMapView::set_orbit_distance(float distance) {
-  const float clamped = qBound(k_min_orbit_distance, distance, k_max_orbit_distance);
+  const float clamped =
+      qBound(k_min_orbit_distance, distance, k_max_orbit_distance);
   if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
