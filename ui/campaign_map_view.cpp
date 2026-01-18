@@ -420,7 +420,7 @@ private:
   QString m_hover_province_id;
   int m_province_state_version = 0;
   int m_current_mission = 7;
-  float m_terrain_height_scale = 1.0F;
+  float m_terrain_height_scale = 0.15F;
   bool m_show_province_fills = true;
   qint64 m_hover_start_time = 0;
   qint64 m_last_update_time = 0;
@@ -1135,29 +1135,24 @@ void main() {
         QStringLiteral(":/assets/campaign_map/terrain_height.json"));
 
     if (heightmap.ready) {
-      const QString land_path = Utils::Resources::resolveResourcePath(
-          QStringLiteral(":/assets/campaign_map/land_mesh.bin"));
-      QFile land_file(land_path);
-      std::vector<float> land_uvs;
-      if (land_file.open(QIODevice::ReadOnly)) {
-        const QByteArray data = land_file.readAll();
-        if (!data.isEmpty() && (data.size() % sizeof(float) == 0)) {
-          const int float_count =
-              data.size() / static_cast<int>(sizeof(float));
-          if (float_count % 2 == 0) {
-            land_uvs.resize(static_cast<size_t>(float_count));
-            memcpy(land_uvs.data(), data.constData(),
-                   static_cast<size_t>(data.size()));
-          }
-        }
-      }
-
-      if (!land_uvs.empty()) {
-        mesh.height_scale = k_height_scale;
+      mesh.height_scale = k_height_scale;
+      const int grid =
+          qMax(resolution, qMax(heightmap.width, heightmap.height) / 4);
+      if (grid > 1) {
+        const float step = 1.0F / static_cast<float>(grid - 1);
         const float sample_dist =
             1.0F / static_cast<float>(qMax(heightmap.width, heightmap.height));
 
-        auto sample_height = [&](float u, float v) -> float {
+        float land_max = 0.0F;
+        for (float h : heightmap.samples) {
+          if (h > land_max) {
+            land_max = h;
+          }
+        }
+        const float land_scale = (land_max > 1e-6F) ? (1.0F / land_max) : 1.0F;
+        const float edge_margin = 0.03F;
+
+        auto sample_height_raw = [&](float u, float v) -> float {
           const float cu = qBound(0.0F, u, 1.0F);
           const float cv = qBound(0.0F, v, 1.0F);
           const float x = cu * static_cast<float>(heightmap.width - 1);
@@ -1186,6 +1181,18 @@ void main() {
           return hx0 + (hx1 - hx0) * fy;
         };
 
+        auto sample_height = [&](float u, float v) -> float {
+          const float h = sample_height_raw(u, v);
+          float height = (h >= 0.0F) ? (h * land_scale) : 0.0F;
+
+          const float edge_dist =
+              qMin(qMin(u, 1.0F - u), qMin(v, 1.0F - v));
+          if (edge_dist < edge_margin) {
+            height *= qMax(0.0F, edge_dist / edge_margin);
+          }
+          return height;
+        };
+
         auto sample_normal = [&](float u, float v) -> QVector3D {
           const float h_left = sample_height(u - sample_dist, v);
           const float h_right = sample_height(u + sample_dist, v);
@@ -1202,13 +1209,11 @@ void main() {
           return normal;
         };
 
-        vertices.reserve(land_uvs.size() / 2 * 8);
-        for (size_t i = 0; i + 1 < land_uvs.size(); i += 2) {
-          const float u = land_uvs[i];
-          const float v = land_uvs[i + 1];
-          const float h = sample_height(u, v);
-          const QVector3D n = sample_normal(u, v);
+        vertices.reserve(
+            static_cast<size_t>(grid - 1) * static_cast<size_t>(grid - 1) * 6 *
+            8);
 
+        auto add_vertex = [&](float u, float v, float h, const QVector3D &n) {
           vertices.push_back(u);
           vertices.push_back(v);
           vertices.push_back(u);
@@ -1217,6 +1222,33 @@ void main() {
           vertices.push_back(n.x());
           vertices.push_back(n.y());
           vertices.push_back(n.z());
+        };
+
+        for (int y = 0; y < grid - 1; ++y) {
+          for (int x = 0; x < grid - 1; ++x) {
+            const float u0 = static_cast<float>(x) * step;
+            const float v0 = static_cast<float>(y) * step;
+            const float u1 = static_cast<float>(x + 1) * step;
+            const float v1 = static_cast<float>(y + 1) * step;
+
+            const float h00 = sample_height(u0, v0);
+            const float h10 = sample_height(u1, v0);
+            const float h01 = sample_height(u0, v1);
+            const float h11 = sample_height(u1, v1);
+
+            const QVector3D n00 = sample_normal(u0, v0);
+            const QVector3D n10 = sample_normal(u1, v0);
+            const QVector3D n01 = sample_normal(u0, v1);
+            const QVector3D n11 = sample_normal(u1, v1);
+
+            add_vertex(u0, v0, h00, n00);
+            add_vertex(u1, v0, h10, n10);
+            add_vertex(u0, v1, h01, n01);
+
+            add_vertex(u1, v0, h10, n10);
+            add_vertex(u1, v1, h11, n11);
+            add_vertex(u0, v1, h01, n01);
+          }
         }
       }
     }
