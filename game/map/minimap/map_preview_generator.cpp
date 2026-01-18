@@ -136,10 +136,11 @@ auto MapPreviewGenerator::world_to_pixel(
     float world_x, float world_z, const GridDefinition &grid,
     float pixels_per_tile) const -> std::pair<float, float> {
 
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  const auto &orient = MinimapOrientation::instance();
+  const float rotated_x =
+      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z =
+      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
