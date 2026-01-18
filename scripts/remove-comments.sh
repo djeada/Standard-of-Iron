@@ -301,7 +301,8 @@ while IFS= read -r -d '' f; do
   process_file "$f"
 done < <(
   find "${ROOTS[@]}" -type f \( "${FIND_NAME[@]}" \) \
-    -not -path '*/.git/*' -not -path '*/.svn/*' -not -path '*/build/*' -print0
+    -not -path '*/.git/*' -not -path '*/.svn/*' -not -path '*/build/*' \
+    -not -path '*/venv/*' -not -path '*/.venv/*' -print0
 )
 
 if (( DRY_RUN == 1 )); then
