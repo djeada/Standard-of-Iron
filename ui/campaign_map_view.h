@@ -102,9 +102,10 @@ signals:
   void current_mission_changed();
 
 private:
-  float m_orbit_yaw = 180.0F;
-  float m_orbit_pitch = 90.0F;
-  float m_orbit_distance = 1.2F;
+  // Cinematic camera defaults: showcase relief and depth by default
+  float m_orbit_yaw = 195.0F;    // Slightly rotated for depth
+  float m_orbit_pitch = 55.0F;   // Angled view to show terrain relief
+  float m_orbit_distance = 1.8F; // Moderate distance for overview
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;

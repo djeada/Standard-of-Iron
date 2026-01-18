@@ -226,7 +226,11 @@ public:
     glDisable(GL_DEPTH_TEST);
     draw_province_layer(m_province_layer, mvp, 0.002F);
     draw_line_layer(m_province_border_layer, mvp, 0.0045F);
-    draw_line_layer(m_coast_layer, mvp, 0.004F);
+
+    // Double-stroke coastline: dark outer stroke + light inner stroke
+    // for printed-map legibility
+    draw_coastline_double_stroke(m_coast_layer, mvp, 0.004F);
+
     draw_line_layer(m_river_layer, mvp, 0.003F);
     draw_progressive_path_layers(m_path_layer, mvp, 0.006F);
 
@@ -835,6 +839,39 @@ void main() {
     m_line_program.release();
   }
 
+  // Double-stroke coastline for printed-map legibility (dark outer + light inner)
+  void draw_coastline_double_stroke(const LineLayer &layer,
+                                     const QMatrix4x4 &mvp, float z_offset) {
+    if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
+      return;
+    }
+
+    m_line_program.bind();
+    m_line_program.setUniformValue("u_mvp", mvp);
+    m_line_program.setUniformValue("u_z", z_offset);
+
+    glBindVertexArray(layer.vao);
+
+    // First pass: dark outer stroke (wider)
+    glLineWidth(layer.width * 2.0F);
+    QVector4D dark_color(0.08F, 0.06F, 0.05F, 0.9F);
+    m_line_program.setUniformValue("u_color", dark_color);
+    for (const auto &span : layer.spans) {
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
+
+    // Second pass: light inner stroke (original width)
+    glLineWidth(layer.width);
+    QVector4D light_color(0.55F, 0.50F, 0.45F, 0.85F);
+    m_line_program.setUniformValue("u_color", light_color);
+    for (const auto &span : layer.spans) {
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
+
+    glBindVertexArray(0);
+    m_line_program.release();
+  }
+
   static auto safe_normalized(const QVector2D &v) -> QVector2D {
     const float len = v.length();
     if (len < 1e-5F) {
@@ -847,6 +884,57 @@ void main() {
     return QVector2D(-v.y(), v.x());
   }
 
+  // Catmull-Rom spline interpolation for smooth curved paths
+  static auto catmull_rom_interpolate(const QVector2D &p0, const QVector2D &p1,
+                                       const QVector2D &p2, const QVector2D &p3,
+                                       float t) -> QVector2D {
+    const float t2 = t * t;
+    const float t3 = t2 * t;
+
+    // Catmull-Rom basis functions
+    const float h1 = -0.5F * t3 + t2 - 0.5F * t;
+    const float h2 = 1.5F * t3 - 2.5F * t2 + 1.0F;
+    const float h3 = -1.5F * t3 + 2.0F * t2 + 0.5F * t;
+    const float h4 = 0.5F * t3 - 0.5F * t2;
+
+    return p0 * h1 + p1 * h2 + p2 * h3 + p3 * h4;
+  }
+
+  // Generate smooth spline from control points using Catmull-Rom
+  static void smooth_path_with_spline(const std::vector<QVector2D> &input,
+                                       std::vector<QVector2D> &output,
+                                       int segments_per_span = 8) {
+    output.clear();
+    if (input.size() < 2) {
+      return;
+    }
+
+    if (input.size() == 2) {
+      output = input;
+      return;
+    }
+
+    output.reserve(input.size() * static_cast<size_t>(segments_per_span));
+
+    for (size_t i = 0; i < input.size() - 1; ++i) {
+      // Get 4 control points for Catmull-Rom (with clamped endpoints)
+      const QVector2D &p0 = (i == 0) ? input[0] : input[i - 1];
+      const QVector2D &p1 = input[i];
+      const QVector2D &p2 = input[i + 1];
+      const QVector2D &p3 =
+          (i + 2 >= input.size()) ? input[input.size() - 1] : input[i + 2];
+
+      // Generate interpolated points for this span
+      for (int j = 0; j < segments_per_span; ++j) {
+        const float t = static_cast<float>(j) / static_cast<float>(segments_per_span);
+        output.push_back(catmull_rom_interpolate(p0, p1, p2, p3, t));
+      }
+    }
+
+    // Add final endpoint
+    output.push_back(input.back());
+  }
+
   void build_path_strip(const std::vector<QVector2D> &input, float half_width,
                         std::vector<QVector2D> &out) const {
     out.clear();
@@ -854,9 +942,14 @@ void main() {
       return;
     }
 
+    // Apply Catmull-Rom spline smoothing to create curved paths
+    std::vector<QVector2D> smoothed;
+    smooth_path_with_spline(input, smoothed, 6);
+
+    // Remove duplicate points from smoothed path
     std::vector<QVector2D> points;
-    points.reserve(input.size());
-    for (const auto &pt : input) {
+    points.reserve(smoothed.size());
+    for (const auto &pt : smoothed) {
       if (points.empty()) {
         points.push_back(pt);
         continue;
