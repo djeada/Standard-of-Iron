@@ -12,12 +12,12 @@ out vec2 v_local;
 out vec2 v_uv;
 
 void main() {
-    // Convert from local badge coordinates to world position
-    vec2 worldPos = u_screen_pos + a_local * u_size;
-    vec3 world = vec3(1.0 - worldPos.x, u_z, worldPos.y);
-    
-    gl_Position = u_mvp * vec4(world, 1.0);
-    
-    v_local = a_local;
-    v_uv = a_local * 0.5 + 0.5; // Normalize to [0,1]
+
+  vec2 worldPos = u_screen_pos + a_local * u_size;
+  vec3 world = vec3(1.0 - worldPos.x, u_z, worldPos.y);
+
+  gl_Position = u_mvp * vec4(world, 1.0);
+
+  v_local = a_local;
+  v_uv = a_local * 0.5 + 0.5;
 }

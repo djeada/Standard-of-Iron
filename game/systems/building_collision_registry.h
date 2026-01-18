@@ -53,10 +53,9 @@ public:
   is_point_in_building(float x, float z,
                        unsigned int ignore_entity_id = 0) const -> bool;
 
-  [[nodiscard]] auto
-  is_circle_overlapping_building(float x, float z, float radius,
-                                 unsigned int ignore_entity_id = 0) const
-      -> bool;
+  [[nodiscard]] auto is_circle_overlapping_building(
+      float x, float z, float radius,
+      unsigned int ignore_entity_id = 0) const -> bool;
 
   [[nodiscard]] static auto get_occupied_grid_cells(
       const BuildingFootprint &footprint,

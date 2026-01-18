@@ -6,6 +6,7 @@
 #include <QDateTime>
 #include <QDebug>
 #include <QFile>
+#include <QImage>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -98,12 +99,11 @@ struct LineLayer {
   float width = 1.0F;
   bool ready = false;
 
-  // Double-stroke support for cartographic coastline rendering
   bool double_stroke = false;
-  QVector4D outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);  // Dark outer
-  QVector4D inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);  // Light inner
-  float outer_width_ratio = 1.8F;  // Outer width as ratio of base width
-  float inner_width_ratio = 1.0F;  // Inner width as ratio of base width
+  QVector4D outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);
+  QVector4D inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);
+  float outer_width_ratio = 1.8F;
+  float inner_width_ratio = 1.0F;
 };
 
 struct StrokeMesh {
@@ -141,31 +141,28 @@ struct ProvinceLayer {
   bool ready = false;
 };
 
-// Mission badge/marker for emblematic mission markers
 struct MissionBadge {
   GLuint vao = 0;
   GLuint vbo = 0;
   int vertex_count = 0;
-  QVector2D position;  // UV position on map
+  QVector2D position;
   bool ready = false;
 
-  // Badge styling (matching CampaignMapRender::MissionBadgeConfig)
-  int style = 3;  // Default to shield style
-  QVector4D primary_color = QVector4D(0.75F, 0.18F, 0.12F, 1.0F);    // Deep red
-  QVector4D secondary_color = QVector4D(0.95F, 0.85F, 0.45F, 1.0F);  // Gold accent
-  QVector4D border_color = QVector4D(0.15F, 0.10F, 0.08F, 1.0F);     // Dark border
-  QVector4D shadow_color = QVector4D(0.0F, 0.0F, 0.0F, 0.4F);        // Shadow
-  float size = 0.025F;  // UV size
+  int style = 3;
+  QVector4D primary_color = QVector4D(0.75F, 0.18F, 0.12F, 1.0F);
+  QVector4D secondary_color = QVector4D(0.95F, 0.85F, 0.45F, 1.0F);
+  QVector4D border_color = QVector4D(0.15F, 0.10F, 0.08F, 1.0F);
+  QVector4D shadow_color = QVector4D(0.0F, 0.0F, 0.0F, 0.4F);
+  float size = 0.025F;
   float border_width = 2.0F;
   bool show_shadow = true;
 };
 
-// Cartographic symbol for map features (mountains, cities, ports)
 struct CartographicSymbolInstance {
-  QVector2D position;  // UV position
-  int symbol_type;     // 0=mountain, 1=city, 2=port, 3=fort, 4=temple
-  float size;          // UV size
-  int importance;      // Affects visual prominence (1-3)
+  QVector2D position;
+  int symbol_type;
+  float size;
+  int importance;
 };
 
 struct CartographicSymbolLayer {
@@ -176,7 +173,6 @@ struct CartographicSymbolLayer {
   int total_vertices = 0;
   bool ready = false;
 
-  // Styling
   QVector4D fill_color = QVector4D(0.35F, 0.30F, 0.25F, 0.85F);
   QVector4D stroke_color = QVector4D(0.18F, 0.15F, 0.12F, 0.95F);
   QVector4D shadow_color = QVector4D(0.0F, 0.0F, 0.0F, 0.35F);
@@ -184,36 +180,40 @@ struct CartographicSymbolLayer {
   bool show_shadow = true;
 };
 
-// 3D Terrain mesh with height displacement
 struct TerrainMesh {
   GLuint vao = 0;
   GLuint vbo = 0;
   int vertex_count = 0;
   bool ready = false;
 
-  // Height displacement settings
   float height_scale = 0.05F;
   float z_base = 0.0F;
 };
 
-// Hillshade texture for terrain shading
 struct HillshadeLayer {
   GLuint texture_id = 0;
   int width = 0;
   int height = 0;
   bool ready = false;
 
-  // Hillshade configuration
   QVector3D light_direction{0.35F, 0.85F, 0.40F};
   float ambient = 0.25F;
   float intensity = 1.0F;
 };
 
-// Province label for typography
+struct HeightmapData {
+  std::vector<float> samples;
+  int width = 0;
+  int height = 0;
+  float min_m = 0.0F;
+  float max_m = 0.0F;
+  bool ready = false;
+};
+
 struct ProvinceLabel {
   QString text;
-  QVector2D position;  // UV position
-  int importance;      // 1=minor, 2=major, 3=capital
+  QVector2D position;
+  int importance;
   bool is_sea = false;
 };
 
@@ -224,7 +224,6 @@ struct LabelLayer {
   int total_vertices = 0;
   bool ready = false;
 
-  // Font atlas texture
   GLuint font_texture = 0;
 };
 
@@ -311,7 +310,9 @@ public:
     compute_mvp(mvp);
 
     draw_textured_layer(m_water_texture, m_quad_vao, 6, mvp, 1.0F, -0.01F);
-    if (m_land_vertex_count > 0) {
+    if (m_terrain_mesh.ready && m_terrain_program.isLinked()) {
+      draw_terrain_layer(m_terrain_mesh, mvp);
+    } else if (m_land_vertex_count > 0) {
       draw_textured_layer(m_base_texture, m_land_vao, m_land_vertex_count, mvp,
                           1.0F, 0.0F);
     } else {
@@ -319,19 +320,18 @@ public:
     }
 
     glDisable(GL_DEPTH_TEST);
-    draw_province_layer(m_province_layer, mvp, 0.002F);
+    if (m_show_province_fills) {
+      draw_province_layer(m_province_layer, mvp, 0.002F);
+    }
     draw_line_layer(m_province_border_layer, mvp, 0.0045F);
     draw_line_layer(m_coast_layer, mvp, 0.004F);
     draw_line_layer(m_river_layer, mvp, 0.003F);
     draw_progressive_path_layers(m_path_layer, mvp, 0.006F);
 
-    // Draw cartographic symbols (mountains, cities, ports)
     draw_symbol_layer(m_symbol_layer, mvp, 0.007F);
 
-    // Draw emblematic mission badge at current path endpoint
     draw_mission_badge(m_mission_badge, mvp, 0.008F);
 
-    // Draw province/city labels with cartographic typography
     draw_label_layer(m_label_layer, mvp, 0.009F);
 
     if (!m_hover_province_id.isEmpty()) {
@@ -363,6 +363,8 @@ public:
     m_orbit_distance = view->orbit_distance();
     m_pan_u = view->pan_u();
     m_pan_v = view->pan_v();
+    m_terrain_height_scale = view->terrain_height_scale();
+    m_show_province_fills = view->show_province_fills();
 
     QString new_hover_id = view->hover_province_id();
     if (m_hover_province_id != new_hover_id) {
@@ -385,10 +387,9 @@ private:
 
   QOpenGLShaderProgram m_texture_program;
   QOpenGLShaderProgram m_line_program;
-  // Note: m_terrain_program and m_label_program are reserved for future
-  // dedicated shader implementations. Currently using fallback rendering.
-  QOpenGLShaderProgram m_terrain_program;  // 3D terrain shader (reserved)
-  QOpenGLShaderProgram m_label_program;    // Typography shader (reserved)
+
+  QOpenGLShaderProgram m_terrain_program;
+  QOpenGLShaderProgram m_label_program;
 
   GLuint m_quad_vao = 0;
   GLuint m_quad_vbo = 0;
@@ -405,21 +406,22 @@ private:
   PathLayer m_path_layer;
   LineLayer m_province_border_layer;
   ProvinceLayer m_province_layer;
-  MissionBadge m_mission_badge;  // Emblematic mission marker
-  CartographicSymbolLayer m_symbol_layer;  // Map symbols (mountains, cities, ports)
-  TerrainMesh m_terrain_mesh;    // 3D terrain with height displacement
-  HillshadeLayer m_hillshade;    // Hillshade texture for terrain shading
-  LabelLayer m_label_layer;      // Province/city labels
+  MissionBadge m_mission_badge;
+  CartographicSymbolLayer m_symbol_layer;
+  TerrainMesh m_terrain_mesh;
+  HillshadeLayer m_hillshade;
+  LabelLayer m_label_layer;
 
-  // Cinematic camera defaults - showcases relief and depth
-  float m_orbit_yaw = 185.0F;     // Slight northwest tilt
-  float m_orbit_pitch = 52.0F;    // More oblique for terrain visibility
-  float m_orbit_distance = 1.35F; // Closer for detail
+  float m_orbit_yaw = 185.0F;
+  float m_orbit_pitch = 52.0F;
+  float m_orbit_distance = 1.35F;
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
   int m_province_state_version = 0;
   int m_current_mission = 7;
+  float m_terrain_height_scale = 1.0F;
+  bool m_show_province_fills = true;
   qint64 m_hover_start_time = 0;
   qint64 m_last_update_time = 0;
 
@@ -452,14 +454,13 @@ private:
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
-    // Initialize coastline with double-stroke cartographic style
     init_line_layer(m_coast_layer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
                     QVector4D(0.12F, 0.10F, 0.08F, 0.95F), 2.5F);
-    // Enable double-stroke for printed-map legibility
+
     m_coast_layer.double_stroke = true;
-    m_coast_layer.outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);  // Dark outer
-    m_coast_layer.inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);  // Light inner
+    m_coast_layer.outer_color = QVector4D(0.12F, 0.10F, 0.08F, 0.95F);
+    m_coast_layer.inner_color = QVector4D(0.55F, 0.50F, 0.42F, 0.75F);
 
     init_line_layer(m_river_layer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
@@ -474,17 +475,13 @@ private:
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
                        QVector4D(0.25F, 0.22F, 0.20F, 0.65F), 1.2F);
 
-    // Initialize cartographic symbols (mountains, cities, ports)
     init_symbol_layer(m_symbol_layer,
                       QStringLiteral(":/assets/campaign_map/provinces.json"));
 
-    // Initialize 3D terrain mesh with height displacement
-    init_terrain_mesh(m_terrain_mesh, 64);  // 64x64 resolution grid
+    init_terrain_mesh(m_terrain_mesh, 128);
 
-    // Generate hillshade texture for terrain shading
-    init_hillshade_layer(m_hillshade, 256, 256);  // 256x256 hillshade texture
+    init_hillshade_layer(m_hillshade, 256, 256);
 
-    // Initialize province/city labels
     init_label_layer(m_label_layer,
                      QStringLiteral(":/assets/campaign_map/provinces.json"));
 
@@ -582,7 +579,34 @@ void main() {
       return false;
     }
 
+    init_terrain_shader();
     return true;
+  }
+
+  void init_terrain_shader() {
+    const QString vert_path = Utils::Resources::resolveResourcePath(
+        QStringLiteral(":/assets/shaders/campaign_terrain.vert"));
+    const QString frag_path = Utils::Resources::resolveResourcePath(
+        QStringLiteral(":/assets/shaders/campaign_terrain.frag"));
+
+    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Vertex,
+                                                   vert_path)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile terrain vertex"
+                 << vert_path;
+      m_terrain_program.removeAllShaders();
+      return;
+    }
+    if (!m_terrain_program.addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                                   frag_path)) {
+      qWarning() << "CampaignMapRenderer: Failed to compile terrain fragment"
+                 << frag_path;
+      m_terrain_program.removeAllShaders();
+      return;
+    }
+    if (!m_terrain_program.link()) {
+      qWarning() << "CampaignMapRenderer: Failed to link terrain shader";
+      m_terrain_program.removeAllShaders();
+    }
   }
 
   void init_quad() {
@@ -886,7 +910,6 @@ void main() {
         continue;
       }
 
-      // Parse raw points from JSON
       std::vector<QVector2D> raw_points;
       raw_points.reserve(static_cast<size_t>(line.size()));
       for (const auto &pt_val : line) {
@@ -904,8 +927,6 @@ void main() {
 
       PathLine entry;
 
-      // Apply Catmull-Rom spline smoothing for curved, coastline-hugging trajectories
-      // Use 8 samples per segment for smooth curves without excessive vertex count
       constexpr int k_spline_samples_per_segment = 8;
       entry.points = CampaignMapRender::smooth_catmull_rom(
           raw_points, k_spline_samples_per_segment);
@@ -918,13 +939,13 @@ void main() {
     layer.ready = !layer.lines.empty();
   }
 
-  // Initialize cartographic symbols from provinces data
   void init_symbol_layer(CartographicSymbolLayer &layer,
                          const QString &resource_path) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly)) {
-      qWarning() << "CampaignMapRenderer: Failed to open symbols source" << path;
+      qWarning() << "CampaignMapRenderer: Failed to open symbols source"
+                 << path;
       return;
     }
 
@@ -934,7 +955,6 @@ void main() {
       return;
     }
 
-    // Extract city symbols from provinces data
     const QJsonArray provinces = doc.object().value("provinces").toArray();
     for (const auto &prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
@@ -948,24 +968,22 @@ void main() {
         }
 
         CartographicSymbolInstance symbol;
-        symbol.position =
-            QVector2D(static_cast<float>(uv.at(0).toDouble()),
-                      static_cast<float>(uv.at(1).toDouble()));
+        symbol.position = QVector2D(static_cast<float>(uv.at(0).toDouble()),
+                                    static_cast<float>(uv.at(1).toDouble()));
 
-        // Determine symbol type based on city properties
         const QString name = city.value("name").toString().toLower();
         const bool is_port = name.contains("port") || name.contains("harbor") ||
                              city.value("is_port").toBool();
         const bool is_capital = city.value("is_capital").toBool();
 
         if (is_port) {
-          symbol.symbol_type = 2;  // Port/anchor
+          symbol.symbol_type = 2;
           symbol.importance = 2;
         } else if (is_capital) {
-          symbol.symbol_type = 1;  // City (major)
+          symbol.symbol_type = 1;
           symbol.importance = 3;
         } else {
-          symbol.symbol_type = 1;  // City (minor)
+          symbol.symbol_type = 1;
           symbol.importance = 1;
         }
 
@@ -973,7 +991,6 @@ void main() {
         layer.symbols.push_back(symbol);
       }
 
-      // Check for mountain regions (high terrain areas)
       const QString terrain = prov.value("terrain_type").toString().toLower();
       if (terrain.contains("mountain") || terrain.contains("alpine")) {
         const QJsonArray label_uv = prov.value("label_uv").toArray();
@@ -982,7 +999,7 @@ void main() {
           mountain.position =
               QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
                         static_cast<float>(label_uv.at(1).toDouble()));
-          mountain.symbol_type = 0;  // Mountain
+          mountain.symbol_type = 0;
           mountain.importance = 2;
           mountain.size = 0.018F;
           layer.symbols.push_back(mountain);
@@ -990,16 +1007,14 @@ void main() {
       }
     }
 
-    // Build geometry for all symbols
     if (!layer.symbols.empty()) {
       build_symbol_geometry(layer);
     }
   }
 
-  // Build combined geometry for all cartographic symbols
   void build_symbol_geometry(CartographicSymbolLayer &layer) {
     std::vector<float> verts;
-    // Reserve approximate space: each symbol ~20 vertices, 4 floats each
+
     verts.reserve(layer.symbols.size() * 20 * 4);
     layer.spans.clear();
 
@@ -1007,21 +1022,21 @@ void main() {
       std::vector<QVector2D> outline;
 
       switch (symbol.symbol_type) {
-      case 0:  // Mountain
+      case 0:
         outline = CampaignMapRender::generate_mountain_icon(
             QVector2D(0.0F, 0.0F), 1.0F, symbol.importance);
         break;
-      case 1:  // City
+      case 1:
         outline = CampaignMapRender::generate_city_marker(
             QVector2D(0.0F, 0.0F), 1.0F, symbol.importance);
         break;
-      case 2:  // Port/anchor
-        outline = CampaignMapRender::generate_anchor_icon(
-            QVector2D(0.0F, 0.0F), 1.0F);
+      case 2:
+        outline = CampaignMapRender::generate_anchor_icon(QVector2D(0.0F, 0.0F),
+                                                          1.0F);
         break;
-      default:  // Fallback to city
-        outline = CampaignMapRender::generate_city_marker(
-            QVector2D(0.0F, 0.0F), 1.0F, 1);
+      default:
+        outline = CampaignMapRender::generate_city_marker(QVector2D(0.0F, 0.0F),
+                                                          1.0F, 1);
         break;
       }
 
@@ -1031,13 +1046,13 @@ void main() {
 
       const int start = static_cast<int>(verts.size() / 4);
       const int count = static_cast<int>(outline.size());
-      // Convert to positioned vertices
+
       for (const auto &pt : outline) {
         float world_x = symbol.position.x() + pt.x() * symbol.size;
         float world_y = symbol.position.y() + pt.y() * symbol.size;
         verts.push_back(world_x);
         verts.push_back(world_y);
-        verts.push_back(pt.x());  // Local coord for shading
+        verts.push_back(pt.x());
         verts.push_back(static_cast<float>(symbol.symbol_type));
       }
 
@@ -1060,11 +1075,10 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(), GL_STATIC_DRAW);
 
-    // Position (location 0)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           reinterpret_cast<void *>(0));
-    // Local coord + symbol type (location 1)
+
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           reinterpret_cast<void *>(2 * sizeof(float)));
@@ -1075,7 +1089,6 @@ void main() {
     layer.ready = true;
   }
 
-  // Draw cartographic symbols layer
   void draw_symbol_layer(const CartographicSymbolLayer &layer,
                          const QMatrix4x4 &mvp, float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
@@ -1085,7 +1098,6 @@ void main() {
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
 
-    // Draw shadow pass first
     if (layer.show_shadow) {
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", layer.shadow_color);
@@ -1096,7 +1108,6 @@ void main() {
       glBindVertexArray(0);
     }
 
-    // Draw fill
     m_line_program.setUniformValue("u_z", z_offset + 0.001F);
     m_line_program.setUniformValue("u_color", layer.fill_color);
     glBindVertexArray(layer.vao);
@@ -1105,7 +1116,6 @@ void main() {
     }
     glBindVertexArray(0);
 
-    // Draw stroke
     m_line_program.setUniformValue("u_z", z_offset + 0.002F);
     m_line_program.setUniformValue("u_color", layer.stroke_color);
     glBindVertexArray(layer.vao);
@@ -1117,10 +1127,104 @@ void main() {
     m_line_program.release();
   }
 
-  // Initialize 3D terrain mesh with height displacement
   void init_terrain_mesh(TerrainMesh &mesh, int resolution) {
-    std::vector<float> vertices = CampaignMapRender::generate_terrain_mesh(
-        resolution, mesh.height_scale);
+    constexpr float k_height_scale = 1.0F;
+    std::vector<float> vertices;
+    HeightmapData heightmap = load_heightmap_data(
+        QStringLiteral(":/assets/campaign_map/terrain_height.png"),
+        QStringLiteral(":/assets/campaign_map/terrain_height.json"));
+
+    if (heightmap.ready) {
+      const QString land_path = Utils::Resources::resolveResourcePath(
+          QStringLiteral(":/assets/campaign_map/land_mesh.bin"));
+      QFile land_file(land_path);
+      std::vector<float> land_uvs;
+      if (land_file.open(QIODevice::ReadOnly)) {
+        const QByteArray data = land_file.readAll();
+        if (!data.isEmpty() && (data.size() % sizeof(float) == 0)) {
+          const int float_count =
+              data.size() / static_cast<int>(sizeof(float));
+          if (float_count % 2 == 0) {
+            land_uvs.resize(static_cast<size_t>(float_count));
+            memcpy(land_uvs.data(), data.constData(),
+                   static_cast<size_t>(data.size()));
+          }
+        }
+      }
+
+      if (!land_uvs.empty()) {
+        mesh.height_scale = k_height_scale;
+        const float sample_dist =
+            1.0F / static_cast<float>(qMax(heightmap.width, heightmap.height));
+
+        auto sample_height = [&](float u, float v) -> float {
+          const float cu = qBound(0.0F, u, 1.0F);
+          const float cv = qBound(0.0F, v, 1.0F);
+          const float x = cu * static_cast<float>(heightmap.width - 1);
+          const float y =
+              (1.0F - cv) * static_cast<float>(heightmap.height - 1);
+
+          const int x0 = static_cast<int>(std::floor(x));
+          const int y0 = static_cast<int>(std::floor(y));
+          const int x1 = qMin(x0 + 1, heightmap.width - 1);
+          const int y1 = qMin(y0 + 1, heightmap.height - 1);
+
+          const float fx = x - static_cast<float>(x0);
+          const float fy = y - static_cast<float>(y0);
+
+          const float h00 =
+              heightmap.samples[static_cast<size_t>(y0 * heightmap.width + x0)];
+          const float h10 =
+              heightmap.samples[static_cast<size_t>(y0 * heightmap.width + x1)];
+          const float h01 =
+              heightmap.samples[static_cast<size_t>(y1 * heightmap.width + x0)];
+          const float h11 =
+              heightmap.samples[static_cast<size_t>(y1 * heightmap.width + x1)];
+
+          const float hx0 = h00 + (h10 - h00) * fx;
+          const float hx1 = h01 + (h11 - h01) * fx;
+          return hx0 + (hx1 - hx0) * fy;
+        };
+
+        auto sample_normal = [&](float u, float v) -> QVector3D {
+          const float h_left = sample_height(u - sample_dist, v);
+          const float h_right = sample_height(u + sample_dist, v);
+          const float h_down = sample_height(u, v - sample_dist);
+          const float h_up = sample_height(u, v + sample_dist);
+
+          const float dx =
+              (h_right - h_left) / (2.0F * sample_dist) * mesh.height_scale;
+          const float dz =
+              (h_up - h_down) / (2.0F * sample_dist) * mesh.height_scale;
+
+          QVector3D normal(-dx, 1.0F, -dz);
+          normal.normalize();
+          return normal;
+        };
+
+        vertices.reserve(land_uvs.size() / 2 * 8);
+        for (size_t i = 0; i + 1 < land_uvs.size(); i += 2) {
+          const float u = land_uvs[i];
+          const float v = land_uvs[i + 1];
+          const float h = sample_height(u, v);
+          const QVector3D n = sample_normal(u, v);
+
+          vertices.push_back(u);
+          vertices.push_back(v);
+          vertices.push_back(u);
+          vertices.push_back(v);
+          vertices.push_back(h);
+          vertices.push_back(n.x());
+          vertices.push_back(n.y());
+          vertices.push_back(n.z());
+        }
+      }
+    }
+
+    if (vertices.empty()) {
+      mesh.height_scale = k_height_scale;
+      vertices = CampaignMapRender::generate_terrain_mesh(resolution, 1.0F);
+    }
 
     if (vertices.empty()) {
       mesh.ready = false;
@@ -1138,22 +1242,20 @@ void main() {
                  static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
                  vertices.data(), GL_STATIC_DRAW);
 
-    // Vertex format: pos(2) + uv(2) + height(1) + normal(3) = 8 floats
     const int stride = 8 * sizeof(float);
 
-    // Position (location 0)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(0));
-    // UV (location 1)
+
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(2 * sizeof(float)));
-    // Height (location 2)
+
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(4 * sizeof(float)));
-    // Normal (location 3)
+
     glEnableVertexAttribArray(3);
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(5 * sizeof(float)));
@@ -1164,7 +1266,6 @@ void main() {
     mesh.ready = true;
   }
 
-  // Generate and upload hillshade texture
   void init_hillshade_layer(HillshadeLayer &layer, int width, int height) {
     CampaignMapRender::HillshadeConfig config;
     config.light_direction = layer.light_direction;
@@ -1197,7 +1298,88 @@ void main() {
     layer.ready = true;
   }
 
-  // Initialize province/city labels from provinces data
+  auto load_heightmap_data(const QString &image_path,
+                           const QString &meta_path) -> HeightmapData {
+    HeightmapData data;
+
+    const QString resolved_image =
+        Utils::Resources::resolveResourcePath(image_path);
+    QImage image(resolved_image);
+    if (image.isNull()) {
+      qWarning() << "CampaignMapRenderer: Failed to load heightmap"
+                 << resolved_image;
+      return data;
+    }
+
+    if (image.format() != QImage::Format_Grayscale16) {
+      image = image.convertToFormat(QImage::Format_Grayscale16);
+    }
+
+    if (image.isNull()) {
+      qWarning() << "CampaignMapRenderer: Heightmap conversion failed"
+                 << resolved_image;
+      return data;
+    }
+
+    float min_m = -6000.0F;
+    float max_m = 4000.0F;
+
+    const QString resolved_meta =
+        Utils::Resources::resolveResourcePath(meta_path);
+    QFile meta_file(resolved_meta);
+    if (meta_file.open(QIODevice::ReadOnly)) {
+      const QJsonDocument doc = QJsonDocument::fromJson(meta_file.readAll());
+      if (doc.isObject()) {
+        const QJsonObject obj = doc.object();
+        if (obj.contains("min_m")) {
+          min_m = static_cast<float>(obj.value("min_m").toDouble());
+        }
+        if (obj.contains("max_m")) {
+          max_m = static_cast<float>(obj.value("max_m").toDouble());
+        }
+      }
+    }
+
+    if (!(min_m < max_m)) {
+      qWarning() << "CampaignMapRenderer: Heightmap metadata invalid"
+                 << resolved_meta;
+      return data;
+    }
+
+    const int width = image.width();
+    const int height = image.height();
+    if (width <= 1 || height <= 1) {
+      qWarning() << "CampaignMapRenderer: Heightmap dimensions invalid"
+                 << width << height;
+      return data;
+    }
+
+    const float range = max_m - min_m;
+    const float max_abs = qMax(std::abs(min_m), std::abs(max_m));
+    if (max_abs <= 0.0F) {
+      return data;
+    }
+
+    data.samples.resize(static_cast<size_t>(width * height));
+    for (int y = 0; y < height; ++y) {
+      const auto *row =
+          reinterpret_cast<const quint16 *>(image.constScanLine(y));
+      for (int x = 0; x < width; ++x) {
+        const float norm = static_cast<float>(row[x]) / 65535.0F;
+        const float height_m = min_m + norm * range;
+        data.samples[static_cast<size_t>(y * width + x)] =
+            height_m / max_abs;
+      }
+    }
+
+    data.width = width;
+    data.height = height;
+    data.min_m = min_m;
+    data.max_m = max_m;
+    data.ready = true;
+    return data;
+  }
+
   void init_label_layer(LabelLayer &layer, const QString &resource_path) {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QFile file(path);
@@ -1212,7 +1394,6 @@ void main() {
       return;
     }
 
-    // Extract labels from provinces
     const QJsonArray provinces = doc.object().value("provinces").toArray();
     for (const auto &prov_val : provinces) {
       const QJsonObject prov = prov_val.toObject();
@@ -1228,33 +1409,30 @@ void main() {
       label.position = QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
                                  static_cast<float>(label_uv.at(1).toDouble()));
 
-      // Determine importance based on province type
       const QString id = prov.value("id").toString().toLower();
       if (id.contains("core") || id.contains("capital")) {
         label.importance = 3;
-      } else if (id.contains("major") || prov.value("cities").toArray().size() > 2) {
+      } else if (id.contains("major") ||
+                 prov.value("cities").toArray().size() > 2) {
         label.importance = 2;
       } else {
         label.importance = 1;
       }
 
-      // Check if it's a sea region
       label.is_sea = id.contains("sea") || id.contains("mare") ||
                      id.contains("mediterranean");
 
       layer.labels.push_back(label);
     }
 
-    // Build label geometry
     build_label_geometry(layer);
   }
 
-  // Build geometry for all labels
   void build_label_geometry(LabelLayer &layer) {
     std::vector<float> verts;
 
     for (const auto &label : layer.labels) {
-      // Get appropriate style based on label type
+
       CampaignMapRender::LabelStyle style;
       if (label.is_sea) {
         style = CampaignMapRender::LabelStyles::sea_label();
@@ -1266,7 +1444,6 @@ void main() {
         style = CampaignMapRender::LabelStyles::city_label();
       }
 
-      // Generate quads for this label
       std::vector<float> label_verts = CampaignMapRender::generate_label_quads(
           label.position, label.text.toStdString(), style);
 
@@ -1289,18 +1466,16 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(), GL_STATIC_DRAW);
 
-    // Vertex format: pos(2) + uv(2) + local(2) = 6 floats
     const int stride = 6 * sizeof(float);
 
-    // Position (location 0)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(0));
-    // UV (location 1)
+
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(2 * sizeof(float)));
-    // Local (location 2)
+
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
                           reinterpret_cast<void *>(4 * sizeof(float)));
@@ -1311,30 +1486,22 @@ void main() {
     layer.ready = true;
   }
 
-  // Draw labels with typography styling
-  // Note: This uses a simplified fallback renderer with the line program.
-  // For full SDF text rendering with crisp edges at any zoom level,
-  // load campaign_label.vert/.frag shaders and a SDF font atlas texture.
-  // The infrastructure for this is ready in the shaders and LabelStyle configs.
   void draw_label_layer(const LabelLayer &layer, const QMatrix4x4 &mvp,
                         float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
       return;
     }
     if (layer.font_texture == 0) {
-      // Skip fallback solid quads to avoid placeholder rectangles.
+
       return;
     }
 
-    // Fallback: render label geometry with solid color
-    // Full SDF implementation would use m_label_program with font atlas
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
     m_line_program.setUniformValue("u_z", z_offset);
 
-    // Draw with sepia/brown color for cartographic look
     m_line_program.setUniformValue("u_color",
-        QVector4D(0.25F, 0.20F, 0.15F, 0.85F));
+                                   QVector4D(0.25F, 0.20F, 0.15F, 0.85F));
 
     glBindVertexArray(layer.vao);
     glDrawArrays(GL_TRIANGLES, 0, layer.total_vertices);
@@ -1386,6 +1553,50 @@ void main() {
     m_texture_program.release();
   }
 
+  void draw_terrain_layer(const TerrainMesh &mesh, const QMatrix4x4 &mvp) {
+    if (!mesh.ready || mesh.vao == 0 || mesh.vertex_count <= 0 ||
+        m_base_texture == nullptr || !m_terrain_program.isLinked()) {
+      return;
+    }
+
+    m_terrain_program.bind();
+    m_terrain_program.setUniformValue("u_mvp", mvp);
+    m_terrain_program.setUniformValue("u_height_scale",
+                                      mesh.height_scale *
+                                          m_terrain_height_scale);
+    m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
+    m_terrain_program.setUniformValue("u_light_direction",
+                                      QVector3D(0.35F, 0.85F, 0.40F));
+    m_terrain_program.setUniformValue("u_ambient_strength", 0.45F);
+    m_terrain_program.setUniformValue("u_hillshade_strength", 0.35F);
+    m_terrain_program.setUniformValue("u_ao_strength", 0.25F);
+    m_terrain_program.setUniformValue("u_use_hillshade", true);
+    m_terrain_program.setUniformValue("u_use_parchment", false);
+    m_terrain_program.setUniformValue("u_use_lighting", true);
+    m_terrain_program.setUniformValue("u_water_deep_color",
+                                      QVector3D(0.10F, 0.22F, 0.30F));
+    m_terrain_program.setUniformValue("u_water_shallow_color",
+                                      QVector3D(0.26F, 0.42F, 0.52F));
+    m_terrain_program.setUniformValue("u_lowland_tint",
+                                      QVector3D(0.96F, 0.92F, 0.86F));
+    m_terrain_program.setUniformValue("u_highland_tint",
+                                      QVector3D(0.82F, 0.74F, 0.64F));
+    m_terrain_program.setUniformValue("u_mountain_tint",
+                                      QVector3D(0.70F, 0.62F, 0.55F));
+    m_terrain_program.setUniformValue("u_elevation_scale", 1.2F);
+
+    m_terrain_program.setUniformValue("u_base_texture", 0);
+    glActiveTexture(GL_TEXTURE0);
+    m_base_texture->bind();
+
+    glBindVertexArray(mesh.vao);
+    glDrawArrays(GL_TRIANGLES, 0, mesh.vertex_count);
+    glBindVertexArray(0);
+
+    m_base_texture->release();
+    m_terrain_program.release();
+  }
+
   void draw_line_layer(const LineLayer &layer, const QMatrix4x4 &mvp,
                        float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
@@ -1396,8 +1607,7 @@ void main() {
     m_line_program.setUniformValue("u_mvp", mvp);
 
     if (layer.double_stroke) {
-      // Double-stroke rendering for cartographic coastline look
-      // Pass 1: Draw outer (dark) stroke - wider
+
       glLineWidth(layer.width * layer.outer_width_ratio);
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", layer.outer_color);
@@ -1407,7 +1617,6 @@ void main() {
         glDrawArrays(GL_LINE_STRIP, span.start, span.count);
       }
 
-      // Pass 2: Draw inner (light) stroke - narrower, on top
       glLineWidth(layer.width * layer.inner_width_ratio);
       m_line_program.setUniformValue("u_z", z_offset + 0.001F);
       m_line_program.setUniformValue("u_color", layer.inner_color);
@@ -1417,7 +1626,7 @@ void main() {
       }
       glBindVertexArray(0);
     } else {
-      // Standard single-stroke rendering
+
       glLineWidth(layer.width);
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", layer.color);
@@ -1512,8 +1721,8 @@ void main() {
     }
   }
 
-  void update_path_mesh(StrokeMesh &mesh,
-                        const std::vector<QVector2D> &points, float width) {
+  void update_path_mesh(StrokeMesh &mesh, const std::vector<QVector2D> &points,
+                        float width) {
     if (points.size() < 2) {
       mesh.ready = false;
       mesh.vertex_count = 0;
@@ -1524,7 +1733,6 @@ void main() {
       return;
     }
 
-    // Use improved stroke mesh generation with round caps for inked cartography look
     CampaignMapRender::StrokeMeshConfig config;
     config.width = width;
     config.start_cap = CampaignMapRender::CapStyle::Round;
@@ -1533,7 +1741,8 @@ void main() {
     config.cap_segments = 6;
     config.miter_params.max_miter_ratio = 3.0F;
 
-    std::vector<QVector2D> strip = CampaignMapRender::build_stroke_mesh(points, config);
+    std::vector<QVector2D> strip =
+        CampaignMapRender::build_stroke_mesh(points, config);
 
     if (strip.size() < 4) {
       mesh.ready = false;
@@ -1597,8 +1806,6 @@ void main() {
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
 
-    // Render all passes for each line in correct order for proper layering
-    // Pass 1: All borders (darkest, widest - underneath)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -1606,17 +1813,16 @@ void main() {
 
       auto &line = layer.lines[static_cast<size_t>(i)];
 
-      // Get cartographic style passes for inked route look
       const int age = max_mission - i;
-      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
-          1.0F, age);
+      auto passes =
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
+                                                                        age);
 
-      // Outer border pass (darkest)
       if (!passes.empty()) {
         const auto &border_pass = passes[0];
         float border_width_px = 6.0F * border_pass.width_multiplier;
         if (i != max_mission) {
-          border_width_px *= 0.85F; // Slightly thinner for older paths
+          border_width_px *= 0.85F;
         }
 
         m_line_program.setUniformValue("u_z", z_offset + border_pass.z_offset);
@@ -1627,7 +1833,6 @@ void main() {
       }
     }
 
-    // Pass 2: All highlights (golden middle layer)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -1636,10 +1841,10 @@ void main() {
       auto &line = layer.lines[static_cast<size_t>(i)];
 
       const int age = max_mission - i;
-      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
-          1.0F, age);
+      auto passes =
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
+                                                                        age);
 
-      // Golden highlight pass
       if (passes.size() > 2) {
         const auto &highlight_pass = passes[2];
         float highlight_width_px = 4.0F * highlight_pass.width_multiplier;
@@ -1647,7 +1852,8 @@ void main() {
           highlight_width_px *= 0.8F;
         }
 
-        m_line_program.setUniformValue("u_z", z_offset + highlight_pass.z_offset);
+        m_line_program.setUniformValue("u_z",
+                                       z_offset + highlight_pass.z_offset);
         update_path_mesh(line.highlight, line.points,
                          uv_width_for_pixels(highlight_width_px));
         m_line_program.setUniformValue("u_color", highlight_pass.color);
@@ -1655,7 +1861,6 @@ void main() {
       }
     }
 
-    // Pass 3: All cores (red center - on top)
     for (int i = 0; i <= max_mission; ++i) {
       if (i >= static_cast<int>(layer.lines.size())) {
         break;
@@ -1664,10 +1869,10 @@ void main() {
       auto &line = layer.lines[static_cast<size_t>(i)];
 
       const int age = max_mission - i;
-      auto passes = CampaignMapRender::CartographicStyles::get_inked_route_passes(
-          1.0F, age);
+      auto passes =
+          CampaignMapRender::CartographicStyles::get_inked_route_passes(1.0F,
+                                                                        age);
 
-      // Core red pass
       if (passes.size() > 3) {
         const auto &core_pass = passes[3];
         float core_width_px = 3.0F * core_pass.width_multiplier;
@@ -1686,7 +1891,6 @@ void main() {
     m_line_program.release();
   }
 
-  // Update mission badge position based on current path endpoint
   void update_mission_badge_position(MissionBadge &badge,
                                      const PathLayer &path_layer,
                                      int mission_index) {
@@ -1695,8 +1899,8 @@ void main() {
       return;
     }
 
-    const int clamped_mission = qBound(
-        0, mission_index, static_cast<int>(path_layer.lines.size()) - 1);
+    const int clamped_mission =
+        qBound(0, mission_index, static_cast<int>(path_layer.lines.size()) - 1);
     const auto &line = path_layer.lines[static_cast<size_t>(clamped_mission)];
 
     if (line.points.empty()) {
@@ -1704,38 +1908,31 @@ void main() {
       return;
     }
 
-    // Position badge at the endpoint of the current mission path
     badge.position = line.points.back();
     badge.ready = true;
   }
 
-  // Build badge geometry using shield shape from render utils
   void build_badge_geometry(MissionBadge &badge) {
     if (!badge.ready) {
       return;
     }
 
-    // Generate shield badge vertices
     std::vector<QVector2D> outline = CampaignMapRender::generate_shield_badge(
         QVector2D(0.0F, 0.0F), 1.0F, 16);
 
-    // Triangle fan requires at least 3 vertices for a valid triangle
     if (outline.size() < 3) {
       badge.ready = false;
       return;
     }
 
-    // Convert outline to triangle fan for filled rendering
     std::vector<float> verts;
-    verts.reserve((outline.size() + 1) * 4); // position + local coords
+    verts.reserve((outline.size() + 1) * 4);
 
-    // Center vertex
     verts.push_back(badge.position.x());
     verts.push_back(badge.position.y());
     verts.push_back(0.0F);
     verts.push_back(0.0F);
 
-    // Outline vertices scaled by badge size
     for (const auto &pt : outline) {
       verts.push_back(badge.position.x() + pt.x() * badge.size);
       verts.push_back(badge.position.y() + pt.y() * badge.size);
@@ -1754,11 +1951,10 @@ void main() {
                  static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
                  verts.data(), GL_DYNAMIC_DRAW);
 
-    // Position attribute (location 0)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           reinterpret_cast<void *>(0));
-    // Local coordinate attribute (location 1)
+
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float),
                           reinterpret_cast<void *>(2 * sizeof(float)));
@@ -1768,18 +1964,15 @@ void main() {
     badge.vertex_count = static_cast<int>(outline.size() + 1);
   }
 
-  // Draw mission badge as emblematic marker
   void draw_mission_badge(MissionBadge &badge, const QMatrix4x4 &mvp,
                           float z_offset) {
     if (!badge.ready) {
       return;
     }
 
-    // Update badge position for current mission
     update_mission_badge_position(badge, m_path_layer, m_current_mission);
     build_badge_geometry(badge);
 
-    // Triangle fan requires at least 3 vertices (including center) for valid rendering
     if (badge.vao == 0 || badge.vertex_count < 3) {
       return;
     }
@@ -1787,7 +1980,6 @@ void main() {
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
 
-    // Draw shadow first if enabled
     if (badge.show_shadow) {
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", badge.shadow_color);
@@ -1796,14 +1988,12 @@ void main() {
       glBindVertexArray(0);
     }
 
-    // Draw border (slightly larger)
     m_line_program.setUniformValue("u_z", z_offset + 0.001F);
     m_line_program.setUniformValue("u_color", badge.border_color);
     glBindVertexArray(badge.vao);
     glDrawArrays(GL_TRIANGLE_FAN, 0, badge.vertex_count);
     glBindVertexArray(0);
 
-    // Draw main fill with gradient effect (primary color)
     m_line_program.setUniformValue("u_z", z_offset + 0.002F);
     m_line_program.setUniformValue("u_color", badge.primary_color);
     glBindVertexArray(badge.vao);
@@ -1846,16 +2036,17 @@ void main() {
       }
       QVector4D color = span.color;
 
-      // Apply parchment texture effect to province fill
-      // This creates a faint ink/parchment mask feel
-      // The parchment pattern multiplies with the owner tint color
-      const float parchment_tint = 0.92F; // Slightly muted for aged paper look
+      const float parchment_tint = 0.92F;
       color.setX(color.x() * parchment_tint);
       color.setY(color.y() * parchment_tint);
-      color.setZ(color.z() * parchment_tint * 0.98F); // Slight warm tint
+      color.setZ(color.z() * parchment_tint * 0.98F);
+      if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
+        float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
+        color.setW(color.w() * fade);
+      }
 
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
-        // Animated hover highlight with pulsing brightness
+
         qint64 elapsed =
             QDateTime::currentMSecsSinceEpoch() - m_hover_start_time;
         float pulse_cycle = 1200.0F;
@@ -1956,7 +2147,6 @@ void main() {
       m_province_layer.vao = 0;
     }
 
-    // Cleanup mission badge
     if (m_mission_badge.vbo != 0) {
       glDeleteBuffers(1, &m_mission_badge.vbo);
       m_mission_badge.vbo = 0;
@@ -1967,7 +2157,6 @@ void main() {
     }
     m_mission_badge.ready = false;
 
-    // Cleanup cartographic symbols
     if (m_symbol_layer.vbo != 0) {
       glDeleteBuffers(1, &m_symbol_layer.vbo);
       m_symbol_layer.vbo = 0;
@@ -1979,7 +2168,6 @@ void main() {
     m_symbol_layer.symbols.clear();
     m_symbol_layer.ready = false;
 
-    // Cleanup terrain mesh
     if (m_terrain_mesh.vbo != 0) {
       glDeleteBuffers(1, &m_terrain_mesh.vbo);
       m_terrain_mesh.vbo = 0;
@@ -1990,14 +2178,12 @@ void main() {
     }
     m_terrain_mesh.ready = false;
 
-    // Cleanup hillshade texture
     if (m_hillshade.texture_id != 0) {
       glDeleteTextures(1, &m_hillshade.texture_id);
       m_hillshade.texture_id = 0;
     }
     m_hillshade.ready = false;
 
-    // Cleanup label layer
     if (m_label_layer.vbo != 0) {
       glDeleteBuffers(1, &m_label_layer.vbo);
       m_label_layer.vbo = 0;
@@ -2514,6 +2700,24 @@ void CampaignMapView::set_current_mission(int mission) {
   }
   m_current_mission = clamped;
   emit current_mission_changed();
+  update();
+}
+
+void CampaignMapView::set_terrain_height_scale(float scale) {
+  if (qFuzzyCompare(m_terrain_height_scale, scale)) {
+    return;
+  }
+  m_terrain_height_scale = scale;
+  emit terrain_height_scale_changed();
+  update();
+}
+
+void CampaignMapView::set_show_province_fills(bool show) {
+  if (m_show_province_fills == show) {
+    return;
+  }
+  m_show_province_fills = show;
+  emit show_province_fills_changed();
   update();
 }
 

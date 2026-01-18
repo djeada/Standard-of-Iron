@@ -21,7 +21,8 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 
 namespace {
 
-auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignore_entity,
+auto is_point_allowed(const QVector3D &pos,
+                      Engine::Core::EntityID ignore_entity,
                       float unit_radius = 0.5F) -> bool {
   auto &terrain_service = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::get_pathfinder();
