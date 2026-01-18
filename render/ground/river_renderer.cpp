@@ -213,8 +213,6 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         }
       }
 
-      // If no samples were in bounds, default to visible (consistent with
-      // riverbank renderer behavior when samples are empty)
       if (!any_sample_in_bounds) {
         max_visibility_state = 2;
       }

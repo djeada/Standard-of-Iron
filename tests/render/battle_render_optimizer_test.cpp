@@ -92,7 +92,8 @@ TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
   EXPECT_NE(frame1_result, frame2_result);
 }
 
-TEST_F(BattleRenderOptimizerTest, AnimationThrottlingBelowThresholdAlwaysUpdates) {
+TEST_F(BattleRenderOptimizerTest,
+       AnimationThrottlingBelowThresholdAlwaysUpdates) {
   auto &optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(20);
   optimizer.begin_frame();
