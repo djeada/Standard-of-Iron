@@ -1567,9 +1567,9 @@ void main() {
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
     m_terrain_program.setUniformValue("u_light_direction",
                                       QVector3D(0.35F, 0.85F, 0.40F));
-    m_terrain_program.setUniformValue("u_ambient_strength", 0.45F);
-    m_terrain_program.setUniformValue("u_hillshade_strength", 0.35F);
-    m_terrain_program.setUniformValue("u_ao_strength", 0.25F);
+    m_terrain_program.setUniformValue("u_ambient_strength", 0.35F);
+    m_terrain_program.setUniformValue("u_hillshade_strength", 0.55F);
+    m_terrain_program.setUniformValue("u_ao_strength", 0.35F);
     m_terrain_program.setUniformValue("u_use_hillshade", true);
     m_terrain_program.setUniformValue("u_use_parchment", false);
     m_terrain_program.setUniformValue("u_use_lighting", true);
@@ -2041,8 +2041,8 @@ void main() {
       color.setY(color.y() * parchment_tint);
       color.setZ(color.z() * parchment_tint * 0.98F);
       if (m_terrain_mesh.ready && m_terrain_height_scale > 0.01F) {
-        float fade = 1.0F / (1.0F + 3.0F * m_terrain_height_scale);
-        color.setW(color.w() * fade);
+        float fade = 1.0F / (1.0F + 8.0F * m_terrain_height_scale);
+        color.setW(color.w() * fade * 0.6F);
       }
 
       if (!m_hover_province_id.isEmpty() && span.id == m_hover_province_id) {
