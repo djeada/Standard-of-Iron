@@ -12,7 +12,7 @@ namespace Render {
 
 class ThreadAffinity {
 public:
-  static bool pinToCore(QThread *thread, int coreId) {
+  static bool pin_to_core(QThread *thread, int core_id) {
     if (!thread) {
       qWarning() << "ThreadAffinity: null thread";
       return false;
@@ -20,20 +20,20 @@ public:
 
 #ifdef __linux__
 
-    pthread_t nativeThread =
+    pthread_t native_thread =
         reinterpret_cast<pthread_t>(thread->currentThreadId());
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(coreId, &cpuset);
+    CPU_SET(core_id, &cpuset);
 
     int result =
-        pthread_setaffinity_np(nativeThread, sizeof(cpu_set_t), &cpuset);
+        pthread_setaffinity_np(native_thread, sizeof(cpu_set_t), &cpuset);
 
     if (result == 0) {
       return true;
     } else {
-      qWarning() << "ThreadAffinity: Failed to pin thread to core" << coreId
+      qWarning() << "ThreadAffinity: Failed to pin thread to core" << core_id
                  << "error:" << result;
       return false;
     }
@@ -42,11 +42,11 @@ public:
 #endif
   }
 
-  static bool pinCurrentThreadToCore(int coreId) {
+  static bool pin_current_thread_to_core(int core_id) {
 #ifdef __linux__
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    CPU_SET(coreId, &cpuset);
+    CPU_SET(core_id, &cpuset);
 
     int result =
         pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
@@ -59,29 +59,29 @@ public:
       return false;
     }
 #else
-    Q_UNUSED(coreId);
+    Q_UNUSED(core_id);
     return false;
 #endif
   }
 
-  static bool pinToCores(QThread *thread, const std::vector<int> &coreIds) {
-    if (!thread || coreIds.empty()) {
+  static bool pin_to_cores(QThread *thread, const std::vector<int> &core_ids) {
+    if (!thread || core_ids.empty()) {
       qWarning() << "ThreadAffinity: invalid parameters";
       return false;
     }
 
 #ifdef __linux__
-    pthread_t nativeThread =
+    pthread_t native_thread =
         reinterpret_cast<pthread_t>(thread->currentThreadId());
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
-    for (int coreId : coreIds) {
-      CPU_SET(coreId, &cpuset);
+    for (int core_id : core_ids) {
+      CPU_SET(core_id, &cpuset);
     }
 
     int result =
-        pthread_setaffinity_np(nativeThread, sizeof(cpu_set_t), &cpuset);
+        pthread_setaffinity_np(native_thread, sizeof(cpu_set_t), &cpuset);
 
     if (result == 0) {
       return true;
@@ -90,12 +90,12 @@ public:
       return false;
     }
 #else
-    Q_UNUSED(coreIds);
+    Q_UNUSED(core_ids);
     return false;
 #endif
   }
 
-  static int getCoreCount() {
+  static int get_core_count() {
 #ifdef __linux__
     return static_cast<int>(sysconf(_SC_NPROCESSORS_ONLN));
 #else
@@ -103,7 +103,7 @@ public:
 #endif
   }
 
-  static std::vector<int> getCurrentAffinity() {
+  static std::vector<int> get_current_affinity() {
     std::vector<int> cores;
 
 #ifdef __linux__
@@ -123,25 +123,25 @@ public:
     return cores;
   }
 
-  static bool resetAffinity(QThread *thread) {
+  static bool reset_affinity(QThread *thread) {
     if (!thread) {
       return false;
     }
 
 #ifdef __linux__
-    pthread_t nativeThread =
+    pthread_t native_thread =
         reinterpret_cast<pthread_t>(thread->currentThreadId());
 
     cpu_set_t cpuset;
     CPU_ZERO(&cpuset);
 
-    int coreCount = getCoreCount();
-    for (int i = 0; i < coreCount; ++i) {
+    int core_count = get_core_count();
+    for (int i = 0; i < core_count; ++i) {
       CPU_SET(i, &cpuset);
     }
 
     int result =
-        pthread_setaffinity_np(nativeThread, sizeof(cpu_set_t), &cpuset);
+        pthread_setaffinity_np(native_thread, sizeof(cpu_set_t), &cpuset);
     return result == 0;
 #else
     Q_UNUSED(thread);
@@ -150,29 +150,29 @@ public:
   }
 
   struct AffinityStrategy {
-    int renderCore{-1};
-    int mainCore{-1};
-    std::vector<int> workerCores;
+    int render_core{-1};
+    int main_core{-1};
+    std::vector<int> worker_cores;
 
-    static AffinityStrategy autoDetect() {
+    static AffinityStrategy auto_detect() {
       AffinityStrategy strategy;
-      int coreCount = getCoreCount();
+      int core_count = get_core_count();
 
-      if (coreCount >= 8) {
+      if (core_count >= 8) {
 
-        strategy.mainCore = 0;
-        strategy.renderCore = 1;
+        strategy.main_core = 0;
+        strategy.render_core = 1;
 
-        strategy.workerCores = {2, 3};
-      } else if (coreCount >= 4) {
+        strategy.worker_cores = {2, 3};
+      } else if (core_count >= 4) {
 
-        strategy.mainCore = 0;
-        strategy.renderCore = 2;
-        strategy.workerCores = {1, 3};
+        strategy.main_core = 0;
+        strategy.render_core = 2;
+        strategy.worker_cores = {1, 3};
       } else {
 
-        strategy.mainCore = -1;
-        strategy.renderCore = -1;
+        strategy.main_core = -1;
+        strategy.render_core = -1;
       }
 
       return strategy;

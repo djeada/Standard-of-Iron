@@ -17,7 +17,7 @@
 namespace Render {
 namespace Geom {
 
-static auto createArrowShaftMesh() -> std::unique_ptr<GL::Mesh> {
+static auto create_arrow_shaft_mesh() -> std::unique_ptr<GL::Mesh> {
   using GL::Vertex;
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
@@ -58,7 +58,7 @@ static auto createArrowShaftMesh() -> std::unique_ptr<GL::Mesh> {
   return std::make_unique<GL::Mesh>(verts, idx);
 }
 
-static auto createArrowTipMesh() -> std::unique_ptr<GL::Mesh> {
+static auto create_arrow_tip_mesh() -> std::unique_ptr<GL::Mesh> {
   using GL::Vertex;
   std::vector<GL::Vertex> verts;
   std::vector<unsigned int> idx;
@@ -95,12 +95,12 @@ static auto createArrowTipMesh() -> std::unique_ptr<GL::Mesh> {
 }
 
 auto Arrow::get_shaft() -> GL::Mesh * {
-  static std::unique_ptr<GL::Mesh> const mesh = createArrowShaftMesh();
+  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_shaft_mesh();
   return mesh.get();
 }
 
 auto Arrow::get_tip() -> GL::Mesh * {
-  static std::unique_ptr<GL::Mesh> const mesh = createArrowTipMesh();
+  static std::unique_ptr<GL::Mesh> const mesh = create_arrow_tip_mesh();
   return mesh.get();
 }
 

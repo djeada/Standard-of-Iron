@@ -66,10 +66,10 @@ void register_swordsman_style(const std::string &nation_id,
 }
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
+using Render::Geom::clamp_f;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
-using Render::Geom::easeInOutCubic;
+using Render::Geom::ease_in_out_cubic;
 using Render::Geom::lerp;
 using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
@@ -265,7 +265,7 @@ private:
     e.pommel_radius = 0.045F + (hash_01(seed ^ 0x19C3U) - 0.5F) * 0.006F;
 
     e.blade_ricasso =
-        clampf(0.14F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
+        clamp_f(0.14F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F, 0.10F, 0.20F);
     e.blade_taper_bias =
         clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
 

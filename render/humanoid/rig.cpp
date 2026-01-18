@@ -1419,7 +1419,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     }
 
     formation_calculator =
-        FormationCalculatorFactory::getCalculator(nation, category);
+        FormationCalculatorFactory::get_calculator(nation, category);
   }
 
   auto fast_random = [](uint32_t &state) -> float {
@@ -1704,13 +1704,13 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           return x;
         };
 
-        constexpr float kAmbientAnimDuration = 6.0F;
-        constexpr float kUnitCycleBase = 15.0F;
-        constexpr float kUnitCycleRange = 10.0F;
+        constexpr float k_ambient_anim_duration = 6.0F;
+        constexpr float k_unit_cycle_base = 15.0F;
+        constexpr float k_unit_cycle_range = 10.0F;
 
         float const unit_cycle_period =
-            kUnitCycleBase +
-            static_cast<float>(seed % 1000U) / (1000.0F / kUnitCycleRange);
+            k_unit_cycle_base +
+            static_cast<float>(seed % 1000U) / (1000.0F / k_unit_cycle_range);
         float const unit_time_in_cycle =
             std::fmod(anim.time, std::max(0.001F, unit_cycle_period));
         std::uint32_t const unit_cycle_number = static_cast<std::uint32_t>(
@@ -1766,11 +1766,11 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         AmbientIdleType const unit_idle_type =
             pick_idle_type(hash_u32(cycle_rng ^ 0x3C6EF372U));
 
-        if (slot_count > 0 && unit_time_in_cycle <= kAmbientAnimDuration) {
+        if (slot_count > 0 && unit_time_in_cycle <= k_ambient_anim_duration) {
           bool const is_active =
               (idx == idx_a) || (slot_count > 1 && idx == idx_b);
           if (is_active) {
-            float const phase = unit_time_in_cycle / kAmbientAnimDuration;
+            float const phase = unit_time_in_cycle / k_ambient_anim_duration;
             pose_ctrl.apply_ambient_idle_explicit(unit_idle_type, phase);
           }
         }

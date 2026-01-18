@@ -20,26 +20,26 @@ public:
   void mount_on_horse(const MountedAttachmentFrame &mount);
   void dismount();
 
-  void ridingIdle(const MountedAttachmentFrame &mount);
-  void ridingLeaning(const MountedAttachmentFrame &mount, float forward_lean,
+  void riding_idle(const MountedAttachmentFrame &mount);
+  void riding_leaning(const MountedAttachmentFrame &mount, float forward_lean,
                      float side_lean);
-  void ridingCharging(const MountedAttachmentFrame &mount, float intensity);
-  void ridingReining(const MountedAttachmentFrame &mount, float left_tension,
+  void riding_charging(const MountedAttachmentFrame &mount, float intensity);
+  void riding_reining(const MountedAttachmentFrame &mount, float left_tension,
                      float right_tension);
 
-  void ridingMeleeStrike(const MountedAttachmentFrame &mount,
+  void riding_melee_strike(const MountedAttachmentFrame &mount,
                          float attack_phase);
-  void ridingSpearThrust(const MountedAttachmentFrame &mount,
+  void riding_spear_thrust(const MountedAttachmentFrame &mount,
                          float attack_phase);
-  void ridingBowShot(const MountedAttachmentFrame &mount, float draw_phase);
-  void ridingShieldDefense(const MountedAttachmentFrame &mount, bool raised);
+  void riding_bow_shot(const MountedAttachmentFrame &mount, float draw_phase);
+  void riding_shield_defense(const MountedAttachmentFrame &mount, bool raised);
 
-  void holdReins(const MountedAttachmentFrame &mount, float left_slack,
+  void hold_reins(const MountedAttachmentFrame &mount, float left_slack,
                  float right_slack, float left_tension = 0.0F,
                  float right_tension = 0.0F);
-  void holdSpearMounted(const MountedAttachmentFrame &mount,
+  void hold_spear_mounted(const MountedAttachmentFrame &mount,
                         SpearGrip grip_style);
-  void holdBowMounted(const MountedAttachmentFrame &mount);
+  void hold_bow_mounted(const MountedAttachmentFrame &mount);
 
   enum class MountedSeatPose { Neutral, Forward, Defensive };
   enum class MountedWeaponPose {
@@ -84,7 +84,7 @@ private:
   const HumanoidAnimationContext &m_anim_ctx;
 
   void attach_feet_to_stirrups(const MountedAttachmentFrame &mount);
-  void positionPelvisOnSaddle(const MountedAttachmentFrame &mount);
+  void position_pelvis_on_saddle(const MountedAttachmentFrame &mount);
   void translate_upper_body(const QVector3D &delta);
   void calculate_riding_knees(const MountedAttachmentFrame &mount);
 
@@ -119,14 +119,14 @@ private:
   void apply_saddle_clearance(const MountedAttachmentFrame &mount,
                               const HorseDimensions &dims, float forward_bias,
                               float up_bias);
-  void stabilizeUpperBody(const MountedAttachmentFrame &mount,
+  void stabilize_upper_body(const MountedAttachmentFrame &mount,
                           const HorseDimensions &dims);
   void apply_torso_sculpt(const MountedAttachmentFrame &mount,
                           float compression, float twist, float shoulder_dip);
   void update_head_hierarchy(const MountedAttachmentFrame &mount,
                              float extra_forward_tilt, float extra_side_tilt,
                              std::string_view debug_label = "head_sync");
-  void holdReinsImpl(const MountedAttachmentFrame &mount, float left_slack,
+  void hold_reins_impl(const MountedAttachmentFrame &mount, float left_slack,
                      float right_slack, float left_tension, float right_tension,
                      bool apply_left, bool apply_right);
 

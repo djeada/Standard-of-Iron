@@ -21,7 +21,7 @@ namespace Render::GL::Carthage {
 namespace {
 
 using Render::Geom::clamp01;
-using Render::Geom::clampVec01;
+using Render::Geom::clamp_vec_01;
 using Render::Geom::cylinder_between;
 
 struct CarthagePalette {
@@ -41,9 +41,9 @@ struct CarthagePalette {
 
 inline auto make_palette(const QVector3D &team) -> CarthagePalette {
   CarthagePalette p;
-  p.team = clampVec01(team);
+  p.team = clamp_vec_01(team);
   p.team_trim =
-      clampVec01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
+      clamp_vec_01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
 }
 
@@ -375,7 +375,7 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
                      bar_y + bar_height * 0.35F, 0.0F),
            QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
-           clampVec01(highlight));
+           clamp_vec_01(highlight));
 
   draw_box(out, unit, white, p.model,
            QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
