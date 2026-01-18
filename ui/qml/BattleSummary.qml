@@ -495,12 +495,9 @@ Rectangle {
 
         }
 
-        Button {
+        StyledButton {
             anchors.horizontalCenter: parent.horizontalCenter
             text: qsTr("Return to Menu")
-            font.pointSize: 16
-            font.bold: true
-            padding: 12
             focusPolicy: Qt.NoFocus
             onClicked: {
                 summaryOverlay.returnToMainMenu();
