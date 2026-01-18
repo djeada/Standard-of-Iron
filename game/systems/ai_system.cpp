@@ -23,14 +23,16 @@ namespace Game::Systems {
 
 AISystem::AISystem() {
 
-  m_behavior_registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
+  m_behavior_registry.register_behavior(
+      std::make_unique<AI::RetreatBehavior>());
 
   m_behavior_registry.register_behavior(std::make_unique<AI::DefendBehavior>());
 
   m_behavior_registry.register_behavior(
       std::make_unique<AI::ProductionBehavior>());
 
-  m_behavior_registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
+  m_behavior_registry.register_behavior(
+      std::make_unique<AI::BuilderBehavior>());
 
   m_behavior_registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
 

@@ -172,8 +172,8 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
     for (const auto &enemy : snapshot.visible_enemies) {
       float const dist_sq =
-          distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, ctx.base_pos_x,
-                           ctx.base_pos_y, ctx.base_pos_z);
+          distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z,
+                           ctx.base_pos_x, ctx.base_pos_y, ctx.base_pos_z);
 
       if (dist_sq <= defend_radius_sq) {
         ctx.barracks_under_threat = true;

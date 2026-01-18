@@ -11,6 +11,8 @@
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/bridge.frag</file>
         <file>assets/shaders/bridge.vert</file>
+        <file>assets/shaders/campaign_terrain.frag</file>
+        <file>assets/shaders/campaign_terrain.vert</file>
         <file>assets/shaders/cylinder_instanced.frag</file>
         <file>assets/shaders/cylinder_instanced.vert</file>
         <file>assets/shaders/firecamp.frag</file>

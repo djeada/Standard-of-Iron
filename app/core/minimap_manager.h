@@ -38,8 +38,6 @@ public:
   void update_camera_viewport(const Render::GL::Camera *camera,
                               float screen_width, float screen_height);
 
-  /// Returns true if any minimap content has changed since last call.
-  /// Calling this clears the dirty flag.
   [[nodiscard]] bool consume_dirty_flag();
 
   [[nodiscard]] const QImage &get_image() const { return m_minimap_image; }
@@ -68,7 +66,6 @@ private:
 
   bool m_dirty = false;
 
-  // Track last state for change detection
   std::uint64_t m_last_unit_hash = 0;
   float m_last_camera_x = 0.0F;
   float m_last_camera_z = 0.0F;

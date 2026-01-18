@@ -102,7 +102,7 @@ inline auto claim_units(
       float const assignment_age = current_time - existing.assignment_time;
 
       bool const can_steal = (priority > existing.owner_priority) &&
-                            (assignment_age > min_lock_duration);
+                             (assignment_age > min_lock_duration);
 
       if (can_steal) {
 

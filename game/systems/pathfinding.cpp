@@ -592,7 +592,8 @@ auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
       if (left < size && !heap_less(m_open_heap[smallest], m_open_heap[left])) {
         smallest = left;
       }
-      if (right < size && !heap_less(m_open_heap[smallest], m_open_heap[right])) {
+      if (right < size &&
+          !heap_less(m_open_heap[smallest], m_open_heap[right])) {
         smallest = right;
       }
       if (smallest == index) {

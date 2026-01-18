@@ -38,8 +38,8 @@ Item {
             }
             if (!mission || !mission.completed)
                 all_completed = false;
-        }
 
+        }
         if (all_completed) {
             var last_index = current_campaign.missions.length - 1;
             selected_mission_index = last_index;
@@ -47,16 +47,12 @@ Item {
     }
 
     function ensure_mission_selection() {
-        if (!current_campaign || !current_campaign.missions ||
-            current_campaign.missions.length === 0) {
+        if (!current_campaign || !current_campaign.missions || current_campaign.missions.length === 0) {
             selected_mission_index = -1;
             return ;
         }
-
-        if (selected_mission_index >= 0 &&
-            selected_mission_index < current_campaign.missions.length) {
+        if (selected_mission_index >= 0 && selected_mission_index < current_campaign.missions.length)
             return ;
-        }
 
         select_next_unlocked_mission();
     }

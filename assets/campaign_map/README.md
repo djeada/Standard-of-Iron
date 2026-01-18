@@ -63,6 +63,8 @@ New shaders for enhanced rendering (in `assets/shaders/`):
 - `coastlines_uv.json` - Coastline geometry in UV space
 - `rivers_uv.json` - River geometry in UV space
 - `land_mesh.bin` - Binary land mesh data
+- `terrain_height.png` - 16-bit heightmap (ETOPO2022 60s bedrock) for terrain relief
+- `terrain_height.json` - Heightmap metadata (min/max meters, size, dataset)
 - `hannibal_path.json` - Hannibal's campaign route visualization with coastline-aware paths
   - Contains 8 progressive route lines, one per campaign mission
   - Routes follow North African coast west to Gibraltar before crossing to Spain

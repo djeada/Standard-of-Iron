@@ -849,7 +849,7 @@ void GameEngine::update(float dt) {
       m_minimap_manager->update_camera_viewport(
           m_camera.get(), static_cast<float>(m_viewport.width),
           static_cast<float>(m_viewport.height));
-      // Only emit if content actually changed
+
       if (m_minimap_manager->consume_dirty_flag()) {
         emit minimap_image_changed();
       }
@@ -969,7 +969,7 @@ void GameEngine::render_game_effects() {
     preview_waypoint = m_commandController->get_patrol_first_waypoint();
   }
   Render::GL::render_patrol_flags(m_renderer.get(), res, *m_world,
-                                preview_waypoint);
+                                  preview_waypoint);
 
   if (m_commandController && m_commandController->is_placing_formation()) {
     Render::GL::FormationPlacementInfo placement;

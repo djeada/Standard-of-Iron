@@ -16,8 +16,6 @@ constexpr float k_default_camera_yaw_deg = 225.0F;
 
 } // namespace Constants
 
-/// Stores precomputed sin/cos for the minimap rotation.
-/// Call set_yaw_degrees() to update when the camera yaw changes.
 class MinimapOrientation {
 public:
   static auto instance() -> MinimapOrientation & {
@@ -43,26 +41,17 @@ public:
   void clear_dirty() { m_dirty = false; }
 
 private:
-  // Compute initial cos/sin from the default yaw angle (225 degrees)
-  static constexpr float compute_default_cos() {
-    // cos(225°) = cos(180° + 45°) = -cos(45°) ≈ -0.70710678118
-    // Using numeric constant since constexpr std::cos isn't available in C++17
-    return -0.70710678118F;
-  }
-  static constexpr float compute_default_sin() {
-    // sin(225°) = sin(180° + 45°) = -sin(45°) ≈ -0.70710678118
-    return -0.70710678118F;
-  }
+  static constexpr float compute_default_cos() { return -0.70710678118F; }
+  static constexpr float compute_default_sin() { return -0.70710678118F; }
 
   MinimapOrientation() {
-    // Initialize from default, which sets m_cos and m_sin via set_yaw_degrees
+
     set_yaw_degrees(Constants::k_default_camera_yaw_deg);
     m_dirty = false;
   }
 
   float m_yaw_deg = Constants::k_default_camera_yaw_deg;
-  // Initial values are overwritten by constructor, but provide defaults
-  // matching 225° (the default camera yaw)
+
   float m_cos = compute_default_cos();
   float m_sin = compute_default_sin();
   bool m_dirty = false;

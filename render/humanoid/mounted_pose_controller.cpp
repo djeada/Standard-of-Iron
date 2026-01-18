@@ -67,13 +67,14 @@ void MountedPoseController::riding_idle(const MountedAttachmentFrame &mount) {
 }
 
 void MountedPoseController::riding_leaning(const MountedAttachmentFrame &mount,
-                                          float forward_lean, float side_lean) {
+                                           float forward_lean,
+                                           float side_lean) {
   mount_on_horse(mount);
   apply_lean(mount, forward_lean, side_lean);
 }
 
 void MountedPoseController::riding_charging(const MountedAttachmentFrame &mount,
-                                           float intensity) {
+                                            float intensity) {
   intensity = std::clamp(intensity, 0.0F, 1.0F);
 
   mount_on_horse(mount);
@@ -94,8 +95,8 @@ void MountedPoseController::riding_charging(const MountedAttachmentFrame &mount,
 }
 
 void MountedPoseController::riding_reining(const MountedAttachmentFrame &mount,
-                                          float left_tension,
-                                          float right_tension) {
+                                           float left_tension,
+                                           float right_tension) {
   left_tension = std::clamp(left_tension, 0.0F, 1.0F);
   right_tension = std::clamp(right_tension, 0.0F, 1.0F);
 
@@ -140,7 +141,7 @@ void MountedPoseController::riding_spear_thrust(
 }
 
 void MountedPoseController::riding_bow_shot(const MountedAttachmentFrame &mount,
-                                          float draw_phase) {
+                                            float draw_phase) {
   mount_on_horse(mount);
   apply_bow_draw(mount, draw_phase);
 }
@@ -152,11 +153,12 @@ void MountedPoseController::riding_shield_defense(
 }
 
 void MountedPoseController::hold_reins(const MountedAttachmentFrame &mount,
-                                      float left_slack, float right_slack,
-                                      float left_tension, float right_tension) {
+                                       float left_slack, float right_slack,
+                                       float left_tension,
+                                       float right_tension) {
   mount_on_horse(mount);
   hold_reins_impl(mount, left_slack, right_slack, left_tension, right_tension,
-                true, true);
+                  true, true);
 }
 
 void MountedPoseController::hold_spear_mounted(
@@ -267,8 +269,8 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
 
   if (apply_left_rein || apply_right_rein) {
     hold_reins_impl(mount, request.rein_slack_left, request.rein_slack_right,
-                  request.rein_tension_left, request.rein_tension_right,
-                  apply_left_rein, apply_right_rein);
+                    request.rein_tension_left, request.rein_tension_right,
+                    apply_left_rein, apply_right_rein);
   }
 
   switch (request.shield_pose) {
@@ -727,10 +729,10 @@ void MountedPoseController::apply_torso_sculpt(
 }
 
 void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame &mount,
-                                          float left_slack, float right_slack,
-                                          float left_tension,
-                                          float right_tension, bool apply_left,
-                                          bool apply_right) {
+                                            float left_slack, float right_slack,
+                                            float left_tension,
+                                            float right_tension,
+                                            bool apply_left, bool apply_right) {
   left_slack = std::clamp(left_slack, 0.0F, 1.0F);
   right_slack = std::clamp(right_slack, 0.0F, 1.0F);
   left_tension = std::clamp(left_tension, 0.0F, 1.0F);
