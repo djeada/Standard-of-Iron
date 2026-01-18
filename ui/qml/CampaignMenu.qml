@@ -236,10 +236,10 @@ Item {
         id: missionDetailPanel
 
         property var campaignData: null
-        property real mapOrbitYaw: 180
-        property real mapOrbitPitch: 90
-        property real mapOrbitDistance: 1.2
-        property var provinceLabels: []
+        property real map_orbit_yaw: 180
+        property real map_orbit_pitch: 90
+        property real map_orbit_distance: 1.2
+        property var province_labels: []
         property string hoverProvinceName: ""
         property string hoverProvinceOwner: ""
         property real hoverMouseX: 0
@@ -255,8 +255,8 @@ Item {
             "color": "#3a3a3a"
         }]
         property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
-        property int labelRefresh: 0
-        property int currentMissionIndex: 7
+        property int label_refresh: 0
+        property int current_mission_index: 7
 
         function loadProvinces() {
             loadProvincesFrom(0);
@@ -292,8 +292,8 @@ Item {
             if (!id)
                 return null;
 
-            for (var i = 0; i < provinceLabels.length; i++) {
-                var prov = provinceLabels[i];
+            for (var i = 0; i < province_labels.length; i++) {
+                var prov = province_labels[i];
                 if (prov && prov.id === id)
                     return prov;
 
@@ -330,8 +330,8 @@ Item {
                             loadProvincesFrom(index + 1);
                             return ;
                         }
-                        missionDetailPanel.provinceLabels = data.provinces;
-                        missionDetailPanel.labelRefresh += 1;
+                        missionDetailPanel.province_labels = data.provinces;
+                        missionDetailPanel.label_refresh += 1;
                     }
                 } catch (e) {
                     loadProvincesFrom(index + 1);
@@ -340,14 +340,14 @@ Item {
             xhr.send();
         }
 
-        onProvinceLabelsChanged: labelRefresh += 1
+        onProvince_labels_changed: label_refresh += 1
         Component.onCompleted: {
             refreshCampaigns();
             if (campaignMapLoader.item) {
-                var labels = campaignMapLoader.item.provinceLabels;
+                var labels = campaignMapLoader.item.province_labels;
                 if (labels && labels.length > 0) {
-                    missionDetailPanel.provinceLabels = labels;
-                    missionDetailPanel.labelRefresh += 1;
+                    missionDetailPanel.province_labels = labels;
+                    missionDetailPanel.label_refresh += 1;
                 } else {
                     loadProvinces();
                 }
@@ -356,9 +356,9 @@ Item {
             }
         }
         onCampaignDataChanged: {
-            mapOrbitYaw = 180;
-            mapOrbitPitch = 90;
-            mapOrbitDistance = 1.2;
+            map_orbit_yaw = 180;
+            map_orbit_pitch = 90;
+            map_orbit_distance = 1.2;
         }
         visible: false
         anchors.fill: parent
@@ -428,16 +428,16 @@ Item {
                                 id: campaignMap
 
                                 anchors.fill: parent
-                                orbitYaw: missionDetailPanel.mapOrbitYaw
-                                orbitPitch: missionDetailPanel.mapOrbitPitch
-                                orbitDistance: missionDetailPanel.mapOrbitDistance
-                                currentMission: missionDetailPanel.currentMissionIndex
-                                onOrbitYawChanged: missionDetailPanel.labelRefresh += 1
-                                onOrbitPitchChanged: missionDetailPanel.labelRefresh += 1
-                                onOrbitDistanceChanged: missionDetailPanel.labelRefresh += 1
-                                onCurrentMissionChanged: missionDetailPanel.labelRefresh += 1
-                                onWidthChanged: missionDetailPanel.labelRefresh += 1
-                                onHeightChanged: missionDetailPanel.labelRefresh += 1
+                                orbit_yaw: missionDetailPanel.map_orbit_yaw
+                                orbit_pitch: missionDetailPanel.map_orbit_pitch
+                                orbit_distance: missionDetailPanel.map_orbit_distance
+                                current_mission: missionDetailPanel.current_mission_index
+                                onOrbit_yaw_changed: missionDetailPanel.label_refresh += 1
+                                onOrbit_pitch_changed: missionDetailPanel.label_refresh += 1
+                                onOrbit_distance_changed: missionDetailPanel.label_refresh += 1
+                                onCurrent_mission_changed: missionDetailPanel.label_refresh += 1
+                                onWidthChanged: missionDetailPanel.label_refresh += 1
+                                onHeightChanged: missionDetailPanel.label_refresh += 1
                             }
 
                         }
@@ -463,8 +463,8 @@ Item {
                             var dy = mouse.y - lastY;
                             lastX = mouse.x;
                             lastY = mouse.y;
-                            missionDetailPanel.mapOrbitYaw += dx * 0.4;
-                            missionDetailPanel.mapOrbitPitch = Math.max(5, Math.min(90, missionDetailPanel.mapOrbitPitch + dy * 0.4));
+                            missionDetailPanel.map_orbit_yaw += dx * 0.4;
+                            missionDetailPanel.map_orbit_pitch = Math.max(5, Math.min(90, missionDetailPanel.map_orbit_pitch + dy * 0.4));
                         }
                         onMouseXChanged: function() {
                             if (!hoverEnabled || !campaignMapLoader.item)
@@ -472,9 +472,9 @@ Item {
 
                             missionDetailPanel.hoverMouseX = mouseX;
                             missionDetailPanel.hoverMouseY = mouseY;
-                            var info = campaignMapLoader.item.provinceInfoAtScreen(mouseX, mouseY);
+                            var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
                             var id = info && info.id ? info.id : "";
-                            campaignMapLoader.item.hoverProvinceId = id;
+                            campaignMapLoader.item.hover_province_id = id;
                             missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
                             missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
                         }
@@ -484,24 +484,24 @@ Item {
 
                             missionDetailPanel.hoverMouseX = mouseX;
                             missionDetailPanel.hoverMouseY = mouseY;
-                            var info = campaignMapLoader.item.provinceInfoAtScreen(mouseX, mouseY);
+                            var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
                             var id = info && info.id ? info.id : "";
-                            campaignMapLoader.item.hoverProvinceId = id;
+                            campaignMapLoader.item.hover_province_id = id;
                             missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
                             missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
                         }
                         onExited: {
                             if (campaignMapLoader.item)
-                                campaignMapLoader.item.hoverProvinceId = "";
+                                campaignMapLoader.item.hover_province_id = "";
 
                             missionDetailPanel.hoverProvinceName = "";
                             missionDetailPanel.hoverProvinceOwner = "";
                         }
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
-                            var nextDistance = missionDetailPanel.mapOrbitDistance * step;
+                            var nextDistance = missionDetailPanel.map_orbit_distance * step;
                             if (campaignMapLoader.item)
-                                missionDetailPanel.mapOrbitDistance = Math.min(campaignMapLoader.item.maxOrbitDistance, Math.max(campaignMapLoader.item.minOrbitDistance, nextDistance));
+                                missionDetailPanel.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, nextDistance));
 
                             wheel.accepted = true;
                         }
@@ -510,8 +510,8 @@ Item {
                     Item {
                         id: hannibalIcon
 
-                        property int _refresh: missionDetailPanel.labelRefresh
-                        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+                        property int _refresh: missionDetailPanel.label_refresh
+                        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
                         property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
                         property int _iconIndex: 0
 
@@ -617,22 +617,22 @@ Item {
                     }
 
                     Repeater {
-                        model: missionDetailPanel.provinceLabels
+                        model: missionDetailPanel.province_labels
 
                         delegate: Text {
                             property var _labelUv: missionDetailPanel.labelUvFor(modelData)
-                            property int _refresh: missionDetailPanel.labelRefresh
-                            property var _pos: (_labelUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(_labelUv[0], _labelUv[1]) : Qt.point(0, 0)
+                            property int _refresh: missionDetailPanel.label_refresh
+                            property var _pos: (_labelUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_labelUv[0], _labelUv[1]) : Qt.point(0, 0)
 
                             visible: false
                             text: modelData.name
-                            color: (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId === modelData.id) ? Theme.accent : Theme.textMain
+                            color: (campaignMapLoader.item && campaignMapLoader.item.hover_province_id === modelData.id) ? Theme.accent : Theme.textMain
                             font.pointSize: Theme.fontSizeSmall
                             font.bold: true
                             style: Text.Outline
                             styleColor: "#101010"
-                            opacity: (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId === modelData.id) ? 1 : 0.85
-                            z: (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId === modelData.id) ? 3 : 2
+                            opacity: (campaignMapLoader.item && campaignMapLoader.item.hover_province_id === modelData.id) ? 1 : 0.85
+                            z: (campaignMapLoader.item && campaignMapLoader.item.hover_province_id === modelData.id) ? 3 : 2
                             x: _pos.x - width / 2
                             y: _pos.y - height / 2
                         }
@@ -640,7 +640,7 @@ Item {
                     }
 
                     Repeater {
-                        model: missionDetailPanel.provinceLabels
+                        model: missionDetailPanel.province_labels
 
                         delegate: Repeater {
                             property var _cities: (modelData && modelData.cities) ? modelData.cities : []
@@ -650,8 +650,8 @@ Item {
                             delegate: Item {
                                 property var cityData: modelData
                                 property var _cityUv: cityData.uv && cityData.uv.length === 2 ? cityData.uv : null
-                                property int _refresh: missionDetailPanel.labelRefresh
-                                property var _pos: (_cityUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(_cityUv[0], _cityUv[1]) : Qt.point(0, 0)
+                                property int _refresh: missionDetailPanel.label_refresh
+                                property var _pos: (_cityUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_cityUv[0], _cityUv[1]) : Qt.point(0, 0)
 
                                 visible: _cityUv !== null && cityData.name && cityData.name.length > 0
                                 z: 4
@@ -689,7 +689,7 @@ Item {
                     Rectangle {
                         id: hoverTooltip
 
-                        visible: campaignMap.hoverProvinceId !== "" && missionDetailPanel.hoverProvinceName !== ""
+                        visible: campaignMap.hover_province_id !== "" && missionDetailPanel.hoverProvinceName !== ""
                         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseX + 12))
                         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseY + 12))
                         radius: 6
@@ -811,9 +811,9 @@ Item {
                                 }
                                 onContainsMouseChanged: {
                                     if (containsMouse && modelData.order_index !== undefined)
-                                        missionDetailPanel.currentMissionIndex = modelData.order_index;
+                                        missionDetailPanel.current_mission_index = modelData.order_index;
                                     else if (!containsMouse)
-                                        missionDetailPanel.currentMissionIndex = 7;
+                                        missionDetailPanel.current_mission_index = 7;
                                 }
                             }
 
