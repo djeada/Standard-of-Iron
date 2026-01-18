@@ -19,8 +19,8 @@
 namespace Render::GL {
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
-using Render::Geom::clampVec01;
+using Render::Geom::clamp_f;
+using Render::Geom::clamp_vec_01;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
@@ -133,7 +133,7 @@ static inline ArcherColors makeColors(const QVector3D &team_tint) {
   C.leather_dark = C.leather * 0.9F;
   C.wood = QVector3D(0.16F, 0.10F, 0.05F);
   C.metal = QVector3D(0.65F, 0.66F, 0.70F);
-  C.metalHead = clampVec01(C.metal * 1.1F);
+  C.metalHead = clamp_vec_01(C.metal * 1.1F);
   C.stringCol = QVector3D(0.30F, 0.30F, 0.32F);
   C.fletch = tint(0.9F);
   return C;
@@ -253,12 +253,12 @@ static inline void draw_legs(const DrawContext &p, ISubmitter &out,
   const float kneeJointR = thighR * 1.15F;
 
   auto makeKnee = [&](const QVector3D &hip, const QVector3D &foot,
-                      float outwardSign) {
+                      float outward_sign) {
     const float t = 0.38F;
     QVector3D knee = hip * (1.0F - t) + foot * t;
     knee.setY(HP::KNEE_Y + 0.03F);
     knee.setZ(knee.z() + 0.05F);
-    knee.setX(knee.x() + outwardSign * 0.06F);
+    knee.setX(knee.x() + outward_sign * 0.06F);
     return knee;
   };
 
@@ -330,8 +330,8 @@ static inline void drawBowAndArrow(const DrawContext &p, ISubmitter &out,
   QVector3D bot_end(P.bowX, P.bowBotY, grip.z());
 
   QVector3D nock(P.bowX,
-                 clampf(P.hand_l.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
-                 clampf(P.hand_l.z(), grip.z() - 0.30F, grip.z() + 0.30F));
+                 clamp_f(P.hand_l.y(), P.bowBotY + 0.05F, P.bowTopY - 0.05F),
+                 clamp_f(P.hand_l.z(), grip.z() - 0.30F, grip.z() + 0.30F));
 
   constexpr int k_bow_curve_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,

@@ -84,15 +84,15 @@ public:
 
   enum class UnitCategory { Infantry, Cavalry, BuilderConstruction };
 
-  static auto getCalculator(Nation nation, UnitCategory category)
+  static auto get_calculator(Nation nation, UnitCategory category)
       -> const IFormationCalculator *;
 
 private:
-  static RomanInfantryFormation s_romanInfantry;
-  static RomanCavalryFormation s_romanCavalry;
-  static CarthageInfantryFormation s_carthageInfantry;
-  static CarthageCavalryFormation s_carthageCavalry;
-  static BuilderCircleFormation s_builderCircle;
+  static RomanInfantryFormation s_roman_infantry;
+  static RomanCavalryFormation s_roman_cavalry;
+  static CarthageInfantryFormation s_carthage_infantry;
+  static CarthageCavalryFormation s_carthage_cavalry;
+  static BuilderCircleFormation s_builder_circle;
 };
 
 } // namespace Render::GL

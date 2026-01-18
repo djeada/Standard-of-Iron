@@ -16,7 +16,7 @@ struct FormationPlacementInfo {
   bool active = false;
 };
 
-void renderFormationArrow(Renderer *renderer, ResourceManager *resources,
+void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
                           const FormationPlacementInfo &placement);
 
 } // namespace Render::GL

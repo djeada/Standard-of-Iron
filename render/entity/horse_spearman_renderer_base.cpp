@@ -88,17 +88,17 @@ void HorseSpearmanRendererBase::apply_riding_animation(
 
   if (anim.is_attacking && anim.is_melee) {
     if (is_charging) {
-      mounted_controller.ridingCharging(mount, 1.0F);
-      mounted_controller.holdSpearMounted(mount, SpearGrip::COUCHED);
+      mounted_controller.riding_charging(mount, 1.0F);
+      mounted_controller.hold_spear_mounted(mount, SpearGrip::COUCHED);
 
       pose.neck_base -= mount.seat_forward * 0.03F;
     } else {
       float const attack_phase =
           std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-      mounted_controller.ridingSpearThrust(mount, attack_phase);
+      mounted_controller.riding_spear_thrust(mount, attack_phase);
     }
   } else {
-    mounted_controller.ridingIdle(mount);
+    mounted_controller.riding_idle(mount);
   }
 }
 

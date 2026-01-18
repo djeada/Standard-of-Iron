@@ -10,18 +10,18 @@ inline auto clamp01(float x) -> float {
   return std::max(0.0F, std::min(1.0F, x));
 }
 
-inline auto clampf(float x, float minVal, float maxVal) -> float {
+inline auto clamp_f(float x, float minVal, float maxVal) -> float {
   return std::max(minVal, std::min(maxVal, x));
 }
 
-inline auto clampVec01(const QVector3D &c) -> QVector3D {
+inline auto clamp_vec_01(const QVector3D &c) -> QVector3D {
   return {clamp01(c.x()), clamp01(c.y()), clamp01(c.z())};
 }
 
-inline auto clampVec(const QVector3D &c, float minVal,
+inline auto clamp_vec(const QVector3D &c, float minVal,
                      float maxVal) -> QVector3D {
-  return {clampf(c.x(), minVal, maxVal), clampf(c.y(), minVal, maxVal),
-          clampf(c.z(), minVal, maxVal)};
+  return {clamp_f(c.x(), minVal, maxVal), clamp_f(c.y(), minVal, maxVal),
+          clamp_f(c.z(), minVal, maxVal)};
 }
 
 constexpr auto lerp(float a, float b, float t) noexcept -> float {
@@ -33,7 +33,7 @@ inline auto lerp(const QVector3D &a, const QVector3D &b,
   return a * (1.0F - t) + b * t;
 }
 
-constexpr auto easeInOutCubic(float t) noexcept -> float {
+constexpr auto ease_in_out_cubic(float t) noexcept -> float {
   const float clamped = (t < 0.0F) ? 0.0F : ((t > 1.0F) ? 1.0F : t);
   return clamped < 0.5F ? 4.0F * clamped * clamped * clamped
                         : 1.0F - std::pow(-2.0F * clamped + 2.0F, 3.0F) / 2.0F;

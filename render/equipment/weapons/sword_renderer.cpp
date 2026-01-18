@@ -15,10 +15,10 @@
 namespace Render::GL {
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
+using Render::Geom::clamp_f;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
-using Render::Geom::easeInOutCubic;
+using Render::Geom::ease_in_out_cubic;
 using Render::Geom::lerp;
 using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
@@ -60,10 +60,10 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   if (is_attacking) {
     if (attack_phase < 0.18F) {
-      float const t = easeInOutCubic(attack_phase / 0.18F);
+      float const t = ease_in_out_cubic(attack_phase / 0.18F);
       sword_dir = nlerp(upish, upish, t);
     } else if (attack_phase < 0.32F) {
-      float const t = easeInOutCubic((attack_phase - 0.18F) / 0.14F);
+      float const t = ease_in_out_cubic((attack_phase - 0.18F) / 0.14F);
       sword_dir = nlerp(upish, midish, t * 0.35F);
     } else if (attack_phase < 0.52F) {
       float t = (attack_phase - 0.32F) / 0.20F;
@@ -76,7 +76,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
         sword_dir = nlerp(midish, downish, u);
       }
     } else if (attack_phase < 0.72F) {
-      float const t = easeInOutCubic((attack_phase - 0.52F) / 0.20F);
+      float const t = ease_in_out_cubic((attack_phase - 0.52F) / 0.20F);
       sword_dir = nlerp(downish, midish, t);
     } else {
       float const t = smoothstep(0.72F, 1.0F, attack_phase);
@@ -125,7 +125,7 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   float const base_w = m_config.sword_width;
   float blade_thickness = base_w * 0.15F;
 
-  float const ricasso_len = clampf(m_config.blade_ricasso, 0.10F, l * 0.30F);
+  float const ricasso_len = clamp_f(m_config.blade_ricasso, 0.10F, l * 0.30F);
   QVector3D const ricasso_end = blade_base + sword_dir * ricasso_len;
 
   float const mid_w = base_w * 0.95F;

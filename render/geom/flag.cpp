@@ -8,12 +8,12 @@ namespace {
 const QMatrix4x4 k_identity_matrix;
 }
 
-auto Flag::create(float world_x, float world_z, const QVector3D &flagColor,
-                  const QVector3D &poleColor,
+auto Flag::create(float world_x, float world_z, const QVector3D &flag_color,
+                  const QVector3D &pole_color,
                   float scale) -> Flag::FlagMatrices {
   FlagMatrices result;
-  result.pennantColor = flagColor;
-  result.poleColor = poleColor;
+  result.pennant_color = flag_color;
+  result.pole_color = pole_color;
 
   result.pole = k_identity_matrix;
   result.pole.translate(world_x, (0.15F + 0.35F) * scale, world_z);

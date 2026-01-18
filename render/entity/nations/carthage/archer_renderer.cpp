@@ -73,7 +73,7 @@ void register_archer_style(const std::string &nation_id,
 }
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
+using Render::Geom::clamp_f;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
@@ -172,7 +172,7 @@ public:
           std::fmod(anim_ctx.attack_phase * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
 
       if (anim.is_melee) {
-        controller.meleeStrike(attack_phase);
+        controller.melee_strike(attack_phase);
       } else {
         controller.aim_bow(attack_phase);
       }
@@ -246,7 +246,7 @@ public:
       BowRenderConfig bow_config;
       bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
       bow_config.metal_color =
-          Render::Geom::clampVec01(v.palette.metal * 1.15F);
+          Render::Geom::clamp_vec_01(v.palette.metal * 1.15F);
       bow_config.fletching_color = fletch;
       bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
       bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;

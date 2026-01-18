@@ -15,7 +15,7 @@
 namespace Render::GL::Carthage {
 namespace {
 
-using Render::Geom::clampVec01;
+using Render::Geom::clamp_vec_01;
 using Render::Geom::cylinder_between;
 
 struct TowerPalette {
@@ -33,7 +33,7 @@ struct TowerPalette {
 
 inline auto make_palette(const QVector3D &team) -> TowerPalette {
   TowerPalette p;
-  p.team = clampVec01(team);
+  p.team = clamp_vec_01(team);
   return p;
 }
 

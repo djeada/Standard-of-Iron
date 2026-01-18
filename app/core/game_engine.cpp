@@ -964,7 +964,7 @@ void GameEngine::render_game_effects() {
   if (m_commandController && m_commandController->has_patrol_first_waypoint()) {
     preview_waypoint = m_commandController->get_patrol_first_waypoint();
   }
-  Render::GL::renderPatrolFlags(m_renderer.get(), res, *m_world,
+  Render::GL::render_patrol_flags(m_renderer.get(), res, *m_world,
                                 preview_waypoint);
 
   if (m_commandController && m_commandController->is_placing_formation()) {
@@ -974,7 +974,7 @@ void GameEngine::render_game_effects() {
     placement.angle_degrees =
         m_commandController->get_formation_placement_angle();
     placement.active = true;
-    Render::GL::renderFormationArrow(m_renderer.get(), res, placement);
+    Render::GL::render_formation_arrow(m_renderer.get(), res, placement);
   }
 }
 

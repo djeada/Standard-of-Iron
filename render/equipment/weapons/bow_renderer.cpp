@@ -16,7 +16,7 @@
 
 namespace Render::GL {
 
-using Render::Geom::clampf;
+using Render::Geom::clamp_f;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
 
@@ -64,8 +64,8 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const string_hand = frames.hand_l.origin;
   QVector3D const nock(
       bow_plane_x,
-      clampf(string_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
-      clampf(string_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
+      clamp_f(string_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
+      clamp_f(string_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
 
   constexpr int k_bowstring_segments = 22;
   auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,

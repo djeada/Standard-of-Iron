@@ -13,7 +13,7 @@ class ResourceManager;
 
 namespace Render::GL {
 
-void renderPatrolFlags(
+void render_patrol_flags(
     Renderer *renderer, ResourceManager *resources, Engine::Core::World &world,
     const std::optional<QVector3D> &preview_waypoint = std::nullopt);
 

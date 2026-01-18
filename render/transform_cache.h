@@ -10,30 +10,30 @@ template <typename KeyType = std::uint64_t> class TransformCache {
 public:
   struct CachedTransform {
     QMatrix4x4 transform;
-    std::uint32_t lastUpdateFrame{0};
+    std::uint32_t last_update_frame{0};
     bool dirty{true};
   };
 
-  void markDirty(KeyType key) {
+  void mark_dirty(KeyType key) {
     auto it = m_cache.find(key);
     if (it != m_cache.end()) {
       it->second.dirty = true;
     }
   }
 
-  void markAllDirty() {
+  void mark_all_dirty() {
     for (auto &entry : m_cache) {
       entry.second.dirty = true;
     }
   }
 
-  const QMatrix4x4 *get(KeyType key, std::uint32_t currentFrame) const {
+  const QMatrix4x4 *get(KeyType key, std::uint32_t current_frame) const {
     auto it = m_cache.find(key);
     if (it == m_cache.end() || it->second.dirty) {
       return nullptr;
     }
 
-    if (currentFrame - it->second.lastUpdateFrame > m_maxFrameAge) {
+    if (current_frame - it->second.last_update_frame > m_max_frame_age) {
       return nullptr;
     }
 
@@ -41,10 +41,10 @@ public:
   }
 
   void set(KeyType key, const QMatrix4x4 &transform,
-           std::uint32_t currentFrame) {
+           std::uint32_t current_frame) {
     auto &entry = m_cache[key];
     entry.transform = transform;
-    entry.lastUpdateFrame = currentFrame;
+    entry.last_update_frame = current_frame;
     entry.dirty = false;
   }
 
@@ -53,30 +53,30 @@ public:
   void clear() { m_cache.clear(); }
 
   struct Stats {
-    std::size_t totalEntries{0};
-    std::size_t dirtyEntries{0};
-    std::size_t validEntries{0};
+    std::size_t total_entries{0};
+    std::size_t dirty_entries{0};
+    std::size_t valid_entries{0};
   };
 
-  Stats getStats() const {
+  Stats get_stats() const {
     Stats stats;
-    stats.totalEntries = m_cache.size();
+    stats.total_entries = m_cache.size();
     for (const auto &entry : m_cache) {
       if (entry.second.dirty) {
-        ++stats.dirtyEntries;
+        ++stats.dirty_entries;
       } else {
-        ++stats.validEntries;
+        ++stats.valid_entries;
       }
     }
     return stats;
   }
 
-  void setMaxFrameAge(std::uint32_t frames) { m_maxFrameAge = frames; }
+  void set_max_frame_age(std::uint32_t frames) { m_max_frame_age = frames; }
 
-  void cleanup(std::uint32_t currentFrame) {
+  void cleanup(std::uint32_t current_frame) {
     auto it = m_cache.begin();
     while (it != m_cache.end()) {
-      if (currentFrame - it->second.lastUpdateFrame > m_maxFrameAge * 2) {
+      if (current_frame - it->second.last_update_frame > m_max_frame_age * 2) {
         it = m_cache.erase(it);
       } else {
         ++it;
@@ -86,7 +86,7 @@ public:
 
 private:
   std::unordered_map<KeyType, CachedTransform> m_cache;
-  std::uint32_t m_maxFrameAge{300};
+  std::uint32_t m_max_frame_age{300};
 };
 
 } // namespace Render
