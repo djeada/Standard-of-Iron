@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Window 2.15
+import StandardOfIron 1.0
 
 ApplicationWindow {
     id: mainWindow
@@ -16,6 +17,7 @@ ApplicationWindow {
     visibility: Window.FullScreen
     visible: true
     title: qsTr("Standard of Iron - RTS Game")
+    color: Theme.bg
 
     GameView {
         id: gameViewItem

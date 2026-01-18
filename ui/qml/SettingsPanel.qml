@@ -55,8 +55,9 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                Button {
+                StyledButton {
                     text: qsTr("Close")
+                    buttonStyle: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -279,7 +280,7 @@ Item {
                                 font.pointSize: Theme.fontSizeMedium
                             }
 
-                            ComboBox {
+                            StyledComboBox {
                                 id: graphicsQualityComboBox
 
                                 Layout.fillWidth: true
@@ -288,20 +289,6 @@ Item {
                                 onActivated: function(index) {
                                     if (typeof graphicsSettings !== 'undefined')
                                         graphicsSettings.quality_level = index;
-
-                                }
-
-                                delegate: ItemDelegate {
-                                    width: graphicsQualityComboBox.width
-                                    highlighted: graphicsQualityComboBox.highlightedIndex === index
-
-                                    contentItem: Text {
-                                        text: modelData
-                                        color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeMedium
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
 
                                 }
 
@@ -357,7 +344,7 @@ Item {
                                 font.pointSize: Theme.fontSizeMedium
                             }
 
-                            ComboBox {
+                            StyledComboBox {
                                 id: languageComboBox
 
                                 Layout.fillWidth: true
@@ -380,19 +367,8 @@ Item {
                                         languageManager.setLanguage(currentText);
 
                                 }
-
-                                delegate: ItemDelegate {
-                                    width: languageComboBox.width
-                                    highlighted: languageComboBox.highlightedIndex === index
-
-                                    contentItem: Text {
-                                        text: typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(modelData) : modelData
-                                        color: Theme.textMain
-                                        font.pointSize: Theme.fontSizeMedium
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-
+                                delegateText: function(data) {
+                                    return typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(data) : data;
                                 }
 
                             }

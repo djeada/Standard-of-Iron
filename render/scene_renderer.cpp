@@ -5,6 +5,7 @@
 #include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
 #include "../game/units/troop_config.h"
+#include "battle_render_optimizer.h"
 #include "draw_queue.h"
 #include "elephant/rig.h"
 #include "entity/registry.h"
@@ -44,6 +45,8 @@ namespace {
 const QVector3D k_axis_x(1.0F, 0.0F, 0.0F);
 const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
+constexpr uint32_t k_animation_cache_cleanup_mask = 0xFF;
+constexpr uint32_t k_animation_cache_max_age = 240;
 } // namespace
 
 Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
@@ -74,6 +77,9 @@ void Renderer::begin_frame() {
   reset_elephant_render_stats();
 
   Render::VisibilityBudgetTracker::instance().reset_frame();
+  auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  battle_optimizer.begin_frame();
+  prune_animation_time_cache(battle_optimizer.frame_counter());
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
@@ -121,6 +127,37 @@ void Renderer::set_viewport(int width, int height) {
                               m_camera->get_far());
   }
 }
+
+auto Renderer::resolve_animation_time(uint32_t entity_id, bool update,
+                                      float current_time,
+                                      uint32_t frame) -> float {
+  if (entity_id == 0U) {
+    return current_time;
+  }
+
+  auto &entry = m_animation_time_cache[entity_id];
+  if (update || entry.last_frame == 0U) {
+    entry.time = current_time;
+  }
+  entry.last_frame = frame;
+  return entry.time;
+}
+
+void Renderer::prune_animation_time_cache(uint32_t frame) {
+  if ((frame & k_animation_cache_cleanup_mask) != 0U) {
+    return;
+  }
+
+  for (auto it = m_animation_time_cache.begin();
+       it != m_animation_time_cache.end();) {
+    if (frame - it->second.last_frame > k_animation_cache_max_age) {
+      it = m_animation_time_cache.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *texture, float alpha, int material_id) {
   if (mesh == nullptr) {
@@ -626,8 +663,15 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
   }
 
+  auto &battleOptimizer = Render::BattleRenderOptimizer::instance();
+  battleOptimizer.set_visible_unit_count(visibleUnitCount);
+  uint32_t optimizer_frame = battleOptimizer.frame_counter();
+
   float batching_ratio =
       gfxSettings.calculate_batching_ratio(visibleUnitCount, cameraHeight);
+
+  float batching_boost = battleOptimizer.get_batching_boost();
+  batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
   PrimitiveBatcher batcher;
   if (batching_ratio > 0.0F) {
@@ -697,6 +741,22 @@ void Renderer::render_world(Engine::Core::World *world) {
         (m_selected_ids.find(entity->get_id()) != m_selected_ids.end());
     bool const is_hovered = (entity->get_id() == m_hovered_entity_id);
 
+    bool is_moving = false;
+    if (unit_comp != nullptr) {
+      auto *move_comp =
+          entity->get_component<Engine::Core::MovementComponent>();
+      is_moving = (move_comp != nullptr) &&
+                  (move_comp->has_target ||
+                   (std::abs(move_comp->vx) > 0.01F) ||
+                   (std::abs(move_comp->vz) > 0.01F));
+    }
+
+    bool should_update_temporal = true;
+    if (unit_comp != nullptr) {
+      should_update_temporal = battleOptimizer.should_render_unit(
+          entity->get_id(), is_moving, is_selected, is_hovered);
+    }
+
     QMatrix4x4 model_matrix;
     model_matrix.translate(transform->position.x, transform->position.y,
                            transform->position.z);
@@ -720,10 +780,29 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         ctx.selected = is_selected;
         ctx.hovered = is_hovered;
-        ctx.animation_time = m_accumulated_time;
+        bool should_update_animation = true;
+        if (unit_comp != nullptr) {
+          if (should_update_temporal) {
+            should_update_animation = battleOptimizer.should_update_animation(
+                entity->get_id(), distanceToCamera, is_selected);
+          } else {
+            should_update_animation = false;
+          }
+        }
+
+        float animation_time = m_accumulated_time;
+        if (unit_comp != nullptr) {
+          animation_time = resolve_animation_time(
+              entity->get_id(), should_update_animation, m_accumulated_time,
+              optimizer_frame);
+        }
+
+        ctx.animation_time = animation_time;
         ctx.renderer_id = renderer_key;
         ctx.backend = m_backend.get();
         ctx.camera = m_camera;
+        ctx.animation_throttled =
+            (unit_comp != nullptr) ? !should_update_animation : false;
 
         bool useBatching = (batching_ratio > 0.0F) &&
                            (distanceToCamera > fullShaderMaxDistance) &&
