@@ -63,11 +63,12 @@ _codeql_build_dir/
 _codeql_detected_source_root
 
 # Generated campaign map assets (pipeline outputs)
-assets/campaign_map/
+assets/campaign_map/*
 # But keep validation and documentation files
 !assets/campaign_map/valid_provinces.json
 !assets/campaign_map/README.md
 !assets/campaign_map/hannibal_path.json
+!assets/campaign_map/campaign_state.json
 
 # Local virtualenvs
 venv/

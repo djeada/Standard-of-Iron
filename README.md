@@ -136,6 +136,13 @@ make build
 make run
 ```
 
+### Map Pipeline Assets
+
+- `make run` invokes the campaign map pipeline when any required outputs are missing (base textures, mesh, rivers/coastlines, provinces, and Hannibal path).
+- The pipeline downloads Natural Earth data and installs Python dependencies, so it needs network access the first time it runs.
+- Generated outputs live in `assets/campaign_map/` and are gitignored; tracked defaults include `campaign_state.json` and `hannibal_path.json`.
+- To force a rebuild: `make run-map-pipeline map_pipeline_rebuild=1`
+
 ### Running Tests
 
 ```bash
