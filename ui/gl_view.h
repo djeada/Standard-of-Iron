@@ -12,12 +12,12 @@ public:
 
   [[nodiscard]] auto createRenderer() const -> Renderer * override;
 
-  Q_PROPERTY(QObject *engine READ engine WRITE setEngine NOTIFY engineChanged)
+  Q_PROPERTY(QObject *engine READ engine WRITE set_engine NOTIFY engine_changed)
   [[nodiscard]] auto engine() const -> QObject *;
-  void setEngine(QObject *eng);
+  void set_engine(QObject *eng);
 
 signals:
-  void engineChanged();
+  void engine_changed();
 
 private:
   QPointer<GameEngine> m_engine;

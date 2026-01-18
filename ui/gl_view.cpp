@@ -41,12 +41,12 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
 
 auto GLView::engine() const -> QObject * { return m_engine; }
 
-void GLView::setEngine(QObject *eng) {
+void GLView::set_engine(QObject *eng) {
   if (m_engine == eng) {
     return;
   }
   m_engine = qobject_cast<GameEngine *>(eng);
-  emit engineChanged();
+  emit engine_changed();
   update();
 }
 
