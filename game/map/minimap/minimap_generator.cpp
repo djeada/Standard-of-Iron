@@ -91,10 +91,11 @@ auto MinimapGenerator::world_to_pixel(float world_x, float world_z,
                                       const GridDefinition &grid) const
     -> std::pair<float, float> {
 
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  const auto &orient = MinimapOrientation::instance();
+  const float rotated_x =
+      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z =
+      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
@@ -221,6 +222,17 @@ void MinimapGenerator::render_terrain_features(QImage &image,
           painter.drawEllipse(QPointF(epx, epy), radius, radius);
         }
       }
+    } else if (feature.type == TerrainType::Forest) {
+      draw_forest_symbol(painter, px, py, pixel_width, pixel_depth);
+    } else if (feature.type == TerrainType::River) {
+      // Render terrain-type rivers as elongated water areas
+      constexpr QColor WATER_DARK{55, 95, 130};
+      constexpr QColor WATER_MAIN{75, 120, 160};
+      painter.setBrush(WATER_MAIN);
+      painter.setPen(QPen(WATER_DARK, 1.0));
+      const float half_w = pixel_width * 0.5F;
+      const float half_h = pixel_depth * 0.5F;
+      painter.drawEllipse(QPointF(px, py), half_w, half_h);
     }
   }
 }
@@ -294,6 +306,59 @@ void MinimapGenerator::draw_hill_symbol(QPainter &painter, float cx, float cy,
   painter.drawPath(hill_path);
 }
 
+void MinimapGenerator::draw_forest_symbol(QPainter &painter, float cx, float cy,
+                                          float width, float height) {
+  // Hash seeds for tree position jitter (arbitrary values for pseudo-random
+  // variation)
+  constexpr int JITTER_SEED_X = 123;
+  constexpr int JITTER_SEED_Y = 456;
+
+  // Draw multiple small tree-like symbols to represent a forest
+  const float tree_size = std::min(width, height) * 0.35F;
+  const float spacing = tree_size * 1.2F;
+
+  // Calculate how many trees fit in the area (at least 2x2 grid)
+  const int cols = std::max(2, static_cast<int>(width / spacing));
+  const int rows = std::max(2, static_cast<int>(height / spacing));
+
+  const float start_x = cx - (cols - 1) * spacing * 0.5F;
+  const float start_y = cy - (rows - 1) * spacing * 0.5F;
+
+  painter.setBrush(Palette::FOREST_BASE);
+  painter.setPen(QPen(Palette::INK_LIGHT, 0.5));
+
+  for (int row = 0; row < rows; ++row) {
+    for (int col = 0; col < cols; ++col) {
+      // Add slight randomness to tree positions for natural look
+      const float jitter_x =
+          (hash_coords(col + static_cast<int>(cx), row + static_cast<int>(cy),
+                       JITTER_SEED_X) *
+           0.3F) *
+          tree_size;
+      const float jitter_y =
+          (hash_coords(row + static_cast<int>(cx), col + static_cast<int>(cy),
+                       JITTER_SEED_Y) *
+           0.3F) *
+          tree_size;
+
+      const float tx = start_x + col * spacing + jitter_x;
+      const float ty = start_y + row * spacing + jitter_y;
+
+      // Draw a simple tree symbol (triangle with small trunk)
+      const float tree_h = tree_size * 0.8F;
+      const float tree_w = tree_size * 0.5F;
+
+      QPainterPath tree_path;
+      tree_path.moveTo(tx, ty - tree_h);
+      tree_path.lineTo(tx - tree_w, ty);
+      tree_path.lineTo(tx + tree_w, ty);
+      tree_path.closeSubpath();
+
+      painter.drawPath(tree_path);
+    }
+  }
+}
+
 void MinimapGenerator::render_rivers(QImage &image,
                                      const MapDefinition &map_def) {
   if (map_def.rivers.empty()) {
@@ -342,6 +407,10 @@ void MinimapGenerator::draw_river_segment(QPainter &painter, float x1, float y1,
     river_path.lineTo(x2, y2);
   }
 
+  // Use SourceOver composition mode to avoid RGB split artifacts
+  painter.setCompositionMode(QPainter::CompositionMode_SourceOver);
+
+  // Draw outline first (darker border)
   QPen outline_pen(Palette::WATER_DARK);
   outline_pen.setWidthF(width * 1.4F);
   outline_pen.setCapStyle(Qt::RoundCap);
@@ -350,6 +419,7 @@ void MinimapGenerator::draw_river_segment(QPainter &painter, float x1, float y1,
   painter.setBrush(Qt::NoBrush);
   painter.drawPath(river_path);
 
+  // Draw main river body
   QPen main_pen(Palette::WATER_MAIN);
   main_pen.setWidthF(width);
   main_pen.setCapStyle(Qt::RoundCap);
@@ -357,10 +427,12 @@ void MinimapGenerator::draw_river_segment(QPainter &painter, float x1, float y1,
   painter.setPen(main_pen);
   painter.drawPath(river_path);
 
+  // Draw highlight only on wider rivers
   if (width > 2.0F) {
     QPen highlight_pen(Palette::WATER_LIGHT);
     highlight_pen.setWidthF(width * 0.4F);
     highlight_pen.setCapStyle(Qt::RoundCap);
+    highlight_pen.setJoinStyle(Qt::RoundJoin);
     painter.setPen(highlight_pen);
     painter.drawPath(river_path);
   }
