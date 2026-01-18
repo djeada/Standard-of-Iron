@@ -78,7 +78,6 @@
 #include "game/map/minimap/minimap_utils.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/mission_loader.h"
-#include "utils/resource_utils.h"
 #include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -145,6 +144,7 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
+#include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -209,8 +209,8 @@ auto build_condition_list(
   return list;
 }
 
-auto build_unit_setup_list(
-    const std::vector<Game::Mission::UnitSetup> &units) -> QVariantList {
+auto build_unit_setup_list(const std::vector<Game::Mission::UnitSetup> &units)
+    -> QVariantList {
   QVariantList list;
   for (const auto &unit : units) {
     QVariantMap entry;
@@ -223,9 +223,8 @@ auto build_unit_setup_list(
   return list;
 }
 
-auto build_building_setup_list(
-    const std::vector<Game::Mission::BuildingSetup> &buildings)
-    -> QVariantList {
+auto build_building_setup_list(const std::vector<Game::Mission::BuildingSetup>
+                                   &buildings) -> QVariantList {
   QVariantList list;
   for (const auto &building : buildings) {
     QVariantMap entry;
@@ -279,8 +278,7 @@ auto build_mission_definition_map(
   result["player_setup"] = build_player_setup_map(mission.player_setup);
   result["victory_conditions"] =
       build_condition_list(mission.victory_conditions);
-  result["defeat_conditions"] =
-      build_condition_list(mission.defeat_conditions);
+  result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
   result["optional_objectives"] =
       build_condition_list(mission.optional_objectives);
 
@@ -1662,15 +1660,17 @@ QVariantMap GameEngine::get_current_mission_objectives() const {
   result["title"] = mission.title;
   result["summary"] = mission.summary;
 
-  result["victory_conditions"] = build_condition_list(mission.victory_conditions);
+  result["victory_conditions"] =
+      build_condition_list(mission.victory_conditions);
   result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
-  result["optional_objectives"] = build_condition_list(mission.optional_objectives);
+  result["optional_objectives"] =
+      build_condition_list(mission.optional_objectives);
 
   return result;
 }
 
-QVariantMap GameEngine::get_mission_definition(
-    const QString &mission_id) const {
+QVariantMap
+GameEngine::get_mission_definition(const QString &mission_id) const {
   QVariantMap result;
   if (mission_id.isEmpty()) {
     return result;

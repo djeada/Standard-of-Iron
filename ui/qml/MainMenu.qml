@@ -109,289 +109,291 @@ Item {
                 columnSpacing: 18
                 columns: parent.width > 900 ? 2 : 1
 
-            ColumnLayout {
-                Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
-                spacing: Theme.spacingLarge
-
                 ColumnLayout {
-                    spacing: Theme.spacingSmall
+                    Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
+                    spacing: Theme.spacingLarge
 
-                    Label {
-                        text: qsTr("STANDARD OF IRON")
-                        color: Theme.textMain
-                        font.pointSize: Theme.fontSizeHero
-                        font.bold: true
-                        horizontalAlignment: Text.AlignLeft
-                        Layout.fillWidth: true
-                        elide: Label.ElideRight
+                    ColumnLayout {
+                        spacing: Theme.spacingSmall
+
+                        Label {
+                            text: qsTr("STANDARD OF IRON")
+                            color: Theme.textMain
+                            font.pointSize: Theme.fontSizeHero
+                            font.bold: true
+                            horizontalAlignment: Text.AlignLeft
+                            Layout.fillWidth: true
+                            elide: Label.ElideRight
+                        }
+
+                        Label {
+                            text: qsTr("A tiny but ambitious RTS")
+                            color: Theme.textSub
+                            font.pointSize: Theme.fontSizeMedium
+                            horizontalAlignment: Text.AlignLeft
+                            Layout.fillWidth: true
+                            elide: Label.ElideRight
+                        }
+
                     }
 
-                    Label {
-                        text: qsTr("A tiny but ambitious RTS")
-                        color: Theme.textSub
-                        font.pointSize: Theme.fontSizeMedium
-                        horizontalAlignment: Text.AlignLeft
-                        Layout.fillWidth: true
-                        elide: Label.ElideRight
+                    ListModel {
+                        id: menuModel
+
+                        ListElement {
+                            idStr: "skirmish"
+                            title: QT_TR_NOOP("Play — Skirmish")
+                            subtitle: QT_TR_NOOP("Select a map and start")
+                            requiresGame: false
+                        }
+
+                        ListElement {
+                            idStr: "campaign"
+                            title: QT_TR_NOOP("Play — Campaign")
+                            subtitle: QT_TR_NOOP("Story missions and battles")
+                            requiresGame: false
+                        }
+
+                        ListElement {
+                            idStr: "objectives"
+                            title: QT_TR_NOOP("Objectives")
+                            subtitle: QT_TR_NOOP("View current mission objectives")
+                            requiresGame: true
+                        }
+
+                        ListElement {
+                            idStr: "save"
+                            title: QT_TR_NOOP("Save Game")
+                            subtitle: QT_TR_NOOP("Save your current progress")
+                            requiresGame: true
+                        }
+
+                        ListElement {
+                            idStr: "load"
+                            title: QT_TR_NOOP("Load Game")
+                            subtitle: QT_TR_NOOP("Resume a previous game")
+                            requiresGame: false
+                        }
+
+                        ListElement {
+                            idStr: "settings"
+                            title: QT_TR_NOOP("Settings")
+                            subtitle: QT_TR_NOOP("Adjust graphics & controls")
+                            requiresGame: false
+                        }
+
+                        ListElement {
+                            idStr: "exit"
+                            title: QT_TR_NOOP("Exit")
+                            subtitle: QT_TR_NOOP("Quit the game")
+                            requiresGame: false
+                        }
+
                     }
 
-                }
+                    Repeater {
+                        model: menuModel
 
-                ListModel {
-                    id: menuModel
+                        delegate: Item {
+                            id: menuItem
 
-                    ListElement {
-                        idStr: "skirmish"
-                        title: QT_TR_NOOP("Play — Skirmish")
-                        subtitle: QT_TR_NOOP("Select a map and start")
-                        requiresGame: false
-                    }
+                            property int idx: index
+                            property bool itemEnabled: !model.requiresGame || root.gameStarted
 
-                    ListElement {
-                        idStr: "campaign"
-                        title: QT_TR_NOOP("Play — Campaign")
-                        subtitle: QT_TR_NOOP("Story missions and battles")
-                        requiresGame: false
-                    }
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: container.width > 900 ? 64 : 56
 
-                    ListElement {
-                        idStr: "objectives"
-                        title: QT_TR_NOOP("Objectives")
-                        subtitle: QT_TR_NOOP("View current mission objectives")
-                        requiresGame: true
-                    }
-
-                    ListElement {
-                        idStr: "save"
-                        title: QT_TR_NOOP("Save Game")
-                        subtitle: QT_TR_NOOP("Save your current progress")
-                        requiresGame: true
-                    }
-
-                    ListElement {
-                        idStr: "load"
-                        title: QT_TR_NOOP("Load Game")
-                        subtitle: QT_TR_NOOP("Resume a previous game")
-                        requiresGame: false
-                    }
-
-                    ListElement {
-                        idStr: "settings"
-                        title: QT_TR_NOOP("Settings")
-                        subtitle: QT_TR_NOOP("Adjust graphics & controls")
-                        requiresGame: false
-                    }
-
-                    ListElement {
-                        idStr: "exit"
-                        title: QT_TR_NOOP("Exit")
-                        subtitle: QT_TR_NOOP("Quit the game")
-                        requiresGame: false
-                    }
-
-                }
-
-                Repeater {
-                    model: menuModel
-
-                    delegate: Item {
-                        id: menuItem
-
-                        property int idx: index
-                        property bool itemEnabled: !model.requiresGame || root.gameStarted
-
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: container.width > 900 ? 64 : 56
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: Theme.radiusLarge
-                            clip: true
-                            color: container.selectedIndex === idx ? Theme.selectedBg : menuItemMouse.containsPress ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
-                            border.width: 1
-                            border.color: container.selectedIndex === idx ? Theme.selectedBr : Theme.cardBorder
-                            opacity: itemEnabled ? 1 : 0.4
-
-                            RowLayout {
+                            Rectangle {
                                 anchors.fill: parent
-                                anchors.margins: Theme.spacingSmall
-                                spacing: Theme.spacingMedium
+                                radius: Theme.radiusLarge
+                                clip: true
+                                color: container.selectedIndex === idx ? Theme.selectedBg : menuItemMouse.containsPress ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
+                                border.width: 1
+                                border.color: container.selectedIndex === idx ? Theme.selectedBr : Theme.cardBorder
+                                opacity: itemEnabled ? 1 : 0.4
 
-                                Item {
-                                    Layout.fillWidth: true
-                                    Layout.preferredWidth: 1
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.margins: Theme.spacingSmall
+                                    spacing: Theme.spacingMedium
+
+                                    Item {
+                                        Layout.fillWidth: true
+                                        Layout.preferredWidth: 1
+                                    }
+
+                                    ColumnLayout {
+                                        Layout.fillWidth: true
+                                        spacing: Theme.spacingTiny
+
+                                        Text {
+                                            text: qsTr(model.title)
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textBright) : Theme.textDim
+                                            font.pointSize: Theme.fontSizeLarge
+                                            font.bold: container.selectedIndex === idx
+                                        }
+
+                                        Text {
+                                            text: qsTr(model.subtitle)
+                                            Layout.fillWidth: true
+                                            elide: Text.ElideRight
+                                            color: itemEnabled ? (container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite) : Theme.textHint
+                                            font.pointSize: Theme.fontSizeSmall
+                                        }
+
+                                    }
+
+                                    Text {
+                                        text: "›"
+                                        font.pointSize: Theme.fontSizeTitle
+                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textDim
+                                        opacity: itemEnabled ? 1 : 0.3
+                                    }
+
                                 }
 
-                                ColumnLayout {
+                                Behavior on color {
+                                    ColorAnimation {
+                                        duration: Theme.animNormal
+                                    }
+
+                                }
+
+                                Behavior on border.color {
+                                    ColorAnimation {
+                                        duration: Theme.animNormal
+                                    }
+
+                                }
+
+                            }
+
+                            MouseArea {
+                                id: menuItemMouse
+
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                acceptedButtons: Qt.LeftButton
+                                cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                onEntered: {
+                                    if (itemEnabled)
+                                        container.selectedIndex = idx;
+
+                                }
+                                onClicked: {
+                                    if (!itemEnabled)
+                                        return ;
+
+                                    if (model.idStr === "skirmish")
+                                        root.openSkirmish();
+                                    else if (model.idStr === "campaign")
+                                        root.openCampaign();
+                                    else if (model.idStr === "objectives")
+                                        root.openObjectives();
+                                    else if (model.idStr === "save")
+                                        root.saveGame();
+                                    else if (model.idStr === "load")
+                                        root.loadSave();
+                                    else if (model.idStr === "settings")
+                                        root.openSettings();
+                                    else if (model.idStr === "exit")
+                                        root.exitRequested();
+                                }
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                Rectangle {
+                    color: Qt.rgba(0, 0, 0, 0)
+                    radius: Theme.radiusMedium
+                    Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
+
+                    ColumnLayout {
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingSmall
+                        spacing: Theme.spacingMedium
+
+                        Rectangle {
+                            id: promo
+
+                            color: Theme.cardBase
+                            radius: Theme.radiusLarge
+                            border.color: Theme.border
+                            border.width: 1
+                            Layout.preferredHeight: 260
+                            clip: true
+
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingMedium
+                                spacing: Theme.spacingSmall
+
+                                Label {
+                                    text: qsTr("Featured")
+                                    color: Theme.accent
+                                    font.pointSize: Theme.fontSizeMedium
                                     Layout.fillWidth: true
-                                    spacing: Theme.spacingTiny
+                                    elide: Label.ElideRight
+                                }
 
-                                    Text {
-                                        text: qsTr(model.title)
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textBright) : Theme.textDim
-                                        font.pointSize: Theme.fontSizeLarge
-                                        font.bold: container.selectedIndex === idx
-                                    }
-
-                                    Text {
-                                        text: qsTr(model.subtitle)
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite) : Theme.textHint
-                                        font.pointSize: Theme.fontSizeSmall
-                                    }
-
+                                Label {
+                                    text: qsTr("Skirmish Mode")
+                                    color: Theme.textMain
+                                    font.pointSize: Theme.fontSizeTitle
+                                    font.bold: true
+                                    Layout.fillWidth: true
+                                    elide: Label.ElideRight
                                 }
 
                                 Text {
-                                    text: "›"
-                                    font.pointSize: Theme.fontSizeTitle
-                                    color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textDim
-                                    opacity: itemEnabled ? 1 : 0.3
-                                }
-
-                            }
-
-                            Behavior on color {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
-                                }
-
-                            }
-
-                            Behavior on border.color {
-                                ColorAnimation {
-                                    duration: Theme.animNormal
+                                    text: qsTr("Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.")
+                                    color: Theme.textSubLite
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 3
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
                                 }
 
                             }
 
                         }
 
-                        MouseArea {
-                            id: menuItemMouse
+                        Rectangle {
+                            color: Theme.cardBase
+                            radius: Theme.radiusLarge
+                            border.color: Theme.border
+                            border.width: 1
+                            Layout.preferredHeight: 120
+                            clip: true
 
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            acceptedButtons: Qt.LeftButton
-                            cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                            onEntered: {
-                                if (itemEnabled)
-                                    container.selectedIndex = idx;
+                            ColumnLayout {
+                                anchors.fill: parent
+                                anchors.margins: Theme.spacingSmall
+                                spacing: Theme.spacingSmall
 
-                            }
-                            onClicked: {
-                                if (!itemEnabled)
-                                    return ;
+                                Label {
+                                    text: qsTr("Tips")
+                                    color: Theme.accent
+                                    font.pointSize: Theme.fontSizeMedium
+                                    Layout.fillWidth: true
+                                    elide: Label.ElideRight
+                                }
 
-                                if (model.idStr === "skirmish")
-                                    root.openSkirmish();
-                                else if (model.idStr === "campaign")
-                                    root.openCampaign();
-                                else if (model.idStr === "objectives")
-                                    root.openObjectives();
-                                else if (model.idStr === "save")
-                                    root.saveGame();
-                                else if (model.idStr === "load")
-                                    root.loadSave();
-                                else if (model.idStr === "settings")
-                                    root.openSettings();
-                                else if (model.idStr === "exit")
-                                    root.exitRequested();
-                            }
-                        }
+                                Text {
+                                    text: qsTr("Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.")
+                                    color: Theme.textSubLite
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 3
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
 
-                    }
-
-                }
-
-            }
-
-            Rectangle {
-                color: Qt.rgba(0, 0, 0, 0)
-                radius: Theme.radiusMedium
-                Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    spacing: Theme.spacingMedium
-
-                    Rectangle {
-                        id: promo
-
-                        color: Theme.cardBase
-                        radius: Theme.radiusLarge
-                        border.color: Theme.border
-                        border.width: 1
-                        Layout.preferredHeight: 260
-                        clip: true
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: Theme.spacingMedium
-                            spacing: Theme.spacingSmall
-
-                            Label {
-                                text: qsTr("Featured")
-                                color: Theme.accent
-                                font.pointSize: Theme.fontSizeMedium
-                                Layout.fillWidth: true
-                                elide: Label.ElideRight
-                            }
-
-                            Label {
-                                text: qsTr("Skirmish Mode")
-                                color: Theme.textMain
-                                font.pointSize: Theme.fontSizeTitle
-                                font.bold: true
-                                Layout.fillWidth: true
-                                elide: Label.ElideRight
-                            }
-
-                            Text {
-                                text: qsTr("Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.")
-                                color: Theme.textSubLite
-                                wrapMode: Text.WordWrap
-                                maximumLineCount: 3
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                        }
-
-                    }
-
-                    Rectangle {
-                        color: Theme.cardBase
-                        radius: Theme.radiusLarge
-                        border.color: Theme.border
-                        border.width: 1
-                        Layout.preferredHeight: 120
-                        clip: true
-
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: Theme.spacingSmall
-                            spacing: Theme.spacingSmall
-
-                            Label {
-                                text: qsTr("Tips")
-                                color: Theme.accent
-                                font.pointSize: Theme.fontSizeMedium
-                                Layout.fillWidth: true
-                                elide: Label.ElideRight
-                            }
-
-                            Text {
-                                text: qsTr("Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.")
-                                color: Theme.textSubLite
-                                wrapMode: Text.WordWrap
-                                maximumLineCount: 3
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
                             }
 
                         }
@@ -399,8 +401,6 @@ Item {
                     }
 
                 }
-
-            }
 
             }
 
@@ -431,6 +431,7 @@ Item {
                 font.pointSize: Theme.fontSizeSmall
                 elide: Label.ElideRight
             }
+
         }
 
     }

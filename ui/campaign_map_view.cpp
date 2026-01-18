@@ -1185,8 +1185,7 @@ void main() {
           const float h = sample_height_raw(u, v);
           float height = (h >= 0.0F) ? (h * land_scale) : 0.0F;
 
-          const float edge_dist =
-              qMin(qMin(u, 1.0F - u), qMin(v, 1.0F - v));
+          const float edge_dist = qMin(qMin(u, 1.0F - u), qMin(v, 1.0F - v));
           if (edge_dist < edge_margin) {
             height *= qMax(0.0F, edge_dist / edge_margin);
           }
@@ -1209,9 +1208,8 @@ void main() {
           return normal;
         };
 
-        vertices.reserve(
-            static_cast<size_t>(grid - 1) * static_cast<size_t>(grid - 1) * 6 *
-            8);
+        vertices.reserve(static_cast<size_t>(grid - 1) *
+                         static_cast<size_t>(grid - 1) * 6 * 8);
 
         auto add_vertex = [&](float u, float v, float h, const QVector3D &n) {
           vertices.push_back(u);
@@ -1381,8 +1379,8 @@ void main() {
     const int width = image.width();
     const int height = image.height();
     if (width <= 1 || height <= 1) {
-      qWarning() << "CampaignMapRenderer: Heightmap dimensions invalid"
-                 << width << height;
+      qWarning() << "CampaignMapRenderer: Heightmap dimensions invalid" << width
+                 << height;
       return data;
     }
 
@@ -1399,8 +1397,7 @@ void main() {
       for (int x = 0; x < width; ++x) {
         const float norm = static_cast<float>(row[x]) / 65535.0F;
         const float height_m = min_m + norm * range;
-        data.samples[static_cast<size_t>(y * width + x)] =
-            height_m / max_abs;
+        data.samples[static_cast<size_t>(y * width + x)] = height_m / max_abs;
       }
     }
 
@@ -1593,9 +1590,8 @@ void main() {
 
     m_terrain_program.bind();
     m_terrain_program.setUniformValue("u_mvp", mvp);
-    m_terrain_program.setUniformValue("u_height_scale",
-                                      mesh.height_scale *
-                                          m_terrain_height_scale);
+    m_terrain_program.setUniformValue(
+        "u_height_scale", mesh.height_scale * m_terrain_height_scale);
     m_terrain_program.setUniformValue("u_z_base", mesh.z_base);
     m_terrain_program.setUniformValue("u_light_direction",
                                       QVector3D(0.35F, 0.85F, 0.40F));
