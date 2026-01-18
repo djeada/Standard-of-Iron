@@ -44,7 +44,7 @@ auto build_mvp_matrix(float width, float height, float yaw_deg, float pitch_deg,
   const float yaw_rad = qDegreesToRadians(yaw_deg);
   const float pitch_rad = qDegreesToRadians(pitch_deg);
   const float clamped_distance =
-      qMax(CampaignMapView::kMinOrbitDistance, distance);
+      qMax(CampaignMapView::k_min_orbit_distance, distance);
 
   const float cos_pitch = std::cos(pitch_rad);
   const float sin_pitch = std::sin(pitch_rad);
@@ -195,20 +195,20 @@ public:
     QMatrix4x4 mvp;
     compute_mvp(mvp);
 
-    draw_textured_layer(m_waterTexture, m_quadVao, 6, mvp, 1.0F, -0.01F);
-    if (m_landVertexCount > 0) {
-      draw_textured_layer(m_baseTexture, m_landVao, m_landVertexCount, mvp,
+    draw_textured_layer(m_water_texture, m_quad_vao, 6, mvp, 1.0F, -0.01F);
+    if (m_land_vertex_count > 0) {
+      draw_textured_layer(m_base_texture, m_land_vao, m_land_vertex_count, mvp,
                           1.0F, 0.0F);
     } else {
-      draw_textured_layer(m_baseTexture, m_quadVao, 6, mvp, 1.0F, 0.0F);
+      draw_textured_layer(m_base_texture, m_quad_vao, 6, mvp, 1.0F, 0.0F);
     }
 
     glDisable(GL_DEPTH_TEST);
-    draw_province_layer(m_provinceLayer, mvp, 0.002F);
-    draw_line_layer(m_provinceBorderLayer, mvp, 0.0045F);
-    draw_line_layer(m_coastLayer, mvp, 0.004F);
-    draw_line_layer(m_riverLayer, mvp, 0.003F);
-    draw_progressive_path_layers(m_pathLayer, mvp, 0.006F);
+    draw_province_layer(m_province_layer, mvp, 0.002F);
+    draw_line_layer(m_province_border_layer, mvp, 0.0045F);
+    draw_line_layer(m_coast_layer, mvp, 0.004F);
+    draw_line_layer(m_river_layer, mvp, 0.003F);
+    draw_progressive_path_layers(m_path_layer, mvp, 0.006F);
 
     if (!m_hover_province_id.isEmpty()) {
       qint64 now = QDateTime::currentMSecsSinceEpoch();
@@ -234,24 +234,24 @@ public:
       return;
     }
 
-    m_orbit_yaw = view->orbitYaw();
-    m_orbit_pitch = view->orbitPitch();
-    m_orbit_distance = view->orbitDistance();
-    m_pan_u = view->panU();
-    m_pan_v = view->panV();
+    m_orbit_yaw = view->orbit_yaw();
+    m_orbit_pitch = view->orbit_pitch();
+    m_orbit_distance = view->orbit_distance();
+    m_pan_u = view->pan_u();
+    m_pan_v = view->pan_v();
 
-    QString new_hover_id = view->hoverProvinceId();
+    QString new_hover_id = view->hover_province_id();
     if (m_hover_province_id != new_hover_id) {
       m_hover_start_time = QDateTime::currentMSecsSinceEpoch();
       m_hover_province_id = new_hover_id;
     }
 
-    m_current_mission = view->currentMission();
+    m_current_mission = view->current_mission();
 
-    if (m_province_state_version != view->provinceStateVersion() &&
-        m_provinceLayer.ready) {
-      apply_province_overrides(view->provinceOverrides());
-      m_province_state_version = view->provinceStateVersion();
+    if (m_province_state_version != view->province_state_version() &&
+        m_province_layer.ready) {
+      apply_province_overrides(view->province_overrides());
+      m_province_state_version = view->province_state_version();
     }
   }
 
@@ -259,24 +259,24 @@ private:
   QSize m_size;
   bool m_initialized = false;
 
-  QOpenGLShaderProgram m_textureProgram;
-  QOpenGLShaderProgram m_lineProgram;
+  QOpenGLShaderProgram m_texture_program;
+  QOpenGLShaderProgram m_line_program;
 
-  GLuint m_quadVao = 0;
-  GLuint m_quadVbo = 0;
+  GLuint m_quad_vao = 0;
+  GLuint m_quad_vbo = 0;
 
-  GLuint m_landVao = 0;
-  GLuint m_landVbo = 0;
-  int m_landVertexCount = 0;
+  GLuint m_land_vao = 0;
+  GLuint m_land_vbo = 0;
+  int m_land_vertex_count = 0;
 
-  QOpenGLTexture *m_baseTexture = nullptr;
-  QOpenGLTexture *m_waterTexture = nullptr;
+  QOpenGLTexture *m_base_texture = nullptr;
+  QOpenGLTexture *m_water_texture = nullptr;
 
-  LineLayer m_coastLayer;
-  LineLayer m_riverLayer;
-  LineLayer m_pathLayer;
-  LineLayer m_provinceBorderLayer;
-  ProvinceLayer m_provinceLayer;
+  LineLayer m_coast_layer;
+  LineLayer m_river_layer;
+  LineLayer m_path_layer;
+  LineLayer m_province_border_layer;
+  ProvinceLayer m_province_layer;
 
   float m_orbit_yaw = 180.0F;
   float m_orbit_pitch = 55.0F;
@@ -310,29 +310,29 @@ private:
 
     auto &tex_cache = CampaignMapTextureCache::instance();
     tex_cache.set_loading_allowed(true);
-    m_waterTexture = tex_cache.get_or_load(
+    m_water_texture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_water.png"));
-    m_baseTexture = tex_cache.get_or_load(
+    m_base_texture = tex_cache.get_or_load(
         QStringLiteral(":/assets/campaign_map/campaign_base_color.png"));
 
     tex_cache.set_loading_allowed(false);
     init_land_mesh();
 
-    init_line_layer(m_coastLayer,
+    init_line_layer(m_coast_layer,
                     QStringLiteral(":/assets/campaign_map/coastlines_uv.json"),
                     QVector4D(0.15F, 0.13F, 0.11F, 1.0F), 2.0F);
 
-    init_line_layer(m_riverLayer,
+    init_line_layer(m_river_layer,
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                     QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
 
-    init_line_layer(m_pathLayer,
+    init_line_layer(m_path_layer,
                     QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
                     QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
-    init_province_layer(m_provinceLayer,
+    init_province_layer(m_province_layer,
                         QStringLiteral(":/assets/campaign_map/provinces.json"));
 
-    init_borders_layer(m_provinceBorderLayer,
+    init_borders_layer(m_province_border_layer,
                        QStringLiteral(":/assets/campaign_map/provinces.json"),
                        QVector4D(0.25F, 0.22F, 0.20F, 0.65F), 1.2F);
 
@@ -397,35 +397,35 @@ void main() {
 }
 )";
 
-    if (!m_textureProgram.addShaderFromSourceCode(QOpenGLShader::Vertex,
+    if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                   kTexVert)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture vertex shader";
       return false;
     }
-    if (!m_textureProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,
+    if (!m_texture_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
                                                   kTexFrag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile texture fragment shader";
       return false;
     }
-    if (!m_textureProgram.link()) {
+    if (!m_texture_program.link()) {
       qWarning() << "CampaignMapRenderer: Failed to link texture shader";
       return false;
     }
 
-    if (!m_lineProgram.addShaderFromSourceCode(QOpenGLShader::Vertex,
+    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Vertex,
                                                kLineVert)) {
       qWarning() << "CampaignMapRenderer: Failed to compile line vertex shader";
       return false;
     }
-    if (!m_lineProgram.addShaderFromSourceCode(QOpenGLShader::Fragment,
+    if (!m_line_program.addShaderFromSourceCode(QOpenGLShader::Fragment,
                                                kLineFrag)) {
       qWarning()
           << "CampaignMapRenderer: Failed to compile line fragment shader";
       return false;
     }
-    if (!m_lineProgram.link()) {
+    if (!m_line_program.link()) {
       qWarning() << "CampaignMapRenderer: Failed to link line shader";
       return false;
     }
@@ -434,7 +434,7 @@ void main() {
   }
 
   void init_quad() {
-    if (m_quadVao != 0) {
+    if (m_quad_vao != 0) {
       return;
     }
 
@@ -442,11 +442,11 @@ void main() {
         0.0F, 0.0F, 1.0F, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F, 1.0F, 0.0F, 1.0F,
     };
 
-    glGenVertexArrays(1, &m_quadVao);
-    glGenBuffers(1, &m_quadVbo);
+    glGenVertexArrays(1, &m_quad_vao);
+    glGenBuffers(1, &m_quad_vbo);
 
-    glBindVertexArray(m_quadVao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_quadVbo);
+    glBindVertexArray(m_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(kQuadVerts), kQuadVerts,
                  GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
@@ -479,16 +479,16 @@ void main() {
     std::vector<float> verts(static_cast<size_t>(floatCount));
     memcpy(verts.data(), data.constData(), static_cast<size_t>(data.size()));
 
-    m_landVertexCount = floatCount / 2;
-    if (m_landVertexCount == 0) {
+    m_land_vertex_count = floatCount / 2;
+    if (m_land_vertex_count == 0) {
       return;
     }
 
-    glGenVertexArrays(1, &m_landVao);
-    glGenBuffers(1, &m_landVbo);
+    glGenVertexArrays(1, &m_land_vao);
+    glGenBuffers(1, &m_land_vbo);
 
-    glBindVertexArray(m_landVao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_landVbo);
+    glBindVertexArray(m_land_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, m_land_vbo);
     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(data.size()),
                  verts.data(), GL_STATIC_DRAW);
     glEnableVertexAttribArray(0);
@@ -741,11 +741,11 @@ void main() {
       return;
     }
 
-    m_textureProgram.bind();
-    m_textureProgram.setUniformValue("u_mvp", mvp);
-    m_textureProgram.setUniformValue("u_z", z_offset);
-    m_textureProgram.setUniformValue("u_alpha", alpha);
-    m_textureProgram.setUniformValue("u_tex", 0);
+    m_texture_program.bind();
+    m_texture_program.setUniformValue("u_mvp", mvp);
+    m_texture_program.setUniformValue("u_z", z_offset);
+    m_texture_program.setUniformValue("u_alpha", alpha);
+    m_texture_program.setUniformValue("u_tex", 0);
 
     glActiveTexture(GL_TEXTURE0);
     texture->bind();
@@ -753,7 +753,7 @@ void main() {
     glDrawArrays(GL_TRIANGLES, 0, vertex_count);
     glBindVertexArray(0);
     texture->release();
-    m_textureProgram.release();
+    m_texture_program.release();
   }
 
   void draw_line_layer(const LineLayer &layer, const QMatrix4x4 &mvp,
@@ -764,17 +764,17 @@ void main() {
 
     glLineWidth(layer.width);
 
-    m_lineProgram.bind();
-    m_lineProgram.setUniformValue("u_mvp", mvp);
-    m_lineProgram.setUniformValue("u_z", z_offset);
-    m_lineProgram.setUniformValue("u_color", layer.color);
+    m_line_program.bind();
+    m_line_program.setUniformValue("u_mvp", mvp);
+    m_line_program.setUniformValue("u_z", z_offset);
+    m_line_program.setUniformValue("u_color", layer.color);
 
     glBindVertexArray(layer.vao);
     for (const auto &span : layer.spans) {
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
     glBindVertexArray(0);
-    m_lineProgram.release();
+    m_line_program.release();
   }
 
   void draw_progressive_path_layers(const LineLayer &layer,
@@ -789,9 +789,9 @@ void main() {
     glEnable(GL_LINE_SMOOTH);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-    m_lineProgram.bind();
-    m_lineProgram.setUniformValue("u_mvp", mvp);
-    m_lineProgram.setUniformValue("u_z", z_offset);
+    m_line_program.bind();
+    m_line_program.setUniformValue("u_mvp", mvp);
+    m_line_program.setUniformValue("u_z", z_offset);
 
     glBindVertexArray(layer.vao);
 
@@ -822,7 +822,7 @@ void main() {
       }
 
       glLineWidth(border_width);
-      m_lineProgram.setUniformValue("u_color", border_color);
+      m_line_program.setUniformValue("u_color", border_color);
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
 
@@ -853,7 +853,7 @@ void main() {
       }
 
       glLineWidth(highlight_width);
-      m_lineProgram.setUniformValue("u_color", highlight_color);
+      m_line_program.setUniformValue("u_color", highlight_color);
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
 
@@ -884,23 +884,23 @@ void main() {
       }
 
       glLineWidth(width);
-      m_lineProgram.setUniformValue("u_color", color);
+      m_line_program.setUniformValue("u_color", color);
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
 
     glBindVertexArray(0);
-    m_lineProgram.release();
+    m_line_program.release();
 
     glDisable(GL_LINE_SMOOTH);
   }
 
   void apply_province_overrides(
       const QHash<QString, CampaignMapView::ProvinceVisual> &overrides) {
-    if (!m_provinceLayer.ready || m_provinceLayer.spans.empty()) {
+    if (!m_province_layer.ready || m_province_layer.spans.empty()) {
       return;
     }
 
-    for (auto &span : m_provinceLayer.spans) {
+    for (auto &span : m_province_layer.spans) {
       const auto it = overrides.find(span.id);
       if (it != overrides.end() && it->has_color) {
         span.color = it->color;
@@ -916,9 +916,9 @@ void main() {
       return;
     }
 
-    m_lineProgram.bind();
-    m_lineProgram.setUniformValue("u_mvp", mvp);
-    m_lineProgram.setUniformValue("u_z", z_offset);
+    m_line_program.bind();
+    m_line_program.setUniformValue("u_mvp", mvp);
+    m_line_program.setUniformValue("u_z", z_offset);
 
     glBindVertexArray(layer.vao);
     for (const auto &span : layer.spans) {
@@ -940,11 +940,11 @@ void main() {
                           qMin(1.0F, color.z() + brightness_boost),
                           qMin(1.0F, color.w() + 0.2F));
       }
-      m_lineProgram.setUniformValue("u_color", color);
+      m_line_program.setUniformValue("u_color", color);
       glDrawArrays(GL_TRIANGLES, span.start, span.count);
     }
     glBindVertexArray(0);
-    m_lineProgram.release();
+    m_line_program.release();
   }
 
   void cleanup() {
@@ -952,65 +952,65 @@ void main() {
       return;
     }
 
-    if (m_quadVbo != 0) {
-      glDeleteBuffers(1, &m_quadVbo);
-      m_quadVbo = 0;
+    if (m_quad_vbo != 0) {
+      glDeleteBuffers(1, &m_quad_vbo);
+      m_quad_vbo = 0;
     }
-    if (m_quadVao != 0) {
-      glDeleteVertexArrays(1, &m_quadVao);
-      m_quadVao = 0;
+    if (m_quad_vao != 0) {
+      glDeleteVertexArrays(1, &m_quad_vao);
+      m_quad_vao = 0;
     }
-    if (m_landVbo != 0) {
-      glDeleteBuffers(1, &m_landVbo);
-      m_landVbo = 0;
+    if (m_land_vbo != 0) {
+      glDeleteBuffers(1, &m_land_vbo);
+      m_land_vbo = 0;
     }
-    if (m_landVao != 0) {
-      glDeleteVertexArrays(1, &m_landVao);
-      m_landVao = 0;
+    if (m_land_vao != 0) {
+      glDeleteVertexArrays(1, &m_land_vao);
+      m_land_vao = 0;
     }
-    if (m_coastLayer.vbo != 0) {
-      glDeleteBuffers(1, &m_coastLayer.vbo);
-      m_coastLayer.vbo = 0;
+    if (m_coast_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_coast_layer.vbo);
+      m_coast_layer.vbo = 0;
     }
-    if (m_coastLayer.vao != 0) {
-      glDeleteVertexArrays(1, &m_coastLayer.vao);
-      m_coastLayer.vao = 0;
+    if (m_coast_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_coast_layer.vao);
+      m_coast_layer.vao = 0;
     }
-    if (m_riverLayer.vbo != 0) {
-      glDeleteBuffers(1, &m_riverLayer.vbo);
-      m_riverLayer.vbo = 0;
+    if (m_river_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_river_layer.vbo);
+      m_river_layer.vbo = 0;
     }
-    if (m_riverLayer.vao != 0) {
-      glDeleteVertexArrays(1, &m_riverLayer.vao);
-      m_riverLayer.vao = 0;
+    if (m_river_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_river_layer.vao);
+      m_river_layer.vao = 0;
     }
-    if (m_pathLayer.vbo != 0) {
-      glDeleteBuffers(1, &m_pathLayer.vbo);
-      m_pathLayer.vbo = 0;
+    if (m_path_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_path_layer.vbo);
+      m_path_layer.vbo = 0;
     }
-    if (m_pathLayer.vao != 0) {
-      glDeleteVertexArrays(1, &m_pathLayer.vao);
-      m_pathLayer.vao = 0;
+    if (m_path_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_path_layer.vao);
+      m_path_layer.vao = 0;
     }
-    if (m_provinceBorderLayer.vbo != 0) {
-      glDeleteBuffers(1, &m_provinceBorderLayer.vbo);
-      m_provinceBorderLayer.vbo = 0;
+    if (m_province_border_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_province_border_layer.vbo);
+      m_province_border_layer.vbo = 0;
     }
-    if (m_provinceBorderLayer.vao != 0) {
-      glDeleteVertexArrays(1, &m_provinceBorderLayer.vao);
-      m_provinceBorderLayer.vao = 0;
+    if (m_province_border_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_province_border_layer.vao);
+      m_province_border_layer.vao = 0;
     }
-    if (m_provinceLayer.vbo != 0) {
-      glDeleteBuffers(1, &m_provinceLayer.vbo);
-      m_provinceLayer.vbo = 0;
+    if (m_province_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_province_layer.vbo);
+      m_province_layer.vbo = 0;
     }
-    if (m_provinceLayer.vao != 0) {
-      glDeleteVertexArrays(1, &m_provinceLayer.vao);
-      m_provinceLayer.vao = 0;
+    if (m_province_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_province_layer.vao);
+      m_province_layer.vao = 0;
     }
 
-    m_baseTexture = nullptr;
-    m_waterTexture = nullptr;
+    m_base_texture = nullptr;
+    m_water_texture = nullptr;
   }
 };
 
@@ -1164,15 +1164,15 @@ void CampaignMapView::load_province_labels() {
     m_province_labels = std::move(updated);
   }
 
-  emit provinceLabelsChanged();
+  emit province_labels_changed();
 }
 
-QVariantList CampaignMapView::provinceLabels() {
+QVariantList CampaignMapView::province_labels() {
   load_province_labels();
   return m_province_labels;
 }
 
-void CampaignMapView::applyProvinceState(const QVariantList &states) {
+void CampaignMapView::apply_province_state(const QVariantList &states) {
   QHash<QString, ProvinceVisual> next_overrides;
   next_overrides.reserve(states.size());
 
@@ -1224,13 +1224,13 @@ void CampaignMapView::applyProvinceState(const QVariantList &states) {
       updated.push_back(entry);
     }
     m_province_labels = std::move(updated);
-    emit provinceLabelsChanged();
+    emit province_labels_changed();
   }
 
   update();
 }
 
-QString CampaignMapView::provinceAtScreen(float x, float y) {
+QString CampaignMapView::province_at_screen(float x, float y) {
   load_provinces_for_hit_test();
   if (m_provinces.empty()) {
     return {};
@@ -1292,7 +1292,7 @@ QString CampaignMapView::provinceAtScreen(float x, float y) {
   return {};
 }
 
-QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
+QVariantMap CampaignMapView::province_info_at_screen(float x, float y) {
   load_provinces_for_hit_test();
   QVariantMap info;
   if (m_provinces.empty()) {
@@ -1358,7 +1358,7 @@ QVariantMap CampaignMapView::provinceInfoAtScreen(float x, float y) {
   return info;
 }
 
-QPointF CampaignMapView::screenPosForUv(float u, float v) {
+QPointF CampaignMapView::screen_pos_for_uv(float u, float v) {
   const float w = static_cast<float>(width());
   const float h = static_cast<float>(height());
   if (w <= 0.0F || h <= 0.0F) {
@@ -1425,7 +1425,7 @@ void CampaignMapView::load_hannibal_paths() {
   }
 }
 
-QPointF CampaignMapView::hannibalIconPosition() {
+QPointF CampaignMapView::hannibal_icon_position() {
   load_hannibal_paths();
 
   if (m_hannibal_paths.empty()) {
@@ -1441,74 +1441,74 @@ QPointF CampaignMapView::hannibalIconPosition() {
   }
 
   const QVector2D &endpoint = path.back();
-  return screenPosForUv(endpoint.x(), endpoint.y());
+  return screen_pos_for_uv(endpoint.x(), endpoint.y());
 }
 
-void CampaignMapView::setOrbitYaw(float yaw) {
+void CampaignMapView::set_orbit_yaw(float yaw) {
   if (qFuzzyCompare(m_orbit_yaw, yaw)) {
     return;
   }
   m_orbit_yaw = yaw;
-  emit orbitYawChanged();
+  emit orbit_yaw_changed();
   update();
 }
 
-void CampaignMapView::setOrbitPitch(float pitch) {
+void CampaignMapView::set_orbit_pitch(float pitch) {
   const float clamped = qBound(5.0F, pitch, 90.0F);
   if (qFuzzyCompare(m_orbit_pitch, clamped)) {
     return;
   }
   m_orbit_pitch = clamped;
-  emit orbitPitchChanged();
+  emit orbit_pitch_changed();
   update();
 }
 
-void CampaignMapView::setOrbitDistance(float distance) {
-  const float clamped = qBound(kMinOrbitDistance, distance, kMaxOrbitDistance);
+void CampaignMapView::set_orbit_distance(float distance) {
+  const float clamped = qBound(k_min_orbit_distance, distance, k_max_orbit_distance);
   if (qFuzzyCompare(m_orbit_distance, clamped)) {
     return;
   }
   m_orbit_distance = clamped;
-  emit orbitDistanceChanged();
+  emit orbit_distance_changed();
   update();
 }
 
-void CampaignMapView::setPanU(float pan) {
+void CampaignMapView::set_pan_u(float pan) {
   const float clamped = qBound(-0.5F, pan, 0.5F);
   if (qFuzzyCompare(m_pan_u, clamped)) {
     return;
   }
   m_pan_u = clamped;
-  emit panUChanged();
+  emit pan_u_changed();
   update();
 }
 
-void CampaignMapView::setPanV(float pan) {
+void CampaignMapView::set_pan_v(float pan) {
   const float clamped = qBound(-0.5F, pan, 0.5F);
   if (qFuzzyCompare(m_pan_v, clamped)) {
     return;
   }
   m_pan_v = clamped;
-  emit panVChanged();
+  emit pan_v_changed();
   update();
 }
 
-void CampaignMapView::setHoverProvinceId(const QString &province_id) {
+void CampaignMapView::set_hover_province_id(const QString &province_id) {
   if (m_hover_province_id == province_id) {
     return;
   }
   m_hover_province_id = province_id;
-  emit hoverProvinceIdChanged();
+  emit hover_province_id_changed();
   update();
 }
 
-void CampaignMapView::setCurrentMission(int mission) {
+void CampaignMapView::set_current_mission(int mission) {
   const int clamped = qBound(0, mission, 7);
   if (m_current_mission == clamped) {
     return;
   }
   m_current_mission = clamped;
-  emit currentMissionChanged();
+  emit current_mission_changed();
   update();
 }
 

@@ -72,7 +72,7 @@ Rectangle {
 
     function load_provinces() {
         if (campaignMapLoader.item) {
-            var labels = campaignMapLoader.item.provinceLabels;
+            var labels = campaignMapLoader.item.province_labels;
             if (labels && labels.length > 0) {
                 province_labels = labels;
                 label_refresh += 1;
@@ -171,7 +171,7 @@ Rectangle {
             }
         }
         if (entries.length > 0)
-            campaignMapLoader.item.applyProvinceState(entries);
+            campaignMapLoader.item.apply_province_state(entries);
 
     }
 
@@ -240,29 +240,29 @@ Rectangle {
                 id: campaign_map
 
                 anchors.fill: parent
-                orbitYaw: root.map_orbit_yaw
-                orbitPitch: root.map_orbit_pitch
-                orbitDistance: root.map_orbit_distance
-                panU: root.map_pan_u
-                panV: root.map_pan_v
-                currentMission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
-                hoverProvinceId: {
+                orbit_yaw: root.map_orbit_yaw
+                orbit_pitch: root.map_orbit_pitch
+                orbit_distance: root.map_orbit_distance
+                pan_u: root.map_pan_u
+                pan_v: root.map_pan_v
+                current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
+                hover_province_id: {
                     if (root.active_region_id !== "")
                         return root.active_region_id;
 
-                    var info = provinceInfoAtScreen(root.hover_mouse_x, root.hover_mouse_y);
+                    var info = province_info_at_screen(root.hover_mouse_x, root.hover_mouse_y);
                     return info && info.id ? info.id : "";
                 }
-                onOrbitYawChanged: root.label_refresh += 1
-                onOrbitPitchChanged: root.label_refresh += 1
-                onOrbitDistanceChanged: root.label_refresh += 1
-                onPanUChanged: root.label_refresh += 1
-                onPanVChanged: root.label_refresh += 1
-                onCurrentMissionChanged: root.label_refresh += 1
+                onOrbit_yaw_changed: root.label_refresh += 1
+                onOrbit_pitch_changed: root.label_refresh += 1
+                onOrbit_distance_changed: root.label_refresh += 1
+                onPan_u_changed: root.label_refresh += 1
+                onPan_v_changed: root.label_refresh += 1
+                onCurrent_mission_changed: root.label_refresh += 1
                 onWidthChanged: root.label_refresh += 1
                 onHeightChanged: root.label_refresh += 1
 
-                Behavior on orbitYaw {
+                Behavior on orbit_yaw {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.InOutQuad
@@ -270,7 +270,7 @@ Rectangle {
 
                 }
 
-                Behavior on orbitPitch {
+                Behavior on orbit_pitch {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.InOutQuad
@@ -278,7 +278,7 @@ Rectangle {
 
                 }
 
-                Behavior on orbitDistance {
+                Behavior on orbit_distance {
                     NumberAnimation {
                         duration: 600
                         easing.type: Easing.InOutQuad
@@ -322,7 +322,7 @@ Rectangle {
             root.hover_mouse_x = mouse.x;
             root.hover_mouse_y = mouse.y;
             if (root.active_region_id === "" && campaignMapLoader.item) {
-                var info = campaignMapLoader.item.provinceInfoAtScreen(mouse.x, mouse.y);
+                var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
                 var id = info && info.id ? info.id : "";
                 root.hover_province_name = info && info.name ? info.name : "";
                 root.hover_province_owner = info && info.owner ? info.owner : "";
@@ -344,7 +344,7 @@ Rectangle {
             if (!campaignMapLoader.item)
                 return ;
 
-            var info = campaignMapLoader.item.provinceInfoAtScreen(mouse.x, mouse.y);
+            var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
             var id = info && info.id ? info.id : "";
             if (id !== "")
                 root.regionSelected(id);
@@ -354,7 +354,7 @@ Rectangle {
             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
             var next_distance = root.map_orbit_distance * step;
             if (campaignMapLoader.item)
-                root.map_orbit_distance = Math.min(campaignMapLoader.item.maxOrbitDistance, Math.max(campaignMapLoader.item.minOrbitDistance, next_distance));
+                root.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, next_distance));
 
             wheel.accepted = true;
         }
@@ -372,7 +372,7 @@ Rectangle {
                 property var city_data: modelData
                 property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
                 property int _refresh: root.label_refresh
-                property var _pos: (_city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+                property var _pos: (_city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
 
                 visible: _city_uv !== null && city_data.name && city_data.name.length > 0
                 z: 4
@@ -439,7 +439,7 @@ Rectangle {
             property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
             property var marker_uv: region_info ? region_info.uv : null
             property int _refresh: root.label_refresh
-            property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screenPosForUv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
+            property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
 
             visible: marker_uv !== null && root.active_region_id !== ""
             z: 6
@@ -507,7 +507,7 @@ Rectangle {
         id: hannibalIcon
 
         property int _refresh: root.label_refresh
-        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibalIconPosition() : Qt.point(0, 0)
+        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
         property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
         property int _iconIndex: 0
 
@@ -615,7 +615,7 @@ Rectangle {
     Rectangle {
         id: hover_tooltip
 
-        visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hoverProvinceId !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+        visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
         x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
         y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
         width: tooltip_layout.implicitWidth + 16
