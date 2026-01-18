@@ -85,7 +85,7 @@ auto is_high_ground_advantage(
   }
   float const height_diff =
       high_transform->position.y - low_transform->position.y;
-  return height_diff > Constants::kHighGroundHeightThreshold;
+  return height_diff > Constants::k_high_ground_height_threshold;
 }
 
 void process_melee_lock(Engine::Core::Entity *attacker,
@@ -124,13 +124,13 @@ void process_melee_lock(Engine::Core::Entity *attacker,
   float const dz = tgt_t->position.z - att_t->position.z;
   float const dist = std::sqrt(dx * dx + dz * dz);
 
-  if (dist > Constants::kMaxMeleeSeparation) {
+  if (dist > Constants::k_max_melee_separation) {
     if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-      float const pull_amount = (dist - Constants::kIdealMeleeDistance) *
-                                Constants::kMeleePullFactor * delta_time *
-                                Constants::kMeleePullSpeed;
+      float const pull_amount = (dist - Constants::k_ideal_melee_distance) *
+                                Constants::k_melee_pull_factor * delta_time *
+                                Constants::k_melee_pull_speed;
 
-      if (dist > Constants::kMinDistance) {
+      if (dist > Constants::k_min_distance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
         float const new_x = att_t->position.x + direction.x() * pull_amount;
         float const new_z = att_t->position.z + direction.z() * pull_amount;
@@ -180,7 +180,7 @@ void apply_health_bonus(Engine::Core::UnitComponent *unit_comp) {
   int const base_max_health =
       base_max_health_opt.value_or(std::max(1, unit_comp->max_health));
   int const max_health_bonus = static_cast<int>(
-      static_cast<float>(base_max_health) * Constants::kHealthMultiplierHold);
+      static_cast<float>(base_max_health) * Constants::k_health_multiplier_hold);
   if (unit_comp->max_health < max_health_bonus) {
     int const safe_max_health = std::max(1, unit_comp->max_health);
     int const health_percentage = (unit_comp->health * 100) / safe_max_health;
@@ -198,18 +198,18 @@ void apply_hold_mode_bonuses(Engine::Core::Entity *attacker,
   }
 
   if (unit_comp->spawn_type == Game::Units::SpawnType::Archer) {
-    range *= Constants::kRangeMultiplierHold;
+    range *= Constants::k_range_multiplier_hold;
     damage = static_cast<int>(static_cast<float>(damage) *
-                              Constants::kDamageMultiplierArcherHold);
+                              Constants::k_damage_multiplier_archer_hold);
     apply_health_bonus(unit_comp);
   } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman) {
-    range *= Constants::kRangeMultiplierSpearmanHold;
+    range *= Constants::k_range_multiplier_spearman_hold;
     damage = static_cast<int>(static_cast<float>(damage) *
-                              Constants::kDamageMultiplierSpearmanHold);
+                              Constants::k_damage_multiplier_spearman_hold);
     apply_health_bonus(unit_comp);
   } else {
     damage = static_cast<int>(static_cast<float>(damage) *
-                              Constants::kDamageMultiplierDefaultHold);
+                              Constants::k_damage_multiplier_default_hold);
   }
 }
 
@@ -235,7 +235,7 @@ void apply_high_ground_defense_bonuses(Engine::Core::Entity *attacker,
   }
 
   damage = std::max(1, static_cast<int>(static_cast<float>(damage) *
-                                        Constants::kHighGroundArmorMultiplier));
+                                        Constants::k_high_ground_armor_multiplier));
 
   auto base_max_health_opt = get_base_max_health(target_unit);
   if (!base_max_health_opt || *base_max_health_opt <= 0) {
@@ -244,7 +244,7 @@ void apply_high_ground_defense_bonuses(Engine::Core::Entity *attacker,
 
   int const max_health_bonus =
       static_cast<int>(static_cast<float>(*base_max_health_opt) *
-                       Constants::kHighGroundHealthMultiplier);
+                       Constants::k_high_ground_health_multiplier);
   if (target_unit->max_health < max_health_bonus) {
     int const safe_max_health = std::max(1, target_unit->max_health);
     int const health_percentage = (target_unit->health * 100) / safe_max_health;
@@ -263,7 +263,7 @@ auto calculate_tactical_damage_multiplier(
     if (target_unit->spawn_type == Game::Units::SpawnType::HorseArcher ||
         target_unit->spawn_type == Game::Units::SpawnType::HorseSpearman ||
         target_unit->spawn_type == Game::Units::SpawnType::MountedKnight) {
-      multiplier *= Constants::kSpearmanVsCavalryMultiplier;
+      multiplier *= Constants::k_spearman_vs_cavalry_multiplier;
     }
   }
 
@@ -271,7 +271,7 @@ auto calculate_tactical_damage_multiplier(
       attacker_unit->spawn_type == Game::Units::SpawnType::HorseArcher) {
 
     if (target->has_component<Engine::Core::ElephantComponent>()) {
-      multiplier *= Constants::kArcherVsElephantMultiplier;
+      multiplier *= Constants::k_archer_vs_elephant_multiplier;
     }
 
     auto *attacker_transform =
@@ -280,7 +280,7 @@ auto calculate_tactical_damage_multiplier(
         target->get_component<Engine::Core::TransformComponent>();
 
     if (is_high_ground_advantage(attacker_transform, target_transform)) {
-      multiplier *= Constants::kArcherHighGroundMultiplier;
+      multiplier *= Constants::k_archer_high_ground_multiplier;
     }
   } else if (attacker_unit->spawn_type == Game::Units::SpawnType::Spearman) {
     auto *attacker_transform =
@@ -289,7 +289,7 @@ auto calculate_tactical_damage_multiplier(
         target->get_component<Engine::Core::TransformComponent>();
 
     if (is_high_ground_advantage(attacker_transform, target_transform)) {
-      multiplier *= Constants::kSpearmanHighGroundMultiplier;
+      multiplier *= Constants::k_spearman_high_ground_multiplier;
     }
   }
 
@@ -335,16 +335,16 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
   for (int i = 0; i < arrow_count; ++i) {
     static thread_local std::mt19937 spread_gen(std::random_device{}());
     std::uniform_real_distribution<float> spread_dist(
-        Constants::kArrowSpreadMin, Constants::kArrowSpreadMax);
+        Constants::k_arrow_spread_min, Constants::k_arrow_spread_max);
 
     QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
     QVector3D const up_vector(0.0F, 1.0F, 0.0F);
 
     float const lateral_offset = spread_dist(spread_gen);
     float const vertical_offset =
-        spread_dist(spread_gen) * Constants::kArrowVerticalSpreadFactor;
+        spread_dist(spread_gen) * Constants::k_arrow_vertical_spread_factor;
     float const depth_offset =
-        spread_dist(spread_gen) * Constants::kArrowDepthSpreadFactor;
+        spread_dist(spread_gen) * Constants::k_arrow_depth_spread_factor;
 
     QVector3D const start_offset =
         perpendicular * lateral_offset + up_vector * vertical_offset;
@@ -353,14 +353,14 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
                                  dir * depth_offset;
 
     QVector3D const start =
-        a_pos + QVector3D(0.0F, Constants::kArrowStartHeight, 0.0F) +
-        dir * Constants::kArrowStartOffset + start_offset;
+        a_pos + QVector3D(0.0F, Constants::k_arrow_start_height, 0.0F) +
+        dir * Constants::k_arrow_start_offset + start_offset;
     QVector3D const end = t_pos +
-                          QVector3D(Constants::kArrowTargetOffset,
-                                    Constants::kArrowTargetOffset, 0.0F) +
+                          QVector3D(Constants::k_arrow_target_offset,
+                                    Constants::k_arrow_target_offset, 0.0F) +
                           end_offset;
 
-    arrow_sys->spawn_arrow(start, end, color, Constants::kArrowSpeed);
+    arrow_sys->spawn_arrow(start, end, color, Constants::k_arrow_speed);
   }
 }
 
@@ -406,11 +406,11 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     float const dz = tgt_t->position.z - att_t->position.z;
     float const dist = std::sqrt(dx * dx + dz * dz);
 
-    if (dist > Constants::kIdealMeleeDistance + 0.1F) {
-      float const move_amount = (dist - Constants::kIdealMeleeDistance) *
-                                Constants::kMoveAmountFactor;
+    if (dist > Constants::k_ideal_melee_distance + 0.1F) {
+      float const move_amount = (dist - Constants::k_ideal_melee_distance) *
+                                Constants::k_move_amount_factor;
 
-      if (dist > Constants::kMinDistance) {
+      if (dist > Constants::k_min_distance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
         if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
@@ -593,9 +593,9 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                     float const distance = std::sqrt(distance_sq);
                     direction /= distance;
                     float const optimal_range =
-                        range * Constants::kOptimalRangeFactor;
+                        range * Constants::k_optimal_range_factor;
                     if (distance >
-                        optimal_range + Constants::kOptimalRangeBuffer) {
+                        optimal_range + Constants::k_optimal_range_buffer) {
                       desired_pos = target_pos - direction * optimal_range;
                     } else {
                       hold_position = true;
@@ -633,8 +633,8 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
                     float const diff_sq =
                         (planned_target - desired_pos).lengthSquared();
                     bool need_new_command = !movement->path_pending;
-                    float const threshold = Constants::kNewCommandThreshold *
-                                            Constants::kNewCommandThreshold;
+                    float const threshold = Constants::k_new_command_threshold *
+                                            Constants::k_new_command_threshold;
                     if (movement->has_target && diff_sq <= threshold) {
                       need_new_command = false;
                     }
@@ -803,10 +803,10 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         float const dz = guard_z - attacker_transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        float const kReturnThresholdSq =
+        float const k_return_threshold_sq =
             Engine::Core::Defaults::kGuardReturnThreshold *
             Engine::Core::Defaults::kGuardReturnThreshold;
-        if (dist_sq > kReturnThresholdSq) {
+        if (dist_sq > k_return_threshold_sq) {
           guard_mode->returning_to_guard_position = true;
           CommandService::MoveOptions options;
           options.clear_attack_intent = true;

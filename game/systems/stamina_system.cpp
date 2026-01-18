@@ -6,7 +6,7 @@
 namespace Game::Systems {
 
 namespace {
-constexpr float kMinMovementSpeedSq = 0.01F;
+constexpr float k_min_movement_speed_sq = 0.01F;
 
 [[nodiscard]] inline auto is_unit_moving(
     const Engine::Core::MovementComponent *movement) noexcept -> bool {
@@ -15,7 +15,7 @@ constexpr float kMinMovementSpeedSq = 0.01F;
   }
   const float speed_sq =
       movement->vx * movement->vx + movement->vz * movement->vz;
-  return speed_sq > kMinMovementSpeedSq;
+  return speed_sq > k_min_movement_speed_sq;
 }
 } // namespace
 

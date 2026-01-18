@@ -88,11 +88,11 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
       if (entity.spawn_type == Game::Units::SpawnType::Barracks &&
           ctx.primary_barracks == 0) {
         ctx.primary_barracks = entity.id;
-        ctx.rally_x = entity.posX - 5.0F;
-        ctx.rally_z = entity.posZ;
-        ctx.base_pos_x = entity.posX;
-        ctx.base_pos_y = entity.posY;
-        ctx.base_pos_z = entity.posZ;
+        ctx.rally_x = entity.pos_x - 5.0F;
+        ctx.rally_z = entity.pos_z;
+        ctx.base_pos_x = entity.pos_x;
+        ctx.base_pos_y = entity.pos_y;
+        ctx.base_pos_z = entity.pos_z;
       }
       continue;
     }
@@ -152,7 +152,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
     if (ctx.primary_barracks != 0) {
       float const dist =
-          distance(enemy.posX, enemy.posY, enemy.posZ, ctx.base_pos_x,
+          distance(enemy.pos_x, enemy.pos_y, enemy.pos_z, ctx.base_pos_x,
                    ctx.base_pos_y, ctx.base_pos_z);
       total_enemy_dist += dist;
     }
@@ -172,7 +172,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
 
     for (const auto &enemy : snapshot.visible_enemies) {
       float const dist_sq =
-          distance_squared(enemy.posX, enemy.posY, enemy.posZ, ctx.base_pos_x,
+          distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, ctx.base_pos_x,
                            ctx.base_pos_y, ctx.base_pos_z);
 
       if (dist_sq <= defend_radius_sq) {

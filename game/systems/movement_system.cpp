@@ -21,12 +21,12 @@ static constexpr float repath_cooldown_seconds = 0.4F;
 
 namespace {
 
-auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
+auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignore_entity,
                       float unit_radius = 0.5F) -> bool {
   auto &terrain_service = Game::Map::TerrainService::instance();
   Pathfinding *pathfinder = CommandService::get_pathfinder();
 
-  (void)ignoreEntity;
+  (void)ignore_entity;
   (void)unit_radius;
 
   if (pathfinder != nullptr) {
@@ -42,9 +42,9 @@ auto is_point_allowed(const QVector3D &pos, Engine::Core::EntityID ignoreEntity,
 }
 
 auto is_segment_walkable(const QVector3D &from, const QVector3D &to,
-                         Engine::Core::EntityID ignoreEntity,
+                         Engine::Core::EntityID ignore_entity,
                          float unit_radius = 0.5F) -> bool {
-  (void)ignoreEntity;
+  (void)ignore_entity;
   (void)unit_radius;
 
   Pathfinding *pathfinder = CommandService::get_pathfinder();
@@ -172,9 +172,9 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
     float const dz = builder_prod->bypass_target_z - transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    constexpr float kBypassArrivalDistSq = 0.25F;
+    constexpr float k_bypass_arrival_dist_sq = 0.25F;
 
-    if (dist_sq < kBypassArrivalDistSq) {
+    if (dist_sq < k_bypass_arrival_dist_sq) {
 
       transform->position.x = builder_prod->bypass_target_x;
       transform->position.z = builder_prod->bypass_target_z;

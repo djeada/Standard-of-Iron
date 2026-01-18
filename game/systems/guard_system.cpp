@@ -54,9 +54,9 @@ void GuardSystem::update(Engine::Core::World *world, float) {
           float const dz = new_guard_z - transform->position.z;
           float const dist_sq = dx * dx + dz * dz;
 
-          constexpr float kFollowThresholdSq = 2.0F * 2.0F;
+          constexpr float k_follow_threshold_sq = 2.0F * 2.0F;
 
-          if (dist_sq > kFollowThresholdSq) {
+          if (dist_sq > k_follow_threshold_sq) {
 
             guard_mode->guard_position_x = new_guard_x;
             guard_mode->guard_position_z = new_guard_z;
@@ -88,11 +88,11 @@ void GuardSystem::update(Engine::Core::World *world, float) {
         float const dz = guard_mode->guard_position_z - transform->position.z;
         float const dist_sq = dx * dx + dz * dz;
 
-        float const kReturnThresholdSq =
+        float const k_return_threshold_sq =
             Engine::Core::Defaults::kGuardReturnThreshold *
             Engine::Core::Defaults::kGuardReturnThreshold;
 
-        if (dist_sq > kReturnThresholdSq) {
+        if (dist_sq > k_return_threshold_sq) {
 
           CommandService::MoveOptions opts;
           opts.clear_attack_intent = false;

@@ -84,9 +84,9 @@ struct EntitySnapshot {
   int max_health = 0;
   bool is_building = false;
 
-  float posX = 0.0F;
-  float posY = 0.0F;
-  float posZ = 0.0F;
+  float pos_x = 0.0F;
+  float pos_y = 0.0F;
+  float pos_z = 0.0F;
 
   MovementSnapshot movement;
   ProductionSnapshot production;
@@ -98,9 +98,9 @@ struct ContactSnapshot {
   bool is_building = false;
   int owner_id = 0;
 
-  float posX = 0.0F;
-  float posY = 0.0F;
-  float posZ = 0.0F;
+  float pos_x = 0.0F;
+  float pos_y = 0.0F;
+  float pos_z = 0.0F;
 
   int health = 0;
   int max_health = 0;

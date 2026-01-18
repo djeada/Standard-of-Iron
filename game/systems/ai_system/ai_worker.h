@@ -29,7 +29,7 @@ public:
   void drain_results(std::queue<AIResult> &out);
 
   auto busy() const noexcept -> bool {
-    return m_workerBusy.load(std::memory_order_acquire);
+    return m_worker_busy.load(std::memory_order_acquire);
   }
 
   void stop();
@@ -42,15 +42,15 @@ private:
   AIBehaviorRegistry &m_registry;
 
   std::thread m_thread;
-  std::atomic<bool> m_shouldStop{false};
-  std::atomic<bool> m_workerBusy{false};
+  std::atomic<bool> m_should_stop{false};
+  std::atomic<bool> m_worker_busy{false};
 
-  std::mutex m_jobMutex;
-  std::condition_variable m_jobCondition;
-  bool m_hasPendingJob = false;
-  AIJob m_pendingJob;
+  std::mutex m_job_mutex;
+  std::condition_variable m_job_condition;
+  bool m_has_pending_job = false;
+  AIJob m_pending_job;
 
-  std::mutex m_resultMutex;
+  std::mutex m_result_mutex;
   std::queue<AIResult> m_results;
 };
 

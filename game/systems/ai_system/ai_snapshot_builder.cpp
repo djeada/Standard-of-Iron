@@ -7,11 +7,11 @@
 namespace Game::Systems::AI {
 
 auto AISnapshotBuilder::build(const Engine::Core::World &world,
-                              int aiOwnerId) -> AISnapshot {
+                              int ai_owner_id) -> AISnapshot {
   AISnapshot snapshot;
-  snapshot.player_id = aiOwnerId;
+  snapshot.player_id = ai_owner_id;
 
-  auto friendlies = world.get_units_owned_by(aiOwnerId);
+  auto friendlies = world.get_units_owned_by(ai_owner_id);
   snapshot.friendly_units.reserve(friendlies.size());
 
   int skipped_no_ai = 0;
@@ -46,9 +46,9 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
 
     if (auto *transform =
             entity->get_component<Engine::Core::TransformComponent>()) {
-      data.posX = transform->position.x;
-      data.posY = 0.0F;
-      data.posZ = transform->position.z;
+      data.pos_x = transform->position.x;
+      data.pos_y = 0.0F;
+      data.pos_z = transform->position.z;
     }
 
     if (auto *movement =
@@ -87,7 +87,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     added++;
   }
 
-  auto enemies = world.get_enemy_units(aiOwnerId);
+  auto enemies = world.get_enemy_units(ai_owner_id);
   snapshot.visible_enemies.reserve(enemies.size());
 
   for (auto *entity : enemies) {
@@ -106,9 +106,9 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     contact.owner_id = unit->owner_id;
     contact.is_building =
         entity->has_component<Engine::Core::BuildingComponent>();
-    contact.posX = transform->position.x;
-    contact.posY = 0.0F;
-    contact.posZ = transform->position.z;
+    contact.pos_x = transform->position.x;
+    contact.pos_y = 0.0F;
+    contact.pos_z = transform->position.z;
 
     contact.health = unit->health;
     contact.max_health = unit->max_health;

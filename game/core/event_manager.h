@@ -187,14 +187,14 @@ public:
 class UnitDiedEvent : public Event {
 public:
   UnitDiedEvent(EntityID unit_id, int owner_id,
-                Game::Units::SpawnType spawn_type, EntityID killerId = 0,
+                Game::Units::SpawnType spawn_type, EntityID killer_id = 0,
                 int killer_owner_id = 0)
       : unit_id(unit_id), owner_id(owner_id), spawn_type(spawn_type),
-        killerId(killerId), killer_owner_id(killer_owner_id) {}
+        killer_id(killer_id), killer_owner_id(killer_owner_id) {}
   EntityID unit_id;
   int owner_id;
   Game::Units::SpawnType spawn_type;
-  EntityID killerId;
+  EntityID killer_id;
   int killer_owner_id;
 };
 
@@ -213,28 +213,29 @@ public:
 
 class BuildingAttackedEvent : public Event {
 public:
-  BuildingAttackedEvent(EntityID buildingId, int owner_id,
-                        Game::Units::SpawnType buildingType,
-                        EntityID attackerId = 0, int attacker_owner_id = 0,
+  BuildingAttackedEvent(EntityID building_id, int owner_id,
+                        Game::Units::SpawnType building_type,
+                        EntityID attacker_id = 0, int attacker_owner_id = 0,
                         int damage = 0)
-      : buildingId(buildingId), owner_id(owner_id), buildingType(buildingType),
-        attackerId(attackerId), attacker_owner_id(attacker_owner_id),
+      : building_id(building_id), owner_id(owner_id),
+        building_type(building_type), attacker_id(attacker_id),
+        attacker_owner_id(attacker_owner_id),
         damage(damage) {}
-  EntityID buildingId;
+  EntityID building_id;
   int owner_id;
-  Game::Units::SpawnType buildingType;
-  EntityID attackerId;
+  Game::Units::SpawnType building_type;
+  EntityID attacker_id;
   int attacker_owner_id;
   int damage;
 };
 
 class BarrackCapturedEvent : public Event {
 public:
-  BarrackCapturedEvent(EntityID barrackId, int previous_owner_id,
-                       int new_owner_id)
-      : barrackId(barrackId), previous_owner_id(previous_owner_id),
+  BarrackCapturedEvent(EntityID barrack_id, int previous_owner_id,
+                        int new_owner_id)
+      : barrack_id(barrack_id), previous_owner_id(previous_owner_id),
         new_owner_id(new_owner_id) {}
-  EntityID barrackId;
+  EntityID barrack_id;
   int previous_owner_id;
   int new_owner_id;
 };

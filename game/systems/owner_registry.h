@@ -12,7 +12,7 @@ namespace Game::Systems {
 enum class OwnerType { Player, AI, Neutral };
 
 namespace Defaults {
-inline constexpr std::array<float, 3> kDefaultOwnerColor{0.8F, 0.9F, 1.0F};
+inline constexpr std::array<float, 3> k_default_owner_color{0.8F, 0.9F, 1.0F};
 }
 
 struct OwnerInfo {
@@ -20,7 +20,7 @@ struct OwnerInfo {
   OwnerType type;
   std::string name;
   int team_id = 0;
-  std::array<float, 3> color = Defaults::kDefaultOwnerColor;
+  std::array<float, 3> color = Defaults::k_default_owner_color;
 };
 
 class OwnerRegistry {

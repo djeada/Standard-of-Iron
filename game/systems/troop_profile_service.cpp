@@ -14,9 +14,9 @@ void TroopProfileService::clear() { m_cache.clear(); }
 
 auto TroopProfileService::get_profile(
     NationID nation_id, Game::Units::TroopType type) -> TroopProfile {
-  auto &nationCache = m_cache[nation_id];
-  auto cached = nationCache.find(type);
-  if (cached != nationCache.end()) {
+  auto &nation_cache = m_cache[nation_id];
+  auto cached = nation_cache.find(type);
+  if (cached != nation_cache.end()) {
     return cached->second;
   }
 
@@ -44,35 +44,35 @@ auto TroopProfileService::get_profile(
   }
 
   TroopProfile profile = build_profile(*nation, type);
-  nationCache.emplace(type, profile);
+  nation_cache.emplace(type, profile);
   return profile;
 }
 
 auto TroopProfileService::build_profile(
     const Nation &nation, Game::Units::TroopType type) -> TroopProfile {
-  const auto &catalogClass =
+  const auto &catalog_class =
       Game::Units::TroopCatalog::instance().get_class_or_fallback(type);
 
   TroopProfile profile{};
-  profile.display_name = catalogClass.display_name;
-  profile.production = catalogClass.production;
-  profile.combat = catalogClass.combat;
-  profile.visuals = catalogClass.visuals;
-  profile.individuals_per_unit = catalogClass.individuals_per_unit;
-  profile.max_units_per_row = catalogClass.max_units_per_row;
+  profile.display_name = catalog_class.display_name;
+  profile.production = catalog_class.production;
+  profile.combat = catalog_class.combat;
+  profile.visuals = catalog_class.visuals;
+  profile.individuals_per_unit = catalog_class.individuals_per_unit;
+  profile.max_units_per_row = catalog_class.max_units_per_row;
   profile.formation_type = nation.formation_type;
 
-  if (const auto *nationTroop = nation.get_troop(type)) {
-    profile.display_name = nationTroop->display_name;
-    profile.production.cost = nationTroop->cost;
-    profile.production.build_time = nationTroop->build_time;
-    profile.production.priority = nationTroop->priority;
-    profile.production.is_melee = nationTroop->is_melee;
+  if (const auto *nation_troop = nation.get_troop(type)) {
+    profile.display_name = nation_troop->display_name;
+    profile.production.cost = nation_troop->cost;
+    profile.production.build_time = nation_troop->build_time;
+    profile.production.priority = nation_troop->priority;
+    profile.production.is_melee = nation_troop->is_melee;
   }
 
-  auto variantIt = nation.troop_variants.find(type);
-  if (variantIt != nation.troop_variants.end()) {
-    const auto &variant = variantIt->second;
+  auto variant_it = nation.troop_variants.find(type);
+  if (variant_it != nation.troop_variants.end()) {
+    const auto &variant = variant_it->second;
     if (variant.health) {
       profile.combat.health = *variant.health;
     }

@@ -61,7 +61,7 @@ void clamp_to_map_bounds(float &x, float &z) {
 
 void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                               float delta_time,
-                              std::vector<AICommand> &outCommands) {
+                              std::vector<AICommand> &out_commands) {
   m_construction_timer += delta_time;
   if (m_construction_timer < 3.0F) {
     return;
@@ -145,7 +145,7 @@ void BuilderBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     command.construction_type = building_to_construct;
     command.construction_site_x = construction_x;
     command.construction_site_z = construction_z;
-    outCommands.push_back(std::move(command));
+    out_commands.push_back(std::move(command));
 
     m_construction_counter++;
   }

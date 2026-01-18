@@ -28,12 +28,8 @@ public:
   void initialize();
   void clear();
 
-  auto getStats(int owner_id) const -> const PlayerStats *;
-  auto getStats(int owner_id) -> PlayerStats *;
-  auto get_stats(int owner_id) const -> const PlayerStats * {
-    return getStats(owner_id);
-  }
-  auto get_stats(int owner_id) -> PlayerStats * { return getStats(owner_id); }
+  auto get_stats(int owner_id) const -> const PlayerStats *;
+  auto get_stats(int owner_id) -> PlayerStats *;
 
   void mark_game_start(int owner_id);
 

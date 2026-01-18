@@ -16,7 +16,7 @@ public:
 
   static void run(const AISnapshot &snapshot, AIContext &context,
                   float delta_time, AIBehaviorRegistry &registry,
-                  std::vector<AICommand> &outCommands);
+                  std::vector<AICommand> &out_commands);
 };
 
 } // namespace Game::Systems::AI

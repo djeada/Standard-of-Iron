@@ -98,10 +98,10 @@ auto find_guaranteed_valid_exit(float exit_x, float exit_z,
     return {exit_x, 0.0F, exit_z};
   }
 
-  constexpr int kMaxSearchRadius = 50;
+  constexpr int k_max_search_radius = 50;
   Point safe_grid = exit_grid;
 
-  for (int radius = 1; radius <= kMaxSearchRadius; ++radius) {
+  for (int radius = 1; radius <= k_max_search_radius; ++radius) {
     for (int dy = -radius; dy <= radius; ++dy) {
       for (int dx = -radius; dx <= radius; ++dx) {
         if (std::abs(dx) != radius && std::abs(dy) != radius) {

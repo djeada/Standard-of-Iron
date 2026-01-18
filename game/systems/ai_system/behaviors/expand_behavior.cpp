@@ -15,7 +15,7 @@ namespace Game::Systems::AI {
 
 void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
-                             std::vector<AICommand> &outCommands) {
+                             std::vector<AICommand> &out_commands) {
   m_expand_timer += delta_time;
 
   if (m_expand_timer < 1.0F) {
@@ -40,8 +40,8 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     if (context.primary_barracks != 0) {
-      float const dx = enemy.posX - context.base_pos_x;
-      float const dz = enemy.posZ - context.base_pos_z;
+      float const dx = enemy.pos_x - context.base_pos_x;
+      float const dz = enemy.pos_z - context.base_pos_z;
       float const dist_sq = dx * dx + dz * dz;
 
       if (dist_sq < closest_distance_sq) {
@@ -63,7 +63,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
+    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       continue;
     }
 
@@ -93,8 +93,8 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     float offset_z = 0.0F;
 
     if (context.primary_barracks != 0) {
-      float const dx = unit->posX - closest_neutral_barracks->posX;
-      float const dz = unit->posZ - closest_neutral_barracks->posZ;
+      float const dx = unit->pos_x - closest_neutral_barracks->pos_x;
+      float const dz = unit->pos_z - closest_neutral_barracks->pos_z;
       float const dist = std::sqrt(dx * dx + dz * dz);
 
       if (dist > 0.1F) {
@@ -103,9 +103,9 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       }
     }
 
-    target_x.push_back(closest_neutral_barracks->posX + offset_x);
+    target_x.push_back(closest_neutral_barracks->pos_x + offset_x);
     target_y.push_back(0.0F);
-    target_z.push_back(closest_neutral_barracks->posZ + offset_z);
+    target_z.push_back(closest_neutral_barracks->pos_z + offset_z);
   }
 
   auto claimed_units = claim_units(unit_ids, get_priority(), "expanding",
@@ -136,7 +136,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.move_target_y = std::move(filtered_y);
   command.move_target_z = std::move(filtered_z);
 
-  outCommands.push_back(std::move(command));
+  out_commands.push_back(std::move(command));
 }
 
 auto ExpandBehavior::should_execute(const AISnapshot &snapshot,
