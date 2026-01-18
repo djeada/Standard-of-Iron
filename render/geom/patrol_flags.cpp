@@ -15,8 +15,8 @@ constexpr float k_position_grid_precision = 10.0F;
 constexpr int k_position_hash_shift = 32;
 
 void render_patrol_flags(Renderer *renderer, ResourceManager *resources,
-                       Engine::Core::World &world,
-                       const std::optional<QVector3D> &preview_waypoint) {
+                         Engine::Core::World &world,
+                         const std::optional<QVector3D> &preview_waypoint) {
   if ((renderer == nullptr) || (resources == nullptr)) {
     return;
   }

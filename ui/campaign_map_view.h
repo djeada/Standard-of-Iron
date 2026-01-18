@@ -26,6 +26,10 @@ class CampaignMapView : public QQuickFramebufferObject {
                  province_labels_changed)
   Q_PROPERTY(int current_mission READ current_mission WRITE set_current_mission
                  NOTIFY current_mission_changed)
+  Q_PROPERTY(float terrain_height_scale READ terrain_height_scale WRITE
+                 set_terrain_height_scale NOTIFY terrain_height_scale_changed)
+  Q_PROPERTY(bool show_province_fills READ show_province_fills WRITE
+                 set_show_province_fills NOTIFY show_province_fills_changed)
   Q_PROPERTY(float min_orbit_distance READ min_orbit_distance CONSTANT)
   Q_PROPERTY(float max_orbit_distance READ max_orbit_distance CONSTANT)
 public:
@@ -91,6 +95,16 @@ public:
   }
   void set_current_mission(int mission);
 
+  [[nodiscard]] auto terrain_height_scale() const -> float {
+    return m_terrain_height_scale;
+  }
+  void set_terrain_height_scale(float scale);
+
+  [[nodiscard]] auto show_province_fills() const -> bool {
+    return m_show_province_fills;
+  }
+  void set_show_province_fills(bool show);
+
 signals:
   void orbit_yaw_changed();
   void orbit_pitch_changed();
@@ -100,10 +114,10 @@ signals:
   void hover_province_id_changed();
   void province_labels_changed();
   void current_mission_changed();
+  void terrain_height_scale_changed();
+  void show_province_fills_changed();
 
 private:
-  // Cinematic camera defaults - showcases relief and depth
-  // Slight northwest tilt, more oblique pitch for terrain visibility
   float m_orbit_yaw = 185.0F;
   float m_orbit_pitch = 52.0F;
   float m_orbit_distance = 1.35F;
@@ -111,6 +125,8 @@ private:
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
   int m_current_mission = 7;
+  float m_terrain_height_scale = 1.0F;
+  bool m_show_province_fills = true;
 
   struct ProvinceHit {
     QString id;

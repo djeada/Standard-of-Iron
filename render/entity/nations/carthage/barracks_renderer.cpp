@@ -42,8 +42,8 @@ struct CarthagePalette {
 inline auto make_palette(const QVector3D &team) -> CarthagePalette {
   CarthagePalette p;
   p.team = clamp_vec_01(team);
-  p.team_trim =
-      clamp_vec_01(QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
+  p.team_trim = clamp_vec_01(
+      QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
 }
 

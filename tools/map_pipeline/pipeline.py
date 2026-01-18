@@ -59,6 +59,15 @@ NE_DATASETS = {
     },
 }
 
+ELEVATION_DATASET = {
+    "urls": [
+        "https://www.ngdc.noaa.gov/mgg/global/relief/ETOPO2022/data/60s/60s_bed_elev_gtif/ETOPO_2022_v1_60s_N90W180_bed.tif",
+    ],
+    "archive": "ETOPO_2022_v1_60s_N90W180_bed.tif",
+    "geotiff": "ETOPO_2022_v1_60s_N90W180_bed.tif",
+    "extract_dir": "",
+}
+
 
 @dataclass(frozen=True)
 class MapBounds:
@@ -113,6 +122,38 @@ def ensure_dataset(dataset: str, work_dir: Path) -> Path:
         with zipfile.ZipFile(archive_path, "r") as zf:
             zf.extractall(extract_dir)
     return shapefile_path
+
+
+def ensure_elevation_dataset(work_dir: Path) -> Path:
+    work_dir.mkdir(parents=True, exist_ok=True)
+    archive_path = work_dir / ELEVATION_DATASET["archive"]
+    if not archive_path.exists():
+        logging.info("Downloading elevation dataset to %s", archive_path)
+        last_error: Exception | None = None
+        for url in ELEVATION_DATASET["urls"]:
+            try:
+                logging.info("  trying %s", url)
+                req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+                with urlopen(req) as resp, open(archive_path, "wb") as out:
+                    out.write(resp.read())
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                logging.warning("  download failed: %s", exc)
+        if last_error:
+            raise last_error
+
+    if archive_path.suffix.lower() != ".zip":
+        return archive_path
+
+    extract_dir = work_dir / ELEVATION_DATASET["extract_dir"]
+    geotiff_path = extract_dir / ELEVATION_DATASET["geotiff"]
+    if not geotiff_path.exists():
+        logging.info("Extracting %s", archive_path)
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            zf.extractall(extract_dir)
+    return geotiff_path
 
 
 def load_geometries(shapefile_path: Path) -> Iterable:
@@ -336,6 +377,72 @@ def render_textures(
     )
 
 
+def render_heightmap(geotiff_path: Path, bounds: MapBounds, size: int = 1024):
+    try:
+        import rasterio
+        from rasterio.windows import from_bounds
+        from rasterio.transform import from_bounds as transform_from_bounds
+        from rasterio.warp import reproject, Resampling
+    except ImportError as exc:
+        raise RuntimeError(
+            "rasterio is required to generate terrain heightmaps. "
+            "Install it with: pip install -r tools/map_pipeline/requirements.txt"
+        ) from exc
+
+    with rasterio.open(geotiff_path) as src:
+        window = from_bounds(
+            bounds.lon_min,
+            bounds.lat_min,
+            bounds.lon_max,
+            bounds.lat_max,
+            transform=src.transform,
+        )
+        window = window.round_offsets().round_lengths()
+        src_window_transform = src.window_transform(window)
+
+        dst = np.empty((size, size), dtype=np.float32)
+        dst_transform = transform_from_bounds(
+            bounds.lon_min, bounds.lat_min, bounds.lon_max, bounds.lat_max, size, size
+        )
+
+        reproject(
+            source=rasterio.band(src, 1),
+            destination=dst,
+            src_transform=src_window_transform,
+            src_crs=src.crs,
+            dst_transform=dst_transform,
+            dst_crs=src.crs,
+            resampling=Resampling.bilinear,
+            src_nodata=src.nodata,
+            dst_nodata=np.nan,
+        )
+
+    if np.isnan(dst).any():
+        dst = np.nan_to_num(dst, nan=0.0)
+
+    min_m = float(np.min(dst))
+    max_m = float(np.max(dst))
+    if max_m - min_m < 1e-6:
+        raise RuntimeError("Elevation data has insufficient range for heightmap.")
+
+    norm = (dst - min_m) / (max_m - min_m)
+    norm = np.clip(norm, 0.0, 1.0)
+    img = (norm * 65535.0).astype(np.uint16)
+
+    heightmap_path = ASSETS_DIR / "terrain_height.png"
+    Image.fromarray(img, mode="I;16").save(heightmap_path)
+
+    meta = {
+        "dataset": "ETOPO2022_60s_bed",
+        "units": "meters",
+        "min_m": min_m,
+        "max_m": max_m,
+        "width": size,
+        "height": size,
+    }
+    (ASSETS_DIR / "terrain_height.json").write_text(json.dumps(meta, indent=2))
+
+
 def write_obj_mesh(tris: List[float], out_path: Path):
     out_path.parent.mkdir(parents=True, exist_ok=True)
     lines = ["# land mesh exported from land_mesh.bin"]
@@ -382,6 +489,7 @@ def main():
 
     land_shp = ensure_dataset("land", WORK_DIR)
     rivers_shp = ensure_dataset("rivers", WORK_DIR)
+    elevation_tif = ensure_elevation_dataset(WORK_DIR)
 
     land_geoms = list(load_geometries(land_shp))
     uv_geoms = clip_and_project(land_geoms, bounds)
@@ -411,6 +519,9 @@ def main():
     render_textures(uv_geoms, coast_lines, river_lines)
     logging.info("campaign_base_color.png and campaign_water.png written")
 
+    render_heightmap(elevation_tif, bounds)
+    logging.info("terrain_height.png and terrain_height.json written")
+
     write_obj_mesh(tris, ASSETS_DIR / "land_mesh.obj")
     write_obj_lines(coast_lines, ASSETS_DIR / "coastlines.obj")
     write_obj_lines(river_lines, ASSETS_DIR / "rivers.obj")
@@ -436,6 +547,8 @@ def main():
             "land_mesh_obj": str(ASSETS_DIR / "land_mesh.obj"),
             "coastlines_obj": str(ASSETS_DIR / "coastlines.obj"),
             "rivers_obj": str(ASSETS_DIR / "rivers.obj"),
+            "terrain_height_png": str(ASSETS_DIR / "terrain_height.png"),
+            "terrain_height_meta": str(ASSETS_DIR / "terrain_height.json"),
         },
     }
     (ASSETS_DIR / "manifest.json").write_text(json.dumps(manifest, indent=2))

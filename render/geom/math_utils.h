@@ -19,7 +19,7 @@ inline auto clamp_vec_01(const QVector3D &c) -> QVector3D {
 }
 
 inline auto clamp_vec(const QVector3D &c, float minVal,
-                     float maxVal) -> QVector3D {
+                      float maxVal) -> QVector3D {
   return {clamp_f(c.x(), minVal, maxVal), clamp_f(c.y(), minVal, maxVal),
           clamp_f(c.z(), minVal, maxVal)};
 }

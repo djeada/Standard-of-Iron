@@ -168,8 +168,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
       for (const auto &enemy : snapshot.visible_enemies) {
         float const dist_sq =
-            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, defend_pos_x,
-                             defend_pos_y, defend_pos_z);
+            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z,
+                             defend_pos_x, defend_pos_y, defend_pos_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
           closest_threat = &enemy;

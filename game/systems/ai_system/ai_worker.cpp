@@ -64,7 +64,8 @@ void AIWorker::worker_loop() {
     {
       std::unique_lock<std::mutex> lock(m_job_mutex);
       m_job_condition.wait(lock, [this]() {
-        return m_should_stop.load(std::memory_order_acquire) || m_has_pending_job;
+        return m_should_stop.load(std::memory_order_acquire) ||
+               m_has_pending_job;
       });
 
       if (m_should_stop.load(std::memory_order_acquire) && !m_has_pending_job) {

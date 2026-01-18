@@ -17,15 +17,10 @@ struct UnitMarker {
   bool is_building = false;
 };
 
-/// Callback type for checking fog-of-war visibility.
-/// Returns true if the given world position is visible/revealed to the player.
 using VisibilityCheckFn = std::function<bool(float world_x, float world_z)>;
 
-/// Callback type for getting player colors from the registry.
-/// Returns the RGB color for the given owner_id.
-using PlayerColorFn =
-    std::function<bool(int owner_id, std::uint8_t &r, std::uint8_t &g,
-                       std::uint8_t &b)>;
+using PlayerColorFn = std::function<bool(int owner_id, std::uint8_t &r,
+                                         std::uint8_t &g, std::uint8_t &b)>;
 
 struct TeamColors {
   struct ColorSet {
@@ -83,13 +78,6 @@ public:
 
   void update(const std::vector<UnitMarker> &markers);
 
-  /// Update with visibility and player color callbacks.
-  /// @param markers The unit markers to render.
-  /// @param local_owner_id The local player's owner ID (their units always
-  /// visible).
-  /// @param visibility_check Callback to check if position is visible/revealed.
-  /// @param player_color_fn Optional callback to get player colors from
-  /// registry.
   void update(const std::vector<UnitMarker> &markers, int local_owner_id,
               const VisibilityCheckFn &visibility_check,
               const PlayerColorFn &player_color_fn = nullptr);

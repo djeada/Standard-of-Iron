@@ -28,7 +28,7 @@ bool MinimapManager::consume_dirty_flag() {
 }
 
 void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
-  // Set minimap orientation from the map's camera yaw
+
   Game::Map::Minimap::MinimapOrientation::instance().set_yaw_degrees(
       map_def.camera.yaw_deg);
 
@@ -95,7 +95,7 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
     return;
   }
   m_minimap_fog_version = current_version;
-  mark_dirty(); // Fog changed
+  mark_dirty();
 
   const int vis_width = visibility_service.getWidth();
   const int vis_height = visibility_service.getHeight();
@@ -111,9 +111,8 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
   const int img_width = m_minimap_fog_image.width();
   const int img_height = m_minimap_fog_image.height();
 
-  // Use the orientation's inverse rotation for fog mapping
   const auto &orient = Game::Map::Minimap::MinimapOrientation::instance();
-  // Inverse rotation: swap sign of sin
+
   const float k_inv_cos = orient.cos_yaw();
   const float k_inv_sin = -orient.sin_yaw();
 
@@ -222,7 +221,6 @@ void MinimapManager::update_units(
     selected_ids.insert(sel.begin(), sel.end());
   }
 
-  // Compute a hash of unit state for change detection
   std::uint64_t unit_hash = 0;
 
   {
@@ -254,32 +252,30 @@ void MinimapManager::update_units(
 
       markers.push_back(marker);
 
-      // Simple hash: combine position and state
       unit_hash ^= static_cast<std::uint64_t>(entity_id);
-      unit_hash ^= static_cast<std::uint64_t>(
-                       *reinterpret_cast<const std::uint32_t *>(&marker.world_x))
-                   << 1;
-      unit_hash ^= static_cast<std::uint64_t>(
-                       *reinterpret_cast<const std::uint32_t *>(&marker.world_z))
-                   << 2;
+      unit_hash ^=
+          static_cast<std::uint64_t>(
+              *reinterpret_cast<const std::uint32_t *>(&marker.world_x))
+          << 1;
+      unit_hash ^=
+          static_cast<std::uint64_t>(
+              *reinterpret_cast<const std::uint32_t *>(&marker.world_z))
+          << 2;
       unit_hash ^= static_cast<std::uint64_t>(marker.is_selected) << 3;
     }
   }
 
-  // Only update if units changed
   if (unit_hash != m_last_unit_hash) {
     m_last_unit_hash = unit_hash;
     mark_dirty();
   }
 
-  // Create visibility check callback using VisibilityService
   auto &visibility_service = Game::Map::VisibilityService::instance();
   Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
 
   if (visibility_service.is_initialized()) {
     visibility_check = [&visibility_service](float world_x,
                                              float world_z) -> bool {
-      // Check if position is visible or explored (revealed)
       return visibility_service.isVisibleWorld(world_x, world_z) ||
              visibility_service.isExploredWorld(world_x, world_z);
     };
@@ -318,7 +314,6 @@ void MinimapManager::update_camera_viewport(const Render::GL::Camera *camera,
   const float camera_x = target.x() / m_tile_size;
   const float camera_z = target.z() / m_tile_size;
 
-  // Check if camera viewport changed
   constexpr float EPSILON = 0.01F;
   if (std::abs(camera_x - m_last_camera_x) > EPSILON ||
       std::abs(camera_z - m_last_camera_z) > EPSILON ||

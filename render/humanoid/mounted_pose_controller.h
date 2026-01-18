@@ -22,23 +22,23 @@ public:
 
   void riding_idle(const MountedAttachmentFrame &mount);
   void riding_leaning(const MountedAttachmentFrame &mount, float forward_lean,
-                     float side_lean);
+                      float side_lean);
   void riding_charging(const MountedAttachmentFrame &mount, float intensity);
   void riding_reining(const MountedAttachmentFrame &mount, float left_tension,
-                     float right_tension);
+                      float right_tension);
 
   void riding_melee_strike(const MountedAttachmentFrame &mount,
-                         float attack_phase);
+                           float attack_phase);
   void riding_spear_thrust(const MountedAttachmentFrame &mount,
-                         float attack_phase);
+                           float attack_phase);
   void riding_bow_shot(const MountedAttachmentFrame &mount, float draw_phase);
   void riding_shield_defense(const MountedAttachmentFrame &mount, bool raised);
 
   void hold_reins(const MountedAttachmentFrame &mount, float left_slack,
-                 float right_slack, float left_tension = 0.0F,
-                 float right_tension = 0.0F);
+                  float right_slack, float left_tension = 0.0F,
+                  float right_tension = 0.0F);
   void hold_spear_mounted(const MountedAttachmentFrame &mount,
-                        SpearGrip grip_style);
+                          SpearGrip grip_style);
   void hold_bow_mounted(const MountedAttachmentFrame &mount);
 
   enum class MountedSeatPose { Neutral, Forward, Defensive };
@@ -120,15 +120,15 @@ private:
                               const HorseDimensions &dims, float forward_bias,
                               float up_bias);
   void stabilize_upper_body(const MountedAttachmentFrame &mount,
-                          const HorseDimensions &dims);
+                            const HorseDimensions &dims);
   void apply_torso_sculpt(const MountedAttachmentFrame &mount,
                           float compression, float twist, float shoulder_dip);
   void update_head_hierarchy(const MountedAttachmentFrame &mount,
                              float extra_forward_tilt, float extra_side_tilt,
                              std::string_view debug_label = "head_sync");
   void hold_reins_impl(const MountedAttachmentFrame &mount, float left_slack,
-                     float right_slack, float left_tension, float right_tension,
-                     bool apply_left, bool apply_right);
+                       float right_slack, float left_tension,
+                       float right_tension, bool apply_left, bool apply_right);
 
   void apply_fixed_head_frame(const MountedAttachmentFrame &mount,
                               std::string_view debug_label);
