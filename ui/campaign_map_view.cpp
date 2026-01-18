@@ -846,6 +846,11 @@ void main() {
       return;
     }
 
+    // Named constants for double-stroke effect
+    static constexpr float k_outer_stroke_multiplier = 2.0F;
+    static const QVector4D k_outer_stroke_color{0.08F, 0.06F, 0.05F, 0.9F};
+    static const QVector4D k_inner_stroke_color{0.55F, 0.50F, 0.45F, 0.85F};
+
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
     m_line_program.setUniformValue("u_z", z_offset);
@@ -853,17 +858,15 @@ void main() {
     glBindVertexArray(layer.vao);
 
     // First pass: dark outer stroke (wider)
-    glLineWidth(layer.width * 2.0F);
-    QVector4D dark_color(0.08F, 0.06F, 0.05F, 0.9F);
-    m_line_program.setUniformValue("u_color", dark_color);
+    glLineWidth(layer.width * k_outer_stroke_multiplier);
+    m_line_program.setUniformValue("u_color", k_outer_stroke_color);
     for (const auto &span : layer.spans) {
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
 
     // Second pass: light inner stroke (original width)
     glLineWidth(layer.width);
-    QVector4D light_color(0.55F, 0.50F, 0.45F, 0.85F);
-    m_line_program.setUniformValue("u_color", light_color);
+    m_line_program.setUniformValue("u_color", k_inner_stroke_color);
     for (const auto &span : layer.spans) {
       glDrawArrays(GL_LINE_STRIP, span.start, span.count);
     }
@@ -942,9 +945,12 @@ void main() {
       return;
     }
 
+    // Named constant for spline smoothing quality
+    static constexpr int k_spline_segments_per_span = 6;
+
     // Apply Catmull-Rom spline smoothing to create curved paths
     std::vector<QVector2D> smoothed;
-    smooth_path_with_spline(input, smoothed, 6);
+    smooth_path_with_spline(input, smoothed, k_spline_segments_per_span);
 
     // Remove duplicate points from smoothed path
     std::vector<QVector2D> points;
