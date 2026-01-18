@@ -1,8 +1,8 @@
 #version 330 core
 
+// Vertex data layout: [pos.x, pos.y, local.x, symbol_type] - 4 floats per vertex
 layout(location = 0) in vec2 a_pos;
-layout(location = 1) in vec2 a_local;
-layout(location = 2) in float a_symbol_type;
+layout(location = 1) in vec2 a_local_and_type; // .x = local coord, .y = symbol type
 
 uniform mat4 u_mvp;
 uniform float u_z;
@@ -14,6 +14,6 @@ void main() {
     vec3 world = vec3(1.0 - a_pos.x, u_z, a_pos.y);
     gl_Position = u_mvp * vec4(world, 1.0);
     
-    v_local = a_local;
-    v_symbol_type = a_symbol_type;
+    v_local = vec2(a_local_and_type.x, 0.0); // Use local.x for simple shading
+    v_symbol_type = a_local_and_type.y;
 }

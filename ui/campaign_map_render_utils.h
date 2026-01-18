@@ -134,6 +134,9 @@ inline auto perp_ccw(const QVector2D &v) -> QVector2D {
 
 /**
  * @brief Safe normalization that returns zero vector for near-zero input
+ * @note Returns zero vector for degenerate inputs. Callers should handle
+ *       the zero-vector case explicitly if a valid direction is required.
+ *       Consider using a default direction when this function returns null.
  */
 inline auto safe_normalize(const QVector2D &v, float epsilon = 1e-5F) -> QVector2D {
   const float len = v.length();
@@ -272,10 +275,14 @@ inline auto build_stroke_mesh(const std::vector<QVector2D> &points,
       QVector2D dir0 = safe_normalize(cleaned[i] - cleaned[i - 1]);
       QVector2D dir1 = safe_normalize(cleaned[i + 1] - cleaned[i]);
 
-      if (dir0.isNull()) {
+      // Handle degenerate cases where direction is null
+      if (dir0.isNull() && dir1.isNull()) {
+        // Both directions are null - use default horizontal direction
+        dir0 = QVector2D(1.0F, 0.0F);
+        dir1 = QVector2D(1.0F, 0.0F);
+      } else if (dir0.isNull()) {
         dir0 = dir1;
-      }
-      if (dir1.isNull()) {
+      } else if (dir1.isNull()) {
         dir1 = dir0;
       }
 

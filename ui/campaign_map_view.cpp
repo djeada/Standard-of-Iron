@@ -1413,6 +1413,7 @@ void main() {
     std::vector<QVector2D> outline = CampaignMapRender::generate_shield_badge(
         QVector2D(0.0F, 0.0F), 1.0F, 16);
 
+    // Triangle fan requires at least 3 vertices for a valid triangle
     if (outline.size() < 3) {
       badge.ready = false;
       return;
@@ -1472,6 +1473,7 @@ void main() {
     update_mission_badge_position(badge, m_path_layer, m_current_mission);
     build_badge_geometry(badge);
 
+    // Triangle fan requires at least 3 vertices (including center) for valid rendering
     if (badge.vao == 0 || badge.vertex_count < 3) {
       return;
     }
