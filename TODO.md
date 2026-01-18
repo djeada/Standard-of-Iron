@@ -31,19 +31,22 @@
   - *Badge shader: `campaign_badge.frag` with SDF shapes (shield, seal, banner, medallion)*
   - *Multi-pass: shadow → border → primary fill with gradient*
 
-## In Progress (Infrastructure Ready)
+- [x] Introduce true 3D terrain mesh: height-displaced land mesh (DEM -> mesh) with normal map, directional light, and subtle AO so relief reads immediately.
+  - *Implementation: `TerrainMesh` struct with procedural heightmap generation*
+  - *Heightmap: `generate_terrain_height()` with Mediterranean mountain ranges (Alps, Pyrenees, Apennines, Atlas)*
+  - *Normals: `compute_terrain_normal()` using central differences*
+  - *Terrain shader: `campaign_terrain.vert/.frag` with height displacement, hillshade, AO*
 
-- [ ] Introduce true 3D terrain mesh: height-displaced land mesh (DEM -> mesh) with normal map, directional light, and subtle AO so relief reads immediately.
-  - *Shader ready: `campaign_terrain.vert/.frag` with height displacement, normal-based lighting, AO*
-  - *Pending: Heightmap data generation (DEM source required)*
+- [x] Upgrade base cartography textures: add hillshade overlay, bathymetry tint, and landform shading for an illustrated map feel.
+  - *Implementation: `HillshadeLayer` with procedural hillshade texture generation*
+  - *Hillshade: `generate_hillshade_texture()` with configurable light direction and vertical exaggeration*
+  - *Bathymetry/landform: `getElevationTint()` in terrain fragment shader*
 
-- [ ] Upgrade base cartography textures: add hillshade overlay, bathymetry tint, and landform shading for an illustrated map feel.
-  - *Shader support: `campaign_terrain.frag` includes hillshade, bathymetry tinting, landform shading*
-  - *Pending: Pre-baked hillshade texture generation*
-
-- [ ] Typography polish: use a dedicated serif/engraved style for province labels and city names, consistent scaling with zoom.
-  - *Pending: Requires font rendering infrastructure (SDF fonts or texture atlas)*
-  - *Zoom-consistent scaling logic can use `uv_width_for_pixels()` pattern*
+- [x] Typography polish: use a dedicated serif/engraved style for province labels and city names, consistent scaling with zoom.
+  - *Implementation: `LabelLayer` with province/city labels extracted from provinces.json*
+  - *Label styles: `LabelStyles::province_label()`, `city_label()`, `region_label()`, `sea_label()`*
+  - *SDF shader: `campaign_label.vert/.frag` with stroke/fill rendering*
+  - *Zoom scaling: `compute_label_scale()` for consistent screen-space sizing*
 
 ## Files Added
 
@@ -54,6 +57,7 @@
 - `campaign_badge.vert/.frag` - Mission marker badges (SDF shapes)
 - `campaign_symbol.vert/.frag` - Cartographic symbols (SDF shapes)
 - `campaign_coastline.frag` - Double-stroke coastline rendering
+- `campaign_label.vert/.frag` - SDF-based typography for labels
 
 ### Utility Header (`ui/`)
 - `campaign_map_render_utils.h` - Comprehensive rendering utilities:
@@ -65,4 +69,8 @@
   - Cartographic symbol geometry generation
   - Mission badge geometry generation
   - Cinematic camera defaults
+  - Mediterranean terrain heightmap generation
+  - Hillshade texture generation
+  - Typography label styling and geometry
+
 

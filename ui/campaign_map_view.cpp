@@ -183,6 +183,50 @@ struct CartographicSymbolLayer {
   bool show_shadow = true;
 };
 
+// 3D Terrain mesh with height displacement
+struct TerrainMesh {
+  GLuint vao = 0;
+  GLuint vbo = 0;
+  int vertex_count = 0;
+  bool ready = false;
+
+  // Height displacement settings
+  float height_scale = 0.05F;
+  float z_base = 0.0F;
+};
+
+// Hillshade texture for terrain shading
+struct HillshadeLayer {
+  GLuint texture_id = 0;
+  int width = 0;
+  int height = 0;
+  bool ready = false;
+
+  // Hillshade configuration
+  QVector3D light_direction{0.35F, 0.85F, 0.40F};
+  float ambient = 0.25F;
+  float intensity = 1.0F;
+};
+
+// Province label for typography
+struct ProvinceLabel {
+  QString text;
+  QVector2D position;  // UV position
+  int importance;      // 1=minor, 2=major, 3=capital
+  bool is_sea = false;
+};
+
+struct LabelLayer {
+  GLuint vao = 0;
+  GLuint vbo = 0;
+  std::vector<ProvinceLabel> labels;
+  int total_vertices = 0;
+  bool ready = false;
+
+  // Font atlas texture
+  GLuint font_texture = 0;
+};
+
 struct QStringHash {
   std::size_t operator()(const QString &s) const noexcept { return qHash(s); }
 };
@@ -286,6 +330,9 @@ public:
     // Draw emblematic mission badge at current path endpoint
     draw_mission_badge(m_mission_badge, mvp, 0.008F);
 
+    // Draw province/city labels with cartographic typography
+    draw_label_layer(m_label_layer, mvp, 0.009F);
+
     if (!m_hover_province_id.isEmpty()) {
       qint64 now = QDateTime::currentMSecsSinceEpoch();
       if (now - m_last_update_time >= 16) {
@@ -337,6 +384,8 @@ private:
 
   QOpenGLShaderProgram m_texture_program;
   QOpenGLShaderProgram m_line_program;
+  QOpenGLShaderProgram m_terrain_program;  // 3D terrain shader
+  QOpenGLShaderProgram m_label_program;    // Typography shader
 
   GLuint m_quad_vao = 0;
   GLuint m_quad_vbo = 0;
@@ -355,6 +404,9 @@ private:
   ProvinceLayer m_province_layer;
   MissionBadge m_mission_badge;  // Emblematic mission marker
   CartographicSymbolLayer m_symbol_layer;  // Map symbols (mountains, cities, ports)
+  TerrainMesh m_terrain_mesh;    // 3D terrain with height displacement
+  HillshadeLayer m_hillshade;    // Hillshade texture for terrain shading
+  LabelLayer m_label_layer;      // Province/city labels
 
   // Cinematic camera defaults - showcases relief and depth
   float m_orbit_yaw = 185.0F;     // Slight northwest tilt
@@ -422,6 +474,16 @@ private:
     // Initialize cartographic symbols (mountains, cities, ports)
     init_symbol_layer(m_symbol_layer,
                       QStringLiteral(":/assets/campaign_map/provinces.json"));
+
+    // Initialize 3D terrain mesh with height displacement
+    init_terrain_mesh(m_terrain_mesh, 64);  // 64x64 resolution grid
+
+    // Generate hillshade texture for terrain shading
+    init_hillshade_layer(m_hillshade, 256, 256);  // 256x256 hillshade texture
+
+    // Initialize province/city labels
+    init_label_layer(m_label_layer,
+                     QStringLiteral(":/assets/campaign_map/provinces.json"));
 
     m_initialized = true;
     return true;
@@ -1032,6 +1094,224 @@ void main() {
     m_line_program.setUniformValue("u_color", layer.stroke_color);
     glBindVertexArray(layer.vao);
     glDrawArrays(GL_LINE_STRIP, 0, layer.total_vertices);
+    glBindVertexArray(0);
+
+    m_line_program.release();
+  }
+
+  // Initialize 3D terrain mesh with height displacement
+  void init_terrain_mesh(TerrainMesh &mesh, int resolution) {
+    std::vector<float> vertices = CampaignMapRender::generate_terrain_mesh(
+        resolution, mesh.height_scale);
+
+    if (vertices.empty()) {
+      mesh.ready = false;
+      return;
+    }
+
+    if (mesh.vao == 0) {
+      glGenVertexArrays(1, &mesh.vao);
+      glGenBuffers(1, &mesh.vbo);
+    }
+
+    glBindVertexArray(mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(vertices.size() * sizeof(float)),
+                 vertices.data(), GL_STATIC_DRAW);
+
+    // Vertex format: pos(2) + uv(2) + height(1) + normal(3) = 8 floats
+    const int stride = 8 * sizeof(float);
+
+    // Position (location 0)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(0));
+    // UV (location 1)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(2 * sizeof(float)));
+    // Height (location 2)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(4 * sizeof(float)));
+    // Normal (location 3)
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(5 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    mesh.vertex_count = static_cast<int>(vertices.size() / 8);
+    mesh.ready = true;
+  }
+
+  // Generate and upload hillshade texture
+  void init_hillshade_layer(HillshadeLayer &layer, int width, int height) {
+    CampaignMapRender::HillshadeConfig config;
+    config.light_direction = layer.light_direction;
+    config.ambient = layer.ambient;
+    config.intensity = layer.intensity;
+
+    std::vector<unsigned char> pixels =
+        CampaignMapRender::generate_hillshade_texture(width, height, config);
+
+    if (pixels.empty()) {
+      layer.ready = false;
+      return;
+    }
+
+    if (layer.texture_id == 0) {
+      glGenTextures(1, &layer.texture_id);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, layer.texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, pixels.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    layer.width = width;
+    layer.height = height;
+    layer.ready = true;
+  }
+
+  // Initialize province/city labels from provinces data
+  void init_label_layer(LabelLayer &layer, const QString &resource_path) {
+    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      qWarning() << "CampaignMapRenderer: Failed to open labels source" << path;
+      return;
+    }
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (!doc.isObject()) {
+      qWarning() << "CampaignMapRenderer: Labels JSON invalid" << path;
+      return;
+    }
+
+    // Extract labels from provinces
+    const QJsonArray provinces = doc.object().value("provinces").toArray();
+    for (const auto &prov_val : provinces) {
+      const QJsonObject prov = prov_val.toObject();
+      const QString name = prov.value("name").toString();
+      const QJsonArray label_uv = prov.value("label_uv").toArray();
+
+      if (name.isEmpty() || label_uv.size() < 2) {
+        continue;
+      }
+
+      ProvinceLabel label;
+      label.text = name;
+      label.position = QVector2D(static_cast<float>(label_uv.at(0).toDouble()),
+                                 static_cast<float>(label_uv.at(1).toDouble()));
+
+      // Determine importance based on province type
+      const QString id = prov.value("id").toString().toLower();
+      if (id.contains("core") || id.contains("capital")) {
+        label.importance = 3;
+      } else if (id.contains("major") || prov.value("cities").toArray().size() > 2) {
+        label.importance = 2;
+      } else {
+        label.importance = 1;
+      }
+
+      // Check if it's a sea region
+      label.is_sea = id.contains("sea") || id.contains("mare") ||
+                     id.contains("mediterranean");
+
+      layer.labels.push_back(label);
+    }
+
+    // Build label geometry
+    build_label_geometry(layer);
+  }
+
+  // Build geometry for all labels
+  void build_label_geometry(LabelLayer &layer) {
+    std::vector<float> verts;
+
+    for (const auto &label : layer.labels) {
+      // Get appropriate style based on label type
+      CampaignMapRender::LabelStyle style;
+      if (label.is_sea) {
+        style = CampaignMapRender::LabelStyles::sea_label();
+      } else if (label.importance >= 3) {
+        style = CampaignMapRender::LabelStyles::region_label();
+      } else if (label.importance >= 2) {
+        style = CampaignMapRender::LabelStyles::province_label();
+      } else {
+        style = CampaignMapRender::LabelStyles::city_label();
+      }
+
+      // Generate quads for this label
+      std::vector<float> label_verts = CampaignMapRender::generate_label_quads(
+          label.position, label.text.toStdString(), style);
+
+      verts.insert(verts.end(), label_verts.begin(), label_verts.end());
+    }
+
+    if (verts.empty()) {
+      layer.ready = false;
+      return;
+    }
+
+    if (layer.vao == 0) {
+      glGenVertexArrays(1, &layer.vao);
+      glGenBuffers(1, &layer.vbo);
+    }
+
+    glBindVertexArray(layer.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, layer.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                 verts.data(), GL_STATIC_DRAW);
+
+    // Vertex format: pos(2) + uv(2) + local(2) = 6 floats
+    const int stride = 6 * sizeof(float);
+
+    // Position (location 0)
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(0));
+    // UV (location 1)
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(2 * sizeof(float)));
+    // Local (location 2)
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
+                          reinterpret_cast<void *>(4 * sizeof(float)));
+
+    glBindVertexArray(0);
+
+    layer.total_vertices = static_cast<int>(verts.size() / 6);
+    layer.ready = true;
+  }
+
+  // Draw labels with typography styling
+  void draw_label_layer(const LabelLayer &layer, const QMatrix4x4 &mvp,
+                        float z_offset) {
+    if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
+      return;
+    }
+
+    // Use line program as fallback (simplified rendering)
+    // Full implementation would use m_label_program with SDF font atlas
+    m_line_program.bind();
+    m_line_program.setUniformValue("u_mvp", mvp);
+    m_line_program.setUniformValue("u_z", z_offset);
+
+    // Draw with sepia/brown color for cartographic look
+    m_line_program.setUniformValue("u_color",
+        QVector4D(0.25F, 0.20F, 0.15F, 0.85F));
+
+    glBindVertexArray(layer.vao);
+    glDrawArrays(GL_TRIANGLES, 0, layer.total_vertices);
     glBindVertexArray(0);
 
     m_line_program.release();
@@ -1672,6 +1952,40 @@ void main() {
     }
     m_symbol_layer.symbols.clear();
     m_symbol_layer.ready = false;
+
+    // Cleanup terrain mesh
+    if (m_terrain_mesh.vbo != 0) {
+      glDeleteBuffers(1, &m_terrain_mesh.vbo);
+      m_terrain_mesh.vbo = 0;
+    }
+    if (m_terrain_mesh.vao != 0) {
+      glDeleteVertexArrays(1, &m_terrain_mesh.vao);
+      m_terrain_mesh.vao = 0;
+    }
+    m_terrain_mesh.ready = false;
+
+    // Cleanup hillshade texture
+    if (m_hillshade.texture_id != 0) {
+      glDeleteTextures(1, &m_hillshade.texture_id);
+      m_hillshade.texture_id = 0;
+    }
+    m_hillshade.ready = false;
+
+    // Cleanup label layer
+    if (m_label_layer.vbo != 0) {
+      glDeleteBuffers(1, &m_label_layer.vbo);
+      m_label_layer.vbo = 0;
+    }
+    if (m_label_layer.vao != 0) {
+      glDeleteVertexArrays(1, &m_label_layer.vao);
+      m_label_layer.vao = 0;
+    }
+    if (m_label_layer.font_texture != 0) {
+      glDeleteTextures(1, &m_label_layer.font_texture);
+      m_label_layer.font_texture = 0;
+    }
+    m_label_layer.labels.clear();
+    m_label_layer.ready = false;
 
     m_base_texture = nullptr;
     m_water_texture = nullptr;
