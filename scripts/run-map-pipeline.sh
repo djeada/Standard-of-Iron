@@ -16,15 +16,35 @@ for arg in "$@"; do
   fi
 done
 
-map_has_output=false
-if [ -d "$map_output_dir" ] &&
-   [ -n "$(find "$map_output_dir" -mindepth 1 -print -quit)" ]; then
-  map_has_output=true
+required_outputs=(
+  "$map_output_dir/campaign_base_color.png"
+  "$map_output_dir/campaign_water.png"
+  "$map_output_dir/coastlines_uv.json"
+  "$map_output_dir/rivers_uv.json"
+  "$map_output_dir/land_mesh.bin"
+  "$map_output_dir/provinces.json"
+  "$map_output_dir/hannibal_path.json"
+)
+
+missing_outputs=()
+if [ -d "$map_output_dir" ]; then
+  for output in "${required_outputs[@]}"; do
+    if [ ! -s "$output" ]; then
+      missing_outputs+=("$output")
+    fi
+  done
+else
+  missing_outputs=("${required_outputs[@]}")
 fi
 
-if [ "$rebuild_maps" != "1" ] && [ "$map_has_output" = "true" ]; then
+if [ "$rebuild_maps" != "1" ] && [ "${#missing_outputs[@]}" -eq 0 ]; then
   echo "Map pipeline output already present; skipping. Use --rebuild to force."
   exit 0
+fi
+
+if [ "$rebuild_maps" != "1" ] && [ "${#missing_outputs[@]}" -gt 0 ]; then
+  echo "Map pipeline outputs missing; regenerating:"
+  printf '  - %s\n' "${missing_outputs[@]}"
 fi
 
 # Ensure Python exists
