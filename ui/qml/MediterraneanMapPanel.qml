@@ -175,6 +175,19 @@ Rectangle {
 
     }
 
+    function reset_view() {
+        if (selected_mission && selected_mission.world_region_id) {
+            focus_on_region(selected_mission.world_region_id);
+            return ;
+        }
+
+        map_orbit_yaw = 180;
+        map_orbit_pitch = 90;
+        map_orbit_distance = 1.2;
+        map_pan_u = 0;
+        map_pan_v = 0;
+    }
+
     function label_uv_for(prov) {
         if (prov && prov.label_uv && prov.label_uv.length === 2)
             return prov.label_uv;
@@ -222,530 +235,574 @@ Rectangle {
         apply_campaign_state();
     }
 
-    Loader {
-        id: campaignMapLoader
+    Item {
+        id: mapViewport
 
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
-        active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
-        onStatusChanged: {
-            if (status === Loader.Ready) {
-                root.load_provinces();
-                root.apply_campaign_state();
+        clip: true
+
+        Loader {
+            id: campaignMapLoader
+
+            anchors.fill: parent
+            active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+            onStatusChanged: {
+                if (status === Loader.Ready) {
+                    root.load_provinces();
+                    root.apply_campaign_state();
+                }
             }
+
+            sourceComponent: Component {
+                CampaignMapView {
+                    id: campaign_map
+
+                    anchors.fill: parent
+                    orbit_yaw: root.map_orbit_yaw
+                    orbit_pitch: root.map_orbit_pitch
+                    orbit_distance: root.map_orbit_distance
+                    pan_u: root.map_pan_u
+                    pan_v: root.map_pan_v
+                    current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
+                    hover_province_id: {
+                        if (root.active_region_id !== "")
+                            return root.active_region_id;
+
+                        var info = province_info_at_screen(root.hover_mouse_x, root.hover_mouse_y);
+                        return info && info.id ? info.id : "";
+                    }
+                    onOrbit_yaw_changed: root.label_refresh += 1
+                    onOrbit_pitch_changed: root.label_refresh += 1
+                    onOrbit_distance_changed: root.label_refresh += 1
+                    onPan_u_changed: root.label_refresh += 1
+                    onPan_v_changed: root.label_refresh += 1
+                    onCurrent_mission_changed: root.label_refresh += 1
+                    onWidthChanged: root.label_refresh += 1
+                    onHeightChanged: root.label_refresh += 1
+
+                    Behavior on orbit_yaw {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.InOutQuad
+                        }
+
+                    }
+
+                    Behavior on orbit_pitch {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.InOutQuad
+                        }
+
+                    }
+
+                    Behavior on orbit_distance {
+                        NumberAnimation {
+                            duration: 600
+                            easing.type: Easing.InOutQuad
+                        }
+
+                    }
+
+                }
+
+            }
+
         }
 
-        sourceComponent: Component {
-            CampaignMapView {
-                id: campaign_map
+        Rectangle {
+            id: resetViewButton
+
+            anchors.top: parent.top
+            anchors.right: parent.right
+            anchors.margins: Theme.spacingMedium
+            height: 24
+            width: resetViewLabel.implicitWidth + 16
+            radius: 4
+            color: "#f5f0e6"
+            border.color: "#8b7355"
+            border.width: 1
+            opacity: resetViewArea.containsMouse ? 1.0 : 0.9
+            z: 8
+            visible: campaignMapLoader.item
+
+            Label {
+                id: resetViewLabel
+
+                anchors.centerIn: parent
+                text: qsTr("Reset view")
+                color: "#2d241c"
+                font.pointSize: Theme.fontSizeTiny
+                font.bold: true
+            }
+
+            MouseArea {
+                id: resetViewArea
 
                 anchors.fill: parent
-                orbit_yaw: root.map_orbit_yaw
-                orbit_pitch: root.map_orbit_pitch
-                orbit_distance: root.map_orbit_distance
-                pan_u: root.map_pan_u
-                pan_v: root.map_pan_v
-                current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
-                hover_province_id: {
-                    if (root.active_region_id !== "")
-                        return root.active_region_id;
-
-                    var info = province_info_at_screen(root.hover_mouse_x, root.hover_mouse_y);
-                    return info && info.id ? info.id : "";
-                }
-                onOrbit_yaw_changed: root.label_refresh += 1
-                onOrbit_pitch_changed: root.label_refresh += 1
-                onOrbit_distance_changed: root.label_refresh += 1
-                onPan_u_changed: root.label_refresh += 1
-                onPan_v_changed: root.label_refresh += 1
-                onCurrent_mission_changed: root.label_refresh += 1
-                onWidthChanged: root.label_refresh += 1
-                onHeightChanged: root.label_refresh += 1
-
-                Behavior on orbit_yaw {
-                    NumberAnimation {
-                        duration: 600
-                        easing.type: Easing.InOutQuad
-                    }
-
-                }
-
-                Behavior on orbit_pitch {
-                    NumberAnimation {
-                        duration: 600
-                        easing.type: Easing.InOutQuad
-                    }
-
-                }
-
-                Behavior on orbit_distance {
-                    NumberAnimation {
-                        duration: 600
-                        easing.type: Easing.InOutQuad
-                    }
-
-                }
-
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.reset_view()
             }
-
         }
 
-    }
+        MouseArea {
+            property real last_x: 0
+            property real last_y: 0
+            property real drag_distance: 0
 
-    MouseArea {
-        property real last_x: 0
-        property real last_y: 0
-        property real drag_distance: 0
-
-        anchors.fill: parent
-        hoverEnabled: true
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onPressed: function(mouse) {
-            last_x = mouse.x;
-            last_y = mouse.y;
-            drag_distance = 0;
-        }
-        onPositionChanged: function(mouse) {
-            var dx = mouse.x - last_x;
-            var dy = mouse.y - last_y;
-            if ((mouse.buttons & Qt.RightButton) || (mouse.buttons & Qt.LeftButton && (mouse.modifiers & Qt.ShiftModifier))) {
-                var pan_scale = 0.0015 * root.map_orbit_distance;
-                root.map_pan_u -= dx * pan_scale;
-                root.map_pan_v += dy * pan_scale;
-            } else if (mouse.buttons & Qt.LeftButton) {
-                root.map_orbit_yaw += dx * 0.4;
-                root.map_orbit_pitch = Math.max(5, Math.min(90, root.map_orbit_pitch + dy * 0.4));
+            anchors.fill: parent
+            hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            onPressed: function(mouse) {
+                last_x = mouse.x;
+                last_y = mouse.y;
+                drag_distance = 0;
             }
-            drag_distance += Math.abs(dx) + Math.abs(dy);
-            last_x = mouse.x;
-            last_y = mouse.y;
-            root.hover_mouse_x = mouse.x;
-            root.hover_mouse_y = mouse.y;
-            if (root.active_region_id === "" && campaignMapLoader.item) {
+            onPositionChanged: function(mouse) {
+                var dx = mouse.x - last_x;
+                var dy = mouse.y - last_y;
+                if ((mouse.buttons & Qt.RightButton) || (mouse.buttons & Qt.LeftButton && (mouse.modifiers & Qt.ShiftModifier))) {
+                    var pan_scale = 0.0015 * root.map_orbit_distance;
+                    root.map_pan_u -= dx * pan_scale;
+                    root.map_pan_v += dy * pan_scale;
+                } else if (mouse.buttons & Qt.LeftButton) {
+                    root.map_orbit_yaw += dx * 0.4;
+                    root.map_orbit_pitch = Math.max(5, Math.min(90, root.map_orbit_pitch + dy * 0.4));
+                }
+                drag_distance += Math.abs(dx) + Math.abs(dy);
+                last_x = mouse.x;
+                last_y = mouse.y;
+                root.hover_mouse_x = mouse.x;
+                root.hover_mouse_y = mouse.y;
+                if (root.active_region_id === "" && campaignMapLoader.item) {
+                    var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
+                    var id = info && info.id ? info.id : "";
+                    root.hover_province_name = info && info.name ? info.name : "";
+                    root.hover_province_owner = info && info.owner ? info.owner : "";
+                }
+            }
+            onExited: {
+                if (root.active_region_id === "") {
+                    root.hover_province_name = "";
+                    root.hover_province_owner = "";
+                }
+            }
+            onReleased: function(mouse) {
+                if (mouse.button !== Qt.LeftButton)
+                    return ;
+
+                if (drag_distance > 6)
+                    return ;
+
+                if (!campaignMapLoader.item)
+                    return ;
+
                 var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
                 var id = info && info.id ? info.id : "";
-                root.hover_province_name = info && info.name ? info.name : "";
-                root.hover_province_owner = info && info.owner ? info.owner : "";
+                if (id !== "")
+                    root.regionSelected(id);
+
+            }
+            onWheel: function(wheel) {
+                var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
+                var next_distance = root.map_orbit_distance * step;
+                if (campaignMapLoader.item)
+                    root.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, next_distance));
+
+                wheel.accepted = true;
             }
         }
-        onExited: {
-            if (root.active_region_id === "") {
-                root.hover_province_name = "";
-                root.hover_province_owner = "";
+
+        Repeater {
+            model: root.province_labels
+
+            delegate: Repeater {
+                property var _cities: (modelData && modelData.cities) ? modelData.cities : []
+
+                model: _cities
+
+                delegate: Item {
+                    property var city_data: modelData
+                    property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
+                    property int _refresh: root.label_refresh
+                    property var _pos: (_city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+
+                    visible: _city_uv !== null && city_data.name && city_data.name.length > 0
+                    z: 4
+                    x: _pos.x
+                    y: _pos.y
+
+                    Rectangle {
+                        width: 6
+                        height: 6
+                        radius: 3
+                        color: "#f2e6c8"
+                        border.color: "#2d241c"
+                        border.width: 1
+                        x: -width / 2
+                        y: -height / 2
+                    }
+
+                    Text {
+                        text: city_data.name
+                        color: "#111111"
+                        font.pointSize: Theme.fontSizeTiny
+                        font.bold: true
+                        style: Text.Outline
+                        styleColor: "#f2e6c8"
+                        x: 6
+                        y: -height / 2
+                    }
+
+                }
+
             }
-        }
-        onReleased: function(mouse) {
-            if (mouse.button !== Qt.LeftButton)
-                return ;
-
-            if (drag_distance > 6)
-                return ;
-
-            if (!campaignMapLoader.item)
-                return ;
-
-            var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
-            var id = info && info.id ? info.id : "";
-            if (id !== "")
-                root.regionSelected(id);
 
         }
-        onWheel: function(wheel) {
-            var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
-            var next_distance = root.map_orbit_distance * step;
-            if (campaignMapLoader.item)
-                root.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, next_distance));
 
-            wheel.accepted = true;
-        }
-    }
+        Repeater {
+            id: missionMarkerRepeater
 
-    Repeater {
-        model: root.province_labels
+            property var mission_region_map: ({
+                "transalpine_gaul": {
+                    "uv": [0.28, 0.35],
+                    "name": "Rhône"
+                },
+                "cisalpine_gaul": {
+                    "uv": [0.42, 0.38],
+                    "name": "N. Italy"
+                },
+                "etruria": {
+                    "uv": [0.44, 0.48],
+                    "name": "Trasimene"
+                },
+                "southern_italy": {
+                    "uv": [0.5, 0.53],
+                    "name": "Cannae"
+                },
+                "carthage_core": {
+                    "uv": [0.4, 0.78],
+                    "name": "Zama"
+                }
+            })
 
-        delegate: Repeater {
-            property var _cities: (modelData && modelData.cities) ? modelData.cities : []
-
-            model: _cities
+            model: root.selected_mission ? 1 : 0
 
             delegate: Item {
-                property var city_data: modelData
-                property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
+                property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
+                property var marker_uv: region_info ? region_info.uv : null
                 property int _refresh: root.label_refresh
-                property var _pos: (_city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+                property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
 
-                visible: _city_uv !== null && city_data.name && city_data.name.length > 0
-                z: 4
+                visible: marker_uv !== null && root.active_region_id !== ""
+                z: 6
                 x: _pos.x
                 y: _pos.y
 
                 Rectangle {
-                    width: 6
-                    height: 6
-                    radius: 3
-                    color: "#f2e6c8"
-                    border.color: "#2d241c"
-                    border.width: 1
+                    width: 24
+                    height: 24
+                    radius: 12
+                    color: "#cc8f47"
+                    border.color: "#ffffff"
+                    border.width: 2
                     x: -width / 2
                     y: -height / 2
+                    opacity: 0.9
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "⚔"
+                        color: "#ffffff"
+                        font.pointSize: Theme.fontSizeSmall
+                        font.bold: true
+                    }
+
+                    SequentialAnimation on scale {
+                        loops: Animation.Infinite
+                        running: visible
+
+                        NumberAnimation {
+                            from: 1
+                            to: 1.15
+                            duration: 800
+                            easing.type: Easing.InOutQuad
+                        }
+
+                        NumberAnimation {
+                            from: 1.15
+                            to: 1
+                            duration: 800
+                            easing.type: Easing.InOutQuad
+                        }
+
+                    }
+
                 }
 
                 Text {
-                    text: city_data.name
-                    color: "#111111"
-                    font.pointSize: Theme.fontSizeTiny
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.topMargin: -24
+                    text: region_info ? region_info.name : ""
+                    color: "#ffffff"
+                    font.pointSize: Theme.fontSizeSmall
                     font.bold: true
                     style: Text.Outline
-                    styleColor: "#f2e6c8"
-                    x: 6
-                    y: -height / 2
+                    styleColor: "#000000"
                 }
 
             }
 
         }
 
-    }
+        Item {
+            id: hannibalIcon
 
-    Repeater {
-        id: missionMarkerRepeater
-
-        property var mission_region_map: ({
-            "transalpine_gaul": {
-                "uv": [0.28, 0.35],
-                "name": "Rhône"
-            },
-            "cisalpine_gaul": {
-                "uv": [0.42, 0.38],
-                "name": "N. Italy"
-            },
-            "etruria": {
-                "uv": [0.44, 0.48],
-                "name": "Trasimene"
-            },
-            "southern_italy": {
-                "uv": [0.5, 0.53],
-                "name": "Cannae"
-            },
-            "carthage_core": {
-                "uv": [0.4, 0.78],
-                "name": "Zama"
-            }
-        })
-
-        model: root.selected_mission ? 1 : 0
-
-        delegate: Item {
-            property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
-            property var marker_uv: region_info ? region_info.uv : null
             property int _refresh: root.label_refresh
-            property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
+            property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
+            property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+            property int _iconIndex: 0
 
-            visible: marker_uv !== null && root.active_region_id !== ""
-            z: 6
+            visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
+            z: 10
             x: _pos.x
             y: _pos.y
 
             Rectangle {
-                width: 24
-                height: 24
-                radius: 12
-                color: "#cc8f47"
-                border.color: "#ffffff"
-                border.width: 2
+                width: 44
+                height: 44
                 x: -width / 2
                 y: -height / 2
-                opacity: 0.9
+                radius: 6
+                color: "#2a1f1a"
+                border.color: "#d4a857"
+                border.width: 2
+                opacity: 0.95
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "⚔"
-                    color: "#ffffff"
-                    font.pointSize: Theme.fontSizeSmall
-                    font.bold: true
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 2
+                    radius: 4
+                    color: "transparent"
+                    border.color: "#6b4423"
+                    border.width: 1
+                }
+
+            }
+
+            Image {
+                source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
+                width: 36
+                height: 36
+                x: -width / 2
+                y: -height / 2
+                smooth: true
+                mipmap: true
+                fillMode: Image.PreserveAspectFit
+                cache: true
+                asynchronous: false
+                onStatusChanged: {
+                    if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
+                        hannibalIcon._iconIndex += 1;
+                        source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                    }
+                }
+            }
+
+            Rectangle {
+                width: 50
+                height: 50
+                x: -width / 2
+                y: -height / 2
+                radius: width / 2
+                color: "transparent"
+                border.color: "#d4a857"
+                border.width: 2
+                opacity: 0.4
+
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                    running: hannibalIcon.visible
+
+                    NumberAnimation {
+                        from: 0.4
+                        to: 0
+                        duration: 1500
+                        easing.type: Easing.OutCubic
+                    }
+
+                    PauseAnimation {
+                        duration: 500
+                    }
+
                 }
 
                 SequentialAnimation on scale {
                     loops: Animation.Infinite
-                    running: visible
+                    running: hannibalIcon.visible
 
                     NumberAnimation {
                         from: 1
-                        to: 1.15
-                        duration: 800
-                        easing.type: Easing.InOutQuad
+                        to: 1.3
+                        duration: 1500
+                        easing.type: Easing.OutCubic
                     }
 
                     NumberAnimation {
-                        from: 1.15
+                        from: 1.3
                         to: 1
-                        duration: 800
-                        easing.type: Easing.InOutQuad
+                        duration: 0
+                    }
+
+                    PauseAnimation {
+                        duration: 500
                     }
 
                 }
 
             }
 
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.top: parent.top
-                anchors.topMargin: -24
-                text: region_info ? region_info.name : ""
-                color: "#ffffff"
-                font.pointSize: Theme.fontSizeSmall
-                font.bold: true
-                style: Text.Outline
-                styleColor: "#000000"
+        }
+
+        Rectangle {
+            id: hover_tooltip
+
+            visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+            x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
+            y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
+            width: tooltip_layout.implicitWidth + 16
+            height: tooltip_layout.implicitHeight + 16
+            radius: 4
+            color: "#f5f0e6"
+            border.color: "#8b7355"
+            border.width: 2
+            opacity: 0.95
+            z: 10
+
+            ColumnLayout {
+                id: tooltip_layout
+
+                anchors.centerIn: parent
+                spacing: 2
+
+                Label {
+                    text: root.hover_province_name
+                    color: "#2d241c"
+                    font.bold: true
+                    font.pointSize: Theme.fontSizeSmall
+                }
+
+                Label {
+                    text: qsTr("Control: ") + root.hover_province_owner
+                    color: "#4a3f32"
+                    font.pointSize: Theme.fontSizeTiny
+                }
+
             }
 
         }
 
-    }
-
-    Item {
-        id: hannibalIcon
-
-        property int _refresh: root.label_refresh
-        property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
-        property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
-        property int _iconIndex: 0
-
-        visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
-        z: 10
-        x: _pos.x
-        y: _pos.y
-
         Rectangle {
-            width: 44
-            height: 44
-            x: -width / 2
-            y: -height / 2
-            radius: 6
-            color: "#2a1f1a"
-            border.color: "#d4a857"
+            anchors.left: parent.left
+            anchors.bottom: parent.bottom
+            anchors.margins: Theme.spacingMedium
+            width: legend_layout.implicitWidth + 16
+            height: legend_layout.implicitHeight + 16
+            radius: 4
+            color: "#f5f0e6"
+            border.color: "#8b7355"
             border.width: 2
             opacity: 0.95
 
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: 2
-                radius: 4
-                color: "transparent"
-                border.color: "#6b4423"
-                border.width: 1
+            ColumnLayout {
+                id: legend_layout
+
+                anchors.centerIn: parent
+                spacing: Theme.spacingTiny
+
+                Label {
+                    text: qsTr("Legend")
+                    color: "#2d241c"
+                    font.pointSize: Theme.fontSizeSmall
+                    font.bold: true
+                }
+
+                Repeater {
+                    model: [{
+                        "name": qsTr("Rome"),
+                        "color": "#d01f1a"
+                    }, {
+                        "name": qsTr("Carthage"),
+                        "color": "#cc8f47"
+                    }, {
+                        "name": qsTr("Neutral"),
+                        "color": "#3a3a3a"
+                    }]
+
+                    delegate: RowLayout {
+                        spacing: Theme.spacingTiny
+
+                        Rectangle {
+                            width: 12
+                            height: 12
+                            radius: 2
+                            color: modelData.color
+                            border.color: "#5a4a3a"
+                            border.width: 1
+                        }
+
+                        Label {
+                            text: modelData.name
+                            color: "#4a3f32"
+                            font.pointSize: Theme.fontSizeTiny
+                        }
+
+                    }
+
+                }
+
             }
 
         }
 
-        Image {
-            source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
-            width: 36
-            height: 36
-            x: -width / 2
-            y: -height / 2
-            smooth: true
-            mipmap: true
-            fillMode: Image.PreserveAspectFit
-            cache: true
-            asynchronous: false
-            onStatusChanged: {
-                if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
-                    hannibalIcon._iconIndex += 1;
-                    source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
-                }
-            }
+        Label {
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: Theme.spacingMedium
+            text: qsTr("🖱️ Drag to rotate • Shift/Right-drag to pan • Scroll to zoom")
+            color: "#4a3f32"
+            font.pointSize: Theme.fontSizeTiny
+            style: Text.Outline
+            styleColor: "#f5f0e6"
         }
 
         Rectangle {
-            width: 50
-            height: 50
-            x: -width / 2
-            y: -height / 2
-            radius: width / 2
-            color: "transparent"
-            border.color: "#d4a857"
+            visible: root.active_region_id !== ""
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.margins: Theme.spacingMedium
+            width: active_region_label.implicitWidth + 16
+            height: active_region_label.implicitHeight + 12
+            radius: 4
+            color: "#cc8f47"
+            border.color: "#8b6332"
             border.width: 2
-            opacity: 0.4
-
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                running: hannibalIcon.visible
-
-                NumberAnimation {
-                    from: 0.4
-                    to: 0
-                    duration: 1500
-                    easing.type: Easing.OutCubic
-                }
-
-                PauseAnimation {
-                    duration: 500
-                }
-
-            }
-
-            SequentialAnimation on scale {
-                loops: Animation.Infinite
-                running: hannibalIcon.visible
-
-                NumberAnimation {
-                    from: 1
-                    to: 1.3
-                    duration: 1500
-                    easing.type: Easing.OutCubic
-                }
-
-                NumberAnimation {
-                    from: 1.3
-                    to: 1
-                    duration: 0
-                }
-
-                PauseAnimation {
-                    duration: 500
-                }
-
-            }
-
-        }
-
-    }
-
-    Rectangle {
-        id: hover_tooltip
-
-        visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
-        x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
-        y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
-        width: tooltip_layout.implicitWidth + 16
-        height: tooltip_layout.implicitHeight + 16
-        radius: 4
-        color: "#f5f0e6"
-        border.color: "#8b7355"
-        border.width: 2
-        opacity: 0.95
-        z: 10
-
-        ColumnLayout {
-            id: tooltip_layout
-
-            anchors.centerIn: parent
-            spacing: 2
+            opacity: 0.95
+            z: 10
 
             Label {
-                text: root.hover_province_name
-                color: "#2d241c"
-                font.bold: true
-                font.pointSize: Theme.fontSizeSmall
-            }
+                id: active_region_label
 
-            Label {
-                text: qsTr("Control: ") + root.hover_province_owner
-                color: "#4a3f32"
-                font.pointSize: Theme.fontSizeTiny
-            }
-
-        }
-
-    }
-
-    Rectangle {
-        anchors.left: parent.left
-        anchors.bottom: parent.bottom
-        anchors.margins: Theme.spacingMedium
-        width: legend_layout.implicitWidth + 16
-        height: legend_layout.implicitHeight + 16
-        radius: 4
-        color: "#f5f0e6"
-        border.color: "#8b7355"
-        border.width: 2
-        opacity: 0.95
-
-        ColumnLayout {
-            id: legend_layout
-
-            anchors.centerIn: parent
-            spacing: Theme.spacingTiny
-
-            Label {
-                text: qsTr("Legend")
+                anchors.centerIn: parent
+                text: qsTr("📍 Mission Region")
                 color: "#2d241c"
                 font.pointSize: Theme.fontSizeSmall
                 font.bold: true
             }
 
-            Repeater {
-                model: [{
-                    "name": qsTr("Rome"),
-                    "color": "#d01f1a"
-                }, {
-                    "name": qsTr("Carthage"),
-                    "color": "#cc8f47"
-                }, {
-                    "name": qsTr("Neutral"),
-                    "color": "#3a3a3a"
-                }]
-
-                delegate: RowLayout {
-                    spacing: Theme.spacingTiny
-
-                    Rectangle {
-                        width: 12
-                        height: 12
-                        radius: 2
-                        color: modelData.color
-                        border.color: "#5a4a3a"
-                        border.width: 1
-                    }
-
-                    Label {
-                        text: modelData.name
-                        color: "#4a3f32"
-                        font.pointSize: Theme.fontSizeTiny
-                    }
-
-                }
-
-            }
-
-        }
-
-    }
-
-    Label {
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        anchors.margins: Theme.spacingMedium
-        text: qsTr("🖱️ Drag to rotate • Shift/Right-drag to pan • Scroll to zoom")
-        color: "#4a3f32"
-        font.pointSize: Theme.fontSizeTiny
-        style: Text.Outline
-        styleColor: "#f5f0e6"
-    }
-
-    Rectangle {
-        visible: root.active_region_id !== ""
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.margins: Theme.spacingMedium
-        width: active_region_label.implicitWidth + 16
-        height: active_region_label.implicitHeight + 12
-        radius: 4
-        color: "#cc8f47"
-        border.color: "#8b6332"
-        border.width: 2
-        opacity: 0.95
-        z: 10
-
-        Label {
-            id: active_region_label
-
-            anchors.centerIn: parent
-            text: qsTr("📍 Mission Region")
-            color: "#2d241c"
-            font.pointSize: Theme.fontSizeSmall
-            font.bold: true
         }
 
     }
