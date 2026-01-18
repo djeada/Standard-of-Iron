@@ -291,7 +291,6 @@ Item {
                                         graphicsSettings.quality_level = index;
 
                                 }
-
                             }
 
                             Label {
@@ -370,7 +369,6 @@ Item {
                                 delegateText: function(data) {
                                     return typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(data) : data;
                                 }
-
                             }
 
                             Label {
