@@ -1,0 +1,64 @@
+{
+  "provinces": [
+    {
+      "id": "iberia_carthaginian",
+      "owner": "neutral"
+    },
+    {
+      "id": "iberia_interior",
+      "owner": "neutral"
+    },
+    {
+      "id": "transalpine_gaul",
+      "owner": "neutral"
+    },
+    {
+      "id": "cisalpine_gaul",
+      "owner": "neutral"
+    },
+    {
+      "id": "etruria",
+      "owner": "neutral"
+    },
+    {
+      "id": "roman_core",
+      "owner": "neutral"
+    },
+    {
+      "id": "southern_italy",
+      "owner": "neutral"
+    },
+    {
+      "id": "sicily_roman",
+      "owner": "neutral"
+    },
+    {
+      "id": "sicily_carthaginian",
+      "owner": "neutral"
+    },
+    {
+      "id": "sardinia",
+      "owner": "neutral"
+    },
+    {
+      "id": "corsica",
+      "owner": "neutral"
+    },
+    {
+      "id": "carthage_core",
+      "owner": "neutral"
+    },
+    {
+      "id": "numidia",
+      "owner": "neutral"
+    },
+    {
+      "id": "libya",
+      "owner": "neutral"
+    },
+    {
+      "id": "illyria",
+      "owner": "neutral"
+    }
+  ]
+}
