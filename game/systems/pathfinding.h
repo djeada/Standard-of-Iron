@@ -43,10 +43,10 @@ public:
 
   void set_grid_offset(float offset_x, float offset_z);
 
-  auto get_grid_offset_x() const -> float { return m_gridOffsetX; }
-  auto get_grid_offset_z() const -> float { return m_gridOffsetZ; }
+  auto get_grid_offset_x() const -> float { return m_grid_offset_x; }
+  auto get_grid_offset_z() const -> float { return m_grid_offset_z; }
 
-  void set_obstacle(int x, int y, bool isObstacle);
+  void set_obstacle(int x, int y, bool is_obstacle);
   auto is_walkable(int x, int y) const -> bool;
   auto is_walkable_with_radius(int x, int y, float unit_radius) const -> bool;
 
@@ -94,9 +94,9 @@ private:
   auto next_generation() -> std::uint32_t;
   void reset_generations();
 
-  auto toIndex(int x, int y) const -> int { return y * m_width + x; }
-  auto toIndex(const Point &p) const -> int { return toIndex(p.x, p.y); }
-  auto toPoint(int index) const -> Point {
+  auto to_index(int x, int y) const -> int { return y * m_width + x; }
+  auto to_index(const Point &p) const -> int { return to_index(p.x, p.y); }
+  auto to_point(int index) const -> Point {
     return {index % m_width, index / m_width};
   }
 
@@ -108,7 +108,7 @@ private:
 
   auto has_parent(int index, std::uint32_t generation) const -> bool;
   auto get_parent(int index, std::uint32_t generation) const -> int;
-  void set_parent(int index, std::uint32_t generation, int parentIndex);
+  void set_parent(int index, std::uint32_t generation, int parent_index);
 
   auto collect_neighbors(const Point &point,
                          std::array<Point, 8> &buffer) const -> std::size_t;
@@ -133,35 +133,35 @@ private:
 
   int m_width, m_height;
   std::vector<std::vector<std::uint8_t>> m_obstacles;
-  float m_gridCellSize{1.0F};
-  float m_gridOffsetX{0.0F}, m_gridOffsetZ{0.0F};
-  std::atomic<bool> m_obstaclesDirty;
+  float m_grid_cell_size{1.0F};
+  float m_grid_offset_x{0.0F}, m_grid_offset_z{0.0F};
+  std::atomic<bool> m_obstacles_dirty;
   mutable std::mutex m_mutex;
-  std::atomic<bool> m_stopWorker{false};
-  std::thread m_workerThread;
-  std::mutex m_requestMutex;
-  std::condition_variable m_requestCondition;
+  std::atomic<bool> m_stop_worker{false};
+  std::thread m_worker_thread;
+  std::mutex m_request_mutex;
+  std::condition_variable m_request_condition;
   struct PathRequest {
     std::uint64_t request_id{};
     Point start;
     Point end;
     float unit_radius{0.0F};
   };
-  std::queue<PathRequest> m_requestQueue;
-  std::mutex m_resultMutex;
-  std::queue<PathResult> m_resultQueue;
+  std::queue<PathRequest> m_request_queue;
+  std::mutex m_result_mutex;
+  std::queue<PathResult> m_result_queue;
 
-  mutable std::vector<std::uint32_t> m_closedGeneration;
-  mutable std::vector<std::uint32_t> m_gCostGeneration;
-  mutable std::vector<int> m_gCostValues;
-  mutable std::vector<std::uint32_t> m_parentGeneration;
-  mutable std::vector<int> m_parentValues;
-  mutable std::vector<QueueNode> m_openHeap;
-  mutable std::uint32_t m_generationCounter{0};
+  mutable std::vector<std::uint32_t> m_closed_generation;
+  mutable std::vector<std::uint32_t> m_g_cost_generation;
+  mutable std::vector<int> m_g_cost_values;
+  mutable std::vector<std::uint32_t> m_parent_generation;
+  mutable std::vector<int> m_parent_values;
+  mutable std::vector<QueueNode> m_open_heap;
+  mutable std::uint32_t m_generation_counter{0};
 
-  std::mutex m_dirtyMutex;
-  std::vector<DirtyRegion> m_dirtyRegions;
-  bool m_fullUpdateRequired{true};
+  std::mutex m_dirty_mutex;
+  std::vector<DirtyRegion> m_dirty_regions;
+  bool m_full_update_required{true};
 };
 
 } // namespace Game::Systems

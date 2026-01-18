@@ -35,7 +35,7 @@ void GlobalStatsRegistry::initialize() {
 
 void GlobalStatsRegistry::clear() { m_player_stats.clear(); }
 
-auto GlobalStatsRegistry::getStats(int owner_id) const -> const PlayerStats * {
+auto GlobalStatsRegistry::get_stats(int owner_id) const -> const PlayerStats * {
   auto it = m_player_stats.find(owner_id);
   if (it != m_player_stats.end()) {
     return &it->second;
@@ -43,7 +43,7 @@ auto GlobalStatsRegistry::getStats(int owner_id) const -> const PlayerStats * {
   return nullptr;
 }
 
-auto GlobalStatsRegistry::getStats(int owner_id) -> PlayerStats * {
+auto GlobalStatsRegistry::get_stats(int owner_id) -> PlayerStats * {
   auto it = m_player_stats.find(owner_id);
   if (it != m_player_stats.end()) {
     return &it->second;

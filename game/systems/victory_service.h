@@ -42,16 +42,16 @@ public:
   void update(Engine::Core::World &world, float delta_time);
 
   [[nodiscard]] auto get_victory_state() const -> QString {
-    return m_victoryState;
+    return m_victory_state;
   }
 
   [[nodiscard]] auto is_game_over() const -> bool {
-    return !m_victoryState.isEmpty();
+    return !m_victory_state.isEmpty();
   }
 
   using VictoryCallback = std::function<void(const QString &state)>;
   void set_victory_callback(VictoryCallback callback) {
-    m_victoryCallback = std::move(callback);
+    m_victory_callback = std::move(callback);
   }
 
 private:
@@ -67,26 +67,26 @@ private:
   auto check_no_units(Engine::Core::World &world) const -> bool;
   auto check_no_key_structures(Engine::Core::World &world) -> bool;
 
-  VictoryType m_victoryType = VictoryType::Elimination;
-  std::vector<QString> m_keyStructures;
-  std::vector<DefeatCondition> m_defeatConditions;
-  int m_requiredKeyStructures = 0;
+  VictoryType m_victory_type = VictoryType::Elimination;
+  std::vector<QString> m_key_structures;
+  std::vector<DefeatCondition> m_defeat_conditions;
+  int m_required_key_structures = 0;
 
   float m_survive_time_duration = 0.0F;
   float m_elapsed_time = 0.0F;
   float m_startup_delay = 0.0F;
 
   int m_local_owner_id = 1;
-  QString m_victoryState;
+  QString m_victory_state;
 
-  VictoryCallback m_victoryCallback;
+  VictoryCallback m_victory_callback;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::BarrackCapturedEvent>
       m_barrack_captured_subscription;
 
-  Engine::Core::World *m_worldPtr = nullptr;
+  Engine::Core::World *m_world_ptr = nullptr;
 
   Game::Systems::GlobalStatsRegistry &m_stats_registry;
   Game::Systems::OwnerRegistry &m_owner_registry;

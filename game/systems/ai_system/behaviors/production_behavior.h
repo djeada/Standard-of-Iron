@@ -22,8 +22,8 @@ public:
   }
 
 private:
-  float m_productionTimer = 0.0F;
-  int m_productionCounter = 0;
+  float m_production_timer = 0.0F;
+  int m_production_counter = 0;
 };
 
 } // namespace Game::Systems::AI

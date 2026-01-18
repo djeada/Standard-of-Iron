@@ -46,9 +46,9 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
 
     if (auto *transform =
             entity->get_component<Engine::Core::TransformComponent>()) {
-      data.posX = transform->position.x;
-      data.posY = 0.0F;
-      data.posZ = transform->position.z;
+      data.pos_x = transform->position.x;
+      data.pos_y = 0.0F;
+      data.pos_z = transform->position.z;
     }
 
     if (auto *movement =
@@ -106,9 +106,9 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     contact.owner_id = unit->owner_id;
     contact.is_building =
         entity->has_component<Engine::Core::BuildingComponent>();
-    contact.posX = transform->position.x;
-    contact.posY = 0.0F;
-    contact.posZ = transform->position.z;
+    contact.pos_x = transform->position.x;
+    contact.pos_y = 0.0F;
+    contact.pos_z = transform->position.z;
 
     contact.health = unit->health;
     contact.max_health = unit->max_health;

@@ -31,14 +31,14 @@ VictoryService::VictoryService()
 VictoryService::~VictoryService() = default;
 
 void VictoryService::reset() {
-  m_victoryState = "";
+  m_victory_state = "";
   m_elapsed_time = 0.0F;
   m_startup_delay = 0.0F;
-  m_worldPtr = nullptr;
-  m_victoryCallback = nullptr;
-  m_keyStructures.clear();
-  m_defeatConditions.clear();
-  m_requiredKeyStructures = 0;
+  m_world_ptr = nullptr;
+  m_victory_callback = nullptr;
+  m_key_structures.clear();
+  m_defeat_conditions.clear();
+  m_required_key_structures = 0;
 }
 
 void VictoryService::configure(const Game::Map::VictoryConfig &config,
@@ -48,58 +48,58 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
   m_local_owner_id = local_owner_id;
 
   if (config.victoryType == "elimination") {
-    m_victoryType = VictoryType::Elimination;
-    m_keyStructures = config.keyStructures;
+    m_victory_type = VictoryType::Elimination;
+    m_key_structures = config.keyStructures;
   } else if (config.victoryType == "control_structures") {
-    m_victoryType = VictoryType::ControlStructures;
-    m_keyStructures = config.keyStructures;
-    m_requiredKeyStructures = config.requiredKeyStructures;
+    m_victory_type = VictoryType::ControlStructures;
+    m_key_structures = config.keyStructures;
+    m_required_key_structures = config.requiredKeyStructures;
   } else if (config.victoryType == "capture_structures") {
-    m_victoryType = VictoryType::CaptureStructures;
-    m_keyStructures = config.keyStructures;
-    m_requiredKeyStructures = config.requiredKeyStructures;
+    m_victory_type = VictoryType::CaptureStructures;
+    m_key_structures = config.keyStructures;
+    m_required_key_structures = config.requiredKeyStructures;
   } else if (config.victoryType == "survive_time") {
-    m_victoryType = VictoryType::SurviveTime;
+    m_victory_type = VictoryType::SurviveTime;
     m_survive_time_duration = config.surviveTimeDuration;
   } else {
-    m_victoryType = VictoryType::Elimination;
-    m_keyStructures = {"barracks"};
+    m_victory_type = VictoryType::Elimination;
+    m_key_structures = {"barracks"};
   }
 
-  m_defeatConditions.clear();
+  m_defeat_conditions.clear();
   for (const auto &condition : config.defeatConditions) {
     if (condition == "no_units") {
-      m_defeatConditions.push_back(DefeatCondition::NoUnits);
+      m_defeat_conditions.push_back(DefeatCondition::NoUnits);
     } else if (condition == "no_key_structures") {
-      m_defeatConditions.push_back(DefeatCondition::NoKeyStructures);
+      m_defeat_conditions.push_back(DefeatCondition::NoKeyStructures);
     }
   }
 
-  if (m_defeatConditions.empty()) {
-    m_defeatConditions.push_back(DefeatCondition::NoKeyStructures);
+  if (m_defeat_conditions.empty()) {
+    m_defeat_conditions.push_back(DefeatCondition::NoKeyStructures);
   }
 
   m_startup_delay = k_startup_delay_seconds;
 }
 
 void VictoryService::update(Engine::Core::World &world, float delta_time) {
-  if (!m_victoryState.isEmpty()) {
+  if (!m_victory_state.isEmpty()) {
     return;
   }
 
-  m_worldPtr = &world;
+  m_world_ptr = &world;
 
   if (m_startup_delay > 0.0F) {
     m_startup_delay = std::max(0.0F, m_startup_delay - delta_time);
     return;
   }
 
-  if (m_victoryType == VictoryType::SurviveTime) {
+  if (m_victory_type == VictoryType::SurviveTime) {
     m_elapsed_time += delta_time;
   }
 
   check_victory_conditions(world);
-  if (!m_victoryState.isEmpty()) {
+  if (!m_victory_state.isEmpty()) {
     return;
   }
 
@@ -111,22 +111,22 @@ void VictoryService::on_unit_died(const Engine::Core::UnitDiedEvent &event) {}
 void VictoryService::on_barrack_captured(
     const Engine::Core::BarrackCapturedEvent &) {
 
-  if ((m_worldPtr == nullptr) || !m_victoryState.isEmpty()) {
+  if ((m_world_ptr == nullptr) || !m_victory_state.isEmpty()) {
     return;
   }
 
-  check_victory_conditions(*m_worldPtr);
-  if (!m_victoryState.isEmpty()) {
+  check_victory_conditions(*m_world_ptr);
+  if (!m_victory_state.isEmpty()) {
     return;
   }
 
-  check_defeat_conditions(*m_worldPtr);
+  check_defeat_conditions(*m_world_ptr);
 }
 
 void VictoryService::check_victory_conditions(Engine::Core::World &world) {
   bool victory = false;
 
-  switch (m_victoryType) {
+  switch (m_victory_type) {
   case VictoryType::Elimination:
     victory = check_elimination(world);
     break;
@@ -145,7 +145,7 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
   }
 
   if (victory) {
-    m_victoryState = "victory";
+    m_victory_state = "victory";
     qInfo() << "VICTORY! Conditions met.";
 
     const auto &all_owners = m_owner_registry.get_all_owners();
@@ -165,14 +165,14 @@ void VictoryService::check_victory_conditions(Engine::Core::World &world) {
               << "Play Time:" << stats->play_time_sec << "seconds";
     }
 
-    if (m_victoryCallback) {
-      m_victoryCallback(m_victoryState);
+    if (m_victory_callback) {
+      m_victory_callback(m_victory_state);
     }
   }
 }
 
 void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
-  for (const auto &condition : m_defeatConditions) {
+  for (const auto &condition : m_defeat_conditions) {
     bool defeat = false;
 
     switch (condition) {
@@ -188,7 +188,7 @@ void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
     }
 
     if (defeat) {
-      m_victoryState = "defeat";
+      m_victory_state = "defeat";
       qInfo() << "DEFEAT! Condition met.";
 
       const auto &all_owners = m_owner_registry.get_all_owners();
@@ -208,8 +208,8 @@ void VictoryService::check_defeat_conditions(Engine::Core::World &world) {
                 << "Play Time:" << stats->play_time_sec << "seconds";
       }
 
-      if (m_victoryCallback) {
-        m_victoryCallback(m_victoryState);
+      if (m_victory_callback) {
+        m_victory_callback(m_victory_state);
       }
       return;
     }
@@ -239,8 +239,8 @@ auto VictoryService::check_elimination(Engine::Core::World &world) -> bool {
 
     QString const unit_type_str = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
-    if (std::find(m_keyStructures.begin(), m_keyStructures.end(),
-                  unit_type_str) != m_keyStructures.end()) {
+    if (std::find(m_key_structures.begin(), m_key_structures.end(),
+                  unit_type_str) != m_key_structures.end()) {
       enemy_key_structures_alive = true;
       break;
     }
@@ -255,11 +255,11 @@ auto VictoryService::check_survive_time() const -> bool {
 
 auto VictoryService::check_control_structures(
     Engine::Core::World &world, bool require_captured) const -> bool {
-  if (m_keyStructures.empty()) {
+  if (m_key_structures.empty()) {
     return false;
   }
 
-  int required = m_requiredKeyStructures;
+  int required = m_required_key_structures;
   if (required <= 0) {
     required = 1;
   }
@@ -286,8 +286,8 @@ auto VictoryService::check_control_structures(
 
     const QString unit_type = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
-    if (std::find(m_keyStructures.begin(), m_keyStructures.end(), unit_type) ==
-        m_keyStructures.end()) {
+    if (std::find(m_key_structures.begin(), m_key_structures.end(), unit_type) ==
+        m_key_structures.end()) {
       continue;
     }
 
@@ -338,8 +338,8 @@ auto VictoryService::check_no_key_structures(Engine::Core::World &world)
     if (unit->owner_id == m_local_owner_id) {
       QString const unit_type_str = QString::fromStdString(
           Game::Units::spawn_typeToString(unit->spawn_type));
-      if (std::find(m_keyStructures.begin(), m_keyStructures.end(),
-                    unit_type_str) != m_keyStructures.end()) {
+      if (std::find(m_key_structures.begin(), m_key_structures.end(),
+                    unit_type_str) != m_key_structures.end()) {
         return false;
       }
     }

@@ -23,22 +23,22 @@ namespace Game::Systems {
 
 AISystem::AISystem() {
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::RetreatBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::RetreatBehavior>());
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::DefendBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::DefendBehavior>());
 
-  m_behaviorRegistry.register_behavior(
+  m_behavior_registry.register_behavior(
       std::make_unique<AI::ProductionBehavior>());
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::BuilderBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::BuilderBehavior>());
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::ExpandBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::ExpandBehavior>());
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::AttackBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::AttackBehavior>());
 
-  m_behaviorRegistry.register_behavior(std::make_unique<AI::GatherBehavior>());
+  m_behavior_registry.register_behavior(std::make_unique<AI::GatherBehavior>());
 
-  m_buildingAttackedSubscription = Engine::Core::ScopedEventSubscription<
+  m_building_attacked_subscription = Engine::Core::ScopedEventSubscription<
       Engine::Core::BuildingAttackedEvent>(
       [this](const Engine::Core::BuildingAttackedEvent &event) {
         this->on_building_attacked(event);
@@ -48,7 +48,7 @@ AISystem::AISystem() {
 }
 
 void AISystem::reinitialize() {
-  m_aiInstances.clear();
+  m_ai_instances.clear();
 
   initialize_ai_players();
 }
@@ -67,9 +67,9 @@ void AISystem::initialize_ai_players() {
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
     instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
-                                                     m_behaviorRegistry);
+                                                     m_behavior_registry);
 
-    m_aiInstances.push_back(std::move(instance));
+    m_ai_instances.push_back(std::move(instance));
   }
 }
 
@@ -78,7 +78,7 @@ AISystem::~AISystem() = default;
 void AISystem::set_ai_strategy(int player_id, AI::AIStrategy strategy,
                                float aggression, float defense,
                                float harassment) {
-  for (auto &ai : m_aiInstances) {
+  for (auto &ai : m_ai_instances) {
     if (ai.context.player_id == player_id) {
       ai.context.strategy_config =
           AI::AIStrategyFactory::create_config(strategy);
@@ -96,11 +96,11 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
   m_total_game_time += delta_time;
 
-  m_commandFilter.update(m_total_game_time);
+  m_command_filter.update(m_total_game_time);
 
   process_results(*world);
 
-  for (auto &ai : m_aiInstances) {
+  for (auto &ai : m_ai_instances) {
 
     ai.update_timer += delta_time;
 
@@ -129,7 +129,7 @@ void AISystem::update(Engine::Core::World *world, float delta_time) {
 
 void AISystem::process_results(Engine::Core::World &world) {
 
-  for (auto &ai : m_aiInstances) {
+  for (auto &ai : m_ai_instances) {
 
     std::queue<AI::AIResult> results;
     ai.worker->drain_results(results);
@@ -140,7 +140,7 @@ void AISystem::process_results(Engine::Core::World &world) {
       ai.context = result.context;
 
       auto filtered_commands =
-          m_commandFilter.filter(result.commands, m_total_game_time);
+          m_command_filter.filter(result.commands, m_total_game_time);
 
       Game::Systems::AI::AICommandApplier::apply(world, ai.context.player_id,
                                                  filtered_commands);
@@ -152,7 +152,7 @@ void AISystem::process_results(Engine::Core::World &world) {
 
 void AISystem::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent &event) {
-  for (auto &ai : m_aiInstances) {
+  for (auto &ai : m_ai_instances) {
     if (ai.context.player_id == event.owner_id) {
       ai.context.buildings_under_attack[event.buildingId] = m_total_game_time;
 

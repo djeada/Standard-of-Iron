@@ -80,11 +80,11 @@ public:
 
   void register_nation(Nation nation);
 
-  auto get_nation(NationID nationId) const -> const Nation *;
+  auto get_nation(NationID nation_id) const -> const Nation *;
 
   auto get_nation_for_player(int player_id) const -> const Nation *;
 
-  void set_player_nation(int player_id, NationID nationId);
+  void set_player_nation(int player_id, NationID nation_id);
 
   auto get_all_nations() const -> const std::vector<Nation> & {
     return m_nations;
@@ -96,15 +96,15 @@ public:
 
   void clear_player_assignments();
 
-  auto default_nation_id() const -> NationID { return m_defaultNation; }
+  auto default_nation_id() const -> NationID { return m_default_nation; }
 
 private:
   NationRegistry() = default;
 
   std::vector<Nation> m_nations;
-  std::unordered_map<NationID, size_t> m_nationIndex;
-  std::unordered_map<int, NationID> m_playerNations;
-  NationID m_defaultNation = NationID::RomanRepublic;
+  std::unordered_map<NationID, size_t> m_nation_index;
+  std::unordered_map<int, NationID> m_player_nations;
+  NationID m_default_nation = NationID::RomanRepublic;
   bool m_initialized = false;
 };
 

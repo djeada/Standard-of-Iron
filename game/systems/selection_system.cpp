@@ -58,10 +58,10 @@ auto SelectionSystem::is_unit_in_area(Engine::Core::Entity *entity, float x1,
 
 SelectionController::SelectionController(Engine::Core::World *world,
                                          SelectionSystem *selection_system,
-                                         PickingService *pickingService,
+                                         PickingService *picking_service,
                                          QObject *parent)
     : QObject(parent), m_world(world), m_selection_system(selection_system),
-      m_picking_service(pickingService) {}
+      m_picking_service(picking_service) {}
 
 void SelectionController::on_click_select(qreal sx, qreal sy, bool additive,
                                           int viewport_width,

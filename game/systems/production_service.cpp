@@ -13,9 +13,10 @@
 namespace Game::Systems {
 
 static auto
-findFirstSelectedBarracks(Engine::Core::World &world,
-                          const std::vector<Engine::Core::EntityID> &selected,
-                          int owner_id) -> Engine::Core::Entity * {
+find_first_selected_barracks(
+    Engine::Core::World &world,
+    const std::vector<Engine::Core::EntityID> &selected,
+    int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
     if (auto *e = world.get_entity(id)) {
       auto *u = e->get_component<Engine::Core::UnitComponent>();
@@ -59,7 +60,7 @@ auto ProductionService::start_production_for_first_selected_barracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
     Game::Units::TroopType unit_type) -> ProductionResult {
-  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  auto *e = find_first_selected_barracks(world, selected, owner_id);
   if (e == nullptr) {
     return ProductionResult::NoBarracks;
   }
@@ -115,7 +116,7 @@ auto ProductionService::set_rally_for_first_selected_barracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id, float x,
     float z) -> bool {
-  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  auto *e = find_first_selected_barracks(world, selected, owner_id);
   if (e == nullptr) {
     return false;
   }
@@ -136,7 +137,7 @@ auto ProductionService::get_selected_barracks_state(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
     ProductionState &outState) -> bool {
-  auto *e = findFirstSelectedBarracks(world, selected, owner_id);
+  auto *e = find_first_selected_barracks(world, selected, owner_id);
   if (e == nullptr) {
     outState = {};
     return false;

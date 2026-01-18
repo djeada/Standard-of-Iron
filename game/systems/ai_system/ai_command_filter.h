@@ -8,8 +8,8 @@ namespace Game::Systems::AI {
 
 class AICommandFilter {
 public:
-  explicit AICommandFilter(float cooldownPeriod = 5.0F)
-      : m_cooldownPeriod(cooldownPeriod) {}
+  explicit AICommandFilter(float cooldown_period = 5.0F)
+      : m_cooldown_period(cooldown_period) {}
 
   auto filter(const std::vector<AICommand> &commands,
               float currentTime) -> std::vector<AICommand>;
@@ -39,7 +39,7 @@ private:
   };
 
   std::vector<CommandHistory> m_history;
-  float m_cooldownPeriod;
+  float m_cooldown_period;
 
   [[nodiscard]] auto is_duplicate(Engine::Core::EntityID unit_id,
                                   AICommandType type,

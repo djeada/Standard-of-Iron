@@ -37,7 +37,7 @@ inline void replicate_last_target_if_needed(
 }
 
 inline auto
-isEntityEngaged(const EntitySnapshot &entity,
+is_entity_engaged(const EntitySnapshot &entity,
                 const std::vector<ContactSnapshot> &enemies) -> bool {
 
   if (entity.max_health > 0 && entity.health < entity.max_health) {
@@ -48,9 +48,9 @@ isEntityEngaged(const EntitySnapshot &entity,
   const float engagedSq = ENGAGED_RADIUS * ENGAGED_RADIUS;
 
   for (const auto &enemy : enemies) {
-    float const dx = enemy.posX - entity.posX;
-    float const dy = enemy.posY - entity.posY;
-    float const dz = enemy.posZ - entity.posZ;
+    float const dx = enemy.pos_x - entity.pos_x;
+    float const dy = enemy.pos_y - entity.pos_y;
+    float const dz = enemy.pos_z - entity.pos_z;
     float const dist_sq = dx * dx + dy * dy + dz * dz;
 
     if (dist_sq <= engagedSq) {

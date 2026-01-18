@@ -27,13 +27,13 @@ auto get_formation_type_for_player(int player_id) -> FormationType {
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_attackTimer += delta_time;
-  m_targetLockDuration += delta_time;
+  m_attack_timer += delta_time;
+  m_target_lock_duration += delta_time;
 
-  if (m_attackTimer < 1.5F) {
+  if (m_attack_timer < 1.5F) {
     return;
   }
-  m_attackTimer = 0.0F;
+  m_attack_timer = 0.0F;
 
   std::vector<const EntitySnapshot *> engaged_units;
   std::vector<const EntitySnapshot *> ready_units;
@@ -53,15 +53,15 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
+    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       engaged_units.push_back(&entity);
       continue;
     }
 
     ready_units.push_back(&entity);
-    group_center_x += entity.posX;
-    group_center_y += entity.posY;
-    group_center_z += entity.posZ;
+    group_center_x += entity.pos_x;
+    group_center_y += entity.pos_y;
+    group_center_z += entity.pos_z;
   }
 
   if (ready_units.empty()) {
@@ -85,10 +85,10 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       constexpr float SCOUT_ADVANCE_DISTANCE = 40.0F;
       constexpr float SCOUT_ROTATION_INTERVAL = 10.0F;
 
-      m_lastScoutTime += delta_time;
-      if (m_lastScoutTime > SCOUT_ROTATION_INTERVAL) {
-        m_scoutDirection = (m_scoutDirection + 1) % 4;
-        m_lastScoutTime = 0.0F;
+      m_last_scout_time += delta_time;
+      if (m_last_scout_time > SCOUT_ROTATION_INTERVAL) {
+        m_scout_direction = (m_scout_direction + 1) % 4;
+        m_last_scout_time = 0.0F;
       }
 
       float scout_x = 0.0F;
@@ -96,7 +96,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
       if (context.primary_barracks != 0) {
 
-        switch (m_scoutDirection) {
+        switch (m_scout_direction) {
         case 0:
           scout_x = context.base_pos_x;
           scout_z = context.base_pos_z + SCOUT_ADVANCE_DISTANCE;
@@ -168,7 +168,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   for (const auto &enemy : snapshot.visible_enemies) {
     float const dist_sq =
-        distance_squared(enemy.posX, enemy.posY, enemy.posZ, group_center_x,
+        distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, group_center_x,
                          group_center_y, group_center_z);
     if (dist_sq <= engage_range_sq) {
       nearby_enemies.push_back(&enemy);
@@ -191,7 +191,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           continue;
         }
         float const dist_sq =
-            distance_squared(enemy.posX, enemy.posY, enemy.posZ, group_center_x,
+            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, group_center_x,
                              group_center_y, group_center_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
@@ -203,19 +203,19 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
       if ((target != nullptr) && !ready_units.empty()) {
 
-        float attack_pos_x = target->posX;
-        float attack_pos_z = target->posZ;
+        float attack_pos_x = target->pos_x;
+        float attack_pos_z = target->pos_z;
 
         bool needs_new_command = false;
-        if (m_lastTarget != target->id) {
+        if (m_last_target != target->id) {
           needs_new_command = true;
-          m_lastTarget = target->id;
-          m_targetLockDuration = 0.0F;
+          m_last_target = target->id;
+          m_target_lock_duration = 0.0F;
         } else {
 
           for (const auto *unit : ready_units) {
-            float const dx = unit->posX - attack_pos_x;
-            float const dz = unit->posZ - attack_pos_z;
+            float const dx = unit->pos_x - attack_pos_x;
+            float const dz = unit->pos_z - attack_pos_z;
             float const dist_sq = dx * dx + dz * dz;
             if (dist_sq > 15.0F * 15.0F) {
               needs_new_command = true;
@@ -264,8 +264,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       }
     }
 
-    m_lastTarget = 0;
-    m_targetLockDuration = 0.0F;
+    m_last_target = 0;
+    m_target_lock_duration = 0.0F;
     return;
   }
 
@@ -278,37 +278,37 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   if (!assessment.should_engage && !context.barracks_under_threat &&
       !being_attacked) {
 
-    m_lastTarget = 0;
-    m_targetLockDuration = 0.0F;
+    m_last_target = 0;
+    m_target_lock_duration = 0.0F;
     return;
   }
 
   bool last_target_still_valid = false;
-  if (m_lastTarget != 0) {
+  if (m_last_target != 0) {
     for (const auto *enemy : nearby_enemies) {
-      if (enemy->id == m_lastTarget) {
+      if (enemy->id == m_last_target) {
         last_target_still_valid = true;
         break;
       }
     }
   }
 
-  if (!last_target_still_valid || m_targetLockDuration > 8.0F) {
-    m_lastTarget = 0;
-    m_targetLockDuration = 0.0F;
+  if (!last_target_still_valid || m_target_lock_duration > 8.0F) {
+    m_last_target = 0;
+    m_target_lock_duration = 0.0F;
   }
 
   auto target_info = TacticalUtils::select_focus_fire_target(
       ready_units, nearby_enemies, group_center_x, group_center_y,
-      group_center_z, context, m_lastTarget);
+      group_center_z, context, m_last_target);
 
   if (target_info.target_id == 0) {
     return;
   }
 
-  if (target_info.target_id != m_lastTarget) {
-    m_lastTarget = target_info.target_id;
-    m_targetLockDuration = 0.0F;
+  if (target_info.target_id != m_last_target) {
+    m_last_target = target_info.target_id;
+    m_target_lock_duration = 0.0F;
   }
 
   const ContactSnapshot *target_snapshot = nullptr;
@@ -330,7 +330,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claim_units(unit_ids, get_priority(), "attacking",
-                                   context, m_attackTimer + delta_time, 2.5F);
+                                   context, m_attack_timer + delta_time, 2.5F);
 
   if (claimed_units.empty()) {
     return;
@@ -339,8 +339,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   FormationType formation_type =
       get_formation_type_for_player(context.player_id);
 
-  QVector3D const attack_center(target_snapshot->posX, 0.0F,
-                                target_snapshot->posZ);
+  QVector3D const attack_center(target_snapshot->pos_x, 0.0F,
+                                target_snapshot->pos_z);
   auto formation_positions =
       FormationSystem::instance().get_formation_positions(
           formation_type, static_cast<int>(claimed_units.size()), attack_center,
@@ -389,7 +389,7 @@ auto AttackBehavior::should_execute(const AISnapshot &snapshot,
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
+    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       continue;
     }
 

@@ -19,14 +19,14 @@ namespace Game::Systems::AI {
 void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_defendTimer += delta_time;
+  m_defend_timer += delta_time;
 
   float const update_interval = context.barracks_under_threat ? 0.5F : 1.5F;
 
-  if (m_defendTimer < update_interval) {
+  if (m_defend_timer < update_interval) {
     return;
   }
-  m_defendTimer = 0.0F;
+  m_defend_timer = 0.0F;
 
   if (context.primary_barracks == 0) {
     return;
@@ -39,9 +39,9 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   for (const auto &entity : snapshot.friendly_units) {
     if (entity.id == context.primary_barracks) {
-      defend_pos_x = entity.posX;
-      defend_pos_y = entity.posY;
-      defend_pos_z = entity.posZ;
+      defend_pos_x = entity.pos_x;
+      defend_pos_y = entity.pos_y;
+      defend_pos_z = entity.pos_z;
       found_barracks = true;
       break;
     }
@@ -65,7 +65,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
+    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       engaged_defenders.push_back(&entity);
     } else {
       ready_defenders.push_back(&entity);
@@ -80,10 +80,10 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     std::sort(list.begin(), list.end(),
               [&](const EntitySnapshot *a, const EntitySnapshot *b) {
                 float const da =
-                    distance_squared(a->posX, a->posY, a->posZ, defend_pos_x,
+                    distance_squared(a->pos_x, a->pos_y, a->pos_z, defend_pos_x,
                                      defend_pos_y, defend_pos_z);
                 float const db =
-                    distance_squared(b->posX, b->posY, b->posZ, defend_pos_x,
+                    distance_squared(b->pos_x, b->pos_y, b->pos_z, defend_pos_x,
                                      defend_pos_y, defend_pos_z);
                 return da < db;
               });
@@ -125,7 +125,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
     for (const auto &enemy : snapshot.visible_enemies) {
       float const dist_sq =
-          distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
+          distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, defend_pos_x,
                            defend_pos_y, defend_pos_z);
       if (dist_sq <= defend_radius_sq) {
         nearby_threats.push_back(&enemy);
@@ -148,7 +148,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
         auto claimed_units =
             claim_units(defender_ids, get_priority(), "defending", context,
-                        m_defendTimer + delta_time, 3.0F);
+                        m_defend_timer + delta_time, 3.0F);
 
         if (!claimed_units.empty()) {
           AICommand attack;
@@ -168,7 +168,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
       for (const auto &enemy : snapshot.visible_enemies) {
         float const dist_sq =
-            distance_squared(enemy.posX, enemy.posY, enemy.posZ, defend_pos_x,
+            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, defend_pos_x,
                              defend_pos_y, defend_pos_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
@@ -185,14 +185,14 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
         for (const auto *unit : ready_defenders) {
           defender_ids.push_back(unit->id);
-          target_x.push_back(closest_threat->posX);
-          target_y.push_back(closest_threat->posY);
-          target_z.push_back(closest_threat->posZ);
+          target_x.push_back(closest_threat->pos_x);
+          target_y.push_back(closest_threat->pos_y);
+          target_z.push_back(closest_threat->pos_z);
         }
 
         auto claimed_units =
             claim_units(defender_ids, get_priority(), "intercepting", context,
-                        m_defendTimer + delta_time, 2.0F);
+                        m_defend_timer + delta_time, 2.0F);
 
         if (!claimed_units.empty()) {
 
@@ -258,8 +258,8 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     const auto *entity = unclaimed_defenders[i];
     const auto &target = targets[i];
 
-    float const dx = entity->posX - target.x();
-    float const dz = entity->posZ - target.z();
+    float const dx = entity->pos_x - target.x();
+    float const dz = entity->pos_z - target.z();
     float const distance_sq = dx * dx + dz * dz;
 
     if (distance_sq < 1.0F * 1.0F) {
@@ -278,7 +278,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
 
   auto claimed_for_move =
       claim_units(units_to_move, BehaviorPriority::Low, "positioning", context,
-                  m_defendTimer + delta_time, 1.5F);
+                  m_defend_timer + delta_time, 1.5F);
 
   if (claimed_for_move.empty()) {
     return;

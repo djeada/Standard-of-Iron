@@ -31,10 +31,10 @@ public:
   };
 
   static auto
-  get_building_size(const std::string &buildingType) -> BuildingSize;
+  get_building_size(const std::string &building_type) -> BuildingSize;
 
   void register_building(unsigned int entity_id,
-                         const std::string &buildingType, float center_x,
+                         const std::string &building_type, float center_x,
                          float center_z, int owner_id);
 
   void unregister_building(unsigned int entity_id);
@@ -51,11 +51,12 @@ public:
 
   [[nodiscard]] auto
   is_point_in_building(float x, float z,
-                       unsigned int ignoreEntityId = 0) const -> bool;
+                       unsigned int ignore_entity_id = 0) const -> bool;
 
   [[nodiscard]] auto
   is_circle_overlapping_building(float x, float z, float radius,
-                                 unsigned int ignoreEntityId = 0) const -> bool;
+                                 unsigned int ignore_entity_id = 0) const
+      -> bool;
 
   [[nodiscard]] static auto get_occupied_grid_cells(
       const BuildingFootprint &footprint,
@@ -75,11 +76,11 @@ private:
       -> BuildingCollisionRegistry & = delete;
 
   std::vector<BuildingFootprint> m_buildings;
-  std::map<unsigned int, size_t> m_entityToIndex;
+  std::map<unsigned int, size_t> m_entity_to_index;
 
-  static const std::map<std::string, BuildingSize> s_buildingSizes;
+  static const std::map<std::string, BuildingSize> s_building_sizes;
 
-  static float s_gridPadding;
+  static float s_grid_padding;
 };
 
 } // namespace Game::Systems

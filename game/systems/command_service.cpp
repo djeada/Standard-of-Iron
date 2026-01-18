@@ -65,23 +65,23 @@ auto are_all_surrounding_cells_invalid(const Point &position,
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
 std::unordered_map<std::uint64_t, CommandService::PendingPathRequest>
-    CommandService::s_pendingRequests;
+    CommandService::s_pending_requests;
 std::unordered_map<Engine::Core::EntityID, std::uint64_t>
-    CommandService::s_entityToRequest;
-std::mutex CommandService::s_pendingMutex;
-std::atomic<std::uint64_t> CommandService::s_nextRequestId{1};
+    CommandService::s_entity_to_request;
+std::mutex CommandService::s_pending_mutex;
+std::atomic<std::uint64_t> CommandService::s_next_request_id{1};
 
-void CommandService::initialize(int worldWidth, int worldHeight) {
-  s_pathfinder = std::make_unique<Pathfinding>(worldWidth, worldHeight);
+void CommandService::initialize(int world_width, int world_height) {
+  s_pathfinder = std::make_unique<Pathfinding>(world_width, world_height);
   {
-    std::lock_guard<std::mutex> const lock(s_pendingMutex);
-    s_pendingRequests.clear();
-    s_entityToRequest.clear();
+    std::lock_guard<std::mutex> const lock(s_pending_mutex);
+    s_pending_requests.clear();
+    s_entity_to_request.clear();
   }
-  s_nextRequestId.store(1, std::memory_order_release);
+  s_next_request_id.store(1, std::memory_order_release);
 
-  float const offset_x = -(worldWidth * 0.5F - 0.5F);
-  float const offset_z = -(worldHeight * 0.5F - 0.5F);
+  float const offset_x = -(world_width * 0.5F - 0.5F);
+  float const offset_z = -(world_height * 0.5F - 0.5F);
   s_pathfinder->set_grid_offset(offset_x, offset_z);
 }
 
@@ -101,13 +101,13 @@ auto CommandService::world_to_grid(float world_x, float world_z) -> Point {
           static_cast<int>(std::round(world_z))};
 }
 
-auto CommandService::grid_to_world(const Point &gridPos) -> QVector3D {
+auto CommandService::grid_to_world(const Point &grid_pos) -> QVector3D {
   if (s_pathfinder) {
-    return {static_cast<float>(gridPos.x) + s_pathfinder->get_grid_offset_x(),
+    return {static_cast<float>(grid_pos.x) + s_pathfinder->get_grid_offset_x(),
             0.0F,
-            static_cast<float>(gridPos.y) + s_pathfinder->get_grid_offset_z()};
+            static_cast<float>(grid_pos.y) + s_pathfinder->get_grid_offset_z()};
   }
-  return {static_cast<float>(gridPos.x), 0.0F, static_cast<float>(gridPos.y)};
+  return {static_cast<float>(grid_pos.x), 0.0F, static_cast<float>(grid_pos.y)};
 }
 
 auto CommandService::get_unit_radius(
@@ -130,28 +130,28 @@ auto CommandService::get_unit_radius(
 }
 
 void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
-  std::lock_guard<std::mutex> const lock(s_pendingMutex);
-  auto it = s_entityToRequest.find(entity_id);
-  if (it == s_entityToRequest.end()) {
+  std::lock_guard<std::mutex> const lock(s_pending_mutex);
+  auto it = s_entity_to_request.find(entity_id);
+  if (it == s_entity_to_request.end()) {
     return;
   }
 
   std::uint64_t const request_id = it->second;
-  s_entityToRequest.erase(it);
+  s_entity_to_request.erase(it);
 
-  auto pending_it = s_pendingRequests.find(request_id);
-  if (pending_it == s_pendingRequests.end()) {
+  auto pending_it = s_pending_requests.find(request_id);
+  if (pending_it == s_pending_requests.end()) {
     return;
   }
 
   auto members = pending_it->second.group_members;
-  s_pendingRequests.erase(pending_it);
+  s_pending_requests.erase(pending_it);
 
   for (auto member_id : members) {
-    auto member_entry = s_entityToRequest.find(member_id);
-    if (member_entry != s_entityToRequest.end() &&
+    auto member_entry = s_entity_to_request.find(member_id);
+    if (member_entry != s_entity_to_request.end() &&
         member_entry->second == request_id) {
-      s_entityToRequest.erase(member_entry);
+      s_entity_to_request.erase(member_entry);
     }
   }
 }
@@ -229,11 +229,11 @@ void CommandService::move_units(
 
     bool matched_pending = false;
     if (mv->path_pending) {
-      std::lock_guard<std::mutex> const lock(s_pendingMutex);
-      auto request_it = s_entityToRequest.find(units[i]);
-      if (request_it != s_entityToRequest.end()) {
-        auto pending_it = s_pendingRequests.find(request_it->second);
-        if (pending_it != s_pendingRequests.end()) {
+      std::lock_guard<std::mutex> const lock(s_pending_mutex);
+      auto request_it = s_entity_to_request.find(units[i]);
+      if (request_it != s_entity_to_request.end()) {
+        auto pending_it = s_pending_requests.find(request_it->second);
+        if (pending_it != s_pending_requests.end()) {
           float const pdx = pending_it->second.target.x() - target_x;
           float const pdz = pending_it->second.target.z() - target_z;
           if (pdx * pdx + pdz * pdz <= same_target_threshold_sq) {
@@ -241,7 +241,7 @@ void CommandService::move_units(
             matched_pending = true;
           }
         } else {
-          s_entityToRequest.erase(request_it);
+          s_entity_to_request.erase(request_it);
         }
       }
     }
@@ -332,22 +332,22 @@ void CommandService::move_units(
 
         bool skip_new_request = false;
         {
-          std::lock_guard<std::mutex> const lock(s_pendingMutex);
-          auto existing_it = s_entityToRequest.find(units[i]);
-          if (existing_it != s_entityToRequest.end()) {
-            auto pending_it = s_pendingRequests.find(existing_it->second);
-            if (pending_it != s_pendingRequests.end()) {
+          std::lock_guard<std::mutex> const lock(s_pending_mutex);
+          auto existing_it = s_entity_to_request.find(units[i]);
+          if (existing_it != s_entity_to_request.end()) {
+            auto pending_it = s_pending_requests.find(existing_it->second);
+            if (pending_it != s_pending_requests.end()) {
               float const dx = pending_it->second.target.x() - target_x;
               float const dz = pending_it->second.target.z() - target_z;
               if (dx * dx + dz * dz <= same_target_threshold_sq) {
                 pending_it->second.options = options;
                 skip_new_request = true;
               } else {
-                s_pendingRequests.erase(pending_it);
-                s_entityToRequest.erase(existing_it);
+                s_pending_requests.erase(pending_it);
+                s_entity_to_request.erase(existing_it);
               }
             } else {
-              s_entityToRequest.erase(existing_it);
+              s_entity_to_request.erase(existing_it);
             }
           }
         }
@@ -363,20 +363,20 @@ void CommandService::move_units(
         mv->path_pending = true;
 
         std::uint64_t const request_id =
-            s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
+            s_next_request_id.fetch_add(1, std::memory_order_relaxed);
         mv->pending_request_id = request_id;
 
         float const unit_radius = 1.0F;
 
         {
-          std::lock_guard<std::mutex> const lock(s_pendingMutex);
+          std::lock_guard<std::mutex> const lock(s_pending_mutex);
           PendingPathRequest pending;
           pending.entity_id = units[i];
           pending.target = targets[i];
           pending.options = options;
           pending.unit_radius = unit_radius;
-          s_pendingRequests[request_id] = std::move(pending);
-          s_entityToRequest[units[i]] = request_id;
+          s_pending_requests[request_id] = std::move(pending);
+          s_entity_to_request[units[i]] = request_id;
         }
 
         s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
@@ -742,7 +742,7 @@ void CommandService::move_group(
   }
 
   std::uint64_t const request_id =
-      s_nextRequestId.fetch_add(1, std::memory_order_relaxed);
+      s_next_request_id.fetch_add(1, std::memory_order_relaxed);
 
   for (auto *member : units_needing_new_path) {
     member->movement->path_pending = true;
@@ -768,10 +768,10 @@ void CommandService::move_group(
   }
 
   {
-    std::lock_guard<std::mutex> const lock(s_pendingMutex);
-    s_pendingRequests[request_id] = std::move(pending);
+    std::lock_guard<std::mutex> const lock(s_pending_mutex);
+    s_pending_requests[request_id] = std::move(pending);
     for (const auto *member : units_needing_new_path) {
-      s_entityToRequest[member->id] = request_id;
+      s_entity_to_request[member->id] = request_id;
     }
   }
 
@@ -793,11 +793,11 @@ void CommandService::process_path_results(Engine::Core::World &world) {
     bool found = false;
 
     {
-      std::lock_guard<std::mutex> const lock(s_pendingMutex);
-      auto pending_it = s_pendingRequests.find(result.request_id);
-      if (pending_it != s_pendingRequests.end()) {
+      std::lock_guard<std::mutex> const lock(s_pending_mutex);
+      auto pending_it = s_pending_requests.find(result.request_id);
+      if (pending_it != s_pending_requests.end()) {
         request_info = pending_it->second;
-        s_pendingRequests.erase(pending_it);
+        s_pending_requests.erase(pending_it);
 
         found = true;
       }
@@ -956,15 +956,15 @@ void CommandService::process_path_results(Engine::Core::World &world) {
     };
 
     auto remove_entry = [&](Engine::Core::EntityID id) {
-      auto entry = s_entityToRequest.find(id);
-      if (entry != s_entityToRequest.end() &&
+      auto entry = s_entity_to_request.find(id);
+      if (entry != s_entity_to_request.end() &&
           entry->second == result.request_id) {
-        s_entityToRequest.erase(entry);
+        s_entity_to_request.erase(entry);
       }
     };
 
     {
-      std::lock_guard<std::mutex> const lock(s_pendingMutex);
+      std::lock_guard<std::mutex> const lock(s_pending_mutex);
       remove_entry(request_info.entity_id);
       for (auto member_id : request_info.group_members) {
         remove_entry(member_id);

@@ -106,7 +106,7 @@ auto AICommandFilter::is_duplicate(Engine::Core::EntityID unit_id,
                                    float currentTime) const -> bool {
   for (const auto &entry : m_history) {
     if (entry.is_similar_to(type, unit_id, target_id, move_x, move_y, move_z,
-                            currentTime, m_cooldownPeriod)) {
+                            currentTime, m_cooldown_period)) {
       return true;
     }
   }
@@ -149,7 +149,7 @@ void AICommandFilter::cleanup_history(float currentTime) {
   m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
                                  [&](const CommandHistory &entry) {
                                    return (currentTime - entry.issued_time) >
-                                          m_cooldownPeriod;
+                                          m_cooldown_period;
                                  }),
                   m_history.end());
 }

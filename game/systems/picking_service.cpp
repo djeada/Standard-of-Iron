@@ -61,10 +61,10 @@ auto PickingService::update_hover(float sx, float sy,
                                   const Render::GL::Camera &camera, int view_w,
                                   int view_h) -> Engine::Core::EntityID {
   if (sx < 0 || sy < 0 || sx >= view_w || sy >= view_h) {
-    m_prev_hoverId = 0;
+    m_prev_hover_id = 0;
     return 0;
   }
-  auto prev_hover = m_prev_hoverId;
+  auto prev_hover = m_prev_hover_id;
 
   Engine::Core::EntityID const picked =
       pick_single(sx, sy, world, camera, view_w, view_h, 0, false);
@@ -82,7 +82,7 @@ auto PickingService::update_hover(float sx, float sy,
   if (m_hover_grace_ticks > 0) {
     --m_hover_grace_ticks;
   }
-  m_prev_hoverId = current_hover;
+  m_prev_hover_id = current_hover;
   return current_hover;
 }
 

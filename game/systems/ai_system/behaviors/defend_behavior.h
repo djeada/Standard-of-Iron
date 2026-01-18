@@ -22,7 +22,7 @@ public:
   }
 
 private:
-  float m_defendTimer = 0.0F;
+  float m_defend_timer = 0.0F;
 };
 
 } // namespace Game::Systems::AI

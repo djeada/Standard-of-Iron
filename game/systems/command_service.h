@@ -31,11 +31,11 @@ public:
 
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
 
-  static void initialize(int worldWidth, int worldHeight);
+  static void initialize(int world_width, int world_height);
 
   static auto get_pathfinder() -> Pathfinding *;
   static auto world_to_grid(float world_x, float world_z) -> Point;
-  static auto grid_to_world(const Point &gridPos) -> QVector3D;
+  static auto grid_to_world(const Point &grid_pos) -> QVector3D;
   static auto get_unit_radius(Engine::Core::World &world,
                               Engine::Core::EntityID entity_id) -> float;
 
@@ -67,11 +67,11 @@ private:
 
   static std::unique_ptr<Pathfinding> s_pathfinder;
   static std::unordered_map<std::uint64_t, PendingPathRequest>
-      s_pendingRequests;
+      s_pending_requests;
   static std::unordered_map<Engine::Core::EntityID, std::uint64_t>
-      s_entityToRequest;
-  static std::mutex s_pendingMutex;
-  static std::atomic<std::uint64_t> s_nextRequestId;
+      s_entity_to_request;
+  static std::mutex s_pending_mutex;
+  static std::atomic<std::uint64_t> s_next_request_id;
   static void clear_pending_request(Engine::Core::EntityID entity_id);
   static void move_group(Engine::Core::World &world,
                          const std::vector<Engine::Core::EntityID> &units,

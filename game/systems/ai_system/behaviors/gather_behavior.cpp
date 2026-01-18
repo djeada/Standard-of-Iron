@@ -16,12 +16,12 @@ namespace Game::Systems::AI {
 void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
                              std::vector<AICommand> &outCommands) {
-  m_gatherTimer += delta_time;
+  m_gather_timer += delta_time;
 
-  if (m_gatherTimer < 1.0F) {
+  if (m_gather_timer < 1.0F) {
     return;
   }
-  m_gatherTimer = 0.0F;
+  m_gather_timer = 0.0F;
 
   if (context.primary_barracks == 0) {
     return;
@@ -41,12 +41,12 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (isEntityEngaged(entity, snapshot.visible_enemies)) {
+    if (is_entity_engaged(entity, snapshot.visible_enemies)) {
       continue;
     }
 
-    const float dx = entity.posX - rally_point.x();
-    const float dz = entity.posZ - rally_point.z();
+    const float dx = entity.pos_x - rally_point.x();
+    const float dz = entity.pos_z - rally_point.z();
     const float dist_sq = dx * dx + dz * dz;
 
     if (dist_sq > 2.0F * 2.0F) {
@@ -93,7 +93,7 @@ void GatherBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claim_units(units_to_move, get_priority(), "gathering",
-                                   context, m_gatherTimer + delta_time, 2.0F);
+                                   context, m_gather_timer + delta_time, 2.0F);
 
   if (claimed_units.empty()) {
     return;
@@ -143,8 +143,8 @@ auto GatherBehavior::should_execute(const AISnapshot &snapshot,
         continue;
       }
 
-      const float dx = entity.posX - rally_point.x();
-      const float dz = entity.posZ - rally_point.z();
+      const float dx = entity.pos_x - rally_point.x();
+      const float dz = entity.pos_z - rally_point.z();
       const float dist_sq = dx * dx + dz * dz;
 
       if (dist_sq > 10.0F * 10.0F) {

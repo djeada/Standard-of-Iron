@@ -22,7 +22,7 @@ public:
   }
 
 private:
-  float m_gatherTimer = 0.0F;
+  float m_gather_timer = 0.0F;
 };
 
 } // namespace Game::Systems::AI

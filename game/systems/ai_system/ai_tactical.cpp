@@ -88,7 +88,7 @@ auto TacticalUtils::select_focus_fire_target(
   for (const auto *enemy : enemies) {
     float score = 0.0F;
 
-    float const dist = distance(enemy->posX, enemy->posY, enemy->posZ,
+    float const dist = distance(enemy->pos_x, enemy->pos_y, enemy->pos_z,
                                 group_center_x, group_center_y, group_center_z);
     score -= dist * 0.5F;
 
@@ -124,7 +124,7 @@ auto TacticalUtils::select_focus_fire_target(
 
     if (context.primary_barracks != 0) {
       float const dist_to_base =
-          distance(enemy->posX, enemy->posY, enemy->posZ, context.base_pos_x,
+          distance(enemy->pos_x, enemy->pos_y, enemy->pos_z, context.base_pos_x,
                    context.base_pos_y, context.base_pos_z);
 
       if (dist_to_base < 16.0F) {
@@ -196,8 +196,8 @@ auto TacticalUtils::is_target_isolated(
     }
 
     float const dist_sq =
-        distance_squared(target.posX, target.posY, target.posZ, enemy->posX,
-                         enemy->posY, enemy->posZ);
+        distance_squared(target.pos_x, target.pos_y, target.pos_z, enemy->pos_x,
+                         enemy->pos_y, enemy->pos_z);
 
     if (dist_sq <= isolation_radius_sq) {
       ++nearby_allies;
