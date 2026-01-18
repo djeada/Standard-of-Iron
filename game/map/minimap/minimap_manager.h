@@ -64,6 +64,15 @@ public:
 
   [[nodiscard]] auto grid() const -> const GridDefinition & { return m_grid; }
 
+  // Set camera yaw for minimap orientation (replaces hardcoded 225 degrees)
+  void set_camera_yaw(float yaw_deg);
+
+  // Check if the composite image has changed since last call
+  [[nodiscard]] auto has_content_changed() const -> bool;
+
+  // Clear the content changed flag after emitting signal
+  void clear_content_changed_flag();
+
 private:
   void regenerate_composite() const;
 
@@ -77,6 +86,7 @@ private:
 
   mutable QImage m_composite_image;
   mutable bool m_composite_dirty = true;
+  mutable bool m_content_changed = false;
 };
 
 } // namespace Game::Map::Minimap

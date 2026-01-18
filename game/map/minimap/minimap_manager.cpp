@@ -30,6 +30,7 @@ void MinimapManager::tick(const std::vector<VisionSource> &vision_sources,
   if (m_fog_mask && m_config.fog_enabled) {
     if (m_fog_mask->tick(vision_sources, player_id)) {
       m_composite_dirty = true;
+      m_content_changed = true;
     }
   }
 }
@@ -39,6 +40,7 @@ void MinimapManager::force_fog_update(
   if (m_fog_mask && m_config.fog_enabled) {
     m_fog_mask->update_vision(vision_sources, player_id);
     m_composite_dirty = true;
+    m_content_changed = true;
   }
 }
 
@@ -174,6 +176,22 @@ void MinimapManager::regenerate_base(const MapDefinition &map_def) {
   }
 
   m_composite_dirty = true;
+  m_content_changed = true;
 }
+
+void MinimapManager::set_camera_yaw(float yaw_deg) {
+  if (m_generator) {
+    m_generator->set_camera_yaw(yaw_deg);
+    // Need to regenerate base image when camera yaw changes
+    m_composite_dirty = true;
+    m_content_changed = true;
+  }
+}
+
+auto MinimapManager::has_content_changed() const -> bool {
+  return m_content_changed;
+}
+
+void MinimapManager::clear_content_changed_flag() { m_content_changed = false; }
 
 } // namespace Game::Map::Minimap

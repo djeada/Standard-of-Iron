@@ -1,6 +1,8 @@
 #pragma once
 
+#include "../../systems/owner_registry.h"
 #include <QImage>
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -14,6 +16,8 @@ struct UnitMarker {
   int owner_id = 0;
   bool is_selected = false;
   bool is_building = false;
+  bool is_visible = true;  // For fog-of-war filtering (hide enemies if false)
+  bool is_firecamp = false; // Filter out fire camps from minimap
 };
 
 struct TeamColors {
@@ -22,41 +26,32 @@ struct TeamColors {
     std::uint8_t border_r, border_g, border_b;
   };
 
-  static constexpr ColorSet PLAYER_1 = {70, 100, 160, 35, 50, 80};
-
-  static constexpr ColorSet PLAYER_2 = {180, 60, 50, 90, 30, 25};
-
-  static constexpr ColorSet PLAYER_3 = {60, 130, 70, 30, 65, 35};
-
-  static constexpr ColorSet PLAYER_4 = {190, 160, 60, 95, 80, 30};
-
-  static constexpr ColorSet PLAYER_5 = {120, 60, 140, 60, 30, 70};
-
-  static constexpr ColorSet PLAYER_6 = {60, 140, 140, 30, 70, 70};
-
   static constexpr ColorSet NEUTRAL = {100, 95, 85, 50, 48, 43};
 
   static constexpr std::uint8_t SELECT_R = 255;
   static constexpr std::uint8_t SELECT_G = 215;
   static constexpr std::uint8_t SELECT_B = 0;
 
-  static constexpr auto get_color(int owner_id) -> ColorSet {
-    switch (owner_id) {
-    case 1:
-      return PLAYER_1;
-    case 2:
-      return PLAYER_2;
-    case 3:
-      return PLAYER_3;
-    case 4:
-      return PLAYER_4;
-    case 5:
-      return PLAYER_5;
-    case 6:
-      return PLAYER_6;
-    default:
+  static auto get_color(int owner_id) -> ColorSet {
+    auto &registry = Game::Systems::OwnerRegistry::instance();
+    std::array<float, 3> color = registry.get_owner_color(owner_id);
+
+    // Convert float [0,1] to uint8_t [0,255]
+    auto r = static_cast<std::uint8_t>(color[0] * 255.0F);
+    auto g = static_cast<std::uint8_t>(color[1] * 255.0F);
+    auto b = static_cast<std::uint8_t>(color[2] * 255.0F);
+
+    // Generate darker border color (50% brightness)
+    auto border_r = static_cast<std::uint8_t>(color[0] * 127.5F);
+    auto border_g = static_cast<std::uint8_t>(color[1] * 127.5F);
+    auto border_b = static_cast<std::uint8_t>(color[2] * 127.5F);
+
+    // Check if this is a neutral or unknown owner
+    if (owner_id <= 0) {
       return NEUTRAL;
     }
+
+    return ColorSet{r, g, b, border_r, border_g, border_b};
   }
 };
 
@@ -77,6 +72,9 @@ public:
   void set_unit_radius(float radius) { m_unit_radius = radius; }
 
   void set_building_size(float size) { m_building_half_size = size; }
+
+  // Set camera yaw for dynamic orientation (replaces hardcoded 225 degrees)
+  void set_camera_yaw(float yaw_deg);
 
 private:
   [[nodiscard]] auto
@@ -101,6 +99,10 @@ private:
   float m_scale_y = 1.0F;
   float m_offset_x = 0.0F;
   float m_offset_y = 0.0F;
+
+  float m_camera_yaw_deg = 225.0F;
+  float m_cos_yaw = -0.70710678118F;
+  float m_sin_yaw = -0.70710678118F;
 };
 
 } // namespace Game::Map::Minimap

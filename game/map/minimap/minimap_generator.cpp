@@ -1,5 +1,6 @@
 #include "minimap_generator.h"
 #include "minimap_utils.h"
+#include "../../systems/owner_registry.h"
 #include <QColor>
 #include <QLinearGradient>
 #include <QPainter>
@@ -7,6 +8,7 @@
 #include <QPen>
 #include <QRadialGradient>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <random>
 
@@ -78,6 +80,9 @@ auto MinimapGenerator::generate(const MapDefinition &map_def) -> QImage {
   render_parchment_background(image);
   render_terrain_base(image, map_def);
   render_terrain_features(image, map_def);
+  if (m_config.render_forests) {
+    render_forests(image, map_def);
+  }
   render_rivers(image, map_def);
   render_roads(image, map_def);
   render_bridges(image, map_def);
@@ -91,10 +96,12 @@ auto MinimapGenerator::world_to_pixel(float world_x, float world_z,
                                       const GridDefinition &grid) const
     -> std::pair<float, float> {
 
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  // Use dynamic camera yaw from config instead of hardcoded 225 degrees
+  const auto [cos_yaw, sin_yaw] =
+      calculate_rotation_from_yaw(m_config.camera_yaw_deg);
+
+  const float rotated_x = world_x * cos_yaw - world_z * sin_yaw;
+  const float rotated_z = world_x * sin_yaw + world_z * cos_yaw;
 
   const float world_width = grid.width * grid.tile_size;
   const float world_height = grid.height * grid.tile_size;
@@ -294,6 +301,63 @@ void MinimapGenerator::draw_hill_symbol(QPainter &painter, float cx, float cy,
   painter.drawPath(hill_path);
 }
 
+void MinimapGenerator::render_forests(QImage &image,
+                                      const MapDefinition &map_def) {
+  QPainter painter(&image);
+  painter.setRenderHint(QPainter::Antialiasing, true);
+
+  for (const auto &feature : map_def.terrain) {
+    if (feature.type != TerrainType::Forest) {
+      continue;
+    }
+
+    const auto [px, py] =
+        world_to_pixel(feature.center_x, feature.center_z, map_def.grid);
+
+    float pixel_width = world_to_pixel_size(feature.width, map_def.grid);
+    float pixel_depth = world_to_pixel_size(feature.depth, map_def.grid);
+
+    constexpr float MIN_FEATURE_SIZE = 4.0F;
+    pixel_width = std::max(pixel_width, MIN_FEATURE_SIZE);
+    pixel_depth = std::max(pixel_depth, MIN_FEATURE_SIZE);
+
+    draw_forest_symbol(painter, px, py, pixel_width, pixel_depth);
+  }
+}
+
+void MinimapGenerator::draw_forest_symbol(QPainter &painter, float cx, float cy,
+                                          float width, float height) {
+  // Draw a cluster of small triangular tree symbols
+  const float tree_size = std::min(width, height) * 0.3F;
+  const float spacing = tree_size * 0.8F;
+
+  // Draw multiple trees in a scattered pattern
+  const std::vector<std::pair<float, float>> offsets = {
+      {0.0F, 0.0F},          // center
+      {-spacing, -spacing},  // top-left
+      {spacing, -spacing},   // top-right
+      {-spacing, spacing},   // bottom-left
+      {spacing, spacing},    // bottom-right
+      {0.0F, -spacing * 1.2F} // top-center
+  };
+
+  for (const auto &[ox, oy] : offsets) {
+    const float tx = cx + ox;
+    const float ty = cy + oy;
+
+    // Draw tree as a simple triangular shape
+    QPainterPath tree_path;
+    tree_path.moveTo(tx, ty - tree_size);                     // top
+    tree_path.lineTo(tx - tree_size * 0.5F, ty + tree_size * 0.5F); // bottom-left
+    tree_path.lineTo(tx + tree_size * 0.5F, ty + tree_size * 0.5F); // bottom-right
+    tree_path.closeSubpath();
+
+    painter.setBrush(Palette::FOREST_BASE);
+    painter.setPen(QPen(Palette::INK_LIGHT, 0.5));
+    painter.drawPath(tree_path);
+  }
+}
+
 void MinimapGenerator::render_rivers(QImage &image,
                                      const MapDefinition &map_def) {
   if (map_def.rivers.empty()) {
@@ -488,20 +552,24 @@ void MinimapGenerator::render_structures(QImage &image,
         grid_to_world_coords(spawn.x, spawn.z, map_def);
     const auto [px, py] = world_to_pixel(world_x, world_z, map_def.grid);
 
-    QColor fill_color = Palette::STRUCTURE_STONE;
-    QColor border_color = Palette::STRUCTURE_SHADOW;
+    // Use owner registry colors instead of hardcoded team colors
+    auto &registry = Game::Systems::OwnerRegistry::instance();
+    std::array<float, 3> owner_color = registry.get_owner_color(spawn.player_id);
 
-    if (spawn.player_id == 1) {
-      fill_color = Palette::TEAM_BLUE;
-      border_color = Palette::TEAM_BLUE_DARK;
-    } else if (spawn.player_id == 2) {
-      fill_color = Palette::TEAM_RED;
-      border_color = Palette::TEAM_RED_DARK;
-    } else if (spawn.player_id > 0) {
+    QColor fill_color = QColor::fromRgbF(static_cast<double>(owner_color[0]),
+                                          static_cast<double>(owner_color[1]),
+                                          static_cast<double>(owner_color[2]));
 
-      const int hue = (spawn.player_id * 47 + 30) % 360;
-      fill_color.setHsv(hue, 140, 180);
-      border_color.setHsv(hue, 180, 100);
+    // Generate darker border color (50% brightness)
+    QColor border_color = QColor::fromRgbF(
+        static_cast<double>(owner_color[0] * 0.5F),
+        static_cast<double>(owner_color[1] * 0.5F),
+        static_cast<double>(owner_color[2] * 0.5F));
+
+    // Use neutral colors for neutral owners
+    if (spawn.player_id <= 0) {
+      fill_color = Palette::STRUCTURE_STONE;
+      border_color = Palette::STRUCTURE_SHADOW;
     }
 
     draw_fortress_icon(painter, px, py, fill_color, border_color);

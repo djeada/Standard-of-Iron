@@ -9,12 +9,23 @@ namespace Game::Map::Minimap {
 
 namespace Constants {
 
-constexpr float k_camera_yaw_cos = -0.70710678118F;
-constexpr float k_camera_yaw_sin = -0.70710678118F;
+constexpr float k_default_camera_yaw_deg = 225.0F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr float k_degrees_to_radians = 3.14159265358979323846F / 180.0F;
+constexpr float k_pi = 3.14159265358979323846F;
+
+// Default values for backward compatibility (225 degrees)
+constexpr float k_camera_yaw_cos = -0.70710678118F;
+constexpr float k_camera_yaw_sin = -0.70710678118F;
 
 } // namespace Constants
+
+// Calculate rotation values from camera yaw in degrees
+inline auto calculate_rotation_from_yaw(float yaw_deg)
+    -> std::pair<float, float> {
+  const float yaw_rad = yaw_deg * Constants::k_degrees_to_radians;
+  return {std::cos(yaw_rad), std::sin(yaw_rad)};
+}
 
 inline auto
 grid_to_world_coords(float grid_x, float grid_z,
@@ -39,6 +50,24 @@ inline auto world_to_pixel(float world_x, float world_z, float world_width,
                           world_z * Constants::k_camera_yaw_sin;
   const float rotated_z = world_x * Constants::k_camera_yaw_sin +
                           world_z * Constants::k_camera_yaw_cos;
+
+  const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
+  const float py =
+      (rotated_z + world_height * 0.5F) * (img_height / world_height);
+
+  return {px, py};
+}
+
+// Overload with custom camera yaw for dynamic orientation
+inline auto world_to_pixel_with_yaw(float world_x, float world_z,
+                                    float world_width, float world_height,
+                                    float img_width, float img_height,
+                                    float camera_yaw_deg)
+    -> std::pair<float, float> {
+  const auto [cos_yaw, sin_yaw] = calculate_rotation_from_yaw(camera_yaw_deg);
+
+  const float rotated_x = world_x * cos_yaw - world_z * sin_yaw;
+  const float rotated_z = world_x * sin_yaw + world_z * cos_yaw;
 
   const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
   const float py =

@@ -23,13 +23,19 @@ void UnitLayer::init(int width, int height, float world_width,
   m_image.fill(Qt::transparent);
 }
 
+void UnitLayer::set_camera_yaw(float yaw_deg) {
+  m_camera_yaw_deg = yaw_deg;
+  const auto [cos_yaw, sin_yaw] = calculate_rotation_from_yaw(yaw_deg);
+  m_cos_yaw = cos_yaw;
+  m_sin_yaw = sin_yaw;
+}
+
 auto UnitLayer::world_to_pixel(float world_x,
                                float world_z) const -> std::pair<float, float> {
 
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  // Use dynamic camera yaw instead of hardcoded 225 degrees
+  const float rotated_x = world_x * m_cos_yaw - world_z * m_sin_yaw;
+  const float rotated_z = world_x * m_sin_yaw + world_z * m_cos_yaw;
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;
@@ -56,6 +62,11 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers) {
   std::vector<const UnitMarker *> selected;
 
   for (const auto &marker : markers) {
+    // Skip invisible units (fog-of-war) and fire camps
+    if (!marker.is_visible || marker.is_firecamp) {
+      continue;
+    }
+
     if (marker.is_selected) {
       selected.push_back(&marker);
     } else if (marker.is_building) {

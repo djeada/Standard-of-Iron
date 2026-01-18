@@ -32,6 +32,9 @@ public:
     m_border_a = a;
   }
 
+  // Set camera yaw for dynamic orientation (replaces hardcoded 225 degrees)
+  void set_camera_yaw(float yaw_deg);
+
 private:
   [[nodiscard]] auto
   world_to_pixel(float world_x, float world_z) const -> std::pair<float, float>;
@@ -55,6 +58,10 @@ private:
   std::uint8_t m_border_g = 255;
   std::uint8_t m_border_b = 255;
   std::uint8_t m_border_a = 200;
+
+  float m_camera_yaw_deg = 225.0F;
+  float m_cos_yaw = -0.70710678118F;
+  float m_sin_yaw = -0.70710678118F;
 };
 
 } // namespace Game::Map::Minimap

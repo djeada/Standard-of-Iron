@@ -14,6 +14,9 @@ class MinimapGenerator {
 public:
   struct Config {
     float pixels_per_tile = 2.0F;
+    float camera_yaw_deg = 225.0F;
+    bool render_forests = true;
+    bool render_firecamps = false;
 
     Config() = default;
   };
@@ -23,12 +26,15 @@ public:
 
   [[nodiscard]] auto generate(const MapDefinition &map_def) -> QImage;
 
+  void set_camera_yaw(float yaw_deg) { m_config.camera_yaw_deg = yaw_deg; }
+
 private:
   Config m_config;
 
   void render_parchment_background(QImage &image);
   void render_terrain_base(QImage &image, const MapDefinition &map_def);
   void render_terrain_features(QImage &image, const MapDefinition &map_def);
+  void render_forests(QImage &image, const MapDefinition &map_def);
   void render_rivers(QImage &image, const MapDefinition &map_def);
   void render_roads(QImage &image, const MapDefinition &map_def);
   void render_bridges(QImage &image, const MapDefinition &map_def);
@@ -39,6 +45,8 @@ private:
                                    float width, float height);
   static void draw_hill_symbol(QPainter &painter, float cx, float cy,
                                float width, float height);
+  static void draw_forest_symbol(QPainter &painter, float cx, float cy,
+                                 float width, float height);
   static void draw_river_segment(QPainter &painter, float x1, float y1,
                                  float x2, float y2, float width);
   static void draw_road_segment(QPainter &painter, float x1, float y1, float x2,
