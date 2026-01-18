@@ -879,6 +879,30 @@ struct MediterraneanTerrainConfig {
 };
 
 /**
+ * @brief Helper function to compute mountain range contribution to height
+ * @param u, v Current UV coordinates
+ * @param u_min, u_max, v_min, v_max Range bounds
+ * @param peak_height Maximum height for this range
+ * @return Height contribution from this mountain range
+ */
+inline auto compute_mountain_contribution(float u, float v,
+                                          float u_min, float u_max,
+                                          float v_min, float v_max,
+                                          float peak_height) -> float {
+  if (u < u_min || u > u_max || v < v_min || v > v_max) {
+    return 0.0F;
+  }
+
+  float dist_u = 1.0F - 2.0F * std::abs(u - (u_min + u_max) * 0.5F) /
+                                (u_max - u_min);
+  float dist_v = 1.0F - 2.0F * std::abs(v - (v_min + v_max) * 0.5F) /
+                                (v_max - v_min);
+  float falloff = dist_u * dist_v;
+  falloff = falloff * falloff;
+  return peak_height * falloff;
+}
+
+/**
  * @brief Generates terrain height at a given UV coordinate
  * Uses procedural noise shaped by Mediterranean geographic features
  */
@@ -888,53 +912,22 @@ inline auto generate_terrain_height(float u, float v) -> float {
   // Start with base continental height
   float height = 0.05F;
 
-  // Alps mountain range
-  if (u >= Config::alps_u_min && u <= Config::alps_u_max &&
-      v >= Config::alps_v_min && v <= Config::alps_v_max) {
-    float dist_u = 1.0F - 2.0F * std::abs(u - (Config::alps_u_min + Config::alps_u_max) * 0.5F) /
-                                  (Config::alps_u_max - Config::alps_u_min);
-    float dist_v = 1.0F - 2.0F * std::abs(v - (Config::alps_v_min + Config::alps_v_max) * 0.5F) /
-                                  (Config::alps_v_max - Config::alps_v_min);
-    float falloff = dist_u * dist_v;
-    falloff = falloff * falloff;
-    height += Config::alps_height * falloff;
-  }
+  // Add contributions from each mountain range
+  height += compute_mountain_contribution(u, v,
+      Config::alps_u_min, Config::alps_u_max,
+      Config::alps_v_min, Config::alps_v_max, Config::alps_height);
 
-  // Pyrenees
-  if (u >= Config::pyrenees_u_min && u <= Config::pyrenees_u_max &&
-      v >= Config::pyrenees_v_min && v <= Config::pyrenees_v_max) {
-    float dist_u = 1.0F - 2.0F * std::abs(u - (Config::pyrenees_u_min + Config::pyrenees_u_max) * 0.5F) /
-                                  (Config::pyrenees_u_max - Config::pyrenees_u_min);
-    float dist_v = 1.0F - 2.0F * std::abs(v - (Config::pyrenees_v_min + Config::pyrenees_v_max) * 0.5F) /
-                                  (Config::pyrenees_v_max - Config::pyrenees_v_min);
-    float falloff = dist_u * dist_v;
-    falloff = falloff * falloff;
-    height += Config::pyrenees_height * falloff;
-  }
+  height += compute_mountain_contribution(u, v,
+      Config::pyrenees_u_min, Config::pyrenees_u_max,
+      Config::pyrenees_v_min, Config::pyrenees_v_max, Config::pyrenees_height);
 
-  // Apennines
-  if (u >= Config::apennines_u_min && u <= Config::apennines_u_max &&
-      v >= Config::apennines_v_min && v <= Config::apennines_v_max) {
-    float dist_u = 1.0F - 2.0F * std::abs(u - (Config::apennines_u_min + Config::apennines_u_max) * 0.5F) /
-                                  (Config::apennines_u_max - Config::apennines_u_min);
-    float dist_v = 1.0F - 2.0F * std::abs(v - (Config::apennines_v_min + Config::apennines_v_max) * 0.5F) /
-                                  (Config::apennines_v_max - Config::apennines_v_min);
-    float falloff = dist_u * dist_v;
-    falloff = falloff * falloff;
-    height += Config::apennines_height * falloff;
-  }
+  height += compute_mountain_contribution(u, v,
+      Config::apennines_u_min, Config::apennines_u_max,
+      Config::apennines_v_min, Config::apennines_v_max, Config::apennines_height);
 
-  // Atlas mountains
-  if (u >= Config::atlas_u_min && u <= Config::atlas_u_max &&
-      v >= Config::atlas_v_min && v <= Config::atlas_v_max) {
-    float dist_u = 1.0F - 2.0F * std::abs(u - (Config::atlas_u_min + Config::atlas_u_max) * 0.5F) /
-                                  (Config::atlas_u_max - Config::atlas_u_min);
-    float dist_v = 1.0F - 2.0F * std::abs(v - (Config::atlas_v_min + Config::atlas_v_max) * 0.5F) /
-                                  (Config::atlas_v_max - Config::atlas_v_min);
-    float falloff = dist_u * dist_v;
-    falloff = falloff * falloff;
-    height += Config::atlas_height * falloff;
-  }
+  height += compute_mountain_contribution(u, v,
+      Config::atlas_u_min, Config::atlas_u_max,
+      Config::atlas_v_min, Config::atlas_v_max, Config::atlas_height);
 
   // Add procedural noise for natural variation
   float noise = fbm_noise_2d(u * 8.0F, v * 8.0F, 4, 2.0F, 0.5F);

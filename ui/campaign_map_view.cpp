@@ -384,8 +384,10 @@ private:
 
   QOpenGLShaderProgram m_texture_program;
   QOpenGLShaderProgram m_line_program;
-  QOpenGLShaderProgram m_terrain_program;  // 3D terrain shader
-  QOpenGLShaderProgram m_label_program;    // Typography shader
+  // Note: m_terrain_program and m_label_program are reserved for future
+  // dedicated shader implementations. Currently using fallback rendering.
+  QOpenGLShaderProgram m_terrain_program;  // 3D terrain shader (reserved)
+  QOpenGLShaderProgram m_label_program;    // Typography shader (reserved)
 
   GLuint m_quad_vao = 0;
   GLuint m_quad_vbo = 0;
@@ -1294,14 +1296,18 @@ void main() {
   }
 
   // Draw labels with typography styling
+  // Note: This uses a simplified fallback renderer with the line program.
+  // For full SDF text rendering with crisp edges at any zoom level,
+  // load campaign_label.vert/.frag shaders and a SDF font atlas texture.
+  // The infrastructure for this is ready in the shaders and LabelStyle configs.
   void draw_label_layer(const LabelLayer &layer, const QMatrix4x4 &mvp,
                         float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
       return;
     }
 
-    // Use line program as fallback (simplified rendering)
-    // Full implementation would use m_label_program with SDF font atlas
+    // Fallback: render label geometry with solid color
+    // Full SDF implementation would use m_label_program with font atlas
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
     m_line_program.setUniformValue("u_z", z_offset);
