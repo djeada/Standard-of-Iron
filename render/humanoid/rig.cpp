@@ -1567,8 +1567,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         make_pose_cache_key(reinterpret_cast<uintptr_t>(ctx.entity), idx);
 
     auto cache_it = s_pose_cache.find(cache_key);
-    const bool allow_cached_pose =
-        (!anim.is_moving) || ctx.animation_throttled;
+    const bool allow_cached_pose = (!anim.is_moving) || ctx.animation_throttled;
     if (allow_cached_pose && cache_it != s_pose_cache.end()) {
       CachedPoseEntry &cached = cache_it->second;
       if ((ctx.animation_throttled || !cached.was_moving) &&

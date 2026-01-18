@@ -49,10 +49,9 @@ public:
                m_config.temporal_culling_threshold;
   }
 
-  [[nodiscard]] auto should_render_unit(uint32_t entity_id, bool is_moving,
-                                        bool is_selected,
-                                        bool is_hovered) const noexcept
-      -> bool {
+  [[nodiscard]] auto
+  should_render_unit(uint32_t entity_id, bool is_moving, bool is_selected,
+                     bool is_hovered) const noexcept -> bool {
     if (!is_battle_mode()) {
       return true;
     }
@@ -73,10 +72,9 @@ public:
     return render;
   }
 
-  [[nodiscard]] auto should_update_animation(uint32_t entity_id,
-                                             float distance_to_camera,
-                                             bool is_selected) const noexcept
-      -> bool {
+  [[nodiscard]] auto
+  should_update_animation(uint32_t entity_id, float distance_to_camera,
+                          bool is_selected) const noexcept -> bool {
     BattleRenderConfig cfg;
     {
       std::lock_guard<std::mutex> lock(m_config_mutex);
@@ -101,9 +99,8 @@ public:
     }
 
     uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
-    bool update =
-        ((entity_id + frame) % static_cast<uint32_t>(
-                                   cfg.animation_skip_frames + 1)) == 0;
+    bool update = ((entity_id + frame) %
+                   static_cast<uint32_t>(cfg.animation_skip_frames + 1)) == 0;
 
     if (!update) {
       m_animations_throttled.fetch_add(1, std::memory_order_relaxed);
