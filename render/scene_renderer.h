@@ -12,6 +12,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -183,6 +184,15 @@ private:
                               Engine::Core::TransformComponent *transform,
                               Engine::Core::UnitComponent *unit_comp);
 
+  struct AnimationTimeCacheEntry {
+    float time = 0.0F;
+    uint32_t last_frame = 0;
+  };
+
+  auto resolve_animation_time(uint32_t entity_id, bool update,
+                              float current_time, uint32_t frame) -> float;
+  void prune_animation_time_cache(uint32_t frame);
+
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;
   DrawQueue m_queues[2];
@@ -206,6 +216,8 @@ private:
 
   QMatrix4x4 m_view_proj;
   Shader *m_current_shader = nullptr;
+
+  std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
 };
 
 struct FrameScope {
