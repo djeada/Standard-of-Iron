@@ -22,20 +22,43 @@ Item {
 
         }
         build_campaign_state();
+        ensure_mission_selection();
     }
 
     function select_next_unlocked_mission() {
         if (!current_campaign || !current_campaign.missions)
             return ;
 
+        var all_completed = current_campaign.missions.length > 0;
         for (var i = 0; i < current_campaign.missions.length; i++) {
             var mission = current_campaign.missions[i];
-            if (mission.unlocked && !mission.completed) {
+            if (mission && mission.unlocked && !mission.completed) {
                 selected_mission_index = i;
-                mission_list_view.currentIndex = i;
                 return ;
             }
+            if (!mission || !mission.completed)
+                all_completed = false;
         }
+
+        if (all_completed) {
+            var last_index = current_campaign.missions.length - 1;
+            selected_mission_index = last_index;
+        }
+    }
+
+    function ensure_mission_selection() {
+        if (!current_campaign || !current_campaign.missions ||
+            current_campaign.missions.length === 0) {
+            selected_mission_index = -1;
+            return ;
+        }
+
+        if (selected_mission_index >= 0 &&
+            selected_mission_index < current_campaign.missions.length) {
+            return ;
+        }
+
+        select_next_unlocked_mission();
     }
 
     function select_mission_by_region(region_id) {
@@ -46,7 +69,6 @@ Item {
             var mission = current_campaign.missions[i];
             if (mission.world_region_id === region_id) {
                 selected_mission_index = i;
-                mission_list_view.currentIndex = i;
                 return ;
             }
         }
@@ -101,7 +123,10 @@ Item {
             refresh_campaigns();
         }
     }
-    onCurrent_campaignChanged: build_campaign_state()
+    onCurrent_campaignChanged: {
+        build_campaign_state();
+        ensure_mission_selection();
+    }
     anchors.fill: parent
     focus: true
     Keys.onPressed: function(event) {
@@ -316,7 +341,6 @@ Item {
                                     is_selected: mission_list_view.currentIndex === index
                                     onClicked: {
                                         selected_mission_index = index;
-                                        mission_list_view.currentIndex = index;
                                     }
                                 }
 

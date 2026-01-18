@@ -361,24 +361,24 @@ inline auto get_inked_route_passes(float base_width, int age_factor = 0)
 
   return {
       // Outer border (darkest)
-      {{0.12F * fade_clamped, 0.06F * fade_clamped, 0.03F * fade_clamped,
-        0.90F * fade_clamped},
-       2.4F,
+      {{0.12F * fade_clamped, 0.09F * fade_clamped, 0.07F * fade_clamped,
+        0.65F * fade_clamped},
+       1.3F,
        0.000F},
       // Ink border
-      {{0.20F * fade_clamped, 0.10F * fade_clamped, 0.05F * fade_clamped,
-        0.85F * fade_clamped},
-       2.0F,
+      {{0.18F * fade_clamped, 0.14F * fade_clamped, 0.10F * fade_clamped,
+        0.55F * fade_clamped},
+       1.05F,
        0.001F},
       // Golden highlight
-      {{0.95F * fade_clamped, 0.75F * fade_clamped, 0.35F * fade_clamped,
-        0.92F * fade_clamped},
-       1.5F,
+      {{0.70F * fade_clamped, 0.58F * fade_clamped, 0.32F * fade_clamped,
+        0.65F * fade_clamped},
+       0.8F,
        0.002F},
       // Core red
-      {{0.85F * fade_clamped, 0.15F * fade_clamped, 0.10F * fade_clamped,
-        1.0F * fade_clamped},
-       1.0F,
+      {{0.62F * fade_clamped, 0.22F * fade_clamped, 0.18F * fade_clamped,
+        0.75F * fade_clamped},
+       0.6F,
        0.003F}};
 }
 
