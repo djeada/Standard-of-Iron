@@ -338,7 +338,7 @@ Item {
                                 delegate: MissionListItem {
                                     width: mission_list_view.width - Theme.spacingSmall
                                     mission_data: modelData
-                                    is_selected: mission_list_view.currentIndex === index
+                                    is_selected: root.selected_mission_index === index
                                     onClicked: {
                                         selected_mission_index = index;
                                     }
