@@ -1,5 +1,6 @@
 singleton StyleGuide 1.0 StyleGuide.qml
 StyledButton 1.0 StyledButton.qml
+StyledComboBox 1.0 StyledComboBox.qml
 ProductionPanel 1.0 ProductionPanel.qml
 SaveGamePanel 1.0 SaveGamePanel.qml
 LoadGamePanel 1.0 LoadGamePanel.qml
