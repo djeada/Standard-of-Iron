@@ -47,9 +47,9 @@ void process_hit_feedback(Engine::Core::World *world, float delta_time) {
         float const dz = feedback->knockback_z * fade * delta_time;
         float const displacement = std::sqrt(dx * dx + dz * dz);
         float const scale =
-            (displacement > Constants::kMaxDisplacementPerFrame &&
+            (displacement > Constants::k_max_displacement_per_frame &&
              displacement > 0.0001F)
-                ? Constants::kMaxDisplacementPerFrame / displacement
+                ? Constants::k_max_displacement_per_frame / displacement
                 : 1.0F;
         transform->position.x += dx * scale;
         transform->position.z += dz * scale;

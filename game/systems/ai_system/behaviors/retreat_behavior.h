@@ -7,7 +7,7 @@ namespace Game::Systems::AI {
 class RetreatBehavior : public AIBehavior {
 public:
   void execute(const AISnapshot &snapshot, AIContext &context, float delta_time,
-               std::vector<AICommand> &outCommands) override;
+               std::vector<AICommand> &out_commands) override;
 
   [[nodiscard]] auto
   should_execute(const AISnapshot &snapshot,
@@ -22,7 +22,7 @@ public:
   }
 
 private:
-  float m_retreatTimer = 0.0F;
+  float m_retreat_timer = 0.0F;
 };
 
 } // namespace Game::Systems::AI

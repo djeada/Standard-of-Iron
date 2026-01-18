@@ -20,27 +20,27 @@ Pathfinding::Pathfinding(int width, int height)
     : m_width(width), m_height(height) {
   m_obstacles.resize(height, std::vector<std::uint8_t>(width, 0));
   ensure_working_buffers();
-  m_obstaclesDirty.store(true, std::memory_order_release);
-  m_fullUpdateRequired = true;
-  m_workerThread = std::thread(&Pathfinding::worker_loop, this);
+  m_obstacles_dirty.store(true, std::memory_order_release);
+  m_full_update_required = true;
+  m_worker_thread = std::thread(&Pathfinding::worker_loop, this);
 }
 
 Pathfinding::~Pathfinding() {
-  m_stopWorker.store(true, std::memory_order_release);
-  m_requestCondition.notify_all();
-  if (m_workerThread.joinable()) {
-    m_workerThread.join();
+  m_stop_worker.store(true, std::memory_order_release);
+  m_request_condition.notify_all();
+  if (m_worker_thread.joinable()) {
+    m_worker_thread.join();
   }
 }
 
 void Pathfinding::set_grid_offset(float offset_x, float offset_z) {
-  m_gridOffsetX = offset_x;
-  m_gridOffsetZ = offset_z;
+  m_grid_offset_x = offset_x;
+  m_grid_offset_z = offset_z;
 }
 
-void Pathfinding::set_obstacle(int x, int y, bool isObstacle) {
+void Pathfinding::set_obstacle(int x, int y, bool is_obstacle) {
   if (x >= 0 && x < m_width && y >= 0 && y < m_height) {
-    m_obstacles[y][x] = static_cast<std::uint8_t>(isObstacle);
+    m_obstacles[y][x] = static_cast<std::uint8_t>(is_obstacle);
   }
 }
 
@@ -58,9 +58,9 @@ auto Pathfinding::is_walkable_with_radius(int x, int y,
 }
 
 void Pathfinding::mark_obstacles_dirty() {
-  std::lock_guard<std::mutex> const lock(m_dirtyMutex);
-  m_fullUpdateRequired = true;
-  m_obstaclesDirty.store(true, std::memory_order_release);
+  std::lock_guard<std::mutex> const lock(m_dirty_mutex);
+  m_full_update_required = true;
+  m_obstacles_dirty.store(true, std::memory_order_release);
 }
 
 void Pathfinding::mark_region_dirty(int min_x, int max_x, int min_z,
@@ -75,9 +75,9 @@ void Pathfinding::mark_region_dirty(int min_x, int max_x, int min_z,
     return;
   }
 
-  std::lock_guard<std::mutex> const lock(m_dirtyMutex);
-  m_dirtyRegions.emplace_back(min_x, max_x, min_z, max_z);
-  m_obstaclesDirty.store(true, std::memory_order_release);
+  std::lock_guard<std::mutex> const lock(m_dirty_mutex);
+  m_dirty_regions.emplace_back(min_x, max_x, min_z, max_z);
+  m_obstacles_dirty.store(true, std::memory_order_release);
 }
 
 void Pathfinding::mark_building_region_dirty(float center_x, float center_z,
@@ -87,13 +87,13 @@ void Pathfinding::mark_building_region_dirty(float center_x, float center_z,
   float const half_depth = depth / 2.0F + padding;
 
   int const min_x =
-      static_cast<int>(std::floor(center_x - half_width - m_gridOffsetX));
+      static_cast<int>(std::floor(center_x - half_width - m_grid_offset_x));
   int const max_x =
-      static_cast<int>(std::ceil(center_x + half_width - m_gridOffsetX));
+      static_cast<int>(std::ceil(center_x + half_width - m_grid_offset_x));
   int const min_z =
-      static_cast<int>(std::floor(center_z - half_depth - m_gridOffsetZ));
+      static_cast<int>(std::floor(center_z - half_depth - m_grid_offset_z));
   int const max_z =
-      static_cast<int>(std::ceil(center_z + half_depth - m_gridOffsetZ));
+      static_cast<int>(std::ceil(center_z + half_depth - m_grid_offset_z));
 
   mark_region_dirty(min_x, max_x, min_z, max_z);
 }
@@ -102,11 +102,11 @@ void Pathfinding::process_dirty_regions() {
   std::vector<DirtyRegion> regions_to_process;
 
   {
-    std::lock_guard<std::mutex> const lock(m_dirtyMutex);
-    if (m_fullUpdateRequired) {
+    std::lock_guard<std::mutex> const lock(m_dirty_mutex);
+    if (m_full_update_required) {
 
-      m_dirtyRegions.clear();
-      m_fullUpdateRequired = false;
+      m_dirty_regions.clear();
+      m_full_update_required = false;
 
       for (auto &row : m_obstacles) {
         std::fill(row.begin(), row.end(), static_cast<std::uint8_t>(0));
@@ -143,12 +143,12 @@ void Pathfinding::process_dirty_regions() {
       for (const auto &building : buildings) {
         auto cells =
             Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
-                building, m_gridCellSize);
+                building, m_grid_cell_size);
         for (const auto &cell : cells) {
           int const grid_x =
-              static_cast<int>(std::round(cell.first - m_gridOffsetX));
+              static_cast<int>(std::round(cell.first - m_grid_offset_x));
           int const grid_z =
-              static_cast<int>(std::round(cell.second - m_gridOffsetZ));
+              static_cast<int>(std::round(cell.second - m_grid_offset_z));
 
           if (grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
               grid_z < m_height) {
@@ -160,8 +160,8 @@ void Pathfinding::process_dirty_regions() {
       return;
     }
 
-    regions_to_process = std::move(m_dirtyRegions);
-    m_dirtyRegions.clear();
+    regions_to_process = std::move(m_dirty_regions);
+    m_dirty_regions.clear();
   }
 
   if (regions_to_process.empty()) {
@@ -204,12 +204,12 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
   for (const auto &building : buildings) {
     auto cells =
         Game::Systems::BuildingCollisionRegistry::get_occupied_grid_cells(
-            building, m_gridCellSize);
+            building, m_grid_cell_size);
     for (const auto &cell : cells) {
       int const grid_x =
-          static_cast<int>(std::round(cell.first - m_gridOffsetX));
+          static_cast<int>(std::round(cell.first - m_grid_offset_x));
       int const grid_z =
-          static_cast<int>(std::round(cell.second - m_gridOffsetZ));
+          static_cast<int>(std::round(cell.second - m_grid_offset_z));
 
       if (grid_x >= min_x && grid_x <= max_x && grid_z >= min_z &&
           grid_z <= max_z && grid_x >= 0 && grid_x < m_width && grid_z >= 0 &&
@@ -222,25 +222,25 @@ void Pathfinding::update_region(int min_x, int max_x, int min_z, int max_z) {
 
 void Pathfinding::update_building_obstacles() {
 
-  if (!m_obstaclesDirty.load(std::memory_order_acquire)) {
+  if (!m_obstacles_dirty.load(std::memory_order_acquire)) {
     return;
   }
 
   std::lock_guard<std::mutex> const lock(m_mutex);
 
-  if (!m_obstaclesDirty.load(std::memory_order_acquire)) {
+  if (!m_obstacles_dirty.load(std::memory_order_acquire)) {
     return;
   }
 
   process_dirty_regions();
 
-  m_obstaclesDirty.store(false, std::memory_order_release);
+  m_obstacles_dirty.store(false, std::memory_order_release);
 }
 
 auto Pathfinding::find_path(const Point &start,
                             const Point &end) -> std::vector<Point> {
 
-  if (m_obstaclesDirty.load(std::memory_order_acquire)) {
+  if (m_obstacles_dirty.load(std::memory_order_acquire)) {
     update_building_obstacles();
   }
 
@@ -251,7 +251,7 @@ auto Pathfinding::find_path(const Point &start,
 auto Pathfinding::find_path(const Point &start, const Point &end,
                             float unit_radius) -> std::vector<Point> {
 
-  if (m_obstaclesDirty.load(std::memory_order_acquire)) {
+  if (m_obstacles_dirty.load(std::memory_order_acquire)) {
     update_building_obstacles();
   }
 
@@ -268,29 +268,29 @@ auto Pathfinding::find_path_async(const Point &start, const Point &end)
 void Pathfinding::submit_path_request(std::uint64_t request_id,
                                       const Point &start, const Point &end) {
   {
-    std::lock_guard<std::mutex> const lock(m_requestMutex);
-    m_requestQueue.push({request_id, start, end, 0.0F});
+    std::lock_guard<std::mutex> const lock(m_request_mutex);
+    m_request_queue.push({request_id, start, end, 0.0F});
   }
-  m_requestCondition.notify_one();
+  m_request_condition.notify_one();
 }
 
 void Pathfinding::submit_path_request(std::uint64_t request_id,
                                       const Point &start, const Point &end,
                                       float unit_radius) {
   {
-    std::lock_guard<std::mutex> const lock(m_requestMutex);
-    m_requestQueue.push({request_id, start, end, unit_radius});
+    std::lock_guard<std::mutex> const lock(m_request_mutex);
+    m_request_queue.push({request_id, start, end, unit_radius});
   }
-  m_requestCondition.notify_one();
+  m_request_condition.notify_one();
 }
 
 auto Pathfinding::fetch_completed_paths()
     -> std::vector<Pathfinding::PathResult> {
   std::vector<PathResult> results;
-  std::lock_guard<std::mutex> const lock(m_resultMutex);
-  while (!m_resultQueue.empty()) {
-    results.push_back(std::move(m_resultQueue.front()));
-    m_resultQueue.pop();
+  std::lock_guard<std::mutex> const lock(m_result_mutex);
+  while (!m_result_queue.empty()) {
+    results.push_back(std::move(m_result_queue.front()));
+    m_result_queue.pop();
   }
   return results;
 }
@@ -315,8 +315,8 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
     return {};
   }
 
-  const int start_idx = toIndex(start);
-  const int end_idx = toIndex(end);
+  const int start_idx = to_index(start);
+  const int end_idx = to_index(end);
 
   if (start_idx == end_idx) {
     return {start};
@@ -324,7 +324,7 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
 
   const std::uint32_t generation = next_generation();
 
-  m_openHeap.clear();
+  m_open_heap.clear();
 
   set_g_cost(start_idx, generation, 0);
   set_parent(start_idx, generation, start_idx);
@@ -336,7 +336,7 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
 
   int final_cost = -1;
 
-  while (!m_openHeap.empty() && iterations < max_iterations) {
+  while (!m_open_heap.empty() && iterations < max_iterations) {
     ++iterations;
 
     QueueNode const current = pop_open_node();
@@ -356,7 +356,7 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
       break;
     }
 
-    const Point current_point = toPoint(current.index);
+    const Point current_point = to_point(current.index);
     std::array<Point, 8> neighbors{};
     const std::size_t neighbor_count =
         collect_neighbors(current_point, neighbors);
@@ -367,7 +367,7 @@ auto Pathfinding::find_path_internal(const Point &start, const Point &end,
         continue;
       }
 
-      const int neighbor_idx = toIndex(neighbor);
+      const int neighbor_idx = to_index(neighbor);
       if (is_closed(neighbor_idx, generation)) {
         continue;
       }
@@ -403,94 +403,94 @@ void Pathfinding::ensure_working_buffers() {
   const std::size_t total_cells =
       static_cast<std::size_t>(m_width) * static_cast<std::size_t>(m_height);
 
-  if (m_closedGeneration.size() != total_cells) {
-    m_closedGeneration.assign(total_cells, 0);
-    m_gCostGeneration.assign(total_cells, 0);
-    m_gCostValues.assign(total_cells, std::numeric_limits<int>::max());
-    m_parentGeneration.assign(total_cells, 0);
-    m_parentValues.assign(total_cells, -1);
+  if (m_closed_generation.size() != total_cells) {
+    m_closed_generation.assign(total_cells, 0);
+    m_g_cost_generation.assign(total_cells, 0);
+    m_g_cost_values.assign(total_cells, std::numeric_limits<int>::max());
+    m_parent_generation.assign(total_cells, 0);
+    m_parent_values.assign(total_cells, -1);
   }
 
   const std::size_t min_open_capacity =
       std::max<std::size_t>(total_cells / 8, 64);
-  if (m_openHeap.capacity() < min_open_capacity) {
-    m_openHeap.reserve(min_open_capacity);
+  if (m_open_heap.capacity() < min_open_capacity) {
+    m_open_heap.reserve(min_open_capacity);
   }
 }
 
 auto Pathfinding::next_generation() -> std::uint32_t {
-  auto next = ++m_generationCounter;
+  auto next = ++m_generation_counter;
   if (next == 0) {
     reset_generations();
-    next = ++m_generationCounter;
+    next = ++m_generation_counter;
   }
   return next;
 }
 
 void Pathfinding::reset_generations() {
-  std::fill(m_closedGeneration.begin(), m_closedGeneration.end(), 0);
-  std::fill(m_gCostGeneration.begin(), m_gCostGeneration.end(), 0);
-  std::fill(m_parentGeneration.begin(), m_parentGeneration.end(), 0);
-  std::fill(m_gCostValues.begin(), m_gCostValues.end(),
+  std::fill(m_closed_generation.begin(), m_closed_generation.end(), 0);
+  std::fill(m_g_cost_generation.begin(), m_g_cost_generation.end(), 0);
+  std::fill(m_parent_generation.begin(), m_parent_generation.end(), 0);
+  std::fill(m_g_cost_values.begin(), m_g_cost_values.end(),
             std::numeric_limits<int>::max());
-  std::fill(m_parentValues.begin(), m_parentValues.end(), -1);
-  m_generationCounter = 0;
+  std::fill(m_parent_values.begin(), m_parent_values.end(), -1);
+  m_generation_counter = 0;
 }
 
 auto Pathfinding::is_closed(int index, std::uint32_t generation) const -> bool {
   return index >= 0 &&
-         static_cast<std::size_t>(index) < m_closedGeneration.size() &&
-         m_closedGeneration[static_cast<std::size_t>(index)] == generation;
+         static_cast<std::size_t>(index) < m_closed_generation.size() &&
+         m_closed_generation[static_cast<std::size_t>(index)] == generation;
 }
 
 void Pathfinding::set_closed(int index, std::uint32_t generation) {
   if (index >= 0 &&
-      static_cast<std::size_t>(index) < m_closedGeneration.size()) {
-    m_closedGeneration[static_cast<std::size_t>(index)] = generation;
+      static_cast<std::size_t>(index) < m_closed_generation.size()) {
+    m_closed_generation[static_cast<std::size_t>(index)] = generation;
   }
 }
 
 auto Pathfinding::get_g_cost(int index, std::uint32_t generation) const -> int {
   if (index < 0 ||
-      static_cast<std::size_t>(index) >= m_gCostGeneration.size()) {
+      static_cast<std::size_t>(index) >= m_g_cost_generation.size()) {
     return std::numeric_limits<int>::max();
   }
-  if (m_gCostGeneration[static_cast<std::size_t>(index)] == generation) {
-    return m_gCostValues[static_cast<std::size_t>(index)];
+  if (m_g_cost_generation[static_cast<std::size_t>(index)] == generation) {
+    return m_g_cost_values[static_cast<std::size_t>(index)];
   }
   return std::numeric_limits<int>::max();
 }
 
 void Pathfinding::set_g_cost(int index, std::uint32_t generation, int cost) {
   if (index >= 0 &&
-      static_cast<std::size_t>(index) < m_gCostGeneration.size()) {
+      static_cast<std::size_t>(index) < m_g_cost_generation.size()) {
     const auto idx = static_cast<std::size_t>(index);
-    m_gCostGeneration[idx] = generation;
-    m_gCostValues[idx] = cost;
+    m_g_cost_generation[idx] = generation;
+    m_g_cost_values[idx] = cost;
   }
 }
 
 auto Pathfinding::has_parent(int index,
                              std::uint32_t generation) const -> bool {
   return index >= 0 &&
-         static_cast<std::size_t>(index) < m_parentGeneration.size() &&
-         m_parentGeneration[static_cast<std::size_t>(index)] == generation;
+         static_cast<std::size_t>(index) < m_parent_generation.size() &&
+         m_parent_generation[static_cast<std::size_t>(index)] == generation;
 }
 
 auto Pathfinding::get_parent(int index, std::uint32_t generation) const -> int {
   if (has_parent(index, generation)) {
-    return m_parentValues[static_cast<std::size_t>(index)];
+    return m_parent_values[static_cast<std::size_t>(index)];
   }
   return -1;
 }
 
 void Pathfinding::set_parent(int index, std::uint32_t generation,
-                             int parentIndex) {
+                             int parent_index) {
   if (index >= 0 &&
-      static_cast<std::size_t>(index) < m_parentGeneration.size()) {
+      static_cast<std::size_t>(index) < m_parent_generation.size()) {
     const auto idx = static_cast<std::size_t>(index);
-    m_parentGeneration[idx] = generation;
-    m_parentValues[idx] = parentIndex;
+    m_parent_generation[idx] = generation;
+    m_parent_values[idx] = parent_index;
   }
 }
 
@@ -533,7 +533,7 @@ void Pathfinding::build_path(int start_index, int end_index,
   int current = end_index;
 
   while (current >= 0) {
-    out_path.push_back(toPoint(current));
+    out_path.push_back(to_point(current));
     if (current == start_index) {
       std::reverse(out_path.begin(), out_path.end());
       return;
@@ -564,41 +564,41 @@ auto Pathfinding::heap_less(const QueueNode &lhs,
 }
 
 void Pathfinding::push_open_node(const QueueNode &node) {
-  m_openHeap.push_back(node);
-  std::size_t index = m_openHeap.size() - 1;
+  m_open_heap.push_back(node);
+  std::size_t index = m_open_heap.size() - 1;
   while (index > 0) {
     std::size_t const parent = (index - 1) / 2;
-    if (heap_less(m_openHeap[parent], m_openHeap[index])) {
+    if (heap_less(m_open_heap[parent], m_open_heap[index])) {
       break;
     }
-    std::swap(m_openHeap[parent], m_openHeap[index]);
+    std::swap(m_open_heap[parent], m_open_heap[index]);
     index = parent;
   }
 }
 
 auto Pathfinding::pop_open_node() -> Pathfinding::QueueNode {
-  QueueNode top = m_openHeap.front();
-  QueueNode const last = m_openHeap.back();
-  m_openHeap.pop_back();
-  if (!m_openHeap.empty()) {
-    m_openHeap[0] = last;
+  QueueNode top = m_open_heap.front();
+  QueueNode const last = m_open_heap.back();
+  m_open_heap.pop_back();
+  if (!m_open_heap.empty()) {
+    m_open_heap[0] = last;
     std::size_t index = 0;
-    const std::size_t size = m_openHeap.size();
+    const std::size_t size = m_open_heap.size();
     while (true) {
       std::size_t const left = index * 2 + 1;
       std::size_t const right = left + 1;
       std::size_t smallest = index;
 
-      if (left < size && !heap_less(m_openHeap[smallest], m_openHeap[left])) {
+      if (left < size && !heap_less(m_open_heap[smallest], m_open_heap[left])) {
         smallest = left;
       }
-      if (right < size && !heap_less(m_openHeap[smallest], m_openHeap[right])) {
+      if (right < size && !heap_less(m_open_heap[smallest], m_open_heap[right])) {
         smallest = right;
       }
       if (smallest == index) {
         break;
       }
-      std::swap(m_openHeap[index], m_openHeap[smallest]);
+      std::swap(m_open_heap[index], m_open_heap[smallest]);
       index = smallest;
     }
   }
@@ -609,19 +609,19 @@ void Pathfinding::worker_loop() {
   while (true) {
     PathRequest request;
     {
-      std::unique_lock<std::mutex> lock(m_requestMutex);
-      m_requestCondition.wait(lock, [this]() {
-        return m_stopWorker.load(std::memory_order_acquire) ||
-               !m_requestQueue.empty();
+      std::unique_lock<std::mutex> lock(m_request_mutex);
+      m_request_condition.wait(lock, [this]() {
+        return m_stop_worker.load(std::memory_order_acquire) ||
+               !m_request_queue.empty();
       });
 
-      if (m_stopWorker.load(std::memory_order_acquire) &&
-          m_requestQueue.empty()) {
+      if (m_stop_worker.load(std::memory_order_acquire) &&
+          m_request_queue.empty()) {
         break;
       }
 
-      request = m_requestQueue.front();
-      m_requestQueue.pop();
+      request = m_request_queue.front();
+      m_request_queue.pop();
     }
 
     auto path = (request.unit_radius > 0.0F)
@@ -629,8 +629,8 @@ void Pathfinding::worker_loop() {
                     : find_path(request.start, request.end);
 
     {
-      std::lock_guard<std::mutex> const lock(m_resultMutex);
-      m_resultQueue.push({request.request_id, std::move(path)});
+      std::lock_guard<std::mutex> const lock(m_result_mutex);
+      m_result_queue.push({request.request_id, std::move(path)});
     }
   }
 }

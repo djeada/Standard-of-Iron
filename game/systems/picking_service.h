@@ -55,7 +55,7 @@ public:
                int owner_filter) -> std::vector<Engine::Core::EntityID>;
 
 private:
-  Engine::Core::EntityID m_prev_hoverId = 0;
+  Engine::Core::EntityID m_prev_hover_id = 0;
   int m_hover_grace_ticks = 0;
   static auto project_bounds(const Render::GL::Camera &cam,
                              const QVector3D &center, float hx, float hz,

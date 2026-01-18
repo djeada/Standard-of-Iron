@@ -28,7 +28,7 @@ constexpr float BUILD_TIME_BARRACKS = 30.0F;
 constexpr float BUILD_TIME_DEFAULT = 20.0F;
 } // namespace
 
-void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
+void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
                              const std::vector<AICommand> &commands) {
 
   for (const auto &command : commands) {
@@ -70,7 +70,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         }
 
         auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
           continue;
         }
 
@@ -106,7 +106,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         }
 
         auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
           continue;
         }
 
@@ -139,12 +139,12 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
       }
 
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-      if ((unit != nullptr) && unit->owner_id != aiOwnerId) {
+      if ((unit != nullptr) && unit->owner_id != ai_owner_id) {
         break;
       }
 
       int const current_troops =
-          Engine::Core::World::count_troops_for_player(aiOwnerId);
+          Engine::Core::World::count_troops_for_player(ai_owner_id);
       int const max_troops =
           Game::GameConfig::instance().get_max_troops_per_player();
       Game::Units::TroopType const product_type = production->product_type;
@@ -174,7 +174,7 @@ void AICommandApplier::apply(Engine::Core::World &world, int aiOwnerId,
         }
 
         auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-        if ((unit == nullptr) || unit->owner_id != aiOwnerId) {
+        if ((unit == nullptr) || unit->owner_id != ai_owner_id) {
           continue;
         }
 

@@ -44,20 +44,20 @@ private:
     float update_timer = 0.0F;
   };
 
-  std::vector<AIInstance> m_aiInstances;
+  std::vector<AIInstance> m_ai_instances;
 
-  AI::AIBehaviorRegistry m_behaviorRegistry;
-  AI::AISnapshotBuilder m_snapshotBuilder;
+  AI::AIBehaviorRegistry m_behavior_registry;
+  AI::AISnapshotBuilder m_snapshot_builder;
   AI::AIReasoner m_reasoner;
   AI::AIExecutor m_executor;
   AI::AICommandApplier m_applier;
-  AI::AICommandFilter m_commandFilter;
+  AI::AICommandFilter m_command_filter;
 
   float m_total_game_time = 0.0F;
   float m_update_interval = 0.3F;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
-      m_buildingAttackedSubscription;
+      m_building_attacked_subscription;
 
   void initialize_ai_players();
 

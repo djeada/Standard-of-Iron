@@ -10,16 +10,16 @@ namespace Game::Systems::AI {
 
 void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                                  float delta_time,
-                                 std::vector<AICommand> &outCommands) {
-  m_productionTimer += delta_time;
+                                 std::vector<AICommand> &out_commands) {
+  m_production_timer += delta_time;
 
   float production_interval =
       1.5F / context.strategy_config.production_rate_modifier;
 
-  if (m_productionTimer < production_interval) {
+  if (m_production_timer < production_interval) {
     return;
   }
-  m_productionTimer = 0.0F;
+  m_production_timer = 0.0F;
 
   static int const exec_counter = 0;
 
@@ -43,7 +43,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   else if (context.builder_count < DESIRED_BUILDERS &&
-           (m_productionCounter % BUILDER_PRODUCTION_INTERVAL == 0)) {
+           (m_production_counter % BUILDER_PRODUCTION_INTERVAL == 0)) {
     should_produce_builder = true;
   }
 
@@ -114,9 +114,9 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     command.type = AICommandType::StartProduction;
     command.building_id = entity.id;
     command.product_type = troop_type->unit_type;
-    outCommands.push_back(std::move(command));
+    out_commands.push_back(std::move(command));
 
-    m_productionCounter++;
+    m_production_counter++;
   }
 }
 
