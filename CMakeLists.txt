@@ -204,6 +204,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/MediterraneanMapPanel.qml
             ui/qml/StyleGuide.qml
             ui/qml/StyledButton.qml
+            ui/qml/StyledComboBox.qml
             ui/qml/HUD.qml
             ui/qml/HUDTop.qml
             ui/qml/HUDBottom.qml
