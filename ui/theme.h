@@ -46,6 +46,9 @@ class Theme : public QObject {
   Q_PROPERTY(QColor addColor READ addColor CONSTANT)
   Q_PROPERTY(QColor removeColor READ removeColor CONSTANT)
 
+  Q_PROPERTY(QColor dangerBg READ dangerBg CONSTANT)
+  Q_PROPERTY(QColor dangerBr READ dangerBr CONSTANT)
+
   Q_PROPERTY(QColor successBg READ successBg CONSTANT)
   Q_PROPERTY(QColor successBr READ successBr CONSTANT)
   Q_PROPERTY(QColor successText READ successText CONSTANT)
@@ -124,6 +127,9 @@ public:
 
   [[nodiscard]] static auto addColor() -> QColor { return {"#3A9CA8"}; }
   [[nodiscard]] static auto removeColor() -> QColor { return {"#D04040"}; }
+
+  [[nodiscard]] static auto dangerBg() -> QColor { return {"#4a1e1e"}; }
+  [[nodiscard]] static auto dangerBr() -> QColor { return {"#6b2d2d"}; }
 
   [[nodiscard]] static auto successBg() -> QColor { return {"#1e4a2c"}; }
   [[nodiscard]] static auto successBr() -> QColor { return {"#2d6b3f"}; }
