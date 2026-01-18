@@ -34,7 +34,7 @@ MountedPoseController::MountedPoseController(
 
 void MountedPoseController::mount_on_horse(
     const MountedAttachmentFrame &mount) {
-  positionPelvisOnSaddle(mount);
+  position_pelvis_on_saddle(mount);
   attach_feet_to_stirrups(mount);
   calculate_riding_knees(mount);
 }
@@ -47,7 +47,7 @@ void MountedPoseController::dismount() {
   m_pose.foot_r = QVector3D(0.14F, HP::GROUND_Y + m_pose.foot_y_offset, -0.06F);
 }
 
-void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
+void MountedPoseController::riding_idle(const MountedAttachmentFrame &mount) {
   mount_on_horse(mount);
 
   QVector3D const left_hand_rest = seat_relative(mount, 0.12F, -0.14F, -0.05F);
@@ -63,16 +63,16 @@ void MountedPoseController::ridingIdle(const MountedAttachmentFrame &mount) {
   get_elbow(false) = solve_elbow_ik(false, get_shoulder(false), right_hand_rest,
                                     right_outward, 0.45F, 0.12F, -0.05F, 1.0F);
 
-  update_head_hierarchy(mount, 0.0F, 0.0F, "ridingIdle");
+  update_head_hierarchy(mount, 0.0F, 0.0F, "riding_idle");
 }
 
-void MountedPoseController::ridingLeaning(const MountedAttachmentFrame &mount,
+void MountedPoseController::riding_leaning(const MountedAttachmentFrame &mount,
                                           float forward_lean, float side_lean) {
   mount_on_horse(mount);
   apply_lean(mount, forward_lean, side_lean);
 }
 
-void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
+void MountedPoseController::riding_charging(const MountedAttachmentFrame &mount,
                                            float intensity) {
   intensity = std::clamp(intensity, 0.0F, 1.0F);
 
@@ -88,12 +88,12 @@ void MountedPoseController::ridingCharging(const MountedAttachmentFrame &mount,
   m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - crouch);
   m_pose.neck_base.setY(m_pose.neck_base.y() - crouch * 0.8F);
 
-  update_head_hierarchy(mount, 0.0F, 0.0F, "ridingCharging");
+  update_head_hierarchy(mount, 0.0F, 0.0F, "riding_charging");
 
-  holdReins(mount, 0.2F, 0.2F, 0.85F, 0.85F);
+  hold_reins(mount, 0.2F, 0.2F, 0.85F, 0.85F);
 }
 
-void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
+void MountedPoseController::riding_reining(const MountedAttachmentFrame &mount,
                                           float left_tension,
                                           float right_tension) {
   left_tension = std::clamp(left_tension, 0.0F, 1.0F);
@@ -120,10 +120,10 @@ void MountedPoseController::ridingReining(const MountedAttachmentFrame &mount,
   m_pose.shoulder_r += lean_back;
   m_pose.neck_base += lean_back * 0.9F;
 
-  update_head_hierarchy(mount, 0.0F, 0.0F, "ridingReining");
+  update_head_hierarchy(mount, 0.0F, 0.0F, "riding_reining");
 }
 
-void MountedPoseController::ridingMeleeStrike(
+void MountedPoseController::riding_melee_strike(
     const MountedAttachmentFrame &mount, float attack_phase) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
@@ -131,7 +131,7 @@ void MountedPoseController::ridingMeleeStrike(
   apply_sword_strike(mount, attack_phase, false);
 }
 
-void MountedPoseController::ridingSpearThrust(
+void MountedPoseController::riding_spear_thrust(
     const MountedAttachmentFrame &mount, float attack_phase) {
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
@@ -139,33 +139,33 @@ void MountedPoseController::ridingSpearThrust(
   apply_spear_thrust(mount, attack_phase);
 }
 
-void MountedPoseController::ridingBowShot(const MountedAttachmentFrame &mount,
+void MountedPoseController::riding_bow_shot(const MountedAttachmentFrame &mount,
                                           float draw_phase) {
   mount_on_horse(mount);
   apply_bow_draw(mount, draw_phase);
 }
 
-void MountedPoseController::ridingShieldDefense(
+void MountedPoseController::riding_shield_defense(
     const MountedAttachmentFrame &mount, bool raised) {
   mount_on_horse(mount);
   apply_shield_defense(mount, raised);
 }
 
-void MountedPoseController::holdReins(const MountedAttachmentFrame &mount,
+void MountedPoseController::hold_reins(const MountedAttachmentFrame &mount,
                                       float left_slack, float right_slack,
                                       float left_tension, float right_tension) {
   mount_on_horse(mount);
-  holdReinsImpl(mount, left_slack, right_slack, left_tension, right_tension,
+  hold_reins_impl(mount, left_slack, right_slack, left_tension, right_tension,
                 true, true);
 }
 
-void MountedPoseController::holdSpearMounted(
+void MountedPoseController::hold_spear_mounted(
     const MountedAttachmentFrame &mount, SpearGrip grip_style) {
   mount_on_horse(mount);
   apply_spear_guard(mount, grip_style);
 }
 
-void MountedPoseController::holdBowMounted(
+void MountedPoseController::hold_bow_mounted(
     const MountedAttachmentFrame &mount) {
   mount_on_horse(mount);
   apply_bow_draw(mount, 0.0F);
@@ -187,7 +187,7 @@ void MountedPoseController::apply_saddle_clearance(
   calculate_riding_knees(mount);
 }
 
-void MountedPoseController::stabilizeUpperBody(
+void MountedPoseController::stabilize_upper_body(
     const MountedAttachmentFrame &mount, const HorseDimensions &dims) {
   QVector3D const world_up(0.0F, 1.0F, 0.0F);
 
@@ -227,7 +227,7 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
   apply_saddle_clearance(mount, request.dims, request.clearance_forward,
                          request.clearance_up);
 
-  stabilizeUpperBody(mount, request.dims);
+  stabilize_upper_body(mount, request.dims);
 
   float forward = request.forward_bias;
   switch (request.seat_pose) {
@@ -266,7 +266,7 @@ void MountedPoseController::apply_pose(const MountedAttachmentFrame &mount,
   bool apply_right_rein = request.right_hand_on_reins && !needs_weapon_right;
 
   if (apply_left_rein || apply_right_rein) {
-    holdReinsImpl(mount, request.rein_slack_left, request.rein_slack_right,
+    hold_reins_impl(mount, request.rein_slack_left, request.rein_slack_right,
                   request.rein_tension_left, request.rein_tension_right,
                   apply_left_rein, apply_right_rein);
   }
@@ -726,7 +726,7 @@ void MountedPoseController::apply_torso_sculpt(
   m_pose.shoulder_r -= dip_vec;
 }
 
-void MountedPoseController::holdReinsImpl(const MountedAttachmentFrame &mount,
+void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame &mount,
                                           float left_slack, float right_slack,
                                           float left_tension,
                                           float right_tension, bool apply_left,
@@ -763,7 +763,7 @@ void MountedPoseController::attach_feet_to_stirrups(
   m_pose.foot_r = mount.stirrup_bottom_right + mount.ground_offset;
 }
 
-void MountedPoseController::positionPelvisOnSaddle(
+void MountedPoseController::position_pelvis_on_saddle(
     const MountedAttachmentFrame &mount) {
   QVector3D const seat_world = mount.seat_position + mount.ground_offset;
   QVector3D const delta = seat_world - m_pose.pelvis_pos;

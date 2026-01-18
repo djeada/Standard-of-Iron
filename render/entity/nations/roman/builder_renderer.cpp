@@ -68,7 +68,7 @@ void register_builder_style(const std::string &nation_id,
 }
 
 using Render::Geom::clamp01;
-using Render::Geom::clampf;
+using Render::Geom::clamp_f;
 using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 

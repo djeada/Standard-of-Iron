@@ -85,9 +85,9 @@ void HorseArcherRendererBase::apply_riding_animation(
   if (anim.is_attacking && !anim.is_melee) {
     float const attack_phase =
         std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
-    mounted_controller.ridingBowShot(mount, attack_phase);
+    mounted_controller.riding_bow_shot(mount, attack_phase);
   } else {
-    mounted_controller.ridingIdle(mount);
+    mounted_controller.riding_idle(mount);
   }
 }
 

@@ -89,7 +89,7 @@ void register_spearman_style(const std::string &nation_id,
 using Render::Geom::clamp01;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
-using Render::Geom::easeInOutCubic;
+using Render::Geom::ease_in_out_cubic;
 using Render::Geom::lerp;
 using Render::Geom::smoothstep;
 using Render::Geom::sphere_at;
@@ -143,7 +143,7 @@ public:
           anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
 
       if (anim.is_exiting_hold) {
-        controller.kneelTransition(anim.hold_exit_progress, true);
+        controller.kneel_transition(anim.hold_exit_progress, true);
       } else {
         controller.kneel(hold_t * k_kneel_depth_multiplier);
       }
@@ -153,7 +153,7 @@ public:
       if (anim.is_attacking && anim.is_melee && anim.is_in_hold_mode) {
         float const attack_phase = std::fmod(
             anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-        controller.spearThrustFromHold(attack_phase,
+        controller.spear_thrust_from_hold(attack_phase,
                                        hold_t * k_kneel_depth_multiplier);
       } else {
 

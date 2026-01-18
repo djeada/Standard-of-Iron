@@ -6,14 +6,14 @@
 
 namespace Render::GL {
 
-using Render::Geom::clampVec01;
+using Render::Geom::clamp_vec_01;
 
 auto make_humanoid_palette(const QVector3D &team_tint,
                            uint32_t seed) -> HumanoidPalette {
   HumanoidPalette p;
 
   float const variation = (hash_01(seed) - 0.5F) * 0.08F;
-  p.cloth = clampVec01(team_tint * (1.0F + variation));
+  p.cloth = clamp_vec_01(team_tint * (1.0F + variation));
 
   p.skin = QVector3D(0.96F, 0.80F, 0.69F);
 
@@ -27,13 +27,13 @@ auto make_humanoid_palette(const QVector3D &team_tint,
                               g * saturation + (1.0F - saturation) * brightness,
                               b * saturation +
                                   (1.0F - saturation) * brightness);
-  p.leather = clampVec01(desaturated * (0.7F + leather_var));
+  p.leather = clamp_vec_01(desaturated * (0.7F + leather_var));
   p.leather_dark = p.leather * 0.85F;
 
   p.wood = QVector3D(0.16F, 0.10F, 0.05F);
 
   QVector3D const neutral_gray(0.70F, 0.70F, 0.70F);
-  p.metal = clampVec01(team_tint * 0.25F + neutral_gray * 0.75F);
+  p.metal = clamp_vec_01(team_tint * 0.25F + neutral_gray * 0.75F);
 
   return p;
 }

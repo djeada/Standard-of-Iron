@@ -17,27 +17,27 @@ void HumanoidPoseController::stand_idle() {}
 void HumanoidPoseController::apply_micro_idle(float, std::uint32_t) {}
 
 namespace {
-constexpr float kMinIdleDuration = 5.0F;
-constexpr float kAmbientDuration = 6.0F;
-constexpr float kSeedOffsetDivisor = 50.0F;
-constexpr float kBaseCyclePeriod = 25.0F;
-constexpr float kCyclePeriodRange = 15.0F;
-constexpr float kTapFrequencyMultiplier = 6.0F;
+constexpr float k_min_idle_duration = 5.0F;
+constexpr float k_ambient_duration = 6.0F;
+constexpr float k_seed_offset_divisor = 50.0F;
+constexpr float k_base_cycle_period = 25.0F;
+constexpr float k_cycle_period_range = 15.0F;
+constexpr float k_tap_frequency_multiplier = 6.0F;
 } // namespace
 
 auto HumanoidPoseController::get_ambient_idle_type(
     float time, std::uint32_t seed, float idle_duration) -> AmbientIdleType {
 
-  if (idle_duration < kMinIdleDuration) {
+  if (idle_duration < k_min_idle_duration) {
     return AmbientIdleType::None;
   }
 
   float const seed_offset =
-      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
+      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
 
   float const cycle_period =
-      kBaseCyclePeriod +
-      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
+      k_base_cycle_period +
+      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
   auto const cycle_number =
@@ -48,7 +48,7 @@ auto HumanoidPoseController::get_ambient_idle_type(
     return AmbientIdleType::None;
   }
 
-  if (cycle_time > kAmbientDuration) {
+  if (cycle_time > k_ambient_duration) {
     return AmbientIdleType::None;
   }
 
@@ -66,13 +66,13 @@ void HumanoidPoseController::apply_ambient_idle(float time, std::uint32_t seed,
   }
 
   float const seed_offset =
-      static_cast<float>(seed % 1000) / kSeedOffsetDivisor;
+      static_cast<float>(seed % 1000) / k_seed_offset_divisor;
   float const cycle_period =
-      kBaseCyclePeriod +
-      static_cast<float>(seed % 1500) / (1500.0F / kCyclePeriodRange);
+      k_base_cycle_period +
+      static_cast<float>(seed % 1500) / (1500.0F / k_cycle_period_range);
   float const cycle_time = std::fmod(time + seed_offset, cycle_period);
 
-  float phase = cycle_time / kAmbientDuration;
+  float phase = cycle_time / k_ambient_duration;
   apply_ambient_idle_explicit(idle_type, phase);
 }
 
@@ -136,7 +136,7 @@ void HumanoidPoseController::apply_ambient_idle_explicit(
 
   case AmbientIdleType::TapFoot: {
 
-    float const tap_phase = std::fmod(phase * kTapFrequencyMultiplier, 1.0F);
+    float const tap_phase = std::fmod(phase * k_tap_frequency_multiplier, 1.0F);
     float const tap_lift =
         (tap_phase < 0.3F)
             ? std::sin(tap_phase / 0.3F * std::numbers::pi_v<float>)
@@ -323,7 +323,7 @@ void HumanoidPoseController::kneel(float depth) {
   m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.6F);
 }
 
-void HumanoidPoseController::kneelTransition(float progress, bool standing_up) {
+void HumanoidPoseController::kneel_transition(float progress, bool standing_up) {
   using HP = HumanProportions;
 
   progress = std::clamp(progress, 0.0F, 1.0F);
@@ -602,7 +602,7 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   }
 }
 
-void HumanoidPoseController::meleeStrike(float strike_phase) {
+void HumanoidPoseController::melee_strike(float strike_phase) {
   using HP = HumanProportions;
 
   strike_phase = std::clamp(strike_phase, 0.0F, 1.0F);
@@ -702,7 +702,7 @@ void HumanoidPoseController::meleeStrike(float strike_phase) {
   place_hand_at(true, hand_l_target);
 }
 
-void HumanoidPoseController::graspTwoHanded(const QVector3D &grip_center,
+void HumanoidPoseController::grasp_two_handed(const QVector3D &grip_center,
                                             float hand_separation) {
   hand_separation = std::clamp(hand_separation, 0.1F, 0.8F);
 
@@ -717,7 +717,7 @@ void HumanoidPoseController::graspTwoHanded(const QVector3D &grip_center,
   place_hand_at(true, left_hand_pos);
 }
 
-void HumanoidPoseController::spearThrust(float attack_phase) {
+void HumanoidPoseController::spear_thrust(float attack_phase) {
   using HP = HumanProportions;
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
@@ -855,7 +855,7 @@ void HumanoidPoseController::spearThrust(float attack_phase) {
   place_hand_at(true, hand_l_target);
 }
 
-void HumanoidPoseController::spearThrustFromHold(float attack_phase,
+void HumanoidPoseController::spear_thrust_from_hold(float attack_phase,
                                                  float hold_depth) {
   using HP = HumanProportions;
 
@@ -1155,8 +1155,8 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
-  constexpr float kStrikeRightToLeft = 1.0F;
-  constexpr float kStrikeLeftToRight = -1.0F;
+  constexpr float k_strike_right_to_left = 1.0F;
+  constexpr float k_strike_left_to_right = -1.0F;
 
   QVector3D rest_pos(0.20F, HP::SHOULDER_Y + 0.05F, 0.15F);
   QVector3D chamber_pos(0.28F, HP::SHOULDER_Y + 0.20F, 0.02F);
@@ -1164,7 +1164,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
   QVector3D strike_pos(0.18F, HP::SHOULDER_Y - 0.15F, 0.62F);
   QVector3D followthrough_pos(0.05F, HP::WAIST_Y + 0.10F, 0.50F);
 
-  float strike_direction = kStrikeRightToLeft;
+  float strike_direction = k_strike_right_to_left;
   switch (variant % 3) {
   case 1:
 
@@ -1172,7 +1172,7 @@ void HumanoidPoseController::sword_slash_variant(float attack_phase,
     apex_pos = QVector3D(-0.08F, HP::SHOULDER_Y + 0.28F, 0.10F);
     strike_pos = QVector3D(0.32F, HP::SHOULDER_Y - 0.12F, 0.58F);
     followthrough_pos = QVector3D(0.40F, HP::WAIST_Y + 0.08F, 0.48F);
-    strike_direction = kStrikeLeftToRight;
+    strike_direction = k_strike_left_to_right;
     break;
   case 2:
 
@@ -1280,9 +1280,9 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);
 
-  constexpr float kThrustHigh = 1.0F;
-  constexpr float kThrustMiddle = 0.0F;
-  constexpr float kThrustLow = -1.0F;
+  constexpr float k_thrust_high = 1.0F;
+  constexpr float k_thrust_middle = 0.0F;
+  constexpr float k_thrust_low = -1.0F;
 
   QVector3D guard_pos(0.26F, HP::SHOULDER_Y + 0.08F, 0.28F);
   QVector3D chamber_pos(0.32F, HP::SHOULDER_Y + 0.12F, 0.02F);
@@ -1290,7 +1290,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
   QVector3D extended_pos(0.25F, HP::SHOULDER_Y + 0.02F, 1.05F);
   QVector3D recover_pos(0.28F, HP::SHOULDER_Y + 0.06F, 0.45F);
 
-  float thrust_height = kThrustMiddle;
+  float thrust_height = k_thrust_middle;
   float crouch_amount = 0.0F;
 
   switch (variant % 3) {
@@ -1300,7 +1300,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
     thrust_pos = QVector3D(0.28F, HP::WAIST_Y + 0.15F, 0.98F);
     extended_pos = QVector3D(0.25F, HP::WAIST_Y + 0.10F, 1.08F);
     recover_pos = QVector3D(0.28F, HP::SHOULDER_Y - 0.05F, 0.42F);
-    thrust_height = kThrustLow;
+    thrust_height = k_thrust_low;
     crouch_amount = 0.08F;
     break;
   case 2:
@@ -1308,7 +1308,7 @@ void HumanoidPoseController::spear_thrust_variant(float attack_phase,
     chamber_pos = QVector3D(0.35F, HP::SHOULDER_Y + 0.05F, 0.08F);
     thrust_pos = QVector3D(0.30F, HP::SHOULDER_Y + 0.12F, 0.92F);
     extended_pos = QVector3D(0.28F, HP::SHOULDER_Y + 0.15F, 1.02F);
-    thrust_height = kThrustHigh;
+    thrust_height = k_thrust_high;
     break;
   default:
 

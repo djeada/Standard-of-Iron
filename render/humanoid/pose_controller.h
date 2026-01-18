@@ -36,17 +36,17 @@ public:
                                     float idle_duration) -> AmbientIdleType;
 
   void kneel(float depth);
-  void kneelTransition(float progress, bool standing_up);
+  void kneel_transition(float progress, bool standing_up);
 
   void lean(const QVector3D &direction, float amount);
 
   void place_hand_at(bool is_left, const QVector3D &target_position);
 
   void aim_bow(float draw_phase);
-  void meleeStrike(float strike_phase);
-  void graspTwoHanded(const QVector3D &grip_center, float hand_separation);
-  void spearThrust(float attack_phase);
-  void spearThrustFromHold(float attack_phase, float hold_depth);
+  void melee_strike(float strike_phase);
+  void grasp_two_handed(const QVector3D &grip_center, float hand_separation);
+  void spear_thrust(float attack_phase);
+  void spear_thrust_from_hold(float attack_phase, float hold_depth);
   void sword_slash(float attack_phase);
   void sword_slash_variant(float attack_phase, std::uint8_t variant);
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
