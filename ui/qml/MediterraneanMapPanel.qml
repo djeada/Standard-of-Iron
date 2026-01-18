@@ -13,7 +13,7 @@ Rectangle {
     property real map_orbit_distance: 1.2
     property real map_pan_u: 0
     property real map_pan_v: 0
-    property real terrain_height_scale: 1.0
+    property real terrain_height_scale: 0.15
     property bool show_province_fills: true
     property string hover_province_name: ""
     property string hover_province_owner: ""
@@ -314,95 +314,106 @@ Rectangle {
 
         }
 
-        Rectangle {
-            id: resetViewButton
+        Row {
+            id: mapControlRow
 
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: Theme.spacingMedium
-            height: 24
-            width: resetViewLabel.implicitWidth + 16
-            radius: 4
-            color: "#f5f0e6"
-            border.color: "#8b7355"
-            border.width: 1
-            opacity: resetViewArea.containsMouse ? 1 : 0.9
+            spacing: Theme.spacingSmall
             z: 8
             visible: campaignMapLoader.item
 
-            Label {
-                id: resetViewLabel
+            Rectangle {
+                id: pitchDownButton
 
-                anchors.centerIn: parent
-                text: qsTr("Reset view")
-                color: "#2d241c"
-                font.pointSize: Theme.fontSizeTiny
-                font.bold: true
-            }
-
-            MouseArea {
-                id: resetViewArea
-
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: root.reset_view()
-            }
-
-        }
-
-        Rectangle {
-            id: heightScalePanel
-
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.margins: Theme.spacingMedium
-            width: heightScaleLayout.implicitWidth + 12
-            height: heightScaleLayout.implicitHeight + 12
-            radius: 4
-            color: "#f5f0e6"
-            border.color: "#8b7355"
-            border.width: 1
-            z: 8
-            visible: campaignMapLoader.item
-
-            RowLayout {
-                id: heightScaleLayout
-
-                anchors.margins: 6
-                anchors.fill: parent
-                spacing: Theme.spacingSmall
+                height: 24
+                width: pitchDownLabel.implicitWidth + 12
+                radius: 4
+                color: "#f5f0e6"
+                border.color: "#8b7355"
+                border.width: 1
+                opacity: pitchDownArea.containsMouse ? 1 : 0.9
 
                 Label {
-                    text: qsTr("Relief")
+                    id: pitchDownLabel
+
+                    anchors.centerIn: parent
+                    text: qsTr("Tilt -")
                     color: "#2d241c"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
 
-                Slider {
-                    id: heightScaleSlider
+                MouseArea {
+                    id: pitchDownArea
 
-                    Layout.preferredWidth: 140
-                    from: 0.0
-                    to: 5.0
-                    stepSize: 0.05
-                    value: root.terrain_height_scale
-                    onValueChanged: root.terrain_height_scale = value
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.map_orbit_pitch = Math.max(5, root.map_orbit_pitch - 5)
                 }
+            }
+
+            Rectangle {
+                id: pitchUpButton
+
+                height: 24
+                width: pitchUpLabel.implicitWidth + 12
+                radius: 4
+                color: "#f5f0e6"
+                border.color: "#8b7355"
+                border.width: 1
+                opacity: pitchUpArea.containsMouse ? 1 : 0.9
 
                 Label {
-                    text: root.terrain_height_scale.toFixed(2)
+                    id: pitchUpLabel
+
+                    anchors.centerIn: parent
+                    text: qsTr("Tilt +")
                     color: "#2d241c"
                     font.pointSize: Theme.fontSizeTiny
+                    font.bold: true
                 }
 
-                CheckBox {
-                    id: provinceFillToggle
+                MouseArea {
+                    id: pitchUpArea
 
-                    text: qsTr("Fills")
-                    checked: root.show_province_fills
-                    onCheckedChanged: root.show_province_fills = checked
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.map_orbit_pitch = Math.min(90, root.map_orbit_pitch + 5)
+                }
+            }
+
+            Rectangle {
+                id: resetViewButton
+
+                height: 24
+                width: resetViewLabel.implicitWidth + 16
+                radius: 4
+                color: "#f5f0e6"
+                border.color: "#8b7355"
+                border.width: 1
+                opacity: resetViewArea.containsMouse ? 1 : 0.9
+
+                Label {
+                    id: resetViewLabel
+
+                    anchors.centerIn: parent
+                    text: qsTr("Reset view")
+                    color: "#2d241c"
+                    font.pointSize: Theme.fontSizeTiny
+                    font.bold: true
+                }
+
+                MouseArea {
+                    id: resetViewArea
+
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.reset_view()
                 }
             }
         }
