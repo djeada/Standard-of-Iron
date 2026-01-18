@@ -14,6 +14,7 @@
         <file>ui/qml/Constants.qml</file>
         <file>ui/qml/StyleGuide.qml</file>
         <file>ui/qml/StyledButton.qml</file>
+        <file>ui/qml/StyledComboBox.qml</file>
         <file>ui/qml/Colors.js</file>
         <file>ui/qml/qmldir</file>
         <file>ui/qml/HUD.qml</file>

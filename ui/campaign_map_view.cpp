@@ -98,6 +98,26 @@ struct LineLayer {
   bool ready = false;
 };
 
+struct StrokeMesh {
+  GLuint vao = 0;
+  GLuint vbo = 0;
+  int vertex_count = 0;
+  float width = 0.0F;
+  bool ready = false;
+};
+
+struct PathLine {
+  std::vector<QVector2D> points;
+  StrokeMesh border;
+  StrokeMesh highlight;
+  StrokeMesh core;
+};
+
+struct PathLayer {
+  std::vector<PathLine> lines;
+  bool ready = false;
+};
+
 struct ProvinceSpan {
   int start = 0;
   int count = 0;
@@ -274,7 +294,7 @@ private:
 
   LineLayer m_coast_layer;
   LineLayer m_river_layer;
-  LineLayer m_path_layer;
+  PathLayer m_path_layer;
   LineLayer m_province_border_layer;
   ProvinceLayer m_province_layer;
 
@@ -326,9 +346,8 @@ private:
                     QStringLiteral(":/assets/campaign_map/rivers_uv.json"),
                     QVector4D(0.35F, 0.45F, 0.55F, 0.85F), 1.5F);
 
-    init_line_layer(m_path_layer,
-                    QStringLiteral(":/assets/campaign_map/hannibal_path.json"),
-                    QVector4D(0.78F, 0.2F, 0.12F, 0.9F), 2.0F);
+    init_path_layer(m_path_layer,
+                    QStringLiteral(":/assets/campaign_map/hannibal_path.json"));
     init_province_layer(m_province_layer,
                         QStringLiteral(":/assets/campaign_map/provinces.json"));
 
@@ -713,6 +732,45 @@ void main() {
     layer.ready = true;
   }
 
+  void init_path_layer(PathLayer &layer, const QString &resource_path) {
+    const QString path = Utils::Resources::resolveResourcePath(resource_path);
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+      qWarning() << "CampaignMapRenderer: Failed to open path layer" << path;
+      return;
+    }
+
+    const QJsonDocument doc = QJsonDocument::fromJson(file.readAll());
+    if (!doc.isObject()) {
+      qWarning() << "CampaignMapRenderer: Path layer JSON invalid" << path;
+      return;
+    }
+
+    const QJsonArray lines = doc.object().value("lines").toArray();
+    for (const auto &line_val : lines) {
+      const QJsonArray line = line_val.toArray();
+      if (line.isEmpty()) {
+        continue;
+      }
+
+      PathLine entry;
+      entry.points.reserve(static_cast<size_t>(line.size()));
+      for (const auto &pt_val : line) {
+        const QJsonArray pt = pt_val.toArray();
+        if (pt.size() < 2) {
+          continue;
+        }
+        entry.points.emplace_back(static_cast<float>(pt.at(0).toDouble()),
+                                  static_cast<float>(pt.at(1).toDouble()));
+      }
+      if (entry.points.size() >= 2) {
+        layer.lines.push_back(std::move(entry));
+      }
+    }
+
+    layer.ready = !layer.lines.empty();
+  }
+
   auto load_texture(const QString &resource_path) -> QOpenGLTexture * {
     const QString path = Utils::Resources::resolveResourcePath(resource_path);
     QImage image(path);
@@ -777,121 +835,259 @@ void main() {
     m_line_program.release();
   }
 
-  void draw_progressive_path_layers(const LineLayer &layer,
-                                    const QMatrix4x4 &mvp, float z_offset) {
-    if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
+  static auto safe_normalized(const QVector2D &v) -> QVector2D {
+    const float len = v.length();
+    if (len < 1e-5F) {
+      return QVector2D(0.0F, 0.0F);
+    }
+    return v / len;
+  }
+
+  static auto perp(const QVector2D &v) -> QVector2D {
+    return QVector2D(-v.y(), v.x());
+  }
+
+  void build_path_strip(const std::vector<QVector2D> &input, float half_width,
+                        std::vector<QVector2D> &out) const {
+    out.clear();
+    if (input.size() < 2 || half_width <= 0.0F) {
+      return;
+    }
+
+    std::vector<QVector2D> points;
+    points.reserve(input.size());
+    for (const auto &pt : input) {
+      if (points.empty()) {
+        points.push_back(pt);
+        continue;
+      }
+      const QVector2D delta = pt - points.back();
+      if (QVector2D::dotProduct(delta, delta) > 1e-10F) {
+        points.push_back(pt);
+      }
+    }
+    if (points.size() < 2) {
+      return;
+    }
+
+    out.reserve(points.size() * 2);
+
+    for (size_t i = 0; i < points.size(); ++i) {
+      QVector2D offset;
+      if (i == 0) {
+        const QVector2D dir = safe_normalized(points[1] - points[0]);
+        offset = perp(dir) * half_width;
+      } else if (i + 1 == points.size()) {
+        const QVector2D dir = safe_normalized(points[i] - points[i - 1]);
+        offset = perp(dir) * half_width;
+      } else {
+        QVector2D dir0 = safe_normalized(points[i] - points[i - 1]);
+        QVector2D dir1 = safe_normalized(points[i + 1] - points[i]);
+        if (dir0.isNull()) {
+          dir0 = dir1;
+        }
+        if (dir1.isNull()) {
+          dir1 = dir0;
+        }
+
+        const QVector2D n0 = perp(dir0);
+        const QVector2D n1 = perp(dir1);
+        QVector2D miter = safe_normalized(n0 + n1);
+        if (miter.isNull()) {
+          miter = n1;
+        }
+
+        float denom = QVector2D::dotProduct(miter, n1);
+        if (std::abs(denom) < 0.2F) {
+          denom = (denom >= 0.0F) ? 0.2F : -0.2F;
+        }
+        float miter_len = half_width / denom;
+        const float max_miter = half_width * 3.0F;
+        if (std::abs(miter_len) > max_miter) {
+          miter_len = (miter_len < 0.0F) ? -max_miter : max_miter;
+        }
+
+        offset = miter * miter_len;
+      }
+
+      out.push_back(points[i] + offset);
+      out.push_back(points[i] - offset);
+    }
+  }
+
+  void update_path_mesh(StrokeMesh &mesh,
+                        const std::vector<QVector2D> &points, float width) {
+    if (points.size() < 2) {
+      mesh.ready = false;
+      mesh.vertex_count = 0;
+      return;
+    }
+
+    if (mesh.ready && qFuzzyCompare(mesh.width, width)) {
+      return;
+    }
+
+    std::vector<QVector2D> strip;
+    build_path_strip(points, width * 0.5F, strip);
+    if (strip.size() < 4) {
+      mesh.ready = false;
+      mesh.vertex_count = 0;
+      return;
+    }
+
+    std::vector<float> verts;
+    verts.reserve(strip.size() * 2);
+    for (const auto &v : strip) {
+      verts.push_back(v.x());
+      verts.push_back(v.y());
+    }
+
+    if (mesh.vao == 0) {
+      glGenVertexArrays(1, &mesh.vao);
+      glGenBuffers(1, &mesh.vbo);
+    }
+
+    glBindVertexArray(mesh.vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(verts.size() * sizeof(float)),
+                 verts.data(), GL_DYNAMIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+                          reinterpret_cast<void *>(0));
+    glBindVertexArray(0);
+
+    mesh.vertex_count = static_cast<int>(strip.size());
+    mesh.width = width;
+    mesh.ready = true;
+  }
+
+  auto uv_width_for_pixels(float px) const -> float {
+    const float viewport_h = qMax(1.0F, static_cast<float>(m_size.height()));
+    const float fov_rad = qDegreesToRadians(45.0F * 0.5F);
+    const float view_h = 2.0F * m_orbit_distance * std::tan(fov_rad);
+    const float uv_width = px * (view_h / viewport_h);
+    return qMax(0.0005F, uv_width);
+  }
+
+  void draw_path_mesh(const StrokeMesh &mesh) {
+    if (!mesh.ready || mesh.vao == 0 || mesh.vertex_count <= 0) {
+      return;
+    }
+    glBindVertexArray(mesh.vao);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, mesh.vertex_count);
+    glBindVertexArray(0);
+  }
+
+  void draw_progressive_path_layers(PathLayer &layer, const QMatrix4x4 &mvp,
+                                    float z_offset) {
+    if (!layer.ready || layer.lines.empty()) {
       return;
     }
 
     const int max_mission =
-        qBound(0, m_current_mission, static_cast<int>(layer.spans.size()) - 1);
-
-    glEnable(GL_LINE_SMOOTH);
-    glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+        qBound(0, m_current_mission, static_cast<int>(layer.lines.size()) - 1);
 
     m_line_program.bind();
     m_line_program.setUniformValue("u_mvp", mvp);
     m_line_program.setUniformValue("u_z", z_offset);
 
-    glBindVertexArray(layer.vao);
-
     for (int i = 0; i <= max_mission; ++i) {
-      if (i >= static_cast<int>(layer.spans.size())) {
+      if (i >= static_cast<int>(layer.lines.size())) {
         break;
       }
 
-      const auto &span = layer.spans[static_cast<size_t>(i)];
+      auto &line = layer.lines[static_cast<size_t>(i)];
 
       QVector4D border_color;
-      float border_width;
+      float border_width_px;
 
       if (i == max_mission) {
 
         border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.85F);
-        border_width = 18.0F;
+        border_width_px = 18.0F;
       } else if (i == max_mission - 1) {
 
         border_color = QVector4D(0.15F, 0.08F, 0.05F, 0.70F);
-        border_width = 16.0F;
+        border_width_px = 16.0F;
       } else {
 
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         border_color = QVector4D(0.15F * age_factor, 0.08F * age_factor,
                                  0.05F * age_factor, 0.55F * age_factor);
-        border_width = 14.0F;
+        border_width_px = 14.0F;
       }
 
-      glLineWidth(border_width);
+      update_path_mesh(line.border, line.points,
+                       uv_width_for_pixels(border_width_px));
       m_line_program.setUniformValue("u_color", border_color);
-      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      draw_path_mesh(line.border);
     }
 
     for (int i = 0; i <= max_mission; ++i) {
-      if (i >= static_cast<int>(layer.spans.size())) {
+      if (i >= static_cast<int>(layer.lines.size())) {
         break;
       }
 
-      const auto &span = layer.spans[static_cast<size_t>(i)];
+      auto &line = layer.lines[static_cast<size_t>(i)];
 
       QVector4D highlight_color;
-      float highlight_width;
+      float highlight_width_px;
 
       if (i == max_mission) {
 
         highlight_color = QVector4D(0.95F, 0.75F, 0.35F, 0.90F);
-        highlight_width = 12.0F;
+        highlight_width_px = 12.0F;
       } else if (i == max_mission - 1) {
 
         highlight_color = QVector4D(0.85F, 0.65F, 0.30F, 0.80F);
-        highlight_width = 10.0F;
+        highlight_width_px = 10.0F;
       } else {
 
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         highlight_color = QVector4D(0.70F * age_factor, 0.50F * age_factor,
                                     0.25F * age_factor, 0.65F * age_factor);
-        highlight_width = 8.5F;
+        highlight_width_px = 8.5F;
       }
 
-      glLineWidth(highlight_width);
+      update_path_mesh(line.highlight, line.points,
+                       uv_width_for_pixels(highlight_width_px));
       m_line_program.setUniformValue("u_color", highlight_color);
-      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      draw_path_mesh(line.highlight);
     }
 
     for (int i = 0; i <= max_mission; ++i) {
-      if (i >= static_cast<int>(layer.spans.size())) {
+      if (i >= static_cast<int>(layer.lines.size())) {
         break;
       }
 
-      const auto &span = layer.spans[static_cast<size_t>(i)];
+      auto &line = layer.lines[static_cast<size_t>(i)];
 
       QVector4D color;
-      float width;
+      float width_px;
 
       if (i == max_mission) {
 
         color = QVector4D(0.80F, 0.15F, 0.10F, 1.0F);
-        width = 7.0F;
+        width_px = 7.0F;
       } else if (i == max_mission - 1) {
 
         color = QVector4D(0.70F, 0.15F, 0.10F, 0.95F);
-        width = 6.0F;
+        width_px = 6.0F;
       } else {
 
         const float age_factor = 1.0F - (max_mission - i) * 0.08F;
         color = QVector4D(0.55F * age_factor, 0.12F * age_factor,
                           0.08F * age_factor, 0.85F * age_factor);
-        width = 5.0F;
+        width_px = 5.0F;
       }
 
-      glLineWidth(width);
+      update_path_mesh(line.core, line.points, uv_width_for_pixels(width_px));
       m_line_program.setUniformValue("u_color", color);
-      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      draw_path_mesh(line.core);
     }
 
-    glBindVertexArray(0);
     m_line_program.release();
-
-    glDisable(GL_LINE_SMOOTH);
   }
 
   void apply_province_overrides(
@@ -984,14 +1180,33 @@ void main() {
       glDeleteVertexArrays(1, &m_river_layer.vao);
       m_river_layer.vao = 0;
     }
-    if (m_path_layer.vbo != 0) {
-      glDeleteBuffers(1, &m_path_layer.vbo);
-      m_path_layer.vbo = 0;
+    for (auto &line : m_path_layer.lines) {
+      if (line.border.vbo != 0) {
+        glDeleteBuffers(1, &line.border.vbo);
+        line.border.vbo = 0;
+      }
+      if (line.border.vao != 0) {
+        glDeleteVertexArrays(1, &line.border.vao);
+        line.border.vao = 0;
+      }
+      if (line.highlight.vbo != 0) {
+        glDeleteBuffers(1, &line.highlight.vbo);
+        line.highlight.vbo = 0;
+      }
+      if (line.highlight.vao != 0) {
+        glDeleteVertexArrays(1, &line.highlight.vao);
+        line.highlight.vao = 0;
+      }
+      if (line.core.vbo != 0) {
+        glDeleteBuffers(1, &line.core.vbo);
+        line.core.vbo = 0;
+      }
+      if (line.core.vao != 0) {
+        glDeleteVertexArrays(1, &line.core.vao);
+        line.core.vao = 0;
+      }
     }
-    if (m_path_layer.vao != 0) {
-      glDeleteVertexArrays(1, &m_path_layer.vao);
-      m_path_layer.vao = 0;
-    }
+    m_path_layer.lines.clear();
     if (m_province_border_layer.vbo != 0) {
       glDeleteBuffers(1, &m_province_border_layer.vbo);
       m_province_border_layer.vbo = 0;
