@@ -262,12 +262,12 @@ Rectangle {
                     anchors.fill: parent
                     orbit_yaw: root.map_orbit_yaw
                     orbit_pitch: root.map_orbit_pitch
-                orbit_distance: root.map_orbit_distance
-                pan_u: root.map_pan_u
-                pan_v: root.map_pan_v
-                terrain_height_scale: root.terrain_height_scale
-                show_province_fills: root.show_province_fills
-                current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
+                    orbit_distance: root.map_orbit_distance
+                    pan_u: root.map_pan_u
+                    pan_v: root.map_pan_v
+                    terrain_height_scale: root.terrain_height_scale
+                    show_province_fills: root.show_province_fills
+                    current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
                     hover_province_id: {
                         if (root.active_region_id !== "")
                             return root.active_region_id;
@@ -353,6 +353,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.map_orbit_pitch = Math.max(5, root.map_orbit_pitch - 5)
                 }
+
             }
 
             Rectangle {
@@ -384,6 +385,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.map_orbit_pitch = Math.min(90, root.map_orbit_pitch + 5)
                 }
+
             }
 
             Rectangle {
@@ -415,7 +417,9 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.reset_view()
                 }
+
             }
+
         }
 
         MouseArea {
