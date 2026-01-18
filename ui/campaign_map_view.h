@@ -125,7 +125,7 @@ private:
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
   int m_current_mission = 7;
-  float m_terrain_height_scale = 1.0F;
+  float m_terrain_height_scale = 0.15F;
   bool m_show_province_fills = true;
 
   struct ProvinceHit {
