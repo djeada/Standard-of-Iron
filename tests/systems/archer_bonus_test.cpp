@@ -43,7 +43,7 @@ TEST_F(ArcherBonusTest, ArcherVsElephantMultiplierIsCorrect) {
   // Verify the archer vs elephant multiplier constant is set correctly
   float const expected_multiplier = 2.0F;
 
-  EXPECT_FLOAT_EQ(Combat::Constants::kArcherVsElephantMultiplier,
+  EXPECT_FLOAT_EQ(Combat::Constants::k_archer_vs_elephant_multiplier,
                   expected_multiplier);
 }
 
@@ -79,7 +79,7 @@ TEST_F(ArcherBonusTest, ExpectedDamageCalculation) {
   int const archer_base_damage = 24;
   int const horse_archer_base_damage = 27;
   float const elephant_multiplier =
-      Combat::Constants::kArcherVsElephantMultiplier;
+      Combat::Constants::k_archer_vs_elephant_multiplier;
 
   int const archer_vs_elephant =
       static_cast<int>(archer_base_damage * elephant_multiplier);
