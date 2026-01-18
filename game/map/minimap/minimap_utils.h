@@ -9,12 +9,50 @@ namespace Game::Map::Minimap {
 
 namespace Constants {
 
-constexpr float k_camera_yaw_cos = -0.70710678118F;
-constexpr float k_camera_yaw_sin = -0.70710678118F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr float k_degrees_to_radians = 3.14159265358979323846F / 180.0F;
+constexpr float k_radians_to_degrees = 180.0F / 3.14159265358979323846F;
+constexpr float k_default_camera_yaw_deg = 225.0F;
 
 } // namespace Constants
+
+/// Stores precomputed sin/cos for the minimap rotation.
+/// Call set_yaw_degrees() to update when the camera yaw changes.
+class MinimapOrientation {
+public:
+  static auto instance() -> MinimapOrientation & {
+    static MinimapOrientation s_instance;
+    return s_instance;
+  }
+
+  void set_yaw_degrees(float yaw_deg) {
+    if (std::abs(m_yaw_deg - yaw_deg) < 0.001F) {
+      return;
+    }
+    m_yaw_deg = yaw_deg;
+    const float rad = yaw_deg * Constants::k_degrees_to_radians;
+    m_cos = std::cos(rad);
+    m_sin = std::sin(rad);
+    m_dirty = true;
+  }
+
+  [[nodiscard]] auto yaw_degrees() const -> float { return m_yaw_deg; }
+  [[nodiscard]] auto cos_yaw() const -> float { return m_cos; }
+  [[nodiscard]] auto sin_yaw() const -> float { return m_sin; }
+  [[nodiscard]] auto is_dirty() const -> bool { return m_dirty; }
+  void clear_dirty() { m_dirty = false; }
+
+private:
+  MinimapOrientation() {
+    set_yaw_degrees(Constants::k_default_camera_yaw_deg);
+    m_dirty = false;
+  }
+
+  float m_yaw_deg = Constants::k_default_camera_yaw_deg;
+  float m_cos = -0.70710678118F;
+  float m_sin = -0.70710678118F;
+  bool m_dirty = false;
+};
 
 inline auto
 grid_to_world_coords(float grid_x, float grid_z,
@@ -35,10 +73,11 @@ grid_to_world_coords(float grid_x, float grid_z,
 inline auto world_to_pixel(float world_x, float world_z, float world_width,
                            float world_height, float img_width,
                            float img_height) -> std::pair<float, float> {
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  const auto &orient = MinimapOrientation::instance();
+  const float rotated_x =
+      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z =
+      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float px = (rotated_x + world_width * 0.5F) * (img_width / world_width);
   const float py =
@@ -56,8 +95,9 @@ inline auto pixel_to_world(float px, float py, float world_width,
   const float rotated_z =
       (py / img_height) * world_height - world_height * 0.5F;
 
-  const float cos_val = Constants::k_camera_yaw_cos;
-  const float sin_val = Constants::k_camera_yaw_sin;
+  const auto &orient = MinimapOrientation::instance();
+  const float cos_val = orient.cos_yaw();
+  const float sin_val = orient.sin_yaw();
 
   const float grid_x = rotated_x * cos_val + rotated_z * sin_val;
   const float grid_z = -rotated_x * sin_val + rotated_z * cos_val;

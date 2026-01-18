@@ -33,9 +33,14 @@ public:
   void generate_for_map(const Game::Map::MapDefinition &map_def);
   void update_fog(float dt, int local_owner_id);
   void update_units(Engine::Core::World *world,
-                    Game::Systems::SelectionSystem *selection_system);
+                    Game::Systems::SelectionSystem *selection_system,
+                    int local_owner_id);
   void update_camera_viewport(const Render::GL::Camera *camera,
                               float screen_width, float screen_height);
+
+  /// Returns true if any minimap content has changed since last call.
+  /// Calling this clears the dirty flag.
+  [[nodiscard]] bool consume_dirty_flag();
 
   [[nodiscard]] const QImage &get_image() const { return m_minimap_image; }
   [[nodiscard]] bool has_minimap() const {
@@ -46,6 +51,8 @@ public:
   [[nodiscard]] float get_tile_size() const { return m_tile_size; }
 
 private:
+  void mark_dirty() { m_dirty = true; }
+
   QImage m_minimap_image;
   QImage m_minimap_base_image;
   QImage m_minimap_fog_image;
@@ -58,4 +65,13 @@ private:
   float m_tile_size = 1.0F;
   float m_minimap_update_timer = 0.0F;
   static constexpr float MINIMAP_UPDATE_INTERVAL = 0.1F;
+
+  bool m_dirty = false;
+
+  // Track last state for change detection
+  std::uint64_t m_last_unit_hash = 0;
+  float m_last_camera_x = 0.0F;
+  float m_last_camera_z = 0.0F;
+  float m_last_viewport_w = 0.0F;
+  float m_last_viewport_h = 0.0F;
 };
