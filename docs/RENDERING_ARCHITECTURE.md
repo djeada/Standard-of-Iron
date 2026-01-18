@@ -568,6 +568,38 @@ When specific units don't render but debug shapes do, the renderer probably isn'
 Transparent objects rendering as opaque usually means blending got disabled somewhere, or the draw order is wrong so transparent stuff draws before what's behind it. Make sure the queue sorts transparent objects to the back and that the BlendScope RAII wrapper is being used.
 
 
+## Battle render optimizations
+
+When more than 15 units are visible on screen, the `BattleRenderOptimizer` kicks in to keep rendering fresh without sacrificing visual quality. This system provides several tricks that work independently of LOD:
+
+### Temporal culling
+
+Static or idle units are rendered on alternating frames. If a unit isn't moving, selected, or hovered, it may be skipped on odd or even frames based on its entity ID. This effectively cuts the render load for idle units in half while remaining imperceptible to the player.
+
+```
+Frame 1: Render units with (entity_id + frame) % 2 == 0
+Frame 2: Render units with (entity_id + frame) % 2 == 0  (different set)
+```
+
+Moving units, selected units, and hovered units always render every frame to maintain responsiveness.
+
+### Animation throttling
+
+When the visible unit count exceeds 30 and units are far from the camera (>40 units away), animation updates are throttled. Instead of computing new poses every frame, distant units update their animations every 2-3 frames. This saves significant CPU time during large battles while keeping close-up units fully animated.
+
+### Enhanced batching
+
+The batching ratio is boosted proportionally when more units are visible. This pushes more units into the primitive batching path, reducing draw call overhead during intense battles.
+
+The optimizer can be configured via `BattleRenderConfig`:
+- `temporal_culling_threshold`: Unit count that triggers temporal culling (default: 15)
+- `animation_throttle_threshold`: Unit count that triggers animation throttling (default: 30)
+- `animation_throttle_distance`: Distance beyond which animations are throttled (default: 40.0)
+- `animation_skip_frames`: How many frames to skip for distant animations (default: 2)
+
+See [battle_render_optimizer.h](../render/battle_render_optimizer.h) for the implementation.
+
+
 ## The full journey
 
 Let's trace a frame from start to finish. Qt's render thread calls our GLRenderer::render method in [gl_view.cpp](../ui/gl_view.cpp). That calls GameEngine::render, which calls SceneRenderer::begin_frame to clear the draw queue and reset frame state.
@@ -598,6 +630,7 @@ Here's a quick reference for common tasks:
 | Change draw order | [render/draw_queue.h](../render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp |
 | Add a new effect | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend |
 | Debug the frame | Use RenderDoc to capture and step through |
+| Tune battle performance | [render/battle_render_optimizer.h](../render/battle_render_optimizer.h) for temporal culling and animation throttling |
 
 The most common mistakes are calling OpenGL from the wrong thread (Qt's render thread is the only safe place), forgetting to bind the VAO before drawing (nothing appears), uploading instance data but calling the non-instanced draw function (only one object appears), or getting matrix conventions mixed up (everything is inside-out or flipped).
 
