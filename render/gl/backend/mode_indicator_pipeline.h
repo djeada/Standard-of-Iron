@@ -36,7 +36,6 @@ private:
 
   struct IndicatorUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle modeColor{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
