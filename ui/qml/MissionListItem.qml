@@ -11,6 +11,21 @@ Rectangle {
 
     signal clicked()
 
+    function titleize(value) {
+        if (!value)
+            return "";
+
+        var parts = value.split("_");
+        for (var i = 0; i < parts.length; i++) {
+            var part = parts[i];
+            if (part.length === 0)
+                continue;
+
+            parts[i] = part.charAt(0).toUpperCase() + part.slice(1);
+        }
+        return parts.join(" ");
+    }
+
     height: 90
     radius: Theme.radiusMedium
     color: {
@@ -69,7 +84,7 @@ Rectangle {
                 spacing: Theme.spacingSmall
 
                 Label {
-                    text: mission_data ? mission_data.mission_id : ""
+                    text: mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : ""
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeLarge
                     font.bold: true

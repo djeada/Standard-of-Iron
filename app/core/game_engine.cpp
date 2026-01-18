@@ -78,6 +78,7 @@
 #include "game/map/minimap/minimap_utils.h"
 #include "game/map/minimap/unit_layer.h"
 #include "game/map/mission_loader.h"
+#include "utils/resource_utils.h"
 #include "game/map/skirmish_loader.h"
 #include "game/map/terrain_service.h"
 #include "game/map/visibility_service.h"
@@ -144,7 +145,6 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
-#include "utils/resource_utils.h"
 #include <QDir>
 #include <QFile>
 #include <QJsonArray>
@@ -156,6 +156,138 @@
 #include <cmath>
 #include <utility>
 #include <vector>
+
+namespace {
+
+auto resolve_mission_file_path(const QString &mission_id) -> QString {
+  const QStringList search_paths = {
+      QStringLiteral("assets/missions/%1.json"),
+      QStringLiteral("../assets/missions/%1.json"),
+      QStringLiteral("../../assets/missions/%1.json"),
+      QStringLiteral(":/assets/missions/%1.json"),
+      QStringLiteral("/assets/missions/%1.json"),
+      QStringLiteral("/../assets/missions/%1.json")};
+
+  for (const auto &pattern : search_paths) {
+    QString candidate = pattern.arg(mission_id);
+    candidate = Utils::Resources::resolveResourcePath(candidate);
+    if (QFile::exists(candidate)) {
+      return candidate;
+    }
+  }
+  return {};
+}
+
+auto build_condition_list(
+    const std::vector<Game::Mission::Condition> &conditions) -> QVariantList {
+  QVariantList list;
+  for (const auto &condition : conditions) {
+    QVariantMap cond;
+    cond["type"] = condition.type;
+    cond["description"] = condition.description;
+    if (condition.duration.has_value()) {
+      cond["duration"] = condition.duration.value();
+    }
+    if (condition.structure_type.has_value()) {
+      cond["structure_type"] = condition.structure_type.value();
+    }
+    if (!condition.structure_types.empty()) {
+      QVariantList types;
+      for (const auto &type : condition.structure_types) {
+        types.append(type);
+      }
+      cond["structure_types"] = types;
+    }
+    if (condition.min_count.has_value()) {
+      cond["min_count"] = condition.min_count.value();
+    }
+    if (condition.wave_count.has_value()) {
+      cond["wave_count"] = condition.wave_count.value();
+    }
+    list.append(cond);
+  }
+  return list;
+}
+
+auto build_unit_setup_list(
+    const std::vector<Game::Mission::UnitSetup> &units) -> QVariantList {
+  QVariantList list;
+  for (const auto &unit : units) {
+    QVariantMap entry;
+    entry["type"] = unit.type;
+    entry["count"] = unit.count;
+    entry["x"] = unit.position.x;
+    entry["z"] = unit.position.z;
+    list.append(entry);
+  }
+  return list;
+}
+
+auto build_building_setup_list(
+    const std::vector<Game::Mission::BuildingSetup> &buildings)
+    -> QVariantList {
+  QVariantList list;
+  for (const auto &building : buildings) {
+    QVariantMap entry;
+    entry["type"] = building.type;
+    entry["max_population"] = building.max_population;
+    entry["x"] = building.position.x;
+    entry["z"] = building.position.z;
+    list.append(entry);
+  }
+  return list;
+}
+
+auto build_player_setup_map(const Game::Mission::PlayerSetup &setup)
+    -> QVariantMap {
+  QVariantMap map;
+  map["nation"] = setup.nation;
+  map["faction"] = setup.faction;
+  map["color"] = setup.color;
+  map["starting_units"] = build_unit_setup_list(setup.starting_units);
+  map["starting_buildings"] =
+      build_building_setup_list(setup.starting_buildings);
+
+  QVariantMap resources;
+  resources["gold"] = setup.starting_resources.gold;
+  resources["food"] = setup.starting_resources.food;
+  map["starting_resources"] = resources;
+
+  return map;
+}
+
+auto build_mission_definition_map(
+    const Game::Mission::MissionDefinition &mission) -> QVariantMap {
+  QVariantMap result;
+  result["id"] = mission.id;
+  result["title"] = mission.title;
+  result["summary"] = mission.summary;
+  result["map_path"] = mission.map_path;
+  if (mission.teaching_goal.has_value()) {
+    result["teaching_goal"] = mission.teaching_goal.value();
+  }
+  if (mission.narrative_intent.has_value()) {
+    result["narrative_intent"] = mission.narrative_intent.value();
+  }
+  if (mission.historical_context.has_value()) {
+    result["historical_context"] = mission.historical_context.value();
+  }
+  if (mission.terrain_type.has_value()) {
+    result["terrain_type"] = mission.terrain_type.value();
+  }
+
+  result["player_setup"] = build_player_setup_map(mission.player_setup);
+  result["victory_conditions"] =
+      build_condition_list(mission.victory_conditions);
+  result["defeat_conditions"] =
+      build_condition_list(mission.defeat_conditions);
+  result["optional_objectives"] =
+      build_condition_list(mission.optional_objectives);
+
+  return result;
+}
+
+} // namespace
 
 GameEngine::GameEngine(QObject *parent)
     : QObject(parent),
@@ -1530,37 +1662,35 @@ QVariantMap GameEngine::get_current_mission_objectives() const {
   result["title"] = mission.title;
   result["summary"] = mission.summary;
 
-  QVariantList victory_conditions;
-  for (const auto &condition : mission.victory_conditions) {
-    QVariantMap cond;
-    cond["type"] = condition.type;
-    cond["description"] = condition.description;
-    if (condition.duration.has_value()) {
-      cond["duration"] = condition.duration.value();
-    }
-    victory_conditions.append(cond);
-  }
-  result["victory_conditions"] = victory_conditions;
-
-  QVariantList defeat_conditions;
-  for (const auto &condition : mission.defeat_conditions) {
-    QVariantMap cond;
-    cond["type"] = condition.type;
-    cond["description"] = condition.description;
-    defeat_conditions.append(cond);
-  }
-  result["defeat_conditions"] = defeat_conditions;
-
-  QVariantList optional_objectives;
-  for (const auto &condition : mission.optional_objectives) {
-    QVariantMap cond;
-    cond["type"] = condition.type;
-    cond["description"] = condition.description;
-    optional_objectives.append(cond);
-  }
-  result["optional_objectives"] = optional_objectives;
+  result["victory_conditions"] = build_condition_list(mission.victory_conditions);
+  result["defeat_conditions"] = build_condition_list(mission.defeat_conditions);
+  result["optional_objectives"] = build_condition_list(mission.optional_objectives);
 
   return result;
+}
+
+QVariantMap GameEngine::get_mission_definition(
+    const QString &mission_id) const {
+  QVariantMap result;
+  if (mission_id.isEmpty()) {
+    return result;
+  }
+
+  const QString mission_path = resolve_mission_file_path(mission_id);
+  if (mission_path.isEmpty()) {
+    qWarning() << "Mission definition not found for" << mission_id;
+    return result;
+  }
+
+  Game::Mission::MissionDefinition mission;
+  QString error;
+  if (!Game::Mission::MissionLoader::loadFromJsonFile(mission_path, mission,
+                                                      &error)) {
+    qWarning() << "Failed to load mission definition" << mission_id << error;
+    return result;
+  }
+
+  return build_mission_definition_map(mission);
 }
 
 void GameEngine::start_skirmish(const QString &map_path,
