@@ -11,7 +11,7 @@
 namespace Render::GL {
 
 inline auto
-computeSpearDirection(const AnimationInputs &anim_inputs) -> QVector3D {
+compute_spear_direction(const AnimationInputs &anim_inputs) -> QVector3D {
 
   auto normalize = [](QVector3D dir) {
     if (dir.lengthSquared() > 1e-6F) {
@@ -47,7 +47,7 @@ inline auto compute_offhand_spear_grip(
     const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
     const QVector3D &main_hand_pos, bool main_is_left, float along_offset,
     float y_drop = 0.05F, float lateral_offset = 0.05F) -> QVector3D {
-  QVector3D const spear_dir = computeSpearDirection(anim_ctx.inputs);
+  QVector3D const spear_dir = compute_spear_direction(anim_ctx.inputs);
 
   QVector3D offhand = main_hand_pos + spear_dir * along_offset;
 

@@ -17,7 +17,7 @@ namespace Render::GL::Roman {
 namespace {
 
 using Render::Geom::clamp01;
-using Render::Geom::clampVec01;
+using Render::Geom::clamp_vec_01;
 using Render::Geom::cylinder_between;
 
 struct RomanCatapultPalette {
@@ -43,7 +43,7 @@ struct CatapultAnimContext {
 
 inline auto make_palette(const QVector3D &team) -> RomanCatapultPalette {
   RomanCatapultPalette p;
-  p.team = clampVec01(team);
+  p.team = clamp_vec_01(team);
   return p;
 }
 

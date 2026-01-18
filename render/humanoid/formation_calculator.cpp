@@ -130,44 +130,44 @@ auto BuilderCircleFormation::calculate_offset(
   return {offset_x, offset_z};
 }
 
-RomanInfantryFormation FormationCalculatorFactory::s_romanInfantry;
-RomanCavalryFormation FormationCalculatorFactory::s_romanCavalry;
-CarthageInfantryFormation FormationCalculatorFactory::s_carthageInfantry;
-CarthageCavalryFormation FormationCalculatorFactory::s_carthageCavalry;
-BuilderCircleFormation FormationCalculatorFactory::s_builderCircle;
+RomanInfantryFormation FormationCalculatorFactory::s_roman_infantry;
+RomanCavalryFormation FormationCalculatorFactory::s_roman_cavalry;
+CarthageInfantryFormation FormationCalculatorFactory::s_carthage_infantry;
+CarthageCavalryFormation FormationCalculatorFactory::s_carthage_cavalry;
+BuilderCircleFormation FormationCalculatorFactory::s_builder_circle;
 
-auto FormationCalculatorFactory::getCalculator(
+auto FormationCalculatorFactory::get_calculator(
     Nation nation, UnitCategory category) -> const IFormationCalculator * {
 
   if (category == UnitCategory::BuilderConstruction) {
-    return &s_builderCircle;
+    return &s_builder_circle;
   }
 
   switch (nation) {
   case Nation::Roman:
     switch (category) {
     case UnitCategory::Infantry:
-      return &s_romanInfantry;
+      return &s_roman_infantry;
     case UnitCategory::Cavalry:
-      return &s_romanCavalry;
+      return &s_roman_cavalry;
     case UnitCategory::BuilderConstruction:
-      return &s_builderCircle;
+      return &s_builder_circle;
     }
     break;
 
   case Nation::Carthage:
     switch (category) {
     case UnitCategory::Infantry:
-      return &s_carthageInfantry;
+      return &s_carthage_infantry;
     case UnitCategory::Cavalry:
-      return &s_carthageCavalry;
+      return &s_carthage_cavalry;
     case UnitCategory::BuilderConstruction:
-      return &s_builderCircle;
+      return &s_builder_circle;
     }
     break;
   }
 
-  return &s_romanInfantry;
+  return &s_roman_infantry;
 }
 
 } // namespace Render::GL

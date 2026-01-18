@@ -336,18 +336,18 @@ auto create_unit_torso_mesh(int radial_segments,
   constexpr float k_micro_center = 0.5F;
   constexpr float k_micro_jitter = 0.004F;
 
-  auto clampf = [](float x, float a, float b) {
+  auto clamp_f = [](float x, float a, float b) {
     return x < a ? a : (x > b ? b : x);
   };
   auto smoothstep01 = [&](float x) {
-    x = clampf(x, 0.0F, 1.0F);
+    x = clamp_f(x, 0.0F, 1.0F);
     return x * x * (3.0F - 2.0F * x);
   };
   auto smooth_band = [&](float t, float a, float b) {
     float const enter = smoothstep01((t - a) / (b - a + k_band_epsilon));
     float const exit = smoothstep01((t - b) / (a - b - k_band_epsilon));
     float const v = enter < exit ? enter : exit;
-    return clampf(v, 0.0F, 1.0F);
+    return clamp_f(v, 0.0F, 1.0F);
   };
 
   struct Axes {
@@ -381,7 +381,7 @@ auto create_unit_torso_mesh(int radial_segments,
   };
 
   auto sample_profile_axes = [&](float profile_t) -> Axes {
-    profile_t = clampf(profile_t, 0.0F, 1.0F);
+    profile_t = clamp_f(profile_t, 0.0F, 1.0F);
     int i = 0;
     while (i + 1 < key_count && profile_t > keys[i + 1].t) {
       ++i;
@@ -393,7 +393,7 @@ auto create_unit_torso_mesh(int radial_segments,
 
     float const denom = (keys[i2].t - keys[i1].t);
     float u = denom > k_band_epsilon ? (profile_t - keys[i1].t) / denom : 0.0F;
-    u = clampf(u, 0.0F, 1.0F);
+    u = clamp_f(u, 0.0F, 1.0F);
 
     float const ax =
         cat_rom(keys[i0].A.ax, keys[i1].A.ax, keys[i2].A.ax, keys[i3].A.ax, u);
@@ -490,7 +490,7 @@ auto create_unit_torso_mesh(int radial_segments,
     float py = y_min + t * y_span;
 
     if (t < k_shoulder_dome_t_end) {
-      float const u = clampf(t / k_shoulder_dome_t_end, 0.0F, 1.0F);
+      float const u = clamp_f(t / k_shoulder_dome_t_end, 0.0F, 1.0F);
       float const us = smoothstep01(u);
 
       float const sphere = std::sqrt(std::max(0.0F, (2.0F * us) - (us * us)));
@@ -535,7 +535,7 @@ auto create_unit_torso_mesh(int radial_segments,
 
       QVector3D const p = sample_pos(t, ang);
       QVector3D const pu = sample_pos(t, ang + da);
-      QVector3D const pv = sample_pos(clampf(t + dt, 0.0F, 1.0F), ang);
+      QVector3D const pv = sample_pos(clamp_f(t + dt, 0.0F, 1.0F), ang);
 
       QVector3D const du = pu - p;
       QVector3D const dv = pv - p;

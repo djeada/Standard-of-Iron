@@ -86,9 +86,9 @@ inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
                                              colors.woodDark, 1.6F);
 
       Mesh *unit = p.resources->unit();
-      out.mesh(unit, flag.pole, flag.poleColor, white, 1.0F);
-      out.mesh(unit, flag.pennant, flag.pennantColor, white, 1.0F);
-      out.mesh(unit, flag.finial, flag.pennantColor, white, 1.0F);
+      out.mesh(unit, flag.pole, flag.pole_color, white, 1.0F);
+      out.mesh(unit, flag.pennant, flag.pennant_color, white, 1.0F);
+      out.mesh(unit, flag.finial, flag.pennant_color, white, 1.0F);
     }
   }
 }
@@ -126,7 +126,7 @@ inline void
 drawPoleWithBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const QVector3D &poleStart,
                    const QVector3D &poleEnd, float poleRadius,
-                   const QVector3D &poleColor, const QVector3D &bannerCenter,
+                   const QVector3D &pole_color, const QVector3D &bannerCenter,
                    const QVector3D &bannerHalfSize,
                    const QVector3D &bannerColor, bool enableCapture = false) {
   QVector3D actualBannerColor = bannerColor;
@@ -148,7 +148,7 @@ drawPoleWithBanner(const DrawContext &p, ISubmitter &out, Mesh *unit,
   out.mesh(get_unit_cylinder(),
            p.model *
                Render::Geom::cylinder_between(poleStart, poleEnd, poleRadius),
-           poleColor, white, 1.0F);
+           pole_color, white, 1.0F);
 
   QMatrix4x4 bannerTransform = p.model;
   bannerTransform.translate(bannerCenter);

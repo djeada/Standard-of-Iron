@@ -123,7 +123,7 @@ TEST_F(MountedPoseControllerTest, DismountRestoresStandingPosition) {
 TEST_F(MountedPoseControllerTest, RidingIdleSetsHandsToRestPosition) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
 
   // Hands should be in a resting position near pelvis
   EXPECT_LT(pose.hand_l.y(), mount.seat_position.y());
@@ -133,10 +133,10 @@ TEST_F(MountedPoseControllerTest, RidingIdleSetsHandsToRestPosition) {
 TEST_F(MountedPoseControllerTest, RidingLeaningForwardMovesTorso) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   QVector3D const original_shoulder_z = pose.shoulder_l;
 
-  controller.ridingLeaning(mount, 1.0F, 0.0F); // Full forward lean
+  controller.riding_leaning(mount, 1.0F, 0.0F); // Full forward lean
 
   // Shoulders should move forward
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_z.z());
@@ -146,10 +146,10 @@ TEST_F(MountedPoseControllerTest, RidingLeaningForwardMovesTorso) {
 TEST_F(MountedPoseControllerTest, RidingLeaningSidewaysMovesTorso) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   QVector3D const original_shoulder_x = pose.shoulder_l;
 
-  controller.ridingLeaning(mount, 0.0F, 1.0F); // Full right lean
+  controller.riding_leaning(mount, 0.0F, 1.0F); // Full right lean
 
   // Shoulders should move to the right
   EXPECT_GT(pose.shoulder_r.x(), original_shoulder_x.x());
@@ -159,16 +159,16 @@ TEST_F(MountedPoseControllerTest, RidingLeaningClampsInputs) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Should not crash with out-of-range inputs
-  EXPECT_NO_THROW(controller.ridingLeaning(mount, 2.0F, -2.0F));
+  EXPECT_NO_THROW(controller.riding_leaning(mount, 2.0F, -2.0F));
 }
 
 TEST_F(MountedPoseControllerTest, RidingChargingLeansForward) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   QVector3D const original_shoulder = pose.shoulder_l;
 
-  controller.ridingCharging(mount, 1.0F);
+  controller.riding_charging(mount, 1.0F);
 
   // Should lean forward when charging
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder.z());
@@ -178,11 +178,11 @@ TEST_F(MountedPoseControllerTest, RidingChargingLeansForward) {
 TEST_F(MountedPoseControllerTest, RidingReiningPullsHandsBack) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   float const idle_left_z = pose.hand_l.z();
   float const idle_right_z = pose.hand_r.z();
 
-  controller.ridingReining(mount, 1.0F, 1.0F);
+  controller.riding_reining(mount, 1.0F, 1.0F);
 
   // Hands should be pulled back when reining
   EXPECT_LT(pose.hand_l.z(), idle_left_z);
@@ -192,10 +192,10 @@ TEST_F(MountedPoseControllerTest, RidingReiningPullsHandsBack) {
 TEST_F(MountedPoseControllerTest, RidingReiningLeansTorsoBack) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   QVector3D const original_shoulder = pose.shoulder_l;
 
-  controller.ridingReining(mount, 1.0F, 1.0F);
+  controller.riding_reining(mount, 1.0F, 1.0F);
 
   // Should lean back when reining hard
   EXPECT_LT(pose.shoulder_l.z(), original_shoulder.z());
@@ -205,11 +205,11 @@ TEST_F(MountedPoseControllerTest, RidingMeleeStrikeAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Test chamber phase (raising weapon)
-  controller.ridingMeleeStrike(mount, 0.15F);
+  controller.riding_melee_strike(mount, 0.15F);
   float const chamber_y = pose.hand_r.y();
 
   // Test apex phase (weapon at highest point)
-  controller.ridingMeleeStrike(mount, 0.25F);
+  controller.riding_melee_strike(mount, 0.25F);
   float const apex_y = pose.hand_r.y();
 
   // Hand should be higher at apex than during chamber
@@ -220,11 +220,11 @@ TEST_F(MountedPoseControllerTest, RidingSpearThrustAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Test couch phase (spear pulled back)
-  controller.ridingSpearThrust(mount, 0.25F);
+  controller.riding_spear_thrust(mount, 0.25F);
   float const couch_z = pose.hand_r.z();
 
   // Test mid-thrust phase (spear extending forward)
-  controller.ridingSpearThrust(mount, 0.45F);
+  controller.riding_spear_thrust(mount, 0.45F);
   float const thrust_z = pose.hand_r.z();
 
   // Hand should move forward during thrust
@@ -235,11 +235,11 @@ TEST_F(MountedPoseControllerTest, RidingBowShotAnimatesCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Test initial draw
-  controller.ridingBowShot(mount, 0.10F);
+  controller.riding_bow_shot(mount, 0.10F);
   QVector3D const draw_start = pose.hand_r;
 
   // Test full draw
-  controller.ridingBowShot(mount, 0.40F);
+  controller.riding_bow_shot(mount, 0.40F);
   QVector3D const draw_end = pose.hand_r;
 
   // Right hand should move back when drawing
@@ -250,10 +250,10 @@ TEST_F(MountedPoseControllerTest, RidingBowShotAnimatesCorrectly) {
 TEST_F(MountedPoseControllerTest, RidingShieldDefenseRaisesHand) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingShieldDefense(mount, false);
+  controller.riding_shield_defense(mount, false);
   float const lowered_y = pose.hand_l.y();
 
-  controller.ridingShieldDefense(mount, true);
+  controller.riding_shield_defense(mount, true);
   float const raised_y = pose.hand_l.y();
 
   // Shield should be higher when raised
@@ -264,7 +264,7 @@ TEST_F(MountedPoseControllerTest, HoldReinsPositionsHandsCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
   controller.mount_on_horse(mount);
-  controller.holdReins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
+  controller.hold_reins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
 
   // Hands should stay near the saddle area with a slight forward bias
   EXPECT_LT(std::abs(pose.hand_l.x()), mount.seat_position.x() + 0.30F);
@@ -277,10 +277,10 @@ TEST_F(MountedPoseControllerTest, HoldReinsSlackAffectsHandPosition) {
   MountedPoseController controller(pose, anim_ctx);
 
   controller.mount_on_horse(mount);
-  controller.holdReins(mount, 0.0F, 0.0F, 1.0F, 1.0F);
+  controller.hold_reins(mount, 0.0F, 0.0F, 1.0F, 1.0F);
   QVector3D const tight_left = pose.hand_l;
 
-  controller.holdReins(mount, 1.0F, 1.0F, 0.0F, 0.0F);
+  controller.hold_reins(mount, 1.0F, 1.0F, 0.0F, 0.0F);
   QVector3D const slack_left = pose.hand_l;
 
   // Slack reins should lower hands
@@ -290,7 +290,7 @@ TEST_F(MountedPoseControllerTest, HoldReinsSlackAffectsHandPosition) {
 TEST_F(MountedPoseControllerTest, HoldSpearOverhandRaisesHand) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.holdSpearMounted(mount, SpearGrip::OVERHAND);
+  controller.hold_spear_mounted(mount, SpearGrip::OVERHAND);
 
   // Right hand should be high for overhead grip
   EXPECT_GT(pose.hand_r.y(), mount.seat_position.y() + 0.40F);
@@ -299,7 +299,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearOverhandRaisesHand) {
 TEST_F(MountedPoseControllerTest, HoldSpearCouchedLowersHand) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.holdSpearMounted(mount, SpearGrip::COUCHED);
+  controller.hold_spear_mounted(mount, SpearGrip::COUCHED);
 
   // Right hand should be low for couched grip
   EXPECT_LT(pose.hand_r.y(), mount.seat_position.y() + 0.20F);
@@ -308,7 +308,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearCouchedLowersHand) {
 TEST_F(MountedPoseControllerTest, HoldSpearTwoHandedUsesBothHands) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.holdSpearMounted(mount, SpearGrip::TWO_HANDED);
+  controller.hold_spear_mounted(mount, SpearGrip::TWO_HANDED);
 
   // Both hands should be on spear shaft
   float const hand_separation = (pose.hand_r - pose.hand_l).length();
@@ -319,7 +319,7 @@ TEST_F(MountedPoseControllerTest, HoldSpearTwoHandedUsesBothHands) {
 TEST_F(MountedPoseControllerTest, HoldBowMountedPositionsHandsCorrectly) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.holdBowMounted(mount);
+  controller.hold_bow_mounted(mount);
 
   // Left hand should hold bow forward
   EXPECT_GT(pose.hand_l.z(), mount.seat_position.z());
@@ -345,7 +345,7 @@ TEST_F(MountedPoseControllerTest, KneePositionValidForMountedRiding) {
 TEST_F(MountedPoseControllerTest, ElbowPositionValidForAllActions) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
 
   // Elbows should be between shoulders and hands
   float const left_shoulder_elbow = (pose.elbow_l - pose.shoulder_l).length();
@@ -363,38 +363,38 @@ TEST_F(MountedPoseControllerTest, AllMethodsHandleEdgeCases) {
   // Should not crash with various inputs
   EXPECT_NO_THROW(controller.mount_on_horse(mount));
   EXPECT_NO_THROW(controller.dismount());
-  EXPECT_NO_THROW(controller.ridingIdle(mount));
-  EXPECT_NO_THROW(controller.ridingLeaning(mount, 0.0F, 0.0F));
-  EXPECT_NO_THROW(controller.ridingCharging(mount, 0.0F));
-  EXPECT_NO_THROW(controller.ridingReining(mount, 0.0F, 0.0F));
-  EXPECT_NO_THROW(controller.ridingMeleeStrike(mount, 0.5F));
-  EXPECT_NO_THROW(controller.ridingSpearThrust(mount, 0.5F));
-  EXPECT_NO_THROW(controller.ridingBowShot(mount, 0.5F));
-  EXPECT_NO_THROW(controller.ridingShieldDefense(mount, true));
-  EXPECT_NO_THROW(controller.holdReins(mount, 0.5F, 0.5F, 0.4F, 0.4F));
-  EXPECT_NO_THROW(controller.holdSpearMounted(mount, SpearGrip::OVERHAND));
-  EXPECT_NO_THROW(controller.holdBowMounted(mount));
+  EXPECT_NO_THROW(controller.riding_idle(mount));
+  EXPECT_NO_THROW(controller.riding_leaning(mount, 0.0F, 0.0F));
+  EXPECT_NO_THROW(controller.riding_charging(mount, 0.0F));
+  EXPECT_NO_THROW(controller.riding_reining(mount, 0.0F, 0.0F));
+  EXPECT_NO_THROW(controller.riding_melee_strike(mount, 0.5F));
+  EXPECT_NO_THROW(controller.riding_spear_thrust(mount, 0.5F));
+  EXPECT_NO_THROW(controller.riding_bow_shot(mount, 0.5F));
+  EXPECT_NO_THROW(controller.riding_shield_defense(mount, true));
+  EXPECT_NO_THROW(controller.hold_reins(mount, 0.5F, 0.5F, 0.4F, 0.4F));
+  EXPECT_NO_THROW(controller.hold_spear_mounted(mount, SpearGrip::OVERHAND));
+  EXPECT_NO_THROW(controller.hold_bow_mounted(mount));
 }
 
 TEST_F(MountedPoseControllerTest, AttackPhaseClamping) {
   MountedPoseController controller(pose, anim_ctx);
 
   // Test clamping of attack phase > 1.0
-  EXPECT_NO_THROW(controller.ridingMeleeStrike(mount, 1.5F));
-  EXPECT_NO_THROW(controller.ridingSpearThrust(mount, 2.0F));
-  EXPECT_NO_THROW(controller.ridingBowShot(mount, -0.5F));
+  EXPECT_NO_THROW(controller.riding_melee_strike(mount, 1.5F));
+  EXPECT_NO_THROW(controller.riding_spear_thrust(mount, 2.0F));
+  EXPECT_NO_THROW(controller.riding_bow_shot(mount, -0.5F));
 }
 
 TEST_F(MountedPoseControllerTest, RidingChargingIntensityClamping) {
   MountedPoseController controller(pose, anim_ctx);
 
-  controller.ridingCharging(mount, 1.5F);
+  controller.riding_charging(mount, 1.5F);
   QVector3D const max_lean = pose.shoulder_l;
 
   // Reset
   SetUp();
   MountedPoseController controller2(pose, anim_ctx);
-  controller2.ridingCharging(mount, 1.0F);
+  controller2.riding_charging(mount, 1.0F);
 
   // Should be same as clamped 1.5F
   EXPECT_TRUE(approxEqual(pose.shoulder_l, max_lean));
@@ -407,17 +407,17 @@ TEST_F(MountedPoseControllerTest, FullRidingSequence) {
   controller.mount_on_horse(mount);
   EXPECT_TRUE(approxEqual(pose.pelvis_pos, mount.seat_position));
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   QVector3D const idle_hands = pose.hand_l;
 
-  controller.holdReins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
-  controller.ridingCharging(mount, 1.0F);
+  controller.hold_reins(mount, 0.5F, 0.5F, 0.3F, 0.3F);
+  controller.riding_charging(mount, 1.0F);
 
-  controller.ridingSpearThrust(mount, 0.35F);
+  controller.riding_spear_thrust(mount, 0.35F);
   // Verify animation in progress
   EXPECT_GT(pose.hand_r.z(), mount.seat_position.z());
 
-  controller.ridingIdle(mount);
+  controller.riding_idle(mount);
   controller.dismount();
 
   // Should be back near standing position

@@ -24,7 +24,7 @@ void SpearRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            ISubmitter &submitter) {
   QVector3D const grip_pos = frames.hand_r.origin;
 
-  QVector3D const spear_dir = computeSpearDirection(anim.inputs);
+  QVector3D const spear_dir = compute_spear_direction(anim.inputs);
 
   QVector3D const shaft_base = grip_pos - spear_dir * 0.28F;
   QVector3D shaft_mid = grip_pos + spear_dir * (m_config.spear_length * 0.5F);
