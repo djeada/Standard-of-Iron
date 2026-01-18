@@ -2,6 +2,60 @@
 
 This directory contains campaign map resources for the Mediterranean strategic map.
 
+## Rendering Improvements (TODO.md Implementation)
+
+### Visual Enhancements
+
+1. **Inked Cartography Path Lines**
+   - Replaced basic GL line strips with triangulated ribbon meshes
+   - Multi-pass rendering: dark border → golden highlight → red core
+   - Proper miter joins and round caps for polished stroke appearance
+   - Age-based fading for historical route progression
+
+2. **Spline-Smoothed Routes**
+   - Catmull-Rom spline interpolation for smooth, curved trajectories
+   - 8 samples per segment removes jagged segments
+   - Coastline-hugging paths look natural and authentic
+
+3. **Double-Stroke Coastlines**
+   - Dark outer stroke + light inner stroke for printed-map legibility
+   - Cartographic style matches historical atlas aesthetics
+   - Proper z-layering prevents visual artifacts
+
+4. **Province Fills with Parchment Texture**
+   - Faint parchment/ink texture mask effect
+   - Owner tint as multiply overlay for aged paper look
+   - Slight warm tinting for authentic period feel
+
+5. **Cinematic Camera Defaults**
+   - Yaw: 185° (slight northwest tilt)
+   - Pitch: 52° (more oblique for terrain visibility)
+   - Distance: 1.35 (closer for detail appreciation)
+   - Showcases relief and depth by default
+
+### Shader Files
+
+New shaders for enhanced rendering (in `assets/shaders/`):
+
+- `campaign_terrain.vert/.frag` - Height-displaced terrain with hillshade and AO
+- `campaign_stroke.vert/.frag` - Improved stroke rendering with ink texture
+- `campaign_province.vert/.frag` - Province fills with parchment texture
+- `campaign_badge.vert/.frag` - Mission marker badges (shield, seal, banner)
+- `campaign_symbol.vert/.frag` - Cartographic symbols (mountains, cities, ports)
+- `campaign_coastline.frag` - Double-stroke coastline rendering
+
+### Utility Header
+
+`ui/campaign_map_render_utils.h` provides:
+
+- Catmull-Rom spline smoothing
+- Triangulated stroke mesh generation with joins/caps
+- Multi-pass stroke rendering configurations
+- Hillshade and terrain coloring utilities
+- Parchment texture pattern generation
+- Cartographic symbol generation (mountains, cities, anchors)
+- Mission badge geometry generation
+
 ## Files
 
 - `campaign_base_color.png` - Base terrain texture for the Mediterranean map
