@@ -77,8 +77,9 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                Button {
+                StyledButton {
                     text: qsTr("Cancel")
+                    buttonStyle: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -118,10 +119,9 @@ Item {
 
                 }
 
-                Button {
+                StyledButton {
                     text: qsTr("Save")
                     enabled: saveNameField.text.length > 0
-                    highlighted: true
                     onClicked: {
                         if (saveListModel.slotExists(saveNameField.text)) {
                             confirmOverwriteDialog.slotName = saveNameField.text;
@@ -275,8 +275,10 @@ Item {
 
                                 }
 
-                                Button {
+                                StyledButton {
                                     text: qsTr("Overwrite")
+                                    buttonStyle: "danger"
+                                    implicitWidth: 100
                                     onClicked: {
                                         confirmOverwriteDialog.slotName = model.slotName;
                                         confirmOverwriteDialog.open();

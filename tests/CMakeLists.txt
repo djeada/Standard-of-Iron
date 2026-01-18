@@ -30,6 +30,7 @@ add_executable(standard_of_iron_tests
     render/rider_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
+    render/battle_render_optimizer_test.cpp
     test_main.cpp
 )
 

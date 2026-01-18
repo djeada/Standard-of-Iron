@@ -200,7 +200,7 @@ Item {
 
                     }
 
-                    ComboBox {
+                    StyledComboBox {
                         id: speedCombo
 
                         visible: topRoot.compact
@@ -208,7 +208,7 @@ Item {
                         model: ["0.5x", "1x", "2x"]
                         currentIndex: topRoot.currentSpeed === 0.5 ? 0 : topRoot.currentSpeed === 1 ? 1 : 2
                         enabled: !topRoot.gameIsPaused
-                        font.pixelSize: 13
+                        textPixelSize: 13
                         onActivated: function(i) {
                             var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
                             topRoot.speedChanged(v);

@@ -68,10 +68,9 @@ Rectangle {
                 font.pointSize: 18
             }
 
-            Button {
+            StyledButton {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: qsTr("Continue")
-                font.pointSize: 14
                 focusPolicy: Qt.NoFocus
                 onClicked: {
                     showingSummary = true;

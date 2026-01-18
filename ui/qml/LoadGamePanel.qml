@@ -122,8 +122,9 @@ Item {
                     Layout.fillWidth: true
                 }
 
-                Button {
+                StyledButton {
                     text: qsTr("Cancel")
+                    buttonStyle: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -310,17 +311,19 @@ Item {
                                     visible: model.isEmpty
                                 }
 
-                                Button {
+                                StyledButton {
                                     text: qsTr("Load")
-                                    highlighted: true
+                                    buttonStyle: "small"
                                     visible: !model.isEmpty
                                     onClicked: {
                                         root.loadRequested(model.slotName);
                                     }
                                 }
 
-                                Button {
+                                StyledButton {
                                     text: qsTr("Delete")
+                                    buttonStyle: "danger"
+                                    implicitWidth: 80
                                     visible: !model.isEmpty
                                     onClicked: {
                                         confirmDeleteDialog.slotName = model.slotName;
@@ -369,10 +372,9 @@ Item {
                     font.pointSize: Theme.fontSizeMedium
                 }
 
-                Button {
+                StyledButton {
                     text: qsTr("Load Selected")
                     enabled: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty
-                    highlighted: true
                     onClicked: {
                         if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty)
                             root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName);
