@@ -17,7 +17,7 @@ public:
   AICommandApplier(const AICommandApplier &) = delete;
   auto operator=(const AICommandApplier &) -> AICommandApplier & = delete;
 
-  static void apply(Engine::Core::World &world, int aiOwnerId,
+  static void apply(Engine::Core::World &world, int ai_owner_id,
                     const std::vector<AICommand> &commands);
 };
 

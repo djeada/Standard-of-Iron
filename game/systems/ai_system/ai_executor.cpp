@@ -8,7 +8,7 @@ namespace Game::Systems::AI {
 
 void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
                      float delta_time, AIBehaviorRegistry &registry,
-                     std::vector<AICommand> &outCommands) {
+                     std::vector<AICommand> &out_commands) {
 
   bool exclusive_behavior_executed = false;
 
@@ -20,9 +20,9 @@ void AIExecutor::run(const AISnapshot &snapshot, AIContext &context,
     bool const should_exec = behavior.should_execute(snapshot, context);
 
     if (should_exec) {
-      size_t commands_before = outCommands.size();
-      behavior.execute(snapshot, context, delta_time, outCommands);
-      size_t commands_after = outCommands.size();
+      size_t commands_before = out_commands.size();
+      behavior.execute(snapshot, context, delta_time, out_commands);
+      size_t commands_after = out_commands.size();
 
       context.debug_info.total_commands_issued +=
           static_cast<int>(commands_after - commands_before);

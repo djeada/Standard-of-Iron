@@ -12,7 +12,7 @@ public:
 
   virtual void execute(const AISnapshot &snapshot, AIContext &context,
                        float delta_time,
-                       std::vector<AICommand> &outCommands) = 0;
+                       std::vector<AICommand> &out_commands) = 0;
 
   [[nodiscard]] virtual auto
   should_execute(const AISnapshot &snapshot,

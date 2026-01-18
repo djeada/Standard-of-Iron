@@ -14,12 +14,12 @@ namespace Game::Systems::AI {
 
 void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                               float delta_time,
-                              std::vector<AICommand> &outCommands) {
-  m_retreatTimer += delta_time;
-  if (m_retreatTimer < 1.0F) {
+                              std::vector<AICommand> &out_commands) {
+  m_retreat_timer += delta_time;
+  if (m_retreat_timer < 1.0F) {
     return;
   }
-  m_retreatTimer = 0.0F;
+  m_retreat_timer = 0.0F;
 
   if (context.primary_barracks == 0) {
     return;
@@ -52,7 +52,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     }
 
     else if (health_ratio < low_health &&
-             isEntityEngaged(entity, snapshot.visible_enemies)) {
+             is_entity_engaged(entity, snapshot.visible_enemies)) {
       retreating_units.push_back(&entity);
     }
   }
@@ -86,7 +86,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   }
 
   auto claimed_units = claim_units(unit_ids, get_priority(), "retreating",
-                                   context, m_retreatTimer + delta_time, 1.0F);
+                                   context, m_retreat_timer + delta_time, 1.0F);
 
   if (claimed_units.empty()) {
     return;
@@ -110,7 +110,7 @@ void RetreatBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.move_target_x = std::move(filtered_x);
   command.move_target_y = std::move(filtered_y);
   command.move_target_z = std::move(filtered_z);
-  outCommands.push_back(std::move(command));
+  out_commands.push_back(std::move(command));
 }
 
 auto RetreatBehavior::should_execute(const AISnapshot &snapshot,
