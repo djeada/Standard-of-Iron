@@ -9,7 +9,7 @@
 namespace Render::GL {
 
 void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
-                          const FormationPlacementInfo &placement) {
+                            const FormationPlacementInfo &placement) {
   if ((renderer == nullptr) || (resources == nullptr) || !placement.active) {
     return;
   }

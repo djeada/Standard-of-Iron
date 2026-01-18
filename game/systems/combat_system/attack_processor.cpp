@@ -179,8 +179,9 @@ void apply_health_bonus(Engine::Core::UnitComponent *unit_comp) {
   auto base_max_health_opt = get_base_max_health(unit_comp);
   int const base_max_health =
       base_max_health_opt.value_or(std::max(1, unit_comp->max_health));
-  int const max_health_bonus = static_cast<int>(
-      static_cast<float>(base_max_health) * Constants::k_health_multiplier_hold);
+  int const max_health_bonus =
+      static_cast<int>(static_cast<float>(base_max_health) *
+                       Constants::k_health_multiplier_hold);
   if (unit_comp->max_health < max_health_bonus) {
     int const safe_max_health = std::max(1, unit_comp->max_health);
     int const health_percentage = (unit_comp->health * 100) / safe_max_health;
@@ -234,8 +235,9 @@ void apply_high_ground_defense_bonuses(Engine::Core::Entity *attacker,
     return;
   }
 
-  damage = std::max(1, static_cast<int>(static_cast<float>(damage) *
-                                        Constants::k_high_ground_armor_multiplier));
+  damage =
+      std::max(1, static_cast<int>(static_cast<float>(damage) *
+                                   Constants::k_high_ground_armor_multiplier));
 
   auto base_max_health_opt = get_base_max_health(target_unit);
   if (!base_max_health_opt || *base_max_health_opt <= 0) {

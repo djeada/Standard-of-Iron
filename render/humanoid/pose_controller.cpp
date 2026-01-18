@@ -323,7 +323,8 @@ void HumanoidPoseController::kneel(float depth) {
   m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.6F);
 }
 
-void HumanoidPoseController::kneel_transition(float progress, bool standing_up) {
+void HumanoidPoseController::kneel_transition(float progress,
+                                              bool standing_up) {
   using HP = HumanProportions;
 
   progress = std::clamp(progress, 0.0F, 1.0F);
@@ -703,7 +704,7 @@ void HumanoidPoseController::melee_strike(float strike_phase) {
 }
 
 void HumanoidPoseController::grasp_two_handed(const QVector3D &grip_center,
-                                            float hand_separation) {
+                                              float hand_separation) {
   hand_separation = std::clamp(hand_separation, 0.1F, 0.8F);
 
   QVector3D const right_axis = compute_right_axis();
@@ -856,7 +857,7 @@ void HumanoidPoseController::spear_thrust(float attack_phase) {
 }
 
 void HumanoidPoseController::spear_thrust_from_hold(float attack_phase,
-                                                 float hold_depth) {
+                                                    float hold_depth) {
   using HP = HumanProportions;
 
   attack_phase = std::clamp(attack_phase, 0.0F, 1.0F);

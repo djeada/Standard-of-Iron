@@ -210,7 +210,7 @@ public:
         float const attack_phase = std::fmod(
             anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
         controller.spear_thrust_from_hold(attack_phase,
-                                       hold_t * k_kneel_depth_multiplier);
+                                          hold_t * k_kneel_depth_multiplier);
       } else {
 
         float const lowered_shoulder_y = controller.get_shoulder_y(true);

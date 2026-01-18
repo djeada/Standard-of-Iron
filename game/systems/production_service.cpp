@@ -12,8 +12,7 @@
 
 namespace Game::Systems {
 
-static auto
-find_first_selected_barracks(
+static auto find_first_selected_barracks(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected,
     int owner_id) -> Engine::Core::Entity * {

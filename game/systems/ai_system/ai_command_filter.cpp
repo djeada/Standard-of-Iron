@@ -156,8 +156,8 @@ void AICommandFilter::cleanup_history(float current_time) {
 
 auto AICommandFilter::CommandHistory::is_similar_to(
     const AICommandType &cmd_type, Engine::Core::EntityID unit,
-    Engine::Core::EntityID target, float x, float y, float z, float current_time,
-    float cooldown) const -> bool {
+    Engine::Core::EntityID target, float x, float y, float z,
+    float current_time, float cooldown) const -> bool {
 
   if (unit_id != unit) {
     return false;

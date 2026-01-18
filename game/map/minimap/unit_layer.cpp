@@ -39,7 +39,7 @@ auto UnitLayer::world_to_pixel(float world_x,
 }
 
 void UnitLayer::update(const std::vector<UnitMarker> &markers) {
-  // Call the full update with no visibility filter (all visible)
+
   update(markers, 0, nullptr, nullptr);
 }
 
@@ -65,11 +65,11 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers,
   std::vector<const UnitMarker *> selected;
 
   for (const auto &marker : markers) {
-    // Fog-of-war filtering: hide enemy units outside visible/revealed areas
+
     if (visibility_check && marker.owner_id != local_owner_id &&
         local_owner_id > 0) {
       if (!visibility_check(marker.world_x, marker.world_z)) {
-        continue; // Skip units not visible to the local player
+        continue;
       }
     }
 
@@ -108,22 +108,20 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers,
 auto UnitLayer::get_color_for_owner(int owner_id,
                                     const PlayerColorFn &player_color_fn)
     -> TeamColors::ColorSet {
-  // Try to get color from registry if callback provided
+
   if (player_color_fn) {
     std::uint8_t r, g, b;
     if (player_color_fn(owner_id, r, g, b)) {
-      // Create a color set with the registry color
-      // Use slightly darker version for border
-      return TeamColors::ColorSet{
-          r,
-          g,
-          b,
-          static_cast<std::uint8_t>(r / 2),
-          static_cast<std::uint8_t>(g / 2),
-          static_cast<std::uint8_t>(b / 2)};
+
+      return TeamColors::ColorSet{r,
+                                  g,
+                                  b,
+                                  static_cast<std::uint8_t>(r / 2),
+                                  static_cast<std::uint8_t>(g / 2),
+                                  static_cast<std::uint8_t>(b / 2)};
     }
   }
-  // Fall back to default colors
+
   return TeamColors::get_color(owner_id);
 }
 

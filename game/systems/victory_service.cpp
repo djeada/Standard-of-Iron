@@ -286,8 +286,8 @@ auto VictoryService::check_control_structures(
 
     const QString unit_type = QString::fromStdString(
         Game::Units::spawn_typeToString(unit->spawn_type));
-    if (std::find(m_key_structures.begin(), m_key_structures.end(), unit_type) ==
-        m_key_structures.end()) {
+    if (std::find(m_key_structures.begin(), m_key_structures.end(),
+                  unit_type) == m_key_structures.end()) {
       continue;
     }
 

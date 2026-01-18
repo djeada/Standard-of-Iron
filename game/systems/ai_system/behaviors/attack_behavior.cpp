@@ -191,8 +191,8 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           continue;
         }
         float const dist_sq =
-            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z, group_center_x,
-                             group_center_y, group_center_z);
+            distance_squared(enemy.pos_x, enemy.pos_y, enemy.pos_z,
+                             group_center_x, group_center_y, group_center_z);
         if (dist_sq < closest_dist_sq) {
           closest_dist_sq = dist_sq;
           closest_enemy = &enemy;

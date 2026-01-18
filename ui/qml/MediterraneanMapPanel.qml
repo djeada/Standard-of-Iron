@@ -13,6 +13,8 @@ Rectangle {
     property real map_orbit_distance: 1.2
     property real map_pan_u: 0
     property real map_pan_v: 0
+    property real terrain_height_scale: 1.0
+    property bool show_province_fills: true
     property string hover_province_name: ""
     property string hover_province_owner: ""
     property real hover_mouse_x: 0
@@ -180,7 +182,6 @@ Rectangle {
             focus_on_region(selected_mission.world_region_id);
             return ;
         }
-
         map_orbit_yaw = 180;
         map_orbit_pitch = 90;
         map_orbit_distance = 1.2;
@@ -261,10 +262,12 @@ Rectangle {
                     anchors.fill: parent
                     orbit_yaw: root.map_orbit_yaw
                     orbit_pitch: root.map_orbit_pitch
-                    orbit_distance: root.map_orbit_distance
-                    pan_u: root.map_pan_u
-                    pan_v: root.map_pan_v
-                    current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
+                orbit_distance: root.map_orbit_distance
+                pan_u: root.map_pan_u
+                pan_v: root.map_pan_v
+                terrain_height_scale: root.terrain_height_scale
+                show_province_fills: root.show_province_fills
+                current_mission: root.selected_mission && root.selected_mission.order_index !== undefined ? root.selected_mission.order_index : 7
                     hover_province_id: {
                         if (root.active_region_id !== "")
                             return root.active_region_id;
@@ -323,7 +326,7 @@ Rectangle {
             color: "#f5f0e6"
             border.color: "#8b7355"
             border.width: 1
-            opacity: resetViewArea.containsMouse ? 1.0 : 0.9
+            opacity: resetViewArea.containsMouse ? 1 : 0.9
             z: 8
             visible: campaignMapLoader.item
 
@@ -344,6 +347,63 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: root.reset_view()
+            }
+
+        }
+
+        Rectangle {
+            id: heightScalePanel
+
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.margins: Theme.spacingMedium
+            width: heightScaleLayout.implicitWidth + 12
+            height: heightScaleLayout.implicitHeight + 12
+            radius: 4
+            color: "#f5f0e6"
+            border.color: "#8b7355"
+            border.width: 1
+            z: 8
+            visible: campaignMapLoader.item
+
+            RowLayout {
+                id: heightScaleLayout
+
+                anchors.margins: 6
+                anchors.fill: parent
+                spacing: Theme.spacingSmall
+
+                Label {
+                    text: qsTr("Relief")
+                    color: "#2d241c"
+                    font.pointSize: Theme.fontSizeTiny
+                    font.bold: true
+                }
+
+                Slider {
+                    id: heightScaleSlider
+
+                    Layout.preferredWidth: 140
+                    from: 0.0
+                    to: 5.0
+                    stepSize: 0.05
+                    value: root.terrain_height_scale
+                    onValueChanged: root.terrain_height_scale = value
+                }
+
+                Label {
+                    text: root.terrain_height_scale.toFixed(2)
+                    color: "#2d241c"
+                    font.pointSize: Theme.fontSizeTiny
+                }
+
+                CheckBox {
+                    id: provinceFillToggle
+
+                    text: qsTr("Fills")
+                    checked: root.show_province_fills
+                    onCheckedChanged: root.show_province_fills = checked
+                }
             }
         }
 

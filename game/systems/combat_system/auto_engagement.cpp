@@ -82,7 +82,8 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
         attack_target->target_id = nearest_enemy->get_id();
         attack_target->should_chase = !in_guard_mode;
 
-        m_engagement_cooldowns[unit->get_id()] = Constants::k_engagement_cooldown;
+        m_engagement_cooldowns[unit->get_id()] =
+            Constants::k_engagement_cooldown;
       }
     }
   }

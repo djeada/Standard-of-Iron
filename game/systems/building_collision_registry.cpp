@@ -146,7 +146,8 @@ auto BuildingCollisionRegistry::is_point_in_building(
 }
 
 auto BuildingCollisionRegistry::is_circle_overlapping_building(
-    float x, float z, float radius, unsigned int ignore_entity_id) const -> bool {
+    float x, float z, float radius,
+    unsigned int ignore_entity_id) const -> bool {
   for (const auto &building : m_buildings) {
     if (ignore_entity_id != 0 && building.entity_id == ignore_entity_id) {
       continue;

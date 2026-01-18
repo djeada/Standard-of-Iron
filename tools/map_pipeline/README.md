@@ -10,10 +10,11 @@ Single-shot pipeline to prep the West Mediterranean campaign map. It locks coord
 - Extracts coastline/rivers polylines → `assets/campaign_map/coastlines_uv.json`, `rivers_uv.json`, and OBJ line exports.
 - Renders preview PNG → `assets/campaign_map/campaign_preview.png`.
 - Renders base textures → `assets/campaign_map/campaign_base_color.png` and `campaign_water.png`.
+- Downloads ETOPO2022 (60s bedrock) and generates a terrain heightmap → `assets/campaign_map/terrain_height.png` + `terrain_height.json`.
 
 ### Dependencies
 - Python 3
-- `fiona`, `shapely`, `pillow`, `mapbox_earcut`, `numpy` (install via `pip install -r requirements.txt`)
+- `fiona`, `shapely`, `pillow`, `mapbox_earcut`, `numpy`, `rasterio` (install via `pip install -r requirements.txt`)
 
 ### Run (does everything)
 ```bash

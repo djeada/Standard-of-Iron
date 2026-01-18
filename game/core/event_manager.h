@@ -219,8 +219,7 @@ public:
                         int damage = 0)
       : building_id(building_id), owner_id(owner_id),
         building_type(building_type), attacker_id(attacker_id),
-        attacker_owner_id(attacker_owner_id),
-        damage(damage) {}
+        attacker_owner_id(attacker_owner_id), damage(damage) {}
   EntityID building_id;
   int owner_id;
   Game::Units::SpawnType building_type;
@@ -232,7 +231,7 @@ public:
 class BarrackCapturedEvent : public Event {
 public:
   BarrackCapturedEvent(EntityID barrack_id, int previous_owner_id,
-                        int new_owner_id)
+                       int new_owner_id)
       : barrack_id(barrack_id), previous_owner_id(previous_owner_id),
         new_owner_id(new_owner_id) {}
   EntityID barrack_id;
