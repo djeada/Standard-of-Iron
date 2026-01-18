@@ -172,6 +172,7 @@ struct CartographicSymbolLayer {
   GLuint vao = 0;
   GLuint vbo = 0;
   std::vector<CartographicSymbolInstance> symbols;
+  std::vector<LineSpan> spans;
   int total_vertices = 0;
   bool ready = false;
 
@@ -1000,6 +1001,7 @@ void main() {
     std::vector<float> verts;
     // Reserve approximate space: each symbol ~20 vertices, 4 floats each
     verts.reserve(layer.symbols.size() * 20 * 4);
+    layer.spans.clear();
 
     for (const auto &symbol : layer.symbols) {
       std::vector<QVector2D> outline;
@@ -1023,6 +1025,12 @@ void main() {
         break;
       }
 
+      if (outline.size() < 2) {
+        continue;
+      }
+
+      const int start = static_cast<int>(verts.size() / 4);
+      const int count = static_cast<int>(outline.size());
       // Convert to positioned vertices
       for (const auto &pt : outline) {
         float world_x = symbol.position.x() + pt.x() * symbol.size;
@@ -1032,9 +1040,11 @@ void main() {
         verts.push_back(pt.x());  // Local coord for shading
         verts.push_back(static_cast<float>(symbol.symbol_type));
       }
+
+      layer.spans.push_back({start, count});
     }
 
-    if (verts.empty()) {
+    if (verts.empty() || layer.spans.empty()) {
       layer.ready = false;
       return;
     }
@@ -1068,7 +1078,7 @@ void main() {
   // Draw cartographic symbols layer
   void draw_symbol_layer(const CartographicSymbolLayer &layer,
                          const QMatrix4x4 &mvp, float z_offset) {
-    if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
+    if (!layer.ready || layer.vao == 0 || layer.spans.empty()) {
       return;
     }
 
@@ -1080,7 +1090,9 @@ void main() {
       m_line_program.setUniformValue("u_z", z_offset);
       m_line_program.setUniformValue("u_color", layer.shadow_color);
       glBindVertexArray(layer.vao);
-      glDrawArrays(GL_LINE_STRIP, 0, layer.total_vertices);
+      for (const auto &span : layer.spans) {
+        glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+      }
       glBindVertexArray(0);
     }
 
@@ -1088,14 +1100,18 @@ void main() {
     m_line_program.setUniformValue("u_z", z_offset + 0.001F);
     m_line_program.setUniformValue("u_color", layer.fill_color);
     glBindVertexArray(layer.vao);
-    glDrawArrays(GL_LINE_STRIP, 0, layer.total_vertices);
+    for (const auto &span : layer.spans) {
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
     glBindVertexArray(0);
 
     // Draw stroke
     m_line_program.setUniformValue("u_z", z_offset + 0.002F);
     m_line_program.setUniformValue("u_color", layer.stroke_color);
     glBindVertexArray(layer.vao);
-    glDrawArrays(GL_LINE_STRIP, 0, layer.total_vertices);
+    for (const auto &span : layer.spans) {
+      glDrawArrays(GL_LINE_STRIP, span.start, span.count);
+    }
     glBindVertexArray(0);
 
     m_line_program.release();
@@ -1303,6 +1319,10 @@ void main() {
   void draw_label_layer(const LabelLayer &layer, const QMatrix4x4 &mvp,
                         float z_offset) {
     if (!layer.ready || layer.vao == 0 || layer.total_vertices <= 0) {
+      return;
+    }
+    if (layer.font_texture == 0) {
+      // Skip fallback solid quads to avoid placeholder rectangles.
       return;
     }
 
@@ -1594,7 +1614,7 @@ void main() {
       // Outer border pass (darkest)
       if (!passes.empty()) {
         const auto &border_pass = passes[0];
-        float border_width_px = 18.0F * border_pass.width_multiplier;
+        float border_width_px = 6.0F * border_pass.width_multiplier;
         if (i != max_mission) {
           border_width_px *= 0.85F; // Slightly thinner for older paths
         }
@@ -1622,7 +1642,7 @@ void main() {
       // Golden highlight pass
       if (passes.size() > 2) {
         const auto &highlight_pass = passes[2];
-        float highlight_width_px = 12.0F * highlight_pass.width_multiplier;
+        float highlight_width_px = 4.0F * highlight_pass.width_multiplier;
         if (i != max_mission) {
           highlight_width_px *= 0.8F;
         }
@@ -1650,7 +1670,7 @@ void main() {
       // Core red pass
       if (passes.size() > 3) {
         const auto &core_pass = passes[3];
-        float core_width_px = 7.0F * core_pass.width_multiplier;
+        float core_width_px = 3.0F * core_pass.width_multiplier;
         if (i != max_mission) {
           core_width_px *= 0.75F;
         }
