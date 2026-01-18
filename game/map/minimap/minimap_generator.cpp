@@ -308,6 +308,11 @@ void MinimapGenerator::draw_hill_symbol(QPainter &painter, float cx, float cy,
 
 void MinimapGenerator::draw_forest_symbol(QPainter &painter, float cx, float cy,
                                           float width, float height) {
+  // Hash seeds for tree position jitter (arbitrary values for pseudo-random
+  // variation)
+  constexpr int JITTER_SEED_X = 123;
+  constexpr int JITTER_SEED_Y = 456;
+
   // Draw multiple small tree-like symbols to represent a forest
   const float tree_size = std::min(width, height) * 0.35F;
   const float spacing = tree_size * 1.2F;
@@ -327,12 +332,12 @@ void MinimapGenerator::draw_forest_symbol(QPainter &painter, float cx, float cy,
       // Add slight randomness to tree positions for natural look
       const float jitter_x =
           (hash_coords(col + static_cast<int>(cx), row + static_cast<int>(cy),
-                       123) *
+                       JITTER_SEED_X) *
            0.3F) *
           tree_size;
       const float jitter_y =
           (hash_coords(row + static_cast<int>(cx), col + static_cast<int>(cy),
-                       456) *
+                       JITTER_SEED_Y) *
            0.3F) *
           tree_size;
 
