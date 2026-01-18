@@ -238,7 +238,9 @@ test-validator: build
 .PHONY: format format-check
 
 EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
-EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*")
+EXCLUDE_PATHS := */venv/* */.venv/*
+EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
+	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
 
 format:
 	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... scripts/... tools/... ui/... assets/shaders/...$(RESET)"
