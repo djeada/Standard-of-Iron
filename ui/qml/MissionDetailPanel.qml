@@ -34,6 +34,28 @@ Rectangle {
 
     }
 
+    function titleize(value) {
+        if (!value)
+            return "";
+
+        var parts = value.split("_");
+        for (var i = 0; i < parts.length; i++) {
+            var part = parts[i];
+            if (part.length === 0)
+                continue;
+
+            parts[i] = part.charAt(0).toUpperCase() + part.slice(1);
+        }
+        return parts.join(" ");
+    }
+
+    function objectives_empty() {
+        var victory_count = mission_definition && mission_definition.victory_conditions ? mission_definition.victory_conditions.length : 0;
+        var optional_count = mission_definition && mission_definition.optional_objectives ? mission_definition.optional_objectives.length : 0;
+        var defeat_count = mission_definition && mission_definition.defeat_conditions ? mission_definition.defeat_conditions.length : 0;
+        return (victory_count + optional_count + defeat_count) === 0;
+    }
+
     onMission_dataChanged: load_mission_definition()
     radius: Theme.radiusMedium
     color: Theme.panelBase
@@ -55,7 +77,12 @@ Rectangle {
                 spacing: Theme.spacingMedium
 
                 Label {
-                    text: mission_data ? mission_data.mission_id : ""
+                    text: {
+                        if (mission_definition && mission_definition.title)
+                            return mission_definition.title;
+
+                        return mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "";
+                    }
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeTitle
                     font.bold: true
@@ -191,7 +218,59 @@ Rectangle {
                     }
 
                     Label {
-                        visible: !mission_definition || !mission_definition.victory_conditions || mission_definition.victory_conditions.length === 0
+                        visible: mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0
+                        text: qsTr("Optional:")
+                        color: Theme.textDim
+                        font.pointSize: Theme.fontSizeTiny
+                        font.bold: true
+                    }
+
+                    Repeater {
+                        model: {
+                            if (!mission_definition || !mission_definition.optional_objectives)
+                                return [];
+
+                            return mission_definition.optional_objectives;
+                        }
+
+                        delegate: Label {
+                            text: "• " + (modelData.description || qsTr("Complete optional objective"))
+                            color: Theme.textSubLite
+                            font.pointSize: Theme.fontSizeSmall
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                    }
+
+                    Label {
+                        visible: mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0
+                        text: qsTr("Failure:")
+                        color: Theme.textDim
+                        font.pointSize: Theme.fontSizeTiny
+                        font.bold: true
+                    }
+
+                    Repeater {
+                        model: {
+                            if (!mission_definition || !mission_definition.defeat_conditions)
+                                return [];
+
+                            return mission_definition.defeat_conditions;
+                        }
+
+                        delegate: Label {
+                            text: "• " + (modelData.description || qsTr("Avoid mission failure"))
+                            color: Theme.textSubLite
+                            font.pointSize: Theme.fontSizeSmall
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
+
+                    }
+
+                    Label {
+                        visible: !mission_definition || objectives_empty()
                         text: qsTr("• Complete the mission successfully")
                         color: Theme.textSubLite
                         font.pointSize: Theme.fontSizeSmall

@@ -284,6 +284,8 @@ public:
   Q_INVOKABLE void start_campaign_mission(const QString &campaign_id);
   Q_INVOKABLE void mark_current_mission_completed();
   Q_INVOKABLE [[nodiscard]] QVariantMap get_current_mission_objectives() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap
+  get_mission_definition(const QString &mission_id) const;
   Q_INVOKABLE void open_settings();
   Q_INVOKABLE void load_save();
   Q_INVOKABLE void save_game(const QString &filename = "savegame.json");

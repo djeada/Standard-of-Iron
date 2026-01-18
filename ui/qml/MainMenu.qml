@@ -92,14 +92,22 @@ Item {
         opacity: 0.98
         clip: true
 
-        GridLayout {
-            id: grid
+        Item {
+            id: contentArea
 
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: footerRow.top
             anchors.margins: Theme.spacingXLarge
-            rowSpacing: Theme.spacingMedium
-            columnSpacing: 18
-            columns: parent.width > 900 ? 2 : 1
+
+            GridLayout {
+                id: grid
+
+                anchors.fill: parent
+                rowSpacing: Theme.spacingMedium
+                columnSpacing: 18
+                columns: parent.width > 900 ? 2 : 1
 
             ColumnLayout {
                 Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
@@ -299,32 +307,6 @@ Item {
 
                 }
 
-                Item {
-                    Layout.fillHeight: true
-                }
-
-                RowLayout {
-                    spacing: Theme.spacingSmall
-
-                    Label {
-                        text: qsTr("v0.9 — prototype")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeSmall
-                    }
-
-                    Item {
-                        Layout.fillWidth: true
-                    }
-
-                    Label {
-                        text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
-                        color: Theme.textHint
-                        font.pointSize: Theme.fontSizeSmall
-                        elide: Label.ElideRight
-                    }
-
-                }
-
             }
 
             Rectangle {
@@ -420,6 +402,35 @@ Item {
 
             }
 
+            }
+
+        }
+
+        RowLayout {
+            id: footerRow
+
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            anchors.margins: Theme.spacingXLarge
+            spacing: Theme.spacingSmall
+
+            Label {
+                text: qsTr("v0.9 — prototype")
+                color: Theme.textDim
+                font.pointSize: Theme.fontSizeSmall
+            }
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            Label {
+                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
+                color: Theme.textHint
+                font.pointSize: Theme.fontSizeSmall
+                elide: Label.ElideRight
+            }
         }
 
     }
