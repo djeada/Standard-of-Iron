@@ -17,7 +17,7 @@ namespace Game::Systems {
 
 CameraService::CameraService()
     : m_controller(std::make_unique<CameraController>()),
-      m_followSystem(std::make_unique<CameraFollowSystem>()) {}
+      m_follow_system(std::make_unique<CameraFollowSystem>()) {}
 
 CameraService::~CameraService() = default;
 
@@ -68,7 +68,7 @@ void CameraService::follow_selection(Render::GL::Camera &camera,
 
   if (enable) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
-      m_followSystem->snap_to_selection(world, *selection_system, camera);
+      m_follow_system->snap_to_selection(world, *selection_system, camera);
     }
   } else {
     auto pos = camera.get_position();
@@ -124,7 +124,7 @@ void CameraService::update_follow(Render::GL::Camera &camera,
                                   bool follow_enabled) {
   if (follow_enabled) {
     if (auto *selection_system = world.get_system<SelectionSystem>()) {
-      m_followSystem->update(world, *selection_system, camera);
+      m_follow_system->update(world, *selection_system, camera);
     }
   }
 }

@@ -25,7 +25,7 @@ auto owner_type_to_string(Game::Systems::OwnerType type) -> QString {
   }
 }
 
-auto owner_typeFromString(const QString &value) -> Game::Systems::OwnerType {
+auto owner_type_from_string(const QString &value) -> Game::Systems::OwnerType {
   using Game::Systems::OwnerType;
   if (value.compare(QStringLiteral("player"), Qt::CaseInsensitive) == 0) {
     return OwnerType::Player;
@@ -327,7 +327,7 @@ void OwnerRegistry::from_json(const QJsonObject &json) {
     const auto owner_obj = value.toObject();
     OwnerInfo info;
     info.owner_id = owner_obj["owner_id"].toInt();
-    info.type = owner_typeFromString(owner_obj["type"].toString());
+    info.type = owner_type_from_string(owner_obj["type"].toString());
     info.name = owner_obj["name"].toString().toStdString();
     info.team_id = owner_obj["team_id"].toInt(0);
     if (owner_obj.contains("color")) {

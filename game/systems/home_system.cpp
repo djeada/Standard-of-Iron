@@ -33,7 +33,7 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    home_comp->update_cooldown = kUpdateInterval;
+    home_comp->update_cooldown = k_update_interval;
 
     float min_distance = std::numeric_limits<float>::max();
     Engine::Core::EntityID nearest_barracks = 0;
@@ -60,7 +60,7 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
       float dz = barracks_transform->position.z - home_transform->position.z;
       float distance = std::sqrt(dx * dx + dz * dz);
 
-      if (distance < min_distance && distance <= kMaxSearchRadius) {
+      if (distance < min_distance && distance <= k_max_search_radius) {
         min_distance = distance;
         nearest_barracks = barracks_entity->get_id();
       }

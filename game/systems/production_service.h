@@ -59,7 +59,7 @@ public:
   static auto get_selected_barracks_state(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      ProductionState &outState) -> bool;
+      ProductionState &out_state) -> bool;
 };
 
 } // namespace Game::Systems

@@ -52,7 +52,7 @@ public:
       const std::vector<UnitFormationInfo> &units, const QVector3D &center,
       float base_spacing = 1.0F) const -> std::vector<FormationPosition> = 0;
 
-  [[nodiscard]] virtual auto getType() const -> FormationType = 0;
+  [[nodiscard]] virtual auto get_type() const -> FormationType = 0;
 };
 
 class RomanFormation : public IFormation {
@@ -67,7 +67,7 @@ public:
                                 float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
-  [[nodiscard]] auto getType() const -> FormationType override {
+  [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Roman;
   }
 };
@@ -84,7 +84,7 @@ public:
                                 float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
-  [[nodiscard]] auto getType() const -> FormationType override {
+  [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Barbarian;
   }
 };
@@ -101,7 +101,7 @@ public:
                                 float base_spacing = 1.0F) const
       -> std::vector<FormationPosition> override;
 
-  [[nodiscard]] auto getType() const -> FormationType override {
+  [[nodiscard]] auto get_type() const -> FormationType override {
     return FormationType::Carthage;
   }
 };

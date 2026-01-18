@@ -89,8 +89,8 @@ auto NationRegistry::instance() -> NationRegistry & {
 
 void NationRegistry::register_nation(Nation nation) {
 
-  auto it = m_nationIndex.find(nation.id);
-  if (it != m_nationIndex.end()) {
+  auto it = m_nation_index.find(nation.id);
+  if (it != m_nation_index.end()) {
 
     m_nations[it->second] = std::move(nation);
     return;
@@ -98,12 +98,12 @@ void NationRegistry::register_nation(Nation nation) {
 
   size_t const index = m_nations.size();
   m_nations.push_back(std::move(nation));
-  m_nationIndex[m_nations.back().id] = index;
+  m_nation_index[m_nations.back().id] = index;
 }
 
-auto NationRegistry::get_nation(NationID nationId) const -> const Nation * {
-  auto it = m_nationIndex.find(nationId);
-  if (it == m_nationIndex.end()) {
+auto NationRegistry::get_nation(NationID nation_id) const -> const Nation * {
+  auto it = m_nation_index.find(nation_id);
+  if (it == m_nation_index.end()) {
     return nullptr;
   }
   return &m_nations[it->second];
@@ -112,20 +112,20 @@ auto NationRegistry::get_nation(NationID nationId) const -> const Nation * {
 auto NationRegistry::get_nation_for_player(int player_id) const
     -> const Nation * {
 
-  auto it = m_playerNations.find(player_id);
-  if (it != m_playerNations.end()) {
+  auto it = m_player_nations.find(player_id);
+  if (it != m_player_nations.end()) {
     const auto *nation = get_nation(it->second);
     return nation;
   }
 
-  const auto *nation = get_nation(m_defaultNation);
+  const auto *nation = get_nation(m_default_nation);
   if (nation == nullptr) {
   }
   return nation;
 }
 
-void NationRegistry::set_player_nation(int player_id, NationID nationId) {
-  m_playerNations[player_id] = nationId;
+void NationRegistry::set_player_nation(int player_id, NationID nation_id) {
+  m_player_nations[player_id] = nation_id;
 }
 
 void NationRegistry::initialize_defaults() {
@@ -144,7 +144,7 @@ void NationRegistry::initialize_defaults() {
     roman.primary_building = Game::Units::BuildingType::Barracks;
     roman.formation_type = FormationType::Roman;
 
-    auto appendTroop = [&roman](Game::Units::TroopType type) {
+    auto append_troop = [&roman](Game::Units::TroopType type) {
       TroopType troop_entry;
       troop_entry.unit_type = type;
 
@@ -159,19 +159,19 @@ void NationRegistry::initialize_defaults() {
       roman.available_troops.push_back(std::move(troop_entry));
     };
 
-    appendTroop(Game::Units::TroopType::Archer);
-    appendTroop(Game::Units::TroopType::Swordsman);
-    appendTroop(Game::Units::TroopType::Spearman);
-    appendTroop(Game::Units::TroopType::MountedKnight);
+    append_troop(Game::Units::TroopType::Archer);
+    append_troop(Game::Units::TroopType::Swordsman);
+    append_troop(Game::Units::TroopType::Spearman);
+    append_troop(Game::Units::TroopType::MountedKnight);
 
     register_nation(std::move(roman));
-    m_defaultNation = NationID::RomanRepublic;
+    m_default_nation = NationID::RomanRepublic;
   } else {
     NationID fallback_default = nations.front().id;
     for (auto &nation : nations) {
       register_nation(std::move(nation));
     }
-    m_defaultNation = fallback_default;
+    m_default_nation = fallback_default;
   }
 
   TroopProfileService::instance().clear();
@@ -180,11 +180,11 @@ void NationRegistry::initialize_defaults() {
 
 void NationRegistry::clear() {
   m_nations.clear();
-  m_nationIndex.clear();
-  m_playerNations.clear();
+  m_nation_index.clear();
+  m_player_nations.clear();
   m_initialized = false;
 }
 
-void NationRegistry::clear_player_assignments() { m_playerNations.clear(); }
+void NationRegistry::clear_player_assignments() { m_player_nations.clear(); }
 
 } // namespace Game::Systems

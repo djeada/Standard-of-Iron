@@ -43,7 +43,7 @@ public:
 
 private:
   std::unique_ptr<CameraController> m_controller;
-  std::unique_ptr<CameraFollowSystem> m_followSystem;
+  std::unique_ptr<CameraFollowSystem> m_follow_system;
 };
 
 } // namespace Game::Systems
