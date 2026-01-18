@@ -10,7 +10,7 @@ namespace Game::Systems::AI {
 
 void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                                  float delta_time,
-                                 std::vector<AICommand> &outCommands) {
+                                 std::vector<AICommand> &out_commands) {
   m_production_timer += delta_time;
 
   float production_interval =
@@ -114,7 +114,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
     command.type = AICommandType::StartProduction;
     command.building_id = entity.id;
     command.product_type = troop_type->unit_type;
-    outCommands.push_back(std::move(command));
+    out_commands.push_back(std::move(command));
 
     m_production_counter++;
   }

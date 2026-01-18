@@ -15,7 +15,7 @@ namespace Game::Systems::AI {
 
 void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
-                             std::vector<AICommand> &outCommands) {
+                             std::vector<AICommand> &out_commands) {
   m_expand_timer += delta_time;
 
   if (m_expand_timer < 1.0F) {
@@ -136,7 +136,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.move_target_y = std::move(filtered_y);
   command.move_target_z = std::move(filtered_z);
 
-  outCommands.push_back(std::move(command));
+  out_commands.push_back(std::move(command));
 }
 
 auto ExpandBehavior::should_execute(const AISnapshot &snapshot,

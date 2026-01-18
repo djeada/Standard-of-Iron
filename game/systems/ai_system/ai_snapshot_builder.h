@@ -17,7 +17,7 @@ public:
   auto operator=(const AISnapshotBuilder &) -> AISnapshotBuilder & = delete;
 
   [[nodiscard]] static auto build(const Engine::Core::World &world,
-                                  int aiOwnerId) -> AISnapshot;
+                                  int ai_owner_id) -> AISnapshot;
 };
 
 } // namespace Game::Systems::AI

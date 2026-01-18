@@ -62,7 +62,7 @@ public:
       const BuildingFootprint &footprint,
       float grid_cell_size = 1.0F) -> std::vector<std::pair<int, int>>;
 
-  static constexpr float kDefaultGridPadding = 1.0F;
+  static constexpr float k_default_grid_padding = 1.0F;
   static void set_grid_padding(float padding);
   static auto get_grid_padding() -> float;
 

@@ -18,7 +18,7 @@ const std::map<std::string, BuildingCollisionRegistry::BuildingSize>
 };
 
 float BuildingCollisionRegistry::s_grid_padding =
-    BuildingCollisionRegistry::kDefaultGridPadding;
+    BuildingCollisionRegistry::k_default_grid_padding;
 
 auto BuildingCollisionRegistry::instance() -> BuildingCollisionRegistry & {
   static BuildingCollisionRegistry instance;

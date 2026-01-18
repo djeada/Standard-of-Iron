@@ -26,7 +26,7 @@ auto get_formation_type_for_player(int player_id) -> FormationType {
 
 void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
-                             std::vector<AICommand> &outCommands) {
+                             std::vector<AICommand> &out_commands) {
   m_attack_timer += delta_time;
   m_target_lock_duration += delta_time;
 
@@ -154,7 +154,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       cmd.move_target_x = std::move(target_x);
       cmd.move_target_y = std::move(target_y);
       cmd.move_target_z = std::move(target_z);
-      outCommands.push_back(cmd);
+      out_commands.push_back(cmd);
     }
     return;
   }
@@ -259,7 +259,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           cmd.move_target_x = std::move(target_x);
           cmd.move_target_y = std::move(target_y);
           cmd.move_target_z = std::move(target_z);
-          outCommands.push_back(cmd);
+          out_commands.push_back(cmd);
         }
       }
     }
@@ -366,7 +366,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   move_command.move_target_y = std::move(target_y);
   move_command.move_target_z = std::move(target_z);
 
-  outCommands.push_back(std::move(move_command));
+  out_commands.push_back(std::move(move_command));
 
   AICommand attack_command;
   attack_command.type = AICommandType::AttackTarget;
@@ -374,7 +374,7 @@ void AttackBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   attack_command.target_id = target_info.target_id;
   attack_command.should_chase = false;
 
-  outCommands.push_back(std::move(attack_command));
+  out_commands.push_back(std::move(attack_command));
 }
 auto AttackBehavior::should_execute(const AISnapshot &snapshot,
                                     const AIContext &context) const -> bool {

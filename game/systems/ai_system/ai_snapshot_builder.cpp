@@ -7,11 +7,11 @@
 namespace Game::Systems::AI {
 
 auto AISnapshotBuilder::build(const Engine::Core::World &world,
-                              int aiOwnerId) -> AISnapshot {
+                              int ai_owner_id) -> AISnapshot {
   AISnapshot snapshot;
-  snapshot.player_id = aiOwnerId;
+  snapshot.player_id = ai_owner_id;
 
-  auto friendlies = world.get_units_owned_by(aiOwnerId);
+  auto friendlies = world.get_units_owned_by(ai_owner_id);
   snapshot.friendly_units.reserve(friendlies.size());
 
   int skipped_no_ai = 0;
@@ -87,7 +87,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     added++;
   }
 
-  auto enemies = world.get_enemy_units(aiOwnerId);
+  auto enemies = world.get_enemy_units(ai_owner_id);
   snapshot.visible_enemies.reserve(enemies.size());
 
   for (auto *entity : enemies) {

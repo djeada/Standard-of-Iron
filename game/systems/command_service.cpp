@@ -29,9 +29,9 @@ constexpr float pathfinding_request_cooldown = 1.0F;
 
 constexpr float target_movement_threshold_sq = 4.0F;
 
-constexpr float kUnitRadiusThreshold = 0.5F;
+constexpr float k_unit_radius_threshold = 0.5F;
 
-constexpr float kJitterDistance = 1.5F;
+constexpr float k_jitter_distance = 1.5F;
 
 auto are_all_surrounding_cells_invalid(const Point &position,
                                        const Pathfinding &pathfinder,
@@ -46,7 +46,7 @@ auto are_all_surrounding_cells_invalid(const Point &position,
       int const check_x = position.x + dx;
       int const check_y = position.y + dy;
 
-      if (unit_radius <= kUnitRadiusThreshold) {
+      if (unit_radius <= k_unit_radius_threshold) {
         if (pathfinder.is_walkable(check_x, check_y)) {
           return false;
         }
@@ -880,16 +880,16 @@ void CommandService::process_path_results(Engine::Core::World &world) {
                                                  member_transform->position.z);
 
         bool const current_cell_invalid =
-            request_info.unit_radius <= kUnitRadiusThreshold
+            request_info.unit_radius <= k_unit_radius_threshold
                 ? !s_pathfinder->is_walkable(current_grid.x, current_grid.y)
                 : !s_pathfinder->is_walkable_with_radius(
                       current_grid.x, current_grid.y, request_info.unit_radius);
 
         if (current_cell_invalid) {
 
-          constexpr int kNearestPointSearchRadius = 5;
+          constexpr int k_nearest_point_search_radius = 5;
           Point const nearest = Pathfinding::find_nearest_walkable_point(
-              current_grid, kNearestPointSearchRadius, *s_pathfinder,
+              current_grid, k_nearest_point_search_radius, *s_pathfinder,
               request_info.unit_radius);
 
           if (!(nearest == current_grid)) {
@@ -898,8 +898,8 @@ void CommandService::process_path_results(Engine::Core::World &world) {
 
             thread_local std::random_device rd;
             thread_local std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-kJitterDistance,
-                                                       kJitterDistance);
+            std::uniform_real_distribution<float> dist(-k_jitter_distance,
+                                                       k_jitter_distance);
 
             float const jitter_x = dist(gen);
             float const jitter_z = dist(gen);
@@ -910,8 +910,8 @@ void CommandService::process_path_results(Engine::Core::World &world) {
 
             thread_local std::random_device rd;
             thread_local std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dist(-kJitterDistance,
-                                                       kJitterDistance);
+            std::uniform_real_distribution<float> dist(-k_jitter_distance,
+                                                       k_jitter_distance);
 
             member_transform->position.x += dist(gen);
             member_transform->position.z += dist(gen);
@@ -929,8 +929,8 @@ void CommandService::process_path_results(Engine::Core::World &world) {
 
           thread_local std::random_device rd;
           thread_local std::mt19937 gen(rd());
-          std::uniform_real_distribution<float> dist(-kJitterDistance,
-                                                     kJitterDistance);
+          std::uniform_real_distribution<float> dist(-k_jitter_distance,
+                                                     k_jitter_distance);
 
           float const jitter_x = dist(gen);
           float const jitter_z = dist(gen);

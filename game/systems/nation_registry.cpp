@@ -144,7 +144,7 @@ void NationRegistry::initialize_defaults() {
     roman.primary_building = Game::Units::BuildingType::Barracks;
     roman.formation_type = FormationType::Roman;
 
-    auto appendTroop = [&roman](Game::Units::TroopType type) {
+    auto append_troop = [&roman](Game::Units::TroopType type) {
       TroopType troop_entry;
       troop_entry.unit_type = type;
 
@@ -159,10 +159,10 @@ void NationRegistry::initialize_defaults() {
       roman.available_troops.push_back(std::move(troop_entry));
     };
 
-    appendTroop(Game::Units::TroopType::Archer);
-    appendTroop(Game::Units::TroopType::Swordsman);
-    appendTroop(Game::Units::TroopType::Spearman);
-    appendTroop(Game::Units::TroopType::MountedKnight);
+    append_troop(Game::Units::TroopType::Archer);
+    append_troop(Game::Units::TroopType::Swordsman);
+    append_troop(Game::Units::TroopType::Spearman);
+    append_troop(Game::Units::TroopType::MountedKnight);
 
     register_nation(std::move(roman));
     m_default_nation = NationID::RomanRepublic;

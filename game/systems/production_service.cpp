@@ -136,28 +136,28 @@ auto ProductionService::set_rally_for_first_selected_barracks(
 auto ProductionService::get_selected_barracks_state(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-    ProductionState &outState) -> bool {
+    ProductionState &out_state) -> bool {
   auto *e = find_first_selected_barracks(world, selected, owner_id);
   if (e == nullptr) {
-    outState = {};
+    out_state = {};
     return false;
   }
-  outState.has_barracks = true;
+  out_state.has_barracks = true;
   if (auto *unit = e->get_component<Engine::Core::UnitComponent>()) {
-    outState.nation_id = resolve_nation_id(unit, owner_id);
+    out_state.nation_id = resolve_nation_id(unit, owner_id);
   } else {
-    outState.nation_id = NationRegistry::instance().default_nation_id();
+    out_state.nation_id = NationRegistry::instance().default_nation_id();
   }
   if (auto *p = e->get_component<Engine::Core::ProductionComponent>()) {
-    outState.in_progress = p->in_progress;
-    outState.product_type = p->product_type;
-    outState.time_remaining = p->time_remaining;
-    outState.build_time = p->build_time;
-    outState.produced_count = p->produced_count;
-    outState.max_units = p->max_units;
-    outState.villager_cost = p->villager_cost;
-    outState.queue_size = static_cast<int>(p->production_queue.size());
-    outState.production_queue = p->production_queue;
+    out_state.in_progress = p->in_progress;
+    out_state.product_type = p->product_type;
+    out_state.time_remaining = p->time_remaining;
+    out_state.build_time = p->build_time;
+    out_state.produced_count = p->produced_count;
+    out_state.max_units = p->max_units;
+    out_state.villager_cost = p->villager_cost;
+    out_state.queue_size = static_cast<int>(p->production_queue.size());
+    out_state.production_queue = p->production_queue;
   }
   return true;
 }

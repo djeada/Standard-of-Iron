@@ -154,9 +154,9 @@ void AISystem::on_building_attacked(
     const Engine::Core::BuildingAttackedEvent &event) {
   for (auto &ai : m_ai_instances) {
     if (ai.context.player_id == event.owner_id) {
-      ai.context.buildings_under_attack[event.buildingId] = m_total_game_time;
+      ai.context.buildings_under_attack[event.building_id] = m_total_game_time;
 
-      if (event.buildingId == ai.context.primary_barracks) {
+      if (event.building_id == ai.context.primary_barracks) {
         ai.context.barracks_under_threat = true;
       }
       break;

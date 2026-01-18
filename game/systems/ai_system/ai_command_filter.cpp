@@ -9,7 +9,7 @@
 namespace Game::Systems::AI {
 
 auto AICommandFilter::filter(const std::vector<AICommand> &commands,
-                             float currentTime) -> std::vector<AICommand> {
+                             float current_time) -> std::vector<AICommand> {
   std::vector<AICommand> filtered;
   filtered.reserve(commands.size());
 
@@ -44,7 +44,7 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
       }
 
       if (!is_duplicate(unit_id, cmd.type, target_id, move_x, move_y, move_z,
-                        currentTime)) {
+                        current_time)) {
         valid_units.push_back(unit_id);
       } else {
         blocked_count++;
@@ -86,15 +86,15 @@ auto AICommandFilter::filter(const std::vector<AICommand> &commands,
 
       filtered.push_back(std::move(filtered_cmd));
 
-      record_command(filtered.back(), currentTime);
+      record_command(filtered.back(), current_time);
     }
   }
 
   return filtered;
 }
 
-void AICommandFilter::update(float currentTime) {
-  cleanup_history(currentTime);
+void AICommandFilter::update(float current_time) {
+  cleanup_history(current_time);
 }
 
 void AICommandFilter::reset() { m_history.clear(); }
@@ -103,22 +103,22 @@ auto AICommandFilter::is_duplicate(Engine::Core::EntityID unit_id,
                                    AICommandType type,
                                    Engine::Core::EntityID target_id,
                                    float move_x, float move_y, float move_z,
-                                   float currentTime) const -> bool {
+                                   float current_time) const -> bool {
   for (const auto &entry : m_history) {
     if (entry.is_similar_to(type, unit_id, target_id, move_x, move_y, move_z,
-                            currentTime, m_cooldown_period)) {
+                            current_time, m_cooldown_period)) {
       return true;
     }
   }
   return false;
 }
 
-void AICommandFilter::record_command(const AICommand &cmd, float currentTime) {
+void AICommandFilter::record_command(const AICommand &cmd, float current_time) {
   for (size_t i = 0; i < cmd.units.size(); ++i) {
     CommandHistory entry{};
     entry.unit_id = cmd.units[i];
     entry.type = cmd.type;
-    entry.issued_time = currentTime;
+    entry.issued_time = current_time;
 
     if (cmd.type == AICommandType::AttackTarget) {
       entry.target_id = cmd.target_id;
@@ -144,34 +144,34 @@ void AICommandFilter::record_command(const AICommand &cmd, float currentTime) {
   }
 }
 
-void AICommandFilter::cleanup_history(float currentTime) {
+void AICommandFilter::cleanup_history(float current_time) {
 
   m_history.erase(std::remove_if(m_history.begin(), m_history.end(),
                                  [&](const CommandHistory &entry) {
-                                   return (currentTime - entry.issued_time) >
+                                   return (current_time - entry.issued_time) >
                                           m_cooldown_period;
                                  }),
                   m_history.end());
 }
 
 auto AICommandFilter::CommandHistory::is_similar_to(
-    const AICommandType &cmdType, Engine::Core::EntityID unit,
-    Engine::Core::EntityID target, float x, float y, float z, float currentTime,
+    const AICommandType &cmd_type, Engine::Core::EntityID unit,
+    Engine::Core::EntityID target, float x, float y, float z, float current_time,
     float cooldown) const -> bool {
 
   if (unit_id != unit) {
     return false;
   }
 
-  if (type != cmdType) {
+  if (type != cmd_type) {
     return false;
   }
 
-  if ((currentTime - issued_time) > cooldown) {
+  if ((current_time - issued_time) > cooldown) {
     return false;
   }
 
-  switch (cmdType) {
+  switch (cmd_type) {
   case AICommandType::AttackTarget:
 
     return (target_id == target);

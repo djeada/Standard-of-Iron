@@ -170,8 +170,8 @@ void GlobalStatsRegistry::rebuild_from_world(Engine::Core::World &world) {
 
   m_player_stats.clear();
 
-  for (auto &[owner_id, startTime] : start_times) {
-    m_player_stats[owner_id].game_start_time = startTime;
+  for (auto &[owner_id, start_time] : start_times) {
+    m_player_stats[owner_id].game_start_time = start_time;
     m_player_stats[owner_id].troops_recruited =
         troops_recruited_values[owner_id];
     m_player_stats[owner_id].enemies_killed = enemies_killed_values[owner_id];

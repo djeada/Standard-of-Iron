@@ -18,7 +18,7 @@ namespace Game::Systems::AI {
 
 void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
                              float delta_time,
-                             std::vector<AICommand> &outCommands) {
+                             std::vector<AICommand> &out_commands) {
   m_defend_timer += delta_time;
 
   float const update_interval = context.barracks_under_threat ? 0.5F : 1.5F;
@@ -156,7 +156,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           attack.units = std::move(claimed_units);
           attack.target_id = target_info.target_id;
           attack.should_chase = true;
-          outCommands.push_back(std::move(attack));
+          out_commands.push_back(std::move(attack));
           return;
         }
       }
@@ -214,7 +214,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
           move.move_target_x = std::move(filtered_x);
           move.move_target_y = std::move(filtered_y);
           move.move_target_z = std::move(filtered_z);
-          outCommands.push_back(std::move(move));
+          out_commands.push_back(std::move(move));
           return;
         }
       }
@@ -302,7 +302,7 @@ void DefendBehavior::execute(const AISnapshot &snapshot, AIContext &context,
   command.move_target_x = std::move(filtered_x);
   command.move_target_y = std::move(filtered_y);
   command.move_target_z = std::move(filtered_z);
-  outCommands.push_back(std::move(command));
+  out_commands.push_back(std::move(command));
 }
 
 auto DefendBehavior::should_execute(const AISnapshot &snapshot,

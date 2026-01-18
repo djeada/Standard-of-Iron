@@ -10,42 +10,43 @@
 namespace Game::Systems::AI {
 
 inline void replicate_last_target_if_needed(
-    const std::vector<float> &fromX, const std::vector<float> &fromY,
-    const std::vector<float> &fromZ, size_t wanted, std::vector<float> &outX,
-    std::vector<float> &outY, std::vector<float> &outZ) {
+    const std::vector<float> &from_x, const std::vector<float> &from_y,
+    const std::vector<float> &from_z, size_t wanted, std::vector<float> &out_x,
+    std::vector<float> &out_y, std::vector<float> &out_z) {
 
-  outX.clear();
-  outY.clear();
-  outZ.clear();
+  out_x.clear();
+  out_y.clear();
+  out_z.clear();
 
-  if (fromX.empty() || fromY.empty() || fromZ.empty()) {
+  if (from_x.empty() || from_y.empty() || from_z.empty()) {
     return;
   }
 
-  size_t const srcSize = std::min({fromX.size(), fromY.size(), fromZ.size()});
+  size_t const src_size =
+      std::min({from_x.size(), from_y.size(), from_z.size()});
 
-  outX.reserve(wanted);
-  outY.reserve(wanted);
-  outZ.reserve(wanted);
+  out_x.reserve(wanted);
+  out_y.reserve(wanted);
+  out_z.reserve(wanted);
 
   for (size_t i = 0; i < wanted; ++i) {
-    size_t const idx = std::min(i, srcSize - 1);
-    outX.push_back(fromX[idx]);
-    outY.push_back(fromY[idx]);
-    outZ.push_back(fromZ[idx]);
+    size_t const idx = std::min(i, src_size - 1);
+    out_x.push_back(from_x[idx]);
+    out_y.push_back(from_y[idx]);
+    out_z.push_back(from_z[idx]);
   }
 }
 
 inline auto
 is_entity_engaged(const EntitySnapshot &entity,
-                const std::vector<ContactSnapshot> &enemies) -> bool {
+                  const std::vector<ContactSnapshot> &enemies) -> bool {
 
   if (entity.max_health > 0 && entity.health < entity.max_health) {
     return true;
   }
 
   constexpr float ENGAGED_RADIUS = 7.5F;
-  const float engagedSq = ENGAGED_RADIUS * ENGAGED_RADIUS;
+  const float engaged_sq = ENGAGED_RADIUS * ENGAGED_RADIUS;
 
   for (const auto &enemy : enemies) {
     float const dx = enemy.pos_x - entity.pos_x;
@@ -53,7 +54,7 @@ is_entity_engaged(const EntitySnapshot &entity,
     float const dz = enemy.pos_z - entity.pos_z;
     float const dist_sq = dx * dx + dy * dy + dz * dz;
 
-    if (dist_sq <= engagedSq) {
+    if (dist_sq <= engaged_sq) {
       return true;
     }
   }
@@ -75,40 +76,40 @@ inline auto distance(float x1, float y1, float z1, float x2, float y2,
 }
 
 inline auto claim_units(
-    const std::vector<Engine::Core::EntityID> &requestedUnits,
-    BehaviorPriority priority, const std::string &taskName, AIContext &context,
-    float currentTime,
-    float minLockDuration = 2.0F) -> std::vector<Engine::Core::EntityID> {
+    const std::vector<Engine::Core::EntityID> &requested_units,
+    BehaviorPriority priority, const std::string &task_name, AIContext &context,
+    float current_time,
+    float min_lock_duration = 2.0F) -> std::vector<Engine::Core::EntityID> {
 
   std::vector<Engine::Core::EntityID> claimed;
-  claimed.reserve(requestedUnits.size());
+  claimed.reserve(requested_units.size());
 
-  for (Engine::Core::EntityID const unit_id : requestedUnits) {
+  for (Engine::Core::EntityID const unit_id : requested_units) {
     auto it = context.assigned_units.find(unit_id);
 
     if (it == context.assigned_units.end()) {
 
       AIContext::UnitAssignment assignment;
       assignment.owner_priority = priority;
-      assignment.assignment_time = currentTime;
-      assignment.assigned_task = taskName;
+      assignment.assignment_time = current_time;
+      assignment.assigned_task = task_name;
       context.assigned_units[unit_id] = assignment;
       claimed.push_back(unit_id);
 
     } else {
 
       const auto &existing = it->second;
-      float const assignmentAge = currentTime - existing.assignment_time;
+      float const assignment_age = current_time - existing.assignment_time;
 
-      bool const canSteal = (priority > existing.owner_priority) &&
-                            (assignmentAge > minLockDuration);
+      bool const can_steal = (priority > existing.owner_priority) &&
+                            (assignment_age > min_lock_duration);
 
-      if (canSteal) {
+      if (can_steal) {
 
         AIContext::UnitAssignment assignment;
         assignment.owner_priority = priority;
-        assignment.assignment_time = currentTime;
-        assignment.assigned_task = taskName;
+        assignment.assignment_time = current_time;
+        assignment.assigned_task = task_name;
         context.assigned_units[unit_id] = assignment;
         claimed.push_back(unit_id);
       }

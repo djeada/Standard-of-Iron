@@ -76,7 +76,7 @@ auto TacticalUtils::select_focus_fire_target(
     const std::vector<const EntitySnapshot *> &,
     const std::vector<const ContactSnapshot *> &enemies, float group_center_x,
     float group_center_y, float group_center_z, const AIContext &context,
-    Engine::Core::EntityID currentTarget) -> TacticalUtils::TargetScore {
+    Engine::Core::EntityID current_target) -> TacticalUtils::TargetScore {
 
   TargetScore best_target;
   best_target.score = -std::numeric_limits<float>::infinity();
@@ -113,7 +113,7 @@ auto TacticalUtils::select_focus_fire_target(
       score += 5.0F;
     }
 
-    if (currentTarget != 0 && enemy->id == currentTarget) {
+    if (current_target != 0 && enemy->id == current_target) {
       score += 10.0F;
     }
 
@@ -183,13 +183,13 @@ auto TacticalUtils::calculate_force_strength(
 
 auto TacticalUtils::is_target_isolated(
     const ContactSnapshot &target,
-    const std::vector<const ContactSnapshot *> &allEnemies,
+    const std::vector<const ContactSnapshot *> &all_enemies,
     float isolation_radius) -> bool {
 
   const float isolation_radius_sq = isolation_radius * isolation_radius;
   int nearby_allies = 0;
 
-  for (const auto *enemy : allEnemies) {
+  for (const auto *enemy : all_enemies) {
 
     if (enemy->id == target.id) {
       continue;
