@@ -12,25 +12,25 @@
 
 class CampaignMapView : public QQuickFramebufferObject {
   Q_OBJECT
-  Q_PROPERTY(
-      float orbitYaw READ orbitYaw WRITE setOrbitYaw NOTIFY orbitYawChanged)
-  Q_PROPERTY(float orbitPitch READ orbitPitch WRITE setOrbitPitch NOTIFY
-                 orbitPitchChanged)
-  Q_PROPERTY(float orbitDistance READ orbitDistance WRITE setOrbitDistance
-                 NOTIFY orbitDistanceChanged)
-  Q_PROPERTY(float panU READ panU WRITE setPanU NOTIFY panUChanged)
-  Q_PROPERTY(float panV READ panV WRITE setPanV NOTIFY panVChanged)
-  Q_PROPERTY(QString hoverProvinceId READ hoverProvinceId WRITE
-                 setHoverProvinceId NOTIFY hoverProvinceIdChanged)
-  Q_PROPERTY(QVariantList provinceLabels READ provinceLabels NOTIFY
-                 provinceLabelsChanged)
-  Q_PROPERTY(int currentMission READ currentMission WRITE setCurrentMission
-                 NOTIFY currentMissionChanged)
-  Q_PROPERTY(float minOrbitDistance READ minOrbitDistance CONSTANT)
-  Q_PROPERTY(float maxOrbitDistance READ maxOrbitDistance CONSTANT)
+  Q_PROPERTY(float orbit_yaw READ orbit_yaw WRITE set_orbit_yaw NOTIFY
+                 orbit_yaw_changed)
+  Q_PROPERTY(float orbit_pitch READ orbit_pitch WRITE set_orbit_pitch NOTIFY
+                 orbit_pitch_changed)
+  Q_PROPERTY(float orbit_distance READ orbit_distance WRITE set_orbit_distance
+                 NOTIFY orbit_distance_changed)
+  Q_PROPERTY(float pan_u READ pan_u WRITE set_pan_u NOTIFY pan_u_changed)
+  Q_PROPERTY(float pan_v READ pan_v WRITE set_pan_v NOTIFY pan_v_changed)
+  Q_PROPERTY(QString hover_province_id READ hover_province_id WRITE
+                 set_hover_province_id NOTIFY hover_province_id_changed)
+  Q_PROPERTY(QVariantList province_labels READ province_labels NOTIFY
+                 province_labels_changed)
+  Q_PROPERTY(int current_mission READ current_mission WRITE set_current_mission
+                 NOTIFY current_mission_changed)
+  Q_PROPERTY(float min_orbit_distance READ min_orbit_distance CONSTANT)
+  Q_PROPERTY(float max_orbit_distance READ max_orbit_distance CONSTANT)
 public:
-  static constexpr float kMinOrbitDistance = 0.3F;
-  static constexpr float kMaxOrbitDistance = 5.0F;
+  static constexpr float k_min_orbit_distance = 0.3F;
+  static constexpr float k_max_orbit_distance = 5.0F;
 
   struct ProvinceVisual {
     QString owner;
@@ -42,60 +42,64 @@ public:
 
   [[nodiscard]] auto createRenderer() const -> Renderer * override;
 
-  Q_INVOKABLE QString provinceAtScreen(float x, float y);
-  Q_INVOKABLE QVariantMap provinceInfoAtScreen(float x, float y);
-  Q_INVOKABLE QPointF screenPosForUv(float u, float v);
-  Q_INVOKABLE QVariantList provinceLabels();
-  Q_INVOKABLE void applyProvinceState(const QVariantList &states);
-  Q_INVOKABLE QPointF hannibalIconPosition();
+  Q_INVOKABLE QString province_at_screen(float x, float y);
+  Q_INVOKABLE QVariantMap province_info_at_screen(float x, float y);
+  Q_INVOKABLE QPointF screen_pos_for_uv(float u, float v);
+  Q_INVOKABLE QVariantList province_labels();
+  Q_INVOKABLE void apply_province_state(const QVariantList &states);
+  Q_INVOKABLE QPointF hannibal_icon_position();
 
-  [[nodiscard]] auto provinceStateVersion() const -> int {
+  [[nodiscard]] auto province_state_version() const -> int {
     return m_province_state_version;
   }
   [[nodiscard]] auto
-  provinceOverrides() const -> const QHash<QString, ProvinceVisual> & {
+  province_overrides() const -> const QHash<QString, ProvinceVisual> & {
     return m_province_overrides;
   }
 
-  [[nodiscard]] auto orbitYaw() const -> float { return m_orbit_yaw; }
-  void setOrbitYaw(float yaw);
+  [[nodiscard]] auto orbit_yaw() const -> float { return m_orbit_yaw; }
+  void set_orbit_yaw(float yaw);
 
-  [[nodiscard]] auto orbitPitch() const -> float { return m_orbit_pitch; }
-  void setOrbitPitch(float pitch);
+  [[nodiscard]] auto orbit_pitch() const -> float { return m_orbit_pitch; }
+  void set_orbit_pitch(float pitch);
 
-  [[nodiscard]] auto orbitDistance() const -> float { return m_orbit_distance; }
-  void setOrbitDistance(float distance);
-
-  [[nodiscard]] auto minOrbitDistance() const -> float {
-    return kMinOrbitDistance;
+  [[nodiscard]] auto orbit_distance() const -> float {
+    return m_orbit_distance;
   }
-  [[nodiscard]] auto maxOrbitDistance() const -> float {
-    return kMaxOrbitDistance;
+  void set_orbit_distance(float distance);
+
+  [[nodiscard]] auto min_orbit_distance() const -> float {
+    return k_min_orbit_distance;
+  }
+  [[nodiscard]] auto max_orbit_distance() const -> float {
+    return k_max_orbit_distance;
   }
 
-  [[nodiscard]] auto panU() const -> float { return m_pan_u; }
-  void setPanU(float pan);
+  [[nodiscard]] auto pan_u() const -> float { return m_pan_u; }
+  void set_pan_u(float pan);
 
-  [[nodiscard]] auto panV() const -> float { return m_pan_v; }
-  void setPanV(float pan);
+  [[nodiscard]] auto pan_v() const -> float { return m_pan_v; }
+  void set_pan_v(float pan);
 
-  [[nodiscard]] auto hoverProvinceId() const -> QString {
+  [[nodiscard]] auto hover_province_id() const -> QString {
     return m_hover_province_id;
   }
-  void setHoverProvinceId(const QString &province_id);
+  void set_hover_province_id(const QString &province_id);
 
-  [[nodiscard]] auto currentMission() const -> int { return m_current_mission; }
-  void setCurrentMission(int mission);
+  [[nodiscard]] auto current_mission() const -> int {
+    return m_current_mission;
+  }
+  void set_current_mission(int mission);
 
 signals:
-  void orbitYawChanged();
-  void orbitPitchChanged();
-  void orbitDistanceChanged();
-  void panUChanged();
-  void panVChanged();
-  void hoverProvinceIdChanged();
-  void provinceLabelsChanged();
-  void currentMissionChanged();
+  void orbit_yaw_changed();
+  void orbit_pitch_changed();
+  void orbit_distance_changed();
+  void pan_u_changed();
+  void pan_v_changed();
+  void hover_province_id_changed();
+  void province_labels_changed();
+  void current_mission_changed();
 
 private:
   float m_orbit_yaw = 180.0F;
