@@ -844,11 +844,15 @@ void GameEngine::update(float dt) {
       }
       auto *selection_system =
           m_world->get_system<Game::Systems::SelectionSystem>();
-      m_minimap_manager->update_units(m_world.get(), selection_system);
+      m_minimap_manager->update_units(m_world.get(), selection_system,
+                                      m_runtime.local_owner_id);
       m_minimap_manager->update_camera_viewport(
           m_camera.get(), static_cast<float>(m_viewport.width),
           static_cast<float>(m_viewport.height));
-      emit minimap_image_changed();
+      // Only emit if content actually changed
+      if (m_minimap_manager->consume_dirty_flag()) {
+        emit minimap_image_changed();
+      }
     }
   }
 

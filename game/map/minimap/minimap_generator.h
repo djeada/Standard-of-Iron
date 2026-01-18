@@ -39,6 +39,8 @@ private:
                                    float width, float height);
   static void draw_hill_symbol(QPainter &painter, float cx, float cy,
                                float width, float height);
+  static void draw_forest_symbol(QPainter &painter, float cx, float cy,
+                                 float width, float height);
   static void draw_river_segment(QPainter &painter, float x1, float y1,
                                  float x2, float y2, float width);
   static void draw_road_segment(QPainter &painter, float x1, float y1, float x2,

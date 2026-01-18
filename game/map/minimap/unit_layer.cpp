@@ -26,10 +26,11 @@ void UnitLayer::init(int width, int height, float world_width,
 auto UnitLayer::world_to_pixel(float world_x,
                                float world_z) const -> std::pair<float, float> {
 
-  const float rotated_x = world_x * Constants::k_camera_yaw_cos -
-                          world_z * Constants::k_camera_yaw_sin;
-  const float rotated_z = world_x * Constants::k_camera_yaw_sin +
-                          world_z * Constants::k_camera_yaw_cos;
+  const auto &orient = MinimapOrientation::instance();
+  const float rotated_x =
+      world_x * orient.cos_yaw() - world_z * orient.sin_yaw();
+  const float rotated_z =
+      world_x * orient.sin_yaw() + world_z * orient.cos_yaw();
 
   const float px = (rotated_x + m_offset_x) * m_scale_x;
   const float py = (rotated_z + m_offset_y) * m_scale_y;
@@ -38,6 +39,14 @@ auto UnitLayer::world_to_pixel(float world_x,
 }
 
 void UnitLayer::update(const std::vector<UnitMarker> &markers) {
+  // Call the full update with no visibility filter (all visible)
+  update(markers, 0, nullptr, nullptr);
+}
+
+void UnitLayer::update(const std::vector<UnitMarker> &markers,
+                       int local_owner_id,
+                       const VisibilityCheckFn &visibility_check,
+                       const PlayerColorFn &player_color_fn) {
   if (m_image.isNull()) {
     return;
   }
@@ -56,6 +65,14 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers) {
   std::vector<const UnitMarker *> selected;
 
   for (const auto &marker : markers) {
+    // Fog-of-war filtering: hide enemy units outside visible/revealed areas
+    if (visibility_check && marker.owner_id != local_owner_id &&
+        local_owner_id > 0) {
+      if (!visibility_check(marker.world_x, marker.world_z)) {
+        continue; // Skip units not visible to the local player
+      }
+    }
+
     if (marker.is_selected) {
       selected.push_back(&marker);
     } else if (marker.is_building) {
@@ -67,25 +84,47 @@ void UnitLayer::update(const std::vector<UnitMarker> &markers) {
 
   for (const auto *marker : buildings) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
-    const auto colors = TeamColors::get_color(marker->owner_id);
+    const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     draw_building_marker(painter, px, py, colors, false);
   }
 
   for (const auto *marker : units) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
-    const auto colors = TeamColors::get_color(marker->owner_id);
+    const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     draw_unit_marker(painter, px, py, colors, false);
   }
 
   for (const auto *marker : selected) {
     const auto [px, py] = world_to_pixel(marker->world_x, marker->world_z);
-    const auto colors = TeamColors::get_color(marker->owner_id);
+    const auto colors = get_color_for_owner(marker->owner_id, player_color_fn);
     if (marker->is_building) {
       draw_building_marker(painter, px, py, colors, true);
     } else {
       draw_unit_marker(painter, px, py, colors, true);
     }
   }
+}
+
+auto UnitLayer::get_color_for_owner(int owner_id,
+                                    const PlayerColorFn &player_color_fn)
+    -> TeamColors::ColorSet {
+  // Try to get color from registry if callback provided
+  if (player_color_fn) {
+    std::uint8_t r, g, b;
+    if (player_color_fn(owner_id, r, g, b)) {
+      // Create a color set with the registry color
+      // Use slightly darker version for border
+      return TeamColors::ColorSet{
+          r,
+          g,
+          b,
+          static_cast<std::uint8_t>(r / 2),
+          static_cast<std::uint8_t>(g / 2),
+          static_cast<std::uint8_t>(b / 2)};
+    }
+  }
+  // Fall back to default colors
+  return TeamColors::get_color(owner_id);
 }
 
 void UnitLayer::draw_unit_marker(QPainter &painter, float px, float py,
