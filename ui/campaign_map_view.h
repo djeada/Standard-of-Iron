@@ -102,9 +102,11 @@ signals:
   void current_mission_changed();
 
 private:
-  float m_orbit_yaw = 180.0F;
-  float m_orbit_pitch = 90.0F;
-  float m_orbit_distance = 1.2F;
+  // Cinematic camera defaults - showcases relief and depth
+  // Slight northwest tilt, more oblique pitch for terrain visibility
+  float m_orbit_yaw = 185.0F;
+  float m_orbit_pitch = 52.0F;
+  float m_orbit_distance = 1.35F;
   float m_pan_u = 0.0F;
   float m_pan_v = 0.0F;
   QString m_hover_province_id;
