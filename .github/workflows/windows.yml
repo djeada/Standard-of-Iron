@@ -127,12 +127,17 @@ jobs:
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
-        if: secrets.WINDOWS_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != ''
         shell: pwsh
         env:
           CERT_DATA: ${{ secrets.WINDOWS_CERTIFICATE }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
         run: |
+          # Skip if certificates are not configured
+          if ([string]::IsNullOrEmpty($env:CERT_DATA) -or [string]::IsNullOrEmpty($env:CERT_PASSWORD)) {
+            Write-Host "Code signing certificates not configured, skipping signing step"
+            exit 0
+          }
+          
           # Validate that the executable exists
           $exePath = "$env:APP_DIR\${{ env.APP_NAME }}.exe"
           if (!(Test-Path $exePath)) {
