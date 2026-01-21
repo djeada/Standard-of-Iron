@@ -332,7 +332,7 @@ auto SkirmishLoader::start(const QString &map_path,
       m_ground->configure_extent(50.0F);
     }
     if (terrain_service.is_initialized()) {
-      m_ground->setBiome(terrain_service.biome_settings());
+    m_ground->set_biome(terrain_service.biome_settings());
     }
   }
 

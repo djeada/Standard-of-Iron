@@ -20,7 +20,7 @@ inline auto saturate(const QVector3D &c) -> QVector3D {
 
 static auto clamp01(const QVector3D &c) -> QVector3D { return saturate(c); }
 
-void GroundRenderer::recomputeModel() {
+void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
   new_model.translate(0.0F, -0.5F, 0.0F);
 
@@ -34,7 +34,7 @@ void GroundRenderer::recomputeModel() {
 
   if (new_model != m_model) {
     m_model = new_model;
-    m_modelDirty = true;
+    m_model_dirty = true;
   }
 }
 
@@ -48,17 +48,17 @@ void GroundRenderer::update_noise_offset() {
   new_offset.setX(span_x * 0.37F + seed * 0.21F);
   new_offset.setY(span_z * 0.43F + seed * 0.17F);
 
-  m_noiseAngle = std::fmod(seed * 0.6180339887F, 1.0F) * 6.28318530718F;
+  m_noise_angle = std::fmod(seed * 0.6180339887F, 1.0F) * 6.28318530718F;
 
-  if (new_offset != m_noiseOffset) {
-    m_noiseOffset = new_offset;
-    invalidateParamsCache();
+  if (new_offset != m_noise_offset) {
+    m_noise_offset = new_offset;
+    invalidate_params_cache();
   }
 }
 
 auto GroundRenderer::build_params() const -> TerrainChunkParams {
-  if (m_cachedParamsValid) {
-    return m_cachedParams;
+  if (m_cached_params_valid) {
+    return m_cached_params;
   }
 
   TerrainChunkParams params;
@@ -93,8 +93,8 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   params.soil_blend_sharpness =
       std::clamp(m_biome_settings.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
 
-  params.noise_offset = m_noiseOffset;
-  params.noise_angle = m_noiseAngle;
+  params.noise_offset = m_noise_offset;
+  params.noise_angle = m_noise_angle;
 
   float target_amp;
   float target_freq;
@@ -141,8 +141,8 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
       std::clamp(m_biome_settings.soil_roughness, 0.0F, 1.0F);
   params.snow_color = saturate(m_biome_settings.snow_color);
 
-  m_cachedParams = params;
-  m_cachedParamsValid = true;
+  m_cached_params = params;
+  m_cached_params_valid = true;
   return params;
 }
 
@@ -153,23 +153,23 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  if (m_hasBiome) {
+  if (m_has_biome) {
     Mesh *plane = resources->ground();
     if (plane != nullptr) {
       const TerrainChunkParams params = build_params();
 
-      const bool model_changed =
-          m_modelDirty || (m_lastSubmittedModel != m_model);
-      const bool state_changed =
-          (m_lastSubmittedStateVersion != m_stateVersion);
+       const bool model_changed =
+           m_model_dirty || (m_last_submitted_model != m_model);
+       const bool state_changed =
+           (m_last_submitted_state_version != m_state_version);
       (void)model_changed;
       (void)state_changed;
 
       renderer.terrain_chunk(plane, m_model, params, 0x0040U, true, +0.0008F);
 
-      m_lastSubmittedModel = m_model;
-      m_modelDirty = false;
-      m_lastSubmittedStateVersion = m_stateVersion;
+       m_last_submitted_model = m_model;
+       m_model_dirty = false;
+       m_last_submitted_state_version = m_state_version;
       return;
     }
   }
@@ -187,16 +187,16 @@ void GroundRenderer::sync_biome_from_service() {
     return;
   }
   const auto &current = service.biome_settings();
-  if (!m_hasBiome || !biomeEquals(current, m_biome_settings)) {
+  if (!m_has_biome || !biome_equals(current, m_biome_settings)) {
     m_biome_settings = current;
-    m_hasBiome = true;
+    m_has_biome = true;
     update_noise_offset();
-    invalidateParamsCache();
+    invalidate_params_cache();
   }
 }
 
-auto GroundRenderer::biomeEquals(const Game::Map::BiomeSettings &a,
-                                 const Game::Map::BiomeSettings &b) -> bool {
+auto GroundRenderer::biome_equals(const Game::Map::BiomeSettings &a,
+                                  const Game::Map::BiomeSettings &b) -> bool {
   return a.ground_type == b.ground_type && a.grass_primary == b.grass_primary &&
          a.grass_secondary == b.grass_secondary && a.grass_dry == b.grass_dry &&
          a.soil_color == b.soil_color && a.rock_low == b.rock_low &&

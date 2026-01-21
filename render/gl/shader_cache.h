@@ -47,8 +47,8 @@ public:
     const QString resolved_frag =
         Utils::Resources::resolveResourcePath(frag_path);
     auto key = resolved_vert + "|" + resolved_frag;
-    auto it = m_byPath.find(key);
-    if (it != m_byPath.end()) {
+    auto it = m_by_path.find(key);
+    if (it != m_by_path.end()) {
       return it->second.get();
     }
     auto sh = std::make_unique<Shader>();
@@ -58,214 +58,217 @@ public:
       return nullptr;
     }
     Shader *raw = sh.get();
-    m_byPath.emplace(std::move(key), std::move(sh));
+    m_by_path.emplace(std::move(key), std::move(sh));
     return raw;
   }
 
   void initialize_defaults() {
-    static const QString kShaderBase = QStringLiteral(":/assets/shaders/");
+    static const QString shader_base = QStringLiteral(":/assets/shaders/");
     auto resolve = [](const QString &path) {
       return Utils::Resources::resolveResourcePath(path);
     };
 
-    const QString basicVert =
-        resolve(kShaderBase + QStringLiteral("basic.vert"));
-    const QString basicFrag =
-        resolve(kShaderBase + QStringLiteral("basic.frag"));
-    const QString gridFrag = resolve(kShaderBase + QStringLiteral("grid.frag"));
-    load(QStringLiteral("basic"), basicVert, basicFrag);
-    load(QStringLiteral("grid"), basicVert, gridFrag);
-    const QString cylVert =
-        resolve(kShaderBase + QStringLiteral("cylinder_instanced.vert"));
-    const QString cylFrag =
-        resolve(kShaderBase + QStringLiteral("cylinder_instanced.frag"));
-    load(QStringLiteral("cylinder_instanced"), cylVert, cylFrag);
+    const QString basic_vert =
+        resolve(shader_base + QStringLiteral("basic.vert"));
+    const QString basic_frag =
+        resolve(shader_base + QStringLiteral("basic.frag"));
+    const QString grid_frag = resolve(shader_base + QStringLiteral("grid.frag"));
+    load(QStringLiteral("basic"), basic_vert, basic_frag);
+    load(QStringLiteral("grid"), basic_vert, grid_frag);
+    const QString cyl_vert =
+        resolve(shader_base + QStringLiteral("cylinder_instanced.vert"));
+    const QString cyl_frag =
+        resolve(shader_base + QStringLiteral("cylinder_instanced.frag"));
+    load(QStringLiteral("cylinder_instanced"), cyl_vert, cyl_frag);
 
-    const QString primVert =
-        resolve(kShaderBase + QStringLiteral("primitive_instanced.vert"));
-    const QString primFrag =
-        resolve(kShaderBase + QStringLiteral("primitive_instanced.frag"));
-    load(QStringLiteral("primitive_instanced"), primVert, primFrag);
+    const QString prim_vert =
+        resolve(shader_base + QStringLiteral("primitive_instanced.vert"));
+    const QString prim_frag =
+        resolve(shader_base + QStringLiteral("primitive_instanced.frag"));
+    load(QStringLiteral("primitive_instanced"), prim_vert, prim_frag);
 
-    const QString fogVert =
-        resolve(kShaderBase + QStringLiteral("fog_instanced.vert"));
-    const QString fogFrag =
-        resolve(kShaderBase + QStringLiteral("fog_instanced.frag"));
-    load(QStringLiteral("fog_instanced"), fogVert, fogFrag);
-    const QString grassVert =
-        resolve(kShaderBase + QStringLiteral("grass_instanced.vert"));
-    const QString grassFrag =
-        resolve(kShaderBase + QStringLiteral("grass_instanced.frag"));
-    load(QStringLiteral("grass_instanced"), grassVert, grassFrag);
+    const QString fog_vert =
+        resolve(shader_base + QStringLiteral("fog_instanced.vert"));
+    const QString fog_frag =
+        resolve(shader_base + QStringLiteral("fog_instanced.frag"));
+    load(QStringLiteral("fog_instanced"), fog_vert, fog_frag);
+    const QString grass_vert =
+        resolve(shader_base + QStringLiteral("grass_instanced.vert"));
+    const QString grass_frag =
+        resolve(shader_base + QStringLiteral("grass_instanced.frag"));
+    load(QStringLiteral("grass_instanced"), grass_vert, grass_frag);
 
-    const QString stoneVert =
-        resolve(kShaderBase + QStringLiteral("stone_instanced.vert"));
-    const QString stoneFrag =
-        resolve(kShaderBase + QStringLiteral("stone_instanced.frag"));
-    load(QStringLiteral("stone_instanced"), stoneVert, stoneFrag);
+    const QString stone_vert =
+        resolve(shader_base + QStringLiteral("stone_instanced.vert"));
+    const QString stone_frag =
+        resolve(shader_base + QStringLiteral("stone_instanced.frag"));
+    load(QStringLiteral("stone_instanced"), stone_vert, stone_frag);
 
-    const QString plantVert =
-        resolve(kShaderBase + QStringLiteral("plant_instanced.vert"));
-    const QString plantFrag =
-        resolve(kShaderBase + QStringLiteral("plant_instanced.frag"));
-    load(QStringLiteral("plant_instanced"), plantVert, plantFrag);
+    const QString plant_vert =
+        resolve(shader_base + QStringLiteral("plant_instanced.vert"));
+    const QString plant_frag =
+        resolve(shader_base + QStringLiteral("plant_instanced.frag"));
+    load(QStringLiteral("plant_instanced"), plant_vert, plant_frag);
 
-    const QString pineVert =
-        resolve(kShaderBase + QStringLiteral("pine_instanced.vert"));
-    const QString pineFrag =
-        resolve(kShaderBase + QStringLiteral("pine_instanced.frag"));
-    load(QStringLiteral("pine_instanced"), pineVert, pineFrag);
-    const QString oliveVert =
-        resolve(kShaderBase + QStringLiteral("olive_instanced.vert"));
-    const QString oliveFrag =
-        resolve(kShaderBase + QStringLiteral("olive_instanced.frag"));
-    load(QStringLiteral("olive_instanced"), oliveVert, oliveFrag);
+    const QString pine_vert =
+        resolve(shader_base + QStringLiteral("pine_instanced.vert"));
+    const QString pine_frag =
+        resolve(shader_base + QStringLiteral("pine_instanced.frag"));
+    load(QStringLiteral("pine_instanced"), pine_vert, pine_frag);
+    const QString olive_vert =
+        resolve(shader_base + QStringLiteral("olive_instanced.vert"));
+    const QString olive_frag =
+        resolve(shader_base + QStringLiteral("olive_instanced.frag"));
+    load(QStringLiteral("olive_instanced"), olive_vert, olive_frag);
 
-    const QString firecampVert =
-        resolve(kShaderBase + QStringLiteral("firecamp.vert"));
-    const QString firecampFrag =
-        resolve(kShaderBase + QStringLiteral("firecamp.frag"));
-    load(QStringLiteral("firecamp"), firecampVert, firecampFrag);
+    const QString firecamp_vert =
+        resolve(shader_base + QStringLiteral("firecamp.vert"));
+    const QString firecamp_frag =
+        resolve(shader_base + QStringLiteral("firecamp.frag"));
+    load(QStringLiteral("firecamp"), firecamp_vert, firecamp_frag);
 
-    const QString groundVert =
-        resolve(kShaderBase + QStringLiteral("ground_plane.vert"));
-    const QString groundFrag =
-        resolve(kShaderBase + QStringLiteral("ground_plane.frag"));
-    load(QStringLiteral("ground_plane"), groundVert, groundFrag);
+    const QString ground_vert =
+        resolve(shader_base + QStringLiteral("ground_plane.vert"));
+    const QString ground_frag =
+        resolve(shader_base + QStringLiteral("ground_plane.frag"));
+    load(QStringLiteral("ground_plane"), ground_vert, ground_frag);
 
-    const QString terrainVert =
-        resolve(kShaderBase + QStringLiteral("terrain_chunk.vert"));
-    const QString terrainFrag =
-        resolve(kShaderBase + QStringLiteral("terrain_chunk.frag"));
-    load(QStringLiteral("terrain_chunk"), terrainVert, terrainFrag);
+    const QString terrain_vert =
+        resolve(shader_base + QStringLiteral("terrain_chunk.vert"));
+    const QString terrain_frag =
+        resolve(shader_base + QStringLiteral("terrain_chunk.frag"));
+    load(QStringLiteral("terrain_chunk"), terrain_vert, terrain_frag);
 
-    const QString riverVert =
-        resolve(kShaderBase + QStringLiteral("river.vert"));
-    const QString riverFrag =
-        resolve(kShaderBase + QStringLiteral("river.frag"));
-    load(QStringLiteral("river"), riverVert, riverFrag);
+    const QString river_vert =
+        resolve(shader_base + QStringLiteral("river.vert"));
+    const QString river_frag =
+        resolve(shader_base + QStringLiteral("river.frag"));
+    load(QStringLiteral("river"), river_vert, river_frag);
 
-    const QString riverbankVert =
-        resolve(kShaderBase + QStringLiteral("riverbank.vert"));
-    const QString riverbankFrag =
-        resolve(kShaderBase + QStringLiteral("riverbank.frag"));
-    load(QStringLiteral("riverbank"), riverbankVert, riverbankFrag);
+    const QString riverbank_vert =
+        resolve(shader_base + QStringLiteral("riverbank.vert"));
+    const QString riverbank_frag =
+        resolve(shader_base + QStringLiteral("riverbank.frag"));
+    load(QStringLiteral("riverbank"), riverbank_vert, riverbank_frag);
 
-    const QString roadVert = resolve(kShaderBase + QStringLiteral("road.vert"));
-    const QString roadFrag = resolve(kShaderBase + QStringLiteral("road.frag"));
-    load(QStringLiteral("road"), roadVert, roadFrag);
+    const QString road_vert =
+        resolve(shader_base + QStringLiteral("road.vert"));
+    const QString road_frag =
+        resolve(shader_base + QStringLiteral("road.frag"));
+    load(QStringLiteral("road"), road_vert, road_frag);
 
-    const QString bridgeVert =
-        resolve(kShaderBase + QStringLiteral("bridge.vert"));
-    const QString bridgeFrag =
-        resolve(kShaderBase + QStringLiteral("bridge.frag"));
-    load(QStringLiteral("bridge"), bridgeVert, bridgeFrag);
+    const QString bridge_vert =
+        resolve(shader_base + QStringLiteral("bridge.vert"));
+    const QString bridge_frag =
+        resolve(shader_base + QStringLiteral("bridge.frag"));
+    load(QStringLiteral("bridge"), bridge_vert, bridge_frag);
 
-    const QString troopShadowVert =
-        resolve(kShaderBase + QStringLiteral("troop_shadow.vert"));
-    const QString troopShadowFrag =
-        resolve(kShaderBase + QStringLiteral("troop_shadow.frag"));
-    load(QStringLiteral("troop_shadow"), troopShadowVert, troopShadowFrag);
+    const QString troop_shadow_vert =
+        resolve(shader_base + QStringLiteral("troop_shadow.vert"));
+    const QString troop_shadow_frag =
+        resolve(shader_base + QStringLiteral("troop_shadow.frag"));
+    load(QStringLiteral("troop_shadow"), troop_shadow_vert, troop_shadow_frag);
 
-    const QString bannerVert =
-        resolve(kShaderBase + QStringLiteral("banner.vert"));
-    const QString bannerFrag =
-        resolve(kShaderBase + QStringLiteral("banner.frag"));
-    load(QStringLiteral("banner"), bannerVert, bannerFrag);
+    const QString banner_vert =
+        resolve(shader_base + QStringLiteral("banner.vert"));
+    const QString banner_frag =
+        resolve(shader_base + QStringLiteral("banner.frag"));
+    load(QStringLiteral("banner"), banner_vert, banner_frag);
 
-    const QString healingBeamVert =
-        resolve(kShaderBase + QStringLiteral("healing_beam.vert"));
-    const QString healingBeamFrag =
-        resolve(kShaderBase + QStringLiteral("healing_beam.frag"));
-    load(QStringLiteral("healing_beam"), healingBeamVert, healingBeamFrag);
+    const QString healing_beam_vert =
+        resolve(shader_base + QStringLiteral("healing_beam.vert"));
+    const QString healing_beam_frag =
+        resolve(shader_base + QStringLiteral("healing_beam.frag"));
+    load(QStringLiteral("healing_beam"), healing_beam_vert, healing_beam_frag);
 
-    const QString healingAuraVert =
-        resolve(kShaderBase + QStringLiteral("healing_aura.vert"));
-    const QString healingAuraFrag =
-        resolve(kShaderBase + QStringLiteral("healing_aura.frag"));
-    load(QStringLiteral("healing_aura"), healingAuraVert, healingAuraFrag);
+    const QString healing_aura_vert =
+        resolve(shader_base + QStringLiteral("healing_aura.vert"));
+    const QString healing_aura_frag =
+        resolve(shader_base + QStringLiteral("healing_aura.frag"));
+    load(QStringLiteral("healing_aura"), healing_aura_vert, healing_aura_frag);
 
     load(QStringLiteral("combat_dust"),
-         resolve(kShaderBase + QStringLiteral("combat_dust.vert")),
-         resolve(kShaderBase + QStringLiteral("combat_dust.frag")));
+         resolve(shader_base + QStringLiteral("combat_dust.vert")),
+         resolve(shader_base + QStringLiteral("combat_dust.frag")));
 
     load(QStringLiteral("mode_indicator"),
-         resolve(kShaderBase + QStringLiteral("mode_indicator.vert")),
-         resolve(kShaderBase + QStringLiteral("mode_indicator.frag")));
+         resolve(shader_base + QStringLiteral("mode_indicator.vert")),
+         resolve(shader_base + QStringLiteral("mode_indicator.frag")));
 
-    const auto loadBaseShader = [&](const QString &name) {
+    const auto load_base_shader = [&](const QString &name) {
       const QString vert =
-          resolve(kShaderBase + name + QStringLiteral(".vert"));
+          resolve(shader_base + name + QStringLiteral(".vert"));
       const QString frag =
-          resolve(kShaderBase + name + QStringLiteral(".frag"));
+          resolve(shader_base + name + QStringLiteral(".frag"));
       load(name, vert, frag);
       return std::pair<QString, QString>{vert, frag};
     };
 
-    const auto [archerVert, archerFrag] =
-        loadBaseShader(QStringLiteral("archer"));
-    const auto [swordsmanVert, swordsmanFrag] =
-        loadBaseShader(QStringLiteral("swordsman"));
-    const auto [horseKnightVert, horseKnightFrag] =
-        loadBaseShader(QStringLiteral("horse_swordsman"));
-    const auto [spearmanVert, spearmanFrag] =
-        loadBaseShader(QStringLiteral("spearman"));
-    const auto [healerVert, healerFrag] =
-        loadBaseShader(QStringLiteral("healer"));
+    const auto [archer_vert, archer_frag] =
+        load_base_shader(QStringLiteral("archer"));
+    const auto [swordsman_vert, swordsman_frag] =
+        load_base_shader(QStringLiteral("swordsman"));
+    const auto [horse_knight_vert, horse_knight_frag] =
+        load_base_shader(QStringLiteral("horse_swordsman"));
+    const auto [spearman_vert, spearman_frag] =
+        load_base_shader(QStringLiteral("spearman"));
+    const auto [healer_vert, healer_frag] =
+        load_base_shader(QStringLiteral("healer"));
 
-    const QStringList nationVariants = {QStringLiteral("roman_republic"),
-                                        QStringLiteral("carthage")};
+    const QStringList nation_variants = {QStringLiteral("roman_republic"),
+                                         QStringLiteral("carthage")};
 
-    auto resourceExists = [](const QString &path) -> bool {
+    auto resource_exists = [](const QString &path) -> bool {
       QFileInfo const info(path);
       return info.exists();
     };
 
-    auto loadVariant = [&](const QString &base_key, const QString &baseVertPath,
-                           const QString &baseFragPath) {
-      for (const QString &nation : nationVariants) {
-        const QString shaderName = base_key + QStringLiteral("_") + nation;
-        const QString variantVertRes = kShaderBase + base_key +
-                                       QStringLiteral("_") + nation +
-                                       QStringLiteral(".vert");
-        const QString variantFragRes = kShaderBase + base_key +
-                                       QStringLiteral("_") + nation +
-                                       QStringLiteral(".frag");
+    auto load_variant = [&](const QString &base_key,
+                            const QString &base_vert_path,
+                            const QString &base_frag_path) {
+      for (const QString &nation : nation_variants) {
+        const QString shader_name = base_key + QStringLiteral("_") + nation;
+        const QString variant_vert_res = shader_base + base_key +
+                                         QStringLiteral("_") + nation +
+                                         QStringLiteral(".vert");
+        const QString variant_frag_res = shader_base + base_key +
+                                         QStringLiteral("_") + nation +
+                                         QStringLiteral(".frag");
 
-        QString resolvedVert = resolve(variantVertRes);
-        if (!resourceExists(resolvedVert)) {
-          resolvedVert = baseVertPath;
+        QString resolved_vert = resolve(variant_vert_res);
+        if (!resource_exists(resolved_vert)) {
+          resolved_vert = base_vert_path;
         }
 
-        QString resolvedFrag = resolve(variantFragRes);
-        if (!resourceExists(resolvedFrag)) {
-          resolvedFrag = baseFragPath;
+        QString resolved_frag = resolve(variant_frag_res);
+        if (!resource_exists(resolved_frag)) {
+          resolved_frag = base_frag_path;
         }
 
-        load(shaderName, resolvedVert, resolvedFrag);
+        load(shader_name, resolved_vert, resolved_frag);
       }
     };
 
-    loadVariant(QStringLiteral("archer"), archerVert, archerFrag);
-    loadVariant(QStringLiteral("spearman"), spearmanVert, spearmanFrag);
-    loadVariant(QStringLiteral("swordsman"), swordsmanVert, swordsmanFrag);
-    loadVariant(QStringLiteral("horse_swordsman"), horseKnightVert,
-                horseKnightFrag);
-    loadVariant(QStringLiteral("healer"), healerVert, healerFrag);
-    loadVariant(QStringLiteral("horse_archer"), horseKnightVert,
-                horseKnightFrag);
-    loadVariant(QStringLiteral("horse_spearman"), horseKnightVert,
-                horseKnightFrag);
+    load_variant(QStringLiteral("archer"), archer_vert, archer_frag);
+    load_variant(QStringLiteral("spearman"), spearman_vert, spearman_frag);
+    load_variant(QStringLiteral("swordsman"), swordsman_vert, swordsman_frag);
+    load_variant(QStringLiteral("horse_swordsman"), horse_knight_vert,
+                 horse_knight_frag);
+    load_variant(QStringLiteral("healer"), healer_vert, healer_frag);
+    load_variant(QStringLiteral("horse_archer"), horse_knight_vert,
+                 horse_knight_frag);
+    load_variant(QStringLiteral("horse_spearman"), horse_knight_vert,
+                 horse_knight_frag);
   }
 
   void clear() {
     m_named.clear();
-    m_byPath.clear();
+    m_by_path.clear();
     m_cache.clear();
   }
 
 private:
-  std::unordered_map<QString, std::unique_ptr<Shader>> m_byPath;
+  std::unordered_map<QString, std::unique_ptr<Shader>> m_by_path;
 
   std::unordered_map<QString, std::unique_ptr<Shader>> m_named;
 

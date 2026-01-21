@@ -384,7 +384,7 @@ The Shader class in [shader.h](../render/gl/shader.h) wraps GLSL programs and ca
 ```cpp
 class Shader : protected QOpenGLFunctions_3_3_Core {
   GLuint m_program = 0;
-  std::unordered_map<std::string, UniformHandle> m_uniformCache;
+  std::unordered_map<std::string, UniformHandle> m_uniform_cache;
   
   // Cached lookup - fast path after first access
   auto uniform_handle(const char *name) -> UniformHandle;

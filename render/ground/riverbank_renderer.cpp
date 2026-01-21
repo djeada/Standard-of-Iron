@@ -24,25 +24,25 @@ RiverbankRenderer::RiverbankRenderer() = default;
 RiverbankRenderer::~RiverbankRenderer() = default;
 
 void RiverbankRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &riverSegments,
+    const std::vector<Game::Map::RiverSegment> &river_segments,
     const Game::Map::TerrainHeightMap &height_map) {
-  m_riverSegments = riverSegments;
+  m_river_segments = river_segments;
   m_tile_size = height_map.getTileSize();
   m_grid_width = height_map.getWidth();
   m_grid_height = height_map.getHeight();
   m_heights = height_map.getHeightData();
-  m_visibilityTexture.reset();
-  m_cachedVisibilityVersion = 0;
-  m_visibilityWidth = 0;
-  m_visibilityHeight = 0;
+  m_visibility_texture.reset();
+  m_cached_visibility_version = 0;
+  m_visibility_width = 0;
+  m_visibility_height = 0;
   build_meshes();
 }
 
 void RiverbankRenderer::build_meshes() {
   m_meshes.clear();
-  m_visibilitySamples.clear();
+  m_visibility_samples.clear();
 
-  if (m_riverSegments.empty()) {
+  if (m_river_segments.empty()) {
     return;
   }
 
@@ -95,12 +95,12 @@ void RiverbankRenderer::build_meshes() {
     return h0 * (1.0F - tz) + h1 * tz;
   };
 
-  for (const auto &segment : m_riverSegments) {
+  for (const auto &segment : m_river_segments) {
     QVector3D dir = segment.end - segment.start;
     float const length = dir.length();
     if (length < 0.01F) {
       m_meshes.push_back(nullptr);
-      m_visibilitySamples.emplace_back();
+      m_visibility_samples.emplace_back();
       continue;
     }
 
@@ -428,16 +428,16 @@ void RiverbankRenderer::build_meshes() {
 
     if (!vertices.empty() && !indices.empty()) {
       m_meshes.push_back(std::make_unique<Mesh>(vertices, indices));
-      m_visibilitySamples.push_back(std::move(samples));
+      m_visibility_samples.push_back(std::move(samples));
     } else {
       m_meshes.push_back(nullptr);
-      m_visibilitySamples.emplace_back();
+      m_visibility_samples.emplace_back();
     }
   }
 }
 
 void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (m_meshes.empty() || m_riverSegments.empty()) {
+  if (m_meshes.empty() || m_river_segments.empty()) {
     return;
   }
 
@@ -462,21 +462,21 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     const int vis_h = visibility.getHeight();
     const std::uint64_t version = visibility.version();
     bool const size_changed =
-        (vis_w != m_visibilityWidth) || (vis_h != m_visibilityHeight);
+        (vis_w != m_visibility_width) || (vis_h != m_visibility_height);
 
-    if (!m_visibilityTexture || size_changed) {
-      m_visibilityTexture = std::make_unique<Texture>();
-      m_visibilityTexture->create_empty(vis_w, vis_h, Texture::Format::RGBA);
-      m_visibilityTexture->set_filter(Texture::Filter::Nearest,
-                                      Texture::Filter::Nearest);
-      m_visibilityTexture->set_wrap(Texture::Wrap::ClampToEdge,
-                                    Texture::Wrap::ClampToEdge);
-      m_visibilityWidth = vis_w;
-      m_visibilityHeight = vis_h;
-      m_cachedVisibilityVersion = 0;
+    if (!m_visibility_texture || size_changed) {
+      m_visibility_texture = std::make_unique<Texture>();
+      m_visibility_texture->create_empty(vis_w, vis_h, Texture::Format::RGBA);
+      m_visibility_texture->set_filter(Texture::Filter::Nearest,
+                                       Texture::Filter::Nearest);
+      m_visibility_texture->set_wrap(Texture::Wrap::ClampToEdge,
+                                     Texture::Wrap::ClampToEdge);
+      m_visibility_width = vis_w;
+      m_visibility_height = vis_h;
+      m_cached_visibility_version = 0;
     }
 
-    if (version != m_cachedVisibilityVersion || size_changed) {
+    if (version != m_cached_visibility_version || size_changed) {
       auto cells = visibility.snapshotCells();
       std::vector<unsigned char> texels(
           static_cast<std::size_t>(vis_w * vis_h * 4), 0U);
@@ -502,13 +502,13 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         }
       }
 
-      m_visibilityTexture->bind();
+      m_visibility_texture->bind();
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vis_w, vis_h, GL_RGBA,
                       GL_UNSIGNED_BYTE, texels.data());
-      visibility_tex = m_visibilityTexture.get();
-      m_cachedVisibilityVersion = version;
+      visibility_tex = m_visibility_texture.get();
+      m_cached_visibility_version = version;
     } else {
-      visibility_tex = m_visibilityTexture.get();
+      visibility_tex = m_visibility_texture.get();
     }
 
     visibility_size =
@@ -518,14 +518,14 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   if (backend != nullptr) {
     backend->set_riverbank_visibility(
         use_visibility && visibility_tex != nullptr, visibility_tex,
-        visibility_size, m_tile_size, m_exploredDimFactor);
+        visibility_size, m_tile_size, m_explored_dim_factor);
   }
 
   QMatrix4x4 model;
   model.setToIdentity();
 
   size_t mesh_index = 0;
-  for (const auto &segment : m_riverSegments) {
+  for (const auto &segment : m_river_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }
@@ -542,7 +542,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       enum class SegmentState { Hidden, Explored, Visible };
       SegmentState state = SegmentState::Hidden;
 
-      const auto &samples = m_visibilitySamples[mesh_index - 1];
+      const auto &samples = m_visibility_samples[mesh_index - 1];
       if (samples.empty()) {
         state = SegmentState::Visible;
       }
@@ -562,7 +562,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       }
 
       segment_visibility =
-          (state == SegmentState::Visible) ? 1.0F : m_exploredDimFactor;
+          (state == SegmentState::Visible) ? 1.0F : m_explored_dim_factor;
     }
 
     renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr,
