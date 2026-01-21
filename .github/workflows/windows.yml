@@ -127,7 +127,7 @@ jobs:
 
       # Code signing (optional: signs .exe with Authenticode)
       - name: Sign executable
-        if: ${{ secrets.WINDOWS_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != '' }}
+        if: secrets.WINDOWS_CERTIFICATE != '' && secrets.WINDOWS_CERTIFICATE_PASSWORD != ''
         shell: pwsh
         env:
           CERT_DATA: ${{ secrets.WINDOWS_CERTIFICATE }}
