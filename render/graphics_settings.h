@@ -60,7 +60,7 @@ public:
     return m_quality;
   }
 
-  void setQuality(GraphicsQuality q) noexcept {
+  void set_quality(GraphicsQuality q) noexcept {
     m_quality = q;
     apply_preset(q);
   }
@@ -156,7 +156,7 @@ public:
   }
 
 private:
-  GraphicsSettings() { setQuality(GraphicsQuality::Ultra); }
+  GraphicsSettings() { set_quality(GraphicsQuality::Ultra); }
 
   void apply_preset(GraphicsQuality q) noexcept {
     switch (q) {

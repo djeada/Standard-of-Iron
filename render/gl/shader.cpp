@@ -28,28 +28,28 @@ Shader::~Shader() {
   }
 }
 
-auto Shader::load_from_files(const QString &vertexPath,
-                             const QString &fragmentPath) -> bool {
+auto Shader::load_from_files(const QString &vertex_path,
+                             const QString &fragment_path) -> bool {
   const QString resolved_vert =
-      Utils::Resources::resolveResourcePath(vertexPath);
+      Utils::Resources::resolveResourcePath(vertex_path);
   const QString resolved_frag =
-      Utils::Resources::resolveResourcePath(fragmentPath);
+      Utils::Resources::resolveResourcePath(fragment_path);
 
   QFile vertex_file(resolved_vert);
   QFile fragment_file(resolved_frag);
 
   if (!vertex_file.open(QIODevice::ReadOnly)) {
     qWarning() << "Failed to open vertex shader file:" << resolved_vert;
-    if (resolved_vert != vertexPath) {
-      qWarning() << "  Requested path:" << vertexPath;
+    if (resolved_vert != vertex_path) {
+      qWarning() << "  Requested path:" << vertex_path;
     }
     return false;
   }
 
   if (!fragment_file.open(QIODevice::ReadOnly)) {
     qWarning() << "Failed to open fragment shader file:" << resolved_frag;
-    if (resolved_frag != fragmentPath) {
-      qWarning() << "  Requested path:" << fragmentPath;
+    if (resolved_frag != fragment_path) {
+      qWarning() << "  Requested path:" << fragment_path;
     }
     vertex_file.close();
     return false;
@@ -67,7 +67,7 @@ auto Shader::load_from_files(const QString &vertexPath,
 auto Shader::load_from_source(const QString &vertex_source,
                               const QString &fragment_source) -> bool {
   initializeOpenGLFunctions();
-  m_uniformCache.clear();
+  m_uniform_cache.clear();
   GLuint const vertex_shader = compile_shader(vertex_source, GL_VERTEX_SHADER);
   GLuint const fragment_shader =
       compile_shader(fragment_source, GL_FRAGMENT_SHADER);
@@ -122,12 +122,12 @@ auto uniform_handle_impl(
 } // namespace
 
 auto Shader::uniform_handle(const char *name) -> Shader::UniformHandle {
-  return uniform_handle_impl(*this, m_program, m_uniformCache, name, true);
+  return uniform_handle_impl(*this, m_program, m_uniform_cache, name, true);
 }
 
 auto Shader::optional_uniform_handle(const char *name)
     -> Shader::UniformHandle {
-  return uniform_handle_impl(*this, m_program, m_uniformCache, name, false);
+  return uniform_handle_impl(*this, m_program, m_uniform_cache, name, false);
 }
 
 void Shader::set_uniform(UniformHandle handle, float value) {

@@ -18,7 +18,7 @@ void GraphicsSettingsProxy::set_quality_level(int level) {
 
   auto newQuality = static_cast<Render::GraphicsQuality>(level);
   if (newQuality != Render::GraphicsSettings::instance().quality()) {
-    Render::GraphicsSettings::instance().setQuality(newQuality);
+    Render::GraphicsSettings::instance().set_quality(newQuality);
     emit quality_level_changed();
   }
 }

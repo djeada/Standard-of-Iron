@@ -85,11 +85,11 @@ void TerrainRenderer::configure(
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
 
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
-  m_hillEntrances = height_map.getHillEntrances();
+  m_hill_entrances = height_map.getHillEntrances();
   m_biome_settings = biome_settings;
-  m_noiseSeed = biome_settings.seed;
+  m_noise_seed = biome_settings.seed;
   build_meshes();
 }
 
@@ -110,8 +110,8 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     if (use_visibility) {
       bool any_visible = false;
-      for (int gz = chunk.minZ; gz <= chunk.maxZ && !any_visible; ++gz) {
-        for (int gx = chunk.minX; gx <= chunk.maxX; ++gx) {
+      for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
+        for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
           if (visibility.stateAt(gx, gz) ==
               Game::Map::VisibilityState::Visible) {
             any_visible = true;
@@ -148,14 +148,14 @@ void TerrainRenderer::build_meshes() {
 
   m_chunks.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
   }
 
-  std::vector<float> height_data = m_heightData;
+  std::vector<float> height_data = m_height_data;
   std::vector<float> entry_weight;
-  if (!m_hillEntrances.empty() &&
-      m_hillEntrances.size() == height_data.size()) {
+  if (!m_hill_entrances.empty() &&
+       m_hill_entrances.size() == height_data.size()) {
     constexpr int k_entry_radius = 4;
     entry_weight.assign(height_data.size(), 0.0F);
     for (int z = 0; z < m_height; ++z) {
@@ -176,7 +176,7 @@ void TerrainRenderer::build_meshes() {
               continue;
             }
             int const n_idx = nz * m_width + nx;
-            if (!m_hillEntrances[n_idx]) {
+            if (!m_hill_entrances[n_idx]) {
               continue;
             }
             float const dist = std::sqrt(float(dx * dx + dz * dz));
@@ -387,7 +387,7 @@ void TerrainRenderer::build_meshes() {
 
       SectionData sections[3];
 
-      uint32_t const chunk_seed = hash_coords(chunk_x, chunk_z, m_noiseSeed);
+      uint32_t const chunk_seed = hash_coords(chunk_x, chunk_z, m_noise_seed);
       uint32_t const variant_seed = chunk_seed ^ k_golden_ratio;
       constexpr int k_rotation_shift = 5;
       constexpr int k_rotation_mask = 3;
@@ -661,19 +661,19 @@ void TerrainRenderer::build_meshes() {
 
         ChunkMesh chunk;
         chunk.mesh = std::move(mesh);
-        chunk.minX = chunk_x;
-        chunk.maxX = chunk_max_x - 1;
-        chunk.minZ = chunk_z;
-        chunk.maxZ = chunk_max_z - 1;
+        chunk.min_x = chunk_x;
+        chunk.max_x = chunk_max_x - 1;
+        chunk.min_z = chunk_z;
+        chunk.max_z = chunk_max_z - 1;
         chunk.type = (i == 0)   ? Game::Map::TerrainType::Flat
                      : (i == 1) ? Game::Map::TerrainType::Hill
                                 : Game::Map::TerrainType::Mountain;
-        chunk.averageHeight =
+        chunk.average_height =
             (section.heightCount > 0)
                 ? section.heightSum / float(section.heightCount)
                 : 0.0F;
 
-        const float nh_chunk = (chunk.averageHeight - min_h) / height_range;
+        const float nh_chunk = (chunk.average_height - min_h) / height_range;
         const float avg_slope =
             (section.statCount > 0)
                 ? (section.slopeSum / float(section.statCount))
@@ -683,8 +683,8 @@ void TerrainRenderer::build_meshes() {
                 ? (section.heightVarSum / float(section.statCount))
                 : 0.0F;
 
-        const float center_gx = 0.5F * (chunk.minX + chunk.maxX);
-        const float center_gz = 0.5F * (chunk.minZ + chunk.maxZ);
+        const float center_gx = 0.5F * (chunk.min_x + chunk.max_x);
+        const float center_gz = 0.5F * (chunk.min_z + chunk.max_z);
         auto hgrid = [&](int gx, int gz) {
           gx = std::clamp(gx, 0, m_width - 1);
           gz = std::clamp(gz, 0, m_height - 1);
@@ -707,7 +707,7 @@ void TerrainRenderer::build_meshes() {
         const float plateau_factor = plateau_flat * plateau_height;
 
         QVector3D const base_color =
-            getTerrainColor(chunk.type, chunk.averageHeight);
+            get_terrain_color(chunk.type, chunk.average_height);
         QVector3D const rock_tint = m_biome_settings.rock_low;
 
         float slope_mix = std::clamp(
@@ -725,7 +725,7 @@ void TerrainRenderer::build_meshes() {
         float const center_wx = (center_gx - half_width) * m_tile_size;
         float const center_wz = (center_gz - half_height) * m_tile_size;
         float const macro = value_noise(center_wx * 0.02F, center_wz * 0.02F,
-                                        m_noiseSeed ^ 0x51C3U);
+                                         m_noise_seed ^ 0x51C3U);
         float const macro_shade = 0.9F + 0.2F * macro;
 
         float const ao_avg = (section.aoCount > 0)
@@ -816,9 +816,9 @@ void TerrainRenderer::build_meshes() {
                                      : 0.95F));
 
         const uint32_t noise_key_a =
-            hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0xB5297A4DU);
+             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0xB5297A4DU);
         const uint32_t noise_key_b =
-            hash_coords(chunk.minX, chunk.minZ, m_noiseSeed ^ 0x68E31DA4U);
+             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0x68E31DA4U);
         constexpr float k_noise_offset_scale = 256.0F;
         params.noise_offset =
             QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
@@ -860,8 +860,8 @@ void TerrainRenderer::build_meshes() {
   }
 }
 
-auto TerrainRenderer::getTerrainColor(Game::Map::TerrainType type,
-                                      float height) const -> QVector3D {
+auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
+                                        float height) const -> QVector3D {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     if (height > 4.0F) {
