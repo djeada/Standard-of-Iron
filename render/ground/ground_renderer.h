@@ -22,39 +22,39 @@ public:
     m_tile_size = tile_size;
     m_width = width;
     m_height = height;
-    recomputeModel();
+    recompute_model();
     update_noise_offset();
 
-    invalidateParamsCache();
+    invalidate_params_cache();
   }
 
   void configure_extent(float extent) {
     m_extent = extent;
-    recomputeModel();
+    recompute_model();
     update_noise_offset();
 
-    invalidateParamsCache();
+    invalidate_params_cache();
   }
 
-  void setColor(const QVector3D &c) { m_color = c; }
+  void set_color(const QVector3D &c) { m_color = c; }
 
-  void setBiome(const Game::Map::BiomeSettings &settings) {
+  void set_biome(const Game::Map::BiomeSettings &settings) {
     m_biome_settings = settings;
-    m_hasBiome = true;
+    m_has_biome = true;
     update_noise_offset();
 
-    invalidateParamsCache();
+    invalidate_params_cache();
   }
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
-  void recomputeModel();
+  void recompute_model();
   void update_noise_offset();
   auto build_params() const -> Render::GL::TerrainChunkParams;
   void sync_biome_from_service();
-  static auto biomeEquals(const Game::Map::BiomeSettings &a,
-                          const Game::Map::BiomeSettings &b) -> bool;
+  static auto biome_equals(const Game::Map::BiomeSettings &a,
+                           const Game::Map::BiomeSettings &b) -> bool;
 
   float m_tile_size = 1.0F;
   int m_width = 50;
@@ -64,22 +64,22 @@ private:
   QVector3D m_color{0.15F, 0.18F, 0.15F};
   QMatrix4x4 m_model;
   Game::Map::BiomeSettings m_biome_settings;
-  bool m_hasBiome = false;
-  QVector2D m_noiseOffset{0.0F, 0.0F};
-  float m_noiseAngle = 0.0F;
+  bool m_has_biome = false;
+  QVector2D m_noise_offset{0.0F, 0.0F};
+  float m_noise_angle = 0.0F;
 
-  mutable Render::GL::TerrainChunkParams m_cachedParams{};
-  mutable bool m_cachedParamsValid = false;
+  mutable Render::GL::TerrainChunkParams m_cached_params{};
+  mutable bool m_cached_params_valid = false;
 
-  QMatrix4x4 m_lastSubmittedModel;
-  bool m_modelDirty = true;
+  QMatrix4x4 m_last_submitted_model;
+  bool m_model_dirty = true;
 
-  std::uint64_t m_stateVersion = 1;
-  std::uint64_t m_lastSubmittedStateVersion = 0;
+  std::uint64_t m_state_version = 1;
+  std::uint64_t m_last_submitted_state_version = 0;
 
-  void invalidateParamsCache() {
-    m_cachedParamsValid = false;
-    ++m_stateVersion;
+  void invalidate_params_cache() {
+    m_cached_params_valid = false;
+    ++m_state_version;
   }
 };
 

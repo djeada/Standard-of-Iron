@@ -17,10 +17,10 @@ public:
   Shader();
   ~Shader() override;
 
-  auto load_from_files(const QString &vertexPath,
-                       const QString &fragmentPath) -> bool;
+  auto load_from_files(const QString &vertex_path,
+                       const QString &fragment_path) -> bool;
   auto load_from_source(const QString &vertex_source,
-                        const QString &fragment_source) -> bool;
+                         const QString &fragment_source) -> bool;
 
   void use();
   void release();
@@ -54,7 +54,7 @@ private:
   auto compile_shader(const QString &source, GLenum type) -> GLuint;
   auto link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool;
 
-  std::unordered_map<std::string, UniformHandle> m_uniformCache;
+  std::unordered_map<std::string, UniformHandle> m_uniform_cache;
 };
 
 } // namespace Render::GL
