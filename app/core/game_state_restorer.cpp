@@ -199,7 +199,7 @@ void GameStateRestorer::restore_environment_from_metadata(
 
     if (renderers.ground) {
       renderers.ground->configure(tile_size, grid_width, grid_height);
-  renderers.ground->set_biome(terrain_service.biome_settings());
+      renderers.ground->set_biome(terrain_service.biome_settings());
     }
 
     if (height_map != nullptr) {

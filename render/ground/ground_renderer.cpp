@@ -158,18 +158,18 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     if (plane != nullptr) {
       const TerrainChunkParams params = build_params();
 
-       const bool model_changed =
-           m_model_dirty || (m_last_submitted_model != m_model);
-       const bool state_changed =
-           (m_last_submitted_state_version != m_state_version);
+      const bool model_changed =
+          m_model_dirty || (m_last_submitted_model != m_model);
+      const bool state_changed =
+          (m_last_submitted_state_version != m_state_version);
       (void)model_changed;
       (void)state_changed;
 
       renderer.terrain_chunk(plane, m_model, params, 0x0040U, true, +0.0008F);
 
-       m_last_submitted_model = m_model;
-       m_model_dirty = false;
-       m_last_submitted_state_version = m_state_version;
+      m_last_submitted_model = m_model;
+      m_model_dirty = false;
+      m_last_submitted_state_version = m_state_version;
       return;
     }
   }
