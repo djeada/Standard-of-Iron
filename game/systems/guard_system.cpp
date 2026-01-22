@@ -67,6 +67,7 @@ void GuardSystem::update(Engine::Core::World *world, float) {
                 std::abs(movement->goal_y - new_guard_z) < 0.5F;
 
             if (!already_moving_to_target) {
+              guard_mode->returning_to_guard_position = true;
 
               CommandService::MoveOptions opts;
               opts.clear_attack_intent = false;
@@ -76,7 +77,6 @@ void GuardSystem::update(Engine::Core::World *world, float) {
               std::vector<QVector3D> const targets = {
                   QVector3D(new_guard_x, 0.0F, new_guard_z)};
               CommandService::move_units(*world, ids, targets, opts);
-              guard_mode->returning_to_guard_position = true;
             }
           }
         }
@@ -93,6 +93,7 @@ void GuardSystem::update(Engine::Core::World *world, float) {
             Engine::Core::Defaults::kGuardReturnThreshold;
 
         if (dist_sq > k_return_threshold_sq) {
+          guard_mode->returning_to_guard_position = true;
 
           CommandService::MoveOptions opts;
           opts.clear_attack_intent = false;
@@ -102,7 +103,6 @@ void GuardSystem::update(Engine::Core::World *world, float) {
               QVector3D(guard_mode->guard_position_x, 0.0F,
                         guard_mode->guard_position_z)};
           CommandService::move_units(*world, ids, targets, opts);
-          guard_mode->returning_to_guard_position = true;
         }
       }
     }
