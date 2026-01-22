@@ -1459,9 +1459,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      auto *uniforms = m_characterPipeline
-                           ? m_characterPipeline->resolve_uniforms(active_shader)
-                           : nullptr;
+      auto *uniforms =
+          m_characterPipeline
+              ? m_characterPipeline->resolve_uniforms(active_shader)
+              : nullptr;
       if (uniforms == nullptr) {
         break;
       }
