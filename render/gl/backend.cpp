@@ -1459,9 +1459,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      auto *uniforms = m_characterPipeline
-                           ? m_characterPipeline->resolveUniforms(active_shader)
-                           : nullptr;
+      auto *uniforms =
+          m_characterPipeline
+              ? m_characterPipeline->resolve_uniforms(active_shader)
+              : nullptr;
       if (uniforms == nullptr) {
         break;
       }
@@ -1484,10 +1485,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(uniforms->texture, 0);
       }
 
-      active_shader->set_uniform(uniforms->useTexture, it.texture != nullptr);
+      active_shader->set_uniform(uniforms->use_texture, it.texture != nullptr);
       active_shader->set_uniform(uniforms->color, it.color);
       active_shader->set_uniform(uniforms->alpha, it.alpha);
-      active_shader->set_uniform(uniforms->materialId, it.material_id);
+      active_shader->set_uniform(uniforms->material_id, it.material_id);
       it.mesh->draw();
 
       if (isTransparent) {

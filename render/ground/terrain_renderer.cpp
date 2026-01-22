@@ -155,7 +155,7 @@ void TerrainRenderer::build_meshes() {
   std::vector<float> height_data = m_height_data;
   std::vector<float> entry_weight;
   if (!m_hill_entrances.empty() &&
-       m_hill_entrances.size() == height_data.size()) {
+      m_hill_entrances.size() == height_data.size()) {
     constexpr int k_entry_radius = 4;
     entry_weight.assign(height_data.size(), 0.0F);
     for (int z = 0; z < m_height; ++z) {
@@ -725,7 +725,7 @@ void TerrainRenderer::build_meshes() {
         float const center_wx = (center_gx - half_width) * m_tile_size;
         float const center_wz = (center_gz - half_height) * m_tile_size;
         float const macro = value_noise(center_wx * 0.02F, center_wz * 0.02F,
-                                         m_noise_seed ^ 0x51C3U);
+                                        m_noise_seed ^ 0x51C3U);
         float const macro_shade = 0.9F + 0.2F * macro;
 
         float const ao_avg = (section.aoCount > 0)
@@ -816,9 +816,9 @@ void TerrainRenderer::build_meshes() {
                                      : 0.95F));
 
         const uint32_t noise_key_a =
-             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0xB5297A4DU);
+            hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0xB5297A4DU);
         const uint32_t noise_key_b =
-             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0x68E31DA4U);
+            hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0x68E31DA4U);
         constexpr float k_noise_offset_scale = 256.0F;
         params.noise_offset =
             QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
