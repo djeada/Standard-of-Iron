@@ -99,7 +99,7 @@ configure: build-dir
 
 # Build the project
 .PHONY: build
-build: configure
+build: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building project...$(RESET)"
 	@cd $(BUILD_DIR) && make -j$$(nproc)
 	@echo "$(GREEN)✓ Build complete$(RESET)"
