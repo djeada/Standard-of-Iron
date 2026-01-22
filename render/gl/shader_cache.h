@@ -72,7 +72,8 @@ public:
         resolve(shader_base + QStringLiteral("basic.vert"));
     const QString basic_frag =
         resolve(shader_base + QStringLiteral("basic.frag"));
-    const QString grid_frag = resolve(shader_base + QStringLiteral("grid.frag"));
+    const QString grid_frag =
+        resolve(shader_base + QStringLiteral("grid.frag"));
     load(QStringLiteral("basic"), basic_vert, basic_frag);
     load(QStringLiteral("grid"), basic_vert, grid_frag);
     const QString cyl_vert =
