@@ -155,7 +155,7 @@ When adding new assets, update `assets.qrc` to include them in the build.
 
 ## Documentation
 
-See [MISSION_FRAMEWORK.md](../docs/MISSION_FRAMEWORK.md) for detailed documentation on:
+See [MISSION_FRAMEWORK.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MISSION_FRAMEWORK.md) for detailed documentation on:
 - Mission configuration options
 - Victory/defeat condition types
 - AI setup and personality
