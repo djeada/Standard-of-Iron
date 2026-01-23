@@ -157,7 +157,7 @@ cd build && make standard_of_iron_tests
 ./build/bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
 ```
 
-See [tests/README.md](tests/README.md) for additional testing documentation.
+See [tests/README.md](https://github.com/djeada/Standard-of-Iron/blob/main/tests/README.md) for additional testing documentation.
 
 ---
 
@@ -360,7 +360,7 @@ Each faction is defined in a JSON file under `assets/data/nations/`.
 
 ### Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for full guidelines covering environment setup, formatting standards, and pull request workflow.
+See [CONTRIBUTING.md](https://github.com/djeada/Standard-of-Iron/blob/main/CONTRIBUTING.md) for full guidelines covering environment setup, formatting standards, and pull request workflow.
 
 **Quick start:**
 
@@ -402,7 +402,7 @@ Edit or add QML files in `ui/qml/`. HUD components communicate with the engine v
 
 ### Code Signing (Maintainers)
 
-- For macOS notarization, follow [docs/MACOS_SIGNING.md](docs/MACOS_SIGNING.md).
+- For macOS notarization, follow [docs/MACOS_SIGNING.md](https://github.com/djeada/Standard-of-Iron/blob/main/docs/MACOS_SIGNING.md).
 - Windows builds use the `WINDOWS_CERTIFICATE` secret configured in GitHub Actions.
 - Linux AppImage distribution does not require code signing.
 
@@ -469,15 +469,15 @@ The engine is transitioning from a single hardcoded nation to a scalable multi-f
 
 ## License
 
-This project is released under the MIT License. See [LICENSE](LICENSE) for full text.
+This project is released under the MIT License. See [LICENSE](https://github.com/djeada/Standard-of-Iron/blob/main/LICENSE) for full text.
 
 ### Third-Party Licenses
 
 - The engine uses the *Qt framework* (https://www.qt.io), licensed under the GNU Lesser General Public License v3 (LGPL v3). Qt is dynamically linked, allowing library replacement. Source code is available at https://www.qt.io/download-open-source.
-- Audio playback uses *miniaudio* (public domain / MIT-0). See [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) for details.
+- Audio playback uses *miniaudio* (public domain / MIT-0). See [THIRD_PARTY_LICENSES.md](https://github.com/djeada/Standard-of-Iron/blob/main/THIRD_PARTY_LICENSES.md) for details.
 
 ---
 
 ## Acknowledgments
 
-Standard of Iron is built with C++20, Qt 6, and OpenGL 3.3. Development has benefited from open-source documentation, community feedback, and contributions from volunteers listed in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+Standard of Iron is built with C++20, Qt 6, and OpenGL 3.3. Development has benefited from open-source documentation, community feedback, and contributions from volunteers listed in [CONTRIBUTORS.md](https://github.com/djeada/Standard-of-Iron/blob/main/CONTRIBUTORS.md).
