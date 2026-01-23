@@ -85,12 +85,12 @@ Here's how a single frame flows through the system:
                               └───────────────────────┘
 ```
 
-The key files in this flow are [scene_renderer.cpp](../render/scene_renderer.cpp) for the recording phase and [backend.cpp](../render/gl/backend.cpp) for playback.
+The key files in this flow are [scene_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/scene_renderer.cpp) for the recording phase and [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp) for playback.
 
 
 ## How Qt gets OpenGL running
 
-Our 3D view lives inside a QML interface. Qt Quick provides something called QQuickFramebufferObject that handles all the threading complexity of running OpenGL alongside a declarative UI. We subclass it in [gl_view.cpp](../ui/gl_view.cpp) to hook in our renderer.
+Our 3D view lives inside a QML interface. Qt Quick provides something called QQuickFramebufferObject that handles all the threading complexity of running OpenGL alongside a declarative UI. We subclass it in [gl_view.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/ui/gl_view.cpp) to hook in our renderer.
 
 The relationship between Qt and our rendering code looks like this:
 
@@ -122,7 +122,7 @@ The relationship between Qt and our rendering code looks like this:
 
 When Qt's render thread starts up, it creates an OpenGL 3.3 Core context for us. Our GLView class notices this and creates a GLRenderer that holds a pointer to the GameEngine. From then on, every frame Qt calls our render method, which calls into GameEngine, which kicks off the whole pipeline.
 
-The actual creation happens in [gl_view.cpp](../ui/gl_view.cpp) around line 30:
+The actual creation happens in [gl_view.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/ui/gl_view.cpp) around line 30:
 
 ```cpp
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
@@ -146,7 +146,7 @@ Here's the problem with naive rendering: imagine you have 10,000 entities with d
 
 The solution is to record everything first, then sort it, then draw in the optimal order. That's what the DrawQueue is for. It's essentially a big list of command structs—things like "draw this mesh with this transform and this color" or "draw a cylinder from here to there." Each command is tiny, maybe 50-100 bytes, and contains no OpenGL calls. Just data.
 
-The commands are defined in [draw_queue.h](../render/draw_queue.h). Here's what a mesh command looks like:
+The commands are defined in [draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h). Here's what a mesh command looks like:
 
 ```cpp
 struct MeshCmd {
@@ -163,7 +163,7 @@ struct MeshCmd {
 
 There are over 20 command types: CylinderCmd for debug lines and spear shafts, TerrainChunkCmd for ground tiles, GrassBatchCmd for instanced vegetation, HealingBeamCmd for visual effects, and so on. They're all stored in a std::variant so the queue can hold any mix of them.
 
-The SceneRenderer implements an interface called ISubmitter that entity renderers use to submit their draw requests. This interface is defined in [submitter.h](../render/submitter.h):
+The SceneRenderer implements an interface called ISubmitter that entity renderers use to submit their draw requests. This interface is defined in [submitter.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/submitter.h):
 
 ```cpp
 class ISubmitter {
@@ -181,7 +181,7 @@ public:
 
 When a Carthaginian spearman renderer wants to draw a torso, it calls the mesh method on the submitter. That method just packs the parameters into a MeshCmd struct and pushes it onto the queue. Fast and simple.
 
-We use double-buffering on these queues. While the GPU is busy rendering the previous frame's queue, the CPU is filling up the next frame's queue. The swap happens in [scene_renderer.cpp](../render/scene_renderer.cpp) at the frame boundary:
+We use double-buffering on these queues. While the GPU is busy rendering the previous frame's queue, the CPU is filling up the next frame's queue. The swap happens in [scene_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/scene_renderer.cpp) at the frame boundary:
 
 ```cpp
 void Renderer::end_frame() {
@@ -241,7 +241,7 @@ This sorting pass is what transforms a random pile of draw requests into somethi
 
 ## The backend and its pipelines
 
-The Backend class in [backend.cpp](../render/gl/backend.cpp) is where OpenGL finally gets involved. It inherits from QOpenGLFunctions_3_3_Core, which gives it access to all the GL functions without polluting the global namespace.
+The Backend class in [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp) is where OpenGL finally gets involved. It inherits from QOpenGLFunctions_3_3_Core, which gives it access to all the GL functions without polluting the global namespace.
 
 Rather than having one giant loop that handles every command type, we split things into specialized pipelines:
 
@@ -274,7 +274,7 @@ Rather than having one giant loop that handles every command type, we split thin
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Each pipeline understands the specific needs of its command type and can optimize accordingly. The main execute loop walks through the sorted queue and delegates to the appropriate pipeline. Here's a simplified view from [backend.cpp](../render/gl/backend.cpp):
+Each pipeline understands the specific needs of its command type and can optimize accordingly. The main execute loop walks through the sorted queue and delegates to the appropriate pipeline. Here's a simplified view from [backend.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/backend.cpp):
 
 ```cpp
 void Backend::execute(const DrawQueue &queue, const Camera &cam) {
@@ -306,7 +306,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
 When it hits a run of cylinder commands, it collects them all into a scratch buffer and draws them all in one instanced call. This is where the earlier sorting pays off—similar commands cluster together so batching opportunities are easy to spot. Drawing 1000 cylinders individually would be 1000 draw calls. Instanced, it's just 1.
 
-For managing OpenGL state, we use RAII wrappers defined in [state_scopes.h](../render/gl/state_scopes.h). There's a DepthMaskScope that saves the current depth write setting, applies a new one, and restores the old one when it goes out of scope:
+For managing OpenGL state, we use RAII wrappers defined in [state_scopes.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/state_scopes.h). There's a DepthMaskScope that saves the current depth write setting, applies a new one, and restores the old one when it goes out of scope:
 
 ```cpp
 struct DepthMaskScope {
@@ -324,7 +324,7 @@ Same pattern for blending, depth testing, polygon offset. This prevents the clas
 
 ## Where OpenGL actually lives
 
-All the low-level OpenGL code is concentrated in the [render/gl](../render/gl) folder:
+All the low-level OpenGL code is concentrated in the [render/gl](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl) folder:
 
 ```
 render/gl/
@@ -353,7 +353,7 @@ class Shader : protected QOpenGLFunctions_3_3_Core { ... };
 class Backend : protected QOpenGLFunctions_3_3_Core { ... };
 ```
 
-The Mesh class in [mesh.cpp](../render/gl/mesh.cpp) wraps VAOs, VBOs, and index buffers. You give it vertex data and indices, and it lazily uploads them to the GPU on first draw:
+The Mesh class in [mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) wraps VAOs, VBOs, and index buffers. You give it vertex data and indices, and it lazily uploads them to the GPU on first draw:
 
 ```cpp
 void Mesh::draw() {
@@ -379,7 +379,7 @@ void Mesh::draw_instanced(std::size_t instance_count) {
 }
 ```
 
-The Shader class in [shader.h](../render/gl/shader.h) wraps GLSL programs and caches uniform locations. Looking up a uniform location is a string hash operation on the GPU driver side—not catastrophically slow, but slow enough that you don't want to do it every frame for every uniform. So we cache:
+The Shader class in [shader.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader.h) wraps GLSL programs and caches uniform locations. Looking up a uniform location is a string hash operation on the GPU driver side—not catastrophically slow, but slow enough that you don't want to do it every frame for every uniform. So we cache:
 
 ```cpp
 class Shader : protected QOpenGLFunctions_3_3_Core {
@@ -449,11 +449,11 @@ Roman legionaries wear red cloaks and carry rectangular shields. Carthaginian in
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-The base class HumanoidRendererBase in [humanoid/rig.h](../render/humanoid/rig.h) handles everything that's common to all humanoids: computing the pose from animation state, drawing the basic body parts, coordinating the rendering sequence. But it has virtual methods for the nation-specific bits.
+The base class HumanoidRendererBase in [humanoid/rig.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/rig.h) handles everything that's common to all humanoids: computing the pose from animation state, drawing the basic body parts, coordinating the rendering sequence. But it has virtual methods for the nation-specific bits.
 
-Each nation has derived classes that override these methods. Looking at the Carthaginian spearman in [spearman_renderer.cpp](../render/entity/nations/carthage/spearman_renderer.cpp), you'll see it sets up purple tunics, bronze helmets, and the distinctive Carthaginian visual style.
+Each nation has derived classes that override these methods. Looking at the Carthaginian spearman in [spearman_renderer.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage/spearman_renderer.cpp), you'll see it sets up purple tunics, bronze helmets, and the distinctive Carthaginian visual style.
 
-The entity system stores a unit type string like "spearman_carthage" on each unit. The EntityRendererRegistry in [registry.cpp](../render/entity/registry.cpp) maps these strings to renderer functions. When it's time to draw, we look up the right renderer and call it. If a unit type isn't registered, it just doesn't render—that's usually the first thing to check when soldiers are mysteriously invisible.
+The entity system stores a unit type string like "spearman_carthage" on each unit. The EntityRendererRegistry in [registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) maps these strings to renderer functions. When it's time to draw, we look up the right renderer and call it. If a unit type isn't registered, it just doesn't render—that's usually the first thing to check when soldiers are mysteriously invisible.
 
 Each nation also gets its own shader files. You can see the pattern in the shader lookup:
 
@@ -481,7 +481,7 @@ The Carthage spearman shader knows how to render bronze with appropriate patina.
 
 Here's a memory problem: if 5000 soldiers each need unique 4K textures for their rust, dirt, and wear patterns, that's around 80 gigabytes of VRAM. Obviously impossible. So instead we generate all that detail procedurally in the shader.
 
-The shaders in [assets/shaders](../assets/shaders) use hash functions and noise to create variation. Looking at [spearman_carthage.frag](../assets/shaders/spearman_carthage.frag), you'll see the building blocks:
+The shaders in [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) use hash functions and noise to create variation. Looking at [spearman_carthage.frag](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/spearman_carthage.frag), you'll see the building blocks:
 
 ```glsl
 // Hash function - turns any position into a pseudo-random number
@@ -524,7 +524,7 @@ else if (u_materialId == 1) { // Cloth
 }
 ```
 
-The vertex shader sometimes does geometry modifications too. For example, in [spearman_carthage.vert](../assets/shaders/spearman_carthage.vert), shields get a curved surface:
+The vertex shader sometimes does geometry modifications too. For example, in [spearman_carthage.vert](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/spearman_carthage.vert), shields get a curved surface:
 
 ```glsl
 if (u_materialId == 4) {  // Shield
@@ -538,7 +538,7 @@ if (u_materialId == 4) {  // Shield
 }
 ```
 
-We have about 90 shader files in the [assets/shaders](../assets/shaders) folder, covering everything from terrain and rivers to individual unit types and special effects. The ShaderCache in [shader_cache.cpp](../render/gl/shader_cache.cpp) loads them on demand and keeps them around so we don't recompile every frame.
+We have about 90 shader files in the [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder, covering everything from terrain and rivers to individual unit types and special effects. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) loads them on demand and keeps them around so we don't recompile every frame.
 
 
 ## Common problems and how to fix them
@@ -547,7 +547,7 @@ When nothing renders at all and you're just seeing a black screen, walk through 
 
 1. Check if the OpenGL context is valid. Look for "No valid OpenGL context" in logs. If you see it, you're probably running in software mode.
 
-2. Check if shaders compiled. The shader loading code in [shader.cpp](../render/gl/shader.cpp) logs errors, but you might want to add more verbose output.
+2. Check if shaders compiled. The shader loading code in [shader.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader.cpp) logs errors, but you might want to add more verbose output.
 
 3. Put a breakpoint in DrawQueue::submit to see if anything's actually being recorded. If the queue is empty, the problem is in the game logic, not the renderer.
 
@@ -561,9 +561,9 @@ When performance tanks, it's usually one of three things:
 
 - State thrashing means commands aren't sorted properly. Fire up RenderDoc or Nsight and look at the call sequence. If you see shader/texture binds alternating rapidly, the sort isn't working.
 
-- Vertex bloat means meshes are too detailed for how small they appear on screen. This points to the LOD system in [rig.h](../render/humanoid/rig.h)—check the distance thresholds.
+- Vertex bloat means meshes are too detailed for how small they appear on screen. This points to the LOD system in [rig.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/humanoid/rig.h)—check the distance thresholds.
 
-When specific units don't render but debug shapes do, the renderer probably isn't registered. Check [entity/registry.cpp](../render/entity/registry.cpp) and make sure there's a registration call for that unit type. Missing registrations are the most common cause of invisible units.
+When specific units don't render but debug shapes do, the renderer probably isn't registered. Check [entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) and make sure there's a registration call for that unit type. Missing registrations are the most common cause of invisible units.
 
 Transparent objects rendering as opaque usually means blending got disabled somewhere, or the draw order is wrong so transparent stuff draws before what's behind it. Make sure the queue sorts transparent objects to the back and that the BlendScope RAII wrapper is being used.
 
@@ -597,12 +597,12 @@ The optimizer can be configured via `BattleRenderConfig`:
 - `animation_throttle_distance`: Distance beyond which animations are throttled (default: 40.0)
 - `animation_skip_frames`: How many frames to skip for distant animations (default: 2)
 
-See [battle_render_optimizer.h](../render/battle_render_optimizer.h) for the implementation.
+See [battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for the implementation.
 
 
 ## The full journey
 
-Let's trace a frame from start to finish. Qt's render thread calls our GLRenderer::render method in [gl_view.cpp](../ui/gl_view.cpp). That calls GameEngine::render, which calls SceneRenderer::begin_frame to clear the draw queue and reset frame state.
+Let's trace a frame from start to finish. Qt's render thread calls our GLRenderer::render method in [gl_view.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/ui/gl_view.cpp). That calls GameEngine::render, which calls SceneRenderer::begin_frame to clear the draw queue and reset frame state.
 
 Game systems iterate through all entities. For each entity that needs rendering, they look up the appropriate renderer in the EntityRendererRegistry and call it. The renderer submits commands to the draw queue: mesh commands for body parts, cylinder commands for spear shafts, whatever's needed.
 
@@ -623,17 +623,17 @@ Here's a quick reference for common tasks:
 
 | What you want to do | Where to look |
 |---------------------|---------------|
-| Add a new unit type | [render/entity/registry.cpp](../render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](../render/entity/nations) |
-| Change a nation's look | [render/entity/nations/carthage](../render/entity/nations/carthage) or [roman](../render/entity/nations/roman) folders |
-| Modify shaders | [assets/shaders](../assets/shaders) folder |
-| Debug GL errors | [render/gl/mesh.cpp](../render/gl/mesh.cpp) has error checking after draws |
-| Change draw order | [render/draw_queue.h](../render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp |
+| Add a new unit type | [render/entity/registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) for registration, create new renderer in [render/entity/nations](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations) |
+| Change a nation's look | [render/entity/nations/carthage](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/carthage) or [roman](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/nations/roman) folders |
+| Modify shaders | [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder |
+| Debug GL errors | [render/gl/mesh.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/mesh.cpp) has error checking after draws |
+| Change draw order | [render/draw_queue.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/draw_queue.h) for command definitions, sort logic in draw_queue.cpp |
 | Add a new effect | Create new Cmd struct in draw_queue.h, add pipeline in render/gl/backend |
 | Debug the frame | Use RenderDoc to capture and step through |
-| Tune battle performance | [render/battle_render_optimizer.h](../render/battle_render_optimizer.h) for temporal culling and animation throttling |
+| Tune battle performance | [render/battle_render_optimizer.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/battle_render_optimizer.h) for temporal culling and animation throttling |
 
 The most common mistakes are calling OpenGL from the wrong thread (Qt's render thread is the only safe place), forgetting to bind the VAO before drawing (nothing appears), uploading instance data but calling the non-instanced draw function (only one object appears), or getting matrix conventions mixed up (everything is inside-out or flipped).
 
-The RAII state scopes in [state_scopes.h](../render/gl/state_scopes.h) help prevent state leakage bugs—use them whenever you need to temporarily change GL state. The uniform cache in Shader prevents per-frame overhead from name lookups.
+The RAII state scopes in [state_scopes.h](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/state_scopes.h) help prevent state leakage bugs—use them whenever you need to temporarily change GL state. The uniform cache in Shader prevents per-frame overhead from name lookups.
 
 When in doubt, fire up RenderDoc and trace a frame. You'll see exactly what gets bound, what gets drawn, and where time goes. Most rendering bugs become obvious once you can see the actual GPU work.

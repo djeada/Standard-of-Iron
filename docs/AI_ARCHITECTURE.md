@@ -59,7 +59,7 @@ The snapshot is the key insight. We copy the world state into an immutable struc
 
 ## The architecture in pieces
 
-Let's look at the files involved. Everything lives in [game/systems/ai_system](../game/systems/ai_system):
+Let's look at the files involved. Everything lives in [game/systems/ai_system](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system):
 
 ```
 ai_system/
@@ -83,14 +83,14 @@ ai_system/
     └── builder_behavior.cpp
 ```
 
-The main coordinator is [ai_system.cpp](../game/systems/ai_system.cpp) in the parent folder. It owns all the AI instances and orchestrates the update loop.
+The main coordinator is [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) in the parent folder. It owns all the AI instances and orchestrates the update loop.
 
 
 ## Data structures: what the AI knows
 
 The AI works with three core data structures: the snapshot (what it sees), the context (what it remembers), and commands (what it decides).
 
-The snapshot is defined in [ai_types.h](../game/systems/ai_system/ai_types.h). It's an immutable copy of the world state, safe to read on a background thread:
+The snapshot is defined in [ai_types.h](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_types.h). It's an immutable copy of the world state, safe to read on a background thread:
 
 ```cpp
 struct AISnapshot {
@@ -101,7 +101,7 @@ struct AISnapshot {
 };
 ```
 
-Each entity gets serialized into an EntitySnapshot with everything the AI might need: position, health, whether it's a building, what it's producing, whether it has a movement target. The snapshot builder in [ai_snapshot_builder.cpp](../game/systems/ai_system/ai_snapshot_builder.cpp) walks through the world and copies this data.
+Each entity gets serialized into an EntitySnapshot with everything the AI might need: position, health, whether it's a building, what it's producing, whether it has a movement target. The snapshot builder in [ai_snapshot_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_snapshot_builder.cpp) walks through the world and copies this data.
 
 The context persists between updates. It tracks things like which state the AI is in, how long it's been in that state, which units are assigned to which tasks, and metrics like average health and unit counts:
 
@@ -146,7 +146,7 @@ enum class AICommandType {
 
 ## The state machine: strategic phases
 
-The AI operates in one of six states: Idle, Gathering, Attacking, Defending, Retreating, and Expanding. The state machine in [ai_reasoner.cpp](../game/systems/ai_system/ai_reasoner.cpp) decides when to transition:
+The AI operates in one of six states: Idle, Gathering, Attacking, Defending, Retreating, and Expanding. The state machine in [ai_reasoner.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_reasoner.cpp) decides when to transition:
 
 ```
                               ┌─────────────┐
@@ -189,7 +189,7 @@ The AI operates in one of six states: Idle, Gathering, Attacking, Defending, Ret
 
 The transitions aren't just time-based. The reasoner looks at actual game state: is the barracks under threat? How many enemies are visible? What's the average health of our units? Are we making progress?
 
-From [ai_reasoner.cpp](../game/systems/ai_system/ai_reasoner.cpp):
+From [ai_reasoner.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_reasoner.cpp):
 
 ```cpp
 if ((ctx.barracks_under_threat || !ctx.buildings_under_attack.empty()) &&
@@ -209,7 +209,7 @@ The state influences which behaviors are allowed to run. Defending state enables
 
 Behaviors are modular pieces of AI logic. Each behavior knows how to do one thing: attack enemies, defend the base, retreat when damaged, produce units, and so on.
 
-The base class in [ai_behavior.h](../game/systems/ai_system/ai_behavior.h) is simple:
+The base class in [ai_behavior.h](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_behavior.h) is simple:
 
 ```cpp
 class AIBehavior {
@@ -241,7 +241,7 @@ Here are the behaviors and their priorities:
 | AttackBehavior | Normal | No | Push into enemy territory |
 | GatherBehavior | Low | No | Rally scattered units |
 
-The behaviors are registered in [ai_system.cpp](../game/systems/ai_system.cpp) at startup:
+The behaviors are registered in [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) at startup:
 
 ```cpp
 AISystem::AISystem() {
@@ -258,7 +258,7 @@ AISystem::AISystem() {
 
 ## Inside a behavior: AttackBehavior
 
-Let's look at how a specific behavior works. AttackBehavior in [attack_behavior.cpp](../game/systems/ai_system/behaviors/attack_behavior.cpp) handles offensive operations.
+Let's look at how a specific behavior works. AttackBehavior in [attack_behavior.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors/attack_behavior.cpp) handles offensive operations.
 
 First, it splits friendly units into two groups: units already engaged in combat, and units ready for new orders:
 
@@ -294,7 +294,7 @@ The behavior has internal timers to prevent spamming commands. It only issues ne
 
 Different AI opponents should feel different. An aggressive AI should attack early with small forces. A defensive AI should turtle up and build a large army before engaging. A rusher should go all-in immediately.
 
-Strategies are configured in [ai_strategy.cpp](../game/systems/ai_system/ai_strategy.cpp). Each strategy is a set of multipliers that modify behavior thresholds:
+Strategies are configured in [ai_strategy.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_strategy.cpp). Each strategy is a set of multipliers that modify behavior thresholds:
 
 ```cpp
 case AIStrategy::Aggressive:
@@ -346,7 +346,7 @@ Strategies can be set per player in mission files:
 
 ## The threading model
 
-Each AI player has a dedicated worker thread managed by [ai_worker.cpp](../game/systems/ai_system/ai_worker.cpp). The main thread never blocks waiting for AI—it just checks if results are ready.
+Each AI player has a dedicated worker thread managed by [ai_worker.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_worker.cpp). The main thread never blocks waiting for AI—it just checks if results are ready.
 
 The worker class looks like this:
 
@@ -373,7 +373,7 @@ private:
 };
 ```
 
-The main update loop in [ai_system.cpp](../game/systems/ai_system.cpp) orchestrates everything:
+The main update loop in [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) orchestrates everything:
 
 ```cpp
 void AISystem::update(Engine::Core::World *world, float delta_time) {
@@ -449,9 +449,9 @@ Unit assignment cleanup: when behaviors finish, they release their unit assignme
 
 Without filtering, the AI might spam the same command every update cycle. "Move unit 42 to position X" repeated 3 times per second creates a lot of noise and can cause units to stutter.
 
-The command filter in [ai_command_filter.cpp](../game/systems/ai_system/ai_command_filter.cpp) tracks recent commands and deduplicates. If we issued a move command to the same unit within the last second, skip the duplicate.
+The command filter in [ai_command_filter.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_command_filter.cpp) tracks recent commands and deduplicates. If we issued a move command to the same unit within the last second, skip the duplicate.
 
-From [ai_system.cpp](../game/systems/ai_system.cpp):
+From [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp):
 
 ```cpp
 auto filtered_commands = m_commandFilter.filter(result.commands, m_total_game_time);
@@ -563,12 +563,12 @@ The architecture supports all of these—behaviors are modular, strategies are d
 
 | What you want to do | Where to look |
 |---------------------|---------------|
-| Adjust AI update rate | [ai_system.cpp](../game/systems/ai_system.cpp) - set_update_interval() |
-| Add a new strategy | [ai_strategy.cpp](../game/systems/ai_system/ai_strategy.cpp) - add case in create_config() |
-| Create a new behavior | [behaviors/](../game/systems/ai_system/behaviors) - create new file, register in ai_system.cpp |
-| Tune attack timing | [attack_behavior.cpp](../game/systems/ai_system/behaviors/attack_behavior.cpp) - m_attackTimer threshold |
-| Debug state transitions | [ai_reasoner.cpp](../game/systems/ai_system/ai_reasoner.cpp) - update_state_machine() |
-| Understand what AI sees | [ai_snapshot_builder.cpp](../game/systems/ai_system/ai_snapshot_builder.cpp) - build() |
+| Adjust AI update rate | [ai_system.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system.cpp) - set_update_interval() |
+| Add a new strategy | [ai_strategy.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_strategy.cpp) - add case in create_config() |
+| Create a new behavior | [behaviors/](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors) - create new file, register in ai_system.cpp |
+| Tune attack timing | [attack_behavior.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/behaviors/attack_behavior.cpp) - m_attackTimer threshold |
+| Debug state transitions | [ai_reasoner.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_reasoner.cpp) - update_state_machine() |
+| Understand what AI sees | [ai_snapshot_builder.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/game/systems/ai_system/ai_snapshot_builder.cpp) - build() |
 | Configure AI per mission | Mission JSON files - ai_setups section |
 
 The code follows snake_case for variables and functions, PascalCase for types. All background thread access goes through mutexes or atomics. The snapshot is immutable once built. Commands are queued and applied on the main thread only.
