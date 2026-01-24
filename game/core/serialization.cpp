@@ -334,6 +334,108 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["elephant_stomp_impacts"] = impacts_array;
   }
 
+  if (const auto *combat_state =
+          entity->get_component<CombatStateComponent>()) {
+    QJsonObject combat_state_obj;
+    combat_state_obj["animation_state"] =
+        static_cast<int>(combat_state->animation_state);
+    combat_state_obj["state_time"] =
+        static_cast<double>(combat_state->state_time);
+    combat_state_obj["state_duration"] =
+        static_cast<double>(combat_state->state_duration);
+    combat_state_obj["attack_offset"] =
+        static_cast<double>(combat_state->attack_offset);
+    combat_state_obj["attack_variant"] =
+        static_cast<int>(combat_state->attack_variant);
+    combat_state_obj["is_hit_paused"] = combat_state->is_hit_paused;
+    combat_state_obj["hit_pause_remaining"] =
+        static_cast<double>(combat_state->hit_pause_remaining);
+    entity_obj["combat_state"] = combat_state_obj;
+  }
+
+  if (const auto *hit_feedback =
+          entity->get_component<HitFeedbackComponent>()) {
+    QJsonObject hit_feedback_obj;
+    hit_feedback_obj["is_reacting"] = hit_feedback->is_reacting;
+    hit_feedback_obj["reaction_time"] =
+        static_cast<double>(hit_feedback->reaction_time);
+    hit_feedback_obj["reaction_intensity"] =
+        static_cast<double>(hit_feedback->reaction_intensity);
+    hit_feedback_obj["knockback_x"] =
+        static_cast<double>(hit_feedback->knockback_x);
+    hit_feedback_obj["knockback_z"] =
+        static_cast<double>(hit_feedback->knockback_z);
+    entity_obj["hit_feedback"] = hit_feedback_obj;
+  }
+
+  if (const auto *builder =
+          entity->get_component<BuilderProductionComponent>()) {
+    QJsonObject builder_obj;
+    builder_obj["in_progress"] = builder->in_progress;
+    builder_obj["build_time"] = static_cast<double>(builder->build_time);
+    builder_obj["time_remaining"] =
+        static_cast<double>(builder->time_remaining);
+    builder_obj["product_type"] =
+        QString::fromStdString(builder->product_type);
+    builder_obj["construction_complete"] = builder->construction_complete;
+    builder_obj["has_construction_site"] = builder->has_construction_site;
+    builder_obj["construction_site_x"] =
+        static_cast<double>(builder->construction_site_x);
+    builder_obj["construction_site_z"] =
+        static_cast<double>(builder->construction_site_z);
+    builder_obj["at_construction_site"] = builder->at_construction_site;
+    builder_obj["is_placement_preview"] = builder->is_placement_preview;
+    builder_obj["bypass_movement_active"] = builder->bypass_movement_active;
+    builder_obj["bypass_target_x"] =
+        static_cast<double>(builder->bypass_target_x);
+    builder_obj["bypass_target_z"] =
+        static_cast<double>(builder->bypass_target_z);
+    entity_obj["builder_production"] = builder_obj;
+  }
+
+  if (const auto *formation =
+          entity->get_component<FormationModeComponent>()) {
+    QJsonObject formation_obj;
+    formation_obj["active"] = formation->active;
+    formation_obj["formation_center_x"] =
+        static_cast<double>(formation->formation_center_x);
+    formation_obj["formation_center_z"] =
+        static_cast<double>(formation->formation_center_z);
+    entity_obj["formation_mode"] = formation_obj;
+  }
+
+  if (const auto *stamina = entity->get_component<StaminaComponent>()) {
+    QJsonObject stamina_obj;
+    stamina_obj["stamina"] = static_cast<double>(stamina->stamina);
+    stamina_obj["max_stamina"] = static_cast<double>(stamina->max_stamina);
+    stamina_obj["regen_rate"] = static_cast<double>(stamina->regen_rate);
+    stamina_obj["depletion_rate"] =
+        static_cast<double>(stamina->depletion_rate);
+    stamina_obj["is_running"] = stamina->is_running;
+    stamina_obj["run_requested"] = stamina->run_requested;
+    entity_obj["stamina"] = stamina_obj;
+  }
+
+  if (const auto *terrain_context =
+          entity->get_component<TerrainContextComponent>()) {
+    QJsonObject terrain_context_obj;
+    terrain_context_obj["is_on_bridge"] = terrain_context->is_on_bridge;
+    terrain_context_obj["is_at_hill_entrance"] =
+        terrain_context->is_at_hill_entrance;
+    terrain_context_obj["audio_cooldown"] =
+        static_cast<double>(terrain_context->audio_cooldown);
+    entity_obj["terrain_context"] = terrain_context_obj;
+  }
+
+  if (const auto *home = entity->get_component<HomeComponent>()) {
+    QJsonObject home_obj;
+    home_obj["population_contribution"] = home->population_contribution;
+    home_obj["nearest_barracks_id"] =
+        static_cast<qint64>(home->nearest_barracks_id);
+    home_obj["update_cooldown"] = static_cast<double>(home->update_cooldown);
+    entity_obj["home"] = home_obj;
+  }
+
   return entity_obj;
 }
 
@@ -664,6 +766,117 @@ void Serialization::deserialize_entity(Entity *entity,
       impact.time = static_cast<float>(impact_obj["time"].toDouble(0.0));
       stomp_impact->impacts.push_back(impact);
     }
+  }
+
+  if (json.contains("combat_state")) {
+    const auto combat_state_obj = json["combat_state"].toObject();
+    auto *combat_state = entity->add_component<CombatStateComponent>();
+    combat_state->animation_state = static_cast<CombatAnimationState>(
+        combat_state_obj["animation_state"].toInt(
+            static_cast<int>(CombatAnimationState::Idle)));
+    combat_state->state_time =
+        static_cast<float>(combat_state_obj["state_time"].toDouble(0.0));
+    combat_state->state_duration =
+        static_cast<float>(combat_state_obj["state_duration"].toDouble(0.0));
+    combat_state->attack_offset =
+        static_cast<float>(combat_state_obj["attack_offset"].toDouble(0.0));
+    combat_state->attack_variant = static_cast<std::uint8_t>(
+        combat_state_obj["attack_variant"].toInt(0));
+    combat_state->is_hit_paused =
+        combat_state_obj["is_hit_paused"].toBool(false);
+    combat_state->hit_pause_remaining =
+        static_cast<float>(combat_state_obj["hit_pause_remaining"].toDouble(0.0));
+  }
+
+  if (json.contains("hit_feedback")) {
+    const auto hit_feedback_obj = json["hit_feedback"].toObject();
+    auto *hit_feedback = entity->add_component<HitFeedbackComponent>();
+    hit_feedback->is_reacting = hit_feedback_obj["is_reacting"].toBool(false);
+    hit_feedback->reaction_time =
+        static_cast<float>(hit_feedback_obj["reaction_time"].toDouble(0.0));
+    hit_feedback->reaction_intensity =
+        static_cast<float>(hit_feedback_obj["reaction_intensity"].toDouble(0.0));
+    hit_feedback->knockback_x =
+        static_cast<float>(hit_feedback_obj["knockback_x"].toDouble(0.0));
+    hit_feedback->knockback_z =
+        static_cast<float>(hit_feedback_obj["knockback_z"].toDouble(0.0));
+  }
+
+  if (json.contains("builder_production")) {
+    const auto builder_obj = json["builder_production"].toObject();
+    auto *builder = entity->add_component<BuilderProductionComponent>();
+    builder->in_progress = builder_obj["in_progress"].toBool(false);
+    builder->build_time =
+        static_cast<float>(builder_obj["build_time"].toDouble(10.0));
+    builder->time_remaining =
+        static_cast<float>(builder_obj["time_remaining"].toDouble(0.0));
+    builder->product_type = builder_obj["product_type"].toString().toStdString();
+    builder->construction_complete =
+        builder_obj["construction_complete"].toBool(false);
+    builder->has_construction_site =
+        builder_obj["has_construction_site"].toBool(false);
+    builder->construction_site_x =
+        static_cast<float>(builder_obj["construction_site_x"].toDouble(0.0));
+    builder->construction_site_z =
+        static_cast<float>(builder_obj["construction_site_z"].toDouble(0.0));
+    builder->at_construction_site =
+        builder_obj["at_construction_site"].toBool(false);
+    builder->is_placement_preview =
+        builder_obj["is_placement_preview"].toBool(false);
+    builder->bypass_movement_active =
+        builder_obj["bypass_movement_active"].toBool(false);
+    builder->bypass_target_x =
+        static_cast<float>(builder_obj["bypass_target_x"].toDouble(0.0));
+    builder->bypass_target_z =
+        static_cast<float>(builder_obj["bypass_target_z"].toDouble(0.0));
+  }
+
+  if (json.contains("formation_mode")) {
+    const auto formation_obj = json["formation_mode"].toObject();
+    auto *formation = entity->add_component<FormationModeComponent>();
+    formation->active = formation_obj["active"].toBool(false);
+    formation->formation_center_x =
+        static_cast<float>(formation_obj["formation_center_x"].toDouble(0.0));
+    formation->formation_center_z =
+        static_cast<float>(formation_obj["formation_center_z"].toDouble(0.0));
+  }
+
+  if (json.contains("stamina")) {
+    const auto stamina_obj = json["stamina"].toObject();
+    auto *stamina = entity->add_component<StaminaComponent>();
+    stamina->stamina = static_cast<float>(stamina_obj["stamina"].toDouble(
+        static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
+    stamina->max_stamina = static_cast<float>(stamina_obj["max_stamina"].toDouble(
+        static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
+    stamina->regen_rate = static_cast<float>(stamina_obj["regen_rate"].toDouble(
+        static_cast<double>(StaminaComponent::kDefaultRegenRate)));
+    stamina->depletion_rate =
+        static_cast<float>(stamina_obj["depletion_rate"].toDouble(
+            static_cast<double>(StaminaComponent::kDefaultDepletionRate)));
+    stamina->is_running = stamina_obj["is_running"].toBool(false);
+    stamina->run_requested = stamina_obj["run_requested"].toBool(false);
+  }
+
+  if (json.contains("terrain_context")) {
+    const auto terrain_context_obj = json["terrain_context"].toObject();
+    auto *terrain_context = entity->add_component<TerrainContextComponent>();
+    terrain_context->is_on_bridge =
+        terrain_context_obj["is_on_bridge"].toBool(false);
+    terrain_context->is_at_hill_entrance =
+        terrain_context_obj["is_at_hill_entrance"].toBool(false);
+    terrain_context->audio_cooldown =
+        static_cast<float>(terrain_context_obj["audio_cooldown"].toDouble(0.0));
+  }
+
+  if (json.contains("home")) {
+    const auto home_obj = json["home"].toObject();
+    auto *home = entity->add_component<HomeComponent>();
+    home->population_contribution =
+        home_obj["population_contribution"].toInt(50);
+    home->nearest_barracks_id = static_cast<EntityID>(
+        home_obj["nearest_barracks_id"].toVariant().toULongLong());
+    home->update_cooldown =
+        static_cast<float>(home_obj["update_cooldown"].toDouble(0.0));
   }
 }
 
