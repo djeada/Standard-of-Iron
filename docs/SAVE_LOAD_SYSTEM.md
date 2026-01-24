@@ -285,7 +285,7 @@ The serialization system supports all game components:
 | StaminaComponent | stamina, regen_rate, is_running | Stamina system |
 | HealerComponent | healing_range, healing_amount | Healer units |
 | ElephantComponent | charge_state, trample_damage | War elephants |
-| CombatStateComponent | animation_state, hit_pause | Combat animations |
+| CombatStateComponent | animation_state, hit_pause | Combat animation states and hit pause |
 | FormationModeComponent | active, formation_center | Unit formations |
 | BuilderProductionComponent | construction_site, progress | Builder units |
 | HomeComponent | population_contribution | Population buildings |
