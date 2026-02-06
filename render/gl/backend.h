@@ -165,6 +165,7 @@ private:
 
   Shader *m_basicShader = nullptr;
   Shader *m_gridShader = nullptr;
+  Shader *m_shadowShader = nullptr;
 
   Shader *m_lastBoundShader = nullptr;
   Texture *m_lastBoundTexture = nullptr;

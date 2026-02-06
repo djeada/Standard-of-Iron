@@ -1,93 +1,92 @@
 {
   "id": "battle_of_trasimene",
   "title": "Battle of Lake Trasimene",
-  "summary": "Execute the perfect lakeside ambush - trap and destroy an entire Roman legion in the morning mist",
-  "teaching_goal": "Perfect ambush execution and terrain exploitation. Teaches players to use fog of war and natural terrain for devastating surprise attacks.",
-  "narrative_intent": "Showcases Hannibal's greatest ambush - complete annihilation through superior positioning and patience.",
+  "summary": "Spring the ambush, seal escape routes, and destroy Roman field camps along the lakeside corridor.",
+  "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits while handling fresh enemy waves.",
+  "narrative_intent": "The Roman column walks into a trap and is destroyed by converging attacks.",
   "map_path": ":/assets/maps/map_battle_trasimene.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 12,
-        "position": {"x": 70, "z": 40},
-        "hidden": true
-      },
-      {
-        "type": "swordsman",
-        "count": 15,
-        "position": {"x": 90, "z": 60},
-        "hidden": true
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 10,
-        "position": {"x": 110, "z": 80},
-        "hidden": true
-      },
-      {
-        "type": "archer",
-        "count": 8,
-        "position": {"x": 85, "z": 35},
-        "hidden": true
-      },
-      {
-        "type": "spearman",
-        "count": 10,
-        "position": {"x": 95, "z": 85},
-        "hidden": true
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 200,
-      "food": 150
+      "gold": 300,
+      "food": 220
     }
   },
   "ai_setups": [
     {
-      "id": "roman_legion_flaminius",
+      "id": "roman_column",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
+      "team_id": 1,
       "difficulty": "hard",
+      "strategy": "rusher",
       "personality": {
-        "aggression": 0.7,
+        "aggression": 0.8,
         "defense": 0.3,
-        "harassment": 0.2
+        "harassment": 0.25
       },
-      "starting_units": [
+      "starting_units": [],
+      "starting_buildings": [
         {
-          "type": "spearman",
-          "count": 30,
-          "position": {"x": 30, "z": 60}
-        },
-        {
-          "type": "swordsman",
-          "count": 25,
-          "position": {"x": 32, "z": 58}
-        },
-        {
-          "type": "archer",
-          "count": 12,
-          "position": {"x": 28, "z": 62}
-        },
-        {
-          "type": "horse_swordsman",
-          "count": 8,
-          "position": {"x": 34, "z": 60}
+          "type": "barracks",
+          "position": {"x": 18, "z": 50},
+          "max_population": 180
         }
       ],
-      "starting_buildings": [],
-      "ai_behavior_phases": [
+      "waves": [
         {
-          "phase": "march",
-          "behavior": "march_along_path",
-          "path": "lakeside_road",
-          "duration": 180.0
+          "timing": 150.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8}
+          ],
+          "entry_point": {"x": 10, "z": 50}
+        },
+        {
+          "timing": 320.0,
+          "composition": [
+            {"type": "archer", "count": 6},
+            {"type": "spearman", "count": 8},
+            {"type": "horse_swordsman", "count": 3}
+          ],
+          "entry_point": {"x": 18, "z": 40}
+        }
+      ]
+    },
+    {
+      "id": "roman_escape_force",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "orange",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "harasser",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.45,
+        "harassment": 0.6
+      },
+      "starting_units": [],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 35, "z": 20},
+          "max_population": 140
+        }
+      ],
+      "waves": [
+        {
+          "timing": 240.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 5},
+            {"type": "spearman", "count": 4}
+          ],
+          "entry_point": {"x": 35, "z": 20}
         }
       ]
     }
@@ -95,33 +94,26 @@
   "victory_conditions": [
     {
       "type": "destroy_all_enemies",
-      "description": "Annihilate the Roman legion - leave no survivors"
+      "description": "Destroy all Roman camps and trapped forces"
     }
   ],
   "defeat_conditions": [
     {
-      "type": "lose_all_units",
-      "description": "Do not lose all your units"
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Do not lose your command camp"
     },
     {
-      "type": "enemy_escape",
-      "escape_threshold": 0.3,
-      "description": "Do not let more than 30% of Romans escape"
+      "type": "lose_all_units",
+      "description": "Do not lose all your units"
     }
   ],
   "optional_objectives": [
     {
-      "type": "kill_commander",
-      "commander_name": "Flaminius",
-      "description": "Kill the Roman consul Flaminius"
-    }
-  ],
-  "map_effects": [
-    {
-      "type": "fog",
-      "duration": 120.0,
-      "visibility_reduction": 0.6,
-      "description": "Morning mist reduces visibility"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Capture both Roman field camps"
     }
   ],
   "events": [
@@ -133,19 +125,31 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "The Romans march blindly into your trap. Wait for the perfect moment..."
+          "text": "The Roman column enters the corridor. Wait for full commitment."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "romans_in_kill_zone"
+        "type": "timer",
+        "time": 140.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "The trap is sprung! Attack from all sides!"
+          "text": "Strike now. Close the western route and split their line."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 260.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Roman cavalry is attempting a breakout from the south. Intercept them."
         }
       ]
     }

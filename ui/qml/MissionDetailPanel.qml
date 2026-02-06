@@ -90,7 +90,7 @@ Rectangle {
                 }
 
                 Rectangle {
-                    visible: mission_definition && mission_definition.terrain_type
+                    visible: !!(mission_definition && mission_definition.terrain_type)
                     Layout.preferredWidth: terrain_badge_layout.implicitWidth + 12
                     Layout.preferredHeight: 24
                     radius: Theme.radiusSmall
@@ -140,7 +140,7 @@ Rectangle {
             }
 
             Label {
-                visible: mission_definition && mission_definition.historical_context
+                visible: !!(mission_definition && mission_definition.historical_context)
                 text: mission_data && mission_data.intro_text ? mission_data.intro_text : ""
                 color: Theme.textSubLite
                 wrapMode: Text.WordWrap
@@ -149,7 +149,7 @@ Rectangle {
             }
 
             Rectangle {
-                visible: mission_definition && mission_definition.historical_context
+                visible: !!(mission_definition && mission_definition.historical_context)
                 Layout.fillWidth: true
                 Layout.preferredHeight: historical_context_text.implicitHeight + Theme.spacingSmall * 2
                 radius: Theme.radiusSmall
@@ -218,7 +218,7 @@ Rectangle {
                     }
 
                     Label {
-                        visible: mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0
+                        visible: !!(mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0)
                         text: qsTr("Optional:")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
@@ -244,7 +244,7 @@ Rectangle {
                     }
 
                     Label {
-                        visible: mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0
+                        visible: !!(mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0)
                         text: qsTr("Failure:")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
@@ -280,7 +280,7 @@ Rectangle {
 
                 ColumnLayout {
                     spacing: Theme.spacingTiny
-                    visible: mission_definition && mission_definition.player_setup && mission_definition.player_setup.starting_units
+                    visible: !!(mission_definition && mission_definition.player_setup && mission_definition.player_setup.starting_units)
 
                     Label {
                         text: qsTr("Your Forces:")
@@ -384,7 +384,7 @@ Rectangle {
 
             StyledButton {
                 text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
-                enabled: mission_data && mission_data.unlocked
+                enabled: !!(mission_data && mission_data.unlocked)
                 onClicked: root.start_mission_clicked()
                 ToolTip.visible: !enabled && hovered
                 ToolTip.text: {
@@ -400,7 +400,7 @@ Rectangle {
             }
 
             Label {
-                visible: mission_data && !mission_data.unlocked
+                visible: !!(mission_data && !mission_data.unlocked)
                 text: qsTr("🔒 Locked")
                 color: Theme.textDim
                 font.pointSize: Theme.fontSizeSmall
@@ -409,7 +409,7 @@ Rectangle {
             }
 
             Label {
-                visible: mission_data && mission_data.completed
+                visible: !!(mission_data && mission_data.completed)
                 text: qsTr("✓ Completed")
                 color: Theme.successText
                 font.pointSize: Theme.fontSizeSmall

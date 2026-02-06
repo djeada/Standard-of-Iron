@@ -2,12 +2,15 @@
 
 in vec3 v_worldNormal;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 in vec2 v_texCoord;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 uniform int u_materialId;
 
 out vec4 FragColor;
@@ -99,7 +102,9 @@ float scaleArmor(vec2 uv) {
 }
 
 void main() {
-  vec3 baseColor = clamp(u_color, 0.0, 1.0);
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
+  vec3 baseColor = clamp(base_color_in, 0.0, 1.0);
   if (u_useTexture) {
     baseColor *= texture(u_texture, v_texCoord).rgb;
   }
@@ -289,5 +294,5 @@ void main() {
   color = color / (color + vec3(0.6));
   color = pow(color, vec3(0.92));
 
-  FragColor = vec4(saturate3(color), u_alpha);
+  FragColor = vec4(saturate3(color), alpha_in);
 }

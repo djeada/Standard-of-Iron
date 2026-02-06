@@ -25,6 +25,11 @@ public:
 
   void draw_instanced(std::size_t instance_count);
 
+  auto bind_vao() -> bool { return prepare_draw("Mesh::bind_vao"); }
+  void unbind_vao();
+
+  void draw_instanced_raw(std::size_t instance_count);
+
   [[nodiscard]] auto get_vertices() const -> const std::vector<Vertex> & {
     return m_vertices;
   }

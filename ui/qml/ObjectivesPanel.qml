@@ -99,7 +99,7 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Theme.spacingSmall
-                        visible: mission_objectives && mission_objectives.title
+                        visible: !!(mission_objectives && mission_objectives.title)
 
                         Label {
                             text: mission_objectives && mission_objectives.title ? mission_objectives.title : ""
@@ -123,7 +123,7 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Theme.spacingMedium
-                        visible: mission_objectives && mission_objectives.victory_conditions && mission_objectives.victory_conditions.length > 0
+                        visible: !!(mission_objectives && mission_objectives.victory_conditions && mission_objectives.victory_conditions.length > 0)
 
                         Label {
                             text: qsTr("Victory Conditions")
@@ -178,7 +178,7 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Theme.spacingMedium
-                        visible: mission_objectives && mission_objectives.defeat_conditions && mission_objectives.defeat_conditions.length > 0
+                        visible: !!(mission_objectives && mission_objectives.defeat_conditions && mission_objectives.defeat_conditions.length > 0)
 
                         Label {
                             text: qsTr("Defeat Conditions")
@@ -233,7 +233,7 @@ Item {
                     ColumnLayout {
                         Layout.fillWidth: true
                         spacing: Theme.spacingMedium
-                        visible: mission_objectives && mission_objectives.optional_objectives && mission_objectives.optional_objectives.length > 0
+                        visible: !!(mission_objectives && mission_objectives.optional_objectives && mission_objectives.optional_objectives.length > 0)
 
                         Label {
                             text: qsTr("Optional Objectives")

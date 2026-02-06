@@ -20,8 +20,10 @@
 #include "../gl/render_constants.h"
 #include "../gl/resources.h"
 #include "../palette.h"
+#include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
+#include "../template_cache.h"
 #include "../visibility_budget.h"
 #include "formation_calculator.h"
 #include "humanoid_math.h"
@@ -67,6 +69,31 @@ static std::unordered_map<PoseCacheKey, CachedPoseEntry> s_pose_cache;
 static uint32_t s_current_frame = 0;
 constexpr uint32_t k_pose_cache_max_age = 300;
 
+struct SoldierLayout {
+  float offset_x{0.0F};
+  float offset_z{0.0F};
+  float vertical_jitter{0.0F};
+  float yaw_offset{0.0F};
+  float phase_offset{0.0F};
+  std::uint32_t inst_seed{0};
+};
+
+struct UnitLayoutCacheEntry {
+  std::vector<SoldierLayout> soldiers;
+  FormationParams formation{};
+  FormationCalculatorFactory::Nation nation{
+      FormationCalculatorFactory::Nation::Roman};
+  FormationCalculatorFactory::UnitCategory category{
+      FormationCalculatorFactory::UnitCategory::Infantry};
+  int rows{0};
+  int cols{0};
+  std::uint32_t seed{0};
+  std::uint32_t frame_number{0};
+};
+
+static std::unordered_map<std::uintptr_t, UnitLayoutCacheEntry> s_layout_cache;
+constexpr uint32_t k_layout_cache_max_age = 600;
+
 inline auto make_pose_cache_key(uintptr_t entity_ptr,
                                 int soldier_idx) -> PoseCacheKey {
   return (static_cast<uint64_t>(entity_ptr) << 16) |
@@ -91,6 +118,120 @@ inline auto should_render_temporal(uint32_t frame, uint32_t seed,
   }
   return ((frame + seed) % period) == 0U;
 }
+
+inline auto
+resolve_layout_seed(const Engine::Core::UnitComponent *unit_comp,
+                    const Engine::Core::Entity *entity) -> std::uint32_t {
+  std::uint32_t seed = 0U;
+  if (unit_comp != nullptr) {
+    seed ^= std::uint32_t(unit_comp->owner_id * 2654435761U);
+  }
+  if (entity != nullptr) {
+    seed ^= std::uint32_t(reinterpret_cast<uintptr_t>(entity) & 0xFFFFFFFFU);
+  }
+  return seed;
+}
+
+inline auto resolve_variant_key_from_seed(std::uint32_t seed) -> std::uint8_t {
+  std::uint32_t v = seed ^ (seed >> 16);
+  return static_cast<std::uint8_t>(v % k_template_variant_count);
+}
+
+inline auto
+resolve_attack_variant_from_seed(std::uint32_t seed) -> std::uint8_t {
+  return static_cast<std::uint8_t>(seed % 3U);
+}
+
+inline auto resolve_variant_seed(const Engine::Core::UnitComponent *unit_comp,
+                                 std::uint8_t variant_key) -> std::uint32_t {
+  std::uint32_t seed = 0U;
+  if (unit_comp != nullptr) {
+    seed ^= static_cast<std::uint32_t>(unit_comp->spawn_type) * 2654435761U;
+    seed ^= static_cast<std::uint32_t>(unit_comp->owner_id) * 1013904223U;
+  }
+  seed ^= static_cast<std::uint32_t>(variant_key) * 2246822519U;
+  return seed;
+}
+
+inline auto resolve_formation_category(
+    const Engine::Core::UnitComponent *unit_comp,
+    const AnimationInputs &anim) -> FormationCalculatorFactory::UnitCategory {
+  using UnitCategory = FormationCalculatorFactory::UnitCategory;
+  if ((unit_comp != nullptr) &&
+      unit_comp->spawn_type == Game::Units::SpawnType::Builder &&
+      anim.is_constructing) {
+    return UnitCategory::BuilderConstruction;
+  }
+  bool is_mounted = false;
+  if (unit_comp != nullptr) {
+    using Game::Units::SpawnType;
+    auto const st = unit_comp->spawn_type;
+    is_mounted =
+        (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
+         st == SpawnType::HorseSpearman);
+  }
+  return is_mounted ? UnitCategory::Cavalry : UnitCategory::Infantry;
+}
+
+auto get_or_build_unit_layout(std::uintptr_t key,
+                              const FormationParams &formation,
+                              FormationCalculatorFactory::Nation nation,
+                              FormationCalculatorFactory::UnitCategory category,
+                              std::uint32_t seed, int rows,
+                              int cols) -> UnitLayoutCacheEntry & {
+  auto &entry = s_layout_cache[key];
+  bool rebuild =
+      entry.soldiers.empty() || entry.rows != rows || entry.cols != cols ||
+      entry.seed != seed || entry.nation != nation ||
+      entry.category != category ||
+      std::abs(entry.formation.spacing - formation.spacing) > 1e-6F ||
+      entry.formation.individuals_per_unit != formation.individuals_per_unit ||
+      entry.formation.max_per_row != formation.max_per_row;
+
+  if (rebuild) {
+    entry.soldiers.clear();
+    entry.soldiers.reserve(static_cast<std::size_t>(rows * cols));
+    entry.rows = rows;
+    entry.cols = cols;
+    entry.seed = seed;
+    entry.nation = nation;
+    entry.category = category;
+    entry.formation = formation;
+
+    const IFormationCalculator *formation_calculator =
+        FormationCalculatorFactory::get_calculator(nation, category);
+
+    auto fast_random = [](uint32_t &state) -> float {
+      state = state * 1664525U + 1013904223U;
+      return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
+    };
+
+    for (int idx = 0; idx < rows * cols; ++idx) {
+      int const r = idx / cols;
+      int const c = idx % cols;
+
+      FormationOffset const formation_offset =
+          formation_calculator->calculate_offset(idx, r, c, rows, cols,
+                                                 formation.spacing, seed);
+
+      std::uint32_t const inst_seed = seed ^ std::uint32_t(idx * 9176U);
+      std::uint32_t rng_state = inst_seed;
+
+      SoldierLayout layout{};
+      layout.offset_x = formation_offset.offset_x;
+      layout.offset_z = formation_offset.offset_z;
+      layout.vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
+      layout.yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
+      layout.phase_offset = fast_random(rng_state) * 0.25F;
+      layout.inst_seed = inst_seed;
+
+      entry.soldiers.push_back(layout);
+    }
+  }
+
+  entry.frame_number = s_current_frame;
+  return entry;
+}
 } // namespace
 
 void advance_pose_cache_frame() {
@@ -106,7 +247,23 @@ void advance_pose_cache_frame() {
         ++it;
       }
     }
+
+    auto layout_it = s_layout_cache.begin();
+    while (layout_it != s_layout_cache.end()) {
+      if (s_current_frame - layout_it->second.frame_number >
+          k_layout_cache_max_age * 2) {
+        layout_it = s_layout_cache.erase(layout_it);
+      } else {
+        ++layout_it;
+      }
+    }
   }
+}
+
+void clear_humanoid_caches() {
+  s_pose_cache.clear();
+  s_layout_cache.clear();
+  s_current_frame = 0;
 }
 
 auto torso_mesh_without_bottom_cap() -> Mesh * {
@@ -942,7 +1099,7 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
     return;
   }
 
-  constexpr float k_facial_hair_max_distance = 25.0F;
+  constexpr float k_facial_hair_max_distance = 12.0F;
   if (ctx.camera != nullptr) {
     QVector3D const soldier_world_pos =
         ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
@@ -1000,6 +1157,9 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
 
   float const beard_forward_tilt_norm = 0.32F;
 
+  constexpr int k_max_facial_hair_strands = 24;
+  int total_strands_emitted = 0;
+
   auto place_strands = [&](int rows, int segments, float jaw_span,
                            float row_spacing_norm, float base_length_norm,
                            float length_variation, float forward_bias_norm,
@@ -1028,6 +1188,9 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
             fh.coverage * (0.75F + coverage_falloff * 0.35F), 0.05F, 1.0F);
         if (random01() > keep_prob) {
           continue;
+        }
+        if (total_strands_emitted >= k_max_facial_hair_strands) {
+          return;
         }
 
         float const wrap_scale = 0.80F + (1.0F - row_t) * 0.20F;
@@ -1091,6 +1254,7 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
 
         out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
+        ++total_strands_emitted;
       }
     }
   };
@@ -1118,6 +1282,9 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
         forward_norm += jitter(0.05F);
         if (random01() > fh.coverage) {
           continue;
+        }
+        if (total_strands_emitted >= k_max_facial_hair_strands) {
+          return;
         }
         QVector3D surface_dir(lateral_norm, mustache_y_norm + jitter(0.03F),
                               forward_norm * 0.85F + 0.20F);
@@ -1161,6 +1328,7 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
                  root_color, nullptr, 1.0F);
         out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
                  tip_color, nullptr, 1.0F);
+        ++total_strands_emitted;
       }
     }
   };
@@ -1333,10 +1501,536 @@ void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
            nullptr, 1.0F);
 }
 
+namespace {
+auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
+  if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
+    return renderer;
+  }
+  if (auto *batch = dynamic_cast<BatchingSubmitter *>(&out)) {
+    return dynamic_cast<Renderer *>(batch->fallback_submitter());
+  }
+  return nullptr;
+}
+} // namespace
+
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
+  AnimationInputs anim = sample_anim_state(ctx);
+
+  if (ctx.template_prewarm) {
+    if (ctx.renderer_id.empty() || ctx.animation_override == nullptr ||
+        !ctx.force_humanoid_lod || !ctx.has_variant_override) {
+      return;
+    }
+
+    auto *unit_comp =
+        ctx.entity ? ctx.entity->get_component<Engine::Core::UnitComponent>()
+                   : nullptr;
+    std::uint32_t owner_id =
+        (unit_comp != nullptr) ? static_cast<std::uint32_t>(unit_comp->owner_id)
+                               : 0U;
+
+    bool is_mounted_spawn = false;
+    if (unit_comp != nullptr) {
+      using Game::Units::SpawnType;
+      auto const st = unit_comp->spawn_type;
+      is_mounted_spawn =
+          (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
+           st == SpawnType::HorseSpearman);
+    }
+
+    std::uint8_t attack_variant = 0;
+    if (ctx.has_attack_variant_override) {
+      attack_variant = ctx.attack_variant_override;
+    }
+
+    AnimKey anim_key =
+        make_anim_key(*ctx.animation_override, 0.0F, attack_variant);
+
+    TemplateKey key;
+    key.renderer_id = ctx.renderer_id;
+    key.owner_id = owner_id;
+    key.lod = static_cast<std::uint8_t>(ctx.forced_humanoid_lod);
+    key.mount_lod = 0;
+    if (is_mounted_spawn) {
+      HorseLOD horse_lod = ctx.force_horse_lod
+                               ? ctx.forced_horse_lod
+                               : static_cast<HorseLOD>(ctx.forced_humanoid_lod);
+      key.mount_lod = static_cast<std::uint8_t>(horse_lod);
+    }
+    key.variant = ctx.variant_override;
+    key.attack_variant = anim_key.attack_variant;
+    key.state = anim_key.state;
+    key.combat_phase = anim_key.combat_phase;
+    key.frame = anim_key.frame;
+
+    (void)TemplateCache::instance().get_or_build(key, [&]() -> PoseTemplate {
+      TemplateRecorder recorder;
+      recorder.reset();
+
+      if (auto *outer = dynamic_cast<Renderer *>(&out)) {
+        recorder.set_current_shader(outer->get_current_shader());
+      }
+
+      Engine::Core::Entity template_entity(1);
+      auto *templ_unit =
+          template_entity.add_component<Engine::Core::UnitComponent>();
+      if (unit_comp != nullptr) {
+        *templ_unit = *unit_comp;
+      }
+      templ_unit->max_health =
+          (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
+      templ_unit->health = templ_unit->max_health;
+
+      auto *templ_transform =
+          template_entity.add_component<Engine::Core::TransformComponent>();
+      templ_transform->position = {0.0F, 0.0F, 0.0F};
+      templ_transform->rotation = {0.0F, 0.0F, 0.0F};
+      templ_transform->scale = {1.0F, 1.0F, 1.0F};
+
+      if (auto *renderable =
+              ctx.entity
+                  ? ctx.entity
+                        ->get_component<Engine::Core::RenderableComponent>()
+                  : nullptr) {
+        auto *templ_renderable =
+            template_entity.add_component<Engine::Core::RenderableComponent>(
+                renderable->mesh_path, renderable->texture_path);
+        templ_renderable->renderer_id = renderable->renderer_id;
+        templ_renderable->mesh = renderable->mesh;
+        templ_renderable->visible = true;
+        templ_renderable->color = renderable->color;
+      }
+
+      DrawContext build_ctx = ctx;
+      build_ctx.entity = &template_entity;
+      build_ctx.world = nullptr;
+      build_ctx.model = QMatrix4x4();
+      build_ctx.camera = nullptr;
+      build_ctx.selected = false;
+      build_ctx.hovered = false;
+      build_ctx.allow_template_cache = false;
+      build_ctx.force_humanoid_lod = true;
+      build_ctx.forced_humanoid_lod = ctx.forced_humanoid_lod;
+      build_ctx.force_horse_lod = is_mounted_spawn;
+      if (is_mounted_spawn) {
+        build_ctx.forced_horse_lod = static_cast<HorseLOD>(key.mount_lod);
+      }
+      build_ctx.has_seed_override = true;
+      build_ctx.seed_override = resolve_variant_seed(unit_comp, key.variant);
+      build_ctx.has_attack_variant_override = true;
+      build_ctx.attack_variant_override = key.attack_variant;
+      build_ctx.force_single_soldier = true;
+      build_ctx.skip_ground_offset = true;
+
+      AnimationInputs build_anim = make_animation_inputs(anim_key);
+      build_ctx.animation_override = &build_anim;
+
+      render_procedural(build_ctx, build_anim, recorder);
+
+      PoseTemplate built;
+      built.commands = recorder.commands();
+      return built;
+    });
+    return;
+  }
+
+  if (!ctx.allow_template_cache || ctx.renderer_id.empty() ||
+      ctx.entity == nullptr) {
+    render_procedural(ctx, anim, out);
+    return;
+  }
+
+  auto *unit_comp = ctx.entity->get_component<Engine::Core::UnitComponent>();
+  auto *transform_comp =
+      ctx.entity->get_component<Engine::Core::TransformComponent>();
+  if (unit_comp == nullptr || transform_comp == nullptr) {
+    render_procedural(ctx, anim, out);
+    return;
+  }
+
   FormationParams const formation = resolve_formation(ctx);
-  AnimationInputs const anim = sample_anim_state(ctx);
+  const int rows =
+      (formation.individuals_per_unit + formation.max_per_row - 1) /
+      formation.max_per_row;
+  int cols = formation.max_per_row;
+  int effective_rows = rows;
+  if (ctx.force_single_soldier) {
+    cols = 1;
+    effective_rows = 1;
+  }
+
+  int visible_count = rows * cols;
+  int max_health = std::max(1, unit_comp->max_health);
+  float ratio = std::clamp(unit_comp->health / float(max_health), 0.0F, 1.0F);
+  visible_count = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
+
+  if (visible_count <= 0) {
+    return;
+  }
+
+  s_render_stats.soldiers_total += visible_count;
+
+  bool is_mounted_spawn = false;
+  if (unit_comp != nullptr) {
+    using Game::Units::SpawnType;
+    auto const st = unit_comp->spawn_type;
+    is_mounted_spawn =
+        (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
+         st == SpawnType::HorseSpearman);
+  }
+
+  FormationCalculatorFactory::Nation nation =
+      FormationCalculatorFactory::Nation::Roman;
+  if (unit_comp != nullptr &&
+      unit_comp->nation_id == Game::Systems::NationID::Carthage) {
+    nation = FormationCalculatorFactory::Nation::Carthage;
+  }
+
+  FormationCalculatorFactory::UnitCategory category =
+      resolve_formation_category(unit_comp, anim);
+
+  std::uint32_t layout_seed = resolve_layout_seed(unit_comp, ctx.entity);
+  auto &layout_entry = get_or_build_unit_layout(
+      reinterpret_cast<std::uintptr_t>(ctx.entity), formation, nation, category,
+      layout_seed, rows, cols);
+
+  float entity_ground_offset =
+      resolve_entity_ground_offset(ctx, unit_comp, transform_comp);
+
+  Renderer *renderer = resolve_renderer_for_submitter(out);
+  Shader *last_shader = nullptr;
+
+  auto fast_random = [](uint32_t &state) -> float {
+    state = state * 1664525U + 1013904223U;
+    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
+  };
+
+  const std::size_t soldier_count = std::min<std::size_t>(
+      layout_entry.soldiers.size(), static_cast<std::size_t>(visible_count));
+
+  for (std::size_t idx = 0; idx < soldier_count; ++idx) {
+    const SoldierLayout &slot = layout_entry.soldiers[idx];
+
+    float offset_x = slot.offset_x;
+    float offset_z = slot.offset_z;
+    float applied_vertical_jitter = slot.vertical_jitter;
+    float applied_yaw_offset = slot.yaw_offset;
+    float phase_offset = slot.phase_offset;
+
+    uint32_t rng_state = slot.inst_seed;
+
+    if (anim.is_attacking && anim.is_melee) {
+      float const combat_jitter_x =
+          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.4F;
+      float const combat_jitter_z =
+          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.3F;
+      float const sway_time = anim.time + phase_offset * 2.0F;
+      float const sway_x = std::sin(sway_time * 1.5F) * 0.05F;
+      float const sway_z = std::cos(sway_time * 1.2F) * 0.04F;
+      offset_x += combat_jitter_x + sway_x;
+      offset_z += combat_jitter_z + sway_z;
+
+      float const combat_yaw = (fast_random(rng_state) - 0.5F) * 15.0F;
+      applied_yaw_offset += combat_yaw;
+    }
+
+    float applied_yaw = applied_yaw_offset;
+    QMatrix4x4 inst_model;
+    if (transform_comp != nullptr) {
+      applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
+      QMatrix4x4 m;
+      m.translate(transform_comp->position.x, transform_comp->position.y,
+                  transform_comp->position.z);
+      m.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
+      m.scale(transform_comp->scale.x, transform_comp->scale.y,
+              transform_comp->scale.z);
+      m.translate(offset_x, applied_vertical_jitter, offset_z);
+      if (entity_ground_offset != 0.0F) {
+        m.translate(0.0F, -entity_ground_offset, 0.0F);
+      }
+      inst_model = m;
+    } else {
+      inst_model = ctx.model;
+      inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
+      inst_model.translate(offset_x, applied_vertical_jitter, offset_z);
+      if (entity_ground_offset != 0.0F) {
+        inst_model.translate(0.0F, -entity_ground_offset, 0.0F);
+      }
+    }
+
+    QVector3D const soldier_world_pos =
+        inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
+
+    constexpr float k_soldier_cull_radius = 0.6F;
+    if (ctx.camera != nullptr &&
+        !ctx.camera->is_in_frustum(soldier_world_pos, k_soldier_cull_radius)) {
+      ++s_render_stats.soldiers_skipped_frustum;
+      continue;
+    }
+
+    HumanoidLOD soldier_lod = HumanoidLOD::Full;
+    float soldier_distance = 0.0F;
+    if (ctx.force_humanoid_lod) {
+      soldier_lod = ctx.forced_humanoid_lod;
+    } else if (ctx.camera != nullptr) {
+      soldier_distance =
+          (soldier_world_pos - ctx.camera->get_position()).length();
+      soldier_lod = calculate_humanoid_lod(soldier_distance);
+
+      if (soldier_lod == HumanoidLOD::Billboard) {
+        ++s_render_stats.soldiers_skipped_lod;
+        continue;
+      }
+
+      soldier_lod =
+          Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
+              soldier_lod);
+    }
+
+    if (soldier_distance > 0.0F) {
+      if (soldier_lod == HumanoidLOD::Reduced &&
+          soldier_distance > k_temporal_skip_distance_reduced) {
+        if (!should_render_temporal(s_current_frame, slot.inst_seed,
+                                    k_temporal_skip_period_reduced)) {
+          ++s_render_stats.soldiers_skipped_temporal;
+          continue;
+        }
+      }
+      if (soldier_lod == HumanoidLOD::Minimal &&
+          soldier_distance > k_temporal_skip_distance_minimal) {
+        if (!should_render_temporal(s_current_frame, slot.inst_seed,
+                                    k_temporal_skip_period_minimal)) {
+          ++s_render_stats.soldiers_skipped_temporal;
+          continue;
+        }
+      }
+    }
+
+    ++s_render_stats.soldiers_rendered;
+    switch (soldier_lod) {
+    case HumanoidLOD::Full:
+      ++s_render_stats.lod_full;
+      break;
+    case HumanoidLOD::Reduced:
+      ++s_render_stats.lod_reduced;
+      break;
+    case HumanoidLOD::Minimal:
+      ++s_render_stats.lod_minimal;
+      break;
+    case HumanoidLOD::Billboard:
+      break;
+    }
+
+    std::uint8_t variant_key = resolve_variant_key_from_seed(slot.inst_seed);
+    std::uint8_t attack_variant =
+        resolve_attack_variant_from_seed(slot.inst_seed);
+
+    AnimKey anim_key = make_anim_key(anim, phase_offset, attack_variant);
+
+    HorseLOD mount_lod = HorseLOD::Full;
+    if (is_mounted_spawn) {
+      if (ctx.force_horse_lod) {
+        mount_lod = ctx.forced_horse_lod;
+      } else {
+        mount_lod = static_cast<HorseLOD>(soldier_lod);
+      }
+    }
+
+    TemplateKey key;
+    key.renderer_id = ctx.renderer_id;
+    key.owner_id = static_cast<std::uint32_t>(unit_comp->owner_id);
+    key.lod = static_cast<std::uint8_t>(soldier_lod);
+    key.mount_lod = is_mounted_spawn ? static_cast<std::uint8_t>(mount_lod) : 0;
+    key.variant = variant_key;
+    key.attack_variant = anim_key.attack_variant;
+    key.state = anim_key.state;
+    key.combat_phase = anim_key.combat_phase;
+    key.frame = anim_key.frame;
+
+    const PoseTemplate *tpl =
+        TemplateCache::instance().get_or_build(key, [&]() -> PoseTemplate {
+          TemplateRecorder recorder;
+          recorder.reset();
+
+          if (auto *outer = dynamic_cast<Renderer *>(&out)) {
+            recorder.set_current_shader(outer->get_current_shader());
+          }
+
+          Engine::Core::Entity template_entity(1);
+          auto *templ_unit =
+              template_entity.add_component<Engine::Core::UnitComponent>();
+          *templ_unit = *unit_comp;
+          templ_unit->max_health =
+              (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
+          templ_unit->health = templ_unit->max_health;
+
+          auto *templ_transform =
+              template_entity.add_component<Engine::Core::TransformComponent>();
+          templ_transform->position = {0.0F, 0.0F, 0.0F};
+          templ_transform->rotation = {0.0F, 0.0F, 0.0F};
+          templ_transform->scale = {1.0F, 1.0F, 1.0F};
+
+          if (auto *renderable =
+                  ctx.entity
+                      ->get_component<Engine::Core::RenderableComponent>()) {
+            auto *templ_renderable =
+                template_entity
+                    .add_component<Engine::Core::RenderableComponent>(
+                        renderable->mesh_path, renderable->texture_path);
+            templ_renderable->renderer_id = renderable->renderer_id;
+            templ_renderable->mesh = renderable->mesh;
+            templ_renderable->visible = true;
+            templ_renderable->color = renderable->color;
+          }
+
+          DrawContext build_ctx = ctx;
+          build_ctx.entity = &template_entity;
+          build_ctx.world = nullptr;
+          build_ctx.model = QMatrix4x4();
+          build_ctx.camera = nullptr;
+          build_ctx.selected = false;
+          build_ctx.hovered = false;
+          build_ctx.allow_template_cache = false;
+          build_ctx.force_humanoid_lod = true;
+          build_ctx.forced_humanoid_lod = soldier_lod;
+          build_ctx.force_horse_lod = is_mounted_spawn;
+          if (is_mounted_spawn) {
+            build_ctx.forced_horse_lod = mount_lod;
+          }
+          build_ctx.has_seed_override = true;
+          build_ctx.seed_override =
+              resolve_variant_seed(unit_comp, variant_key);
+          build_ctx.has_attack_variant_override = true;
+          build_ctx.attack_variant_override = anim_key.attack_variant;
+          build_ctx.force_single_soldier = true;
+          build_ctx.skip_ground_offset = true;
+
+          AnimationInputs build_anim = make_animation_inputs(anim_key);
+          build_ctx.animation_override = &build_anim;
+
+          render_procedural(build_ctx, build_anim, recorder);
+
+          PoseTemplate built;
+          built.commands = recorder.commands();
+          return built;
+        });
+
+    if (tpl == nullptr || tpl->commands.empty()) {
+      render_procedural(ctx, anim, out);
+      return;
+    }
+
+    for (const auto &cmd : tpl->commands) {
+      if (renderer != nullptr && cmd.shader != last_shader) {
+        renderer->set_current_shader(cmd.shader);
+        last_shader = cmd.shader;
+      }
+      QMatrix4x4 world_model = inst_model * cmd.local_model;
+      out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
+               cmd.material_id);
+    }
+
+    const auto &gfx_settings = Render::GraphicsSettings::instance();
+    const bool should_render_shadow =
+        gfx_settings.shadows_enabled() &&
+        (soldier_lod == HumanoidLOD::Full ||
+         soldier_lod == HumanoidLOD::Reduced) &&
+        soldier_distance < gfx_settings.shadow_max_distance() &&
+        ctx.backend != nullptr && ctx.resources != nullptr;
+
+    if (should_render_shadow) {
+      auto *shadow_shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
+      auto *quad_mesh = ctx.resources->quad();
+
+      if (shadow_shader != nullptr && quad_mesh != nullptr) {
+        float const shadow_size =
+            is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
+        float depth_boost = 1.0F;
+        float width_boost = 1.0F;
+        using Game::Units::SpawnType;
+        switch (unit_comp->spawn_type) {
+        case SpawnType::Spearman:
+          depth_boost = 1.8F;
+          width_boost = 0.95F;
+          break;
+        case SpawnType::HorseSpearman:
+          depth_boost = 2.1F;
+          width_boost = 1.05F;
+          break;
+        case SpawnType::Archer:
+        case SpawnType::HorseArcher:
+          depth_boost = 1.2F;
+          width_boost = 0.95F;
+          break;
+        default:
+          break;
+        }
+
+        float const shadow_width =
+            shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
+        float const shadow_depth =
+            shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
+
+        auto &terrain_service = Game::Map::TerrainService::instance();
+        if (terrain_service.is_initialized()) {
+          QVector3D const inst_pos = soldier_world_pos;
+          float const shadow_y =
+              terrain_service.get_terrain_height(inst_pos.x(), inst_pos.z());
+
+          QVector3D light_dir = k_shadow_light_dir.normalized();
+          QVector2D light_dir_xz(light_dir.x(), light_dir.z());
+          if (light_dir_xz.lengthSquared() < 1e-6F) {
+            light_dir_xz = QVector2D(0.0F, 1.0F);
+          } else {
+            light_dir_xz.normalize();
+          }
+          QVector2D const shadow_dir = -light_dir_xz;
+          QVector2D dir_for_use = shadow_dir;
+          if (dir_for_use.lengthSquared() < 1e-6F) {
+            dir_for_use = QVector2D(0.0F, 1.0F);
+          } else {
+            dir_for_use.normalize();
+          }
+          float const shadow_offset = shadow_depth * 1.25F;
+          QVector2D const offset_2d = dir_for_use * shadow_offset;
+          float const light_yaw_deg = qRadiansToDegrees(
+              std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
+
+          QMatrix4x4 shadow_model;
+          shadow_model.translate(inst_pos.x() + offset_2d.x(),
+                                 shadow_y + k_shadow_ground_offset,
+                                 inst_pos.z() + offset_2d.y());
+          shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
+          shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+          shadow_model.scale(shadow_width, shadow_depth, 1.0F);
+
+          if (renderer != nullptr) {
+            Shader *previous_shader = renderer->get_current_shader();
+            renderer->set_current_shader(shadow_shader);
+            shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
+                                       dir_for_use);
+
+            out.mesh(quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+                     nullptr, k_shadow_base_alpha, 0);
+
+            renderer->set_current_shader(previous_shader);
+            last_shader = previous_shader;
+          }
+        }
+      }
+    }
+  }
+
+  if (renderer != nullptr) {
+    renderer->set_current_shader(nullptr);
+  }
+}
+
+void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
+                                             const AnimationInputs &anim,
+                                             ISubmitter &out) const {
+  FormationParams const formation = resolve_formation(ctx);
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {
@@ -1356,17 +2050,26 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       resolve_entity_ground_offset(ctx, unit_comp, transform_comp);
 
   uint32_t seed = 0U;
-  if (unit_comp != nullptr) {
-    seed ^= uint32_t(unit_comp->owner_id * 2654435761U);
-  }
-  if (ctx.entity != nullptr) {
-    seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+  if (ctx.has_seed_override) {
+    seed = ctx.seed_override;
+  } else {
+    if (unit_comp != nullptr) {
+      seed ^= uint32_t(unit_comp->owner_id * 2654435761U);
+    }
+    if (ctx.entity != nullptr) {
+      seed ^= uint32_t(reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+    }
   }
 
   const int rows =
       (formation.individuals_per_unit + formation.max_per_row - 1) /
       formation.max_per_row;
-  const int cols = formation.max_per_row;
+  int cols = formation.max_per_row;
+  int effective_rows = rows;
+  if (ctx.force_single_soldier) {
+    cols = 1;
+    effective_rows = 1;
+  }
 
   bool is_mounted_spawn = false;
   if (unit_comp != nullptr) {
@@ -1377,8 +2080,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
          st == SpawnType::HorseSpearman);
   }
 
-  int visible_count = rows * cols;
-  if (unit_comp != nullptr) {
+  int visible_count = effective_rows * cols;
+  if (!ctx.force_single_soldier && unit_comp != nullptr) {
     int const mh = std::max(1, unit_comp->max_health);
     float const ratio = std::clamp(unit_comp->health / float(mh), 0.0F, 1.0F);
     visible_count = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
@@ -1433,20 +2136,29 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     int const r = idx / cols;
     int const c = idx % cols;
 
-    FormationOffset const formation_offset =
-        formation_calculator->calculate_offset(idx, r, c, rows, cols,
-                                               formation.spacing, seed);
+    float offset_x = 0.0F;
+    float offset_z = 0.0F;
 
-    float offset_x = formation_offset.offset_x;
-    float offset_z = formation_offset.offset_z;
-
-    uint32_t const inst_seed = seed ^ uint32_t(idx * 9176U);
+    uint32_t inst_seed = seed ^ uint32_t(idx * 9176U);
 
     uint32_t rng_state = inst_seed;
 
-    float const vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
-    float const yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
-    float const phase_offset = fast_random(rng_state) * 0.25F;
+    float vertical_jitter = 0.0F;
+    float yaw_offset = 0.0F;
+    float phase_offset = 0.0F;
+
+    if (!ctx.force_single_soldier) {
+      FormationOffset const formation_offset =
+          formation_calculator->calculate_offset(idx, r, c, rows, cols,
+                                                 formation.spacing, seed);
+
+      offset_x = formation_offset.offset_x;
+      offset_z = formation_offset.offset_z;
+
+      vertical_jitter = (fast_random(rng_state) - 0.5F) * 0.03F;
+      yaw_offset = (fast_random(rng_state) - 0.5F) * 5.0F;
+      phase_offset = fast_random(rng_state) * 0.25F;
+    }
 
     if (anim.is_attacking && anim.is_melee) {
       float const combat_jitter_x =
@@ -1480,7 +2192,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       m.scale(transform_comp->scale.x, transform_comp->scale.y,
               transform_comp->scale.z);
       m.translate(offset_x, applied_vertical_jitter, offset_z);
-      if (entity_ground_offset != 0.0F) {
+      if (!ctx.skip_ground_offset && entity_ground_offset != 0.0F) {
         m.translate(0.0F, -entity_ground_offset, 0.0F);
       }
       inst_model = m;
@@ -1488,7 +2200,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       inst_model = ctx.model;
       inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
       inst_model.translate(offset_x, applied_vertical_jitter, offset_z);
-      if (entity_ground_offset != 0.0F) {
+      if (!ctx.skip_ground_offset && entity_ground_offset != 0.0F) {
         inst_model.translate(0.0F, -entity_ground_offset, 0.0F);
       }
     }
@@ -1505,7 +2217,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     HumanoidLOD soldier_lod = HumanoidLOD::Full;
     float soldier_distance = 0.0F;
-    if (ctx.camera != nullptr) {
+    if (ctx.force_humanoid_lod) {
+      soldier_lod = ctx.forced_humanoid_lod;
+    } else if (ctx.camera != nullptr) {
       soldier_distance =
           (soldier_world_pos - ctx.camera->get_position()).length();
       soldier_lod = calculate_humanoid_lod(soldier_distance);
@@ -1582,9 +2296,29 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     if (!used_cached_pose) {
 
-      compute_locomotion_pose(inst_seed, anim.time + phase_offset,
-                              anim.is_moving, variation, pose);
-      ++s_render_stats.poses_computed;
+      bool used_palette = false;
+      if (!anim.is_moving && !anim.is_attacking &&
+          PosePaletteCache::instance().is_generated() &&
+          (soldier_lod == HumanoidLOD::Reduced ||
+           soldier_lod == HumanoidLOD::Minimal)) {
+        PosePaletteKey palette_key;
+        palette_key.state = AnimState::Idle;
+        palette_key.frame = 0;
+        palette_key.is_moving = false;
+        const auto *palette_entry =
+            PosePaletteCache::instance().get(palette_key);
+        if (palette_entry != nullptr) {
+          pose = palette_entry->pose;
+          used_palette = true;
+          ++s_render_stats.poses_cached;
+        }
+      }
+
+      if (!used_palette) {
+        compute_locomotion_pose(inst_seed, anim.time + phase_offset,
+                                anim.is_moving, variation, pose);
+        ++s_render_stats.poses_computed;
+      }
 
       CachedPoseEntry &entry = s_pose_cache[cache_key];
       entry.pose = pose;
@@ -1684,7 +2418,12 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     if (anim.is_attacking) {
       float const attack_offset = phase_offset * 1.5F;
       anim_ctx.attack_phase = std::fmod(anim.time + attack_offset, 1.0F);
-      anim_ctx.inputs.attack_variant = static_cast<std::uint8_t>(inst_seed % 3);
+      if (ctx.has_attack_variant_override) {
+        anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
+      } else {
+        anim_ctx.inputs.attack_variant =
+            static_cast<std::uint8_t>(inst_seed % 3);
+      }
     }
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
@@ -1910,7 +2649,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     const auto &gfx_settings = Render::GraphicsSettings::instance();
     const bool should_render_shadow =
-        gfx_settings.shadows_enabled() &&
+        ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
         (soldier_lod == HumanoidLOD::Full ||
          soldier_lod == HumanoidLOD::Reduced) &&
         soldier_distance < gfx_settings.shadow_max_distance();

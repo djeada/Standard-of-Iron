@@ -98,8 +98,8 @@ TEST_F(BattleRenderOptimizerTest,
   optimizer.set_visible_unit_count(20);
   optimizer.begin_frame();
 
-  EXPECT_TRUE(optimizer.should_update_animation(1, 100.0F, false));
-  EXPECT_TRUE(optimizer.should_update_animation(2, 100.0F, false));
+  EXPECT_TRUE(optimizer.should_update_animation(1, 100.0F * 100.0F, false));
+  EXPECT_TRUE(optimizer.should_update_animation(2, 100.0F * 100.0F, false));
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingSelectedAlwaysUpdates) {
@@ -107,8 +107,8 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingSelectedAlwaysUpdates) {
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
-  EXPECT_TRUE(optimizer.should_update_animation(1, 100.0F, true));
-  EXPECT_TRUE(optimizer.should_update_animation(2, 100.0F, true));
+  EXPECT_TRUE(optimizer.should_update_animation(1, 100.0F * 100.0F, true));
+  EXPECT_TRUE(optimizer.should_update_animation(2, 100.0F * 100.0F, true));
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingCloseUnitsAlwaysUpdate) {
@@ -116,8 +116,8 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingCloseUnitsAlwaysUpdate) {
   optimizer.set_visible_unit_count(100);
   optimizer.begin_frame();
 
-  EXPECT_TRUE(optimizer.should_update_animation(1, 10.0F, false));
-  EXPECT_TRUE(optimizer.should_update_animation(2, 30.0F, false));
+  EXPECT_TRUE(optimizer.should_update_animation(1, 10.0F * 10.0F, false));
+  EXPECT_TRUE(optimizer.should_update_animation(2, 30.0F * 30.0F, false));
 }
 
 TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
@@ -128,7 +128,7 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
   int throttled = 0;
   for (int frame = 0; frame < 6; ++frame) {
     optimizer.begin_frame();
-    if (optimizer.should_update_animation(1, 100.0F, false)) {
+    if (optimizer.should_update_animation(1, 100.0F * 100.0F, false)) {
       ++updated;
     } else {
       ++throttled;

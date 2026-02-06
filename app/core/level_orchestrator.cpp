@@ -199,6 +199,10 @@ auto LevelOrchestrator::load_skirmish(
     }
   }
 
+  if (renderers.renderer) {
+    renderers.renderer->prewarm_unit_templates();
+  }
+
   if (progress_tracker) {
     progress_tracker->set_stage(
         LoadingProgressTracker::LoadingStage::FINALIZING);
