@@ -1,52 +1,19 @@
 {
   "id": "battle_of_trebia",
   "title": "Battle of Trebia",
-  "summary": "Lure the Roman army into the freezing river and strike with concealed forces in a devastating ambush",
-  "teaching_goal": "Ambush tactics and multi-phase engagements. Teaches players to coordinate attacks from multiple directions and use concealment.",
-  "narrative_intent": "Demonstrates Hannibal's mastery of deception and timing. Player must execute a planned ambush.",
+  "summary": "Hold the river line, trigger your ambush, and defeat Roman reinforcements from multiple crossings.",
+  "teaching_goal": "Defense-to-offense transition. Teaches timing: absorb pressure, then collapse the enemy line.",
+  "narrative_intent": "The Romans are baited into the winter river and punished by coordinated counterattacks.",
   "map_path": ":/assets/maps/map_battle_trebia.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 18,
-        "position": {"x": 60, "z": 80}
-      },
-      {
-        "type": "swordsman",
-        "count": 15,
-        "position": {"x": 62, "z": 78}
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 10,
-        "position": {"x": 58, "z": 82}
-      },
-      {
-        "type": "archer",
-        "count": 12,
-        "position": {"x": 60, "z": 76}
-      },
-      {
-        "type": "swordsman",
-        "count": 15,
-        "position": {"x": 90, "z": 50},
-        "hidden": true
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 8,
-        "position": {"x": 30, "z": 50},
-        "hidden": true
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 400,
-      "food": 300
+      "gold": 450,
+      "food": 320
     }
   },
   "ai_setups": [
@@ -55,51 +22,75 @@
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
+      "team_id": 1,
       "difficulty": "hard",
+      "strategy": "aggressive",
       "personality": {
-        "aggression": 0.8,
-        "defense": 0.4,
+        "aggression": 0.85,
+        "defense": 0.35,
         "harassment": 0.3
       },
-      "starting_units": [
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": [
         {
-          "type": "spearman",
-          "count": 25,
-          "position": {"x": 60, "z": 30}
+          "timing": 120.0,
+          "composition": [
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6},
+            {"type": "archer", "count": 4}
+          ],
+          "entry_point": {"x": 60, "z": 8}
         },
         {
-          "type": "swordsman",
-          "count": 20,
-          "position": {"x": 62, "z": 28}
-        },
-        {
-          "type": "archer",
-          "count": 10,
-          "position": {"x": 64, "z": 32}
-        },
-        {
-          "type": "horse_swordsman",
-          "count": 8,
-          "position": {"x": 58, "z": 32}
+          "timing": 300.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "horse_swordsman", "count": 3}
+          ],
+          "entry_point": {"x": 70, "z": 12}
         }
-      ],
+      ]
+    },
+    {
+      "id": "roman_west_reserve",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "orange",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "defensive",
+      "personality": {
+        "aggression": 0.65,
+        "defense": 0.55,
+        "harassment": 0.4
+      },
+      "starting_units": [],
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 60, "z": 20},
-          "max_population": 200
+          "position": {"x": 25, "z": 12},
+          "max_population": 160
         }
       ],
-      "ai_behavior_phases": [
+      "waves": [
         {
-          "phase": "initial",
-          "behavior": "advance_to_river",
-          "duration": 120.0
+          "timing": 210.0,
+          "composition": [
+            {"type": "swordsman", "count": 6},
+            {"type": "spearman", "count": 4},
+            {"type": "archer", "count": 2}
+          ],
+          "entry_point": {"x": 25, "z": 12}
         },
         {
-          "phase": "crossing",
-          "behavior": "cross_river_aggressive",
-          "trigger": "reach_river"
+          "timing": 420.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "swordsman", "count": 6}
+          ],
+          "entry_point": {"x": 25, "z": 12}
         }
       ]
     }
@@ -107,10 +98,15 @@
   "victory_conditions": [
     {
       "type": "destroy_all_enemies",
-      "description": "Annihilate the Roman army"
+      "description": "Destroy the Roman invasion force and its camps"
     }
   ],
   "defeat_conditions": [
+    {
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Do not lose your river command camp"
+    },
     {
       "type": "lose_all_units",
       "description": "Do not lose all your units"
@@ -118,32 +114,45 @@
   ],
   "optional_objectives": [
     {
-      "type": "ambush_success",
-      "description": "Trigger ambush while Romans are crossing the river"
+      "type": "wave_count",
+      "wave_count": 2,
+      "description": "Crush at least two reinforcement waves before they reach the river"
     }
   ],
   "events": [
     {
       "trigger": {
         "type": "timer",
-        "time": 45.0
+        "time": 60.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "The Romans are taking the bait! Prepare your ambush forces."
+          "text": "Hold discipline. Let the Romans commit at the ford."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "enemy_crosses_river"
+        "type": "timer",
+        "time": 180.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Now! Strike from both flanks!"
+          "text": "Roman reserves are moving from the western bank."
+        }
+      ]
+    },
+    {
+      "trigger": {
+        "type": "timer",
+        "time": 320.0
+      },
+      "actions": [
+        {
+          "type": "show_message",
+          "text": "Counterattack now. Break them while they are split by the river."
         }
       ]
     }

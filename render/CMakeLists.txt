@@ -27,6 +27,7 @@ add_library(render_gl STATIC
     gl/state_scopes.cpp
     draw_queue.cpp
     primitive_batch.cpp
+    template_cache.cpp
     ground/spawn_validator.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
@@ -120,6 +121,8 @@ add_library(render_gl STATIC
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
     humanoid/mounted_pose_controller.cpp
+    unit_render_cache.cpp
+    pose_palette_cache.cpp
     equipment/equipment_registry.cpp
     equipment/register_equipment.cpp
     equipment/armor/tunic_renderer.cpp

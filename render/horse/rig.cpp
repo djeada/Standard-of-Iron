@@ -755,7 +755,7 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
 
   if (sample.is_moving) {
     float const speed = rider_ctx.locomotion_speed();
-    if (speed < kIdleSpeedMax) {
+    if (speed < kIdleSpeedMax && !anim.is_moving) {
       controller.idle(1.0F);
     } else if (speed < kWalkSpeedMax) {
       controller.set_gait(GaitType::WALK);
@@ -1325,7 +1325,6 @@ void HorseRendererBase::render_full(
     }
 
     if (is_moving) {
-      float const angle = leg_phase * 2.0F * k_pi;
 
       bool const is_galloping = (g.stride_swing > 0.7F);
 
@@ -1339,7 +1338,8 @@ void HorseRendererBase::render_full(
       float const swing_ease =
           swing_progress * swing_progress * (3.0F - 2.0F * swing_progress);
 
-      float const stance_motion = stance_progress;
+      float const stance_ease =
+          stance_progress * stance_progress * (3.0F - 2.0F * stance_progress);
 
       float stride_mult = 0.85F;
       float lift_mult = 1.0F;
@@ -1357,12 +1357,12 @@ void HorseRendererBase::render_full(
         stride_mult *= reach_factor;
       }
 
-      float const stride_forward = swing_ease * g.stride_swing * stride_mult;
-      float const stride_backward = stance_motion * g.stride_swing * 0.65F;
-      stride = (leg_phase < k_swing_phase_end
-                    ? stride_forward
-                    : (g.stride_swing * stride_mult - stride_backward)) +
-               forwardBias - g.stride_swing * 0.25F;
+      float const rest_stride = forwardBias - g.stride_swing * 0.25F;
+      float const peak_stride =
+          g.stride_swing * stride_mult + forwardBias - g.stride_swing * 0.25F;
+      stride = leg_phase < k_swing_phase_end
+                   ? rest_stride + swing_ease * (peak_stride - rest_stride)
+                   : peak_stride - stance_ease * (peak_stride - rest_stride);
 
       float const lift_curve = std::sin(swing_progress * k_pi);
       float const impact_settle =
@@ -1386,7 +1386,7 @@ void HorseRendererBase::render_full(
 
     if (!is_rear) {
       stride =
-          std::clamp(stride, -d.body_length * 0.02F, d.body_length * 0.18F);
+          std::clamp(stride, -d.body_length * 0.08F, d.body_length * 0.35F);
     }
 
     bool const tighten_legs = is_moving;
@@ -1432,13 +1432,13 @@ void HorseRendererBase::render_full(
     float const extend_phase = smoothstep(0.7F, 1.0F, leg_phase);
 
     float knee_flex_base =
-        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 0.75F));
+        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 1.10F));
     float knee_flex_gallop =
         is_galloping ? knee_flex_base * 1.08F : knee_flex_base;
     float const knee_flex = is_moving ? knee_flex_gallop : 0.35F;
 
     float cannon_flex_base = smoothstep(0.35F, 0.65F, leg_phase) *
-                             (1.0F - extend_phase) * (is_rear ? 0.70F : 0.60F);
+                             (1.0F - extend_phase) * (is_rear ? 0.70F : 0.85F);
     float cannon_flex_gallop =
         is_galloping ? cannon_flex_base * 1.05F : cannon_flex_base;
     float const cannon_flex = is_moving ? cannon_flex_gallop : 0.35F;
@@ -1449,10 +1449,11 @@ void HorseRendererBase::render_full(
                   : 0.2F;
 
     float const backward_bias = is_rear ? -0.42F : -0.18F;
-    float const hip_drive = (is_rear ? -1.0F : 1.0F) * hip_swing * 0.20F;
+    float const hip_drive =
+        (is_rear ? -1.0F : 1.0F) * hip_swing * (is_rear ? 0.20F : 0.35F);
 
     float const upper_vertical =
-        -0.90F - lift_factor * 0.08F - knee_flex * 0.25F;
+        -0.90F - lift_factor * 0.08F - knee_flex * (is_rear ? 0.25F : 0.40F);
     QVector3D upper_dir(lateralSign * (tighten_legs ? -0.05F : -0.02F),
                         upper_vertical, backward_bias + hip_drive);
     if (upper_dir.lengthSquared() < 1e-6F) {
@@ -1501,11 +1502,9 @@ void HorseRendererBase::render_full(
     if (is_moving) {
 
       float hoof_lift_amount = 0.0F;
-      if (leg_phase > 0.25F && leg_phase < 0.85F) {
+      if (leg_phase < k_swing_phase_end && lift > 0.0F) {
 
-        float const lift_progress = (leg_phase - 0.25F) / 0.60F;
-        float const lift_curve = std::sin(lift_progress * k_pi);
-        hoof_lift_amount = lift_curve * lift;
+        hoof_lift_amount = lift * 0.35F;
       }
       hoof_top.setY(hoof_top.y() + hoof_lift_amount);
       fetlock = hoof_top;

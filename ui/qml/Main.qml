@@ -11,6 +11,7 @@ ApplicationWindow {
     property bool gameStarted: false
     property bool gamePaused: false
     property bool edgeScrollDisabled: false
+    property string missionAnnouncementText: ""
 
     width: 1280
     height: 720
@@ -67,6 +68,52 @@ ApplicationWindow {
         onReturnToMainMenuRequested: {
             mainWindow.menuVisible = true;
         }
+    }
+
+    Rectangle {
+        id: missionAnnouncementToast
+
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.top: parent.top
+        anchors.topMargin: 26
+        z: 12
+        visible: gameStarted && opacity > 0.01
+        opacity: 0
+        radius: 8
+        color: "#cc1f1f1f"
+        border.color: "#d9d9d9"
+        border.width: 1
+        width: Math.min(parent.width * 0.7, 700)
+        height: missionAnnouncementLabel.implicitHeight + 22
+
+        Text {
+            id: missionAnnouncementLabel
+
+            anchors.centerIn: parent
+            width: parent.width - 28
+            text: mainWindow.missionAnnouncementText
+            color: "#f5f5f5"
+            font.pixelSize: 18
+            font.bold: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
+        }
+
+        Behavior on opacity {
+            NumberAnimation {
+                duration: 220
+            }
+
+        }
+
+    }
+
+    Timer {
+        id: missionAnnouncementTimer
+
+        interval: 3600
+        repeat: false
+        onTriggered: missionAnnouncementToast.opacity = 0
     }
 
     Rectangle {
@@ -533,6 +580,19 @@ ApplicationWindow {
                 gameViewItem.setPaused(true);
                 objectivesPanel.visible = true;
             }
+        }
+
+        target: game
+    }
+
+    Connections {
+        function onMission_announcement(text) {
+            if (!text || !mainWindow.gameStarted)
+                return ;
+
+            mainWindow.missionAnnouncementText = text;
+            missionAnnouncementToast.opacity = 1;
+            missionAnnouncementTimer.restart();
         }
 
         target: game
