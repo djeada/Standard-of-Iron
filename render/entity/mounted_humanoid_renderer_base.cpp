@@ -130,7 +130,9 @@ void MountedHumanoidRendererBase::add_attachments(
   const AnimationInputs &anim = anim_ctx.inputs;
 
   HorseLOD horse_lod = HorseLOD::Full;
-  if (ctx.camera != nullptr) {
+  if (ctx.force_horse_lod) {
+    horse_lod = ctx.forced_horse_lod;
+  } else if (ctx.camera != nullptr) {
     QVector3D const horse_world_pos =
         ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
     float const distance =

@@ -58,12 +58,14 @@ auto Mesh::prepare_draw(const char *caller_name) -> bool {
   }
   m_vao->bind();
 
+#ifndef NDEBUG
   initializeOpenGLFunctions();
   GLenum preErr = glGetError();
   if (preErr != GL_NO_ERROR) {
     qWarning() << caller_name << "pre-draw GL error" << preErr << "vao"
                << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
   }
+#endif
   return true;
 }
 
@@ -76,10 +78,12 @@ void Mesh::draw() {
 
   m_vao->unbind();
 
+#ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw GL error" << err << "indices" << m_indices.size();
   }
+#endif
 }
 
 void Mesh::draw_instanced(std::size_t instance_count) {
@@ -95,11 +99,33 @@ void Mesh::draw_instanced(std::size_t instance_count) {
 
   m_vao->unbind();
 
+#ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "Mesh::draw_instanced GL error" << err << "indices"
                << m_indices.size() << "instances" << instance_count;
   }
+#endif
+}
+
+void Mesh::unbind_vao() {
+  if (m_vao) {
+    m_vao->unbind();
+  }
+}
+
+void Mesh::draw_instanced_raw(std::size_t instance_count) {
+  initializeOpenGLFunctions();
+  glDrawElementsInstanced(GL_TRIANGLES, static_cast<GLsizei>(m_indices.size()),
+                          GL_UNSIGNED_INT, nullptr,
+                          static_cast<GLsizei>(instance_count));
+#ifndef NDEBUG
+  GLenum err = glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "Mesh::draw_instanced_raw GL error" << err << "indices"
+               << m_indices.size() << "instances" << instance_count;
+  }
+#endif
 }
 
 auto create_quad_mesh() -> std::unique_ptr<Mesh> {

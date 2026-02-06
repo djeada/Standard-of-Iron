@@ -352,6 +352,15 @@ private:
     qreal last_cursor_y = -1.0;
     int selection_refresh_counter = 0;
   };
+  struct PendingMissionWave {
+    int owner_id = 0;
+    Game::Systems::NationID nation_id = Game::Systems::NationID::RomanRepublic;
+    QString ai_id;
+    float trigger_time = 0.0F;
+    QVector3D entry_world_position{0.0F, 0.0F, 0.0F};
+    std::vector<Game::Mission::WaveComposition> composition;
+    bool spawned = false;
+  };
   bool screen_to_ground(const QPointF &screenPt, QVector3D &outWorld);
   bool world_to_screen(const QVector3D &world, QPointF &outScreen) const;
   void sync_selection_flags();
@@ -378,6 +387,10 @@ private:
   void apply_mission_setup();
   void configure_mission_victory_conditions();
   void configure_rain_system();
+  void reset_mission_runtime_state();
+  void update_mission_waves(float dt);
+  void spawn_mission_wave(const PendingMissionWave &wave);
+  void center_camera_on_local_forces();
   void finalize_skirmish_load();
   void render_game_effects();
   void update_loading_overlay();
@@ -439,6 +452,8 @@ private:
   QElapsedTimer m_loading_overlay_timer;
   bool m_finalize_progress_after_overlay = false;
   bool m_show_objectives_after_loading = false;
+  float m_campaign_mission_elapsed = 0.0F;
+  std::vector<PendingMissionWave> m_pending_mission_waves;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitDiedEvent>
       m_unit_died_subscription;
   Engine::Core::ScopedEventSubscription<Engine::Core::UnitSpawnedEvent>
@@ -472,4 +487,5 @@ signals:
   void placing_formation_changed();
   void placing_construction_changed();
   void campaign_mission_changed();
+  void mission_announcement(QString text);
 };
