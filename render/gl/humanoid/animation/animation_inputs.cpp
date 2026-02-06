@@ -35,6 +35,9 @@ auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
 } // namespace
 
 auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
+  if (ctx.animation_override != nullptr) {
+    return *ctx.animation_override;
+  }
   AnimationInputs anim{};
   anim.time = ctx.animation_time;
   anim.is_moving = false;

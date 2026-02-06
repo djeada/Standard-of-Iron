@@ -375,8 +375,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     builder_obj["build_time"] = static_cast<double>(builder->build_time);
     builder_obj["time_remaining"] =
         static_cast<double>(builder->time_remaining);
-    builder_obj["product_type"] =
-        QString::fromStdString(builder->product_type);
+    builder_obj["product_type"] = QString::fromStdString(builder->product_type);
     builder_obj["construction_complete"] = builder->construction_complete;
     builder_obj["has_construction_site"] = builder->has_construction_site;
     builder_obj["construction_site_x"] =
@@ -393,8 +392,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["builder_production"] = builder_obj;
   }
 
-  if (const auto *formation =
-          entity->get_component<FormationModeComponent>()) {
+  if (const auto *formation = entity->get_component<FormationModeComponent>()) {
     QJsonObject formation_obj;
     formation_obj["active"] = formation->active;
     formation_obj["formation_center_x"] =
@@ -780,12 +778,12 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(combat_state_obj["state_duration"].toDouble(0.0));
     combat_state->attack_offset =
         static_cast<float>(combat_state_obj["attack_offset"].toDouble(0.0));
-    combat_state->attack_variant = static_cast<std::uint8_t>(
-        combat_state_obj["attack_variant"].toInt(0));
+    combat_state->attack_variant =
+        static_cast<std::uint8_t>(combat_state_obj["attack_variant"].toInt(0));
     combat_state->is_hit_paused =
         combat_state_obj["is_hit_paused"].toBool(false);
-    combat_state->hit_pause_remaining =
-        static_cast<float>(combat_state_obj["hit_pause_remaining"].toDouble(0.0));
+    combat_state->hit_pause_remaining = static_cast<float>(
+        combat_state_obj["hit_pause_remaining"].toDouble(0.0));
   }
 
   if (json.contains("hit_feedback")) {
@@ -794,8 +792,8 @@ void Serialization::deserialize_entity(Entity *entity,
     hit_feedback->is_reacting = hit_feedback_obj["is_reacting"].toBool(false);
     hit_feedback->reaction_time =
         static_cast<float>(hit_feedback_obj["reaction_time"].toDouble(0.0));
-    hit_feedback->reaction_intensity =
-        static_cast<float>(hit_feedback_obj["reaction_intensity"].toDouble(0.0));
+    hit_feedback->reaction_intensity = static_cast<float>(
+        hit_feedback_obj["reaction_intensity"].toDouble(0.0));
     hit_feedback->knockback_x =
         static_cast<float>(hit_feedback_obj["knockback_x"].toDouble(0.0));
     hit_feedback->knockback_z =
@@ -810,7 +808,8 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(builder_obj["build_time"].toDouble(10.0));
     builder->time_remaining =
         static_cast<float>(builder_obj["time_remaining"].toDouble(0.0));
-    builder->product_type = builder_obj["product_type"].toString().toStdString();
+    builder->product_type =
+        builder_obj["product_type"].toString().toStdString();
     builder->construction_complete =
         builder_obj["construction_complete"].toBool(false);
     builder->has_construction_site =
@@ -846,8 +845,9 @@ void Serialization::deserialize_entity(Entity *entity,
     auto *stamina = entity->add_component<StaminaComponent>();
     stamina->stamina = static_cast<float>(stamina_obj["stamina"].toDouble(
         static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
-    stamina->max_stamina = static_cast<float>(stamina_obj["max_stamina"].toDouble(
-        static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
+    stamina->max_stamina =
+        static_cast<float>(stamina_obj["max_stamina"].toDouble(
+            static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
     stamina->regen_rate = static_cast<float>(stamina_obj["regen_rate"].toDouble(
         static_cast<double>(StaminaComponent::kDefaultRegenRate)));
     stamina->depletion_rate =

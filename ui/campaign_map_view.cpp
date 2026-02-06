@@ -2234,18 +2234,7 @@ void main() {
 
 } // namespace
 
-CampaignMapView::CampaignMapView() {
-  setMirrorVertically(true);
-
-  QOpenGLContext *ctx = QOpenGLContext::currentContext();
-  if (ctx == nullptr) {
-    qWarning() << "CampaignMapView: No OpenGL context available";
-    qWarning()
-        << "CampaignMapView: 3D rendering will not work in software mode";
-    qWarning()
-        << "CampaignMapView: Try running without QT_QUICK_BACKEND=software";
-  }
-}
+CampaignMapView::CampaignMapView() { setMirrorVertically(true); }
 
 void CampaignMapView::load_provinces_for_hit_test() {
   if (m_provinces_loaded) {

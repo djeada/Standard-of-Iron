@@ -7,6 +7,7 @@
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "submitter.h"
+#include "unit_render_cache.h"
 #include <atomic>
 #include <cstdint>
 #include <memory>
@@ -151,6 +152,7 @@ public:
                      float depth_bias = 0.0F);
 
   void render_world(Engine::Core::World *world);
+  void prewarm_unit_templates();
 
   void lock_world_for_modification() { m_world_mutex.lock(); }
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
@@ -180,9 +182,10 @@ private:
                               Engine::Core::TransformComponent *transform,
                               Engine::Core::UnitComponent *unit_comp,
                               bool selected, bool hovered);
-  void enqueue_mode_indicator(Engine::Core::Entity *entity,
-                              Engine::Core::TransformComponent *transform,
-                              Engine::Core::UnitComponent *unit_comp);
+  void enqueue_mode_indicator(Engine::Core::TransformComponent *transform,
+                              Engine::Core::UnitComponent *unit_comp,
+                              bool has_attack, bool has_guard_mode,
+                              bool has_hold_mode, bool has_patrol);
 
   struct AnimationTimeCacheEntry {
     float time = 0.0F;
@@ -218,6 +221,9 @@ private:
   Shader *m_current_shader = nullptr;
 
   std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
+  UnitRenderCache m_unit_render_cache;
+  ModelMatrixCache m_model_matrix_cache;
+  std::uint32_t m_frame_counter{0};
 };
 
 struct FrameScope {

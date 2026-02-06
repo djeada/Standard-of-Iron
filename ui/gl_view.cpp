@@ -15,17 +15,7 @@
 #include <qtmetamacros.h>
 #include <utility>
 
-GLView::GLView() {
-  setMirrorVertically(true);
-
-  QOpenGLContext *ctx = QOpenGLContext::currentContext();
-  if (ctx == nullptr) {
-    qWarning() << "GLView: No OpenGL context available";
-    qWarning() << "GLView: 3D rendering will not work in software mode";
-    qWarning() << "GLView: Try running without QT_QUICK_BACKEND=software for "
-                  "full functionality";
-  }
-}
+GLView::GLView() { setMirrorVertically(true); }
 
 auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
 

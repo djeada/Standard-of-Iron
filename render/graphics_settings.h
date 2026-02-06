@@ -245,14 +245,14 @@ private:
 
     case GraphicsQuality::Ultra:
 
-      m_lod_multipliers = {.humanoid_full = 100.0F,
-                           .humanoid_reduced = 100.0F,
-                           .humanoid_minimal = 100.0F,
-                           .humanoid_billboard = 100.0F,
-                           .horse_full = 100.0F,
-                           .horse_reduced = 100.0F,
-                           .horse_minimal = 100.0F,
-                           .horse_billboard = 100.0F,
+      m_lod_multipliers = {.humanoid_full = 3.0F,
+                           .humanoid_reduced = 3.0F,
+                           .humanoid_minimal = 3.0F,
+                           .humanoid_billboard = 3.0F,
+                           .horse_full = 3.0F,
+                           .horse_reduced = 3.0F,
+                           .horse_minimal = 3.0F,
+                           .horse_billboard = 3.0F,
                            .shadow_distance = 200.0F,
                            .enable_shadows = true};
       m_features = {.enable_facial_hair = true,
@@ -273,10 +273,10 @@ private:
     }
   }
 
-  static constexpr float kBaseHumanoidFull = 15.0F;
-  static constexpr float kBaseHumanoidReduced = 35.0F;
-  static constexpr float kBaseHumanoidMinimal = 60.0F;
-  static constexpr float kBaseHumanoidBillboard = 100.0F;
+  static constexpr float kBaseHumanoidFull = 10.0F;
+  static constexpr float kBaseHumanoidReduced = 22.0F;
+  static constexpr float kBaseHumanoidMinimal = 45.0F;
+  static constexpr float kBaseHumanoidBillboard = 80.0F;
 
   static constexpr float kBaseHorseFull = 20.0F;
   static constexpr float kBaseHorseReduced = 40.0F;

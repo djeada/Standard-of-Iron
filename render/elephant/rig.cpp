@@ -1,11 +1,13 @@
 #include "rig.h"
 
+#include "../../game/core/component.h"
 #include "../entity/registry.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../humanoid/rig.h"
 #include "../submitter.h"
+#include "../template_cache.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -54,6 +56,22 @@ constexpr uint32_t k_cache_cleanup_interval_mask = 0x1FFU;
 constexpr float k_color_hash_multiplier = 31.0F;
 
 constexpr float k_color_comparison_tolerance = 0.001F;
+
+inline auto resolve_variant_key_from_seed(std::uint32_t seed) -> std::uint8_t {
+  std::uint32_t v = seed ^ (seed >> 16);
+  return static_cast<std::uint8_t>(v % k_template_variant_count);
+}
+
+inline auto resolve_variant_seed(const Engine::Core::UnitComponent *unit_comp,
+                                 std::uint8_t variant_key) -> std::uint32_t {
+  std::uint32_t seed = 0U;
+  if (unit_comp != nullptr) {
+    seed ^= static_cast<std::uint32_t>(unit_comp->spawn_type) * 2654435761U;
+    seed ^= static_cast<std::uint32_t>(unit_comp->owner_id) * 1013904223U;
+  }
+  seed ^= static_cast<std::uint32_t>(variant_key) * 2246822519U;
+  return seed;
+}
 
 inline auto make_elephant_profile_cache_key(
     uint32_t seed, const QVector3D &fabric_base,
@@ -1147,20 +1165,24 @@ void ElephantRendererBase::render_full(
 
       float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
 
-      float const stride_angle = leg_phase * 2.0F * k_pi;
-      stride_offset = std::sin(stride_angle) * full_stride * 0.5F;
+      constexpr float k_swing_end = 0.5F;
+      bool const in_swing = (leg_phase < k_swing_end);
 
-      float const forward_velocity = std::cos(stride_angle);
-      forward_bias = forward_velocity;
-
-      if (is_moving && forward_velocity > 0.0F) {
-        if (leg_phase < 0.25F) {
-          float const u = leg_phase / 0.25F;
-          lift = std::sin(u * k_pi * 0.5F) * lift_height;
-        } else if (leg_phase < 0.50F) {
-          float const u = (leg_phase - 0.25F) / 0.25F;
-          lift = std::cos(u * k_pi * 0.5F) * lift_height;
+      if (in_swing) {
+        float const t = leg_phase / k_swing_end;
+        float const ease = t * t * (3.0F - 2.0F * t);
+        stride_offset = (-0.5F + ease) * full_stride;
+        forward_bias = 1.0F;
+        if (is_moving) {
+          lift = std::sin(t * k_pi) * lift_height;
         }
+      } else {
+        float const t = (leg_phase - k_swing_end) / (1.0F - k_swing_end);
+        float const ease = t * t * (3.0F - 2.0F * t);
+
+        stride_offset = (0.5F - ease) * full_stride;
+        forward_bias = -1.0F;
+        lift = 0.0F;
       }
     }
 
@@ -1482,38 +1504,172 @@ void ElephantRendererBase::render_minimal(
   }
 }
 
+namespace {
+auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
+  if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
+    return renderer;
+  }
+  if (auto *batch = dynamic_cast<BatchingSubmitter *>(&out)) {
+    return dynamic_cast<Renderer *>(batch->fallback_submitter());
+  }
+  return nullptr;
+}
+} // namespace
+
 void ElephantRendererBase::render(const DrawContext &ctx,
                                   const AnimationInputs &anim,
                                   ElephantProfile &profile,
                                   const HowdahAttachmentFrame *shared_howdah,
                                   const ElephantMotionSample *shared_motion,
                                   ISubmitter &out, HorseLOD lod) const {
+  HorseLOD effective_lod = lod;
+  if (ctx.force_horse_lod) {
+    effective_lod = ctx.forced_horse_lod;
+  }
+
+  bool use_cache = ctx.allow_template_cache && !ctx.renderer_id.empty();
+
+  std::uint32_t seed = 0U;
+  if (ctx.has_seed_override) {
+    seed = ctx.seed_override;
+  } else if (ctx.entity != nullptr) {
+    seed = static_cast<std::uint32_t>(
+        reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+  }
+
+  std::uint8_t variant_key = ctx.has_variant_override
+                                 ? ctx.variant_override
+                                 : resolve_variant_key_from_seed(seed);
+
+  AnimKey anim_key = make_anim_key(anim, 0.0F, 0);
+
+  auto *unit_comp =
+      ctx.entity ? ctx.entity->get_component<Engine::Core::UnitComponent>()
+                 : nullptr;
+  std::uint32_t owner_id = (unit_comp != nullptr)
+                               ? static_cast<std::uint32_t>(unit_comp->owner_id)
+                               : 0U;
+
+  TemplateKey key;
+  key.renderer_id = ctx.renderer_id;
+  key.owner_id = owner_id;
+  key.lod = static_cast<std::uint8_t>(effective_lod);
+  key.mount_lod = 0;
+  key.variant = variant_key;
+  key.attack_variant = anim_key.attack_variant;
+  key.state = anim_key.state;
+  key.combat_phase = anim_key.combat_phase;
+  key.frame = anim_key.frame;
+
+  auto build_template = [&]() -> PoseTemplate {
+    TemplateRecorder recorder;
+    recorder.reset();
+
+    if (auto *outer = dynamic_cast<Renderer *>(&out)) {
+      recorder.set_current_shader(outer->get_current_shader());
+    }
+
+    DrawContext build_ctx = ctx;
+    build_ctx.model = QMatrix4x4();
+    build_ctx.camera = nullptr;
+    build_ctx.allow_template_cache = false;
+    build_ctx.force_horse_lod = true;
+    build_ctx.forced_horse_lod = effective_lod;
+
+    QVector3D fabric_base = profile.variant.howdah_fabric_color;
+    QVector3D metal_base = profile.variant.howdah_metal_color;
+    std::uint32_t variant_seed = resolve_variant_seed(unit_comp, variant_key);
+    ElephantProfile variant_profile = get_or_create_cached_elephant_profile(
+        variant_seed, fabric_base, metal_base);
+
+    AnimationInputs build_anim = make_animation_inputs(anim_key);
+
+    switch (effective_lod) {
+    case HorseLOD::Full:
+      render_full(build_ctx, build_anim, variant_profile, nullptr, nullptr,
+                  recorder);
+      break;
+    case HorseLOD::Reduced:
+      render_simplified(build_ctx, build_anim, variant_profile, nullptr,
+                        nullptr, recorder);
+      break;
+    case HorseLOD::Minimal:
+      render_minimal(build_ctx, variant_profile, nullptr, recorder);
+      break;
+    case HorseLOD::Billboard:
+      break;
+    }
+
+    PoseTemplate built;
+    built.commands = recorder.commands();
+    return built;
+  };
+
+  if (ctx.template_prewarm) {
+    if (use_cache && effective_lod != HorseLOD::Billboard) {
+      (void)TemplateCache::instance().get_or_build(key, build_template);
+    }
+    return;
+  }
 
   ++s_elephantRenderStats.elephants_total;
 
-  if (lod == HorseLOD::Billboard) {
+  if (effective_lod == HorseLOD::Billboard) {
     ++s_elephantRenderStats.elephants_skipped_lod;
     return;
   }
 
+  if (use_cache) {
+    const PoseTemplate *tpl =
+        TemplateCache::instance().get_or_build(key, build_template);
+    if (tpl != nullptr && !tpl->commands.empty()) {
+      Renderer *renderer = resolve_renderer_for_submitter(out);
+      Shader *last_shader = nullptr;
+      for (const auto &cmd : tpl->commands) {
+        if (renderer != nullptr && cmd.shader != last_shader) {
+          renderer->set_current_shader(cmd.shader);
+          last_shader = cmd.shader;
+        }
+        QMatrix4x4 world_model = ctx.model * cmd.local_model;
+        out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
+                 cmd.material_id);
+      }
+      if (renderer != nullptr) {
+        renderer->set_current_shader(nullptr);
+      }
+      ++s_elephantRenderStats.elephants_rendered;
+      switch (effective_lod) {
+      case HorseLOD::Full:
+        ++s_elephantRenderStats.lod_full;
+        break;
+      case HorseLOD::Reduced:
+        ++s_elephantRenderStats.lod_reduced;
+        break;
+      case HorseLOD::Minimal:
+        ++s_elephantRenderStats.lod_minimal;
+        break;
+      case HorseLOD::Billboard:
+        break;
+      }
+      return;
+    }
+  }
+
   ++s_elephantRenderStats.elephants_rendered;
 
-  switch (lod) {
+  switch (effective_lod) {
   case HorseLOD::Full:
     ++s_elephantRenderStats.lod_full;
     render_full(ctx, anim, profile, shared_howdah, shared_motion, out);
     break;
-
   case HorseLOD::Reduced:
     ++s_elephantRenderStats.lod_reduced;
     render_simplified(ctx, anim, profile, shared_howdah, shared_motion, out);
     break;
-
   case HorseLOD::Minimal:
     ++s_elephantRenderStats.lod_minimal;
     render_minimal(ctx, profile, shared_motion, out);
     break;
-
   case HorseLOD::Billboard:
     break;
   }

@@ -3,11 +3,14 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 
 out vec4 FragColor;
 
@@ -63,7 +66,9 @@ vec3 proceduralMaterialVariation(vec3 baseColor, vec3 worldPos, vec3 normal) {
 }
 
 void main() {
-  vec3 color = u_color;
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
+  vec3 color = base_color_in;
   if (u_useTexture) {
     color *= texture(u_texture, v_texCoord).rgb;
   }
@@ -73,12 +78,12 @@ void main() {
 
   vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
 
-  float avgColor = (u_color.r + u_color.g + u_color.b) / 3.0;
+  float avgColor = (base_color_in.r + base_color_in.g + base_color_in.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
 
   float nDotL = dot(normal, lightDir);
   float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.22);
 
   color *= diff;
-  FragColor = vec4(color, u_alpha);
+  FragColor = vec4(color, alpha_in);
 }

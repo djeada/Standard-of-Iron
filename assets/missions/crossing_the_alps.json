@@ -1,161 +1,207 @@
 {
   "id": "crossing_the_alps",
   "title": "Crossing the Alps",
-  "summary": "Lead your army through the treacherous Alpine passes, surviving harsh weather and hostile mountain tribes",
-  "teaching_goal": "Survival and attrition management. Teaches players to manage limited resources, preserve units, and overcome environmental hazards.",
-  "narrative_intent": "A flashback mission showing Hannibal's legendary feat. The player experiences the cost of the impossible crossing.",
-  "historical_context": "In 218 BC, Hannibal Barca achieved one of history's most remarkable military feats by crossing the Alps with an army of approximately 38,000 infantry, 8,000 cavalry, and 37 war elephants. The journey through the snow-covered passes claimed nearly half his men and most of his elephants, but the psychological impact on Rome was immense.",
+  "summary": "Secure the mountain passes by capturing tribal camps while surviving repeated ambush waves.",
+  "teaching_goal": "Long-form offensive progression. Teaches clearing staged defensive positions under attrition.",
+  "narrative_intent": "The crossing is a running battle through hostile high ground, not a single engagement.",
+  "historical_context": "218 BC: Hannibal's Alpine march depended on breaking hostile positions along narrow passes while preserving combat strength.",
   "terrain_type": "mountain",
   "map_path": ":/assets/maps/map_crossing_alps.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 25,
-        "position": {"x": 40, "z": 40}
-      },
-      {
-        "type": "swordsman",
-        "count": 20,
-        "position": {"x": 42, "z": 38}
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 10,
-        "position": {"x": 38, "z": 42}
-      },
-      {
-        "type": "archer",
-        "count": 12,
-        "position": {"x": 40, "z": 36}
-      },
-      {
-        "type": "elephant",
-        "count": 3,
-        "position": {"x": 44, "z": 40}
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 300,
-      "food": 500
+      "gold": 350,
+      "food": 520
     }
   },
   "ai_setups": [
     {
-      "id": "mountain_tribes_1",
-      "nation": "gauls",
-      "faction": "gallic",
+      "id": "mountain_tribes_pass_one",
+      "nation": "roman_republic",
+      "faction": "roman",
       "color": "green",
       "team_id": 1,
       "difficulty": "medium",
+      "strategy": "defensive",
       "personality": {
-        "aggression": 0.6,
-        "defense": 0.7,
-        "harassment": 0.8
+        "aggression": 0.65,
+        "defense": 0.75,
+        "harassment": 0.65
       },
-      "starting_units": [
+      "starting_units": [],
+      "starting_buildings": [
         {
-          "type": "spearman",
-          "count": 8,
-          "position": {"x": 80, "z": 60}
+          "type": "barracks",
+          "position": {"x": 75, "z": 55},
+          "max_population": 130
+        }
+      ],
+      "waves": [
+        {
+          "timing": 150.0,
+          "composition": [
+            {"type": "spearman", "count": 8},
+            {"type": "archer", "count": 4}
+          ],
+          "entry_point": {"x": 75, "z": 55}
         },
         {
-          "type": "swordsman",
-          "count": 6,
-          "position": {"x": 82, "z": 58}
+          "timing": 360.0,
+          "composition": [
+            {"type": "swordsman", "count": 6},
+            {"type": "spearman", "count": 6}
+          ],
+          "entry_point": {"x": 82, "z": 62}
         }
       ]
     },
     {
-      "id": "mountain_tribes_2",
-      "nation": "gauls",
-      "faction": "gallic",
-      "color": "green",
+      "id": "mountain_tribes_pass_two",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "yellow",
       "team_id": 1,
       "difficulty": "medium",
+      "strategy": "harasser",
       "personality": {
-        "aggression": 0.6,
-        "defense": 0.7,
+        "aggression": 0.7,
+        "defense": 0.65,
         "harassment": 0.8
       },
-      "starting_units": [
+      "starting_units": [],
+      "starting_buildings": [
         {
-          "type": "spearman",
-          "count": 10,
-          "position": {"x": 110, "z": 90}
+          "type": "barracks",
+          "position": {"x": 105, "z": 85},
+          "max_population": 130
+        }
+      ],
+      "waves": [
+        {
+          "timing": 240.0,
+          "composition": [
+            {"type": "archer", "count": 6},
+            {"type": "spearman", "count": 8}
+          ],
+          "entry_point": {"x": 105, "z": 85}
         },
         {
-          "type": "archer",
-          "count": 8,
-          "position": {"x": 112, "z": 88}
+          "timing": 480.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "swordsman", "count": 6}
+          ],
+          "entry_point": {"x": 112, "z": 92}
+        }
+      ]
+    },
+    {
+      "id": "mountain_tribes_final_pass",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "orange",
+      "team_id": 1,
+      "difficulty": "hard",
+      "strategy": "defensive",
+      "personality": {
+        "aggression": 0.72,
+        "defense": 0.8,
+        "harassment": 0.6
+      },
+      "starting_units": [],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 125, "z": 115},
+          "max_population": 150
+        }
+      ],
+      "waves": [
+        {
+          "timing": 600.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 6}
+          ],
+          "entry_point": {"x": 125, "z": 115}
+        },
+        {
+          "timing": 780.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 10},
+            {"type": "horse_swordsman", "count": 4}
+          ],
+          "entry_point": {"x": 132, "z": 122}
         }
       ]
     }
   ],
   "victory_conditions": [
     {
-      "type": "reach_destination",
-      "destination": {"x": 150, "z": 150},
-      "description": "Lead your army through the Alps to the Italian side"
-    },
-    {
-      "type": "preserve_minimum_units",
-      "min_count": 20,
-      "description": "Preserve at least 20 units to continue the campaign"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 3,
+      "description": "Capture all three tribal camps to secure the Alpine route"
     }
   ],
   "defeat_conditions": [
     {
-      "type": "lose_critical_units",
-      "threshold": 0.7,
-      "description": "Do not lose more than 70% of your army"
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Do not lose your supply camp"
+    },
+    {
+      "type": "lose_all_units",
+      "description": "Do not lose all your units"
     }
   ],
   "optional_objectives": [
     {
-      "type": "save_elephants",
-      "min_elephants": 2,
-      "description": "Bonus: Save at least 2 elephants"
+      "type": "survive_duration",
+      "duration": 900.0,
+      "description": "Complete the crossing in under 15 minutes"
     }
   ],
   "events": [
     {
       "trigger": {
         "type": "timer",
-        "time": 60.0
+        "time": 80.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "The cold takes its toll. Keep moving to minimize losses."
+          "text": "Take the first pass quickly before the next ambush line assembles."
         }
       ]
     },
     {
       "trigger": {
-        "type": "enter_area",
-        "area": "narrow_pass"
+        "type": "timer",
+        "time": 230.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Beware! Mountain tribes ambush travelers in these passes!"
+          "text": "Second pass defenders are reinforcing. Keep the column moving."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "lose_elephant"
+        "type": "timer",
+        "time": 580.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "An elephant has fallen to the harsh conditions..."
+          "text": "Final ridge ahead. Break the last camp to open the descent."
         }
       ]
     }

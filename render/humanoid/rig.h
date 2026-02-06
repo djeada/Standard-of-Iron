@@ -22,6 +22,7 @@ namespace Render::GL {
 auto torso_mesh_without_bottom_cap() -> Mesh *;
 
 void advance_pose_cache_frame();
+void clear_humanoid_caches();
 
 inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
   const auto &settings = Render::GraphicsSettings::instance();
@@ -120,20 +121,23 @@ public:
                                         const QVector3D &local_offset,
                                         float uniform_scale) -> QMatrix4x4;
 
+  static void compute_locomotion_pose(uint32_t seed, float time, bool is_moving,
+                                      const VariationParams &variation,
+                                      HumanoidPose &io_pose);
+
 protected:
   mutable QVector3D m_cached_proportion_scale;
   mutable bool m_proportion_scale_cached = false;
 
   static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
-  static void compute_locomotion_pose(uint32_t seed, float time, bool is_moving,
-                                      const VariationParams &variation,
-                                      HumanoidPose &io_pose);
-
   static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;
 
   void draw_common_body(const DrawContext &ctx, const HumanoidVariant &v,
                         HumanoidPose &pose, ISubmitter &out) const;
+
+  void render_procedural(const DrawContext &ctx, const AnimationInputs &anim,
+                         ISubmitter &out) const;
 };
 
 struct HumanoidRenderStats {

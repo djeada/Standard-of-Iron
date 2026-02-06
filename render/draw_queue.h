@@ -34,7 +34,6 @@ struct MeshCmd {
   Mesh *mesh = nullptr;
   Texture *texture = nullptr;
   QMatrix4x4 model;
-  QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
   float alpha = 1.0F;
   int material_id = 0;
@@ -444,9 +443,12 @@ private:
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
 
-      uint64_t const tex_ptr =
-          reinterpret_cast<uintptr_t>(mesh.texture) & 0x0000FFFFFFFFFFFF;
-      key |= tex_ptr;
+      auto ptr_bits16 = [](const void *p) -> uint64_t {
+        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFFF;
+      };
+      key |= ptr_bits16(mesh.shader) << 32;
+      key |= ptr_bits16(mesh.mesh) << 16;
+      key |= ptr_bits16(mesh.texture);
     } else if (cmd.index() == GrassBatchCmdIndex) {
       const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
       uint64_t const buffer_ptr =
