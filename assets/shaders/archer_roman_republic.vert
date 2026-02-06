@@ -3,9 +3,15 @@
 layout(location = 0) in vec3 a_position;
 layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_texCoord;
+layout(location = 3) in vec4 a_instanceModelCol0;
+layout(location = 4) in vec4 a_instanceModelCol1;
+layout(location = 5) in vec4 a_instanceModelCol2;
+layout(location = 6) in vec4 a_instanceColorAlpha;
 
 uniform mat4 u_mvp;
 uniform mat4 u_model;
+uniform mat4 u_viewProj;
+uniform bool u_instanced;
 uniform int u_materialId;
 uniform float u_time;
 
@@ -15,6 +21,8 @@ out vec3 v_tangent;
 out vec3 v_bitangent;
 out vec2 v_texCoord;
 out vec3 v_worldPos;
+out vec3 v_instanceColor;
+out float v_instanceAlpha;
 out float v_armorLayer;
 out float v_bodyHeight;
 out float v_helmetDetail;
@@ -31,6 +39,20 @@ vec3 fallbackUp(vec3 n) {
 }
 
 void main() {
+  mat4 eff_model;
+  if (u_instanced) {
+    eff_model = mat4(vec4(a_instanceModelCol0.xyz, 0.0),
+                     vec4(a_instanceModelCol1.xyz, 0.0),
+                     vec4(a_instanceModelCol2.xyz, 0.0),
+                     vec4(a_instanceModelCol0.w, a_instanceModelCol1.w,
+                          a_instanceModelCol2.w, 1.0));
+    v_instanceColor = a_instanceColorAlpha.rgb;
+    v_instanceAlpha = a_instanceColorAlpha.a;
+  } else {
+    eff_model = u_model;
+    v_instanceColor = vec3(0.0);
+    v_instanceAlpha = 1.0;
+  }
   vec3 position = a_position;
   vec3 normal = a_normal;
 
@@ -89,7 +111,7 @@ void main() {
                   cos(angle) * normal.z - sin(angle) * normal.x);
   }
 
-  mat3 normalMatrix = mat3(transpose(inverse(u_model)));
+  mat3 normalMatrix = mat3(eff_model);
   vec3 worldNormal = normalize(normalMatrix * normal);
 
   vec3 t = normalize(cross(fallbackUp(worldNormal), worldNormal));
@@ -98,7 +120,7 @@ void main() {
   t = normalize(t - worldNormal * dot(worldNormal, t));
   vec3 b = normalize(cross(worldNormal, t));
 
-  vec4 modelPos = u_model * vec4(position, 1.0);
+  vec4 modelPos = eff_model * vec4(position, 1.0);
   vec3 worldPos = modelPos.xyz;
 
   bool deformArmor =
@@ -120,9 +142,7 @@ void main() {
     offsetPos = batteredPos + worldNormal * 0.0055;
   }
 
-  mat4 invModel = inverse(u_model);
-  vec4 localBattered = invModel * vec4(batteredPos, 1.0);
-  gl_Position = u_mvp * localBattered;
+  gl_Position = u_viewProj * vec4(batteredPos, 1.0);
 
   v_worldPos = offsetPos;
   v_texCoord = a_texCoord;

@@ -3,12 +3,15 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 in float v_armorLayer;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 uniform int u_materialId;
 
 out vec4 FragColor;
@@ -123,7 +126,9 @@ float leatherGrain(vec2 p) {
 }
 
 void main() {
-  vec3 baseColor = clamp(u_color, 0.0, 1.0);
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
+  vec3 baseColor = clamp(base_color_in, 0.0, 1.0);
   if (u_useTexture)
     baseColor *= texture(u_texture, v_texCoord).rgb;
   baseColor = boostSaturation(baseColor, 0.25);
@@ -384,5 +389,5 @@ void main() {
   color = color / (color + vec3(0.55));
   color = pow(color, vec3(0.9));
 
-  FragColor = vec4(saturate3(color), u_alpha);
+  FragColor = vec4(saturate3(color), alpha_in);
 }

@@ -1,63 +1,24 @@
 {
   "id": "campania_campaign",
   "title": "Campania Campaign",
-  "summary": "Survive 3 waves of Roman counterattacks while defending Campania. Wave 1 arrives at 5 minutes, Wave 2 at 10 minutes, and the final Wave 3 at 15 minutes. Hold your position for 17 minutes to win!",
-  "teaching_goal": "Defensive operations, wave survival, and resource management. Teaches players to hold territory against escalating enemy waves and manage reinforcements between attacks.",
-  "narrative_intent": "Represents the long grind of the war - holding gains while Rome refuses to surrender. Tests player's defensive skills against increasingly powerful Roman counterattacks.",
+  "summary": "Hold Campania against coordinated Roman waves from north, south, and west while preserving village control.",
+  "teaching_goal": "Layered defense with selective counterattacks. Teaches distributed defense and reserve management.",
+  "narrative_intent": "A prolonged operational defense where Rome attacks from every axis to retake Campania.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 15,
-        "position": {"x": 70, "z": 80}
-      },
-      {
-        "type": "swordsman",
-        "count": 12,
-        "position": {"x": 72, "z": 78}
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 8,
-        "position": {"x": 68, "z": 82}
-      },
-      {
-        "type": "archer",
-        "count": 10,
-        "position": {"x": 70, "z": 76}
-      }
-    ],
-    "starting_buildings": [
-      {
-        "type": "barracks",
-        "position": {"x": 70, "z": 80},
-        "max_population": 200
-      },
-      {
-        "type": "village",
-        "position": {"x": 100, "z": 95}
-      },
-      {
-        "type": "village",
-        "position": {"x": 40, "z": 95}
-      },
-      {
-        "type": "village",
-        "position": {"x": 70, "z": 50}
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
+    "starting_buildings": [],
     "starting_resources": {
-      "gold": 1500,
-      "food": 1000
+      "gold": 1300,
+      "food": 900
     }
   },
   "ai_setups": [
     {
-      "id": "roman_wave_army",
+      "id": "northern_roman_legion",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
@@ -65,83 +26,80 @@
       "difficulty": "hard",
       "strategy": "aggressive",
       "personality": {
-        "aggression": 0.8,
-        "defense": 0.3,
-        "harassment": 0.5
+        "aggression": 0.82,
+        "defense": 0.35,
+        "harassment": 0.45
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {"x": 70, "z": 155},
-          "max_population": 250
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
-          "timing": 300.0,
+          "timing": 180.0,
           "composition": [
-            {"type": "spearman", "count": 15},
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 6}
+          ],
+          "entry_point": {"x": 70, "z": 155}
+        },
+        {
+          "timing": 420.0,
+          "composition": [
+            {"type": "spearman", "count": 12},
             {"type": "swordsman", "count": 10},
-            {"type": "archer", "count": 8}
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "archer", "count": 6}
           ],
           "entry_point": {"x": 70, "z": 155}
         },
         {
-          "timing": 600.0,
+          "timing": 720.0,
           "composition": [
-            {"type": "spearman", "count": 20},
-            {"type": "swordsman", "count": 15},
-            {"type": "archer", "count": 10},
-            {"type": "horse_swordsman", "count": 6}
-          ],
-          "entry_point": {"x": 70, "z": 155}
-        },
-        {
-          "timing": 900.0,
-          "composition": [
-            {"type": "spearman", "count": 25},
-            {"type": "swordsman", "count": 20},
-            {"type": "archer", "count": 12},
-            {"type": "horse_swordsman", "count": 10},
-            {"type": "catapult", "count": 2}
+            {"type": "spearman", "count": 14},
+            {"type": "swordsman", "count": 12},
+            {"type": "horse_swordsman", "count": 6},
+            {"type": "catapult", "count": 1}
           ],
           "entry_point": {"x": 70, "z": 155}
         }
       ]
     },
     {
-      "id": "roman_flanking_force",
+      "id": "southern_roman_legion",
       "nation": "roman_republic",
       "faction": "roman",
-      "color": "red",
+      "color": "orange",
       "team_id": 1,
-      "difficulty": "medium",
+      "difficulty": "hard",
       "strategy": "harasser",
       "personality": {
-        "aggression": 0.6,
+        "aggression": 0.72,
         "defense": 0.4,
-        "harassment": 0.8
+        "harassment": 0.75
       },
       "starting_units": [],
-      "starting_buildings": [
-        {
-          "type": "barracks",
-          "position": {"x": 70, "z": 5},
-          "max_population": 180
-        }
-      ],
+      "starting_buildings": [],
       "waves": [
         {
-          "timing": 450.0,
+          "timing": 260.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 8},
-            {"type": "archer", "count": 6}
+            {"type": "horse_swordsman", "count": 6},
+            {"type": "archer", "count": 4},
+            {"type": "spearman", "count": 6}
           ],
           "entry_point": {"x": 70, "z": 5}
         },
         {
-          "timing": 750.0,
+          "timing": 540.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "horse_swordsman", "count": 4}
+          ],
+          "entry_point": {"x": 70, "z": 5}
+        },
+        {
+          "timing": 780.0,
           "composition": [
             {"type": "spearman", "count": 12},
             {"type": "swordsman", "count": 10},
@@ -150,25 +108,66 @@
           "entry_point": {"x": 70, "z": 5}
         }
       ]
+    },
+    {
+      "id": "western_raiders",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "yellow",
+      "team_id": 1,
+      "difficulty": "medium",
+      "strategy": "rusher",
+      "personality": {
+        "aggression": 0.75,
+        "defense": 0.35,
+        "harassment": 0.8
+      },
+      "starting_units": [],
+      "starting_buildings": [
+        {
+          "type": "barracks",
+          "position": {"x": 10, "z": 80},
+          "max_population": 140
+        }
+      ],
+      "waves": [
+        {
+          "timing": 360.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 5},
+            {"type": "archer", "count": 4}
+          ],
+          "entry_point": {"x": 10, "z": 80}
+        },
+        {
+          "timing": 660.0,
+          "composition": [
+            {"type": "swordsman", "count": 8},
+            {"type": "spearman", "count": 6}
+          ],
+          "entry_point": {"x": 10, "z": 80}
+        }
+      ]
     }
   ],
   "victory_conditions": [
     {
       "type": "survive_duration",
-      "duration": 1020.0,
-      "description": "Survive 3 Roman attack waves (Wave 1 at 5min, Wave 2 at 10min, Wave 3 at 15min) - Hold for 17 minutes total"
+      "duration": 900.0,
+      "description": "Hold Campania for 15 minutes against all Roman waves"
     },
     {
       "type": "control_structures",
       "structure_types": ["village"],
       "min_count": 2,
-      "description": "Maintain control of at least 2 villages throughout the battle"
+      "description": "Maintain control of at least 2 villages"
     }
   ],
   "defeat_conditions": [
     {
-      "type": "lose_all_structures",
-      "description": "Do not lose all your buildings"
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Do not lose your central command barracks"
     },
     {
       "type": "lose_all_units",
@@ -180,120 +179,73 @@
       "type": "control_structures",
       "structure_types": ["village"],
       "min_count": 3,
-      "description": "Bonus: Maintain control of all 3 villages"
+      "description": "Hold all three Campanian villages"
     },
     {
-      "type": "minimize_losses",
-      "max_unit_losses": 20,
-      "description": "Bonus: Complete mission with fewer than 20 unit losses"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 1,
+      "description": "Counterattack and capture at least one Roman camp"
     }
   ],
   "events": [
     {
       "trigger": {
         "type": "timer",
-        "time": 60.0
+        "time": 90.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Scouts report Roman forces gathering to the north. Prepare your defenses! First wave arrives in 4 minutes."
+          "text": "Scouts confirm attacks from north and south. Split your reserve early."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 280.0
+        "time": 170.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "WAVE 1 APPROACHING! Roman infantry advancing from the north!"
+          "text": "First northern wave is incoming."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 300.0
+        "time": 250.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "WAVE 1 HAS ARRIVED! Defend your positions!"
+          "text": "Southern cavalry is moving. Guard your forward village."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 430.0
+        "time": 350.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Warning: Enemy cavalry spotted flanking from the south!"
+          "text": "Western raiders spotted near the supply road."
         }
       ]
     },
     {
       "trigger": {
         "type": "timer",
-        "time": 580.0
+        "time": 700.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "WAVE 2 APPROACHING! A larger Roman force is marching toward Campania!"
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 600.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "WAVE 2 HAS ARRIVED! The Romans have brought cavalry reinforcements!"
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 730.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "More enemy forces approaching from the south! They're trying to overwhelm us!"
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 880.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "FINAL WAVE APPROACHING! Rome's full counterattack force with siege equipment!"
-        }
-      ]
-    },
-    {
-      "trigger": {
-        "type": "timer",
-        "time": 900.0
-      },
-      "actions": [
-        {
-          "type": "show_message",
-          "text": "WAVE 3 HAS ARRIVED! This is the final assault - hold the line!"
+          "text": "Final phase: heavy Roman formations are assembling for a decisive push."
         }
       ]
     }

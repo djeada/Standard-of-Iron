@@ -178,6 +178,31 @@ auto resolve_mission_file_path(const QString &mission_id) -> QString {
   return {};
 }
 
+auto classify_wave_direction(const QVector3D &entry_point) -> QString {
+  const float x = entry_point.x();
+  const float z = entry_point.z();
+  const float ax = std::abs(x);
+  const float az = std::abs(z);
+
+  constexpr float k_direction_bias = 1.25F;
+  if (ax > az * k_direction_bias) {
+    return x >= 0.0F ? QStringLiteral("east") : QStringLiteral("west");
+  }
+  if (az > ax * k_direction_bias) {
+    return z >= 0.0F ? QStringLiteral("south") : QStringLiteral("north");
+  }
+  if (x >= 0.0F && z >= 0.0F) {
+    return QStringLiteral("southeast");
+  }
+  if (x >= 0.0F && z < 0.0F) {
+    return QStringLiteral("northeast");
+  }
+  if (x < 0.0F && z >= 0.0F) {
+    return QStringLiteral("southwest");
+  }
+  return QStringLiteral("northwest");
+}
+
 auto build_condition_list(
     const std::vector<Game::Mission::Condition> &conditions) -> QVariantList {
   QVariantList list;
@@ -925,6 +950,8 @@ void GameEngine::update(float dt) {
   } else {
     dt *= m_runtime.time_scale;
   }
+
+  update_mission_waves(dt);
 
   if (!m_runtime.paused && !m_runtime.loading) {
     if (m_ambient_state_manager) {
@@ -1703,6 +1730,7 @@ void GameEngine::start_skirmish_internal(const QString &map_path,
                                          bool set_skirmish_context) {
 
   clear_error();
+  reset_mission_runtime_state();
 
   m_level.map_path = map_path;
   m_level.map_name = map_path;
@@ -1808,6 +1836,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 }
 
 void GameEngine::apply_mission_setup() {
+  reset_mission_runtime_state();
+
   if (!m_world || !m_campaign_manager) {
     return;
   }
@@ -2109,6 +2139,19 @@ void GameEngine::apply_mission_setup() {
     spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id,
                               ai_setup.starting_buildings);
+
+    for (const auto &wave : ai_setup.waves) {
+      PendingMissionWave pending_wave;
+      pending_wave.owner_id = ai_owner_id;
+      pending_wave.nation_id = ai_nation_id;
+      pending_wave.ai_id = ai_setup.id;
+      pending_wave.trigger_time = std::max(0.0F, wave.timing);
+      pending_wave.entry_world_position =
+          mission_position_to_world(wave.entry_point);
+      pending_wave.composition = wave.composition;
+      m_pending_mission_waves.push_back(std::move(pending_wave));
+    }
+
     ai_owner_id++;
   }
 
@@ -2153,6 +2196,8 @@ void GameEngine::apply_mission_setup() {
   if (m_selected_player_id != prev_selected_player) {
     emit selected_player_id_changed();
   }
+
+  center_camera_on_local_forces();
   emit troop_count_changed();
   emit owner_info_changed();
 }
@@ -2200,6 +2245,205 @@ void GameEngine::configure_rain_system() {
       m_rainManager ? m_rainManager->get_intensity()
                     : (m_level.rain.enabled ? m_level.rain.intensity : 0.0F);
   m_rain->set_intensity(initial_intensity);
+}
+
+void GameEngine::reset_mission_runtime_state() {
+  m_campaign_mission_elapsed = 0.0F;
+  m_pending_mission_waves.clear();
+}
+
+void GameEngine::update_mission_waves(float dt) {
+  if (dt <= 0.0F || !m_world || m_pending_mission_waves.empty() ||
+      !m_runtime.victory_state.isEmpty()) {
+    return;
+  }
+  if (!m_campaign_manager ||
+      !m_campaign_manager->current_mission_context().is_campaign()) {
+    return;
+  }
+
+  m_campaign_mission_elapsed += dt;
+
+  bool spawned_any = false;
+  for (auto &wave : m_pending_mission_waves) {
+    if (wave.spawned || m_campaign_mission_elapsed < wave.trigger_time) {
+      continue;
+    }
+    spawn_mission_wave(wave);
+    wave.spawned = true;
+    spawned_any = true;
+  }
+
+  if (spawned_any) {
+    emit owner_info_changed();
+  }
+}
+
+void GameEngine::spawn_mission_wave(const PendingMissionWave &wave) {
+  if (!m_world) {
+    return;
+  }
+
+  auto reg = Game::Map::MapTransformer::getFactoryRegistry();
+  if (!reg) {
+    qWarning() << "Mission wave spawn skipped: unit factory registry missing";
+    return;
+  }
+
+  auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  if (owner_registry.get_owner_type(wave.owner_id) ==
+      Game::Systems::OwnerType::Neutral) {
+    owner_registry.register_owner_with_id(
+        wave.owner_id, Game::Systems::OwnerType::AI,
+        "AI Wave " + std::to_string(wave.owner_id));
+  }
+
+  const bool ai_controlled = owner_registry.is_ai(wave.owner_id);
+  if (wave.composition.empty()) {
+    qWarning() << "Mission wave has empty composition for AI" << wave.ai_id;
+    return;
+  }
+  const float spacing = std::max(0.5F, m_level.tile_size * 1.2F);
+  const int composition_count = static_cast<int>(wave.composition.size());
+  constexpr float k_group_radius_multiplier = 3.0F;
+  constexpr float k_two_pi = 6.28318530718F;
+
+  int spawned_units = 0;
+
+  for (int comp_index = 0; comp_index < composition_count; ++comp_index) {
+    const auto &comp = wave.composition[static_cast<std::size_t>(comp_index)];
+    const auto spawn_type =
+        Game::Units::spawn_typeFromString(comp.type.toStdString());
+    if (!spawn_type.has_value()) {
+      qWarning() << "Mission wave: unknown unit type" << comp.type;
+      continue;
+    }
+
+    const int count = std::max(1, comp.count);
+    const int grid =
+        static_cast<int>(std::ceil(std::sqrt(static_cast<float>(count))));
+    const float angle = (k_two_pi * static_cast<float>(comp_index)) /
+                        static_cast<float>(composition_count);
+    const QVector3D group_center =
+        wave.entry_world_position +
+        QVector3D(std::cos(angle), 0.0F, std::sin(angle)) *
+            (spacing * k_group_radius_multiplier);
+
+    for (int i = 0; i < count; ++i) {
+      const int row = i / grid;
+      const int col = i % grid;
+      const float offset_x = (float(col) - (grid - 1) * 0.5F) * spacing;
+      const float offset_z = (float(row) - (grid - 1) * 0.5F) * spacing;
+      const QVector3D pos =
+          QVector3D(group_center.x() + offset_x, group_center.y(),
+                    group_center.z() + offset_z);
+
+      Game::Units::SpawnParams sp;
+      sp.position = pos;
+      sp.player_id = wave.owner_id;
+      sp.spawn_type = spawn_type.value();
+      sp.ai_controlled = ai_controlled;
+      sp.nation_id = wave.nation_id;
+
+      auto unit = reg->create(sp.spawn_type, *m_world, sp);
+      if (!unit) {
+        qWarning() << "Mission wave: failed to spawn unit" << comp.type
+                   << "for owner" << wave.owner_id;
+        continue;
+      }
+
+      auto *entity = m_world->get_entity(unit->id());
+      if (entity != nullptr) {
+        auto *renderable =
+            entity->get_component<Engine::Core::RenderableComponent>();
+        if (renderable != nullptr) {
+          const QVector3D team_color =
+              Game::Visuals::team_colorForOwner(wave.owner_id);
+          renderable->color[0] = team_color.x();
+          renderable->color[1] = team_color.y();
+          renderable->color[2] = team_color.z();
+        }
+      }
+      spawned_units++;
+    }
+  }
+
+  if (spawned_units > 0) {
+    qInfo() << "Mission wave spawned for AI" << wave.ai_id << "("
+            << wave.owner_id << "):" << spawned_units
+            << "units at t=" << m_campaign_mission_elapsed;
+
+    QString wave_name = wave.ai_id;
+    wave_name.replace('_', ' ');
+    if (wave_name.isEmpty()) {
+      wave_name = QStringLiteral("Enemy");
+    }
+
+    const QString direction =
+        classify_wave_direction(wave.entry_world_position);
+    const QString announcement =
+        QStringLiteral("%1 wave from the %2 (%3 units)")
+            .arg(wave_name, direction)
+            .arg(spawned_units);
+    emit mission_announcement(announcement);
+  }
+}
+
+void GameEngine::center_camera_on_local_forces() {
+  if (!m_world || !m_camera) {
+    return;
+  }
+
+  QVector3D troops_sum(0.0F, 0.0F, 0.0F);
+  QVector3D structures_sum(0.0F, 0.0F, 0.0F);
+  int troops_count = 0;
+  int structures_count = 0;
+
+  auto entities = m_world->get_entities_with<Engine::Core::UnitComponent>();
+  for (auto *entity : entities) {
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (unit == nullptr || transform == nullptr || unit->health <= 0 ||
+        unit->owner_id != m_runtime.local_owner_id) {
+      continue;
+    }
+
+    const QVector3D pos(transform->position.x, transform->position.y,
+                        transform->position.z);
+    if (Game::Units::isTroopSpawn(unit->spawn_type)) {
+      troops_sum += pos;
+      troops_count++;
+    } else {
+      structures_sum += pos;
+      structures_count++;
+    }
+  }
+
+  QVector3D focus;
+  if (troops_count > 0) {
+    focus = troops_sum / static_cast<float>(troops_count);
+  } else if (structures_count > 0) {
+    focus = structures_sum / static_cast<float>(structures_count);
+  } else {
+    return;
+  }
+
+  const QVector3D current_target = m_camera->get_target();
+  const QVector3D current_position = m_camera->get_position();
+  const QVector3D offset = current_position - current_target;
+
+  if (offset.lengthSquared() < 1e-6F) {
+    const auto &cam_config = Game::GameConfig::instance().camera();
+    m_camera->set_rts_view(focus, cam_config.default_distance,
+                           cam_config.default_pitch, cam_config.default_yaw);
+    return;
+  }
+
+  m_camera->look_at(focus + offset, focus, m_camera->get_up_vector());
 }
 
 void GameEngine::finalize_skirmish_load() {
@@ -2258,6 +2502,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     set_error("Load: not initialized");
     return false;
   }
+
+  reset_mission_runtime_state();
 
   m_finalize_progress_after_overlay = false;
   m_loading_overlay_active = true;

@@ -30,6 +30,8 @@ public:
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle material_id{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_basic_shader = nullptr;
@@ -48,6 +50,8 @@ private:
   GL::Backend *m_backend = nullptr;
   GL::ShaderCache *m_shader_cache = nullptr;
   std::unordered_map<GL::Shader *, BasicUniforms> m_uniform_cache;
+  GL::Shader *m_last_resolved_shader = nullptr;
+  BasicUniforms *m_last_resolved_uniforms = nullptr;
 
   void cache_basic_uniforms();
   void cache_archer_uniforms();

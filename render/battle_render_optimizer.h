@@ -73,7 +73,7 @@ public:
   }
 
   [[nodiscard]] auto
-  should_update_animation(uint32_t entity_id, float distance_to_camera,
+  should_update_animation(uint32_t entity_id, float distance_sq,
                           bool is_selected) const noexcept -> bool {
     BattleRenderConfig cfg;
     {
@@ -94,7 +94,9 @@ public:
       return true;
     }
 
-    if (distance_to_camera < cfg.animation_throttle_distance) {
+    float const throttle_distance_sq =
+        cfg.animation_throttle_distance * cfg.animation_throttle_distance;
+    if (distance_sq < throttle_distance_sq) {
       return true;
     }
 

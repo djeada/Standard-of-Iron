@@ -102,13 +102,15 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
   if (shader == nullptr) {
     return uniforms;
   }
-  uniforms.mvp = shader->uniform_handle("u_mvp");
+  uniforms.mvp = shader->optional_uniform_handle("u_mvp");
   uniforms.model = shader->uniform_handle("u_model");
   uniforms.texture = shader->uniform_handle("u_texture");
   uniforms.use_texture = shader->uniform_handle("u_useTexture");
   uniforms.color = shader->uniform_handle("u_color");
   uniforms.alpha = shader->uniform_handle("u_alpha");
   uniforms.material_id = shader->optional_uniform_handle("u_materialId");
+  uniforms.instanced = shader->optional_uniform_handle("u_instanced");
+  uniforms.view_proj = shader->optional_uniform_handle("u_viewProj");
   return uniforms;
 }
 
@@ -131,13 +133,20 @@ auto CharacterPipeline::resolve_uniforms(GL::Shader *shader)
   if (shader == nullptr) {
     return nullptr;
   }
+  if (shader == m_last_resolved_shader) {
+    return m_last_resolved_uniforms;
+  }
   auto it = m_uniform_cache.find(shader);
   if (it != m_uniform_cache.end()) {
-    return &it->second;
+    m_last_resolved_shader = shader;
+    m_last_resolved_uniforms = &it->second;
+    return m_last_resolved_uniforms;
   }
   BasicUniforms uniforms = build_uniform_set(shader);
   auto [inserted, success] = m_uniform_cache.emplace(shader, uniforms);
-  return &inserted->second;
+  m_last_resolved_shader = shader;
+  m_last_resolved_uniforms = &inserted->second;
+  return m_last_resolved_uniforms;
 }
 
 } // namespace Render::GL::BackendPipelines

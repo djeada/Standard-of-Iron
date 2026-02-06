@@ -57,10 +57,11 @@ else()
     # Release/RelWithDebInfo: optimize for performance
     if(MSVC)
         # MSVC Release flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2 /Oi /Ot /GL /fp:fast")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /LTCG")
     else()
         # GCC/Clang Release flags
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -ffast-math -march=x86-64-v2 -funroll-loops -ftree-vectorize")
     endif()
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)  # Enable LTO
     message(STATUS "Building in RELEASE mode with optimizations")

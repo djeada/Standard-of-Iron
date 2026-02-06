@@ -175,19 +175,30 @@ void MeshInstancingPipeline::flush() {
                   static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu)),
                   m_instances.data());
 
+  if (!m_currentMesh->bind_vao()) {
+    m_instances.clear();
+    return;
+  }
+
   setup_instance_attributes();
 
   if (m_currentTexture != nullptr) {
     m_currentTexture->bind(0);
   }
 
-  m_currentMesh->draw_instanced(count);
+  m_currentMesh->draw_instanced_raw(count);
 
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glVertexAttribDivisor(k_instance_model_col0_loc, 0);
+  glVertexAttribDivisor(k_instance_model_col1_loc, 0);
+  glVertexAttribDivisor(k_instance_model_col2_loc, 0);
+  glVertexAttribDivisor(k_instance_color_alpha_loc, 0);
   glDisableVertexAttribArray(k_instance_model_col0_loc);
   glDisableVertexAttribArray(k_instance_model_col1_loc);
   glDisableVertexAttribArray(k_instance_model_col2_loc);
   glDisableVertexAttribArray(k_instance_color_alpha_loc);
+
+  m_currentMesh->unbind_vao();
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 
   m_instances.clear();
 }

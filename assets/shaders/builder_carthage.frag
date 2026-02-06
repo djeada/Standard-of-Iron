@@ -6,6 +6,8 @@ in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 in float v_armorLayer;
 in float v_bodyHeight;
 in float v_clothFolds;
@@ -15,6 +17,7 @@ uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 uniform int u_materialId;
 
 out vec4 FragColor;
@@ -162,18 +165,20 @@ vec3 apply_lighting(vec3 albedo, vec3 N, vec3 V, vec3 L, float roughness,
 }
 
 void main() {
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
   vec3 N = normalize(v_worldNormal);
   vec3 T = normalize(v_tangent);
   vec3 B = normalize(v_bitangent);
   vec2 uv = v_worldPos.xz * 4.5;
 
-  vec3 base_color = clamp(u_color, 0.0, 1.0);
+  vec3 base_color = clamp(base_color_in, 0.0, 1.0);
   if (u_useTexture) {
     base_color *= texture(u_texture, v_texCoord).rgb;
   }
 
   vec3 teamDefault = vec3(0.0);
-  vec3 teamColor = clamp(mix(teamDefault, u_color, 0.75), 0.0, 1.0);
+  vec3 teamColor = clamp(mix(teamDefault, base_color_in, 0.75), 0.0, 1.0);
 
   bool is_body = (u_materialId == 0);
   bool is_tunic = (u_materialId == 1);
@@ -279,5 +284,5 @@ void main() {
   vec3 color = apply_lighting(albedo, N_used, V, L, roughness, metallic, ao,
                               sheen, wrap);
   color = pow(color * 1.25, vec3(0.9));
-  FragColor = vec4(clamp(color, 0.0, 1.0), u_alpha);
+  FragColor = vec4(clamp(color, 0.0, 1.0), alpha_in);
 }

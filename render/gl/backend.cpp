@@ -212,6 +212,7 @@ void Backend::initialize() {
   qInfo() << "Backend: Loading basic shaders...";
   m_basicShader = m_shaderCache->get(QStringLiteral("basic"));
   m_gridShader = m_shaderCache->get(QStringLiteral("grid"));
+  m_shadowShader = m_shaderCache->get(QStringLiteral("troop_shadow"));
   if (m_basicShader == nullptr) {
     qWarning() << "Backend: basic shader missing";
   }
@@ -280,6 +281,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   m_lastBoundShader = nullptr;
   m_lastBoundTexture = nullptr;
 
+  bool polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
+
   const std::size_t count = queue.size();
   std::size_t i = 0;
   while (i < count) {
@@ -308,8 +311,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (instance_count > 0 &&
           (m_cylinderPipeline->cylinderShader() != nullptr)) {
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+        if (polygon_offset_enabled) {
           glDisable(GL_POLYGON_OFFSET_FILL);
+          polygon_offset_enabled = false;
         }
         Shader *cylinder_shader = m_cylinderPipeline->cylinderShader();
         if (m_lastBoundShader != cylinder_shader) {
@@ -347,8 +351,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_cylinderPipeline->m_fogScratch[idx] = gpu;
         }
         glDepthMask(GL_TRUE);
-        if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+        if (polygon_offset_enabled) {
           glDisable(GL_POLYGON_OFFSET_FILL);
+          polygon_offset_enabled = false;
         }
         Shader *fog_shader = m_cylinderPipeline->fogShader();
         if (m_lastBoundShader != fog_shader) {
@@ -1258,14 +1263,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         break;
       }
 
-      if (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U) {
+      if (polygon_offset_enabled) {
         glDisable(GL_POLYGON_OFFSET_FILL);
+        polygon_offset_enabled = false;
       }
 
-      Shader *shadowShader =
-          m_shaderCache ? m_shaderCache->get(QStringLiteral("troop_shadow"))
-                        : nullptr;
-      bool const isShadowShader = (active_shader == shadowShader);
+      bool const isShadowShader = (active_shader == m_shadowShader);
       std::unique_ptr<DepthMaskScope> shadow_depth_scope;
       std::unique_ptr<BlendScope> shadow_blend_scope;
       if (isShadowShader) {
@@ -1377,7 +1380,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.mvp,
-                                   it.mvp);
+                                   view_proj * it.model);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.model,
                                    it.model);
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.color,
@@ -1398,7 +1401,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
 
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.mvp,
-                                   it.mvp);
+                                   view_proj * it.model);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.model,
                                    it.model);
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.color,
@@ -1421,8 +1424,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           m_lastBoundShader = active_shader;
         }
 
-        QMatrix4x4 mvp =
-            cam.get_projection_matrix() * cam.get_view_matrix() * it.model;
+        QMatrix4x4 mvp = view_proj * it.model;
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.mvp, mvp);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.model,
                                    it.model);
@@ -1472,24 +1474,84 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_lastBoundShader = active_shader;
       }
 
-      active_shader->set_uniform(uniforms->mvp, it.mvp);
-      active_shader->set_uniform(uniforms->model, it.model);
-
-      Texture *tex_to_use =
-          (it.texture != nullptr)
-              ? it.texture
-              : (m_resources ? m_resources->white() : nullptr);
-      if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
-        tex_to_use->bind(0);
-        m_lastBoundTexture = tex_to_use;
-        active_shader->set_uniform(uniforms->texture, 0);
+      std::size_t batch_end = i + 1;
+      if (m_meshInstancingPipeline &&
+          m_meshInstancingPipeline->is_initialized() && !isTransparent &&
+          !isShadowShader && uniforms->instanced != Shader::InvalidUniform) {
+        while (batch_end < count) {
+          const auto &next_cmd = queue.get_sorted(batch_end);
+          if (next_cmd.index() != MeshCmdIndex) {
+            break;
+          }
+          const auto &next_mesh = std::get<MeshCmdIndex>(next_cmd);
+          if (!can_batch_mesh_cmds(it, next_mesh)) {
+            break;
+          }
+          ++batch_end;
+        }
       }
+      const std::size_t batch_size = batch_end - i;
 
-      active_shader->set_uniform(uniforms->use_texture, it.texture != nullptr);
-      active_shader->set_uniform(uniforms->color, it.color);
-      active_shader->set_uniform(uniforms->alpha, it.alpha);
-      active_shader->set_uniform(uniforms->material_id, it.material_id);
-      it.mesh->draw();
+      if (batch_size > 1) {
+
+        active_shader->set_uniform(uniforms->instanced, true);
+        active_shader->set_uniform(uniforms->view_proj, view_proj);
+
+        Texture *tex_to_use =
+            (it.texture != nullptr)
+                ? it.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          active_shader->set_uniform(uniforms->texture, 0);
+        }
+        active_shader->set_uniform(uniforms->use_texture,
+                                   it.texture != nullptr);
+
+        m_meshInstancingPipeline->begin_batch(it.mesh, active_shader,
+                                              it.texture);
+        for (std::size_t j = i; j < batch_end; ++j) {
+          const auto &batch_it = std::get<MeshCmdIndex>(queue.get_sorted(j));
+          m_meshInstancingPipeline->accumulate(batch_it.model, batch_it.color,
+                                               batch_it.alpha,
+                                               batch_it.material_id);
+        }
+        m_meshInstancingPipeline->flush();
+
+        active_shader->set_uniform(uniforms->instanced, false);
+
+        i = batch_end - 1;
+      } else {
+
+        active_shader->set_uniform(uniforms->model, it.model);
+        if (uniforms->view_proj != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->view_proj, view_proj);
+        } else if (uniforms->mvp != Shader::InvalidUniform) {
+          QMatrix4x4 const mvp = view_proj * it.model;
+          active_shader->set_uniform(uniforms->mvp, mvp);
+        }
+
+        Texture *tex_to_use =
+            (it.texture != nullptr)
+                ? it.texture
+                : (m_resources ? m_resources->white() : nullptr);
+        if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+          tex_to_use->bind(0);
+          m_lastBoundTexture = tex_to_use;
+          active_shader->set_uniform(uniforms->texture, 0);
+        }
+
+        active_shader->set_uniform(uniforms->use_texture,
+                                   it.texture != nullptr);
+        active_shader->set_uniform(uniforms->color, it.color);
+        active_shader->set_uniform(uniforms->alpha, it.alpha);
+        active_shader->set_uniform(uniforms->material_id, it.material_id);
+        if (uniforms->instanced != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->instanced, false);
+        }
+        it.mesh->draw();
+      }
 
       if (isTransparent) {
         glDepthFunc(static_cast<GLenum>(prev_depth_func));

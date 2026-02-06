@@ -6,6 +6,8 @@ in vec3 v_tangent;
 in vec3 v_bitangent;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 in float v_armorLayer;
 in float v_bodyHeight;
 in float v_armorSheen;
@@ -18,6 +20,7 @@ uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 uniform int u_materialId;
 
 out vec4 FragColor;
@@ -144,7 +147,9 @@ vec3 hemilight(vec3 N) {
 }
 
 void main() {
-  vec3 base_color = u_color;
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
+  vec3 base_color = base_color_in;
   if (u_useTexture)
     base_color *= texture(u_texture, v_texCoord).rgb;
 
@@ -178,7 +183,7 @@ void main() {
   bool is_leather = is_saddle_leather || is_bridle;
 
   if (is_rider_cloak) {
-    base_color = mix(base_color, saturate(u_color), 0.75);
+    base_color = mix(base_color, saturate(base_color_in), 0.75);
   }
 
   vec3 L = normalize(vec3(1.0, 1.2, 1.0));
@@ -881,5 +886,5 @@ void main() {
   }
 
   col = saturate(col);
-  FragColor = vec4(col, u_alpha);
+  FragColor = vec4(col, alpha_in);
 }

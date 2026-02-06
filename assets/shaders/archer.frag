@@ -3,12 +3,15 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+in vec3 v_instanceColor;
+in float v_instanceAlpha;
 in float v_armorLayer;
 
 uniform sampler2D u_texture;
 uniform vec3 u_color;
 uniform bool u_useTexture;
 uniform float u_alpha;
+uniform bool u_instanced;
 
 out vec4 FragColor;
 
@@ -74,7 +77,9 @@ float scaleArmor(vec2 p, float y) {
 }
 
 void main() {
-  vec3 color = u_color;
+  vec3 base_color_in = u_instanced ? v_instanceColor : u_color;
+  float alpha_in = u_instanced ? v_instanceAlpha : u_alpha;
+  vec3 color = base_color_in;
   if (u_useTexture) {
     color *= texture(u_texture, v_texCoord).rgb;
   }
@@ -190,5 +195,5 @@ void main() {
   }
 
   color *= diff;
-  FragColor = vec4(color, u_alpha);
+  FragColor = vec4(color, alpha_in);
 }

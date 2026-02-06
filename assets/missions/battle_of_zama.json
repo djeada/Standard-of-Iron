@@ -1,103 +1,129 @@
 {
   "id": "battle_of_zama",
   "title": "Battle of Zama",
-  "summary": "The final confrontation - face Scipio Africanus in Africa. Rome's greatest general has learned your tactics and prepares the perfect counter",
-  "teaching_goal": "Adapting to an opponent who knows your tactics. Tests all skills learned - the ultimate challenge against a master tactician.",
-  "narrative_intent": "The culmination of the campaign. Whether victory or defeat, this battle determines the fate of Carthage and Rome.",
+  "summary": "Final battle in Africa: defeat Scipio's main line, Numidian cavalry allies, and reserve camps across a wide front.",
+  "teaching_goal": "Full-spectrum command. Teaches managing elephants, center pressure, and multi-camp enemy logistics.",
+  "narrative_intent": "The final confrontation becomes a layered battle of adaptation and endurance.",
   "map_path": ":/assets/maps/map_battle_zama.json",
   "player_setup": {
     "nation": "carthage",
     "faction": "carthaginian",
-    "color": "blue",
-    "starting_units": [
-      {
-        "type": "spearman",
-        "count": 22,
-        "position": {"x": 60, "z": 60}
-      },
-      {
-        "type": "swordsman",
-        "count": 18,
-        "position": {"x": 62, "z": 58}
-      },
-      {
-        "type": "horse_swordsman",
-        "count": 10,
-        "position": {"x": 58, "z": 62}
-      },
-      {
-        "type": "archer",
-        "count": 12,
-        "position": {"x": 60, "z": 56}
-      },
-      {
-        "type": "elephant",
-        "count": 8,
-        "position": {"x": 56, "z": 60}
-      }
-    ],
+    "color": "brown",
+    "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 500,
-      "food": 400
+      "gold": 550,
+      "food": 420
     }
   },
   "ai_setups": [
     {
-      "id": "roman_scipio_army",
+      "id": "roman_main_line",
       "nation": "roman_republic",
       "faction": "roman",
       "color": "red",
-      "difficulty": "legendary",
+      "team_id": 1,
+      "difficulty": "very_hard",
+      "strategy": "aggressive",
+      "personality": {
+        "aggression": 0.85,
+        "defense": 0.6,
+        "harassment": 0.45
+      },
+      "starting_units": [],
+      "starting_buildings": [],
+      "waves": [
+        {
+          "timing": 220.0,
+          "composition": [
+            {"type": "spearman", "count": 12},
+            {"type": "swordsman", "count": 10},
+            {"type": "archer", "count": 6}
+          ],
+          "entry_point": {"x": 200, "z": 60}
+        },
+        {
+          "timing": 460.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 8},
+            {"type": "spearman", "count": 8}
+          ],
+          "entry_point": {"x": 170, "z": 30}
+        }
+      ]
+    },
+    {
+      "id": "roman_numidian_allies",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "orange",
+      "team_id": 1,
+      "difficulty": "hard",
+      "strategy": "harasser",
       "personality": {
         "aggression": 0.8,
-        "defense": 0.7,
-        "harassment": 0.5
+        "defense": 0.45,
+        "harassment": 0.8
       },
-      "starting_units": [
-        {
-          "type": "spearman",
-          "count": 30,
-          "position": {"x": 160, "z": 60}
-        },
-        {
-          "type": "swordsman",
-          "count": 25,
-          "position": {"x": 162, "z": 58}
-        },
-        {
-          "type": "horse_swordsman",
-          "count": 15,
-          "position": {"x": 155, "z": 62}
-        },
-        {
-          "type": "archer",
-          "count": 15,
-          "position": {"x": 160, "z": 56}
-        }
-      ],
+      "starting_units": [],
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 170, "z": 60},
-          "max_population": 220
+          "position": {"x": 210, "z": 30},
+          "max_population": 180
         }
       ],
-      "ai_behavior_phases": [
+      "waves": [
         {
-          "phase": "anti_elephant_formation",
-          "behavior": "create_lanes_for_elephants",
-          "duration": 120.0
+          "timing": 180.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 8},
+            {"type": "horse_archer", "count": 4}
+          ],
+          "entry_point": {"x": 210, "z": 30}
         },
         {
-          "phase": "counter_envelopment",
-          "behavior": "cavalry_superiority_flanking",
-          "trigger": "elephants_neutralized"
-        },
+          "timing": 420.0,
+          "composition": [
+            {"type": "horse_swordsman", "count": 10},
+            {"type": "archer", "count": 6},
+            {"type": "spearman", "count": 6}
+          ],
+          "entry_point": {"x": 210, "z": 30}
+        }
+      ]
+    },
+    {
+      "id": "roman_rear_guard",
+      "nation": "roman_republic",
+      "faction": "roman",
+      "color": "yellow",
+      "team_id": 1,
+      "difficulty": "hard",
+      "strategy": "defensive",
+      "personality": {
+        "aggression": 0.7,
+        "defense": 0.75,
+        "harassment": 0.35
+      },
+      "starting_units": [],
+      "starting_buildings": [
         {
-          "phase": "final_push",
-          "behavior": "coordinated_assault",
-          "trigger": "enemy_weakened"
+          "type": "barracks",
+          "position": {"x": 200, "z": 95},
+          "max_population": 170
+        }
+      ],
+      "waves": [
+        {
+          "timing": 520.0,
+          "composition": [
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 6},
+            {"type": "catapult", "count": 1}
+          ],
+          "entry_point": {"x": 200, "z": 95}
         }
       ]
     }
@@ -105,10 +131,15 @@
   "victory_conditions": [
     {
       "type": "destroy_all_enemies",
-      "description": "Defeat Scipio's army and secure Carthage's future"
+      "description": "Destroy Scipio's army and every Roman field camp"
     }
   ],
   "defeat_conditions": [
+    {
+      "type": "lose_structure",
+      "structure_type": "barracks",
+      "description": "Do not lose your command barracks"
+    },
     {
       "type": "lose_all_units",
       "description": "Do not lose all your units"
@@ -116,60 +147,58 @@
   ],
   "optional_objectives": [
     {
-      "type": "elephant_effectiveness",
-      "description": "Use elephants effectively before they panic"
-    },
-    {
-      "type": "overcome_cavalry_disadvantage",
-      "description": "Win despite inferior cavalry"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Capture at least two Roman camps"
     }
   ],
   "events": [
     {
       "trigger": {
         "type": "timer",
-        "time": 30.0
+        "time": 60.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Scipio has studied your tactics. He opens his lines to let your elephants pass harmlessly!"
+          "text": "Scipio extends the line. Keep your center steady and protect elephants from isolation."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "elephants_panic"
+        "type": "timer",
+        "time": 170.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "The elephants panic! Your own beasts turn against you!"
+          "text": "Numidian cavalry is entering from the southeastern flank."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "cavalry_flanking"
+        "type": "timer",
+        "time": 410.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "Scipio's cavalry - your own former Numidian allies - sweep around your flanks!"
+          "text": "Roman cavalry waves intensify. Collapse one flank before the rear guard arrives."
         }
       ]
     },
     {
       "trigger": {
-        "type": "custom",
-        "condition": "final_phase"
+        "type": "timer",
+        "time": 510.0
       },
       "actions": [
         {
           "type": "show_message",
-          "text": "This is it - the moment that will decide the fate of Carthage and Rome!"
+          "text": "Rear guard deployment detected in the north. This is the final phase."
         }
       ]
     }

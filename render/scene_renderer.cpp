@@ -2,9 +2,12 @@
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/nation_registry.h"
+#include "../game/systems/owner_registry.h"
 #include "../game/systems/troop_profile_service.h"
 #include "../game/units/spawn_type.h"
+#include "../game/units/troop_catalog.h"
 #include "../game/units/troop_config.h"
+#include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
 #include "draw_queue.h"
 #include "elephant/rig.h"
@@ -16,6 +19,7 @@
 #include "gl/backend.h"
 #include "gl/buffer.h"
 #include "gl/camera.h"
+#include "gl/humanoid/animation/animation_inputs.h"
 #include "gl/primitives.h"
 #include "gl/resources.h"
 #include "graphics_settings.h"
@@ -27,8 +31,10 @@
 #include "ground/terrain_gpu.h"
 #include "horse/rig.h"
 #include "humanoid/rig.h"
+#include "pose_palette_cache.h"
 #include "primitive_batch.h"
 #include "submitter.h"
+#include "template_cache.h"
 #include "visibility_budget.h"
 #include <algorithm>
 #include <cmath>
@@ -47,6 +53,59 @@ const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 constexpr uint32_t k_animation_cache_cleanup_mask = 0xFF;
 constexpr uint32_t k_animation_cache_max_age = 240;
+
+float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
+  switch (spawn_type) {
+  case Game::Units::SpawnType::MountedKnight:
+    return 4.0F;
+  case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::Knight:
+    return 2.5F;
+  default:
+    return 3.0F;
+  }
+}
+
+auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
+  if (move_comp == nullptr) {
+    return false;
+  }
+  return move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
+         (std::abs(move_comp->vz) > 0.01F);
+}
+
+struct UnitRenderEntry {
+  Engine::Core::Entity *entity{nullptr};
+  Engine::Core::RenderableComponent *renderable{nullptr};
+  Engine::Core::TransformComponent *transform{nullptr};
+  Engine::Core::UnitComponent *unit{nullptr};
+  Engine::Core::MovementComponent *movement{nullptr};
+  std::string renderer_key;
+  QMatrix4x4 model_matrix;
+  uint32_t entity_id{0};
+  bool selected{false};
+  bool hovered{false};
+  bool moving{false};
+  bool in_frustum{true};
+  bool fog_visible{true};
+  bool has_attack{false};
+  bool has_guard_mode{false};
+  bool has_hold_mode{false};
+  bool has_patrol{false};
+  float distance_sq{0.0F};
+};
+
+struct RenderEntry {
+  Engine::Core::Entity *entity{nullptr};
+  Engine::Core::RenderableComponent *renderable{nullptr};
+  Engine::Core::TransformComponent *transform{nullptr};
+  Engine::Core::UnitComponent *unit{nullptr};
+  std::string renderer_key;
+  uint32_t entity_id{0};
+  bool selected{false};
+  bool hovered{false};
+};
 } // namespace
 
 Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
@@ -180,7 +239,6 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.model = model;
-  cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.alpha = effective_alpha;
   cmd.material_id = material_id;
@@ -334,7 +392,6 @@ void Renderer::selection_ring(const QMatrix4x4 &model, float alpha_inner,
                               float alpha_outer, const QVector3D &color) {
   SelectionRingCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_view_proj * model;
   cmd.alpha_inner = alpha_inner;
   cmd.alpha_outer = alpha_outer;
   cmd.color = color;
@@ -361,7 +418,6 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                                float base_alpha) {
   SelectionSmokeCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_view_proj * model;
   cmd.color = color;
   cmd.base_alpha = base_alpha;
   if (m_active_queue != nullptr) {
@@ -441,7 +497,6 @@ void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
                               const QVector3D &color, float alpha) {
   ModeIndicatorCmd cmd;
   cmd.model = model;
-  cmd.mvp = m_view_proj * model;
   cmd.mode_type = mode_type;
   cmd.color = color;
   cmd.alpha = alpha;
@@ -516,24 +571,12 @@ void Renderer::enqueue_selection_ring(
 }
 
 void Renderer::enqueue_mode_indicator(
-    Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
-    Engine::Core::UnitComponent *unit_comp) {
-  if ((entity == nullptr) || (transform == nullptr)) {
+    Engine::Core::TransformComponent *transform,
+    Engine::Core::UnitComponent *unit_comp, bool has_attack,
+    bool has_guard_mode, bool has_hold_mode, bool has_patrol) {
+  if (transform == nullptr) {
     return;
   }
-
-  auto *attack_comp = entity->get_component<Engine::Core::AttackComponent>();
-  bool const has_attack =
-      (attack_comp != nullptr) && attack_comp->in_melee_lock;
-
-  auto *guard_mode = entity->get_component<Engine::Core::GuardModeComponent>();
-  bool const has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
-
-  auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
-  bool const has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
-
-  auto *patrol_comp = entity->get_component<Engine::Core::PatrolComponent>();
-  bool const has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
   if (!has_attack && !has_guard_mode && !has_hold_mode && !has_patrol) {
     return;
@@ -644,24 +687,135 @@ void Renderer::render_world(Engine::Core::World *world) {
     cameraHeight = m_camera->get_position().y();
   }
 
+  ++m_frame_counter;
+
   int visibleUnitCount = 0;
+  std::vector<UnitRenderEntry> unit_entries;
+  std::vector<RenderEntry> building_entries;
+  std::vector<RenderEntry> other_entries;
+  unit_entries.reserve(renderable_entities.size());
+  building_entries.reserve(renderable_entities.size());
+  other_entries.reserve(renderable_entities.size());
+
   for (auto *entity : renderable_entities) {
     if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
+
+    uint32_t const entity_id = entity->get_id();
+
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit_comp != nullptr && unit_comp->health > 0) {
-      auto *transform =
-          entity->get_component<Engine::Core::TransformComponent>();
-      if (transform != nullptr && m_camera != nullptr) {
-        QVector3D const unit_pos(transform->position.x, transform->position.y,
-                                 transform->position.z);
+    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
+      continue;
+    }
+
+    if (unit_comp != nullptr) {
+
+      auto &cached =
+          m_unit_render_cache.get_or_create(entity_id, entity, m_frame_counter);
+
+      if (cached.renderable == nullptr || !cached.renderable->visible) {
+        continue;
+      }
+      if (cached.transform == nullptr) {
+        continue;
+      }
+
+      UnitRenderEntry entry;
+      entry.entity = entity;
+      entry.renderable = cached.renderable;
+      entry.transform = cached.transform;
+      entry.unit = cached.unit;
+      entry.entity_id = entity_id;
+
+      bool const is_selected =
+          (m_selected_ids.find(entity_id) != m_selected_ids.end());
+      bool const is_hovered = (entity_id == m_hovered_entity_id);
+      entry.selected = is_selected;
+      entry.hovered = is_hovered;
+      entry.renderer_key = cached.renderer_key;
+      entry.movement = cached.movement;
+      entry.moving = is_unit_moving(entry.movement);
+
+      UnitRenderCache::update_model_matrix(cached);
+      entry.model_matrix = cached.model_matrix;
+
+      if (m_camera != nullptr) {
+        QVector3D const unit_pos(cached.transform->position.x,
+                                 cached.transform->position.y,
+                                 cached.transform->position.z);
         if (m_camera->is_in_frustum(unit_pos, 4.0F)) {
           ++visibleUnitCount;
         }
+
+        float const cull_radius = get_unit_cull_radius(unit_comp->spawn_type);
+        entry.in_frustum = m_camera->is_in_frustum(unit_pos, cull_radius);
+
+        QVector3D const cam_pos = m_camera->get_position();
+        float const dx = unit_pos.x() - cam_pos.x();
+        float const dz = unit_pos.z() - cam_pos.z();
+        entry.distance_sq = dx * dx + dz * dz;
       }
+
+      if (unit_comp->owner_id != m_local_owner_id && visibility_enabled) {
+        entry.fog_visible = vis.isVisibleWorld(cached.transform->position.x,
+                                               cached.transform->position.z);
+      }
+
+      auto *attack_comp =
+          entity->get_component<Engine::Core::AttackComponent>();
+      entry.has_attack = (attack_comp != nullptr) && attack_comp->in_melee_lock;
+
+      auto *guard_mode =
+          entity->get_component<Engine::Core::GuardModeComponent>();
+      entry.has_guard_mode = (guard_mode != nullptr) && guard_mode->active;
+
+      auto *hold_mode =
+          entity->get_component<Engine::Core::HoldModeComponent>();
+      entry.has_hold_mode = (hold_mode != nullptr) && hold_mode->active;
+
+      auto *patrol_comp =
+          entity->get_component<Engine::Core::PatrolComponent>();
+      entry.has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
+
+      unit_entries.push_back(std::move(entry));
+      continue;
+    }
+
+    auto *renderable =
+        entity->get_component<Engine::Core::RenderableComponent>();
+    if ((renderable == nullptr) || !renderable->visible) {
+      continue;
+    }
+
+    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
+    if (transform == nullptr) {
+      continue;
+    }
+
+    RenderEntry entry;
+    entry.entity = entity;
+    entry.renderable = renderable;
+    entry.transform = transform;
+    entry.unit = nullptr;
+    entry.entity_id = entity_id;
+    entry.selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
+    entry.hovered = (entity_id == m_hovered_entity_id);
+    if (!renderable->renderer_id.empty()) {
+      entry.renderer_key = renderable->renderer_id;
+    }
+
+    auto *building_comp =
+        entity->get_component<Engine::Core::BuildingComponent>();
+    if (building_comp != nullptr) {
+      building_entries.push_back(std::move(entry));
+    } else {
+      other_entries.push_back(std::move(entry));
     }
   }
+
+  m_unit_render_cache.prune(m_frame_counter);
+  m_model_matrix_cache.prune(m_frame_counter);
 
   auto &battleOptimizer = Render::BattleRenderOptimizer::instance();
   battleOptimizer.set_visible_unit_count(visibleUnitCount);
@@ -682,150 +836,15 @@ void Renderer::render_world(Engine::Core::World *world) {
   if (batch_config.force_batching) {
     fullShaderMaxDistance = 0.0F;
   }
+  float fullShaderMaxDistanceSq = fullShaderMaxDistance * fullShaderMaxDistance;
 
   BatchingSubmitter batchSubmitter(this, &batcher);
 
-  for (auto *entity : renderable_entities) {
+  ResourceManager *res = resources();
 
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
-      continue;
-    }
-
-    auto *renderable =
-        entity->get_component<Engine::Core::RenderableComponent>();
-    auto *transform = entity->get_component<Engine::Core::TransformComponent>();
-
-    if (!renderable->visible || (transform == nullptr)) {
-      continue;
-    }
-
-    auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
-      continue;
-    }
-
-    float distanceToCamera = 0.0F;
-    if ((m_camera != nullptr) && (unit_comp != nullptr)) {
-
-      float cull_radius = 3.0F;
-
-      if (unit_comp->spawn_type == Game::Units::SpawnType::MountedKnight) {
-        cull_radius = 4.0F;
-      } else if (unit_comp->spawn_type == Game::Units::SpawnType::Spearman ||
-                 unit_comp->spawn_type == Game::Units::SpawnType::Archer ||
-                 unit_comp->spawn_type == Game::Units::SpawnType::Knight) {
-        cull_radius = 2.5F;
-      }
-
-      QVector3D const unit_pos(transform->position.x, transform->position.y,
-                               transform->position.z);
-      if (!m_camera->is_in_frustum(unit_pos, cull_radius)) {
-        continue;
-      }
-
-      QVector3D camPos = m_camera->get_position();
-      float dx = unit_pos.x() - camPos.x();
-      float dz = unit_pos.z() - camPos.z();
-      distanceToCamera = std::sqrt(dx * dx + dz * dz);
-    }
-
-    if ((unit_comp != nullptr) && unit_comp->owner_id != m_local_owner_id) {
-      if (visibility_enabled) {
-        if (!vis.isVisibleWorld(transform->position.x, transform->position.z)) {
-          continue;
-        }
-      }
-    }
-
-    bool const is_selected =
-        (m_selected_ids.find(entity->get_id()) != m_selected_ids.end());
-    bool const is_hovered = (entity->get_id() == m_hovered_entity_id);
-
-    bool is_moving = false;
-    if (unit_comp != nullptr) {
-      auto *move_comp =
-          entity->get_component<Engine::Core::MovementComponent>();
-      is_moving = (move_comp != nullptr) &&
-                  (move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
-                   (std::abs(move_comp->vz) > 0.01F));
-    }
-
-    bool should_update_temporal = true;
-    if (unit_comp != nullptr) {
-      should_update_temporal = battleOptimizer.should_render_unit(
-          entity->get_id(), is_moving, is_selected, is_hovered);
-    }
-
-    QMatrix4x4 model_matrix;
-    model_matrix.translate(transform->position.x, transform->position.y,
-                           transform->position.z);
-    model_matrix.rotate(transform->rotation.x, k_axis_x);
-    model_matrix.rotate(transform->rotation.y, k_axis_y);
-    model_matrix.rotate(transform->rotation.z, k_axis_z);
-    model_matrix.scale(transform->scale.x, transform->scale.y,
-                       transform->scale.z);
-
-    bool drawn_by_registry = false;
-    if (m_entity_registry) {
-      std::string renderer_key;
-      if (!renderable->renderer_id.empty()) {
-        renderer_key = renderable->renderer_id;
-      } else if (unit_comp != nullptr) {
-        renderer_key = Game::Units::spawn_typeToString(unit_comp->spawn_type);
-      }
-      auto fn = m_entity_registry->get(renderer_key);
-      if (fn) {
-        DrawContext ctx{resources(), entity, world, model_matrix};
-
-        ctx.selected = is_selected;
-        ctx.hovered = is_hovered;
-        bool should_update_animation = true;
-        if (unit_comp != nullptr) {
-          if (should_update_temporal) {
-            should_update_animation = battleOptimizer.should_update_animation(
-                entity->get_id(), distanceToCamera, is_selected);
-          } else {
-            should_update_animation = false;
-          }
-        }
-
-        float animation_time = m_accumulated_time;
-        if (unit_comp != nullptr) {
-          animation_time =
-              resolve_animation_time(entity->get_id(), should_update_animation,
-                                     m_accumulated_time, optimizer_frame);
-        }
-
-        ctx.animation_time = animation_time;
-        ctx.renderer_id = renderer_key;
-        ctx.backend = m_backend.get();
-        ctx.camera = m_camera;
-        ctx.animation_throttled =
-            (unit_comp != nullptr) ? !should_update_animation : false;
-
-        bool useBatching = (batching_ratio > 0.0F) &&
-                           (distanceToCamera > fullShaderMaxDistance) &&
-                           !is_selected && !is_hovered &&
-                           !batch_config.never_batch;
-
-        if (useBatching) {
-          fn(ctx, batchSubmitter);
-        } else {
-          fn(ctx, *this);
-        }
-
-        enqueue_selection_ring(entity, transform, unit_comp, is_selected,
-                               is_hovered);
-        enqueue_mode_indicator(entity, transform, unit_comp);
-        drawn_by_registry = true;
-      }
-    }
-    if (drawn_by_registry) {
-      continue;
-    }
-
+  auto resolve_fallback_mesh =
+      [&](Engine::Core::RenderableComponent *renderable) -> Mesh * {
     Mesh *mesh_to_draw = nullptr;
-    ResourceManager *res = resources();
     switch (renderable->mesh) {
     case Engine::Core::RenderableComponent::MeshKind::Quad:
       mesh_to_draw = (res != nullptr) ? res->quad() : nullptr;
@@ -852,55 +871,181 @@ void Renderer::render_world(Engine::Core::World *world) {
     if ((mesh_to_draw == nullptr) && (res != nullptr)) {
       mesh_to_draw = res->quad();
     }
-    QVector3D const color = QVector3D(
-        renderable->color[0], renderable->color[1], renderable->color[2]);
+    return mesh_to_draw;
+  };
 
-    if (res != nullptr) {
-      Mesh *contact_quad = res->quad();
-      Texture *white = res->white();
-      if ((contact_quad != nullptr) && (white != nullptr)) {
-        QMatrix4x4 contact_base;
-        contact_base.translate(transform->position.x,
-                               transform->position.y + 0.03F,
-                               transform->position.z);
-        constexpr float k_contact_shadow_rotation = -90.0F;
-        contact_base.rotate(k_contact_shadow_rotation, 1.0F, 0.0F, 0.0F);
-        float const footprint =
-            std::max({transform->scale.x, transform->scale.z, 0.6F});
+  auto draw_contact_shadow = [&](Engine::Core::TransformComponent *transform,
+                                 Engine::Core::UnitComponent *unit_comp) {
+    if (res == nullptr) {
+      return;
+    }
+    Mesh *contact_quad = res->quad();
+    Texture *white = res->white();
+    if ((contact_quad == nullptr) || (white == nullptr)) {
+      return;
+    }
+    QMatrix4x4 contact_base;
+    contact_base.translate(transform->position.x, transform->position.y + 0.03F,
+                           transform->position.z);
+    constexpr float k_contact_shadow_rotation = -90.0F;
+    contact_base.rotate(k_contact_shadow_rotation, 1.0F, 0.0F, 0.0F);
+    float const footprint =
+        std::max({transform->scale.x, transform->scale.z, 0.6F});
 
-        float size_ratio = 1.0F;
-        if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
-          int const mh = std::max(1, unit->max_health);
-          size_ratio = std::clamp(unit->health / float(mh), 0.0F, 1.0F);
+    float size_ratio = 1.0F;
+    if (unit_comp != nullptr) {
+      int const mh = std::max(1, unit_comp->max_health);
+      size_ratio = std::clamp(unit_comp->health / float(mh), 0.0F, 1.0F);
+    }
+    float const eased = 0.25F + 0.75F * size_ratio;
+
+    float const base_scale_x = footprint * 0.55F * eased;
+    float const base_scale_y = footprint * 0.35F * eased;
+
+    QVector3D const col(0.03F, 0.03F, 0.03F);
+    float const center_alpha = 0.32F * eased;
+    float const mid_alpha = 0.16F * eased;
+    float const outer_alpha = 0.07F * eased;
+
+    QMatrix4x4 c0 = contact_base;
+    c0.scale(base_scale_x * 0.60F, base_scale_y * 0.60F, 1.0F);
+    mesh(contact_quad, c0, col, white, center_alpha);
+
+    QMatrix4x4 c1 = contact_base;
+    c1.scale(base_scale_x * 0.95F, base_scale_y * 0.95F, 1.0F);
+    mesh(contact_quad, c1, col, white, mid_alpha);
+
+    QMatrix4x4 c2 = contact_base;
+    c2.scale(base_scale_x * 1.35F, base_scale_y * 1.35F, 1.0F);
+    mesh(contact_quad, c2, col, white, outer_alpha);
+  };
+
+  for (auto &entry : unit_entries) {
+    if (!entry.in_frustum || !entry.fog_visible) {
+      continue;
+    }
+
+    bool should_update_temporal = battleOptimizer.should_render_unit(
+        entry.entity_id, entry.moving, entry.selected, entry.hovered);
+
+    const QMatrix4x4 &model_matrix = entry.model_matrix;
+
+    bool drawn_by_registry = false;
+    if (m_entity_registry) {
+      auto fn = m_entity_registry->get(entry.renderer_key);
+      if (fn) {
+        DrawContext ctx{resources(), entry.entity, world, model_matrix};
+
+        ctx.selected = entry.selected;
+        ctx.hovered = entry.hovered;
+        bool should_update_animation = true;
+        if (should_update_temporal) {
+          should_update_animation = battleOptimizer.should_update_animation(
+              entry.entity_id, entry.distance_sq, entry.selected);
+        } else {
+          should_update_animation = false;
         }
-        float const eased = 0.25F + 0.75F * size_ratio;
 
-        float const base_scale_x = footprint * 0.55F * eased;
-        float const base_scale_y = footprint * 0.35F * eased;
+        float animation_time =
+            resolve_animation_time(entry.entity_id, should_update_animation,
+                                   m_accumulated_time, optimizer_frame);
 
-        QVector3D const col(0.03F, 0.03F, 0.03F);
-        float const center_alpha = 0.32F * eased;
-        float const mid_alpha = 0.16F * eased;
-        float const outer_alpha = 0.07F * eased;
+        ctx.animation_time = animation_time;
+        ctx.renderer_id = entry.renderer_key;
+        ctx.backend = m_backend.get();
+        ctx.camera = m_camera;
+        ctx.animation_throttled = !should_update_animation;
 
-        QMatrix4x4 c0 = contact_base;
-        c0.scale(base_scale_x * 0.60F, base_scale_y * 0.60F, 1.0F);
-        mesh(contact_quad, c0, col, white, center_alpha);
+        bool useBatching = (batching_ratio > 0.0F) &&
+                           (entry.distance_sq > fullShaderMaxDistanceSq) &&
+                           !entry.selected && !entry.hovered &&
+                           !batch_config.never_batch;
 
-        QMatrix4x4 c1 = contact_base;
-        c1.scale(base_scale_x * 0.95F, base_scale_y * 0.95F, 1.0F);
-        mesh(contact_quad, c1, col, white, mid_alpha);
+        if (useBatching) {
+          fn(ctx, batchSubmitter);
+        } else {
+          fn(ctx, *this);
+        }
 
-        QMatrix4x4 c2 = contact_base;
-        c2.scale(base_scale_x * 1.35F, base_scale_y * 1.35F, 1.0F);
-        mesh(contact_quad, c2, col, white, outer_alpha);
+        drawn_by_registry = true;
       }
     }
-    enqueue_selection_ring(entity, transform, unit_comp, is_selected,
-                           is_hovered);
-    enqueue_mode_indicator(entity, transform, unit_comp);
+    if (drawn_by_registry) {
+      if (entry.selected || entry.hovered) {
+        enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
+                               entry.selected, entry.hovered);
+      }
+      enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
+                             entry.has_guard_mode, entry.has_hold_mode,
+                             entry.has_patrol);
+      continue;
+    }
+
+    Mesh *mesh_to_draw = resolve_fallback_mesh(entry.renderable);
+    QVector3D const color =
+        QVector3D(entry.renderable->color[0], entry.renderable->color[1],
+                  entry.renderable->color[2]);
+
+    draw_contact_shadow(entry.transform, entry.unit);
+    if (entry.selected || entry.hovered) {
+      enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
+                             entry.selected, entry.hovered);
+    }
+    enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
+                           entry.has_guard_mode, entry.has_hold_mode,
+                           entry.has_patrol);
     mesh(mesh_to_draw, model_matrix, color,
          (res != nullptr) ? res->white() : nullptr, 1.0F);
+  }
+
+  auto render_non_unit_entry = [&](const RenderEntry &entry) {
+    const QMatrix4x4 &model_matrix = m_model_matrix_cache.get_or_create(
+        entry.entity_id, entry.transform, m_frame_counter);
+
+    bool drawn_by_registry = false;
+    if (m_entity_registry && !entry.renderer_key.empty()) {
+      auto fn = m_entity_registry->get(entry.renderer_key);
+      if (fn) {
+        DrawContext ctx{resources(), entry.entity, world, model_matrix};
+        ctx.selected = entry.selected;
+        ctx.hovered = entry.hovered;
+        ctx.animation_time = m_accumulated_time;
+        ctx.renderer_id = entry.renderer_key;
+        ctx.backend = m_backend.get();
+        ctx.camera = m_camera;
+        ctx.animation_throttled = false;
+        fn(ctx, *this);
+        drawn_by_registry = true;
+      }
+    }
+    if (drawn_by_registry) {
+      if (entry.selected || entry.hovered) {
+        enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
+                               entry.selected, entry.hovered);
+      }
+      return;
+    }
+
+    Mesh *mesh_to_draw = resolve_fallback_mesh(entry.renderable);
+    QVector3D const color =
+        QVector3D(entry.renderable->color[0], entry.renderable->color[1],
+                  entry.renderable->color[2]);
+
+    draw_contact_shadow(entry.transform, entry.unit);
+    if (entry.selected || entry.hovered) {
+      enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
+                             entry.selected, entry.hovered);
+    }
+    mesh(mesh_to_draw, model_matrix, color,
+         (res != nullptr) ? res->white() : nullptr, 1.0F);
+  };
+
+  for (const auto &entry : building_entries) {
+    render_non_unit_entry(entry);
+  }
+
+  for (const auto &entry : other_entries) {
+    render_non_unit_entry(entry);
   }
 
   if ((m_active_queue != nullptr) && batcher.total_count() > 0) {
@@ -933,6 +1078,154 @@ void Renderer::render_world(Engine::Core::World *world) {
   }
 
   render_construction_previews(world, vis, visibility_enabled);
+}
+
+void Renderer::prewarm_unit_templates() {
+  if (!m_entity_registry) {
+    return;
+  }
+
+  TemplateCache::instance().clear();
+  clear_humanoid_caches();
+  PosePaletteCache::instance().generate();
+
+  TemplateRecorder recorder;
+  recorder.reset();
+
+  std::vector<int> owner_ids;
+  const auto &owners =
+      Game::Systems::OwnerRegistry::instance().get_all_owners();
+  for (const auto &owner : owners) {
+    owner_ids.push_back(owner.owner_id);
+  }
+  if (owner_ids.empty()) {
+    owner_ids.push_back(0);
+  }
+
+  std::vector<AnimKey> anim_keys;
+  anim_keys.reserve(1);
+
+  {
+    AnimKey key{};
+    key.state = AnimState::Idle;
+    key.frame = 0;
+    key.combat_phase = CombatAnimPhase::Idle;
+    key.attack_variant = 0;
+    anim_keys.push_back(key);
+  }
+
+  auto is_prewarmeable_troop = [](Game::Units::TroopType type) -> bool {
+    using Game::Units::TroopType;
+    switch (type) {
+    case TroopType::Archer:
+    case TroopType::Swordsman:
+    case TroopType::Spearman:
+    case TroopType::MountedKnight:
+    case TroopType::HorseArcher:
+    case TroopType::HorseSpearman:
+    case TroopType::Healer:
+    case TroopType::Builder:
+    case TroopType::Elephant:
+      return true;
+    case TroopType::Catapult:
+    case TroopType::Ballista:
+    default:
+      return false;
+    }
+  };
+
+  const auto &troops = Game::Units::TroopCatalog::instance().get_all_classes();
+  const auto &nations =
+      Game::Systems::NationRegistry::instance().get_all_nations();
+
+  for (const auto &nation : nations) {
+    for (const auto &entry : troops) {
+      auto type = entry.first;
+      if (!is_prewarmeable_troop(type)) {
+        continue;
+      }
+
+      auto profile = Game::Systems::TroopProfileService::instance().get_profile(
+          nation.id, type);
+      if (profile.visuals.renderer_id.empty()) {
+        continue;
+      }
+
+      auto fn = m_entity_registry->get(profile.visuals.renderer_id);
+      if (!fn) {
+        continue;
+      }
+
+      Game::Units::SpawnType spawn_type =
+          Game::Units::spawn_typeFromTroopType(type);
+
+      bool is_mounted = false;
+      bool is_elephant = (spawn_type == Game::Units::SpawnType::Elephant);
+      if (spawn_type == Game::Units::SpawnType::MountedKnight ||
+          spawn_type == Game::Units::SpawnType::HorseArcher ||
+          spawn_type == Game::Units::SpawnType::HorseSpearman) {
+        is_mounted = true;
+      }
+
+      for (int owner_id : owner_ids) {
+        Engine::Core::Entity entity(1);
+        auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+        unit->spawn_type = spawn_type;
+        unit->owner_id = owner_id;
+        unit->nation_id = nation.id;
+        unit->max_health = std::max(1, profile.combat.max_health);
+        unit->health = unit->max_health;
+
+        auto *transform =
+            entity.add_component<Engine::Core::TransformComponent>();
+        transform->position = {0.0F, 0.0F, 0.0F};
+        transform->rotation = {0.0F, 0.0F, 0.0F};
+        transform->scale = {1.0F, 1.0F, 1.0F};
+
+        auto *renderable =
+            entity.add_component<Engine::Core::RenderableComponent>("", "");
+        renderable->renderer_id = profile.visuals.renderer_id;
+        renderable->visible = true;
+        QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
+        renderable->color[0] = team_color.x();
+        renderable->color[1] = team_color.y();
+        renderable->color[2] = team_color.z();
+
+        DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
+        ctx.renderer_id = profile.visuals.renderer_id;
+        ctx.backend = m_backend.get();
+        ctx.camera = nullptr;
+        ctx.allow_template_cache = true;
+        ctx.template_prewarm = true;
+        ctx.has_variant_override = true;
+        ctx.force_humanoid_lod = true;
+        ctx.force_horse_lod = is_mounted || is_elephant;
+
+        for (HumanoidLOD lod :
+             {HumanoidLOD::Full, HumanoidLOD::Reduced, HumanoidLOD::Minimal}) {
+          ctx.forced_humanoid_lod = lod;
+          if (ctx.force_horse_lod) {
+            ctx.forced_horse_lod = static_cast<HorseLOD>(lod);
+          }
+
+          for (std::uint8_t variant = 0; variant < k_template_variant_count;
+               ++variant) {
+            ctx.variant_override = variant;
+
+            for (const auto &anim_key : anim_keys) {
+              AnimationInputs anim = make_animation_inputs(anim_key);
+              ctx.animation_override = &anim;
+              bool attack_state = (anim_key.state == AnimState::AttackMelee) ||
+                                  (anim_key.state == AnimState::AttackRanged);
+              ctx.has_attack_variant_override = attack_state;
+              ctx.attack_variant_override = anim_key.attack_variant;
+              fn(ctx, recorder);
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void Renderer::render_construction_previews(
