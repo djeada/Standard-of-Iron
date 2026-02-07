@@ -190,6 +190,11 @@ void MeshInstancingPipeline::flush() {
     return;
   }
 
+  if (!m_currentMesh->bind_vao()) {
+    m_instances.clear();
+    return;
+  }
+
   setup_instance_attributes();
 
   if (m_currentTexture != nullptr) {
