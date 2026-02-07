@@ -9,6 +9,7 @@
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../entity/registry.h"
+#include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/backend.h"
@@ -1926,7 +1927,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         renderer->set_current_shader(cmd.shader);
         last_shader = cmd.shader;
       }
-      QMatrix4x4 world_model = inst_model * cmd.local_model;
+      QMatrix4x4 world_model =
+          Render::Geom::multiply_affine(inst_model, cmd.local_model);
       out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
                cmd.material_id);
     }
