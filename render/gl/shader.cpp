@@ -84,15 +84,9 @@ auto Shader::load_from_source(const QString &vertex_source,
   return success;
 }
 
-void Shader::use() {
-  initializeOpenGLFunctions();
-  glUseProgram(m_program);
-}
+void Shader::use() { glUseProgram(m_program); }
 
-void Shader::release() {
-  initializeOpenGLFunctions();
-  glUseProgram(0);
-}
+void Shader::release() { glUseProgram(0); }
 
 namespace {
 auto uniform_handle_impl(
@@ -131,35 +125,30 @@ auto Shader::optional_uniform_handle(const char *name)
 }
 
 void Shader::set_uniform(UniformHandle handle, float value) {
-  initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform1f(handle, value);
   }
 }
 
 void Shader::set_uniform(UniformHandle handle, const QVector3D &value) {
-  initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform3f(handle, value.x(), value.y(), value.z());
   }
 }
 
 void Shader::set_uniform(UniformHandle handle, const QVector2D &value) {
-  initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform2f(handle, value.x(), value.y());
   }
 }
 
 void Shader::set_uniform(UniformHandle handle, const QMatrix4x4 &value) {
-  initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniformMatrix4fv(handle, 1, GL_FALSE, value.constData());
   }
 }
 
 void Shader::set_uniform(UniformHandle handle, int value) {
-  initializeOpenGLFunctions();
   if (handle != InvalidUniform) {
     glUniform1i(handle, value);
   }

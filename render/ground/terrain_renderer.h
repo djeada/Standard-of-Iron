@@ -7,6 +7,7 @@
 #include <QVector3D>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -56,6 +57,12 @@ private:
     TerrainChunkParams params;
   };
 
+  struct ChunkVisibilityCacheEntry {
+    std::uint64_t visibility_version =
+        std::numeric_limits<std::uint64_t>::max();
+    bool any_visible = true;
+  };
+
   int m_width = 0;
   int m_height = 0;
   float m_tile_size = 1.0F;
@@ -65,6 +72,7 @@ private:
   std::vector<Game::Map::TerrainType> m_terrain_types;
   std::vector<bool> m_hill_entrances;
   std::vector<ChunkMesh> m_chunks;
+  std::vector<ChunkVisibilityCacheEntry> m_chunk_visibility_cache;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noise_seed = 0U;
 };

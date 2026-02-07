@@ -4,6 +4,7 @@
 #include "../humanoid/rig.h"
 #include "horse_renderer.h"
 
+#include <mutex>
 #include <unordered_map>
 
 namespace Render::GL {
@@ -42,12 +43,13 @@ protected:
       Engine::Core::TransformComponent *transform_comp) const -> float override;
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
-  auto get_cached_horse_profile(uint32_t seed, const HumanoidVariant &v) const
-      -> const HorseProfile &;
+  auto get_cached_horse_profile(uint32_t seed,
+                                const HumanoidVariant &v) const -> HorseProfile;
 
   HorseRenderer m_horseRenderer;
 
 private:
+  mutable std::mutex m_profile_cache_mutex;
   mutable std::unordered_map<uint32_t, HorseProfile> m_profile_cache;
   static constexpr size_t MAX_PROFILE_CACHE_SIZE = 100;
 

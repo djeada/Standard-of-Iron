@@ -149,6 +149,10 @@ public:
     return m_animations_throttled.load(std::memory_order_relaxed);
   }
 
+  [[nodiscard]] auto visible_unit_count() const noexcept -> int {
+    return m_visible_unit_count.load(std::memory_order_relaxed);
+  }
+
 private:
   BattleRenderOptimizer() = default;
 
