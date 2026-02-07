@@ -1549,8 +1549,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         it.mesh->draw();
       }
-      const std::size_t batch_size = batch_end - i;
-
       if (isTransparent) {
         glDepthFunc(GL_LESS);
       }
