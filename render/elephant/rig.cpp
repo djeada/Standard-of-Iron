@@ -1568,8 +1568,9 @@ void ElephantRendererBase::render(const DrawContext &ctx,
       TemplateCache::dense_slot_index(key.variant, anim_key);
 
   auto build_template = [&]() -> PoseTemplate {
-    TemplateRecorder recorder;
+    thread_local TemplateRecorder recorder;
     recorder.reset();
+    recorder.set_current_shader(nullptr);
 
     if (auto *outer = dynamic_cast<Renderer *>(&out)) {
       recorder.set_current_shader(outer->get_current_shader());

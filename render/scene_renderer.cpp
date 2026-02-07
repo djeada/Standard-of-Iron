@@ -466,8 +466,9 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   ctx.has_attack_variant_override = attack_state;
   ctx.attack_variant_override = anim_key.attack_variant;
 
-  TemplateRecorder recorder;
+  thread_local TemplateRecorder recorder;
   recorder.reset();
+  recorder.set_current_shader(nullptr);
   profile.fn(ctx, recorder);
 }
 

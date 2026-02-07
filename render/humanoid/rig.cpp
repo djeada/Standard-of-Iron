@@ -121,6 +121,33 @@ inline auto should_render_temporal(uint32_t frame, uint32_t seed,
   return ((frame + seed) % period) == 0U;
 }
 
+inline auto make_yaw_scale_model(float cos_yaw, float sin_yaw, float scale_x,
+                                 float scale_y, float scale_z,
+                                 const QVector3D &translation) -> QMatrix4x4 {
+  QMatrix4x4 m;
+  float *d = m.data();
+  d[0] = cos_yaw * scale_x;
+  d[1] = 0.0F;
+  d[2] = -sin_yaw * scale_x;
+  d[3] = 0.0F;
+
+  d[4] = 0.0F;
+  d[5] = scale_y;
+  d[6] = 0.0F;
+  d[7] = 0.0F;
+
+  d[8] = sin_yaw * scale_z;
+  d[9] = 0.0F;
+  d[10] = cos_yaw * scale_z;
+  d[11] = 0.0F;
+
+  d[12] = translation.x();
+  d[13] = translation.y();
+  d[14] = translation.z();
+  d[15] = 1.0F;
+  return m;
+}
+
 inline auto
 resolve_layout_seed(const Engine::Core::UnitComponent *unit_comp,
                     const Engine::Core::Entity *entity) -> std::uint32_t {
@@ -1575,8 +1602,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     (void)TemplateCache::instance().get_or_build_dense(
         dense_domain, dense_slot, key, [&]() -> PoseTemplate {
-      TemplateRecorder recorder;
+      thread_local TemplateRecorder recorder;
       recorder.reset();
+      recorder.set_current_shader(nullptr);
 
       if (auto *outer = dynamic_cast<Renderer *>(&out)) {
         recorder.set_current_shader(outer->get_current_shader());
@@ -1710,6 +1738,46 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
   Renderer *renderer = resolve_renderer_for_submitter(out);
   Shader *last_shader = nullptr;
+  const auto &gfx_settings = Render::GraphicsSettings::instance();
+
+  const float base_pos_x = transform_comp->position.x;
+  const float base_pos_y = transform_comp->position.y;
+  const float base_pos_z = transform_comp->position.z;
+  const float scale_x = transform_comp->scale.x;
+  const float scale_y = transform_comp->scale.y;
+  const float scale_z = transform_comp->scale.z;
+  const float base_yaw = transform_comp->rotation.y;
+  const float ground_offset_scaled = entity_ground_offset * scale_y;
+
+  const bool has_camera = (ctx.camera != nullptr);
+  const QVector3D camera_position =
+      has_camera ? ctx.camera->get_position() : QVector3D();
+
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  const bool terrain_initialized = terrain_service.is_initialized();
+  QVector2D shadow_dir_for_use(0.0F, 1.0F);
+  {
+    QVector2D light_dir_xz(k_shadow_light_dir.x(), k_shadow_light_dir.z());
+    if (light_dir_xz.lengthSquared() >= 1e-6F) {
+      light_dir_xz.normalize();
+      shadow_dir_for_use = -light_dir_xz;
+      if (shadow_dir_for_use.lengthSquared() >= 1e-6F) {
+        shadow_dir_for_use.normalize();
+      } else {
+        shadow_dir_for_use = QVector2D(0.0F, 1.0F);
+      }
+    }
+  }
+
+  Shader *shadow_shader = nullptr;
+  Mesh *shadow_quad_mesh = nullptr;
+  const bool can_render_shadow_mesh =
+      gfx_settings.shadows_enabled() && ctx.backend != nullptr &&
+      ctx.resources != nullptr && terrain_initialized;
+  if (can_render_shadow_mesh) {
+    shadow_shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
+    shadow_quad_mesh = ctx.resources->quad();
+  }
 
   auto fast_random = [](uint32_t &state) -> float {
     state = state * 1664525U + 1013904223U;
@@ -1770,35 +1838,20 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       applied_yaw_offset += combat_yaw;
     }
 
-    float applied_yaw = applied_yaw_offset;
-    QMatrix4x4 inst_model;
-    if (transform_comp != nullptr) {
-      applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
-      QMatrix4x4 m;
-      m.translate(transform_comp->position.x, transform_comp->position.y,
-                  transform_comp->position.z);
-      m.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
-      m.scale(transform_comp->scale.x, transform_comp->scale.y,
-              transform_comp->scale.z);
-      m.translate(offset_x, applied_vertical_jitter, offset_z);
-      if (entity_ground_offset != 0.0F) {
-        m.translate(0.0F, -entity_ground_offset, 0.0F);
-      }
-      inst_model = m;
-    } else {
-      inst_model = ctx.model;
-      inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
-      inst_model.translate(offset_x, applied_vertical_jitter, offset_z);
-      if (entity_ground_offset != 0.0F) {
-        inst_model.translate(0.0F, -entity_ground_offset, 0.0F);
-      }
-    }
+    const float applied_yaw = base_yaw + applied_yaw_offset;
+    const float yaw_rad = qDegreesToRadians(applied_yaw);
+    const float cos_yaw = std::cos(yaw_rad);
+    const float sin_yaw = std::sin(yaw_rad);
+    const float local_x = offset_x * scale_x;
+    const float local_z = offset_z * scale_z;
 
-    QVector3D const soldier_world_pos =
-        inst_model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    QVector3D const soldier_world_pos(
+        base_pos_x + (cos_yaw * local_x) + (sin_yaw * local_z),
+        base_pos_y + (applied_vertical_jitter * scale_y) - ground_offset_scaled,
+        base_pos_z - (sin_yaw * local_x) + (cos_yaw * local_z));
 
     constexpr float k_soldier_cull_radius = 0.6F;
-    if (ctx.camera != nullptr &&
+    if (has_camera &&
         !ctx.camera->is_in_frustum(soldier_world_pos, k_soldier_cull_radius)) {
       ++s_render_stats.soldiers_skipped_frustum;
       continue;
@@ -1808,9 +1861,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     float soldier_distance = 0.0F;
     if (ctx.force_humanoid_lod) {
       soldier_lod = ctx.forced_humanoid_lod;
-    } else if (ctx.camera != nullptr) {
-      soldier_distance =
-          (soldier_world_pos - ctx.camera->get_position()).length();
+    } else if (has_camera) {
+      soldier_distance = (soldier_world_pos - camera_position).length();
       soldier_lod = calculate_humanoid_lod(soldier_distance);
 
       if (soldier_lod == HumanoidLOD::Billboard) {
@@ -1857,6 +1909,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       break;
     }
 
+    QMatrix4x4 inst_model = make_yaw_scale_model(
+        cos_yaw, sin_yaw, scale_x, scale_y, scale_z, soldier_world_pos);
+
     std::uint8_t variant_key = resolve_variant_key_from_seed(slot.inst_seed);
     std::uint8_t attack_variant =
         resolve_attack_variant_from_seed(slot.inst_seed);
@@ -1891,8 +1946,9 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
         dense_domain, dense_slot, key, [&]() -> PoseTemplate {
-          TemplateRecorder recorder;
+          thread_local TemplateRecorder recorder;
           recorder.reset();
+          recorder.set_current_shader(nullptr);
 
           if (auto *outer = dynamic_cast<Renderer *>(&out)) {
             recorder.set_current_shader(outer->get_current_shader());
@@ -1973,93 +2029,70 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
                cmd.material_id);
     }
 
-    const auto &gfx_settings = Render::GraphicsSettings::instance();
     const bool should_render_shadow =
-        gfx_settings.shadows_enabled() &&
+        (shadow_shader != nullptr) && (shadow_quad_mesh != nullptr) &&
         (soldier_lod == HumanoidLOD::Full ||
          soldier_lod == HumanoidLOD::Reduced) &&
-        soldier_distance < gfx_settings.shadow_max_distance() &&
-        ctx.backend != nullptr && ctx.resources != nullptr;
+        soldier_distance < gfx_settings.shadow_max_distance();
 
     if (should_render_shadow) {
-      auto *shadow_shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
-      auto *quad_mesh = ctx.resources->quad();
+      float const shadow_size =
+          is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
+      float depth_boost = 1.0F;
+      float width_boost = 1.0F;
+      using Game::Units::SpawnType;
+      switch (unit_comp->spawn_type) {
+      case SpawnType::Spearman:
+        depth_boost = 1.8F;
+        width_boost = 0.95F;
+        break;
+      case SpawnType::HorseSpearman:
+        depth_boost = 2.1F;
+        width_boost = 1.05F;
+        break;
+      case SpawnType::Archer:
+      case SpawnType::HorseArcher:
+        depth_boost = 1.2F;
+        width_boost = 0.95F;
+        break;
+      default:
+        break;
+      }
 
-      if (shadow_shader != nullptr && quad_mesh != nullptr) {
-        float const shadow_size =
-            is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
-        float depth_boost = 1.0F;
-        float width_boost = 1.0F;
-        using Game::Units::SpawnType;
-        switch (unit_comp->spawn_type) {
-        case SpawnType::Spearman:
-          depth_boost = 1.8F;
-          width_boost = 0.95F;
-          break;
-        case SpawnType::HorseSpearman:
-          depth_boost = 2.1F;
-          width_boost = 1.05F;
-          break;
-        case SpawnType::Archer:
-        case SpawnType::HorseArcher:
-          depth_boost = 1.2F;
-          width_boost = 0.95F;
-          break;
-        default:
-          break;
-        }
+      float const shadow_width =
+          shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
+      float const shadow_depth =
+          shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
 
-        float const shadow_width =
-            shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
-        float const shadow_depth =
-            shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
+      QVector3D const inst_pos = soldier_world_pos;
+      float const shadow_y =
+          terrain_service.get_terrain_height(inst_pos.x(), inst_pos.z());
 
-        auto &terrain_service = Game::Map::TerrainService::instance();
-        if (terrain_service.is_initialized()) {
-          QVector3D const inst_pos = soldier_world_pos;
-          float const shadow_y =
-              terrain_service.get_terrain_height(inst_pos.x(), inst_pos.z());
+      float const shadow_offset = shadow_depth * 1.25F;
+      QVector2D const offset_2d = shadow_dir_for_use * shadow_offset;
+      float const light_yaw_deg = qRadiansToDegrees(
+          std::atan2(double(shadow_dir_for_use.x()),
+                     double(shadow_dir_for_use.y())));
 
-          QVector3D light_dir = k_shadow_light_dir.normalized();
-          QVector2D light_dir_xz(light_dir.x(), light_dir.z());
-          if (light_dir_xz.lengthSquared() < 1e-6F) {
-            light_dir_xz = QVector2D(0.0F, 1.0F);
-          } else {
-            light_dir_xz.normalize();
-          }
-          QVector2D const shadow_dir = -light_dir_xz;
-          QVector2D dir_for_use = shadow_dir;
-          if (dir_for_use.lengthSquared() < 1e-6F) {
-            dir_for_use = QVector2D(0.0F, 1.0F);
-          } else {
-            dir_for_use.normalize();
-          }
-          float const shadow_offset = shadow_depth * 1.25F;
-          QVector2D const offset_2d = dir_for_use * shadow_offset;
-          float const light_yaw_deg = qRadiansToDegrees(
-              std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
+      QMatrix4x4 shadow_model;
+      shadow_model.translate(inst_pos.x() + offset_2d.x(),
+                             shadow_y + k_shadow_ground_offset,
+                             inst_pos.z() + offset_2d.y());
+      shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
+      shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+      shadow_model.scale(shadow_width, shadow_depth, 1.0F);
 
-          QMatrix4x4 shadow_model;
-          shadow_model.translate(inst_pos.x() + offset_2d.x(),
-                                 shadow_y + k_shadow_ground_offset,
-                                 inst_pos.z() + offset_2d.y());
-          shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
-          shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-          shadow_model.scale(shadow_width, shadow_depth, 1.0F);
+      if (renderer != nullptr) {
+        Shader *previous_shader = renderer->get_current_shader();
+        renderer->set_current_shader(shadow_shader);
+        shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
+                                   shadow_dir_for_use);
 
-          if (renderer != nullptr) {
-            Shader *previous_shader = renderer->get_current_shader();
-            renderer->set_current_shader(shadow_shader);
-            shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
-                                       dir_for_use);
+        out.mesh(shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+                 nullptr, k_shadow_base_alpha, 0);
 
-            out.mesh(quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-                     nullptr, k_shadow_base_alpha, 0);
-
-            renderer->set_current_shader(previous_shader);
-            last_shader = previous_shader;
-          }
-        }
+        renderer->set_current_shader(previous_shader);
+        last_shader = previous_shader;
       }
     }
   }
