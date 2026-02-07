@@ -56,6 +56,7 @@ public:
     return m_patrol_first_waypoint;
   }
   void clear_patrol_first_waypoint() { m_has_patrol_first_waypoint = false; }
+  void reset_transient_state();
 
   [[nodiscard]] bool is_placing_formation() const {
     return m_is_placing_formation;

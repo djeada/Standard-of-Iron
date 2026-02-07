@@ -39,6 +39,7 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <qglobal.h>
 #include <qmatrix4x4.h>
 #include <qopenglcontext.h>
@@ -275,8 +276,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     return;
   }
 
-  const QMatrix4x4 view_proj =
-      cam.get_projection_matrix() * cam.get_view_matrix();
+  const QMatrix4x4 view = cam.get_view_matrix();
+  const QMatrix4x4 projection = cam.get_projection_matrix();
+  const QMatrix4x4 view_proj = projection * view;
+  const float banner_wind_strength =
+      0.8F + 0.2F * std::sin(m_animationTime * 0.5F);
 
   m_lastBoundShader = nullptr;
   m_lastBoundTexture = nullptr;
@@ -1242,13 +1246,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       DepthMaskScope const depth_mask(terrain.depth_write);
-      std::unique_ptr<PolygonOffsetScope> poly_scope;
       if (terrain.depth_bias != 0.0F) {
-        poly_scope = std::make_unique<PolygonOffsetScope>(terrain.depth_bias,
-                                                          terrain.depth_bias);
+        PolygonOffsetScope const poly_scope(terrain.depth_bias,
+                                            terrain.depth_bias);
+        terrain.mesh->draw();
+      } else {
+        terrain.mesh->draw();
       }
-
-      terrain.mesh->draw();
       break;
     }
     case MeshCmdIndex: {
@@ -1269,40 +1273,38 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
 
       bool const isShadowShader = (active_shader == m_shadowShader);
-      std::unique_ptr<DepthMaskScope> shadow_depth_scope;
-      std::unique_ptr<BlendScope> shadow_blend_scope;
+      std::optional<DepthMaskScope> shadow_depth_scope;
+      std::optional<BlendScope> shadow_blend_scope;
       if (isShadowShader) {
-        shadow_depth_scope = std::make_unique<DepthMaskScope>(false);
-        shadow_blend_scope = std::make_unique<BlendScope>(true);
+        shadow_depth_scope.emplace(false);
+        shadow_blend_scope.emplace(true);
       } else {
         glDepthMask(GL_TRUE);
       }
 
       bool const isTransparent = (!isShadowShader) && (it.alpha < 0.999F);
-      std::unique_ptr<DepthMaskScope> transparent_depth_scope;
-      std::unique_ptr<BlendScope> transparent_blend_scope;
-      GLint prev_depth_func = GL_LESS;
+      std::optional<DepthMaskScope> transparent_depth_scope;
+      std::optional<BlendScope> transparent_blend_scope;
       if (isTransparent) {
-        glGetIntegerv(GL_DEPTH_FUNC, &prev_depth_func);
-        transparent_depth_scope = std::make_unique<DepthMaskScope>(false);
-        transparent_blend_scope = std::make_unique<BlendScope>(true);
+        transparent_depth_scope.emplace(false);
+        transparent_blend_scope.emplace(true);
         glDepthFunc(GL_LEQUAL);
       }
 
       if (active_shader == m_waterPipeline->m_riverShader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
+          active_shader->set_uniform(m_waterPipeline->m_riverUniforms.view,
+                                     view);
+          active_shader->set_uniform(
+              m_waterPipeline->m_riverUniforms.projection, projection);
+          active_shader->set_uniform(m_waterPipeline->m_riverUniforms.time,
+                                     m_animationTime);
           m_lastBoundShader = active_shader;
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverUniforms.model,
                                    it.model);
-        active_shader->set_uniform(m_waterPipeline->m_riverUniforms.view,
-                                   cam.get_view_matrix());
-        active_shader->set_uniform(m_waterPipeline->m_riverUniforms.projection,
-                                   cam.get_projection_matrix());
-        active_shader->set_uniform(m_waterPipeline->m_riverUniforms.time,
-                                   m_animationTime);
 
         it.mesh->draw();
         break;
@@ -1311,62 +1313,59 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (active_shader == m_waterPipeline->m_riverbankShader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
+          active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.view,
+                                     view);
+          active_shader->set_uniform(
+              m_waterPipeline->m_riverbankUniforms.projection, projection);
+          active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.time,
+                                     m_animationTime);
+          if (m_waterPipeline->m_riverbankUniforms.has_visibility !=
+              Shader::InvalidUniform) {
+            int const has_vis = m_riverbankVisibility.enabled ? 1 : 0;
+            active_shader->set_uniform(
+                m_waterPipeline->m_riverbankUniforms.has_visibility, has_vis);
+          }
+          if (m_riverbankVisibility.enabled &&
+              m_riverbankVisibility.texture != nullptr) {
+            if (m_waterPipeline->m_riverbankUniforms.visibility_size !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_waterPipeline->m_riverbankUniforms.visibility_size,
+                  m_riverbankVisibility.size);
+            }
+            if (m_waterPipeline->m_riverbankUniforms.visibility_tile_size !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_waterPipeline->m_riverbankUniforms.visibility_tile_size,
+                  m_riverbankVisibility.tile_size);
+            }
+            if (m_waterPipeline->m_riverbankUniforms.explored_alpha !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_waterPipeline->m_riverbankUniforms.explored_alpha,
+                  m_riverbankVisibility.explored_alpha);
+            }
+            constexpr int k_riverbank_vis_texture_unit = 7;
+            m_riverbankVisibility.texture->bind(k_riverbank_vis_texture_unit);
+            if (m_waterPipeline->m_riverbankUniforms.visibility_texture !=
+                Shader::InvalidUniform) {
+              active_shader->set_uniform(
+                  m_waterPipeline->m_riverbankUniforms.visibility_texture,
+                  k_riverbank_vis_texture_unit);
+            }
+            m_lastBoundTexture = m_riverbankVisibility.texture;
+          }
           m_lastBoundShader = active_shader;
         }
 
         active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.model,
                                    it.model);
-        active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.view,
-                                   cam.get_view_matrix());
-        active_shader->set_uniform(
-            m_waterPipeline->m_riverbankUniforms.projection,
-            cam.get_projection_matrix());
-        active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.time,
-                                   m_animationTime);
 
         if (m_waterPipeline->m_riverbankUniforms.segment_visibility !=
             Shader::InvalidUniform) {
           active_shader->set_uniform(
               m_waterPipeline->m_riverbankUniforms.segment_visibility,
               it.alpha);
-        }
-
-        if (m_waterPipeline->m_riverbankUniforms.has_visibility !=
-            Shader::InvalidUniform) {
-          int const has_vis = m_riverbankVisibility.enabled ? 1 : 0;
-          active_shader->set_uniform(
-              m_waterPipeline->m_riverbankUniforms.has_visibility, has_vis);
-        }
-
-        if (m_riverbankVisibility.enabled &&
-            m_riverbankVisibility.texture != nullptr) {
-          if (m_waterPipeline->m_riverbankUniforms.visibility_size !=
-              Shader::InvalidUniform) {
-            active_shader->set_uniform(
-                m_waterPipeline->m_riverbankUniforms.visibility_size,
-                m_riverbankVisibility.size);
-          }
-          if (m_waterPipeline->m_riverbankUniforms.visibility_tile_size !=
-              Shader::InvalidUniform) {
-            active_shader->set_uniform(
-                m_waterPipeline->m_riverbankUniforms.visibility_tile_size,
-                m_riverbankVisibility.tile_size);
-          }
-          if (m_waterPipeline->m_riverbankUniforms.explored_alpha !=
-              Shader::InvalidUniform) {
-            active_shader->set_uniform(
-                m_waterPipeline->m_riverbankUniforms.explored_alpha,
-                m_riverbankVisibility.explored_alpha);
-          }
-          constexpr int k_riverbank_vis_texture_unit = 7;
-          m_riverbankVisibility.texture->bind(k_riverbank_vis_texture_unit);
-          if (m_waterPipeline->m_riverbankUniforms.visibility_texture !=
-              Shader::InvalidUniform) {
-            active_shader->set_uniform(
-                m_waterPipeline->m_riverbankUniforms.visibility_texture,
-                k_riverbank_vis_texture_unit);
-          }
-          m_lastBoundTexture = m_riverbankVisibility.texture;
         }
 
         it.mesh->draw();
@@ -1376,6 +1375,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (active_shader == m_waterPipeline->m_bridgeShader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
+          QVector3D const light_dir(0.35F, 0.8F, 0.45F);
+          active_shader->set_uniform(
+              m_waterPipeline->m_bridgeUniforms.light_direction, light_dir);
           m_lastBoundShader = active_shader;
         }
 
@@ -1386,10 +1388,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(m_waterPipeline->m_bridgeUniforms.color,
                                    it.color);
 
-        QVector3D const light_dir(0.35F, 0.8F, 0.45F);
-        active_shader->set_uniform(
-            m_waterPipeline->m_bridgeUniforms.light_direction, light_dir);
-
         it.mesh->draw();
         break;
       }
@@ -1397,6 +1395,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (active_shader == m_waterPipeline->m_road_shader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
+          QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
+          active_shader->set_uniform(
+              m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
           m_lastBoundShader = active_shader;
         }
 
@@ -1409,10 +1410,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(m_waterPipeline->m_road_uniforms.alpha,
                                    it.alpha);
 
-        QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
-        active_shader->set_uniform(
-            m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
-
         it.mesh->draw();
         break;
       }
@@ -1421,6 +1418,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader == m_bannerPipeline->m_bannerShader) {
         if (m_lastBoundShader != active_shader) {
           active_shader->use();
+          active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
+                                     m_animationTime);
+          active_shader->set_uniform(
+              m_bannerPipeline->m_bannerUniforms.windStrength,
+              banner_wind_strength);
           m_lastBoundShader = active_shader;
         }
 
@@ -1428,12 +1430,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.mvp, mvp);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.model,
                                    it.model);
-        active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
-                                   m_animationTime);
-
-        float windStrength = 0.8F + 0.2F * std::sin(m_animationTime * 0.5F);
-        active_shader->set_uniform(
-            m_bannerPipeline->m_bannerUniforms.windStrength, windStrength);
         active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
                                    it.color);
 
@@ -1471,6 +1467,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       if (m_lastBoundShader != active_shader) {
         active_shader->use();
+        if (uniforms->view_proj != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->view_proj, view_proj);
+        }
         m_lastBoundShader = active_shader;
       }
 
@@ -1495,7 +1494,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (batch_size > 1) {
 
         active_shader->set_uniform(uniforms->instanced, true);
-        active_shader->set_uniform(uniforms->view_proj, view_proj);
 
         Texture *tex_to_use =
             (it.texture != nullptr)
@@ -1525,9 +1523,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       } else {
 
         active_shader->set_uniform(uniforms->model, it.model);
-        if (uniforms->view_proj != Shader::InvalidUniform) {
-          active_shader->set_uniform(uniforms->view_proj, view_proj);
-        } else if (uniforms->mvp != Shader::InvalidUniform) {
+        if (uniforms->view_proj == Shader::InvalidUniform &&
+            uniforms->mvp != Shader::InvalidUniform) {
           QMatrix4x4 const mvp = view_proj * it.model;
           active_shader->set_uniform(uniforms->mvp, mvp);
         }
@@ -1552,9 +1549,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         it.mesh->draw();
       }
+      const std::size_t batch_size = batch_end - i;
 
       if (isTransparent) {
-        glDepthFunc(static_cast<GLenum>(prev_depth_func));
+        glDepthFunc(GL_LESS);
       }
       break;
     }
@@ -1600,8 +1598,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_effectsPipeline->m_basicShader->use();
         m_lastBoundShader = m_effectsPipeline->m_basicShader;
       }
-
-      m_effectsPipeline->m_basicShader->use();
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.useTexture, false);
       m_effectsPipeline->m_basicShader->set_uniform(

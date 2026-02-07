@@ -10,27 +10,48 @@ namespace Render {
 auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
                                     Engine::Core::Entity *entity,
                                     std::uint32_t frame) -> CachedUnitData & {
-  auto it = m_cache.find(entity_id);
-  if (it != m_cache.end()) {
-    it->second.last_seen_frame = frame;
-    return it->second;
+  auto [it, inserted] = m_cache.emplace(entity_id, CachedUnitData{});
+  auto &data = it->second;
+
+  data.entity_id = entity_id;
+  data.last_seen_frame = frame;
+
+  if (inserted || data.entity != entity) {
+    data.entity = entity;
+    data.model_matrix_valid = false;
   }
 
-  auto &data = m_cache[entity_id];
-  data.entity_id = entity_id;
-  data.entity = entity;
-  data.last_seen_frame = frame;
-  data.model_matrix_valid = false;
+  if (entity == nullptr) {
+    data.transform = nullptr;
+    data.unit = nullptr;
+    data.renderable = nullptr;
+    data.movement = nullptr;
+    data.renderer_key.clear();
+    return data;
+  }
 
-  data.transform = entity->get_component<Engine::Core::TransformComponent>();
-  data.unit = entity->get_component<Engine::Core::UnitComponent>();
-  data.renderable = entity->get_component<Engine::Core::RenderableComponent>();
-  data.movement = entity->get_component<Engine::Core::MovementComponent>();
+  auto *new_transform =
+      entity->get_component<Engine::Core::TransformComponent>();
+  auto *new_unit = entity->get_component<Engine::Core::UnitComponent>();
+  auto *new_renderable =
+      entity->get_component<Engine::Core::RenderableComponent>();
+  auto *new_movement = entity->get_component<Engine::Core::MovementComponent>();
+
+  if (data.transform != new_transform) {
+    data.model_matrix_valid = false;
+  }
+
+  data.transform = new_transform;
+  data.unit = new_unit;
+  data.renderable = new_renderable;
+  data.movement = new_movement;
 
   if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
     data.renderer_key = data.renderable->renderer_id;
   } else if (data.unit != nullptr) {
     data.renderer_key = Game::Units::spawn_typeToString(data.unit->spawn_type);
+  } else {
+    data.renderer_key.clear();
   }
 
   return data;

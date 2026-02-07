@@ -34,6 +34,7 @@ public:
   void place_building_at_screen(qreal sx, qreal sy, int local_owner_id,
                                 const ViewportState &viewport);
   void cancel_building_placement();
+  void reset_transient_state();
   [[nodiscard]] QString pending_building_type() const {
     return m_pending_building_type;
   }

@@ -50,12 +50,14 @@ auto Mesh::prepare_draw(const char *caller_name) -> bool {
   if (!m_vao) {
     setup_buffers();
   }
+#ifndef NDEBUG
   if (QOpenGLContext::currentContext() == nullptr) {
     qWarning() << caller_name
                << "called without current GL context; skipping draw"
                << "indices" << m_indices.size();
     return false;
   }
+#endif
   m_vao->bind();
 
 #ifndef NDEBUG
