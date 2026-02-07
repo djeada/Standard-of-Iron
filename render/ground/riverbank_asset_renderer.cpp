@@ -85,6 +85,11 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       (use_visibility && current_version != m_cachedVisibilityVersion);
 
   if (needs_visibility_update) {
+    Game::Map::VisibilityService::Snapshot visibility_snapshot;
+    if (use_visibility) {
+      visibility_snapshot = visibility.snapshot();
+    }
+
     m_visibleInstances.clear();
     m_visibleInstances.reserve(m_assetInstances.size());
 
@@ -95,7 +100,7 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
         float const world_x = instance.position[0];
         float const world_z = instance.position[2];
 
-        if (!visibility.isVisibleWorld(world_x, world_z)) {
+        if (!visibility_snapshot.isVisibleWorld(world_x, world_z)) {
           should_render = false;
         }
       }

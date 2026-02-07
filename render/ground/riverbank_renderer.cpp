@@ -453,14 +453,19 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   auto *backend = renderer.backend();
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
+  const std::uint64_t visibility_version =
+      use_visibility ? visibility.version() : 0;
+  Game::Map::VisibilityService::Snapshot visibility_snapshot;
+  if (use_visibility) {
+    visibility_snapshot = visibility.snapshot();
+  }
 
   Texture *visibility_tex = nullptr;
   QVector2D visibility_size(0.0F, 0.0F);
 
   if (use_visibility) {
-    const int vis_w = visibility.getWidth();
-    const int vis_h = visibility.getHeight();
-    const std::uint64_t version = visibility.version();
+    const int vis_w = visibility_snapshot.width;
+    const int vis_h = visibility_snapshot.height;
     bool const size_changed =
         (vis_w != m_visibility_width) || (vis_h != m_visibility_height);
 
@@ -476,8 +481,8 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_cached_visibility_version = 0;
     }
 
-    if (version != m_cached_visibility_version || size_changed) {
-      auto cells = visibility.snapshotCells();
+    if (visibility_version != m_cached_visibility_version || size_changed) {
+      const auto &cells = visibility_snapshot.cells;
       std::vector<unsigned char> texels(
           static_cast<std::size_t>(vis_w * vis_h * 4), 0U);
 
@@ -506,7 +511,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, vis_w, vis_h, GL_RGBA,
                       GL_UNSIGNED_BYTE, texels.data());
       visibility_tex = m_visibility_texture.get();
-      m_cached_visibility_version = version;
+      m_cached_visibility_version = visibility_version;
     } else {
       visibility_tex = m_visibility_texture.get();
     }
@@ -547,12 +552,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         state = SegmentState::Visible;
       }
       for (const auto &sample : samples) {
-        if (visibility.isVisibleWorld(sample.x(), sample.z())) {
+        if (visibility_snapshot.isVisibleWorld(sample.x(), sample.z())) {
           state = SegmentState::Visible;
           break;
         }
         if ((state == SegmentState::Hidden) &&
-            visibility.isExploredWorld(sample.x(), sample.z())) {
+            visibility_snapshot.isExploredWorld(sample.x(), sample.z())) {
           state = SegmentState::Explored;
         }
       }

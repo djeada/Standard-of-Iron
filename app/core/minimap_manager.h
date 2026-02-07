@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QImage>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -49,12 +50,27 @@ public:
   [[nodiscard]] float get_tile_size() const { return m_tile_size; }
 
 private:
+  struct FogLookupEntry {
+    int idx00 = 0;
+    int idx10 = 0;
+    int idx01 = 0;
+    int idx11 = 0;
+    float fx = 0.0F;
+    float fy = 0.0F;
+  };
+
+  void rebuild_fog_lookup(int vis_width, int vis_height);
   void mark_dirty() { m_dirty = true; }
 
   QImage m_minimap_image;
   QImage m_minimap_base_image;
   QImage m_minimap_fog_image;
   std::uint64_t m_minimap_fog_version = 0;
+  int m_fog_lookup_vis_width = 0;
+  int m_fog_lookup_vis_height = 0;
+  int m_fog_lookup_img_width = 0;
+  int m_fog_lookup_img_height = 0;
+  std::vector<FogLookupEntry> m_fog_lookup_entries;
   std::unique_ptr<Game::Map::Minimap::UnitLayer> m_unit_layer;
   std::unique_ptr<Game::Map::Minimap::CameraViewportLayer>
       m_camera_viewport_layer;

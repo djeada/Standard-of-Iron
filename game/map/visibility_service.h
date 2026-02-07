@@ -25,6 +25,25 @@ enum class VisibilityState : std::uint8_t {
 
 class VisibilityService {
 public:
+  struct Snapshot {
+    bool initialized = false;
+    int width = 0;
+    int height = 0;
+    float tile_size = 1.0F;
+    float half_width = 0.0F;
+    float half_height = 0.0F;
+    std::vector<std::uint8_t> cells;
+
+    auto stateAt(int grid_x, int grid_z) const -> VisibilityState;
+    auto isVisibleWorld(float world_x, float world_z) const -> bool;
+    auto isExploredWorld(float world_x, float world_z) const -> bool;
+
+  private:
+    auto inBounds(int grid_x, int grid_z) const -> bool;
+    auto index(int grid_x, int grid_z) const -> int;
+    auto worldToGrid(float world_coord, float half) const -> int;
+  };
+
   static auto instance() -> VisibilityService &;
 
   void initialize(int width, int height, float tile_size);
@@ -41,6 +60,7 @@ public:
   auto stateAt(int grid_x, int grid_z) const -> VisibilityState;
   auto isVisibleWorld(float world_x, float world_z) const -> bool;
   auto isExploredWorld(float world_x, float world_z) const -> bool;
+  auto snapshot() const -> Snapshot;
 
   auto snapshotCells() const -> std::vector<std::uint8_t>;
   auto version() const -> std::uint64_t {

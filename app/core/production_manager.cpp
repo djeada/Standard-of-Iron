@@ -108,6 +108,19 @@ void ProductionManager::cancel_building_placement() {
   m_pending_building_type.clear();
 }
 
+void ProductionManager::reset_transient_state() {
+  cancel_building_placement();
+
+  if (m_is_placing_construction) {
+    on_construction_cancel();
+  }
+
+  m_pending_construction_type.clear();
+  m_pending_construction_builders.clear();
+  m_construction_placement_position = QVector3D();
+  m_is_placing_construction = false;
+}
+
 void ProductionManager::on_construction_mouse_move(
     qreal sx, qreal sy, const ViewportState &viewport) {
   if (!m_is_placing_construction || !m_picking_service || !m_camera) {

@@ -615,39 +615,48 @@ auto create_unit_torso_mesh(int radial_segments,
 
 } // namespace
 
+namespace {
+const std::unique_ptr<Mesh> k_unit_cylinder_mesh =
+    create_unit_cylinder_mesh(k_default_radial_segments);
+const std::unique_ptr<Mesh> k_unit_cube_mesh = create_cube_mesh();
+const std::unique_ptr<Mesh> k_unit_sphere_mesh = create_unit_sphere_mesh(
+    k_default_latitude_segments, k_default_radial_segments);
+const std::unique_ptr<Mesh> k_unit_cone_mesh =
+    create_unit_cone_mesh(k_default_radial_segments);
+const std::unique_ptr<Mesh> k_unit_capsule_mesh = create_capsule_mesh(
+    k_default_radial_segments, k_default_capsule_height_segments);
+const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
+    k_default_radial_segments, k_default_torso_height_segments);
+} // namespace
+
 auto get_unit_cylinder(int radial_segments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_cylinder_mesh(radial_segments));
-  return s_mesh.get();
+  (void)radial_segments;
+  return k_unit_cylinder_mesh.get();
 }
 
-auto get_unit_cube() -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(create_cube_mesh());
-  return s_mesh.get();
-}
+auto get_unit_cube() -> Mesh * { return k_unit_cube_mesh.get(); }
 
 auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_sphere_mesh(lat_segments, lon_segments));
-  return s_mesh.get();
+  (void)lat_segments;
+  (void)lon_segments;
+  return k_unit_sphere_mesh.get();
 }
 
 auto get_unit_cone(int radial_segments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_cone_mesh(radial_segments));
-  return s_mesh.get();
+  (void)radial_segments;
+  return k_unit_cone_mesh.get();
 }
 
 auto get_unit_capsule(int radial_segments, int height_segments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(
-      create_capsule_mesh(radial_segments, height_segments));
-  return s_mesh.get();
+  (void)radial_segments;
+  (void)height_segments;
+  return k_unit_capsule_mesh.get();
 }
 
 auto get_unit_torso(int radial_segments, int height_segments) -> Mesh * {
-  static std::unique_ptr<Mesh> const s_mesh(
-      create_unit_torso_mesh(radial_segments, height_segments));
-  return s_mesh.get();
+  (void)radial_segments;
+  (void)height_segments;
+  return k_unit_torso_mesh.get();
 }
 
 } // namespace Render::GL
