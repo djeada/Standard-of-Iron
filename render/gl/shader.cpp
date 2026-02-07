@@ -84,13 +84,9 @@ auto Shader::load_from_source(const QString &vertex_source,
   return success;
 }
 
-void Shader::use() {
-  glUseProgram(m_program);
-}
+void Shader::use() { glUseProgram(m_program); }
 
-void Shader::release() {
-  glUseProgram(0);
-}
+void Shader::release() { glUseProgram(0); }
 
 namespace {
 auto uniform_handle_impl(

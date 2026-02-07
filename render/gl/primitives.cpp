@@ -619,17 +619,14 @@ namespace {
 const std::unique_ptr<Mesh> k_unit_cylinder_mesh =
     create_unit_cylinder_mesh(k_default_radial_segments);
 const std::unique_ptr<Mesh> k_unit_cube_mesh = create_cube_mesh();
-const std::unique_ptr<Mesh> k_unit_sphere_mesh =
-    create_unit_sphere_mesh(k_default_latitude_segments,
-                            k_default_radial_segments);
+const std::unique_ptr<Mesh> k_unit_sphere_mesh = create_unit_sphere_mesh(
+    k_default_latitude_segments, k_default_radial_segments);
 const std::unique_ptr<Mesh> k_unit_cone_mesh =
     create_unit_cone_mesh(k_default_radial_segments);
-const std::unique_ptr<Mesh> k_unit_capsule_mesh =
-    create_capsule_mesh(k_default_radial_segments,
-                        k_default_capsule_height_segments);
-const std::unique_ptr<Mesh> k_unit_torso_mesh =
-    create_unit_torso_mesh(k_default_radial_segments,
-                           k_default_torso_height_segments);
+const std::unique_ptr<Mesh> k_unit_capsule_mesh = create_capsule_mesh(
+    k_default_radial_segments, k_default_capsule_height_segments);
+const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
+    k_default_radial_segments, k_default_torso_height_segments);
 } // namespace
 
 auto get_unit_cylinder(int radial_segments) -> Mesh * {
@@ -637,9 +634,7 @@ auto get_unit_cylinder(int radial_segments) -> Mesh * {
   return k_unit_cylinder_mesh.get();
 }
 
-auto get_unit_cube() -> Mesh * {
-  return k_unit_cube_mesh.get();
-}
+auto get_unit_cube() -> Mesh * { return k_unit_cube_mesh.get(); }
 
 auto get_unit_sphere(int lat_segments, int lon_segments) -> Mesh * {
   (void)lat_segments;

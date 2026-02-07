@@ -271,9 +271,8 @@ class DrawQueue {
 public:
   void clear() { m_items.clear(); }
 
-  template <typename CmdT,
-            typename = std::enable_if_t<
-                std::is_constructible_v<DrawCmd, CmdT &&>>>
+  template <typename CmdT, typename = std::enable_if_t<
+                               std::is_constructible_v<DrawCmd, CmdT &&>>>
   void submit(CmdT &&cmd) {
     m_items.emplace_back(std::forward<CmdT>(cmd));
   }

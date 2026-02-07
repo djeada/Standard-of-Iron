@@ -186,8 +186,8 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
     rebuild_fog_lookup(vis_width, vis_height);
   }
 
-  if (m_minimap_fog_image.isNull() || m_minimap_fog_image.size() !=
-                                         m_minimap_base_image.size() ||
+  if (m_minimap_fog_image.isNull() ||
+      m_minimap_fog_image.size() != m_minimap_base_image.size() ||
       m_minimap_fog_image.format() != m_minimap_base_image.format()) {
     m_minimap_fog_image = m_minimap_base_image.copy();
   }

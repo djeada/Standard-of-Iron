@@ -1730,6 +1730,7 @@ void GameEngine::start_skirmish_internal(const QString &map_path,
                                          bool set_skirmish_context) {
 
   clear_error();
+  reset_preload_interaction_state();
   reset_mission_runtime_state();
 
   m_level.map_path = map_path;
@@ -2247,6 +2248,41 @@ void GameEngine::configure_rain_system() {
   m_rain->set_intensity(initial_intensity);
 }
 
+void GameEngine::reset_preload_interaction_state() {
+  if (m_commandController) {
+    m_commandController->reset_transient_state();
+  }
+
+  if (m_production_manager) {
+    m_production_manager->reset_transient_state();
+  }
+
+  if (m_world) {
+    if (auto *selection_system =
+            m_world->get_system<Game::Systems::SelectionSystem>()) {
+      selection_system->clear_selection();
+    }
+  }
+
+  if (m_renderer) {
+    m_renderer->set_selected_entities({});
+    m_renderer->set_hovered_entity_id(0);
+  }
+
+  if (m_hoverTracker && m_world && m_camera) {
+    m_hoverTracker->update_hover(-1, -1, *m_world, *m_camera, 0, 0);
+  }
+
+  if (m_cursor_manager && m_cursor_manager->mode() != CursorMode::Normal) {
+    set_cursor_mode(CursorMode::Normal);
+  }
+
+  m_followSelectionEnabled = false;
+  m_runtime.selection_refresh_counter = 0;
+
+  emit selected_units_changed();
+}
+
 void GameEngine::reset_mission_runtime_state() {
   m_campaign_mission_elapsed = 0.0F;
   m_pending_mission_waves.clear();
@@ -2503,6 +2539,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     return false;
   }
 
+  reset_preload_interaction_state();
   reset_mission_runtime_state();
 
   m_finalize_progress_after_overlay = false;

@@ -4,10 +4,8 @@
 
 namespace Render::Geom {
 
-// Fast affine multiply for transforms where both matrices have
-// bottom row [0, 0, 0, 1].
-inline auto multiply_affine(const QMatrix4x4 &a, const QMatrix4x4 &b)
-    -> QMatrix4x4 {
+inline auto multiply_affine(const QMatrix4x4 &a,
+                            const QMatrix4x4 &b) -> QMatrix4x4 {
   const float *A = a.constData();
   const float *B = b.constData();
 

@@ -11,9 +11,8 @@ const float k_epsilon = 1e-6F;
 const float k_epsilon_sq = k_epsilon * k_epsilon;
 
 inline void set_affine_columns(QMatrix4x4 &m, float xx, float xy, float xz,
-                               float yx, float yy, float yz, float zx,
-                               float zy, float zz, float tx, float ty,
-                               float tz) {
+                               float yx, float yy, float yz, float zx, float zy,
+                               float zz, float tx, float ty, float tz) {
   float *d = m.data();
   d[0] = xx;
   d[1] = xy;

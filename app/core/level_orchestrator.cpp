@@ -201,9 +201,10 @@ auto LevelOrchestrator::load_skirmish(
 
   if (renderers.renderer) {
     renderers.renderer->prewarm_unit_templates(
-        &world, [progress_tracker](
-                    const Render::GL::Renderer::TemplatePrewarmProgress
-                        &progress) -> bool {
+        &world,
+        [progress_tracker](
+            const Render::GL::Renderer::TemplatePrewarmProgress &progress)
+            -> bool {
           if (progress_tracker == nullptr) {
             return true;
           }
@@ -220,8 +221,7 @@ auto LevelOrchestrator::load_skirmish(
                          .arg(progress.total);
             break;
           case Phase::QueueingExtendedTemplates:
-            detail = QString(
-                         "Queued deferred template warmup (%1 additional)")
+            detail = QString("Queued deferred template warmup (%1 additional)")
                          .arg(progress.total);
             break;
           case Phase::Completed:

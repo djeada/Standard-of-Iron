@@ -328,8 +328,8 @@ auto VisibilityService::executeJob(JobPayload payload)
   return JobResult{std::move(payload.cells), payload.generation, changed};
 }
 
-auto VisibilityService::Snapshot::inBounds(int grid_x, int grid_z) const
-    -> bool {
+auto VisibilityService::Snapshot::inBounds(int grid_x,
+                                           int grid_z) const -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
 }
 

@@ -148,10 +148,9 @@ public:
                                std::uint32_t owner_id, std::uint8_t lod,
                                std::uint8_t mount_lod) -> DenseDomainHandle;
 
-  auto get_or_build_dense(DenseDomainHandle domain, std::size_t dense_slot,
-                          const TemplateKey &key,
-                          const std::function<PoseTemplate()> &builder)
-      -> const PoseTemplate *;
+  auto get_or_build_dense(
+      DenseDomainHandle domain, std::size_t dense_slot, const TemplateKey &key,
+      const std::function<PoseTemplate()> &builder) -> const PoseTemplate *;
 
   static auto dense_slot_index(std::uint8_t variant,
                                const AnimKey &anim_key) -> std::size_t;

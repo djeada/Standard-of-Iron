@@ -20,7 +20,8 @@ constexpr std::size_t k_construct_base =
     k_attack_ranged_base + (k_combat_phase_slots * k_frame_slots);
 constexpr std::size_t k_heal_base = k_construct_base + k_frame_slots;
 constexpr std::size_t k_hit_base = k_heal_base + k_frame_slots;
-constexpr std::size_t k_anim_dense_state_slot_count = k_hit_base + k_frame_slots;
+constexpr std::size_t k_anim_dense_state_slot_count =
+    k_hit_base + k_frame_slots;
 
 static_assert(k_anim_dense_state_slot_count ==
               TemplateCache::k_dense_anim_state_slots);
@@ -191,11 +192,9 @@ auto TemplateCache::dense_slot_index(std::uint8_t variant,
          anim_slot;
 }
 
-auto TemplateCache::get_dense_domain_handle(const std::string &renderer_id,
-                                            std::uint32_t owner_id,
-                                            std::uint8_t lod,
-                                            std::uint8_t mount_lod)
-    -> DenseDomainHandle {
+auto TemplateCache::get_dense_domain_handle(
+    const std::string &renderer_id, std::uint32_t owner_id, std::uint8_t lod,
+    std::uint8_t mount_lod) -> DenseDomainHandle {
   std::lock_guard<std::mutex> lock(m_mutex);
   DenseDomainKey key{renderer_id, owner_id, lod, mount_lod};
   auto it = m_dense_domain_lookup.find(key);
@@ -246,12 +245,11 @@ void TemplateCache::clear_dense_slot_for_key(const TemplateKey &key) {
   m_dense_domains[domain_it->second].template_slots[dense_slot] = nullptr;
 }
 
-auto TemplateCache::get_or_build_dense(DenseDomainHandle domain,
-                                       std::size_t dense_slot,
-                                       const TemplateKey &key,
-                                       const std::function<PoseTemplate()>
-                                           &builder) -> const PoseTemplate * {
-  const bool use_dense = domain.is_valid() && dense_slot < k_dense_anim_slot_count;
+auto TemplateCache::get_or_build_dense(
+    DenseDomainHandle domain, std::size_t dense_slot, const TemplateKey &key,
+    const std::function<PoseTemplate()> &builder) -> const PoseTemplate * {
+  const bool use_dense =
+      domain.is_valid() && dense_slot < k_dense_anim_slot_count;
 
   {
     std::lock_guard<std::mutex> lock(m_mutex);

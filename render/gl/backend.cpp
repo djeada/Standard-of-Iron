@@ -1317,8 +1317,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                                      view);
           active_shader->set_uniform(
               m_waterPipeline->m_riverbankUniforms.projection, projection);
-          active_shader->set_uniform(
-              m_waterPipeline->m_riverbankUniforms.time, m_animationTime);
+          active_shader->set_uniform(m_waterPipeline->m_riverbankUniforms.time,
+                                     m_animationTime);
           if (m_waterPipeline->m_riverbankUniforms.has_visibility !=
               Shader::InvalidUniform) {
             int const has_vis = m_riverbankVisibility.enabled ? 1 : 0;
@@ -1397,8 +1397,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->use();
           QVector3D const road_light_dir(0.35F, 0.8F, 0.45F);
           active_shader->set_uniform(
-              m_waterPipeline->m_road_uniforms.light_direction,
-              road_light_dir);
+              m_waterPipeline->m_road_uniforms.light_direction, road_light_dir);
           m_lastBoundShader = active_shader;
         }
 

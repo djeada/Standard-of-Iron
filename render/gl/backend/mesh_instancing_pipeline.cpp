@@ -174,11 +174,12 @@ void MeshInstancingPipeline::flush() {
   GLsizeiptr const upload_size =
       static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
 
-  void *mapped = glMapBufferRange(
-      GL_ARRAY_BUFFER, 0, upload_size,
-      GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+  void *mapped =
+      glMapBufferRange(GL_ARRAY_BUFFER, 0, upload_size,
+                       GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
   if (mapped != nullptr) {
-    std::memcpy(mapped, m_instances.data(), static_cast<std::size_t>(upload_size));
+    std::memcpy(mapped, m_instances.data(),
+                static_cast<std::size_t>(upload_size));
     glUnmapBuffer(GL_ARRAY_BUFFER);
   } else {
     glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, m_instances.data());

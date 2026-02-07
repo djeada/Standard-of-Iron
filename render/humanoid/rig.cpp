@@ -1602,74 +1602,76 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     (void)TemplateCache::instance().get_or_build_dense(
         dense_domain, dense_slot, key, [&]() -> PoseTemplate {
-      thread_local TemplateRecorder recorder;
-      recorder.reset(320);
-      recorder.set_current_shader(nullptr);
+          thread_local TemplateRecorder recorder;
+          recorder.reset(320);
+          recorder.set_current_shader(nullptr);
 
-      if (auto *outer = dynamic_cast<Renderer *>(&out)) {
-        recorder.set_current_shader(outer->get_current_shader());
-      }
+          if (auto *outer = dynamic_cast<Renderer *>(&out)) {
+            recorder.set_current_shader(outer->get_current_shader());
+          }
 
-      Engine::Core::Entity template_entity(1);
-      auto *templ_unit =
-          template_entity.add_component<Engine::Core::UnitComponent>();
-      if (unit_comp != nullptr) {
-        *templ_unit = *unit_comp;
-      }
-      templ_unit->max_health =
-          (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
-      templ_unit->health = templ_unit->max_health;
+          Engine::Core::Entity template_entity(1);
+          auto *templ_unit =
+              template_entity.add_component<Engine::Core::UnitComponent>();
+          if (unit_comp != nullptr) {
+            *templ_unit = *unit_comp;
+          }
+          templ_unit->max_health =
+              (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
+          templ_unit->health = templ_unit->max_health;
 
-      auto *templ_transform =
-          template_entity.add_component<Engine::Core::TransformComponent>();
-      templ_transform->position = {0.0F, 0.0F, 0.0F};
-      templ_transform->rotation = {0.0F, 0.0F, 0.0F};
-      templ_transform->scale = {1.0F, 1.0F, 1.0F};
+          auto *templ_transform =
+              template_entity.add_component<Engine::Core::TransformComponent>();
+          templ_transform->position = {0.0F, 0.0F, 0.0F};
+          templ_transform->rotation = {0.0F, 0.0F, 0.0F};
+          templ_transform->scale = {1.0F, 1.0F, 1.0F};
 
-      if (auto *renderable =
-              ctx.entity
-                  ? ctx.entity
-                        ->get_component<Engine::Core::RenderableComponent>()
-                  : nullptr) {
-        auto *templ_renderable =
-            template_entity.add_component<Engine::Core::RenderableComponent>(
-                renderable->mesh_path, renderable->texture_path);
-        templ_renderable->renderer_id = renderable->renderer_id;
-        templ_renderable->mesh = renderable->mesh;
-        templ_renderable->visible = true;
-        templ_renderable->color = renderable->color;
-      }
+          if (auto *renderable =
+                  ctx.entity
+                      ? ctx.entity
+                            ->get_component<Engine::Core::RenderableComponent>()
+                      : nullptr) {
+            auto *templ_renderable =
+                template_entity
+                    .add_component<Engine::Core::RenderableComponent>(
+                        renderable->mesh_path, renderable->texture_path);
+            templ_renderable->renderer_id = renderable->renderer_id;
+            templ_renderable->mesh = renderable->mesh;
+            templ_renderable->visible = true;
+            templ_renderable->color = renderable->color;
+          }
 
-      DrawContext build_ctx = ctx;
-      build_ctx.entity = &template_entity;
-      build_ctx.world = nullptr;
-      build_ctx.model = QMatrix4x4();
-      build_ctx.camera = nullptr;
-      build_ctx.selected = false;
-      build_ctx.hovered = false;
-      build_ctx.allow_template_cache = false;
-      build_ctx.force_humanoid_lod = true;
-      build_ctx.forced_humanoid_lod = ctx.forced_humanoid_lod;
-      build_ctx.force_horse_lod = is_mounted_spawn;
-      if (is_mounted_spawn) {
-        build_ctx.forced_horse_lod = static_cast<HorseLOD>(key.mount_lod);
-      }
-      build_ctx.has_seed_override = true;
-      build_ctx.seed_override = resolve_variant_seed(unit_comp, key.variant);
-      build_ctx.has_attack_variant_override = true;
-      build_ctx.attack_variant_override = key.attack_variant;
-      build_ctx.force_single_soldier = true;
-      build_ctx.skip_ground_offset = true;
+          DrawContext build_ctx = ctx;
+          build_ctx.entity = &template_entity;
+          build_ctx.world = nullptr;
+          build_ctx.model = QMatrix4x4();
+          build_ctx.camera = nullptr;
+          build_ctx.selected = false;
+          build_ctx.hovered = false;
+          build_ctx.allow_template_cache = false;
+          build_ctx.force_humanoid_lod = true;
+          build_ctx.forced_humanoid_lod = ctx.forced_humanoid_lod;
+          build_ctx.force_horse_lod = is_mounted_spawn;
+          if (is_mounted_spawn) {
+            build_ctx.forced_horse_lod = static_cast<HorseLOD>(key.mount_lod);
+          }
+          build_ctx.has_seed_override = true;
+          build_ctx.seed_override =
+              resolve_variant_seed(unit_comp, key.variant);
+          build_ctx.has_attack_variant_override = true;
+          build_ctx.attack_variant_override = key.attack_variant;
+          build_ctx.force_single_soldier = true;
+          build_ctx.skip_ground_offset = true;
 
-      AnimationInputs build_anim = make_animation_inputs(anim_key);
-      build_ctx.animation_override = &build_anim;
+          AnimationInputs build_anim = make_animation_inputs(anim_key);
+          build_ctx.animation_override = &build_anim;
 
-      render_procedural(build_ctx, build_anim, recorder);
+          render_procedural(build_ctx, build_anim, recorder);
 
-      PoseTemplate built;
-      built.commands = recorder.take_commands();
-      return built;
-    });
+          PoseTemplate built;
+          built.commands = recorder.take_commands();
+          return built;
+        });
     return;
   }
 
@@ -1792,13 +1794,13 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       dense_domains{};
   std::array<std::array<bool, 4>, 4> dense_domains_ready{};
 
-  auto dense_domain_for = [&](HumanoidLOD lod,
-                              HorseLOD mount_lod_val)
-      -> TemplateCache::DenseDomainHandle {
+  auto dense_domain_for =
+      [&](HumanoidLOD lod,
+          HorseLOD mount_lod_val) -> TemplateCache::DenseDomainHandle {
     const std::size_t lod_idx =
         std::min<std::size_t>(static_cast<std::size_t>(lod), 3);
-    const std::size_t mount_idx = std::min<std::size_t>(
-        static_cast<std::size_t>(mount_lod_val), 3);
+    const std::size_t mount_idx =
+        std::min<std::size_t>(static_cast<std::size_t>(mount_lod_val), 3);
 
     if (!dense_domains_ready[lod_idx][mount_idx]) {
       const std::uint8_t lod_u8 = static_cast<std::uint8_t>(lod_idx);
@@ -1938,9 +1940,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     key.combat_phase = anim_key.combat_phase;
     key.frame = anim_key.frame;
 
-    const TemplateCache::DenseDomainHandle dense_domain =
-        dense_domain_for(soldier_lod, is_mounted_spawn ? mount_lod
-                                                       : HorseLOD::Full);
+    const TemplateCache::DenseDomainHandle dense_domain = dense_domain_for(
+        soldier_lod, is_mounted_spawn ? mount_lod : HorseLOD::Full);
     const std::size_t dense_slot =
         TemplateCache::dense_slot_index(variant_key, anim_key);
 
@@ -2070,9 +2071,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
       float const shadow_offset = shadow_depth * 1.25F;
       QVector2D const offset_2d = shadow_dir_for_use * shadow_offset;
-      float const light_yaw_deg = qRadiansToDegrees(
-          std::atan2(double(shadow_dir_for_use.x()),
-                     double(shadow_dir_for_use.y())));
+      float const light_yaw_deg = qRadiansToDegrees(std::atan2(
+          double(shadow_dir_for_use.x()), double(shadow_dir_for_use.y())));
 
       QMatrix4x4 shadow_model;
       shadow_model.translate(inst_pos.x() + offset_2d.x(),

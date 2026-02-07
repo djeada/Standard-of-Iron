@@ -45,11 +45,11 @@
 #include <initializer_list>
 #include <memory>
 #include <mutex>
+#include <qvectornd.h>
+#include <string>
 #include <thread>
 #include <unordered_set>
 #include <utility>
-#include <qvectornd.h>
-#include <string>
 
 namespace Render::GL {
 
@@ -430,8 +430,8 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   transform->rotation = {0.0F, 0.0F, 0.0F};
   transform->scale = {1.0F, 1.0F, 1.0F};
 
-  auto *renderable = entity.add_component<Engine::Core::RenderableComponent>(
-      "", "");
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
   renderable->renderer_id = profile.renderer_id;
   renderable->visible = true;
   const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
@@ -1270,8 +1270,7 @@ void Renderer::prewarm_unit_templates(
   }
 
   auto report_progress = [&](TemplatePrewarmProgress::Phase phase,
-                             std::size_t completed,
-                             std::size_t total) -> bool {
+                             std::size_t completed, std::size_t total) -> bool {
     if (!progress_callback) {
       return true;
     }
@@ -1398,8 +1397,7 @@ void Renderer::prewarm_unit_templates(
 
   auto add_profile = [&](const std::string &renderer_id,
                          Game::Units::SpawnType spawn_type,
-                         Game::Systems::NationID nation_id,
-                         int max_health) {
+                         Game::Systems::NationID nation_id, int max_health) {
     if (!is_prewarmable_spawn(spawn_type) || renderer_id.empty()) {
       return;
     }
@@ -1436,8 +1434,8 @@ void Renderer::prewarm_unit_templates(
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       auto *renderable =
           entity->get_component<Engine::Core::RenderableComponent>();
-      if (unit == nullptr || renderable == nullptr ||
-          unit->health <= 0 || renderable->renderer_id.empty()) {
+      if (unit == nullptr || renderable == nullptr || unit->health <= 0 ||
+          renderable->renderer_id.empty()) {
         continue;
       }
 
@@ -1541,25 +1539,25 @@ void Renderer::prewarm_unit_templates(
     }
   };
 
-  auto add_attack_frames =
-      [&](std::vector<AnimKey> &keys, AnimState state, int frame_step) {
-        constexpr CombatAnimPhase phases[] = {
-            CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
-            CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
-            CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
-            CombatAnimPhase::Reposition};
-        const int step = std::max(1, frame_step);
-        for (std::uint8_t attack_variant = 0; attack_variant < 3;
-             ++attack_variant) {
-          for (CombatAnimPhase phase : phases) {
-            for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
-                 frame += step) {
-              push_anim_key(keys, state, phase,
-                            static_cast<std::uint8_t>(frame), attack_variant);
-            }
-          }
+  auto add_attack_frames = [&](std::vector<AnimKey> &keys, AnimState state,
+                               int frame_step) {
+    constexpr CombatAnimPhase phases[] = {
+        CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
+        CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
+        CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
+        CombatAnimPhase::Reposition};
+    const int step = std::max(1, frame_step);
+    for (std::uint8_t attack_variant = 0; attack_variant < 3;
+         ++attack_variant) {
+      for (CombatAnimPhase phase : phases) {
+        for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
+             frame += step) {
+          push_anim_key(keys, state, phase, static_cast<std::uint8_t>(frame),
+                        attack_variant);
         }
-      };
+      }
+    }
+  };
 
   push_anim_key(core_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
   add_state_frames(core_anim_keys, AnimState::Move, 4);
@@ -1616,8 +1614,8 @@ void Renderer::prewarm_unit_templates(
   if (core_per_variant > 0) {
     const std::size_t max_variants_for_core =
         target_template_count / core_per_variant;
-    variant_count =
-        std::clamp<std::size_t>(max_variants_for_core, 1, k_template_variant_count);
+    variant_count = std::clamp<std::size_t>(max_variants_for_core, 1,
+                                            k_template_variant_count);
   }
 
   std::size_t anim_count_budget =
@@ -1630,7 +1628,8 @@ void Renderer::prewarm_unit_templates(
     variant_count = std::max<std::size_t>(
         1, target_template_count /
                std::max<std::size_t>(1, domain_count * core_anim_count));
-    variant_count = std::min<std::size_t>(variant_count, k_template_variant_count);
+    variant_count =
+        std::min<std::size_t>(variant_count, k_template_variant_count);
     anim_count_budget = target_template_count /
                         std::max<std::size_t>(1, domain_count * variant_count);
     anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
@@ -1684,8 +1683,8 @@ void Renderer::prewarm_unit_templates(
   clear_humanoid_caches();
   PosePaletteCache::instance().generate();
 
-  auto build_work_items =
-      [&](const std::vector<AnimKey> &anim_keys) -> std::vector<PrewarmWorkItem> {
+  auto build_work_items = [&](const std::vector<AnimKey> &anim_keys)
+      -> std::vector<PrewarmWorkItem> {
     std::vector<PrewarmWorkItem> items;
     items.reserve(domain_count * variant_values.size() * anim_keys.size());
     constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Reduced,
@@ -1766,7 +1765,8 @@ void Renderer::prewarm_unit_templates(
       unit->max_health = profile.max_health;
       unit->health = profile.max_health;
 
-      auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+      auto *transform =
+          entity.add_component<Engine::Core::TransformComponent>();
       transform->position = {0.0F, 0.0F, 0.0F};
       transform->rotation = {0.0F, 0.0F, 0.0F};
       transform->scale = {1.0F, 1.0F, 1.0F};
@@ -1830,8 +1830,9 @@ void Renderer::prewarm_unit_templates(
 
     if ((done - last_reported) >= k_progress_report_step) {
       last_reported = done;
-      if (!report_progress(TemplatePrewarmProgress::Phase::BuildingCoreTemplates,
-                           done, core_work_items.size())) {
+      if (!report_progress(
+              TemplatePrewarmProgress::Phase::BuildingCoreTemplates, done,
+              core_work_items.size())) {
         cancel_requested.store(true, std::memory_order_relaxed);
         break;
       }
@@ -1844,9 +1845,8 @@ void Renderer::prewarm_unit_templates(
     t.join();
   }
 
-  const std::size_t core_done =
-      std::min(completed_count.load(std::memory_order_relaxed),
-               core_work_items.size());
+  const std::size_t core_done = std::min(
+      completed_count.load(std::memory_order_relaxed), core_work_items.size());
   if (cancel_requested.load(std::memory_order_relaxed) ||
       core_done < core_work_items.size()) {
     report_progress(TemplatePrewarmProgress::Phase::Cancelled, core_done,
