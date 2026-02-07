@@ -200,7 +200,46 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   if (renderers.renderer) {
-    renderers.renderer->prewarm_unit_templates(&world);
+    renderers.renderer->prewarm_unit_templates(
+        &world, [progress_tracker](
+                    const Render::GL::Renderer::TemplatePrewarmProgress
+                        &progress) -> bool {
+          if (progress_tracker == nullptr) {
+            return true;
+          }
+
+          QString detail;
+          using Phase = Render::GL::Renderer::TemplatePrewarmProgress::Phase;
+          switch (progress.phase) {
+          case Phase::CollectingProfiles:
+            detail = "Prewarming templates: scanning unit profiles...";
+            break;
+          case Phase::BuildingCoreTemplates:
+            detail = QString("Prewarming templates: %1 / %2")
+                         .arg(progress.completed)
+                         .arg(progress.total);
+            break;
+          case Phase::QueueingExtendedTemplates:
+            detail = QString(
+                         "Queued deferred template warmup (%1 additional)")
+                         .arg(progress.total);
+            break;
+          case Phase::Completed:
+            detail = QString("Template warmup complete (%1 core, %2 total)")
+                         .arg(progress.completed)
+                         .arg(progress.total);
+            break;
+          case Phase::Cancelled:
+            detail = "Template warmup cancelled";
+            break;
+          }
+
+          progress_tracker->set_stage(
+              LoadingProgressTracker::LoadingStage::INITIALIZING_SYSTEMS,
+              detail);
+          QCoreApplication::processEvents();
+          return !progress_tracker->has_failed();
+        });
   }
 
   if (progress_tracker) {
