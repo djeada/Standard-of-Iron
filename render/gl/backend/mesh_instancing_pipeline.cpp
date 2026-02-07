@@ -9,8 +9,8 @@
 namespace Render::GL::BackendPipelines {
 
 namespace {
-constexpr std::size_t k_initial_capacity = 256;
-constexpr std::size_t k_max_instances_per_batch = 4096;
+constexpr std::size_t k_initial_capacity = 512;
+constexpr std::size_t k_max_instances_per_batch = 8192;
 
 constexpr GLuint k_instance_model_col0_loc = 3;
 constexpr GLuint k_instance_model_col1_loc = 4;
@@ -171,9 +171,18 @@ void MeshInstancingPipeline::flush() {
   }
 
   glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
-  glBufferSubData(GL_ARRAY_BUFFER, 0,
-                  static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu)),
-                  m_instances.data());
+  GLsizeiptr const upload_size =
+      static_cast<GLsizeiptr>(count * sizeof(MeshInstanceGpu));
+
+  void *mapped = glMapBufferRange(
+      GL_ARRAY_BUFFER, 0, upload_size,
+      GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+  if (mapped != nullptr) {
+    std::memcpy(mapped, m_instances.data(), static_cast<std::size_t>(upload_size));
+    glUnmapBuffer(GL_ARRAY_BUFFER);
+  } else {
+    glBufferSubData(GL_ARRAY_BUFFER, 0, upload_size, m_instances.data());
+  }
 
   if (!m_currentMesh->bind_vao()) {
     m_instances.clear();
