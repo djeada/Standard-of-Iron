@@ -83,7 +83,11 @@ class TemplateRecorder : public Renderer {
 public:
   TemplateRecorder() = default;
 
-  void reset();
+  void reset(std::size_t reserve_hint = 0);
+
+  auto take_commands() -> std::vector<RecordedMeshCmd> {
+    return std::move(m_commands);
+  }
 
   [[nodiscard]] auto commands() const -> const std::vector<RecordedMeshCmd> & {
     return m_commands;

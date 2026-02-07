@@ -1569,7 +1569,7 @@ void ElephantRendererBase::render(const DrawContext &ctx,
 
   auto build_template = [&]() -> PoseTemplate {
     thread_local TemplateRecorder recorder;
-    recorder.reset();
+    recorder.reset(192);
     recorder.set_current_shader(nullptr);
 
     if (auto *outer = dynamic_cast<Renderer *>(&out)) {
@@ -1608,7 +1608,7 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     }
 
     PoseTemplate built;
-    built.commands = recorder.commands();
+    built.commands = recorder.take_commands();
     return built;
   };
 

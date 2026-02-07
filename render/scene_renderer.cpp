@@ -467,7 +467,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   ctx.attack_variant_override = anim_key.attack_variant;
 
   thread_local TemplateRecorder recorder;
-  recorder.reset();
+  recorder.reset(192);
   recorder.set_current_shader(nullptr);
   profile.fn(ctx, recorder);
 }
@@ -503,6 +503,22 @@ void Renderer::process_async_template_prewarm() {
     max_items = 320;
     time_budget = std::chrono::microseconds(4000);
     break;
+  }
+
+  const auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  const int visible_units = battle_optimizer.visible_unit_count();
+  if (visible_units >= 300) {
+    if ((battle_optimizer.frame_counter() & 1U) != 0U) {
+      return;
+    }
+    max_items = std::min<std::size_t>(max_items, 12);
+    time_budget = std::min(time_budget, std::chrono::microseconds(300));
+  } else if (visible_units >= 220) {
+    max_items = std::min<std::size_t>(max_items, 24);
+    time_budget = std::min(time_budget, std::chrono::microseconds(600));
+  } else if (visible_units >= 150) {
+    max_items = std::min<std::size_t>(max_items, 48);
+    time_budget = std::min(time_budget, std::chrono::microseconds(1000));
   }
 
   std::size_t processed = 0;
@@ -1788,7 +1804,7 @@ void Renderer::prewarm_unit_templates(
       ctx.has_attack_variant_override = attack_state;
       ctx.attack_variant_override = item.anim_key.attack_variant;
 
-      recorder.reset();
+      recorder.reset(192);
       std::lock_guard<std::mutex> profile_lock(
           profile_mutexes[item.profile_index]);
       profile.fn(ctx, recorder);

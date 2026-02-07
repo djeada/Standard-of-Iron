@@ -1603,7 +1603,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     (void)TemplateCache::instance().get_or_build_dense(
         dense_domain, dense_slot, key, [&]() -> PoseTemplate {
       thread_local TemplateRecorder recorder;
-      recorder.reset();
+      recorder.reset(320);
       recorder.set_current_shader(nullptr);
 
       if (auto *outer = dynamic_cast<Renderer *>(&out)) {
@@ -1667,7 +1667,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       render_procedural(build_ctx, build_anim, recorder);
 
       PoseTemplate built;
-      built.commands = recorder.commands();
+      built.commands = recorder.take_commands();
       return built;
     });
     return;
@@ -1947,7 +1947,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
         dense_domain, dense_slot, key, [&]() -> PoseTemplate {
           thread_local TemplateRecorder recorder;
-          recorder.reset();
+          recorder.reset(320);
           recorder.set_current_shader(nullptr);
 
           if (auto *outer = dynamic_cast<Renderer *>(&out)) {
@@ -2009,7 +2009,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           render_procedural(build_ctx, build_anim, recorder);
 
           PoseTemplate built;
-          built.commands = recorder.commands();
+          built.commands = recorder.take_commands();
           return built;
         });
 

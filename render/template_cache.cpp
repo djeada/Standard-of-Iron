@@ -120,7 +120,12 @@ std::size_t TemplateCache::DenseDomainKeyHash::operator()(
   return h;
 }
 
-void TemplateRecorder::reset() { m_commands.clear(); }
+void TemplateRecorder::reset(std::size_t reserve_hint) {
+  m_commands.clear();
+  if (reserve_hint > m_commands.capacity()) {
+    m_commands.reserve(reserve_hint);
+  }
+}
 
 void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
                             const QVector3D &color, Texture *texture,
@@ -128,7 +133,8 @@ void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
   if (mesh == nullptr) {
     return;
   }
-  RecordedMeshCmd cmd;
+  m_commands.emplace_back();
+  RecordedMeshCmd &cmd = m_commands.back();
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.shader = get_current_shader();
@@ -136,7 +142,6 @@ void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
   cmd.color = color;
   cmd.alpha = alpha;
   cmd.material_id = material_id;
-  m_commands.push_back(std::move(cmd));
 }
 
 auto TemplateCache::get_or_build(const TemplateKey &key,
