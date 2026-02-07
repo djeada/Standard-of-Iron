@@ -19,16 +19,22 @@ using namespace Render::GL::ComponentCount;
 
 namespace {
 void clear_gl_errors() {
+#ifndef NDEBUG
   while (glGetError() != GL_NO_ERROR) {
   }
+#endif
 }
 
 auto check_gl_error(const char *operation) -> bool {
+#ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "HealerAuraPipeline GL error in" << operation << ":" << err;
     return false;
   }
+#else
+  Q_UNUSED(operation);
+#endif
   return true;
 }
 } // namespace
@@ -39,7 +45,6 @@ auto HealerAuraPipeline::initialize() -> bool {
     return false;
   }
 
-  initializeOpenGLFunctions();
   clear_gl_errors();
 
   m_auraShader = m_shaderCache->get("healing_aura");
@@ -74,7 +79,6 @@ void HealerAuraPipeline::shutdown_geometry() {
     return;
   }
 
-  initializeOpenGLFunctions();
   clear_gl_errors();
 
   if (m_vao != 0) {
@@ -281,7 +285,6 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
     return;
   }
 
-  initializeOpenGLFunctions();
   clear_gl_errors();
 
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
@@ -354,9 +357,6 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   if (intensity < 0.01F) {
     return;
   }
-
-  initializeOpenGLFunctions();
-  ;
 
   GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthMaskEnabled = GL_TRUE;

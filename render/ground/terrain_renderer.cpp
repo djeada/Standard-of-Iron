@@ -102,6 +102,10 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
+  Game::Map::VisibilityService::Snapshot visibility_snapshot;
+  if (use_visibility) {
+    visibility_snapshot = visibility.snapshot();
+  }
 
   for (const auto &chunk : m_chunks) {
     if (!chunk.mesh) {
@@ -112,7 +116,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       bool any_visible = false;
       for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
         for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-          if (visibility.stateAt(gx, gz) ==
+          if (visibility_snapshot.stateAt(gx, gz) ==
               Game::Map::VisibilityState::Visible) {
             any_visible = true;
             break;

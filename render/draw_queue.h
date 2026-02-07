@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -269,27 +271,12 @@ class DrawQueue {
 public:
   void clear() { m_items.clear(); }
 
-  void submit(const MeshCmd &c) { m_items.emplace_back(c); }
-  void submit(const GridCmd &c) { m_items.emplace_back(c); }
-  void submit(const SelectionRingCmd &c) { m_items.emplace_back(c); }
-  void submit(const SelectionSmokeCmd &c) { m_items.emplace_back(c); }
-  void submit(const CylinderCmd &c) { m_items.emplace_back(c); }
-  void submit(const FogBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const GrassBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const StoneBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const PlantBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const PineBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const OliveBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const FireCampBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const RainBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const TerrainChunkCmd &c) { m_items.emplace_back(c); }
-  void submit(const PrimitiveBatchCmd &c) { m_items.emplace_back(c); }
-  void submit(const HealingBeamCmd &c) { m_items.emplace_back(c); }
-  void submit(const HealerAuraCmd &c) { m_items.emplace_back(c); }
-  void submit(const CombatDustCmd &c) { m_items.emplace_back(c); }
-  void submit(const BuildingFlameCmd &c) { m_items.emplace_back(c); }
-  void submit(const StoneImpactCmd &c) { m_items.emplace_back(c); }
-  void submit(const ModeIndicatorCmd &c) { m_items.emplace_back(c); }
+  template <typename CmdT,
+            typename = std::enable_if_t<
+                std::is_constructible_v<DrawCmd, CmdT &&>>>
+  void submit(CmdT &&cmd) {
+    m_items.emplace_back(std::forward<CmdT>(cmd));
+  }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
   [[nodiscard]] auto size() const -> std::size_t { return m_items.size(); }

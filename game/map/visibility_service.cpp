@@ -328,6 +328,70 @@ auto VisibilityService::executeJob(JobPayload payload)
   return JobResult{std::move(payload.cells), payload.generation, changed};
 }
 
+auto VisibilityService::Snapshot::inBounds(int grid_x, int grid_z) const
+    -> bool {
+  return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
+}
+
+auto VisibilityService::Snapshot::index(int grid_x, int grid_z) const -> int {
+  return grid_z * width + grid_x;
+}
+
+auto VisibilityService::Snapshot::worldToGrid(float world_coord,
+                                              float half) const -> int {
+  const float grid_coord = world_coord / tile_size + half;
+  return static_cast<int>(std::floor(grid_coord + k_half_cell_offset));
+}
+
+auto VisibilityService::Snapshot::stateAt(int grid_x,
+                                          int grid_z) const -> VisibilityState {
+  if (!initialized || !inBounds(grid_x, grid_z)) {
+    return VisibilityState::Visible;
+  }
+  const int idx = index(grid_x, grid_z);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= cells.size()) {
+    return VisibilityState::Visible;
+  }
+  return static_cast<VisibilityState>(cells[static_cast<std::size_t>(idx)]);
+}
+
+auto VisibilityService::Snapshot::isVisibleWorld(float world_x,
+                                                 float world_z) const -> bool {
+  if (!initialized) {
+    return true;
+  }
+  const int grid_x = worldToGrid(world_x, half_width);
+  const int grid_z = worldToGrid(world_z, half_height);
+  if (!inBounds(grid_x, grid_z)) {
+    return false;
+  }
+  const int idx = index(grid_x, grid_z);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= cells.size()) {
+    return false;
+  }
+  return cells[static_cast<std::size_t>(idx)] ==
+         static_cast<std::uint8_t>(VisibilityState::Visible);
+}
+
+auto VisibilityService::Snapshot::isExploredWorld(float world_x,
+                                                  float world_z) const -> bool {
+  if (!initialized) {
+    return true;
+  }
+  const int grid_x = worldToGrid(world_x, half_width);
+  const int grid_z = worldToGrid(world_z, half_height);
+  if (!inBounds(grid_x, grid_z)) {
+    return false;
+  }
+  const int idx = index(grid_x, grid_z);
+  if (idx < 0 || static_cast<std::size_t>(idx) >= cells.size()) {
+    return false;
+  }
+  const auto state = cells[static_cast<std::size_t>(idx)];
+  return state == static_cast<std::uint8_t>(VisibilityState::Visible) ||
+         state == static_cast<std::uint8_t>(VisibilityState::Explored);
+}
+
 auto VisibilityService::stateAt(int grid_x,
                                 int grid_z) const -> VisibilityState {
   if (!m_initialized || !inBounds(grid_x, grid_z)) {
@@ -366,6 +430,19 @@ auto VisibilityService::isExploredWorld(float world_x,
   const auto state = m_cells[index(grid_x, grid_z)];
   return state == static_cast<std::uint8_t>(VisibilityState::Visible) ||
          state == static_cast<std::uint8_t>(VisibilityState::Explored);
+}
+
+auto VisibilityService::snapshot() const -> VisibilityService::Snapshot {
+  std::shared_lock<std::shared_mutex> const lock(m_cellsMutex);
+  Snapshot shot;
+  shot.initialized = m_initialized;
+  shot.width = m_width;
+  shot.height = m_height;
+  shot.tile_size = m_tile_size;
+  shot.half_width = m_half_width;
+  shot.half_height = m_half_height;
+  shot.cells = m_cells;
+  return shot;
 }
 
 auto VisibilityService::snapshotCells() const -> std::vector<std::uint8_t> {

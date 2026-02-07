@@ -221,6 +221,10 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
+  Game::Map::VisibilityService::Snapshot visibility_snapshot;
+  if (use_visibility) {
+    visibility_snapshot = visibility.snapshot();
+  }
 
   auto *shader = renderer.get_shader("bridge");
   if (shader == nullptr) {
@@ -266,11 +270,11 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
             static_cast<float>(i) / static_cast<float>(samples_per_bridge - 1);
         QVector3D const pos = bridge.start + dir * (length * t);
 
-        if (visibility.isVisibleWorld(pos.x(), pos.z())) {
+        if (visibility_snapshot.isVisibleWorld(pos.x(), pos.z())) {
           max_visibility_state = 2;
           break;
         }
-        if (visibility.isExploredWorld(pos.x(), pos.z())) {
+        if (visibility_snapshot.isExploredWorld(pos.x(), pos.z())) {
           max_visibility_state = std::max(max_visibility_state, 1);
         }
       }
