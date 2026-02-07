@@ -34,16 +34,22 @@ constexpr float kFlameYOffset = 0.5F;
 constexpr float kBuildingHealthThreshold = 0.5F;
 
 void clear_gl_errors() {
+#ifndef NDEBUG
   while (glGetError() != GL_NO_ERROR) {
   }
+#endif
 }
 
 auto check_gl_error(const char *operation) -> bool {
+#ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "CombatDustPipeline GL error in" << operation << ":" << err;
     return false;
   }
+#else
+  Q_UNUSED(operation);
+#endif
   return true;
 }
 } // namespace
@@ -420,7 +426,6 @@ void CombatDustPipeline::render(const Camera &cam, float animation_time) {
     return;
   }
 
-  initializeOpenGLFunctions();
   clear_gl_errors();
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
@@ -495,8 +500,6 @@ void CombatDustPipeline::render_single_dust(const QVector3D &position,
     return;
   }
 
-  initializeOpenGLFunctions();
-
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
@@ -549,8 +552,6 @@ void CombatDustPipeline::render_single_flame(const QVector3D &position,
     return;
   }
 
-  initializeOpenGLFunctions();
-
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depth_mask_enabled);
@@ -600,8 +601,6 @@ void CombatDustPipeline::render_single_stone_impact(
   if (intensity < kMinDustIntensity) {
     return;
   }
-
-  initializeOpenGLFunctions();
 
   GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depth_mask_enabled = GL_TRUE;

@@ -87,6 +87,11 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
 
   if (needs_visibility_update) {
+    Game::Map::VisibilityService::Snapshot visibility_snapshot;
+    if (use_visibility) {
+      visibility_snapshot = visibility.snapshot();
+    }
+
     m_visibleInstances.clear();
 
     if (use_visibility) {
@@ -94,7 +99,7 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       for (const auto &instance : m_pineInstances) {
         float const world_x = instance.pos_scale.x();
         float const world_z = instance.pos_scale.z();
-        if (visibility.isVisibleWorld(world_x, world_z)) {
+        if (visibility_snapshot.isVisibleWorld(world_x, world_z)) {
           m_visibleInstances.push_back(instance);
         }
       }

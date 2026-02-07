@@ -355,6 +355,37 @@ void CommandController::reset_movement(Engine::Core::Entity *entity) {
   App::Utils::reset_movement(entity);
 }
 
+void CommandController::reset_transient_state() {
+  m_has_patrol_first_waypoint = false;
+  m_patrol_first_waypoint = QVector3D();
+
+  if (!m_is_placing_formation) {
+    m_formation_placement_position = QVector3D();
+    m_formation_placement_angle = 0.0F;
+    m_formation_units.clear();
+    return;
+  }
+
+  for (const auto id : m_formation_units) {
+    auto *entity = m_world != nullptr ? m_world->get_entity(id) : nullptr;
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *formation_mode =
+        entity->get_component<Engine::Core::FormationModeComponent>();
+    if (formation_mode != nullptr) {
+      formation_mode->active = false;
+    }
+  }
+
+  m_is_placing_formation = false;
+  m_formation_placement_position = QVector3D();
+  m_formation_placement_angle = 0.0F;
+  m_formation_units.clear();
+  emit formation_placement_ended();
+  emit formation_mode_changed(false);
+}
+
 auto CommandController::any_selected_in_hold_mode() const -> bool {
   if ((m_selection_system == nullptr) || (m_world == nullptr)) {
     return false;

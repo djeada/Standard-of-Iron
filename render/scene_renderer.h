@@ -1,6 +1,7 @@
 #pragma once
 
 #include "draw_queue.h"
+#include "entity/registry.h"
 #include "gl/backend.h"
 #include "gl/camera.h"
 #include "gl/mesh.h"
@@ -10,9 +11,11 @@
 #include "unit_render_cache.h"
 #include <atomic>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -151,8 +154,27 @@ public:
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,
                      float depth_bias = 0.0F);
 
+  struct TemplatePrewarmProgress {
+    enum class Phase {
+      CollectingProfiles,
+      BuildingCoreTemplates,
+      QueueingExtendedTemplates,
+      Completed,
+      Cancelled
+    };
+
+    Phase phase{Phase::CollectingProfiles};
+    std::size_t completed{0};
+    std::size_t total{0};
+  };
+
+  using TemplatePrewarmProgressCallback =
+      std::function<bool(const TemplatePrewarmProgress &)>;
+
   void render_world(Engine::Core::World *world);
-  void prewarm_unit_templates();
+  void prewarm_unit_templates(
+      Engine::Core::World *world = nullptr,
+      TemplatePrewarmProgressCallback progress_callback = {});
 
   void lock_world_for_modification() { m_world_mutex.lock(); }
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
@@ -195,6 +217,39 @@ private:
   auto resolve_animation_time(uint32_t entity_id, bool update,
                               float current_time, uint32_t frame) -> float;
   void prune_animation_time_cache(uint32_t frame);
+  void process_async_template_prewarm();
+  void cancel_async_template_prewarm();
+
+  struct AsyncPrewarmProfile {
+    std::string renderer_id;
+    int spawn_type{0};
+    int nation_id{0};
+    int max_health{1};
+    bool is_mounted{false};
+    bool is_elephant{false};
+    RenderFunc fn;
+  };
+
+  struct AsyncPrewarmWorkItem {
+    std::size_t profile_index{0};
+    int owner_id{0};
+    std::uint8_t lod{0};
+    std::uint8_t variant{0};
+    std::uint8_t anim_state{0};
+    std::uint8_t combat_phase{0};
+    std::uint8_t frame{0};
+    std::uint8_t attack_variant{0};
+  };
+
+  struct AsyncTemplatePrewarmState {
+    std::vector<AsyncPrewarmProfile> profiles;
+    std::vector<AsyncPrewarmWorkItem> work_items;
+    std::atomic<std::size_t> next_index{0};
+    std::atomic<bool> cancel_requested{false};
+  };
+
+  void run_template_prewarm_item(const AsyncPrewarmProfile &profile,
+                                 const AsyncPrewarmWorkItem &item);
 
   Camera *m_camera = nullptr;
   std::shared_ptr<Backend> m_backend;
@@ -224,6 +279,9 @@ private:
   UnitRenderCache m_unit_render_cache;
   ModelMatrixCache m_model_matrix_cache;
   std::uint32_t m_frame_counter{0};
+
+  std::mutex m_async_prewarm_mutex;
+  std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;
 };
 
 struct FrameScope {

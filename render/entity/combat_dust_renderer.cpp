@@ -76,6 +76,13 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
   float animation_time = renderer->get_animation_time();
   auto &visibility = Game::Systems::CameraVisibilityService::instance();
   auto &fog_of_war = Game::Map::VisibilityService::instance();
+  Game::Map::VisibilityService::Snapshot fog_snapshot;
+  if (fog_of_war.is_initialized()) {
+    fog_snapshot = fog_of_war.snapshot();
+  }
+  auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
+    return fog_snapshot.isVisibleWorld(world_x, world_z);
+  };
 
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();
 
@@ -100,8 +107,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                   transform->position.z)) {
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
       continue;
     }
 
@@ -145,8 +151,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                   transform->position.z)) {
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
       continue;
     }
 
@@ -190,8 +195,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       continue;
     }
 
-    if (!fog_of_war.isVisibleWorld(transform->position.x,
-                                   transform->position.z)) {
+    if (!is_fog_visible(transform->position.x, transform->position.z)) {
       continue;
     }
 
@@ -238,7 +242,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
       QVector3D impact_pos = stone_proj->get_end();
 
-      if (!fog_of_war.isVisibleWorld(impact_pos.x(), impact_pos.z())) {
+      if (!is_fog_visible(impact_pos.x(), impact_pos.z())) {
         continue;
       }
 
@@ -288,7 +292,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
       QVector3D position(impact.x, transform->position.y + kStoneImpactYOffset,
                          impact.z);
 
-      if (!fog_of_war.isVisibleWorld(position.x(), position.z())) {
+      if (!is_fog_visible(position.x(), position.z())) {
         impact.time = -1.0F;
         continue;
       }
@@ -316,7 +320,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
 
   QVector3D color(kStoneImpactColorR, kStoneImpactColorG, kStoneImpactColorB);
   for (const auto &impact : impact_tracker.impacts()) {
-    if (!fog_of_war.isVisibleWorld(impact.position.x(), impact.position.z())) {
+    if (!is_fog_visible(impact.position.x(), impact.position.z())) {
       continue;
     }
 

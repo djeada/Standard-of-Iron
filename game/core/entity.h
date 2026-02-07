@@ -1,11 +1,11 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <type_traits>
 #include <typeindex>
-#include <unordered_map>
 #include <vector>
 
 namespace Engine::Core {
@@ -35,8 +35,12 @@ public:
                   "T must inherit from Component");
     auto component = std::make_unique<T>(std::forward<Args>(args)...);
     auto ptr = component.get();
+    std::size_t const slot = component_type_id<T>();
+    if (m_components_by_type.size() <= slot) {
+      m_components_by_type.resize(slot + 1);
+    }
+    m_components_by_type[slot] = std::move(component);
     std::type_index const type_idx = std::type_index(typeid(T));
-    m_components[type_idx] = std::move(component);
 
     if (m_component_change_callback) {
       m_component_change_callback(m_id, type_idx, true);
@@ -46,26 +50,27 @@ public:
   }
 
   template <typename T> auto get_component() -> T * {
-    auto it = m_components.find(std::type_index(typeid(T)));
-    if (it != m_components.end()) {
-      return static_cast<T *>(it->second.get());
+    std::size_t const slot = component_type_id<T>();
+    if (slot < m_components_by_type.size()) {
+      return static_cast<T *>(m_components_by_type[slot].get());
     }
     return nullptr;
   }
 
   template <typename T> auto get_component() const -> const T * {
-    auto it = m_components.find(std::type_index(typeid(T)));
-    if (it != m_components.end()) {
-      return static_cast<const T *>(it->second.get());
+    std::size_t const slot = component_type_id<T>();
+    if (slot < m_components_by_type.size()) {
+      return static_cast<const T *>(m_components_by_type[slot].get());
     }
     return nullptr;
   }
 
   template <typename T> void remove_component() {
+    std::size_t const slot = component_type_id<T>();
     std::type_index const type_idx = std::type_index(typeid(T));
-    auto it = m_components.find(type_idx);
-    if (it != m_components.end()) {
-      m_components.erase(it);
+    if (slot < m_components_by_type.size() &&
+        m_components_by_type[slot] != nullptr) {
+      m_components_by_type[slot].reset();
 
       if (m_component_change_callback) {
         m_component_change_callback(m_id, type_idx, false);
@@ -74,12 +79,22 @@ public:
   }
 
   template <typename T> auto has_component() const -> bool {
-    return m_components.find(std::type_index(typeid(T))) != m_components.end();
+    std::size_t const slot = component_type_id<T>();
+    return slot < m_components_by_type.size() &&
+           m_components_by_type[slot] != nullptr;
   }
 
 private:
+  static auto resolve_component_type_id(std::type_index type) -> std::size_t;
+
+  template <typename T> static auto component_type_id() -> std::size_t {
+    static const std::size_t id =
+        resolve_component_type_id(std::type_index(typeid(T)));
+    return id;
+  }
+
   EntityID m_id;
-  std::unordered_map<std::type_index, std::unique_ptr<Component>> m_components;
+  std::vector<std::unique_ptr<Component>> m_components_by_type;
   ComponentChangeCallback m_component_change_callback;
 };
 

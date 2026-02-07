@@ -25,16 +25,22 @@ constexpr float kSnowColorG = 1.0F;
 constexpr float kSnowColorB = 1.0F;
 
 void clear_gl_errors() {
+#ifndef NDEBUG
   while (glGetError() != GL_NO_ERROR) {
   }
+#endif
 }
 
 auto check_gl_error(const char *operation) -> bool {
+#ifndef NDEBUG
   GLenum err = glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RainPipeline GL error in" << operation << ":" << err;
     return false;
   }
+#else
+  Q_UNUSED(operation);
+#endif
   return true;
 }
 } // namespace
@@ -253,7 +259,6 @@ void RainPipeline::render(const Camera &cam, const RainBatchParams &params) {
     return;
   }
 
-  initializeOpenGLFunctions();
   clear_gl_errors();
 
   GLboolean depth_mask_enabled = GL_TRUE;

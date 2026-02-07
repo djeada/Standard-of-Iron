@@ -5,6 +5,7 @@
 #include "primitive_batch.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <utility>
 
 namespace Render::GL {
 class Mesh;
@@ -67,7 +68,8 @@ public:
       return;
     }
 
-    if (mesh == get_unit_cylinder() && (tex == nullptr) &&
+    static Mesh *const unit_cylinder_mesh = get_unit_cylinder();
+    if (mesh == unit_cylinder_mesh && (tex == nullptr) &&
         (m_shader == nullptr)) {
       QVector3D start;
       QVector3D end;
@@ -79,7 +81,7 @@ public:
         cyl.radius = radius;
         cyl.color = color;
         cyl.alpha = alpha;
-        m_queue->submit(cyl);
+        m_queue->submit(std::move(cyl));
         return;
       }
     }
@@ -91,7 +93,7 @@ public:
     cmd.alpha = alpha;
     cmd.material_id = material_id;
     cmd.shader = m_shader;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
                 const QVector3D &color, float alpha = 1.0F) override {
@@ -104,7 +106,7 @@ public:
     cmd.radius = radius;
     cmd.color = color;
     cmd.alpha = alpha;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void selection_ring(const QMatrix4x4 &model, float alpha_inner,
                       float alpha_outer, const QVector3D &color) override {
@@ -116,7 +118,7 @@ public:
     cmd.alpha_inner = alpha_inner;
     cmd.alpha_outer = alpha_outer;
     cmd.color = color;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void grid(const QMatrix4x4 &model, const QVector3D &color, float cell_size,
             float thickness, float extent) override {
@@ -129,7 +131,7 @@ public:
     cmd.cell_size = cell_size;
     cmd.thickness = thickness;
     cmd.extent = extent;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
                        float base_alpha = 0.15F) override {
@@ -140,7 +142,7 @@ public:
     cmd.model = model;
     cmd.color = color;
     cmd.base_alpha = base_alpha;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void healing_beam(const QVector3D &start, const QVector3D &end,
                     const QVector3D &color, float progress, float beam_width,
@@ -156,7 +158,7 @@ public:
     cmd.beam_width = beam_width;
     cmd.intensity = intensity;
     cmd.time = time;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void healer_aura(const QVector3D &position, const QVector3D &color,
                    float radius, float intensity, float time) override {
@@ -169,7 +171,7 @@ public:
     cmd.radius = radius;
     cmd.intensity = intensity;
     cmd.time = time;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void combat_dust(const QVector3D &position, const QVector3D &color,
                    float radius, float intensity, float time) override {
@@ -182,7 +184,7 @@ public:
     cmd.radius = radius;
     cmd.intensity = intensity;
     cmd.time = time;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void stone_impact(const QVector3D &position, const QVector3D &color,
                     float radius, float intensity, float time) override {
@@ -195,7 +197,7 @@ public:
     cmd.radius = radius;
     cmd.intensity = intensity;
     cmd.time = time;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override {
@@ -207,7 +209,7 @@ public:
     cmd.mode_type = mode_type;
     cmd.color = color;
     cmd.alpha = alpha;
-    m_queue->submit(cmd);
+    m_queue->submit(std::move(cmd));
   }
 
 private:
@@ -231,15 +233,19 @@ public:
             int material_id = 0) override {
 
     if (m_enabled && m_batcher != nullptr && tex == nullptr) {
-      if (mesh == get_unit_sphere()) {
+      static Mesh *const unit_sphere_mesh = get_unit_sphere();
+      static Mesh *const unit_cylinder_mesh = get_unit_cylinder();
+      static Mesh *const unit_cone_mesh = get_unit_cone();
+
+      if (mesh == unit_sphere_mesh) {
         m_batcher->add_sphere(model, color, alpha);
         return;
       }
-      if (mesh == get_unit_cylinder()) {
+      if (mesh == unit_cylinder_mesh) {
         m_batcher->add_cylinder(model, color, alpha);
         return;
       }
-      if (mesh == get_unit_cone()) {
+      if (mesh == unit_cone_mesh) {
         m_batcher->add_cone(model, color, alpha);
         return;
       }

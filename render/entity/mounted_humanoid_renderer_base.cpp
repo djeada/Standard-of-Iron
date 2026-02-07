@@ -27,7 +27,8 @@ auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
 }
 
 auto MountedHumanoidRendererBase::get_cached_horse_profile(
-    uint32_t seed, const HumanoidVariant &v) const -> const HorseProfile & {
+    uint32_t seed, const HumanoidVariant &v) const -> HorseProfile {
+  std::lock_guard<std::mutex> lock(m_profile_cache_mutex);
   auto it = m_profile_cache.find(seed);
   if (it != m_profile_cache.end()) {
     return it->second;
@@ -38,7 +39,7 @@ auto MountedHumanoidRendererBase::get_cached_horse_profile(
       make_horse_profile(seed, v.palette.leather, v.palette.cloth);
   profile.dims = dims;
 
-  m_profile_cache[seed] = profile;
+  m_profile_cache[seed] = std::move(profile);
   if (m_profile_cache.size() > MAX_PROFILE_CACHE_SIZE) {
     m_profile_cache.clear();
   }
@@ -84,13 +85,14 @@ void MountedHumanoidRendererBase::customize_pose(
       evaluate_horse_motion(mount_profile, anim, anim_ctx);
   apply_mount_vertical_offset(mount, motion.bob);
 
-  m_last_pose = &pose;
-  m_last_mount = mount;
-  m_last_motion = motion;
-
   ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
-  m_last_rein_state = reins;
-  m_has_last_reins = true;
+  if (!ctx.template_prewarm) {
+    m_last_pose = &pose;
+    m_last_mount = mount;
+    m_last_motion = motion;
+    m_last_rein_state = reins;
+    m_has_last_reins = true;
+  }
 
   MountedPoseController mounted_controller(pose, anim_ctx);
 
@@ -107,20 +109,14 @@ void MountedHumanoidRendererBase::customize_pose(
 void MountedHumanoidRendererBase::add_attachments(
     const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
     const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
-  static uint64_t s_mounted_frame_counter = 0;
-  ++s_mounted_frame_counter;
-  uint64_t frame_id = s_mounted_frame_counter;
-
   uint32_t horse_seed = 0U;
   if (ctx.entity != nullptr) {
     horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
                                        0xFFFFFFFFU);
   }
 
-  const HorseProfile &profile_const = get_cached_horse_profile(horse_seed, v);
-  HorseProfile &profile = const_cast<HorseProfile &>(profile_const);
-
-  const bool is_current_pose = (m_last_pose == &pose);
+  HorseProfile profile = get_cached_horse_profile(horse_seed, v);
+  const bool is_current_pose = !ctx.template_prewarm && (m_last_pose == &pose);
   const MountedAttachmentFrame *mount_ptr =
       (is_current_pose) ? &m_last_mount : nullptr;
   const ReinState *rein_ptr =
@@ -145,8 +141,10 @@ void MountedHumanoidRendererBase::add_attachments(
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
                          motion_ptr, out, horse_lod);
 
-  m_last_pose = nullptr;
-  m_has_last_reins = false;
+  if (!ctx.template_prewarm) {
+    m_last_pose = nullptr;
+    m_has_last_reins = false;
+  }
 
   draw_equipment(ctx, v, pose, anim_ctx, out);
 }

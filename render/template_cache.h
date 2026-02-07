@@ -6,6 +6,7 @@
 #include <QVector3D>
 #include <cstdint>
 #include <functional>
+#include <limits>
 #include <list>
 #include <mutex>
 #include <string>
@@ -82,7 +83,11 @@ class TemplateRecorder : public Renderer {
 public:
   TemplateRecorder() = default;
 
-  void reset();
+  void reset(std::size_t reserve_hint = 0);
+
+  auto take_commands() -> std::vector<RecordedMeshCmd> {
+    return std::move(m_commands);
+  }
 
   [[nodiscard]] auto commands() const -> const std::vector<RecordedMeshCmd> & {
     return m_commands;
@@ -116,6 +121,19 @@ private:
 class TemplateCache {
 public:
   static constexpr std::size_t k_default_max_entries = 500'000;
+  static constexpr std::size_t k_dense_attack_variant_slots = 8;
+  static constexpr std::size_t k_dense_variant_slots = k_template_variant_count;
+  static constexpr std::size_t k_dense_anim_state_slots = 305;
+  static constexpr std::size_t k_dense_anim_slot_count =
+      k_dense_variant_slots * k_dense_attack_variant_slots *
+      k_dense_anim_state_slots;
+
+  struct DenseDomainHandle {
+    static constexpr std::size_t k_invalid =
+        std::numeric_limits<std::size_t>::max();
+    std::size_t value{k_invalid};
+    [[nodiscard]] auto is_valid() const -> bool { return value != k_invalid; }
+  };
 
   static auto instance() noexcept -> TemplateCache & {
     static TemplateCache inst;
@@ -125,6 +143,17 @@ public:
   auto get_or_build(const TemplateKey &key,
                     const std::function<PoseTemplate()> &builder)
       -> const PoseTemplate *;
+
+  auto get_dense_domain_handle(const std::string &renderer_id,
+                               std::uint32_t owner_id, std::uint8_t lod,
+                               std::uint8_t mount_lod) -> DenseDomainHandle;
+
+  auto get_or_build_dense(
+      DenseDomainHandle domain, std::size_t dense_slot, const TemplateKey &key,
+      const std::function<PoseTemplate()> &builder) -> const PoseTemplate *;
+
+  static auto dense_slot_index(std::uint8_t variant,
+                               const AnimKey &anim_key) -> std::size_t;
 
   void clear();
 
@@ -142,6 +171,9 @@ private:
   TemplateCache() = default;
 
   void evict_lru();
+  void clear_dense_slot_for_key(const TemplateKey &key);
+  auto set_dense_slot(DenseDomainHandle domain, std::size_t dense_slot,
+                      const PoseTemplate *tpl) -> void;
 
   using LruList = std::list<TemplateKey>;
   struct CacheEntry {
@@ -149,8 +181,32 @@ private:
     LruList::iterator lru_it;
   };
 
+  struct DenseDomainKey {
+    std::string renderer_id;
+    std::uint32_t owner_id{0};
+    std::uint8_t lod{0};
+    std::uint8_t mount_lod{0};
+
+    bool operator==(const DenseDomainKey &other) const {
+      return renderer_id == other.renderer_id && owner_id == other.owner_id &&
+             lod == other.lod && mount_lod == other.mount_lod;
+    }
+  };
+
+  struct DenseDomainKeyHash {
+    std::size_t operator()(const DenseDomainKey &key) const noexcept;
+  };
+
+  struct DenseDomainEntry {
+    DenseDomainKey key;
+    std::vector<const PoseTemplate *> template_slots;
+  };
+
   std::unordered_map<TemplateKey, CacheEntry, TemplateKeyHash> m_cache;
   LruList m_lru;
+  std::unordered_map<DenseDomainKey, std::size_t, DenseDomainKeyHash>
+      m_dense_domain_lookup;
+  std::vector<DenseDomainEntry> m_dense_domains;
   std::size_t m_max_entries{k_default_max_entries};
   mutable std::mutex m_mutex;
 };

@@ -102,24 +102,40 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
+  Game::Map::VisibilityService::Snapshot visibility_snapshot;
+  std::uint64_t visibility_version = 0;
+  if (use_visibility) {
+    visibility_snapshot = visibility.snapshot();
+    visibility_version = visibility.version();
+    if (m_chunk_visibility_cache.size() != m_chunks.size()) {
+      m_chunk_visibility_cache.assign(m_chunks.size(), {});
+    }
+  }
 
-  for (const auto &chunk : m_chunks) {
+  for (std::size_t chunk_index = 0; chunk_index < m_chunks.size();
+       ++chunk_index) {
+    const auto &chunk = m_chunks[chunk_index];
     if (!chunk.mesh) {
       continue;
     }
 
     if (use_visibility) {
-      bool any_visible = false;
-      for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
-        for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-          if (visibility.stateAt(gx, gz) ==
-              Game::Map::VisibilityState::Visible) {
-            any_visible = true;
-            break;
+      auto &cache = m_chunk_visibility_cache[chunk_index];
+      if (cache.visibility_version != visibility_version) {
+        bool any_visible = false;
+        for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
+          for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
+            if (visibility_snapshot.stateAt(gx, gz) ==
+                Game::Map::VisibilityState::Visible) {
+              any_visible = true;
+              break;
+            }
           }
         }
+        cache.any_visible = any_visible;
+        cache.visibility_version = visibility_version;
       }
-      if (!any_visible) {
+      if (!cache.any_visible) {
         continue;
       }
     }
@@ -147,6 +163,7 @@ void TerrainRenderer::build_meshes() {
   timer.start();
 
   m_chunks.clear();
+  m_chunk_visibility_cache.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
@@ -858,6 +875,8 @@ void TerrainRenderer::build_meshes() {
       }
     }
   }
+
+  m_chunk_visibility_cache.assign(m_chunks.size(), {});
 }
 
 auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,

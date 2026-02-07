@@ -2,6 +2,7 @@
 
 #include "../../game/core/component.h"
 #include "../entity/registry.h"
+#include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
@@ -1560,10 +1561,16 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   key.state = anim_key.state;
   key.combat_phase = anim_key.combat_phase;
   key.frame = anim_key.frame;
+  const TemplateCache::DenseDomainHandle dense_domain =
+      TemplateCache::instance().get_dense_domain_handle(
+          key.renderer_id, key.owner_id, key.lod, key.mount_lod);
+  const std::size_t dense_slot =
+      TemplateCache::dense_slot_index(key.variant, anim_key);
 
   auto build_template = [&]() -> PoseTemplate {
-    TemplateRecorder recorder;
-    recorder.reset();
+    thread_local TemplateRecorder recorder;
+    recorder.reset(192);
+    recorder.set_current_shader(nullptr);
 
     if (auto *outer = dynamic_cast<Renderer *>(&out)) {
       recorder.set_current_shader(outer->get_current_shader());
@@ -1601,13 +1608,14 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     }
 
     PoseTemplate built;
-    built.commands = recorder.commands();
+    built.commands = recorder.take_commands();
     return built;
   };
 
   if (ctx.template_prewarm) {
     if (use_cache && effective_lod != HorseLOD::Billboard) {
-      (void)TemplateCache::instance().get_or_build(key, build_template);
+      (void)TemplateCache::instance().get_or_build_dense(
+          dense_domain, dense_slot, key, build_template);
     }
     return;
   }
@@ -1620,8 +1628,8 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   }
 
   if (use_cache) {
-    const PoseTemplate *tpl =
-        TemplateCache::instance().get_or_build(key, build_template);
+    const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
+        dense_domain, dense_slot, key, build_template);
     if (tpl != nullptr && !tpl->commands.empty()) {
       Renderer *renderer = resolve_renderer_for_submitter(out);
       Shader *last_shader = nullptr;
@@ -1630,7 +1638,8 @@ void ElephantRendererBase::render(const DrawContext &ctx,
           renderer->set_current_shader(cmd.shader);
           last_shader = cmd.shader;
         }
-        QMatrix4x4 world_model = ctx.model * cmd.local_model;
+        QMatrix4x4 world_model =
+            Render::Geom::multiply_affine(ctx.model, cmd.local_model);
         out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
                  cmd.material_id);
       }

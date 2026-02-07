@@ -387,6 +387,7 @@ private:
   void apply_mission_setup();
   void configure_mission_victory_conditions();
   void configure_rain_system();
+  void reset_preload_interaction_state();
   void reset_mission_runtime_state();
   void update_mission_waves(float dt);
   void spawn_mission_wave(const PendingMissionWave &wave);
