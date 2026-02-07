@@ -413,12 +413,7 @@ void Renderer::cancel_async_template_prewarm() {
 
 void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
                                          const AsyncPrewarmWorkItem &item) {
-  if (!m_entity_registry || !m_backend) {
-    return;
-  }
-
-  auto fn = m_entity_registry->get(profile.renderer_id);
-  if (!fn) {
+  if (!m_backend || !profile.fn) {
     return;
   }
 
@@ -473,7 +468,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
 
   TemplateRecorder recorder;
   recorder.reset();
-  fn(ctx, recorder);
+  profile.fn(ctx, recorder);
 }
 
 void Renderer::process_async_template_prewarm() {
@@ -1032,7 +1027,8 @@ void Renderer::render_world(Engine::Core::World *world) {
   };
 
   auto draw_contact_shadow = [&](Engine::Core::TransformComponent *transform,
-                                 Engine::Core::UnitComponent *unit_comp) {
+                                 Engine::Core::UnitComponent *unit_comp,
+                                 float distance_sq) {
     if (res == nullptr) {
       return;
     }
@@ -1064,17 +1060,28 @@ void Renderer::render_world(Engine::Core::World *world) {
     float const mid_alpha = 0.16F * eased;
     float const outer_alpha = 0.07F * eased;
 
+    int shadow_layers = 3;
+    if ((visibleUnitCount > 420) || (distance_sq > 1200.0F)) {
+      shadow_layers = 1;
+    } else if ((visibleUnitCount > 260) || (distance_sq > 600.0F)) {
+      shadow_layers = 2;
+    }
+
     QMatrix4x4 c0 = contact_base;
     c0.scale(base_scale_x * 0.60F, base_scale_y * 0.60F, 1.0F);
     mesh(contact_quad, c0, col, white, center_alpha);
 
-    QMatrix4x4 c1 = contact_base;
-    c1.scale(base_scale_x * 0.95F, base_scale_y * 0.95F, 1.0F);
-    mesh(contact_quad, c1, col, white, mid_alpha);
+    if (shadow_layers >= 2) {
+      QMatrix4x4 c1 = contact_base;
+      c1.scale(base_scale_x * 0.95F, base_scale_y * 0.95F, 1.0F);
+      mesh(contact_quad, c1, col, white, mid_alpha);
+    }
 
-    QMatrix4x4 c2 = contact_base;
-    c2.scale(base_scale_x * 1.35F, base_scale_y * 1.35F, 1.0F);
-    mesh(contact_quad, c2, col, white, outer_alpha);
+    if (shadow_layers >= 3) {
+      QMatrix4x4 c2 = contact_base;
+      c2.scale(base_scale_x * 1.35F, base_scale_y * 1.35F, 1.0F);
+      mesh(contact_quad, c2, col, white, outer_alpha);
+    }
   };
 
   for (auto &entry : unit_entries) {
@@ -1143,7 +1150,7 @@ void Renderer::render_world(Engine::Core::World *world) {
         QVector3D(entry.renderable->color[0], entry.renderable->color[1],
                   entry.renderable->color[2]);
 
-    draw_contact_shadow(entry.transform, entry.unit);
+    draw_contact_shadow(entry.transform, entry.unit, entry.distance_sq);
     if (entry.selected || entry.hovered) {
       enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
                              entry.selected, entry.hovered);
@@ -1188,7 +1195,7 @@ void Renderer::render_world(Engine::Core::World *world) {
         QVector3D(entry.renderable->color[0], entry.renderable->color[1],
                   entry.renderable->color[2]);
 
-    draw_contact_shadow(entry.transform, entry.unit);
+    draw_contact_shadow(entry.transform, entry.unit, 0.0F);
     if (entry.selected || entry.hovered) {
       enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
                              entry.selected, entry.hovered);
@@ -1855,6 +1862,7 @@ void Renderer::prewarm_unit_templates(
       async_profile.max_health = profile.max_health;
       async_profile.is_mounted = profile.is_mounted;
       async_profile.is_elephant = profile.is_elephant;
+      async_profile.fn = profile.fn;
       async_state->profiles.push_back(std::move(async_profile));
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "draw_queue.h"
+#include "entity/registry.h"
 #include "gl/backend.h"
 #include "gl/camera.h"
 #include "gl/mesh.h"
@@ -226,6 +227,7 @@ private:
     int max_health{1};
     bool is_mounted{false};
     bool is_elephant{false};
+    RenderFunc fn;
   };
 
   struct AsyncPrewarmWorkItem {
