@@ -40,6 +40,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <initializer_list>
 #include <memory>
 #include <mutex>
 #include <utility>
@@ -1109,16 +1110,57 @@ void Renderer::prewarm_unit_templates() {
   }
 
   std::vector<AnimKey> anim_keys;
-  anim_keys.reserve(1);
+  anim_keys.reserve(160);
 
-  {
-    AnimKey key{};
-    key.state = AnimState::Idle;
-    key.frame = 0;
-    key.combat_phase = CombatAnimPhase::Idle;
-    key.attack_variant = 0;
-    anim_keys.push_back(key);
-  }
+  auto add_state_frames = [&anim_keys](AnimState state,
+                                       std::initializer_list<std::uint8_t>
+                                           frames) {
+    for (std::uint8_t frame : frames) {
+      AnimKey key{};
+      key.state = state;
+      key.frame = frame;
+      key.combat_phase = CombatAnimPhase::Idle;
+      key.attack_variant = 0;
+      anim_keys.push_back(key);
+    }
+  };
+
+  auto add_attack_frames = [&anim_keys](
+                               AnimState state,
+                               std::initializer_list<CombatAnimPhase> phases,
+                               std::initializer_list<std::uint8_t> frames,
+                               std::initializer_list<std::uint8_t> variants) {
+    for (std::uint8_t variant : variants) {
+      for (CombatAnimPhase phase : phases) {
+        for (std::uint8_t frame : frames) {
+          AnimKey key{};
+          key.state = state;
+          key.frame = frame;
+          key.combat_phase = phase;
+          key.attack_variant = variant;
+          anim_keys.push_back(key);
+        }
+      }
+    }
+  };
+
+  add_state_frames(AnimState::Idle, {0});
+  add_state_frames(AnimState::Move, {0, 4, 8, 12});
+  add_state_frames(AnimState::Run, {0, 4, 8, 12});
+  add_state_frames(AnimState::Construct, {0, 5, 10, 15});
+  add_state_frames(AnimState::Heal, {0, 4, 8, 12});
+  add_state_frames(AnimState::Hit, {0, 5, 10, 15});
+
+  add_attack_frames(AnimState::AttackMelee,
+                    {CombatAnimPhase::Advance, CombatAnimPhase::WindUp,
+                     CombatAnimPhase::Strike, CombatAnimPhase::Impact,
+                     CombatAnimPhase::Recover, CombatAnimPhase::Reposition},
+                    {0, 8, 15}, {0, 1, 2});
+  add_attack_frames(AnimState::AttackRanged,
+                    {CombatAnimPhase::Advance, CombatAnimPhase::WindUp,
+                     CombatAnimPhase::Strike, CombatAnimPhase::Impact,
+                     CombatAnimPhase::Recover, CombatAnimPhase::Reposition},
+                    {0, 8, 15}, {0, 1, 2});
 
   auto is_prewarmeable_troop = [](Game::Units::TroopType type) -> bool {
     using Game::Units::TroopType;

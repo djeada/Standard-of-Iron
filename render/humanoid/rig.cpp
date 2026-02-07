@@ -34,6 +34,7 @@
 #include <QVector4D>
 #include <QtMath>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <functional>
@@ -1709,6 +1710,31 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
   const std::size_t soldier_count = std::min<std::size_t>(
       layout_entry.soldiers.size(), static_cast<std::size_t>(visible_count));
+  const std::uint32_t template_owner_id =
+      static_cast<std::uint32_t>(unit_comp->owner_id);
+  std::array<std::array<TemplateCache::DenseDomainHandle, 4>, 4>
+      dense_domains{};
+  std::array<std::array<bool, 4>, 4> dense_domains_ready{};
+
+  auto dense_domain_for = [&](HumanoidLOD lod,
+                              HorseLOD mount_lod_val)
+      -> TemplateCache::DenseDomainHandle {
+    const std::size_t lod_idx =
+        std::min<std::size_t>(static_cast<std::size_t>(lod), 3);
+    const std::size_t mount_idx = std::min<std::size_t>(
+        static_cast<std::size_t>(mount_lod_val), 3);
+
+    if (!dense_domains_ready[lod_idx][mount_idx]) {
+      const std::uint8_t lod_u8 = static_cast<std::uint8_t>(lod_idx);
+      const std::uint8_t mount_u8 = static_cast<std::uint8_t>(mount_idx);
+      dense_domains[lod_idx][mount_idx] =
+          TemplateCache::instance().get_dense_domain_handle(
+              ctx.renderer_id, template_owner_id, lod_u8, mount_u8);
+      dense_domains_ready[lod_idx][mount_idx] = true;
+    }
+
+    return dense_domains[lod_idx][mount_idx];
+  };
 
   for (std::size_t idx = 0; idx < soldier_count; ++idx) {
     const SoldierLayout &slot = layout_entry.soldiers[idx];
@@ -1840,7 +1866,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
 
     TemplateKey key;
     key.renderer_id = ctx.renderer_id;
-    key.owner_id = static_cast<std::uint32_t>(unit_comp->owner_id);
+    key.owner_id = template_owner_id;
     key.lod = static_cast<std::uint8_t>(soldier_lod);
     key.mount_lod = is_mounted_spawn ? static_cast<std::uint8_t>(mount_lod) : 0;
     key.variant = variant_key;
@@ -1849,8 +1875,14 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     key.combat_phase = anim_key.combat_phase;
     key.frame = anim_key.frame;
 
-    const PoseTemplate *tpl =
-        TemplateCache::instance().get_or_build(key, [&]() -> PoseTemplate {
+    const TemplateCache::DenseDomainHandle dense_domain =
+        dense_domain_for(soldier_lod, is_mounted_spawn ? mount_lod
+                                                       : HorseLOD::Full);
+    const std::size_t dense_slot =
+        TemplateCache::dense_slot_index(variant_key, anim_key);
+
+    const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
+        dense_domain, dense_slot, key, [&]() -> PoseTemplate {
           TemplateRecorder recorder;
           recorder.reset();
 
