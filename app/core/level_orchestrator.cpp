@@ -200,7 +200,7 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   if (renderers.renderer) {
-    renderers.renderer->prewarm_unit_templates();
+    renderers.renderer->prewarm_unit_templates(&world);
   }
 
   if (progress_tracker) {

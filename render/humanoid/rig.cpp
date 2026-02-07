@@ -1553,12 +1553,13 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     key.renderer_id = ctx.renderer_id;
     key.owner_id = owner_id;
     key.lod = static_cast<std::uint8_t>(ctx.forced_humanoid_lod);
+    HorseLOD mount_lod = HorseLOD::Full;
     key.mount_lod = 0;
     if (is_mounted_spawn) {
-      HorseLOD horse_lod = ctx.force_horse_lod
-                               ? ctx.forced_horse_lod
-                               : static_cast<HorseLOD>(ctx.forced_humanoid_lod);
-      key.mount_lod = static_cast<std::uint8_t>(horse_lod);
+      mount_lod = ctx.force_horse_lod
+                      ? ctx.forced_horse_lod
+                      : static_cast<HorseLOD>(ctx.forced_humanoid_lod);
+      key.mount_lod = static_cast<std::uint8_t>(mount_lod);
     }
     key.variant = ctx.variant_override;
     key.attack_variant = anim_key.attack_variant;
@@ -1566,7 +1567,14 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
     key.combat_phase = anim_key.combat_phase;
     key.frame = anim_key.frame;
 
-    (void)TemplateCache::instance().get_or_build(key, [&]() -> PoseTemplate {
+    const TemplateCache::DenseDomainHandle dense_domain =
+        TemplateCache::instance().get_dense_domain_handle(
+            key.renderer_id, key.owner_id, key.lod, key.mount_lod);
+    const std::size_t dense_slot =
+        TemplateCache::dense_slot_index(key.variant, anim_key);
+
+    (void)TemplateCache::instance().get_or_build_dense(
+        dense_domain, dense_slot, key, [&]() -> PoseTemplate {
       TemplateRecorder recorder;
       recorder.reset();
 

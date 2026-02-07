@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <mutex>
 #include <numbers>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
@@ -47,6 +48,7 @@ struct CachedHorseProfileEntry {
 using HorseProfileCacheKey = uint64_t;
 static std::unordered_map<HorseProfileCacheKey, CachedHorseProfileEntry>
     s_horse_profile_cache;
+static std::mutex s_horse_profile_cache_mutex;
 static uint32_t s_horse_cache_frame = 0;
 constexpr uint32_t k_horse_profile_cache_max_age = 600;
 
@@ -526,6 +528,7 @@ auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
 auto get_or_create_cached_horse_profile(
     uint32_t seed, const QVector3D &leather_base,
     const QVector3D &cloth_base) -> HorseProfile {
+  std::lock_guard<std::mutex> lock(s_horse_profile_cache_mutex);
   HorseProfileCacheKey cache_key =
       make_horse_profile_cache_key(seed, leather_base, cloth_base);
 
@@ -556,6 +559,7 @@ auto get_or_create_cached_horse_profile(
 }
 
 void advance_horse_profile_cache_frame() {
+  std::lock_guard<std::mutex> lock(s_horse_profile_cache_mutex);
   ++s_horse_cache_frame;
 
   if ((s_horse_cache_frame & k_cache_cleanup_interval_mask) == 0) {

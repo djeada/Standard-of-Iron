@@ -152,7 +152,7 @@ public:
                      float depth_bias = 0.0F);
 
   void render_world(Engine::Core::World *world);
-  void prewarm_unit_templates();
+  void prewarm_unit_templates(Engine::Core::World *world = nullptr);
 
   void lock_world_for_modification() { m_world_mutex.lock(); }
   void unlock_world_for_modification() { m_world_mutex.unlock(); }

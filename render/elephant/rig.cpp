@@ -1561,6 +1561,11 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   key.state = anim_key.state;
   key.combat_phase = anim_key.combat_phase;
   key.frame = anim_key.frame;
+  const TemplateCache::DenseDomainHandle dense_domain =
+      TemplateCache::instance().get_dense_domain_handle(
+          key.renderer_id, key.owner_id, key.lod, key.mount_lod);
+  const std::size_t dense_slot =
+      TemplateCache::dense_slot_index(key.variant, anim_key);
 
   auto build_template = [&]() -> PoseTemplate {
     TemplateRecorder recorder;
@@ -1608,7 +1613,8 @@ void ElephantRendererBase::render(const DrawContext &ctx,
 
   if (ctx.template_prewarm) {
     if (use_cache && effective_lod != HorseLOD::Billboard) {
-      (void)TemplateCache::instance().get_or_build(key, build_template);
+      (void)TemplateCache::instance().get_or_build_dense(
+          dense_domain, dense_slot, key, build_template);
     }
     return;
   }
@@ -1621,8 +1627,8 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   }
 
   if (use_cache) {
-    const PoseTemplate *tpl =
-        TemplateCache::instance().get_or_build(key, build_template);
+    const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
+        dense_domain, dense_slot, key, build_template);
     if (tpl != nullptr && !tpl->commands.empty()) {
       Renderer *renderer = resolve_renderer_for_submitter(out);
       Shader *last_shader = nullptr;

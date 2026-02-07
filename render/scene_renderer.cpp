@@ -37,12 +37,15 @@
 #include "template_cache.h"
 #include "visibility_budget.h"
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
 #include <mutex>
+#include <thread>
+#include <unordered_set>
 #include <utility>
 #include <qvectornd.h>
 #include <string>
@@ -1087,82 +1090,71 @@ void Renderer::render_world(Engine::Core::World *world) {
   render_construction_previews(world, vis, visibility_enabled);
 }
 
-void Renderer::prewarm_unit_templates() {
+void Renderer::prewarm_unit_templates(Engine::Core::World *world) {
   if (!m_entity_registry) {
     return;
   }
 
-  TemplateCache::instance().clear();
-  clear_humanoid_caches();
-  PosePaletteCache::instance().generate();
+  struct PrewarmProfile {
+    std::string renderer_id;
+    Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
+    Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+    int max_health{1};
+    bool is_mounted{false};
+    bool is_elephant{false};
+    RenderFunc fn;
+  };
 
-  TemplateRecorder recorder;
-  recorder.reset();
-
-  std::vector<int> owner_ids;
-  const auto &owners =
-      Game::Systems::OwnerRegistry::instance().get_all_owners();
-  for (const auto &owner : owners) {
-    owner_ids.push_back(owner.owner_id);
-  }
-  if (owner_ids.empty()) {
-    owner_ids.push_back(0);
-  }
-
-  std::vector<AnimKey> anim_keys;
-  anim_keys.reserve(160);
-
-  auto add_state_frames = [&anim_keys](AnimState state,
-                                       std::initializer_list<std::uint8_t>
-                                           frames) {
-    for (std::uint8_t frame : frames) {
-      AnimKey key{};
-      key.state = state;
-      key.frame = frame;
-      key.combat_phase = CombatAnimPhase::Idle;
-      key.attack_variant = 0;
-      anim_keys.push_back(key);
+  struct PrewarmProfileKey {
+    std::string renderer_id;
+    Game::Units::SpawnType spawn_type{Game::Units::SpawnType::Archer};
+    Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+    bool operator==(const PrewarmProfileKey &other) const {
+      return renderer_id == other.renderer_id &&
+             spawn_type == other.spawn_type && nation_id == other.nation_id;
     }
   };
 
-  auto add_attack_frames = [&anim_keys](
-                               AnimState state,
-                               std::initializer_list<CombatAnimPhase> phases,
-                               std::initializer_list<std::uint8_t> frames,
-                               std::initializer_list<std::uint8_t> variants) {
-    for (std::uint8_t variant : variants) {
-      for (CombatAnimPhase phase : phases) {
-        for (std::uint8_t frame : frames) {
-          AnimKey key{};
-          key.state = state;
-          key.frame = frame;
-          key.combat_phase = phase;
-          key.attack_variant = variant;
-          anim_keys.push_back(key);
-        }
-      }
+  struct PrewarmProfileKeyHash {
+    std::size_t operator()(const PrewarmProfileKey &key) const noexcept {
+      std::size_t h = std::hash<std::string>()(key.renderer_id);
+      h ^= static_cast<std::size_t>(key.spawn_type) + 0x9e3779b9 + (h << 6) +
+           (h >> 2);
+      h ^= static_cast<std::size_t>(static_cast<std::uint8_t>(key.nation_id)) +
+           0x9e3779b9 + (h << 6) + (h >> 2);
+      return h;
     }
   };
 
-  add_state_frames(AnimState::Idle, {0});
-  add_state_frames(AnimState::Move, {0, 4, 8, 12});
-  add_state_frames(AnimState::Run, {0, 4, 8, 12});
-  add_state_frames(AnimState::Construct, {0, 5, 10, 15});
-  add_state_frames(AnimState::Heal, {0, 4, 8, 12});
-  add_state_frames(AnimState::Hit, {0, 5, 10, 15});
+  struct PrewarmWorkItem {
+    std::size_t profile_index{0};
+    int owner_id{0};
+    HumanoidLOD lod{HumanoidLOD::Full};
+    std::uint8_t variant{0};
+    AnimKey anim_key{};
+  };
 
-  add_attack_frames(AnimState::AttackMelee,
-                    {CombatAnimPhase::Advance, CombatAnimPhase::WindUp,
-                     CombatAnimPhase::Strike, CombatAnimPhase::Impact,
-                     CombatAnimPhase::Recover, CombatAnimPhase::Reposition},
-                    {0, 8, 15}, {0, 1, 2});
-  add_attack_frames(AnimState::AttackRanged,
-                    {CombatAnimPhase::Advance, CombatAnimPhase::WindUp,
-                     CombatAnimPhase::Strike, CombatAnimPhase::Impact,
-                     CombatAnimPhase::Recover, CombatAnimPhase::Reposition},
-                    {0, 8, 15}, {0, 1, 2});
+  auto is_prewarmable_spawn = [](Game::Units::SpawnType spawn_type) -> bool {
+    using Game::Units::SpawnType;
+    switch (spawn_type) {
+    case SpawnType::Archer:
+    case SpawnType::Knight:
+    case SpawnType::Spearman:
+    case SpawnType::MountedKnight:
+    case SpawnType::HorseArcher:
+    case SpawnType::HorseSpearman:
+    case SpawnType::Healer:
+    case SpawnType::Builder:
+    case SpawnType::Elephant:
+      return true;
+    case SpawnType::Catapult:
+    case SpawnType::Ballista:
+    default:
+      return false;
+    }
+  };
 
-  auto is_prewarmeable_troop = [](Game::Units::TroopType type) -> bool {
+  auto is_prewarmable_troop = [](Game::Units::TroopType type) -> bool {
     using Game::Units::TroopType;
     switch (type) {
     case TroopType::Archer:
@@ -1182,14 +1174,121 @@ void Renderer::prewarm_unit_templates() {
     }
   };
 
+  auto choose_template_budget_by_quality = []() -> std::size_t {
+    using Render::GraphicsQuality;
+    switch (Render::GraphicsSettings::instance().quality()) {
+    case GraphicsQuality::Low:
+      return 60'000;
+    case GraphicsQuality::Medium:
+      return 100'000;
+    case GraphicsQuality::High:
+      return 160'000;
+    case GraphicsQuality::Ultra:
+    default:
+      return 240'000;
+    }
+  };
+
+  std::vector<int> owner_ids;
+  owner_ids.reserve(8);
+  std::unordered_set<int> owner_seen;
+  std::unordered_set<Game::Systems::NationID> active_nation_ids;
+  std::vector<PrewarmProfile> profiles;
+  profiles.reserve(64);
+  std::unordered_set<PrewarmProfileKey, PrewarmProfileKeyHash> profile_seen;
+
+  auto add_owner = [&](int owner_id) {
+    if (owner_seen.insert(owner_id).second) {
+      owner_ids.push_back(owner_id);
+    }
+  };
+
+  auto add_profile = [&](const std::string &renderer_id,
+                         Game::Units::SpawnType spawn_type,
+                         Game::Systems::NationID nation_id,
+                         int max_health) {
+    if (!is_prewarmable_spawn(spawn_type) || renderer_id.empty()) {
+      return;
+    }
+    PrewarmProfileKey key{renderer_id, spawn_type, nation_id};
+    if (!profile_seen.insert(key).second) {
+      return;
+    }
+    auto fn = m_entity_registry->get(renderer_id);
+    if (!fn) {
+      return;
+    }
+
+    bool is_elephant = (spawn_type == Game::Units::SpawnType::Elephant);
+    bool is_mounted = false;
+    if (spawn_type == Game::Units::SpawnType::MountedKnight ||
+        spawn_type == Game::Units::SpawnType::HorseArcher ||
+        spawn_type == Game::Units::SpawnType::HorseSpearman) {
+      is_mounted = true;
+    }
+
+    PrewarmProfile p;
+    p.renderer_id = renderer_id;
+    p.spawn_type = spawn_type;
+    p.nation_id = nation_id;
+    p.max_health = std::max(1, max_health);
+    p.is_mounted = is_mounted;
+    p.is_elephant = is_elephant;
+    p.fn = std::move(fn);
+    profiles.push_back(std::move(p));
+  };
+
+  if (world != nullptr) {
+    auto world_units = world->get_entities_with<Engine::Core::UnitComponent>();
+    for (auto *entity : world_units) {
+      if (entity == nullptr ||
+          entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+        continue;
+      }
+
+      auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+      auto *renderable =
+          entity->get_component<Engine::Core::RenderableComponent>();
+      if (unit == nullptr || renderable == nullptr ||
+          unit->health <= 0 || renderable->renderer_id.empty()) {
+        continue;
+      }
+
+      if (!is_prewarmable_spawn(unit->spawn_type)) {
+        continue;
+      }
+
+      add_owner(unit->owner_id);
+      active_nation_ids.insert(unit->nation_id);
+      add_profile(renderable->renderer_id, unit->spawn_type, unit->nation_id,
+                  unit->max_health);
+    }
+  }
+
+  if (owner_ids.empty()) {
+    const auto &owners =
+        Game::Systems::OwnerRegistry::instance().get_all_owners();
+    for (const auto &owner : owners) {
+      add_owner(owner.owner_id);
+    }
+  }
+  if (owner_ids.empty()) {
+    add_owner(0);
+  }
+
   const auto &troops = Game::Units::TroopCatalog::instance().get_all_classes();
   const auto &nations =
       Game::Systems::NationRegistry::instance().get_all_nations();
+  const bool restrict_to_active_nations = !active_nation_ids.empty();
 
   for (const auto &nation : nations) {
+    if (restrict_to_active_nations &&
+        (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
+      continue;
+    }
     for (const auto &entry : troops) {
       auto type = entry.first;
-      if (!is_prewarmeable_troop(type)) {
+      if (!is_prewarmable_troop(type)) {
         continue;
       }
 
@@ -1199,80 +1298,283 @@ void Renderer::prewarm_unit_templates() {
         continue;
       }
 
-      auto fn = m_entity_registry->get(profile.visuals.renderer_id);
-      if (!fn) {
-        continue;
-      }
+      add_profile(profile.visuals.renderer_id,
+                  Game::Units::spawn_typeFromTroopType(type), nation.id,
+                  profile.combat.max_health);
+    }
+  }
 
-      Game::Units::SpawnType spawn_type =
-          Game::Units::spawn_typeFromTroopType(type);
+  if (profiles.empty()) {
+    return;
+  }
 
-      bool is_mounted = false;
-      bool is_elephant = (spawn_type == Game::Units::SpawnType::Elephant);
-      if (spawn_type == Game::Units::SpawnType::MountedKnight ||
-          spawn_type == Game::Units::SpawnType::HorseArcher ||
-          spawn_type == Game::Units::SpawnType::HorseSpearman) {
-        is_mounted = true;
-      }
+  std::vector<AnimKey> core_anim_keys;
+  std::vector<AnimKey> full_anim_keys;
+  core_anim_keys.reserve(192);
+  full_anim_keys.reserve(1024);
 
-      for (int owner_id : owner_ids) {
-        Engine::Core::Entity entity(1);
-        auto *unit = entity.add_component<Engine::Core::UnitComponent>();
-        unit->spawn_type = spawn_type;
-        unit->owner_id = owner_id;
-        unit->nation_id = nation.id;
-        unit->max_health = std::max(1, profile.combat.max_health);
-        unit->health = unit->max_health;
+  auto push_anim_key = [](std::vector<AnimKey> &keys, AnimState state,
+                          CombatAnimPhase phase, std::uint8_t frame,
+                          std::uint8_t attack_variant) {
+    AnimKey key{};
+    key.state = state;
+    key.combat_phase = phase;
+    key.frame = frame;
+    key.attack_variant = attack_variant;
+    keys.push_back(key);
+  };
 
-        auto *transform =
-            entity.add_component<Engine::Core::TransformComponent>();
-        transform->position = {0.0F, 0.0F, 0.0F};
-        transform->rotation = {0.0F, 0.0F, 0.0F};
-        transform->scale = {1.0F, 1.0F, 1.0F};
+  auto add_state_frames = [&](std::vector<AnimKey> &keys, AnimState state,
+                              int frame_step) {
+    int step = std::max(1, frame_step);
+    for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
+         frame += step) {
+      push_anim_key(keys, state, CombatAnimPhase::Idle,
+                    static_cast<std::uint8_t>(frame), 0);
+    }
+  };
 
-        auto *renderable =
-            entity.add_component<Engine::Core::RenderableComponent>("", "");
-        renderable->renderer_id = profile.visuals.renderer_id;
-        renderable->visible = true;
-        QVector3D team_color = Game::Visuals::team_colorForOwner(owner_id);
-        renderable->color[0] = team_color.x();
-        renderable->color[1] = team_color.y();
-        renderable->color[2] = team_color.z();
-
-        DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
-        ctx.renderer_id = profile.visuals.renderer_id;
-        ctx.backend = m_backend.get();
-        ctx.camera = nullptr;
-        ctx.allow_template_cache = true;
-        ctx.template_prewarm = true;
-        ctx.has_variant_override = true;
-        ctx.force_humanoid_lod = true;
-        ctx.force_horse_lod = is_mounted || is_elephant;
-
-        for (HumanoidLOD lod :
-             {HumanoidLOD::Full, HumanoidLOD::Reduced, HumanoidLOD::Minimal}) {
-          ctx.forced_humanoid_lod = lod;
-          if (ctx.force_horse_lod) {
-            ctx.forced_horse_lod = static_cast<HorseLOD>(lod);
-          }
-
-          for (std::uint8_t variant = 0; variant < k_template_variant_count;
-               ++variant) {
-            ctx.variant_override = variant;
-
-            for (const auto &anim_key : anim_keys) {
-              AnimationInputs anim = make_animation_inputs(anim_key);
-              ctx.animation_override = &anim;
-              bool attack_state = (anim_key.state == AnimState::AttackMelee) ||
-                                  (anim_key.state == AnimState::AttackRanged);
-              ctx.has_attack_variant_override = attack_state;
-              ctx.attack_variant_override = anim_key.attack_variant;
-              fn(ctx, recorder);
+  auto add_attack_frames =
+      [&](std::vector<AnimKey> &keys, AnimState state, int frame_step) {
+        constexpr CombatAnimPhase phases[] = {
+            CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
+            CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
+            CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
+            CombatAnimPhase::Reposition};
+        int step = std::max(1, frame_step);
+        for (std::uint8_t attack_variant = 0; attack_variant < 3;
+             ++attack_variant) {
+          for (CombatAnimPhase phase : phases) {
+            for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
+                 frame += step) {
+              push_anim_key(keys, state, phase,
+                            static_cast<std::uint8_t>(frame), attack_variant);
             }
+          }
+        }
+      };
+
+  push_anim_key(core_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
+  add_state_frames(core_anim_keys, AnimState::Move, 4);
+  add_state_frames(core_anim_keys, AnimState::Run, 4);
+  add_state_frames(core_anim_keys, AnimState::Construct, 4);
+  add_state_frames(core_anim_keys, AnimState::Heal, 4);
+  add_state_frames(core_anim_keys, AnimState::Hit, 4);
+  add_attack_frames(core_anim_keys, AnimState::AttackMelee, 4);
+  add_attack_frames(core_anim_keys, AnimState::AttackRanged, 4);
+
+  push_anim_key(full_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
+  add_state_frames(full_anim_keys, AnimState::Move, 1);
+  add_state_frames(full_anim_keys, AnimState::Run, 1);
+  add_state_frames(full_anim_keys, AnimState::Construct, 1);
+  add_state_frames(full_anim_keys, AnimState::Heal, 1);
+  add_state_frames(full_anim_keys, AnimState::Hit, 1);
+  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1);
+  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1);
+
+  auto encode_anim_key = [](const AnimKey &key) -> std::uint32_t {
+    return static_cast<std::uint32_t>(key.state) |
+           (static_cast<std::uint32_t>(key.combat_phase) << 8U) |
+           (static_cast<std::uint32_t>(key.frame) << 16U) |
+           (static_cast<std::uint32_t>(key.attack_variant) << 24U);
+  };
+
+  std::unordered_set<std::uint32_t> core_key_set;
+  core_key_set.reserve(core_anim_keys.size() * 2);
+  for (const auto &key : core_anim_keys) {
+    core_key_set.insert(encode_anim_key(key));
+  }
+
+  std::vector<AnimKey> extra_anim_keys;
+  extra_anim_keys.reserve(full_anim_keys.size());
+  for (const auto &key : full_anim_keys) {
+    if (core_key_set.find(encode_anim_key(key)) == core_key_set.end()) {
+      extra_anim_keys.push_back(key);
+    }
+  }
+
+  const std::size_t domain_count = profiles.size() * owner_ids.size() * 3U;
+  if (domain_count == 0) {
+    return;
+  }
+
+  const std::size_t target_template_count = choose_template_budget_by_quality();
+  const std::size_t core_anim_count = core_anim_keys.size();
+  const std::size_t full_anim_count = core_anim_keys.size() + extra_anim_keys.size();
+
+  std::size_t variant_count = k_template_variant_count;
+  const std::size_t core_per_variant = domain_count * core_anim_count;
+  if (core_per_variant > 0) {
+    const std::size_t max_variants_for_core =
+        target_template_count / core_per_variant;
+    variant_count = std::clamp<std::size_t>(
+        max_variants_for_core, 1, k_template_variant_count);
+  }
+
+  std::size_t anim_count_budget =
+      target_template_count /
+      std::max<std::size_t>(1, domain_count * variant_count);
+  anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
+
+  std::size_t anim_count = std::min(full_anim_count, anim_count_budget);
+  if (anim_count < core_anim_count && variant_count > 1) {
+    variant_count = std::max<std::size_t>(
+        1, target_template_count /
+               std::max<std::size_t>(1, domain_count * core_anim_count));
+    variant_count = std::min<std::size_t>(variant_count, k_template_variant_count);
+    anim_count_budget = target_template_count /
+                        std::max<std::size_t>(1, domain_count * variant_count);
+    anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
+    anim_count = std::min(full_anim_count, anim_count_budget);
+  }
+
+  std::vector<std::uint8_t> variant_values;
+  variant_values.reserve(variant_count);
+  for (std::size_t i = 0; i < variant_count; ++i) {
+    std::size_t idx = (i * k_template_variant_count) / variant_count;
+    if (idx >= k_template_variant_count) {
+      idx = k_template_variant_count - 1;
+    }
+    variant_values.push_back(static_cast<std::uint8_t>(idx));
+  }
+
+  std::vector<AnimKey> anim_keys;
+  anim_keys.reserve(anim_count);
+  const std::size_t core_take = std::min(core_anim_count, anim_count);
+  anim_keys.insert(anim_keys.end(), core_anim_keys.begin(),
+                   core_anim_keys.begin() + static_cast<std::ptrdiff_t>(core_take));
+  if (anim_count > core_take) {
+    const std::size_t extra_take = std::min<std::size_t>(
+        anim_count - core_take, extra_anim_keys.size());
+    anim_keys.insert(
+        anim_keys.end(), extra_anim_keys.begin(),
+        extra_anim_keys.begin() + static_cast<std::ptrdiff_t>(extra_take));
+  }
+
+  if (anim_keys.empty() || variant_values.empty()) {
+    return;
+  }
+
+  const std::size_t expected_template_count =
+      domain_count * variant_values.size() * anim_keys.size();
+  constexpr std::size_t k_cache_min_cap = 50'000;
+  constexpr std::size_t k_cache_hard_cap = 300'000;
+  const std::size_t cache_entry_cap = std::clamp<std::size_t>(
+      expected_template_count +
+          std::max<std::size_t>(4096, expected_template_count / 8),
+      k_cache_min_cap, k_cache_hard_cap);
+
+  TemplateCache::instance().set_max_entries(cache_entry_cap);
+  TemplateCache::instance().clear();
+  clear_humanoid_caches();
+  PosePaletteCache::instance().generate();
+
+  std::vector<PrewarmWorkItem> work_items;
+  work_items.reserve(expected_template_count);
+  constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Reduced,
+                                  HumanoidLOD::Minimal};
+  for (std::size_t profile_idx = 0; profile_idx < profiles.size();
+       ++profile_idx) {
+    for (int owner_id : owner_ids) {
+      for (HumanoidLOD lod : lods) {
+        for (std::uint8_t variant : variant_values) {
+          for (const auto &anim_key : anim_keys) {
+            PrewarmWorkItem item;
+            item.profile_index = profile_idx;
+            item.owner_id = owner_id;
+            item.lod = lod;
+            item.variant = variant;
+            item.anim_key = anim_key;
+            work_items.push_back(item);
           }
         }
       }
     }
+  }
+
+  if (work_items.empty()) {
+    return;
+  }
+
+  std::vector<std::mutex> profile_mutexes(profiles.size());
+
+  const unsigned hw_threads = std::max(1U, std::thread::hardware_concurrency());
+  std::size_t worker_count = std::min<std::size_t>(4U, hw_threads);
+  if (work_items.size() < 20'000) {
+    worker_count = 1;
+  }
+
+  std::atomic<std::size_t> next_index{0};
+  auto worker = [&]() {
+    TemplateRecorder recorder;
+    while (true) {
+      const std::size_t idx = next_index.fetch_add(1, std::memory_order_relaxed);
+      if (idx >= work_items.size()) {
+        break;
+      }
+
+      const PrewarmWorkItem &item = work_items[idx];
+      const PrewarmProfile &profile = profiles[item.profile_index];
+
+      Engine::Core::Entity entity(1);
+      auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+      unit->spawn_type = profile.spawn_type;
+      unit->owner_id = item.owner_id;
+      unit->nation_id = profile.nation_id;
+      unit->max_health = profile.max_health;
+      unit->health = profile.max_health;
+
+      auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+      transform->position = {0.0F, 0.0F, 0.0F};
+      transform->rotation = {0.0F, 0.0F, 0.0F};
+      transform->scale = {1.0F, 1.0F, 1.0F};
+
+      auto *renderable =
+          entity.add_component<Engine::Core::RenderableComponent>("", "");
+      renderable->renderer_id = profile.renderer_id;
+      renderable->visible = true;
+      const QVector3D team_color = Game::Visuals::team_colorForOwner(item.owner_id);
+      renderable->color[0] = team_color.x();
+      renderable->color[1] = team_color.y();
+      renderable->color[2] = team_color.z();
+
+      DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
+      ctx.renderer_id = profile.renderer_id;
+      ctx.backend = m_backend.get();
+      ctx.camera = nullptr;
+      ctx.allow_template_cache = true;
+      ctx.template_prewarm = true;
+      ctx.has_variant_override = true;
+      ctx.variant_override = item.variant;
+      ctx.force_humanoid_lod = true;
+      ctx.forced_humanoid_lod = item.lod;
+      ctx.force_horse_lod = profile.is_mounted || profile.is_elephant;
+      if (ctx.force_horse_lod) {
+        ctx.forced_horse_lod = static_cast<HorseLOD>(item.lod);
+      }
+
+      AnimationInputs anim = make_animation_inputs(item.anim_key);
+      ctx.animation_override = &anim;
+      const bool attack_state = (item.anim_key.state == AnimState::AttackMelee) ||
+                                (item.anim_key.state == AnimState::AttackRanged);
+      ctx.has_attack_variant_override = attack_state;
+      ctx.attack_variant_override = item.anim_key.attack_variant;
+
+      recorder.reset();
+      std::lock_guard<std::mutex> profile_lock(
+          profile_mutexes[item.profile_index]);
+      profile.fn(ctx, recorder);
+    }
+  };
+
+  std::vector<std::thread> workers;
+  workers.reserve((worker_count > 0) ? (worker_count - 1) : 0);
+  for (std::size_t i = 1; i < worker_count; ++i) {
+    workers.emplace_back(worker);
+  }
+  worker();
+  for (auto &t : workers) {
+    t.join();
   }
 }
 
