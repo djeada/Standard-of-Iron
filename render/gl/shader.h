@@ -4,8 +4,12 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QString>
 #include <QVector2D>
+#include <QVector3D>
+#include <QVector4D>
+#include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <variant>
 
 namespace Render::GL {
 
@@ -49,12 +53,27 @@ public:
   void set_uniform(const QString &name, int value);
   void set_uniform(const QString &name, bool value);
 
+  void clear_uniform_cache() { m_uniform_value_cache.clear(); }
+
+  // Stage 16.2 — bind a `layout(std140) uniform <name> { ... }` block
+  // to a fixed binding point. Safe to call before/after `use()`. Returns
+  // false if the block is not present in the program (warning emitted).
+  auto bind_uniform_block(const char *block_name, std::uint32_t binding_point)
+      -> bool;
+
 private:
   GLuint m_program = 0;
   auto compile_shader(const QString &source, GLenum type) -> GLuint;
   auto link_program(GLuint vertex_shader, GLuint fragment_shader) -> bool;
 
   std::unordered_map<std::string, UniformHandle> m_uniform_cache;
+
+  // Dirty-tracking for uniform values to skip redundant glUniform calls
+  using UniformValue = std::variant<float, int, QVector2D, QVector3D, QVector4D, QMatrix4x4>;
+  std::unordered_map<GLint, UniformValue> m_uniform_value_cache;
+
+  template <typename T>
+  auto is_uniform_dirty(GLint location, const T &value) -> bool;
 };
 
 } // namespace Render::GL

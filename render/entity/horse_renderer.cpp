@@ -5,6 +5,7 @@
 
 #include <utility>
 
+#include "../equipment/equipment_submit.h"
 namespace Render::GL {
 
 HorseRenderer::HorseRenderer() = default;
@@ -36,7 +37,7 @@ void HorseRenderer::draw_attachments(
 
   for (const auto &attachment : m_attachments) {
     if (attachment) {
-      attachment->render(ctx, frames, profile.variant, horse_anim, out);
+      render_horse_equipment(*attachment, ctx, frames, profile.variant, horse_anim, out);
     }
   }
 }

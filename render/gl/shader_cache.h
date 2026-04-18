@@ -76,6 +76,12 @@ public:
         resolve(shader_base + QStringLiteral("grid.frag"));
     load(QStringLiteral("basic"), basic_vert, basic_frag);
     load(QStringLiteral("grid"), basic_vert, grid_frag);
+
+    const QString skinned_vert =
+        resolve(shader_base + QStringLiteral("character_skinned.vert"));
+    const QString skinned_frag =
+        resolve(shader_base + QStringLiteral("character_skinned.frag"));
+    load(QStringLiteral("character_skinned"), skinned_vert, skinned_frag);
     const QString cyl_vert =
         resolve(shader_base + QStringLiteral("cylinder_instanced.vert"));
     const QString cyl_frag =

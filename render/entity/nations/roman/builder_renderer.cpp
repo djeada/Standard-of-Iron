@@ -3,6 +3,7 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -147,20 +148,24 @@ public:
     auto work_apron =
         registry.get(EquipmentCategory::Armor, "work_apron_roman");
     if (work_apron) {
-      work_apron->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*work_apron, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto tool_belt = registry.get(EquipmentCategory::Armor, "tool_belt_roman");
     if (tool_belt) {
-      tool_belt->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*tool_belt, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto arm_guards = registry.get(EquipmentCategory::Armor, "arm_guards");
     if (arm_guards) {
-      arm_guards->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*arm_guards, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
-    draw_stone_hammer(ctx, v, pose, anim_ctx, out);
+    {
+      EquipmentBatch batch;
+      draw_stone_hammer(ctx, v, pose, anim_ctx, batch);
+      submit_equipment_batch(batch, out);
+    }
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
@@ -170,7 +175,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -179,7 +184,9 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
     uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    draw_work_tunic(ctx, v, pose, seed, out);
+    EquipmentBatch batch;
+    draw_work_tunic(ctx, v, pose, seed, batch);
+    submit_equipment_batch(batch, out);
   }
 
 private:
@@ -324,7 +331,7 @@ private:
   void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose,
                          const HumanoidAnimationContext &anim_ctx,
-                         ISubmitter &out) const {
+                         EquipmentBatch &batch) const {
     QVector3D const wood_color = v.palette.wood;
 
     QVector3D const stone_color(0.55F, 0.52F, 0.48F);
@@ -357,34 +364,25 @@ private:
     QVector3D const handle_top = hand + handle_offset;
     QVector3D const handle_bot = handle_top - handle_axis * handle_len;
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
-             wood_color, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, handle_bot, handle_top, handle_r), wood_color, nullptr, 1.0F, 0});
 
     float const head_len = 0.10F;
     float const head_r = 0.030F;
     QVector3D const head_center = handle_top + handle_axis * 0.035F;
 
-    out.mesh(
-        get_unit_cylinder(),
-        cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                         head_center + head_axis * (head_len * 0.5F), head_r),
-        stone_color, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                         head_center + head_axis * (head_len * 0.5F), head_r), stone_color, nullptr, 1.0F, 0});
 
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
-                       head_r * 1.15F),
-             stone_dark, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
+                       head_r * 1.15F), stone_dark, nullptr, 1.0F, 0});
 
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                       head_r * 0.9F),
-             stone_color * 0.95F, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                       head_r * 0.9F), stone_color * 0.95F, nullptr, 1.0F, 0});
   }
 
   void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
                        const HumanoidPose &pose, uint32_t seed,
-                       ISubmitter &out) const {
+                       EquipmentBatch &batch) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -430,8 +428,7 @@ private:
                        forward * (d * std::cos(a1)) + up * (y - origin.y());
         QVector3D p2 = origin + right * (w * std::sin(a2)) +
                        forward * (d * std::cos(a2)) + up * (y - origin.y());
-        out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, p1, p2, th),
-                 col, nullptr, 1.0F);
+        batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, p1, p2, th), col, nullptr, 1.0F, 0});
       }
     };
 
@@ -466,18 +463,17 @@ private:
         QVector3D pos =
             shoulder * (1.0F - t) + elbow * t * 0.6F + out_dir * 0.008F;
         float r = HP::UPPER_ARM_R * (1.40F - t * 0.25F);
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r),
-                 tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F);
+        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F, 0});
       }
     };
     drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
     drawSleeve(frames.shoulder_r.origin, right, pose.elbow_r);
 
-    draw_extended_forearm(ctx, v, pose, out);
+    draw_extended_forearm(ctx, v, pose, batch);
   }
 
   void draw_extended_forearm(const DrawContext &ctx, const HumanoidVariant &v,
-                             const HumanoidPose &pose, ISubmitter &out) const {
+                             const HumanoidPose &pose, EquipmentBatch &batch) const {
 
     QVector3D const skin_color = v.palette.skin;
 
@@ -488,8 +484,7 @@ private:
       float t = 0.25F + float(i) * 0.20F;
       QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
       float r = 0.024F - float(i) * 0.002F;
-      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), skin_color,
-               nullptr, 1.0F);
+      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), skin_color, nullptr, 1.0F, 0});
     }
   }
 

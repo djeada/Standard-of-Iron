@@ -1,4 +1,5 @@
 #include "plume_renderer.h"
+#include "../../equipment_submit.h"
 
 #include "../../../entity/registry.h"
 #include "../../../geom/transforms.h"
@@ -12,7 +13,7 @@ void PlumeRenderer::render(const DrawContext &ctx,
                            const HorseBodyFrames &frames,
                            const HorseVariant &variant,
                            const HorseAnimationContext &anim,
-                           ISubmitter &out) const {
+                           EquipmentBatch &batch) const {
 
   const HorseAttachmentFrame &head = frames.head;
 
@@ -28,8 +29,8 @@ void PlumeRenderer::render(const DrawContext &ctx,
     QVector3D const feather_tip =
         feather_base + head.up * 0.25F + head.forward * sway;
 
-    out.cylinder(feather_base, feather_tip, 0.018F - i * 0.002F, plume_color,
-                 0.85F);
+    batch.cylinders.push_back({feather_base, feather_tip, 0.018F - i * 0.002F, plume_color,
+                 0.85F});
   }
 }
 

@@ -7,6 +7,9 @@
 #include "../humanoid/rig.h"
 #include "../submitter.h"
 #include "horse_animation_controller.h"
+#include "horse_spec.h"
+
+#include <vector>
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -155,39 +158,6 @@ inline auto scaled_sphere(const QMatrix4x4 &model, const QVector3D &center,
   m.translate(center);
   m.scale(scale);
   return m;
-}
-
-inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
-                          const QVector3D &a, const QVector3D &b, float radius,
-                          const QVector3D &color, float alpha = 1.0F,
-                          int material_id = 0) {
-  out.mesh(get_unit_cylinder(), cylinder_between(model, a, b, radius), color,
-           nullptr, alpha, material_id);
-}
-
-inline void draw_cone(ISubmitter &out, const QMatrix4x4 &model,
-                      const QVector3D &tip, const QVector3D &base, float radius,
-                      const QVector3D &color, float alpha = 1.0F,
-                      int material_id = 0) {
-  out.mesh(get_unit_cone(), cone_from_to(model, tip, base, radius), color,
-           nullptr, alpha, material_id);
-}
-
-inline void draw_rounded_segment(ISubmitter &out, const QMatrix4x4 &model,
-                                 const QVector3D &start, const QVector3D &end,
-                                 float start_radius, float end_radius,
-                                 const QVector3D &start_color,
-                                 const QVector3D &end_color, float alpha = 1.0F,
-                                 int material_id = 0) {
-  float const mid_radius = 0.5F * (start_radius + end_radius);
-  QVector3D const tint = lerp(start_color, end_color, 0.5F);
-  out.mesh(get_unit_cylinder(), cylinder_between(model, start, end, mid_radius),
-           tint, nullptr, alpha, material_id);
-  out.mesh(get_unit_sphere(),
-           Render::Geom::sphere_at(model, start, start_radius), start_color,
-           nullptr, alpha, material_id);
-  out.mesh(get_unit_sphere(), Render::Geom::sphere_at(model, end, end_radius),
-           end_color, nullptr, alpha, material_id);
 }
 
 inline auto bezier(const QVector3D &p0, const QVector3D &p1,
@@ -826,6 +796,10 @@ void HorseRendererBase::render_full(
   horse_ctx.model = ctx.model;
   horse_ctx.model.translate(mount.ground_offset);
 
+  // Rider-driven body sway/pitch/nod — preserved so attachment frames
+  // (saddle/bridle/rider) continue to align with the legacy silhouette.
+  // The baked Full mesh itself is authored at baseline; per-frame
+  // variation flows through the bone palette only.
   float const sway_intensity =
       is_moving ? (1.0F - rider_intensity * 0.5F) : 0.3F;
   float const body_sway =
@@ -842,34 +816,19 @@ void HorseRendererBase::render_full(
                                    : std::sin(anim.time * 1.5F) * 0.008F;
   float const nod_secondary = std::sin(anim.time * 0.8F) * 0.004F;
   float const head_nod = nod_base + nod_secondary;
-
   float const head_lateral = body_sway * 0.6F;
 
   float const spine_flex =
       is_moving ? std::sin(phase * 2.0F * k_pi) * 0.006F * rider_intensity
                 : 0.0F;
 
-  uint32_t const vhash = color_hash(v.coat_color);
-  float const sock_chance_fl = hash01(vhash ^ 0x101U);
-  float const sock_chance_fr = hash01(vhash ^ 0x202U);
-  float const sock_chance_rl = hash01(vhash ^ 0x303U);
-  float const sock_chance_rr = hash01(vhash ^ 0x404U);
-  bool const has_blaze = hash01(vhash ^ 0x505U) > 0.82F;
-
   ReinState const rein_state =
       shared_reins ? *shared_reins : compute_rein_state(horse_seed, rider_ctx);
   float const rein_slack = rein_state.slack;
-  float const rein_tension = rein_state.tension;
-
-  const float coat_seed_a = hash01(vhash ^ 0x701U);
-  const float coat_seed_b = hash01(vhash ^ 0x702U);
-  const float coat_seed_c = hash01(vhash ^ 0x703U);
-  const float coat_seed_d = hash01(vhash ^ 0x704U);
+  (void)rein_state.tension;
 
   QVector3D const barrel_center(body_sway, d.barrel_center_y + bob + body_pitch,
                                 spine_flex);
-
-  float const ground_offset = -d.barrel_center_y - bob;
 
   QVector3D const chest_center =
       barrel_center +
@@ -877,76 +836,6 @@ void HorseRendererBase::render_full(
   QVector3D const rump_center =
       barrel_center +
       QVector3D(0.0F, d.body_height * 0.08F, -d.body_length * 0.36F);
-  QVector3D const belly_center =
-      barrel_center +
-      QVector3D(0.0F, -d.body_height * 0.35F, -d.body_length * 0.05F);
-
-  {
-    QMatrix4x4 chest = horse_ctx.model;
-    chest.translate(chest_center);
-    chest.scale(d.body_width * 1.12F, d.body_height * 0.95F,
-                d.body_length * 0.36F);
-    QVector3D const chest_color =
-        coat_gradient(v.coat_color, 0.75F, 0.20F, coat_seed_a);
-    out.mesh(get_unit_sphere(), chest, chest_color, nullptr, 1.0F, 6);
-  }
-
-  {
-    QMatrix4x4 withers = horse_ctx.model;
-    withers.translate(chest_center + QVector3D(0.0F, d.body_height * 0.55F,
-                                               -d.body_length * 0.03F));
-    withers.scale(d.body_width * 0.75F, d.body_height * 0.35F,
-                  d.body_length * 0.18F);
-    QVector3D const wither_color =
-        coat_gradient(v.coat_color, 0.88F, 0.35F, coat_seed_b);
-    out.mesh(get_unit_sphere(), withers, wither_color, nullptr, 1.0F, 6);
-  }
-
-  {
-    QMatrix4x4 belly = horse_ctx.model;
-    belly.translate(belly_center);
-    belly.scale(d.body_width * 0.98F, d.body_height * 0.64F,
-                d.body_length * 0.40F);
-    QVector3D const belly_color =
-        coat_gradient(v.coat_color, 0.25F, -0.10F, coat_seed_c);
-    out.mesh(get_unit_sphere(), belly, belly_color, nullptr, 1.0F, 6);
-  }
-
-  {
-    QMatrix4x4 rump = horse_ctx.model;
-    rump.translate(rump_center);
-    rump.scale(d.body_width * 1.22F, d.body_height * 1.05F,
-               d.body_length * 0.38F);
-    QVector3D const rump_color =
-        coat_gradient(v.coat_color, 0.62F, -0.28F, coat_seed_a * 0.7F);
-    out.mesh(get_unit_sphere(), rump, rump_color, nullptr, 1.0F, 6);
-  }
-
-  QVector3D withers_peak = chest_center + QVector3D(0.0F, d.body_height * 0.65F,
-                                                    -d.body_length * 0.04F);
-  QVector3D croup_peak = rump_center + QVector3D(0.0F, d.body_height * 0.50F,
-                                                 -d.body_length * 0.16F);
-
-  {
-    QMatrix4x4 spine = horse_ctx.model;
-    spine.translate(lerp(withers_peak, croup_peak, 0.42F));
-    spine.scale(QVector3D(d.body_width * 0.55F, d.body_height * 0.16F,
-                          d.body_length * 0.58F));
-    QVector3D const spine_color =
-        coat_gradient(v.coat_color, 0.74F, -0.06F, coat_seed_d * 0.92F);
-    out.mesh(get_unit_sphere(), spine, spine_color, nullptr, 1.0F, 6);
-  }
-
-  {
-    QMatrix4x4 sternum = horse_ctx.model;
-    sternum.translate(barrel_center + QVector3D(0.0F, -d.body_height * 0.42F,
-                                                d.body_length * 0.30F));
-    sternum.scale(QVector3D(d.body_width * 0.55F, d.body_height * 0.18F,
-                            d.body_length * 0.14F));
-    out.mesh(get_unit_sphere(), sternum,
-             coat_gradient(v.coat_color, 0.18F, 0.18F, coat_seed_a * 0.4F),
-             nullptr, 1.0F, 6);
-  }
 
   QVector3D const neck_base =
       chest_center + QVector3D(head_lateral * 0.3F, d.body_height * 0.42F,
@@ -954,666 +843,30 @@ void HorseRendererBase::render_full(
   QVector3D const neck_top =
       neck_base + QVector3D(head_lateral * 0.8F, d.neck_rise + head_nod * 0.4F,
                             d.neck_length);
-  float const neck_radius = d.body_width * 0.48F;
-
-  QVector3D const neck_mid =
-      lerp(neck_base, neck_top, 0.55F) + QVector3D(head_lateral * 0.5F,
-                                                   d.body_height * 0.03F,
-                                                   d.body_length * 0.02F);
-  QVector3D const neck_color_base =
-      coat_gradient(v.coat_color, 0.78F, 0.12F, coat_seed_c * 0.6F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(horse_ctx.model, neck_base, neck_mid,
-                            neck_radius * 1.00F),
-           neck_color_base, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(horse_ctx.model, neck_mid, neck_top,
-                            neck_radius * 0.86F),
-           lighten(neck_color_base, 1.03F), nullptr, 1.0F);
-
-  {
-    QVector3D const jugular_start =
-        lerp(neck_base, neck_top, 0.42F) + QVector3D(d.body_width * 0.18F,
-                                                     -d.body_height * 0.06F,
-                                                     d.body_length * 0.04F);
-    QVector3D const jugular_end =
-        jugular_start +
-        QVector3D(0.0F, -d.body_height * 0.24F, d.body_length * 0.06F);
-    draw_cylinder(out, horse_ctx.model, jugular_start, jugular_end,
-                  neck_radius * 0.18F, lighten(neck_color_base, 1.08F), 0.85F,
-                  6);
-  }
-
-  const int mane_sections = 8;
-  QVector3D const mane_color =
-      lerp3(v.mane_color, QVector3D(0.12F, 0.09F, 0.08F), 0.35F);
-  for (int i = 0; i < mane_sections; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(mane_sections - 1);
-    QVector3D const spine = lerp(neck_base, neck_top, t) +
-                            QVector3D(0.0F, d.body_height * 0.12F, 0.0F);
-    float const length = lerp(0.14F, 0.08F, t) * d.body_height * 1.4F;
-    QVector3D const tip =
-        spine + QVector3D(0.0F, length * 1.2F, 0.02F * length);
-    draw_cone(out, horse_ctx.model, tip, spine,
-              d.body_width * lerp(0.25F, 0.12F, t), mane_color, 1.0F, 7);
-  }
-
   QVector3D const head_center =
       neck_top + QVector3D(head_lateral,
                            d.head_height * (0.10F - head_nod * 0.20F),
                            d.head_length * 0.40F + head_nod * 0.03F);
-
-  {
-    QMatrix4x4 skull = horse_ctx.model;
-    skull.translate(head_center + QVector3D(0.0F, d.head_height * 0.10F,
-                                            -d.head_length * 0.10F));
-    skull.scale(d.head_width * 0.95F, d.head_height * 0.90F,
-                d.head_length * 0.80F);
-    QVector3D const skull_color =
-        coat_gradient(v.coat_color, 0.82F, 0.30F, coat_seed_d * 0.8F);
-    out.mesh(get_unit_sphere(), skull, skull_color, nullptr, 1.0F);
-  }
-
-  for (int i = 0; i < 2; ++i) {
-    float const side = (i == 0) ? 1.0F : -1.0F;
-    QMatrix4x4 cheek = horse_ctx.model;
-    cheek.translate(head_center + QVector3D(side * d.head_width * 0.55F,
-                                            -d.head_height * 0.15F, 0.0F));
-    cheek.scale(d.head_width * 0.45F, d.head_height * 0.50F,
-                d.head_length * 0.60F);
-    QVector3D const cheek_color =
-        coat_gradient(v.coat_color, 0.70F, 0.18F, coat_seed_a * 0.9F);
-    out.mesh(get_unit_sphere(), cheek, cheek_color, nullptr, 1.0F, 6);
-  }
-
   QVector3D const muzzle_center =
       head_center +
       QVector3D(0.0F, -d.head_height * 0.18F, d.head_length * 0.58F);
-  {
-    QMatrix4x4 muzzle = horse_ctx.model;
-    muzzle.translate(muzzle_center +
-                     QVector3D(0.0F, -d.head_height * 0.05F, 0.0F));
-    muzzle.scale(d.head_width * 0.68F, d.head_height * 0.60F,
-                 d.muzzle_length * 1.05F);
-    out.mesh(get_unit_sphere(), muzzle, v.muzzle_color, nullptr, 1.0F);
-  }
 
-  {
-    QVector3D const nostril_base =
-        muzzle_center +
-        QVector3D(0.0F, -d.head_height * 0.02F, d.muzzle_length * 0.60F);
-    QVector3D const left_base =
-        nostril_base + QVector3D(d.head_width * 0.26F, 0.0F, 0.0F);
-    QVector3D const right_base =
-        nostril_base + QVector3D(-d.head_width * 0.26F, 0.0F, 0.0F);
-    QVector3D const inward =
-        QVector3D(0.0F, -d.head_height * 0.02F, d.muzzle_length * -0.30F);
-    out.mesh(get_unit_cone(),
-             cone_from_to(horse_ctx.model, left_base + inward, left_base,
-                          d.head_width * 0.11F),
-             darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
-    out.mesh(get_unit_cone(),
-             cone_from_to(horse_ctx.model, right_base + inward, right_base,
-                          d.head_width * 0.11F),
-             darken(v.muzzle_color, 0.6F), nullptr, 1.0F);
-  }
-
-  float const ear_flick_l = std::sin(anim.time * 1.7F + 1.3F) * 0.25F;
-  float const ear_flick_r = std::sin(anim.time * 1.9F + 2.1F) * -0.22F;
-  float const ear_forward_l = std::sin(anim.time * 0.8F) * 0.15F;
-  float const ear_forward_r = std::sin(anim.time * 0.9F + 0.5F) * 0.12F;
-
-  QVector3D const ear_base_left =
-      head_center + QVector3D(d.head_width * 0.42F, d.head_height * 0.48F,
-                              -d.head_length * 0.15F);
-  QVector3D const ear_tip_left =
-      ear_base_left +
-      rotate_around_y(QVector3D(d.head_width * 0.12F, d.head_height * 0.55F,
-                                -d.head_length * 0.08F + ear_forward_l),
-                      ear_flick_l);
-  QVector3D const ear_base_right =
-      head_center + QVector3D(-d.head_width * 0.42F, d.head_height * 0.48F,
-                              -d.head_length * 0.15F);
-  QVector3D const ear_tip_right =
-      ear_base_right +
-      rotate_around_y(QVector3D(-d.head_width * 0.12F, d.head_height * 0.55F,
-                                -d.head_length * 0.08F + ear_forward_r),
-                      ear_flick_r);
-
-  float const ear_base_radius = d.head_width * 0.14F;
-  float const ear_tip_radius = d.head_width * 0.06F;
-  out.mesh(get_unit_cone(),
-           cone_from_to(horse_ctx.model, ear_tip_left, ear_base_left,
-                        ear_base_radius),
-           v.mane_color, nullptr, 1.0F);
-  out.mesh(get_unit_cone(),
-           cone_from_to(horse_ctx.model, ear_tip_right, ear_base_right,
-                        ear_base_radius),
-           v.mane_color, nullptr, 1.0F);
-
-  QVector3D const ear_inner_base(HorseVariantConstants::kEarInnerBaseR,
-                                 HorseVariantConstants::kEarInnerBaseG,
-                                 HorseVariantConstants::kEarInnerBaseB);
-  QVector3D const ear_inner_color =
-      lerp(v.mane_color, ear_inner_base,
-           HorseVariantConstants::kEarInnerBlendFactor);
-  QVector3D const ear_mid_left = lerp(ear_base_left, ear_tip_left, 0.4F);
-  QVector3D const ear_mid_right = lerp(ear_base_right, ear_tip_right, 0.4F);
-  out.mesh(
-      get_unit_cone(),
-      cone_from_to(horse_ctx.model, ear_tip_left, ear_mid_left, ear_tip_radius),
-      ear_inner_color, nullptr, 1.0F);
-  out.mesh(get_unit_cone(),
-           cone_from_to(horse_ctx.model, ear_tip_right, ear_mid_right,
-                        ear_tip_radius),
-           ear_inner_color, nullptr, 1.0F);
-
-  QVector3D const eye_left =
-      head_center + QVector3D(d.head_width * 0.48F, d.head_height * 0.10F,
-                              d.head_length * 0.05F);
-  QVector3D const eye_right =
-      head_center + QVector3D(-d.head_width * 0.48F, d.head_height * 0.10F,
-                              d.head_length * 0.05F);
-  QVector3D eye_base_color(0.10F, 0.10F, 0.10F);
-
-  auto draw_eye = [&](const QVector3D &pos) {
-    {
-      QMatrix4x4 eye = horse_ctx.model;
-      eye.translate(pos);
-      eye.scale(d.head_width * 0.14F);
-      out.mesh(get_unit_sphere(), eye, eye_base_color, nullptr, 1.0F, 6);
-    }
-    {
-
-      QMatrix4x4 pupil = horse_ctx.model;
-      pupil.translate(pos + QVector3D(0.0F, 0.0F, d.head_width * 0.04F));
-      pupil.scale(d.head_width * 0.05F);
-      out.mesh(get_unit_sphere(), pupil, QVector3D(0.03F, 0.03F, 0.03F),
-               nullptr, 1.0F, 6);
-    }
-    {
-
-      QMatrix4x4 spec = horse_ctx.model;
-      spec.translate(pos + QVector3D(d.head_width * 0.03F, d.head_width * 0.03F,
-                                     d.head_width * 0.03F));
-      spec.scale(d.head_width * 0.02F);
-      out.mesh(get_unit_sphere(), spec, QVector3D(0.95F, 0.95F, 0.95F), nullptr,
-               1.0F, 6);
-    }
-  };
-  draw_eye(eye_left);
-  draw_eye(eye_right);
-
-  if (has_blaze) {
-    QMatrix4x4 blaze = horse_ctx.model;
-    blaze.translate(head_center + QVector3D(0.0F, d.head_height * 0.15F,
-                                            d.head_length * 0.10F));
-    blaze.scale(d.head_width * 0.22F, d.head_height * 0.32F,
-                d.head_length * 0.10F);
-    out.mesh(get_unit_sphere(), blaze, QVector3D(0.92F, 0.92F, 0.90F), nullptr,
-             1.0F, 6);
-  }
-
-  QVector3D bridle_base =
-      muzzle_center +
-      QVector3D(0.0F, -d.head_height * 0.05F, d.muzzle_length * 0.20F);
-  mount.bridle_base = bridle_base;
-  QVector3D const cheek_anchor_left =
-      head_center + QVector3D(d.head_width * 0.55F, d.head_height * 0.05F,
-                              -d.head_length * 0.05F);
-  QVector3D const cheek_anchor_right =
-      head_center + QVector3D(-d.head_width * 0.55F, d.head_height * 0.05F,
-                              -d.head_length * 0.05F);
-  QVector3D const brow = head_center + QVector3D(0.0F, d.head_height * 0.38F,
-                                                 -d.head_length * 0.28F);
-  QVector3D const tack_color = lighten(v.tack_color, 0.9F);
-  draw_cylinder(out, horse_ctx.model, bridle_base, cheek_anchor_left,
-                d.head_width * 0.07F, tack_color, 1.0F, 10);
-  draw_cylinder(out, horse_ctx.model, bridle_base, cheek_anchor_right,
-                d.head_width * 0.07F, tack_color, 1.0F, 10);
-  draw_cylinder(out, horse_ctx.model, cheek_anchor_left, brow,
-                d.head_width * 0.05F, tack_color, 1.0F, 10);
-  draw_cylinder(out, horse_ctx.model, cheek_anchor_right, brow,
-                d.head_width * 0.05F, tack_color, 1.0F, 10);
-
-  QVector3D const mane_root =
-      neck_top + QVector3D(0.0F, d.head_height * 0.25F, -d.head_length * 0.15F);
-  constexpr int k_mane_segments = 16;
-  constexpr float k_mane_segment_divisor =
-      static_cast<float>(k_mane_segments - 1);
-  for (int i = 0; i < k_mane_segments; ++i) {
-    float const t = static_cast<float>(i) / k_mane_segment_divisor;
-    QVector3D seg_start = lerp(mane_root, neck_base, t);
-
-    seg_start.setY(seg_start.y() + (0.10F - t * 0.06F));
-    float const sway =
-        (is_moving ? std::sin((phase + t * 0.18F) * 2.0F * k_pi) *
-                         (0.035F + rider_intensity * 0.030F)
-                   : std::sin((anim.time * 0.7F + t * 2.5F)) * 0.025F);
-
-    QVector3D const seg_end =
-        seg_start + QVector3D(sway, 0.10F - t * 0.06F, -0.07F - t * 0.04F);
-
-    float const mane_thickness = d.head_width * (0.14F * (1.0F - t * 0.35F));
-    out.mesh(
-        get_unit_cylinder(),
-        cylinder_between(horse_ctx.model, seg_start, seg_end, mane_thickness),
-        v.mane_color * (0.96F + t * 0.06F), nullptr, 1.0F, 7);
-  }
-
-  {
-    QVector3D const forelock_base =
-        head_center +
-        QVector3D(0.0F, d.head_height * 0.35F, -d.head_length * 0.12F);
-    for (int i = 0; i < 5; ++i) {
-      float const offset = (i - 2) * d.head_width * 0.08F;
-      float const wave = std::sin(anim.time * 0.9F + i * 0.5F) * 0.01F;
-      QVector3D const strand_base =
-          forelock_base + QVector3D(offset, 0.0F, 0.0F);
-      QVector3D const strand_tip =
-          strand_base + QVector3D(offset * 0.3F + wave, -d.head_height * 0.35F,
-                                  d.head_length * 0.15F);
-      draw_cone(out, horse_ctx.model, strand_tip, strand_base,
-                d.head_width * 0.12F, v.mane_color * (0.92F + 0.04F * (i % 3)),
-                0.94F, 7);
-    }
-  }
-
-  QVector3D const tail_base =
-      rump_center +
-      QVector3D(0.0F, d.body_height * 0.36F, -d.body_length * 0.34F);
-  QVector3D const tail_ctrl =
-      tail_base +
-      QVector3D(0.0F, -d.tail_length * 0.25F, -d.tail_length * 0.22F);
-  QVector3D const tail_end = tail_base + QVector3D(0.0F, -d.tail_length * 1.1F,
-                                                   -d.tail_length * 0.55F);
-  QVector3D const tail_color = lerp3(v.tail_color, v.mane_color, 0.35F);
-  QVector3D prev_tail = tail_base;
-
-  constexpr int k_tail_segments = 14;
-  for (int i = 1; i <= k_tail_segments; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(k_tail_segments);
-    QVector3D p = bezier(tail_base, tail_ctrl, tail_end, t);
-
-    float const primary_swing =
-        (is_moving ? std::sin((phase + t * 0.15F) * 2.0F * k_pi)
-                   : std::sin((phase * 0.5F + t * 0.4F) * 2.0F * k_pi)) *
-        (0.035F + rider_intensity * 0.030F + 0.025F * (1.0F - t));
-    float const secondary_swing =
-        std::sin(anim.time * 1.2F + t * 3.5F) * 0.015F * (1.0F - t * 0.5F);
-    p.setX(p.x() + primary_swing + secondary_swing);
-
-    float const radius = d.body_width * (0.22F - 0.014F * i);
-    draw_cylinder(out, horse_ctx.model, prev_tail, p, radius, tail_color, 1.0F,
-                  7);
-    prev_tail = p;
-  }
-
-  {
-    QMatrix4x4 tail_knot = horse_ctx.model;
-    tail_knot.translate(tail_base + QVector3D(0.0F, -d.body_height * 0.04F,
-                                              -d.body_length * 0.01F));
-    tail_knot.scale(QVector3D(d.body_width * 0.28F, d.body_width * 0.22F,
-                              d.body_width * 0.24F));
-    out.mesh(get_unit_sphere(), tail_knot, lighten(tail_color, 0.92F), nullptr,
-             1.0F, 7);
-  }
-
-  for (int i = 0; i < 5; ++i) {
-    float const spread = (i - 2) * d.body_width * 0.12F;
-    float const swing_offset = std::sin(anim.time * 0.8F + i * 0.7F) * 0.02F;
-    QVector3D const fan_base =
-        tail_end + QVector3D(spread * 0.1F + swing_offset,
-                             -d.body_width * 0.04F, -d.tail_length * 0.06F);
-    QVector3D const fan_tip =
-        fan_base + QVector3D(spread + swing_offset * 2.0F,
-                             -d.tail_length * 0.38F, -d.tail_length * 0.18F);
-    draw_cone(out, horse_ctx.model, fan_tip, fan_base, d.body_width * 0.20F,
-              tail_color * (0.94F + 0.03F * (i % 3)), 0.85F, 7);
-  }
-
-  auto render_hoof = [&](const QVector3D &hoof_top, float hoof_height,
-                         float half_width, float half_depth,
-                         const QVector3D &hoof_color, bool is_rear) {
-    QVector3D const hoof_center =
-        hoof_top + QVector3D(0.0F, -hoof_height * 0.5F, 0.0F);
-    QVector3D const wall_tint = lighten(hoof_color, is_rear ? 1.02F : 1.05F);
-    QMatrix4x4 hoof_block = horse_ctx.model;
-    hoof_block.translate(hoof_center);
-    hoof_block.scale(QVector3D(half_width, hoof_height * 0.5F, half_depth));
-    out.mesh(get_unit_cylinder(), hoof_block, wall_tint, nullptr, 1.0F, 8);
-
-    QMatrix4x4 sole = horse_ctx.model;
-    sole.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.45F, 0.0F));
-    sole.scale(
-        QVector3D(half_width * 0.92F, hoof_height * 0.08F, half_depth * 0.95F));
-    out.mesh(get_unit_cylinder(), sole, darken(hoof_color, 0.72F), nullptr,
-             1.0F, 8);
-
-    QMatrix4x4 toe = horse_ctx.model;
-    toe.translate(hoof_center + QVector3D(0.0F, -hoof_height * 0.10F,
-                                          is_rear ? -half_depth * 0.35F
-                                                  : half_depth * 0.30F));
-    toe.scale(
-        QVector3D(half_width * 0.85F, hoof_height * 0.20F, half_depth * 0.70F));
-    out.mesh(get_unit_sphere(), toe, lighten(hoof_color, 1.10F), nullptr, 1.0F,
-             8);
-
-    QMatrix4x4 coronet = horse_ctx.model;
-    coronet.translate(hoof_top + QVector3D(0.0F, -hoof_height * 0.10F, 0.0F));
-    coronet.scale(
-        QVector3D(half_width * 0.95F, half_width * 0.60F, half_depth * 1.05F));
-    out.mesh(get_unit_sphere(), coronet, lighten(hoof_color, 1.16F), nullptr,
-             1.0F, 8);
-  };
-
-  constexpr float k_swing_phase_end = 0.5F;
-  constexpr float k_impact_settle_duration = 0.15F;
-  constexpr float k_impact_settle_intensity = 0.08F;
-
-  auto draw_leg = [&](const QVector3D &anchor, float lateralSign,
-                      float forwardBias, float phase_offset, float sockChance) {
-    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
-    float stride = 0.0F;
-    float lift = 0.0F;
-
-    float const weight_shift_time = anim.time * 0.15F;
-    bool const is_rear = (forwardBias < 0.0F);
-    float weight_shift = 0.0F;
-    if (!is_moving && is_rear) {
-
-      float const shift_cycle =
-          std::sin(weight_shift_time + lateralSign * k_pi * 0.5F);
-      weight_shift = shift_cycle * 0.03F;
-    }
-
-    if (is_moving) {
-
-      bool const is_galloping = (g.stride_swing > 0.7F);
-
-      float const swing_progress =
-          leg_phase < k_swing_phase_end ? leg_phase / k_swing_phase_end : 0.0F;
-      float const stance_progress =
-          leg_phase >= k_swing_phase_end
-              ? (leg_phase - k_swing_phase_end) / (1.0F - k_swing_phase_end)
-              : 0.0F;
-
-      float const swing_ease =
-          swing_progress * swing_progress * (3.0F - 2.0F * swing_progress);
-
-      float const stance_ease =
-          stance_progress * stance_progress * (3.0F - 2.0F * stance_progress);
-
-      float stride_mult = 0.85F;
-      float lift_mult = 1.0F;
-
-      if (is_galloping) {
-
-        float const suspension_phase =
-            (leg_phase > 0.35F && leg_phase < 0.45F) ? 1.0F : 0.0F;
-
-        stride_mult = 0.88F + swing_ease * 0.08F;
-
-        lift_mult = 1.0F + suspension_phase * 0.12F;
-
-        float const reach_factor = is_rear ? 0.90F : 1.08F;
-        stride_mult *= reach_factor;
-      }
-
-      float const rest_stride = forwardBias - g.stride_swing * 0.25F;
-      float const peak_stride =
-          g.stride_swing * stride_mult + forwardBias - g.stride_swing * 0.25F;
-      stride = leg_phase < k_swing_phase_end
-                   ? rest_stride + swing_ease * (peak_stride - rest_stride)
-                   : peak_stride - stance_ease * (peak_stride - rest_stride);
-
-      float const lift_curve = std::sin(swing_progress * k_pi);
-      float const impact_settle =
-          stance_progress < k_impact_settle_duration
-              ? std::sin(stance_progress / k_impact_settle_duration * k_pi) *
-                    k_impact_settle_intensity
-              : 0.0F;
-      lift = leg_phase < k_swing_phase_end
-                 ? lift_curve * g.stride_lift * lift_mult
-                 : -impact_settle * g.stride_lift;
-
-    } else {
-
-      float const idle = std::sin(leg_phase * 2.0F * k_pi);
-      float const secondary =
-          std::sin(anim.time * 0.7F + lateralSign * 1.2F) * 0.015F;
-      stride = idle * g.stride_swing * 0.08F + forwardBias + secondary +
-               weight_shift;
-      lift = idle * d.idle_bob_amplitude * 2.5F;
-    }
-
-    if (!is_rear) {
-      stride =
-          std::clamp(stride, -d.body_length * 0.08F, d.body_length * 0.35F);
-    }
-
-    bool const tighten_legs = is_moving;
-    float const shoulder_out = d.body_width * (tighten_legs ? 0.42F : 0.56F) *
-                               (is_rear ? 0.96F : 1.0F);
-    float const shoulder_height = (is_rear ? 0.02F : 0.05F);
-    float const stance_pull =
-        is_rear ? -d.body_length * 0.04F : d.body_length * 0.05F;
-    float const stance_stagger =
-        lateralSign *
-        (is_rear ? -d.body_length * 0.020F : d.body_length * 0.030F);
-    QVector3D shoulder =
-        anchor + QVector3D(lateralSign * shoulder_out,
-                           shoulder_height + lift * 0.04F,
-                           stride + stance_pull + stance_stagger);
-
-    float const gallop_angle = leg_phase * 2.0F * k_pi;
-    bool const is_galloping = (g.stride_swing > 0.7F);
-
-    float hip_swing_mult = is_galloping ? 1.1F : 1.0F;
-    float const hip_swing =
-        is_moving ? std::sin(gallop_angle) * hip_swing_mult : 0.0F;
-
-    float const lift_factor =
-        is_moving
-            ? std::max(0.0F,
-                       std::sin(gallop_angle + (is_rear ? 0.35F : -0.25F)))
-            : 0.0F;
-
-    float const hip_flex =
-        is_galloping ? (is_rear ? -0.08F : 0.06F) : (is_rear ? -0.06F : 0.05F);
-    shoulder.setZ(shoulder.z() + hip_swing * hip_flex);
-    if (tighten_legs) {
-      shoulder.setX(shoulder.x() - lateralSign * lift_factor * 0.04F);
-    }
-
-    float const upper_length = d.leg_length * (is_rear ? 0.48F : 0.46F);
-    float const lower_length = d.leg_length * (is_rear ? 0.43F : 0.49F);
-    float const pastern_length = d.leg_length * (is_rear ? 0.12F : 0.14F);
-
-    float const stance_phase = smoothstep(0.0F, 0.3F, leg_phase);
-    float const swing_phase = smoothstep(0.3F, 0.7F, leg_phase);
-    float const extend_phase = smoothstep(0.7F, 1.0F, leg_phase);
-
-    float knee_flex_base =
-        (swing_phase * (1.0F - extend_phase) * (is_rear ? 0.85F : 1.10F));
-    float knee_flex_gallop =
-        is_galloping ? knee_flex_base * 1.08F : knee_flex_base;
-    float const knee_flex = is_moving ? knee_flex_gallop : 0.35F;
-
-    float cannon_flex_base = smoothstep(0.35F, 0.65F, leg_phase) *
-                             (1.0F - extend_phase) * (is_rear ? 0.70F : 0.85F);
-    float cannon_flex_gallop =
-        is_galloping ? cannon_flex_base * 1.05F : cannon_flex_base;
-    float const cannon_flex = is_moving ? cannon_flex_gallop : 0.35F;
-
-    float const fetlock_compress =
-        is_moving ? std::max(stance_phase * 0.4F,
-                             (1.0F - swing_phase) * extend_phase * 0.6F)
-                  : 0.2F;
-
-    float const backward_bias = is_rear ? -0.42F : -0.18F;
-    float const hip_drive =
-        (is_rear ? -1.0F : 1.0F) * hip_swing * (is_rear ? 0.20F : 0.35F);
-
-    float const upper_vertical =
-        -0.90F - lift_factor * 0.08F - knee_flex * (is_rear ? 0.25F : 0.40F);
-    QVector3D upper_dir(lateralSign * (tighten_legs ? -0.05F : -0.02F),
-                        upper_vertical, backward_bias + hip_drive);
-    if (upper_dir.lengthSquared() < 1e-6F) {
-      upper_dir = QVector3D(0.0F, -1.0F, backward_bias);
-    }
-    upper_dir.normalize();
-
-    QVector3D knee = shoulder + upper_dir * upper_length;
-    float const knee_out = d.body_width * (is_rear ? 0.08F : 0.06F);
-    knee.setX(knee.x() + lateralSign * knee_out);
-
-    float const joint_drive =
-        is_moving
-            ? clamp01(std::sin(gallop_angle + (is_rear ? 0.50F : -0.35F)) *
-                          0.55F +
-                      0.45F)
-            : 0.35F;
-
-    float const lower_forward =
-        (is_rear ? 0.44F : 0.20F) +
-        (is_rear ? 0.30F : 0.18F) * (joint_drive - 0.5F) - cannon_flex * 0.35F;
-
-    float const lower_vertical = -0.95F + cannon_flex * 0.15F;
-    QVector3D lower_dir(lateralSign * (tighten_legs ? -0.02F : -0.01F),
-                        lower_vertical, lower_forward);
-    if (lower_dir.lengthSquared() < 1e-6F) {
-      lower_dir = QVector3D(0.0F, -1.0F, lower_forward);
-    }
-    lower_dir.normalize();
-
-    QVector3D cannon = knee + lower_dir * lower_length;
-
-    float const pastern_bias = is_rear ? -0.30F : 0.08F;
-    float const pastern_dyn =
-        (is_rear ? -0.10F : 0.05F) * (joint_drive - 0.5F) +
-        fetlock_compress * 0.25F;
-    QVector3D pastern_dir(0.0F, -1.0F, pastern_bias + pastern_dyn);
-    if (pastern_dir.lengthSquared() < 1e-6F) {
-      pastern_dir = QVector3D(0.0F, -1.0F, pastern_bias);
-    }
-    pastern_dir.normalize();
-
-    QVector3D fetlock = cannon + pastern_dir * pastern_length;
-
-    QVector3D hoof_top = fetlock;
-    if (is_moving) {
-
-      float hoof_lift_amount = 0.0F;
-      if (leg_phase < k_swing_phase_end && lift > 0.0F) {
-
-        hoof_lift_amount = lift * 0.35F;
-      }
-      hoof_top.setY(hoof_top.y() + hoof_lift_amount);
-      fetlock = hoof_top;
-    }
-
-    float const shoulder_r = d.body_width * (is_rear ? 0.38F : 0.35F);
-    float const upper_r = shoulder_r * (is_rear ? 0.92F : 0.88F);
-    float const knee_r = upper_r * 0.85F;
-    float const cannon_r = knee_r * 0.72F;
-    float const pastern_r = cannon_r * 0.78F;
-
-    QVector3D const thigh_color = coat_gradient(
-        v.coat_color, is_rear ? 0.48F : 0.58F, is_rear ? -0.22F : 0.18F,
-        coat_seed_a + lateralSign * 0.07F);
-
-    draw_cylinder(out, horse_ctx.model, shoulder, knee,
-                  (shoulder_r + upper_r) * 0.5F, thigh_color, 1.0F, 6);
-
-    {
-      QMatrix4x4 knee_joint = horse_ctx.model;
-      knee_joint.translate(knee);
-      float const joint_scale = knee_r * 1.15F;
-      knee_joint.scale(joint_scale, joint_scale * 0.9F, joint_scale);
-      QVector3D const joint_color = darken(thigh_color, 0.95F);
-      out.mesh(get_unit_sphere(), knee_joint, joint_color, nullptr, 1.0F, 6);
-    }
-
-    QVector3D const shin_color = darken(thigh_color, is_rear ? 0.90F : 0.92F);
-
-    draw_cylinder(out, horse_ctx.model, knee, cannon,
-                  (knee_r + cannon_r) * 0.45F, shin_color, 1.0F, 6);
-
-    {
-      QVector3D const tendon_offset =
-          QVector3D(0.0F, 0.0F, is_rear ? cannon_r * 0.4F : -cannon_r * 0.4F);
-      QVector3D const tendon_start = knee + tendon_offset;
-      QVector3D const tendon_end = cannon + tendon_offset;
-      draw_cylinder(out, horse_ctx.model, tendon_start, tendon_end,
-                    cannon_r * 0.35F, darken(shin_color, 0.88F), 1.0F, 6);
-    }
-
-    QVector3D const hoof_joint_color =
-        darken(shin_color, is_rear ? 0.92F : 0.94F);
-
-    float const sock =
-        sockChance > 0.78F ? 1.0F : (sockChance > 0.58F ? 0.55F : 0.0F);
-    QVector3D const distal_color =
-        (sock > 0.0F) ? lighten(v.coat_color, 1.18F) : v.coat_color * 0.92F;
-    float const t_sock = smoothstep(0.0F, 1.0F, sock);
-    QVector3D const pastern_color =
-        lerp(hoof_joint_color, distal_color, t_sock * 0.8F);
-
-    {
-      QMatrix4x4 fetlock_joint = horse_ctx.model;
-      fetlock_joint.translate(cannon);
-      float const fetlock_scale = cannon_r * 1.1F;
-      fetlock_joint.scale(fetlock_scale, fetlock_scale * 0.85F, fetlock_scale);
-      out.mesh(get_unit_sphere(), fetlock_joint,
-               lerp(hoof_joint_color, pastern_color, 0.3F), nullptr, 1.0F, 6);
-    }
-
-    draw_cylinder(out, horse_ctx.model, cannon, fetlock,
-                  (cannon_r * 0.85F + pastern_r) * 0.5F,
-                  lerp(hoof_joint_color, pastern_color, 0.5F), 1.0F, 6);
-
-    QVector3D const fetlock_color = lerp(pastern_color, distal_color, 0.25F);
-
-    QVector3D const hoof_color = v.hoof_color;
-    float const hoof_width = pastern_r * (is_rear ? 1.70F : 1.60F);
-    float const hoof_depth = hoof_width * (is_rear ? 0.95F : 1.10F);
-    render_hoof(hoof_top, d.hoof_height, hoof_width, hoof_depth, hoof_color,
-                is_rear);
-
-    if (sock > 0.0F) {
-      QVector3D const feather_tip = lerp(fetlock, hoof_top, 0.35F) +
-                                    QVector3D(0.0F, -pastern_r * 0.65F, 0.0F);
-      draw_cone(out, horse_ctx.model, feather_tip, fetlock, pastern_r * 0.90F,
-                lerp(distal_color, v.coat_color, 0.25F), 0.85F, 6);
-    }
-  };
-
-  QVector3D const front_anchor =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.05F, d.body_length * 0.32F);
-  QVector3D const rear_anchor =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.02F, -d.body_length * 0.30F);
-
-  float const front_forward_bias = d.body_length * 0.16F;
-  float const front_bias_offset = d.body_length * 0.035F;
-
-  draw_leg(front_anchor, 1.0F, front_forward_bias + front_bias_offset,
-           g.front_leg_phase, sock_chance_fl);
-
-  draw_leg(front_anchor, -1.0F, front_forward_bias - front_bias_offset,
-           g.front_leg_phase + 0.50F, sock_chance_fr);
-
-  float const rear_forward_bias = -d.body_length * 0.16F;
-  float const rear_bias_offset = d.body_length * 0.032F;
-
-  draw_leg(rear_anchor, 1.0F, rear_forward_bias - rear_bias_offset,
-           g.rear_leg_phase + 0.50F, sock_chance_rl);
-
-  draw_leg(rear_anchor, -1.0F, rear_forward_bias + rear_bias_offset,
-           g.rear_leg_phase, sock_chance_rr);
+  // Build the per-frame Reduced-shaped HorseSpecPose then override the
+  // neck/head/feet to inherit the rider-influenced positions above.
+  // This keeps the runtime bone palette aligned with the Full silhouette
+  // even though the bake itself uses a single static (baseline) PartGraph.
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose_reduced(
+      d, g,
+      Render::Horse::HorseReducedMotion{phase, bob, is_moving},
+      pose);
+  pose.barrel_center = barrel_center;
+  pose.neck_base = neck_base;
+  pose.neck_top = neck_top;
+  pose.head_center = head_center;
+
+  Render::Horse::submit_horse_lod(pose, v, Render::Creature::CreatureLOD::Full,
+                                  horse_ctx.model, out);
 
   QVector3D const bit_left =
       muzzle_center + QVector3D(d.head_width * 0.55F, -d.head_height * 0.08F,
@@ -1704,90 +957,24 @@ void HorseRendererBase::render_simplified(
   HorseMotionSample const motion =
       shared_motion ? *shared_motion
                     : evaluate_horse_motion(profile, anim, rider_ctx);
-  float const phase = motion.phase;
-  float const bob = motion.bob;
-  const bool is_moving = motion.is_moving;
 
   MountedAttachmentFrame mount =
       shared_mount ? *shared_mount : compute_mount_frame(profile);
   if (!shared_mount) {
-    apply_mount_vertical_offset(mount, bob);
+    apply_mount_vertical_offset(mount, motion.bob);
   }
 
-  DrawContext horse_ctx = ctx;
-  horse_ctx.model = ctx.model;
-  horse_ctx.model.translate(mount.ground_offset);
+  QMatrix4x4 world_from_unit = ctx.model;
+  world_from_unit.translate(mount.ground_offset);
 
-  QVector3D const barrel_center(0.0F, d.barrel_center_y + bob, 0.0F);
-
-  {
-    QMatrix4x4 body = horse_ctx.model;
-    body.translate(barrel_center);
-    body.scale(d.body_width * 1.0F, d.body_height * 0.85F,
-               d.body_length * 0.80F);
-    out.mesh(get_unit_sphere(), body, v.coat_color, nullptr, 1.0F, 6);
-  }
-
-  QVector3D const neck_base =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.35F, d.body_length * 0.35F);
-  QVector3D const neck_top =
-      neck_base + QVector3D(0.0F, d.neck_rise, d.neck_length);
-  draw_cylinder(out, horse_ctx.model, neck_base, neck_top, d.body_width * 0.40F,
-                v.coat_color, 1.0F);
-
-  QVector3D const head_center =
-      neck_top + QVector3D(0.0F, d.head_height * 0.10F, d.head_length * 0.40F);
-  {
-    QMatrix4x4 head = horse_ctx.model;
-    head.translate(head_center);
-    head.scale(d.head_width * 0.90F, d.head_height * 0.85F,
-               d.head_length * 0.75F);
-    out.mesh(get_unit_sphere(), head, v.coat_color, nullptr, 1.0F);
-  }
-
-  QVector3D const front_anchor =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.05F, d.body_length * 0.30F);
-  QVector3D const rear_anchor =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.02F, -d.body_length * 0.28F);
-
-  auto draw_simple_leg = [&](const QVector3D &anchor, float lateralSign,
-                             float forwardBias, float phase_offset) {
-    float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
-    float stride = 0.0F;
-    float lift = 0.0F;
-
-    if (is_moving) {
-      float const angle = leg_phase * 2.0F * k_pi;
-      stride = std::sin(angle) * g.stride_swing * 0.6F + forwardBias;
-      float const lift_raw = std::sin(angle);
-      lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * 0.8F : 0.0F;
-    }
-
-    float const shoulder_out = d.body_width * 0.45F;
-    QVector3D shoulder =
-        anchor + QVector3D(lateralSign * shoulder_out, lift * 0.05F, stride);
-
-    float const leg_length = d.leg_length * 0.85F;
-    QVector3D const foot = shoulder + QVector3D(0.0F, -leg_length + lift, 0.0F);
-
-    draw_cylinder(out, horse_ctx.model, shoulder, foot, d.body_width * 0.22F,
-                  v.coat_color * 0.85F, 1.0F, 6);
-
-    QMatrix4x4 hoof = horse_ctx.model;
-    hoof.translate(foot);
-    hoof.scale(d.body_width * 0.28F, d.hoof_height, d.body_width * 0.30F);
-    out.mesh(get_unit_cylinder(), hoof, v.hoof_color, nullptr, 1.0F, 8);
-  };
-
-  draw_simple_leg(front_anchor, 1.0F, d.body_length * 0.15F, g.front_leg_phase);
-  draw_simple_leg(front_anchor, -1.0F, d.body_length * 0.15F,
-                  g.front_leg_phase + 0.48F);
-  draw_simple_leg(rear_anchor, 1.0F, -d.body_length * 0.15F, g.rear_leg_phase);
-  draw_simple_leg(rear_anchor, -1.0F, -d.body_length * 0.15F,
-                  g.rear_leg_phase + 0.52F);
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose_reduced(
+      d, g,
+      Render::Horse::HorseReducedMotion{motion.phase, motion.bob,
+                                        motion.is_moving},
+      pose);
+  Render::Horse::submit_horse_lod(
+      pose, v, Render::Creature::CreatureLOD::Reduced, world_from_unit, out);
 }
 
 void HorseRendererBase::render_minimal(const DrawContext &ctx,
@@ -1803,30 +990,14 @@ void HorseRendererBase::render_minimal(const DrawContext &ctx,
   MountedAttachmentFrame mount = compute_mount_frame(profile);
   apply_mount_vertical_offset(mount, bob);
 
-  DrawContext horse_ctx = ctx;
-  horse_ctx.model = ctx.model;
-  horse_ctx.model.translate(mount.ground_offset);
+  QMatrix4x4 world_from_unit = ctx.model;
+  world_from_unit.translate(mount.ground_offset);
 
-  QVector3D const center(0.0F, d.barrel_center_y + bob, 0.0F);
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose(d, bob, pose);
 
-  QMatrix4x4 body = horse_ctx.model;
-  body.translate(center);
-  body.scale(d.body_width * 1.2F, d.body_height + d.neck_rise * 0.5F,
-             d.body_length + d.head_length * 0.5F);
-  out.mesh(get_unit_sphere(), body, v.coat_color, nullptr, 1.0F, 6);
-
-  for (int i = 0; i < 4; ++i) {
-    float const x_sign = (i % 2 == 0) ? 1.0F : -1.0F;
-    float const z_offset =
-        (i < 2) ? d.body_length * 0.25F : -d.body_length * 0.25F;
-
-    QVector3D const top = center + QVector3D(x_sign * d.body_width * 0.40F,
-                                             -d.body_height * 0.3F, z_offset);
-    QVector3D const bottom = top + QVector3D(0.0F, -d.leg_length * 0.60F, 0.0F);
-
-    draw_cylinder(out, horse_ctx.model, top, bottom, d.body_width * 0.15F,
-                  v.coat_color * 0.75F, 1.0F, 6);
-  }
+  Render::Horse::submit_horse_lod(pose, v, Render::Creature::CreatureLOD::Minimal,
+                                  world_from_unit, out);
 }
 
 void HorseRendererBase::render(const DrawContext &ctx,

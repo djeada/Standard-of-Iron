@@ -6,6 +6,7 @@
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -189,7 +190,7 @@ public:
           cloak_renderer->set_config(cloak_config);
         }
 
-        cloak->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+        render_equipment(*cloak, ctx, pose.body_frames, v.palette, anim_ctx, out);
       }
     }
     auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
@@ -204,7 +205,7 @@ public:
         quiver_renderer->set_config(quiver_config);
       }
 
-      quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*quiver, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto bow = registry.get(EquipmentCategory::Weapon, "bow_roman");
@@ -232,7 +233,7 @@ public:
         bow_renderer->set_config(bow_config);
       }
 
-      bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*bow, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -249,7 +250,7 @@ public:
 
         auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
         if (headwrap) {
-          headwrap->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+          render_equipment(*headwrap, ctx, pose.body_frames, v.palette, anim_ctx, out);
         }
       }
       return;
@@ -257,7 +258,7 @@ public:
 
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
     if (helmet) {
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -270,13 +271,13 @@ public:
     if (resolve_style(ctx).show_armor) {
       auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
       if (armor) {
-        armor->render(ctx, pose.body_frames, v.palette, anim, out);
+        render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
       }
     }
 
     auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
     if (greaves) {
-      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*greaves, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

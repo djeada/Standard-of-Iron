@@ -34,6 +34,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "../../../equipment/equipment_submit.h"
 namespace Render::GL::Roman {
 
 namespace {
@@ -230,7 +231,7 @@ public:
       if (spear_renderer) {
         spear_renderer->set_config(spear_config);
       }
-      m_cached_spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*m_cached_spear, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -239,7 +240,7 @@ public:
 
     if (m_cached_helmet) {
       HumanoidAnimationContext anim_ctx{};
-      m_cached_helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*m_cached_helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -248,16 +249,16 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
     if (m_cached_armor) {
-      m_cached_armor->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*m_cached_armor, ctx, pose.body_frames, v.palette, anim, out);
     }
 
     if (m_cached_shoulder_cover) {
-      m_cached_shoulder_cover->render(ctx, pose.body_frames, v.palette, anim,
+      render_equipment(*m_cached_shoulder_cover, ctx, pose.body_frames, v.palette, anim,
                                       out);
     }
 
     if (m_cached_greaves) {
-      m_cached_greaves->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*m_cached_greaves, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

@@ -2,7 +2,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
-#include "grass_gpu.h"
+#include "../decoration_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>

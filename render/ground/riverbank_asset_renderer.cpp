@@ -3,7 +3,7 @@
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/resources.h"
-#include "ground/riverbank_asset_gpu.h"
+#include "riverbank_asset_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
 #include <QDebug>

@@ -2,7 +2,7 @@
 #include "../draw_queue.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "ground/terrain_gpu.h"
+#include "world_chunk.h"
 #include <algorithm>
 #include <cmath>
 #include <qmatrix4x4.h>

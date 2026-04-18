@@ -3,6 +3,7 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -219,7 +220,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -232,15 +233,17 @@ public:
       auto armor =
           registry.get(EquipmentCategory::Armor, "carthage_light_armor");
       if (armor) {
-        armor->render(ctx, pose.body_frames, v.palette, anim, out);
+        render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
         return;
       }
     }
-    draw_healer_robes(ctx, v, pose, out);
+    EquipmentBatch batch;
+    draw_healer_robes(ctx, v, pose, batch);
+    submit_equipment_batch(batch, out);
   }
 
   void draw_healer_robes(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, ISubmitter &out) const {
+                         const HumanoidPose &pose, EquipmentBatch &batch) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -298,9 +301,7 @@ public:
         QVector3D const p2 = origin + right * (r2 * sin2) +
                              forward * (r2 * cos2) + up * (y_pos - origin.y());
 
-        out.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, p1, p2, thickness), color, nullptr,
-                 1.0F, materialId);
+        batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, p1, p2, thickness), color, nullptr, 1.0F, materialId});
       }
     };
 
@@ -342,46 +343,31 @@ public:
     float const sash_y = y_waist + 0.01F;
     QVector3D const sash_top = origin + up * (sash_y + 0.028F - origin.y());
     QVector3D const sash_bot = origin + up * (sash_y - 0.028F - origin.y());
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, sash_bot, sash_top, torso_r * 0.99F),
-             purple_tyrian, nullptr, 1.0F, k_mat_purple_trim);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, sash_bot, sash_top, torso_r * 0.99F), purple_tyrian, nullptr, 1.0F, k_mat_purple_trim});
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, sash_top, sash_top - up * 0.006F,
-                              torso_r * 1.02F),
-             team_tint, nullptr, 1.0F, k_mat_tools);
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, sash_bot + up * 0.006F, sash_bot,
-                              torso_r * 1.02F),
-             team_tint, nullptr, 1.0F, k_mat_tools);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, sash_top, sash_top - up * 0.006F,
+                              torso_r * 1.02F), team_tint, nullptr, 1.0F, k_mat_tools});
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, sash_bot + up * 0.006F, sash_bot,
+                              torso_r * 1.02F), team_tint, nullptr, 1.0F, k_mat_tools});
 
     QVector3D const sash_hang_start =
         origin + right * (torso_r * 0.3F) + up * (sash_y - origin.y());
     QVector3D const sash_hang_end =
         sash_hang_start - up * 0.12F + forward * 0.02F;
-    out.mesh(
-        get_unit_cylinder(),
-        cylinder_between(ctx.model, sash_hang_start, sash_hang_end, 0.018F),
-        purple_dark, nullptr, 1.0F, k_mat_purple_trim);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, sash_hang_start, sash_hang_end, 0.018F), purple_dark, nullptr, 1.0F, k_mat_purple_trim});
 
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, sash_hang_end - up * 0.01F, 0.015F),
-             bronze_color, nullptr, 1.0F, k_mat_tools);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, sash_hang_end - up * 0.01F, 0.015F), bronze_color, nullptr, 1.0F, k_mat_tools});
 
     float const neck_y = y_shoulder + 0.04F;
     QVector3D const neck_center = origin + up * (neck_y - origin.y());
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, neck_center - up * 0.012F,
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, neck_center - up * 0.012F,
                               neck_center + up * 0.012F,
-                              HP::NECK_RADIUS * 1.7F),
-             robe_tan, nullptr, 1.0F, k_mat_tunic);
+                              HP::NECK_RADIUS * 1.7F), robe_tan, nullptr, 1.0F, k_mat_tunic});
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, neck_center + up * 0.010F,
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, neck_center + up * 0.010F,
                               neck_center + up * 0.018F,
-                              HP::NECK_RADIUS * 2.0F),
-             purple_tyrian * 0.9F, nullptr, 1.0F, k_mat_purple_trim);
+                              HP::NECK_RADIUS * 2.0F), purple_tyrian * 0.9F, nullptr, 1.0F, k_mat_purple_trim});
 
     auto drawFlowingSleeve = [&](const QVector3D &shoulder_pos,
                                  const QVector3D &outward) {
@@ -394,29 +380,23 @@ public:
                                      up * (t * 0.05F);
         float const sleeve_r = HP::UPPER_ARM_R * (1.55F - t * 0.08F);
         QVector3D const sleeve_color = robe_cream * (1.0F - t * 0.04F);
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, sleeve_pos, sleeve_r),
-                 sleeve_color, nullptr, 1.0F, k_mat_tunic);
+        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, sleeve_pos, sleeve_r), sleeve_color, nullptr, 1.0F, k_mat_tunic});
       }
 
       QVector3D const cuff_pos =
           anchor + outward * 0.055F + forward * 0.040F - up * 0.05F;
-      out.mesh(get_unit_sphere(),
-               sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.15F),
-               purple_tyrian * 0.85F, nullptr, 1.0F, k_mat_purple_trim);
+      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, cuff_pos, HP::UPPER_ARM_R * 1.15F), purple_tyrian * 0.85F, nullptr, 1.0F, k_mat_purple_trim});
     };
     drawFlowingSleeve(frames.shoulder_l.origin, -right);
     drawFlowingSleeve(frames.shoulder_r.origin, right);
 
     QVector3D const pendant_pos = origin + forward * (torso_depth * 0.6F) +
                                   up * (y_shoulder - 0.06F - origin.y());
-    out.mesh(get_unit_sphere(), sphere_at(ctx.model, pendant_pos, 0.022F),
-             bronze_color, nullptr, 1.0F, k_mat_tools);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pendant_pos, 0.022F), bronze_color, nullptr, 1.0F, k_mat_tools});
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model,
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model,
                               neck_center + forward * (torso_depth * 0.3F),
-                              pendant_pos + up * 0.01F, 0.006F),
-             bronze_color * 0.85F, nullptr, 1.0F, k_mat_tools);
+                              pendant_pos + up * 0.01F, 0.006F), bronze_color * 0.85F, nullptr, 1.0F, k_mat_tools});
   }
 
 private:

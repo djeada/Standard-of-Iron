@@ -5,6 +5,7 @@ add_library(render_gl STATIC
     gl/texture.cpp
     gl/primitives.cpp
     scene_renderer.cpp
+    render_backend_factory.cpp
     gl/camera.cpp
     gl/resources.cpp
     gl/bootstrap.cpp
@@ -23,11 +24,18 @@ add_library(render_gl STATIC
     gl/backend/mode_indicator_pipeline.cpp
     gl/backend/rain_pipeline.cpp
     gl/backend/mesh_instancing_pipeline.cpp
+    gl/backend/rigged_character_pipeline.cpp
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
+    world_chunk.cpp
     primitive_batch.cpp
     template_cache.cpp
+    rig_dsl/rig_interpreter.cpp
+    pipeline/instance_coalescer.cpp
+    pass/frame_pass_runner.cpp
+    pass/primitive_flush_pass.cpp
+    pass/construction_preview_pass.cpp
     ground/spawn_validator.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
@@ -58,6 +66,7 @@ add_library(render_gl STATIC
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
     horse/rig.cpp
+    horse/horse_spec.cpp
     horse/horse_animation_controller.cpp
     entity/horse_renderer.cpp
     entity/mounted_humanoid_renderer_base.cpp
@@ -98,6 +107,7 @@ add_library(render_gl STATIC
     entity/nations/roman/ballista_renderer.cpp
     entity/nations/carthage/ballista_renderer.cpp
     elephant/rig.cpp
+    elephant/elephant_spec.cpp
     entity/elephant_renderer.cpp
     entity/nations/carthage/elephant_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
@@ -112,18 +122,36 @@ add_library(render_gl STATIC
     geom/patrol_flags.cpp
     geom/formation_arrow.cpp
     geom/transforms.cpp
+    geom/parts.cpp
     humanoid/humanoid_math.cpp
     gl/humanoid/animation/animation_inputs.cpp
     gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
+    humanoid/poser.cpp
+    humanoid/skin.cpp
     humanoid/formation_calculator.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
     humanoid/mounted_pose_controller.cpp
+    humanoid/skeleton.cpp
+    humanoid/humanoid_full_builder.cpp
+    humanoid/humanoid_spec.cpp
+    humanoid/humanoid_state_machine.cpp
+    humanoid/humanoid_clip_registry.cpp
+    humanoid/clip_driver_cache.cpp
+    creature/skeleton.cpp
+    creature/part_graph.cpp
+    creature/spec.cpp
+    rigged_mesh.cpp
+    rigged_mesh_bake.cpp
+    rigged_mesh_cache.cpp
+    bone_palette_arena.cpp
     unit_render_cache.cpp
     pose_palette_cache.cpp
+    mesh_geometry_pool.cpp
     equipment/equipment_registry.cpp
+    equipment/equipment_submit.cpp
     equipment/register_equipment.cpp
     equipment/armor/tunic_renderer.cpp
     equipment/armor/roman_armor.cpp
@@ -166,10 +194,14 @@ add_library(render_gl STATIC
     equipment/horse/decorations/plume_renderer.cpp
     equipment/horse/decorations/tail_ribbon_renderer.cpp
     equipment/horse/decorations/saddle_bag_renderer.cpp
+    software/software_rasterizer.cpp
+    software_backend.cpp
+    profiling/frame_profile.cpp
+    profiling/profiling_hud.cpp
 )
 
 target_include_directories(render_gl PUBLIC .)
-target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core)
+target_link_libraries(render_gl PUBLIC Qt${QT_VERSION_MAJOR}::Core Qt${QT_VERSION_MAJOR}::Gui Qt${QT_VERSION_MAJOR}::OpenGL ${OPENGL_LIBRARIES} engine_core)
 
 # Optimization flags for render hot paths
 if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")

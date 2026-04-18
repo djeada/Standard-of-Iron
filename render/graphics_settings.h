@@ -1,5 +1,6 @@
 #pragma once
 
+#include "i_render_backend.h"
 #include <cstdint>
 
 namespace Render {
@@ -34,6 +35,7 @@ struct GraphicsFeatures {
   bool enable_equipment_detail;
   bool enable_ground_shadows;
   bool enable_pose_cache;
+  ShaderQuality shader_quality{ShaderQuality::Full};
 };
 
 struct BatchingConfig {
@@ -178,7 +180,8 @@ private:
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
                     .enable_ground_shadows = true,
-                    .enable_pose_cache = true};
+                    .enable_pose_cache = true,
+                    .shader_quality = ShaderQuality::Minimal};
       m_batching_config = {.force_batching = true,
                            .never_batch = false,
                            .batching_unit_threshold = 0,
@@ -205,7 +208,8 @@ private:
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
                     .enable_ground_shadows = true,
-                    .enable_pose_cache = true};
+                    .enable_pose_cache = true,
+                    .shader_quality = ShaderQuality::Reduced};
 
       m_batching_config = {.force_batching = false,
                            .never_batch = false,
@@ -233,7 +237,8 @@ private:
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
                     .enable_ground_shadows = true,
-                    .enable_pose_cache = true};
+                    .enable_pose_cache = true,
+                    .shader_quality = ShaderQuality::Full};
 
       m_batching_config = {.force_batching = false,
                            .never_batch = false,
@@ -261,7 +266,8 @@ private:
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
                     .enable_ground_shadows = true,
-                    .enable_pose_cache = false};
+                    .enable_pose_cache = false,
+                    .shader_quality = ShaderQuality::Full};
 
       m_batching_config = {.force_batching = false,
                            .never_batch = true,

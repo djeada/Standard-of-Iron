@@ -3,7 +3,7 @@
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/style_palette.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>
@@ -18,7 +18,7 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
                                   const BodyFrames &frames,
                                   const HumanoidPalette &palette,
                                   const HumanoidAnimationContext &anim,
-                                  ISubmitter &submitter) {
+                                  EquipmentBatch &batch) {
   (void)anim;
 
   using HP = HumanProportions;
@@ -78,8 +78,8 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
 
       seg_transform.scale(segment_width, greave_len * 0.5F, greave_thickness);
 
-      submitter.mesh(get_unit_cube(), seg_transform, greaves_color, nullptr,
-                     1.0F, 5);
+      batch.meshes.push_back({get_unit_cube(), nullptr, seg_transform, greaves_color, nullptr,
+                     1.0F, 5});
     }
   };
 

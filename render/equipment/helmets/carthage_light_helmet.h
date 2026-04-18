@@ -29,23 +29,23 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
 private:
   CarthageLightHelmetConfig m_config;
 
   void render_bowl(const DrawContext &ctx, const AttachmentFrame &head,
-                   ISubmitter &submitter);
+                   EquipmentBatch &batch);
   void render_brim(const DrawContext &ctx, const AttachmentFrame &head,
-                   ISubmitter &submitter);
+                   EquipmentBatch &batch);
   void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
-                           ISubmitter &submitter);
+                           EquipmentBatch &batch);
   void render_nasal_guard(const DrawContext &ctx, const AttachmentFrame &head,
-                          ISubmitter &submitter);
+                          EquipmentBatch &batch);
   void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
-                    ISubmitter &submitter);
+                    EquipmentBatch &batch);
   void render_rivets(const DrawContext &ctx, const AttachmentFrame &head,
-                     ISubmitter &submitter);
+                     EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

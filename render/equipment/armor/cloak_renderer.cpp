@@ -3,7 +3,7 @@
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/rig.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
@@ -24,7 +24,7 @@ void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
 void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
-                           ISubmitter &submitter) {
+                           EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
@@ -67,8 +67,8 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     cape_model.scale(cape_width, 1.0F, cape_depth);
 
-    submitter.mesh(m_shoulder_mesh.get(), ctx.model * cape_model, cloak_color,
-                   nullptr, 1.0F, m_config.shoulder_material_id);
+    batch.meshes.push_back({m_shoulder_mesh.get(), nullptr, ctx.model * cape_model, cloak_color,
+                   nullptr, 1.0F, m_config.shoulder_material_id});
   }
 
   {
@@ -99,17 +99,17 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     drape_model.scale(drape_width, 1.0F, drape_length);
 
-    submitter.mesh(m_back_mesh.get(), ctx.model * drape_model, cloak_color,
-                   nullptr, 1.0F, m_config.back_material_id);
+    batch.meshes.push_back({m_back_mesh.get(), nullptr, ctx.model * drape_model, cloak_color,
+                   nullptr, 1.0F, m_config.back_material_id});
   }
 
   if (m_config.show_clasp) {
     QVector3D clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
-    submitter.mesh(
-        get_unit_sphere(),
+    batch.meshes.push_back({
+        get_unit_sphere(), nullptr,
         Render::Geom::sphere_at(ctx.model, clasp_pos, torso_r * 0.12F),
-        trim_color, nullptr, 1.0F, 1);
+        trim_color, nullptr, 1.0F, 1});
   }
 }
 

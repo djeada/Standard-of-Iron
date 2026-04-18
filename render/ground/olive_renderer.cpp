@@ -4,7 +4,7 @@
 #include "../scene_renderer.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
-#include "ground/olive_gpu.h"
+#include "decoration_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
 #include "spawn_validator.h"

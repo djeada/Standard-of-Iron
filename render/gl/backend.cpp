@@ -1,5 +1,8 @@
 #include "backend.h"
 #include "../draw_queue.h"
+#include "../graphics_settings.h"
+#include "../material.h"
+#include "../pipeline/instance_coalescer.h"
 #include "../geom/mode_indicator.h"
 #include "../geom/selection_disc.h"
 #include "../geom/selection_ring.h"
@@ -15,19 +18,15 @@
 #include "backend/mode_indicator_pipeline.h"
 #include "backend/primitive_batch_pipeline.h"
 #include "backend/rain_pipeline.h"
+#include "backend/rigged_character_pipeline.h"
 #include "backend/terrain_pipeline.h"
 #include "backend/vegetation_pipeline.h"
 #include "backend/water_pipeline.h"
 #include "buffer.h"
 #include "gl/camera.h"
 #include "gl/resources.h"
-#include "ground/firecamp_gpu.h"
-#include "ground/grass_gpu.h"
-#include "ground/olive_gpu.h"
-#include "ground/pine_gpu.h"
-#include "ground/plant_gpu.h"
-#include "ground/rain_gpu.h"
-#include "ground/stone_gpu.h"
+#include "decoration_gpu.h"
+#include "../rain_gpu.h"
 #include "mesh.h"
 #include "render_constants.h"
 #include "shader.h"
@@ -69,6 +68,7 @@ const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 } // namespace
 
 Backend::Backend() = default;
+Backend::Backend(ShaderQuality quality) : m_shader_quality(quality) {}
 
 Backend::~Backend() {
 
@@ -78,6 +78,7 @@ Backend::~Backend() {
     (void)m_vegetationPipeline.release();
     (void)m_terrainPipeline.release();
     (void)m_characterPipeline.release();
+    (void)m_riggedCharacterPipeline.release();
     (void)m_waterPipeline.release();
     (void)m_effectsPipeline.release();
     (void)m_meshInstancingPipeline.release();
@@ -87,6 +88,7 @@ Backend::~Backend() {
     m_vegetationPipeline.reset();
     m_terrainPipeline.reset();
     m_characterPipeline.reset();
+    m_riggedCharacterPipeline.reset();
     m_waterPipeline.reset();
     m_effectsPipeline.reset();
     m_meshInstancingPipeline.reset();
@@ -145,6 +147,13 @@ void Backend::initialize() {
       this, m_shaderCache.get());
   m_characterPipeline->initialize();
   qInfo() << "Backend: CharacterPipeline initialized";
+
+  qInfo() << "Backend: Creating RiggedCharacterPipeline...";
+  m_riggedCharacterPipeline =
+      std::make_unique<BackendPipelines::RiggedCharacterPipeline>(
+          this, m_shaderCache.get());
+  m_riggedCharacterPipeline->initialize();
+  qInfo() << "Backend: RiggedCharacterPipeline initialized";
 
   qInfo() << "Backend: Creating WaterPipeline...";
   m_waterPipeline = std::make_unique<BackendPipelines::WaterPipeline>(
@@ -220,6 +229,13 @@ void Backend::initialize() {
   if (m_gridShader == nullptr) {
     qWarning() << "Backend: grid shader missing";
   }
+
+  // Populate the process-wide Material registry so DrawPartCmd emit sites
+  // (humanoid replay, equipment, etc.) can route through quality-tiered
+  // shaders. Safe to call with a null basic shader — MaterialRegistry
+  // simply stays uninitialised and the replay path falls back to the
+  // legacy MeshCmd emit.
+  MaterialRegistry::instance().init(m_basicShader, m_shadowShader);
   qInfo() << "Backend::initialize() - Complete!";
 }
 
@@ -272,7 +288,11 @@ void Backend::set_clear_color(float r, float g, float b, float a) {
 }
 
 void Backend::execute(const DrawQueue &queue, const Camera &cam) {
+  m_frame_tracker.begin_frame();
+
   if (m_basicShader == nullptr) {
+    m_frame_tracker.mark_complete();
+    m_frame_tracker.end_frame();
     return;
   }
 
@@ -294,8 +314,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
     switch (cmd.index()) {
     case CylinderCmdIndex: {
       if (!m_cylinderPipeline) {
-        ++i;
-        continue;
+        break;
       }
       m_cylinderPipeline->m_cylinderScratch.clear();
       do {
@@ -333,12 +352,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_cylinderPipeline->upload_cylinder_instances(instance_count);
         m_cylinderPipeline->draw_cylinders(instance_count);
       }
-      continue;
+      --i; // compensate for bottom ++i
+      break;
     }
     case FogBatchCmdIndex: {
       if (!m_cylinderPipeline) {
-        ++i;
-        continue;
+        break;
       }
       const auto &batch = std::get<FogBatchCmdIndex>(cmd);
       const FogInstanceData *instances = batch.instances;
@@ -373,11 +392,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_cylinderPipeline->upload_fog_instances(instance_count);
         m_cylinderPipeline->draw_fog(instance_count);
       }
-      ++i;
-      continue;
+      break;
     }
-    case GrassBatchCmdIndex: {
-      const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
+    case DecorationBatchCmdIndex: {
+      const auto &deco_cmd_ = std::get<DecorationBatchCmdIndex>(cmd);
+      switch (deco_cmd_.kind) {
+      case DecorationBatchCmd::Kind::Grass: {
+      struct GrassView { Buffer *instance_buffer; std::size_t instance_count; const GrassBatchParams &params; };
+      const GrassView grass {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.grass};
       if ((grass.instance_buffer == nullptr) || grass.instance_count == 0 ||
           (m_terrainPipeline->m_grassShader == nullptr) ||
           (m_terrainPipeline->m_grassVao == 0U) ||
@@ -461,12 +483,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
-    case StoneBatchCmdIndex: {
+    case DecorationBatchCmd::Kind::Stone: {
       if (!m_vegetationPipeline) {
         ++i;
         continue;
       }
-      const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
+      struct StoneView { Buffer *instance_buffer; std::size_t instance_count; const StoneBatchParams &params; };
+      const StoneView stone {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.stone};
       if ((stone.instance_buffer == nullptr) || stone.instance_count == 0 ||
           (m_vegetationPipeline->stone_shader() == nullptr) ||
           (m_vegetationPipeline->m_stoneVao == 0U) ||
@@ -518,12 +541,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
-    case PlantBatchCmdIndex: {
+    case DecorationBatchCmd::Kind::Plant: {
       if (!m_vegetationPipeline) {
         ++i;
         continue;
       }
-      const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
+      struct PlantView { Buffer *instance_buffer; std::size_t instance_count; const PlantBatchParams &params; };
+      const PlantView plant {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.plant};
 
       if ((plant.instance_buffer == nullptr) || plant.instance_count == 0 ||
           (m_vegetationPipeline->plant_shader() == nullptr) ||
@@ -607,12 +631,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
-    case PineBatchCmdIndex: {
+    case DecorationBatchCmd::Kind::Pine: {
       if (!m_vegetationPipeline) {
         ++i;
         continue;
       }
-      const auto &pine = std::get<PineBatchCmdIndex>(cmd);
+      struct PineView { Buffer *instance_buffer; std::size_t instance_count; const PineBatchParams &params; };
+      const PineView pine {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.pine};
 
       if ((pine.instance_buffer == nullptr) || pine.instance_count == 0 ||
           (m_vegetationPipeline->pine_shader() == nullptr) ||
@@ -694,12 +719,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
-    case OliveBatchCmdIndex: {
+    case DecorationBatchCmd::Kind::Olive: {
       if (!m_vegetationPipeline) {
         ++i;
         continue;
       }
-      const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
+      struct OliveView { Buffer *instance_buffer; std::size_t instance_count; const OliveBatchParams &params; };
+      const OliveView olive {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.olive};
 
       if ((olive.instance_buffer == nullptr) || olive.instance_count == 0 ||
           (m_vegetationPipeline->olive_shader() == nullptr) ||
@@ -782,12 +808,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
-    case FireCampBatchCmdIndex: {
+    case DecorationBatchCmd::Kind::FireCamp: {
       if (!m_vegetationPipeline) {
         ++i;
         continue;
       }
-      const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
+      struct FireCampView { Buffer *instance_buffer; std::size_t instance_count; const FireCampBatchParams &params; };
+      const FireCampView firecamp {deco_cmd_.instance_buffer, deco_cmd_.instance_count, deco_cmd_.firecamp};
 
       if ((firecamp.instance_buffer == nullptr) ||
           firecamp.instance_count == 0 ||
@@ -899,6 +926,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
       break;
     }
+      }  // switch (deco_cmd_.kind)
+      break;
+    }  // case DecorationBatchCmdIndex
     case RainBatchCmdIndex: {
       const auto &rain = std::get<RainBatchCmdIndex>(cmd);
       if (m_rainPipeline == nullptr || !m_rainPipeline->is_initialized()) {
@@ -907,8 +937,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_rainPipeline->render(cam, rain.params);
       break;
     }
-    case TerrainChunkCmdIndex: {
-      const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
+    case WorldChunkCmdIndex: {
+      const auto &terrain = std::get<WorldChunkCmdIndex>(cmd);
 
       Shader *active_shader = terrain.params.is_ground_plane
                                   ? m_terrainPipeline->m_groundShader
@@ -1554,6 +1584,141 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       break;
     }
+    case DrawPartCmdIndex: {
+      // Unified draw-part dispatch. When adjacent sorted commands share the
+      // same (mesh, material, texture, material_id) tuple and carry no bone
+      // palette, Render::Pipeline::parts_are_compatible says they may fuse
+      // into a single glDrawElementsInstanced call — routed through
+      // MeshInstancingPipeline, the same path MeshCmd uses.
+      const auto &part = std::get<DrawPartCmdIndex>(cmd);
+      if (part.mesh == nullptr) {
+        break;
+      }
+
+      const Render::ShaderQuality shader_quality =
+          Render::GraphicsSettings::instance().features().shader_quality;
+      Shader *active_shader =
+          (part.material != nullptr) ? part.material->resolve(shader_quality)
+                                     : nullptr;
+      if (active_shader == nullptr) {
+        active_shader = m_basicShader;
+      }
+      if (active_shader == nullptr) {
+        break;
+      }
+
+      if (polygon_offset_enabled) {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        polygon_offset_enabled = false;
+      }
+
+      const float part_alpha = part.alpha;
+      const bool is_transparent = part_alpha < k_opaque_threshold;
+
+      std::optional<DepthMaskScope> transparent_depth_scope;
+      std::optional<BlendScope> transparent_blend_scope;
+      glDepthMask(GL_TRUE);
+      if (is_transparent) {
+        transparent_depth_scope.emplace(false);
+        transparent_blend_scope.emplace(true);
+        glDepthFunc(GL_LEQUAL);
+      }
+
+      auto *uniforms =
+          m_characterPipeline
+              ? m_characterPipeline->resolve_uniforms(active_shader)
+              : nullptr;
+      if (uniforms == nullptr) {
+        if (is_transparent) {
+          glDepthFunc(GL_LESS);
+        }
+        break;
+      }
+
+      if (m_lastBoundShader != active_shader) {
+        active_shader->use();
+        if (uniforms->view_proj != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->view_proj, view_proj);
+        }
+        m_lastBoundShader = active_shader;
+      }
+
+      // Peek-ahead: find the longest adjacent run of compatible DrawPartCmds.
+      // The shader must advertise a u_instanced uniform, we must not be in
+      // transparent mode (instanced batch doesn't depth-sort), and the
+      // instancing pipeline must be live. Mirrors the MeshCmd branch.
+      std::size_t part_batch_end = i + 1;
+      constexpr std::size_t k_draw_part_min_run = 4;
+      if (m_meshInstancingPipeline &&
+          m_meshInstancingPipeline->is_initialized() && !is_transparent &&
+          uniforms->instanced != Shader::InvalidUniform &&
+          part.palette.empty()) {
+        while (part_batch_end < count) {
+          const auto &next_cmd = queue.get_sorted(part_batch_end);
+          if (next_cmd.index() != DrawPartCmdIndex) {
+            break;
+          }
+          const auto &next_part = std::get<DrawPartCmdIndex>(next_cmd);
+          if (!Render::Pipeline::parts_are_compatible(part, next_part)) {
+            break;
+          }
+          ++part_batch_end;
+        }
+      }
+      const std::size_t part_batch_size = part_batch_end - i;
+
+      Texture *tex_to_use =
+          (part.texture != nullptr)
+              ? part.texture
+              : (m_resources ? m_resources->white() : nullptr);
+      if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+        tex_to_use->bind(0);
+        m_lastBoundTexture = tex_to_use;
+        active_shader->set_uniform(uniforms->texture, 0);
+      }
+      active_shader->set_uniform(uniforms->use_texture,
+                                 part.texture != nullptr);
+      active_shader->set_uniform(uniforms->material_id, part.material_id);
+
+      if (part_batch_size >= k_draw_part_min_run) {
+        // Instanced fast path: one glDrawElementsInstanced for the run.
+        active_shader->set_uniform(uniforms->instanced, true);
+
+        m_meshInstancingPipeline->begin_batch(part.mesh, active_shader,
+                                              part.texture);
+        for (std::size_t j = i; j < part_batch_end; ++j) {
+          const auto &batch_part = std::get<DrawPartCmdIndex>(
+              queue.get_sorted(j));
+          m_meshInstancingPipeline->accumulate(batch_part.world,
+                                               batch_part.color,
+                                               batch_part.alpha,
+                                               batch_part.material_id);
+        }
+        m_meshInstancingPipeline->flush();
+
+        active_shader->set_uniform(uniforms->instanced, false);
+        i = part_batch_end - 1;
+      } else {
+        // Non-fused path — single part draw with uniform setup.
+        active_shader->set_uniform(uniforms->model, part.world);
+        if (uniforms->view_proj == Shader::InvalidUniform &&
+            uniforms->mvp != Shader::InvalidUniform) {
+          QMatrix4x4 const mvp = view_proj * part.world;
+          active_shader->set_uniform(uniforms->mvp, mvp);
+        }
+        active_shader->set_uniform(uniforms->color, part.color);
+        active_shader->set_uniform(uniforms->alpha, part_alpha);
+        if (uniforms->instanced != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->instanced, false);
+        }
+        part.mesh->draw();
+      }
+
+      if (is_transparent) {
+        glDepthFunc(GL_LESS);
+      }
+      break;
+    }
     case GridCmdIndex: {
       if (m_effectsPipeline->m_gridShader == nullptr) {
         break;
@@ -1699,8 +1864,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = m_primitiveBatchPipeline->shader();
       break;
     }
-    case HealingBeamCmdIndex: {
-      const auto &beam = std::get<HealingBeamCmdIndex>(cmd);
+    case EffectBatchCmdIndex: {
+      const auto &eff_cmd_ = std::get<EffectBatchCmdIndex>(cmd);
+      switch (eff_cmd_.kind) {
+      case EffectBatchCmd::Kind::HealingBeam: {
+      struct HealingBeamView { const QVector3D &start_pos; const QVector3D &end_pos; const QVector3D &color; float progress; float beam_width; float intensity; float time; };
+      const HealingBeamView beam {eff_cmd_.position, eff_cmd_.end_pos, eff_cmd_.color, eff_cmd_.progress, eff_cmd_.beam_width, eff_cmd_.intensity, eff_cmd_.time};
       if (m_healingBeamPipeline == nullptr ||
           !m_healingBeamPipeline->is_initialized()) {
         break;
@@ -1711,8 +1880,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
-    case HealerAuraCmdIndex: {
-      const auto &aura = std::get<HealerAuraCmdIndex>(cmd);
+    case EffectBatchCmd::Kind::HealerAura: {
+      struct HealerAuraView { const QVector3D &position; const QVector3D &color; float radius; float intensity; float time; };
+      const HealerAuraView aura {eff_cmd_.position, eff_cmd_.color, eff_cmd_.radius, eff_cmd_.intensity, eff_cmd_.time};
       if (m_healerAuraPipeline == nullptr ||
           !m_healerAuraPipeline->is_initialized()) {
         break;
@@ -1723,8 +1893,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
-    case CombatDustCmdIndex: {
-      const auto &dust = std::get<CombatDustCmdIndex>(cmd);
+    case EffectBatchCmd::Kind::CombatDust: {
+      struct CombatDustView { const QVector3D &position; const QVector3D &color; float radius; float intensity; float time; };
+      const CombatDustView dust {eff_cmd_.position, eff_cmd_.color, eff_cmd_.radius, eff_cmd_.intensity, eff_cmd_.time};
       if (m_combatDustPipeline == nullptr ||
           !m_combatDustPipeline->is_initialized()) {
         break;
@@ -1735,8 +1906,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
-    case BuildingFlameCmdIndex: {
-      const auto &flame = std::get<BuildingFlameCmdIndex>(cmd);
+    case EffectBatchCmd::Kind::BuildingFlame: {
+      struct BuildingFlameView { const QVector3D &position; const QVector3D &color; float radius; float intensity; float time; };
+      const BuildingFlameView flame {eff_cmd_.position, eff_cmd_.color, eff_cmd_.radius, eff_cmd_.intensity, eff_cmd_.time};
       if (m_combatDustPipeline == nullptr ||
           !m_combatDustPipeline->is_initialized()) {
         break;
@@ -1747,8 +1919,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
-    case StoneImpactCmdIndex: {
-      const auto &impact = std::get<StoneImpactCmdIndex>(cmd);
+    case EffectBatchCmd::Kind::StoneImpact: {
+      struct StoneImpactView { const QVector3D &position; const QVector3D &color; float radius; float intensity; float time; };
+      const StoneImpactView impact {eff_cmd_.position, eff_cmd_.color, eff_cmd_.radius, eff_cmd_.intensity, eff_cmd_.time};
       if (m_combatDustPipeline == nullptr ||
           !m_combatDustPipeline->is_initialized()) {
         break;
@@ -1759,6 +1932,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
+      }  // switch (eff_cmd_.kind)
+      break;
+    }  // case EffectBatchCmdIndex
     case ModeIndicatorCmdIndex: {
       const auto &mc = std::get<ModeIndicatorCmdIndex>(cmd);
 
@@ -1789,15 +1965,114 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_lastBoundShader = nullptr;
       break;
     }
+    case RiggedCreatureCmdIndex: {
+      // Stage 16.4 — coalesce contiguous compatible RiggedCreatureCmds
+      // (same mesh, same material, no texture) into one
+      // glDrawElementsInstanced. Textured / heterogeneous / single-cmd
+      // tail items fall through to the per-cmd path below.
+      if (polygon_offset_enabled) {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+        polygon_offset_enabled = false;
+      }
+      glDepthMask(GL_TRUE);
+      if (!m_riggedCharacterPipeline ||
+          !m_riggedCharacterPipeline->is_initialized()) {
+        break;
+      }
+
+      const auto &head = std::get<RiggedCreatureCmdIndex>(cmd);
+      std::size_t const cap =
+          m_riggedCharacterPipeline->max_instances_per_batch();
+      std::size_t group = 1;
+      if (head.texture == nullptr && head.mesh != nullptr && cap >= 2 &&
+          m_riggedCharacterPipeline->instanced_shader() != nullptr) {
+        std::size_t j = i + 1;
+        while (j < count && (j - i) < cap &&
+               queue.get_sorted(j).index() == RiggedCreatureCmdIndex) {
+          const auto &nxt = std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
+          if (nxt.mesh != head.mesh || nxt.material != head.material ||
+              nxt.texture != nullptr) {
+            break;
+          }
+          ++j;
+        }
+        group = j - i;
+      }
+
+      if (group >= 2) {
+        // Build a temporary contiguous array of RiggedCreatureCmd
+        // (variant access cost is small; the coalescer expects a
+        // pointer). Reuse a thread-local buffer to avoid alloc churn.
+        thread_local std::vector<RiggedCreatureCmd> rig_batch_scratch;
+        rig_batch_scratch.clear();
+        rig_batch_scratch.reserve(group);
+        for (std::size_t k = 0; k < group; ++k) {
+          rig_batch_scratch.push_back(
+              std::get<RiggedCreatureCmdIndex>(queue.get_sorted(i + k)));
+        }
+        if (m_riggedCharacterPipeline->draw_instanced(
+                rig_batch_scratch.data(), group, view_proj)) {
+          m_lastBoundShader = m_riggedCharacterPipeline->instanced_shader();
+          m_lastBoundTexture = nullptr;
+          // Account for budget per cmd consumed.
+          for (std::size_t k = 1; k < group; ++k) {
+            m_frame_tracker.record_executed();
+          }
+          i += group - 1; // bottom ++i bumps the last
+          break;
+        }
+        // draw_instanced returned false: fall back to single draw of head.
+      }
+
+      m_riggedCharacterPipeline->draw(head, view_proj);
+      m_lastBoundShader = m_riggedCharacterPipeline->shader();
+      m_lastBoundTexture = head.texture;
+      break;
+    }
     default:
       break;
     }
+
+    // Frame budget check: only skip purely decorative Low-priority commands
+    // past the hard deadline. Normal-priority commands (units, meshes) must
+    // always render to completion, otherwise subsets of units flicker on and
+    // off frame-to-frame as the defer point moves with timing jitter.
+    m_frame_tracker.record_executed();
+    if (m_frame_budget_config.allow_partial_render &&
+        m_frame_tracker.should_defer(m_frame_budget_config)) {
+      std::size_t next_i = i + 1;
+      if (next_i < count) {
+        auto next_prio = extract_cmd_priority(queue.get_sorted(next_i));
+        if (next_prio >= CommandPriority::Low) {
+          // Scan ahead and drop only the Low-priority tail; if there are any
+          // higher-priority commands still queued, keep processing normally.
+          bool only_low_remaining = true;
+          for (std::size_t j = next_i; j < count; ++j) {
+            if (extract_cmd_priority(queue.get_sorted(j)) <
+                CommandPriority::Low) {
+              only_low_remaining = false;
+              break;
+            }
+          }
+          if (only_low_remaining) {
+            for (std::size_t j = next_i; j < count; ++j) {
+              m_frame_tracker.record_deferred();
+            }
+            break;
+          }
+        }
+      }
+    }
+
     ++i;
   }
   if (m_lastBoundShader != nullptr) {
     m_lastBoundShader->release();
     m_lastBoundShader = nullptr;
   }
+
+  m_frame_tracker.mark_complete();
+  m_frame_tracker.end_frame();
 }
 
 } // namespace Render::GL

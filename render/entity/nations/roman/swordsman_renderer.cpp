@@ -4,6 +4,7 @@
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/shield_renderer.h"
 #include "../../../equipment/weapons/sword_renderer.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -193,16 +194,18 @@ public:
       if (sword_renderer) {
         sword_renderer->set_config(sword_config);
       }
-      sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*sword, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     auto shield = registry.get(EquipmentCategory::Weapon, "shield_roman");
     if (shield) {
-      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*shield, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
 
     if (!is_attacking && extras.has_scabbard) {
-      drawScabbard(ctx, pose, v, extras, out);
+      EquipmentBatch batch;
+      drawScabbard(ctx, pose, v, extras, batch);
+      submit_equipment_batch(batch, out);
     }
   }
 
@@ -213,7 +216,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -224,18 +227,18 @@ public:
     auto &registry = EquipmentRegistry::instance();
     auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
     if (armor) {
-      armor->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
     }
 
     auto shoulder_cover =
         registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
     if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*shoulder_cover, ctx, pose.body_frames, v.palette, anim, out);
     }
 
     auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
     if (greaves) {
-      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*greaves, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
@@ -278,21 +281,17 @@ private:
 
   static void drawScabbard(const DrawContext &ctx, const HumanoidPose &,
                            const HumanoidVariant &v, const KnightExtras &extras,
-                           ISubmitter &out) {
+                           EquipmentBatch &batch) {
     using HP = HumanProportions;
 
     QVector3D const hip(0.10F, HP::WAIST_Y - 0.04F, -0.02F);
     QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
     float const sheath_r = extras.swordWidth * 0.85F;
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, hip, tip, sheath_r),
-             v.palette.leather * 0.9F, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, hip, tip, sheath_r), v.palette.leather * 0.9F, nullptr, 1.0F, 0});
 
-    out.mesh(get_unit_cone(),
-             cone_from_to(ctx.model, tip,
-                          tip + QVector3D(-0.02F, -0.02F, -0.02F), sheath_r),
-             extras.metal_color, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_cone(), nullptr, cone_from_to(ctx.model, tip,
+                          tip + QVector3D(-0.02F, -0.02F, -0.02F), sheath_r), extras.metal_color, nullptr, 1.0F, 0});
   }
 
   auto

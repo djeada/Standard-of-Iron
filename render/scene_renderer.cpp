@@ -1,4 +1,5 @@
 #include "scene_renderer.h"
+#include "render_backend_factory.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/nation_registry.h"
@@ -23,16 +24,19 @@
 #include "gl/primitives.h"
 #include "gl/resources.h"
 #include "graphics_settings.h"
-#include "ground/firecamp_gpu.h"
-#include "ground/grass_gpu.h"
-#include "ground/pine_gpu.h"
-#include "ground/plant_gpu.h"
-#include "ground/stone_gpu.h"
-#include "ground/terrain_gpu.h"
+#include "decoration_gpu.h"
+#include "world_chunk.h"
 #include "horse/rig.h"
 #include "humanoid/rig.h"
+#include "pipeline/lod_selector.h"
 #include "pose_palette_cache.h"
 #include "primitive_batch.h"
+#include "pass/construction_preview_pass.h"
+#include "pass/frame_context.h"
+#include "pass/frame_pass_runner.h"
+#include "pass/primitive_flush_pass.h"
+#include "profiling/frame_profile.h"
+#include "software_backend.h"
 #include "submitter.h"
 #include "template_cache.h"
 #include "visibility_budget.h"
@@ -57,7 +61,7 @@ namespace {
 const QVector3D k_axis_x(1.0F, 0.0F, 0.0F);
 const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
-constexpr uint32_t k_animation_cache_cleanup_mask = 0xFF;
+constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
 
 float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
@@ -114,13 +118,17 @@ struct RenderEntry {
 };
 } // namespace
 
-Renderer::Renderer() { m_active_queue = &m_queues[m_fill_queue_index]; }
+Renderer::Renderer(ShaderQuality quality)
+    : m_shader_quality(quality) {
+  m_active_queue = &m_queues[m_fill_queue_index];
+}
 
 Renderer::~Renderer() { shutdown(); }
 
 auto Renderer::initialize() -> bool {
   if (!m_backend) {
-    m_backend = std::make_shared<Backend>();
+    m_backend = RenderBackendFactory::create(m_shader_quality);
+    m_gl_backend = dynamic_cast<Backend *>(m_backend.get());
   }
   m_backend->initialize();
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
@@ -131,10 +139,17 @@ auto Renderer::initialize() -> bool {
 
 void Renderer::shutdown() {
   cancel_async_template_prewarm();
+  m_gl_backend = nullptr;
   m_backend.reset();
 }
 
 void Renderer::begin_frame() {
+
+  auto &profile = Render::Profiling::global_profile();
+  profile.reset();
+  profile.frame_index += 1;
+  Render::Profiling::PhaseScope const collect_scope(
+      &profile, Render::Profiling::Phase::Collection);
 
   advance_pose_cache_frame();
   advance_horse_profile_cache_frame();
@@ -151,6 +166,12 @@ void Renderer::begin_frame() {
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
+
+  // Stage 15.5c — bone-palette arena lifetime matches submit→dispatch.
+  // Reset at frame start so the queue that will be filled this frame
+  // starts with fresh storage; the previous frame's render queue has
+  // already been executed by the prior end_frame() call.
+  m_bone_palette_arena.reset_frame();
 
   if (m_camera != nullptr) {
     m_view_proj =
@@ -169,15 +190,48 @@ void Renderer::end_frame() {
     return;
   }
   if (m_backend && (m_camera != nullptr)) {
+    auto &profile = Render::Profiling::global_profile();
     std::swap(m_fill_queue_index, m_render_queue_index);
     DrawQueue &render_queue = m_queues[m_render_queue_index];
-    render_queue.sort_for_batching();
+    {
+      Render::Profiling::PhaseScope const sort_scope(
+          &profile, Render::Profiling::Phase::Sort);
+      render_queue.sort_for_batching();
+    }
+    profile.draw_calls = static_cast<std::uint64_t>(render_queue.size());
     m_backend->set_animation_time(m_accumulated_time);
-    m_backend->execute(render_queue, *m_camera);
+    {
+      Render::Profiling::PhaseScope const play_scope(
+          &profile, Render::Profiling::Phase::Playback);
+      // Stage 16.2 — push every dirty bone-palette slab to its UBO once
+      // per frame, after submit but before backend dispatch. The
+      // pipeline binds slices via glBindBufferRange at draw time.
+      m_bone_palette_arena.flush_to_gpu();
+      m_backend->execute(render_queue, *m_camera);
+    }
+    constexpr double k_frame_budget_ms = 16.67;
+    profile.budget_headroom_ms =
+        k_frame_budget_ms -
+        static_cast<double>(profile.total_us()) / 1000.0;
   }
 }
 
 void Renderer::set_camera(Camera *camera) { m_camera = camera; }
+
+auto Renderer::render_software_preview(int width, int height) -> QImage {
+  if (m_camera == nullptr || width <= 0 || height <= 0) {
+    return QImage();
+  }
+  DrawQueue const &queue = m_queues[m_render_queue_index];
+  SoftwareBackend backend;
+  Render::Software::RasterSettings settings;
+  settings.width = width;
+  settings.height = height;
+  backend.set_settings(settings);
+  backend.begin_frame();
+  backend.execute(queue, *m_camera);
+  return backend.last_frame().copy();
+}
 
 void Renderer::set_clear_color(float r, float g, float b, float a) {
   if (m_backend) {
@@ -260,6 +314,33 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
+void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+                    const QVector3D &color, Texture *texture, float alpha,
+                    int material_id) {
+  if (mesh == nullptr) {
+    return;
+  }
+  if (material == nullptr) {
+    // No material → degrade to legacy MeshCmd so we honour the currently
+    // bound shader (shadow / flag / etc.) without accidentally dropping
+    // it via DrawPartCmd's shader-from-material resolution.
+    this->mesh(mesh, model, color, texture, alpha, material_id);
+    return;
+  }
+  float const effective_alpha = alpha * m_alpha_override;
+  DrawPartCmd cmd;
+  cmd.mesh = mesh;
+  cmd.material = material;
+  cmd.world = model;
+  cmd.color = color;
+  cmd.alpha = effective_alpha;
+  cmd.texture = texture;
+  cmd.material_id = material_id;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color, float alpha) {
 
@@ -291,11 +372,12 @@ void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  GrassBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::Grass;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
-  cmd.params.time = m_accumulated_time;
+  cmd.grass = params;
+  cmd.grass.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -305,10 +387,11 @@ void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  StoneBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::Stone;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
+  cmd.stone = params;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -318,11 +401,12 @@ void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  PlantBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::Plant;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
-  cmd.params.time = m_accumulated_time;
+  cmd.plant = params;
+  cmd.plant.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -332,11 +416,12 @@ void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  PineBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::Pine;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
-  cmd.params.time = m_accumulated_time;
+  cmd.pine = params;
+  cmd.pine.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -346,11 +431,12 @@ void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  OliveBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::Olive;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
-  cmd.params.time = m_accumulated_time;
+  cmd.olive = params;
+  cmd.olive.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -361,11 +447,12 @@ void Renderer::firecamp_batch(Buffer *instance_buffer,
       (m_active_queue == nullptr)) {
     return;
   }
-  FireCampBatchCmd cmd;
+  DecorationBatchCmd cmd;
+  cmd.kind = DecorationBatchCmd::Kind::FireCamp;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
-  cmd.params = params;
-  cmd.params.time = m_accumulated_time;
+  cmd.firecamp = params;
+  cmd.firecamp.time = m_accumulated_time;
   m_active_queue->submit(std::move(cmd));
 }
 
@@ -390,7 +477,7 @@ void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
   if ((mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
-  TerrainChunkCmd cmd;
+  WorldChunkCmd cmd;
   cmd.mesh = mesh;
   cmd.model = model;
   cmd.params = params;
@@ -441,7 +528,7 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
 
   DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
   ctx.renderer_id = profile.renderer_id;
-  ctx.backend = m_backend.get();
+  ctx.backend = m_gl_backend;
   ctx.camera = nullptr;
   ctx.allow_template_cache = true;
   ctx.template_prewarm = true;
@@ -593,14 +680,16 @@ void Renderer::selection_smoke(const QMatrix4x4 &model, const QVector3D &color,
 void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
                             const QVector3D &color, float progress,
                             float beam_width, float intensity, float time) {
-  HealingBeamCmd cmd;
-  cmd.start_pos = start;
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::HealingBeam;
+  cmd.position = start;
   cmd.end_pos = end;
   cmd.color = color;
   cmd.progress = progress;
   cmd.beam_width = beam_width;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.priority = CommandPriority::High;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -608,12 +697,14 @@ void Renderer::healing_beam(const QVector3D &start, const QVector3D &end,
 
 void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time) {
-  HealerAuraCmd cmd;
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::HealerAura;
   cmd.position = position;
   cmd.color = color;
   cmd.radius = radius;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.priority = CommandPriority::Normal;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -621,12 +712,14 @@ void Renderer::healer_aura(const QVector3D &position, const QVector3D &color,
 
 void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
                            float radius, float intensity, float time) {
-  CombatDustCmd cmd;
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::CombatDust;
   cmd.position = position;
   cmd.color = color;
   cmd.radius = radius;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.priority = CommandPriority::Low;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -634,12 +727,14 @@ void Renderer::combat_dust(const QVector3D &position, const QVector3D &color,
 
 void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
                               float radius, float intensity, float time) {
-  BuildingFlameCmd cmd;
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::BuildingFlame;
   cmd.position = position;
   cmd.color = color;
   cmd.radius = radius;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.priority = CommandPriority::Normal;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -647,12 +742,14 @@ void Renderer::building_flame(const QVector3D &position, const QVector3D &color,
 
 void Renderer::stone_impact(const QVector3D &position, const QVector3D &color,
                             float radius, float intensity, float time) {
-  StoneImpactCmd cmd;
+  EffectBatchCmd cmd;
+  cmd.kind = EffectBatchCmd::Kind::StoneImpact;
   cmd.position = position;
   cmd.color = color;
   cmd.radius = radius;
   cmd.intensity = intensity;
   cmd.time = time;
+  cmd.priority = CommandPriority::High;
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
@@ -668,6 +765,13 @@ void Renderer::mode_indicator(const QMatrix4x4 &model, int mode_type,
   if (m_active_queue != nullptr) {
     m_active_queue->submit(std::move(cmd));
   }
+}
+
+void Renderer::rigged(const RiggedCreatureCmd &cmd) {
+  if (m_active_queue == nullptr || cmd.mesh == nullptr) {
+    return;
+  }
+  m_active_queue->submit(cmd);
 }
 
 void Renderer::enqueue_selection_ring(
@@ -1001,11 +1105,9 @@ void Renderer::render_world(Engine::Core::World *world) {
     batcher.reserve(2000, 4000, 500);
   }
 
-  float fullShaderMaxDistance = 30.0F * (1.0F - batching_ratio * 0.7F);
-  if (batch_config.force_batching) {
-    fullShaderMaxDistance = 0.0F;
-  }
-  float fullShaderMaxDistanceSq = fullShaderMaxDistance * fullShaderMaxDistance;
+  float fullShaderMaxDistanceSq =
+      Render::Pipeline::compute_full_detail_max_distance_sq(
+          batching_ratio, batch_config.force_batching);
 
   BatchingSubmitter batchSubmitter(this, &batcher);
 
@@ -1112,6 +1214,7 @@ void Renderer::render_world(Engine::Core::World *world) {
     const QMatrix4x4 &model_matrix = entry.model_matrix;
 
     bool drawn_by_registry = false;
+    bool tier_is_minimal = false;
     if (m_entity_registry) {
       auto fn = m_entity_registry->get(entry.renderer_key);
       if (fn) {
@@ -1133,14 +1236,33 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         ctx.animation_time = animation_time;
         ctx.renderer_id = entry.renderer_key;
-        ctx.backend = m_backend.get();
+        ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
         ctx.animation_throttled = !should_update_animation;
 
-        bool useBatching = (batching_ratio > 0.0F) &&
-                           (entry.distance_sq > fullShaderMaxDistanceSq) &&
-                           !entry.selected && !entry.hovered &&
-                           !batch_config.never_batch;
+        Render::Pipeline::LodInputs lod_in;
+        lod_in.distance_sq = entry.distance_sq;
+        lod_in.visible_unit_count = visibleUnitCount;
+        lod_in.full_detail_max_distance_sq = fullShaderMaxDistanceSq;
+        lod_in.selected = entry.selected;
+        lod_in.hovered = entry.hovered;
+        lod_in.in_frustum = entry.in_frustum;
+        lod_in.fog_visible = entry.fog_visible;
+        lod_in.force_batching = batch_config.force_batching;
+        lod_in.never_batch = batch_config.never_batch;
+        // batching_ratio == 0 means the frame budget has disabled the
+        // batched submitter entirely; keep the full path in that case
+        // regardless of distance.
+        const bool batching_available = batching_ratio > 0.0F;
+        const auto tier = Render::Pipeline::select_lod(lod_in);
+        // Simplified + Minimal both prefer the batched submitter for the
+        // unit body; Minimal additionally drops decorations to shave cost
+        // for far / high-pressure frames.
+        const bool useBatching =
+            batching_available &&
+            (tier == Render::Pipeline::LodTier::Simplified ||
+             tier == Render::Pipeline::LodTier::Minimal);
+        tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
 
         if (useBatching) {
           fn(ctx, batchSubmitter);
@@ -1152,13 +1274,19 @@ void Renderer::render_world(Engine::Core::World *world) {
       }
     }
     if (drawn_by_registry) {
+      // Minimal tier: drop non-essential decorations. Selection rings still
+      // render because the player needs to locate their own units, but the
+      // mode indicator (attack/guard/hold/patrol pip) is a nice-to-have that
+      // can be hidden on far crowds without compromising legibility.
       if (entry.selected || entry.hovered) {
         enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
                                entry.selected, entry.hovered);
       }
-      enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
-                             entry.has_guard_mode, entry.has_hold_mode,
-                             entry.has_patrol);
+      if (!tier_is_minimal) {
+        enqueue_mode_indicator(entry.transform, entry.unit, entry.has_attack,
+                               entry.has_guard_mode, entry.has_hold_mode,
+                               entry.has_patrol);
+      }
       continue;
     }
 
@@ -1192,7 +1320,7 @@ void Renderer::render_world(Engine::Core::World *world) {
         ctx.hovered = entry.hovered;
         ctx.animation_time = m_accumulated_time;
         ctx.renderer_id = entry.renderer_key;
-        ctx.backend = m_backend.get();
+        ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
         ctx.animation_throttled = false;
         fn(ctx, *this);
@@ -1229,36 +1357,26 @@ void Renderer::render_world(Engine::Core::World *world) {
     render_non_unit_entry(entry);
   }
 
-  if ((m_active_queue != nullptr) && batcher.total_count() > 0) {
-    PrimitiveBatchParams params;
-    params.view_proj = m_view_proj;
+  // Stage 10: tail phases run through the FramePassRunner. Collection /
+  // culling / LOD / submit stay inline above because they read and mutate
+  // a thick tangle of renderer-private state; the trailing primitive flush
+  // and construction previews are self-contained, so they move first.
+  {
+    Render::Pass::FrameContext pass_ctx;
+    pass_ctx.renderer = this;
+    pass_ctx.world = world;
+    pass_ctx.queue = m_active_queue;
+    pass_ctx.frame_counter = m_frame_counter;
+    pass_ctx.view_proj = m_view_proj;
+    pass_ctx.primitive_batcher = &batcher;
+    pass_ctx.visibility = const_cast<Game::Map::VisibilityService *>(&vis);
+    pass_ctx.visibility_enabled = visibility_enabled;
 
-    if (batcher.sphere_count() > 0) {
-      PrimitiveBatchCmd cmd;
-      cmd.type = PrimitiveType::Sphere;
-      cmd.instances = batcher.sphere_data();
-      cmd.params = params;
-      m_active_queue->submit(std::move(cmd));
-    }
-
-    if (batcher.cylinder_count() > 0) {
-      PrimitiveBatchCmd cmd;
-      cmd.type = PrimitiveType::Cylinder;
-      cmd.instances = batcher.cylinder_data();
-      cmd.params = params;
-      m_active_queue->submit(std::move(cmd));
-    }
-
-    if (batcher.cone_count() > 0) {
-      PrimitiveBatchCmd cmd;
-      cmd.type = PrimitiveType::Cone;
-      cmd.instances = batcher.cone_data();
-      cmd.params = params;
-      m_active_queue->submit(std::move(cmd));
-    }
+    Render::Pass::FramePassRunner runner;
+    runner.add(std::make_unique<Render::Pass::PrimitiveFlushPass>());
+    runner.add(std::make_unique<Render::Pass::ConstructionPreviewPass>());
+    runner.execute(pass_ctx);
   }
-
-  render_construction_previews(world, vis, visibility_enabled);
 }
 
 void Renderer::prewarm_unit_templates(
@@ -1783,7 +1901,7 @@ void Renderer::prewarm_unit_templates(
 
       DrawContext ctx{resources(), &entity, nullptr, QMatrix4x4()};
       ctx.renderer_id = profile.renderer_id;
-      ctx.backend = m_backend.get();
+      ctx.backend = m_gl_backend;
       ctx.camera = nullptr;
       ctx.allow_template_cache = true;
       ctx.template_prewarm = true;
@@ -1909,15 +2027,15 @@ void Renderer::prewarm_unit_templates(
 }
 
 void Renderer::render_construction_previews(
-    Engine::Core::World *world, const Game::Map::VisibilityService &vis,
+    Engine::Core::World *world, const Game::Map::VisibilityService *vis,
     bool visibility_enabled) {
   if (world == nullptr || m_entity_registry == nullptr) {
     return;
   }
 
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (visibility_enabled) {
-    visibility_snapshot = vis.snapshot();
+  if (visibility_enabled && vis != nullptr) {
+    visibility_snapshot = vis->snapshot();
   }
 
   auto builders =
@@ -2001,7 +2119,7 @@ void Renderer::render_construction_previews(
     ctx.hovered = false;
     ctx.animation_time = m_accumulated_time;
     ctx.renderer_id = renderer_key;
-    ctx.backend = m_backend.get();
+    ctx.backend = m_gl_backend;
     ctx.camera = m_camera;
 
     float const prev_alpha = m_alpha_override;

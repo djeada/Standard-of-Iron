@@ -1,4 +1,5 @@
 #include "reins_renderer.h"
+#include "../../equipment_submit.h"
 
 #include "../../../entity/registry.h"
 #include "../../../gl/primitives.h"
@@ -11,7 +12,7 @@ void ReinsRenderer::render(const DrawContext &ctx,
                            const HorseBodyFrames &frames,
                            const HorseVariant &variant,
                            const HorseAnimationContext &,
-                           ISubmitter &out) const {
+                           EquipmentBatch &batch) const {
 
   const HorseAttachmentFrame &muzzle = frames.muzzle;
   const HorseAttachmentFrame &back = frames.back_center;
@@ -55,15 +56,15 @@ void ReinsRenderer::render(const DrawContext &ctx,
     endpoints[i].bit = bit_pos;
     endpoints[i].handle = rein_handle;
 
-    out.cylinder(bit_pos, mid_point, k_rein_radius, variant.tack_color, 1.0F);
-    out.cylinder(mid_point, rein_handle, k_rein_radius, variant.tack_color,
-                 1.0F);
+    batch.cylinders.push_back({bit_pos, mid_point, k_rein_radius, variant.tack_color, 1.0F});
+    batch.cylinders.push_back({mid_point, rein_handle, k_rein_radius, variant.tack_color,
+                 1.0F});
   }
 
-  out.cylinder(endpoints[0].bit, endpoints[1].bit, k_rein_radius,
-               variant.tack_color, 1.0F);
-  out.cylinder(endpoints[0].handle, endpoints[1].handle, k_rein_radius,
-               variant.tack_color, 1.0F);
+  batch.cylinders.push_back({endpoints[0].bit, endpoints[1].bit, k_rein_radius,
+               variant.tack_color, 1.0F});
+  batch.cylinders.push_back({endpoints[0].handle, endpoints[1].handle, k_rein_radius,
+               variant.tack_color, 1.0F});
 }
 
 } // namespace Render::GL

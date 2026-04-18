@@ -69,7 +69,7 @@ endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
-find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql Multimedia)
+find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql OPTIONAL_COMPONENTS Multimedia)
 if(Qt6_FOUND)
     message(STATUS "Using Qt6")
     set(QT_VERSION_MAJOR 6)
@@ -361,7 +361,7 @@ target_link_libraries(standard_of_iron
         Qt${QT_VERSION_MAJOR}::Quick
         Qt${QT_VERSION_MAJOR}::Qml
     Qt${QT_VERSION_MAJOR}::Sql
-        Qt${QT_VERSION_MAJOR}::Multimedia
+        $<$<TARGET_EXISTS:Qt${QT_VERSION_MAJOR}::Multimedia>:Qt${QT_VERSION_MAJOR}::Multimedia>
         ${OPENGL_LIBRARIES}
         engine_core
         render_gl

@@ -20,6 +20,7 @@ class UnitComponent;
 namespace Render::GL {
 
 auto torso_mesh_without_bottom_cap() -> Mesh *;
+void align_torso_mesh_forward(QMatrix4x4 &model) noexcept;
 
 void advance_pose_cache_frame();
 void clear_humanoid_caches();
@@ -99,12 +100,7 @@ public:
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
       Engine::Core::TransformComponent *transform_comp) const -> float;
 
-  void draw_simplified_body(const DrawContext &ctx, const HumanoidVariant &v,
-                            HumanoidPose &pose, ISubmitter &out) const;
-
-  void draw_minimal_body(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose, ISubmitter &out) const;
-
+  // Body draws are submitted by the CreatureSpec walker for all live LODs.
   static auto frame_local_position(const AttachmentFrame &frame,
                                    const QVector3D &local) -> QVector3D;
 
@@ -132,9 +128,6 @@ protected:
   static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
   static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;
-
-  void draw_common_body(const DrawContext &ctx, const HumanoidVariant &v,
-                        HumanoidPose &pose, ISubmitter &out) const;
 
   void render_procedural(const DrawContext &ctx, const AnimationInputs &anim,
                          ISubmitter &out) const;

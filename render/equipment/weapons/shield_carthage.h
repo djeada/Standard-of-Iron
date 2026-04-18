@@ -14,7 +14,7 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
 private:
   float m_scale_multiplier = 1.0F;

@@ -9,6 +9,10 @@
         <file>assets/shaders/archer_carthage.vert</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
+        <file>assets/shaders/character_skinned.vert</file>
+        <file>assets/shaders/character_skinned.frag</file>
+        <file>assets/shaders/character_skinned_instanced.vert</file>
+        <file>assets/shaders/character_skinned_instanced.frag</file>
         <file>assets/shaders/bridge.frag</file>
         <file>assets/shaders/bridge.vert</file>
         <file>assets/shaders/campaign_terrain.frag</file>
@@ -177,5 +181,10 @@
         <file>assets/data/troops/base.json</file>
         <file>assets/data/nations/roman_republic.json</file>
         <file>assets/data/nations/carthage.json</file>
+
+        <!-- Shared shader includes -->
+        <file>assets/shaders/include/noise.glsl</file>
+        <file>assets/shaders/include/lighting.glsl</file>
+        <file>assets/shaders/include/materials.glsl</file>
     </qresource>
 </RCC>

@@ -3,6 +3,7 @@
 #include "../equipment/equipment_registry.h"
 #include "../equipment/weapons/shield_renderer.h"
 #include "../equipment/weapons/sword_renderer.h"
+#include "../equipment/equipment_submit.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../humanoid/mounted_pose_controller.h"
@@ -158,7 +159,7 @@ void MountedKnightRendererBase::draw_equipment(
       if (auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get())) {
         sword_renderer->set_config(sword_config);
       }
-      sword->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*sword, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -166,7 +167,7 @@ void MountedKnightRendererBase::draw_equipment(
     auto shield =
         registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
     if (shield) {
-      shield->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*shield, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -174,7 +175,7 @@ void MountedKnightRendererBase::draw_equipment(
     auto shoulder_cover =
         registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
     if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*shoulder_cover, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 }
@@ -203,7 +204,7 @@ void MountedKnightRendererBase::draw_helmet(const DrawContext &ctx,
         }
       }
     }
-    helmet->render(ctx, frames, v.palette, anim_ctx, out);
+    render_equipment(*helmet, ctx, frames, v.palette, anim_ctx, out);
   }
 }
 
@@ -220,7 +221,7 @@ void MountedKnightRendererBase::draw_armor(const DrawContext &ctx,
   auto armor =
       registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
   if (armor) {
-    armor->render(ctx, pose.body_frames, v.palette, anim, out);
+    render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
   }
 }
 

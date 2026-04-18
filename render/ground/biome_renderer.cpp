@@ -3,7 +3,7 @@
 #include "../gl/render_constants.h"
 #include "../scene_renderer.h"
 #include "gl/resources.h"
-#include "ground/grass_gpu.h"
+#include "decoration_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
 #include "spawn_validator.h"

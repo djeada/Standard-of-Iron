@@ -26,7 +26,7 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
   void set_config(const ShieldRenderConfig &config) { m_config = config; }
 

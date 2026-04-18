@@ -1,14 +1,11 @@
 #pragma once
 
-#include "ground/firecamp_gpu.h"
-#include "ground/grass_gpu.h"
-#include "ground/olive_gpu.h"
-#include "ground/pine_gpu.h"
-#include "ground/plant_gpu.h"
-#include "ground/rain_gpu.h"
-#include "ground/stone_gpu.h"
-#include "ground/terrain_gpu.h"
+#include "decoration_gpu.h"
+#include "draw_part.h"
+#include "frame_budget.h"
 #include "primitive_batch.h"
+#include "rain_gpu.h"
+#include "world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
@@ -21,9 +18,11 @@
 
 namespace Render::GL {
 class Mesh;
+class RiggedMesh;
 class Texture;
 class Buffer;
 class Shader;
+struct Material;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -40,6 +39,7 @@ struct MeshCmd {
   float alpha = 1.0F;
   int material_id = 0;
   class Shader *shader = nullptr;
+  CommandPriority priority{CommandPriority::Normal};
 };
 
 struct CylinderCmd {
@@ -48,6 +48,7 @@ struct CylinderCmd {
   QVector3D color{1.0F, 1.0F, 1.0F};
   float radius = 1.0F;
   float alpha = 1.0F;
+  CommandPriority priority{CommandPriority::Normal};
 };
 
 struct FogInstanceData {
@@ -60,57 +61,61 @@ struct FogInstanceData {
 struct FogBatchCmd {
   const FogInstanceData *instances = nullptr;
   std::size_t count = 0;
+  CommandPriority priority{CommandPriority::Low};
 };
 
-struct GrassBatchCmd {
-  Buffer *instance_buffer = nullptr;
-  std::size_t instance_count = 0;
-  GrassBatchParams params;
-};
+struct DecorationBatchCmd {
+  // Stage 18 — unified static decoration batch. Replaces the separate
+  // Grass/Stone/Plant/Pine/Olive/FireCamp BatchCmds. The backend
+  // dispatcher routes on `kind` to the appropriate sub-pipeline; all
+  // share the same (mesh, instance_buffer, per-instance pos/scale/variant)
+  // skeleton. Per-kind params (wind, flicker, etc.) live in the
+  // matching struct below and are only meaningful for their kind.
+  enum class Kind : std::uint8_t {
+    Grass = 0,
+    Stone,
+    Plant,
+    Pine,
+    Olive,
+    FireCamp
+  };
 
-struct StoneBatchCmd {
+  Kind kind = Kind::Grass;
+  const Material *material = nullptr;
   Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
-  StoneBatchParams params;
-};
 
-struct PlantBatchCmd {
-  Buffer *instance_buffer = nullptr;
-  std::size_t instance_count = 0;
-  PlantBatchParams params;
-};
+  GrassBatchParams grass{};
+  StoneBatchParams stone{};
+  PlantBatchParams plant{};
+  PineBatchParams pine{};
+  OliveBatchParams olive{};
+  FireCampBatchParams firecamp{};
 
-struct PineBatchCmd {
-  Buffer *instance_buffer = nullptr;
-  std::size_t instance_count = 0;
-  PineBatchParams params;
-};
-
-struct OliveBatchCmd {
-  Buffer *instance_buffer = nullptr;
-  std::size_t instance_count = 0;
-  OliveBatchParams params;
-};
-
-struct FireCampBatchCmd {
-  Buffer *instance_buffer = nullptr;
-  std::size_t instance_count = 0;
-  FireCampBatchParams params;
+  CommandPriority priority{CommandPriority::Low};
 };
 
 struct RainBatchCmd {
   Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
   RainBatchParams params;
+  CommandPriority priority{CommandPriority::Low};
 };
 
-struct TerrainChunkCmd {
+struct WorldChunkCmd {
+  // Stage 18 — terrain folds in here. A WorldChunkCmd carries a Mesh
+  // plus terrain Material + full TerrainChunkParams (the terrain
+  // shader is specialised and consumes the whole param set). Future
+  // static-world chunks (rock fields, roads) can reuse this cmd.
   Mesh *mesh = nullptr;
+  const Material *material = nullptr;
   QMatrix4x4 model;
+  BoundingBox aabb;
   TerrainChunkParams params;
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
   float depth_bias = 0.0F;
+  CommandPriority priority{CommandPriority::High};
 };
 
 struct GridCmd {
@@ -121,6 +126,7 @@ struct GridCmd {
   float cell_size = 1.0F;
   float thickness = 0.06F;
   float extent = 50.0F;
+  CommandPriority priority{CommandPriority::Low};
 };
 
 struct SelectionRingCmd {
@@ -129,6 +135,7 @@ struct SelectionRingCmd {
   QVector3D color{0, 0, 0};
   float alpha_inner = 0.6F;
   float alpha_outer = 0.25F;
+  CommandPriority priority{CommandPriority::Critical};
 };
 
 struct SelectionSmokeCmd {
@@ -136,48 +143,40 @@ struct SelectionSmokeCmd {
   QMatrix4x4 mvp;
   QVector3D color{1, 1, 1};
   float base_alpha = 0.15F;
+  CommandPriority priority{CommandPriority::Critical};
 };
 
-struct HealingBeamCmd {
-  QVector3D start_pos{0, 0, 0};
-  QVector3D end_pos{0, 0, 0};
-  QVector3D color{0.4F, 1.0F, 0.5F};
+struct EffectBatchCmd {
+  // Stage 18 — merges HealingBeam / HealerAura / CombatDust /
+  // BuildingFlame / StoneImpact. Each still renders through its own
+  // backend sub-pipeline; this wrapper unifies the DrawCmd variant
+  // slot and routes on `kind`.
+  enum class Kind : std::uint8_t {
+    HealingBeam = 0,
+    HealerAura,
+    CombatDust,
+    BuildingFlame,
+    StoneImpact
+  };
+
+  Kind kind = Kind::HealerAura;
+
+  // Positional data. `position` is used by aura/dust/flame/impact and
+  // as beam start; `end_pos` is the beam end.
+  QVector3D position{0.0F, 0.0F, 0.0F};
+  QVector3D end_pos{0.0F, 0.0F, 0.0F};
+  QVector3D color{1.0F, 1.0F, 1.0F};
+
+  // Shared scalar params.
+  float radius = 1.0F;
+  float intensity = 1.0F;
+  float time = 0.0F;
+
+  // Beam-only.
   float progress = 1.0F;
   float beam_width = 0.15F;
-  float intensity = 1.0F;
-  float time = 0.0F;
-};
 
-struct HealerAuraCmd {
-  QVector3D position{0, 0, 0};
-  QVector3D color{0.4F, 1.0F, 0.5F};
-  float radius = 5.0F;
-  float intensity = 1.0F;
-  float time = 0.0F;
-};
-
-struct CombatDustCmd {
-  QVector3D position{0, 0, 0};
-  QVector3D color{0.6F, 0.55F, 0.45F};
-  float radius = 2.0F;
-  float intensity = 0.7F;
-  float time = 0.0F;
-};
-
-struct BuildingFlameCmd {
-  QVector3D position{0, 0, 0};
-  QVector3D color{1.0F, 0.4F, 0.1F};
-  float radius = 3.0F;
-  float intensity = 0.8F;
-  float time = 0.0F;
-};
-
-struct StoneImpactCmd {
-  QVector3D position{0, 0, 0};
-  QVector3D color{0.75F, 0.65F, 0.50F};
-  float radius = 4.0F;
-  float intensity = 1.2F;
-  float time = 0.0F;
+  CommandPriority priority{CommandPriority::Normal};
 };
 
 struct ModeIndicatorCmd {
@@ -186,15 +185,44 @@ struct ModeIndicatorCmd {
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
   int mode_type = 0;
+  CommandPriority priority{CommandPriority::Critical};
+};
+
+// Stage 15.5b — GPU-skinned rigged creature draw. `bone_palette` points to
+// a contiguous array of `bone_count` world-space bone matrices owned by the
+// caller; the data must outlive the DrawQueue submit→flush cycle (same
+// contract as DrawPartCmd's BonePaletteRef). No production callsite emits
+// this yet — that's 15.5c. Until then the dispatch branch is exercised only
+// by tests, but it is wired through Backend::execute so the
+// std::variant<...> visit path and sort-key table are live.
+struct RiggedCreatureCmd {
+  RiggedMesh *mesh = nullptr;
+  const Material *material = nullptr;
+  QMatrix4x4 world;
+  // CPU-side bone palette pointer. Owned by Renderer::bone_palette_arena()
+  // and pointer-stable for the submit→dispatch lifetime. Software backend,
+  // tests, and any non-GPU consumer read from here.
+  const QMatrix4x4 *bone_palette = nullptr;
+  // GPU-side palette handle (Stage 16.2). `palette_ubo == 0` means the
+  // arena had no GL context when allocating; the pipeline then skips the
+  // bind and the shader falls back to identity skinning. `palette_offset`
+  // is the byte offset into the slab UBO for this palette.
+  std::uint32_t palette_ubo = 0;
+  std::uint32_t palette_offset = 0;
+  std::uint32_t bone_count = 0;
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float alpha = 1.0F;
+  Texture *texture = nullptr;
+  std::int32_t material_id = 0;
+  QVector3D variation_scale{1.0F, 1.0F, 1.0F};
+  CommandPriority priority{CommandPriority::Normal};
 };
 
 using DrawCmd =
     std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, GrassBatchCmd, StoneBatchCmd,
-                 PlantBatchCmd, PineBatchCmd, OliveBatchCmd, FireCampBatchCmd,
-                 RainBatchCmd, TerrainChunkCmd, PrimitiveBatchCmd,
-                 HealingBeamCmd, HealerAuraCmd, CombatDustCmd, BuildingFlameCmd,
-                 StoneImpactCmd, ModeIndicatorCmd>;
+                 MeshCmd, FogBatchCmd, DecorationBatchCmd, RainBatchCmd,
+                 WorldChunkCmd, PrimitiveBatchCmd, EffectBatchCmd,
+                 ModeIndicatorCmd, DrawPartCmd, RiggedCreatureCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -203,21 +231,14 @@ enum class DrawCmdType : std::uint8_t {
   Cylinder = 3,
   Mesh = 4,
   FogBatch = 5,
-  GrassBatch = 6,
-  StoneBatch = 7,
-  PlantBatch = 8,
-  PineBatch = 9,
-  OliveBatch = 10,
-  FireCampBatch = 11,
-  RainBatch = 12,
-  TerrainChunk = 13,
-  PrimitiveBatch = 14,
-  HealingBeam = 15,
-  HealerAura = 16,
-  CombatDust = 17,
-  BuildingFlame = 18,
-  StoneImpact = 19,
-  ModeIndicator = 20
+  DecorationBatch = 6,
+  RainBatch = 7,
+  WorldChunk = 8,
+  PrimitiveBatch = 9,
+  EffectBatch = 10,
+  ModeIndicator = 11,
+  DrawPart = 12,
+  RiggedCreature = 13
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -232,39 +253,30 @@ constexpr std::size_t CylinderCmdIndex =
     static_cast<std::size_t>(DrawCmdType::Cylinder);
 constexpr std::size_t FogBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FogBatch);
-constexpr std::size_t GrassBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::GrassBatch);
-constexpr std::size_t StoneBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::StoneBatch);
-constexpr std::size_t PlantBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::PlantBatch);
-constexpr std::size_t PineBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::PineBatch);
-constexpr std::size_t OliveBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::OliveBatch);
-constexpr std::size_t FireCampBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::FireCampBatch);
+constexpr std::size_t DecorationBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::DecorationBatch);
 constexpr std::size_t RainBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::RainBatch);
-constexpr std::size_t TerrainChunkCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::TerrainChunk);
+constexpr std::size_t WorldChunkCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::WorldChunk);
 constexpr std::size_t PrimitiveBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
-constexpr std::size_t HealingBeamCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::HealingBeam);
-constexpr std::size_t HealerAuraCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::HealerAura);
-constexpr std::size_t CombatDustCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::CombatDust);
-constexpr std::size_t BuildingFlameCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::BuildingFlame);
-constexpr std::size_t StoneImpactCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::StoneImpact);
+constexpr std::size_t EffectBatchCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::EffectBatch);
 constexpr std::size_t ModeIndicatorCmdIndex =
     static_cast<std::size_t>(DrawCmdType::ModeIndicator);
+constexpr std::size_t DrawPartCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::DrawPart);
+constexpr std::size_t RiggedCreatureCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::RiggedCreature);
 
 inline auto draw_cmd_type(const DrawCmd &cmd) -> DrawCmdType {
   return static_cast<DrawCmdType>(cmd.index());
+}
+
+inline auto extract_cmd_priority(const DrawCmd &cmd) -> CommandPriority {
+  return std::visit(
+      [](const auto &c) -> CommandPriority { return c.priority; }, cmd);
 }
 
 class DrawQueue {
@@ -330,12 +342,39 @@ private:
 
     m_temp_indices.resize(count);
 
+    // LSD radix sort: sort by the lower byte (bits 48-55) first, then by the
+    // higher byte (bits 56-63 = type_order). The final (most significant)
+    // pass dominates, so type_order becomes the primary sort criterion while
+    // the lower byte (terrain sort_byte, primitive type, …) acts as a
+    // tie-breaker within each type.
     {
       int histogram[BUCKETS] = {0};
 
       for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket =
-            static_cast<uint8_t>(m_sort_keys[i] >> k_sort_key_bucket_shift);
+        uint8_t const bucket =
+            static_cast<uint8_t>(m_sort_keys[i] >> 48) & 0xFF;
+        ++histogram[bucket];
+      }
+
+      int offsets[BUCKETS];
+      offsets[0] = 0;
+      for (int i = 1; i < BUCKETS; ++i) {
+        offsets[i] = offsets[i - 1] + histogram[i - 1];
+      }
+
+      for (std::size_t i = 0; i < count; ++i) {
+        uint8_t const bucket =
+            static_cast<uint8_t>(m_sort_keys[m_sort_indices[i]] >> 48) & 0xFF;
+        m_temp_indices[offsets[bucket]++] = m_sort_indices[i];
+      }
+    }
+
+    {
+      int histogram[BUCKETS] = {0};
+
+      for (std::size_t i = 0; i < count; ++i) {
+        auto const bucket = static_cast<uint8_t>(
+            m_sort_keys[m_temp_indices[i]] >> k_sort_key_bucket_shift);
         ++histogram[bucket];
       }
 
@@ -347,29 +386,7 @@ private:
 
       for (std::size_t i = 0; i < count; ++i) {
         auto const bucket = static_cast<uint8_t>(
-            m_sort_keys[m_sort_indices[i]] >> k_sort_key_bucket_shift);
-        m_temp_indices[offsets[bucket]++] = m_sort_indices[i];
-      }
-    }
-
-    {
-      int histogram[BUCKETS] = {0};
-
-      for (std::size_t i = 0; i < count; ++i) {
-        uint8_t const bucket =
-            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
-        ++histogram[bucket];
-      }
-
-      int offsets[BUCKETS];
-      offsets[0] = 0;
-      for (int i = 1; i < BUCKETS; ++i) {
-        offsets[i] = offsets[i - 1] + histogram[i - 1];
-      }
-
-      for (std::size_t i = 0; i < count; ++i) {
-        uint8_t const bucket =
-            static_cast<uint8_t>(m_sort_keys[m_temp_indices[i]] >> 48) & 0xFF;
+            m_sort_keys[m_temp_indices[i]] >> k_sort_key_bucket_shift);
         m_sort_indices[offsets[bucket]++] = m_temp_indices[i];
       }
     }
@@ -378,24 +395,21 @@ private:
   [[nodiscard]] static auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
-      TerrainChunk = 0,
-      GrassBatch = 1,
-      StoneBatch = 2,
-      PlantBatch = 3,
-      PineBatch = 4,
-      OliveBatch = 5,
-      FireCampBatch = 6,
-      RainBatch = 7,
-      PrimitiveBatch = 8,
-      Mesh = 9,
-      Cylinder = 10,
-      FogBatch = 11,
-      SelectionSmoke = 12,
-      Grid = 13,
+      WorldChunk = 0,
+      DecorationBatch = 1,
+      RainBatch = 2,
+      PrimitiveBatch = 3,
+      Mesh = 4,
+      Cylinder = 5,
+      FogBatch = 6,
+      SelectionSmoke = 7,
+      Grid = 8,
+      EffectBatch = 9,
       SelectionRing = 16,
       ModeIndicator = 17
     };
 
+    // Indexed by DrawCmd::index(); must match DrawCmdType ordering.
     static constexpr uint8_t k_type_order[] = {
         static_cast<uint8_t>(RenderOrder::Grid),
         static_cast<uint8_t>(RenderOrder::SelectionRing),
@@ -403,19 +417,14 @@ private:
         static_cast<uint8_t>(RenderOrder::Cylinder),
         static_cast<uint8_t>(RenderOrder::Mesh),
         static_cast<uint8_t>(RenderOrder::FogBatch),
-        static_cast<uint8_t>(RenderOrder::GrassBatch),
-        static_cast<uint8_t>(RenderOrder::StoneBatch),
-        static_cast<uint8_t>(RenderOrder::PlantBatch),
-        static_cast<uint8_t>(RenderOrder::PineBatch),
-        static_cast<uint8_t>(RenderOrder::OliveBatch),
-        static_cast<uint8_t>(RenderOrder::FireCampBatch),
+        static_cast<uint8_t>(RenderOrder::DecorationBatch),
         static_cast<uint8_t>(RenderOrder::RainBatch),
-        static_cast<uint8_t>(RenderOrder::TerrainChunk),
+        static_cast<uint8_t>(RenderOrder::WorldChunk),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
-        15,
-        16,
-        17,
-        static_cast<uint8_t>(RenderOrder::ModeIndicator)};
+        static_cast<uint8_t>(RenderOrder::EffectBatch),
+        static_cast<uint8_t>(RenderOrder::ModeIndicator),
+        static_cast<uint8_t>(RenderOrder::Mesh),
+        static_cast<uint8_t>(RenderOrder::Mesh)};
 
     const std::size_t type_index = cmd.index();
     constexpr std::size_t type_count =
@@ -424,6 +433,11 @@ private:
                                    ? k_type_order[type_index]
                                    : static_cast<uint8_t>(type_index);
 
+    // Type order is the primary sort criterion — this preserves the required
+    // draw order (terrain -> units -> selection rings -> UI overlays).
+    // Priority is metadata used only by the frame-budget defer logic and
+    // MUST NOT influence sort order, otherwise critical commands (e.g.
+    // selection rings) end up rendered under the terrain.
     uint64_t key = static_cast<uint64_t>(type_order) << 56;
 
     if (cmd.index() == MeshCmdIndex) {
@@ -435,49 +449,21 @@ private:
       key |= ptr_bits16(mesh.shader) << 32;
       key |= ptr_bits16(mesh.mesh) << 16;
       key |= ptr_bits16(mesh.texture);
-    } else if (cmd.index() == GrassBatchCmdIndex) {
-      const auto &grass = std::get<GrassBatchCmdIndex>(cmd);
+    } else if (cmd.index() == DecorationBatchCmdIndex) {
+      const auto &deco = std::get<DecorationBatchCmdIndex>(cmd);
+      // Sub-sort by kind so same-kind draws batch contiguously.
+      key |= static_cast<uint64_t>(deco.kind) << 48;
       uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(grass.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
+          reinterpret_cast<uintptr_t>(deco.instance_buffer) &
+          0x0000FFFFFFFFFFFFU;
       key |= buffer_ptr;
-    } else if (cmd.index() == StoneBatchCmdIndex) {
-      const auto &stone = std::get<StoneBatchCmdIndex>(cmd);
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(stone.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
-      key |= buffer_ptr;
-    } else if (cmd.index() == PlantBatchCmdIndex) {
-      const auto &plant = std::get<PlantBatchCmdIndex>(cmd);
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(plant.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
-      key |= buffer_ptr;
-    } else if (cmd.index() == PineBatchCmdIndex) {
-      const auto &pine = std::get<PineBatchCmdIndex>(cmd);
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(pine.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
-      key |= buffer_ptr;
-    } else if (cmd.index() == OliveBatchCmdIndex) {
-      const auto &olive = std::get<OliveBatchCmdIndex>(cmd);
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(olive.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
-      key |= buffer_ptr;
-    } else if (cmd.index() == FireCampBatchCmdIndex) {
-      const auto &firecamp = std::get<FireCampBatchCmdIndex>(cmd);
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(firecamp.instance_buffer) &
-          0x0000FFFFFFFFFFFF;
-      key |= buffer_ptr;
-    } else if (cmd.index() == TerrainChunkCmdIndex) {
-      const auto &terrain = std::get<TerrainChunkCmdIndex>(cmd);
+    } else if (cmd.index() == WorldChunkCmdIndex) {
+      const auto &chunk = std::get<WorldChunkCmdIndex>(cmd);
       auto const sort_byte =
-          static_cast<uint64_t>((terrain.sort_key >> 8) & 0xFFU);
+          static_cast<uint64_t>((chunk.sort_key >> 8) & 0xFFU);
       key |= sort_byte << 48;
       uint64_t const mesh_ptr =
-          reinterpret_cast<uintptr_t>(terrain.mesh) & 0x0000FFFFFFFFFFFFU;
+          reinterpret_cast<uintptr_t>(chunk.mesh) & 0x0000FFFFFFFFFFFFU;
       key |= mesh_ptr;
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
@@ -485,6 +471,29 @@ private:
       key |= static_cast<uint64_t>(prim.type) << 48;
 
       key |= static_cast<uint64_t>(prim.instance_count() & 0xFFFFFFFF);
+    } else if (cmd.index() == DrawPartCmdIndex) {
+      const auto &part = std::get<DrawPartCmdIndex>(cmd);
+      // Batch DrawPartCmds by material. The two-pass radix sort only
+      // examines the top two bytes of the key (bits 48-63), so the
+      // material-discriminating bits MUST live in the 48-55 byte to
+      // actually influence ordering. Mesh pointer goes into the lower
+      // bits as batch-locality metadata (unused by sort, useful for
+      // debugging / can_batch predicates).
+      auto ptr_byte = [](const void *p) -> uint64_t {
+        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFU;
+      };
+      key |= ptr_byte(part.material) << 48;
+      key |= (reinterpret_cast<uintptr_t>(part.mesh) & 0xFFFFU) << 16;
+    } else if (cmd.index() == RiggedCreatureCmdIndex) {
+      // Stage 15.5b — batch rigged creatures by material/mesh so
+      // adjacent draws can share shader + VAO binds. Mirrors DrawPartCmd's
+      // material-byte-into-48 convention.
+      const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
+      auto ptr_byte = [](const void *p) -> uint64_t {
+        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFU;
+      };
+      key |= ptr_byte(rig.material) << 48;
+      key |= (reinterpret_cast<uintptr_t>(rig.mesh) & 0xFFFFU) << 16;
     }
 
     return key;

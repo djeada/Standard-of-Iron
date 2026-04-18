@@ -27,20 +27,20 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
 private:
   ChainmailArmorConfig m_config;
 
   void renderTorsoMail(const DrawContext &ctx, const BodyFrames &frames,
-                       ISubmitter &submitter);
+                       EquipmentBatch &batch);
   void renderShoulderGuards(const DrawContext &ctx, const BodyFrames &frames,
-                            ISubmitter &submitter);
+                            EquipmentBatch &batch);
   void renderArmMail(const DrawContext &ctx, const BodyFrames &frames,
-                     ISubmitter &submitter);
+                     EquipmentBatch &batch);
   void renderRingDetails(const DrawContext &ctx, const QVector3D &center,
                          float radius, float height, const QVector3D &up,
-                         const QVector3D &right, ISubmitter &submitter);
+                         const QVector3D &right, EquipmentBatch &batch);
 
   auto calculate_ring_color(float x, float y, float z) const -> QVector3D;
 };

@@ -3,6 +3,7 @@
 #include "../../../../game/systems/nation_id.h"
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/spear_renderer.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -288,7 +289,7 @@ public:
       if (spear_renderer) {
         spear_renderer->set_config(spear_config);
       }
-      spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*spear, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -299,7 +300,7 @@ public:
     auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
     if (helmet) {
       HumanoidAnimationContext anim_ctx{};
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
+      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
     }
   }
 
@@ -313,13 +314,13 @@ public:
         style.armor_id.empty() ? "armor_light_carthage" : style.armor_id;
     auto armor = registry.get(EquipmentCategory::Armor, armor_key);
     if (armor) {
-      armor->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
     }
 
     auto shoulder_cover =
         registry.get(EquipmentCategory::Armor, "carthage_shoulder_cover");
     if (shoulder_cover) {
-      shoulder_cover->render(ctx, pose.body_frames, v.palette, anim, out);
+      render_equipment(*shoulder_cover, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

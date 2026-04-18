@@ -20,7 +20,7 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
   void set_config(const ArmGuardsConfig &config) { m_config = config; }
 
@@ -28,7 +28,7 @@ private:
   ArmGuardsConfig m_config;
 
   void renderArmGuard(const DrawContext &ctx, const QVector3D &elbow,
-                      const QVector3D &wrist, ISubmitter &submitter);
+                      const QVector3D &wrist, EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

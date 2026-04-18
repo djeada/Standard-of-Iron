@@ -1,14 +1,19 @@
 #pragma once
 
+#include "bone_palette_arena.h"
 #include "draw_queue.h"
 #include "entity/registry.h"
+#include "frame_budget.h"
 #include "gl/backend.h"
 #include "gl/camera.h"
 #include "gl/mesh.h"
 #include "gl/resources.h"
 #include "gl/texture.h"
+#include "i_render_backend.h"
+#include "rigged_mesh_cache.h"
 #include "submitter.h"
 #include "unit_render_cache.h"
+#include <QImage>
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -45,7 +50,7 @@ class Backend;
 
 class Renderer : public ISubmitter {
 public:
-  Renderer();
+  explicit Renderer(ShaderQuality quality = ShaderQuality::Full);
   ~Renderer() override;
 
   auto initialize() -> bool;
@@ -58,7 +63,7 @@ public:
   void set_camera(Camera *camera);
   void set_clear_color(float r, float g, float b, float a = 1.0F);
   auto camera() const -> Camera * { return m_camera; }
-  auto backend() -> Backend * { return m_backend.get(); }
+  auto backend() -> Backend * { return m_gl_backend; }
 
   void update_animation_time(float delta_time) {
     m_accumulated_time += delta_time;
@@ -70,6 +75,15 @@ public:
   }
   void set_hovered_entity_id(unsigned int id) { m_hovered_entity_id = id; }
   void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
+
+  void set_frame_budget(const FrameBudgetConfig &config) {
+    if (m_backend) {
+      m_backend->set_frame_budget(config);
+    }
+  }
+  [[nodiscard]] auto frame_tracker() const -> const FrameTimeTracker * {
+    return m_backend ? m_backend->frame_tracker() : nullptr;
+  }
 
   void set_selected_entities(const std::vector<unsigned int> &ids) {
     m_selected_ids.clear();
@@ -103,8 +117,9 @@ public:
   }
   auto load_shader(const QString &name, const QString &vert_path,
                    const QString &frag_path) -> Shader * {
-    return m_backend ? m_backend->get_or_load_shader(name, vert_path, frag_path)
-                     : nullptr;
+    return m_gl_backend
+               ? m_gl_backend->get_or_load_shader(name, vert_path, frag_path)
+               : nullptr;
   }
 
   void set_current_shader(Shader *shader) { m_current_shader = shader; }
@@ -123,9 +138,19 @@ public:
   void resume() { m_paused = false; }
   auto is_paused() const -> bool { return m_paused; }
 
+  // Stage 13 — software fallback. Renders the most recently completed
+  // draw queue into a QImage without touching any OpenGL state. Safe to
+  // call when the GL backend is uninitialised; used for headless
+  // diagnostics, CI smoke tests and the ShaderQuality::None tier. The
+  // returned image is an independent copy.
+  [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
+
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *texture = nullptr, float alpha = 1.0F,
             int material_id = 0) override;
+  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+            const QVector3D &color, Texture *texture = nullptr,
+            float alpha = 1.0F, int material_id = 0) override;
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
                 const QVector3D &color, float alpha = 1.0F) override;
   void selection_ring(const QMatrix4x4 &model, float alpha_inner,
@@ -149,6 +174,7 @@ public:
                     float radius, float intensity, float time) override;
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override;
+  void rigged(const RiggedCreatureCmd &cmd) override;
   void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,
@@ -195,9 +221,26 @@ public:
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 
-private:
+  // Stage 10: thin public adapter for the ConstructionPreviewPass. The
+  // visibility pointer may be null; the pass then skips fog-of-war
+  // filtering (equivalent to visibility_enabled=false).
+  void render_construction_previews_public(
+      Engine::Core::World *world, const Game::Map::VisibilityService *vis,
+      bool visibility_enabled) {
+    render_construction_previews(world, vis,
+                                 visibility_enabled && vis != nullptr);
+  }
+
+  auto rigged_mesh_cache() noexcept -> RiggedMeshCache & {
+    return m_rigged_mesh_cache;
+  }
+  auto bone_palette_arena() noexcept -> BonePaletteArena & {
+    return m_bone_palette_arena;
+  }
+
+ private:
   void render_construction_previews(Engine::Core::World *world,
-                                    const Game::Map::VisibilityService &vis,
+                                    const Game::Map::VisibilityService *vis,
                                     bool visibility_enabled);
 
   void enqueue_selection_ring(Engine::Core::Entity *entity,
@@ -252,7 +295,9 @@ private:
                                  const AsyncPrewarmWorkItem &item);
 
   Camera *m_camera = nullptr;
-  std::shared_ptr<Backend> m_backend;
+  std::unique_ptr<IRenderBackend> m_backend;
+  Backend *m_gl_backend = nullptr;
+  ShaderQuality m_shader_quality{ShaderQuality::Full};
   DrawQueue m_queues[2];
   DrawQueue *m_active_queue = nullptr;
   int m_fill_queue_index = 0;
@@ -278,6 +323,8 @@ private:
   std::unordered_map<uint32_t, AnimationTimeCacheEntry> m_animation_time_cache;
   UnitRenderCache m_unit_render_cache;
   ModelMatrixCache m_model_matrix_cache;
+  RiggedMeshCache m_rigged_mesh_cache;
+  BonePaletteArena m_bone_palette_arena;
   std::uint32_t m_frame_counter{0};
 
   std::mutex m_async_prewarm_mutex;

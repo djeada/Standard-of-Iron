@@ -4,7 +4,7 @@
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
 #include "../../humanoid/rig.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QQuaternion>
 #include <QVector3D>
@@ -29,7 +29,7 @@ helmet_lift_vector(const AttachmentFrame &head) -> QVector3D {
   return up * (head.radius * k_helmet_vertical_lift);
 }
 
-static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
+static inline void submit_disk(EquipmentBatch &batch, const DrawContext &ctx,
                                const QVector3D &center,
                                const QVector3D &normal_dir, float radius,
                                float thickness, const QVector3D &color,
@@ -42,11 +42,11 @@ static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
   QVector3D a = center - 0.5f * thickness * n;
   QVector3D b = center + 0.5f * thickness * n;
 
-  submitter.mesh(get_unit_cylinder(), cylinder_between(ctx.model, a, b, radius),
-                 color, nullptr, roughness, material_id);
+  batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, a, b, radius),
+                 color, nullptr, roughness, material_id});
 }
 
-static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
+static inline void submit_spike(EquipmentBatch &batch, const DrawContext &ctx,
                                 const QVector3D &base, const QVector3D &dir,
                                 float length, float base_radius,
                                 const QVector3D &color, float roughness,
@@ -58,22 +58,22 @@ static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
   d.normalize();
   QVector3D tip = base + d * length;
 
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, base, tip, base_radius), color,
-                 nullptr, roughness, material_id);
+                 nullptr, roughness, material_id});
   QMatrix4x4 m;
   m = ctx.model;
   m.translate(tip);
   m.scale(base_radius * 1.1f);
-  submitter.mesh(get_unit_sphere(), m, color * 1.05f, nullptr, roughness,
-                 material_id);
+  batch.meshes.push_back({get_unit_sphere(), nullptr, m, color * 1.05f, nullptr, roughness,
+                 material_id});
 }
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
                                          const BodyFrames &frames,
                                          const HumanoidPalette &palette,
                                          const HumanoidAnimationContext &anim,
-                                         ISubmitter &submitter) {
+                                         EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
@@ -82,12 +82,12 @@ void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
     return;
   }
 
-  render_bowl(ctx, head, submitter);
+  render_bowl(ctx, head, batch);
 }
 
 void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
                                               const AttachmentFrame &head,
-                                              ISubmitter &submitter) {
+                                              EquipmentBatch &batch) {
   const float base_r = head.radius;
   const float helmet_scale = 1.26F;
   const float R = base_r * helmet_scale;
@@ -121,63 +121,63 @@ void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
   QMatrix4x4 bowl = ctx.model;
   bowl.translate(cap_center);
   bowl.scale(R * 0.88F, R * 0.82F, R * 0.88F);
-  submitter.mesh(get_unit_sphere(), bowl, m_config.leather_color * 0.94F,
-                 nullptr, 0.9F, 2);
+  batch.meshes.push_back({get_unit_sphere(), nullptr, bowl, m_config.leather_color * 0.94F,
+                 nullptr, 0.9F, 2});
 
   QVector3D taper_top = helmet_origin + up * (R * 0.48F);
   QVector3D taper_bot = helmet_origin + up * (R * 0.26F);
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, taper_top, taper_bot, R * 0.78F),
-                 m_config.leather_color * 0.86F, nullptr, 0.92F, 2);
+                 m_config.leather_color * 0.86F, nullptr, 0.92F, 2});
 
   QVector3D band_top = helmet_origin + up * (R * 0.24F);
   QVector3D band_bot = helmet_origin + up * (R * 0.10F);
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, band_top, band_bot, R * 0.92F),
-                 m_config.leather_color * 0.72F, nullptr, 0.95F, 2);
+                 m_config.leather_color * 0.72F, nullptr, 0.95F, 2});
 
   QVector3D crest_base = helmet_origin + up * (R * 0.82F);
   QVector3D crest_tip = crest_base + up * (R * 0.55F);
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, crest_base, crest_tip, R * 0.35F),
-                 m_config.bronze_color * 0.78F, nullptr, 0.92F, 2);
+                 m_config.bronze_color * 0.78F, nullptr, 0.92F, 2});
   QMatrix4x4 crest_cap = ctx.model;
   crest_cap.translate(crest_tip);
   crest_cap.scale(R * 0.42F, R * 0.32F, R * 0.42F);
-  submitter.mesh(get_unit_sphere(), crest_cap, m_config.bronze_color * 0.88F,
-                 nullptr, 0.93F, 2);
+  batch.meshes.push_back({get_unit_sphere(), nullptr, crest_cap, m_config.bronze_color * 0.88F,
+                 nullptr, 0.93F, 2});
 
   QVector3D strap_front_top =
       helmet_origin + up * (R * 0.44F) + forward * (R * 0.60F);
   QVector3D strap_front_bot =
       helmet_origin + up * (R * 0.20F) + forward * (R * 0.70F);
-  submitter.mesh(
-      get_unit_cylinder(),
+  batch.meshes.push_back({
+      get_unit_cylinder(), nullptr,
       cylinder_between(ctx.model, strap_front_top, strap_front_bot, R * 0.20F),
-      m_config.bronze_color * 0.85F, nullptr, 0.92F, 2);
+      m_config.bronze_color * 0.85F, nullptr, 0.92F, 2});
 
   QVector3D strap_left_top =
       helmet_origin + up * (R * 0.38F) - right * (R * 0.66F);
   QVector3D strap_left_bot =
       helmet_origin + up * (R * 0.16F) - right * (R * 0.72F);
-  submitter.mesh(
-      get_unit_cylinder(),
+  batch.meshes.push_back({
+      get_unit_cylinder(), nullptr,
       cylinder_between(ctx.model, strap_left_top, strap_left_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
+      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2});
 
   QVector3D strap_right_top =
       helmet_origin + up * (R * 0.38F) + right * (R * 0.66F);
   QVector3D strap_right_bot =
       helmet_origin + up * (R * 0.16F) + right * (R * 0.72F);
-  submitter.mesh(
-      get_unit_cylinder(),
+  batch.meshes.push_back({
+      get_unit_cylinder(), nullptr,
       cylinder_between(ctx.model, strap_right_top, strap_right_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
+      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2});
 }
 
 void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
                                               const AttachmentFrame &head,
-                                              ISubmitter &submitter) {
+                                              EquipmentBatch &batch) {
   const float base_r = head.radius;
   const float helmet_scale = 1.26F;
   const float R = base_r * helmet_scale;
@@ -191,7 +191,7 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
     QVector3D nrm =
         (head.forward * 0.90f - head.right * sx * 0.25f - head.up * 0.15f)
             .normalized();
-    submit_disk(submitter, ctx, center, nrm, R * 0.56f, R * 0.08f,
+    submit_disk(batch, ctx, center, nrm, R * 0.56f, R * 0.08f,
                 m_config.bronze_color * 1.02f, 0.92f);
   };
   blade(-1.0f);
@@ -199,9 +199,9 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
 
   auto connect_brow = [&](const QVector3D &a, const QVector3D &b,
                           float radius_scale) {
-    submitter.mesh(get_unit_cylinder(),
+    batch.meshes.push_back({get_unit_cylinder(), nullptr,
                    cylinder_between(ctx.model, a, b, R * radius_scale),
-                   m_config.bronze_color * 1.08f, nullptr, 0.95f, 2);
+                   m_config.bronze_color * 1.08f, nullptr, 0.95f, 2});
   };
 
   QVector3D brow_left = head_point(QVector3D(-0.54f, 0.86f, 0.64f));
@@ -213,7 +213,7 @@ void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
 
 void CarthageLightHelmetRenderer::render_cheek_guards(
     const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
+    EquipmentBatch &batch) {
   const float base_r = head.radius;
   const float helmet_scale = 1.26F;
   const float R = base_r * helmet_scale;
@@ -232,7 +232,7 @@ void CarthageLightHelmetRenderer::render_cheek_guards(
               .normalized();
       float r_plate = R * (0.38f - 0.05f * v);
       float thick = R * 0.055f;
-      submit_disk(submitter, ctx, center, n, r_plate, thick,
+      submit_disk(batch, ctx, center, n, r_plate, thick,
                   m_config.bronze_color * 0.95f, 0.86f);
 
       if (m_config.detail_level >= 1) {
@@ -240,13 +240,13 @@ void CarthageLightHelmetRenderer::render_cheek_guards(
         QMatrix4x4 riv_m = ctx.model;
         riv_m.translate(center + n * (thick * 0.55f));
         riv_m.scale(R * 0.06f);
-        submitter.mesh(get_unit_sphere(), riv_m, m_config.bronze_color * 1.28f,
-                       nullptr, 1.0f, 2);
+        batch.meshes.push_back({get_unit_sphere(), nullptr, riv_m, m_config.bronze_color * 1.28f,
+                       nullptr, 1.0f, 2});
       }
     }
 
     QVector3D fang_base = head_point(QVector3D(0.78f * sx, 0.20f, 0.36f));
-    submit_spike(submitter, ctx, fang_base,
+    submit_spike(batch, ctx, fang_base,
                  -head.up * 0.8f + head.forward * 0.2f, R * 0.22f, R * 0.05f,
                  m_config.bronze_color * 1.1f, 0.95f);
   };
@@ -257,7 +257,7 @@ void CarthageLightHelmetRenderer::render_cheek_guards(
 
 void CarthageLightHelmetRenderer::render_nasal_guard(
     const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
+    EquipmentBatch &batch) {
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
@@ -266,29 +266,29 @@ void CarthageLightHelmetRenderer::render_nasal_guard(
 
   QVector3D top = head_point(QVector3D(0.0f, 0.70f, 0.80f));
   QVector3D bot = head_point(QVector3D(0.0f, -0.04f, 0.95f));
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, bot, top, R * 0.14f),
-                 m_config.bronze_color * 0.98f, nullptr, 0.9f, 2);
+                 m_config.bronze_color * 0.98f, nullptr, 0.9f, 2});
 
   QVector3D left = top + head.right * (R * 0.30f);
   QVector3D right = top - head.right * (R * 0.30f);
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, left, right, R * 0.07f),
-                 m_config.bronze_color * 1.06f, nullptr, 0.93f, 2);
+                 m_config.bronze_color * 1.06f, nullptr, 0.93f, 2});
 
   for (int i = 0; i < 3; ++i) {
     float yy = -0.02f - 0.08f * i;
     QVector3D gl = head_point(QVector3D(-0.32f, yy, 0.96f));
     QVector3D gr = head_point(QVector3D(0.32f, yy, 0.96f));
-    submitter.mesh(get_unit_cylinder(),
+    batch.meshes.push_back({get_unit_cylinder(), nullptr,
                    cylinder_between(ctx.model, gl, gr, R * 0.045f),
-                   m_config.bronze_color * 1.02f, nullptr, 0.9f, 2);
+                   m_config.bronze_color * 1.02f, nullptr, 0.9f, 2});
   }
 }
 
 void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
                                                const AttachmentFrame &head,
-                                               ISubmitter &submitter) {
+                                               EquipmentBatch &batch) {
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
@@ -297,9 +297,9 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
 
   QVector3D left = head_point(QVector3D(-0.95f, 1.02f, 0.02f));
   QVector3D right = head_point(QVector3D(0.95f, 1.02f, 0.02f));
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, left, right, R * 0.12f),
-                 m_config.bronze_color * 1.12f, nullptr, 0.96f, 2);
+                 m_config.bronze_color * 1.12f, nullptr, 0.96f, 2});
 
   QVector3D crest_color(0.85f, 0.15f, 0.18f);
   int strands = (m_config.detail_level >= 2) ? 24 : 14;
@@ -314,15 +314,15 @@ void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
     float spread = (float((i % 5) - 2)) * R * 0.06f;
     tip += head.forward * 0.0f + head.right * 0.0f;
     QVector3D col = crest_color * (0.9f + 0.18f * ((i % 2) ? 1.0f : 0.0f));
-    submitter.mesh(get_unit_cylinder(),
+    batch.meshes.push_back({get_unit_cylinder(), nullptr,
                    cylinder_between(ctx.model, base, tip, R * 0.04f), col,
-                   nullptr, 0.62f, 2);
+                   nullptr, 0.62f, 2});
   }
 }
 
 void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
                                                 const AttachmentFrame &head,
-                                                ISubmitter &submitter) {
+                                                EquipmentBatch &batch) {
   const float R = head.radius;
   QVector3D const helmet_offset = helmet_lift_vector(head);
   auto head_point = [&](const QVector3D &n) {
@@ -338,7 +338,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(p1);
     m.scale(R * 0.058f);
-    submitter.mesh(get_unit_sphere(), m, col, nullptr, 1.0f, 2);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, col, nullptr, 1.0f, 2});
   }
   int n2 = 12;
   for (int i = 0; i < n2; ++i) {
@@ -348,7 +348,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(p2);
     m.scale(R * 0.05f);
-    submitter.mesh(get_unit_sphere(), m, col * 0.98f, nullptr, 1.0f, 2);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, col * 0.98f, nullptr, 1.0f, 2});
   }
 
   int sp = 7;
@@ -357,7 +357,7 @@ void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
     QVector3D base = head_point(
         QVector3D(0.0f, 0.95f + 0.1f * (t - 0.5f), 0.50f - 1.05f * t));
     QVector3D dir = (head.up * 0.85f - head.forward * 0.15f);
-    submit_spike(submitter, ctx, base, dir,
+    submit_spike(batch, ctx, base, dir,
                  R * (0.22f + 0.06f * std::sin(t * std::numbers::pi_v<float>)),
                  R * 0.045f, m_config.bronze_color * 1.12f, 0.96f);
   }

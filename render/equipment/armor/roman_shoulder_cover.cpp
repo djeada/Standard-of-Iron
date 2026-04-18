@@ -2,7 +2,7 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -14,7 +14,7 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
                                         const BodyFrames &frames,
                                         const HumanoidPalette &palette,
                                         const HumanoidAnimationContext &anim,
-                                        ISubmitter &submitter) {
+                                        EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
@@ -60,21 +60,21 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
     QMatrix4x4 dome =
         oriented_transform(anchor, {upper_arm_r * 1.38F, upper_arm_r * 1.10F,
                                     upper_arm_r * 1.22F});
-    submitter.mesh(get_unit_sphere(), dome, metal_base, nullptr, 1.0F, 1);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, dome, metal_base, nullptr, 1.0F, 1});
 
     QVector3D inner_center =
         anchor + up_n * (-0.030F) + outward_n * (0.006F * m_outward_scale);
     QMatrix4x4 inner = oriented_transform(
         inner_center,
         {upper_arm_r * 1.22F, upper_arm_r * 0.94F, upper_arm_r * 1.05F});
-    submitter.mesh(get_unit_sphere(), inner, metal_dark, nullptr, 1.0F, 1);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, inner, metal_dark, nullptr, 1.0F, 1});
 
     QVector3D rim_center = inner_center + up_n * (-0.028F) +
                            outward_n * (0.006F * m_outward_scale);
     QMatrix4x4 rim = oriented_transform(
         rim_center,
         {upper_arm_r * 1.10F, upper_arm_r * 0.40F, upper_arm_r * 0.98F});
-    submitter.mesh(get_unit_sphere(), rim, edge_highlight, nullptr, 1.0F, 1);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, rim, edge_highlight, nullptr, 1.0F, 1});
   };
 
   draw_shoulder_cover(frames.shoulder_l.origin, -right_axis);

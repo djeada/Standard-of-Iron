@@ -22,7 +22,7 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
   void set_config(const WorkApronConfig &config) { m_config = config; }
 
@@ -30,13 +30,13 @@ private:
   WorkApronConfig m_config;
 
   void renderApronBody(const DrawContext &ctx, const AttachmentFrame &torso,
-                       const AttachmentFrame &waist, ISubmitter &submitter);
+                       const AttachmentFrame &waist, EquipmentBatch &batch);
 
   void renderStraps(const DrawContext &ctx, const AttachmentFrame &torso,
-                    const BodyFrames &frames, ISubmitter &submitter);
+                    const BodyFrames &frames, EquipmentBatch &batch);
 
   void renderPockets(const DrawContext &ctx, const AttachmentFrame &waist,
-                     ISubmitter &submitter);
+                     EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

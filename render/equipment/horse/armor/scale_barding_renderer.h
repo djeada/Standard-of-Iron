@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../i_horse_equipment_renderer.h"
+// EquipmentBatch used in render signature
 
 namespace Render::GL {
 
@@ -10,7 +11,7 @@ public:
 
   void render(const DrawContext &ctx, const HorseBodyFrames &frames,
               const HorseVariant &variant, const HorseAnimationContext &anim,
-              ISubmitter &out) const override;
+              EquipmentBatch &batch) const override;
 };
 
 } // namespace Render::GL

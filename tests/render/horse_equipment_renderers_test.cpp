@@ -1,4 +1,5 @@
 #include "render/entity/registry.h"
+#include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
 #include "render/equipment/horse/armor/crupper_renderer.h"
 #include "render/equipment/horse/armor/leather_barding_renderer.h"
@@ -23,73 +24,18 @@ using namespace Render::GL;
 
 namespace {
 
-class MockSubmitter : public ISubmitter {
-public:
-  void mesh(Mesh * /*mesh*/, const QMatrix4x4 & /*model*/,
-            const QVector3D & /*color*/, Texture * /*tex*/ = nullptr,
-            float /*alpha*/ = 1.0F, int /*materialId*/ = 0) override {
-    mesh_count++;
-  }
+using MockSubmitter = EquipmentBatch;
+using CapturingSubmitter = EquipmentBatch;
 
-  void cylinder(const QVector3D & /*start*/, const QVector3D & /*end*/,
-                float /*radius*/, const QVector3D & /*color*/,
-                float /*alpha*/ = 1.0F) override {
-    cylinder_count++;
-  }
-
-  void selection_ring(const QMatrix4x4 & /*model*/, float /*alphaInner*/,
-                      float /*alphaOuter*/,
-                      const QVector3D & /*color*/) override {}
-
-  void grid(const QMatrix4x4 & /*model*/, const QVector3D & /*color*/,
-            float /*cellSize*/, float /*thickness*/,
-            float /*extent*/) override {}
-
-  void selection_smoke(const QMatrix4x4 & /*model*/,
-                       const QVector3D & /*color*/,
-                       float /*baseAlpha*/ = 0.15F) override {}
-
-  void healing_beam(const QVector3D & /*start*/, const QVector3D & /*end*/,
-                    const QVector3D & /*color*/, float /*progress*/,
-                    float /*beam_width*/, float /*intensity*/,
-                    float /*time*/) override {}
-
-  void healer_aura(const QVector3D & /*position*/, const QVector3D & /*color*/,
-                   float /*radius*/, float /*intensity*/,
-                   float /*time*/) override {}
-
-  void combat_dust(const QVector3D & /*position*/, const QVector3D & /*color*/,
-                   float /*radius*/, float /*intensity*/,
-                   float /*time*/) override {}
-
-  void stone_impact(const QVector3D & /*position*/, const QVector3D & /*color*/,
-                    float /*radius*/, float /*intensity*/,
-                    float /*time*/) override {}
-  void mode_indicator(const QMatrix4x4 & /*model*/, int /*mode_type*/,
-                      const QVector3D & /*color*/, float /*alpha*/) override {}
-
-  int mesh_count = 0;
-  int cylinder_count = 0;
-};
-
-class CapturingSubmitter : public MockSubmitter {
-public:
-  struct CylinderCall {
-    QVector3D start;
-    QVector3D end;
-    float radius;
-  };
-
-  void cylinder(const QVector3D &start, const QVector3D &end, float radius,
-                const QVector3D &color, float alpha = 1.0F) override {
-    cylinders.push_back({start, end, radius});
-    MockSubmitter::cylinder(start, end, radius, color, alpha);
-  }
-
-  std::vector<CylinderCall> cylinders;
-};
+inline int mesh_count_of(const EquipmentBatch &b) {
+  return static_cast<int>(b.meshes.size());
+}
+inline int cylinder_count_of(const EquipmentBatch &b) {
+  return static_cast<int>(b.cylinders.size());
+}
 
 } // namespace
+
 
 class HorseEquipmentRenderersTest : public ::testing::Test {
 protected:
@@ -155,7 +101,7 @@ TEST_F(HorseEquipmentRenderersTest, RomanSaddleRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, CarthageSaddleRendererProducesMeshes) {
@@ -164,7 +110,7 @@ TEST_F(HorseEquipmentRenderersTest, CarthageSaddleRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, LightCavalrySaddleRendererProducesMeshes) {
@@ -173,7 +119,7 @@ TEST_F(HorseEquipmentRenderersTest, LightCavalrySaddleRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, BridleRendererProducesCylinders) {
@@ -182,7 +128,7 @@ TEST_F(HorseEquipmentRenderersTest, BridleRendererProducesCylinders) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, StirrupRendererProducesBoth) {
@@ -191,8 +137,8 @@ TEST_F(HorseEquipmentRenderersTest, StirrupRendererProducesBoth) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
@@ -201,7 +147,7 @@ TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererProducesCylinders) {
@@ -210,7 +156,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererProducesCylinders) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
@@ -257,7 +203,7 @@ TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, LeatherBardingRendererProducesMeshes) {
@@ -266,7 +212,7 @@ TEST_F(HorseEquipmentRenderersTest, LeatherBardingRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ChampionRendererProducesMeshes) {
@@ -275,7 +221,7 @@ TEST_F(HorseEquipmentRenderersTest, ChampionRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, CrupperRendererProducesMeshes) {
@@ -284,7 +230,7 @@ TEST_F(HorseEquipmentRenderersTest, CrupperRendererProducesMeshes) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, PlumeRendererProducesCylinders) {
@@ -293,7 +239,7 @@ TEST_F(HorseEquipmentRenderersTest, PlumeRendererProducesCylinders) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, TailRibbonRendererProducesBoth) {
@@ -302,8 +248,8 @@ TEST_F(HorseEquipmentRenderersTest, TailRibbonRendererProducesBoth) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }
 
 TEST_F(HorseEquipmentRenderersTest, SaddleBagRendererProducesBoth) {
@@ -312,6 +258,6 @@ TEST_F(HorseEquipmentRenderersTest, SaddleBagRendererProducesBoth) {
 
   renderer.render(ctx, frames, variant, anim, submitter);
 
-  EXPECT_GT(submitter.cylinder_count, 0);
-  EXPECT_GT(submitter.mesh_count, 0);
+  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_GT(mesh_count_of(submitter), 0);
 }

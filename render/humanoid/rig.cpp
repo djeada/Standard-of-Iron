@@ -1,5 +1,7 @@
 #include "rig.h"
 
+#include "../material.h"
+
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
@@ -12,6 +14,7 @@
 #include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
+#include "../geom/parts.h"
 #include "../gl/backend.h"
 #include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
@@ -29,6 +32,10 @@
 #include "formation_calculator.h"
 #include "humanoid_math.h"
 #include "pose_controller.h"
+#include "rig_stats_shim.h"
+#include "clip_driver_cache.h"
+#include "humanoid_spec.h"
+#include "../creature/spec.h"
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector4D>
@@ -40,6 +47,7 @@
 #include <functional>
 #include <limits>
 #include <numbers>
+#include <span>
 #include <unordered_map>
 #include <vector>
 
@@ -49,6 +57,7 @@ using namespace Render::GL::Geometry;
 using Render::Geom::capsule_between;
 using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
+using Render::Geom::oriented_cylinder;
 using Render::Geom::sphere_at;
 
 namespace {
@@ -265,6 +274,7 @@ auto get_or_build_unit_layout(std::uintptr_t key,
 
 void advance_pose_cache_frame() {
   ++s_current_frame;
+  ::Render::Humanoid::ClipDriverCache::instance().advance_frame(s_current_frame);
 
   if ((s_current_frame & 0x1FF) == 0) {
     auto it = s_pose_cache.begin();
@@ -293,6 +303,7 @@ void clear_humanoid_caches() {
   s_pose_cache.clear();
   s_layout_cache.clear();
   s_current_frame = 0;
+  ::Render::Humanoid::ClipDriverCache::instance().clear();
 }
 
 auto torso_mesh_without_bottom_cap() -> Mesh * {
@@ -338,6 +349,10 @@ auto torso_mesh_without_bottom_cap() -> Mesh * {
   s_mesh =
       (filtered != nullptr) ? std::move(filtered) : std::unique_ptr<Mesh>(base);
   return s_mesh.get();
+}
+
+void align_torso_mesh_forward(QMatrix4x4 &model) noexcept {
+  model.rotate(90.0F, 0.0F, 1.0F, 0.0F);
 }
 
 auto HumanoidRendererBase::frame_local_position(
@@ -447,1088 +462,7 @@ auto HumanoidRendererBase::resolve_formation(const DrawContext &ctx)
   return params;
 }
 
-void HumanoidRendererBase::compute_locomotion_pose(
-    uint32_t seed, float time, bool is_moving, const VariationParams &variation,
-    HumanoidPose &pose) {
-  using HP = HumanProportions;
 
-  float const h_scale = variation.height_scale;
-
-  pose.head_pos = QVector3D(0.0F, HP::HEAD_CENTER_Y * h_scale, 0.0F);
-  pose.head_r = HP::HEAD_RADIUS * h_scale;
-  pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y * h_scale, 0.0F);
-
-  float const b_scale = variation.bulk_scale;
-  float const s_width = variation.stance_width;
-
-  float const half_shoulder_span = 0.5F * HP::SHOULDER_WIDTH * b_scale;
-  pose.shoulder_l =
-      QVector3D(-half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
-  pose.shoulder_r =
-      QVector3D(half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
-
-  pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y * h_scale, 0.0F);
-
-  float const rest_stride = 0.06F + (variation.arm_swing_amp - 1.0F) * 0.045F;
-  float const foot_x_span = HP::SHOULDER_WIDTH * 0.62F * s_width;
-  pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
-  pose.foot_l =
-      QVector3D(-foot_x_span, HP::GROUND_Y + pose.foot_y_offset, rest_stride);
-  pose.foot_r =
-      QVector3D(foot_x_span, HP::GROUND_Y + pose.foot_y_offset, -rest_stride);
-
-  pose.shoulder_l.setY(pose.shoulder_l.y() + variation.shoulder_tilt);
-  pose.shoulder_r.setY(pose.shoulder_r.y() - variation.shoulder_tilt);
-
-  float const slouch_offset = variation.posture_slump * 0.15F;
-  pose.shoulder_l.setZ(pose.shoulder_l.z() + slouch_offset);
-  pose.shoulder_r.setZ(pose.shoulder_r.z() + slouch_offset);
-
-  float const foot_inward_jitter = (hash_01(seed ^ 0x5678U) - 0.5F) * 0.02F;
-  float const foot_forward_jitter = (hash_01(seed ^ 0x9ABCU) - 0.5F) * 0.035F;
-
-  pose.foot_l.setX(pose.foot_l.x() + foot_inward_jitter);
-  pose.foot_r.setX(pose.foot_r.x() - foot_inward_jitter);
-  pose.foot_l.setZ(pose.foot_l.z() + foot_forward_jitter);
-  pose.foot_r.setZ(pose.foot_r.z() - foot_forward_jitter);
-
-  float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-  float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-  pose.hand_l =
-      QVector3D(-0.05F + arm_asymmetry,
-                HP::SHOULDER_Y * h_scale + 0.05F + arm_height_jitter, 0.55F);
-  pose.hand_r = QVector3D(
-      0.15F - arm_asymmetry * 0.5F,
-      HP::SHOULDER_Y * h_scale + 0.15F + arm_height_jitter * 0.8F, 0.20F);
-
-  if (is_moving) {
-
-    float const walk_cycle_time = 0.8F / variation.walk_speed_mult;
-    float const walk_phase = std::fmod(time * (1.0F / walk_cycle_time), 1.0F);
-    float const left_phase = walk_phase;
-    float const right_phase = std::fmod(walk_phase + 0.5F, 1.0F);
-
-    const float ground_y = HP::GROUND_Y;
-
-    const float stride_length = 0.35F * variation.arm_swing_amp;
-
-    float const bob_phase = walk_phase * 2.0F;
-    float const vertical_bob =
-        std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
-
-    float const hip_sway_amount = 0.002F;
-    float const sway_raw =
-        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
-    float const hip_sway = sway_raw * hip_sway_amount;
-
-    float const torso_sway_z = 0.0F;
-
-    auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
-                                                         float phase) {
-      float const lift_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
-      float lift = 0.0F;
-      if (lift_raw > 0.0F) {
-
-        float const lift_phase =
-            phase < 0.5F ? phase * 2.0F : (1.0F - phase) * 2.0F;
-        float const ease_t =
-            lift_phase * lift_phase * (3.0F - 2.0F * lift_phase);
-        lift = lift_raw * ease_t;
-        foot.setY(ground_y + pose.foot_y_offset + lift * 0.15F);
-      } else {
-        foot.setY(ground_y + pose.foot_y_offset);
-      }
-
-      float const stride_phase =
-          (phase - 0.25F) * 2.0F * std::numbers::pi_v<float>;
-      foot.setZ(foot.z() + std::sin(stride_phase) * stride_length);
-    };
-
-    animate_foot(pose.foot_l, left_phase);
-    animate_foot(pose.foot_r, right_phase);
-
-    pose.pelvis_pos.setY(pose.pelvis_pos.y() + vertical_bob);
-    pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob);
-    pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob);
-    pose.neck_base.setY(pose.neck_base.y() + vertical_bob);
-    pose.head_pos.setY(pose.head_pos.y() + vertical_bob);
-
-    pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
-
-    pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
-    pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
-    pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
-    pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
-
-    float const arm_swing_amp = 0.04F * variation.arm_swing_amp;
-    float const arm_phase_offset = 0.15F;
-    constexpr float max_arm_displacement = 0.06F;
-
-    float const left_swing_raw = std::sin((left_phase + arm_phase_offset) *
-                                          2.0F * std::numbers::pi_v<float>);
-    float const left_arm_swing =
-        std::clamp(left_swing_raw * arm_swing_amp, -max_arm_displacement,
-                   max_arm_displacement);
-    pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
-
-    float const right_swing_raw = std::sin((right_phase + arm_phase_offset) *
-                                           2.0F * std::numbers::pi_v<float>);
-    float const right_arm_swing =
-        std::clamp(right_swing_raw * arm_swing_amp, -max_arm_displacement,
-                   max_arm_displacement);
-    pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
-
-    auto clamp_hand_reach = [&](const QVector3D &shoulder, QVector3D &hand) {
-      float const max_reach =
-          (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * h_scale * 0.98F;
-      QVector3D diff = hand - shoulder;
-      float const len = diff.length();
-      if (len > max_reach && len > 1e-6F) {
-        hand = shoulder + diff * (max_reach / len);
-      }
-    };
-    clamp_hand_reach(pose.shoulder_l, pose.hand_l);
-    clamp_hand_reach(pose.shoulder_r, pose.hand_r);
-  }
-
-  QVector3D const hip_l =
-      pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-  QVector3D const hip_r =
-      pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-
-  auto solve_leg = [&](const QVector3D &hip, const QVector3D &foot,
-                       bool is_left) -> QVector3D {
-    QVector3D hip_to_foot = foot - hip;
-    float const distance = hip_to_foot.length();
-    if (distance < HP::EPSILON_SMALL) {
-      return hip;
-    }
-
-    float const upper_len = HP::UPPER_LEG_LEN * h_scale;
-    float const lower_len = HP::LOWER_LEG_LEN * h_scale;
-    float const reach = upper_len + lower_len;
-    float const min_reach =
-        std::max(std::abs(upper_len - lower_len) + 1e-4F, 1e-3F);
-    float const max_reach = std::max(reach - 1e-4F, min_reach + 1e-4F);
-    float const clamped_dist = std::clamp(distance, min_reach, max_reach);
-
-    QVector3D const dir = hip_to_foot / distance;
-
-    float cos_theta = (upper_len * upper_len + clamped_dist * clamped_dist -
-                       lower_len * lower_len) /
-                      (2.0F * upper_len * clamped_dist);
-    cos_theta = std::clamp(cos_theta, -1.0F, 1.0F);
-    float const sin_theta =
-        std::sqrt(std::max(0.0F, 1.0F - cos_theta * cos_theta));
-
-    QVector3D bend_pref = is_left ? QVector3D(-0.24F, 0.0F, 0.95F)
-                                  : QVector3D(0.24F, 0.0F, 0.95F);
-    bend_pref.normalize();
-
-    QVector3D bend_axis =
-        bend_pref - dir * QVector3D::dotProduct(dir, bend_pref);
-    if (bend_axis.lengthSquared() < 1e-6F) {
-      bend_axis = QVector3D::crossProduct(dir, QVector3D(0.0F, 1.0F, 0.0F));
-      if (bend_axis.lengthSquared() < 1e-6F) {
-        bend_axis = QVector3D::crossProduct(dir, QVector3D(1.0F, 0.0F, 0.0F));
-      }
-    }
-    bend_axis.normalize();
-
-    QVector3D const knee = hip + dir * (cos_theta * upper_len) +
-                           bend_axis * (sin_theta * upper_len);
-
-    float const knee_floor = HP::GROUND_Y + pose.foot_y_offset * 0.5F;
-    if (knee.y() < knee_floor) {
-      QVector3D adjusted = knee;
-      adjusted.setY(knee_floor);
-      return adjusted;
-    }
-
-    return knee;
-  };
-
-  pose.knee_l = solve_leg(hip_l, pose.foot_l, true);
-  pose.knee_r = solve_leg(hip_r, pose.foot_r, false);
-
-  QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
-  right_axis.setY(0.0F);
-  if (right_axis.lengthSquared() < 1e-8F) {
-    right_axis = QVector3D(1, 0, 0);
-  }
-  right_axis.normalize();
-
-  if (right_axis.x() < 0.0F) {
-    right_axis = -right_axis;
-  }
-  QVector3D const outward_l = -right_axis;
-  QVector3D const outward_r = right_axis;
-
-  pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l,
-                                  0.45F, 0.15F, -0.08F, +1.0F);
-  pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r,
-                                  0.48F, 0.12F, 0.02F, +1.0F);
-}
-
-void HumanoidRendererBase::draw_common_body(const DrawContext &ctx,
-                                            const HumanoidVariant &v,
-                                            HumanoidPose &pose,
-                                            ISubmitter &out) const {
-  using HP = HumanProportions;
-
-  QVector3D const scaling = get_proportion_scaling();
-  float const width_scale = scaling.x();
-  float const height_scale = scaling.y();
-  float const torso_scale = get_torso_scale();
-
-  float const head_scale = 1.0F;
-
-  QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
-  right_axis.setY(0.0F);
-  right_axis.setZ(0.0F);
-  if (right_axis.lengthSquared() < 1e-8F) {
-    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  right_axis.normalize();
-
-  if (right_axis.x() < 0.0F) {
-    right_axis = -right_axis;
-  }
-
-  QVector3D const up_axis(0.0F, 1.0F, 0.0F);
-  QVector3D forward_axis = QVector3D::crossProduct(right_axis, up_axis);
-  if (forward_axis.lengthSquared() < 1e-8F) {
-    forward_axis = QVector3D(0.0F, 0.0F, 1.0F);
-  }
-  forward_axis.normalize();
-
-  QVector3D const shoulder_mid = (pose.shoulder_l + pose.shoulder_r) * 0.5F;
-  const float y_shoulder = shoulder_mid.y();
-  const float y_neck = pose.neck_base.y();
-  const float shoulder_half_span =
-      0.5F * std::abs(pose.shoulder_r.x() - pose.shoulder_l.x());
-
-  const float torso_r_base =
-      std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
-
-  const float torso_r = torso_r_base * torso_scale;
-  float const depth_scale = scaling.z();
-
-  const float torso_depth_factor =
-      std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
-                 HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
-  float torso_depth = torso_r * torso_depth_factor;
-
-  const float y_top_cover =
-      std::max(y_shoulder + 0.00F, y_neck + HP::TORSO_TOP_COVER_OFFSET);
-
-  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
-  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
-  const float joint_r = HP::HAND_RADIUS * width_scale * 1.05F;
-  const float hand_r = HP::HAND_RADIUS * width_scale * 0.95F;
-
-  const float leg_joint_r = HP::LOWER_LEG_R * width_scale * 0.95F;
-  const float thigh_r = HP::UPPER_LEG_R * width_scale;
-  const float shin_r = HP::LOWER_LEG_R * width_scale;
-  const float foot_radius = shin_r * 1.10F;
-
-  float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
-  constexpr float torso_z = 0.0F;
-
-  QVector3D const tunic_top{torso_x, y_top_cover - 0.006F, torso_z};
-  QVector3D const tunic_bot{torso_x, pose.pelvis_pos.y() - 0.05F, torso_z};
-
-  QMatrix4x4 torso_transform =
-      cylinder_between(ctx.model, tunic_top, tunic_bot, 1.0F);
-
-  torso_transform.scale(torso_r, 1.0F, torso_depth);
-
-  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  if (torso_mesh != nullptr) {
-    out.mesh(torso_mesh, torso_transform, v.palette.cloth, nullptr, 1.0F);
-  }
-
-  float const head_r = pose.head_r;
-
-  QVector3D head_up;
-  QVector3D head_right;
-  QVector3D head_forward;
-
-  if (pose.head_frame.radius > 0.001F) {
-    head_up = pose.head_frame.up;
-    head_right = pose.head_frame.right;
-    head_forward = pose.head_frame.forward;
-  } else {
-    head_up = pose.head_pos - pose.neck_base;
-    if (head_up.lengthSquared() < 1e-8F) {
-      head_up = up_axis;
-    } else {
-      head_up.normalize();
-    }
-
-    head_right =
-        right_axis - head_up * QVector3D::dotProduct(right_axis, head_up);
-    if (head_right.lengthSquared() < 1e-8F) {
-      head_right = QVector3D::crossProduct(head_up, forward_axis);
-      if (head_right.lengthSquared() < 1e-8F) {
-        head_right = QVector3D(1.0F, 0.0F, 0.0F);
-      }
-    }
-    head_right.normalize();
-
-    if (QVector3D::dotProduct(head_right, right_axis) < 0.0F) {
-      head_right = -head_right;
-    }
-
-    head_forward = QVector3D::crossProduct(head_right, head_up);
-    if (head_forward.lengthSquared() < 1e-8F) {
-      head_forward = forward_axis;
-    } else {
-      head_forward.normalize();
-    }
-
-    if (QVector3D::dotProduct(head_forward, forward_axis) < 0.0F) {
-      head_right = -head_right;
-      head_forward = -head_forward;
-    }
-  }
-
-  QVector3D const chin_pos = pose.head_pos - head_up * head_r;
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.neck_base, chin_pos,
-                            HP::NECK_RADIUS * width_scale),
-           v.palette.skin * 0.9F, nullptr, 1.0F);
-
-  QMatrix4x4 head_rot;
-  head_rot.setColumn(0, QVector4D(head_right, 0.0F));
-  head_rot.setColumn(1, QVector4D(head_up, 0.0F));
-  head_rot.setColumn(2, QVector4D(head_forward, 0.0F));
-  head_rot.setColumn(3, QVector4D(0.0F, 0.0F, 0.0F, 1.0F));
-
-  QMatrix4x4 head_transform = ctx.model;
-  head_transform.translate(pose.head_pos);
-  head_transform = head_transform * head_rot;
-  head_transform.scale(head_r);
-
-  out.mesh(get_unit_sphere(), head_transform, v.palette.skin, nullptr, 1.0F);
-
-  pose.head_frame.origin = pose.head_pos;
-  pose.head_frame.right = head_right;
-  pose.head_frame.up = head_up;
-  pose.head_frame.forward = head_forward;
-  pose.head_frame.radius = head_r;
-
-  pose.body_frames.head = pose.head_frame;
-
-  QVector3D const torso_center = QVector3D(
-      (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F, y_shoulder, 0.0F);
-
-  pose.body_frames.torso.origin = torso_center;
-  pose.body_frames.torso.right = right_axis;
-  pose.body_frames.torso.up = up_axis;
-  pose.body_frames.torso.forward = forward_axis;
-  pose.body_frames.torso.radius = torso_r;
-  pose.body_frames.torso.depth = torso_depth;
-
-  pose.body_frames.back.origin = torso_center - forward_axis * torso_depth;
-  pose.body_frames.back.right = right_axis;
-  pose.body_frames.back.up = up_axis;
-  pose.body_frames.back.forward = -forward_axis;
-  pose.body_frames.back.radius = torso_r * 0.75F;
-  pose.body_frames.back.depth = torso_depth * 0.90F;
-
-  pose.body_frames.waist.origin = pose.pelvis_pos;
-  pose.body_frames.waist.right = right_axis;
-  pose.body_frames.waist.up = up_axis;
-  pose.body_frames.waist.forward = forward_axis;
-  pose.body_frames.waist.radius = torso_r * 0.80F;
-  pose.body_frames.waist.depth = torso_depth * 0.72F;
-
-  QVector3D shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
-  QVector3D shoulder_forward_l =
-      QVector3D::crossProduct(-right_axis, shoulder_up);
-  if (shoulder_forward_l.lengthSquared() < 1e-8F) {
-    shoulder_forward_l = forward_axis;
-  } else {
-    shoulder_forward_l.normalize();
-  }
-
-  pose.body_frames.shoulder_l.origin = pose.shoulder_l;
-  pose.body_frames.shoulder_l.right = -right_axis;
-  pose.body_frames.shoulder_l.up = shoulder_up;
-  pose.body_frames.shoulder_l.forward = shoulder_forward_l;
-  pose.body_frames.shoulder_l.radius = upper_arm_r;
-
-  QVector3D shoulder_forward_r =
-      QVector3D::crossProduct(right_axis, shoulder_up);
-  if (shoulder_forward_r.lengthSquared() < 1e-8F) {
-    shoulder_forward_r = forward_axis;
-  } else {
-    shoulder_forward_r.normalize();
-  }
-
-  pose.body_frames.shoulder_r.origin = pose.shoulder_r;
-  pose.body_frames.shoulder_r.right = right_axis;
-  pose.body_frames.shoulder_r.up = shoulder_up;
-  pose.body_frames.shoulder_r.forward = shoulder_forward_r;
-  pose.body_frames.shoulder_r.radius = upper_arm_r;
-
-  QVector3D hand_up_l = (pose.hand_l - pose.elbow_l);
-  if (hand_up_l.lengthSquared() > 1e-8F) {
-    hand_up_l.normalize();
-  } else {
-    hand_up_l = up_axis;
-  }
-  QVector3D hand_forward_l = QVector3D::crossProduct(-right_axis, hand_up_l);
-  if (hand_forward_l.lengthSquared() < 1e-8F) {
-    hand_forward_l = forward_axis;
-  } else {
-    hand_forward_l.normalize();
-  }
-
-  pose.body_frames.hand_l.origin = pose.hand_l;
-  pose.body_frames.hand_l.right = -right_axis;
-  pose.body_frames.hand_l.up = hand_up_l;
-  pose.body_frames.hand_l.forward = hand_forward_l;
-  pose.body_frames.hand_l.radius = hand_r;
-
-  QVector3D hand_up_r = (pose.hand_r - pose.elbow_r);
-  if (hand_up_r.lengthSquared() > 1e-8F) {
-    hand_up_r.normalize();
-  } else {
-    hand_up_r = up_axis;
-  }
-  QVector3D hand_forward_r = QVector3D::crossProduct(right_axis, hand_up_r);
-  if (hand_forward_r.lengthSquared() < 1e-8F) {
-    hand_forward_r = forward_axis;
-  } else {
-    hand_forward_r.normalize();
-  }
-
-  pose.body_frames.hand_r.origin = pose.hand_r;
-  pose.body_frames.hand_r.right = right_axis;
-  pose.body_frames.hand_r.up = hand_up_r;
-  pose.body_frames.hand_r.forward = hand_forward_r;
-  pose.body_frames.hand_r.radius = hand_r;
-
-  QVector3D foot_up_l = up_axis;
-  QVector3D foot_forward_l = forward_axis - right_axis * 0.12F;
-  if (foot_forward_l.lengthSquared() > 1e-8F) {
-    foot_forward_l.normalize();
-  } else {
-    foot_forward_l = forward_axis;
-  }
-
-  pose.body_frames.foot_l.origin = pose.foot_l;
-  pose.body_frames.foot_l.right = -right_axis;
-  pose.body_frames.foot_l.up = foot_up_l;
-  pose.body_frames.foot_l.forward = foot_forward_l;
-  pose.body_frames.foot_l.radius = foot_radius;
-
-  QVector3D foot_forward_r = forward_axis + right_axis * 0.12F;
-  if (foot_forward_r.lengthSquared() > 1e-8F) {
-    foot_forward_r.normalize();
-  } else {
-    foot_forward_r = forward_axis;
-  }
-
-  pose.body_frames.foot_r.origin = pose.foot_r;
-  pose.body_frames.foot_r.right = right_axis;
-  pose.body_frames.foot_r.up = foot_up_l;
-  pose.body_frames.foot_r.forward = foot_forward_r;
-  pose.body_frames.foot_r.radius = foot_radius;
-
-  auto compute_shin_frame = [&](const QVector3D &ankle, const QVector3D &knee,
-                                float right_sign) -> AttachmentFrame {
-    AttachmentFrame shin{};
-    shin.origin = ankle;
-
-    QVector3D shin_dir = knee - ankle;
-    float shin_len = shin_dir.length();
-    if (shin_len > 1e-6F) {
-      shin.up = shin_dir / shin_len;
-    } else {
-      shin.up = up_axis;
-    }
-
-    QVector3D shin_forward = forward_axis;
-    shin_forward =
-        shin_forward - shin.up * QVector3D::dotProduct(shin_forward, shin.up);
-    if (shin_forward.lengthSquared() > 1e-6F) {
-      shin_forward.normalize();
-    } else {
-      shin_forward = forward_axis;
-    }
-    shin.forward = shin_forward;
-
-    shin.right = QVector3D::crossProduct(shin.up, shin.forward) * right_sign;
-    shin.radius = HP::LOWER_LEG_R;
-
-    return shin;
-  };
-
-  pose.body_frames.shin_l = compute_shin_frame(pose.foot_l, pose.knee_l, -1.0F);
-  pose.body_frames.shin_r = compute_shin_frame(pose.foot_r, pose.knee_r, 1.0F);
-
-  QVector3D const iris = QVector3D(0.10F, 0.10F, 0.12F);
-  auto eye_position = [&](float lateral) {
-    QVector3D const local(lateral, 0.12F, 0.92F);
-    QVector3D world = frame_local_position(pose.body_frames.head, local);
-    world +=
-        pose.body_frames.head.forward * (pose.body_frames.head.radius * 0.02F);
-    return world;
-  };
-  QVector3D const left_eye_world = eye_position(-0.32F);
-  QVector3D const right_eye_world = eye_position(0.32F);
-  float const eye_radius = pose.body_frames.head.radius * 0.17F;
-
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, left_eye_world, eye_radius),
-           iris, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, right_eye_world, eye_radius),
-           iris, nullptr, 1.0F);
-
-  out.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, pose.shoulder_l, pose.elbow_l, upper_arm_r),
-      v.palette.cloth, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.elbow_l, joint_r),
-           v.palette.cloth * 0.95F, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.elbow_l, pose.hand_l, fore_arm_r),
-           v.palette.skin * 0.95F, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_l, hand_r),
-           v.palette.leather_dark * 0.92F, nullptr, 1.0F);
-
-  out.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, pose.shoulder_r, pose.elbow_r, upper_arm_r),
-      v.palette.cloth, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.elbow_r, joint_r),
-           v.palette.cloth * 0.95F, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.elbow_r, pose.hand_r, fore_arm_r),
-           v.palette.skin * 0.95F, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.hand_r, hand_r),
-           v.palette.leather_dark * 0.92F, nullptr, 1.0F);
-
-  QVector3D const hip_l =
-      pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-  QVector3D const hip_r =
-      pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, hip_l, pose.knee_l, thigh_r),
-           v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.knee_l, leg_joint_r),
-           v.palette.cloth * 0.90F, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.knee_l, pose.foot_l, shin_r),
-           v.palette.leather * 0.95F, nullptr, 1.0F);
-
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, hip_r, pose.knee_r, thigh_r),
-           v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(get_unit_sphere(), sphere_at(ctx.model, pose.knee_r, leg_joint_r),
-           v.palette.cloth * 0.90F, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.knee_r, pose.foot_r, shin_r),
-           v.palette.leather * 0.95F, nullptr, 1.0F);
-
-  auto draw_foot = [&](const QVector3D &ankle, bool is_left) {
-    QVector3D lateral = is_left ? -right_axis : right_axis;
-    QVector3D foot_forward =
-        forward_axis + lateral * (is_left ? -0.12F : 0.12F);
-    if (foot_forward.lengthSquared() < 1e-6F) {
-      foot_forward = forward_axis;
-    }
-    foot_forward.normalize();
-
-    float const heel_span = foot_radius * 3.50F;
-    float const toe_span = foot_radius * 5.50F;
-    float const sole_y = HP::GROUND_Y;
-
-    QVector3D ankle_ground = ankle;
-    ankle_ground.setY(sole_y);
-
-    QVector3D heel = ankle_ground - foot_forward * heel_span;
-    QVector3D toe = ankle_ground + foot_forward * toe_span;
-    heel.setY(sole_y);
-    toe.setY(sole_y);
-
-    QMatrix4x4 foot_mat = capsule_between(ctx.model, heel, toe, foot_radius);
-
-    float const width_at_heel = 1.2F;
-    float const width_at_toe = 2.5F;
-    float const height_scale = 0.26F;
-    float const depth_scale = 1.0F;
-
-    QMatrix4x4 scale_mat;
-    scale_mat.setToIdentity();
-    scale_mat.scale((width_at_heel + width_at_toe) * 0.5F, height_scale,
-                    depth_scale);
-
-    QMatrix4x4 shear_mat;
-    shear_mat.setToIdentity();
-    shear_mat(0, 2) = (width_at_toe - width_at_heel) * 0.5F;
-
-    foot_mat = foot_mat * scale_mat * shear_mat;
-
-    out.mesh(get_unit_capsule(), foot_mat, v.palette.leather_dark * 0.92F,
-             nullptr, 1.0F);
-  };
-
-  draw_foot(pose.foot_l, true);
-  draw_foot(pose.foot_r, false);
-
-  draw_armor_overlay(ctx, v, pose, y_top_cover, torso_r, shoulder_half_span,
-                     upper_arm_r, right_axis, out);
-
-  draw_shoulder_decorations(ctx, v, pose, y_top_cover, pose.neck_base.y(),
-                            right_axis, out);
-
-  draw_helmet(ctx, v, pose, out);
-}
-
-void HumanoidRendererBase::draw_armor_overlay(
-    const DrawContext &, const HumanoidVariant &, const HumanoidPose &, float,
-    float, float, float, const QVector3D &, ISubmitter &) const {}
-
-void HumanoidRendererBase::draw_armor(const DrawContext &,
-                                      const HumanoidVariant &,
-                                      const HumanoidPose &,
-                                      const HumanoidAnimationContext &,
-                                      ISubmitter &) const {}
-
-void HumanoidRendererBase::draw_shoulder_decorations(
-    const DrawContext &, const HumanoidVariant &, const HumanoidPose &, float,
-    float, const QVector3D &, ISubmitter &) const {}
-
-void HumanoidRendererBase::draw_helmet(const DrawContext &,
-                                       const HumanoidVariant &,
-                                       const HumanoidPose &,
-                                       ISubmitter &) const {}
-
-void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
-                                            const HumanoidVariant &v,
-                                            const HumanoidPose &pose,
-                                            ISubmitter &out) const {
-  const FacialHairParams &fh = v.facial_hair;
-
-  if (fh.style == FacialHairStyle::None || fh.coverage < 0.01F) {
-    return;
-  }
-
-  const auto &gfx_settings = Render::GraphicsSettings::instance();
-  if (!gfx_settings.features().enable_facial_hair) {
-    return;
-  }
-
-  constexpr float k_facial_hair_max_distance = 12.0F;
-  if (ctx.camera != nullptr) {
-    QVector3D const soldier_world_pos =
-        ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    float const distance =
-        (soldier_world_pos - ctx.camera->get_position()).length();
-    if (distance > k_facial_hair_max_distance) {
-      ++s_render_stats.facial_hair_skipped_distance;
-      return;
-    }
-  }
-
-  const AttachmentFrame &frame = pose.body_frames.head;
-  float const head_r = frame.radius;
-  if (head_r <= 0.0F) {
-    return;
-  }
-
-  auto saturate = [](const QVector3D &c) -> QVector3D {
-    return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
-            std::clamp(c.z(), 0.0F, 1.0F)};
-  };
-
-  QVector3D hair_color = fh.color * (1.0F - fh.greyness) +
-                         QVector3D(0.75F, 0.75F, 0.75F) * fh.greyness;
-  QVector3D hair_dark = hair_color * 0.80F;
-  QVector3D const hair_root = hair_dark * 0.95F;
-  QVector3D const hair_tip = hair_color * 1.08F;
-
-  float const chin_y = -head_r * 0.95F;
-  float const mouth_y = -head_r * 0.18F;
-  float const jaw_z = head_r * 0.68F;
-
-  float const chin_norm = chin_y / head_r;
-  float const mouth_norm = mouth_y / head_r;
-  float const jaw_forward_norm = jaw_z / head_r;
-
-  uint32_t rand_state = 0x9E3779B9U;
-  if (ctx.entity != nullptr) {
-    uintptr_t ptr = reinterpret_cast<uintptr_t>(ctx.entity);
-    rand_state ^= static_cast<uint32_t>(ptr & 0xFFFFFFFFU);
-    rand_state ^= static_cast<uint32_t>((ptr >> 32) & 0xFFFFFFFFU);
-  }
-  rand_state ^= static_cast<uint32_t>(fh.length * 9973.0F);
-  rand_state ^= static_cast<uint32_t>(fh.thickness * 6151.0F);
-  rand_state ^= static_cast<uint32_t>(fh.coverage * 4099.0F);
-
-  auto random01 = [&]() -> float {
-    rand_state = rand_state * 1664525U + 1013904223U;
-    return hash_01(rand_state);
-  };
-
-  auto jitter = [&](float amplitude) -> float {
-    return (random01() - 0.5F) * 2.0F * amplitude;
-  };
-
-  float const beard_forward_tilt_norm = 0.32F;
-
-  constexpr int k_max_facial_hair_strands = 24;
-  int total_strands_emitted = 0;
-
-  auto place_strands = [&](int rows, int segments, float jaw_span,
-                           float row_spacing_norm, float base_length_norm,
-                           float length_variation, float forward_bias_norm,
-                           float base_radius_norm) {
-    if (rows <= 0 || segments <= 0) {
-      return;
-    }
-
-    const float phi_half_range = std::max(0.35F, jaw_span * 0.5F);
-    const float base_y_norm = chin_norm + 0.10F;
-    for (int row = 0; row < rows; ++row) {
-      float const row_t = (rows > 1) ? float(row) / float(rows - 1) : 0.0F;
-      float const target_y_norm =
-          std::clamp(base_y_norm + row_t * row_spacing_norm, -0.92F, 0.10F);
-      float const plane_radius =
-          std::sqrt(std::max(0.02F, 1.0F - target_y_norm * target_y_norm));
-      for (int seg = 0; seg < segments; ++seg) {
-        float const seg_t =
-            (segments > 1) ? float(seg) / float(segments - 1) : 0.5F;
-        float const base_phi = (seg_t - 0.5F) * jaw_span;
-        float const phi = std::clamp(base_phi + jitter(0.25F), -phi_half_range,
-                                     phi_half_range);
-        float const coverage_falloff =
-            1.0F - std::abs(phi) / std::max(0.001F, phi_half_range);
-        float const keep_prob = std::clamp(
-            fh.coverage * (0.75F + coverage_falloff * 0.35F), 0.05F, 1.0F);
-        if (random01() > keep_prob) {
-          continue;
-        }
-        if (total_strands_emitted >= k_max_facial_hair_strands) {
-          return;
-        }
-
-        float const wrap_scale = 0.80F + (1.0F - row_t) * 0.20F;
-        float lateral_norm = plane_radius * std::sin(phi) * wrap_scale;
-        float forward_norm = plane_radius * std::cos(phi);
-        lateral_norm += jitter(0.06F);
-        forward_norm += jitter(0.08F);
-        float const y_norm = target_y_norm + jitter(0.05F);
-
-        QVector3D surface_dir(lateral_norm, y_norm,
-                              forward_norm *
-                                      (0.75F + forward_bias_norm * 0.45F) +
-                                  (forward_bias_norm - 0.05F));
-        float const dir_len = surface_dir.length();
-        if (dir_len < 1e-4F) {
-          continue;
-        }
-        surface_dir /= dir_len;
-
-        float const shell = 1.02F + jitter(0.03F);
-        QVector3D const root = frame_local_position(frame, surface_dir * shell);
-
-        QVector3D local_dir(jitter(0.15F),
-                            -(0.55F + row_t * 0.30F) + jitter(0.10F),
-                            forward_bias_norm + beard_forward_tilt_norm +
-                                row_t * 0.20F + jitter(0.12F));
-        QVector3D strand_dir =
-            frame.right * local_dir.x() + frame.up * local_dir.y() +
-            frame.forward * local_dir.z() - surface_dir * 0.25F;
-        if (strand_dir.lengthSquared() < 1e-6F) {
-          continue;
-        }
-        strand_dir.normalize();
-
-        float const strand_length = base_length_norm * fh.length *
-                                    (1.0F + length_variation * jitter(0.5F)) *
-                                    (1.0F + row_t * 0.25F);
-        if (strand_length < 0.05F) {
-          continue;
-        }
-
-        QVector3D const tip = root + strand_dir * (head_r * strand_length);
-
-        float const base_radius =
-            std::max(head_r * base_radius_norm * fh.thickness *
-                         (0.7F + coverage_falloff * 0.35F),
-                     head_r * 0.010F);
-        float const mid_radius = base_radius * 0.55F;
-
-        float const color_jitter = 0.85F + random01() * 0.30F;
-        QVector3D const root_color = saturate(hair_root * color_jitter);
-        QVector3D const tip_color = saturate(hair_tip * color_jitter);
-
-        QMatrix4x4 base_blob = sphere_at(ctx.model, root, base_radius * 0.95F);
-        out.mesh(get_unit_sphere(), base_blob, root_color, nullptr, 1.0F);
-
-        QVector3D const mid = root + (tip - root) * 0.40F;
-        out.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, root, mid, base_radius),
-                 root_color, nullptr, 1.0F);
-
-        out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
-                 tip_color, nullptr, 1.0F);
-        ++total_strands_emitted;
-      }
-    }
-  };
-
-  auto place_mustache = [&](int segments, float base_length_norm,
-                            float upward_bias_norm) {
-    if (segments <= 0) {
-      return;
-    }
-
-    float const mustache_y_norm = mouth_norm + upward_bias_norm - 0.04F;
-    float const phi_half_range = 0.55F;
-    for (int side = -1; side <= 1; side += 2) {
-      for (int seg = 0; seg < segments; ++seg) {
-        float const t =
-            (segments > 1) ? float(seg) / float(segments - 1) : 0.5F;
-        float const base_phi = (t - 0.5F) * (phi_half_range * 2.0F);
-        float const phi = std::clamp(base_phi + jitter(0.18F), -phi_half_range,
-                                     phi_half_range);
-        float const plane_radius = std::sqrt(
-            std::max(0.02F, 1.0F - mustache_y_norm * mustache_y_norm));
-        float lateral_norm = plane_radius * std::sin(phi);
-        float forward_norm = plane_radius * std::cos(phi);
-        lateral_norm += jitter(0.04F);
-        forward_norm += jitter(0.05F);
-        if (random01() > fh.coverage) {
-          continue;
-        }
-        if (total_strands_emitted >= k_max_facial_hair_strands) {
-          return;
-        }
-        QVector3D surface_dir(lateral_norm, mustache_y_norm + jitter(0.03F),
-                              forward_norm * 0.85F + 0.20F);
-        float const dir_len = surface_dir.length();
-        if (dir_len < 1e-4F) {
-          continue;
-        }
-        surface_dir /= dir_len;
-        QVector3D const root =
-            frame_local_position(frame, surface_dir * (1.01F + jitter(0.02F)));
-
-        QVector3D const dir_local(side * (0.55F + jitter(0.12F)), jitter(0.06F),
-                                  0.34F + jitter(0.08F));
-        QVector3D strand_dir =
-            frame.right * dir_local.x() + frame.up * dir_local.y() +
-            frame.forward * dir_local.z() - surface_dir * 0.20F;
-        if (strand_dir.lengthSquared() < 1e-6F) {
-          continue;
-        }
-        strand_dir.normalize();
-
-        float const strand_length =
-            base_length_norm * fh.length * (1.0F + jitter(0.35F));
-        QVector3D const tip = root + strand_dir * (head_r * strand_length);
-
-        float const base_radius =
-            std::max(head_r * 0.028F * fh.thickness, head_r * 0.0065F);
-        float const mid_radius = base_radius * 0.45F;
-        float const color_jitter = 0.92F + random01() * 0.18F;
-        QVector3D const root_color =
-            saturate(hair_root * (color_jitter * 0.95F));
-        QVector3D const tip_color = saturate(hair_tip * (color_jitter * 1.02F));
-
-        out.mesh(get_unit_sphere(),
-                 sphere_at(ctx.model, root, base_radius * 0.7F), root_color,
-                 nullptr, 1.0F);
-
-        QVector3D const mid = root + (tip - root) * 0.5F;
-        out.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, root, mid, base_radius * 0.85F),
-                 root_color, nullptr, 1.0F);
-        out.mesh(get_unit_cone(), cone_from_to(ctx.model, mid, tip, mid_radius),
-                 tip_color, nullptr, 1.0F);
-        ++total_strands_emitted;
-      }
-    }
-  };
-
-  switch (fh.style) {
-  case FacialHairStyle::Stubble: {
-    place_strands(1, 11, 2.0F, 0.12F, 0.28F, 0.30F, 0.08F, 0.035F);
-    break;
-  }
-
-  case FacialHairStyle::ShortBeard: {
-    place_strands(3, 14, 2.6F, 0.18F, 0.58F, 0.38F, 0.12F, 0.055F);
-    break;
-  }
-
-  case FacialHairStyle::FullBeard:
-  case FacialHairStyle::LongBeard: {
-    bool const is_long = (fh.style == FacialHairStyle::LongBeard);
-    if (is_long) {
-      place_strands(5, 20, 3.0F, 0.24F, 1.00F, 0.48F, 0.18F, 0.060F);
-    } else {
-      place_strands(4, 18, 2.8F, 0.22F, 0.85F, 0.42F, 0.16F, 0.058F);
-    }
-    break;
-  }
-
-  case FacialHairStyle::Goatee: {
-    place_strands(2, 8, 1.8F, 0.16F, 0.70F, 0.34F, 0.14F, 0.055F);
-    break;
-  }
-
-  case FacialHairStyle::Mustache: {
-    place_mustache(5, 0.32F, 0.05F);
-    break;
-  }
-
-  case FacialHairStyle::MustacheAndBeard: {
-    FacialHairParams mustache_only = fh;
-    mustache_only.style = FacialHairStyle::Mustache;
-    FacialHairParams beard_only = fh;
-    beard_only.style = FacialHairStyle::ShortBeard;
-
-    HumanoidVariant v_mustache = v;
-    v_mustache.facial_hair = mustache_only;
-    draw_facial_hair(ctx, v_mustache, pose, out);
-
-    HumanoidVariant v_beard = v;
-    v_beard.facial_hair = beard_only;
-    draw_facial_hair(ctx, v_beard, pose, out);
-    break;
-  }
-
-  case FacialHairStyle::None:
-  default:
-    break;
-  }
-}
-
-void HumanoidRendererBase::draw_simplified_body(const DrawContext &ctx,
-                                                const HumanoidVariant &v,
-                                                HumanoidPose &pose,
-                                                ISubmitter &out) const {
-  using HP = HumanProportions;
-
-  QVector3D const scaling = get_proportion_scaling();
-  float const width_scale = scaling.x();
-  float const height_scale = scaling.y();
-  float const torso_scale = get_torso_scale();
-
-  QVector3D right_axis = pose.shoulder_r - pose.shoulder_l;
-  right_axis.setY(0.0F);
-  right_axis.setZ(0.0F);
-  if (right_axis.lengthSquared() < HP::EPSILON_VECTOR) {
-    right_axis = QVector3D(1.0F, 0.0F, 0.0F);
-  }
-  right_axis.normalize();
-  if (right_axis.x() < 0.0F) {
-    right_axis = -right_axis;
-  }
-
-  QVector3D const up_axis(0.0F, 1.0F, 0.0F);
-  QVector3D forward_axis = QVector3D::crossProduct(right_axis, up_axis);
-  if (forward_axis.lengthSquared() < HP::EPSILON_VECTOR) {
-    forward_axis = QVector3D(0.0F, 0.0F, 1.0F);
-  }
-  forward_axis.normalize();
-
-  QVector3D const shoulder_mid = (pose.shoulder_l + pose.shoulder_r) * 0.5F;
-  const float y_shoulder = shoulder_mid.y();
-  const float y_neck = pose.neck_base.y();
-  const float shoulder_half_span =
-      0.5F * std::abs(pose.shoulder_r.x() - pose.shoulder_l.x());
-
-  const float torso_r_base =
-      std::max(HP::TORSO_TOP_R, shoulder_half_span * 0.95F);
-  const float torso_r = torso_r_base * torso_scale;
-  float const depth_scale = scaling.z();
-  const float torso_depth_factor =
-      std::clamp(HP::TORSO_DEPTH_FACTOR_BASE + (depth_scale - 1.0F) * 0.20F,
-                 HP::TORSO_DEPTH_FACTOR_MIN, HP::TORSO_DEPTH_FACTOR_MAX);
-  float torso_depth = torso_r * torso_depth_factor;
-
-  const float y_top_cover =
-      std::max(y_shoulder + 0.00F, y_neck + HP::TORSO_TOP_COVER_OFFSET);
-
-  const float upper_arm_r = HP::UPPER_ARM_R * width_scale;
-  const float fore_arm_r = HP::FORE_ARM_R * width_scale;
-  const float thigh_r = HP::UPPER_LEG_R * width_scale;
-  const float shin_r = HP::LOWER_LEG_R * width_scale;
-
-  float const torso_x = (shoulder_mid.x() + pose.pelvis_pos.x()) * 0.5F;
-  constexpr float torso_z = 0.0F;
-
-  QVector3D const tunic_top{torso_x, y_top_cover - 0.006F, torso_z};
-  QVector3D const tunic_bot{torso_x, pose.pelvis_pos.y() - 0.05F, torso_z};
-  QMatrix4x4 torso_transform =
-      cylinder_between(ctx.model, tunic_top, tunic_bot, 1.0F);
-  torso_transform.scale(torso_r, 1.0F, torso_depth);
-
-  Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  if (torso_mesh != nullptr) {
-    out.mesh(torso_mesh, torso_transform, v.palette.cloth, nullptr, 1.0F);
-  }
-
-  float const head_r = pose.head_r;
-  QMatrix4x4 head_transform = ctx.model;
-  head_transform.translate(pose.head_pos);
-  head_transform.scale(head_r);
-  out.mesh(get_unit_sphere(), head_transform, v.palette.skin, nullptr, 1.0F);
-
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.shoulder_l, pose.hand_l,
-                            (upper_arm_r + fore_arm_r) * 0.5F),
-           v.palette.cloth, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, pose.shoulder_r, pose.hand_r,
-                            (upper_arm_r + fore_arm_r) * 0.5F),
-           v.palette.cloth, nullptr, 1.0F);
-
-  QVector3D const hip_l =
-      pose.pelvis_pos +
-      QVector3D(-HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-  QVector3D const hip_r =
-      pose.pelvis_pos +
-      QVector3D(HP::HIP_LATERAL_OFFSET, HP::HIP_VERTICAL_OFFSET, 0.0F);
-
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, hip_l, pose.foot_l,
-                            (thigh_r + shin_r) * 0.5F),
-           v.palette.cloth * 0.92F, nullptr, 1.0F);
-  out.mesh(get_unit_cylinder(),
-           cylinder_between(ctx.model, hip_r, pose.foot_r,
-                            (thigh_r + shin_r) * 0.5F),
-           v.palette.cloth * 0.92F, nullptr, 1.0F);
-}
-
-void HumanoidRendererBase::draw_minimal_body(const DrawContext &ctx,
-                                             const HumanoidVariant &v,
-                                             const HumanoidPose &pose,
-                                             ISubmitter &out) const {
-  using HP = HumanProportions;
-
-  QVector3D const top = pose.head_pos + QVector3D(0.0F, pose.head_r, 0.0F);
-  QVector3D const bot = (pose.foot_l + pose.foot_r) * 0.5F;
-
-  float const body_radius = HP::TORSO_TOP_R * get_torso_scale();
-
-  out.mesh(get_unit_capsule(),
-           capsule_between(ctx.model, top, bot, body_radius), v.palette.cloth,
-           nullptr, 1.0F);
-}
 
 namespace {
 auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
@@ -1540,6 +474,7 @@ auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
   }
   return nullptr;
 }
+
 } // namespace
 
 void HumanoidRendererBase::render(const DrawContext &ctx,
@@ -1605,6 +540,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           thread_local TemplateRecorder recorder;
           recorder.reset(320);
           recorder.set_current_shader(nullptr);
+          recorder.set_current_material(
+              Render::GL::MaterialRegistry::instance().is_initialised()
+                  ? Render::GL::MaterialRegistry::instance().character()
+                  : nullptr);
 
           if (auto *outer = dynamic_cast<Renderer *>(&out)) {
             recorder.set_current_shader(outer->get_current_shader());
@@ -1950,6 +889,10 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
           thread_local TemplateRecorder recorder;
           recorder.reset(320);
           recorder.set_current_shader(nullptr);
+          recorder.set_current_material(
+              Render::GL::MaterialRegistry::instance().is_initialised()
+                  ? Render::GL::MaterialRegistry::instance().character()
+                  : nullptr);
 
           if (auto *outer = dynamic_cast<Renderer *>(&out)) {
             recorder.set_current_shader(outer->get_current_shader());
@@ -2026,8 +969,15 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       }
       QMatrix4x4 world_model =
           Render::Geom::multiply_affine(inst_model, cmd.local_model);
-      out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
-               cmd.material_id);
+      if (cmd.material != nullptr) {
+        // Stage-5 path: Material-aware DrawPartCmd so the backend picks
+        // the shader via material->resolve(GraphicsSettings quality).
+        out.part(cmd.mesh, const_cast<Material *>(cmd.material), world_model,
+                 cmd.color, cmd.texture, cmd.alpha, cmd.material_id);
+      } else {
+        out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
+                 cmd.material_id);
+      }
     }
 
     const bool should_render_shadow =
@@ -2088,8 +1038,13 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
                                    shadow_dir_for_use);
 
-        out.mesh(shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-                 nullptr, k_shadow_base_alpha, 0);
+        Render::Humanoid::HumanoidFullPrim const shadow_prim{
+            shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+            k_shadow_base_alpha, 0};
+        Render::Humanoid::submit_humanoid_full_prims(
+            std::span<const Render::Humanoid::HumanoidFullPrim>(&shadow_prim,
+                                                                1U),
+            out);
 
         renderer->set_current_shader(previous_shader);
         last_shader = previous_shader;
@@ -2503,6 +1458,34 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
+    // Stage 15 — apply clip-driven idle overlays (sway, breathing) via
+    // the per-entity state machine. This is the live consumer of the
+    // Stage 12 Clip/StateMachine infrastructure. Overlays are applied
+    // after customize_pose so rig-specific overrides win, and before
+    // IK so downstream pose_controller passes see the adjusted torso.
+    if (ctx.entity != nullptr) {
+      auto const entity_id =
+          static_cast<std::uint32_t>(ctx.entity->get_id());
+      auto &cache_entry =
+          ::Render::Humanoid::ClipDriverCache::instance().get_or_create(
+              entity_id);
+      float const now = anim.time + phase_offset;
+      float dt = 0.0F;
+      if (cache_entry.initialised) {
+        dt = now - cache_entry.last_time;
+        if (dt < 0.0F || dt > 1.0F) {
+          dt = 0.0F; // clip skips / rewinds — don't advance blend
+        }
+      } else {
+        cache_entry.initialised = true;
+      }
+      cache_entry.last_time = now;
+      cache_entry.driver.tick(dt, anim);
+      auto const overlays = cache_entry.driver.sample(now);
+      ::Render::Humanoid::apply_overlays_to_pose(pose, overlays,
+                                                  anim_ctx.entity_right);
+    }
+
     if (!anim.is_moving && !anim.is_attacking) {
       HumanoidPoseController pose_ctrl(pose, anim_ctx);
 
@@ -2809,8 +1792,13 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
             shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
                                        dir_for_use);
 
-            out.mesh(quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-                     nullptr, k_shadow_base_alpha, 0);
+            Render::Humanoid::HumanoidFullPrim const shadow_prim{
+                quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+                k_shadow_base_alpha, 0};
+            Render::Humanoid::submit_humanoid_full_prims(
+                std::span<const Render::Humanoid::HumanoidFullPrim>(
+                    &shadow_prim, 1U),
+                out);
 
             renderer->set_current_shader(previous_shader);
           }
@@ -2819,19 +1807,51 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
     }
 
     switch (soldier_lod) {
-    case HumanoidLOD::Full:
+    case HumanoidLOD::Full: {
 
       ++s_render_stats.lod_full;
-      draw_common_body(inst_ctx, variant, pose, out);
+
+      // Compute the per-entity body metrics + frames that armor and
+      // attachment renderers read out of pose.body_frames. The metrics
+      // encode proportion_scaling / torso_scale so attachments still
+      // align with the soldier's silhouette even though the baked Full
+      // mesh was authored at the static baseline (Stage 15.5d deferral).
+      Render::Humanoid::HumanoidBodyMetrics metrics{};
+      Render::Humanoid::compute_humanoid_body_metrics(
+          pose, get_proportion_scaling(), get_torso_scale(), metrics);
+      Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
+      Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
+
+      Render::Humanoid::submit_humanoid_lod(
+          pose, variant, Render::Creature::CreatureLOD::Full, inst_ctx.model,
+          out);
+
+      // Overridable helpers — nations plug armor overlay, shoulder
+      // decorations and helmets in here. Base impls are empty; these
+      // all route through DrawPartCmd when a nation overrides them.
+      draw_armor_overlay(inst_ctx, variant, pose, metrics.y_top_cover,
+                         metrics.torso_r, metrics.shoulder_half_span,
+                         metrics.upper_arm_r, metrics.right_axis, out);
+      draw_shoulder_decorations(inst_ctx, variant, pose, metrics.y_top_cover,
+                                pose.neck_base.y(), metrics.right_axis, out);
+      draw_helmet(inst_ctx, variant, pose, out);
+
+      // Facial hair stays imperative — RNG-procedural per entity seed;
+      // baking it would require keying the RiggedMeshCache by a seed
+      // bucket (the cache key has `variant_bucket` room for it; see
+      // Stage 15.5e+).
       draw_facial_hair(inst_ctx, variant, pose, out);
       draw_armor(inst_ctx, variant, pose, anim_ctx, out);
       add_attachments(inst_ctx, variant, pose, anim_ctx, out);
       break;
+    }
 
     case HumanoidLOD::Reduced:
 
       ++s_render_stats.lod_reduced;
-      draw_simplified_body(inst_ctx, variant, pose, out);
+      Render::Humanoid::submit_humanoid_lod(
+          pose, variant, Render::Creature::CreatureLOD::Reduced,
+          inst_ctx.model, out);
       draw_armor(inst_ctx, variant, pose, anim_ctx, out);
       add_attachments(inst_ctx, variant, pose, anim_ctx, out);
       break;
@@ -2839,7 +1859,9 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
     case HumanoidLOD::Minimal:
 
       ++s_render_stats.lod_minimal;
-      draw_minimal_body(inst_ctx, variant, pose, out);
+      Render::Humanoid::submit_humanoid_lod(
+          pose, variant, Render::Creature::CreatureLOD::Minimal,
+          inst_ctx.model, out);
       break;
 
     case HumanoidLOD::Billboard:
@@ -2854,5 +1876,11 @@ auto get_humanoid_render_stats() -> const HumanoidRenderStats & {
 }
 
 void reset_humanoid_render_stats() { s_render_stats.reset(); }
+
+namespace detail {
+void increment_facial_hair_skipped_distance() {
+  ++s_render_stats.facial_hair_skipped_distance;
+}
+} // namespace detail
 
 } // namespace Render::GL

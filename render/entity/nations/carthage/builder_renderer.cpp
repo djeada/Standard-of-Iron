@@ -35,6 +35,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "../../../equipment/equipment_submit.h"
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
@@ -167,27 +168,33 @@ public:
                        const HumanoidAnimationContext &anim_ctx,
                        ISubmitter &out) const override {
     if (m_cached_work_apron) {
-      m_cached_work_apron->render(ctx, pose.body_frames, v.palette, anim_ctx,
+      render_equipment(*m_cached_work_apron, ctx, pose.body_frames, v.palette, anim_ctx,
                                   out);
     }
 
     if (m_cached_tool_belt) {
-      m_cached_tool_belt->render(ctx, pose.body_frames, v.palette, anim_ctx,
+      render_equipment(*m_cached_tool_belt, ctx, pose.body_frames, v.palette, anim_ctx,
                                  out);
     }
 
     if (m_cached_arm_guards) {
-      m_cached_arm_guards->render(ctx, pose.body_frames, v.palette, anim_ctx,
+      render_equipment(*m_cached_arm_guards, ctx, pose.body_frames, v.palette, anim_ctx,
                                   out);
     }
 
-    draw_stone_hammer(ctx, v, pose, anim_ctx, out);
+    {
+      EquipmentBatch batch;
+      draw_stone_hammer(ctx, v, pose, anim_ctx, batch);
+      submit_equipment_batch(batch, out);
+    }
   }
 
   void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
                    const HumanoidPose &pose, ISubmitter &out) const override {
 
-    draw_headwrap(ctx, v, pose, out);
+    EquipmentBatch batch;
+    draw_headwrap(ctx, v, pose, batch);
+    submit_equipment_batch(batch, out);
   }
 
   void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
@@ -195,7 +202,9 @@ public:
                   const HumanoidAnimationContext &anim,
                   ISubmitter &out) const override {
     uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    draw_craftsman_robes(ctx, v, pose, seed, out);
+    EquipmentBatch batch;
+    draw_craftsman_robes(ctx, v, pose, seed, batch);
+    submit_equipment_batch(batch, out);
   }
 
 private:
@@ -351,7 +360,7 @@ private:
   void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
                          const HumanoidPose &pose,
                          const HumanoidAnimationContext &anim_ctx,
-                         ISubmitter &out) const {
+                         EquipmentBatch &batch) const {
     QVector3D const wood = v.palette.wood;
 
     QVector3D const stone_color(0.52F, 0.50F, 0.46F);
@@ -383,33 +392,24 @@ private:
     QVector3D const h_top = hand + handle_offset;
     QVector3D const h_bot = h_top - handle_axis * h_len;
 
-    out.mesh(get_unit_cylinder(),
-             cylinder_between(ctx.model, h_bot, h_top, 0.015F), wood, nullptr,
-             1.0F);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, h_bot, h_top, 0.015F), wood, nullptr, 1.0F, 0});
 
     float const head_len = 0.09F;
     float const head_r = 0.028F;
     QVector3D const head_center = h_top + handle_axis * 0.03F;
 
-    out.mesh(
-        get_unit_cylinder(),
-        cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                         head_center + head_axis * (head_len * 0.5F), head_r),
-        stone_color, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                         head_center + head_axis * (head_len * 0.5F), head_r), stone_color, nullptr, 1.0F, 0});
 
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
-                       head_r * 1.1F),
-             stone_dark, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
+                       head_r * 1.1F), stone_dark, nullptr, 1.0F, 0});
 
-    out.mesh(get_unit_sphere(),
-             sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                       head_r * 0.85F),
-             stone_color * 0.92F, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                       head_r * 0.85F), stone_color * 0.92F, nullptr, 1.0F, 0});
   }
 
   void draw_headwrap(const DrawContext &ctx, const HumanoidVariant &v,
-                     const HumanoidPose &pose, ISubmitter &out) const {
+                     const HumanoidPose &pose, EquipmentBatch &batch) const {
     const BodyFrames &frames = pose.body_frames;
     QVector3D const wrap_color(0.88F, 0.82F, 0.72F);
 
@@ -418,15 +418,13 @@ private:
                                 frames.head.forward * 0.03F +
                                 frames.head.up * 0.02F;
 
-    out.mesh(get_unit_sphere(), sphere_at(ctx.model, head_top, 0.052F),
-             wrap_color, nullptr, 1.0F);
-    out.mesh(get_unit_sphere(), sphere_at(ctx.model, head_back, 0.048F),
-             wrap_color * 0.95F, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_top, 0.052F), wrap_color, nullptr, 1.0F, 0});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_back, 0.048F), wrap_color * 0.95F, nullptr, 1.0F, 0});
   }
 
   void draw_craftsman_robes(const DrawContext &ctx, const HumanoidVariant &v,
                             const HumanoidPose &pose, uint32_t seed,
-                            ISubmitter &out) const {
+                            EquipmentBatch &batch) const {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -471,8 +469,7 @@ private:
                        forward * (d * std::cos(a1)) + up * (y - origin.y());
         QVector3D p2 = origin + right * (w * std::sin(a2)) +
                        forward * (d * std::cos(a2)) + up * (y - origin.y());
-        out.mesh(get_unit_cylinder(), cylinder_between(ctx.model, p1, p2, th),
-                 c, nullptr, 1.0F);
+        batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, p1, p2, th), c, nullptr, 1.0F, 0});
       }
     };
 
@@ -505,18 +502,17 @@ private:
         QVector3D pos = anchor + out_dir * (0.012F + t * 0.022F) +
                         forward * (-0.012F + t * 0.05F) - up * (t * 0.035F);
         float r = HP::UPPER_ARM_R * (1.48F - t * 0.08F);
-        out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r),
-                 robe_color * (1.0F - t * 0.03F), nullptr, 1.0F);
+        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), robe_color * (1.0F - t * 0.03F), nullptr, 1.0F, 0});
       }
     };
     sleeve(frames.shoulder_l.origin, -right);
     sleeve(frames.shoulder_r.origin, right);
 
-    draw_extended_forearm(ctx, v, pose, out);
+    draw_extended_forearm(ctx, v, pose, batch);
   }
 
   void draw_extended_forearm(const DrawContext &ctx, const HumanoidVariant &v,
-                             const HumanoidPose &pose, ISubmitter &out) const {
+                             const HumanoidPose &pose, EquipmentBatch &batch) const {
 
     QVector3D const skin_color = v.palette.skin;
 
@@ -527,8 +523,7 @@ private:
       float t = 0.25F + float(i) * 0.20F;
       QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
       float r = 0.022F - float(i) * 0.002F;
-      out.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r), skin_color,
-               nullptr, 1.0F);
+      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), skin_color, nullptr, 1.0F, 0});
     }
   }
 

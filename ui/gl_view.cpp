@@ -1,10 +1,13 @@
 #include "gl_view.h"
 #include "../app/core/game_engine.h"
+#include "../render/graphics_settings.h"
+#include "../render/i_render_backend.h"
 
 #include <QOpenGLContext>
 #include <QOpenGLFramebufferObject>
 #include <QOpenGLFramebufferObjectFormat>
 #include <QQuickWindow>
+#include <QSurfaceFormat>
 #include <exception>
 #include <qglobal.h>
 #include <qobject.h>
@@ -24,6 +27,26 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
     qCritical() << "GLView::createRenderer() - No valid OpenGL context";
     qCritical() << "Running in software rendering mode - 3D view not available";
     return nullptr;
+  }
+
+  // Stage 17.3 — probe the GL version before handing off to the GameEngine.
+  // Anything below 3.3 cannot run the OpenGL backend; fall back to the
+  // software tier by forcing ShaderQuality::None in the global settings.
+  const auto fmt = ctx->format();
+  const auto version = fmt.version();
+  if (version.first < 3 ||
+      (version.first == 3 && version.second < 3)) {
+    qWarning() << "GLView::createRenderer() - OpenGL" << version.first << "."
+               << version.second
+               << "detected; at least 3.3 required. Falling back to "
+                  "ShaderQuality::None (software backend). Launch with "
+                  "--force-software to silence this warning.";
+    auto &gfx = Render::GraphicsSettings::instance();
+    const_cast<Render::GraphicsFeatures &>(gfx.features()).shader_quality =
+        Render::ShaderQuality::None;
+  } else {
+    qInfo() << "GLView::createRenderer() - OpenGL" << version.first << "."
+            << version.second << "context OK";
   }
 
   return new GLRenderer(m_engine);
@@ -57,7 +80,16 @@ void GLView::GLRenderer::render() {
 
   try {
     m_engine->ensure_initialized();
-    m_engine->update(1.0F / 60.0F);
+
+    auto now = std::chrono::steady_clock::now();
+    float dt = 1.0F / 60.0F;
+    if (m_last_frame_time.time_since_epoch().count() != 0) {
+      dt = std::chrono::duration<float>(now - m_last_frame_time).count();
+      dt = std::min(dt, 0.1F); // cap at 100ms to prevent death spiral
+    }
+    m_last_frame_time = now;
+
+    m_engine->update(dt);
     m_engine->render(m_size.width(), m_size.height());
   } catch (const std::exception &e) {
     qCritical() << "GLRenderer::render() exception:" << e.what();

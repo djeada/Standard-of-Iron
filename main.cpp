@@ -1,3 +1,5 @@
+#include <QCommandLineOption>
+#include <QCommandLineParser>
 #include <QCoreApplication>
 #include <QDateTime>
 #include <QDebug>
@@ -16,6 +18,7 @@
 #include <QUrl>
 #include <cstdio>
 #include <memory>
+#include <optional>
 #include <qglobal.h>
 #include <qguiapplication.h>
 #include <qnamespace.h>
@@ -40,6 +43,9 @@
 #include "app/models/graphics_settings_proxy.h"
 #include "app/models/map_preview_image_provider.h"
 #include "app/models/minimap_image_provider.h"
+#include "render/graphics_settings.h"
+#include "render/i_render_backend.h"
+#include "render/profiling/profiling_hud.h"
 #include "ui/campaign_map_view.h"
 #include "ui/gl_view.h"
 #include "ui/theme.h"
@@ -269,6 +275,78 @@ auto main(int argc, char *argv[]) -> int {
   QGuiApplication app(argc, argv);
   qInfo() << "QGuiApplication created successfully";
 
+  // Stage 17.3 — parse rendering CLI flags. We do this after QGuiApplication
+  // construction so that Qt's own platform args (-platform, -style, …) are
+  // already consumed, but before any rendering setup so that the chosen
+  // shader_quality is honoured by the GameEngine on first ensure_initialized().
+  {
+    QCommandLineParser parser;
+    parser.setApplicationDescription("Standard of Iron");
+    parser.addHelpOption();
+    QCommandLineOption force_software_opt(
+        QStringList{"s", "force-software"},
+        "Force the CPU software rendering backend (ShaderQuality::None).");
+    QCommandLineOption quality_opt(
+        "quality",
+        "Override shader quality: full | reduced | minimal | none.",
+        "level");
+    parser.addOption(force_software_opt);
+    parser.addOption(quality_opt);
+    parser.process(app);
+
+    std::optional<Render::ShaderQuality> requested;
+    if (parser.isSet(quality_opt)) {
+      const QString v = parser.value(quality_opt).trimmed().toLower();
+      if (v == "full") {
+        requested = Render::ShaderQuality::Full;
+      } else if (v == "reduced") {
+        requested = Render::ShaderQuality::Reduced;
+      } else if (v == "minimal") {
+        requested = Render::ShaderQuality::Minimal;
+      } else if (v == "none" || v == "software") {
+        requested = Render::ShaderQuality::None;
+      } else {
+        qWarning() << "Unknown --quality value:" << v
+                   << "(expected full|reduced|minimal|none)";
+      }
+    }
+    if (parser.isSet(force_software_opt)) {
+      requested = Render::ShaderQuality::None;
+    }
+    if (requested.has_value()) {
+      auto &gfx = Render::GraphicsSettings::instance();
+      auto features = gfx.features();
+      features.shader_quality = *requested;
+      // GraphicsSettings does not expose a direct features setter; the
+      // shader_quality field is consulted through features() each frame.
+      // We persist it by setting the matching GraphicsQuality preset and
+      // then overriding shader_quality. Low ↔ Minimal, Medium ↔ Reduced,
+      // High/Ultra ↔ Full, anything-software → keep current preset and just
+      // flip the shader_quality bit.
+      switch (*requested) {
+      case Render::ShaderQuality::None:
+        qInfo() << "[CLI] shader_quality = None (software backend)";
+        break;
+      case Render::ShaderQuality::Minimal:
+        gfx.set_quality(Render::GraphicsQuality::Low);
+        qInfo() << "[CLI] shader_quality = Minimal";
+        break;
+      case Render::ShaderQuality::Reduced:
+        gfx.set_quality(Render::GraphicsQuality::Medium);
+        qInfo() << "[CLI] shader_quality = Reduced";
+        break;
+      case Render::ShaderQuality::Full:
+        gfx.set_quality(Render::GraphicsQuality::High);
+        qInfo() << "[CLI] shader_quality = Full";
+        break;
+      }
+      // Override the per-feature shader_quality after the preset apply so
+      // --force-software always wins regardless of the underlying preset.
+      const_cast<Render::GraphicsFeatures &>(gfx.features()).shader_quality =
+          *requested;
+    }
+  }
+
   // Use unique_ptr with custom deleter for Qt objects
   // This ensures proper cleanup order and prevents segfaults
   std::unique_ptr<LanguageManager> language_manager;
@@ -310,6 +388,10 @@ auto main(int argc, char *argv[]) -> int {
                                             map_preview_provider);
   engine->rootContext()->setContextProperty("graphicsSettings",
                                             graphics_settings.get());
+
+  auto profiling_hud = std::make_unique<Render::Profiling::ProfilingHud>();
+  engine->rootContext()->setContextProperty("profilingHud",
+                                            profiling_hud.get());
 
   // Connect minimap image updates to the provider with DirectConnection
   // This ensures the image is set in the provider BEFORE QML reacts to the

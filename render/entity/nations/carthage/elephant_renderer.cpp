@@ -21,7 +21,6 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clamp_vec_01;
-using Render::Geom::cylinder_between;
 
 struct CarthageElephantPalette {
   QVector3D fabric_purple{0.45F, 0.18F, 0.55F};
@@ -39,22 +38,6 @@ inline auto make_palette(const QVector3D &team) -> CarthageElephantPalette {
   CarthageElephantPalette p;
   p.team = clamp_vec_01(team);
   return p;
-}
-
-inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
-                     const QMatrix4x4 &model, const QVector3D &pos,
-                     const QVector3D &size, const QVector3D &color) {
-  QMatrix4x4 m = model;
-  m.translate(pos);
-  m.scale(size);
-  out.mesh(unit, m, color, white, 1.0F);
-}
-
-inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
-                     const QVector3D &a, const QVector3D &b, float r,
-                     const QVector3D &color, Texture *white) {
-  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
-           1.0F);
 }
 
 class CarthageElephantRenderer : public ElephantRendererBase {

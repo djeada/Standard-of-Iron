@@ -22,7 +22,7 @@ public:
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
+              EquipmentBatch &batch) override;
 
   void set_config(const ToolBeltConfig &config) { m_config = config; }
 
@@ -30,16 +30,16 @@ private:
   ToolBeltConfig m_config;
 
   void renderBelt(const DrawContext &ctx, const AttachmentFrame &waist,
-                  ISubmitter &submitter);
+                  EquipmentBatch &batch);
 
   void renderHammerLoop(const DrawContext &ctx, const AttachmentFrame &waist,
-                        ISubmitter &submitter);
+                        EquipmentBatch &batch);
 
   void renderChiselHolder(const DrawContext &ctx, const AttachmentFrame &waist,
-                          ISubmitter &submitter);
+                          EquipmentBatch &batch);
 
   void renderPouches(const DrawContext &ctx, const AttachmentFrame &waist,
-                     ISubmitter &submitter);
+                     EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

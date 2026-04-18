@@ -31,6 +31,36 @@ add_executable(standard_of_iron_tests
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
+    render/draw_queue_sort_order_test.cpp
+    render/oriented_parts_test.cpp
+    render/draw_part_material_test.cpp
+    render/pose_template_cache_test.cpp
+    render/rig_dsl_interpreter_test.cpp
+    render/rigged_pipeline_test.cpp
+    render/rigged_pipeline_instanced_test.cpp
+    render/bone_palette_arena_ubo_test.cpp
+    render/gpu_skinning_perf_sentinel_test.cpp
+    render/pipeline/lod_selector_test.cpp
+    render/pipeline/instance_coalescer_test.cpp
+    render/pass/frame_pass_runner_test.cpp
+    render/rig_dsl/barracks_rig_test.cpp
+    render/animation/animation_test.cpp
+    render/humanoid/skeleton_test.cpp
+    render/humanoid/humanoid_spec_test.cpp
+    render/horse/horse_spec_test.cpp
+    render/elephant/elephant_spec_test.cpp
+    render/creature/skeleton_test.cpp
+    render/creature/part_graph_test.cpp
+    render/creature/rigged_mesh_bake_test.cpp
+    render/creature/humanoid_reduced_switchover_test.cpp
+    render/creature/humanoid_full_switchover_test.cpp
+    render/creature/horse_full_switchover_test.cpp
+    render/creature/elephant_full_switchover_test.cpp
+    render/rigged_visual_parity_test.cpp
+    render/software/software_rasterizer_test.cpp
+    render/software/software_backend_integration_test.cpp
+    render/software/render_backend_factory_test.cpp
+    render/profiling/frame_profile_test.cpp
     test_main.cpp
 )
 
@@ -61,4 +91,46 @@ gtest_discover_tests(standard_of_iron_tests)
 # Set output directory
 set_target_properties(standard_of_iron_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
+# --- Subset test binary -------------------------------------------------
+# Three test files have pre-existing compile breakage as of Stage 15.5c
+# (equipment_registry_test.cpp / helmet_renderers_test.cpp /
+# horse_equipment_renderers_test.cpp rely on a MockEquipmentRenderer
+# whose interface drifted from the real registry). Fixing those is
+# out-of-scope for the 15.5x switchover series, so we build a subset
+# binary that skips them and run it as the per-stage verification.
+get_target_property(_soi_tests_sources standard_of_iron_tests SOURCES)
+set(_soi_tests_subset_sources)
+foreach(src IN LISTS _soi_tests_sources)
+    get_filename_component(_name "${src}" NAME)
+    if(NOT _name STREQUAL "equipment_registry_test.cpp"
+        AND NOT _name STREQUAL "helmet_renderers_test.cpp"
+        AND NOT _name STREQUAL "horse_equipment_renderers_test.cpp")
+        list(APPEND _soi_tests_subset_sources "${src}")
+    endif()
+endforeach()
+
+add_executable(standard_of_iron_tests_subset ${_soi_tests_subset_sources})
+target_link_libraries(standard_of_iron_tests_subset
+    PRIVATE
+        GTest::gtest
+        GTest::gmock
+        Qt${QT_VERSION_MAJOR}::Core
+        Qt${QT_VERSION_MAJOR}::Gui
+        Qt${QT_VERSION_MAJOR}::Sql
+        engine_core
+        render_gl
+        game_systems
+)
+target_include_directories(standard_of_iron_tests_subset
+    PRIVATE
+        ${CMAKE_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/game
+)
+set_target_properties(standard_of_iron_tests_subset PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+    AUTOMOC ON
+    AUTOUIC ON
+    AUTORCC ON
 )

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../draw_queue.h"
-#include "../ground/grass_gpu.h"
-#include "../ground/plant_gpu.h"
-#include "../ground/stone_gpu.h"
-#include "../ground/terrain_gpu.h"
+#include "../frame_budget.h"
+#include "../decoration_gpu.h"
+#include "../world_chunk.h"
+#include "../i_render_backend.h"
 #include "camera.h"
 #include "persistent_buffer.h"
 #include "resources.h"
@@ -22,6 +22,7 @@ class CylinderPipeline;
 class VegetationPipeline;
 class TerrainPipeline;
 class CharacterPipeline;
+class RiggedCharacterPipeline;
 class WaterPipeline;
 class EffectsPipeline;
 class PrimitiveBatchPipeline;
@@ -36,12 +37,13 @@ class MeshInstancingPipeline;
 
 namespace Render::GL {
 
-class Backend : protected QOpenGLFunctions_3_3_Core {
+class Backend : public IRenderBackend, protected QOpenGLFunctions_3_3_Core {
 public:
   friend class BackendPipelines::CylinderPipeline;
   friend class BackendPipelines::VegetationPipeline;
 
   Backend();
+  explicit Backend(ShaderQuality quality);
   ~Backend() override;
 
   Backend(const Backend &) = delete;
@@ -49,20 +51,28 @@ public:
   Backend(Backend &&) = delete;
   auto operator=(Backend &&) -> Backend & = delete;
 
-  void initialize();
-  void begin_frame();
-  void set_viewport(int w, int h);
-  void set_clear_color(float r, float g, float b, float a);
-  void set_animation_time(float time) { m_animationTime = time; }
-  void execute(const DrawQueue &queue, const Camera &cam);
+  void initialize() override;
+  void begin_frame() override;
+  void set_viewport(int w, int h) override;
+  void set_clear_color(float r, float g, float b, float a) override;
+  void set_animation_time(float time) noexcept override {
+    m_animationTime = time;
+  }
+  void execute(const DrawQueue &queue, const Camera &cam) override;
 
-  [[nodiscard]] auto resources() const -> ResourceManager * {
+  [[nodiscard]] auto resources() const -> ResourceManager * override {
     return m_resources.get();
   }
 
-  [[nodiscard]] auto shader(const QString &name) const -> Shader * {
+  [[nodiscard]] auto shader(const QString &name) const -> Shader * override {
     return m_shaderCache ? m_shaderCache->get(name) : nullptr;
   }
+
+  [[nodiscard]] auto supports_shaders() const -> bool override { return true; }
+  [[nodiscard]] auto shader_quality() const -> ShaderQuality override {
+    return m_shader_quality;
+  }
+  void set_shader_quality(ShaderQuality q) noexcept { m_shader_quality = q; }
   auto get_or_load_shader(const QString &name, const QString &vert_path,
                           const QString &fragPath) -> Shader * {
     if (!m_shaderCache) {
@@ -139,6 +149,14 @@ public:
     m_riverbankVisibility.explored_alpha = explored_alpha;
   }
 
+  void set_frame_budget(const Render::FrameBudgetConfig &config) override {
+    m_frame_budget_config = config;
+  }
+  [[nodiscard]] auto frame_tracker() const
+      -> const Render::FrameTimeTracker * override {
+    return &m_frame_tracker;
+  }
+
 private:
   int m_viewportWidth{0};
   int m_viewportHeight{0};
@@ -149,6 +167,8 @@ private:
   std::unique_ptr<BackendPipelines::VegetationPipeline> m_vegetationPipeline;
   std::unique_ptr<BackendPipelines::TerrainPipeline> m_terrainPipeline;
   std::unique_ptr<BackendPipelines::CharacterPipeline> m_characterPipeline;
+  std::unique_ptr<BackendPipelines::RiggedCharacterPipeline>
+      m_riggedCharacterPipeline;
   std::unique_ptr<BackendPipelines::WaterPipeline> m_waterPipeline;
   std::unique_ptr<BackendPipelines::EffectsPipeline> m_effectsPipeline;
   std::unique_ptr<BackendPipelines::PrimitiveBatchPipeline>
@@ -180,6 +200,10 @@ private:
     float explored_alpha = 0.6F;
     bool enabled = false;
   } m_riverbankVisibility;
+
+  Render::FrameBudgetConfig m_frame_budget_config;
+  Render::FrameTimeTracker m_frame_tracker;
+  ShaderQuality m_shader_quality{ShaderQuality::Full};
 };
 
 } // namespace Render::GL

@@ -3,7 +3,7 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>
@@ -19,20 +19,20 @@ ArmGuardsRenderer::ArmGuardsRenderer(const ArmGuardsConfig &config)
 void ArmGuardsRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                                const HumanoidPalette &,
                                const HumanoidAnimationContext &,
-                               ISubmitter &submitter) {
+                               EquipmentBatch &batch) {
   QVector3D elbow_l = frames.shoulder_l.origin +
                       (frames.hand_l.origin - frames.shoulder_l.origin) * 0.55F;
   QVector3D elbow_r = frames.shoulder_r.origin +
                       (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
 
-  renderArmGuard(ctx, elbow_l, frames.hand_l.origin, submitter);
-  renderArmGuard(ctx, elbow_r, frames.hand_r.origin, submitter);
+  renderArmGuard(ctx, elbow_l, frames.hand_l.origin, batch);
+  renderArmGuard(ctx, elbow_r, frames.hand_r.origin, batch);
 }
 
 void ArmGuardsRenderer::renderArmGuard(const DrawContext &ctx,
                                        const QVector3D &elbow,
                                        const QVector3D &wrist,
-                                       ISubmitter &submitter) {
+                                       EquipmentBatch &batch) {
   QVector3D const guard_color = m_config.leather_color;
   QVector3D const strap_color = m_config.strap_color;
 
@@ -57,8 +57,8 @@ void ArmGuardsRenderer::renderArmGuard(const DrawContext &ctx,
 
     float const r = 0.026F - t * 0.004F;
 
-    submitter.mesh(get_unit_sphere(), sphere_at(ctx.model, pos, r),
-                   guard_color * (1.0F - t * 0.08F), nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
+                   guard_color * (1.0F - t * 0.08F), nullptr, 1.0F});
   }
 
   if (m_config.include_straps) {
@@ -68,8 +68,8 @@ void ArmGuardsRenderer::renderArmGuard(const DrawContext &ctx,
     QVector3D const strap_3 = guard_bot - arm_dir * 0.02F;
 
     for (const auto &strap_pos : {strap_1, strap_2, strap_3}) {
-      submitter.mesh(get_unit_sphere(), sphere_at(ctx.model, strap_pos, 0.010F),
-                     strap_color, nullptr, 1.0F);
+      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, strap_pos, 0.010F),
+                     strap_color, nullptr, 1.0F});
     }
   }
 }

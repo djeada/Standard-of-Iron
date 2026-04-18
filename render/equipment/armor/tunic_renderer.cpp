@@ -5,7 +5,7 @@
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/rig.h"
 #include "../../humanoid/style_palette.h"
-#include "../../submitter.h"
+#include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
@@ -24,7 +24,7 @@ TunicRenderer::TunicRenderer(const TunicConfig &config) : m_config(config) {}
 void TunicRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
-                           ISubmitter &submitter) {
+                           EquipmentBatch &batch) {
 
   (void)anim;
 
@@ -48,18 +48,18 @@ void TunicRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   float const y_top = torsoY(HP::SHOULDER_Y + 0.02F);
 
-  renderTorsoArmor(ctx, torso, steel_color, brass_color, submitter);
+  renderTorsoArmor(ctx, torso, steel_color, brass_color, batch);
 
   if (m_config.include_pauldrons) {
-    renderPauldrons(ctx, frames, steel_color, brass_color, submitter);
+    renderPauldrons(ctx, frames, steel_color, brass_color, batch);
   }
 
   if (m_config.include_gorget) {
-    renderGorget(ctx, torso, y_top, steel_color, brass_color, submitter);
+    renderGorget(ctx, torso, y_top, steel_color, brass_color, batch);
   }
 
   if (m_config.include_belt) {
-    renderBelt(ctx, waist, steel_color, brass_color, submitter);
+    renderBelt(ctx, waist, steel_color, brass_color, batch);
   }
 }
 
@@ -67,7 +67,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
                                      const AttachmentFrame &torso,
                                      const QVector3D &steel_color,
                                      const QVector3D &brass_color,
-                                     ISubmitter &submitter) {
+                                     EquipmentBatch &batch) {
   using HP = HumanProportions;
 
   const QVector3D &origin = torso.origin;
@@ -135,9 +135,9 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
                            forward * (r2 * cos2) + up * (y_pos - origin.y());
 
       float const seg_r = (r1 + r2) * 0.5F * 0.08F;
-      submitter.mesh(get_unit_cylinder(),
+      batch.meshes.push_back({get_unit_cylinder(), nullptr,
                      cylinder_between(ctx.model, p1, p2, seg_r), color, nullptr,
-                     1.0F);
+                     1.0F});
     }
   };
 
@@ -170,9 +170,9 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
       QVector3D const bot = origin + right * (r2 * sin_a) +
                             forward * (r2 * cos_a) + up * (y2 - origin.y());
 
-      submitter.mesh(get_unit_cylinder(),
+      batch.meshes.push_back({get_unit_cylinder(), nullptr,
                      cylinder_between(ctx.model, top, bot, torso_r * 0.06F),
-                     steel_color * 0.96F, nullptr, 1.0F);
+                     steel_color * 0.96F, nullptr, 1.0F});
     }
   };
 
@@ -185,7 +185,7 @@ void TunicRenderer::renderTorsoArmor(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(pos);
     m.scale(0.012F);
-    submitter.mesh(get_unit_sphere(), m, brass_color, nullptr, 1.0F);
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, brass_color, nullptr, 1.0F});
   };
 
   constexpr float RIVET_POSITION_SCALE = 0.92F;
@@ -204,7 +204,7 @@ void TunicRenderer::renderPauldrons(const DrawContext &ctx,
                                     const BodyFrames &frames,
                                     const QVector3D &steel_color,
                                     const QVector3D &brass_color,
-                                    ISubmitter &submitter) {
+                                    EquipmentBatch &batch) {
   using HP = HumanProportions;
 
   auto draw_pauldron = [&](const QVector3D &shoulder,
@@ -217,17 +217,17 @@ void TunicRenderer::renderPauldrons(const DrawContext &ctx,
           shoulder + outward * (0.02F + static_cast<float>(i) * 0.008F);
       seg_pos.setY(seg_y);
 
-      submitter.mesh(get_unit_sphere(), sphere_at(ctx.model, seg_pos, seg_r),
+      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, seg_pos, seg_r),
                      i == 0
                          ? steel_color * 1.05F
                          : steel_color * (1.0F - static_cast<float>(i) * 0.03F),
-                     nullptr, 1.0F);
+                     nullptr, 1.0F});
 
       if (i < 3) {
         QMatrix4x4 m = ctx.model;
         m.translate(seg_pos + QVector3D(0, 0.015F, 0.03F));
         m.scale(0.012F);
-        submitter.mesh(get_unit_sphere(), m, brass_color, nullptr, 1.0F);
+        batch.meshes.push_back({get_unit_sphere(), nullptr, m, brass_color, nullptr, 1.0F});
       }
     }
   };
@@ -244,7 +244,7 @@ void TunicRenderer::renderGorget(const DrawContext &ctx,
                                  const AttachmentFrame &torso, float y_top,
                                  const QVector3D &steel_color,
                                  const QVector3D &brass_color,
-                                 ISubmitter &submitter) {
+                                 EquipmentBatch &batch) {
   using HP = HumanProportions;
 
   QVector3D const gorget_top(torso.origin.x(), y_top + 0.025F,
@@ -252,23 +252,23 @@ void TunicRenderer::renderGorget(const DrawContext &ctx,
   QVector3D const gorget_bot(torso.origin.x(), y_top - 0.012F,
                              torso.origin.z());
 
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, gorget_bot, gorget_top,
                                   HP::NECK_RADIUS * 2.6F),
-                 steel_color * 1.08F, nullptr, 1.0F);
+                 steel_color * 1.08F, nullptr, 1.0F});
 
   QVector3D const a = gorget_top + QVector3D(0, 0.005F, 0);
   QVector3D const b = gorget_top - QVector3D(0, 0.005F, 0);
-  submitter.mesh(get_unit_cylinder(),
+  batch.meshes.push_back({get_unit_cylinder(), nullptr,
                  cylinder_between(ctx.model, a, b, HP::NECK_RADIUS * 2.62F),
-                 brass_color, nullptr, 1.0F);
+                 brass_color, nullptr, 1.0F});
 }
 
 void TunicRenderer::renderBelt(const DrawContext &ctx,
                                const AttachmentFrame &waist,
                                const QVector3D &steel_color,
                                const QVector3D &brass_color,
-                               ISubmitter &submitter) {
+                               EquipmentBatch &batch) {
   using HP = HumanProportions;
 
   float const waist_r = waist.radius * m_config.waist_taper;
@@ -283,17 +283,17 @@ void TunicRenderer::renderBelt(const DrawContext &ctx,
   QVector3D const belt_bot(waist.origin.x(), y_center - 0.02F,
                            waist.origin.z());
 
-  submitter.mesh(
-      get_unit_cylinder(),
+  batch.meshes.push_back({
+      get_unit_cylinder(), nullptr,
       cylinder_between(ctx.model, belt_bot, belt_top, waist_r * 1.08F),
-      steel_color * 0.94F, nullptr, 1.0F);
+      steel_color * 0.94F, nullptr, 1.0F});
 
   QVector3D const trim_top = belt_top + QVector3D(0, 0.005F, 0);
   QVector3D const trim_bot = belt_bot - QVector3D(0, 0.005F, 0);
-  submitter.mesh(
-      get_unit_cylinder(),
+  batch.meshes.push_back({
+      get_unit_cylinder(), nullptr,
       cylinder_between(ctx.model, trim_bot, trim_top, waist_r * 1.12F),
-      brass_color * 0.95F, nullptr, 1.0F);
+      brass_color * 0.95F, nullptr, 1.0F});
 }
 
 } // namespace Render::GL

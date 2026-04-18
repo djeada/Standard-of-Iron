@@ -1,5 +1,6 @@
 #include "rig.h"
 
+#include "../material.h"
 #include "../../game/core/component.h"
 #include "../entity/registry.h"
 #include "../geom/affine_matrix.h"
@@ -9,6 +10,7 @@
 #include "../humanoid/rig.h"
 #include "../submitter.h"
 #include "../template_cache.h"
+#include "elephant_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -17,6 +19,7 @@
 #include <cmath>
 #include <cstdint>
 #include <numbers>
+#include <vector>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
 #include <unordered_map>
@@ -154,22 +157,6 @@ inline auto color_hash(const QVector3D &c) -> uint32_t {
   v *= k_hash_mult_2;
   v ^= v >> k_hash_shift_16;
   return v;
-}
-
-inline void draw_cylinder(ISubmitter &out, const QMatrix4x4 &model,
-                          const QVector3D &a, const QVector3D &b, float radius,
-                          const QVector3D &color, float alpha = 1.0F,
-                          int material_id = 0) {
-  out.mesh(get_unit_cylinder(), cylinder_between(model, a, b, radius), color,
-           nullptr, alpha, material_id);
-}
-
-inline void draw_cone(ISubmitter &out, const QMatrix4x4 &model,
-                      const QVector3D &tip, const QVector3D &base, float radius,
-                      const QVector3D &color, float alpha = 1.0F,
-                      int material_id = 0) {
-  out.mesh(get_unit_cone(), cone_from_to(model, tip, base, radius), color,
-           nullptr, alpha, material_id);
 }
 
 constexpr float k_skin_highlight_base = 0.50F;
@@ -849,447 +836,44 @@ void ElephantRendererBase::render_full(
 
   QVector3D const barrel_center(body_sway, d.barrel_center_y + bob, 0.0F);
 
-  {
-    QMatrix4x4 body_main = elephant_ctx.model;
-    body_main.translate(barrel_center);
-
-    body_main.scale(d.body_width * 1.05F * 1.2F, d.body_height * 0.95F * 1.2F,
-                    d.body_length * 0.55F * 1.2F);
-    QVector3D const body_color =
-        skin_gradient(v.skin_color, 0.60F, 0.0F, skin_seed_a);
-    out.mesh(get_unit_sphere(), body_main, body_color, nullptr, 1.0F, 6);
-  }
-
   QVector3D const chest_center =
       barrel_center +
       QVector3D(0.0F, d.body_height * 0.10F, d.body_length * 0.30F);
-  {
-    QMatrix4x4 chest = elephant_ctx.model;
-    chest.translate(chest_center);
-
-    chest.scale(d.body_width * 1.18F * 1.1F, d.body_height * 1.00F * 1.1F,
-                d.body_length * 0.36F * 1.1F);
-    out.mesh(get_unit_sphere(), chest,
-             skin_gradient(v.skin_color, 0.70F, 0.15F, skin_seed_a), nullptr,
-             1.0F, 6);
-  }
-
   QVector3D const rump_center =
       barrel_center +
       QVector3D(0.0F, d.body_height * 0.02F, -d.body_length * 0.32F);
-  {
-    QMatrix4x4 rump = elephant_ctx.model;
-    rump.translate(rump_center);
-
-    rump.scale(d.body_width * 1.10F * 1.1F, d.body_height * 0.98F * 1.1F,
-               d.body_length * 0.34F * 1.1F);
-    out.mesh(get_unit_sphere(), rump,
-             skin_gradient(v.skin_color, 0.55F, -0.20F, skin_seed_b), nullptr,
-             1.0F, 6);
-  }
-
   QVector3D const belly_center =
       barrel_center +
       QVector3D(0.0F, -d.body_height * 0.22F, d.body_length * 0.05F);
-  {
-    QMatrix4x4 belly = elephant_ctx.model;
-    belly.translate(belly_center);
-    belly.scale(d.body_width * 1.00F, d.body_height * 0.70F,
-                d.body_length * 0.55F);
-    out.mesh(get_unit_sphere(), belly, darken(v.skin_color, 0.92F), nullptr,
-             1.0F, 6);
-  }
-
   QVector3D const neck_base =
       chest_center +
       QVector3D(0.0F, d.body_height * 0.25F, d.body_length * 0.15F);
   QVector3D const neck_top =
       neck_base + QVector3D(0.0F, d.neck_length * 0.60F, d.neck_length * 0.50F);
-  draw_cylinder(out, elephant_ctx.model, neck_base, neck_top, d.neck_width,
-                skin_gradient(v.skin_color, 0.65F, 0.10F, skin_seed_a), 1.0F);
-
   QVector3D const head_center =
       neck_top + QVector3D(0.0F, d.head_height * 0.20F, d.head_length * 0.35F);
-  {
-    QMatrix4x4 head = elephant_ctx.model;
-    head.translate(head_center);
-    head.scale(d.head_width * 1.0F, d.head_height * 0.90F,
-               d.head_length * 0.80F);
-    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
-  }
-
-  {
-    QMatrix4x4 forehead = elephant_ctx.model;
-    forehead.translate(head_center + QVector3D(0.0F, d.head_height * 0.35F,
-                                               d.head_length * 0.10F));
-    forehead.scale(d.head_width * 0.85F, d.head_height * 0.45F,
-                   d.head_length * 0.50F);
-    out.mesh(get_unit_sphere(), forehead, lighten(v.skin_color, 1.05F), nullptr,
-             1.0F);
-  }
-
-  QVector3D const trunk_base =
+  QVector3D const forehead_center =
       head_center +
-      QVector3D(0.0F, -d.head_height * 0.25F, d.head_length * 0.55F);
+      QVector3D(0.0F, d.head_height * 0.35F, d.head_length * 0.10F);
+  (void)forehead_center;
 
-  constexpr int k_trunk_segments = 12;
-  QVector3D prev_trunk = trunk_base;
-  float prev_radius = d.trunk_base_radius;
-  for (int i = 1; i <= k_trunk_segments; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(k_trunk_segments);
+  // Build the per-frame Reduced-shaped ElephantSpecPose then override
+  // the trunk/head/feet to inherit the rider-influenced positions
+  // above. The Full body uses the static baseline graph; per-entity
+  // offsets still flow through the evaluated pose.
+  Render::Elephant::ElephantSpecPose pose;
+  Render::Elephant::ElephantReducedMotion rm{
+      phase, bob, is_moving, is_fighting, anim.time, anim.combat_phase};
+  Render::Elephant::make_elephant_spec_pose_reduced(d, g, rm, pose);
+  pose.barrel_center = barrel_center;
+  pose.head_center = head_center;
+  (void)trunk_swing;
+  (void)ear_flap;
+  (void)skin_seed_a;
+  (void)skin_seed_b;
 
-    float const segment_angle = t * k_pi * 0.6F;
-    float const swing_offset = trunk_swing * t * t;
-    float const curl_x = std::sin(anim.time * 0.5F + t * 2.0F) * 0.03F * t;
-
-    QVector3D const segment_offset(
-        curl_x + swing_offset,
-        -d.trunk_length * t * std::cos(segment_angle) * 0.7F,
-        d.trunk_length * t * std::sin(segment_angle) * 0.5F);
-
-    QVector3D const curr_trunk = trunk_base + segment_offset;
-    float const curr_radius = lerp(d.trunk_base_radius, d.trunk_tip_radius, t);
-
-    draw_cylinder(out, elephant_ctx.model, prev_trunk, curr_trunk,
-                  (prev_radius + curr_radius) * 0.5F,
-                  skin_gradient(v.skin_color, 0.50F - t * 0.15F, 0.0F,
-                                skin_seed_a * (1.0F - t * 0.3F)),
-                  1.0F, 6);
-
-    prev_trunk = curr_trunk;
-    prev_radius = curr_radius;
-  }
-
-  {
-    QMatrix4x4 trunk_tip_sphere = elephant_ctx.model;
-    trunk_tip_sphere.translate(prev_trunk);
-    trunk_tip_sphere.scale(d.trunk_tip_radius * 1.2F);
-    out.mesh(get_unit_sphere(), trunk_tip_sphere, darken(v.skin_color, 0.85F),
-             nullptr, 1.0F);
-  }
-
-  auto draw_ear = [&](float side) {
-    float const flap_angle = ear_flap * side;
-    QVector3D const ear_base =
-        head_center + QVector3D(side * d.head_width * 0.75F,
-                                d.head_height * 0.10F, -d.head_length * 0.15F);
-
-    QVector3D const ear_tip =
-        ear_base + QVector3D(side * d.ear_width * (0.85F + flap_angle * 0.3F),
-                             -d.ear_height * 0.40F, -d.ear_width * 0.20F);
-
-    QVector3D const ear_top =
-        ear_base + QVector3D(side * d.ear_width * 0.50F, d.ear_height * 0.45F,
-                             -d.ear_width * 0.10F);
-
-    draw_cylinder(out, elephant_ctx.model, ear_base, ear_tip, d.ear_thickness,
-                  v.skin_color, 1.0F, 6);
-    draw_cylinder(out, elephant_ctx.model, ear_base, ear_top,
-                  d.ear_thickness * 0.8F, v.skin_color, 1.0F, 6);
-
-    {
-      QMatrix4x4 ear_main = elephant_ctx.model;
-      QVector3D const ear_center = (ear_base + ear_tip + ear_top) * 0.33F;
-      ear_main.translate(ear_center);
-      ear_main.rotate(side * (15.0F + flap_angle * 20.0F), 0.0F, 0.0F, 1.0F);
-      ear_main.scale(d.ear_width * 0.70F, d.ear_height * 0.65F,
-                     d.ear_thickness * 0.25F);
-      out.mesh(get_unit_sphere(), ear_main, v.skin_color, nullptr, 1.0F, 6);
-    }
-
-    {
-      QMatrix4x4 ear_inner = elephant_ctx.model;
-      QVector3D const inner_center =
-          (ear_base + ear_tip + ear_top) * 0.33F +
-          QVector3D(side * d.ear_thickness * 0.5F, 0.0F, d.ear_thickness);
-      ear_inner.translate(inner_center);
-      ear_inner.rotate(side * (15.0F + flap_angle * 20.0F), 0.0F, 0.0F, 1.0F);
-      ear_inner.scale(d.ear_width * 0.62F, d.ear_height * 0.55F,
-                      d.ear_thickness * 0.10F);
-      out.mesh(get_unit_sphere(), ear_inner, v.ear_inner_color, nullptr, 1.0F,
-               6);
-    }
-  };
-
-  draw_ear(1.0F);
-  draw_ear(-1.0F);
-
-  auto draw_tusk = [&](float side) {
-    QVector3D const tusk_base =
-        head_center + QVector3D(side * d.head_width * 0.35F,
-                                -d.head_height * 0.30F, d.head_length * 0.45F);
-    QVector3D const tusk_tip =
-        tusk_base + QVector3D(side * d.tusk_length * 0.25F,
-                              -d.tusk_length * 0.15F, d.tusk_length * 0.90F);
-    QVector3D const tusk_ctrl =
-        (tusk_base + tusk_tip) * 0.5F +
-        QVector3D(side * d.tusk_length * 0.08F, -d.tusk_length * 0.10F, 0.0F);
-
-    constexpr int k_tusk_segments = 6;
-    QVector3D prev_tusk = tusk_base;
-    for (int i = 1; i <= k_tusk_segments; ++i) {
-      float const t =
-          static_cast<float>(i) / static_cast<float>(k_tusk_segments);
-      QVector3D const curr_tusk = bezier(tusk_base, tusk_ctrl, tusk_tip, t);
-      float const seg_radius = d.tusk_radius * (1.0F - t * 0.6F);
-      draw_cylinder(out, elephant_ctx.model, prev_tusk, curr_tusk, seg_radius,
-                    v.tusk_color, 1.0F, 8);
-      prev_tusk = curr_tusk;
-    }
-  };
-
-  draw_tusk(1.0F);
-  draw_tusk(-1.0F);
-
-  QVector3D const eye_left =
-      head_center + QVector3D(d.head_width * 0.45F, d.head_height * 0.15F,
-                              d.head_length * 0.25F);
-  QVector3D const eye_right =
-      head_center + QVector3D(-d.head_width * 0.45F, d.head_height * 0.15F,
-                              d.head_length * 0.25F);
-  float const eye_radius = d.head_width * 0.08F;
-  QVector3D const eye_color(0.08F, 0.06F, 0.05F);
-
-  {
-    QMatrix4x4 eye_l = elephant_ctx.model;
-    eye_l.translate(eye_left);
-    eye_l.scale(eye_radius);
-    out.mesh(get_unit_sphere(), eye_l, eye_color, nullptr, 1.0F);
-  }
-  {
-    QMatrix4x4 eye_r = elephant_ctx.model;
-    eye_r.translate(eye_right);
-    eye_r.scale(eye_radius);
-    out.mesh(get_unit_sphere(), eye_r, eye_color, nullptr, 1.0F);
-  }
-
-  float const upper_len = d.leg_length * 0.55F;
-  float const lower_len = d.leg_length * 0.45F;
-
-  float const full_stride = g.stride_swing * 1.2F;
-
-  float const lift_height = d.leg_length * 0.18F;
-
-  auto draw_leg_phase = [&](int leg_index) {
-    bool const is_front = (leg_index < 2);
-    bool const is_left = (leg_index == 0 || leg_index == 2);
-    float const lateral_sign = is_left ? 1.0F : -1.0F;
-
-    float const base_forward =
-        is_front ? d.body_length * 0.42F : -d.body_length * 0.42F;
-
-    float phase_offset = 0.0F;
-    switch (leg_index) {
-    case 0:
-      phase_offset = 0.00F;
-      break;
-    case 1:
-      phase_offset = 0.50F;
-      break;
-    case 2:
-      phase_offset = 0.75F;
-      break;
-    case 3:
-      phase_offset = 0.25F;
-      break;
-    }
-
-    float stride_offset = 0.0F;
-    float lift = 0.0F;
-    float forward_bias = 0.0F;
-
-    if (is_fighting) {
-
-      float const stomp_period = 1.15F;
-      float const t = std::fmod(anim.time / stomp_period + phase_offset, 1.0F);
-
-      float intensity = 0.70F;
-      switch (anim.combat_phase) {
-      case CombatAnimPhase::WindUp:
-        intensity = 0.85F;
-        break;
-      case CombatAnimPhase::Strike:
-      case CombatAnimPhase::Impact:
-        intensity = 1.0F;
-        break;
-      case CombatAnimPhase::Recover:
-        intensity = 0.80F;
-        break;
-      default:
-        break;
-      }
-
-      float const local = t;
-
-      float const base_stomp_height = d.leg_length * 0.62F;
-      float const stomp_height = base_stomp_height * (0.7F + 0.3F * intensity);
-
-      float const leg_multiplier = is_front ? 1.0F : 0.75F;
-      float const final_stomp_height = stomp_height * leg_multiplier;
-
-      float const stomp_reach = full_stride * 0.35F * intensity;
-
-      float const impact_sink = d.foot_radius * (0.22F + 0.10F * intensity) *
-                                (is_front ? 1.0F : 0.85F);
-
-      if (local < 0.45F) {
-
-        float const u = local / 0.45F;
-        float const ease = 1.0F - std::cos(u * k_pi * 0.5F);
-        lift = ease * final_stomp_height;
-        stride_offset = stomp_reach * ease * 0.35F;
-        forward_bias = 1.0F;
-      } else if (local < 0.65F) {
-
-        lift = final_stomp_height;
-        stride_offset = stomp_reach * 0.35F;
-        forward_bias = 1.0F;
-      } else if (local < 0.78F) {
-
-        float const u = (local - 0.65F) / 0.13F;
-        float const slam = (1.0F - u);
-        float const slam_pow = slam * slam * slam * slam;
-        lift = slam_pow * final_stomp_height - impact_sink * (u * u);
-        stride_offset = stomp_reach * (0.35F + u * 0.65F);
-        forward_bias = -1.0F;
-      } else {
-
-        float const u = (local - 0.78F) / 0.22F;
-        float const recover = 1.0F - (u * u);
-        lift = -impact_sink * recover;
-        stride_offset = stomp_reach * (1.0F - u * 0.25F);
-        forward_bias = -0.6F;
-      }
-
-    } else {
-
-      float const leg_phase = std::fmod(phase + phase_offset, 1.0F);
-
-      constexpr float k_swing_end = 0.5F;
-      bool const in_swing = (leg_phase < k_swing_end);
-
-      if (in_swing) {
-        float const t = leg_phase / k_swing_end;
-        float const ease = t * t * (3.0F - 2.0F * t);
-        stride_offset = (-0.5F + ease) * full_stride;
-        forward_bias = 1.0F;
-        if (is_moving) {
-          lift = std::sin(t * k_pi) * lift_height;
-        }
-      } else {
-        float const t = (leg_phase - k_swing_end) / (1.0F - k_swing_end);
-        float const ease = t * t * (3.0F - 2.0F * t);
-
-        stride_offset = (0.5F - ease) * full_stride;
-        forward_bias = -1.0F;
-        lift = 0.0F;
-      }
-    }
-
-    QVector3D const hip =
-        barrel_center + QVector3D(lateral_sign * d.body_width * 0.48F,
-                                  -d.body_height * 0.40F, base_forward);
-
-    QVector3D const foot_target(
-        hip.x(), lift,
-        hip.z() + ((is_moving || is_fighting) ? stride_offset : 0.0F));
-
-    ElephantLegPose pose = solve_elephant_leg_ik(hip, foot_target, upper_len,
-                                                 lower_len, lateral_sign);
-
-    float const upper_radius = d.leg_radius * (is_front ? 1.05F : 1.10F);
-    float const lower_radius = d.leg_radius * (is_front ? 0.80F : 0.85F);
-
-    draw_cylinder(out, elephant_ctx.model, pose.hip, pose.knee, upper_radius,
-                  skin_gradient(v.skin_color, 0.45F,
-                                forward_bias > 0.0F ? 0.1F : -0.1F,
-                                skin_seed_a),
-                  1.0F, 6);
-
-    {
-      QMatrix4x4 knee_joint = elephant_ctx.model;
-      knee_joint.translate(pose.knee);
-      knee_joint.scale(lower_radius * 1.15F);
-      out.mesh(get_unit_sphere(), knee_joint, darken(v.skin_color, 0.92F),
-               nullptr, 1.0F, 6);
-    }
-
-    draw_cylinder(out, elephant_ctx.model, pose.knee, pose.foot, lower_radius,
-                  skin_gradient(v.skin_color, 0.40F, 0.0F, skin_seed_b), 1.0F,
-                  6);
-
-    {
-      QVector3D const ankle =
-          pose.foot + QVector3D(0.0F, d.foot_radius * 0.15F, 0.0F);
-      QMatrix4x4 ankle_joint = elephant_ctx.model;
-      ankle_joint.translate(ankle);
-      ankle_joint.scale(lower_radius * 1.10F);
-      out.mesh(get_unit_sphere(), ankle_joint, darken(v.skin_color, 0.90F),
-               nullptr, 1.0F, 6);
-    }
-
-    {
-      QMatrix4x4 foot_pad = elephant_ctx.model;
-      foot_pad.translate(pose.foot +
-                         QVector3D(0.0F, -d.foot_radius * 0.18F, 0.0F));
-      foot_pad.scale(d.foot_radius * 1.10F, d.foot_radius * 0.70F,
-                     d.foot_radius * 1.20F);
-      out.mesh(get_unit_sphere(), foot_pad, darken(v.skin_color, 0.80F),
-               nullptr, 1.0F, 8);
-    }
-
-    constexpr int k_toenails = 4;
-    for (int t = 0; t < k_toenails; ++t) {
-      float const toe_angle =
-          (static_cast<float>(t) / static_cast<float>(k_toenails - 1) - 0.5F) *
-          k_pi * 0.6F;
-      QVector3D const nail_pos =
-          pose.foot + QVector3D(std::sin(toe_angle) * d.foot_radius * 0.8F,
-                                -d.foot_radius * 0.35F,
-                                std::cos(toe_angle) * d.foot_radius * 0.9F);
-      {
-        QMatrix4x4 nail = elephant_ctx.model;
-        nail.translate(nail_pos);
-        nail.scale(d.foot_radius * 0.18F, d.foot_radius * 0.25F,
-                   d.foot_radius * 0.22F);
-        out.mesh(get_unit_sphere(), nail, v.toenail_color, nullptr, 1.0F, 8);
-      }
-    }
-  };
-
-  draw_leg_phase(0);
-  draw_leg_phase(1);
-  draw_leg_phase(2);
-  draw_leg_phase(3);
-
-  QVector3D const tail_base =
-      rump_center +
-      QVector3D(0.0F, d.body_height * 0.15F, -d.body_length * 0.32F);
-  float const tail_sway = is_moving ? std::sin(phase * 4.0F * k_pi) * 0.08F
-                                    : std::sin(anim.time * 0.7F) * 0.04F;
-
-  constexpr int k_tail_segments = 8;
-  QVector3D prev_tail = tail_base;
-  for (int i = 1; i <= k_tail_segments; ++i) {
-    float const t = static_cast<float>(i) / static_cast<float>(k_tail_segments);
-    QVector3D const curr_tail =
-        tail_base + QVector3D(tail_sway * t, -d.tail_length * t * 0.85F,
-                              -d.tail_length * t * 0.35F);
-    float const seg_radius = d.leg_radius * 0.25F * (1.0F - t * 0.6F);
-    draw_cylinder(out, elephant_ctx.model, prev_tail, curr_tail, seg_radius,
-                  darken(v.skin_color, 0.85F), 1.0F, 6);
-    prev_tail = curr_tail;
-  }
-
-  {
-    QMatrix4x4 tail_tuft = elephant_ctx.model;
-    tail_tuft.translate(prev_tail);
-    tail_tuft.scale(d.leg_radius * 0.20F, d.leg_radius * 0.35F,
-                    d.leg_radius * 0.15F);
-    out.mesh(get_unit_sphere(), tail_tuft, darken(v.skin_color, 0.70F), nullptr,
-             1.0F);
-  }
+  Render::Elephant::submit_elephant_lod(
+      pose, v, Render::Creature::CreatureLOD::Full, elephant_ctx.model, out);
 
   ElephantBodyFrames body_frames;
   QVector3D const forward(0.0F, 0.0F, 1.0F);
@@ -1325,9 +909,6 @@ void ElephantRendererBase::render_simplified(
 
   ElephantMotionSample const motion =
       shared_motion ? *shared_motion : evaluate_elephant_motion(profile, anim);
-  float const phase = motion.phase;
-  float const bob = motion.bob;
-  const bool is_moving = motion.is_moving;
 
   bool const is_fighting =
       anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
@@ -1335,137 +916,19 @@ void ElephantRendererBase::render_simplified(
   HowdahAttachmentFrame howdah =
       shared_howdah ? *shared_howdah : compute_howdah_frame(profile);
   if (!shared_howdah) {
-    apply_howdah_vertical_offset(howdah, bob);
+    apply_howdah_vertical_offset(howdah, motion.bob);
   }
 
-  DrawContext elephant_ctx = ctx;
-  elephant_ctx.model = ctx.model;
-  elephant_ctx.model.translate(howdah.ground_offset);
+  QMatrix4x4 world_from_unit = ctx.model;
+  world_from_unit.translate(howdah.ground_offset);
 
-  QVector3D const barrel_center(0.0F, d.barrel_center_y + bob, 0.0F);
-
-  {
-    QMatrix4x4 body = elephant_ctx.model;
-    body.translate(barrel_center);
-    body.scale(d.body_width * 1.0F, d.body_height * 0.90F,
-               d.body_length * 0.75F);
-    out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
-  }
-
-  QVector3D const neck_base =
-      barrel_center +
-      QVector3D(0.0F, d.body_height * 0.20F, d.body_length * 0.45F);
-  QVector3D const head_center =
-      neck_base + QVector3D(0.0F, d.neck_length * 0.50F, d.head_length * 0.60F);
-  draw_cylinder(out, elephant_ctx.model, neck_base, head_center,
-                d.neck_width * 0.85F, v.skin_color, 1.0F);
-
-  {
-    QMatrix4x4 head = elephant_ctx.model;
-    head.translate(head_center);
-    head.scale(d.head_width * 0.85F, d.head_height * 0.80F,
-               d.head_length * 0.70F);
-    out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
-  }
-
-  QVector3D const trunk_end =
-      head_center +
-      QVector3D(0.0F, -d.trunk_length * 0.50F, d.trunk_length * 0.40F);
-  draw_cone(out, elephant_ctx.model, trunk_end, head_center,
-            d.trunk_base_radius * 0.8F, darken(v.skin_color, 0.90F), 1.0F);
-
-  auto draw_simple_leg = [&](float lateral_sign, float forward_bias,
-                             float phase_offset) {
-    float const leg_phase =
-        is_fighting ? std::fmod(anim.time / 1.15F + phase_offset, 1.0F)
-                    : std::fmod(phase + phase_offset, 1.0F);
-    float stride = 0.0F;
-    float lift = 0.0F;
-
-    if (is_fighting) {
-
-      bool const is_front = (forward_bias > 0.0F);
-      float const local = leg_phase;
-
-      float intensity = 0.70F;
-      switch (anim.combat_phase) {
-      case CombatAnimPhase::WindUp:
-        intensity = 0.85F;
-        break;
-      case CombatAnimPhase::Strike:
-      case CombatAnimPhase::Impact:
-        intensity = 1.0F;
-        break;
-      case CombatAnimPhase::Recover:
-        intensity = 0.80F;
-        break;
-      default:
-        break;
-      }
-
-      float const base_stomp = d.leg_length * 0.58F;
-      float const stomp_height =
-          base_stomp * (0.7F + 0.3F * intensity) * (is_front ? 1.0F : 0.80F);
-      float const stomp_stride = g.stride_swing * 0.32F * intensity;
-
-      float const impact_sink = d.foot_radius * (0.20F + 0.10F * intensity) *
-                                (is_front ? 1.0F : 0.85F);
-
-      if (local < 0.45F) {
-        float const u = local / 0.45F;
-        float const ease = 1.0F - std::cos(u * k_pi * 0.5F);
-        lift = ease * stomp_height;
-        stride = stomp_stride * ease * 0.35F;
-      } else if (local < 0.65F) {
-        lift = stomp_height;
-        stride = stomp_stride * 0.35F;
-      } else if (local < 0.78F) {
-        float const u = (local - 0.65F) / 0.13F;
-        float const slam = (1.0F - u);
-        float const slam_pow = slam * slam * slam * slam;
-        lift = slam_pow * stomp_height - impact_sink * (u * u);
-        stride = stomp_stride * (0.35F + u * 0.65F);
-      } else {
-        float const u = (local - 0.78F) / 0.22F;
-        float const recover = 1.0F - (u * u);
-        lift = -impact_sink * recover;
-        stride = stomp_stride * (1.0F - u * 0.25F);
-      }
-
-    } else if (is_moving) {
-      float const angle = leg_phase * 2.0F * k_pi;
-      stride = std::sin(angle) * g.stride_swing * 0.6F;
-      float const lift_raw = std::sin(angle);
-      lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * 0.8F : 0.0F;
-    }
-
-    QVector3D const hip =
-        barrel_center + QVector3D(lateral_sign * d.body_width * 0.40F,
-                                  -d.body_height * 0.30F,
-                                  forward_bias + stride);
-    QVector3D const foot =
-        hip + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.3F);
-
-    draw_cylinder(out, elephant_ctx.model, hip, foot, d.leg_radius * 0.85F,
-                  darken(v.skin_color, 0.88F), 1.0F, 6);
-
-    {
-      QMatrix4x4 foot_pad = elephant_ctx.model;
-      foot_pad.translate(foot + QVector3D(0.0F, -d.foot_radius * 0.18F, 0.0F));
-      foot_pad.scale(d.foot_radius * 1.00F, d.foot_radius * 0.65F,
-                     d.foot_radius * 1.10F);
-      out.mesh(get_unit_sphere(), foot_pad, darken(v.skin_color, 0.75F),
-               nullptr, 1.0F, 8);
-    }
-  };
-
-  float const front_forward = d.body_length * 0.35F;
-  float const rear_forward = -d.body_length * 0.35F;
-
-  draw_simple_leg(1.0F, front_forward, g.front_leg_phase);
-  draw_simple_leg(-1.0F, front_forward, g.front_leg_phase + 0.50F);
-  draw_simple_leg(1.0F, rear_forward, g.rear_leg_phase);
-  draw_simple_leg(-1.0F, rear_forward, g.rear_leg_phase + 0.50F);
+  Render::Elephant::ElephantSpecPose pose;
+  Render::Elephant::ElephantReducedMotion rm{
+      motion.phase, motion.bob, motion.is_moving, is_fighting, anim.time,
+      anim.combat_phase};
+  Render::Elephant::make_elephant_spec_pose_reduced(d, g, rm, pose);
+  Render::Elephant::submit_elephant_lod(
+      pose, v, Render::Creature::CreatureLOD::Reduced, world_from_unit, out);
 }
 
 void ElephantRendererBase::render_minimal(
@@ -1479,30 +942,14 @@ void ElephantRendererBase::render_minimal(
   HowdahAttachmentFrame howdah = compute_howdah_frame(profile);
   apply_howdah_vertical_offset(howdah, bob);
 
-  DrawContext elephant_ctx = ctx;
-  elephant_ctx.model = ctx.model;
-  elephant_ctx.model.translate(howdah.ground_offset);
+  QMatrix4x4 world_from_unit = ctx.model;
+  world_from_unit.translate(howdah.ground_offset);
 
-  QVector3D const center(0.0F, d.barrel_center_y + bob, 0.0F);
+  Render::Elephant::ElephantSpecPose pose;
+  Render::Elephant::make_elephant_spec_pose(d, bob, pose);
 
-  QMatrix4x4 body = elephant_ctx.model;
-  body.translate(center);
-  body.scale(d.body_width * 1.2F, d.body_height + d.neck_length * 0.3F,
-             d.body_length + d.head_length * 0.3F);
-  out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
-
-  for (int i = 0; i < 4; ++i) {
-    float const x_sign = (i % 2 == 0) ? 1.0F : -1.0F;
-    float const z_offset =
-        (i < 2) ? d.body_length * 0.30F : -d.body_length * 0.30F;
-
-    QVector3D const top = center + QVector3D(x_sign * d.body_width * 0.38F,
-                                             -d.body_height * 0.25F, z_offset);
-    QVector3D const bottom = top + QVector3D(0.0F, -d.leg_length * 0.70F, 0.0F);
-
-    draw_cylinder(out, elephant_ctx.model, top, bottom, d.leg_radius * 0.70F,
-                  darken(v.skin_color, 0.80F), 1.0F, 6);
-  }
+  Render::Elephant::submit_elephant_lod(
+      pose, v, Render::Creature::CreatureLOD::Minimal, world_from_unit, out);
 }
 
 namespace {
@@ -1571,6 +1018,10 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     thread_local TemplateRecorder recorder;
     recorder.reset(192);
     recorder.set_current_shader(nullptr);
+    recorder.set_current_material(
+        Render::GL::MaterialRegistry::instance().is_initialised()
+            ? Render::GL::MaterialRegistry::instance().character()
+            : nullptr);
 
     if (auto *outer = dynamic_cast<Renderer *>(&out)) {
       recorder.set_current_shader(outer->get_current_shader());
@@ -1640,8 +1091,13 @@ void ElephantRendererBase::render(const DrawContext &ctx,
         }
         QMatrix4x4 world_model =
             Render::Geom::multiply_affine(ctx.model, cmd.local_model);
-        out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
-                 cmd.material_id);
+        if (cmd.material != nullptr) {
+          out.part(cmd.mesh, const_cast<Material *>(cmd.material), world_model,
+                   cmd.color, cmd.texture, cmd.alpha, cmd.material_id);
+        } else {
+          out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
+                   cmd.material_id);
+        }
       }
       if (renderer != nullptr) {
         renderer->set_current_shader(nullptr);

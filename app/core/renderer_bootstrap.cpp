@@ -22,6 +22,7 @@
 #include "game/systems/stamina_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/gl/camera.h"
+#include "render/graphics_settings.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/bridge_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -41,7 +42,8 @@
 auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   RenderingComponents components;
 
-  components.renderer = std::make_unique<Render::GL::Renderer>();
+  components.renderer = std::make_unique<Render::GL::Renderer>(
+      Render::GraphicsSettings::instance().features().shader_quality);
   components.camera = std::make_unique<Render::GL::Camera>();
   components.ground = std::make_unique<Render::GL::GroundRenderer>();
   components.terrain = std::make_unique<Render::GL::TerrainRenderer>();
