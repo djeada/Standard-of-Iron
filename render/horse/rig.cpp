@@ -51,11 +51,7 @@ auto HorseRendererBase::visual_spec() const
   return spec;
 }
 
-using Render::Geom::clamp01;
-using Render::Geom::cone_from_to;
-using Render::Geom::cylinder_between;
 using Render::Geom::lerp;
-using Render::Geom::smoothstep;
 
 namespace {
 
@@ -168,14 +164,6 @@ inline auto lerp3(const QVector3D &a, const QVector3D &b,
                   float t) -> QVector3D {
   return {a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t,
           a.z() + (b.z() - a.z()) * t};
-}
-
-inline auto scaled_sphere(const QMatrix4x4 &model, const QVector3D &center,
-                          const QVector3D &scale) -> QMatrix4x4 {
-  QMatrix4x4 m = model;
-  m.translate(center);
-  m.scale(scale);
-  return m;
 }
 
 inline auto bezier(const QVector3D &p0, const QVector3D &p1,

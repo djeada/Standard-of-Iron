@@ -5,14 +5,11 @@
 #include "../../game/core/component.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
-#include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
 #include "../humanoid/humanoid_renderer_base.h"
-#include "../material.h"
 #include "../submitter.h"
-#include "../template_cache.h"
 #include "elephant_spec.h"
 
 #include <QMatrix4x4>
@@ -49,12 +46,6 @@ auto ElephantRendererBase::visual_spec() const
   return spec;
 }
 
-using Render::Geom::clamp01;
-using Render::Geom::cone_from_to;
-using Render::Geom::cylinder_between;
-using Render::Geom::lerp;
-using Render::Geom::smoothstep;
-
 namespace {
 
 struct CachedElephantProfileEntry {
@@ -75,22 +66,6 @@ constexpr uint32_t k_cache_cleanup_interval_mask = 0x1FFU;
 constexpr float k_color_hash_multiplier = 31.0F;
 
 constexpr float k_color_comparison_tolerance = 0.001F;
-
-inline auto resolve_variant_key_from_seed(std::uint32_t seed) -> std::uint8_t {
-  std::uint32_t v = seed ^ (seed >> 16);
-  return static_cast<std::uint8_t>(v % k_template_variant_count);
-}
-
-inline auto resolve_variant_seed(const Engine::Core::UnitComponent *unit_comp,
-                                 std::uint8_t variant_key) -> std::uint32_t {
-  std::uint32_t seed = 0U;
-  if (unit_comp != nullptr) {
-    seed ^= static_cast<std::uint32_t>(unit_comp->spawn_type) * 2654435761U;
-    seed ^= static_cast<std::uint32_t>(unit_comp->owner_id) * 1013904223U;
-  }
-  seed ^= static_cast<std::uint32_t>(variant_key) * 2246822519U;
-  return seed;
-}
 
 inline auto make_elephant_profile_cache_key(
     uint32_t seed, const QVector3D &fabric_base,
@@ -943,18 +918,6 @@ void ElephantRendererBase::render_minimal(
       Render::Creature::CreatureLOD::Minimal, out);
 }
 
-namespace {
-auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
-  if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
-    return renderer;
-  }
-  if (auto *batch = dynamic_cast<BatchingSubmitter *>(&out)) {
-    return dynamic_cast<Renderer *>(batch->fallback_submitter());
-  }
-  return nullptr;
-}
-} // namespace
-
 void ElephantRendererBase::render(const DrawContext &ctx,
                                   const AnimationInputs &anim,
                                   ElephantProfile &profile,
@@ -966,99 +929,8 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     effective_lod = ctx.forced_horse_lod;
   }
 
-  bool use_cache = false;
-
-  std::uint32_t seed = 0U;
-  if (ctx.has_seed_override) {
-    seed = ctx.seed_override;
-  } else if (ctx.entity != nullptr) {
-    seed = static_cast<std::uint32_t>(
-        reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
-  }
-
-  std::uint8_t variant_key = ctx.has_variant_override
-                                 ? ctx.variant_override
-                                 : resolve_variant_key_from_seed(seed);
-
-  AnimKey anim_key = make_anim_key(anim, 0.0F, 0);
-
-  auto *unit_comp =
-      ctx.entity ? ctx.entity->get_component<Engine::Core::UnitComponent>()
-                 : nullptr;
-  std::uint32_t owner_id = (unit_comp != nullptr)
-                               ? static_cast<std::uint32_t>(unit_comp->owner_id)
-                               : 0U;
-
-  TemplateKey key;
-  key.renderer_id = ctx.renderer_id;
-  key.owner_id = owner_id;
-  key.lod = static_cast<std::uint8_t>(effective_lod);
-  key.mount_lod = 0;
-  key.variant = variant_key;
-  key.attack_variant = anim_key.attack_variant;
-  key.state = anim_key.state;
-  key.combat_phase = anim_key.combat_phase;
-  key.frame = anim_key.frame;
-  const TemplateCache::DenseDomainHandle dense_domain =
-      TemplateCache::instance().get_dense_domain_handle(
-          key.renderer_id, key.owner_id, key.lod, key.mount_lod);
-  const std::size_t dense_slot =
-      TemplateCache::dense_slot_index(key.variant, anim_key);
-
-  auto build_template = [&]() -> PoseTemplate {
-    thread_local TemplateRecorder recorder;
-    recorder.reset(192);
-    recorder.set_current_shader(nullptr);
-    recorder.set_current_material(
-        Render::GL::MaterialRegistry::instance().is_initialised()
-            ? Render::GL::MaterialRegistry::instance().character()
-            : nullptr);
-
-    if (auto *outer = dynamic_cast<Renderer *>(&out)) {
-      recorder.set_current_shader(outer->get_current_shader());
-    }
-
-    DrawContext build_ctx = ctx;
-    build_ctx.model = QMatrix4x4();
-    build_ctx.camera = nullptr;
-    build_ctx.allow_template_cache = false;
-    build_ctx.force_horse_lod = true;
-    build_ctx.forced_horse_lod = effective_lod;
-
-    QVector3D fabric_base = profile.variant.howdah_fabric_color;
-    QVector3D metal_base = profile.variant.howdah_metal_color;
-    std::uint32_t variant_seed = resolve_variant_seed(unit_comp, variant_key);
-    ElephantProfile variant_profile = get_or_create_cached_elephant_profile(
-        variant_seed, fabric_base, metal_base);
-
-    AnimationInputs build_anim = make_animation_inputs(anim_key);
-
-    switch (effective_lod) {
-    case HorseLOD::Full:
-      render_full(build_ctx, build_anim, variant_profile, nullptr, nullptr,
-                  recorder);
-      break;
-    case HorseLOD::Reduced:
-      render_simplified(build_ctx, build_anim, variant_profile, nullptr,
-                        nullptr, recorder);
-      break;
-    case HorseLOD::Minimal:
-      render_minimal(build_ctx, variant_profile, nullptr, recorder);
-      break;
-    case HorseLOD::Billboard:
-      break;
-    }
-
-    PoseTemplate built;
-    built.commands = recorder.take_commands();
-    return built;
-  };
-
   if (ctx.template_prewarm) {
-    if (use_cache && effective_lod != HorseLOD::Billboard) {
-      (void)TemplateCache::instance().get_or_build_dense(
-          dense_domain, dense_slot, key, build_template);
-    }
+
     return;
   }
 
@@ -1067,48 +939,6 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   if (effective_lod == HorseLOD::Billboard) {
     ++s_elephantRenderStats.elephants_skipped_lod;
     return;
-  }
-
-  if (use_cache) {
-    const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
-        dense_domain, dense_slot, key, build_template);
-    if (tpl != nullptr && !tpl->commands.empty()) {
-      Renderer *renderer = resolve_renderer_for_submitter(out);
-      Shader *last_shader = nullptr;
-      for (const auto &cmd : tpl->commands) {
-        if (renderer != nullptr && cmd.shader != last_shader) {
-          renderer->set_current_shader(cmd.shader);
-          last_shader = cmd.shader;
-        }
-        QMatrix4x4 world_model =
-            Render::Geom::multiply_affine(ctx.model, cmd.local_model);
-        if (cmd.material != nullptr) {
-          out.part(cmd.mesh, const_cast<Material *>(cmd.material), world_model,
-                   cmd.color, cmd.texture, cmd.alpha, cmd.material_id);
-        } else {
-          out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
-                   cmd.material_id);
-        }
-      }
-      if (renderer != nullptr) {
-        renderer->set_current_shader(nullptr);
-      }
-      ++s_elephantRenderStats.elephants_rendered;
-      switch (effective_lod) {
-      case HorseLOD::Full:
-        ++s_elephantRenderStats.lod_full;
-        break;
-      case HorseLOD::Reduced:
-        ++s_elephantRenderStats.lod_reduced;
-        break;
-      case HorseLOD::Minimal:
-        ++s_elephantRenderStats.lod_minimal;
-        break;
-      case HorseLOD::Billboard:
-        break;
-      }
-      return;
-    }
   }
 
   ++s_elephantRenderStats.elephants_rendered;

@@ -4,8 +4,6 @@
 #include "mesh_helpers.h"
 #include "render_stats.h"
 
-#include "../material.h"
-
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
@@ -19,7 +17,6 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/spec.h"
 #include "../entity/registry.h"
-#include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/parts.h"
 #include "../geom/transforms.h"
@@ -35,7 +32,6 @@
 #include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
-#include "../template_cache.h"
 #include "../visibility_budget.h"
 #include "clip_driver_cache.h"
 #include "formation_calculator.h"
@@ -61,12 +57,6 @@
 namespace Render::GL {
 
 using namespace Render::GL::Geometry;
-using Render::Geom::capsule_between;
-using Render::Geom::cone_from_to;
-using Render::Geom::cylinder_between;
-using Render::Geom::oriented_cylinder;
-using Render::Geom::sphere_at;
-
 namespace {
 
 constexpr float k_shadow_size_infantry = 0.16F;
@@ -177,25 +167,9 @@ resolve_layout_seed(const Engine::Core::UnitComponent *unit_comp,
   return seed;
 }
 
-inline auto resolve_variant_key_from_seed(std::uint32_t seed) -> std::uint8_t {
-  std::uint32_t v = seed ^ (seed >> 16);
-  return static_cast<std::uint8_t>(v % k_template_variant_count);
-}
-
 inline auto
 resolve_attack_variant_from_seed(std::uint32_t seed) -> std::uint8_t {
   return static_cast<std::uint8_t>(seed % 3U);
-}
-
-inline auto resolve_variant_seed(const Engine::Core::UnitComponent *unit_comp,
-                                 std::uint8_t variant_key) -> std::uint32_t {
-  std::uint32_t seed = 0U;
-  if (unit_comp != nullptr) {
-    seed ^= static_cast<std::uint32_t>(unit_comp->spawn_type) * 2654435761U;
-    seed ^= static_cast<std::uint32_t>(unit_comp->owner_id) * 1013904223U;
-  }
-  seed ^= static_cast<std::uint32_t>(variant_key) * 2246822519U;
-  return seed;
 }
 
 inline auto resolve_formation_category(
@@ -518,473 +492,16 @@ void submit_humanoid_via_pipeline(
 
 } // namespace
 
-namespace {
-auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
-  if (auto *renderer = dynamic_cast<Renderer *>(&out)) {
-    return renderer;
-  }
-  if (auto *batch = dynamic_cast<BatchingSubmitter *>(&out)) {
-    return dynamic_cast<Renderer *>(batch->fallback_submitter());
-  }
-  return nullptr;
-}
-
-} // namespace
-
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   AnimationInputs anim = sample_anim_state(ctx);
 
   if (ctx.template_prewarm) {
 
-    if (ctx.renderer_id.empty() || ctx.animation_override == nullptr ||
-        !ctx.force_humanoid_lod || !ctx.has_variant_override) {
-      return;
-    }
     return;
   }
 
-  if (ctx.allow_template_cache && !ctx.renderer_id.empty()) {
-
-    render_procedural(ctx, anim, out);
-    return;
-  }
-
-  if (!ctx.allow_template_cache || ctx.renderer_id.empty() ||
-      ctx.entity == nullptr) {
-    render_procedural(ctx, anim, out);
-    return;
-  }
-
-  auto *unit_comp = ctx.entity->get_component<Engine::Core::UnitComponent>();
-  auto *transform_comp =
-      ctx.entity->get_component<Engine::Core::TransformComponent>();
-  if (unit_comp == nullptr || transform_comp == nullptr) {
-    render_procedural(ctx, anim, out);
-    return;
-  }
-
-  FormationParams const formation = resolve_formation(ctx);
-  const int rows =
-      (formation.individuals_per_unit + formation.max_per_row - 1) /
-      formation.max_per_row;
-  int cols = formation.max_per_row;
-  int effective_rows = rows;
-  if (ctx.force_single_soldier) {
-    cols = 1;
-    effective_rows = 1;
-  }
-
-  int visible_count = rows * cols;
-  int max_health = std::max(1, unit_comp->max_health);
-  float ratio = std::clamp(unit_comp->health / float(max_health), 0.0F, 1.0F);
-  visible_count = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
-
-  if (visible_count <= 0) {
-    return;
-  }
-
-  s_render_stats.soldiers_total += visible_count;
-
-  bool is_mounted_spawn = false;
-  if (unit_comp != nullptr) {
-    using Game::Units::SpawnType;
-    auto const st = unit_comp->spawn_type;
-    is_mounted_spawn =
-        (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
-         st == SpawnType::HorseSpearman);
-  }
-
-  FormationCalculatorFactory::Nation nation =
-      FormationCalculatorFactory::Nation::Roman;
-  if (unit_comp != nullptr &&
-      unit_comp->nation_id == Game::Systems::NationID::Carthage) {
-    nation = FormationCalculatorFactory::Nation::Carthage;
-  }
-
-  FormationCalculatorFactory::UnitCategory category =
-      resolve_formation_category(unit_comp, anim);
-
-  std::uint32_t layout_seed = resolve_layout_seed(unit_comp, ctx.entity);
-  auto &layout_entry = get_or_build_unit_layout(
-      reinterpret_cast<std::uintptr_t>(ctx.entity), formation, nation, category,
-      layout_seed, rows, cols);
-
-  float entity_ground_offset =
-      resolve_entity_ground_offset(ctx, unit_comp, transform_comp);
-
-  Renderer *renderer = resolve_renderer_for_submitter(out);
-  Shader *last_shader = nullptr;
-  const auto &gfx_settings = Render::GraphicsSettings::instance();
-
-  const float base_pos_x = transform_comp->position.x;
-  const float base_pos_y = transform_comp->position.y;
-  const float base_pos_z = transform_comp->position.z;
-  const float scale_x = transform_comp->scale.x;
-  const float scale_y = transform_comp->scale.y;
-  const float scale_z = transform_comp->scale.z;
-  const float base_yaw = transform_comp->rotation.y;
-  const float ground_offset_scaled = entity_ground_offset * scale_y;
-
-  const bool has_camera = (ctx.camera != nullptr);
-  const QVector3D camera_position =
-      has_camera ? ctx.camera->get_position() : QVector3D();
-
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  const bool terrain_initialized = terrain_service.is_initialized();
-  QVector2D shadow_dir_for_use(0.0F, 1.0F);
-  {
-    QVector2D light_dir_xz(k_shadow_light_dir.x(), k_shadow_light_dir.z());
-    if (light_dir_xz.lengthSquared() >= 1e-6F) {
-      light_dir_xz.normalize();
-      shadow_dir_for_use = -light_dir_xz;
-      if (shadow_dir_for_use.lengthSquared() >= 1e-6F) {
-        shadow_dir_for_use.normalize();
-      } else {
-        shadow_dir_for_use = QVector2D(0.0F, 1.0F);
-      }
-    }
-  }
-
-  Shader *shadow_shader = nullptr;
-  Mesh *shadow_quad_mesh = nullptr;
-  const bool can_render_shadow_mesh =
-      gfx_settings.shadows_enabled() && ctx.backend != nullptr &&
-      ctx.resources != nullptr && terrain_initialized;
-  if (can_render_shadow_mesh) {
-    shadow_shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
-    shadow_quad_mesh = ctx.resources->quad();
-  }
-
-  auto fast_random = [](uint32_t &state) -> float {
-    state = state * 1664525U + 1013904223U;
-    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
-  };
-
-  const std::size_t soldier_count = std::min<std::size_t>(
-      layout_entry.soldiers.size(), static_cast<std::size_t>(visible_count));
-  const std::uint32_t template_owner_id =
-      static_cast<std::uint32_t>(unit_comp->owner_id);
-  std::array<std::array<TemplateCache::DenseDomainHandle, 4>, 4>
-      dense_domains{};
-  std::array<std::array<bool, 4>, 4> dense_domains_ready{};
-
-  auto dense_domain_for =
-      [&](HumanoidLOD lod,
-          HorseLOD mount_lod_val) -> TemplateCache::DenseDomainHandle {
-    const std::size_t lod_idx =
-        std::min<std::size_t>(static_cast<std::size_t>(lod), 3);
-    const std::size_t mount_idx =
-        std::min<std::size_t>(static_cast<std::size_t>(mount_lod_val), 3);
-
-    if (!dense_domains_ready[lod_idx][mount_idx]) {
-      const std::uint8_t lod_u8 = static_cast<std::uint8_t>(lod_idx);
-      const std::uint8_t mount_u8 = static_cast<std::uint8_t>(mount_idx);
-      dense_domains[lod_idx][mount_idx] =
-          TemplateCache::instance().get_dense_domain_handle(
-              ctx.renderer_id, template_owner_id, lod_u8, mount_u8);
-      dense_domains_ready[lod_idx][mount_idx] = true;
-    }
-
-    return dense_domains[lod_idx][mount_idx];
-  };
-
-  for (std::size_t idx = 0; idx < soldier_count; ++idx) {
-    const SoldierLayout &slot = layout_entry.soldiers[idx];
-
-    float offset_x = slot.offset_x;
-    float offset_z = slot.offset_z;
-    float applied_vertical_jitter = slot.vertical_jitter;
-    float applied_yaw_offset = slot.yaw_offset;
-    float phase_offset = slot.phase_offset;
-
-    uint32_t rng_state = slot.inst_seed;
-
-    if (anim.is_attacking && anim.is_melee) {
-      float const combat_jitter_x =
-          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.4F;
-      float const combat_jitter_z =
-          (fast_random(rng_state) - 0.5F) * formation.spacing * 0.3F;
-      float const sway_time = anim.time + phase_offset * 2.0F;
-      float const sway_x = std::sin(sway_time * 1.5F) * 0.05F;
-      float const sway_z = std::cos(sway_time * 1.2F) * 0.04F;
-      offset_x += combat_jitter_x + sway_x;
-      offset_z += combat_jitter_z + sway_z;
-
-      float const combat_yaw = (fast_random(rng_state) - 0.5F) * 15.0F;
-      applied_yaw_offset += combat_yaw;
-    }
-
-    const float applied_yaw = base_yaw + applied_yaw_offset;
-    const float yaw_rad = qDegreesToRadians(applied_yaw);
-    const float cos_yaw = std::cos(yaw_rad);
-    const float sin_yaw = std::sin(yaw_rad);
-    const float local_x = offset_x * scale_x;
-    const float local_z = offset_z * scale_z;
-
-    QVector3D const soldier_world_pos(
-        base_pos_x + (cos_yaw * local_x) + (sin_yaw * local_z),
-        base_pos_y + (applied_vertical_jitter * scale_y) - ground_offset_scaled,
-        base_pos_z - (sin_yaw * local_x) + (cos_yaw * local_z));
-
-    constexpr float k_soldier_cull_radius = 0.6F;
-    if (has_camera &&
-        !ctx.camera->is_in_frustum(soldier_world_pos, k_soldier_cull_radius)) {
-      ++s_render_stats.soldiers_skipped_frustum;
-      continue;
-    }
-
-    HumanoidLOD soldier_lod = HumanoidLOD::Full;
-    float soldier_distance = 0.0F;
-    if (ctx.force_humanoid_lod) {
-      soldier_lod = ctx.forced_humanoid_lod;
-    } else if (has_camera) {
-      soldier_distance = (soldier_world_pos - camera_position).length();
-      soldier_lod = calculate_humanoid_lod(soldier_distance);
-
-      if (soldier_lod == HumanoidLOD::Billboard) {
-        ++s_render_stats.soldiers_skipped_lod;
-        continue;
-      }
-
-      soldier_lod =
-          Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
-              soldier_lod);
-    }
-
-    if (soldier_distance > 0.0F) {
-      if (soldier_lod == HumanoidLOD::Reduced &&
-          soldier_distance > k_temporal_skip_distance_reduced) {
-        if (!should_render_temporal(s_current_frame, slot.inst_seed,
-                                    k_temporal_skip_period_reduced)) {
-          ++s_render_stats.soldiers_skipped_temporal;
-          continue;
-        }
-      }
-      if (soldier_lod == HumanoidLOD::Minimal &&
-          soldier_distance > k_temporal_skip_distance_minimal) {
-        if (!should_render_temporal(s_current_frame, slot.inst_seed,
-                                    k_temporal_skip_period_minimal)) {
-          ++s_render_stats.soldiers_skipped_temporal;
-          continue;
-        }
-      }
-    }
-
-    ++s_render_stats.soldiers_rendered;
-    switch (soldier_lod) {
-    case HumanoidLOD::Full:
-      ++s_render_stats.lod_full;
-      break;
-    case HumanoidLOD::Reduced:
-      ++s_render_stats.lod_reduced;
-      break;
-    case HumanoidLOD::Minimal:
-      ++s_render_stats.lod_minimal;
-      break;
-    case HumanoidLOD::Billboard:
-      break;
-    }
-
-    QMatrix4x4 inst_model = make_yaw_scale_model(
-        cos_yaw, sin_yaw, scale_x, scale_y, scale_z, soldier_world_pos);
-
-    std::uint8_t variant_key = resolve_variant_key_from_seed(slot.inst_seed);
-    std::uint8_t attack_variant =
-        resolve_attack_variant_from_seed(slot.inst_seed);
-
-    AnimKey anim_key = make_anim_key(anim, phase_offset, attack_variant);
-
-    HorseLOD mount_lod = HorseLOD::Full;
-    if (is_mounted_spawn) {
-      if (ctx.force_horse_lod) {
-        mount_lod = ctx.forced_horse_lod;
-      } else {
-        mount_lod = static_cast<HorseLOD>(soldier_lod);
-      }
-    }
-
-    TemplateKey key;
-    key.renderer_id = ctx.renderer_id;
-    key.owner_id = template_owner_id;
-    key.lod = static_cast<std::uint8_t>(soldier_lod);
-    key.mount_lod = is_mounted_spawn ? static_cast<std::uint8_t>(mount_lod) : 0;
-    key.variant = variant_key;
-    key.attack_variant = anim_key.attack_variant;
-    key.state = anim_key.state;
-    key.combat_phase = anim_key.combat_phase;
-    key.frame = anim_key.frame;
-
-    const TemplateCache::DenseDomainHandle dense_domain = dense_domain_for(
-        soldier_lod, is_mounted_spawn ? mount_lod : HorseLOD::Full);
-    const std::size_t dense_slot =
-        TemplateCache::dense_slot_index(variant_key, anim_key);
-
-    const PoseTemplate *tpl = TemplateCache::instance().get_or_build_dense(
-        dense_domain, dense_slot, key, [&]() -> PoseTemplate {
-          thread_local TemplateRecorder recorder;
-          recorder.reset(320);
-          recorder.set_current_shader(nullptr);
-          recorder.set_current_material(
-              Render::GL::MaterialRegistry::instance().is_initialised()
-                  ? Render::GL::MaterialRegistry::instance().character()
-                  : nullptr);
-
-          if (auto *outer = dynamic_cast<Renderer *>(&out)) {
-            recorder.set_current_shader(outer->get_current_shader());
-          }
-
-          Engine::Core::Entity template_entity(1);
-          auto *templ_unit =
-              template_entity.add_component<Engine::Core::UnitComponent>();
-          *templ_unit = *unit_comp;
-          templ_unit->max_health =
-              (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
-          templ_unit->health = templ_unit->max_health;
-
-          auto *templ_transform =
-              template_entity.add_component<Engine::Core::TransformComponent>();
-          templ_transform->position = {0.0F, 0.0F, 0.0F};
-          templ_transform->rotation = {0.0F, 0.0F, 0.0F};
-          templ_transform->scale = {1.0F, 1.0F, 1.0F};
-
-          if (auto *renderable =
-                  ctx.entity
-                      ->get_component<Engine::Core::RenderableComponent>()) {
-            auto *templ_renderable =
-                template_entity
-                    .add_component<Engine::Core::RenderableComponent>(
-                        renderable->mesh_path, renderable->texture_path);
-            templ_renderable->renderer_id = renderable->renderer_id;
-            templ_renderable->mesh = renderable->mesh;
-            templ_renderable->visible = true;
-            templ_renderable->color = renderable->color;
-          }
-
-          DrawContext build_ctx = ctx;
-          build_ctx.entity = &template_entity;
-          build_ctx.world = nullptr;
-          build_ctx.model = QMatrix4x4();
-          build_ctx.camera = nullptr;
-          build_ctx.selected = false;
-          build_ctx.hovered = false;
-          build_ctx.allow_template_cache = false;
-          build_ctx.force_humanoid_lod = true;
-          build_ctx.forced_humanoid_lod = soldier_lod;
-          build_ctx.force_horse_lod = is_mounted_spawn;
-          if (is_mounted_spawn) {
-            build_ctx.forced_horse_lod = mount_lod;
-          }
-          build_ctx.has_seed_override = true;
-          build_ctx.seed_override =
-              resolve_variant_seed(unit_comp, variant_key);
-          build_ctx.has_attack_variant_override = true;
-          build_ctx.attack_variant_override = anim_key.attack_variant;
-          build_ctx.force_single_soldier = true;
-          build_ctx.skip_ground_offset = true;
-
-          AnimationInputs build_anim = make_animation_inputs(anim_key);
-          build_ctx.animation_override = &build_anim;
-
-          render_procedural(build_ctx, build_anim, recorder);
-
-          PoseTemplate built;
-          built.commands = recorder.take_commands();
-          return built;
-        });
-
-    if (tpl == nullptr || tpl->commands.empty()) {
-      render_procedural(ctx, anim, out);
-      return;
-    }
-
-    for (const auto &cmd : tpl->commands) {
-      if (renderer != nullptr && cmd.shader != last_shader) {
-        renderer->set_current_shader(cmd.shader);
-        last_shader = cmd.shader;
-      }
-      QMatrix4x4 world_model =
-          Render::Geom::multiply_affine(inst_model, cmd.local_model);
-      if (cmd.material != nullptr) {
-
-        out.part(cmd.mesh, const_cast<Material *>(cmd.material), world_model,
-                 cmd.color, cmd.texture, cmd.alpha, cmd.material_id);
-      } else {
-        out.mesh(cmd.mesh, world_model, cmd.color, cmd.texture, cmd.alpha,
-                 cmd.material_id);
-      }
-    }
-
-    const bool should_render_shadow =
-        (shadow_shader != nullptr) && (shadow_quad_mesh != nullptr) &&
-        (soldier_lod == HumanoidLOD::Full ||
-         soldier_lod == HumanoidLOD::Reduced) &&
-        soldier_distance < gfx_settings.shadow_max_distance();
-
-    if (should_render_shadow) {
-      float const shadow_size =
-          is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
-      float depth_boost = 1.0F;
-      float width_boost = 1.0F;
-      using Game::Units::SpawnType;
-      switch (unit_comp->spawn_type) {
-      case SpawnType::Spearman:
-        depth_boost = 1.8F;
-        width_boost = 0.95F;
-        break;
-      case SpawnType::HorseSpearman:
-        depth_boost = 2.1F;
-        width_boost = 1.05F;
-        break;
-      case SpawnType::Archer:
-      case SpawnType::HorseArcher:
-        depth_boost = 1.2F;
-        width_boost = 0.95F;
-        break;
-      default:
-        break;
-      }
-
-      float const shadow_width =
-          shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
-      float const shadow_depth =
-          shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
-
-      QVector3D const inst_pos = soldier_world_pos;
-      float const shadow_y =
-          terrain_service.get_terrain_height(inst_pos.x(), inst_pos.z());
-
-      float const shadow_offset = shadow_depth * 1.25F;
-      QVector2D const offset_2d = shadow_dir_for_use * shadow_offset;
-      float const light_yaw_deg = qRadiansToDegrees(std::atan2(
-          double(shadow_dir_for_use.x()), double(shadow_dir_for_use.y())));
-
-      QMatrix4x4 shadow_model;
-      shadow_model.translate(inst_pos.x() + offset_2d.x(),
-                             shadow_y + k_shadow_ground_offset,
-                             inst_pos.z() + offset_2d.y());
-      shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
-      shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-      shadow_model.scale(shadow_width, shadow_depth, 1.0F);
-
-      if (renderer != nullptr) {
-        Shader *previous_shader = renderer->get_current_shader();
-        renderer->set_current_shader(shadow_shader);
-        shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
-                                   shadow_dir_for_use);
-
-        out.mesh(shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-                 nullptr, k_shadow_base_alpha, 0);
-
-        renderer->set_current_shader(previous_shader);
-        last_shader = previous_shader;
-      }
-    }
-  }
-
-  if (renderer != nullptr) {
-    renderer->set_current_shader(nullptr);
-  }
+  render_procedural(ctx, anim, out);
 }
 
 void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
