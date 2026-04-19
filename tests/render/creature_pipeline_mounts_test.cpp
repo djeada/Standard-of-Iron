@@ -7,6 +7,7 @@
 #include "render/creature/pipeline/creature_frame.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/equipment_registry.h"
+#include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/elephant/elephant_renderer_base.h"
 #include "render/elephant/elephant_spec.h"
@@ -176,6 +177,51 @@ TEST(CreaturePipelineHorseSubmit, EmitsOneRiggedCallPerLodRow) {
   EXPECT_GT(sink.mesh_calls, 0u);
 }
 
+TEST(CreaturePipelinePreparedSubmit, HorseUsesPreparedPipelineBridge) {
+  RecordingSubmitter sink;
+
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Horse;
+  Render::Horse::HorseSpecPose pose = make_test_horse_pose();
+  Render::GL::HorseVariant variant{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  PreparedCreatureSubmitBatch batch;
+  batch.add(make_prepared_horse_row(spec, pose, variant, world, /*seed*/ 77,
+                                    CreatureLOD::Full));
+  const SubmitStats stats = batch.submit(sink);
+
+  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
+}
+
+TEST(CreatureRenderStatePrep, HorseRowAppendsResolvedState) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  Render::Horse::HorseSpecPose pose = make_test_horse_pose();
+  Render::GL::HorseVariant variant{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  const PreparedCreatureRenderRow row = make_prepared_horse_row(
+      spec, pose, variant, world, /*seed*/ 77, CreatureLOD::Minimal);
+
+  EXPECT_EQ(row.spec.kind, CreatureKind::Horse);
+  EXPECT_EQ(row.seed, 77u);
+  EXPECT_EQ(row.lod, CreatureLOD::Minimal);
+
+  CreatureFrame frame;
+  append_prepared_row(frame, row);
+
+  ASSERT_EQ(frame.size(), 1u);
+  EXPECT_TRUE(frame_columns_consistent(frame));
+  EXPECT_EQ(frame.seed[0], 77u);
+  EXPECT_EQ(frame.lod[0], CreatureLOD::Minimal);
+  EXPECT_FLOAT_EQ(frame.horse_pose[0].barrel_center.y(),
+                  pose.barrel_center.y());
+}
+
 TEST(CreaturePipelineElephantSubmit, EmitsOneRiggedCallPerLodRow) {
   CreaturePipeline pipeline;
   FrameContext ctx;
@@ -201,6 +247,89 @@ TEST(CreaturePipelineElephantSubmit, EmitsOneRiggedCallPerLodRow) {
   EXPECT_EQ(stats.lod_minimal, 1u);
   EXPECT_EQ(stats.lod_billboard, 1u);
   EXPECT_GT(sink.mesh_calls, 0u);
+}
+
+TEST(CreaturePipelinePreparedSubmit, ElephantUsesPreparedPipelineBridge) {
+  RecordingSubmitter sink;
+
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Elephant;
+  Render::Elephant::ElephantSpecPose pose = make_test_elephant_pose();
+  Render::GL::ElephantVariant variant{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  PreparedCreatureSubmitBatch batch;
+  batch.add(make_prepared_elephant_row(spec, pose, variant, world, /*seed*/ 88,
+                                       CreatureLOD::Full));
+  const SubmitStats stats = batch.submit(sink);
+
+  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
+}
+
+TEST(CreatureRenderStatePrep, ElephantRowAppendsResolvedState) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Horse;
+  Render::Elephant::ElephantSpecPose pose = make_test_elephant_pose();
+  Render::GL::ElephantVariant variant{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  const PreparedCreatureRenderRow row = make_prepared_elephant_row(
+      spec, pose, variant, world, /*seed*/ 88, CreatureLOD::Full);
+
+  EXPECT_EQ(row.spec.kind, CreatureKind::Elephant);
+  EXPECT_EQ(row.seed, 88u);
+  EXPECT_EQ(row.lod, CreatureLOD::Full);
+
+  CreatureFrame frame;
+  append_prepared_row(frame, row);
+
+  ASSERT_EQ(frame.size(), 1u);
+  EXPECT_TRUE(frame_columns_consistent(frame));
+  EXPECT_EQ(frame.seed[0], 88u);
+  EXPECT_EQ(frame.lod[0], CreatureLOD::Full);
+  EXPECT_FLOAT_EQ(frame.elephant_pose[0].barrel_center.y(),
+                  pose.barrel_center.y());
+}
+
+TEST(CreaturePipelinePreparedSubmit, MixedRowsSubmitAsPreparedFrame) {
+  RecordingSubmitter sink;
+
+  UnitVisualSpec horse_spec{};
+  horse_spec.kind = CreatureKind::Horse;
+  UnitVisualSpec elephant_spec{};
+  elephant_spec.kind = CreatureKind::Elephant;
+  UnitVisualSpec humanoid_spec{};
+  humanoid_spec.kind = CreatureKind::Humanoid;
+
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  Render::GL::HumanoidPose humanoid_pose{};
+  Render::GL::HumanoidVariant humanoid_variant{};
+  Render::GL::HumanoidAnimationContext humanoid_anim{};
+
+  PreparedCreatureSubmitBatch batch;
+  batch.reserve(3);
+  batch.add(make_prepared_horse_row(horse_spec, make_test_horse_pose(),
+                                    Render::GL::HorseVariant{}, world,
+                                    /*seed*/ 11, CreatureLOD::Full));
+  batch.add(make_prepared_elephant_row(elephant_spec, make_test_elephant_pose(),
+                                       Render::GL::ElephantVariant{}, world,
+                                       /*seed*/ 22, CreatureLOD::Reduced));
+  batch.add(make_prepared_humanoid_row(humanoid_spec, humanoid_pose,
+                                       humanoid_variant, humanoid_anim, world,
+                                       /*seed*/ 33, CreatureLOD::Billboard));
+
+  const SubmitStats stats = batch.submit(sink);
+
+  EXPECT_EQ(stats.entities_submitted, 3u);
+  EXPECT_EQ(stats.lod_full, 1u);
+  EXPECT_EQ(stats.lod_reduced, 1u);
+  EXPECT_EQ(stats.lod_billboard, 1u);
+  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
 }
 
 TEST(CreaturePipelineMountedSubmit,

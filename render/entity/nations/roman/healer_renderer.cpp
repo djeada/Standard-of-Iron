@@ -544,11 +544,11 @@ private:
 void register_healer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_healer_styles_registered();
   static HealerRenderer const renderer;
-	  registry.register_renderer(
-	      "troops/roman/healer", [](const DrawContext &ctx, ISubmitter &out) {
-	        static HealerRenderer const static_renderer;
-	        static_renderer.render(ctx, out);
-	      });
+  registry.register_renderer("troops/roman/healer",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static HealerRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

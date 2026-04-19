@@ -33,12 +33,12 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
 } // namespace
 
 void register_horse_archer_renderer(EntityRendererRegistry &registry) {
-	  registry.register_renderer(
-	      "troops/roman/horse_archer", [](const DrawContext &ctx, ISubmitter &out) {
-	        static HorseArcherRendererBase const static_renderer(
-	            make_horse_archer_config());
-	        static_renderer.render(ctx, out);
-	      });
+  registry.register_renderer(
+      "troops/roman/horse_archer", [](const DrawContext &ctx, ISubmitter &out) {
+        static HorseArcherRendererBase const static_renderer(
+            make_horse_archer_config());
+        static_renderer.render(ctx, out);
+      });
 }
 
 } // namespace Render::GL::Roman

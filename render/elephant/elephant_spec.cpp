@@ -1,9 +1,6 @@
 #include "elephant_spec.h"
 
 #include "../creature/part_graph.h"
-#include "../creature/pipeline/creature_frame.h"
-#include "../creature/pipeline/creature_pipeline.h"
-#include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/skeleton.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
@@ -680,30 +677,6 @@ void submit_elephant_minimal_rigged(const ElephantSpecPose &pose,
   submit_elephant_rigged_impl(pose, variant,
                               Render::Creature::CreatureLOD::Minimal,
                               world_from_unit, out);
-}
-
-void submit_elephant_via_pipeline(const Render::GL::ElephantRendererBase &owner,
-                                  const ElephantSpecPose &pose,
-                                  const Render::GL::ElephantVariant &variant,
-                                  const QMatrix4x4 &world_from_unit,
-                                  std::uint32_t inst_seed,
-                                  Render::Creature::CreatureLOD lod,
-                                  Render::GL::ISubmitter &out) noexcept {
-  thread_local Render::Creature::Pipeline::CreaturePipeline pipeline;
-  thread_local Render::Creature::Pipeline::CreatureFrame frame;
-  thread_local std::array<Render::Creature::Pipeline::UnitVisualSpec, 1> specs;
-
-  frame.clear();
-  specs[0] = owner.visual_spec();
-  specs[0].kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-
-  frame.push_elephant(0, world_from_unit, 0, inst_seed, lod, pose, variant);
-
-  Render::Creature::Pipeline::FrameContext fctx{};
-  pipeline.submit(fctx,
-                  std::span<const Render::Creature::Pipeline::UnitVisualSpec>{
-                      specs.data(), specs.size()},
-                  frame, out);
 }
 
 } // namespace Render::Elephant

@@ -2,6 +2,7 @@
 #include "lod.h"
 #include "render_stats.h"
 
+#include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
 #include "../equipment/equipment_submit.h"
@@ -50,6 +51,24 @@ auto HorseRendererBase::visual_spec() const
       Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
   return spec;
 }
+
+namespace {
+
+void submit_prepared_horse_body(const HorseRendererBase &owner,
+                                const Render::Horse::HorseSpecPose &pose,
+                                const HorseVariant &variant,
+                                const QMatrix4x4 &world_from_unit,
+                                std::uint32_t seed,
+                                Render::Creature::CreatureLOD lod,
+                                ISubmitter &out) noexcept {
+  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
+  batch.reserve(1);
+  batch.add(Render::Creature::Pipeline::make_prepared_horse_row(
+      owner.visual_spec(), pose, variant, world_from_unit, seed, lod));
+  (void)batch.submit(out);
+}
+
+} // namespace
 
 using Render::Geom::lerp;
 
@@ -864,9 +883,8 @@ void HorseRendererBase::render_full(
   pose.neck_top = neck_top;
   pose.head_center = head_center;
 
-  Render::Horse::submit_horse_via_pipeline(
-      *this, pose, v, horse_ctx.model, horse_seed,
-      Render::Creature::CreatureLOD::Full, out);
+  submit_prepared_horse_body(*this, pose, v, horse_ctx.model, horse_seed,
+                             Render::Creature::CreatureLOD::Full, out);
 
   QVector3D const bit_left =
       muzzle_center + QVector3D(d.head_width * 0.55F, -d.head_height * 0.08F,
@@ -1007,9 +1025,8 @@ void HorseRendererBase::render_simplified(
       Render::Horse::HorseReducedMotion{motion.phase, motion.bob,
                                         motion.is_moving},
       pose);
-  Render::Horse::submit_horse_via_pipeline(
-      *this, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Reduced, out);
+  submit_prepared_horse_body(*this, pose, v, world_from_unit, 0,
+                             Render::Creature::CreatureLOD::Reduced, out);
 }
 
 void HorseRendererBase::render_minimal(const DrawContext &ctx,
@@ -1031,9 +1048,8 @@ void HorseRendererBase::render_minimal(const DrawContext &ctx,
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose(d, bob, pose);
 
-  Render::Horse::submit_horse_via_pipeline(
-      *this, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Minimal, out);
+  submit_prepared_horse_body(*this, pose, v, world_from_unit, 0,
+                             Render::Creature::CreatureLOD::Minimal, out);
 }
 
 void HorseRendererBase::render(

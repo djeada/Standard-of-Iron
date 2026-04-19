@@ -118,12 +118,4 @@ void submit_horse_minimal_rigged(const HorseSpecPose &pose,
                                  const QMatrix4x4 &world_from_unit,
                                  Render::GL::ISubmitter &out) noexcept;
 
-void submit_horse_via_pipeline(const Render::GL::HorseRendererBase &owner,
-                               const HorseSpecPose &pose,
-                               const Render::GL::HorseVariant &variant,
-                               const QMatrix4x4 &world_from_unit,
-                               std::uint32_t inst_seed,
-                               Render::Creature::CreatureLOD lod,
-                               Render::GL::ISubmitter &out) noexcept;
-
 } // namespace Render::Horse

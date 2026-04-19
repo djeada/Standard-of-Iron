@@ -3,6 +3,7 @@
 #include "render_stats.h"
 
 #include "../../game/core/component.h"
+#include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
 #include "../geom/math_utils.h"
@@ -47,6 +48,19 @@ auto ElephantRendererBase::visual_spec() const
 }
 
 namespace {
+
+void submit_prepared_elephant_body(
+    const ElephantRendererBase &owner,
+    const Render::Elephant::ElephantSpecPose &pose,
+    const ElephantVariant &variant, const QMatrix4x4 &world_from_unit,
+    std::uint32_t seed, Render::Creature::CreatureLOD lod,
+    ISubmitter &out) noexcept {
+  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
+  batch.reserve(1);
+  batch.add(Render::Creature::Pipeline::make_prepared_elephant_row(
+      owner.visual_spec(), pose, variant, world_from_unit, seed, lod));
+  (void)batch.submit(out);
+}
 
 struct CachedElephantProfileEntry {
   ElephantProfile profile;
@@ -858,9 +872,8 @@ void ElephantRendererBase::render_full(
   (void)skin_seed_a;
   (void)skin_seed_b;
 
-  Render::Elephant::submit_elephant_via_pipeline(
-      *this, pose, v, elephant_ctx.model, 0,
-      Render::Creature::CreatureLOD::Full, out);
+  submit_prepared_elephant_body(*this, pose, v, elephant_ctx.model, 0,
+                                Render::Creature::CreatureLOD::Full, out);
 }
 
 void ElephantRendererBase::render_simplified(
@@ -891,9 +904,8 @@ void ElephantRendererBase::render_simplified(
       motion.phase, motion.bob, motion.is_moving,
       is_fighting,  anim.time,  anim.combat_phase};
   Render::Elephant::make_elephant_spec_pose_reduced(d, g, rm, pose);
-  Render::Elephant::submit_elephant_via_pipeline(
-      *this, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Reduced, out);
+  submit_prepared_elephant_body(*this, pose, v, world_from_unit, 0,
+                                Render::Creature::CreatureLOD::Reduced, out);
 }
 
 void ElephantRendererBase::render_minimal(
@@ -913,9 +925,8 @@ void ElephantRendererBase::render_minimal(
   Render::Elephant::ElephantSpecPose pose;
   Render::Elephant::make_elephant_spec_pose(d, bob, pose);
 
-  Render::Elephant::submit_elephant_via_pipeline(
-      *this, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Minimal, out);
+  submit_prepared_elephant_body(*this, pose, v, world_from_unit, 0,
+                                Render::Creature::CreatureLOD::Minimal, out);
 }
 
 void ElephantRendererBase::render(const DrawContext &ctx,

@@ -18,7 +18,6 @@ struct KnightStyleConfig {
   std::optional<float> shield_aspect_ratio;
   std::optional<bool> shield_cross_decal;
   std::optional<bool> has_scabbard;
-
 };
 
 void register_roman_swordsman_style();

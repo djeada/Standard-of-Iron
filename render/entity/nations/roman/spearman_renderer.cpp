@@ -323,11 +323,11 @@ private:
 void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
-	  registry.register_renderer("troops/roman/spearman", [](const DrawContext &ctx,
-	                                                         ISubmitter &out) {
-	    static SpearmanRenderer const static_renderer;
-	    static_renderer.render(ctx, out);
-	  });
+  registry.register_renderer("troops/roman/spearman",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static SpearmanRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

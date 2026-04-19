@@ -12,8 +12,7 @@
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
-#include "../creature/pipeline/creature_frame.h"
-#include "../creature/pipeline/creature_pipeline.h"
+#include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/spec.h"
 #include "../entity/registry.h"
@@ -461,33 +460,15 @@ auto HumanoidRendererBase::resolve_formation(const DrawContext &ctx)
 
 namespace {
 
-void submit_humanoid_via_pipeline(
+auto make_humanoid_prepared_row(
     const HumanoidRendererBase &owner, const HumanoidPose &pose,
     const HumanoidVariant &variant, const HumanoidAnimationContext &anim_ctx,
     const QMatrix4x4 &inst_model, std::uint32_t inst_seed,
-    Render::Creature::CreatureLOD lod, ISubmitter &out,
-    const DrawContext *legacy_ctx = nullptr) {
-  thread_local Render::Creature::Pipeline::CreaturePipeline pipeline;
-  thread_local Render::Creature::Pipeline::CreatureFrame frame;
-  thread_local std::array<Render::Creature::Pipeline::UnitVisualSpec, 1> specs;
-
-  frame.clear();
-
-  specs[0] = owner.visual_spec();
-  specs[0].kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-
-  frame.push_humanoid(0, inst_model, 0, inst_seed, lod, pose, variant,
-                      anim_ctx);
-
-  if (legacy_ctx != nullptr && !frame.legacy_ctx.empty()) {
-    frame.legacy_ctx.back() = legacy_ctx;
-  }
-
-  Render::Creature::Pipeline::FrameContext fctx{};
-  pipeline.submit(fctx,
-                  std::span<const Render::Creature::Pipeline::UnitVisualSpec>{
-                      specs.data(), specs.size()},
-                  frame, out);
+    Render::Creature::CreatureLOD lod, const DrawContext *legacy_ctx = nullptr)
+    -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
+  return Render::Creature::Pipeline::make_prepared_humanoid_row(
+      owner.visual_spec(), pose, variant, anim_ctx, inst_model, inst_seed, lod,
+      legacy_ctx);
 }
 
 } // namespace
@@ -608,6 +589,21 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
   };
 
   s_render_stats.soldiers_total += visible_count;
+
+  Render::Creature::Pipeline::PreparedCreatureSubmitBatch prepared_bodies;
+  std::vector<std::function<void()>> post_body_draws;
+  prepared_bodies.reserve(static_cast<std::size_t>(visible_count));
+  post_body_draws.reserve(static_cast<std::size_t>(visible_count));
+
+  auto enqueue_prepared_body =
+      [&](const HumanoidPose &pose, const HumanoidVariant &variant,
+          const HumanoidAnimationContext &anim_ctx, const DrawContext &inst_ctx,
+          std::uint32_t inst_seed, Render::Creature::CreatureLOD lod) {
+        prepared_bodies.add_with_legacy_context(
+            make_humanoid_prepared_row(*this, pose, variant, anim_ctx,
+                                       inst_ctx.model, inst_seed, lod, nullptr),
+            inst_ctx);
+      };
 
   for (int idx = 0; idx < visible_count; ++idx) {
     int const r = idx / cols;
@@ -1253,28 +1249,37 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
       Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
       Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
 
-      submit_humanoid_via_pipeline(
-          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
-          Render::Creature::CreatureLOD::Full, out, &inst_ctx);
+      enqueue_prepared_body(pose, variant, anim_ctx, inst_ctx, inst_seed,
+                            Render::Creature::CreatureLOD::Full);
 
       using Render::Creature::Pipeline::LegacySlotMask;
       using Render::Creature::Pipeline::owns_slot;
       const auto owned_slots = visual_spec().owned_legacy_slots;
-      if (!owns_slot(owned_slots, LegacySlotMask::ArmorOverlay)) {
-        draw_armor_overlay(inst_ctx, variant, pose, metrics.y_top_cover,
-                           metrics.torso_r, metrics.shoulder_half_span,
-                           metrics.upper_arm_r, metrics.right_axis, out);
-      }
-      if (!owns_slot(owned_slots, LegacySlotMask::ShoulderDecorations)) {
-        draw_shoulder_decorations(inst_ctx, variant, pose, metrics.y_top_cover,
-                                  pose.neck_base.y(), metrics.right_axis, out);
-      }
-
-      if (!owns_slot(owned_slots, LegacySlotMask::FacialHair)) {
-        draw_facial_hair(inst_ctx, variant, pose, out);
-      }
-      if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
-        add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+      if (!owns_slot(owned_slots, LegacySlotMask::ArmorOverlay) ||
+          !owns_slot(owned_slots, LegacySlotMask::ShoulderDecorations) ||
+          !owns_slot(owned_slots, LegacySlotMask::FacialHair) ||
+          !owns_slot(owned_slots, LegacySlotMask::Attachments)) {
+        post_body_draws.emplace_back([this, inst_ctx, variant, pose, anim_ctx,
+                                      metrics, owned_slots, &out]() {
+          using Render::Creature::Pipeline::LegacySlotMask;
+          using Render::Creature::Pipeline::owns_slot;
+          if (!owns_slot(owned_slots, LegacySlotMask::ArmorOverlay)) {
+            draw_armor_overlay(inst_ctx, variant, pose, metrics.y_top_cover,
+                               metrics.torso_r, metrics.shoulder_half_span,
+                               metrics.upper_arm_r, metrics.right_axis, out);
+          }
+          if (!owns_slot(owned_slots, LegacySlotMask::ShoulderDecorations)) {
+            draw_shoulder_decorations(inst_ctx, variant, pose,
+                                      metrics.y_top_cover, pose.neck_base.y(),
+                                      metrics.right_axis, out);
+          }
+          if (!owns_slot(owned_slots, LegacySlotMask::FacialHair)) {
+            draw_facial_hair(inst_ctx, variant, pose, out);
+          }
+          if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
+            add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+          }
+        });
       }
       break;
     }
@@ -1282,14 +1287,16 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
     case HumanoidLOD::Reduced: {
 
       ++s_render_stats.lod_reduced;
-      submit_humanoid_via_pipeline(
-          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
-          Render::Creature::CreatureLOD::Reduced, out, &inst_ctx);
+      enqueue_prepared_body(pose, variant, anim_ctx, inst_ctx, inst_seed,
+                            Render::Creature::CreatureLOD::Reduced);
       using Render::Creature::Pipeline::LegacySlotMask;
       using Render::Creature::Pipeline::owns_slot;
       const auto owned_slots = visual_spec().owned_legacy_slots;
       if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
-        add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+        post_body_draws.emplace_back(
+            [this, inst_ctx, variant, pose, anim_ctx, &out]() {
+              add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+            });
       }
       break;
     }
@@ -1297,15 +1304,22 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
     case HumanoidLOD::Minimal:
 
       ++s_render_stats.lod_minimal;
-      submit_humanoid_via_pipeline(
-          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
-          Render::Creature::CreatureLOD::Minimal, out, &inst_ctx);
+      enqueue_prepared_body(pose, variant, anim_ctx, inst_ctx, inst_seed,
+                            Render::Creature::CreatureLOD::Minimal);
       break;
 
     case HumanoidLOD::Billboard:
 
       break;
     }
+  }
+
+  if (!prepared_bodies.empty()) {
+    (void)prepared_bodies.submit(out);
+  }
+
+  for (const auto &draw : post_body_draws) {
+    draw();
   }
 }
 

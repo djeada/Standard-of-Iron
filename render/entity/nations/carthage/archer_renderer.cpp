@@ -441,10 +441,10 @@ private:
 void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_archer_styles_registered();
   static ArcherRenderer const renderer;
-	  registry.register_renderer(
-	      "troops/carthage/archer", [](const DrawContext &ctx, ISubmitter &out) {
-	        static ArcherRenderer const static_renderer;
-	        static_renderer.render(ctx, out);
-	      });
+  registry.register_renderer("troops/carthage/archer",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static ArcherRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 } // namespace Render::GL::Carthage

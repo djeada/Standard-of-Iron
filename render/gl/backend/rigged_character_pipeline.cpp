@@ -121,10 +121,10 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   }
   vert_src.insert(newline, define_line);
 
-	  m_instanced_shader_storage = std::make_unique<Shader>();
-	  m_instanced_shader_storage->set_debug_name(
-	      QStringLiteral("character_skinned_instanced"));
-	  if (!m_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
+  m_instanced_shader_storage = std::make_unique<Shader>();
+  m_instanced_shader_storage->set_debug_name(
+      QStringLiteral("character_skinned_instanced"));
+  if (!m_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
     qWarning() << "RiggedCharacterPipeline: failed to compile instanced shader";
     m_instanced_shader_storage.reset();
     return false;

@@ -143,7 +143,9 @@ add_library(render_gl STATIC
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
+    creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
+    creature/pipeline/prepared_submit.cpp
     creature/pipeline/equipment_registry.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp

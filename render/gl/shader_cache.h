@@ -25,9 +25,9 @@ public:
         Utils::Resources::resolveResourcePath(vert_path);
     const QString resolved_frag =
         Utils::Resources::resolveResourcePath(frag_path);
-	    auto sh = std::make_unique<Shader>();
-	    sh->set_debug_name(name);
-	    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
+    auto sh = std::make_unique<Shader>();
+    sh->set_debug_name(name);
+    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
     }
@@ -52,9 +52,9 @@ public:
     if (it != m_by_path.end()) {
       return it->second.get();
     }
-	    auto sh = std::make_unique<Shader>();
-	    sh->set_debug_name(resolved_vert + QStringLiteral("|") + resolved_frag);
-	    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
+    auto sh = std::make_unique<Shader>();
+    sh->set_debug_name(resolved_vert + QStringLiteral("|") + resolved_frag);
+    if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader from paths:"
                  << resolved_vert << "," << resolved_frag;
       return nullptr;
@@ -203,8 +203,7 @@ public:
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));
-
-	  }
+  }
 
   void clear() {
     m_named.clear();

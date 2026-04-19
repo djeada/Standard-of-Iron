@@ -1,0 +1,61 @@
+#pragma once
+
+#include "creature_frame.h"
+
+namespace Render::Creature::Pipeline {
+
+enum class RenderPassIntent : std::uint8_t {
+  Main = 0,
+  Shadow = 1,
+};
+
+struct PreparedCreatureRenderRow {
+  UnitVisualSpec spec{};
+  EntityId entity_id{0};
+  QMatrix4x4 world_from_unit{};
+  std::uint32_t seed{0};
+  CreatureLOD lod{CreatureLOD::Full};
+  RenderPassIntent pass{RenderPassIntent::Main};
+
+  Render::GL::HumanoidPose humanoid_pose{};
+  Render::GL::HumanoidVariant humanoid_variant{};
+  Render::GL::HumanoidAnimationContext humanoid_anim{};
+
+  Render::Horse::HorseSpecPose horse_pose{};
+  Render::GL::HorseVariant horse_variant{};
+
+  Render::Elephant::ElephantSpecPose elephant_pose{};
+  Render::GL::ElephantVariant elephant_variant{};
+
+  const Render::GL::DrawContext *legacy_ctx{nullptr};
+};
+
+[[nodiscard]] auto make_prepared_humanoid_row(
+    UnitVisualSpec spec, const Render::GL::HumanoidPose &pose,
+    const Render::GL::HumanoidVariant &variant,
+    const Render::GL::HumanoidAnimationContext &anim,
+    const QMatrix4x4 &world_from_unit, std::uint32_t seed, CreatureLOD lod,
+    const Render::GL::DrawContext *legacy_ctx = nullptr, EntityId entity_id = 0,
+    RenderPassIntent pass = RenderPassIntent::Main) noexcept
+    -> PreparedCreatureRenderRow;
+
+[[nodiscard]] auto make_prepared_horse_row(
+    UnitVisualSpec spec, const Render::Horse::HorseSpecPose &pose,
+    const Render::GL::HorseVariant &variant, const QMatrix4x4 &world_from_unit,
+    std::uint32_t seed, CreatureLOD lod, EntityId entity_id = 0,
+    RenderPassIntent pass = RenderPassIntent::Main) noexcept
+    -> PreparedCreatureRenderRow;
+
+[[nodiscard]] auto make_prepared_elephant_row(
+    UnitVisualSpec spec, const Render::Elephant::ElephantSpecPose &pose,
+    const Render::GL::ElephantVariant &variant,
+    const QMatrix4x4 &world_from_unit, std::uint32_t seed, CreatureLOD lod,
+    EntityId entity_id = 0,
+    RenderPassIntent pass = RenderPassIntent::Main) noexcept
+    -> PreparedCreatureRenderRow;
+
+void append_prepared_row(CreatureFrame &frame,
+                         const PreparedCreatureRenderRow &row,
+                         SpecId spec_id = 0) noexcept;
+
+} // namespace Render::Creature::Pipeline

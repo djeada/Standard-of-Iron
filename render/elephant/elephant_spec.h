@@ -130,12 +130,4 @@ void submit_elephant_minimal_rigged(const ElephantSpecPose &pose,
                                     const QMatrix4x4 &world_from_unit,
                                     Render::GL::ISubmitter &out) noexcept;
 
-void submit_elephant_via_pipeline(const Render::GL::ElephantRendererBase &owner,
-                                  const ElephantSpecPose &pose,
-                                  const Render::GL::ElephantVariant &variant,
-                                  const QMatrix4x4 &world_from_unit,
-                                  std::uint32_t inst_seed,
-                                  Render::Creature::CreatureLOD lod,
-                                  Render::GL::ISubmitter &out) noexcept;
-
 } // namespace Render::Elephant

@@ -90,8 +90,8 @@ struct ShaderBindAuditEntry {
 void set_shader_bind_audit_enabled(bool enabled);
 [[nodiscard]] auto shader_bind_audit_enabled() -> bool;
 void reset_shader_bind_audit();
-[[nodiscard]] auto shader_bind_audit_snapshot()
-    -> std::vector<ShaderBindAuditEntry>;
+[[nodiscard]] auto
+shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry>;
 [[nodiscard]] auto classify_shader_for_audit(const QString &name) -> QString;
 [[nodiscard]] auto format_shader_bind_audit() -> QStringList;
 
