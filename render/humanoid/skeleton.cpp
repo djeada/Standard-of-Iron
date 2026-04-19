@@ -1,15 +1,4 @@
-// Humanoid skeleton — Stage 16.1 adapter.
-//
-// Since S16.1 this file is a thin facade over `render/creature/skeleton.*`.
-// The humanoid topology (20 bones, 10 equipment sockets) is exposed to
-// the generic evaluator as a constexpr `Render::Creature::SkeletonTopology`
-// and the per-bone joint lookup is implemented as a `JointProviderFn`
-// that reads the existing HumanoidPose fields.
-//
-// Rationale: every Stage 15 test exercises the public humanoid API in
-// `skeleton.h`. Making this file a delegation layer means those tests
-// continue to gate the exact same observable behaviour while the
-// underlying engine becomes species-agnostic.
+
 
 #include "skeleton.h"
 #include "../creature/skeleton.h"
@@ -32,28 +21,23 @@ constexpr std::array<std::string_view, kBoneCount> k_bone_names = {
 };
 
 constexpr std::array<SocketDef, kSocketCount> k_socket_defs = {{
-    {HumanoidBone::Head, QVector3D(0.0F, 0.00F, 0.0F)},    // Head crown
-    {HumanoidBone::HandR, QVector3D(0.0F, 0.00F, 0.0F)},   // HandR grip
-    {HumanoidBone::HandL, QVector3D(0.0F, 0.00F, 0.0F)},   // HandL grip
-    {HumanoidBone::Chest, QVector3D(0.0F, 0.10F, -0.12F)}, // Back anchor
-    {HumanoidBone::HipL, QVector3D(0.0F, -0.02F, 0.0F)},   // Left hip pouch
-    {HumanoidBone::HipR, QVector3D(0.0F, -0.02F, 0.0F)},   // Right hip pouch
-    {HumanoidBone::Chest, QVector3D(0.0F, 0.05F, 0.15F)},  // Chest front
-    {HumanoidBone::Chest, QVector3D(0.0F, 0.05F, -0.15F)}, // Chest back
+    {HumanoidBone::Head, QVector3D(0.0F, 0.00F, 0.0F)},
+    {HumanoidBone::HandR, QVector3D(0.0F, 0.00F, 0.0F)},
+    {HumanoidBone::HandL, QVector3D(0.0F, 0.00F, 0.0F)},
+    {HumanoidBone::Chest, QVector3D(0.0F, 0.10F, -0.12F)},
+    {HumanoidBone::HipL, QVector3D(0.0F, -0.02F, 0.0F)},
+    {HumanoidBone::HipR, QVector3D(0.0F, -0.02F, 0.0F)},
+    {HumanoidBone::Chest, QVector3D(0.0F, 0.05F, 0.15F)},
+    {HumanoidBone::Chest, QVector3D(0.0F, 0.05F, -0.15F)},
     {HumanoidBone::FootL, QVector3D(0.0F, 0.0F, 0.0F)},
     {HumanoidBone::FootR, QVector3D(0.0F, 0.0F, 0.0F)},
 }};
 
 constexpr std::array<std::string_view, kSocketCount> k_socket_names = {
-    "Head",       "HandR",      "HandL",      "Back",
-    "HipL",       "HipR",       "ChestFront", "ChestBack",
-    "FootL",      "FootR",
+    "Head", "HandR",      "HandL",     "Back",  "HipL",
+    "HipR", "ChestFront", "ChestBack", "FootL", "FootR",
 };
 
-// Construct the generic topology lazily the first time it is needed.
-// Using `BoneDef { string_view, BoneIndex }` and `SocketDef { string_view,
-// BoneIndex, offset }` from the creature namespace; the definitions
-// here mirror the humanoid-specific `SocketDef` exactly.
 } // namespace
 
 auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
@@ -72,8 +56,7 @@ auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
     std::array<Creature::SocketDef, kSocketCount> out{};
     for (std::size_t i = 0; i < kSocketCount; ++i) {
       out[i].name = k_socket_names[i];
-      out[i].bone =
-          static_cast<Creature::BoneIndex>(k_socket_defs[i].bone);
+      out[i].bone = static_cast<Creature::BoneIndex>(k_socket_defs[i].bone);
       out[i].local_offset = k_socket_defs[i].local_offset;
     }
     return out;
@@ -90,8 +73,6 @@ namespace {
 
 namespace Creature = Render::Creature;
 
-// Provider context: carries the caller's HumanoidPose so the evaluator
-// can sample head/tail joints for each bone without any per-bone allocation.
 struct HumanoidProviderContext {
   const Render::GL::HumanoidPose *pose;
   QVector3D pelvis;
@@ -238,14 +219,10 @@ void evaluate_skeleton(const Render::GL::HumanoidPose &pose,
   ctx.head = pose.head_pos;
   ctx.spine_tail = ctx.pelvis + (ctx.neck_base - ctx.pelvis) * (1.0F / 3.0F);
 
-  // HumanoidPose has no explicit hip joints; synthesise from the knees
-  // projected onto the horizontal plane at pelvis height.
   QVector3D const to_knee_l = pose.knee_l - ctx.pelvis;
   QVector3D const to_knee_r = pose.knee_r - ctx.pelvis;
-  ctx.hip_l =
-      ctx.pelvis + QVector3D(to_knee_l.x(), 0.0F, to_knee_l.z()) * 0.3F;
-  ctx.hip_r =
-      ctx.pelvis + QVector3D(to_knee_r.x(), 0.0F, to_knee_r.z()) * 0.3F;
+  ctx.hip_l = ctx.pelvis + QVector3D(to_knee_l.x(), 0.0F, to_knee_l.z()) * 0.3F;
+  ctx.hip_r = ctx.pelvis + QVector3D(to_knee_r.x(), 0.0F, to_knee_r.z()) * 0.3F;
 
   Creature::evaluate_skeleton(
       humanoid_topology(), &humanoid_provider, &ctx, right_axis,

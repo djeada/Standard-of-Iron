@@ -1,6 +1,7 @@
 #include "mounted_humanoid_renderer_base.h"
 
 #include "../gl/camera.h"
+#include "../horse/lod.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -18,6 +19,18 @@
 namespace Render::GL {
 
 MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
+
+auto MountedHumanoidRendererBase::mounted_visual_spec() const
+    -> const Render::Creature::Pipeline::MountedSpec & {
+
+  static thread_local Render::Creature::Pipeline::MountedSpec spec;
+  spec.rider = HumanoidRendererBase::visual_spec();
+  spec.rider.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.mount = m_horseRenderer.visual_spec();
+  spec.mount.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  spec.mount_socket = Render::Creature::kInvalidSocket;
+  return spec;
+}
 
 auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
     uint32_t seed) const -> HorseDimensions {
@@ -145,8 +158,6 @@ void MountedHumanoidRendererBase::add_attachments(
     m_last_pose = nullptr;
     m_has_last_reins = false;
   }
-
-  draw_equipment(ctx, v, pose, anim_ctx, out);
 }
 
 } // namespace Render::GL

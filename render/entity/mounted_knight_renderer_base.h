@@ -1,6 +1,8 @@
 #pragma once
 
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../equipment/horse/i_horse_equipment_renderer.h"
+#include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QString>
@@ -37,19 +39,18 @@ public:
   MountedKnightRendererBase &operator=(MountedKnightRendererBase &&) = delete;
   ~MountedKnightRendererBase() override = default;
 
+  auto mounted_visual_spec() const
+      -> const Render::Creature::Pipeline::MountedSpec & override;
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override;
+
   auto get_proportion_scaling() const -> QVector3D override;
   auto get_mount_scale() const -> float override;
   void adjust_variation(const DrawContext &, uint32_t,
                         VariationParams &variation) const override;
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override;
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override;
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override;
 
   auto resolve_shader_key(const DrawContext &ctx) const -> QString;
 
@@ -62,13 +63,19 @@ protected:
                               HumanoidPose &pose, const HorseDimensions &dims,
                               const ReinState &reins) const override;
 
-  void draw_equipment(const DrawContext &ctx, const HumanoidVariant &v,
-                      const HumanoidPose &pose,
-                      const HumanoidAnimationContext &anim_ctx,
-                      ISubmitter &out) const override;
-
 private:
   MountedKnightRendererConfig m_config;
+
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder;
+  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shield;
+
+  std::vector<Render::Creature::Pipeline::EquipmentRecord> m_loadout;
+  Render::Creature::Pipeline::UnitVisualSpec m_spec{};
+
+  void cache_equipment();
+  void build_visual_spec();
 };
 
 } // namespace Render::GL

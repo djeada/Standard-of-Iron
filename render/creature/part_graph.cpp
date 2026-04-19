@@ -13,8 +13,6 @@ namespace Render::Creature {
 
 namespace {
 
-// Resolve a bone-local offset to a world-space position using the bone's
-// current transform columns.
 auto bone_world_offset(const QMatrix4x4 &bone,
                        const QVector3D &local_offset) noexcept -> QVector3D {
   if (local_offset.isNull()) {
@@ -28,25 +26,18 @@ auto bone_world_offset(const QMatrix4x4 &bone,
          z * local_offset.z();
 }
 
-// Build a model matrix that places a unit-box mesh at `bone`'s origin
-// (offset by `local_offset`) with non-uniform scale `half_extents`.
-// The unit box is assumed to span [-0.5, +0.5] on each axis, so we
-// scale by 2*half_extents.
 auto box_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
                const QVector3D &half_extents) noexcept -> QMatrix4x4 {
   QMatrix4x4 m = bone;
   QVector3D const world_origin = bone_world_offset(bone, local_offset);
   m.setColumn(3, QVector4D(world_origin, 1.0F));
-  // Apply non-uniform scale on the RIGHT so it scales the model-space
-  // mesh along the bone's local X/Y/Z axes (not world axes).
+
   QMatrix4x4 scale;
   scale.scale(half_extents.x() * 2.0F, half_extents.y() * 2.0F,
               half_extents.z() * 2.0F);
   return m * scale;
 }
 
-// Build a model matrix for a custom mesh anchored to a bone, scaled by
-// half_extents along the bone's own axes.
 auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
                 const QVector3D &half_extents) noexcept -> QMatrix4x4 {
   QMatrix4x4 m = bone;
@@ -62,13 +53,11 @@ auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
 
 } // namespace
 
-auto submit_part_graph(const SkeletonTopology &topology,
-                       const PartGraph &graph,
-                       std::span<const QMatrix4x4> palette, CreatureLOD lod,
-                       const QMatrix4x4 &world_from_unit,
-                       Render::GL::ISubmitter &out,
-                       std::span<const QVector3D> role_colors)
-    -> PartSubmissionStats {
+auto submit_part_graph(
+    const SkeletonTopology &topology, const PartGraph &graph,
+    std::span<const QMatrix4x4> palette, CreatureLOD lod,
+    const QMatrix4x4 &world_from_unit, Render::GL::ISubmitter &out,
+    std::span<const QVector3D> role_colors) -> PartSubmissionStats {
   PartSubmissionStats stats;
   std::uint8_t const lod_filter = lod_bit(lod);
   std::size_t const bone_count = topology.bones.size();
@@ -83,7 +72,6 @@ auto submit_part_graph(const SkeletonTopology &topology,
       continue;
     }
 
-    // Validate bone references against the palette + topology bounds.
     BoneIndex const anchor = prim.params.anchor_bone;
     BoneIndex const tail = prim.params.tail_bone;
     if (anchor == kInvalidBone || anchor >= bone_count ||
@@ -146,8 +134,8 @@ auto submit_part_graph(const SkeletonTopology &topology,
 
     case PrimitiveShape::Box:
       mesh_ptr = Render::GL::get_unit_cube();
-      unit_model =
-          box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
+      unit_model = box_model(anchor_m, prim.params.head_offset,
+                             prim.params.half_extents);
       break;
 
     case PrimitiveShape::OrientedCylinder: {
@@ -160,19 +148,13 @@ auto submit_part_graph(const SkeletonTopology &topology,
       float const r_forward = (prim.params.depth_radius > 0.0F)
                                   ? prim.params.depth_radius
                                   : prim.params.radius;
-      unit_model = Render::Geom::oriented_cylinder(head_world, tail_world,
-                                                   right_ref, r_right,
-                                                   r_forward);
+      unit_model = Render::Geom::oriented_cylinder(
+          head_world, tail_world, right_ref, r_right, r_forward);
       break;
     }
 
     case PrimitiveShape::OrientedSphere: {
-      // Stage 16.Fb — ellipsoid aligned to the anchor bone's own basis.
-      // `half_extents` are the three semi-axes in (right, up, forward).
-      // The bone's basis columns are assumed orthonormal (otherwise
-      // callers should be using OrientedCylinder / Box with explicit
-      // framing). Scale columns 0/1/2 of the bone matrix by the
-      // per-axis diameter (2 * semi-axis) around the offset origin.
+
       mesh_ptr = Render::GL::get_unit_sphere();
       QVector3D const x = anchor_m.column(0).toVector3D();
       QVector3D const y = anchor_m.column(1).toVector3D();
@@ -213,8 +195,8 @@ auto submit_part_graph(const SkeletonTopology &topology,
         (prim.color_role > 0 && prim.color_role <= role_colors.size())
             ? role_colors[prim.color_role - 1]
             : prim.color;
-    out.part(mesh_ptr, prim.material, model, color,
-             /*tex=*/nullptr, prim.alpha, prim.material_id);
+    out.part(mesh_ptr, prim.material, model, color, nullptr, prim.alpha,
+             prim.material_id);
     ++stats.submitted;
   }
   return stats;
@@ -227,8 +209,7 @@ auto validate_part_graph(const SkeletonTopology &topology,
     if (p.shape == PrimitiveShape::None) {
       return false;
     }
-    if (p.params.anchor_bone == kInvalidBone ||
-        p.params.anchor_bone >= n) {
+    if (p.params.anchor_bone == kInvalidBone || p.params.anchor_bone >= n) {
       return false;
     }
     bool const needs_tail = (p.shape == PrimitiveShape::Cylinder ||
@@ -236,8 +217,7 @@ auto validate_part_graph(const SkeletonTopology &topology,
                              p.shape == PrimitiveShape::Cone ||
                              p.shape == PrimitiveShape::OrientedCylinder);
     if (needs_tail) {
-      if (p.params.tail_bone == kInvalidBone ||
-          p.params.tail_bone >= n) {
+      if (p.params.tail_bone == kInvalidBone || p.params.tail_bone >= n) {
         return false;
       }
     }

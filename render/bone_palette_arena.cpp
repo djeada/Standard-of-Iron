@@ -9,6 +9,7 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <algorithm>
 #include <cstring>
+#include <vector>
 
 namespace Render::GL {
 
@@ -22,32 +23,58 @@ auto gl_funcs() -> QOpenGLFunctions_3_3_Core * {
   return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
 }
 
+void pack_palettes_for_std140(const QMatrix4x4 *src, std::size_t slot_count,
+                              std::vector<float> &scratch) {
+  scratch.resize(slot_count * BonePaletteArena::kPaletteFloats);
+
+  for (std::size_t slot = 0; slot < slot_count; ++slot) {
+    const QMatrix4x4 *slot_src = src + slot * BonePaletteArena::kPaletteWidth;
+    float *slot_dst = scratch.data() + slot * BonePaletteArena::kPaletteFloats;
+    BonePaletteArena::pack_palette_for_gpu(slot_src, slot_dst);
+  }
+}
+
 } // namespace
 
 struct BonePaletteArena::Slab {
-  // Slab CPU storage is one big contiguous mat4 array, laid out as
-  // [slot0_bone0..slot0_bone63][slot1_bone0..slot1_bone63]... so a
-  // `glBindBufferRange(offset = slot_idx * 4096, size = 4096)` reads a
-  // single palette and a future instanced bind reads N palettes.
+
   std::array<QMatrix4x4, kSlotsPerSlab * kPaletteWidth> data{};
   GLuint ubo = 0;
-  std::size_t high_water_slot = 0; // slots written this frame
+  std::size_t high_water_slot = 0;
   bool dirty = false;
-  // Owns its UBO so destruction reclaims it. We can't use unique_ptr
-  // because we need the GL context current; explicit cleanup below.
+
   ~Slab() {
     if (ubo != 0) {
       auto *fn = gl_funcs();
       if (fn != nullptr) {
         fn->glDeleteBuffers(1, &ubo);
       }
-      // No GL context → leak intentionally (driver reaps on context teardown).
     }
   }
 };
 
 BonePaletteArena::BonePaletteArena() = default;
 BonePaletteArena::~BonePaletteArena() = default;
+
+void BonePaletteArena::pack_palette_for_gpu(const QMatrix4x4 *src,
+                                            float *dst) noexcept {
+  if (dst == nullptr) {
+    return;
+  }
+  if (src == nullptr) {
+    for (std::size_t b = 0; b < kPaletteWidth; ++b) {
+      QMatrix4x4 ident;
+      ident.setToIdentity();
+      std::memcpy(dst + b * kMatrixFloats, ident.constData(),
+                  sizeof(float) * kMatrixFloats);
+    }
+    return;
+  }
+  for (std::size_t b = 0; b < kPaletteWidth; ++b) {
+    std::memcpy(dst + b * kMatrixFloats, src[b].constData(),
+                sizeof(float) * kMatrixFloats);
+  }
+}
 
 void BonePaletteArena::reset_frame() noexcept {
   m_used_slots = 0;
@@ -69,10 +96,6 @@ auto BonePaletteArena::allocate_palette() -> BonePaletteSlot {
   std::size_t const intra_idx = m_used_slots % kSlotsPerSlab;
   Slab &slab = ensure_slab(slab_idx);
 
-  // Lazily create the slab's UBO on first allocation when a GL context
-  // is current. Submitters always run on the render thread, so this is
-  // expected to succeed in production; headless tests get ubo == 0
-  // and the pipeline silently skips the bind.
   if (slab.ubo == 0) {
     auto *fn = gl_funcs();
     if (fn != nullptr) {
@@ -106,7 +129,7 @@ void BonePaletteArena::flush_to_gpu() {
   }
   auto *fn = gl_funcs();
   if (fn == nullptr) {
-    return; // headless: leave CPU data only
+    return;
   }
 
   for (auto &slab_ptr : m_slabs) {
@@ -115,7 +138,7 @@ void BonePaletteArena::flush_to_gpu() {
       continue;
     }
     if (slab.ubo == 0) {
-      // GL context appeared after allocation. Create now and upload.
+
       fn->glGenBuffers(1, &slab.ubo);
       fn->glBindBuffer(GL_UNIFORM_BUFFER, slab.ubo);
       fn->glBufferData(GL_UNIFORM_BUFFER,
@@ -124,9 +147,14 @@ void BonePaletteArena::flush_to_gpu() {
     } else {
       fn->glBindBuffer(GL_UNIFORM_BUFFER, slab.ubo);
     }
+
+    std::vector<float> upload_scratch;
+    pack_palettes_for_std140(slab.data.data(), slab.high_water_slot,
+                             upload_scratch);
     GLsizeiptr const upload_bytes =
         static_cast<GLsizeiptr>(slab.high_water_slot * kPaletteBytes);
-    fn->glBufferSubData(GL_UNIFORM_BUFFER, 0, upload_bytes, slab.data.data());
+    fn->glBufferSubData(GL_UNIFORM_BUFFER, 0, upload_bytes,
+                        upload_scratch.data());
     slab.dirty = false;
   }
 

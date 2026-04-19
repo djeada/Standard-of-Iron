@@ -1,18 +1,20 @@
 #include "spearman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/equipment_registry.h"
-#include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../equipment/equipment_submit.h"
+#include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/spear_pose_utils.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -81,6 +83,30 @@ void ensure_spearman_styles_registered() {
   (void)registered;
 }
 
+auto resolve_spearman_style_fn(const Render::GL::DrawContext &ctx)
+    -> const SpearmanStyleConfig & {
+  ensure_spearman_styles_registered();
+  auto &styles = spearman_style_registry();
+  std::string nation_id;
+  if (ctx.entity != nullptr) {
+    if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
+      nation_id = Game::Systems::nation_id_to_string(unit->nation_id);
+    }
+  }
+  if (!nation_id.empty()) {
+    auto it = styles.find(nation_id);
+    if (it != styles.end()) {
+      return it->second;
+    }
+  }
+  auto it_default = styles.find(std::string(k_spearman_default_style_key));
+  if (it_default != styles.end()) {
+    return it_default->second;
+  }
+  static const SpearmanStyleConfig k_empty{};
+  return k_empty;
+}
+
 } // namespace
 
 void register_spearman_style(const std::string &nation_id,
@@ -109,7 +135,6 @@ struct SpearmanExtras {
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-
     return {0.72F, 1.02F, 0.74F};
   }
 
@@ -119,10 +144,91 @@ public:
     variation.stance_width *= 0.92F;
   }
 
-private:
-  mutable std::unordered_map<uint32_t, SpearmanExtras> m_extrasCache;
-
 public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    static auto helmet =
+        reg.get(Render::GL::EquipmentCategory::Helmet, "carthage_heavy");
+    static auto shoulder = reg.get(Render::GL::EquipmentCategory::Armor,
+                                   "carthage_shoulder_cover");
+
+    ensure_spearman_styles_registered();
+    static const std::optional<float> spear_length_scale_opt =
+        []() -> std::optional<float> {
+      auto &styles = spearman_style_registry();
+      auto it = styles.find("carthage");
+      if (it != styles.end() && it->second.spear_length_scale) {
+        return it->second.spear_length_scale;
+      }
+      auto it_default = styles.find(std::string(k_spearman_default_style_key));
+      if (it_default != styles.end() && it_default->second.spear_length_scale) {
+        return it_default->second.spear_length_scale;
+      }
+      return std::nullopt;
+    }();
+
+    static const std::array<EquipmentRecord, 4> records{
+        make_legacy_equipment_record(*helmet),
+        make_legacy_equipment_record(*shoulder),
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  const SpearmanStyleConfig &style =
+                      resolve_spearman_style_fn(*sub.ctx);
+                  std::string const armor_key = style.armor_id.empty()
+                                                    ? "armor_light_carthage"
+                                                    : style.armor_id;
+                  auto armor = EquipmentRegistry::instance().get(
+                      EquipmentCategory::Armor, armor_key);
+                  if (armor) {
+                    armor->render(*sub.ctx, *sub.frames, *sub.palette,
+                                  *sub.anim, batch);
+                  }
+                },
+        },
+
+        make_payload_record<SpearRenderer>([](uint32_t seed) {
+          SpearRenderConfig cfg;
+          cfg.shaft_color =
+              QVector3D(0.5F, 0.3F, 0.2F) * QVector3D(0.85F, 0.75F, 0.65F);
+          cfg.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
+          cfg.spear_length =
+              1.15F + (Render::GL::hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+          cfg.shaft_radius =
+              0.018F + (Render::GL::hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+          cfg.spearhead_length =
+              0.16F + (Render::GL::hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
+          if (spear_length_scale_opt) {
+            cfg.spear_length =
+                std::max(0.80F, cfg.spear_length * *spear_length_scale_opt);
+          }
+          return cfg;
+        }),
+    };
+
+    static const UnitVisualSpec spec = []() {
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/carthage/spearman";
+      s.scaling = ProportionScaling{0.72F, 1.02F, 0.74F};
+      s.equipment =
+          std::span<const EquipmentRecord>{records.data(), records.size()};
+
+      s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor |
+                             LegacySlotMask::Attachments;
+      return s;
+    }();
+    return spec;
+  }
+
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -248,97 +354,7 @@ public:
     }
   }
 
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    const AnimationInputs &anim = anim_ctx.inputs;
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    auto const &style = resolve_style(ctx);
-    QVector3D const team_tint = resolve_team_tint(ctx);
-
-    SpearmanExtras extras;
-    auto it = m_extrasCache.find(seed);
-    if (it != m_extrasCache.end()) {
-      extras = it->second;
-    } else {
-      extras = computeSpearmanExtras(seed, v);
-      apply_extras_overrides(style, team_tint, v, extras);
-      m_extrasCache[seed] = extras;
-
-      if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-        m_extrasCache.clear();
-      }
-    }
-    apply_extras_overrides(style, team_tint, v, extras);
-
-    bool const is_attacking = anim.is_attacking && anim.is_melee;
-
-    auto &registry = EquipmentRegistry::instance();
-
-    auto spear = registry.get(EquipmentCategory::Weapon, "spear");
-    if (spear) {
-      SpearRenderConfig spear_config;
-      spear_config.shaft_color = extras.spear_shaft_color;
-      spear_config.spearhead_color = extras.spearhead_color;
-      spear_config.spear_length = extras.spear_length;
-      spear_config.shaft_radius = extras.spear_shaft_radius;
-      spear_config.spearhead_length = extras.spearheadLength;
-
-      auto *spear_renderer = dynamic_cast<SpearRenderer *>(spear.get());
-      if (spear_renderer) {
-        spear_renderer->set_config(spear_config);
-      }
-      render_equipment(*spear, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_heavy");
-    if (helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-    const SpearmanStyleConfig &style = resolve_style(ctx);
-    std::string armor_key =
-        style.armor_id.empty() ? "armor_light_carthage" : style.armor_id;
-    auto armor = registry.get(EquipmentCategory::Armor, armor_key);
-    if (armor) {
-      render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
-    }
-
-    auto shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "carthage_shoulder_cover");
-    if (shoulder_cover) {
-      render_equipment(*shoulder_cover, ctx, pose.body_frames, v.palette, anim, out);
-    }
-  }
-
 private:
-  static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
-      -> SpearmanExtras {
-    SpearmanExtras e;
-
-    e.spear_shaft_color = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
-    e.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
-
-    e.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
-    e.spear_shaft_radius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
-    e.spearheadLength = 0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
-
-    return e;
-  }
-
   auto
   resolve_style(const DrawContext &ctx) const -> const SpearmanStyleConfig & {
     ensure_spearman_styles_registered();
@@ -388,29 +404,6 @@ private:
     apply_color(style.leather_color, variant.palette.leather);
     apply_color(style.leather_dark_color, variant.palette.leather_dark);
     apply_color(style.metal_color, variant.palette.metal);
-  }
-
-  void apply_extras_overrides(const SpearmanStyleConfig &style,
-                              const QVector3D &team_tint,
-                              [[maybe_unused]] const HumanoidVariant &variant,
-                              SpearmanExtras &extras) const {
-    extras.spear_shaft_color = saturate_color(extras.spear_shaft_color);
-    extras.spearhead_color = saturate_color(extras.spearhead_color);
-
-    auto apply_color = [&](const std::optional<QVector3D> &override_color,
-                           QVector3D &target) {
-      target = mix_palette_color(target, override_color, team_tint,
-                                 k_spearman_team_mix_weight,
-                                 k_spearman_style_mix_weight);
-    };
-
-    apply_color(style.spear_shaft_color, extras.spear_shaft_color);
-    apply_color(style.spearhead_color, extras.spearhead_color);
-
-    if (style.spear_length_scale) {
-      extras.spear_length =
-          std::max(0.80F, extras.spear_length * *style.spear_length_scale);
-    }
   }
 };
 

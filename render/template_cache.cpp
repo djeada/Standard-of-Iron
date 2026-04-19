@@ -139,10 +139,7 @@ void TemplateRecorder::mesh(Mesh *mesh, const QMatrix4x4 &model,
   cmd.mesh = mesh;
   cmd.texture = texture;
   cmd.shader = get_current_shader();
-  // Attach the currently-bound Material (if any). A non-null shader
-  // override takes precedence: that path wants an exact shader (e.g.
-  // troop_shadow quad) so material is left null to force a legacy
-  // MeshCmd replay.
+
   cmd.material = (cmd.shader == nullptr) ? m_current_material : nullptr;
   cmd.local_model = model;
   cmd.color = color;

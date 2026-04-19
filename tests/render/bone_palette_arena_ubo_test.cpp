@@ -13,6 +13,8 @@
 
 #include "render/bone_palette_arena.h"
 
+#include <array>
+
 #include <gtest/gtest.h>
 
 namespace {
@@ -60,8 +62,7 @@ TEST(BonePaletteArenaUBO, PendingBytesTracksHighWater) {
   EXPECT_EQ(arena.pending_upload_bytes(), 0U);
   [[maybe_unused]] auto a = arena.allocate_palette();
   [[maybe_unused]] auto b = arena.allocate_palette();
-  EXPECT_EQ(arena.pending_upload_bytes(),
-            2U * BonePaletteArena::kPaletteBytes);
+  EXPECT_EQ(arena.pending_upload_bytes(), 2U * BonePaletteArena::kPaletteBytes);
   arena.reset_frame();
   EXPECT_EQ(arena.pending_upload_bytes(), 0U);
 }
@@ -72,6 +73,45 @@ TEST(BonePaletteArenaUBO, PaletteCpuStorageIsIdentityOnAllocation) {
   ASSERT_NE(slot.cpu, nullptr);
   for (std::size_t i = 0; i < BonePaletteArena::kPaletteWidth; ++i) {
     EXPECT_TRUE(slot.cpu[i].isIdentity()) << "slot.cpu[" << i << "]";
+  }
+}
+
+TEST(BonePaletteArenaUBO, PackedPaletteUsesStd140Mat4Stride) {
+  static_assert(BonePaletteArena::kPaletteBytes ==
+                BonePaletteArena::kPaletteFloats * sizeof(float));
+  static_assert(BonePaletteArena::kPaletteBytes == 4096U);
+
+  std::array<QMatrix4x4, BonePaletteArena::kPaletteWidth> palette{};
+  for (auto &matrix : palette) {
+    matrix.setToIdentity();
+  }
+
+  QMatrix4x4 custom;
+  custom.translate(1.0F, 2.0F, 3.0F);
+  custom.scale(4.0F, 5.0F, 6.0F);
+  palette[3] = custom;
+
+  std::array<float, BonePaletteArena::kPaletteFloats> packed{};
+  BonePaletteArena::pack_palette_for_gpu(palette.data(), packed.data());
+
+  const float *expected = custom.constData();
+  const std::size_t offset = 3U * BonePaletteArena::kMatrixFloats;
+  for (std::size_t i = 0; i < BonePaletteArena::kMatrixFloats; ++i) {
+    EXPECT_FLOAT_EQ(packed[offset + i], expected[i]);
+  }
+}
+
+TEST(BonePaletteArenaUBO, NullPalettePacksIdentityMatrices) {
+  std::array<float, BonePaletteArena::kPaletteFloats> packed{};
+  BonePaletteArena::pack_palette_for_gpu(nullptr, packed.data());
+
+  QMatrix4x4 identity;
+  identity.setToIdentity();
+  for (std::size_t bone = 0; bone < BonePaletteArena::kPaletteWidth; ++bone) {
+    const std::size_t offset = bone * BonePaletteArena::kMatrixFloats;
+    for (std::size_t i = 0; i < BonePaletteArena::kMatrixFloats; ++i) {
+      EXPECT_FLOAT_EQ(packed[offset + i], identity.constData()[i]);
+    }
   }
 }
 

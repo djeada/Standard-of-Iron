@@ -1,9 +1,8 @@
 #pragma once
 
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
 #include "../gl/humanoid/humanoid_types.h"
-#include "../gl/mesh.h"
-#include "../graphics_settings.h"
 #include "humanoid_specs.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -19,26 +18,6 @@ class UnitComponent;
 
 namespace Render::GL {
 
-auto torso_mesh_without_bottom_cap() -> Mesh *;
-void align_torso_mesh_forward(QMatrix4x4 &model) noexcept;
-
-void advance_pose_cache_frame();
-void clear_humanoid_caches();
-
-inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
-  const auto &settings = Render::GraphicsSettings::instance();
-  if (distance < settings.humanoid_full_detail_distance()) {
-    return HumanoidLOD::Full;
-  }
-  if (distance < settings.humanoid_reduced_detail_distance()) {
-    return HumanoidLOD::Reduced;
-  }
-  if (distance < settings.humanoid_minimal_detail_distance()) {
-    return HumanoidLOD::Minimal;
-  }
-  return HumanoidLOD::Billboard;
-}
-
 class HumanoidRendererBase {
 public:
   virtual ~HumanoidRendererBase() = default;
@@ -52,6 +31,9 @@ public:
   }
 
   virtual auto get_mount_scale() const -> float { return 1.0F; }
+
+  virtual auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec &;
 
   virtual void adjust_variation(const DrawContext &, uint32_t,
                                 VariationParams &) const {}
@@ -67,14 +49,6 @@ public:
                                const HumanoidPose &pose,
                                const HumanoidAnimationContext &anim_ctx,
                                ISubmitter &out) const;
-
-  virtual void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                           const HumanoidPose &pose, ISubmitter &out) const;
-
-  virtual void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                          const HumanoidPose &pose,
-                          const HumanoidAnimationContext &anim,
-                          ISubmitter &out) const;
 
   virtual void
   draw_armor_overlay(const DrawContext &ctx, const HumanoidVariant &v,
@@ -100,7 +74,6 @@ public:
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
       Engine::Core::TransformComponent *transform_comp) const -> float;
 
-  // Body draws are submitted by the CreatureSpec walker for all live LODs.
   static auto frame_local_position(const AttachmentFrame &frame,
                                    const QVector3D &local) -> QVector3D;
 
@@ -132,37 +105,5 @@ protected:
   void render_procedural(const DrawContext &ctx, const AnimationInputs &anim,
                          ISubmitter &out) const;
 };
-
-struct HumanoidRenderStats {
-  uint32_t soldiers_total{0};
-  uint32_t soldiers_rendered{0};
-  uint32_t soldiers_skipped_frustum{0};
-  uint32_t soldiers_skipped_lod{0};
-  uint32_t soldiers_skipped_temporal{0};
-  uint32_t poses_computed{0};
-  uint32_t poses_cached{0};
-  uint32_t facial_hair_skipped_distance{0};
-  uint32_t lod_full{0};
-  uint32_t lod_reduced{0};
-  uint32_t lod_minimal{0};
-
-  void reset() {
-    soldiers_total = 0;
-    soldiers_rendered = 0;
-    soldiers_skipped_frustum = 0;
-    soldiers_skipped_lod = 0;
-    soldiers_skipped_temporal = 0;
-    poses_computed = 0;
-    poses_cached = 0;
-    facial_hair_skipped_distance = 0;
-    lod_full = 0;
-    lod_reduced = 0;
-    lod_minimal = 0;
-  }
-};
-
-auto get_humanoid_render_stats() -> const HumanoidRenderStats &;
-
-void reset_humanoid_render_stats();
 
 } // namespace Render::GL

@@ -31,10 +31,6 @@ void RiggedMesh::setup_buffers() {
   m_vbo->set_data(m_vertices);
   m_ebo->set_data(m_indices);
 
-  // The shared `VertexArray::add_vertexBuffer` helper only handles
-  // float attribs via glVertexAttribPointer. RiggedVertex needs an
-  // integer attribute (bone_indices, GL_UNSIGNED_BYTE -> ivec4 via
-  // glVertexAttribIPointer), so we configure the layout manually.
   constexpr GLsizei k_stride = sizeof(RiggedVertex);
   constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
     return reinterpret_cast<std::size_t>(

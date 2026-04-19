@@ -32,12 +32,8 @@ using namespace Render::Creature;
 //   4 Arm       (from_head_tail: shoulder → hand)
 //   5 Hand      (from_parent: origin = hand_pos, zero-length tip)
 constexpr std::array<BoneDef, 6> kToyBones = {
-    BoneDef{"root", kInvalidBone},
-    BoneDef{"torso", 0},
-    BoneDef{"head", 1},
-    BoneDef{"shoulder", 1},
-    BoneDef{"arm", 3},
-    BoneDef{"hand", 4},
+    BoneDef{"root", kInvalidBone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
+    BoneDef{"shoulder", 1},        BoneDef{"arm", 3},   BoneDef{"hand", 4},
 };
 
 constexpr std::array<SocketDef, 3> kToySockets = {
@@ -102,12 +98,18 @@ bool is_orthonormal(const QMatrix4x4 &m, float eps = 1e-4F) {
   QVector3D const x = m.column(0).toVector3D();
   QVector3D const y = m.column(1).toVector3D();
   QVector3D const z = m.column(2).toVector3D();
-  if (std::abs(x.lengthSquared() - 1.0F) > eps) return false;
-  if (std::abs(y.lengthSquared() - 1.0F) > eps) return false;
-  if (std::abs(z.lengthSquared() - 1.0F) > eps) return false;
-  if (std::abs(QVector3D::dotProduct(x, y)) > eps) return false;
-  if (std::abs(QVector3D::dotProduct(x, z)) > eps) return false;
-  if (std::abs(QVector3D::dotProduct(y, z)) > eps) return false;
+  if (std::abs(x.lengthSquared() - 1.0F) > eps)
+    return false;
+  if (std::abs(y.lengthSquared() - 1.0F) > eps)
+    return false;
+  if (std::abs(z.lengthSquared() - 1.0F) > eps)
+    return false;
+  if (std::abs(QVector3D::dotProduct(x, y)) > eps)
+    return false;
+  if (std::abs(QVector3D::dotProduct(x, z)) > eps)
+    return false;
+  if (std::abs(QVector3D::dotProduct(y, z)) > eps)
+    return false;
   return true;
 }
 
@@ -189,10 +191,8 @@ TEST(CreatureEvaluatorTest, BoneOriginsMatchProvidedHeads) {
             1e-5F);
   EXPECT_LT((palette[1].column(3).toVector3D() - sample.pelvis).length(),
             1e-5F);
-  EXPECT_LT((palette[2].column(3).toVector3D() - sample.head).length(),
-            1e-5F);
-  EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(),
-            1e-5F);
+  EXPECT_LT((palette[2].column(3).toVector3D() - sample.head).length(), 1e-5F);
+  EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(), 1e-5F);
 }
 
 TEST(CreatureEvaluatorTest, TorsoLongAxisPointsUpForUprightSample) {
@@ -211,8 +211,7 @@ TEST(CreatureEvaluatorTest, ArmLongAxisPointsAlongShoulderToHand) {
   evaluate_skeleton(toy_topology(), toy_provider, &sample,
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
-  QVector3D const expected =
-      (sample.hand - sample.shoulder).normalized();
+  QVector3D const expected = (sample.hand - sample.shoulder).normalized();
   QVector3D const y = palette[4].column(1).toVector3D();
   EXPECT_LT((y - expected).length(), 1e-4F);
 }
@@ -255,8 +254,7 @@ TEST(CreatureEvaluatorTest, ParentTransformPropagatesThroughChain) {
   QVector3D const hand_y = palette[5].column(1).toVector3D();
   EXPECT_LT((arm_y - hand_y).length(), 1e-5F);
   // but hand origin differs (it's at sample.hand).
-  EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(),
-            1e-5F);
+  EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(), 1e-5F);
 }
 
 TEST(CreatureSocketTest, HeadSocketAppliesLocalOffsetInBoneAxes) {
@@ -268,7 +266,8 @@ TEST(CreatureSocketTest, HeadSocketAppliesLocalOffsetInBoneAxes) {
   auto const t = toy_topology();
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
   QVector3D const crown = socket_position(t, p, 0); // head_crown socket
-  // Y offset = 0.1m along head bone's Y axis (inherited from torso, so +Y world).
+  // Y offset = 0.1m along head bone's Y axis (inherited from torso, so +Y
+  // world).
   EXPECT_LT((crown - (sample.head + QVector3D(0.0F, 0.1F, 0.0F))).length(),
             1e-5F);
 }
@@ -313,8 +312,7 @@ TEST(CreatureSocketTest, OutOfRangeSocketReturnsIdentity) {
 
 TEST(CreaturePrimitiveTest, MakeBoneBasisIsOrthonormal) {
   QMatrix4x4 const m =
-      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F),
-                      QVector3D(0.0F, 1.0F, 0.0F),
+      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F),
                       QVector3D(1.0F, 0.0F, 0.0F));
   EXPECT_TRUE(is_orthonormal(m));
 }
@@ -322,8 +320,7 @@ TEST(CreaturePrimitiveTest, MakeBoneBasisIsOrthonormal) {
 TEST(CreaturePrimitiveTest, MakeBoneBasisHandlesColinearRightHint) {
   // right_hint parallel to bone axis — must not produce a zero X axis.
   QMatrix4x4 const m =
-      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F),
-                      QVector3D(0.0F, 1.0F, 0.0F),
+      make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F),
                       QVector3D(0.0F, 1.0F, 0.0F));
   EXPECT_TRUE(is_orthonormal(m));
 }

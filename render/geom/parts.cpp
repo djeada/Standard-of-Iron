@@ -41,7 +41,7 @@ auto build_oriented_cylinder_matrix(const QVector3D &a, const QVector3D &b,
   QMatrix4x4 m;
 
   if (len_sq <= k_eps_sq) {
-    // Degenerate segment — pick an up from the reference right.
+
     QVector3D up{0.0F, 1.0F, 0.0F};
     QVector3D right = right_reference;
     if (right.lengthSquared() < k_eps_sq) {
@@ -53,32 +53,24 @@ auto build_oriented_cylinder_matrix(const QVector3D &a, const QVector3D &b,
     }
     right.normalize();
     const QVector3D forward = QVector3D::crossProduct(right, up).normalized();
-    set_affine_columns(m, right.x() * radius_right, right.y() * radius_right,
-                       right.z() * radius_right, up.x(), up.y(), up.z(),
-                       forward.x() * radius_forward,
-                       forward.y() * radius_forward,
-                       forward.z() * radius_forward, centre.x(), centre.y(),
-                       centre.z());
+    set_affine_columns(
+        m, right.x() * radius_right, right.y() * radius_right,
+        right.z() * radius_right, up.x(), up.y(), up.z(),
+        forward.x() * radius_forward, forward.y() * radius_forward,
+        forward.z() * radius_forward, centre.x(), centre.y(), centre.z());
     return m;
   }
 
-  const QVector3D up_axis = delta;      // length = segment length
+  const QVector3D up_axis = delta;
   const QVector3D up_unit = up_axis.normalized();
 
-  // Orthogonalise the caller's right reference against the segment axis.
-  // This is the core of the API: the right axis is CHOSEN by the caller, not
-  // picked by a perpendicular-guessing heuristic.
-  QVector3D right =
-      right_reference - up_unit * QVector3D::dotProduct(right_reference, up_unit);
+  QVector3D right = right_reference -
+                    up_unit * QVector3D::dotProduct(right_reference, up_unit);
   if (right.lengthSquared() < k_eps_sq) {
-    // Caller-supplied right was parallel to the segment axis. Fall back to a
-    // stable perpendicular — but unlike the legacy helper we pick one that
-    // points away from world-up when possible, so the result is at least
-    // deterministic.
-    const QVector3D fallback =
-        std::abs(up_unit.y()) < 0.9F
-            ? QVector3D{1.0F, 0.0F, 0.0F}
-            : QVector3D{0.0F, 0.0F, 1.0F};
+
+    const QVector3D fallback = std::abs(up_unit.y()) < 0.9F
+                                   ? QVector3D{1.0F, 0.0F, 0.0F}
+                                   : QVector3D{0.0F, 0.0F, 1.0F};
     right = fallback - up_unit * QVector3D::dotProduct(fallback, up_unit);
     if (right.lengthSquared() < k_eps_sq) {
       right = QVector3D{1.0F, 0.0F, 0.0F};
@@ -93,26 +85,24 @@ auto build_oriented_cylinder_matrix(const QVector3D &a, const QVector3D &b,
     forward.normalize();
   }
 
-  // Columns in column-major order: X (right * r_right), Y (segment axis — keep
-  // length so Y:[-0.5,0.5] maps to full segment), Z (forward * r_forward).
-  set_affine_columns(
-      m, right.x() * radius_right, right.y() * radius_right,
-      right.z() * radius_right, up_axis.x(), up_axis.y(), up_axis.z(),
-      forward.x() * radius_forward, forward.y() * radius_forward,
-      forward.z() * radius_forward, centre.x(), centre.y(), centre.z());
+  set_affine_columns(m, right.x() * radius_right, right.y() * radius_right,
+                     right.z() * radius_right, up_axis.x(), up_axis.y(),
+                     up_axis.z(), forward.x() * radius_forward,
+                     forward.y() * radius_forward, forward.z() * radius_forward,
+                     centre.x(), centre.y(), centre.z());
   return m;
 }
 
 auto build_oriented_basis_matrix(const Render::Math::BoneFrame &frame,
                                  const QVector3D &scale) -> QMatrix4x4 {
   QMatrix4x4 m;
-  set_affine_columns(
-      m, frame.right.x() * scale.x(), frame.right.y() * scale.x(),
-      frame.right.z() * scale.x(), frame.up.x() * scale.y(),
-      frame.up.y() * scale.y(), frame.up.z() * scale.y(),
-      frame.forward.x() * scale.z(), frame.forward.y() * scale.z(),
-      frame.forward.z() * scale.z(), frame.origin.x(), frame.origin.y(),
-      frame.origin.z());
+  set_affine_columns(m, frame.right.x() * scale.x(),
+                     frame.right.y() * scale.x(), frame.right.z() * scale.x(),
+                     frame.up.x() * scale.y(), frame.up.y() * scale.y(),
+                     frame.up.z() * scale.y(), frame.forward.x() * scale.z(),
+                     frame.forward.y() * scale.z(),
+                     frame.forward.z() * scale.z(), frame.origin.x(),
+                     frame.origin.y(), frame.origin.z());
   return m;
 }
 

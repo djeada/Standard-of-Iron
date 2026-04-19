@@ -1,5 +1,5 @@
 #pragma once
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
 
@@ -22,10 +22,20 @@ public:
       const CarthageHeavyHelmetConfig &cfg = {})
       : m_config(cfg) {}
 
+  static void submit(const CarthageHeavyHelmetConfig &config,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
+
+  [[nodiscard]] auto base_config() const -> const CarthageHeavyHelmetConfig & {
+    return m_config;
+  }
 
 private:
   CarthageHeavyHelmetConfig m_config;

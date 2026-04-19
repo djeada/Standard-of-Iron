@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rig.h"
+#include "horse_renderer_base.h"
 
 namespace Render::GL {
 

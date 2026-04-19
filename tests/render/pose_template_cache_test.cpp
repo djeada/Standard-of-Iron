@@ -130,18 +130,15 @@ TEST(PoseTemplateCache, SameKeyDifferentWorldTransformsShareCache) {
 
   // First part's local world is identity * translate(0,0,0) → origin.
   // After unit_a's translation, the part's world-origin column must match.
-  QVector3D const a_origin =
-      out_a[0].world.map(QVector3D(0.0F, 0.0F, 0.0F));
-  QVector3D const b_origin =
-      out_b[0].world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const a_origin = out_a[0].world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const b_origin = out_b[0].world.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_FLOAT_EQ(a_origin.x(), 10.0F);
   EXPECT_FLOAT_EQ(b_origin.x(), -5.0F);
   EXPECT_FLOAT_EQ(b_origin.z(), 12.0F);
 
   // Second part was locally at (1,0,0) — after world translate (10,0,0) it
   // must end up at (11, 0, 0).
-  QVector3D const a_second =
-      out_a[1].world.map(QVector3D(0.0F, 0.0F, 0.0F));
+  QVector3D const a_second = out_a[1].world.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_FLOAT_EQ(a_second.x(), 11.0F);
 }
 

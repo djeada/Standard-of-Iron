@@ -1,13 +1,16 @@
-#include "rig.h"
+#include "elephant_renderer_base.h"
+#include "lod.h"
+#include "render_stats.h"
 
-#include "../material.h"
 #include "../../game/core/component.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
 #include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
+#include "../material.h"
 #include "../submitter.h"
 #include "../template_cache.h"
 #include "elephant_spec.h"
@@ -19,10 +22,10 @@
 #include <cmath>
 #include <cstdint>
 #include <numbers>
-#include <vector>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>
 #include <unordered_map>
+#include <vector>
 
 namespace Render::GL {
 
@@ -33,6 +36,18 @@ auto get_elephant_render_stats() -> const ElephantRenderStats & {
 }
 
 void reset_elephant_render_stats() { s_elephantRenderStats.reset(); }
+
+auto ElephantRendererBase::visual_spec() const
+    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec = Render::Creature::Pipeline::UnitVisualSpec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
+  spec.debug_name = "elephant/default";
+  const QVector3D ps = get_proportion_scaling();
+  spec.scaling =
+      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+  return spec;
+}
 
 using Render::Geom::clamp01;
 using Render::Geom::cone_from_to;
@@ -857,10 +872,6 @@ void ElephantRendererBase::render_full(
       QVector3D(0.0F, d.head_height * 0.35F, d.head_length * 0.10F);
   (void)forehead_center;
 
-  // Build the per-frame Reduced-shaped ElephantSpecPose then override
-  // the trunk/head/feet to inherit the rider-influenced positions
-  // above. The Full body uses the static baseline graph; per-entity
-  // offsets still flow through the evaluated pose.
   Render::Elephant::ElephantSpecPose pose;
   Render::Elephant::ElephantReducedMotion rm{
       phase, bob, is_moving, is_fighting, anim.time, anim.combat_phase};
@@ -872,31 +883,9 @@ void ElephantRendererBase::render_full(
   (void)skin_seed_a;
   (void)skin_seed_b;
 
-  Render::Elephant::submit_elephant_lod(
-      pose, v, Render::Creature::CreatureLOD::Full, elephant_ctx.model, out);
-
-  ElephantBodyFrames body_frames;
-  QVector3D const forward(0.0F, 0.0F, 1.0F);
-  QVector3D const up(0.0F, 1.0F, 0.0F);
-  QVector3D const right(1.0F, 0.0F, 0.0F);
-
-  body_frames.head.origin = head_center;
-  body_frames.head.right = right;
-  body_frames.head.up = up;
-  body_frames.head.forward = forward;
-
-  body_frames.back_center.origin = howdah.howdah_center;
-  body_frames.back_center.right = right;
-  body_frames.back_center.up = up;
-  body_frames.back_center.forward = forward;
-
-  body_frames.howdah.origin = howdah.seat_position;
-  body_frames.howdah.right = right;
-  body_frames.howdah.up = up;
-  body_frames.howdah.forward = forward;
-
-  draw_howdah(elephant_ctx, anim, profile, howdah, phase, bob, body_frames,
-              out);
+  Render::Elephant::submit_elephant_via_pipeline(
+      *this, pose, v, elephant_ctx.model, 0,
+      Render::Creature::CreatureLOD::Full, out);
 }
 
 void ElephantRendererBase::render_simplified(
@@ -924,11 +913,12 @@ void ElephantRendererBase::render_simplified(
 
   Render::Elephant::ElephantSpecPose pose;
   Render::Elephant::ElephantReducedMotion rm{
-      motion.phase, motion.bob, motion.is_moving, is_fighting, anim.time,
-      anim.combat_phase};
+      motion.phase, motion.bob, motion.is_moving,
+      is_fighting,  anim.time,  anim.combat_phase};
   Render::Elephant::make_elephant_spec_pose_reduced(d, g, rm, pose);
-  Render::Elephant::submit_elephant_lod(
-      pose, v, Render::Creature::CreatureLOD::Reduced, world_from_unit, out);
+  Render::Elephant::submit_elephant_via_pipeline(
+      *this, pose, v, world_from_unit, 0,
+      Render::Creature::CreatureLOD::Reduced, out);
 }
 
 void ElephantRendererBase::render_minimal(
@@ -948,8 +938,9 @@ void ElephantRendererBase::render_minimal(
   Render::Elephant::ElephantSpecPose pose;
   Render::Elephant::make_elephant_spec_pose(d, bob, pose);
 
-  Render::Elephant::submit_elephant_lod(
-      pose, v, Render::Creature::CreatureLOD::Minimal, world_from_unit, out);
+  Render::Elephant::submit_elephant_via_pipeline(
+      *this, pose, v, world_from_unit, 0,
+      Render::Creature::CreatureLOD::Minimal, out);
 }
 
 namespace {
@@ -975,7 +966,7 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     effective_lod = ctx.forced_horse_lod;
   }
 
-  bool use_cache = ctx.allow_template_cache && !ctx.renderer_id.empty();
+  bool use_cache = false;
 
   std::uint32_t seed = 0U;
   if (ctx.has_seed_override) {

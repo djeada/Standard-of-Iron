@@ -3,8 +3,9 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/mesh_helpers.h"
 #include "../../humanoid/style_palette.h"
 #include "../equipment_submit.h"
 #include <QMatrix4x4>
@@ -79,13 +80,13 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   float main_radius = torso_r * 1.36F;
   float const main_depth = torso_depth * 1.24F;
 
-  QMatrix4x4 cuirass =
-      oriented_cylinder(ctx.model, top, bottom, right, main_radius,
-                        main_radius * std::max(0.15F, main_depth / main_radius));
+  QMatrix4x4 cuirass = oriented_cylinder(
+      ctx.model, top, bottom, right, main_radius,
+      main_radius * std::max(0.15F, main_depth / main_radius));
   align_torso_mesh_forward(cuirass);
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr, cuirass,
-                 metal_color, nullptr, 1.0F, 1});
+  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
+                          nullptr, cuirass, metal_color, nullptr, 1.0F, 1});
 
   auto strap = [&](float side) {
     QVector3D shoulder_anchor =
@@ -93,9 +94,9 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
     QVector3D chest_anchor =
         shoulder_anchor - up * (torso_r * 0.82F) + forward * (torso_r * 0.22F);
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, shoulder_anchor, chest_anchor,
-                                    torso_r * 0.12F),
-                   leather_highlight * 0.95F, nullptr, 1.0F, 1});
+                            cylinder_between(ctx.model, shoulder_anchor,
+                                             chest_anchor, torso_r * 0.12F),
+                            leather_highlight * 0.95F, nullptr, 1.0F, 1});
   };
   strap(1.0F);
   strap(-1.0F);
@@ -105,27 +106,27 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
   QVector3D front_panel_bottom =
       bottom + forward * (torso_depth * 0.38F) + up * (torso_r * 0.03F);
   float const front_radius = torso_r * 0.56F;
-  QMatrix4x4 front_panel = oriented_cylinder(
-      ctx.model, front_panel_top, front_panel_bottom, right, front_radius * 1.18F,
-      front_radius *
-          std::max(0.22F, (torso_depth * 0.76F) / (torso_r * 0.76F)));
+  QMatrix4x4 front_panel =
+      oriented_cylinder(ctx.model, front_panel_top, front_panel_bottom, right,
+                        front_radius * 1.18F,
+                        front_radius * std::max(0.22F, (torso_depth * 0.76F) /
+                                                           (torso_r * 0.76F)));
   align_torso_mesh_forward(front_panel);
-  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr,
-                 front_panel, cloth_accent, nullptr, 1.0F, 1});
+  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
+                          nullptr, front_panel, cloth_accent, nullptr, 1.0F,
+                          1});
 
   QVector3D back_panel_top =
       top - forward * (torso_depth * 0.32F) - up * (torso_r * 0.05F);
   QVector3D back_panel_bottom =
       bottom - forward * (torso_depth * 0.34F) + up * (torso_r * 0.02F);
   float const back_radius = torso_r * 0.58F;
-  QMatrix4x4 back_panel =
-      oriented_cylinder(ctx.model, back_panel_top, back_panel_bottom, right,
-                        back_radius * 1.18F,
-                        back_radius * std::max(0.22F, (torso_depth * 0.74F) /
-                                                          (torso_r * 0.80F)));
+  QMatrix4x4 back_panel = oriented_cylinder(
+      ctx.model, back_panel_top, back_panel_bottom, right, back_radius * 1.18F,
+      back_radius * std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
   align_torso_mesh_forward(back_panel);
-  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr,
-                 back_panel, metal_core, nullptr, 1.0F, 1});
+  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
+                          nullptr, back_panel, metal_core, nullptr, 1.0F, 1});
 }
 
 } // namespace Render::GL

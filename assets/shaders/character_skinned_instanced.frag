@@ -1,14 +1,5 @@
 #version 330 core
 
-// Stage 16.4 — instanced GPU-skinning fragment shader.
-//
-// Mirrors character_skinned.frag but reads color/alpha (and material
-// id, currently unused but reserved) from per-instance varyings so a
-// single instanced draw can render N creatures with distinct tints.
-// Texturing is intentionally not supported on the instanced path —
-// textured rigged commands fall back to the per-cmd shader. See
-// RiggedCharacterPipeline::draw_instanced.
-
 in vec3 v_normal_ws;
 in vec2 v_tex;
 in vec3 v_pos_ws;

@@ -49,6 +49,12 @@ add_executable(standard_of_iron_tests
     render/humanoid/humanoid_spec_test.cpp
     render/horse/horse_spec_test.cpp
     render/elephant/elephant_spec_test.cpp
+    render/creature_pipeline_test.cpp
+    render/creature_pipeline_humanoid_test.cpp
+    render/creature_pipeline_mounts_test.cpp
+    render/mounted_base_loadout_migration_test.cpp
+    render/creature_pipeline_equipment_test.cpp
+    render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
     render/creature/part_graph_test.cpp
     render/creature/rigged_mesh_bake_test.cpp

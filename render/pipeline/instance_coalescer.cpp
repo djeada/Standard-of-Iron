@@ -1,6 +1,6 @@
 #include "instance_coalescer.h"
 
-#include "../draw_queue.h" // for k_opaque_threshold
+#include "../draw_queue.h"
 
 namespace Render::Pipeline {
 
@@ -21,15 +21,12 @@ auto parts_are_compatible(const Render::GL::DrawPartCmd &a,
   if (a.priority != b.priority) {
     return false;
   }
-  // Transparency forces depth ordering; never fuse.
+
   if (a.alpha < Render::GL::k_opaque_threshold ||
       b.alpha < Render::GL::k_opaque_threshold) {
     return false;
   }
-  // BonePaletteRef carries per-part skinning palette. Non-empty palettes
-  // can't trivially share one instanced draw (each instance would need its
-  // own indirect indexing), so any skinned part is routed to the per-part
-  // path. Keeps the compatibility predicate symmetric.
+
   if (!a.palette.empty() || !b.palette.empty()) {
     return false;
   }

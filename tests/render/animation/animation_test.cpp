@@ -66,8 +66,7 @@ TEST(AnimationClipTest, LoopWrapModeRepeatsInTime) {
 
 TEST(AnimationClipTest, SortsUnorderedKeyframes) {
   // Construct deliberately out of order; Clip ctor must sort.
-  Clip<float> c("unordered",
-                {{1.0F, 10.0F}, {0.0F, 0.0F}, {0.5F, 5.0F}});
+  Clip<float> c("unordered", {{1.0F, 10.0F}, {0.0F, 0.0F}, {0.5F, 5.0F}});
   EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, kEps);
   EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, kEps);
   EXPECT_NEAR(evaluate(c, 1.0F), 10.0F, kEps);

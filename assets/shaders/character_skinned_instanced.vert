@@ -1,20 +1,5 @@
 #version 330 core
 
-// Stage 16.4 — instanced GPU-skinning vertex shader.
-//
-// Companion to character_skinned.vert: same skinning math, but
-// per-instance world / color / variation / material come in as
-// vertex attribs (divisor = 1) and the bone palette UBO carries
-// `INSTANCED_BATCH_SIZE * 64` mat4s. `gl_InstanceID * 64` selects the
-// per-instance palette window.
-//
-// `INSTANCED_BATCH_SIZE` is substituted by the pipeline at shader
-// compile time (it must match `glDrawElementsInstanced(..., N)` and
-// `glBindBufferRange` size of `N * 64 * sizeof(mat4)`). The default
-// of 16 lets the file compile standalone if loaded raw, but the live
-// pipeline ALWAYS substitutes it from the GL_MAX_UNIFORM_BLOCK_SIZE
-// probe.
-
 #ifndef INSTANCED_BATCH_SIZE
 #define INSTANCED_BATCH_SIZE 16
 #endif
@@ -34,9 +19,8 @@ layout(location = 10) in vec4 i_variation_material;
 
 uniform mat4 u_view_proj;
 
-layout(std140) uniform BonePalette {
-  mat4 bones[INSTANCED_BATCH_SIZE * 64];
-} u_palette;
+layout(std140) uniform BonePalette { mat4 bones[INSTANCED_BATCH_SIZE * 64]; }
+u_palette;
 
 out vec3 v_normal_ws;
 out vec2 v_tex;
@@ -52,8 +36,8 @@ void main() {
               a_bone_weights.z * u_palette.bones[base + a_bone_indices.z] +
               a_bone_weights.w * u_palette.bones[base + a_bone_indices.w];
 
-  float wsum = a_bone_weights.x + a_bone_weights.y + a_bone_weights.z +
-               a_bone_weights.w;
+  float wsum =
+      a_bone_weights.x + a_bone_weights.y + a_bone_weights.z + a_bone_weights.w;
   if (wsum < 0.001) {
     skin = mat4(1.0);
   }

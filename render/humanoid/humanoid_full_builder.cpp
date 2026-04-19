@@ -20,9 +20,6 @@ constexpr auto bi(HumanoidBone b) noexcept -> Creature::BoneIndex {
   return static_cast<Creature::BoneIndex>(b);
 }
 
-// Frame-local position used by the eye lookups — mirrors
-// `frame_local_position` in render/geom/math_utils.h but is duplicated
-// here to avoid pulling extra headers into this compilation unit.
 auto frame_local(const Render::GL::AttachmentFrame &f,
                  const QVector3D &local) noexcept -> QVector3D {
   return f.origin + f.right * local.x() * f.radius +
@@ -88,17 +85,13 @@ void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
   out.foot_radius = out.shin_r * 1.10F;
 }
 
-void compute_humanoid_body_frames(
-    Render::GL::HumanoidPose &pose,
-    const HumanoidBodyMetrics &m) noexcept {
+void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
+                                  const HumanoidBodyMetrics &m) noexcept {
   using AF = Render::GL::AttachmentFrame;
 
   QVector3D const shoulder_mid = (pose.shoulder_l + pose.shoulder_r) * 0.5F;
   float const y_shoulder = shoulder_mid.y();
 
-  // Head frame: already populated by draw_common_body's head RigDSL block
-  // as `pose.head_frame`. Mirror it to body_frames.head; the body_frames
-  // write is what downstream equipment reads.
   pose.body_frames.head = pose.head_frame;
 
   QVector3D const torso_center = QVector3D(
@@ -110,8 +103,7 @@ void compute_humanoid_body_frames(
   pose.body_frames.torso.radius = m.torso_r;
   pose.body_frames.torso.depth = m.torso_depth;
 
-  pose.body_frames.back.origin =
-      torso_center - m.forward_axis * m.torso_depth;
+  pose.body_frames.back.origin = torso_center - m.forward_axis * m.torso_depth;
   pose.body_frames.back.right = m.right_axis;
   pose.body_frames.back.up = m.up_axis;
   pose.body_frames.back.forward = -m.forward_axis;
@@ -125,8 +117,6 @@ void compute_humanoid_body_frames(
   pose.body_frames.waist.radius = m.torso_r * 0.80F;
   pose.body_frames.waist.depth = m.torso_depth * 0.72F;
 
-  // Shoulders — locally-flipped right axis so "outward" along the arm is
-  // consistent regardless of side.
   QVector3D shoulder_up = (pose.shoulder_l - pose.pelvis_pos).normalized();
   QVector3D shoulder_fwd_l =
       QVector3D::crossProduct(-m.right_axis, shoulder_up);
@@ -135,20 +125,17 @@ void compute_humanoid_body_frames(
   } else {
     shoulder_fwd_l.normalize();
   }
-  pose.body_frames.shoulder_l = AF{pose.shoulder_l, -m.right_axis,
-                                   shoulder_up, shoulder_fwd_l,
-                                   m.upper_arm_r, 0.0F};
+  pose.body_frames.shoulder_l = AF{pose.shoulder_l, -m.right_axis, shoulder_up,
+                                   shoulder_fwd_l,  m.upper_arm_r, 0.0F};
 
-  QVector3D shoulder_fwd_r =
-      QVector3D::crossProduct(m.right_axis, shoulder_up);
+  QVector3D shoulder_fwd_r = QVector3D::crossProduct(m.right_axis, shoulder_up);
   if (shoulder_fwd_r.lengthSquared() < 1e-8F) {
     shoulder_fwd_r = m.forward_axis;
   } else {
     shoulder_fwd_r.normalize();
   }
-  pose.body_frames.shoulder_r = AF{pose.shoulder_r, m.right_axis,
-                                   shoulder_up, shoulder_fwd_r,
-                                   m.upper_arm_r, 0.0F};
+  pose.body_frames.shoulder_r = AF{pose.shoulder_r, m.right_axis,  shoulder_up,
+                                   shoulder_fwd_r,  m.upper_arm_r, 0.0F};
 
   auto compute_hand = [&](const QVector3D &elbow, const QVector3D &hand,
                           float right_sign) -> AF {
@@ -158,8 +145,7 @@ void compute_humanoid_body_frames(
     } else {
       up = m.up_axis;
     }
-    QVector3D fwd =
-        QVector3D::crossProduct(m.right_axis * right_sign, up);
+    QVector3D fwd = QVector3D::crossProduct(m.right_axis * right_sign, up);
     if (fwd.lengthSquared() < 1e-8F) {
       fwd = m.forward_axis;
     } else {
@@ -179,10 +165,12 @@ void compute_humanoid_body_frames(
     }
     return f;
   };
-  pose.body_frames.foot_l = AF{pose.foot_l, -m.right_axis, m.up_axis,
-                               compute_foot_fwd(-1.0F), m.foot_radius, 0.0F};
-  pose.body_frames.foot_r = AF{pose.foot_r, m.right_axis, m.up_axis,
-                               compute_foot_fwd(+1.0F), m.foot_radius, 0.0F};
+  pose.body_frames.foot_l =
+      AF{pose.foot_l,   -m.right_axis, m.up_axis, compute_foot_fwd(-1.0F),
+         m.foot_radius, 0.0F};
+  pose.body_frames.foot_r =
+      AF{pose.foot_r,   m.right_axis, m.up_axis, compute_foot_fwd(+1.0F),
+         m.foot_radius, 0.0F};
 
   auto compute_shin = [&](const QVector3D &ankle, const QVector3D &knee,
                           float right_sign) -> AF {
@@ -209,8 +197,7 @@ void compute_humanoid_body_frames(
 
 void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
                                  const HumanoidBodyMetrics &m) noexcept {
-  // Preserve any upstream override (e.g. look-target animation has
-  // already filled head_frame with a final orientation).
+
   if (pose.head_frame.radius > 0.001F) {
     pose.head_frame.origin = pose.head_pos;
     return;

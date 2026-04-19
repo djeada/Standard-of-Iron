@@ -4,11 +4,10 @@
 
 namespace Render::GL {
 
-auto RiggedMeshCache::get_or_bake(const Render::Creature::CreatureSpec &spec,
-                                  Render::Creature::CreatureLOD lod,
-                                  std::span<const QMatrix4x4> rest_palette,
-                                  std::uint16_t variant_bucket)
-    -> const RiggedMeshEntry * {
+auto RiggedMeshCache::get_or_bake(
+    const Render::Creature::CreatureSpec &spec,
+    Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
+    std::uint16_t variant_bucket) -> const RiggedMeshEntry * {
   Key const key{&spec, lod, variant_bucket};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     return &it->second;

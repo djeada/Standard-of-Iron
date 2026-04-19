@@ -14,8 +14,8 @@
 #include "render/bone_palette_arena.h"
 #include "render/creature/part_graph.h"
 #include "render/draw_queue.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/rig.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
@@ -29,13 +29,13 @@
 
 namespace {
 
+using Render::GL::DrawPartCmdIndex;
 using Render::GL::HumanoidPose;
 using Render::GL::HumanoidVariant;
+using Render::GL::MeshCmdIndex;
 using Render::GL::Renderer;
 using Render::GL::RiggedCreatureCmd;
 using Render::GL::RiggedCreatureCmdIndex;
-using Render::GL::DrawPartCmdIndex;
-using Render::GL::MeshCmdIndex;
 
 // Minimal renderer-shaped test rig: we can't spin up the full
 // GL-backed Renderer without a Qt window + context, so we reproduce
@@ -71,8 +71,8 @@ TEST(HumanoidReducedSwitchover, EmitsOneRiggedCreatureCmd) {
   Render::GL::RiggedMeshCache cache;
   Render::GL::BonePaletteArena arena;
 
-  const auto *entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(entry, nullptr);
   ASSERT_NE(entry->mesh, nullptr);
   EXPECT_GT(entry->mesh->vertex_count(), 0U)
@@ -88,8 +88,8 @@ TEST(HumanoidReducedSwitchover, EmitsOneRiggedCreatureCmd) {
   var.stance_width = 1.0F;
   var.arm_swing_amp = 1.0F;
   var.walk_speed_mult = 1.0F;
-  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-      0U, 0.0F, false, var, pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.0F, false,
+                                                            var, pose);
 
   std::array<QMatrix4x4, Render::Humanoid::kBoneCount> palette_buf{};
   std::uint32_t const nbones = Render::Humanoid::compute_bone_palette(
@@ -98,7 +98,8 @@ TEST(HumanoidReducedSwitchover, EmitsOneRiggedCreatureCmd) {
 
   // Stage the palette through the arena (what the production helper
   // does) and compose with inverse-bind to get skinning matrices.
-  auto arena_slot_h = arena.allocate_palette(); QMatrix4x4 *arena_slot = arena_slot_h.cpu;
+  auto arena_slot_h = arena.allocate_palette();
+  QMatrix4x4 *arena_slot = arena_slot_h.cpu;
   ASSERT_NE(arena_slot, nullptr);
   for (std::size_t i = 0; i < nbones; ++i) {
     arena_slot[i] = palette_buf[i] * entry->inverse_bind[i];
@@ -165,10 +166,10 @@ TEST(HumanoidReducedSwitchover, CacheReusesBakedMesh) {
   auto bind = Render::Humanoid::humanoid_bind_palette();
 
   Render::GL::RiggedMeshCache cache;
-  const auto *first = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
-  const auto *second = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *first =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *second =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(first, nullptr);
   EXPECT_EQ(first, second);
   EXPECT_EQ(cache.size(), 1U);
@@ -176,19 +177,22 @@ TEST(HumanoidReducedSwitchover, CacheReusesBakedMesh) {
 
 TEST(HumanoidReducedSwitchover, ArenaResetInvalidatesSlots) {
   Render::GL::BonePaletteArena arena;
-  auto slot_a_h = arena.allocate_palette(); QMatrix4x4 *slot_a = slot_a_h.cpu;
-  auto slot_b_h = arena.allocate_palette(); QMatrix4x4 *slot_b = slot_b_h.cpu;
+  auto slot_a_h = arena.allocate_palette();
+  QMatrix4x4 *slot_a = slot_a_h.cpu;
+  auto slot_b_h = arena.allocate_palette();
+  QMatrix4x4 *slot_b = slot_b_h.cpu;
   ASSERT_NE(slot_a, nullptr);
   ASSERT_NE(slot_b, nullptr);
   EXPECT_NE(slot_a, slot_b) << "distinct allocations must have distinct "
-                              "storage before reset";
+                               "storage before reset";
   EXPECT_EQ(arena.allocations_in_flight(), 2U);
 
   arena.reset_frame();
   EXPECT_EQ(arena.allocations_in_flight(), 0U);
 
   // After reset, next allocation reuses slab 0.
-  auto slot_c_h = arena.allocate_palette(); QMatrix4x4 *slot_c = slot_c_h.cpu;
+  auto slot_c_h = arena.allocate_palette();
+  QMatrix4x4 *slot_c = slot_c_h.cpu;
   EXPECT_EQ(slot_c, slot_a);
 }
 

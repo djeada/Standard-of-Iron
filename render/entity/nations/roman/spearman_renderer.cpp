@@ -1,6 +1,8 @@
 #include "spearman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../geom/math_utils.h"
@@ -9,9 +11,9 @@
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/spear_pose_utils.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -107,7 +109,7 @@ struct SpearmanExtras {
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
-  SpearmanRenderer() { cache_equipment(); }
+  SpearmanRenderer() = default;
 
   auto get_proportion_scaling() const -> QVector3D override {
 
@@ -116,10 +118,78 @@ public:
 
   auto get_torso_scale() const -> float override { return 0.64F; }
 
-private:
-  mutable std::unordered_map<uint32_t, SpearmanExtras> m_extrasCache;
-
 public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    static auto helmet =
+        reg.get(Render::GL::EquipmentCategory::Helmet, "roman_heavy");
+    static auto armor_body =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_light_armor");
+    static auto shoulder =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_shoulder_cover");
+    static auto greaves =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_greaves");
+
+    ensure_spearman_styles_registered();
+    static const SpearmanStyleConfig captured_style = []() {
+      auto &styles = spearman_style_registry();
+      auto it = styles.find("roman_republic");
+      if (it != styles.end()) {
+        return it->second;
+      }
+      auto it_default = styles.find(std::string(k_spearman_default_style_key));
+      if (it_default != styles.end()) {
+        return it_default->second;
+      }
+      return SpearmanStyleConfig{};
+    }();
+
+    static const std::array<EquipmentRecord, 5> records{
+        make_legacy_equipment_record(*helmet),
+        make_legacy_equipment_record(*armor_body),
+        make_legacy_equipment_record(*shoulder),
+        make_legacy_equipment_record(*greaves),
+
+        make_payload_record<SpearRenderer>([](uint32_t seed) {
+          SpearRenderConfig cfg;
+          QVector3D shaft =
+              QVector3D(0.5F, 0.3F, 0.2F) * QVector3D(0.85F, 0.75F, 0.65F);
+          QVector3D head(0.75F, 0.76F, 0.80F);
+          if (captured_style.spear_shaft_color) {
+            shaft = *captured_style.spear_shaft_color;
+          }
+          if (captured_style.spearhead_color) {
+            head = *captured_style.spearhead_color;
+          }
+          cfg.shaft_color = saturate_color(shaft);
+          cfg.spearhead_color = saturate_color(head);
+          cfg.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+          cfg.shaft_radius = 0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+          cfg.spearhead_length =
+              0.16F + (hash_01(seed ^ 0xBEEFU) - 0.5F) * 0.04F;
+          if (captured_style.spear_length_scale) {
+            cfg.spear_length = std::max(
+                0.80F, cfg.spear_length * *captured_style.spear_length_scale);
+          }
+          return cfg;
+        }),
+    };
+
+    static const UnitVisualSpec spec = []() {
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/spearman";
+      s.scaling = ProportionScaling{0.90F, 0.80F, 0.76F};
+      s.equipment =
+          std::span<const EquipmentRecord>{records.data(), records.size()};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+      return s;
+    }();
+    return spec;
+  }
+
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -192,94 +262,7 @@ public:
     }
   }
 
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    const AnimationInputs &anim = anim_ctx.inputs;
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    auto const &style = resolve_style(ctx);
-    QVector3D const team_tint = resolve_team_tint(ctx);
-
-    SpearmanExtras extras;
-    auto it = m_extrasCache.find(seed);
-    if (it != m_extrasCache.end()) {
-      extras = it->second;
-    } else {
-      extras = computeSpearmanExtras(seed, v);
-      apply_extras_overrides(style, team_tint, v, extras);
-      m_extrasCache[seed] = extras;
-
-      if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-        m_extrasCache.clear();
-      }
-    }
-    apply_extras_overrides(style, team_tint, v, extras);
-
-    bool const is_attacking = anim.is_attacking && anim.is_melee;
-
-    if (m_cached_spear) {
-      SpearRenderConfig spear_config;
-      spear_config.shaft_color = extras.spearShaftColor;
-      spear_config.spearhead_color = extras.spearhead_color;
-      spear_config.spear_length = extras.spear_length;
-      spear_config.shaft_radius = extras.spear_shaft_radius;
-      spear_config.spearhead_length = extras.spearhead_length;
-
-      auto *spear_renderer =
-          dynamic_cast<SpearRenderer *>(m_cached_spear.get());
-      if (spear_renderer) {
-        spear_renderer->set_config(spear_config);
-      }
-      render_equipment(*m_cached_spear, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-
-    if (m_cached_helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      render_equipment(*m_cached_helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    if (m_cached_armor) {
-      render_equipment(*m_cached_armor, ctx, pose.body_frames, v.palette, anim, out);
-    }
-
-    if (m_cached_shoulder_cover) {
-      render_equipment(*m_cached_shoulder_cover, ctx, pose.body_frames, v.palette, anim,
-                                      out);
-    }
-
-    if (m_cached_greaves) {
-      render_equipment(*m_cached_greaves, ctx, pose.body_frames, v.palette, anim, out);
-    }
-  }
-
 private:
-  void cache_equipment() {
-    auto &registry = EquipmentRegistry::instance();
-    m_cached_spear = registry.get(EquipmentCategory::Weapon, "spear");
-    m_cached_helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
-    m_cached_armor =
-        registry.get(EquipmentCategory::Armor, "roman_light_armor");
-    m_cached_shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
-    m_cached_greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-  }
-
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_spear;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder_cover;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_greaves;
-
   static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
       -> SpearmanExtras {
     SpearmanExtras e;

@@ -37,8 +37,7 @@ auto load_shader_source(const QString &resource_path) -> QString {
   QString const resolved = Utils::Resources::resolveResourcePath(resource_path);
   QFile file(resolved);
   if (!file.open(QIODevice::ReadOnly)) {
-    qWarning() << "RiggedCharacterPipeline: Failed to open shader"
-               << resolved;
+    qWarning() << "RiggedCharacterPipeline: Failed to open shader" << resolved;
     return {};
   }
   QTextStream stream(&file);
@@ -53,6 +52,12 @@ auto query_max_uniform_block_size() -> std::size_t {
   GLint max_block = 0;
   fn->glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &max_block);
   return (max_block > 0) ? static_cast<std::size_t>(max_block) : 0;
+}
+
+void copy_palette_to_scratch(const QMatrix4x4 *palette,
+                             std::vector<float> &scratch) {
+  scratch.resize(BonePaletteArena::kPaletteFloats);
+  BonePaletteArena::pack_palette_for_gpu(palette, scratch.data());
 }
 
 } // namespace
@@ -71,13 +76,9 @@ auto RiggedCharacterPipeline::initialize() -> bool {
   }
 
   cache_uniforms();
-  // Stage 16.2: pin the BonePalette UBO block to the shared binding
-  // point so glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint, ...)
-  // feeds it.
+
   m_shader->bind_uniform_block("BonePalette", kBonePaletteBindingPoint);
 
-  // Stage 16.4 — pick the per-batch instance cap from the live driver
-  // limit. UBO range bytes per batch = N * 64 * sizeof(mat4) = N*4096.
   std::size_t const max_block_bytes = query_max_uniform_block_size();
   std::size_t cap = k_instanced_batch_floor;
   if (max_block_bytes > 0) {
@@ -94,15 +95,13 @@ auto RiggedCharacterPipeline::initialize() -> bool {
   if (!build_instanced_shader_source()) {
     qWarning() << "RiggedCharacterPipeline: instanced shader unavailable; "
                   "falling back to per-cmd draws";
-    // Non-fatal: pipeline still serves the single-draw path.
   }
 
   return is_initialized();
 }
 
 auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
-  // Read both source files from Qt resources, prepend the
-  // INSTANCED_BATCH_SIZE define, then compile via load_from_source.
+
   QString vert_src = load_shader_source(
       QStringLiteral(":/assets/shaders/character_skinned_instanced.vert"));
   QString frag_src = load_shader_source(
@@ -111,9 +110,6 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
     return false;
   }
 
-  // Insert `#define INSTANCED_BATCH_SIZE N` right after the #version
-  // directive so the existing `#ifndef INSTANCED_BATCH_SIZE` guard in
-  // the file picks it up.
   QString const define_line =
       QStringLiteral("#define INSTANCED_BATCH_SIZE %1\n")
           .arg(static_cast<qulonglong>(m_max_instances_per_batch));
@@ -127,8 +123,7 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
 
   m_instanced_shader_storage = std::make_unique<Shader>();
   if (!m_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
-    qWarning()
-        << "RiggedCharacterPipeline: failed to compile instanced shader";
+    qWarning() << "RiggedCharacterPipeline: failed to compile instanced shader";
     m_instanced_shader_storage.reset();
     return false;
   }
@@ -207,9 +202,8 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd &cmd,
                           static_cast<int>(cmd.material_id));
   }
 
-  const bool has_texture =
-      (cmd.texture != nullptr) &&
-      m_uniforms.texture != GL::Shader::InvalidUniform;
+  const bool has_texture = (cmd.texture != nullptr) &&
+                           m_uniforms.texture != GL::Shader::InvalidUniform;
   if (m_uniforms.use_texture != GL::Shader::InvalidUniform) {
     m_shader->set_uniform(m_uniforms.use_texture, has_texture);
   }
@@ -218,19 +212,37 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd &cmd,
     m_shader->set_uniform(m_uniforms.texture, 0);
   }
 
-  // Stage 16.2 — bind the per-draw palette slice. `palette_ubo == 0`
-  // means the arena ran without a GL context (headless / shutdown);
-  // the shader keeps reading whatever palette was bound previously,
-  // which is harmless because the wsum < 0.001 fallback collapses to
-  // identity skinning when bone weights weren't initialised.
-  if (cmd.palette_ubo != 0) {
-    auto *fn = gl_funcs();
-    if (fn != nullptr) {
-      fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
-                            static_cast<GLuint>(cmd.palette_ubo),
-                            static_cast<GLintptr>(cmd.palette_offset),
-                            static_cast<GLsizeiptr>(
-                                BonePaletteArena::kPaletteBytes));
+  auto *fn = gl_funcs();
+  if (fn != nullptr) {
+    if (cmd.palette_ubo != 0) {
+      fn->glBindBufferRange(
+          GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
+          static_cast<GLuint>(cmd.palette_ubo),
+          static_cast<GLintptr>(cmd.palette_offset),
+          static_cast<GLsizeiptr>(BonePaletteArena::kPaletteBytes));
+    } else {
+      if (m_palette_ubo == 0) {
+        fn->glGenBuffers(1, &m_palette_ubo);
+      }
+      if (m_palette_ubo != 0) {
+        if (BonePaletteArena::kPaletteBytes > m_palette_ubo_capacity_bytes) {
+          fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+          fn->glBufferData(
+              GL_UNIFORM_BUFFER,
+              static_cast<GLsizeiptr>(BonePaletteArena::kPaletteBytes), nullptr,
+              GL_DYNAMIC_DRAW);
+          m_palette_ubo_capacity_bytes = BonePaletteArena::kPaletteBytes;
+        }
+        copy_palette_to_scratch(cmd.bone_palette, m_palette_scratch);
+        fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+        fn->glBufferSubData(
+            GL_UNIFORM_BUFFER, 0,
+            static_cast<GLsizeiptr>(BonePaletteArena::kPaletteBytes),
+            m_palette_scratch.data());
+        fn->glBindBufferRange(
+            GL_UNIFORM_BUFFER, kBonePaletteBindingPoint, m_palette_ubo, 0,
+            static_cast<GLsizeiptr>(BonePaletteArena::kPaletteBytes));
+      }
     }
   }
 
@@ -251,7 +263,7 @@ void RiggedCharacterPipeline::compute_groups(
   while (i < count) {
     const auto &head = cmds[i];
     if (head.texture != nullptr || head.mesh == nullptr) {
-      // Non-instanceable: emit a size-1 group.
+
       out_groups.push_back(1);
       ++i;
       continue;
@@ -280,7 +292,7 @@ auto RiggedCharacterPipeline::ensure_instance_vbo(std::size_t bytes_needed)
     fn->glGenBuffers(1, &m_instance_vbo);
   }
   if (bytes_needed > m_instance_vbo_capacity_bytes) {
-    // Round up to nearest 4 KiB to amortise reallocations.
+
     std::size_t cap = ((bytes_needed + 4095) / 4096) * 4096;
     fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
     fn->glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(cap), nullptr,
@@ -314,8 +326,6 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   fn->glGenVertexArrays(1, &vao);
   fn->glBindVertexArray(vao);
 
-  // Re-bind the mesh's vertex buffer and configure the same per-vertex
-  // attribs (locs 0..4) the non-instanced VAO uses.
   vbo->bind();
   constexpr GLsizei k_stride = sizeof(RiggedVertex);
   constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
@@ -344,8 +354,6 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   fn->glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, k_stride,
                             reinterpret_cast<void *>(bw_off));
 
-  // Per-instance attribs (locs 5..10) backed by the pipeline's shared
-  // instance VBO. divisor=1 advances once per instance.
   fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
   constexpr GLsizei k_inst_stride = sizeof(InstanceAttrib);
   std::size_t off = 0;
@@ -367,7 +375,6 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
                             reinterpret_cast<void *>(off));
   fn->glVertexAttribDivisor(10, 1);
 
-  // Element buffer state lives on the VAO.
   ebo->bind();
 
   fn->glBindVertexArray(0);
@@ -390,8 +397,6 @@ auto RiggedCharacterPipeline::draw_instanced(
     return false;
   }
 
-  // Headless: no GL context. Still record the would-be batch for tests
-  // and return true so the caller treats it as handled.
   auto *fn = gl_funcs();
   if (fn == nullptr) {
     m_batch_sizes.push_back(count);
@@ -399,12 +404,11 @@ auto RiggedCharacterPipeline::draw_instanced(
     return true;
   }
 
-  // Build per-instance attribute scratch (column-major mat4).
   m_instance_scratch.resize(count);
   for (std::size_t k = 0; k < count; ++k) {
     const auto &c = cmds[k];
     InstanceAttrib &ia = m_instance_scratch[k];
-    const float *src = c.world.constData(); // column-major
+    const float *src = c.world.constData();
     std::memcpy(ia.world, src, sizeof(float) * 16);
     ia.color_alpha[0] = c.color.x();
     ia.color_alpha[1] = c.color.y();
@@ -421,7 +425,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     return false;
   }
   fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
-  // Orphan + upload.
+
   fn->glBufferData(GL_ARRAY_BUFFER,
                    static_cast<GLsizeiptr>(m_instance_vbo_capacity_bytes),
                    nullptr, GL_DYNAMIC_DRAW);
@@ -438,60 +442,39 @@ auto RiggedCharacterPipeline::draw_instanced(
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
 
-  // Bind the contiguous palette UBO range covering all `count`
-  // palettes. The cmds may have come from non-contiguous arena slots
-  // (different submission paths, interleaved units), so we cannot rely
-  // on cmds[k].palette_ubo being contiguous. Instead, copy each cmd's
-  // CPU palette pointer (BonePaletteArena guarantees pointer stability
-  // until the next reset_frame) into the pipeline-owned palette UBO.
-  std::size_t const palette_bytes = count * BonePaletteArena::kPaletteBytes;
+  std::size_t const upload_palette_bytes =
+      count * BonePaletteArena::kPaletteBytes;
+  std::size_t const bound_palette_bytes =
+      palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
   if (m_palette_ubo == 0) {
     fn->glGenBuffers(1, &m_palette_ubo);
   }
-  if (palette_bytes > m_palette_ubo_capacity_bytes) {
+  if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
     fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
     fn->glBufferData(GL_UNIFORM_BUFFER,
-                     static_cast<GLsizeiptr>(palette_bytes), nullptr,
+                     static_cast<GLsizeiptr>(bound_palette_bytes), nullptr,
                      GL_DYNAMIC_DRAW);
-    m_palette_ubo_capacity_bytes = palette_bytes;
+    m_palette_ubo_capacity_bytes = bound_palette_bytes;
   }
 
-  // Pack palettes into a contiguous CPU scratch then upload. mat4 is
-  // 16 floats, std140 mat4 is also 16 floats (4 vec4 rows aligned 16),
-  // so a flat float array maps directly.
-  std::size_t const floats_per_palette =
-      BonePaletteArena::kPaletteWidth * 16;
+  std::size_t const floats_per_palette = BonePaletteArena::kPaletteFloats;
   m_palette_scratch.resize(count * floats_per_palette);
   for (std::size_t k = 0; k < count; ++k) {
     const auto &c = cmds[k];
     float *dst = m_palette_scratch.data() + k * floats_per_palette;
-    if (c.bone_palette == nullptr) {
-      // Identity-fill: skinning shader's wsum<0.001 fallback handles
-      // the no-weights case, but bones[] still gets read. Zero-fill
-      // would yield NaN in skinning math; identity is safe.
-      for (std::size_t b = 0; b < BonePaletteArena::kPaletteWidth; ++b) {
-        QMatrix4x4 ident;
-        std::memcpy(dst + b * 16, ident.constData(), sizeof(float) * 16);
-      }
-    } else {
-      for (std::size_t b = 0; b < BonePaletteArena::kPaletteWidth; ++b) {
-        std::memcpy(dst + b * 16, c.bone_palette[b].constData(),
-                    sizeof(float) * 16);
-      }
-    }
+    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
   }
   fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-  // Orphan to avoid stalls when the previous frame's draw is still
-  // referencing it.
+
   fn->glBufferData(GL_UNIFORM_BUFFER,
                    static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
                    nullptr, GL_DYNAMIC_DRAW);
   fn->glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                      static_cast<GLsizeiptr>(palette_bytes),
+                      static_cast<GLsizeiptr>(upload_palette_bytes),
                       m_palette_scratch.data());
   fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
                         m_palette_ubo, 0,
-                        static_cast<GLsizeiptr>(palette_bytes));
+                        static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);
   GLsizei const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());
@@ -499,16 +482,15 @@ auto RiggedCharacterPipeline::draw_instanced(
                               static_cast<GLsizei>(count));
   fn->glBindVertexArray(0);
 
-  m_batch_sizes.push_back(count);
-  m_last_instance_count = count;
-
-#ifndef NDEBUG
   GLenum err = fn->glGetError();
   if (err != GL_NO_ERROR) {
     qWarning() << "RiggedCharacterPipeline::draw_instanced GL error" << err
                << "count" << count;
+    return false;
   }
-#endif
+
+  m_batch_sizes.push_back(count);
+  m_last_instance_count = count;
   return true;
 }
 

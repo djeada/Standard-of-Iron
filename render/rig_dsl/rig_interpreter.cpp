@@ -63,13 +63,13 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
   }
 
   QVector3D const a = ctx.anchors->resolve(part.anchor_a);
-  QVector3D const b = (part.kind == PartKind::Sphere)
-                          ? a
-                          : ctx.anchors->resolve(part.anchor_b);
+  QVector3D const b =
+      (part.kind == PartKind::Sphere) ? a : ctx.anchors->resolve(part.anchor_b);
 
-  float const scale = (part.scale_id != kInvalidScalar && ctx.scalars != nullptr)
-                          ? ctx.scalars->resolve(part.scale_id)
-                          : 1.0F;
+  float const scale =
+      (part.scale_id != kInvalidScalar && ctx.scalars != nullptr)
+          ? ctx.scalars->resolve(part.scale_id)
+          : 1.0F;
   float const sx = part.size_x * scale;
   float const sy = part.size_y * scale;
   float const sz = part.size_z * scale;
@@ -90,8 +90,7 @@ void render_part(const PartDef &part, const InterpretContext &ctx,
     QVector3D const span = b - a;
     model = ctx.model;
     model.translate(centre);
-    model.scale(std::abs(span.x()) * 0.5F * sx,
-                std::abs(span.y()) * 0.5F * sy,
+    model.scale(std::abs(span.x()) * 0.5F * sx, std::abs(span.y()) * 0.5F * sy,
                 std::abs(span.z()) * 0.5F * sz);
     break;
   }

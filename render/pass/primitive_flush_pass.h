@@ -1,8 +1,4 @@
-// Stage 10 — flush the Primitive batcher into the active DrawQueue.
-//
-// Extracted from render_world phase 6. Emits up to three
-// PrimitiveBatchCmds (sphere / cylinder / cone) as a single ordered
-// step so downstream passes don't observe a half-flushed batcher.
+
 
 #pragma once
 

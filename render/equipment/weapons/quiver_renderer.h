@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -21,12 +21,21 @@ class QuiverRenderer : public IEquipmentRenderer {
 public:
   explicit QuiverRenderer(QuiverRenderConfig config = {});
 
+  static void submit(const QuiverRenderConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
   void set_config(const QuiverRenderConfig &config) { m_config = config; }
+
+  [[nodiscard]] auto base_config() const -> const QuiverRenderConfig & {
+    return m_config;
+  }
 
 private:
   QuiverRenderConfig m_config;

@@ -55,11 +55,8 @@ public:
 
   void clear_uniform_cache() { m_uniform_value_cache.clear(); }
 
-  // Stage 16.2 — bind a `layout(std140) uniform <name> { ... }` block
-  // to a fixed binding point. Safe to call before/after `use()`. Returns
-  // false if the block is not present in the program (warning emitted).
-  auto bind_uniform_block(const char *block_name, std::uint32_t binding_point)
-      -> bool;
+  auto bind_uniform_block(const char *block_name,
+                          std::uint32_t binding_point) -> bool;
 
 private:
   GLuint m_program = 0;
@@ -68,8 +65,8 @@ private:
 
   std::unordered_map<std::string, UniformHandle> m_uniform_cache;
 
-  // Dirty-tracking for uniform values to skip redundant glUniform calls
-  using UniformValue = std::variant<float, int, QVector2D, QVector3D, QVector4D, QMatrix4x4>;
+  using UniformValue =
+      std::variant<float, int, QVector2D, QVector3D, QVector4D, QMatrix4x4>;
   std::unordered_map<GLint, UniformValue> m_uniform_value_cache;
 
   template <typename T>

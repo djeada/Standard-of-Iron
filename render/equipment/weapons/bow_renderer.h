@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -29,15 +29,22 @@ class BowRenderer : public IEquipmentRenderer {
 public:
   explicit BowRenderer(BowRenderConfig config = {});
 
+  static void submit(const BowRenderConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const BowRenderConfig & {
+    return m_base;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const BowRenderConfig &config) { m_config = config; }
-
 private:
-  BowRenderConfig m_config;
+  BowRenderConfig m_base;
 };
 
 } // namespace Render::GL

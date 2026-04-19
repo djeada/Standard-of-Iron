@@ -5,8 +5,8 @@
 #include "../../gl/primitives.h"
 #include "../../gl/render_constants.h"
 #include "../../humanoid/humanoid_math.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
 #include "../equipment_submit.h"
 
 #include <QMatrix4x4>
@@ -23,6 +23,14 @@ QuiverRenderer::QuiverRenderer(QuiverRenderConfig config)
 
 void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
                             const HumanoidPalette &palette,
+                            const HumanoidAnimationContext &anim,
+                            EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void QuiverRenderer::submit(const QuiverRenderConfig &config,
+                            const DrawContext &ctx, const BodyFrames &frames,
+                            const HumanoidPalette &palette,
                             const HumanoidAnimationContext &,
                             EquipmentBatch &batch) {
 
@@ -37,10 +45,10 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const q_base =
       quiver_pos - frames.waist.up * 0.25F + frames.waist.forward * 0.05F;
 
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, q_base, q_top, m_config.quiver_radius),
-      palette.leather, nullptr, 1.0F, m_config.material_id});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, q_base, q_top, config.quiver_radius),
+       palette.leather, nullptr, 1.0F, config.material_id});
 
   uint32_t seed = 0U;
   if (ctx.entity != nullptr) {
@@ -52,22 +60,22 @@ void QuiverRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
   QVector3D const a1 = q_top + QVector3D(0.00F + j, 0.08F, 0.00F + k);
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, q_top, a1, 0.010F), palette.wood,
-                 nullptr, 1.0F, m_config.material_id});
-  batch.meshes.push_back({
-      get_unit_cone(), nullptr,
-      cone_from_to(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
-      m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
+                          cylinder_between(ctx.model, q_top, a1, 0.010F),
+                          palette.wood, nullptr, 1.0F, config.material_id});
+  batch.meshes.push_back(
+      {get_unit_cone(), nullptr,
+       cone_from_to(ctx.model, a1, a1 + QVector3D(0, 0.05F, 0), 0.025F),
+       config.fletching_color, nullptr, 1.0F, config.material_id});
 
-  if (m_config.num_arrows >= 2) {
+  if (config.num_arrows >= 2) {
     QVector3D const a2 = q_top + QVector3D(0.02F - j, 0.07F, 0.02F - k);
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, q_top, a2, 0.010F), palette.wood,
-                   nullptr, 1.0F, m_config.material_id});
-    batch.meshes.push_back({
-        get_unit_cone(), nullptr,
-        cone_from_to(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
-        m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
+                            cylinder_between(ctx.model, q_top, a2, 0.010F),
+                            palette.wood, nullptr, 1.0F, config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cone(), nullptr,
+         cone_from_to(ctx.model, a2, a2 + QVector3D(0, 0.05F, 0), 0.025F),
+         config.fletching_color, nullptr, 1.0F, config.material_id});
   }
 }
 

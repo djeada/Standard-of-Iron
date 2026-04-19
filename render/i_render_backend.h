@@ -10,10 +10,10 @@ struct FrameBudgetConfig;
 class FrameTimeTracker;
 
 enum class ShaderQuality : std::uint8_t {
-  Full = 0,    // All procedural effects (metal patina, cloth weave, FBM noise)
-  Reduced = 1, // Simplified: 1-octave noise, 2 material paths
-  Minimal = 2, // Flat color + simple diffuse, no procedural texturing
-  None = 3     // Software backend path (CPU-side flat shading)
+  Full = 0,
+  Reduced = 1,
+  Minimal = 2,
+  None = 3
 };
 
 } // namespace Render
@@ -42,8 +42,8 @@ public:
   [[nodiscard]] virtual auto shader(const QString &name) const -> Shader * = 0;
   [[nodiscard]] virtual auto supports_shaders() const -> bool = 0;
   [[nodiscard]] virtual auto shader_quality() const -> ShaderQuality = 0;
-  [[nodiscard]] virtual auto frame_tracker() const
-      -> const Render::FrameTimeTracker * = 0;
+  [[nodiscard]] virtual auto
+  frame_tracker() const -> const Render::FrameTimeTracker * = 0;
 };
 
 } // namespace Render::GL

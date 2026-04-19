@@ -1,15 +1,6 @@
-// Stage 2 split — skinning/draw layer of the humanoid rig pipeline.
-//
-// Responsibility: given a fully-posed HumanoidPose, emit the procedural
-// draws that live outside the CreatureSpec body path, namely per-entity
-// facial hair strands (RNG-procedural, per-unit seed).
-//
-// This file was split out of rig.cpp as part of the Stage 2 separation.
-// It purposefully does NOT reach into rig.cpp's anonymous-namespace
-// statics; the single required counter bump (facial-hair distance skip)
-// goes through a narrow shim in rig_stats_shim.h.
 
-#include "rig.h"
+
+#include "humanoid_renderer_base.h"
 
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
@@ -22,6 +13,7 @@
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
 #include "../gl/resources.h"
+#include "../graphics_settings.h"
 #include "../palette.h"
 #include "../submitter.h"
 #include "humanoid_math.h"
@@ -48,25 +40,23 @@ using Render::Geom::cone_from_to;
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
+namespace {
+struct BeardPrim {
+  Render::GL::Mesh *mesh{nullptr};
+  QMatrix4x4 model{};
+  QVector3D color{};
+  float alpha{1.0F};
+  int material_id{0};
+};
+} // namespace
 
 void HumanoidRendererBase::draw_armor_overlay(
     const DrawContext &, const HumanoidVariant &, const HumanoidPose &, float,
     float, float, float, const QVector3D &, ISubmitter &) const {}
 
-void HumanoidRendererBase::draw_armor(const DrawContext &,
-                                      const HumanoidVariant &,
-                                      const HumanoidPose &,
-                                      const HumanoidAnimationContext &,
-                                      ISubmitter &) const {}
-
 void HumanoidRendererBase::draw_shoulder_decorations(
     const DrawContext &, const HumanoidVariant &, const HumanoidPose &, float,
     float, const QVector3D &, ISubmitter &) const {}
-
-void HumanoidRendererBase::draw_helmet(const DrawContext &,
-                                       const HumanoidVariant &,
-                                       const HumanoidPose &,
-                                       ISubmitter &) const {}
 
 void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
                                             const HumanoidVariant &v,
@@ -144,7 +134,7 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
   constexpr int k_max_facial_hair_strands = 24;
   int total_strands_emitted = 0;
 
-  std::vector<Render::Humanoid::HumanoidFullPrim> beard_prims;
+  std::vector<BeardPrim> beard_prims;
   beard_prims.reserve(static_cast<std::size_t>(k_max_facial_hair_strands) * 3U);
 
   auto place_strands = [&](int rows, int segments, float jaw_span,
@@ -232,7 +222,8 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
         QVector3D const tip_color = saturate(hair_tip * color_jitter);
 
         QMatrix4x4 base_blob = sphere_at(ctx.model, root, base_radius * 0.95F);
-        beard_prims.push_back({get_unit_sphere(), base_blob, root_color, 1.0F, 0});
+        beard_prims.push_back(
+            {get_unit_sphere(), base_blob, root_color, 1.0F, 0});
 
         QVector3D const mid = root + (tip - root) * 0.40F;
         beard_prims.push_back(
@@ -307,9 +298,9 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
             saturate(hair_root * (color_jitter * 0.95F));
         QVector3D const tip_color = saturate(hair_tip * (color_jitter * 1.02F));
 
-        beard_prims.push_back(
-            {get_unit_sphere(), sphere_at(ctx.model, root, base_radius * 0.7F),
-             root_color, 1.0F, 0});
+        beard_prims.push_back({get_unit_sphere(),
+                               sphere_at(ctx.model, root, base_radius * 0.7F),
+                               root_color, 1.0F, 0});
 
         QVector3D const mid = root + (tip - root) * 0.5F;
         beard_prims.push_back(
@@ -377,20 +368,12 @@ void HumanoidRendererBase::draw_facial_hair(const DrawContext &ctx,
     break;
   }
 
-  Render::Humanoid::submit_humanoid_full_prims(
-      std::span<const Render::Humanoid::HumanoidFullPrim>(beard_prims.data(),
-                                                          beard_prims.size()),
-      out);
+  for (std::size_t i = 0; i < beard_prims.size(); ++i) {
+    const auto &p = beard_prims[i];
+    if (p.mesh != nullptr) {
+      out.mesh(p.mesh, p.model, p.color, nullptr, p.alpha, p.material_id);
+    }
+  }
 }
-
-// draw_simplified_body was removed in S16.3c. The Reduced LOD body is
-// now authored as a 6-primitive PartGraph in the humanoid CreatureSpec
-// (see render/humanoid/humanoid_spec.cpp) and submitted via the shared
-// walker through submit_humanoid_lod(pose, variant, Reduced, ...).
-
-// draw_minimal_body was removed in S16.3b. The Minimal LOD body is now
-// authored as a single Capsule primitive in the humanoid CreatureSpec
-// (see render/humanoid/humanoid_spec.cpp) and submitted via the shared
-// PartGraph walker. There is no hand-rolled alternative.
 
 } // namespace Render::GL

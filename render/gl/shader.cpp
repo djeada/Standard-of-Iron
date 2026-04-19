@@ -38,7 +38,8 @@ auto Shader::is_uniform_dirty(GLint location, const T &value) -> bool {
 }
 
 namespace {
-auto resolve_shader_includes(const QString &source, const QString &base_dir) -> QString {
+auto resolve_shader_includes(const QString &source,
+                             const QString &base_dir) -> QString {
   QString result;
   result.reserve(source.size());
 
@@ -46,7 +47,7 @@ auto resolve_shader_includes(const QString &source, const QString &base_dir) -> 
   for (const QString &line : lines) {
     const QString trimmed = line.trimmed();
     if (trimmed.startsWith("#include")) {
-      // Extract filename from #include "filename" or #include <filename>
+
       int start = trimmed.indexOf('"');
       int end = -1;
       if (start >= 0) {
@@ -60,14 +61,16 @@ auto resolve_shader_includes(const QString &source, const QString &base_dir) -> 
 
       if (start >= 0 && end > start) {
         const QString include_name = trimmed.mid(start + 1, end - start - 1);
-        // Resolve relative to shader include directory
-        const QString include_path = QStringLiteral(":/assets/shaders/include/") + include_name;
-        const QString resolved = Utils::Resources::resolveResourcePath(include_path);
+
+        const QString include_path =
+            QStringLiteral(":/assets/shaders/include/") + include_name;
+        const QString resolved =
+            Utils::Resources::resolveResourcePath(include_path);
         QFile include_file(resolved);
         if (include_file.open(QIODevice::ReadOnly)) {
           QTextStream stream(&include_file);
           const QString included_source = stream.readAll();
-          // Recursively resolve includes (with depth limit)
+
           result += resolve_shader_includes(included_source, base_dir);
           result += '\n';
           continue;
@@ -124,9 +127,10 @@ auto Shader::load_from_files(const QString &vertex_path,
   QString const vertex_source = vertex_stream.readAll();
   QString const fragment_source = fragment_stream.readAll();
 
-  // Process #include directives
-  const QString processed_vert = resolve_shader_includes(vertex_source, QFileInfo(resolved_vert).path());
-  const QString processed_frag = resolve_shader_includes(fragment_source, QFileInfo(resolved_frag).path());
+  const QString processed_vert =
+      resolve_shader_includes(vertex_source, QFileInfo(resolved_vert).path());
+  const QString processed_frag =
+      resolve_shader_includes(fragment_source, QFileInfo(resolved_frag).path());
 
   return load_from_source(processed_vert, processed_frag);
 }
@@ -193,32 +197,42 @@ auto Shader::optional_uniform_handle(const char *name)
 }
 
 void Shader::set_uniform(UniformHandle handle, float value) {
-  if (handle == InvalidUniform) return;
-  if (!is_uniform_dirty(handle, value)) return;
+  if (handle == InvalidUniform)
+    return;
+  if (!is_uniform_dirty(handle, value))
+    return;
   glUniform1f(handle, value);
 }
 
 void Shader::set_uniform(UniformHandle handle, const QVector3D &value) {
-  if (handle == InvalidUniform) return;
-  if (!is_uniform_dirty(handle, value)) return;
+  if (handle == InvalidUniform)
+    return;
+  if (!is_uniform_dirty(handle, value))
+    return;
   glUniform3f(handle, value.x(), value.y(), value.z());
 }
 
 void Shader::set_uniform(UniformHandle handle, const QVector2D &value) {
-  if (handle == InvalidUniform) return;
-  if (!is_uniform_dirty(handle, value)) return;
+  if (handle == InvalidUniform)
+    return;
+  if (!is_uniform_dirty(handle, value))
+    return;
   glUniform2f(handle, value.x(), value.y());
 }
 
 void Shader::set_uniform(UniformHandle handle, const QMatrix4x4 &value) {
-  if (handle == InvalidUniform) return;
-  if (!is_uniform_dirty(handle, value)) return;
+  if (handle == InvalidUniform)
+    return;
+  if (!is_uniform_dirty(handle, value))
+    return;
   glUniformMatrix4fv(handle, 1, GL_FALSE, value.constData());
 }
 
 void Shader::set_uniform(UniformHandle handle, int value) {
-  if (handle == InvalidUniform) return;
-  if (!is_uniform_dirty(handle, value)) return;
+  if (handle == InvalidUniform)
+    return;
+  if (!is_uniform_dirty(handle, value))
+    return;
   glUniform1i(handle, value);
 }
 

@@ -7,11 +7,11 @@ namespace Render::Humanoid {
 namespace {
 
 constexpr std::array<std::string_view, kStateCount> k_state_names = {
-    "Idle",        "Walk",        "Run",        "Hold",     "AttackMelee",
-    "AttackRanged", "HitReaction", "Healing",    "Construct", "Death",
+    "Idle",         "Walk",        "Run",     "Hold",      "AttackMelee",
+    "AttackRanged", "HitReaction", "Healing", "Construct", "Death",
 };
 
-} // namespace
+}
 
 auto state_name(HumanoidState s) noexcept -> std::string_view {
   auto const i = static_cast<std::size_t>(s);
@@ -28,7 +28,7 @@ auto select_state(const Render::GL::AnimationInputs &inputs,
   }
   if (inputs.is_attacking) {
     return inputs.is_melee ? HumanoidState::AttackMelee
-                            : HumanoidState::AttackRanged;
+                           : HumanoidState::AttackRanged;
   }
   if (inputs.is_constructing) {
     return HumanoidState::Construct;
@@ -51,29 +51,27 @@ auto select_state(const Render::GL::AnimationInputs &inputs,
 HumanoidStateMachine::HumanoidStateMachine()
     : m_machine(static_cast<Render::Animation::StateId>(HumanoidState::Idle)) {}
 
-auto HumanoidStateMachine::blend_seconds_for(HumanoidState from,
-                                             HumanoidState to) noexcept
-    -> float {
+auto HumanoidStateMachine::blend_seconds_for(
+    HumanoidState from, HumanoidState to) noexcept -> float {
   if (from == to) {
     return 0.0F;
   }
-  // Death snaps instantly — no blend from whatever pose the unit was in.
+
   if (to == HumanoidState::Death || from == HumanoidState::Death) {
     return 0.0F;
   }
-  // Hit reaction must punch in fast for readability.
+
   if (to == HumanoidState::HitReaction) {
     return 0.05F;
   }
   if (from == HumanoidState::HitReaction) {
     return 0.15F;
   }
-  // Attack wind-ups should feel snappy but not twitchy.
-  if (to == HumanoidState::AttackMelee ||
-      to == HumanoidState::AttackRanged) {
+
+  if (to == HumanoidState::AttackMelee || to == HumanoidState::AttackRanged) {
     return 0.12F;
   }
-  // Locomotion transitions are the common path; pick something smooth.
+
   return 0.20F;
 }
 

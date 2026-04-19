@@ -1,7 +1,7 @@
 #include "elephant_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/visuals/team_colors.h"
-#include "../../../elephant/rig.h"
+#include "../../../elephant/elephant_renderer_base.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/humanoid/animation/animation_inputs.h"
@@ -43,6 +43,15 @@ inline auto make_palette(const QVector3D &team) -> CarthageElephantPalette {
 class CarthageElephantRenderer : public ElephantRendererBase {
 public:
   CarthageElephantRenderer() = default;
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
+    spec = Render::Creature::Pipeline::UnitVisualSpec{};
+    spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
+    spec.debug_name = "troops/carthage/elephant";
+    return spec;
+  }
 
 protected:
 };

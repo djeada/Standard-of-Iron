@@ -1,14 +1,5 @@
 #pragma once
 
-// Stage 18 — Rain stays in its own GPU-data header.
-//
-// Justification: rain/snow drops are true particle systems with
-// CPU-side physics (wind, speed variation, weather-type branching)
-// that don't match the static decoration (mesh, transform, variant_id)
-// pattern shared by grass/plant/stone/pine/olive/firecamp. The
-// InstancedDecorationPipeline explicitly excludes rain; RainPipeline
-// keeps its dedicated DrawCmd variant.
-
 #include "../game/map/map_definition.h"
 #include <QVector3D>
 #include <QVector4D>

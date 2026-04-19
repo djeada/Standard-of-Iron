@@ -7,11 +7,11 @@
 
 namespace Render::GL {
 
-void StirrupRenderer::render(const DrawContext &ctx,
+void StirrupRenderer::submit(const DrawContext &ctx,
                              const HorseBodyFrames &frames,
                              const HorseVariant &variant,
                              const HorseAnimationContext &,
-                             EquipmentBatch &batch) const {
+                             EquipmentBatch &batch) {
 
   const HorseAttachmentFrame &back = frames.back_center;
 
@@ -22,14 +22,14 @@ void StirrupRenderer::render(const DrawContext &ctx,
         back.origin + back.right * side * 0.45F - back.up * 0.02F;
     QVector3D const stirrup_bottom = stirrup_attach - back.up * 0.30F;
 
-    batch.cylinders.push_back({stirrup_attach, stirrup_bottom, 0.008F, variant.tack_color,
-                 1.0F});
+    batch.cylinders.push_back(
+        {stirrup_attach, stirrup_bottom, 0.008F, variant.tack_color, 1.0F});
 
     QMatrix4x4 foot_plate = ctx.model;
     foot_plate.translate(stirrup_bottom);
     foot_plate.scale(0.10F, 0.015F, 0.12F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, foot_plate, variant.tack_color, nullptr, 1.0F,
-             4});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, foot_plate,
+                            variant.tack_color, nullptr, 1.0F, 4});
   }
 }
 

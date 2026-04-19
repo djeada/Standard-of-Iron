@@ -2,7 +2,7 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/style_palette.h"
 #include "../../rig_dsl/defs/roman_light_helmet_rig.h"
 #include "../../rig_dsl/rig_interpreter.h"
@@ -20,10 +20,6 @@ namespace {
 
 namespace RLH = Render::RigDSL::RomanLightHelmet;
 
-// Pre-computes all helmet anchor positions once per render call. The rig
-// interpreter then just reads them out by AnchorId in O(1). This keeps the
-// anchor resolver branchless and matches the imperative version's anchor
-// values bit-for-bit.
 class HelmetAnchors : public Render::RigDSL::AnchorResolver {
 public:
   HelmetAnchors(const AttachmentFrame &head, const QVector3D &apex_pos,
@@ -58,8 +54,8 @@ public:
     m_positions[RLH::Crest_Top] = crest_top;
   }
 
-  [[nodiscard]] auto resolve(Render::RigDSL::AnchorId id) const
-      -> QVector3D override {
+  [[nodiscard]] auto
+  resolve(Render::RigDSL::AnchorId id) const -> QVector3D override {
     return id < m_positions.size() ? m_positions[id] : QVector3D{};
   }
 
@@ -72,8 +68,8 @@ public:
   HelmetPalette(const QVector3D &base, const QVector3D &accent)
       : m_base(base), m_accent(accent) {}
 
-  [[nodiscard]] auto resolve(Render::RigDSL::PaletteSlot slot) const
-      -> QVector3D override {
+  [[nodiscard]] auto
+  resolve(Render::RigDSL::PaletteSlot slot) const -> QVector3D override {
     switch (slot) {
     case Render::RigDSL::PaletteSlot::Metal:
       return m_base;
@@ -92,8 +88,8 @@ private:
 class HelmetScalars : public Render::RigDSL::ScalarResolver {
 public:
   explicit HelmetScalars(float helmet_r) : m_helmet_r(helmet_r) {}
-  [[nodiscard]] auto resolve(Render::RigDSL::ScalarId id) const
-      -> float override {
+  [[nodiscard]] auto
+  resolve(Render::RigDSL::ScalarId id) const -> float override {
     switch (id) {
     case RLH::S_Helmet_R:
       return m_helmet_r;
@@ -121,6 +117,15 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
                                       const HumanoidPalette &palette,
                                       const HumanoidAnimationContext &anim,
                                       EquipmentBatch &batch) {
+  submit({}, ctx, frames, palette, anim, batch);
+}
+
+void RomanLightHelmetRenderer::submit(const RomanLightHelmetConfig &,
+                                      const DrawContext &ctx,
+                                      const BodyFrames &frames,
+                                      const HumanoidPalette &palette,
+                                      const HumanoidAnimationContext &anim,
+                                      EquipmentBatch &batch) {
   (void)anim;
 
   AttachmentFrame head = frames.head;
@@ -129,8 +134,6 @@ void RomanLightHelmetRenderer::render(const DrawContext &ctx,
     return;
   }
 
-  // Helmet-local derived anchors that depend on head.up / apex_pos → computed
-  // in one place, fed to the resolver. Keeps the rig def purely declarative.
   auto head_point = [&](const QVector3D &n) {
     return HumanoidRendererBase::frame_local_position(head, n);
   };

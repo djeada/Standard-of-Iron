@@ -18,6 +18,7 @@
 //     in the live backend).
 //   * Cap is honoured: 200 cmds split into ceil(200/cap) groups.
 
+#include "render/bone_palette_arena.h"
 #include "render/draw_queue.h"
 #include "render/gl/backend/rigged_character_pipeline.h"
 #include "render/material.h"
@@ -131,6 +132,13 @@ TEST(RiggedPipelineInstanced, CapBoundsLargeCompatibleRun) {
     EXPECT_EQ(groups[k], k_cap) << "group " << k;
   }
   EXPECT_EQ(groups.back(), 8U);
+}
+
+TEST(RiggedPipelineInstanced, PaletteRangeCoversDeclaredShaderBatch) {
+  constexpr std::size_t k_shader_batch_size = 16;
+  EXPECT_EQ(RiggedCharacterPipeline::palette_range_bytes_for_instanced_shader(
+                k_shader_batch_size),
+            k_shader_batch_size * Render::GL::BonePaletteArena::kPaletteBytes);
 }
 
 // Headless `draw_instanced` exercises the test recorder so callers can

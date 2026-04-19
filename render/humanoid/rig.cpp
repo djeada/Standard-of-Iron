@@ -1,4 +1,8 @@
-#include "rig.h"
+#include "cache_control.h"
+#include "humanoid_renderer_base.h"
+#include "lod.h"
+#include "mesh_helpers.h"
+#include "render_stats.h"
 
 #include "../material.h"
 
@@ -10,11 +14,15 @@
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
+#include "../creature/pipeline/creature_frame.h"
+#include "../creature/pipeline/creature_pipeline.h"
+#include "../creature/pipeline/unit_visual_spec.h"
+#include "../creature/spec.h"
 #include "../entity/registry.h"
 #include "../geom/affine_matrix.h"
 #include "../geom/math_utils.h"
-#include "../geom/transforms.h"
 #include "../geom/parts.h"
+#include "../geom/transforms.h"
 #include "../gl/backend.h"
 #include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
@@ -29,13 +37,12 @@
 #include "../submitter.h"
 #include "../template_cache.h"
 #include "../visibility_budget.h"
+#include "clip_driver_cache.h"
 #include "formation_calculator.h"
 #include "humanoid_math.h"
+#include "humanoid_spec.h"
 #include "pose_controller.h"
 #include "rig_stats_shim.h"
-#include "clip_driver_cache.h"
-#include "humanoid_spec.h"
-#include "../creature/spec.h"
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector4D>
@@ -274,7 +281,8 @@ auto get_or_build_unit_layout(std::uintptr_t key,
 
 void advance_pose_cache_frame() {
   ++s_current_frame;
-  ::Render::Humanoid::ClipDriverCache::instance().advance_frame(s_current_frame);
+  ::Render::Humanoid::ClipDriverCache::instance().advance_frame(
+      s_current_frame);
 
   if ((s_current_frame & 0x1FF) == 0) {
     auto it = s_pose_cache.begin();
@@ -408,6 +416,21 @@ void HumanoidRendererBase::add_attachments(const DrawContext &,
                                            const HumanoidAnimationContext &,
                                            ISubmitter &) const {}
 
+auto HumanoidRendererBase::visual_spec() const
+    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+
+  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.debug_name = "humanoid/default";
+  spec.equipment = {};
+  spec.pose_hook = nullptr;
+  spec.variant_hook = nullptr;
+  const QVector3D ps = get_proportion_scaling();
+  spec.scaling =
+      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+  return spec;
+}
+
 auto HumanoidRendererBase::resolve_entity_ground_offset(
     const DrawContext &, Engine::Core::UnitComponent *unit_comp,
     Engine::Core::TransformComponent *transform_comp) const -> float {
@@ -462,7 +485,38 @@ auto HumanoidRendererBase::resolve_formation(const DrawContext &ctx)
   return params;
 }
 
+namespace {
 
+void submit_humanoid_via_pipeline(
+    const HumanoidRendererBase &owner, const HumanoidPose &pose,
+    const HumanoidVariant &variant, const HumanoidAnimationContext &anim_ctx,
+    const QMatrix4x4 &inst_model, std::uint32_t inst_seed,
+    Render::Creature::CreatureLOD lod, ISubmitter &out,
+    const DrawContext *legacy_ctx = nullptr) {
+  thread_local Render::Creature::Pipeline::CreaturePipeline pipeline;
+  thread_local Render::Creature::Pipeline::CreatureFrame frame;
+  thread_local std::array<Render::Creature::Pipeline::UnitVisualSpec, 1> specs;
+
+  frame.clear();
+
+  specs[0] = owner.visual_spec();
+  specs[0].kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+
+  frame.push_humanoid(0, inst_model, 0, inst_seed, lod, pose, variant,
+                      anim_ctx);
+
+  if (legacy_ctx != nullptr && !frame.legacy_ctx.empty()) {
+    frame.legacy_ctx.back() = legacy_ctx;
+  }
+
+  Render::Creature::Pipeline::FrameContext fctx{};
+  pipeline.submit(fctx,
+                  std::span<const Render::Creature::Pipeline::UnitVisualSpec>{
+                      specs.data(), specs.size()},
+                  frame, out);
+}
+
+} // namespace
 
 namespace {
 auto resolve_renderer_for_submitter(ISubmitter &out) -> Renderer * {
@@ -482,135 +536,17 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   AnimationInputs anim = sample_anim_state(ctx);
 
   if (ctx.template_prewarm) {
+
     if (ctx.renderer_id.empty() || ctx.animation_override == nullptr ||
         !ctx.force_humanoid_lod || !ctx.has_variant_override) {
       return;
     }
+    return;
+  }
 
-    auto *unit_comp =
-        ctx.entity ? ctx.entity->get_component<Engine::Core::UnitComponent>()
-                   : nullptr;
-    std::uint32_t owner_id =
-        (unit_comp != nullptr) ? static_cast<std::uint32_t>(unit_comp->owner_id)
-                               : 0U;
+  if (ctx.allow_template_cache && !ctx.renderer_id.empty()) {
 
-    bool is_mounted_spawn = false;
-    if (unit_comp != nullptr) {
-      using Game::Units::SpawnType;
-      auto const st = unit_comp->spawn_type;
-      is_mounted_spawn =
-          (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
-           st == SpawnType::HorseSpearman);
-    }
-
-    std::uint8_t attack_variant = 0;
-    if (ctx.has_attack_variant_override) {
-      attack_variant = ctx.attack_variant_override;
-    }
-
-    AnimKey anim_key =
-        make_anim_key(*ctx.animation_override, 0.0F, attack_variant);
-
-    TemplateKey key;
-    key.renderer_id = ctx.renderer_id;
-    key.owner_id = owner_id;
-    key.lod = static_cast<std::uint8_t>(ctx.forced_humanoid_lod);
-    HorseLOD mount_lod = HorseLOD::Full;
-    key.mount_lod = 0;
-    if (is_mounted_spawn) {
-      mount_lod = ctx.force_horse_lod
-                      ? ctx.forced_horse_lod
-                      : static_cast<HorseLOD>(ctx.forced_humanoid_lod);
-      key.mount_lod = static_cast<std::uint8_t>(mount_lod);
-    }
-    key.variant = ctx.variant_override;
-    key.attack_variant = anim_key.attack_variant;
-    key.state = anim_key.state;
-    key.combat_phase = anim_key.combat_phase;
-    key.frame = anim_key.frame;
-
-    const TemplateCache::DenseDomainHandle dense_domain =
-        TemplateCache::instance().get_dense_domain_handle(
-            key.renderer_id, key.owner_id, key.lod, key.mount_lod);
-    const std::size_t dense_slot =
-        TemplateCache::dense_slot_index(key.variant, anim_key);
-
-    (void)TemplateCache::instance().get_or_build_dense(
-        dense_domain, dense_slot, key, [&]() -> PoseTemplate {
-          thread_local TemplateRecorder recorder;
-          recorder.reset(320);
-          recorder.set_current_shader(nullptr);
-          recorder.set_current_material(
-              Render::GL::MaterialRegistry::instance().is_initialised()
-                  ? Render::GL::MaterialRegistry::instance().character()
-                  : nullptr);
-
-          if (auto *outer = dynamic_cast<Renderer *>(&out)) {
-            recorder.set_current_shader(outer->get_current_shader());
-          }
-
-          Engine::Core::Entity template_entity(1);
-          auto *templ_unit =
-              template_entity.add_component<Engine::Core::UnitComponent>();
-          if (unit_comp != nullptr) {
-            *templ_unit = *unit_comp;
-          }
-          templ_unit->max_health =
-              (templ_unit->max_health > 0) ? templ_unit->max_health : 1;
-          templ_unit->health = templ_unit->max_health;
-
-          auto *templ_transform =
-              template_entity.add_component<Engine::Core::TransformComponent>();
-          templ_transform->position = {0.0F, 0.0F, 0.0F};
-          templ_transform->rotation = {0.0F, 0.0F, 0.0F};
-          templ_transform->scale = {1.0F, 1.0F, 1.0F};
-
-          if (auto *renderable =
-                  ctx.entity
-                      ? ctx.entity
-                            ->get_component<Engine::Core::RenderableComponent>()
-                      : nullptr) {
-            auto *templ_renderable =
-                template_entity
-                    .add_component<Engine::Core::RenderableComponent>(
-                        renderable->mesh_path, renderable->texture_path);
-            templ_renderable->renderer_id = renderable->renderer_id;
-            templ_renderable->mesh = renderable->mesh;
-            templ_renderable->visible = true;
-            templ_renderable->color = renderable->color;
-          }
-
-          DrawContext build_ctx = ctx;
-          build_ctx.entity = &template_entity;
-          build_ctx.world = nullptr;
-          build_ctx.model = QMatrix4x4();
-          build_ctx.camera = nullptr;
-          build_ctx.selected = false;
-          build_ctx.hovered = false;
-          build_ctx.allow_template_cache = false;
-          build_ctx.force_humanoid_lod = true;
-          build_ctx.forced_humanoid_lod = ctx.forced_humanoid_lod;
-          build_ctx.force_horse_lod = is_mounted_spawn;
-          if (is_mounted_spawn) {
-            build_ctx.forced_horse_lod = static_cast<HorseLOD>(key.mount_lod);
-          }
-          build_ctx.has_seed_override = true;
-          build_ctx.seed_override =
-              resolve_variant_seed(unit_comp, key.variant);
-          build_ctx.has_attack_variant_override = true;
-          build_ctx.attack_variant_override = key.attack_variant;
-          build_ctx.force_single_soldier = true;
-          build_ctx.skip_ground_offset = true;
-
-          AnimationInputs build_anim = make_animation_inputs(anim_key);
-          build_ctx.animation_override = &build_anim;
-
-          render_procedural(build_ctx, build_anim, recorder);
-
-          PoseTemplate built;
-          built.commands = recorder.take_commands();
-          return built;
-        });
+    render_procedural(ctx, anim, out);
     return;
   }
 
@@ -970,8 +906,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
       QMatrix4x4 world_model =
           Render::Geom::multiply_affine(inst_model, cmd.local_model);
       if (cmd.material != nullptr) {
-        // Stage-5 path: Material-aware DrawPartCmd so the backend picks
-        // the shader via material->resolve(GraphicsSettings quality).
+
         out.part(cmd.mesh, const_cast<Material *>(cmd.material), world_model,
                  cmd.color, cmd.texture, cmd.alpha, cmd.material_id);
       } else {
@@ -1038,13 +973,8 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
         shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
                                    shadow_dir_for_use);
 
-        Render::Humanoid::HumanoidFullPrim const shadow_prim{
-            shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-            k_shadow_base_alpha, 0};
-        Render::Humanoid::submit_humanoid_full_prims(
-            std::span<const Render::Humanoid::HumanoidFullPrim>(&shadow_prim,
-                                                                1U),
-            out);
+        out.mesh(shadow_quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+                 nullptr, k_shadow_base_alpha, 0);
 
         renderer->set_current_shader(previous_shader);
         last_shader = previous_shader;
@@ -1458,14 +1388,8 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
 
     customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
-    // Stage 15 — apply clip-driven idle overlays (sway, breathing) via
-    // the per-entity state machine. This is the live consumer of the
-    // Stage 12 Clip/StateMachine infrastructure. Overlays are applied
-    // after customize_pose so rig-specific overrides win, and before
-    // IK so downstream pose_controller passes see the adjusted torso.
     if (ctx.entity != nullptr) {
-      auto const entity_id =
-          static_cast<std::uint32_t>(ctx.entity->get_id());
+      auto const entity_id = static_cast<std::uint32_t>(ctx.entity->get_id());
       auto &cache_entry =
           ::Render::Humanoid::ClipDriverCache::instance().get_or_create(
               entity_id);
@@ -1474,7 +1398,7 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
       if (cache_entry.initialised) {
         dt = now - cache_entry.last_time;
         if (dt < 0.0F || dt > 1.0F) {
-          dt = 0.0F; // clip skips / rewinds — don't advance blend
+          dt = 0.0F;
         }
       } else {
         cache_entry.initialised = true;
@@ -1483,7 +1407,7 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
       cache_entry.driver.tick(dt, anim);
       auto const overlays = cache_entry.driver.sample(now);
       ::Render::Humanoid::apply_overlays_to_pose(pose, overlays,
-                                                  anim_ctx.entity_right);
+                                                 anim_ctx.entity_right);
     }
 
     if (!anim.is_moving && !anim.is_attacking) {
@@ -1792,13 +1716,8 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
             shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
                                        dir_for_use);
 
-            Render::Humanoid::HumanoidFullPrim const shadow_prim{
-                quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
-                k_shadow_base_alpha, 0};
-            Render::Humanoid::submit_humanoid_full_prims(
-                std::span<const Render::Humanoid::HumanoidFullPrim>(
-                    &shadow_prim, 1U),
-                out);
+            out.mesh(quad_mesh, shadow_model, QVector3D(0.0F, 0.0F, 0.0F),
+                     nullptr, k_shadow_base_alpha, 0);
 
             renderer->set_current_shader(previous_shader);
           }
@@ -1811,57 +1730,59 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
 
       ++s_render_stats.lod_full;
 
-      // Compute the per-entity body metrics + frames that armor and
-      // attachment renderers read out of pose.body_frames. The metrics
-      // encode proportion_scaling / torso_scale so attachments still
-      // align with the soldier's silhouette even though the baked Full
-      // mesh was authored at the static baseline (Stage 15.5d deferral).
       Render::Humanoid::HumanoidBodyMetrics metrics{};
       Render::Humanoid::compute_humanoid_body_metrics(
           pose, get_proportion_scaling(), get_torso_scale(), metrics);
       Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
       Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
 
-      Render::Humanoid::submit_humanoid_lod(
-          pose, variant, Render::Creature::CreatureLOD::Full, inst_ctx.model,
-          out);
+      submit_humanoid_via_pipeline(
+          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
+          Render::Creature::CreatureLOD::Full, out, &inst_ctx);
 
-      // Overridable helpers — nations plug armor overlay, shoulder
-      // decorations and helmets in here. Base impls are empty; these
-      // all route through DrawPartCmd when a nation overrides them.
-      draw_armor_overlay(inst_ctx, variant, pose, metrics.y_top_cover,
-                         metrics.torso_r, metrics.shoulder_half_span,
-                         metrics.upper_arm_r, metrics.right_axis, out);
-      draw_shoulder_decorations(inst_ctx, variant, pose, metrics.y_top_cover,
-                                pose.neck_base.y(), metrics.right_axis, out);
-      draw_helmet(inst_ctx, variant, pose, out);
+      using Render::Creature::Pipeline::LegacySlotMask;
+      using Render::Creature::Pipeline::owns_slot;
+      const auto owned_slots = visual_spec().owned_legacy_slots;
+      if (!owns_slot(owned_slots, LegacySlotMask::ArmorOverlay)) {
+        draw_armor_overlay(inst_ctx, variant, pose, metrics.y_top_cover,
+                           metrics.torso_r, metrics.shoulder_half_span,
+                           metrics.upper_arm_r, metrics.right_axis, out);
+      }
+      if (!owns_slot(owned_slots, LegacySlotMask::ShoulderDecorations)) {
+        draw_shoulder_decorations(inst_ctx, variant, pose, metrics.y_top_cover,
+                                  pose.neck_base.y(), metrics.right_axis, out);
+      }
 
-      // Facial hair stays imperative — RNG-procedural per entity seed;
-      // baking it would require keying the RiggedMeshCache by a seed
-      // bucket (the cache key has `variant_bucket` room for it; see
-      // Stage 15.5e+).
-      draw_facial_hair(inst_ctx, variant, pose, out);
-      draw_armor(inst_ctx, variant, pose, anim_ctx, out);
-      add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+      if (!owns_slot(owned_slots, LegacySlotMask::FacialHair)) {
+        draw_facial_hair(inst_ctx, variant, pose, out);
+      }
+      if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
+        add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+      }
       break;
     }
 
-    case HumanoidLOD::Reduced:
+    case HumanoidLOD::Reduced: {
 
       ++s_render_stats.lod_reduced;
-      Render::Humanoid::submit_humanoid_lod(
-          pose, variant, Render::Creature::CreatureLOD::Reduced,
-          inst_ctx.model, out);
-      draw_armor(inst_ctx, variant, pose, anim_ctx, out);
-      add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+      submit_humanoid_via_pipeline(
+          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
+          Render::Creature::CreatureLOD::Reduced, out, &inst_ctx);
+      using Render::Creature::Pipeline::LegacySlotMask;
+      using Render::Creature::Pipeline::owns_slot;
+      const auto owned_slots = visual_spec().owned_legacy_slots;
+      if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
+        add_attachments(inst_ctx, variant, pose, anim_ctx, out);
+      }
       break;
+    }
 
     case HumanoidLOD::Minimal:
 
       ++s_render_stats.lod_minimal;
-      Render::Humanoid::submit_humanoid_lod(
-          pose, variant, Render::Creature::CreatureLOD::Minimal,
-          inst_ctx.model, out);
+      submit_humanoid_via_pipeline(
+          *this, pose, variant, anim_ctx, inst_ctx.model, inst_seed,
+          Render::Creature::CreatureLOD::Minimal, out, &inst_ctx);
       break;
 
     case HumanoidLOD::Billboard:

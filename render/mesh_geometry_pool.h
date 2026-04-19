@@ -9,7 +9,6 @@
 
 namespace Render {
 
-// Opaque handle to a pooled mesh geometry
 struct MeshHandle {
   std::uint32_t id{0};
   [[nodiscard]] auto valid() const -> bool { return id != 0; }
@@ -24,7 +23,6 @@ struct MeshHandleHash {
   }
 };
 
-// Vertex layout: position(3) + normal(3) + texcoord(2) = 32 bytes
 struct PooledVertex {
   float position[3];
   float normal[3];
@@ -40,9 +38,6 @@ struct PooledMeshInfo {
   bool uploaded{false};
 };
 
-// Manages pooled GPU mesh geometries to avoid redundant uploads.
-// Primitive shapes (cylinder, sphere, capsule, etc.) are registered once
-// and referenced by MeshHandle for instanced rendering.
 class MeshGeometryPool {
 public:
   static constexpr std::uint32_t k_invalid_handle = 0;
@@ -56,9 +51,7 @@ public:
   MeshGeometryPool(MeshGeometryPool &&) = delete;
   auto operator=(MeshGeometryPool &&) -> MeshGeometryPool & = delete;
 
-  // Register mesh geometry for pooling (CPU-side). Returns handle.
-  auto register_mesh(const QString &name,
-                     std::vector<PooledVertex> vertices,
+  auto register_mesh(const QString &name, std::vector<PooledVertex> vertices,
                      std::vector<std::uint32_t> indices) -> MeshHandle {
     std::lock_guard lock(m_mutex);
     auto it = m_name_to_handle.find(name);
@@ -79,7 +72,6 @@ public:
     return handle;
   }
 
-  // Upload all pending meshes to GPU. Must be called from GL context thread.
   void upload_pending() {
     std::lock_guard lock(m_mutex);
     for (auto &[id, entry] : m_entries) {
@@ -89,40 +81,35 @@ public:
     }
   }
 
-  // Look up a mesh by handle
   [[nodiscard]] auto get(MeshHandle handle) const -> const PooledMeshInfo * {
     std::lock_guard lock(m_mutex);
     auto it = m_entries.find(handle.id);
     return (it != m_entries.end()) ? &it->second.info : nullptr;
   }
 
-  // Look up a mesh by name
   [[nodiscard]] auto find(const QString &name) const -> MeshHandle {
     std::lock_guard lock(m_mutex);
     auto it = m_name_to_handle.find(name);
     return (it != m_name_to_handle.end()) ? it->second : MeshHandle{};
   }
 
-  // Number of registered meshes
   [[nodiscard]] auto size() const -> std::size_t {
     std::lock_guard lock(m_mutex);
     return m_entries.size();
   }
 
-  // Number of GPU-uploaded meshes
   [[nodiscard]] auto uploaded_count() const -> std::size_t {
     std::lock_guard lock(m_mutex);
     std::size_t count = 0;
     for (const auto &[id, entry] : m_entries) {
-      if (entry.info.uploaded) ++count;
+      if (entry.info.uploaded)
+        ++count;
     }
     return count;
   }
 
-  // Release all GPU resources. Must be called from GL context thread.
   void release_gpu_resources();
 
-  // Stats for debugging
   struct PoolStats {
     std::size_t total_meshes{0};
     std::size_t uploaded_meshes{0};
@@ -140,8 +127,8 @@ public:
       s.total_indices += entry.indices.size();
       if (entry.info.uploaded) {
         ++s.uploaded_meshes;
-        s.gpu_memory_bytes += entry.vertices.size() * sizeof(PooledVertex)
-                           + entry.indices.size() * sizeof(std::uint32_t);
+        s.gpu_memory_bytes += entry.vertices.size() * sizeof(PooledVertex) +
+                              entry.indices.size() * sizeof(std::uint32_t);
       }
     }
     return s;

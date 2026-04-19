@@ -1,6 +1,8 @@
 #include "horse_spearman_renderer_base.h"
 
+#include "../creature/pipeline/equipment_registry.h"
 #include "../equipment/equipment_registry.h"
+#include "../equipment/equipment_submit.h"
 #include "../equipment/weapons/shield_renderer.h"
 #include "../equipment/weapons/spear_renderer.h"
 #include "../humanoid/humanoid_math.h"
@@ -21,7 +23,6 @@
 #include <cmath>
 #include <utility>
 
-#include "../equipment/equipment_submit.h"
 namespace Render::GL {
 
 namespace {
@@ -48,11 +49,27 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
   m_horseRenderer.set_attachments(m_config.horse_attachments);
 
   cache_equipment();
+  build_visual_spec();
 }
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
-
   return QVector3D{0.78F, 0.84F, 0.84F};
+}
+
+auto HorseSpearmanRendererBase::mounted_visual_spec() const
+    -> const Render::Creature::Pipeline::MountedSpec & {
+  static thread_local Render::Creature::Pipeline::MountedSpec spec;
+  spec = MountedHumanoidRendererBase::mounted_visual_spec();
+  spec.rider = visual_spec();
+  spec.rider.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+  spec.rider.debug_name = "troops/horse_spearman/rider";
+  spec.mount.debug_name = "troops/horse_spearman/horse";
+  return spec;
+}
+
+auto HorseSpearmanRendererBase::visual_spec() const
+    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+  return m_spec;
 }
 
 auto HorseSpearmanRendererBase::get_mount_scale() const -> float {
@@ -103,83 +120,6 @@ void HorseSpearmanRendererBase::apply_riding_animation(
   }
 }
 
-void HorseSpearmanRendererBase::draw_equipment(
-    const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
-    const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
-  uint32_t horse_seed = 0U;
-  if (ctx.entity != nullptr) {
-    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
-                                       0xFFFFFFFFU);
-  }
-
-  float spear_length = 1.15F + (hash_01(horse_seed ^ 0xABCDU) - 0.5F) * 0.10F;
-  float spear_shaft_radius =
-      0.018F + (hash_01(horse_seed ^ 0x7777U) - 0.5F) * 0.003F;
-
-  if (m_config.has_spear && m_cached_spear) {
-    SpearRenderConfig spear_config;
-    spear_config.shaft_color =
-        v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
-    spear_config.spearhead_color = m_config.metal_color;
-    spear_config.spear_length = spear_length;
-    spear_config.shaft_radius = spear_shaft_radius;
-    spear_config.spearhead_length = 0.18F;
-
-    if (auto *spear_renderer =
-            dynamic_cast<SpearRenderer *>(m_cached_spear.get())) {
-      spear_renderer->set_config(spear_config);
-    }
-    render_equipment(*m_cached_spear, ctx, pose.body_frames, v.palette, anim_ctx, out);
-  }
-
-  if (m_config.has_shield && m_cached_shield) {
-    render_equipment(*m_cached_shield, ctx, pose.body_frames, v.palette, anim_ctx, out);
-  }
-
-  if (m_config.has_shoulder && m_cached_shoulder) {
-    render_equipment(*m_cached_shoulder, ctx, pose.body_frames, v.palette, anim_ctx, out);
-  }
-}
-
-void HorseSpearmanRendererBase::draw_helmet(const DrawContext &ctx,
-                                            const HumanoidVariant &v,
-                                            const HumanoidPose &pose,
-                                            ISubmitter &out) const {
-  if (m_config.helmet_equipment_id.empty()) {
-    return;
-  }
-
-  if (m_cached_helmet) {
-    HumanoidAnimationContext anim_ctx{};
-    BodyFrames frames = pose.body_frames;
-    if (ctx.entity != nullptr) {
-      auto *move = ctx.entity->get_component<Engine::Core::MovementComponent>();
-      if (move != nullptr) {
-        float speed_sq = move->vx * move->vx + move->vz * move->vz;
-        if (speed_sq > 0.0001F && m_config.helmet_offset_moving > 0.0F) {
-          frames.head.origin +=
-              frames.head.forward * m_config.helmet_offset_moving;
-        }
-      }
-    }
-    render_equipment(*m_cached_helmet, ctx, frames, v.palette, anim_ctx, out);
-  }
-}
-
-void HorseSpearmanRendererBase::draw_armor(const DrawContext &ctx,
-                                           const HumanoidVariant &v,
-                                           const HumanoidPose &pose,
-                                           const HumanoidAnimationContext &anim,
-                                           ISubmitter &out) const {
-  if (m_config.armor_equipment_id.empty()) {
-    return;
-  }
-
-  if (m_cached_armor) {
-    render_equipment(*m_cached_armor, ctx, pose.body_frames, v.palette, anim, out);
-  }
-}
-
 void HorseSpearmanRendererBase::cache_equipment() {
   auto &registry = EquipmentRegistry::instance();
 
@@ -207,6 +147,88 @@ void HorseSpearmanRendererBase::cache_equipment() {
     m_cached_armor =
         registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
   }
+}
+
+void HorseSpearmanRendererBase::build_visual_spec() {
+  using namespace Render::Creature::Pipeline;
+
+  m_loadout.clear();
+
+  if (m_cached_helmet) {
+    auto *helmet_ptr = m_cached_helmet.get();
+    float const helmet_offset = m_config.helmet_offset_moving;
+    EquipmentRecord rec{};
+    rec.dispatch = [helmet_ptr,
+                    helmet_offset](const EquipmentSubmitContext &sub,
+                                   Render::GL::EquipmentBatch &batch) {
+      if (helmet_ptr == nullptr || sub.ctx == nullptr ||
+          sub.frames == nullptr || sub.palette == nullptr) {
+        return;
+      }
+      BodyFrames frames = *sub.frames;
+      if (sub.ctx->entity != nullptr && helmet_offset > 0.0F) {
+        if (auto *move = sub.ctx->entity
+                             ->get_component<Engine::Core::MovementComponent>();
+            move != nullptr) {
+          float const speed_sq = move->vx * move->vx + move->vz * move->vz;
+          if (speed_sq > 0.0001F) {
+            frames.head.origin += frames.head.forward * helmet_offset;
+          }
+        }
+      }
+      HumanoidAnimationContext anim_ctx{};
+      helmet_ptr->render(*sub.ctx, frames, *sub.palette, anim_ctx, batch);
+    };
+    m_loadout.push_back(std::move(rec));
+  }
+
+  if (m_cached_armor) {
+    m_loadout.push_back(make_legacy_equipment_record(*m_cached_armor));
+  }
+
+  if (m_config.has_spear) {
+    QVector3D const metal_color = m_config.metal_color;
+    EquipmentRecord rec{};
+    rec.dispatch = [metal_color](const EquipmentSubmitContext &sub,
+                                 Render::GL::EquipmentBatch &batch) {
+      if (sub.ctx == nullptr || sub.frames == nullptr ||
+          sub.palette == nullptr || sub.anim == nullptr) {
+        return;
+      }
+      uint32_t const seed = sub.seed;
+      float const spear_length =
+          1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
+      float const spear_shaft_radius =
+          0.018F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.003F;
+      SpearRenderConfig spear_config;
+      spear_config.shaft_color =
+          sub.palette->leather * QVector3D(0.85F, 0.75F, 0.65F);
+      spear_config.spearhead_color = metal_color;
+      spear_config.spear_length = spear_length;
+      spear_config.shaft_radius = spear_shaft_radius;
+      spear_config.spearhead_length = 0.18F;
+      SpearRenderer::submit(spear_config, *sub.ctx, *sub.frames, *sub.palette,
+                            *sub.anim, batch);
+    };
+    m_loadout.push_back(std::move(rec));
+  }
+
+  if (m_config.has_shield && m_cached_shield) {
+    m_loadout.push_back(make_legacy_equipment_record(*m_cached_shield));
+  }
+
+  if (m_config.has_shoulder && m_cached_shoulder) {
+    m_loadout.push_back(make_legacy_equipment_record(*m_cached_shoulder));
+  }
+
+  m_spec = UnitVisualSpec{};
+  m_spec.kind = CreatureKind::Humanoid;
+  m_spec.debug_name = "troops/horse_spearman/rider";
+  QVector3D const ps = get_proportion_scaling();
+  m_spec.scaling = ProportionScaling{ps.x(), ps.y(), ps.z()};
+  m_spec.equipment =
+      std::span<const EquipmentRecord>{m_loadout.data(), m_loadout.size()};
+  m_spec.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor;
 }
 
 auto HorseSpearmanRendererBase::resolve_shader_key(const DrawContext &ctx) const

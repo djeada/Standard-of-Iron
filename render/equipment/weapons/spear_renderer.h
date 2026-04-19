@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -22,15 +22,22 @@ class SpearRenderer : public IEquipmentRenderer {
 public:
   explicit SpearRenderer(SpearRenderConfig config = {});
 
+  static void submit(const SpearRenderConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const SpearRenderConfig & {
+    return m_base;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const SpearRenderConfig &config) { m_config = config; }
-
 private:
-  SpearRenderConfig m_config;
+  SpearRenderConfig m_base;
 };
 
 } // namespace Render::GL

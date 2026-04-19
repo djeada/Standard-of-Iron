@@ -9,9 +9,9 @@
 
 #include <gtest/gtest.h>
 
+using Render::Pipeline::compute_full_detail_max_distance_sq;
 using Render::Pipeline::LodInputs;
 using Render::Pipeline::LodTier;
-using Render::Pipeline::compute_full_detail_max_distance_sq;
 using Render::Pipeline::select_lod;
 
 TEST(LodSelector, CulledWhenOffFrustum) {

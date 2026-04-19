@@ -109,8 +109,7 @@ TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
   ASSERT_EQ(queue.size(), 3U);
   // extract_cmd_priority must compile for the new variant.
   for (std::size_t i = 0; i < queue.size(); ++i) {
-    EXPECT_NO_THROW(
-        (void)extract_cmd_priority(queue.get_sorted(i)));
+    EXPECT_NO_THROW((void)extract_cmd_priority(queue.get_sorted(i)));
   }
 }
 

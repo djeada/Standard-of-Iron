@@ -1,7 +1,7 @@
 #include "shield_roman.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../equipment_submit.h"
 
 #include <QMatrix4x4>
@@ -15,17 +15,17 @@ namespace Render::GL {
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
-RomanShieldRenderer::RomanShieldRenderer() {
-  ShieldRenderConfig config;
-  config.shield_color = {0.65F, 0.15F, 0.15F};
-  config.trim_color = {0.78F, 0.70F, 0.45F};
-  config.metal_color = {0.72F, 0.73F, 0.78F};
-  config.shield_radius = 0.18F;
-  config.shield_aspect = 1.3F;
-  config.has_cross_decal = false;
-
-  set_config(config);
-}
+RomanShieldRenderer::RomanShieldRenderer()
+    : ShieldRenderer([]() {
+        ShieldRenderConfig config;
+        config.shield_color = {0.65F, 0.15F, 0.15F};
+        config.trim_color = {0.78F, 0.70F, 0.45F};
+        config.metal_color = {0.72F, 0.73F, 0.78F};
+        config.shield_radius = 0.18F;
+        config.shield_aspect = 1.3F;
+        config.has_cross_decal = false;
+        return config;
+      }()) {}
 
 void RomanShieldRenderer::render(const DrawContext &ctx,
                                  const BodyFrames &frames,
@@ -59,7 +59,8 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   shield_body.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
   shield_body.scale(shield_width * 0.005F, shield_height * 0.5F, 0.24F);
 
-  batch.meshes.push_back({get_unit_cube(), nullptr, shield_body, shield_color, nullptr, 1.0F, 4});
+  batch.meshes.push_back(
+      {get_unit_cube(), nullptr, shield_body, shield_color, nullptr, 1.0F, 4});
 
   float const rim_thickness = 0.020F;
 
@@ -67,30 +68,31 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
                        axis_x * (shield_width * 0.5F);
   QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, top_left, top_right, rim_thickness),
-      trim_color, nullptr, 1.0F, 4});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, top_left, top_right, rim_thickness),
+       trim_color, nullptr, 1.0F, 4});
 
   QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) -
                        axis_x * (shield_width * 0.5F);
   QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
                         axis_x * (shield_width * 0.5F);
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
-      trim_color, nullptr, 1.0F, 4});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
+       trim_color, nullptr, 1.0F, 4});
 
   float const boss_radius = 0.08F;
-  batch.meshes.push_back({get_unit_sphere(), nullptr,
-                 sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),
-                 metal_color, nullptr, 1.0F, 4});
+  batch.meshes.push_back(
+      {get_unit_sphere(), nullptr,
+       sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),
+       metal_color, nullptr, 1.0F, 4});
 
   QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
   QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, grip_a, grip_b, 0.012F),
-                 palette.leather, nullptr, 1.0F, 0});
+                          cylinder_between(ctx.model, grip_a, grip_b, 0.012F),
+                          palette.leather, nullptr, 1.0F, 0});
 }
 
 } // namespace Render::GL

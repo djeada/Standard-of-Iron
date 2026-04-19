@@ -1,13 +1,5 @@
 #pragma once
 
-// Stage 18 — unified decoration GPU data types.
-//
-// Replaces the separate grass/plant/stone/pine/olive/firecamp _gpu.h
-// headers with a single consolidated layout. Each per-kind Instance and
-// Params struct lives here; the backend's InstancedDecorationPipeline
-// dispatcher routes to the appropriate pipeline based on
-// DecorationBatchCmd::kind. See render/draw_queue.h.
-
 #include <QVector3D>
 #include <QVector4D>
 #include <cstdint>

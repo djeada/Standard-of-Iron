@@ -1,8 +1,8 @@
 #include "cloak_renderer.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
 #include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -22,6 +22,15 @@ CloakRenderer::CloakRenderer(const CloakConfig &config) : m_config(config) {
 void CloakRenderer::set_config(const CloakConfig &config) { m_config = config; }
 
 void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                           const HumanoidPalette &palette,
+                           const HumanoidAnimationContext &anim,
+                           EquipmentBatch &batch) {
+  submit(m_config, {m_back_mesh.get(), m_shoulder_mesh.get()}, ctx, frames,
+         palette, anim, batch);
+}
+
+void CloakRenderer::submit(const CloakConfig &config, const CloakMeshes &meshes,
+                           const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            EquipmentBatch &batch) {
@@ -53,7 +62,7 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D shoulder_mid = (shoulder_l.origin + shoulder_r.origin) * 0.5F;
 
   {
-    float cape_width = shoulder_span * 1.6F * m_config.width_scale;
+    float cape_width = shoulder_span * 1.6F * config.width_scale;
     float cape_depth = torso_r * 1.8F;
 
     QVector3D cape_anchor = shoulder_mid + up * (torso_r * 0.82F);
@@ -67,13 +76,14 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     cape_model.scale(cape_width, 1.0F, cape_depth);
 
-    batch.meshes.push_back({m_shoulder_mesh.get(), nullptr, ctx.model * cape_model, cloak_color,
-                   nullptr, 1.0F, m_config.shoulder_material_id});
+    batch.meshes.push_back({meshes.shoulder, nullptr, ctx.model * cape_model,
+                            cloak_color, nullptr, 1.0F,
+                            config.shoulder_material_id});
   }
 
   {
-    float drape_width = shoulder_span * 1.22F * m_config.width_scale;
-    float drape_length = torso_r * 4.2F * m_config.length_scale;
+    float drape_width = shoulder_span * 1.22F * config.width_scale;
+    float drape_length = torso_r * 4.2F * config.length_scale;
 
     QVector3D drape_anchor =
         shoulder_mid + up * (torso_r * 0.62F) + back * (torso_r * 0.96F);
@@ -99,17 +109,18 @@ void CloakRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     drape_model.scale(drape_width, 1.0F, drape_length);
 
-    batch.meshes.push_back({m_back_mesh.get(), nullptr, ctx.model * drape_model, cloak_color,
-                   nullptr, 1.0F, m_config.back_material_id});
+    batch.meshes.push_back({meshes.back, nullptr, ctx.model * drape_model,
+                            cloak_color, nullptr, 1.0F,
+                            config.back_material_id});
   }
 
-  if (m_config.show_clasp) {
+  if (config.show_clasp) {
     QVector3D clasp_pos =
         shoulder_mid + up * (torso_r * 0.5F) + forward * (torso_r * 0.2F);
-    batch.meshes.push_back({
-        get_unit_sphere(), nullptr,
-        Render::Geom::sphere_at(ctx.model, clasp_pos, torso_r * 0.12F),
-        trim_color, nullptr, 1.0F, 1});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr,
+         Render::Geom::sphere_at(ctx.model, clasp_pos, torso_r * 0.12F),
+         trim_color, nullptr, 1.0F, 1});
   }
 }
 

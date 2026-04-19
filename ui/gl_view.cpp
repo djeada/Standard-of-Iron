@@ -29,13 +29,9 @@ auto GLView::createRenderer() const -> QQuickFramebufferObject::Renderer * {
     return nullptr;
   }
 
-  // Stage 17.3 — probe the GL version before handing off to the GameEngine.
-  // Anything below 3.3 cannot run the OpenGL backend; fall back to the
-  // software tier by forcing ShaderQuality::None in the global settings.
   const auto fmt = ctx->format();
   const auto version = fmt.version();
-  if (version.first < 3 ||
-      (version.first == 3 && version.second < 3)) {
+  if (version.first < 3 || (version.first == 3 && version.second < 3)) {
     qWarning() << "GLView::createRenderer() - OpenGL" << version.first << "."
                << version.second
                << "detected; at least 3.3 required. Falling back to "
@@ -85,7 +81,7 @@ void GLView::GLRenderer::render() {
     float dt = 1.0F / 60.0F;
     if (m_last_frame_time.time_since_epoch().count() != 0) {
       dt = std::chrono::duration<float>(now - m_last_frame_time).count();
-      dt = std::min(dt, 0.1F); // cap at 100ms to prevent death spiral
+      dt = std::min(dt, 0.1F);
     }
     m_last_frame_time = now;
 

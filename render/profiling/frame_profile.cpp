@@ -19,17 +19,16 @@ auto format_overlay(const FrameProfile &profile) -> std::string {
   std::uint64_t const total = profile.total_us();
   double const total_ms = static_cast<double>(total) / 1000.0;
   std::snprintf(line, sizeof(line), "frame #%llu  total %6.2f ms\n",
-                static_cast<unsigned long long>(profile.frame_index),
-                total_ms);
+                static_cast<unsigned long long>(profile.frame_index), total_ms);
   out += line;
 
   for (std::size_t i = 0; i < profile.phase_us.size(); ++i) {
     auto const phase = static_cast<Phase>(i);
     double const ms = static_cast<double>(profile.phase_us[i]) / 1000.0;
-    double const pct =
-        total > 0 ? (100.0 * static_cast<double>(profile.phase_us[i]) /
-                     static_cast<double>(total))
-                  : 0.0;
+    double const pct = total > 0
+                           ? (100.0 * static_cast<double>(profile.phase_us[i]) /
+                              static_cast<double>(total))
+                           : 0.0;
     std::snprintf(line, sizeof(line), "  %-8s %6.2f ms  %5.1f%%\n",
                   phase_name(phase), ms, pct);
     out += line;

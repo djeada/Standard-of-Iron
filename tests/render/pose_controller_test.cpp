@@ -1,6 +1,6 @@
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
-#include "render/humanoid/rig.h"
 #include <QVector3D>
 #include <cmath>
 #include <gtest/gtest.h>

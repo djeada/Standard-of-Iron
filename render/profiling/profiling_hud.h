@@ -1,9 +1,4 @@
-// Stage 14 — QObject adapter that exposes FrameProfile to QML.
-//
-// Usage: register with `qmlRegisterSingletonType` or attach as a
-// context property. QML consumers bind `overlayText` for a formatted
-// multi-line string, or the numeric properties for graphs.
-// `setEnabled(false)` turns profiling off from QML (F3 key handler).
+
 
 #pragma once
 
@@ -19,7 +14,8 @@ class ProfilingHud : public QObject {
   Q_OBJECT
   Q_PROPERTY(QString overlayText READ overlay_text NOTIFY overlayChanged)
   Q_PROPERTY(bool enabled READ enabled WRITE set_enabled NOTIFY enabledChanged)
-  Q_PROPERTY(double budgetHeadroomMs READ budget_headroom_ms NOTIFY overlayChanged)
+  Q_PROPERTY(
+      double budgetHeadroomMs READ budget_headroom_ms NOTIFY overlayChanged)
   Q_PROPERTY(double totalMs READ total_ms NOTIFY overlayChanged)
   Q_PROPERTY(quint64 drawCalls READ draw_calls NOTIFY overlayChanged)
   Q_PROPERTY(quint64 frameIndex READ frame_index NOTIFY overlayChanged)

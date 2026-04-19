@@ -1,27 +1,4 @@
-// Stage 13 — software rasterizer for the ShaderQuality::None path.
-//
-// Purpose: allow the game to render a passable picture on systems with
-// no working OpenGL 3.3 context (headless CI, remote desktop without
-// GPU acceleration, museum kiosks). The rasterizer consumes a
-// view-projection matrix plus a list of ColoredTriangle primitives,
-// projects vertices to screen space, depth-sorts the triangles back
-// to front, and fills each one with a flat Lambertian-shaded colour
-// into a QImage.
-//
-// The data types below are deliberately decoupled from Render::GL —
-// callers are expected to convert from their native mesh/draw-cmd
-// types into ColoredTriangle before handing work to the rasterizer.
-// This keeps the rasterizer free of Mesh VBO/shader dependencies and
-// makes it unit-testable without an OpenGL context.
-//
-// Scope limits (intentional):
-//   * Flat per-triangle colour only. No per-vertex gradients, no
-//     textures, no transparency beyond back-to-front painter's
-//     algorithm.
-//   * Triangles rejected if all vertices fall outside NDC — full
-//     clipping is out of scope (units are small so this is rare).
-//   * Depth resolved per-triangle (centroid z), not per-pixel — good
-//     enough for the low-detail silhouettes this tier serves.
+
 
 #pragma once
 

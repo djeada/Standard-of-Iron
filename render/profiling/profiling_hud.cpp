@@ -23,8 +23,7 @@ void ProfilingHud::set_enabled(bool on) {
 }
 
 void ProfilingHud::refresh() {
-  QString const next =
-      QString::fromStdString(format_overlay(global_profile()));
+  QString const next = QString::fromStdString(format_overlay(global_profile()));
   bool const changed = next != m_overlay;
   m_overlay = next;
   if (changed) {

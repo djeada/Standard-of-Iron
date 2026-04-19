@@ -11,8 +11,8 @@
 #include "render/bone_palette_arena.h"
 #include "render/creature/spec.h"
 #include "render/draw_queue.h"
+#include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
-#include "render/horse/rig.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
 #include "render/submitter.h"
@@ -39,7 +39,8 @@ Render::GL::HorseVariant make_variant() {
 }
 
 Render::Horse::HorseSpecPose baseline_pose() {
-  Render::GL::HorseDimensions const dims = Render::GL::make_horse_dimensions(0U);
+  Render::GL::HorseDimensions const dims =
+      Render::GL::make_horse_dimensions(0U);
   Render::GL::HorseGait gait{};
   Render::Horse::HorseSpecPose pose{};
   Render::Horse::make_horse_spec_pose_reduced(
@@ -58,10 +59,10 @@ TEST(HorseFullSwitchover, FullLodBakesMoreGeometryThanReduced) {
   EXPECT_EQ(spec.lod_reduced.primitives.size(), 11U);
 
   Render::GL::RiggedMeshCache cache;
-  const auto *full_entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Full, bind);
-  const auto *reduced_entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *full_entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Full, bind);
+  const auto *reduced_entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(full_entry, nullptr);
   ASSERT_NE(reduced_entry, nullptr);
   ASSERT_NE(full_entry->mesh, nullptr);
@@ -93,8 +94,8 @@ TEST(HorseFullSwitchover, RiggedCmdEmittedForFullLod) {
 
   Render::GL::RiggedMeshCache cache;
   Render::GL::BonePaletteArena arena;
-  const auto *entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Full, bind);
+  const auto *entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Full, bind);
   ASSERT_NE(entry, nullptr);
 
   auto pose = baseline_pose();
@@ -102,7 +103,8 @@ TEST(HorseFullSwitchover, RiggedCmdEmittedForFullLod) {
   Render::Horse::compute_horse_bone_palette(
       pose, std::span<QMatrix4x4>(palette_buf.data(), palette_buf.size()));
 
-  auto slot_h = arena.allocate_palette(); QMatrix4x4 *slot = slot_h.cpu;
+  auto slot_h = arena.allocate_palette();
+  QMatrix4x4 *slot = slot_h.cpu;
   ASSERT_NE(slot, nullptr);
   for (std::size_t i = 0; i < entry->inverse_bind.size(); ++i) {
     slot[i] = palette_buf[i] * entry->inverse_bind[i];
@@ -125,8 +127,10 @@ TEST(HorseFullSwitchover, RiggedCmdEmittedForFullLod) {
 
   std::size_t parts = 0, meshes = 0;
   for (const auto &c : queue.items()) {
-    if (c.index() == DrawPartCmdIndex) ++parts;
-    else if (c.index() == MeshCmdIndex) ++meshes;
+    if (c.index() == DrawPartCmdIndex)
+      ++parts;
+    else if (c.index() == MeshCmdIndex)
+      ++meshes;
   }
   EXPECT_EQ(parts, 0U) << "horse body emits zero DrawPartCmds in rigged path";
   EXPECT_EQ(meshes, 0U);
@@ -149,7 +153,8 @@ TEST(HorseFullSwitchover, VariationScaleSharedMeshDifferentUnits) {
   Render::GL::QueueSubmitter sub(&queue);
 
   for (int unit = 0; unit < 2; ++unit) {
-    auto slot_h = arena.allocate_palette(); QMatrix4x4 *slot = slot_h.cpu;
+    auto slot_h = arena.allocate_palette();
+    QMatrix4x4 *slot = slot_h.cpu;
     for (std::size_t i = 0; i < entry->inverse_bind.size(); ++i) {
       slot[i] = entry->inverse_bind[i].inverted() * entry->inverse_bind[i];
     }
@@ -159,9 +164,8 @@ TEST(HorseFullSwitchover, VariationScaleSharedMeshDifferentUnits) {
     cmd.bone_count = static_cast<std::uint32_t>(entry->inverse_bind.size());
     cmd.color = QVector3D(0.4F, 0.3F, 0.2F);
     cmd.alpha = 1.0F;
-    cmd.variation_scale = (unit == 0)
-                              ? QVector3D(1.0F, 1.0F, 1.0F)
-                              : QVector3D(1.10F, 0.95F, 1.05F);
+    cmd.variation_scale = (unit == 0) ? QVector3D(1.0F, 1.0F, 1.0F)
+                                      : QVector3D(1.10F, 0.95F, 1.05F);
     sub.rigged(cmd);
   }
 
@@ -180,10 +184,10 @@ TEST(HorseFullSwitchover, ReducedAndFullShareBindPalette) {
   auto bind = Render::Horse::horse_bind_palette();
 
   Render::GL::RiggedMeshCache cache;
-  const auto *full = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Full, bind);
-  const auto *reduced = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *full =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Full, bind);
+  const auto *reduced =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(full, nullptr);
   ASSERT_NE(reduced, nullptr);
   EXPECT_NE(full->mesh.get(), reduced->mesh.get());
@@ -198,8 +202,8 @@ TEST(HorseReducedSwitchover, ReducedBakeNonEmpty) {
   auto const &spec = Render::Horse::horse_creature_spec();
   auto bind = Render::Horse::horse_bind_palette();
   Render::GL::RiggedMeshCache cache;
-  const auto *e = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *e =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(e, nullptr);
   ASSERT_NE(e->mesh, nullptr);
   EXPECT_GT(e->mesh->vertex_count(), 0U);

@@ -287,8 +287,7 @@ auto main(int argc, char *argv[]) -> int {
         QStringList{"s", "force-software"},
         "Force the CPU software rendering backend (ShaderQuality::None).");
     QCommandLineOption quality_opt(
-        "quality",
-        "Override shader quality: full | reduced | minimal | none.",
+        "quality", "Override shader quality: full | reduced | minimal | none.",
         "level");
     parser.addOption(force_software_opt);
     parser.addOption(quality_opt);

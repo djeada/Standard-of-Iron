@@ -27,6 +27,9 @@ auto fake_shader(std::uintptr_t tag) -> Render::GL::Shader * {
 auto fake_mesh(std::uintptr_t tag) -> Render::GL::Mesh * {
   return reinterpret_cast<Render::GL::Mesh *>(tag);
 }
+auto fake_texture(std::uintptr_t tag) -> Render::GL::Texture * {
+  return reinterpret_cast<Render::GL::Texture *>(tag);
+}
 
 } // namespace
 
@@ -51,11 +54,9 @@ TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
   queue.sort_for_batching();
 
   ASSERT_EQ(queue.size(), 3U);
-  EXPECT_EQ(queue.get_sorted(0).index(),
-            Render::GL::WorldChunkCmdIndex);
+  EXPECT_EQ(queue.get_sorted(0).index(), Render::GL::WorldChunkCmdIndex);
   EXPECT_EQ(queue.get_sorted(1).index(), Render::GL::DrawPartCmdIndex);
-  EXPECT_EQ(queue.get_sorted(2).index(),
-            Render::GL::SelectionRingCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), Render::GL::SelectionRingCmdIndex);
 }
 
 TEST(DrawPartCmdSortOrder, BatchesByMaterialThenMesh) {
@@ -64,10 +65,9 @@ TEST(DrawPartCmdSortOrder, BatchesByMaterialThenMesh) {
   Render::GL::Material mat_a{};
   Render::GL::Material mat_b{};
 
-  // Same material + mesh → adjacent in the sort. Different material →
-  // separated. Mesh pointer acts as secondary batch-key. We can't predict
-  // exact batch ordering because sort uses raw pointer bits, but we can
-  // verify that same-material items are adjacent.
+  // Same material + mesh -> adjacent in the sort. Different material ->
+  // separated. Material and mesh are interned to stable queue-local IDs, so
+  // the order is independent of pointer fragments.
   Render::GL::DrawPartCmd a{};
   a.material = &mat_a;
   a.mesh = fake_mesh(0x1110);
@@ -102,6 +102,93 @@ TEST(DrawPartCmdSortOrder, BatchesByMaterialThenMesh) {
   EXPECT_TRUE(adjacent_a);
 }
 
+TEST(DrawPartCmdSortOrder, FullKeyGroupsSameMeshWithinMaterial) {
+  Render::GL::DrawQueue queue;
+
+  Render::GL::Material mat{};
+  Render::GL::DrawPartCmd a{};
+  a.material = &mat;
+  a.mesh = fake_mesh(0x1110);
+
+  Render::GL::DrawPartCmd b{};
+  b.material = &mat;
+  b.mesh = fake_mesh(0x2220);
+
+  Render::GL::DrawPartCmd c{};
+  c.material = &mat;
+  c.mesh = fake_mesh(0x1110);
+
+  // Old two-byte sorting ignored the mesh field for DrawPartCmds, leaving
+  // this as a/b/c. Full-key sorting must pull a/c together.
+  queue.submit(a);
+  queue.submit(b);
+  queue.submit(c);
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  const auto &first =
+      std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(0));
+  const auto &second =
+      std::get<Render::GL::DrawPartCmdIndex>(queue.get_sorted(1));
+  EXPECT_EQ(first.mesh, fake_mesh(0x1110));
+  EXPECT_EQ(second.mesh, fake_mesh(0x1110));
+  EXPECT_LE(queue.sort_key_for_sorted(0), queue.sort_key_for_sorted(1));
+  EXPECT_LE(queue.sort_key_for_sorted(1), queue.sort_key_for_sorted(2));
+}
+
+TEST(DrawQueuePreparedBatches, MeshCommandsExposeInstancedBatch) {
+  Render::GL::DrawQueue queue;
+
+  Render::GL::MeshCmd a{};
+  a.shader = fake_shader(0xA00);
+  a.mesh = fake_mesh(0x1000);
+  a.texture = fake_texture(0xD00);
+
+  Render::GL::MeshCmd b = a;
+  Render::GL::MeshCmd other = a;
+  other.mesh = fake_mesh(0x2000);
+
+  queue.submit(a);
+  queue.submit(other);
+  queue.submit(b);
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::MeshInstanced);
+  EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::Mesh);
+  EXPECT_EQ(batches[0].count, 2U);
+  EXPECT_EQ(batches[1].kind, Render::GL::PreparedBatchKind::Single);
+  EXPECT_EQ(batches[1].count, 1U);
+}
+
+TEST(DrawQueuePreparedBatches, DrawPartMinRunBecomesPreparedBatch) {
+  Render::GL::DrawQueue queue;
+  Render::GL::Material mat{};
+
+  Render::GL::DrawPartCmd common{};
+  common.material = &mat;
+  common.mesh = fake_mesh(0x1110);
+  common.texture = fake_texture(0x9000);
+  common.material_id = 7;
+
+  Render::GL::DrawPartCmd other = common;
+  other.mesh = fake_mesh(0x2220);
+
+  queue.submit(common);
+  queue.submit(other);
+  queue.submit(common);
+  queue.submit(common);
+  queue.submit(common);
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::DrawPartInstanced);
+  EXPECT_EQ(batches[0].count, 4U);
+  EXPECT_EQ(batches[1].kind, Render::GL::PreparedBatchKind::Single);
+}
+
 TEST(MaterialResolve, PicksExactTierWhenAvailable) {
   Render::GL::Material mat{};
   mat.shader_full = fake_shader(1);
@@ -132,10 +219,8 @@ TEST(MaterialResolve, FallsBackWhenRequestedTierMissing) {
   full_only.shader_full = fake_shader(10);
 
   EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Full), fake_shader(10));
-  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Reduced),
-            fake_shader(10));
-  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Minimal),
-            fake_shader(10));
+  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Reduced), fake_shader(10));
+  EXPECT_EQ(full_only.resolve(Render::ShaderQuality::Minimal), fake_shader(10));
 
   // Only Minimal populated — Full should fall back to Minimal (upgrade
   // path failed, weaker tier is used as last resort rather than rendering
@@ -143,8 +228,7 @@ TEST(MaterialResolve, FallsBackWhenRequestedTierMissing) {
   Render::GL::Material minimal_only{};
   minimal_only.shader_minimal = fake_shader(20);
 
-  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Full),
-            fake_shader(20));
+  EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Full), fake_shader(20));
   EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Reduced),
             fake_shader(20));
   EXPECT_EQ(minimal_only.resolve(Render::ShaderQuality::Minimal),

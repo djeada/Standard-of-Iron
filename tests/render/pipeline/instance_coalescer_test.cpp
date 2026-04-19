@@ -15,9 +15,9 @@
 #include <cstddef>
 
 using Render::GL::DrawPartCmd;
+using Render::GL::Material;
 using Render::GL::Mesh;
 using Render::GL::Texture;
-using Render::GL::Material;
 
 namespace {
 
@@ -88,9 +88,9 @@ TEST(InstanceCoalescer, DifferentMaterialBreaksRun) {
   auto *m = fake_mesh(1);
   const auto *mat_a = fake_material(2);
   const auto *mat_b = fake_material(3);
-  std::array<DrawPartCmd, 6> parts{
-      make_part(m, mat_a), make_part(m, mat_a), make_part(m, mat_a),
-      make_part(m, mat_b), make_part(m, mat_b), make_part(m, mat_b)};
+  std::array<DrawPartCmd, 6> parts{make_part(m, mat_a), make_part(m, mat_a),
+                                   make_part(m, mat_a), make_part(m, mat_b),
+                                   make_part(m, mat_b), make_part(m, mat_b)};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].header->material, mat_a);

@@ -45,8 +45,7 @@ public:
                       const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
             float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
-                       float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
   void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
                     float, float, float, float) override {}
   void healer_aura(const QVector3D &, const QVector3D &, float, float,
@@ -136,9 +135,8 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
 
   QMatrix4x4 identity;
   NullSubmitter sub;
-  auto stats = Render::Creature::submit_creature(s, palette_view,
-                                                  CreatureLOD::Billboard,
-                                                  identity, sub);
+  auto stats = Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Billboard, identity, sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_EQ(stats.skipped_lod, 0U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
@@ -164,11 +162,11 @@ TEST(HumanoidSpecTest, SpecReferenceIsStable) {
 // matrix via `Render::Geom::capsule_between`.
 // -------------------------------------------------------------------
 
-#include "render/geom/transforms.h"
-#include "render/humanoid/humanoid_specs.h"
-#include "render/humanoid/humanoid_math.h"
-#include "render/gl/primitives.h"
 #include "render/creature/part_graph.h"
+#include "render/geom/transforms.h"
+#include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_math.h"
+#include "render/humanoid/humanoid_specs.h"
 
 #include <vector>
 
@@ -199,8 +197,8 @@ public:
     ++mesh_calls;
   }
   void part(Render::GL::Mesh *m, Render::GL::Material *mat,
-            const QMatrix4x4 &mdl, const QVector3D &c,
-            Render::GL::Texture *t, float a, int mid) override {
+            const QMatrix4x4 &mdl, const QVector3D &c, Render::GL::Texture *t,
+            float a, int mid) override {
     parts.push_back({m, mat, mdl, c, t, a, mid});
   }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
@@ -209,8 +207,7 @@ public:
                       const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
             float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
-                       float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
   void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
                     float, float, float, float) override {}
   void healer_aura(const QVector3D &, const QVector3D &, float, float,
@@ -254,15 +251,14 @@ TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
   RecordingSubmitter sub;
-  auto stats = Render::Creature::submit_creature(s, palette_view,
-                                                 CreatureLOD::Minimal,
-                                                 identity, sub);
+  auto stats = Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Minimal, identity, sub);
 
   EXPECT_EQ(stats.submitted, 1U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
@@ -277,16 +273,15 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
   // Full LOD is now populated (Stage 15.5d); only Billboard remains empty.
   RecordingSubmitter sub;
-  auto stats = Render::Creature::submit_creature(s, palette_view,
-                                                  CreatureLOD::Billboard,
-                                                  identity, sub);
+  auto stats = Render::Creature::submit_creature(
+      s, palette_view, CreatureLOD::Billboard, identity, sub);
   EXPECT_EQ(stats.submitted, 0U);
   EXPECT_TRUE(sub.parts.empty());
 }
@@ -296,8 +291,8 @@ TEST(HumanoidSpecTest, ReducedLodEmitsSixPrimitives) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -314,8 +309,8 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -359,8 +354,8 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -379,17 +374,17 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
   auto near = [](const QVector3D &a, const QVector3D &b) {
     return (a - b).lengthSquared() < 1.0e-7F;
   };
-  bool const matched = (near(ep_a, expected_head_crown) &&
-                        near(ep_b, expected_foot)) ||
-                       (near(ep_b, expected_head_crown) &&
-                        near(ep_a, expected_foot));
-  EXPECT_TRUE(matched)
-      << "Endpoints (" << ep_a.x() << "," << ep_a.y() << "," << ep_a.z()
-      << ") and (" << ep_b.x() << "," << ep_b.y() << "," << ep_b.z()
-      << ") don't cover head_crown=(" << expected_head_crown.x() << ","
-      << expected_head_crown.y() << "," << expected_head_crown.z()
-      << ") and foot=(" << expected_foot.x() << "," << expected_foot.y()
-      << "," << expected_foot.z() << ")";
+  bool const matched =
+      (near(ep_a, expected_head_crown) && near(ep_b, expected_foot)) ||
+      (near(ep_b, expected_head_crown) && near(ep_a, expected_foot));
+  EXPECT_TRUE(matched) << "Endpoints (" << ep_a.x() << "," << ep_a.y() << ","
+                       << ep_a.z() << ") and (" << ep_b.x() << "," << ep_b.y()
+                       << "," << ep_b.z() << ") don't cover head_crown=("
+                       << expected_head_crown.x() << ","
+                       << expected_head_crown.y() << ","
+                       << expected_head_crown.z() << ") and foot=("
+                       << expected_foot.x() << "," << expected_foot.y() << ","
+                       << expected_foot.z() << ")";
 }
 
 TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
@@ -401,8 +396,8 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
   HumanoidPose const pose = make_upright_pose();
 
   std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(
-      pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
   // Baseline model (no world transform).
@@ -446,4 +441,3 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
 // tests/render/creature/humanoid_full_switchover_test.cpp for the
 // replacement integration test.
 // -------------------------------------------------------------------
-

@@ -1,10 +1,10 @@
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
 #include "render/equipment/armor/roman_armor.h"
-#include "render/equipment/equipment_submit.h"
 #include "render/equipment/armor/tunic_renderer.h"
 #include "render/equipment/equipment_registry.h"
-#include "render/humanoid/rig.h"
+#include "render/equipment/equipment_submit.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include <QVector3D>
 #include <gtest/gtest.h>
 #include <memory>
@@ -106,8 +106,8 @@ TEST_F(ArmorRendererTest, TorsoArmorMeshFrontFacesBodyForward) {
   armor.render(ctx, frames, palette, anim, batch);
 
   ASSERT_FALSE(batch.meshes.empty());
-  QVector3D const mesh_front =
-      batch.meshes.front().model.mapVector(QVector3D(1.0F, 0.0F, 0.0F))
-          .normalized();
+  QVector3D const mesh_front = batch.meshes.front()
+                                   .model.mapVector(QVector3D(1.0F, 0.0F, 0.0F))
+                                   .normalized();
   EXPECT_GT(QVector3D::dotProduct(mesh_front, frames.torso.forward), 0.95F);
 }

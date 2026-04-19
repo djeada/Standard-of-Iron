@@ -11,8 +11,8 @@ namespace {
 constexpr float kAxisEpsilonSq = 1.0e-6F;
 constexpr float kLengthEpsilon = 1.0e-5F;
 
-auto normalised_or(const QVector3D &v, const QVector3D &fallback) noexcept
-    -> QVector3D {
+auto normalised_or(const QVector3D &v,
+                   const QVector3D &fallback) noexcept -> QVector3D {
   float const len = v.length();
   if (len < kLengthEpsilon) {
     return fallback;
@@ -22,11 +22,9 @@ auto normalised_or(const QVector3D &v, const QVector3D &fallback) noexcept
 
 auto orthonormalise_x(const QVector3D &right_hint, const QVector3D &y_axis,
                       const QVector3D &world_fallback) noexcept -> QVector3D {
-  QVector3D x = right_hint -
-                y_axis * QVector3D::dotProduct(right_hint, y_axis);
+  QVector3D x = right_hint - y_axis * QVector3D::dotProduct(right_hint, y_axis);
   if (x.lengthSquared() < kAxisEpsilonSq) {
-    x = world_fallback -
-        y_axis * QVector3D::dotProduct(world_fallback, y_axis);
+    x = world_fallback - y_axis * QVector3D::dotProduct(world_fallback, y_axis);
     if (x.lengthSquared() < kAxisEpsilonSq) {
       QVector3D const alt(0.0F, 0.0F, 1.0F);
       x = alt - y_axis * QVector3D::dotProduct(alt, y_axis);
@@ -44,8 +42,7 @@ auto make_bone_basis(const QVector3D &head, const QVector3D &tail,
       normalised_or(tail - head, QVector3D(0.0F, 1.0F, 0.0F));
   QVector3D const x_axis =
       orthonormalise_x(right_hint, y_axis, QVector3D(1.0F, 0.0F, 0.0F));
-  QVector3D const z_axis =
-      QVector3D::crossProduct(x_axis, y_axis).normalized();
+  QVector3D const z_axis = QVector3D::crossProduct(x_axis, y_axis).normalized();
 
   QMatrix4x4 m;
   m.setColumn(0, QVector4D(x_axis, 0.0F));
@@ -67,8 +64,7 @@ auto basis_from_root_up(const QVector3D &origin,
   QVector3D const y_axis(0.0F, 1.0F, 0.0F);
   QVector3D const x_axis =
       orthonormalise_x(right_hint, y_axis, QVector3D(1.0F, 0.0F, 0.0F));
-  QVector3D const z_axis =
-      QVector3D::crossProduct(x_axis, y_axis).normalized();
+  QVector3D const z_axis = QVector3D::crossProduct(x_axis, y_axis).normalized();
 
   QMatrix4x4 m;
   m.setColumn(0, QVector4D(x_axis, 0.0F));
@@ -78,9 +74,8 @@ auto basis_from_root_up(const QVector3D &origin,
   return m;
 }
 
-void evaluate_skeleton(const SkeletonTopology &topo,
-                       JointProviderFn provider, void *user,
-                       const QVector3D &right_axis,
+void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
+                       void *user, const QVector3D &right_axis,
                        std::span<QMatrix4x4> out_palette) noexcept {
   assert(provider != nullptr);
   assert(out_palette.size() >= topo.bones.size());
@@ -102,9 +97,7 @@ void evaluate_skeleton(const SkeletonTopology &topo,
       break;
 
     case BoneBasisKind::FromHeadTail: {
-      // If tail collapses onto head (zero-length bone), fall back to
-      // parent-basis-at-own-origin so equipment sockets still have a
-      // well-defined orientation.
+
       if ((r.tail - r.head).lengthSquared() < kAxisEpsilonSq) {
         BoneIndex const p = topo.bones[i].parent;
         if (p != kInvalidBone && p < i) {
@@ -162,10 +155,9 @@ auto socket_position(const SkeletonTopology &topo,
   return socket_transform(topo, palette, socket).column(3).toVector3D();
 }
 
-auto socket_attachment_frame(const SkeletonTopology &topo,
-                             std::span<const QMatrix4x4> palette,
-                             SocketIndex socket) noexcept
-    -> Render::GL::AttachmentFrame {
+auto socket_attachment_frame(
+    const SkeletonTopology &topo, std::span<const QMatrix4x4> palette,
+    SocketIndex socket) noexcept -> Render::GL::AttachmentFrame {
   QMatrix4x4 const m = socket_transform(topo, palette, socket);
   Render::GL::AttachmentFrame f;
   f.origin = m.column(3).toVector3D();
@@ -201,15 +193,15 @@ auto validate_topology(const SkeletonTopology &topo) noexcept -> bool {
     BoneDef const &b = topo.bones[i];
     if (b.parent == kInvalidBone) {
       if (has_root) {
-        return false; // more than one root
+        return false;
       }
       has_root = true;
     } else if (b.parent >= i) {
-      return false; // not topologically sorted
+      return false;
     }
     for (std::size_t j = i + 1; j < topo.bones.size(); ++j) {
       if (topo.bones[j].name == b.name) {
-        return false; // duplicate name
+        return false;
       }
     }
   }

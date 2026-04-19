@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 
@@ -19,27 +19,40 @@ class ToolBeltRenderer : public IEquipmentRenderer {
 public:
   explicit ToolBeltRenderer(const ToolBeltConfig &config = ToolBeltConfig{});
 
+  static void submit(const ToolBeltConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const ToolBeltConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const ToolBeltConfig &config) { m_config = config; }
-
 private:
   ToolBeltConfig m_config;
 
-  void renderBelt(const DrawContext &ctx, const AttachmentFrame &waist,
-                  EquipmentBatch &batch);
+  static void renderBelt(const ToolBeltConfig &config, const DrawContext &ctx,
+                         const AttachmentFrame &waist, EquipmentBatch &batch);
 
-  void renderHammerLoop(const DrawContext &ctx, const AttachmentFrame &waist,
-                        EquipmentBatch &batch);
+  static void renderHammerLoop(const ToolBeltConfig &config,
+                               const DrawContext &ctx,
+                               const AttachmentFrame &waist,
+                               EquipmentBatch &batch);
 
-  void renderChiselHolder(const DrawContext &ctx, const AttachmentFrame &waist,
-                          EquipmentBatch &batch);
+  static void renderChiselHolder(const ToolBeltConfig &config,
+                                 const DrawContext &ctx,
+                                 const AttachmentFrame &waist,
+                                 EquipmentBatch &batch);
 
-  void renderPouches(const DrawContext &ctx, const AttachmentFrame &waist,
-                     EquipmentBatch &batch);
+  static void renderPouches(const ToolBeltConfig &config,
+                            const DrawContext &ctx,
+                            const AttachmentFrame &waist,
+                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

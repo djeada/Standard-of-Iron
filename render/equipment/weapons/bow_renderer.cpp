@@ -5,8 +5,8 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
 #include "../equipment_submit.h"
 
 #include <QMatrix4x4>
@@ -24,10 +24,17 @@ namespace {
 constexpr QVector3D k_dark_bow_color(0.05F, 0.035F, 0.02F);
 }
 
-BowRenderer::BowRenderer(BowRenderConfig config)
-    : m_config(std::move(config)) {}
+BowRenderer::BowRenderer(BowRenderConfig config) : m_base(std::move(config)) {}
 
 void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                         const HumanoidPalette &palette,
+                         const HumanoidAnimationContext &anim,
+                         EquipmentBatch &batch) {
+  submit(m_base, ctx, frames, palette, anim, batch);
+}
+
+void BowRenderer::submit(const BowRenderConfig &m_config,
+                         const DrawContext &ctx, const BodyFrames &frames,
                          const HumanoidPalette &palette,
                          const HumanoidAnimationContext &anim,
                          EquipmentBatch &batch) {
@@ -83,35 +90,35 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   for (int i = 1; i <= k_bowstring_segments; ++i) {
     float const t = float(i) / float(k_bowstring_segments);
     QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
-    batch.meshes.push_back({
-        get_unit_cylinder(), nullptr,
-        cylinder_between(ctx.model, prev, cur, m_config.bow_rod_radius),
-        k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, prev, cur, m_config.bow_rod_radius),
+         k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
     prev = cur;
   }
 
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, grip - up * 0.05F,
-                                  grip + up * 0.05F,
-                                  m_config.bow_rod_radius * 1.45F),
-                 k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
+                        m_config.bow_rod_radius * 1.45F),
+       k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
 
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, top_end, nock, m_config.string_radius),
-      m_config.string_color, nullptr, 1.0F, m_config.material_id});
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, nock, bot_end, m_config.string_radius),
-      m_config.string_color, nullptr, 1.0F, m_config.material_id});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, top_end, nock, m_config.string_radius),
+       m_config.string_color, nullptr, 1.0F, m_config.material_id});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, nock, bot_end, m_config.string_radius),
+       m_config.string_color, nullptr, 1.0F, m_config.material_id});
 
   bool const is_bow_attacking =
       anim.inputs.is_attacking && !anim.inputs.is_melee;
   if (is_bow_attacking) {
-    batch.meshes.push_back({
-        get_unit_cylinder(), nullptr,
-        cylinder_between(ctx.model, frames.hand_l.origin, nock, 0.0045F),
-        m_config.string_color * 0.9F, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, frames.hand_l.origin, nock, 0.0045F),
+         m_config.string_color * 0.9F, nullptr, 1.0F, m_config.material_id});
   }
 
   float attack_phase = 0.0F;
@@ -125,7 +132,7 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       is_bow_attacking &&
       (attack_phase >= 0.0F && attack_phase < k_attack_arrow_window_end);
 
-  auto arrow_visible = [this, is_bow_attacking,
+  auto arrow_visible = [&m_config, is_bow_attacking,
                         attack_window_active]() -> bool {
     switch (m_config.arrow_visibility) {
     case ArrowVisibility::Hidden:
@@ -148,25 +155,26 @@ void BowRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const tip = tail + forward * 0.90F;
 
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, tail, tip, 0.018F), palette.wood,
-                   nullptr, 1.0F, m_config.material_id});
+                            cylinder_between(ctx.model, tail, tip, 0.018F),
+                            palette.wood, nullptr, 1.0F, m_config.material_id});
 
     QVector3D const head_base = tip - forward * 0.10F;
     batch.meshes.push_back({get_unit_cone(), nullptr,
-                   cone_from_to(ctx.model, head_base, tip, 0.05F),
-                   m_config.metal_color, nullptr, 1.0F, m_config.material_id});
+                            cone_from_to(ctx.model, head_base, tip, 0.05F),
+                            m_config.metal_color, nullptr, 1.0F,
+                            m_config.material_id});
 
     QVector3D const f1b = tail - forward * 0.02F;
     QVector3D const f1a = f1b - forward * 0.06F;
     QVector3D const f2b = tail + forward * 0.02F;
     QVector3D const f2a = f2b + forward * 0.06F;
 
-    batch.meshes.push_back({get_unit_cone(), nullptr, cone_from_to(ctx.model, f1b, f1a, 0.04F),
-                   m_config.fletching_color, nullptr, 1.0F,
-                   m_config.material_id});
-    batch.meshes.push_back({get_unit_cone(), nullptr, cone_from_to(ctx.model, f2a, f2b, 0.04F),
-                   m_config.fletching_color, nullptr, 1.0F,
-                   m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cone(), nullptr, cone_from_to(ctx.model, f1b, f1a, 0.04F),
+         m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cone(), nullptr, cone_from_to(ctx.model, f2a, f2b, 0.04F),
+         m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
   }
 }
 

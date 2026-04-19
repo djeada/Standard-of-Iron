@@ -1,7 +1,8 @@
 #include "horse_renderer.h"
 
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../equipment/horse/i_horse_equipment_renderer.h"
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
 
 #include <utility>
 
@@ -37,9 +38,19 @@ void HorseRenderer::draw_attachments(
 
   for (const auto &attachment : m_attachments) {
     if (attachment) {
-      render_horse_equipment(*attachment, ctx, frames, profile.variant, horse_anim, out);
+      render_horse_equipment(*attachment, ctx, frames, profile.variant,
+                             horse_anim, out);
     }
   }
+}
+
+auto HorseRenderer::visual_spec() const
+    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec = Render::Creature::Pipeline::UnitVisualSpec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  spec.debug_name = "horse/with_attachments";
+  return spec;
 }
 
 } // namespace Render::GL

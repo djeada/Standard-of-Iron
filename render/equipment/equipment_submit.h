@@ -1,10 +1,4 @@
-// Stage 17 — central equipment submission.
-//
-// Every equipment renderer builds an EquipmentBatch (mesh + cylinder
-// prims) directly. The batch is then replayed through a single
-// submit_equipment_batch() helper — the ONLY call site that invokes
-// ISubmitter::mesh/part/cylinder on behalf of equipment renderers.
-// No equipment code touches ISubmitter directly anymore.
+
 
 #pragma once
 
@@ -61,12 +55,9 @@ struct EquipmentBatch {
   }
 };
 
-// THE single dispatch point for every equipment draw in the engine.
 void submit_equipment_batch(const EquipmentBatch &batch,
                             ISubmitter &out) noexcept;
 
-// Lightweight adapter: presents an EquipmentBatch as an ISubmitter for
-// legacy code paths (e.g. rig DSL interpreter) that still need one.
 class BatchSubmitterAdapter : public ISubmitter {
 public:
   explicit BatchSubmitterAdapter(EquipmentBatch &batch) : m_batch(batch) {}
@@ -90,7 +81,6 @@ public:
     m_batch.cylinders.push_back({start, end, radius, color, alpha});
   }
 
-  // Effects not used by equipment renderers — no-ops.
   void selection_ring(const QMatrix4x4 &, float, float,
                       const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
@@ -111,10 +101,6 @@ private:
   EquipmentBatch &m_batch;
 };
 
-// High-level one-shot wrappers. These build an EquipmentBatch,
-// invoke the equipment renderer's render() to populate it, then
-// replay the batch through submit_equipment_batch(). Nation
-// renderers call these instead of renderer->render() directly.
 void render_equipment(IEquipmentRenderer &renderer, const DrawContext &ctx,
                       const BodyFrames &frames, const HumanoidPalette &palette,
                       const HumanoidAnimationContext &anim,

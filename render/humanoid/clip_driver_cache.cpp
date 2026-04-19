@@ -44,10 +44,6 @@ void apply_overlays_to_pose(Render::GL::HumanoidPose &pose,
   QVector3D const lateral = right * overlays.torso_sway_x;
   QVector3D const breath = up * overlays.breathing_y;
 
-  // Shift the upper torso as a rigid unit. Neck_base gets both shifts;
-  // head gets both. Shoulders get the lateral only (breathing looks
-  // odd when shoulders bob). Chest body frame is not touched here —
-  // the skin code reads it off neck_base/head_pos for its own basis.
   pose.neck_base += lateral + breath;
   pose.head_pos += lateral + breath;
   pose.shoulder_l += lateral;

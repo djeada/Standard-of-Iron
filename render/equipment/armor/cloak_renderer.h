@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../gl/mesh.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -19,9 +19,28 @@ struct CloakConfig {
   int shoulder_material_id = 6;
 };
 
+struct CloakMeshes {
+  Mesh *back = nullptr;
+  Mesh *shoulder = nullptr;
+};
+
 class CloakRenderer : public IEquipmentRenderer {
 public:
   explicit CloakRenderer(const CloakConfig &config = CloakConfig{});
+
+  static void submit(const CloakConfig &config, const CloakMeshes &meshes,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const CloakConfig & {
+    return m_config;
+  }
+
+  [[nodiscard]] auto meshes() const noexcept -> CloakMeshes {
+    return {m_back_mesh.get(), m_shoulder_mesh.get()};
+  }
 
   void set_config(const CloakConfig &config);
 

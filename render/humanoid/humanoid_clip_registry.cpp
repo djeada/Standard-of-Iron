@@ -10,8 +10,6 @@ namespace {
 using Clip = Render::Animation::Clip<float>;
 using KF = Render::Animation::Keyframe<float>;
 
-// Author one clip per state for a channel. Missing entries (empty Clip)
-// cleanly evaluate to 0.0F.
 auto build_sway_clips() -> std::vector<Clip> {
   std::vector<Clip> clips(kStateCount);
   clips[static_cast<std::size_t>(HumanoidState::Idle)] =
@@ -30,20 +28,18 @@ auto build_sway_clips() -> std::vector<Clip> {
       Clip("humanoid_run_sway",
            {KF{0.00F, 0.00F}, KF{0.15F, 0.08F}, KF{0.30F, 0.00F},
             KF{0.45F, -0.08F}, KF{0.60F, 0.00F}});
-  // Combat sway kept small so it doesn't fight the combat pose logic.
+
   clips[static_cast<std::size_t>(HumanoidState::AttackMelee)] =
-      Clip("humanoid_melee_sway",
-           {KF{0.00F, 0.00F}, KF{0.30F, 0.02F}, KF{0.60F, -0.02F},
-            KF{0.90F, 0.00F}});
+      Clip("humanoid_melee_sway", {KF{0.00F, 0.00F}, KF{0.30F, 0.02F},
+                                   KF{0.60F, -0.02F}, KF{0.90F, 0.00F}});
   clips[static_cast<std::size_t>(HumanoidState::AttackRanged)] =
-      Clip("humanoid_ranged_sway",
-           {KF{0.00F, 0.00F}, KF{0.50F, 0.01F}, KF{1.00F, -0.01F},
-            KF{1.50F, 0.00F}});
+      Clip("humanoid_ranged_sway", {KF{0.00F, 0.00F}, KF{0.50F, 0.01F},
+                                    KF{1.00F, -0.01F}, KF{1.50F, 0.00F}});
   clips[static_cast<std::size_t>(HumanoidState::Construct)] =
       Clip("humanoid_construct_sway",
            {KF{0.00F, 0.00F}, KF{0.40F, 0.03F}, KF{0.80F, 0.00F},
             KF{1.20F, -0.03F}, KF{1.60F, 0.00F}});
-  // Healing / HitReaction / Death: no sway. Empty clips evaluate to 0.
+
   return clips;
 }
 
@@ -69,15 +65,14 @@ auto build_breathing_clips() -> std::vector<Clip> {
 
 auto build_jitter_clips() -> std::vector<Clip> {
   std::vector<Clip> clips(kStateCount);
-  // Idle: gentle, visible jitter.
+
   clips[static_cast<std::size_t>(HumanoidState::Idle)] =
       Clip("humanoid_idle_jitter",
            {KF{0.00F, 0.004F}, KF{1.00F, 0.006F}, KF{2.00F, 0.004F}});
-  // Hold: very small jitter (professional discipline).
+
   clips[static_cast<std::size_t>(HumanoidState::Hold)] =
-      Clip("humanoid_hold_jitter",
-           {KF{0.00F, 0.002F}, KF{2.00F, 0.002F}});
-  // Locomotion / combat: no jitter — motion already drives hands.
+      Clip("humanoid_hold_jitter", {KF{0.00F, 0.002F}, KF{2.00F, 0.002F}});
+
   return clips;
 }
 
@@ -103,9 +98,7 @@ void HumanoidClipDriver::tick(float dt,
 }
 
 auto HumanoidClipDriver::sample(float time) const -> HumanoidOverlays {
-  // Build ChannelEvaluators bound to the local state machine each call.
-  // They're cheap (a vector copy of up to 10 small clips and a pointer).
-  // The evaluators are local so the registry can stay const & shared.
+
   Render::Animation::ChannelEvaluator<float> sway_eval(m_registry->sway_clips(),
                                                        &m_state.raw());
   Render::Animation::ChannelEvaluator<float> breathing_eval(
@@ -114,8 +107,7 @@ auto HumanoidClipDriver::sample(float time) const -> HumanoidOverlays {
       m_registry->jitter_clips(), &m_state.raw());
 
   HumanoidOverlays out;
-  out.torso_sway_x =
-      sway_eval.sample(time, Render::Animation::WrapMode::Loop);
+  out.torso_sway_x = sway_eval.sample(time, Render::Animation::WrapMode::Loop);
   out.breathing_y =
       breathing_eval.sample(time, Render::Animation::WrapMode::Loop);
   out.hand_jitter_amp =

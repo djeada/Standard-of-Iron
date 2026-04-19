@@ -1,19 +1,21 @@
 #include "swordsman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/weapons/shield_renderer.h"
 #include "../../../equipment/weapons/sword_renderer.h"
-#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -110,9 +112,130 @@ public:
   auto get_torso_scale() const -> float override { return kTorsoWidthScale; }
 
 private:
-  mutable std::unordered_map<uint32_t, KnightExtras> m_extrasCache;
-
 public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    static auto helmet =
+        reg.get(Render::GL::EquipmentCategory::Helmet, "roman_heavy");
+    static auto armor_body =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_heavy_armor");
+    static auto armor_shoulder =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_shoulder_cover");
+    static auto armor_greaves =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_greaves");
+    static auto shield =
+        reg.get(Render::GL::EquipmentCategory::Weapon, "shield_roman");
+
+    ensure_swordsman_styles_registered();
+    static const KnightStyleConfig captured_style = []() {
+      auto &styles = swordsman_style_registry();
+      auto it = styles.find("roman_republic");
+      if (it != styles.end()) {
+        return it->second;
+      }
+      auto it_default = styles.find(std::string(k_swordsman_default_style_key));
+      if (it_default != styles.end()) {
+        return it_default->second;
+      }
+      return KnightStyleConfig{};
+    }();
+
+    static const std::array<EquipmentRecord, 7> records{
+        make_legacy_equipment_record(*helmet),
+        make_legacy_equipment_record(*armor_body),
+        make_legacy_equipment_record(*armor_shoulder),
+        make_legacy_equipment_record(*armor_greaves),
+        make_legacy_equipment_record(*shield),
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  SwordRenderConfig cfg;
+                  cfg.metal_color = saturate_color(sub.palette->metal);
+                  cfg.sword_length =
+                      0.80F + (hash_01(sub.seed ^ 0xABCDU) - 0.5F) * 0.16F;
+                  cfg.sword_width =
+                      0.060F + (hash_01(sub.seed ^ 0x7777U) - 0.5F) * 0.010F;
+                  cfg.guard_half_width =
+                      0.120F + (hash_01(sub.seed ^ 0x3456U) - 0.5F) * 0.020F;
+                  cfg.handle_radius =
+                      0.016F + (hash_01(sub.seed ^ 0x88AAU) - 0.5F) * 0.003F;
+                  cfg.pommel_radius =
+                      0.045F + (hash_01(sub.seed ^ 0x19C3U) - 0.5F) * 0.006F;
+                  cfg.blade_ricasso = clamp_f(
+                      0.14F + (hash_01(sub.seed ^ 0xBEEFU) - 0.5F) * 0.04F,
+                      0.10F, 0.20F);
+                  cfg.blade_taper_bias = clamp01(
+                      0.6F + (hash_01(sub.seed ^ 0xFACEU) - 0.5F) * 0.2F);
+                  bool has_scabbard = (hash_01(sub.seed ^ 0x5CABU) > 0.15F);
+                  if (captured_style.has_scabbard) {
+                    has_scabbard = *captured_style.has_scabbard;
+                  }
+                  cfg.has_scabbard = has_scabbard;
+                  SwordRenderer::submit(cfg, *sub.ctx, *sub.frames,
+                                        *sub.palette, *sub.anim, batch);
+                },
+        },
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  bool has_scabbard = (hash_01(sub.seed ^ 0x5CABU) > 0.15F);
+                  if (captured_style.has_scabbard) {
+                    has_scabbard = *captured_style.has_scabbard;
+                  }
+                  bool const is_attacking = sub.anim->inputs.is_attacking &&
+                                            sub.anim->inputs.is_melee;
+                  if (is_attacking || !has_scabbard) {
+                    return;
+                  }
+                  using HP = HumanProportions;
+                  float const sword_width =
+                      0.060F + (hash_01(sub.seed ^ 0x7777U) - 0.5F) * 0.010F;
+                  float const sheath_r = sword_width * 0.85F;
+                  QVector3D const hip(0.10F, HP::WAIST_Y - 0.04F, -0.02F);
+                  QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
+                  QVector3D const metal_color =
+                      saturate_color(sub.palette->metal);
+                  batch.meshes.push_back(
+                      {get_unit_cylinder(), nullptr,
+                       cylinder_between(sub.ctx->model, hip, tip, sheath_r),
+                       sub.palette->leather * 0.9F, nullptr, 1.0F, 0});
+                  batch.meshes.push_back(
+                      {get_unit_cone(), nullptr,
+                       cone_from_to(sub.ctx->model, tip,
+                                    tip + QVector3D(-0.02F, -0.02F, -0.02F),
+                                    sheath_r),
+                       metal_color, nullptr, 1.0F, 0});
+                },
+        },
+    };
+
+    static const UnitVisualSpec spec = []() {
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/swordsman";
+      s.scaling = ProportionScaling{1.00F, 0.78F, 0.26F};
+      s.equipment =
+          std::span<const EquipmentRecord>{records.data(), records.size()};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+      return s;
+    }();
+    return spec;
+  }
+
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -146,99 +269,6 @@ public:
 
       controller.place_hand_at(false, idle_hand_r);
       controller.place_hand_at(true, idle_hand_l);
-    }
-  }
-
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    const AnimationInputs &anim = anim_ctx.inputs;
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    auto const &style = resolve_style(ctx);
-    QVector3D const team_tint = resolve_team_tint(ctx);
-
-    KnightExtras extras;
-    auto it = m_extrasCache.find(seed);
-    if (it != m_extrasCache.end()) {
-      extras = it->second;
-    } else {
-      extras = computeKnightExtras(seed, v);
-      apply_extras_overrides(style, team_tint, v, extras);
-      m_extrasCache[seed] = extras;
-
-      if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-        m_extrasCache.clear();
-      }
-    }
-    apply_extras_overrides(style, team_tint, v, extras);
-
-    bool const is_attacking = anim.is_attacking && anim.is_melee;
-
-    auto &registry = EquipmentRegistry::instance();
-
-    auto sword = registry.get(EquipmentCategory::Weapon, "sword_roman");
-    if (sword) {
-      SwordRenderConfig sword_config;
-      sword_config.metal_color = extras.metal_color;
-      sword_config.sword_length = extras.sword_length;
-      sword_config.sword_width = extras.swordWidth;
-      sword_config.guard_half_width = extras.guard_half_width;
-      sword_config.handle_radius = extras.handle_radius;
-      sword_config.pommel_radius = extras.pommel_radius;
-      sword_config.blade_ricasso = extras.blade_ricasso;
-      sword_config.blade_taper_bias = extras.blade_taper_bias;
-      sword_config.has_scabbard = extras.has_scabbard;
-
-      auto *sword_renderer = dynamic_cast<SwordRenderer *>(sword.get());
-      if (sword_renderer) {
-        sword_renderer->set_config(sword_config);
-      }
-      render_equipment(*sword, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    auto shield = registry.get(EquipmentCategory::Weapon, "shield_roman");
-    if (shield) {
-      render_equipment(*shield, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    if (!is_attacking && extras.has_scabbard) {
-      EquipmentBatch batch;
-      drawScabbard(ctx, pose, v, extras, batch);
-      submit_equipment_batch(batch, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
-    if (helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-    auto armor = registry.get(EquipmentCategory::Armor, "roman_heavy_armor");
-    if (armor) {
-      render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
-    }
-
-    auto shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
-    if (shoulder_cover) {
-      render_equipment(*shoulder_cover, ctx, pose.body_frames, v.palette, anim, out);
-    }
-
-    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-    if (greaves) {
-      render_equipment(*greaves, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 
@@ -288,10 +318,15 @@ private:
     QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
     float const sheath_r = extras.swordWidth * 0.85F;
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, hip, tip, sheath_r), v.palette.leather * 0.9F, nullptr, 1.0F, 0});
+    batch.meshes.push_back({get_unit_cylinder(), nullptr,
+                            cylinder_between(ctx.model, hip, tip, sheath_r),
+                            v.palette.leather * 0.9F, nullptr, 1.0F, 0});
 
-    batch.meshes.push_back({get_unit_cone(), nullptr, cone_from_to(ctx.model, tip,
-                          tip + QVector3D(-0.02F, -0.02F, -0.02F), sheath_r), extras.metal_color, nullptr, 1.0F, 0});
+    batch.meshes.push_back(
+        {get_unit_cone(), nullptr,
+         cone_from_to(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
+                      sheath_r),
+         extras.metal_color, nullptr, 1.0F, 0});
   }
 
   auto

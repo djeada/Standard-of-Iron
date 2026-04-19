@@ -9,13 +9,8 @@ uniform mat4 u_view_proj;
 uniform mat4 u_model;
 uniform vec3 u_variation_scale;
 
-// Stage 16.2 — bone palette is now a std140 UBO bound at binding=2
-// (Render::GL::kBonePaletteBindingPoint). The pipeline binds a 4096-byte
-// slice of the slab UBO via glBindBufferRange so a single draw sees only
-// its 64-mat4 palette.
-layout(std140) uniform BonePalette {
-  mat4 bones[64];
-} u_palette;
+layout(std140) uniform BonePalette { mat4 bones[64]; }
+u_palette;
 
 out vec3 v_normal_ws;
 out vec2 v_tex;
@@ -27,8 +22,8 @@ void main() {
               a_bone_weights.z * u_palette.bones[a_bone_indices.z] +
               a_bone_weights.w * u_palette.bones[a_bone_indices.w];
 
-  float wsum = a_bone_weights.x + a_bone_weights.y + a_bone_weights.z +
-               a_bone_weights.w;
+  float wsum =
+      a_bone_weights.x + a_bone_weights.y + a_bone_weights.z + a_bone_weights.w;
   if (wsum < 0.001) {
     skin = mat4(1.0);
   }

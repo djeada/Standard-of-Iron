@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 
@@ -17,18 +17,26 @@ class ArmGuardsRenderer : public IEquipmentRenderer {
 public:
   explicit ArmGuardsRenderer(const ArmGuardsConfig &config = ArmGuardsConfig{});
 
+  static void submit(const ArmGuardsConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const ArmGuardsConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const ArmGuardsConfig &config) { m_config = config; }
-
 private:
   ArmGuardsConfig m_config;
 
-  void renderArmGuard(const DrawContext &ctx, const QVector3D &elbow,
-                      const QVector3D &wrist, EquipmentBatch &batch);
+  static void renderArmGuard(const ArmGuardsConfig &config,
+                             const DrawContext &ctx, const QVector3D &elbow,
+                             const QVector3D &wrist, EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

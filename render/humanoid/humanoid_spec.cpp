@@ -7,8 +7,8 @@
 #include "../scene_renderer.h"
 #include "../submitter.h"
 #include "humanoid_full_builder.h"
+#include "humanoid_renderer_base.h"
 #include "humanoid_specs.h"
-#include "rig.h"
 #include "skeleton.h"
 
 #include <QMatrix4x4>
@@ -25,11 +25,6 @@ namespace {
 namespace Creature = Render::Creature;
 using HP = Render::GL::HumanProportions;
 
-// -------------------------------------------------------------------
-// Humanoid colour roles — the PartGraph's `color_role` indexes here.
-// Index 0 is reserved for "literal color"; roles start at 1.
-// Keep the enum values, role_count, and fill_role_colors() in sync.
-// -------------------------------------------------------------------
 enum HumanoidColorRole : std::uint8_t {
   Cloth = 1,
   Skin = 2,
@@ -37,7 +32,7 @@ enum HumanoidColorRole : std::uint8_t {
   LeatherDark = 4,
   Wood = 5,
   Metal = 6,
-  ClothDark = 7, // cloth * 0.92 — trouser shade.
+  ClothDark = 7,
   kRoleCount = 7,
 };
 
@@ -52,10 +47,6 @@ auto fill_role_colors(const Render::GL::HumanoidVariant &v,
   out[ClothDark - 1] = v.palette.cloth * 0.92F;
 }
 
-// -------------------------------------------------------------------
-// Minimal LOD — one capsule from the head crown down to the left foot.
-// Colour role: Cloth (picked up at submit time from the variant palette).
-// -------------------------------------------------------------------
 constexpr auto make_minimal_capsule() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_minimal_body";
@@ -74,17 +65,6 @@ constexpr std::array<Creature::PrimitiveInstance, 1> k_minimal_parts = {
     make_minimal_capsule(),
 };
 
-// -------------------------------------------------------------------
-// Reduced LOD — 6 primitives approximating the legacy draw_simplified_body.
-// Silhouette preserved from the skeleton palette; per-entity proportion
-// scaling collapses to baseline (slightly thinner than Full LOD). The
-// variant palette is still honoured via colour roles.
-//
-//   torso      — cylinder(Chest -> Pelvis, r = TORSO_TOP_R)
-//   head       — sphere(Head, r = HEAD_RADIUS)
-//   arm L/R    — cylinder(Shoulder -> Hand, r = (UPPER_ARM_R + FORE_ARM_R)/2)
-//   leg L/R    — cylinder(Hip     -> Foot, r = (UPPER_LEG_R + LOWER_LEG_R)/2)
-// -------------------------------------------------------------------
 constexpr auto make_reduced_torso() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_reduced_torso";
@@ -108,8 +88,8 @@ constexpr auto make_reduced_head() noexcept -> Creature::PrimitiveInstance {
   return p;
 }
 
-constexpr auto make_reduced_arm(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_reduced_arm(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_reduced_arm_l" : "humanoid_reduced_arm_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
@@ -123,8 +103,8 @@ constexpr auto make_reduced_arm(bool left) noexcept
   return p;
 }
 
-constexpr auto make_reduced_leg(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_reduced_leg(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_reduced_leg_l" : "humanoid_reduced_leg_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
@@ -139,33 +119,10 @@ constexpr auto make_reduced_leg(bool left) noexcept
 }
 
 constexpr std::array<Creature::PrimitiveInstance, 6> k_reduced_parts = {
-    make_reduced_torso(),     make_reduced_head(),
-    make_reduced_arm(true),   make_reduced_arm(false),
-    make_reduced_leg(true),   make_reduced_leg(false),
+    make_reduced_torso(),    make_reduced_head(),    make_reduced_arm(true),
+    make_reduced_arm(false), make_reduced_leg(true), make_reduced_leg(false),
 };
 
-// -------------------------------------------------------------------
-// Full LOD — 18 primitives approximating the legacy draw_common_body.
-// Geometry is baked at the static baseline proportions (width/height/
-// depth scaling collapses to 1.0 — same contract as the Reduced bake).
-// Per-part colour differentiation (skin vs cloth vs leather) collapses
-// to a single `color` uniform on RiggedCreatureCmd, matching the
-// trade-off Reduced LOD made in Stage 15.5c. See the Stage 15.5d
-// commit message for the honest deferral list (torso oriented shape,
-// sheared feet, RigDSL head, facial hair, per-entity scaling).
-//
-//   torso          — cylinder(Chest -> Pelvis, r = TORSO_TOP_R)
-//   neck           — cylinder(Neck -> Head, r = NECK_RADIUS)
-//   head           — sphere(Head, r = HEAD_RADIUS)
-//   upper_arm L/R  — cylinder(UpperArm -> Forearm, r = UPPER_ARM_R)
-//   elbow L/R      — sphere(Forearm, r = HAND_RADIUS * 1.05)
-//   forearm L/R    — cylinder(Forearm -> Hand, r = FORE_ARM_R)
-//   hand L/R       — sphere(Hand, r = HAND_RADIUS * 0.95)
-//   thigh L/R      — cylinder(Hip -> Knee, r = UPPER_LEG_R)
-//   knee L/R       — sphere(Knee, r = LOWER_LEG_R * 0.95)
-//   shin L/R       — cylinder(Knee -> Foot, r = LOWER_LEG_R)
-//   foot L/R       — sphere(Foot, r = LOWER_LEG_R * 1.10)
-// -------------------------------------------------------------------
 constexpr auto make_full_torso() noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = "humanoid_full_torso";
@@ -201,10 +158,11 @@ constexpr auto make_full_head() noexcept -> Creature::PrimitiveInstance {
   return p;
 }
 
-constexpr auto make_full_upper_arm(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_upper_arm(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_full_upper_arm_l" : "humanoid_full_upper_arm_r";
+  p.debug_name =
+      left ? "humanoid_full_upper_arm_l" : "humanoid_full_upper_arm_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone = static_cast<Creature::BoneIndex>(
       left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
@@ -216,8 +174,8 @@ constexpr auto make_full_upper_arm(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_elbow(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_elbow(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_elbow_l" : "humanoid_full_elbow_r";
   p.shape = Creature::PrimitiveShape::Sphere;
@@ -229,8 +187,8 @@ constexpr auto make_full_elbow(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_forearm(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_forearm(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_forearm_l" : "humanoid_full_forearm_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
@@ -244,8 +202,8 @@ constexpr auto make_full_forearm(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_hand(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_hand(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_hand_l" : "humanoid_full_hand_r";
   p.shape = Creature::PrimitiveShape::Sphere;
@@ -257,8 +215,8 @@ constexpr auto make_full_hand(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_thigh(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_thigh(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_thigh_l" : "humanoid_full_thigh_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
@@ -272,8 +230,8 @@ constexpr auto make_full_thigh(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_knee(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_knee(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_knee_l" : "humanoid_full_knee_r";
   p.shape = Creature::PrimitiveShape::Sphere;
@@ -285,8 +243,8 @@ constexpr auto make_full_knee(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_shin(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_shin(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_shin_l" : "humanoid_full_shin_r";
   p.shape = Creature::PrimitiveShape::Cylinder;
@@ -300,8 +258,8 @@ constexpr auto make_full_shin(bool left) noexcept
   return p;
 }
 
-constexpr auto make_full_foot(bool left) noexcept
-    -> Creature::PrimitiveInstance {
+constexpr auto
+make_full_foot(bool left) noexcept -> Creature::PrimitiveInstance {
   Creature::PrimitiveInstance p{};
   p.debug_name = left ? "humanoid_full_foot_l" : "humanoid_full_foot_r";
   p.shape = Creature::PrimitiveShape::Sphere;
@@ -314,15 +272,16 @@ constexpr auto make_full_foot(bool left) noexcept
 }
 
 constexpr std::array<Creature::PrimitiveInstance, 19> k_full_parts = {
-    make_full_torso(),        make_full_neck(),         make_full_head(),
-    make_full_upper_arm(true),  make_full_upper_arm(false),
-    make_full_elbow(true),      make_full_elbow(false),
-    make_full_forearm(true),    make_full_forearm(false),
-    make_full_hand(true),       make_full_hand(false),
-    make_full_thigh(true),      make_full_thigh(false),
-    make_full_knee(true),       make_full_knee(false),
-    make_full_shin(true),       make_full_shin(false),
-    make_full_foot(true),       make_full_foot(false),
+    make_full_torso(),          make_full_neck(),
+    make_full_head(),           make_full_upper_arm(true),
+    make_full_upper_arm(false), make_full_elbow(true),
+    make_full_elbow(false),     make_full_forearm(true),
+    make_full_forearm(false),   make_full_hand(true),
+    make_full_hand(false),      make_full_thigh(true),
+    make_full_thigh(false),     make_full_knee(true),
+    make_full_knee(false),      make_full_shin(true),
+    make_full_shin(false),      make_full_foot(true),
+    make_full_foot(false),
 };
 
 } // namespace
@@ -344,52 +303,15 @@ auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec & {
         std::span<const Creature::PrimitiveInstance>(k_full_parts.data(),
                                                      k_full_parts.size()),
     };
-    // lod_billboard left empty until a dedicated billboard bake lands.
+
     return s;
   }();
   return spec;
 }
 
-void submit_humanoid_lod(const Render::GL::HumanoidPose &pose,
-                         const Render::GL::HumanoidVariant &variant,
-                         Creature::CreatureLOD lod,
-                         const QMatrix4x4 &world_from_unit,
-                         Render::GL::ISubmitter &out) noexcept {
-  // Production body path for Minimal, Reduced and Full LODs.
-  if (lod == Creature::CreatureLOD::Billboard) {
-    return;
-  }
-  BonePalette palette{};
-  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
-
-  std::array<QVector3D, kRoleCount> roles{};
-  fill_role_colors(variant, roles);
-
-  Creature::submit_creature(
-      humanoid_creature_spec(),
-      std::span<const QMatrix4x4>(palette.data(), palette.size()), lod,
-      world_from_unit, out,
-      std::span<const QVector3D>(roles.data(), roles.size()));
-}
-
 } // namespace Render::Humanoid
 
 namespace Render::Humanoid {
-
-void submit_humanoid_full_prims(
-    std::span<const HumanoidFullPrim> prims,
-    Render::GL::ISubmitter &out) noexcept {
-  for (const auto &p : prims) {
-    if (p.mesh == nullptr) {
-      continue;
-    }
-    out.mesh(p.mesh, p.model, p.color, nullptr, p.alpha, p.material_id);
-  }
-}
-
-// -------------------------------------------------------------------
-// Stage 15.5c — bone-palette helper + Reduced-LOD rigged switchover.
-// -------------------------------------------------------------------
 
 namespace {
 
@@ -404,10 +326,6 @@ auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
   return nullptr;
 }
 
-// Cache the resting bind-pose palette. Evaluated once from an idle
-// locomotion pose at t=0 and reused for every subsequent bake. The
-// first-touch initialisation is mutex-guarded so concurrent entry
-// points can't race in headless test setups.
 auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
   Render::GL::VariationParams variation{};
   variation.height_scale = 1.0F;
@@ -419,8 +337,8 @@ auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
   variation.shoulder_tilt = 0.0F;
 
   Render::GL::HumanoidPose pose{};
-  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-      /*seed=*/0, /*time=*/0.0F, /*is_moving=*/false, variation, pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0, 0.0F, false,
+                                                            variation, pose);
 
   std::array<QMatrix4x4, kBoneCount> palette{};
   BonePalette tmp{};
@@ -455,25 +373,34 @@ auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4> {
 
 namespace {
 
-// Shared body of the per-LOD rigged submit helpers. Resolves the
-// Renderer, looks up (or bakes) the rigged mesh for the given LOD,
-// composes skinning = current[i] * inverse_bind[i] into an arena
-// slot, and emits a single RiggedCreatureCmd.
 void submit_humanoid_rigged_impl(const Render::GL::HumanoidPose &pose,
                                  const Render::GL::HumanoidVariant &variant,
                                  Creature::CreatureLOD lod,
                                  const QMatrix4x4 &world_from_unit,
                                  Render::GL::ISubmitter &out) noexcept {
+
+  BonePalette tmp{};
+  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), tmp);
+
   auto *renderer = resolve_renderer(out);
   if (renderer == nullptr) {
+    if (lod == Creature::CreatureLOD::Billboard) {
+      return;
+    }
+    std::array<QVector3D, kRoleCount> roles{};
+    fill_role_colors(variant, roles);
+    Creature::submit_creature(
+        humanoid_creature_spec(),
+        std::span<const QMatrix4x4>(tmp.data(), tmp.size()), lod,
+        world_from_unit, out,
+        std::span<const QVector3D>(roles.data(), roles.size()));
     return;
   }
 
   auto const &spec = humanoid_creature_spec();
   auto bind = humanoid_bind_palette();
 
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind,
-                                                          /*variant_bucket=*/0);
+  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind, 0);
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
     return;
@@ -483,17 +410,10 @@ void submit_humanoid_rigged_impl(const Render::GL::HumanoidPose &pose,
   Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
   QMatrix4x4 *palette_slot = palette_slot_h.cpu;
 
-  std::array<QMatrix4x4, kBoneCount> current{};
-  BonePalette tmp{};
-  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), tmp);
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
-    current[i] = tmp[i];
-  }
-
   std::size_t const n =
       std::min<std::size_t>(entry->inverse_bind.size(), kBoneCount);
   for (std::size_t i = 0; i < n; ++i) {
-    palette_slot[i] = current[i] * entry->inverse_bind[i];
+    palette_slot[i] = tmp[i] * entry->inverse_bind[i];
   }
 
   Render::GL::RiggedCreatureCmd cmd{};
@@ -528,6 +448,14 @@ void submit_humanoid_full_rigged(const Render::GL::HumanoidPose &pose,
                                  const QMatrix4x4 &world_from_unit,
                                  Render::GL::ISubmitter &out) noexcept {
   submit_humanoid_rigged_impl(pose, variant, Creature::CreatureLOD::Full,
+                              world_from_unit, out);
+}
+
+void submit_humanoid_minimal_rigged(const Render::GL::HumanoidPose &pose,
+                                    const Render::GL::HumanoidVariant &variant,
+                                    const QMatrix4x4 &world_from_unit,
+                                    Render::GL::ISubmitter &out) noexcept {
+  submit_humanoid_rigged_impl(pose, variant, Creature::CreatureLOD::Minimal,
                               world_from_unit, out);
 }
 

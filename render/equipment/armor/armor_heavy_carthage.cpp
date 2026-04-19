@@ -2,8 +2,9 @@
 #include "../../geom/parts.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/mesh_helpers.h"
 #include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -70,13 +71,13 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
   auto draw_torso = [&](const QVector3D &a, const QVector3D &b, float radius,
                         const QVector3D &color, float scale_x, float base_z,
                         int material_id = 1) {
-    QMatrix4x4 m =
-        oriented_cylinder(ctx.model, a, b, right, radius * scale_x,
-                          radius * depth_scale_for(base_z));
+    QMatrix4x4 m = oriented_cylinder(ctx.model, a, b, right, radius * scale_x,
+                                     radius * depth_scale_for(base_z));
     align_torso_mesh_forward(m);
     Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-    batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr, m,
-                   color, nullptr, 1.0F, material_id});
+    batch.meshes.push_back(
+        {torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr, m,
+         color, nullptr, 1.0F, material_id});
   };
 
   draw_torso(top, chainmail_bottom, torso_r * 1.10F, chainmail_color, 1.07F,

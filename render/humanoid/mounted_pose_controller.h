@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../horse/rig.h"
-#include "rig.h"
+#include "../horse/horse_renderer_base.h"
+#include "humanoid_renderer_base.h"
 #include <QVector3D>
 #include <string_view>
 

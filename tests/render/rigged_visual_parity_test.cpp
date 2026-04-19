@@ -18,8 +18,8 @@
 #include "render/creature/spec.h"
 #include "render/draw_queue.h"
 #include "render/gl/primitives.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/rig.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_bake.h"
@@ -37,9 +37,9 @@
 namespace {
 
 using Render::Creature::CreatureLOD;
+using Render::Creature::part_graph_for;
 using Render::Creature::PrimitiveInstance;
 using Render::Creature::PrimitiveShape;
-using Render::Creature::part_graph_for;
 using Render::GL::HumanoidPose;
 
 auto build_pose(std::uint32_t seed, float t, bool moving) -> HumanoidPose {
@@ -99,8 +99,8 @@ void RunParityCheck(CreatureLOD lod) {
 
   std::array<QMatrix4x4, Render::Humanoid::kBoneCount> current{};
   Render::Humanoid::BonePalette tmp{};
-  Render::Humanoid::evaluate_skeleton(current_pose,
-                                      QVector3D(1.0F, 0.0F, 0.0F), tmp);
+  Render::Humanoid::evaluate_skeleton(current_pose, QVector3D(1.0F, 0.0F, 0.0F),
+                                      tmp);
   for (std::size_t i = 0; i < Render::Humanoid::kBoneCount; ++i) {
     current[i] = tmp[i];
   }

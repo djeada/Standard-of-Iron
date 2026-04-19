@@ -4,9 +4,9 @@
 #include "../gl/render_constants.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "world_chunk.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "world_chunk.h"
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QQuaternion>

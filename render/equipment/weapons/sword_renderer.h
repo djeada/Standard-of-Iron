@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -26,15 +26,22 @@ class SwordRenderer : public IEquipmentRenderer {
 public:
   explicit SwordRenderer(SwordRenderConfig config = {});
 
+  static void submit(const SwordRenderConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const SwordRenderConfig & {
+    return m_base;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const SwordRenderConfig &config) { m_config = config; }
-
 private:
-  SwordRenderConfig m_config;
+  SwordRenderConfig m_base;
 };
 
 } // namespace Render::GL

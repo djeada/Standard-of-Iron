@@ -27,9 +27,8 @@ struct ProjectedVertex {
   bool outside_ndc{false};
 };
 
-[[nodiscard]] auto project(const QVector3D &world,
-                           const QMatrix4x4 &view_proj, int width, int height)
-    -> ProjectedVertex {
+[[nodiscard]] auto project(const QVector3D &world, const QMatrix4x4 &view_proj,
+                           int width, int height) -> ProjectedVertex {
   QVector4D const clip =
       view_proj * QVector4D(world.x(), world.y(), world.z(), 1.0F);
   ProjectedVertex out;
@@ -43,9 +42,9 @@ struct ProjectedVertex {
   if (ndc_x < -1.2F || ndc_x > 1.2F || ndc_y < -1.2F || ndc_y > 1.2F) {
     out.outside_ndc = true;
   }
-  out.screen = QPointF((ndc_x * 0.5F + 0.5F) * static_cast<float>(width),
-                       (1.0F - (ndc_y * 0.5F + 0.5F)) *
-                           static_cast<float>(height));
+  out.screen =
+      QPointF((ndc_x * 0.5F + 0.5F) * static_cast<float>(width),
+              (1.0F - (ndc_y * 0.5F + 0.5F)) * static_cast<float>(height));
   out.ndc_z = ndc_z;
   return out;
 }
@@ -62,7 +61,7 @@ struct ProjectedVertex {
   QVector3D const n = normal;
   QVector3D const l = light_dir.normalized();
   float const lambert = std::clamp(QVector3D::dotProduct(n, -l), 0.0F, 1.0F);
-  // 0.3 ambient + 0.7 diffuse — keeps dark sides visible.
+
   float const factor = 0.3F + 0.7F * lambert;
   return QVector3D(base_color.x() * factor, base_color.y() * factor,
                    base_color.z() * factor);
@@ -87,12 +86,18 @@ constexpr std::array<QVector3D, 8> kCubeVerts = {
     QVector3D{1, 1, 1},    QVector3D{-1, 1, 1},
 };
 constexpr std::array<CubeTri, 12> kCubeTris = {{
-    {0, 2, 1}, {0, 3, 2}, // -Z
-    {4, 5, 6}, {4, 6, 7}, // +Z
-    {0, 1, 5}, {0, 5, 4}, // -Y
-    {3, 6, 2}, {3, 7, 6}, // +Y
-    {0, 4, 7}, {0, 7, 3}, // -X
-    {1, 2, 6}, {1, 6, 5}, // +X
+    {0, 2, 1},
+    {0, 3, 2},
+    {4, 5, 6},
+    {4, 6, 7},
+    {0, 1, 5},
+    {0, 5, 4},
+    {3, 6, 2},
+    {3, 7, 6},
+    {0, 4, 7},
+    {0, 7, 3},
+    {1, 2, 6},
+    {1, 6, 5},
 }};
 
 } // namespace
@@ -104,8 +109,7 @@ void SoftwareRasterizer::submit_cube(const QMatrix4x4 &model,
     world[i] = model.map(kCubeVerts[i]);
   }
   for (auto const &t : kCubeTris) {
-    m_triangles.push_back(
-        {world[t.a], world[t.b], world[t.c], color, alpha});
+    m_triangles.push_back({world[t.a], world[t.b], world[t.c], color, alpha});
   }
 }
 

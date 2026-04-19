@@ -1,19 +1,4 @@
-// Stage 14 — structured frame-profiling data + text formatter.
-//
-// The existing HumanoidRenderStats / HorseRenderStats / … are per-
-// rig-type counters read ad-hoc by debug code. This header adds a
-// single `FrameProfile` struct that aggregates the phase timings a
-// render HUD wants to expose (collection, culling, sort, submit,
-// playback) plus top-level counters (draw calls, triangles, budget
-// headroom) across any number of rigs.
-//
-// The profile is populated from inside the renderer each frame via a
-// lightweight `FrameTimer` scope (RAII + `steady_clock`). QML/Qt
-// overlays read it via `format_overlay()`.
-//
-// Zero cost when disabled: `FrameProfile::enabled=false` short-circuits
-// every phase accumulator. Toggle via `set_enabled()` from the F3 key
-// handler (wiring into QML is the host's job).
+
 
 #pragma once
 
@@ -56,17 +41,13 @@ enum class Phase : std::uint8_t {
 }
 
 struct FrameProfile {
-  // All times in microseconds. 0 when the phase did not run.
-  std::array<std::uint64_t,
-             static_cast<std::size_t>(Phase::_Count)>
-      phase_us{};
+
+  std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
 
   std::uint64_t draw_calls{0};
   std::uint64_t triangles{0};
   std::uint64_t instances{0};
 
-  // Budget headroom is "ms left in the frame before we overshoot 16.7ms".
-  // Negative values mean we already overshot.
   double budget_headroom_ms{16.67};
 
   std::uint64_t frame_index{0};
@@ -99,9 +80,6 @@ struct FrameProfile {
   }
 };
 
-// RAII scope that measures elapsed time and reports to a FrameProfile
-// phase on destruction. Cheap (one steady_clock sample at ctor/dtor)
-// and disabled when the profile is disabled.
 class PhaseScope {
 public:
   PhaseScope(FrameProfile *profile, Phase phase)
@@ -120,9 +98,9 @@ public:
       return;
     }
     auto const now = std::chrono::steady_clock::now();
-    auto const us = std::chrono::duration_cast<std::chrono::microseconds>(
-                        now - m_start)
-                        .count();
+    auto const us =
+        std::chrono::duration_cast<std::chrono::microseconds>(now - m_start)
+            .count();
     m_profile->add_phase_us(m_phase, static_cast<std::uint64_t>(us));
   }
 
@@ -132,13 +110,8 @@ private:
   std::chrono::steady_clock::time_point m_start;
 };
 
-// Format the profile as a multi-line overlay string suitable for a
-// debug HUD. Deterministic output — safe to snapshot in tests.
 [[nodiscard]] auto format_overlay(const FrameProfile &profile) -> std::string;
 
-// Process-global profile. Renderer writes to it; HUD reads from it.
-// Atomic pointer lets the HUD swap in its own profile for scoped
-// measurements without disturbing the renderer.
 [[nodiscard]] auto global_profile() -> FrameProfile &;
 
 } // namespace Render::Profiling

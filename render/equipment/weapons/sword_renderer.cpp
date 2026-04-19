@@ -4,7 +4,7 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/style_palette.h"
 #include "../equipment_submit.h"
 
@@ -24,9 +24,17 @@ using Render::Geom::nlerp;
 using Render::Geom::smoothstep;
 
 SwordRenderer::SwordRenderer(SwordRenderConfig config)
-    : m_config(std::move(config)) {}
+    : m_base(std::move(config)) {}
 
 void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                           const HumanoidPalette &palette,
+                           const HumanoidAnimationContext &anim,
+                           EquipmentBatch &batch) {
+  submit(m_base, ctx, frames, palette, anim, batch);
+}
+
+void SwordRenderer::submit(const SwordRenderConfig &m_config,
+                           const DrawContext &ctx, const BodyFrames &frames,
                            const HumanoidPalette &palette,
                            const HumanoidAnimationContext &anim,
                            EquipmentBatch &batch) {
@@ -89,9 +97,10 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const blade_tip = grip_pos + sword_dir * m_config.sword_length;
 
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, handle_end, blade_base,
-                                  m_config.handle_radius),
-                 palette.leather, nullptr, 1.0F, m_config.material_id});
+                          cylinder_between(ctx.model, handle_end, blade_base,
+                                           m_config.handle_radius),
+                          palette.leather, nullptr, 1.0F,
+                          m_config.material_id});
 
   QVector3D const guard_center = blade_base;
   float const gw = m_config.guard_half_width;
@@ -107,19 +116,20 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
   QVector3D const guard_r = guard_center + guard_right * gw;
 
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, guard_l, guard_r, 0.014F),
-                 m_config.metal_color, nullptr, 1.0F, m_config.material_id});
+                          cylinder_between(ctx.model, guard_l, guard_r, 0.014F),
+                          m_config.metal_color, nullptr, 1.0F,
+                          m_config.material_id});
 
   QMatrix4x4 gl = ctx.model;
   gl.translate(guard_l);
   gl.scale(0.018F);
-  batch.meshes.push_back({get_unit_sphere(), nullptr, gl, m_config.metal_color, nullptr, 1.0F,
-                 m_config.material_id});
+  batch.meshes.push_back({get_unit_sphere(), nullptr, gl, m_config.metal_color,
+                          nullptr, 1.0F, m_config.material_id});
   QMatrix4x4 gr = ctx.model;
   gr.translate(guard_r);
   gr.scale(0.018F);
-  batch.meshes.push_back({get_unit_sphere(), nullptr, gr, m_config.metal_color, nullptr, 1.0F,
-                 m_config.material_id});
+  batch.meshes.push_back({get_unit_sphere(), nullptr, gr, m_config.metal_color,
+                          nullptr, 1.0F, m_config.material_id});
 
   float const l = m_config.sword_length;
   float const base_w = m_config.sword_width;
@@ -143,21 +153,22 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
 
     float const offset = width * 0.33F;
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, start, end, blade_thickness),
-                   color, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, start, end, blade_thickness), color,
+         nullptr, 1.0F, m_config.material_id});
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, start + right * offset,
-                                    end + right * offset,
-                                    blade_thickness * 0.8F),
-                   color * 0.92F, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, start + right * offset,
+                          end + right * offset, blade_thickness * 0.8F),
+         color * 0.92F, nullptr, 1.0F, m_config.material_id});
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, start - right * offset,
-                                    end - right * offset,
-                                    blade_thickness * 0.8F),
-                   color * 0.92F, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, start - right * offset,
+                          end - right * offset, blade_thickness * 0.8F),
+         color * 0.92F, nullptr, 1.0F, m_config.material_id});
   };
 
   draw_flat_section(blade_base, ricasso_end, base_w, m_config.metal_color);
@@ -173,38 +184,39 @@ void SwordRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const seg_end =
         tip_start + sword_dir * ((blade_tip - tip_start).length() * t1);
     float const w = lerp(mid_w, tip_w, t1);
-    batch.meshes.push_back({
-        get_unit_cylinder(), nullptr,
-        cylinder_between(ctx.model, seg_start, seg_end, blade_thickness),
-        m_config.metal_color * (1.0F - i * 0.03F), nullptr, 1.0F,
-        m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, seg_start, seg_end, blade_thickness),
+         m_config.metal_color * (1.0F - i * 0.03F), nullptr, 1.0F,
+         m_config.material_id});
   }
 
   QVector3D const fuller_start = blade_base + sword_dir * (ricasso_len + 0.02F);
   QVector3D const fuller_end =
       blade_base + sword_dir * (tip_start_dist - 0.06F);
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, fuller_start, fuller_end,
-                                  blade_thickness * 0.6F),
-                 m_config.metal_color * 0.65F, nullptr, 1.0F,
-                 m_config.material_id});
+                          cylinder_between(ctx.model, fuller_start, fuller_end,
+                                           blade_thickness * 0.6F),
+                          m_config.metal_color * 0.65F, nullptr, 1.0F,
+                          m_config.material_id});
 
   QVector3D const pommel = handle_end - sword_dir * 0.02F;
   QMatrix4x4 pommel_mat = ctx.model;
   pommel_mat.translate(pommel);
   pommel_mat.scale(m_config.pommel_radius);
-  batch.meshes.push_back({get_unit_sphere(), nullptr, pommel_mat, m_config.metal_color, nullptr,
-                 1.0F, m_config.material_id});
+  batch.meshes.push_back({get_unit_sphere(), nullptr, pommel_mat,
+                          m_config.metal_color, nullptr, 1.0F,
+                          m_config.material_id});
 
   if (is_attacking && attack_phase >= 0.32F && attack_phase < 0.56F) {
     float const t = (attack_phase - 0.32F) / 0.24F;
     float const alpha = clamp01(0.35F * (1.0F - t));
     QVector3D const trail_start = blade_base - sword_dir * 0.05F;
     QVector3D const trail_end = blade_base - sword_dir * (0.28F + 0.15F * t);
-    batch.meshes.push_back({
-        get_unit_cone(), nullptr,
-        cone_from_to(ctx.model, trail_end, trail_start, base_w * 0.9F),
-        m_config.metal_color * 0.9F, nullptr, alpha, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cone(), nullptr,
+         cone_from_to(ctx.model, trail_end, trail_start, base_w * 0.9F),
+         m_config.metal_color * 0.9F, nullptr, alpha, m_config.material_id});
   }
 }
 

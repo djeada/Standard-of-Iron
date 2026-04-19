@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include "../palette.h"
 #include <atomic>
 #include <cstdint>

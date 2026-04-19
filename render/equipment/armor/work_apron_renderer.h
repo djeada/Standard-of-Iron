@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 
@@ -19,24 +19,37 @@ class WorkApronRenderer : public IEquipmentRenderer {
 public:
   explicit WorkApronRenderer(const WorkApronConfig &config = WorkApronConfig{});
 
+  static void submit(const WorkApronConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const WorkApronConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  void set_config(const WorkApronConfig &config) { m_config = config; }
-
 private:
   WorkApronConfig m_config;
 
-  void renderApronBody(const DrawContext &ctx, const AttachmentFrame &torso,
-                       const AttachmentFrame &waist, EquipmentBatch &batch);
+  static void renderApronBody(const WorkApronConfig &config,
+                              const DrawContext &ctx,
+                              const AttachmentFrame &torso,
+                              const AttachmentFrame &waist,
+                              EquipmentBatch &batch);
 
-  void renderStraps(const DrawContext &ctx, const AttachmentFrame &torso,
-                    const BodyFrames &frames, EquipmentBatch &batch);
+  static void renderStraps(const WorkApronConfig &config,
+                           const DrawContext &ctx, const AttachmentFrame &torso,
+                           const BodyFrames &frames, EquipmentBatch &batch);
 
-  void renderPockets(const DrawContext &ctx, const AttachmentFrame &waist,
-                     EquipmentBatch &batch);
+  static void renderPockets(const WorkApronConfig &config,
+                            const DrawContext &ctx,
+                            const AttachmentFrame &waist,
+                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

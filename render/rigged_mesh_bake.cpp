@@ -21,10 +21,6 @@ using Render::GL::Mesh;
 using Render::GL::RiggedVertex;
 using Render::GL::Vertex;
 
-// Resolve `local_offset` expressed in `bone`'s own basis to world
-// space. At identity bind pose this is just `local_offset` itself, but
-// keeping the general form lets 15.5b drop in real bind matrices
-// without touching this code.
 auto bone_world_offset(const QMatrix4x4 &bone,
                        const QVector3D &local_offset) -> QVector3D {
   if (local_offset.isNull()) {
@@ -62,10 +58,6 @@ auto mesh_model(const QMatrix4x4 &bone, const QVector3D &local_offset,
   return m * scale;
 }
 
-// True if the primitive is two-bone-blended in the rigged vertex
-// format. Cone is NOT in this list per stage-15.5a spec: even though
-// it references a tail bone for its world placement, every vertex is
-// tagged to the anchor bone with weight 1.
 auto is_two_bone_blend(PrimitiveShape shape) -> bool {
   switch (shape) {
   case PrimitiveShape::Cylinder:
@@ -77,9 +69,6 @@ auto is_two_bone_blend(PrimitiveShape shape) -> bool {
   }
 }
 
-// Fetches the shared CPU unit mesh for a given shape. Returns
-// `prim.custom_mesh` for PrimitiveShape::Mesh. Returns nullptr for
-// shapes with no direct unit-mesh source (None).
 auto resolve_unit_mesh(const PrimitiveInstance &prim) -> Mesh * {
   switch (prim.shape) {
   case PrimitiveShape::Sphere:
@@ -102,11 +91,6 @@ auto resolve_unit_mesh(const PrimitiveInstance &prim) -> Mesh * {
   }
 }
 
-// Computes the unit-space model matrix for a primitive under the
-// supplied bind pose. Mirrors `submit_part_graph`'s per-shape math;
-// kept local to avoid taking a dependency on that walker's ISubmitter
-// contract. Returns false (out_model untouched) if the primitive can't
-// be baked (invalid bone refs, missing custom mesh, unsupported shape).
 auto compute_unit_model(const PrimitiveInstance &prim,
                         std::span<const BoneWorldMatrix> bind_pose,
                         QMatrix4x4 &out_model) -> bool {
@@ -151,14 +135,14 @@ auto compute_unit_model(const PrimitiveInstance &prim,
   case PrimitiveShape::Cone: {
     QVector3D const tail_world =
         bone_world_offset(bind_pose[tail], prim.params.tail_offset);
-    out_model = Render::Geom::cone_from_to(head_world, tail_world,
-                                           prim.params.radius);
+    out_model =
+        Render::Geom::cone_from_to(head_world, tail_world, prim.params.radius);
     return true;
   }
 
   case PrimitiveShape::Box:
-    out_model = box_model(anchor_m, prim.params.head_offset,
-                          prim.params.half_extents);
+    out_model =
+        box_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
     return true;
 
   case PrimitiveShape::OrientedCylinder: {
@@ -170,8 +154,7 @@ auto compute_unit_model(const PrimitiveInstance &prim,
                                 ? prim.params.depth_radius
                                 : prim.params.radius;
     out_model = Render::Geom::oriented_cylinder(head_world, tail_world,
-                                                right_ref, r_right,
-                                                r_forward);
+                                                right_ref, r_right, r_forward);
     return true;
   }
 
@@ -195,8 +178,8 @@ auto compute_unit_model(const PrimitiveInstance &prim,
     if (prim.custom_mesh == nullptr) {
       return false;
     }
-    out_model = mesh_model(anchor_m, prim.params.head_offset,
-                           prim.params.half_extents);
+    out_model =
+        mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
     return true;
 
   case PrimitiveShape::None:
@@ -205,14 +188,10 @@ auto compute_unit_model(const PrimitiveInstance &prim,
   }
 }
 
-// Transform a direction by the 3x3 of `m`, then normalise. Approximate
-// for non-uniform scale (should be inverse-transpose), but good enough
-// for identity-pose baking and far cheaper; 15.5b can revisit if any
-// shader actually samples these normals.
 auto transform_normal(const QMatrix4x4 &m, const QVector3D &n) -> QVector3D {
   QVector3D const mapped = m.mapVector(n);
-  float const len_sq =
-      mapped.x() * mapped.x() + mapped.y() * mapped.y() + mapped.z() * mapped.z();
+  float const len_sq = mapped.x() * mapped.x() + mapped.y() * mapped.y() +
+                       mapped.z() * mapped.z();
   if (len_sq <= 1e-20F) {
     return QVector3D{0.0F, 1.0F, 0.0F};
   }
@@ -250,10 +229,7 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
     rv.tex_coord = v.tex_coord;
 
     if (two_bone) {
-      // Unit cylinder/capsule meshes span Y ∈ [-0.5, +0.5]; oriented
-      // cylinder reuses the unit cylinder. local +Y maps to the
-      // anchor→tail direction (see Render::Geom::cylinder_between), so
-      // t = 0 at y = -0.5 (anchor) and t = 1 at y = +0.5 (tail).
+
       float t = v.position[1] + 0.5F;
       t = std::clamp(t, 0.0F, 1.0F);
       rv.bone_indices = {anchor, tail, 0, 0};

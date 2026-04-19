@@ -18,33 +18,42 @@ ToolBeltRenderer::ToolBeltRenderer(const ToolBeltConfig &config)
     : m_config(config) {}
 
 void ToolBeltRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                              const HumanoidPalette &palette,
+                              const HumanoidAnimationContext &anim,
+                              EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void ToolBeltRenderer::submit(const ToolBeltConfig &config,
+                              const DrawContext &ctx, const BodyFrames &frames,
                               const HumanoidPalette &,
                               const HumanoidAnimationContext &,
                               EquipmentBatch &batch) {
-  renderBelt(ctx, frames.waist, batch);
+  renderBelt(config, ctx, frames.waist, batch);
 
-  if (m_config.include_hammer) {
-    renderHammerLoop(ctx, frames.waist, batch);
+  if (config.include_hammer) {
+    renderHammerLoop(config, ctx, frames.waist, batch);
   }
 
-  if (m_config.include_chisel) {
-    renderChiselHolder(ctx, frames.waist, batch);
+  if (config.include_chisel) {
+    renderChiselHolder(config, ctx, frames.waist, batch);
   }
 
-  if (m_config.include_pouches) {
-    renderPouches(ctx, frames.waist, batch);
+  if (config.include_pouches) {
+    renderPouches(config, ctx, frames.waist, batch);
   }
 }
 
-void ToolBeltRenderer::renderBelt(const DrawContext &ctx,
+void ToolBeltRenderer::renderBelt(const ToolBeltConfig &config,
+                                  const DrawContext &ctx,
                                   const AttachmentFrame &waist,
                                   EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
 
-  QVector3D const belt_color = m_config.leather_color;
-  QVector3D const buckle_color = m_config.metal_color;
+  QVector3D const belt_color = config.leather_color;
+  QVector3D const buckle_color = config.metal_color;
 
   const QVector3D &origin = waist.origin;
   const QVector3D &right = waist.right;
@@ -70,31 +79,34 @@ void ToolBeltRenderer::renderBelt(const DrawContext &ctx,
                          forward * (waist_d * std::cos(a2)) + up * belt_y;
 
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, p1, p2, belt_thickness),
-                   belt_color, nullptr, 1.0F});
+                            cylinder_between(ctx.model, p1, p2, belt_thickness),
+                            belt_color, nullptr, 1.0F});
   }
 
   QVector3D const buckle_pos =
       origin + forward * waist.radius * 0.92F - right * 0.05F + up * belt_y;
-  batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, buckle_pos, 0.030F),
-                 buckle_color, nullptr, 1.0F});
+  batch.meshes.push_back({get_unit_sphere(), nullptr,
+                          sphere_at(ctx.model, buckle_pos, 0.030F),
+                          buckle_color, nullptr, 1.0F});
 
   QVector3D const buckle_pin = buckle_pos + right * 0.035F;
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, buckle_pos, buckle_pin, 0.008F),
-                 buckle_color * 0.85F, nullptr, 1.0F});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, buckle_pos, buckle_pin, 0.008F),
+       buckle_color * 0.85F, nullptr, 1.0F});
 }
 
-void ToolBeltRenderer::renderHammerLoop(const DrawContext &ctx,
+void ToolBeltRenderer::renderHammerLoop(const ToolBeltConfig &config,
+                                        const DrawContext &ctx,
                                         const AttachmentFrame &waist,
                                         EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
 
-  QVector3D const loop_color = m_config.leather_color * 0.90F;
-  QVector3D const hammer_wood = m_config.wood_color;
-  QVector3D const hammer_metal = m_config.metal_color * 0.92F;
+  QVector3D const loop_color = config.leather_color * 0.90F;
+  QVector3D const hammer_wood = config.wood_color;
+  QVector3D const hammer_metal = config.metal_color * 0.92F;
 
   constexpr float pi = std::numbers::pi_v<float>;
   float const side_angle = -0.35F * pi;
@@ -107,37 +119,39 @@ void ToolBeltRenderer::renderHammerLoop(const DrawContext &ctx,
     float const t = float(i) / 2.0F;
     QVector3D const pos = loop_pos - waist.up * (t * 0.10F);
     float const r = 0.014F - t * 0.003F;
-    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), loop_color,
-                   nullptr, 1.0F});
+    batch.meshes.push_back({get_unit_sphere(), nullptr,
+                            sphere_at(ctx.model, pos, r), loop_color, nullptr,
+                            1.0F});
   }
 
   QVector3D const hammer_top = loop_pos - waist.up * 0.08F;
   QVector3D const hammer_handle_bot = hammer_top - waist.up * 0.12F;
 
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, hammer_top, hammer_handle_bot, 0.008F),
-      hammer_wood, nullptr, 1.0F});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, hammer_top, hammer_handle_bot, 0.008F),
+       hammer_wood, nullptr, 1.0F});
 
   QVector3D const hammer_head_center = hammer_top + waist.up * 0.015F;
   QVector3D const hammer_head_left = hammer_head_center - waist.right * 0.025F;
   QVector3D const hammer_head_right = hammer_head_center + waist.right * 0.025F;
 
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, hammer_head_left, hammer_head_right, 0.012F),
-      hammer_metal, nullptr, 1.0F});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, hammer_head_left, hammer_head_right, 0.012F),
+       hammer_metal, nullptr, 1.0F});
 }
 
-void ToolBeltRenderer::renderChiselHolder(const DrawContext &ctx,
+void ToolBeltRenderer::renderChiselHolder(const ToolBeltConfig &config,
+                                          const DrawContext &ctx,
                                           const AttachmentFrame &waist,
                                           EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
 
-  QVector3D const holder_color = m_config.leather_color * 0.88F;
-  QVector3D const chisel_metal = m_config.metal_color * 0.90F;
+  QVector3D const holder_color = config.leather_color * 0.88F;
+  QVector3D const chisel_metal = config.metal_color * 0.90F;
 
   constexpr float pi = std::numbers::pi_v<float>;
   float const side_angle = 0.30F * pi;
@@ -146,28 +160,32 @@ void ToolBeltRenderer::renderChiselHolder(const DrawContext &ctx,
       waist.origin + waist.right * (waist.radius * std::sin(side_angle)) +
       waist.forward * (waist.radius * std::cos(side_angle)) - waist.up * 0.04F;
 
-  batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, holder_pos, 0.018F),
-                 holder_color, nullptr, 1.0F});
+  batch.meshes.push_back({get_unit_sphere(), nullptr,
+                          sphere_at(ctx.model, holder_pos, 0.018F),
+                          holder_color, nullptr, 1.0F});
 
   QVector3D const chisel_bot = holder_pos - waist.up * 0.02F;
   QVector3D const chisel_top = holder_pos + waist.up * 0.08F;
 
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, chisel_bot, chisel_top, 0.006F),
-                 chisel_metal, nullptr, 1.0F});
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, chisel_bot, chisel_top, 0.006F),
+       chisel_metal, nullptr, 1.0F});
 
-  batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, chisel_top, 0.008F),
-                 chisel_metal * 1.15F, nullptr, 1.0F});
+  batch.meshes.push_back({get_unit_sphere(), nullptr,
+                          sphere_at(ctx.model, chisel_top, 0.008F),
+                          chisel_metal * 1.15F, nullptr, 1.0F});
 }
 
-void ToolBeltRenderer::renderPouches(const DrawContext &ctx,
+void ToolBeltRenderer::renderPouches(const ToolBeltConfig &config,
+                                     const DrawContext &ctx,
                                      const AttachmentFrame &waist,
                                      EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
 
-  QVector3D const pouch_color = m_config.leather_color * 0.85F;
+  QVector3D const pouch_color = config.leather_color * 0.85F;
 
   constexpr float pi = std::numbers::pi_v<float>;
 
@@ -190,8 +208,9 @@ void ToolBeltRenderer::renderPouches(const DrawContext &ctx,
                               waist.up * y_off;
 
         float const r = 0.012F - float(j) * 0.002F;
-        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
-                       pouch_color, nullptr, 1.0F});
+        batch.meshes.push_back({get_unit_sphere(), nullptr,
+                                sphere_at(ctx.model, pos, r), pouch_color,
+                                nullptr, 1.0F});
       }
     }
   }

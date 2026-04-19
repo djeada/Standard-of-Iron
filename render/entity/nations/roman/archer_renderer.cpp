@@ -2,11 +2,13 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/cloak_renderer.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
-#include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -14,9 +16,9 @@
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -83,8 +85,93 @@ using Render::GL::Humanoid::saturate_color;
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-
     return {0.78F, 1.01F, 0.96F};
+  }
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    static auto helmet =
+        reg.get(Render::GL::EquipmentCategory::Helmet, "roman_light");
+    static auto armor_body =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_light_armor");
+    static auto greaves =
+        reg.get(Render::GL::EquipmentCategory::Armor, "roman_greaves");
+    static auto cloak_inst =
+        reg.get(Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+    static auto quiver =
+        reg.get(Render::GL::EquipmentCategory::Weapon, "quiver");
+
+    static const CloakMeshes cloak_meshes = []() -> CloakMeshes {
+      if (cloak_inst) {
+        if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
+          return cr->meshes();
+        }
+      }
+      return CloakMeshes{};
+    }();
+
+    static const std::array<EquipmentRecord, 6> records{
+        make_legacy_equipment_record(*helmet),
+        make_legacy_equipment_record(*armor_body),
+        make_legacy_equipment_record(*greaves),
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  CloakConfig cfg;
+                  cfg.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
+                  cfg.trim_color = sub.palette->metal;
+                  CloakRenderer::submit(cfg, cloak_meshes, *sub.ctx,
+                                        *sub.frames, *sub.palette, *sub.anim,
+                                        batch);
+                },
+        },
+
+        make_legacy_equipment_record(*quiver),
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  BowRenderConfig cfg;
+                  cfg.string_color =
+                      saturate_color(QVector3D(0.28F, 0.28F, 0.32F));
+                  cfg.metal_color =
+                      Render::Geom::clamp_vec_01(sub.palette->metal * 1.15F);
+                  cfg.fletching_color =
+                      saturate_color(QVector3D(0.93F, 0.83F, 0.33F));
+                  cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
+                  cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
+                  cfg.bow_x = 0.0F;
+                  cfg.arrow_visibility = ArrowVisibility::IdleAndAttackCycle;
+                  BowRenderer::submit(cfg, *sub.ctx, *sub.frames, *sub.palette,
+                                      *sub.anim, batch);
+                },
+        },
+    };
+
+    static const UnitVisualSpec spec = []() {
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/archer";
+      s.scaling = ProportionScaling{0.78F, 1.01F, 0.96F};
+      s.equipment =
+          std::span<const EquipmentRecord>{records.data(), records.size()};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+      return s;
+    }();
+    return spec;
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
@@ -155,129 +242,6 @@ public:
       } else {
         controller.aim_bow(attack_phase);
       }
-    }
-  }
-
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    QVector3D team_tint = resolve_team_tint(ctx);
-
-    auto tint = [&](float k) {
-      return QVector3D(clamp01(team_tint.x() * k), clamp01(team_tint.y() * k),
-                       clamp01(team_tint.z() * k));
-    };
-    QVector3D const fletch = tint(0.9F);
-
-    auto &registry = EquipmentRegistry::instance();
-
-    if (style.show_cape) {
-      auto cloak = registry.get(EquipmentCategory::Armor, "cloak_carthage");
-      if (cloak) {
-        CloakConfig cloak_config;
-        if (style.cape_color) {
-          cloak_config.primary_color = *style.cape_color;
-        } else {
-          cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
-        }
-        cloak_config.trim_color = v.palette.metal;
-
-        if (auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get())) {
-          cloak_renderer->set_config(cloak_config);
-        }
-
-        render_equipment(*cloak, ctx, pose.body_frames, v.palette, anim_ctx, out);
-      }
-    }
-    auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
-    if (quiver) {
-
-      QuiverRenderConfig quiver_config;
-      quiver_config.fletching_color = fletch;
-      quiver_config.quiver_radius = HP::HEAD_RADIUS * 0.45F;
-
-      auto *quiver_renderer = dynamic_cast<QuiverRenderer *>(quiver.get());
-      if (quiver_renderer) {
-        quiver_renderer->set_config(quiver_config);
-      }
-
-      render_equipment(*quiver, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    auto bow = registry.get(EquipmentCategory::Weapon, "bow_roman");
-    if (bow) {
-
-      BowRenderConfig bow_config;
-      bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
-      bow_config.metal_color =
-          Render::Geom::clamp_vec_01(v.palette.metal * 1.15F);
-      bow_config.fletching_color = fletch;
-      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
-      bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
-      bow_config.bow_x = 0.0F;
-      bow_config.arrow_visibility = ArrowVisibility::IdleAndAttackCycle;
-
-      if (style.bow_string_color) {
-        bow_config.string_color = saturate_color(*style.bow_string_color);
-      }
-      if (style.fletching_color) {
-        bow_config.fletching_color = saturate_color(*style.fletching_color);
-      }
-
-      auto *bow_renderer = dynamic_cast<BowRenderer *>(bow.get());
-      if (bow_renderer) {
-        bow_renderer->set_config(bow_config);
-      }
-
-      render_equipment(*bow, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    auto &registry = EquipmentRegistry::instance();
-    HumanoidAnimationContext anim_ctx{};
-
-    if (!style.show_helmet) {
-      if (style.attachment_profile == std::string(k_attachment_headwrap)) {
-
-        auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
-        if (headwrap) {
-          render_equipment(*headwrap, ctx, pose.body_frames, v.palette, anim_ctx, out);
-        }
-      }
-      return;
-    }
-
-    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
-    if (helmet) {
-      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-
-    if (resolve_style(ctx).show_armor) {
-      auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
-      if (armor) {
-        render_equipment(*armor, ctx, pose.body_frames, v.palette, anim, out);
-      }
-    }
-
-    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-    if (greaves) {
-      render_equipment(*greaves, ctx, pose.body_frames, v.palette, anim, out);
     }
   }
 

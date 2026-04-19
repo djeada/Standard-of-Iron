@@ -1,14 +1,4 @@
-// Stage 12 — combine a StateMachine with per-state Clips into a single
-// sampled value.
-//
-// A channel evaluator holds:
-//   * a list of clips indexed by StateId,
-//   * a (non-owning) StateMachine reference,
-//   * a per-channel time accumulator so clips loop independently.
-//
-// sample(time_now) returns the blended value for the current state,
-// cross-faded with the previous state's clip when the machine is
-// mid-transition.
+
 
 #pragma once
 
@@ -22,14 +12,11 @@ namespace Render::Animation {
 
 template <typename T> class ChannelEvaluator {
 public:
-  // `clips` must have one entry per StateId the state machine can
-  // reach. Unused slots can be empty Clip<T>() — evaluate() handles
-  // empty clips by returning T{}.
   ChannelEvaluator(std::vector<Clip<T>> clips, const StateMachine *machine)
       : m_clips(std::move(clips)), m_machine(machine) {}
 
-  [[nodiscard]] auto sample(float time, WrapMode wrap = WrapMode::Loop) const
-      -> T {
+  [[nodiscard]] auto sample(float time,
+                            WrapMode wrap = WrapMode::Loop) const -> T {
     if (m_machine == nullptr) {
       return T{};
     }
@@ -51,8 +38,8 @@ public:
   }
 
 private:
-  [[nodiscard]] auto sample_clip(StateId id, float time, WrapMode wrap) const
-      -> T {
+  [[nodiscard]] auto sample_clip(StateId id, float time,
+                                 WrapMode wrap) const -> T {
     if (id >= m_clips.size()) {
       return T{};
     }

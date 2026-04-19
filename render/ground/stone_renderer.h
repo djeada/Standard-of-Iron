@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
-#include "../i_render_pass.h"
 #include "../decoration_gpu.h"
+#include "../i_render_pass.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>

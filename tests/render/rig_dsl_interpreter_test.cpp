@@ -100,8 +100,18 @@ TEST(RigDSL, SphereOnlyConsultsAnchorAOnce) {
 
   constexpr Render::RigDSL::PartDef sphere_part{
       Render::RigDSL::PartKind::Sphere,
-      0, 0xFFU, Render::RigDSL::PaletteSlot::Literal, {255, 0, 0, 255},
-      0, Render::RigDSL::kInvalidAnchor, Render::RigDSL::kInvalidScalar, 0.5F, 1.0F, 1.0F, 1.0F, 1.0F};
+      0,
+      0xFFU,
+      Render::RigDSL::PaletteSlot::Literal,
+      {255, 0, 0, 255},
+      0,
+      Render::RigDSL::kInvalidAnchor,
+      Render::RigDSL::kInvalidScalar,
+      0.5F,
+      1.0F,
+      1.0F,
+      1.0F,
+      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {sphere_part};
   auto const rig = Render::RigDSL::make_rig("s", arr);
 
@@ -121,10 +131,19 @@ TEST(RigDSL, LodMaskSkipsPartsWithoutResolvingAnchors) {
   ConstantPalette palette;
 
   // Only bit 0 set → part visible at LOD 0, skipped at LOD 1/2/....
-  constexpr Render::RigDSL::PartDef p{
-      Render::RigDSL::PartKind::Cylinder,
-      0, 0x01U, Render::RigDSL::PaletteSlot::Literal, {255, 255, 255, 255},
-      0, 1, Render::RigDSL::kInvalidScalar, 0.1F, 1.0F, 1.0F, 1.0F, 1.0F};
+  constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Cylinder,
+                                      0,
+                                      0x01U,
+                                      Render::RigDSL::PaletteSlot::Literal,
+                                      {255, 255, 255, 255},
+                                      0,
+                                      1,
+                                      Render::RigDSL::kInvalidScalar,
+                                      0.1F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {p};
   auto const rig = Render::RigDSL::make_rig("lod", arr);
 
@@ -153,10 +172,19 @@ TEST(RigDSL, MaterialContextRoutesThroughDrawPartCmd) {
 
   Render::GL::Material mat{};
 
-  constexpr Render::RigDSL::PartDef p{
-      Render::RigDSL::PartKind::Cylinder,
-      0, 0xFFU, Render::RigDSL::PaletteSlot::Literal, {255, 255, 255, 255},
-      0, 1, Render::RigDSL::kInvalidScalar, 0.1F, 1.0F, 1.0F, 1.0F, 1.0F};
+  constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Cylinder,
+                                      0,
+                                      0xFFU,
+                                      Render::RigDSL::PaletteSlot::Literal,
+                                      {255, 255, 255, 255},
+                                      0,
+                                      1,
+                                      Render::RigDSL::kInvalidScalar,
+                                      0.1F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {p};
   auto const rig = Render::RigDSL::make_rig("m", arr);
 
@@ -178,10 +206,19 @@ TEST(RigDSL, NoMaterialContextFallsBackToMeshCmd) {
   anchors.set(1, QVector3D(0, 1, 0));
   ConstantPalette palette;
 
-  constexpr Render::RigDSL::PartDef p{
-      Render::RigDSL::PartKind::Cylinder,
-      0, 0xFFU, Render::RigDSL::PaletteSlot::Literal, {255, 255, 255, 255},
-      0, 1, Render::RigDSL::kInvalidScalar, 0.1F, 1.0F, 1.0F, 1.0F, 1.0F};
+  constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Cylinder,
+                                      0,
+                                      0xFFU,
+                                      Render::RigDSL::PaletteSlot::Literal,
+                                      {255, 255, 255, 255},
+                                      0,
+                                      1,
+                                      Render::RigDSL::kInvalidScalar,
+                                      0.1F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {p};
   auto const rig = Render::RigDSL::make_rig("n", arr);
 
@@ -209,10 +246,19 @@ TEST(RigDSL, LiteralPaletteBypassesResolver) {
   anchors.set(0, QVector3D());
   ConstantPalette palette; // resolve() always returns (0.1, 0.2, 0.3)
 
-  constexpr Render::RigDSL::PartDef p{
-      Render::RigDSL::PartKind::Sphere,
-      0, 0xFFU, Render::RigDSL::PaletteSlot::Literal, {200, 100, 50, 255},
-      0, Render::RigDSL::kInvalidAnchor, Render::RigDSL::kInvalidScalar, 0.1F, 1.0F, 1.0F, 1.0F, 1.0F};
+  constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Sphere,
+                                      0,
+                                      0xFFU,
+                                      Render::RigDSL::PaletteSlot::Literal,
+                                      {200, 100, 50, 255},
+                                      0,
+                                      Render::RigDSL::kInvalidAnchor,
+                                      Render::RigDSL::kInvalidScalar,
+                                      0.1F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {p};
   auto const rig = Render::RigDSL::make_rig("lit", arr);
 
@@ -239,11 +285,19 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
   FlatScalars scalars;
   scalars.set(7, 2.5F); // scale_id=7 -> radius multiplied by 2.5
 
-  constexpr Render::RigDSL::PartDef p{
-      Render::RigDSL::PartKind::Sphere,
-      0, 0xFFU, Render::RigDSL::PaletteSlot::Literal, {255, 255, 255, 255},
-      0, Render::RigDSL::kInvalidAnchor, /*scale_id=*/7, 0.2F, 1.0F, 1.0F,
-      1.0F, 1.0F};
+  constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Sphere,
+                                      0,
+                                      0xFFU,
+                                      Render::RigDSL::PaletteSlot::Literal,
+                                      {255, 255, 255, 255},
+                                      0,
+                                      Render::RigDSL::kInvalidAnchor,
+                                      /*scale_id=*/7,
+                                      0.2F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F,
+                                      1.0F};
   constexpr Render::RigDSL::PartDef arr[] = {p};
   auto const rig = Render::RigDSL::make_rig("s", arr);
 
@@ -258,4 +312,3 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
   const QVector3D col0(cmd.model(0, 0), cmd.model(1, 0), cmd.model(2, 0));
   EXPECT_NEAR(col0.length(), 0.5F, 1e-4F);
 }
-

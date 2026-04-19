@@ -138,11 +138,6 @@ public:
   void resume() { m_paused = false; }
   auto is_paused() const -> bool { return m_paused; }
 
-  // Stage 13 — software fallback. Renders the most recently completed
-  // draw queue into a QImage without touching any OpenGL state. Safe to
-  // call when the GL backend is uninitialised; used for headless
-  // diagnostics, CI smoke tests and the ShaderQuality::None tier. The
-  // returned image is an independent copy.
   [[nodiscard]] auto render_software_preview(int width, int height) -> QImage;
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
@@ -221,12 +216,10 @@ public:
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 
-  // Stage 10: thin public adapter for the ConstructionPreviewPass. The
-  // visibility pointer may be null; the pass then skips fog-of-war
-  // filtering (equivalent to visibility_enabled=false).
-  void render_construction_previews_public(
-      Engine::Core::World *world, const Game::Map::VisibilityService *vis,
-      bool visibility_enabled) {
+  void
+  render_construction_previews_public(Engine::Core::World *world,
+                                      const Game::Map::VisibilityService *vis,
+                                      bool visibility_enabled) {
     render_construction_previews(world, vis,
                                  visibility_enabled && vis != nullptr);
   }
@@ -238,7 +231,7 @@ public:
     return m_bone_palette_arena;
   }
 
- private:
+private:
   void render_construction_previews(Engine::Core::World *world,
                                     const Game::Map::VisibilityService *vis,
                                     bool visibility_enabled);

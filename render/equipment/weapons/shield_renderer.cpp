@@ -1,7 +1,7 @@
 #include "shield_renderer.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../equipment_submit.h"
 
 #include <QMatrix4x4>
@@ -16,9 +16,17 @@ using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
 ShieldRenderer::ShieldRenderer(ShieldRenderConfig config)
-    : m_config(std::move(config)) {}
+    : m_base(std::move(config)) {}
 
 void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                            const HumanoidPalette &palette,
+                            const HumanoidAnimationContext &anim,
+                            EquipmentBatch &batch) {
+  submit(m_base, ctx, frames, palette, anim, batch);
+}
+
+void ShieldRenderer::submit(const ShieldRenderConfig &m_config,
+                            const DrawContext &ctx, const BodyFrames &frames,
                             const HumanoidPalette &palette,
                             const HumanoidAnimationContext &,
                             EquipmentBatch &batch) {
@@ -49,8 +57,9 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     m.translate(shield_center + n * plate_half);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_width, shield_height, plate_full);
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, m, m_config.shield_color, nullptr, 1.0F,
-                   m_config.material_id});
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, m,
+                            m_config.shield_color, nullptr, 1.0F,
+                            m_config.material_id});
   }
 
   {
@@ -58,8 +67,9 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     m.translate(shield_center - n * plate_half);
     m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
     m.scale(shield_width * 0.985F, shield_height * 0.985F, plate_full);
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, m, palette.leather * 0.8F, nullptr,
-                   1.0F, m_config.material_id});
+    batch.meshes.push_back({get_unit_cylinder(), nullptr, m,
+                            palette.leather * 0.8F, nullptr, 1.0F,
+                            m_config.material_id});
   }
 
   auto draw_ring_rotated = [&](float width, float height, float thickness,
@@ -77,8 +87,8 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
       QVector3D const p1 = shield_center + rot.map(v1);
 
       batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                     cylinder_between(ctx.model, p0, p1, thickness), color,
-                     nullptr, 1.0F, m_config.material_id});
+                              cylinder_between(ctx.model, p0, p1, thickness),
+                              color, nullptr, 1.0F, m_config.material_id});
     }
   };
 
@@ -91,16 +101,17 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QMatrix4x4 m = ctx.model;
     m.translate(shield_center + n * (0.02F * k_scale_factor));
     m.scale(0.045F * k_scale_factor);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, m_config.metal_color, nullptr, 1.0F,
-                   m_config.material_id});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, m_config.metal_color,
+                            nullptr, 1.0F, m_config.material_id});
   }
 
   {
     QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
     QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
-                   palette.leather, nullptr, 1.0F, m_config.material_id});
+                            cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
+                            palette.leather, nullptr, 1.0F,
+                            m_config.material_id});
   }
 
   if (m_config.has_cross_decal) {
@@ -111,14 +122,16 @@ void ShieldRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
     QVector3D const top = center_front + axis_y * (shield_height * 0.90F);
     QVector3D const bot = center_front - axis_y * (shield_height * 0.90F);
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, top, bot, bar_radius),
-                   m_config.trim_color, nullptr, 1.0F, m_config.material_id});
+                            cylinder_between(ctx.model, top, bot, bar_radius),
+                            m_config.trim_color, nullptr, 1.0F,
+                            m_config.material_id});
 
     QVector3D const left = center_front - axis_x * (shield_width * 0.90F);
     QVector3D const right = center_front + axis_x * (shield_width * 0.90F);
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, left, right, bar_radius),
-                   m_config.trim_color, nullptr, 1.0F, m_config.material_id});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, left, right, bar_radius),
+         m_config.trim_color, nullptr, 1.0F, m_config.material_id});
   }
 }
 

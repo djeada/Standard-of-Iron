@@ -4,7 +4,8 @@
 #include "../../gl/backend.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
+#include "../../humanoid/mesh_helpers.h"
 #include "../equipment_submit.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -17,8 +18,9 @@ namespace Render::GL {
 using Render::Geom::cylinder_between;
 using Render::Geom::oriented_cylinder;
 
-auto ChainmailArmorRenderer::calculate_ring_color(float x, float y,
-                                                  float z) const -> QVector3D {
+auto ChainmailArmorRenderer::calculate_ring_color(
+    const ChainmailArmorConfig &config, float x, float y,
+    float z) -> QVector3D {
 
   float rust_noise =
       std::sin(x * 127.3F) * std::cos(y * 97.1F) * std::sin(z * 83.7F);
@@ -26,10 +28,10 @@ auto ChainmailArmorRenderer::calculate_ring_color(float x, float y,
 
   float gravity_rust = std::clamp(1.0F - y * 0.8F, 0.0F, 1.0F);
   float total_rust =
-      (rust_noise * 0.6F + gravity_rust * 0.4F) * m_config.rust_amount;
+      (rust_noise * 0.6F + gravity_rust * 0.4F) * config.rust_amount;
 
-  return m_config.metal_color * (1.0F - total_rust) +
-         m_config.rust_tint * total_rust;
+  return config.metal_color * (1.0F - total_rust) +
+         config.rust_tint * total_rust;
 }
 
 void ChainmailArmorRenderer::render(const DrawContext &ctx,
@@ -37,23 +39,34 @@ void ChainmailArmorRenderer::render(const DrawContext &ctx,
                                     const HumanoidPalette &palette,
                                     const HumanoidAnimationContext &anim,
                                     EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void ChainmailArmorRenderer::submit(const ChainmailArmorConfig &config,
+                                    const DrawContext &ctx,
+                                    const BodyFrames &frames,
+                                    const HumanoidPalette &palette,
+                                    const HumanoidAnimationContext &anim,
+                                    EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
-  renderTorsoMail(ctx, frames, batch);
+  renderTorsoMail(config, ctx, frames, batch);
 
-  if (m_config.has_shoulder_guards) {
-    renderShoulderGuards(ctx, frames, batch);
+  if (config.has_shoulder_guards) {
+    renderShoulderGuards(config, ctx, frames, batch);
   }
 
-  if (m_config.has_arm_coverage) {
-    renderArmMail(ctx, frames, batch);
+  if (config.has_arm_coverage) {
+    renderArmMail(config, ctx, frames, batch);
   }
 }
 
-void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
+void ChainmailArmorRenderer::renderTorsoMail(const ChainmailArmorConfig &config,
+                                             const DrawContext &ctx,
                                              const BodyFrames &frames,
                                              EquipmentBatch &batch) {
+  (void)config;
   const AttachmentFrame &torso = frames.torso;
   const AttachmentFrame &waist = frames.waist;
 
@@ -69,21 +82,21 @@ void ChainmailArmorRenderer::renderTorsoMail(const DrawContext &ctx,
   QVector3D bottom = waist.origin - waist.up * (torso_r * 0.35F);
 
   QVector3D right_dir = torso.right.normalized();
-  QMatrix4x4 mail_transform = oriented_cylinder(
-      ctx.model, top, bottom, right_dir, torso_r * 1.12F,
-      std::max(0.08F, torso_depth * 1.10F));
+  QMatrix4x4 mail_transform =
+      oriented_cylinder(ctx.model, top, bottom, right_dir, torso_r * 1.12F,
+                        std::max(0.08F, torso_depth * 1.10F));
   align_torso_mesh_forward(mail_transform);
 
   QVector3D steel_color = QVector3D(0.65F, 0.67F, 0.70F);
 
   Mesh *torso_mesh = torso_mesh_without_bottom_cap();
-  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(), nullptr,
-                 mail_transform, steel_color, nullptr, 1.0F});
+  batch.meshes.push_back({torso_mesh != nullptr ? torso_mesh : get_unit_torso(),
+                          nullptr, mail_transform, steel_color, nullptr, 1.0F});
 }
 
-void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
-                                                  const BodyFrames &frames,
-                                                  EquipmentBatch &batch) {
+void ChainmailArmorRenderer::renderShoulderGuards(
+    const ChainmailArmorConfig &config, const DrawContext &ctx,
+    const BodyFrames &frames, EquipmentBatch &batch) {
   const AttachmentFrame &shoulder_l = frames.shoulder_l;
   const AttachmentFrame &shoulder_r = frames.shoulder_r;
   const AttachmentFrame &torso = frames.torso;
@@ -94,23 +107,23 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
   float const shoulder_radius = 0.08F;
 
   QVector3D left_color =
-      calculate_ring_color(left_base.x(), left_base.y(), left_base.z());
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, left_base, left_tip, shoulder_radius),
-      left_color, nullptr, 0.8F});
+      calculate_ring_color(config, left_base.x(), left_base.y(), left_base.z());
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, left_base, left_tip, shoulder_radius),
+       left_color, nullptr, 0.8F});
 
   QVector3D right_base = shoulder_r.origin;
   QVector3D right_tip = right_base + torso.up * 0.08F + torso.right * 0.05F;
 
-  QVector3D right_color =
-      calculate_ring_color(right_base.x(), right_base.y(), right_base.z());
-  batch.meshes.push_back({
-      get_unit_cylinder(), nullptr,
-      cylinder_between(ctx.model, right_base, right_tip, shoulder_radius),
-      right_color, nullptr, 0.8F});
+  QVector3D right_color = calculate_ring_color(config, right_base.x(),
+                                               right_base.y(), right_base.z());
+  batch.meshes.push_back(
+      {get_unit_cylinder(), nullptr,
+       cylinder_between(ctx.model, right_base, right_tip, shoulder_radius),
+       right_color, nullptr, 0.8F});
 
-  if (m_config.detail_level >= 1) {
+  if (config.detail_level >= 1) {
     for (int layer = 0; layer < 3; ++layer) {
       float layer_offset = static_cast<float>(layer) * 0.025F;
 
@@ -121,18 +134,21 @@ void ChainmailArmorRenderer::renderShoulderGuards(const DrawContext &ctx,
       left_m.translate(left_layer);
       left_m.scale(shoulder_radius * 1.3F);
       batch.meshes.push_back({get_unit_sphere(), nullptr, left_m,
-                     left_color * (1.0F - layer_offset), nullptr, 0.75F});
+                              left_color * (1.0F - layer_offset), nullptr,
+                              0.75F});
 
       QMatrix4x4 right_m = ctx.model;
       right_m.translate(right_layer);
       right_m.scale(shoulder_radius * 1.3F);
       batch.meshes.push_back({get_unit_sphere(), nullptr, right_m,
-                     right_color * (1.0F - layer_offset), nullptr, 0.75F});
+                              right_color * (1.0F - layer_offset), nullptr,
+                              0.75F});
     }
   }
 }
 
-void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
+void ChainmailArmorRenderer::renderArmMail(const ChainmailArmorConfig &config,
+                                           const DrawContext &ctx,
                                            const BodyFrames &frames,
                                            EquipmentBatch &batch) {
 
@@ -144,7 +160,7 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
   QVector3D left_shoulder = shoulder_l.origin;
   QVector3D left_elbow = (left_shoulder + hand_l.origin) * 0.5F;
 
-  int const arm_segments = m_config.detail_level >= 2 ? 6 : 3;
+  int const arm_segments = config.detail_level >= 2 ? 6 : 3;
 
   for (int i = 0; i < arm_segments; ++i) {
     float t0 = static_cast<float>(i) / static_cast<float>(arm_segments);
@@ -155,10 +171,11 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     float radius = 0.05F * (1.0F - t0 * 0.2F);
 
-    QVector3D color = calculate_ring_color(pos0.x(), pos0.y(), pos0.z());
+    QVector3D color =
+        calculate_ring_color(config, pos0.x(), pos0.y(), pos0.z());
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, pos0, pos1, radius), color,
-                   nullptr, 0.75F});
+                            cylinder_between(ctx.model, pos0, pos1, radius),
+                            color, nullptr, 0.75F});
   }
 
   QVector3D right_shoulder = shoulder_r.origin;
@@ -173,16 +190,18 @@ void ChainmailArmorRenderer::renderArmMail(const DrawContext &ctx,
 
     float radius = 0.05F * (1.0F - t0 * 0.2F);
 
-    QVector3D color = calculate_ring_color(pos0.x(), pos0.y(), pos0.z());
+    QVector3D color =
+        calculate_ring_color(config, pos0.x(), pos0.y(), pos0.z());
     batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                   cylinder_between(ctx.model, pos0, pos1, radius), color,
-                   nullptr, 0.75F});
+                            cylinder_between(ctx.model, pos0, pos1, radius),
+                            color, nullptr, 0.75F});
   }
 }
 
 void ChainmailArmorRenderer::renderRingDetails(
-    const DrawContext &ctx, const QVector3D &center, float radius, float height,
-    const QVector3D &up, const QVector3D &right, EquipmentBatch &batch) {
+    const ChainmailArmorConfig &config, const DrawContext &ctx,
+    const QVector3D &center, float radius, float height, const QVector3D &up,
+    const QVector3D &right, EquipmentBatch &batch) {
 
   int const rings_around = 24;
   int const rings_vertical = 4;
@@ -206,11 +225,12 @@ void ChainmailArmorRenderer::renderRingDetails(
 
       QMatrix4x4 ring_m = ctx.model;
       ring_m.translate(ring_pos);
-      ring_m.scale(m_config.ring_size);
+      ring_m.scale(config.ring_size);
 
-      QVector3D color =
-          calculate_ring_color(ring_pos.x(), ring_pos.y(), ring_pos.z());
-      batch.meshes.push_back({get_unit_sphere(), nullptr, ring_m, color, nullptr, 0.85F});
+      QVector3D color = calculate_ring_color(config, ring_pos.x(), ring_pos.y(),
+                                             ring_pos.z());
+      batch.meshes.push_back(
+          {get_unit_sphere(), nullptr, ring_m, color, nullptr, 0.85F});
     }
   }
 }

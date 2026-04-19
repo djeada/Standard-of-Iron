@@ -75,8 +75,8 @@ TEST(OrientedCylinder, DegenerateSegmentStillProducesValidFrame) {
   // Segment collapsed to a point — the API must still produce a sane matrix
   // with the caller's chosen right axis (no NaNs, no zero columns).
   const QVector3D p{1.0F, 2.0F, 3.0F};
-  QMatrix4x4 m = Render::Geom::oriented_cylinder(
-      p, p, QVector3D{1, 0, 0}, 0.2F, 0.1F);
+  QMatrix4x4 m =
+      Render::Geom::oriented_cylinder(p, p, QVector3D{1, 0, 0}, 0.2F, 0.1F);
 
   EXPECT_GT(col(m, 0).length(), 0.0F);
   EXPECT_GT(col(m, 1).length(), 0.0F);
@@ -95,8 +95,7 @@ TEST(BoneFrame, MakeBoneFrameOrthonormalises) {
   EXPECT_NEAR(f.right.length(), 1.0F, 1e-4F);
   EXPECT_NEAR(f.up.length(), 1.0F, 1e-4F);
   EXPECT_NEAR(f.forward.length(), 1.0F, 1e-4F);
-  EXPECT_TRUE(
-      approx(QVector3D::crossProduct(f.right, f.up), f.forward, 1e-4F));
+  EXPECT_TRUE(approx(QVector3D::crossProduct(f.right, f.up), f.forward, 1e-4F));
 }
 
 } // namespace

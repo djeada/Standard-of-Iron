@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../horse/rig.h"
+#include "../horse/horse_renderer_base.h"
 #include "../humanoid/humanoid_math.h"
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include <algorithm>
 
 namespace Render::GL {

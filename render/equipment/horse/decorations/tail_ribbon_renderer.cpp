@@ -8,11 +8,11 @@
 
 namespace Render::GL {
 
-void TailRibbonRenderer::render(const DrawContext &ctx,
+void TailRibbonRenderer::submit(const DrawContext &ctx,
                                 const HorseBodyFrames &frames,
                                 const HorseVariant &variant,
                                 const HorseAnimationContext &anim,
-                                EquipmentBatch &batch) const {
+                                EquipmentBatch &batch) {
 
   const HorseAttachmentFrame &tail = frames.tail_base;
 
@@ -26,13 +26,16 @@ void TailRibbonRenderer::render(const DrawContext &ctx,
   QVector3D const ribbon_mid =
       (ribbon_start + ribbon_end) * 0.5F + tail.right * wave;
 
-  batch.cylinders.push_back({ribbon_start, ribbon_mid, 0.015F, ribbon_color, 0.90F});
-  batch.cylinders.push_back({ribbon_mid, ribbon_end, 0.015F, ribbon_color, 0.90F});
+  batch.cylinders.push_back(
+      {ribbon_start, ribbon_mid, 0.015F, ribbon_color, 0.90F});
+  batch.cylinders.push_back(
+      {ribbon_mid, ribbon_end, 0.015F, ribbon_color, 0.90F});
 
   QMatrix4x4 bow = ctx.model;
   bow.translate(ribbon_start);
   bow.scale(0.08F, 0.08F, 0.06F);
-  batch.meshes.push_back({get_unit_sphere(), nullptr, bow, ribbon_color, nullptr, 1.0F, 4});
+  batch.meshes.push_back(
+      {get_unit_sphere(), nullptr, bow, ribbon_color, nullptr, 1.0F, 4});
 }
 
 } // namespace Render::GL

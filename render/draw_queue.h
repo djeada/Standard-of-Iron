@@ -11,7 +11,9 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -65,12 +67,7 @@ struct FogBatchCmd {
 };
 
 struct DecorationBatchCmd {
-  // Stage 18 — unified static decoration batch. Replaces the separate
-  // Grass/Stone/Plant/Pine/Olive/FireCamp BatchCmds. The backend
-  // dispatcher routes on `kind` to the appropriate sub-pipeline; all
-  // share the same (mesh, instance_buffer, per-instance pos/scale/variant)
-  // skeleton. Per-kind params (wind, flicker, etc.) live in the
-  // matching struct below and are only meaningful for their kind.
+
   enum class Kind : std::uint8_t {
     Grass = 0,
     Stone,
@@ -103,10 +100,7 @@ struct RainBatchCmd {
 };
 
 struct WorldChunkCmd {
-  // Stage 18 — terrain folds in here. A WorldChunkCmd carries a Mesh
-  // plus terrain Material + full TerrainChunkParams (the terrain
-  // shader is specialised and consumes the whole param set). Future
-  // static-world chunks (rock fields, roads) can reuse this cmd.
+
   Mesh *mesh = nullptr;
   const Material *material = nullptr;
   QMatrix4x4 model;
@@ -147,10 +141,7 @@ struct SelectionSmokeCmd {
 };
 
 struct EffectBatchCmd {
-  // Stage 18 — merges HealingBeam / HealerAura / CombatDust /
-  // BuildingFlame / StoneImpact. Each still renders through its own
-  // backend sub-pipeline; this wrapper unifies the DrawCmd variant
-  // slot and routes on `kind`.
+
   enum class Kind : std::uint8_t {
     HealingBeam = 0,
     HealerAura,
@@ -161,18 +152,14 @@ struct EffectBatchCmd {
 
   Kind kind = Kind::HealerAura;
 
-  // Positional data. `position` is used by aura/dust/flame/impact and
-  // as beam start; `end_pos` is the beam end.
   QVector3D position{0.0F, 0.0F, 0.0F};
   QVector3D end_pos{0.0F, 0.0F, 0.0F};
   QVector3D color{1.0F, 1.0F, 1.0F};
 
-  // Shared scalar params.
   float radius = 1.0F;
   float intensity = 1.0F;
   float time = 0.0F;
 
-  // Beam-only.
   float progress = 1.0F;
   float beam_width = 0.15F;
 
@@ -188,25 +175,13 @@ struct ModeIndicatorCmd {
   CommandPriority priority{CommandPriority::Critical};
 };
 
-// Stage 15.5b — GPU-skinned rigged creature draw. `bone_palette` points to
-// a contiguous array of `bone_count` world-space bone matrices owned by the
-// caller; the data must outlive the DrawQueue submit→flush cycle (same
-// contract as DrawPartCmd's BonePaletteRef). No production callsite emits
-// this yet — that's 15.5c. Until then the dispatch branch is exercised only
-// by tests, but it is wired through Backend::execute so the
-// std::variant<...> visit path and sort-key table are live.
 struct RiggedCreatureCmd {
   RiggedMesh *mesh = nullptr;
   const Material *material = nullptr;
   QMatrix4x4 world;
-  // CPU-side bone palette pointer. Owned by Renderer::bone_palette_arena()
-  // and pointer-stable for the submit→dispatch lifetime. Software backend,
-  // tests, and any non-GPU consumer read from here.
+
   const QMatrix4x4 *bone_palette = nullptr;
-  // GPU-side palette handle (Stage 16.2). `palette_ubo == 0` means the
-  // arena had no GL context when allocating; the pipeline then skips the
-  // bind and the shader falls back to identity skinning. `palette_offset`
-  // is the byte offset into the slab UBO for this palette.
+
   std::uint32_t palette_ubo = 0;
   std::uint32_t palette_offset = 0;
   std::uint32_t bone_count = 0;
@@ -275,13 +250,43 @@ inline auto draw_cmd_type(const DrawCmd &cmd) -> DrawCmdType {
 }
 
 inline auto extract_cmd_priority(const DrawCmd &cmd) -> CommandPriority {
-  return std::visit(
-      [](const auto &c) -> CommandPriority { return c.priority; }, cmd);
+  return std::visit([](const auto &c) -> CommandPriority { return c.priority; },
+                    cmd);
 }
+
+enum class PreparedBatchKind : std::uint8_t {
+  Single,
+  CylinderInstanced,
+  MeshInstanced,
+  DrawPartInstanced,
+  RiggedCreatureInstanced
+};
+
+struct PreparedBatch {
+  std::size_t start = 0;
+  std::size_t count = 0;
+  DrawCmdType type = DrawCmdType::Grid;
+  PreparedBatchKind kind = PreparedBatchKind::Single;
+  std::uint64_t sort_key = 0;
+
+  [[nodiscard]] auto end() const noexcept -> std::size_t {
+    return start + count;
+  }
+
+  [[nodiscard]] auto is_instanced() const noexcept -> bool {
+    return kind != PreparedBatchKind::Single;
+  }
+};
 
 class DrawQueue {
 public:
-  void clear() { m_items.clear(); }
+  void clear() {
+    m_items.clear();
+    m_sort_indices.clear();
+    m_sort_keys.clear();
+    m_prepared_batches.clear();
+    clear_sort_id_maps();
+  }
 
   template <typename CmdT, typename = std::enable_if_t<
                                std::is_constructible_v<DrawCmd, CmdT &&>>>
@@ -300,11 +305,22 @@ public:
     return m_items;
   }
 
+  [[nodiscard]] auto
+  prepared_batches() const -> const std::vector<PreparedBatch> & {
+    return m_prepared_batches;
+  }
+
+  [[nodiscard]] auto sort_key_for_sorted(std::size_t i) const -> std::uint64_t {
+    return m_sort_keys[m_sort_indices[i]];
+  }
+
   void sort_for_batching() {
     const std::size_t count = m_items.size();
 
     m_sort_keys.resize(count);
     m_sort_indices.resize(count);
+    m_prepared_batches.clear();
+    clear_sort_id_maps();
 
     for (std::size_t i = 0; i < count; ++i) {
       m_sort_indices[i] = static_cast<uint32_t>(i);
@@ -312,8 +328,9 @@ public:
     }
 
     if (count >= 2) {
-      radix_sort_two_pass(count);
+      sort_full_keys(count);
     }
+    build_prepared_batches();
   }
 
   [[nodiscard]] auto can_batch_mesh(std::size_t sorted_idx_a,
@@ -337,62 +354,61 @@ public:
   }
 
 private:
-  void radix_sort_two_pass(std::size_t count) {
-    constexpr int BUCKETS = 256;
+  struct SortIdentity {
+    std::uint8_t pass = 0;
+    std::uint8_t pipeline = 0;
+    std::uint8_t transparency_bucket = 0;
+    std::uint16_t material = 0;
+    std::uint16_t mesh = 0;
+    std::uint16_t texture = 0;
+    std::uint8_t skeleton = 0;
 
-    m_temp_indices.resize(count);
-
-    // LSD radix sort: sort by the lower byte (bits 48-55) first, then by the
-    // higher byte (bits 56-63 = type_order). The final (most significant)
-    // pass dominates, so type_order becomes the primary sort criterion while
-    // the lower byte (terrain sort_byte, primitive type, …) acts as a
-    // tie-breaker within each type.
-    {
-      int histogram[BUCKETS] = {0};
-
-      for (std::size_t i = 0; i < count; ++i) {
-        uint8_t const bucket =
-            static_cast<uint8_t>(m_sort_keys[i] >> 48) & 0xFF;
-        ++histogram[bucket];
-      }
-
-      int offsets[BUCKETS];
-      offsets[0] = 0;
-      for (int i = 1; i < BUCKETS; ++i) {
-        offsets[i] = offsets[i - 1] + histogram[i - 1];
-      }
-
-      for (std::size_t i = 0; i < count; ++i) {
-        uint8_t const bucket =
-            static_cast<uint8_t>(m_sort_keys[m_sort_indices[i]] >> 48) & 0xFF;
-        m_temp_indices[offsets[bucket]++] = m_sort_indices[i];
-      }
+    [[nodiscard]] auto pack() const noexcept -> std::uint64_t {
+      return (static_cast<std::uint64_t>(pass) << 56) |
+             (static_cast<std::uint64_t>(pipeline) << 48) |
+             (static_cast<std::uint64_t>(transparency_bucket & 0x0FU) << 44) |
+             (static_cast<std::uint64_t>(material & 0x0FFFU) << 32) |
+             (static_cast<std::uint64_t>(mesh) << 16) |
+             (static_cast<std::uint64_t>(texture & 0x0FFFU) << 4) |
+             static_cast<std::uint64_t>(skeleton & 0x0FU);
     }
+  };
 
-    {
-      int histogram[BUCKETS] = {0};
+  enum class SortPipeline : std::uint8_t {
+    Mesh = 0,
+    DrawPart = 1,
+    RiggedCreature = 2,
+    Cylinder = 3,
+    Fog = 4,
+    DecorationGrass = 8,
+    DecorationStone = 9,
+    DecorationPlant = 10,
+    DecorationPine = 11,
+    DecorationOlive = 12,
+    DecorationFireCamp = 13,
+    Rain = 16,
+    WorldChunk = 17,
+    PrimitiveSphere = 18,
+    PrimitiveCylinder = 19,
+    PrimitiveCone = 20,
+    Effect = 24,
+    Grid = 25,
+    SelectionSmoke = 26,
+    SelectionRing = 27,
+    ModeIndicator = 28
+  };
 
-      for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket = static_cast<uint8_t>(
-            m_sort_keys[m_temp_indices[i]] >> k_sort_key_bucket_shift);
-        ++histogram[bucket];
-      }
-
-      int offsets[BUCKETS];
-      offsets[0] = 0;
-      for (int i = 1; i < BUCKETS; ++i) {
-        offsets[i] = offsets[i - 1] + histogram[i - 1];
-      }
-
-      for (std::size_t i = 0; i < count; ++i) {
-        auto const bucket = static_cast<uint8_t>(
-            m_sort_keys[m_temp_indices[i]] >> k_sort_key_bucket_shift);
-        m_sort_indices[offsets[bucket]++] = m_temp_indices[i];
-      }
-    }
+  void sort_full_keys(std::size_t count) {
+    std::stable_sort(m_sort_indices.begin(), m_sort_indices.begin() + count,
+                     [&](std::uint32_t lhs, std::uint32_t rhs) {
+                       if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
+                         return lhs < rhs;
+                       }
+                       return m_sort_keys[lhs] < m_sort_keys[rhs];
+                     });
   }
 
-  [[nodiscard]] static auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
+  [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
       WorldChunk = 0,
@@ -409,7 +425,6 @@ private:
       ModeIndicator = 17
     };
 
-    // Indexed by DrawCmd::index(); must match DrawCmdType ordering.
     static constexpr uint8_t k_type_order[] = {
         static_cast<uint8_t>(RenderOrder::Grid),
         static_cast<uint8_t>(RenderOrder::SelectionRing),
@@ -433,76 +448,245 @@ private:
                                    ? k_type_order[type_index]
                                    : static_cast<uint8_t>(type_index);
 
-    // Type order is the primary sort criterion — this preserves the required
-    // draw order (terrain -> units -> selection rings -> UI overlays).
-    // Priority is metadata used only by the frame-budget defer logic and
-    // MUST NOT influence sort order, otherwise critical commands (e.g.
-    // selection rings) end up rendered under the terrain.
-    uint64_t key = static_cast<uint64_t>(type_order) << 56;
+    SortIdentity identity;
+    identity.pass = type_order;
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-
-      auto ptr_bits16 = [](const void *p) -> uint64_t {
-        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFFF;
-      };
-      key |= ptr_bits16(mesh.shader) << 32;
-      key |= ptr_bits16(mesh.mesh) << 16;
-      key |= ptr_bits16(mesh.texture);
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Mesh);
+      identity.transparency_bucket = transparency_bucket(mesh.alpha);
+      identity.material = pack_12(intern_material_id(mesh.shader));
+      identity.mesh = pack_16(intern_mesh_id(mesh.mesh));
+      identity.texture = pack_12(intern_texture_id(mesh.texture));
     } else if (cmd.index() == DecorationBatchCmdIndex) {
       const auto &deco = std::get<DecorationBatchCmdIndex>(cmd);
-      // Sub-sort by kind so same-kind draws batch contiguously.
-      key |= static_cast<uint64_t>(deco.kind) << 48;
-      uint64_t const buffer_ptr =
-          reinterpret_cast<uintptr_t>(deco.instance_buffer) &
-          0x0000FFFFFFFFFFFFU;
-      key |= buffer_ptr;
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::DecorationGrass) +
+          static_cast<std::uint8_t>(deco.kind);
+      identity.material = pack_12(intern_material_id(deco.material));
+      identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
     } else if (cmd.index() == WorldChunkCmdIndex) {
       const auto &chunk = std::get<WorldChunkCmdIndex>(cmd);
-      auto const sort_byte =
-          static_cast<uint64_t>((chunk.sort_key >> 8) & 0xFFU);
-      key |= sort_byte << 48;
-      uint64_t const mesh_ptr =
-          reinterpret_cast<uintptr_t>(chunk.mesh) & 0x0000FFFFFFFFFFFFU;
-      key |= mesh_ptr;
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::WorldChunk);
+      identity.material = pack_12(chunk.sort_key);
+      identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
+      identity.texture = pack_12(intern_material_id(chunk.material));
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
-
-      key |= static_cast<uint64_t>(prim.type) << 48;
-
-      key |= static_cast<uint64_t>(prim.instance_count() & 0xFFFFFFFF);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::PrimitiveSphere) +
+          static_cast<std::uint8_t>(prim.type);
+      identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
+          prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
     } else if (cmd.index() == DrawPartCmdIndex) {
       const auto &part = std::get<DrawPartCmdIndex>(cmd);
-      // Batch DrawPartCmds by material. The two-pass radix sort only
-      // examines the top two bytes of the key (bits 48-63), so the
-      // material-discriminating bits MUST live in the 48-55 byte to
-      // actually influence ordering. Mesh pointer goes into the lower
-      // bits as batch-locality metadata (unused by sort, useful for
-      // debugging / can_batch predicates).
-      auto ptr_byte = [](const void *p) -> uint64_t {
-        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFU;
-      };
-      key |= ptr_byte(part.material) << 48;
-      key |= (reinterpret_cast<uintptr_t>(part.mesh) & 0xFFFFU) << 16;
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::DrawPart);
+      identity.transparency_bucket = transparency_bucket(part.alpha);
+      identity.material = pack_12(intern_material_id(part.material));
+      identity.mesh = pack_16(intern_mesh_id(part.mesh));
+      identity.texture = pack_12(intern_texture_id(part.texture));
+      identity.skeleton = part.palette.empty() ? 0U : 1U;
     } else if (cmd.index() == RiggedCreatureCmdIndex) {
-      // Stage 15.5b — batch rigged creatures by material/mesh so
-      // adjacent draws can share shader + VAO binds. Mirrors DrawPartCmd's
-      // material-byte-into-48 convention.
       const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
-      auto ptr_byte = [](const void *p) -> uint64_t {
-        return (reinterpret_cast<uintptr_t>(p) >> 4) & 0xFFU;
-      };
-      key |= ptr_byte(rig.material) << 48;
-      key |= (reinterpret_cast<uintptr_t>(rig.mesh) & 0xFFFFU) << 16;
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::RiggedCreature);
+      identity.transparency_bucket = transparency_bucket(rig.alpha);
+      identity.material = pack_12(intern_material_id(rig.material));
+      identity.mesh = pack_16(intern_mesh_id(rig.mesh));
+      identity.texture = pack_12(intern_texture_id(rig.texture));
+      identity.skeleton = pack_4(rig.bone_count);
+    } else if (cmd.index() == CylinderCmdIndex) {
+      const auto &cy = std::get<CylinderCmdIndex>(cmd);
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Cylinder);
+      identity.transparency_bucket = transparency_bucket(cy.alpha);
+    } else if (cmd.index() == FogBatchCmdIndex) {
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Fog);
+    } else if (cmd.index() == RainBatchCmdIndex) {
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Rain);
+    } else if (cmd.index() == EffectBatchCmdIndex) {
+      const auto &effect = std::get<EffectBatchCmdIndex>(cmd);
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Effect);
+      identity.material = pack_12(static_cast<std::uint32_t>(effect.kind));
+    } else if (cmd.index() == SelectionSmokeCmdIndex) {
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::SelectionSmoke);
+      identity.transparency_bucket = 1U;
+    } else if (cmd.index() == GridCmdIndex) {
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Grid);
+    } else if (cmd.index() == SelectionRingCmdIndex) {
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::SelectionRing);
+      identity.transparency_bucket = 1U;
+    } else if (cmd.index() == ModeIndicatorCmdIndex) {
+      const auto &mode = std::get<ModeIndicatorCmdIndex>(cmd);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::ModeIndicator);
+      identity.material = pack_12(static_cast<std::uint32_t>(mode.mode_type));
     }
 
-    return key;
+    return identity.pack();
+  }
+
+  void build_prepared_batches() {
+    m_prepared_batches.clear();
+    const std::size_t count = m_sort_indices.size();
+    std::size_t i = 0;
+    while (i < count) {
+      const DrawCmd &head = get_sorted(i);
+      const DrawCmdType type = draw_cmd_type(head);
+      PreparedBatchKind kind = PreparedBatchKind::Single;
+      std::size_t end = i + 1;
+
+      if (head.index() == CylinderCmdIndex) {
+        while (end < count && get_sorted(end).index() == CylinderCmdIndex) {
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::CylinderInstanced;
+        }
+      } else if (head.index() == MeshCmdIndex) {
+        while (end < count && can_batch_mesh(i, end)) {
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::MeshInstanced;
+        }
+      } else if (head.index() == DrawPartCmdIndex) {
+        while (end < count && can_batch_draw_part(i, end)) {
+          ++end;
+        }
+        constexpr std::size_t k_draw_part_min_run = 4;
+        if (end - i >= k_draw_part_min_run) {
+          kind = PreparedBatchKind::DrawPartInstanced;
+        } else {
+          end = i + 1;
+        }
+      } else if (head.index() == RiggedCreatureCmdIndex) {
+        while (end < count && can_batch_rigged(i, end)) {
+          ++end;
+        }
+        if (end - i > 1U) {
+          kind = PreparedBatchKind::RiggedCreatureInstanced;
+        }
+      }
+
+      m_prepared_batches.push_back(
+          PreparedBatch{.start = i,
+                        .count = end - i,
+                        .type = type,
+                        .kind = kind,
+                        .sort_key = m_sort_keys[m_sort_indices[i]]});
+      i = end;
+    }
+  }
+
+  [[nodiscard]] auto
+  can_batch_draw_part(std::size_t sorted_idx_a,
+                      std::size_t sorted_idx_b) const -> bool {
+    if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
+      return false;
+    }
+    const auto &a = m_items[m_sort_indices[sorted_idx_a]];
+    const auto &b = m_items[m_sort_indices[sorted_idx_b]];
+    if (a.index() != DrawPartCmdIndex || b.index() != DrawPartCmdIndex) {
+      return false;
+    }
+    const auto &part_a = std::get<DrawPartCmdIndex>(a);
+    const auto &part_b = std::get<DrawPartCmdIndex>(b);
+    if (part_a.alpha < k_opaque_threshold ||
+        part_b.alpha < k_opaque_threshold) {
+      return false;
+    }
+    return part_a.mesh == part_b.mesh && part_a.material == part_b.material &&
+           part_a.texture == part_b.texture &&
+           part_a.material_id == part_b.material_id &&
+           part_a.priority == part_b.priority && part_a.palette.empty() &&
+           part_b.palette.empty();
+  }
+
+  [[nodiscard]] auto can_batch_rigged(std::size_t sorted_idx_a,
+                                      std::size_t sorted_idx_b) const -> bool {
+    if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
+      return false;
+    }
+    const auto &a = m_items[m_sort_indices[sorted_idx_a]];
+    const auto &b = m_items[m_sort_indices[sorted_idx_b]];
+    if (a.index() != RiggedCreatureCmdIndex ||
+        b.index() != RiggedCreatureCmdIndex) {
+      return false;
+    }
+    const auto &rig_a = std::get<RiggedCreatureCmdIndex>(a);
+    const auto &rig_b = std::get<RiggedCreatureCmdIndex>(b);
+    return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
+           rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
+           rig_a.material == rig_b.material;
+  }
+
+  void clear_sort_id_maps() {
+    m_material_ids.clear();
+    m_mesh_ids.clear();
+    m_texture_ids.clear();
+    m_next_material_id = 1;
+    m_next_mesh_id = 1;
+    m_next_texture_id = 1;
+  }
+
+  static auto transparency_bucket(float alpha) noexcept -> std::uint8_t {
+    return alpha < k_opaque_threshold ? 1U : 0U;
+  }
+
+  static auto pack_4(std::uint32_t value) noexcept -> std::uint8_t {
+    return static_cast<std::uint8_t>(std::min<std::uint32_t>(value, 0x0FU));
+  }
+
+  static auto pack_12(std::uint32_t value) noexcept -> std::uint16_t {
+    return static_cast<std::uint16_t>(std::min<std::uint32_t>(value, 0x0FFFU));
+  }
+
+  static auto pack_16(std::uint32_t value) noexcept -> std::uint16_t {
+    return static_cast<std::uint16_t>(std::min<std::uint32_t>(value, 0xFFFFU));
+  }
+
+  auto intern_material_id(const void *ptr) -> std::uint32_t {
+    return intern_id(m_material_ids, m_next_material_id, ptr);
+  }
+
+  auto intern_mesh_id(const void *ptr) -> std::uint32_t {
+    return intern_id(m_mesh_ids, m_next_mesh_id, ptr);
+  }
+
+  auto intern_texture_id(const void *ptr) -> std::uint32_t {
+    return intern_id(m_texture_ids, m_next_texture_id, ptr);
+  }
+
+  static auto intern_id(std::unordered_map<const void *, std::uint32_t> &ids,
+                        std::uint32_t &next, const void *ptr) -> std::uint32_t {
+    if (ptr == nullptr) {
+      return 0;
+    }
+    auto found = ids.find(ptr);
+    if (found != ids.end()) {
+      return found->second;
+    }
+
+    const std::uint32_t id = next;
+    if (next != std::numeric_limits<std::uint32_t>::max()) {
+      ++next;
+    }
+    ids.emplace(ptr, id);
+    return id;
   }
 
   std::vector<DrawCmd> m_items;
   std::vector<uint32_t> m_sort_indices;
   std::vector<uint64_t> m_sort_keys;
-  std::vector<uint32_t> m_temp_indices;
+  std::vector<PreparedBatch> m_prepared_batches;
+  std::unordered_map<const void *, std::uint32_t> m_material_ids;
+  std::unordered_map<const void *, std::uint32_t> m_mesh_ids;
+  std::unordered_map<const void *, std::uint32_t> m_texture_ids;
+  std::uint32_t m_next_material_id = 1;
+  std::uint32_t m_next_mesh_id = 1;
+  std::uint32_t m_next_texture_id = 1;
 };
 
 } // namespace Render::GL

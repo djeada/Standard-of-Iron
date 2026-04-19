@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
@@ -22,8 +22,15 @@ class CarthageLightHelmetRenderer : public IEquipmentRenderer {
 public:
   CarthageLightHelmetRenderer() = default;
 
-  void set_config(const CarthageLightHelmetConfig &config) {
-    m_config = config;
+  static void submit(const CarthageLightHelmetConfig &config,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto
+  base_config() const noexcept -> const CarthageLightHelmetConfig & {
+    return m_config;
   }
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
@@ -34,18 +41,26 @@ public:
 private:
   CarthageLightHelmetConfig m_config;
 
-  void render_bowl(const DrawContext &ctx, const AttachmentFrame &head,
-                   EquipmentBatch &batch);
-  void render_brim(const DrawContext &ctx, const AttachmentFrame &head,
-                   EquipmentBatch &batch);
-  void render_cheek_guards(const DrawContext &ctx, const AttachmentFrame &head,
-                           EquipmentBatch &batch);
-  void render_nasal_guard(const DrawContext &ctx, const AttachmentFrame &head,
+  static void render_bowl(const CarthageLightHelmetConfig &config,
+                          const DrawContext &ctx, const AttachmentFrame &head,
                           EquipmentBatch &batch);
-  void render_crest(const DrawContext &ctx, const AttachmentFrame &head,
-                    EquipmentBatch &batch);
-  void render_rivets(const DrawContext &ctx, const AttachmentFrame &head,
-                     EquipmentBatch &batch);
+  static void render_brim(const CarthageLightHelmetConfig &config,
+                          const DrawContext &ctx, const AttachmentFrame &head,
+                          EquipmentBatch &batch);
+  static void render_cheek_guards(const CarthageLightHelmetConfig &config,
+                                  const DrawContext &ctx,
+                                  const AttachmentFrame &head,
+                                  EquipmentBatch &batch);
+  static void render_nasal_guard(const CarthageLightHelmetConfig &config,
+                                 const DrawContext &ctx,
+                                 const AttachmentFrame &head,
+                                 EquipmentBatch &batch);
+  static void render_crest(const CarthageLightHelmetConfig &config,
+                           const DrawContext &ctx, const AttachmentFrame &head,
+                           EquipmentBatch &batch);
+  static void render_rivets(const CarthageLightHelmetConfig &config,
+                            const DrawContext &ctx, const AttachmentFrame &head,
+                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

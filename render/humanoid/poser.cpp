@@ -1,18 +1,6 @@
-// Stage 2 split — pose-generation layer of the humanoid rig pipeline.
-//
-// Responsibility: given a deterministic seed, time, a "moving" flag and a set
-// of per-unit variation parameters, fill a HumanoidPose with joint positions
-// (shoulders, pelvis, hands, elbows, knees, feet, head). No draw calls, no
-// materials, no world transform.
-//
-// This file was split out of rig.cpp as part of the Stage 2 skeleton/pose/
-// skin separation. It implements HumanoidRendererBase::compute_locomotion_pose
-// which was previously at rig.cpp:452-676.
-//
-// Kept strictly free of anonymous-namespace statics from rig.cpp so this
-// layer has no hidden coupling to the render loop.
 
-#include "rig.h"
+
+#include "humanoid_renderer_base.h"
 
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/humanoid_constants.h"

@@ -1,10 +1,15 @@
-#include "rig.h"
+#include "horse_renderer_base.h"
+#include "lod.h"
+#include "render_stats.h"
 
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
+#include "../equipment/equipment_submit.h"
+#include "../equipment/horse/i_horse_equipment_renderer.h"
 #include "../geom/math_utils.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include "../submitter.h"
 #include "horse_animation_controller.h"
 #include "horse_spec.h"
@@ -32,6 +37,19 @@ auto get_horse_render_stats() -> const HorseRenderStats & {
 }
 
 void reset_horse_render_stats() { s_horseRenderStats.reset(); }
+
+auto HorseRendererBase::visual_spec() const
+    -> const Render::Creature::Pipeline::UnitVisualSpec & {
+
+  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
+  spec = Render::Creature::Pipeline::UnitVisualSpec{};
+  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  spec.debug_name = "horse/default";
+  const QVector3D ps = get_proportion_scaling();
+  spec.scaling =
+      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+  return spec;
+}
 
 using Render::Geom::clamp01;
 using Render::Geom::cone_from_to;
@@ -767,7 +785,10 @@ void HorseRendererBase::render_full(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
     const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
-    const HorseMotionSample *shared_motion, ISubmitter &out) const {
+    const HorseMotionSample *shared_motion, ISubmitter &out,
+    Render::Creature::Pipeline::EquipmentLoadout horse_loadout,
+    const Render::Creature::Pipeline::EquipmentSubmitContext *sub_ctx_template)
+    const {
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
 
@@ -796,10 +817,6 @@ void HorseRendererBase::render_full(
   horse_ctx.model = ctx.model;
   horse_ctx.model.translate(mount.ground_offset);
 
-  // Rider-driven body sway/pitch/nod — preserved so attachment frames
-  // (saddle/bridle/rider) continue to align with the legacy silhouette.
-  // The baked Full mesh itself is authored at baseline; per-frame
-  // variation flows through the bone palette only.
   float const sway_intensity =
       is_moving ? (1.0F - rider_intensity * 0.5F) : 0.3F;
   float const body_sway =
@@ -851,22 +868,17 @@ void HorseRendererBase::render_full(
       head_center +
       QVector3D(0.0F, -d.head_height * 0.18F, d.head_length * 0.58F);
 
-  // Build the per-frame Reduced-shaped HorseSpecPose then override the
-  // neck/head/feet to inherit the rider-influenced positions above.
-  // This keeps the runtime bone palette aligned with the Full silhouette
-  // even though the bake itself uses a single static (baseline) PartGraph.
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose_reduced(
-      d, g,
-      Render::Horse::HorseReducedMotion{phase, bob, is_moving},
-      pose);
+      d, g, Render::Horse::HorseReducedMotion{phase, bob, is_moving}, pose);
   pose.barrel_center = barrel_center;
   pose.neck_base = neck_base;
   pose.neck_top = neck_top;
   pose.head_center = head_center;
 
-  Render::Horse::submit_horse_lod(pose, v, Render::Creature::CreatureLOD::Full,
-                                  horse_ctx.model, out);
+  Render::Horse::submit_horse_via_pipeline(
+      *this, pose, v, horse_ctx.model, horse_seed,
+      Render::Creature::CreatureLOD::Full, out);
 
   QVector3D const bit_left =
       muzzle_center + QVector3D(d.head_width * 0.55F, -d.head_height * 0.08F,
@@ -940,8 +952,42 @@ void HorseRendererBase::render_full(
   body_frames.muzzle.up = up;
   body_frames.muzzle.forward = forward;
 
-  draw_attachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
-                   rein_slack, body_frames, out);
+  using Render::Creature::Pipeline::LegacySlotMask;
+  using Render::Creature::Pipeline::owns_slot;
+  if (!owns_slot(visual_spec().owned_legacy_slots,
+                 LegacySlotMask::HorseAttachments)) {
+    draw_attachments(horse_ctx, anim, rider_ctx, profile, mount, phase, bob,
+                     rein_slack, body_frames, out);
+  }
+
+  if (!horse_loadout.empty() && sub_ctx_template != nullptr) {
+    HorseAnimationContext horse_anim_ctx{};
+    horse_anim_ctx.time = anim.time;
+    horse_anim_ctx.phase = phase;
+    horse_anim_ctx.bob = bob;
+    horse_anim_ctx.is_moving = is_moving;
+    horse_anim_ctx.rider_intensity = rider_intensity;
+
+    Render::Creature::Pipeline::EquipmentSubmitContext sub_ctx =
+        *sub_ctx_template;
+    sub_ctx.ctx = &horse_ctx;
+    sub_ctx.horse_frames = &body_frames;
+    sub_ctx.horse_variant = &profile.variant;
+    sub_ctx.horse_anim = &horse_anim_ctx;
+    sub_ctx.horse_profile = &profile;
+    sub_ctx.mount_frame = &mount;
+    sub_ctx.rein_state = &rein_state;
+    sub_ctx.horse_motion = &motion;
+
+    for (const auto &record : horse_loadout) {
+      if (!record.dispatch) {
+        continue;
+      }
+      EquipmentBatch batch;
+      record.dispatch(sub_ctx, batch);
+      submit_equipment_batch(batch, out);
+    }
+  }
 }
 
 void HorseRendererBase::render_simplified(
@@ -973,8 +1019,9 @@ void HorseRendererBase::render_simplified(
       Render::Horse::HorseReducedMotion{motion.phase, motion.bob,
                                         motion.is_moving},
       pose);
-  Render::Horse::submit_horse_lod(
-      pose, v, Render::Creature::CreatureLOD::Reduced, world_from_unit, out);
+  Render::Horse::submit_horse_via_pipeline(
+      *this, pose, v, world_from_unit, 0,
+      Render::Creature::CreatureLOD::Reduced, out);
 }
 
 void HorseRendererBase::render_minimal(const DrawContext &ctx,
@@ -996,18 +1043,19 @@ void HorseRendererBase::render_minimal(const DrawContext &ctx,
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose(d, bob, pose);
 
-  Render::Horse::submit_horse_lod(pose, v, Render::Creature::CreatureLOD::Minimal,
-                                  world_from_unit, out);
+  Render::Horse::submit_horse_via_pipeline(
+      *this, pose, v, world_from_unit, 0,
+      Render::Creature::CreatureLOD::Minimal, out);
 }
 
-void HorseRendererBase::render(const DrawContext &ctx,
-                               const AnimationInputs &anim,
-                               const HumanoidAnimationContext &rider_ctx,
-                               HorseProfile &profile,
-                               const MountedAttachmentFrame *shared_mount,
-                               const ReinState *shared_reins,
-                               const HorseMotionSample *shared_motion,
-                               ISubmitter &out, HorseLOD lod) const {
+void HorseRendererBase::render(
+    const DrawContext &ctx, const AnimationInputs &anim,
+    const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
+    const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
+    const HorseMotionSample *shared_motion, ISubmitter &out, HorseLOD lod,
+    Render::Creature::Pipeline::EquipmentLoadout horse_loadout,
+    const Render::Creature::Pipeline::EquipmentSubmitContext *sub_ctx_template)
+    const {
 
   ++s_horseRenderStats.horses_total;
 
@@ -1022,7 +1070,7 @@ void HorseRendererBase::render(const DrawContext &ctx,
   case HorseLOD::Full:
     ++s_horseRenderStats.lod_full;
     render_full(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
-                shared_motion, out);
+                shared_motion, out, horse_loadout, sub_ctx_template);
     break;
 
   case HorseLOD::Reduced:

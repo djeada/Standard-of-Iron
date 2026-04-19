@@ -1,7 +1,8 @@
 #pragma once
 
+#include "../creature/pipeline/unit_visual_spec.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include "../humanoid/mounted_pose_controller.h"
-#include "../humanoid/rig.h"
 #include "horse_renderer.h"
 
 #include <mutex>
@@ -13,6 +14,9 @@ class MountedHumanoidRendererBase : public HumanoidRendererBase {
 public:
   MountedHumanoidRendererBase();
   ~MountedHumanoidRendererBase() override = default;
+
+  virtual auto mounted_visual_spec() const
+      -> const Render::Creature::Pipeline::MountedSpec &;
 
   void customize_pose(const DrawContext &ctx,
                       const HumanoidAnimationContext &anim_ctx, uint32_t seed,
@@ -32,11 +36,6 @@ protected:
                                       HumanoidPose &pose,
                                       const HorseDimensions &dims,
                                       const ReinState &reins) const = 0;
-
-  virtual void draw_equipment(const DrawContext &ctx, const HumanoidVariant &v,
-                              const HumanoidPose &pose,
-                              const HumanoidAnimationContext &anim_ctx,
-                              ISubmitter &out) const {}
 
   auto resolve_entity_ground_offset(
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,

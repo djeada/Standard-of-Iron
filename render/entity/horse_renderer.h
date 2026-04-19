@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../equipment/horse/i_horse_equipment_renderer.h"
-#include "../horse/rig.h"
+#include "../horse/horse_renderer_base.h"
 
 #include <memory>
 #include <vector>
@@ -18,6 +18,9 @@ public:
 
   void set_attachments(
       const std::vector<std::shared_ptr<IHorseEquipmentRenderer>> &attachments);
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override;
 
 protected:
   void draw_attachments(const DrawContext &ctx, const AnimationInputs &anim,

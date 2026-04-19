@@ -26,28 +26,26 @@ struct RecordedPart {
 
 class RecordingSubmitter final : public Render::GL::ISubmitter {
 public:
-  void mesh(Render::GL::Mesh *, const QMatrix4x4 &model,
-            const QVector3D &color, Render::GL::Texture *, float alpha,
-            int = 0) override {
+  void mesh(Render::GL::Mesh *, const QMatrix4x4 &model, const QVector3D &color,
+            Render::GL::Texture *, float alpha, int = 0) override {
     m_records.push_back({model, color, alpha});
   }
-  void part(Render::GL::Mesh *, Render::GL::Material *,
-            const QMatrix4x4 &model, const QVector3D &color,
-            Render::GL::Texture *, float alpha, int = 0) override {
+  void part(Render::GL::Mesh *, Render::GL::Material *, const QMatrix4x4 &model,
+            const QVector3D &color, Render::GL::Texture *, float alpha,
+            int = 0) override {
     m_records.push_back({model, color, alpha});
   }
 
   // Remaining ISubmitter methods: no-ops for this test. We don't care
   // about the emission channel — only that the rig interpreter reaches
   // mesh/part for each part it iterates.
-  void cylinder(const QVector3D &, const QVector3D &, float,
-                const QVector3D &, float) override {}
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
                       const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
             float) override {}
-  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
-                       float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
   void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
                     float, float, float, float) override {}
   void healer_aura(const QVector3D &, const QVector3D &, float, float,
@@ -144,33 +142,55 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
   };
 
   const LegacyBox kLegacyBoxes[] = {
-      {Platform_BaseLow, Platform_BaseHigh, {0.0F, 0.08F, 0.0F},
+      {Platform_BaseLow,
+       Platform_BaseHigh,
+       {0.0F, 0.08F, 0.0F},
        {2.0F, 0.08F, 1.8F}},
-      {Platform_TopLow, Platform_TopHigh, {0.0F, 0.18F, 0.0F},
+      {Platform_TopLow,
+       Platform_TopHigh,
+       {0.0F, 0.18F, 0.0F},
        {1.8F, 0.02F, 1.6F}},
-      {Court_StoneLow, Court_StoneHigh, {0.0F, 0.22F, 0.0F},
+      {Court_StoneLow,
+       Court_StoneHigh,
+       {0.0F, 0.22F, 0.0F},
        {1.3F, 0.01F, 1.1F}},
-      {Court_PoolLow, Court_PoolHigh, {0.0F, 0.24F, 0.0F},
-       {0.7F, 0.02F, 0.5F}},
-      {Court_PoolTrimSLow, Court_PoolTrimSHigh, {0.0F, 0.25F, -0.52F},
+      {Court_PoolLow, Court_PoolHigh, {0.0F, 0.24F, 0.0F}, {0.7F, 0.02F, 0.5F}},
+      {Court_PoolTrimSLow,
+       Court_PoolTrimSHigh,
+       {0.0F, 0.25F, -0.52F},
        {0.72F, 0.02F, 0.02F}},
-      {Court_PoolTrimNLow, Court_PoolTrimNHigh, {0.0F, 0.25F, 0.52F},
+      {Court_PoolTrimNLow,
+       Court_PoolTrimNHigh,
+       {0.0F, 0.25F, 0.52F},
        {0.72F, 0.02F, 0.02F}},
-      {Court_PillarCapLow, Court_PillarCapHigh, {0.0F, 0.58F, 0.0F},
+      {Court_PillarCapLow,
+       Court_PillarCapHigh,
+       {0.0F, 0.58F, 0.0F},
        {0.08F, 0.03F, 0.08F}},
-      {Wall_BackLow, Wall_BackHigh, {0.0F, 0.90F, -1.2F},
-       {1.4F, 0.70F, 0.10F}},
-      {Wall_LeftLow, Wall_LeftHigh, {-1.5F, 0.90F, -0.5F},
+      {Wall_BackLow, Wall_BackHigh, {0.0F, 0.90F, -1.2F}, {1.4F, 0.70F, 0.10F}},
+      {Wall_LeftLow,
+       Wall_LeftHigh,
+       {-1.5F, 0.90F, -0.5F},
        {0.10F, 0.70F, 0.60F}},
-      {Wall_RightLow, Wall_RightHigh, {1.5F, 0.90F, -0.5F},
+      {Wall_RightLow,
+       Wall_RightHigh,
+       {1.5F, 0.90F, -0.5F},
        {0.10F, 0.70F, 0.60F}},
-      {Door_LDoorLow, Door_LDoorHigh, {-0.6F, 0.65F, -1.15F},
+      {Door_LDoorLow,
+       Door_LDoorHigh,
+       {-0.6F, 0.65F, -1.15F},
        {0.25F, 0.35F, 0.03F}},
-      {Door_LLintelLow, Door_LLintelHigh, {-0.6F, 0.98F, -1.15F},
+      {Door_LLintelLow,
+       Door_LLintelHigh,
+       {-0.6F, 0.98F, -1.15F},
        {0.25F, 0.05F, 0.03F}},
-      {Door_RDoorLow, Door_RDoorHigh, {0.6F, 0.65F, -1.15F},
+      {Door_RDoorLow,
+       Door_RDoorHigh,
+       {0.6F, 0.65F, -1.15F},
        {0.25F, 0.35F, 0.03F}},
-      {Door_RLintelLow, Door_RLintelHigh, {0.6F, 0.98F, -1.15F},
+      {Door_RLintelLow,
+       Door_RLintelHigh,
+       {0.6F, 0.98F, -1.15F},
        {0.25F, 0.05F, 0.03F}},
   };
 
@@ -186,20 +206,19 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
   }
 
   for (auto const &b : kLegacyBoxes) {
-    Render::RigDSL::PartDef part{
-        Render::RigDSL::PartKind::Box,
-        0,
-        0xFFU,
-        Render::RigDSL::PaletteSlot::Literal,
-        Render::RigDSL::PackedColor{0, 0, 0, 255},
-        b.low,
-        b.high,
-        Render::RigDSL::kInvalidScalar,
-        1.0F,
-        1.0F,
-        1.0F,
-        1.0F,
-        1.0F};
+    Render::RigDSL::PartDef part{Render::RigDSL::PartKind::Box,
+                                 0,
+                                 0xFFU,
+                                 Render::RigDSL::PaletteSlot::Literal,
+                                 Render::RigDSL::PackedColor{0, 0, 0, 255},
+                                 b.low,
+                                 b.high,
+                                 Render::RigDSL::kInvalidScalar,
+                                 1.0F,
+                                 1.0F,
+                                 1.0F,
+                                 1.0F,
+                                 1.0F};
 
     Render::RigDSL::InterpretContext ctx;
     ctx.anchors = &anchors;
@@ -239,8 +258,7 @@ TEST(BarracksRigTest, RigIteratesAllParts) {
   // Any non-degenerate values work: we only check part count.
   for (std::size_t i = 0; i <= static_cast<std::size_t>(Goods_Amp3Top); ++i) {
     anchors.set(static_cast<Render::RigDSL::AnchorId>(i),
-                QVector3D(static_cast<float>(i),
-                          static_cast<float>(i) + 0.5F,
+                QVector3D(static_cast<float>(i), static_cast<float>(i) + 0.5F,
                           -static_cast<float>(i)));
   }
 

@@ -7,11 +7,11 @@
 
 namespace Render::GL {
 
-void SaddleBagRenderer::render(const DrawContext &ctx,
+void SaddleBagRenderer::submit(const DrawContext &ctx,
                                const HorseBodyFrames &frames,
                                const HorseVariant &variant,
                                const HorseAnimationContext &,
-                               EquipmentBatch &batch) const {
+                               EquipmentBatch &batch) {
 
   const HorseAttachmentFrame &back = frames.back_center;
 
@@ -23,7 +23,8 @@ void SaddleBagRenderer::render(const DrawContext &ctx,
     QMatrix4x4 bag = back.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, -0.12F, -0.15F), 1.0F);
     bag.scale(0.18F, 0.22F, 0.30F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, bag, bag_color, nullptr, 1.0F, 4});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr, bag, bag_color, nullptr, 1.0F, 4});
 
     QMatrix4x4 strap_attachment = back.make_local_transform(
         ctx.model, QVector3D(side * 0.28F, 0.02F, -0.10F), 1.0F);
@@ -33,7 +34,8 @@ void SaddleBagRenderer::render(const DrawContext &ctx,
     QVector3D const strap_bottom = back.origin + back.right * side * 0.28F -
                                    back.up * 0.12F - back.forward * 0.15F;
 
-    batch.cylinders.push_back({strap_top, strap_bottom, 0.012F, variant.tack_color, 1.0F});
+    batch.cylinders.push_back(
+        {strap_top, strap_bottom, 0.012F, variant.tack_color, 1.0F});
   }
 }
 

@@ -1,6 +1,6 @@
 #include "pose_palette_cache.h"
 
-#include "humanoid/rig.h"
+#include "humanoid/humanoid_renderer_base.h"
 #include "template_cache.h"
 
 namespace Render::GL {

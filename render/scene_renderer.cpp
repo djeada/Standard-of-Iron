@@ -1,5 +1,4 @@
 #include "scene_renderer.h"
-#include "render_backend_factory.h"
 #include "../game/map/terrain_service.h"
 #include "../game/map/visibility_service.h"
 #include "../game/systems/nation_registry.h"
@@ -10,8 +9,12 @@
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
+#include "decoration_gpu.h"
 #include "draw_queue.h"
-#include "elephant/rig.h"
+#include "elephant/dimensions.h"
+#include "elephant/elephant_renderer_base.h"
+#include "elephant/lod.h"
+#include "elephant/render_stats.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "game/core/component.h"
@@ -24,22 +27,26 @@
 #include "gl/primitives.h"
 #include "gl/resources.h"
 #include "graphics_settings.h"
-#include "decoration_gpu.h"
-#include "world_chunk.h"
-#include "horse/rig.h"
-#include "humanoid/rig.h"
-#include "pipeline/lod_selector.h"
-#include "pose_palette_cache.h"
-#include "primitive_batch.h"
+#include "horse/dimensions.h"
+#include "horse/horse_renderer_base.h"
+#include "horse/render_stats.h"
+#include "humanoid/cache_control.h"
+#include "humanoid/humanoid_renderer_base.h"
+#include "humanoid/render_stats.h"
 #include "pass/construction_preview_pass.h"
 #include "pass/frame_context.h"
 #include "pass/frame_pass_runner.h"
 #include "pass/primitive_flush_pass.h"
+#include "pipeline/lod_selector.h"
+#include "pose_palette_cache.h"
+#include "primitive_batch.h"
 #include "profiling/frame_profile.h"
+#include "render_backend_factory.h"
 #include "software_backend.h"
 #include "submitter.h"
 #include "template_cache.h"
 #include "visibility_budget.h"
+#include "world_chunk.h"
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -118,8 +125,7 @@ struct RenderEntry {
 };
 } // namespace
 
-Renderer::Renderer(ShaderQuality quality)
-    : m_shader_quality(quality) {
+Renderer::Renderer(ShaderQuality quality) : m_shader_quality(quality) {
   m_active_queue = &m_queues[m_fill_queue_index];
 }
 
@@ -167,10 +173,6 @@ void Renderer::begin_frame() {
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
 
-  // Stage 15.5c — bone-palette arena lifetime matches submit→dispatch.
-  // Reset at frame start so the queue that will be filled this frame
-  // starts with fresh storage; the previous frame's render queue has
-  // already been executed by the prior end_frame() call.
   m_bone_palette_arena.reset_frame();
 
   if (m_camera != nullptr) {
@@ -203,16 +205,13 @@ void Renderer::end_frame() {
     {
       Render::Profiling::PhaseScope const play_scope(
           &profile, Render::Profiling::Phase::Playback);
-      // Stage 16.2 — push every dirty bone-palette slab to its UBO once
-      // per frame, after submit but before backend dispatch. The
-      // pipeline binds slices via glBindBufferRange at draw time.
+
       m_bone_palette_arena.flush_to_gpu();
       m_backend->execute(render_queue, *m_camera);
     }
     constexpr double k_frame_budget_ms = 16.67;
     profile.budget_headroom_ms =
-        k_frame_budget_ms -
-        static_cast<double>(profile.total_us()) / 1000.0;
+        k_frame_budget_ms - static_cast<double>(profile.total_us()) / 1000.0;
   }
 }
 
@@ -321,9 +320,7 @@ void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
     return;
   }
   if (material == nullptr) {
-    // No material → degrade to legacy MeshCmd so we honour the currently
-    // bound shader (shadow / flag / etc.) without accidentally dropping
-    // it via DrawPartCmd's shader-from-material resolution.
+
     this->mesh(mesh, model, color, texture, alpha, material_id);
     return;
   }
@@ -1250,14 +1247,10 @@ void Renderer::render_world(Engine::Core::World *world) {
         lod_in.fog_visible = entry.fog_visible;
         lod_in.force_batching = batch_config.force_batching;
         lod_in.never_batch = batch_config.never_batch;
-        // batching_ratio == 0 means the frame budget has disabled the
-        // batched submitter entirely; keep the full path in that case
-        // regardless of distance.
+
         const bool batching_available = batching_ratio > 0.0F;
         const auto tier = Render::Pipeline::select_lod(lod_in);
-        // Simplified + Minimal both prefer the batched submitter for the
-        // unit body; Minimal additionally drops decorations to shave cost
-        // for far / high-pressure frames.
+
         const bool useBatching =
             batching_available &&
             (tier == Render::Pipeline::LodTier::Simplified ||
@@ -1274,10 +1267,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       }
     }
     if (drawn_by_registry) {
-      // Minimal tier: drop non-essential decorations. Selection rings still
-      // render because the player needs to locate their own units, but the
-      // mode indicator (attack/guard/hold/patrol pip) is a nice-to-have that
-      // can be hidden on far crowds without compromising legibility.
+
       if (entry.selected || entry.hovered) {
         enqueue_selection_ring(entry.entity, entry.transform, entry.unit,
                                entry.selected, entry.hovered);
@@ -1357,10 +1347,6 @@ void Renderer::render_world(Engine::Core::World *world) {
     render_non_unit_entry(entry);
   }
 
-  // Stage 10: tail phases run through the FramePassRunner. Collection /
-  // culling / LOD / submit stay inline above because they read and mutate
-  // a thick tangle of renderer-private state; the trailing primitive flush
-  // and construction previews are self-contained, so they move first.
   {
     Render::Pass::FrameContext pass_ctx;
     pass_ctx.renderer = this;

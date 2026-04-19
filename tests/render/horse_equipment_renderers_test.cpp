@@ -36,7 +36,6 @@ inline int cylinder_count_of(const EquipmentBatch &b) {
 
 } // namespace
 
-
 class HorseEquipmentRenderersTest : public ::testing::Test {
 protected:
   void SetUp() override {

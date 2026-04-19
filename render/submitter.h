@@ -23,13 +23,6 @@ public:
                     Texture *tex = nullptr, float alpha = 1.0F,
                     int material_id = 0) = 0;
 
-  // Stage-5 material-aware emission path. Default implementation falls
-  // through to `mesh()` so existing submitters keep working; the
-  // QueueSubmitter override emits a DrawPartCmd that resolves the shader
-  // through `material->resolve(shader_quality)` at backend dispatch time.
-  //
-  // If `material` is nullptr the call degrades to the legacy MeshCmd path
-  // verbatim (same colour/alpha/texture/material_id).
   virtual void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
                     const QVector3D &color, Texture *tex = nullptr,
                     float alpha = 1.0F, int material_id = 0) {
@@ -37,11 +30,6 @@ public:
     this->mesh(mesh, model, color, tex, alpha, material_id);
   }
 
-  // Stage 15.5c — GPU-skinned creature draw. The default implementation
-  // is a no-op: only the renderer's own queue submitter (and adapters
-  // that forward to it) understand RiggedCreatureCmd. Test-fake and
-  // equipment-batch submitters can safely ignore rigged draws because
-  // humanoid equipment is still emitted through part()/mesh().
   virtual void rigged(const RiggedCreatureCmd &cmd) { (void)cmd; }
   virtual void cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color,
@@ -120,14 +108,13 @@ public:
   }
 
   void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
-            const QVector3D &color, Texture *tex = nullptr,
-            float alpha = 1.0F, int material_id = 0) override {
+            const QVector3D &color, Texture *tex = nullptr, float alpha = 1.0F,
+            int material_id = 0) override {
     if ((m_queue == nullptr) || (mesh == nullptr)) {
       return;
     }
     if (material == nullptr) {
-      // No Material => legacy MeshCmd path (preserves existing shader
-      // selection via m_shader + backend's basic fallback).
+
       this->mesh(mesh, model, color, tex, alpha, material_id);
       return;
     }

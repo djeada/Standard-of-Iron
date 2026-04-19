@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../i_horse_equipment_renderer.h"
-// EquipmentBatch used in render signature
 
 namespace Render::GL {
 
@@ -9,9 +8,15 @@ class CrupperRenderer : public IHorseEquipmentRenderer {
 public:
   CrupperRenderer() = default;
 
+  static void submit(const DrawContext &ctx, const HorseBodyFrames &frames,
+                     const HorseVariant &variant,
+                     const HorseAnimationContext &anim, EquipmentBatch &batch);
+
   void render(const DrawContext &ctx, const HorseBodyFrames &frames,
               const HorseVariant &variant, const HorseAnimationContext &anim,
-              EquipmentBatch &batch) const override;
+              EquipmentBatch &batch) const override {
+    submit(ctx, frames, variant, anim, batch);
+  }
 };
 
 } // namespace Render::GL

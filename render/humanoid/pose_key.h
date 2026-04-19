@@ -1,14 +1,5 @@
 #pragma once
 
-// Stage 4 seam — narrow pose-shape cache key.
-//
-// The legacy template_cache bakes the unit's world transform into its
-// 6-tuple key, so a unit that only translated could not reuse a cached
-// pose. PoseKey deliberately excludes world transform and owner id: it
-// captures *shape only* (animation state, variant, frame, stance), so any
-// number of units sharing the same animation/variant/frame hit the same
-// cache slot. Apply world transform at submit time.
-
 #include <cstdint>
 #include <functional>
 
@@ -37,8 +28,8 @@ struct PoseKey {
   std::uint16_t frame = 0;
 
   [[nodiscard]] auto operator==(const PoseKey &o) const noexcept -> bool {
-    return variant_id == o.variant_id && anim == o.anim &&
-           stance == o.stance && frame == o.frame;
+    return variant_id == o.variant_id && anim == o.anim && stance == o.stance &&
+           frame == o.frame;
   }
 };
 
@@ -47,13 +38,13 @@ struct PoseKey {
 namespace std {
 
 template <> struct hash<::Render::GL::PoseKey> {
-  auto operator()(const ::Render::GL::PoseKey &k) const noexcept
-      -> std::size_t {
+  auto
+  operator()(const ::Render::GL::PoseKey &k) const noexcept -> std::size_t {
     std::uint64_t packed = k.variant_id;
     packed = (packed << 8) | static_cast<std::uint64_t>(k.anim);
     packed = (packed << 8) | static_cast<std::uint64_t>(k.stance);
     packed = (packed << 16) | static_cast<std::uint64_t>(k.frame);
-    // Splitmix-style finaliser — cheap and well-dispersed for small ints.
+
     packed ^= packed >> 33;
     packed *= 0xff51afd7ed558ccdULL;
     packed ^= packed >> 33;

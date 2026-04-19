@@ -1,10 +1,10 @@
 #pragma once
 
+#include "../decoration_gpu.h"
 #include "../draw_queue.h"
 #include "../frame_budget.h"
-#include "../decoration_gpu.h"
-#include "../world_chunk.h"
 #include "../i_render_backend.h"
+#include "../world_chunk.h"
 #include "camera.h"
 #include "persistent_buffer.h"
 #include "resources.h"
@@ -152,8 +152,8 @@ public:
   void set_frame_budget(const Render::FrameBudgetConfig &config) override {
     m_frame_budget_config = config;
   }
-  [[nodiscard]] auto frame_tracker() const
-      -> const Render::FrameTimeTracker * override {
+  [[nodiscard]] auto
+  frame_tracker() const -> const Render::FrameTimeTracker * override {
     return &m_frame_tracker;
   }
 

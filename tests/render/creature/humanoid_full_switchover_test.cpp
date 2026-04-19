@@ -11,12 +11,14 @@
 // context and are covered by the offscreen smoke test that launches
 // the real binary.
 
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "render/bone_palette_arena.h"
 #include "render/creature/part_graph.h"
 #include "render/creature/spec.h"
 #include "render/draw_queue.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/rig.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
@@ -28,6 +30,7 @@
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <vector>
 
 namespace {
 
@@ -37,6 +40,15 @@ using Render::GL::HumanoidVariant;
 using Render::GL::MeshCmdIndex;
 using Render::GL::RiggedCreatureCmd;
 using Render::GL::RiggedCreatureCmdIndex;
+
+class RecordingRenderer : public Render::GL::Renderer {
+public:
+  std::vector<RiggedCreatureCmd> rigged_calls;
+
+  void rigged(const RiggedCreatureCmd &cmd) override {
+    rigged_calls.push_back(cmd);
+  }
+};
 
 TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   auto const &spec = Render::Humanoid::humanoid_creature_spec();
@@ -50,8 +62,8 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   Render::GL::RiggedMeshCache cache;
   Render::GL::BonePaletteArena arena;
 
-  const auto *entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Full, bind);
+  const auto *entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Full, bind);
   ASSERT_NE(entry, nullptr);
   ASSERT_NE(entry->mesh, nullptr);
   EXPECT_GT(entry->mesh->vertex_count(), 0U)
@@ -62,11 +74,10 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   // 19 primitives) — this is a quick sanity check that the static
   // Full PartGraph actually drove the bake and we didn't accidentally
   // reuse the Reduced bake.
-  const auto *reduced_entry = cache.get_or_bake(
-      spec, Render::Creature::CreatureLOD::Reduced, bind);
+  const auto *reduced_entry =
+      cache.get_or_bake(spec, Render::Creature::CreatureLOD::Reduced, bind);
   ASSERT_NE(reduced_entry, nullptr);
-  EXPECT_GT(entry->mesh->vertex_count(),
-            reduced_entry->mesh->vertex_count())
+  EXPECT_GT(entry->mesh->vertex_count(), reduced_entry->mesh->vertex_count())
       << "Full LOD bake must contain more geometry than Reduced";
 
   // Build a current pose (idle at t=0 — identical to bind pose).
@@ -77,15 +88,16 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   var.stance_width = 1.0F;
   var.arm_swing_amp = 1.0F;
   var.walk_speed_mult = 1.0F;
-  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-      0U, 0.0F, false, var, pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.0F, false,
+                                                            var, pose);
 
   std::array<QMatrix4x4, Render::Humanoid::kBoneCount> palette_buf{};
   std::uint32_t const nbones = Render::Humanoid::compute_bone_palette(
       pose, std::span<QMatrix4x4>(palette_buf.data(), palette_buf.size()));
   EXPECT_EQ(nbones, Render::Humanoid::kBoneCount);
 
-  auto arena_slot_h = arena.allocate_palette(); QMatrix4x4 *arena_slot = arena_slot_h.cpu;
+  auto arena_slot_h = arena.allocate_palette();
+  QMatrix4x4 *arena_slot = arena_slot_h.cpu;
   ASSERT_NE(arena_slot, nullptr);
   for (std::size_t i = 0; i < nbones; ++i) {
     arena_slot[i] = palette_buf[i] * entry->inverse_bind[i];
@@ -145,6 +157,42 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   EXPECT_EQ(queue.get_sorted(0).index(), RiggedCreatureCmdIndex);
 }
 
+TEST(HumanoidFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
+  Render::GL::HumanoidRendererBase humanoid;
+  RecordingRenderer renderer;
+
+  Engine::Core::Entity entity(7);
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->owner_id = 1;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 0.0F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.renderer_id = "cache_enabled_humanoid_body_regression";
+  ctx.allow_template_cache = true;
+  ctx.force_single_soldier = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::GL::HumanoidLOD::Full;
+  ctx.animation_override = &anim;
+  ctx.has_seed_override = true;
+  ctx.seed_override = 42U;
+
+  humanoid.render(ctx, renderer);
+
+  ASSERT_EQ(renderer.rigged_calls.size(), 1U);
+  EXPECT_NE(renderer.rigged_calls[0].mesh, nullptr);
+  EXPECT_GT(renderer.rigged_calls[0].bone_count, 0U);
+  EXPECT_NE(renderer.rigged_calls[0].bone_palette, nullptr);
+}
+
 TEST(HumanoidFullSwitchover, CacheDistinguishesLodsAndBucket) {
   auto const &spec = Render::Humanoid::humanoid_creature_spec();
   auto bind = Render::Humanoid::humanoid_bind_palette();
@@ -177,8 +225,8 @@ TEST(HumanoidFullSwitchover, BonePaletteMatricesAreFinite) {
   var.arm_swing_amp = 1.0F;
   var.walk_speed_mult = 1.0F;
   // Non-zero time to exercise a real (non-bind) pose.
-  Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-      0xABCDU, 0.42F, true, var, pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0xABCDU, 0.42F,
+                                                            true, var, pose);
 
   std::array<QMatrix4x4, Render::Humanoid::kBoneCount> palette_buf{};
   std::uint32_t const nbones = Render::Humanoid::compute_bone_palette(

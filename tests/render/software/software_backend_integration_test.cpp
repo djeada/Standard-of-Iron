@@ -111,15 +111,9 @@ TEST(FrameProfileIntegration, PhasesRecordElapsedInRenderer) {
   auto &p = global_profile();
   p.reset();
   p.enabled = true;
-  {
-    PhaseScope s(&p, Phase::Collection);
-  }
-  {
-    PhaseScope s(&p, Phase::Sort);
-  }
-  {
-    PhaseScope s(&p, Phase::Playback);
-  }
+  { PhaseScope s(&p, Phase::Collection); }
+  { PhaseScope s(&p, Phase::Sort); }
+  { PhaseScope s(&p, Phase::Playback); }
   // Scopes may be sub-microsecond on fast CPUs; total must at least be
   // measurable and the overlay formatter must not crash.
   EXPECT_GE(p.total_us(), 0U);

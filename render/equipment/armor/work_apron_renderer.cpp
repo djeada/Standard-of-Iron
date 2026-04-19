@@ -18,21 +18,30 @@ WorkApronRenderer::WorkApronRenderer(const WorkApronConfig &config)
     : m_config(config) {}
 
 void WorkApronRenderer::render(const DrawContext &ctx, const BodyFrames &frames,
+                               const HumanoidPalette &palette,
+                               const HumanoidAnimationContext &anim,
+                               EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void WorkApronRenderer::submit(const WorkApronConfig &config,
+                               const DrawContext &ctx, const BodyFrames &frames,
                                const HumanoidPalette &,
                                const HumanoidAnimationContext &,
                                EquipmentBatch &batch) {
-  renderApronBody(ctx, frames.torso, frames.waist, batch);
+  renderApronBody(config, ctx, frames.torso, frames.waist, batch);
 
-  if (m_config.include_straps) {
-    renderStraps(ctx, frames.torso, frames, batch);
+  if (config.include_straps) {
+    renderStraps(config, ctx, frames.torso, frames, batch);
   }
 
-  if (m_config.include_pockets) {
-    renderPockets(ctx, frames.waist, batch);
+  if (config.include_pockets) {
+    renderPockets(config, ctx, frames.waist, batch);
   }
 }
 
-void WorkApronRenderer::renderApronBody(const DrawContext &ctx,
+void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
+                                        const DrawContext &ctx,
                                         const AttachmentFrame &torso,
                                         const AttachmentFrame &waist,
                                         EquipmentBatch &batch) {
@@ -47,17 +56,17 @@ void WorkApronRenderer::renderApronBody(const DrawContext &ctx,
   const QVector3D &up = waist.up;
   const QVector3D &forward = waist.forward;
 
-  float const waist_r = waist.radius * m_config.apron_width;
+  float const waist_r = waist.radius * config.apron_width;
   float const waist_d =
       (waist.depth > 0.0F) ? waist.depth * 0.85F : waist.radius * 0.75F;
 
   float const y_top = origin.y() + 0.05F;
-  float const y_bottom = origin.y() - m_config.apron_length;
+  float const y_bottom = origin.y() - config.apron_length;
 
   constexpr int segs = 14;
   constexpr float pi = std::numbers::pi_v<float>;
 
-  QVector3D const apron_color = m_config.leather_color;
+  QVector3D const apron_color = config.leather_color;
   QVector3D const apron_dark = apron_color * 0.80F;
 
   for (int ring = 0; ring < 6; ++ring) {
@@ -86,8 +95,8 @@ void WorkApronRenderer::renderApronBody(const DrawContext &ctx,
                            up * (y - origin.y());
 
       batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                     cylinder_between(ctx.model, p1, p2, thickness), color,
-                     nullptr, 1.0F});
+                              cylinder_between(ctx.model, p1, p2, thickness),
+                              color, nullptr, 1.0F});
     }
   }
 
@@ -105,13 +114,15 @@ void WorkApronRenderer::renderApronBody(const DrawContext &ctx,
                             forward * (d * std::cos(side_angle)) +
                             up * (y - origin.y());
 
-      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, 0.020F),
-                     apron_dark, nullptr, 1.0F});
+      batch.meshes.push_back({get_unit_sphere(), nullptr,
+                              sphere_at(ctx.model, pos, 0.020F), apron_dark,
+                              nullptr, 1.0F});
     }
   }
 }
 
-void WorkApronRenderer::renderStraps(const DrawContext &ctx,
+void WorkApronRenderer::renderStraps(const WorkApronConfig &config,
+                                     const DrawContext &ctx,
                                      const AttachmentFrame &torso,
                                      const BodyFrames &frames,
                                      EquipmentBatch &batch) {
@@ -119,7 +130,7 @@ void WorkApronRenderer::renderStraps(const DrawContext &ctx,
     return;
   }
 
-  QVector3D const strap_color = m_config.strap_color;
+  QVector3D const strap_color = config.strap_color;
 
   QVector3D const shoulder_l = frames.shoulder_l.origin;
   QVector3D const shoulder_r = frames.shoulder_r.origin;
@@ -140,25 +151,26 @@ void WorkApronRenderer::renderStraps(const DrawContext &ctx,
       torso_back - torso.right * torso.radius * 0.20F - torso.up * 0.02F;
 
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, chest_l, back_l, 0.020F),
-                 strap_color, nullptr, 1.0F});
+                          cylinder_between(ctx.model, chest_l, back_l, 0.020F),
+                          strap_color, nullptr, 1.0F});
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, chest_r, back_r, 0.020F),
-                 strap_color, nullptr, 1.0F});
+                          cylinder_between(ctx.model, chest_r, back_r, 0.020F),
+                          strap_color, nullptr, 1.0F});
 
   batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                 cylinder_between(ctx.model, back_l, back_r, 0.018F),
-                 strap_color, nullptr, 1.0F});
+                          cylinder_between(ctx.model, back_l, back_r, 0.018F),
+                          strap_color, nullptr, 1.0F});
 }
 
-void WorkApronRenderer::renderPockets(const DrawContext &ctx,
+void WorkApronRenderer::renderPockets(const WorkApronConfig &config,
+                                      const DrawContext &ctx,
                                       const AttachmentFrame &waist,
                                       EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
 
-  QVector3D const pocket_color = m_config.leather_color * 0.88F;
+  QVector3D const pocket_color = config.leather_color * 0.88F;
 
   constexpr float pi = std::numbers::pi_v<float>;
 
@@ -180,8 +192,9 @@ void WorkApronRenderer::renderPockets(const DrawContext &ctx,
                               waist.up * y_off;
 
         float const r = 0.012F - float(i + j) * 0.0005F;
-        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
-                       pocket_color, nullptr, 1.0F});
+        batch.meshes.push_back({get_unit_sphere(), nullptr,
+                                sphere_at(ctx.model, pos, r), pocket_color,
+                                nullptr, 1.0F});
       }
     }
   }

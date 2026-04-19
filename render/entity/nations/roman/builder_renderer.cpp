@@ -2,6 +2,8 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/equipment_registry.h"
 #include "../../../equipment/equipment_submit.h"
 #include "../../../geom/math_utils.h"
@@ -11,9 +13,9 @@
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -82,6 +84,69 @@ public:
     return {1.05F, 0.98F, 1.02F};
   }
 
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    static auto helmet =
+        reg.get(Render::GL::EquipmentCategory::Helmet, "roman_light");
+    static auto work_apron =
+        reg.get(Render::GL::EquipmentCategory::Armor, "work_apron_roman");
+    static auto tool_belt =
+        reg.get(Render::GL::EquipmentCategory::Armor, "tool_belt_roman");
+    static auto arm_guards =
+        reg.get(Render::GL::EquipmentCategory::Armor, "arm_guards");
+
+    static const std::array<EquipmentRecord, 6> records{
+        make_legacy_equipment_record(*helmet),
+        make_legacy_equipment_record(*work_apron),
+        make_legacy_equipment_record(*tool_belt),
+        make_legacy_equipment_record(*arm_guards),
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.frames == nullptr ||
+                      sub.palette == nullptr || sub.pose == nullptr) {
+                    return;
+                  }
+                  HumanoidVariant tmp_v{};
+                  tmp_v.palette = *sub.palette;
+                  draw_work_tunic(*sub.ctx, tmp_v, *sub.pose, sub.seed, batch);
+                },
+        },
+
+        EquipmentRecord{
+            .dispatch =
+                [](const EquipmentSubmitContext &sub,
+                   Render::GL::EquipmentBatch &batch) {
+                  if (sub.ctx == nullptr || sub.palette == nullptr ||
+                      sub.pose == nullptr || sub.anim == nullptr) {
+                    return;
+                  }
+                  HumanoidVariant tmp_v{};
+                  tmp_v.palette = *sub.palette;
+                  draw_stone_hammer(*sub.ctx, tmp_v, *sub.pose, *sub.anim,
+                                    batch);
+                },
+        },
+    };
+
+    static const UnitVisualSpec spec = []() {
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/builder";
+      s.scaling = ProportionScaling{1.05F, 0.98F, 1.02F};
+      s.equipment =
+          std::span<const EquipmentRecord>{records.data(), records.size()};
+      s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor |
+                             LegacySlotMask::Attachments;
+      return s;
+    }();
+    return spec;
+  }
+
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -137,56 +202,6 @@ public:
 
     controller.place_hand_at(true, hammer_hand);
     controller.place_hand_at(false, rest_hand);
-  }
-
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-
-    auto work_apron =
-        registry.get(EquipmentCategory::Armor, "work_apron_roman");
-    if (work_apron) {
-      render_equipment(*work_apron, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    auto tool_belt = registry.get(EquipmentCategory::Armor, "tool_belt_roman");
-    if (tool_belt) {
-      render_equipment(*tool_belt, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    auto arm_guards = registry.get(EquipmentCategory::Armor, "arm_guards");
-    if (arm_guards) {
-      render_equipment(*arm_guards, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    {
-      EquipmentBatch batch;
-      draw_stone_hammer(ctx, v, pose, anim_ctx, batch);
-      submit_equipment_batch(batch, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-
-    auto &registry = EquipmentRegistry::instance();
-    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
-    if (helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      render_equipment(*helmet, ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    EquipmentBatch batch;
-    draw_work_tunic(ctx, v, pose, seed, batch);
-    submit_equipment_batch(batch, out);
   }
 
 private:
@@ -328,11 +343,11 @@ private:
     }
   }
 
-  void draw_stone_hammer(const DrawContext &ctx, const HumanoidVariant &v,
-                         const HumanoidPose &pose,
-                         const HumanoidAnimationContext &anim_ctx,
-                         EquipmentBatch &batch) const {
-    QVector3D const wood_color = v.palette.wood;
+  static void draw_stone_hammer(const DrawContext &ctx,
+                                const HumanoidVariant &v,
+                                const HumanoidPose &pose,
+                                const HumanoidAnimationContext &anim_ctx,
+                                EquipmentBatch &batch) {
 
     QVector3D const stone_color(0.55F, 0.52F, 0.48F);
     QVector3D const stone_dark(0.45F, 0.42F, 0.38F);
@@ -364,25 +379,38 @@ private:
     QVector3D const handle_top = hand + handle_offset;
     QVector3D const handle_bot = handle_top - handle_axis * handle_len;
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, handle_bot, handle_top, handle_r), wood_color, nullptr, 1.0F, 0});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
+         v.palette.wood, nullptr, 1.0F, 0});
 
     float const head_len = 0.10F;
     float const head_r = 0.030F;
     QVector3D const head_center = handle_top + handle_axis * 0.035F;
 
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                         head_center + head_axis * (head_len * 0.5F), head_r), stone_color, nullptr, 1.0F, 0});
+    batch.meshes.push_back(
+        {get_unit_cylinder(), nullptr,
+         cylinder_between(ctx.model,
+                          head_center - head_axis * (head_len * 0.5F),
+                          head_center + head_axis * (head_len * 0.5F), head_r),
+         stone_color, nullptr, 1.0F, 0});
 
-    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
-                       head_r * 1.15F), stone_dark, nullptr, 1.0F, 0});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr,
+         sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
+                   head_r * 1.15F),
+         stone_dark, nullptr, 1.0F, 0});
 
-    batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                       head_r * 0.9F), stone_color * 0.95F, nullptr, 1.0F, 0});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr,
+         sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
+                   head_r * 0.9F),
+         stone_color * 0.95F, nullptr, 1.0F, 0});
   }
 
-  void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose, uint32_t seed,
-                       EquipmentBatch &batch) const {
+  static void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
+                              const HumanoidPose &pose, uint32_t seed,
+                              EquipmentBatch &batch) {
     using HP = HumanProportions;
     const BodyFrames &frames = pose.body_frames;
     const AttachmentFrame &torso = frames.torso;
@@ -428,7 +456,9 @@ private:
                        forward * (d * std::cos(a1)) + up * (y - origin.y());
         QVector3D p2 = origin + right * (w * std::sin(a2)) +
                        forward * (d * std::cos(a2)) + up * (y - origin.y());
-        batch.meshes.push_back({get_unit_cylinder(), nullptr, cylinder_between(ctx.model, p1, p2, th), col, nullptr, 1.0F, 0});
+        batch.meshes.push_back({get_unit_cylinder(), nullptr,
+                                cylinder_between(ctx.model, p1, p2, th), col,
+                                nullptr, 1.0F, 0});
       }
     };
 
@@ -463,7 +493,9 @@ private:
         QVector3D pos =
             shoulder * (1.0F - t) + elbow * t * 0.6F + out_dir * 0.008F;
         float r = HP::UPPER_ARM_R * (1.40F - t * 0.25F);
-        batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F, 0});
+        batch.meshes.push_back(
+            {get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
+             tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F, 0});
       }
     };
     drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
@@ -472,8 +504,10 @@ private:
     draw_extended_forearm(ctx, v, pose, batch);
   }
 
-  void draw_extended_forearm(const DrawContext &ctx, const HumanoidVariant &v,
-                             const HumanoidPose &pose, EquipmentBatch &batch) const {
+  static void draw_extended_forearm(const DrawContext &ctx,
+                                    const HumanoidVariant &v,
+                                    const HumanoidPose &pose,
+                                    EquipmentBatch &batch) {
 
     QVector3D const skin_color = v.palette.skin;
 
@@ -484,7 +518,9 @@ private:
       float t = 0.25F + float(i) * 0.20F;
       QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
       float r = 0.024F - float(i) * 0.002F;
-      batch.meshes.push_back({get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r), skin_color, nullptr, 1.0F, 0});
+      batch.meshes.push_back({get_unit_sphere(), nullptr,
+                              sphere_at(ctx.model, pos, r), skin_color, nullptr,
+                              1.0F, 0});
     }
   }
 

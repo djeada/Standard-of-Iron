@@ -6,16 +6,6 @@
 
 namespace Render::Math {
 
-// A typed local reference frame. Unlike a bare origin + axis-end pair, a
-// BoneFrame carries its right/up/forward explicitly so that downstream code
-// never has to guess which direction is "wider" vs "deeper" for a
-// non-rotationally-symmetric part (torso, shield, saddle, helmet, …).
-//
-// Invariants (not enforced at construction — caller's responsibility):
-//   * right, up, forward are unit length.
-//   * They form a right-handed orthonormal basis:
-//        right.cross(up) ≈ forward
-// The helpers below build frames that satisfy both.
 struct BoneFrame {
   QVector3D origin{0.0F, 0.0F, 0.0F};
   QVector3D right{1.0F, 0.0F, 0.0F};
@@ -28,15 +18,6 @@ struct BoneFrame {
   }
 };
 
-// Build a BoneFrame from an explicit up axis and a *reference* right axis.
-// The up is kept verbatim (caller is responsible for normalising). The right
-// axis is orthogonalised against up (Gram–Schmidt) so that `right.dot(up)==0`.
-// Forward is derived as right × up and is therefore guaranteed orthogonal.
-//
-// This is the canonical way to construct a frame when the caller knows
-// "which way is up for this bone" AND "which way is the unit facing / to its
-// right in world space". Any non-symmetric scaling applied afterwards is
-// unambiguous.
 [[nodiscard]] inline auto
 make_bone_frame(const QVector3D &origin, const QVector3D &up_axis,
                 const QVector3D &right_reference) noexcept -> BoneFrame {
@@ -53,10 +34,9 @@ make_bone_frame(const QVector3D &origin, const QVector3D &up_axis,
   QVector3D right =
       right_reference - up * QVector3D::dotProduct(right_reference, up);
   if (right.lengthSquared() < 1e-8F) {
-    const QVector3D fallback =
-        std::abs(up.y()) < 0.9F
-            ? QVector3D{1.0F, 0.0F, 0.0F}
-            : QVector3D{0.0F, 0.0F, 1.0F};
+    const QVector3D fallback = std::abs(up.y()) < 0.9F
+                                   ? QVector3D{1.0F, 0.0F, 0.0F}
+                                   : QVector3D{0.0F, 0.0F, 1.0F};
     right = fallback - up * QVector3D::dotProduct(fallback, up);
   }
   right.normalize();

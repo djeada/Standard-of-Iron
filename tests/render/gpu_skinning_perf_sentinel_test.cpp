@@ -19,8 +19,8 @@
 
 #include "render/bone_palette_arena.h"
 #include "render/draw_queue.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_spec.h"
-#include "render/humanoid/rig.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh_cache.h"
 #include "render/submitter.h"
@@ -95,11 +95,10 @@ TEST(GpuSkinningPerfSentinel, TwoHundredHumanoidSubmitsUnderBudget) {
   auto const elapsed_us =
       std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
   ASSERT_EQ(queue.size(), static_cast<std::size_t>(k_units));
-  EXPECT_EQ(arena.allocations_in_flight(),
-            static_cast<std::size_t>(k_units));
+  EXPECT_EQ(arena.allocations_in_flight(), static_cast<std::size_t>(k_units));
   EXPECT_LT(elapsed_us, k_budget_us_total)
-      << "200-unit rigged submit phase exceeded budget; recorded "
-      << elapsed_us << " us";
+      << "200-unit rigged submit phase exceeded budget; recorded " << elapsed_us
+      << " us";
 
   ::testing::Test::RecordProperty("perf_us_total",
                                   static_cast<int>(elapsed_us));

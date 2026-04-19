@@ -69,9 +69,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const RomanPalette &c) {
-  // The platform's terracotta tile grid is procedural (nested loops over
-  // position), so it stays imperative. The two slab layers move to the
-  // rig below (see draw_static_structure).
+
   for (float x = -1.5F; x <= 1.5F; x += 0.35F) {
     for (float z = -1.3F; z <= 1.3F; z += 0.35F) {
       if (fabsf(x) > 0.6F || fabsf(z) > 0.5F) {
@@ -82,10 +80,6 @@ void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-// Stage 11: structural mass (platform slabs, courtyard pool, chamber
-// walls, doors, trading amphorae) lives as data in barracks_rig.h. This
-// function populates the static anchor table and asks the rig
-// interpreter to emit the whole batch in one walk.
 void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   using namespace Render::RigDSL::Barracks;
 
@@ -97,14 +91,11 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
     anchors.set(id, QVector3D(x, y, z));
   };
 
-  // Platform (two-layer pedestal). Anchors are the diagonal corners of
-  // the volume the old draw_box(center, halfExtents) used to express.
   set(Platform_BaseLow, -2.0F, 0.00F, -1.8F);
   set(Platform_BaseHigh, 2.0F, 0.16F, 1.8F);
   set(Platform_TopLow, -1.8F, 0.16F, -1.6F);
   set(Platform_TopHigh, 1.8F, 0.20F, 1.6F);
 
-  // Central courtyard.
   set(Court_StoneLow, -1.3F, 0.21F, -1.1F);
   set(Court_StoneHigh, 1.3F, 0.23F, 1.1F);
   set(Court_PoolLow, -0.7F, 0.22F, -0.5F);
@@ -118,7 +109,6 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   set(Court_PillarCapLow, -0.08F, 0.55F, -0.08F);
   set(Court_PillarCapHigh, 0.08F, 0.61F, 0.08F);
 
-  // Chamber walls (wall_h = 1.4 → wall top at y = 0.2 + 1.4 = 1.6).
   set(Wall_BackLow, -1.4F, 0.20F, -1.3F);
   set(Wall_BackHigh, 1.4F, 1.60F, -1.1F);
   set(Wall_LeftLow, -1.6F, 0.20F, -1.1F);
@@ -126,7 +116,6 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   set(Wall_RightLow, 1.4F, 0.20F, -1.1F);
   set(Wall_RightHigh, 1.6F, 1.60F, 0.1F);
 
-  // Doors + lintels.
   set(Door_LDoorLow, -0.85F, 0.30F, -1.18F);
   set(Door_LDoorHigh, -0.35F, 1.00F, -1.12F);
   set(Door_LLintelLow, -0.85F, 0.93F, -1.18F);
@@ -136,7 +125,6 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   set(Door_RLintelLow, 0.35F, 0.93F, -1.18F);
   set(Door_RLintelHigh, 0.85F, 1.03F, -1.12F);
 
-  // Trading goods.
   set(Goods_Amp1Bot, -1.2F, 0.20F, 1.10F);
   set(Goods_Amp1Top, -1.2F, 0.50F, 1.10F);
   set(Goods_Amp2Bot, -0.9F, 0.20F, 1.15F);
@@ -147,7 +135,7 @@ void draw_static_structure(const DrawContext &p, ISubmitter &out) {
   Render::RigDSL::InterpretContext ictx;
   ictx.model = p.model;
   ictx.anchors = &anchors;
-  ictx.palette = nullptr; // all parts are PaletteSlot::Literal
+  ictx.palette = nullptr;
   ictx.scalars = nullptr;
   ictx.material = nullptr;
   ictx.lod = 0;
@@ -492,12 +480,11 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     cloth.bannerShader = p.backend->banner_shader();
   }
 
-  draw_static_structure(p, out); // platform slabs, courtyard stone +
-                                 // pool + pillar, chamber walls, doors +
-                                 // lintels, trading amphorae — all data.
-  draw_platform(p, out, unit, white, c); // procedural terracotta tile grid.
-  draw_colonnade(p, out, unit, white, c, state); // state-dependent columns.
-  draw_terrace(p, out, unit, white, c, state);   // state-dependent roof.
+  draw_static_structure(p, out);
+
+  draw_platform(p, out, unit, white, c);
+  draw_colonnade(p, out, unit, white, c, state);
+  draw_terrace(p, out, unit, white, c, state);
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);

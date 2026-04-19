@@ -2,8 +2,8 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_math.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
-#include "../../humanoid/rig.h"
 #include "../../humanoid/style_palette.h"
 #include "../equipment_submit.h"
 #include <QMatrix4x4>
@@ -74,7 +74,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       m.scale(0.03F, 0.05F, 0.01F);
 
       QVector3D segment_color = shield_red * (1.0F + (v % 2) * 0.05F - 0.025F);
-      batch.meshes.push_back({get_unit_sphere(), nullptr, m, segment_color, nullptr, 1.0F, 4});
+      batch.meshes.push_back(
+          {get_unit_sphere(), nullptr, m, segment_color, nullptr, 1.0F, 4});
     }
   }
 
@@ -90,7 +91,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(ridge_pos);
     m.scale(0.025F, 0.06F, 0.015F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.9F, nullptr, 1.0F, 4});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr, m, bronze_color * 0.9F, nullptr, 1.0F, 4});
   }
 
   QVector3D const boss_center =
@@ -106,12 +108,13 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(ring_pos);
     m.scale(0.018F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color, nullptr, 1.0F, 4});
+    batch.meshes.push_back(
+        {get_unit_sphere(), nullptr, m, bronze_color, nullptr, 1.0F, 4});
   }
 
   batch.meshes.push_back({get_unit_sphere(), nullptr,
-                 sphere_at(ctx.model, boss_center, boss_radius * 0.8F),
-                 bronze_color * 1.1F, nullptr, 1.0F, 4});
+                          sphere_at(ctx.model, boss_center, boss_radius * 0.8F),
+                          bronze_color * 1.1F, nullptr, 1.0F, 4});
 
   float const y_pos = shield_height * 0.48F;
   for (int i = 0; i < 10; ++i) {
@@ -125,8 +128,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rim_pos);
     m.scale(rim_thickness);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.95F, nullptr, 1.0F,
-                   4});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.95F,
+                            nullptr, 1.0F, 4});
   }
 
   float const y_pos_bot = -shield_height * 0.48F;
@@ -141,8 +144,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rim_pos);
     m.scale(rim_thickness);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.95F, nullptr, 1.0F,
-                   4});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.95F,
+                            nullptr, 1.0F, 4});
   }
 
   for (int side = 0; side < 2; ++side) {
@@ -160,8 +163,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       QMatrix4x4 m = ctx.model;
       m.translate(rim_pos);
       m.scale(rim_thickness);
-      batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 0.95F, nullptr, 1.0F,
-                     4});
+      batch.meshes.push_back({get_unit_sphere(), nullptr, m,
+                              bronze_color * 0.95F, nullptr, 1.0F, 4});
     }
   }
 
@@ -176,8 +179,8 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
     QMatrix4x4 m = ctx.model;
     m.translate(rivet_pos);
     m.scale(0.012F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 1.15F, nullptr, 1.0F,
-                   4});
+    batch.meshes.push_back({get_unit_sphere(), nullptr, m, bronze_color * 1.15F,
+                            nullptr, 1.0F, 4});
   }
 }
 

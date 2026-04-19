@@ -3,9 +3,9 @@
 #include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "gl/resources.h"
-#include "riverbank_asset_gpu.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "riverbank_asset_gpu.h"
 #include <QDebug>
 #include <QVector2D>
 #include <algorithm>

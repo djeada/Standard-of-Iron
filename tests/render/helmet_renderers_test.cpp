@@ -2,7 +2,7 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
-#include "render/humanoid/rig.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
 #include <gtest/gtest.h>
 #include <memory>

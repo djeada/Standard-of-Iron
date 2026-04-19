@@ -1,6 +1,9 @@
 #include "horse_spec.h"
 
 #include "../creature/part_graph.h"
+#include "../creature/pipeline/creature_frame.h"
+#include "../creature/pipeline/creature_pipeline.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/skeleton.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
@@ -12,6 +15,7 @@
 #include <array>
 #include <cmath>
 #include <numbers>
+#include <span>
 
 namespace Render::Horse {
 
@@ -46,11 +50,10 @@ constexpr SkeletonTopology kHorseTopology{
     std::span<const Render::Creature::SocketDef>(kHorseSockets),
 };
 
-// Color roles resolved by submit_horse_lod:
-constexpr std::uint8_t kRoleCoat = 1;           // solid coat
-constexpr std::uint8_t kRoleCoatDark = 2;       // Minimal legs
-constexpr std::uint8_t kRoleCoatReducedLeg = 3; // Reduced legs
-constexpr std::uint8_t kRoleHoof = 4;           // hoof_color
+constexpr std::uint8_t kRoleCoat = 1;
+constexpr std::uint8_t kRoleCoatDark = 2;
+constexpr std::uint8_t kRoleCoatReducedLeg = 3;
+constexpr std::uint8_t kRoleHoof = 4;
 
 [[nodiscard]] auto
 translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
@@ -71,7 +74,6 @@ void evaluate_horse_skeleton(const HorseSpecPose &pose,
   out_palette[static_cast<std::size_t>(HorseBone::Root)] =
       translation_matrix(pose.barrel_center);
 
-  // Minimal body — basis columns encode the Minimal ellipsoid scale.
   QMatrix4x4 body;
   body.setColumn(0, QVector4D(pose.body_ellipsoid_x, 0.0F, 0.0F, 0.0F));
   body.setColumn(1, QVector4D(0.0F, pose.body_ellipsoid_y, 0.0F, 0.0F));
@@ -123,31 +125,30 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   out_pose.shoulder_offset_br = QVector3D(-shoulder_dx, shoulder_dy, rear_dz);
 
   float const drop = -dims.leg_length * 0.60F;
-  out_pose.foot_fl = center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
-  out_pose.foot_fr = center + out_pose.shoulder_offset_fr + QVector3D(0, drop, 0);
-  out_pose.foot_bl = center + out_pose.shoulder_offset_bl + QVector3D(0, drop, 0);
-  out_pose.foot_br = center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
+  out_pose.foot_fl =
+      center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
+  out_pose.foot_fr =
+      center + out_pose.shoulder_offset_fr + QVector3D(0, drop, 0);
+  out_pose.foot_bl =
+      center + out_pose.shoulder_offset_bl + QVector3D(0, drop, 0);
+  out_pose.foot_br =
+      center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
   out_pose.leg_radius = dims.body_width * 0.15F;
 }
 
 namespace {
 
-// Legacy `render_simplified` leg math, factored out so the Reduced
-// pose builder and the parity tests can share the exact same
-// expression tree.
 struct ReducedLegSample {
-  QVector3D shoulder; // local to barrel_center (relative offset)
-  QVector3D foot;     // local to barrel_center (relative offset)
+  QVector3D shoulder;
+  QVector3D foot;
 };
 
-auto compute_reduced_leg(const Render::GL::HorseDimensions &dims,
-                         const Render::GL::HorseGait &gait,
-                         float phase_base, float phase_offset,
-                         float lateral_sign, float forward_bias,
-                         bool is_moving,
-                         const QVector3D &anchor_offset) noexcept
-    -> ReducedLegSample {
+auto compute_reduced_leg(
+    const Render::GL::HorseDimensions &dims, const Render::GL::HorseGait &gait,
+    float phase_base, float phase_offset, float lateral_sign,
+    float forward_bias, bool is_moving,
+    const QVector3D &anchor_offset) noexcept -> ReducedLegSample {
   constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
   float const leg_phase = std::fmod(phase_base + phase_offset, 1.0F);
   float stride = 0.0F;
@@ -176,36 +177,28 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
                                   const Render::GL::HorseGait &gait,
                                   HorseReducedMotion motion,
                                   HorseSpecPose &out_pose) noexcept {
-  // Start from the Minimal pose to keep Body basis + Minimal leg
-  // fields valid in case a downstream consumer ever needs them.
+
   make_horse_spec_pose(dims, motion.bob, out_pose);
 
   QVector3D const center = out_pose.barrel_center;
 
-  // --- Reduced body ellipsoid ---------------------------------------
-  // Legacy: body.scale(body_width, body_height*0.85, body_length*0.80)
-  // on a unit sphere. half_extents = that * 0.5.
   out_pose.reduced_body_half =
       QVector3D(dims.body_width * 0.5F, dims.body_height * 0.425F,
                 dims.body_length * 0.40F);
 
-  // --- Neck ---------------------------------------------------------
-  out_pose.neck_base =
-      center + QVector3D(0.0F, dims.body_height * 0.35F,
-                         dims.body_length * 0.35F);
+  out_pose.neck_base = center + QVector3D(0.0F, dims.body_height * 0.35F,
+                                          dims.body_length * 0.35F);
   out_pose.neck_top =
       out_pose.neck_base + QVector3D(0.0F, dims.neck_rise, dims.neck_length);
   out_pose.neck_radius = dims.body_width * 0.40F;
 
-  // --- Head ---------------------------------------------------------
   out_pose.head_center =
       out_pose.neck_top +
       QVector3D(0.0F, dims.head_height * 0.10F, dims.head_length * 0.40F);
-  out_pose.head_half = QVector3D(dims.head_width * 0.45F,
-                                 dims.head_height * 0.425F,
-                                 dims.head_length * 0.375F);
+  out_pose.head_half =
+      QVector3D(dims.head_width * 0.45F, dims.head_height * 0.425F,
+                dims.head_length * 0.375F);
 
-  // --- Legs (motion-biased) ----------------------------------------
   QVector3D const front_anchor =
       QVector3D(0.0F, dims.body_height * 0.05F, dims.body_length * 0.30F);
   QVector3D const rear_anchor =
@@ -214,18 +207,17 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
   float const front_bias = dims.body_length * 0.15F;
   float const rear_bias = -dims.body_length * 0.15F;
 
-  auto fl = compute_reduced_leg(dims, gait, motion.phase, gait.front_leg_phase,
-                                1.0F, front_bias, motion.is_moving,
-                                front_anchor);
+  auto fl =
+      compute_reduced_leg(dims, gait, motion.phase, gait.front_leg_phase, 1.0F,
+                          front_bias, motion.is_moving, front_anchor);
   auto fr = compute_reduced_leg(dims, gait, motion.phase,
-                                gait.front_leg_phase + 0.48F, -1.0F,
-                                front_bias, motion.is_moving, front_anchor);
+                                gait.front_leg_phase + 0.48F, -1.0F, front_bias,
+                                motion.is_moving, front_anchor);
   auto bl = compute_reduced_leg(dims, gait, motion.phase, gait.rear_leg_phase,
-                                1.0F, rear_bias, motion.is_moving,
-                                rear_anchor);
-  auto br = compute_reduced_leg(dims, gait, motion.phase,
-                                gait.rear_leg_phase + 0.52F, -1.0F, rear_bias,
-                                motion.is_moving, rear_anchor);
+                                1.0F, rear_bias, motion.is_moving, rear_anchor);
+  auto br =
+      compute_reduced_leg(dims, gait, motion.phase, gait.rear_leg_phase + 0.52F,
+                          -1.0F, rear_bias, motion.is_moving, rear_anchor);
 
   out_pose.shoulder_offset_reduced_fl = fl.shoulder;
   out_pose.shoulder_offset_reduced_fr = fr.shoulder;
@@ -239,18 +231,12 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
 
   out_pose.leg_radius_reduced = dims.body_width * 0.22F;
 
-  // --- Hooves -------------------------------------------------------
-  // Legacy: hoof.scale(body_width*0.28, hoof_height, body_width*0.30)
-  // on a unit cylinder (which has radius 1 and height 1 along Y).
-  out_pose.hoof_scale =
-      QVector3D(dims.body_width * 0.28F, dims.hoof_height,
-                dims.body_width * 0.30F);
+  out_pose.hoof_scale = QVector3D(dims.body_width * 0.28F, dims.hoof_height,
+                                  dims.body_width * 0.30F);
 }
 
 namespace {
 
-// Build the Minimal LOD PartGraph into the caller-owned array.
-// Returns the number of primitives written.
 auto build_minimal_primitives(const HorseSpecPose &pose,
                               std::array<PrimitiveInstance, 5> &out) noexcept
     -> std::size_t {
@@ -294,22 +280,10 @@ auto build_minimal_primitives(const HorseSpecPose &pose,
   return 5;
 }
 
-// Build the Reduced LOD PartGraph. Layout:
-//   [0]  body ellipsoid        (OrientedSphere @ Root)
-//   [1]  neck cylinder         (Cylinder Root+neck_base → NeckTop)
-//   [2]  head ellipsoid        (OrientedSphere @ Head)
-//   [3]  leg FL                (Cylinder Root+shoulder → FootFL)
-//   [4]  hoof FL               (Mesh unit_cylinder @ FootFL)
-//   [5]  leg FR
-//   [6]  hoof FR
-//   [7]  leg BL
-//   [8]  hoof BL
-//   [9]  leg BR
-//   [10] hoof BR
 auto build_reduced_primitives(const HorseSpecPose &pose,
                               std::array<PrimitiveInstance, 11> &out) noexcept
     -> std::size_t {
-  // Body.
+
   {
     PrimitiveInstance &p = out[0];
     p.debug_name = "horse.body.reduced";
@@ -320,7 +294,7 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
     p.material_id = 6;
     p.lod_mask = kLodReduced;
   }
-  // Neck.
+
   {
     PrimitiveInstance &p = out[1];
     p.debug_name = "horse.neck";
@@ -333,7 +307,7 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
     p.material_id = 0;
     p.lod_mask = kLodReduced;
   }
-  // Head.
+
   {
     PrimitiveInstance &p = out[2];
     p.debug_name = "horse.head";
@@ -362,7 +336,7 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
        pose.shoulder_offset_reduced_br},
   }};
   for (std::size_t i = 0; i < 4; ++i) {
-    // Leg cylinder (Root + shoulder_offset_reduced) → Foot.
+
     PrimitiveInstance &leg = out[3 + (i * 2)];
     leg.debug_name = legs[i].leg_name;
     leg.shape = PrimitiveShape::Cylinder;
@@ -375,7 +349,6 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
     leg.material_id = 0;
     leg.lod_mask = kLodReduced;
 
-    // Hoof Mesh(unit_cylinder) axis-aligned at foot.
     PrimitiveInstance &hoof = out[4 + (i * 2)];
     hoof.debug_name = legs[i].hoof_name;
     hoof.shape = PrimitiveShape::Mesh;
@@ -391,55 +364,7 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
 
 } // namespace
 
-void submit_horse_lod(const HorseSpecPose &pose,
-                      const Render::GL::HorseVariant &variant,
-                      CreatureLOD lod,
-                      const QMatrix4x4 &world_from_unit,
-                      Render::GL::ISubmitter &out) noexcept {
-  BonePalette palette;
-  evaluate_horse_skeleton(pose, palette);
-
-  std::array<QVector3D, 4> role_colors{};
-  fill_horse_role_colors(variant, role_colors);
-
-  switch (lod) {
-  case CreatureLOD::Minimal: {
-    std::array<PrimitiveInstance, 5> prims{};
-    std::size_t const n = build_minimal_primitives(pose, prims);
-    PartGraph graph{std::span<const PrimitiveInstance>(prims.data(), n)};
-    submit_part_graph(kHorseTopology, graph,
-                      std::span<const QMatrix4x4>(palette), lod,
-                      world_from_unit, out,
-                      std::span<const QVector3D>(role_colors));
-    break;
-  }
-  case CreatureLOD::Reduced: {
-    std::array<PrimitiveInstance, 11> prims{};
-    std::size_t const n = build_reduced_primitives(pose, prims);
-    PartGraph graph{std::span<const PrimitiveInstance>(prims.data(), n)};
-    submit_part_graph(kHorseTopology, graph,
-                      std::span<const QMatrix4x4>(palette), lod,
-                      world_from_unit, out,
-                      std::span<const QVector3D>(role_colors));
-    break;
-  }
-  case CreatureLOD::Full:
-  {
-    Render::Creature::submit_creature(
-        horse_creature_spec(), std::span<const QMatrix4x4>(palette), lod,
-        world_from_unit, out, std::span<const QVector3D>(role_colors));
-    break;
-  }
-  case CreatureLOD::Billboard:
-    break;
-  }
-}
-
 } // namespace Render::Horse
-
-// ---------------------------------------------------------------------
-// Legacy rigged-mesh helpers retained for non-production tests.
-// ---------------------------------------------------------------------
 
 #include "../bone_palette_arena.h"
 #include "../rigged_mesh_cache.h"
@@ -449,9 +374,6 @@ namespace Render::Horse {
 
 namespace {
 
-// Pose used as the bake's bind reference. Built from
-// `make_horse_dimensions(0)` so per-entity dimension drift collapses
-// to a single baseline silhouette.
 auto build_baseline_pose() noexcept -> HorseSpecPose {
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
@@ -466,10 +388,6 @@ auto baseline_pose() noexcept -> const HorseSpecPose & {
   return pose;
 }
 
-// ---------------- Static Reduced LOD PartGraph ----------------------
-// 11 primitives mirroring `build_reduced_primitives` layout, but with
-// half_extents / radii frozen from the baseline pose so the bake is
-// keyable purely by (spec, lod).
 auto build_static_reduced_parts() noexcept
     -> std::array<PrimitiveInstance, 11> {
   std::array<PrimitiveInstance, 11> out{};
@@ -483,21 +401,19 @@ auto static_reduced_parts() noexcept
   return parts;
 }
 
-// ---------------- Static Full LOD PartGraph -------------------------
-// 16 primitives forming a recognisable horse silhouette:
-//   [0..5]  body shell (chest, withers, belly, rump, spine, sternum)
-//   [6]     neck cylinder (Root + neck_base_offset → NeckTop)
-//   [7]     head ellipsoid (OrientedSphere @ Head)
-//   [8..11] leg cylinders (Root + shoulder → FootXX)
-//   [12..15] hoof cylinders (Mesh unit_cylinder @ FootXX)
-//
-// All silhouette features beyond the shell — mane, forelock, tail,
-// ears, eyes, blaze, fetlock joints, knee bumps, bridle/reins — are
-// deferred to the v3-s15-5g-mount-fidelity follow-up. Equipment
-// (saddle/armor/rider) continues to render as DrawPartCmd via the
-// existing equipment dispatch.
-auto build_static_full_parts() noexcept
-    -> std::array<PrimitiveInstance, 16> {
+auto build_static_minimal_parts() noexcept -> std::array<PrimitiveInstance, 5> {
+  std::array<PrimitiveInstance, 5> out{};
+  build_minimal_primitives(baseline_pose(), out);
+  return out;
+}
+
+auto static_minimal_parts() noexcept
+    -> const std::array<PrimitiveInstance, 5> & {
+  static const auto parts = build_static_minimal_parts();
+  return parts;
+}
+
+auto build_static_full_parts() noexcept -> std::array<PrimitiveInstance, 16> {
   HorseSpecPose const &pose = baseline_pose();
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
@@ -516,23 +432,19 @@ auto build_static_full_parts() noexcept
     p.lod_mask = Render::Creature::kLodFull;
   };
 
-  // Body shell anchored at Root with offset_from_anchor =
-  // (legacy_world_center − barrel_center). Under baseline these
-  // offsets are constant; at runtime the per-entity Root bone moves
-  // them with the unit.
   QVector3D const chest_off(0.0F, dims.body_height * 0.12F,
                             dims.body_length * 0.34F);
   QVector3D const withers_off =
-      chest_off + QVector3D(0.0F, dims.body_height * 0.55F,
-                            -dims.body_length * 0.03F);
+      chest_off +
+      QVector3D(0.0F, dims.body_height * 0.55F, -dims.body_length * 0.03F);
   QVector3D const belly_off(0.0F, -dims.body_height * 0.35F,
                             -dims.body_length * 0.05F);
   QVector3D const rump_off(0.0F, dims.body_height * 0.08F,
                            -dims.body_length * 0.36F);
-  QVector3D const wp = chest_off +
-      QVector3D(0.0F, dims.body_height * 0.65F, -dims.body_length * 0.04F);
-  QVector3D const cp = rump_off +
-      QVector3D(0.0F, dims.body_height * 0.50F, -dims.body_length * 0.16F);
+  QVector3D const wp = chest_off + QVector3D(0.0F, dims.body_height * 0.65F,
+                                             -dims.body_length * 0.04F);
+  QVector3D const cp = rump_off + QVector3D(0.0F, dims.body_height * 0.50F,
+                                            -dims.body_length * 0.16F);
   QVector3D const spine_off = wp + (cp - wp) * 0.42F;
   QVector3D const sternum_off(0.0F, -dims.body_height * 0.42F,
                               dims.body_length * 0.30F);
@@ -562,7 +474,6 @@ auto build_static_full_parts() noexcept
                 dims.body_length * 0.07F),
       sternum_off);
 
-  // Neck cylinder: Root + neck_base_offset → NeckTop.
   {
     PrimitiveInstance &p = out[6];
     p.debug_name = "horse.full.neck";
@@ -576,7 +487,6 @@ auto build_static_full_parts() noexcept
     p.lod_mask = Render::Creature::kLodFull;
   }
 
-  // Head ellipsoid.
   {
     PrimitiveInstance &p = out[7];
     p.debug_name = "horse.full.head";
@@ -588,7 +498,6 @@ auto build_static_full_parts() noexcept
     p.lod_mask = Render::Creature::kLodFull;
   }
 
-  // Legs + hooves (4 each).
   struct Leg {
     std::string_view leg_name;
     std::string_view hoof_name;
@@ -631,8 +540,7 @@ auto build_static_full_parts() noexcept
   return out;
 }
 
-auto static_full_parts() noexcept
-    -> const std::array<PrimitiveInstance, 16> & {
+auto static_full_parts() noexcept -> const std::array<PrimitiveInstance, 16> & {
   static const auto parts = build_static_full_parts();
   return parts;
 }
@@ -664,16 +572,29 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
                               Render::Creature::CreatureLOD lod,
                               const QMatrix4x4 &world_from_unit,
                               Render::GL::ISubmitter &out) noexcept {
+
+  BonePalette tmp{};
+  evaluate_horse_skeleton(pose, tmp);
+
   auto *renderer = resolve_renderer(out);
   if (renderer == nullptr) {
+    if (lod == Render::Creature::CreatureLOD::Billboard) {
+      return;
+    }
+    std::array<QVector3D, 4> role_colors{};
+    fill_horse_role_colors(variant, role_colors);
+    Render::Creature::submit_creature(
+        horse_creature_spec(),
+        std::span<const QMatrix4x4>(tmp.data(), tmp.size()), lod,
+        world_from_unit, out,
+        std::span<const QVector3D>(role_colors.data(), role_colors.size()));
     return;
   }
 
   auto const &spec = horse_creature_spec();
   auto bind = horse_bind_palette();
 
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind,
-                                                          /*variant_bucket=*/0);
+  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind, 0);
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
     return;
@@ -683,17 +604,10 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
   Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
   QMatrix4x4 *palette_slot = palette_slot_h.cpu;
 
-  std::array<QMatrix4x4, kHorseBoneCount> current{};
-  BonePalette tmp{};
-  evaluate_horse_skeleton(pose, tmp);
-  for (std::size_t i = 0; i < kHorseBoneCount; ++i) {
-    current[i] = tmp[i];
-  }
-
   std::size_t const n =
       std::min<std::size_t>(entry->inverse_bind.size(), kHorseBoneCount);
   for (std::size_t i = 0; i < n; ++i) {
-    palette_slot[i] = current[i] * entry->inverse_bind[i];
+    palette_slot[i] = tmp[i] * entry->inverse_bind[i];
   }
 
   Render::GL::RiggedCreatureCmd cmd{};
@@ -708,9 +622,7 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
   cmd.alpha = 1.0F;
   cmd.texture = nullptr;
   cmd.material_id = 0;
-  // Per-entity proportion drift collapses to baseline in the bake; a
-  // future stage may bucket dominant axes (e.g. body_width) into
-  // variant_bucket. variation_scale stays uniform here.
+
   cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
 
   out.rigged(cmd);
@@ -718,19 +630,22 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
 
 } // namespace
 
-auto horse_creature_spec() noexcept
-    -> const Render::Creature::CreatureSpec & {
+auto horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec & {
   static const Render::Creature::CreatureSpec spec = [] {
     Render::Creature::CreatureSpec s;
     s.species_name = "horse";
     s.topology = horse_topology();
+    s.lod_minimal = PartGraph{
+        std::span<const PrimitiveInstance>(static_minimal_parts().data(),
+                                           static_minimal_parts().size()),
+    };
     s.lod_reduced = PartGraph{
         std::span<const PrimitiveInstance>(static_reduced_parts().data(),
-                                            static_reduced_parts().size()),
+                                           static_reduced_parts().size()),
     };
     s.lod_full = PartGraph{
         std::span<const PrimitiveInstance>(static_full_parts().data(),
-                                            static_full_parts().size()),
+                                           static_full_parts().size()),
     };
     return s;
   }();
@@ -770,9 +685,41 @@ void submit_horse_full_rigged(const HorseSpecPose &pose,
                               const Render::GL::HorseVariant &variant,
                               const QMatrix4x4 &world_from_unit,
                               Render::GL::ISubmitter &out) noexcept {
-  submit_horse_rigged_impl(pose, variant,
-                           Render::Creature::CreatureLOD::Full,
+  submit_horse_rigged_impl(pose, variant, Render::Creature::CreatureLOD::Full,
                            world_from_unit, out);
+}
+
+void submit_horse_minimal_rigged(const HorseSpecPose &pose,
+                                 const Render::GL::HorseVariant &variant,
+                                 const QMatrix4x4 &world_from_unit,
+                                 Render::GL::ISubmitter &out) noexcept {
+  submit_horse_rigged_impl(pose, variant,
+                           Render::Creature::CreatureLOD::Minimal,
+                           world_from_unit, out);
+}
+
+void submit_horse_via_pipeline(const Render::GL::HorseRendererBase &owner,
+                               const HorseSpecPose &pose,
+                               const Render::GL::HorseVariant &variant,
+                               const QMatrix4x4 &world_from_unit,
+                               std::uint32_t inst_seed,
+                               Render::Creature::CreatureLOD lod,
+                               Render::GL::ISubmitter &out) noexcept {
+  thread_local Render::Creature::Pipeline::CreaturePipeline pipeline;
+  thread_local Render::Creature::Pipeline::CreatureFrame frame;
+  thread_local std::array<Render::Creature::Pipeline::UnitVisualSpec, 1> specs;
+
+  frame.clear();
+  specs[0] = owner.visual_spec();
+  specs[0].kind = Render::Creature::Pipeline::CreatureKind::Horse;
+
+  frame.push_horse(0, world_from_unit, 0, inst_seed, lod, pose, variant);
+
+  Render::Creature::Pipeline::FrameContext fctx{};
+  pipeline.submit(fctx,
+                  std::span<const Render::Creature::Pipeline::UnitVisualSpec>{
+                      specs.data(), specs.size()},
+                  frame, out);
 }
 
 } // namespace Render::Horse

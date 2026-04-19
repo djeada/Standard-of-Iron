@@ -1,18 +1,5 @@
 #pragma once
 
-// Stage 18 — WorldChunk abstraction.
-//
-// A WorldChunk represents any static-world piece (terrain tile, rock
-// field, road, riverbank) that carries a Mesh + Material + transform and
-// is culled by a bounding box. WorldChunkPipeline (implemented in the
-// GL backend) iterates WorldChunkCmds, frustum-culls by AABB, and
-// batches by Material shader tier.
-//
-// Terrain is the first consumer: terrain chunks are emitted as
-// WorldChunkCmd with a "terrain" Material and full TerrainChunkParams
-// payload. The terrain shader is still specialised (splat maps,
-// multi-layer blending) — it plugs in through Material::resolve().
-
 #include <QMatrix4x4>
 #include <QVector2D>
 #include <QVector3D>
@@ -28,12 +15,8 @@ struct BoundingBox {
   QVector3D min{0.0F, 0.0F, 0.0F};
   QVector3D max{0.0F, 0.0F, 0.0F};
 
-  [[nodiscard]] auto center() const -> QVector3D {
-    return (min + max) * 0.5F;
-  }
-  [[nodiscard]] auto extents() const -> QVector3D {
-    return (max - min) * 0.5F;
-  }
+  [[nodiscard]] auto center() const -> QVector3D { return (min + max) * 0.5F; }
+  [[nodiscard]] auto extents() const -> QVector3D { return (max - min) * 0.5F; }
 
   void expand(const QVector3D &p) {
     min.setX(std::min(min.x(), p.x()));
