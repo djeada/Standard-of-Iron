@@ -633,14 +633,6 @@ private:
     return def;
   }
 
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const BuilderStyleConfig &s = resolve_style(ctx);
-    if (!s.shader_id.empty()) {
-      return QString::fromStdString(s.shader_id);
-    }
-    return QStringLiteral("builder");
-  }
-
   void apply_palette_overrides(const BuilderStyleConfig &style,
                                const QVector3D &team_tint,
                                HumanoidVariant &v) const {
@@ -664,26 +656,11 @@ private:
 void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_builder_styles_registered();
   static BuilderRenderer const renderer;
-  registry.register_renderer(
-      "troops/carthage/builder", [](const DrawContext &ctx, ISubmitter &out) {
-        static BuilderRenderer const r;
-        Shader *shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString key = r.resolve_shader_key(ctx);
-          shader = ctx.backend->shader(key);
-          if (!shader) {
-            shader = ctx.backend->shader(QStringLiteral("builder"));
-          }
-        }
-        auto *sr = dynamic_cast<Renderer *>(&out);
-        if (sr && shader) {
-          sr->set_current_shader(shader);
-        }
-        r.render(ctx, out);
-        if (sr) {
-          sr->set_current_shader(nullptr);
-        }
-      });
+	  registry.register_renderer(
+	      "troops/carthage/builder", [](const DrawContext &ctx, ISubmitter &out) {
+	        static BuilderRenderer const r;
+	        r.render(ctx, out);
+	      });
 }
 
 } // namespace Render::GL::Carthage

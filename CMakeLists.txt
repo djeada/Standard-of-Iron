@@ -220,12 +220,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             ui/qml/CursorManager.qml
             ui/qml/LoadScreen.qml
         RESOURCES
-            assets/shaders/archer.frag
-            assets/shaders/archer.vert
-            assets/shaders/archer_roman_republic.frag
-            assets/shaders/archer_roman_republic.vert
-            assets/shaders/archer_carthage.frag
-            assets/shaders/archer_carthage.vert
             assets/shaders/basic.frag
             assets/shaders/basic.vert
             assets/shaders/bridge.frag
@@ -241,32 +235,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/grid.frag
             assets/shaders/ground_plane.frag
             assets/shaders/ground_plane.vert
-            assets/shaders/swordsman.frag
-            assets/shaders/swordsman.vert
-            assets/shaders/swordsman_roman_republic.frag
-            assets/shaders/swordsman_roman_republic.vert
-            assets/shaders/swordsman_carthage.frag
-            assets/shaders/swordsman_carthage.vert
-            assets/shaders/horse_swordsman.frag
-            assets/shaders/horse_swordsman.vert
-            assets/shaders/horse_swordsman_roman_republic.frag
-            assets/shaders/horse_swordsman_roman_republic.vert
-            assets/shaders/horse_swordsman_carthage.frag
-            assets/shaders/horse_swordsman_carthage.vert
-            assets/shaders/horse_archer_roman_republic.frag
-            assets/shaders/horse_archer_roman_republic.vert
-            assets/shaders/horse_archer_carthage.frag
-            assets/shaders/horse_archer_carthage.vert
-            assets/shaders/horse_spearman_roman_republic.frag
-            assets/shaders/horse_spearman_roman_republic.vert
-            assets/shaders/horse_spearman_carthage.frag
-            assets/shaders/horse_spearman_carthage.vert
-            assets/shaders/healer.frag
-            assets/shaders/healer.vert
-            assets/shaders/healer_roman_republic.frag
-            assets/shaders/healer_roman_republic.vert
-            assets/shaders/healer_carthage.frag
-            assets/shaders/healer_carthage.vert
             assets/shaders/pine_instanced.frag
             assets/shaders/pine_instanced.vert
             assets/shaders/plant_instanced.frag
@@ -275,12 +243,6 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/shaders/river.vert
             assets/shaders/riverbank.frag
             assets/shaders/riverbank.vert
-            assets/shaders/spearman.frag
-            assets/shaders/spearman.vert
-            assets/shaders/spearman_roman_republic.frag
-            assets/shaders/spearman_roman_republic.vert
-            assets/shaders/spearman_carthage.frag
-            assets/shaders/spearman_carthage.vert
             assets/shaders/stone_instanced.frag
             assets/shaders/stone_instanced.vert
             assets/shaders/terrain_chunk.frag

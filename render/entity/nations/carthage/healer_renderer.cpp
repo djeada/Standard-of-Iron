@@ -679,15 +679,6 @@ private:
     return default_style;
   }
 
-public:
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const HealerStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return QStringLiteral("healer");
-  }
-
 private:
   void apply_palette_overrides(const HealerStyleConfig &style,
                                const QVector3D &team_tint,
@@ -723,26 +714,11 @@ private:
 void register_healer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_healer_styles_registered();
   static HealerRenderer const renderer;
-  registry.register_renderer(
-      "troops/carthage/healer", [](const DrawContext &ctx, ISubmitter &out) {
-        static HealerRenderer const static_renderer;
-        Shader *healer_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          healer_shader = ctx.backend->shader(shader_key);
-          if (healer_shader == nullptr) {
-            healer_shader = ctx.backend->shader(QStringLiteral("healer"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (healer_shader != nullptr)) {
-          scene_renderer->set_current_shader(healer_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+	  registry.register_renderer(
+	      "troops/carthage/healer", [](const DrawContext &ctx, ISubmitter &out) {
+	        static HealerRenderer const static_renderer;
+	        static_renderer.render(ctx, out);
+	      });
 }
 
 } // namespace Render::GL::Carthage

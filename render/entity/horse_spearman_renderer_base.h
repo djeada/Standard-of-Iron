@@ -5,7 +5,6 @@
 #include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
-#include <QString>
 #include <QVector3D>
 
 #include <memory>
@@ -51,8 +50,6 @@ public:
                         VariationParams &variation) const override;
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override;
-
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString;
 
 protected:
   const HorseSpearmanRendererConfig &config() const { return m_config; }

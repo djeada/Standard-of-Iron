@@ -11,7 +11,6 @@ struct HorseSwordsmanStyleConfig {
   std::optional<QVector3D> metal_color;
   std::optional<QVector3D> wood_color;
   std::optional<QVector3D> cape_color;
-  std::string shader_id;
   bool show_helmet = true;
   bool show_armor = true;
   bool show_shoulder_decor = false;

@@ -290,15 +290,6 @@ private:
     return k_empty;
   }
 
-public:
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const KnightStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return QStringLiteral("swordsman");
-  }
-
 private:
   void apply_palette_overrides(const KnightStyleConfig &style,
                                const QVector3D &team_tint,
@@ -320,26 +311,11 @@ private:
 void register_knight_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
-  registry.register_renderer(
-      "troops/carthage/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
-        static KnightRenderer const static_renderer;
-        Shader *swordsman_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          swordsman_shader = ctx.backend->shader(shader_key);
-          if (swordsman_shader == nullptr) {
-            swordsman_shader = ctx.backend->shader(QStringLiteral("swordsman"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (swordsman_shader != nullptr)) {
-          scene_renderer->set_current_shader(swordsman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+	  registry.register_renderer(
+	      "troops/carthage/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
+	        static KnightRenderer const static_renderer;
+	        static_renderer.render(ctx, out);
+	      });
 }
 
 } // namespace Render::GL::Carthage

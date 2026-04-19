@@ -62,6 +62,12 @@ Backend::Backend() = default;
 Backend::Backend(ShaderQuality quality) : m_shader_quality(quality) {}
 
 Backend::~Backend() {
+  if (shader_bind_audit_enabled()) {
+    qInfo() << "Shader bind audit:";
+    for (const QString &line : format_shader_bind_audit()) {
+      qInfo().noquote() << line;
+    }
+  }
 
   if (QOpenGLContext::currentContext() == nullptr) {
 

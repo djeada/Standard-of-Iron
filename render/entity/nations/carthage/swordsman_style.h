@@ -19,7 +19,6 @@ struct KnightStyleConfig {
   std::optional<bool> shield_cross_decal;
   std::optional<bool> has_scabbard;
 
-  std::string shader_id;
 };
 
 void register_carthage_swordsman_style();

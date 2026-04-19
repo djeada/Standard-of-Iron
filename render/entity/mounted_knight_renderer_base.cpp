@@ -12,7 +12,6 @@
 
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
-#include "../../game/systems/nation_id.h"
 
 #include "mounted_knight_pose.h"
 #include "renderer_constants.h"
@@ -247,20 +246,6 @@ void MountedKnightRendererBase::build_visual_spec() {
       std::span<const EquipmentRecord>{m_loadout.data(), m_loadout.size()};
 
   m_spec.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor;
-}
-
-auto MountedKnightRendererBase::resolve_shader_key(const DrawContext &ctx) const
-    -> QString {
-  std::string nation;
-  if (ctx.entity != nullptr) {
-    if (auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>()) {
-      nation = Game::Systems::nation_id_to_string(unit->nation_id);
-    }
-  }
-  if (!nation.empty()) {
-    return QString::fromStdString(std::string("horse_swordsman_") + nation);
-  }
-  return QStringLiteral("horse_swordsman");
 }
 
 } // namespace Render::GL

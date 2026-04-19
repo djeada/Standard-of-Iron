@@ -30,7 +30,6 @@ void register_carthage_healer_style() {
   style.metal_color = k_carthage_bronze;
   style.wood_color = k_carthage_wood;
   style.cape_color = k_carthage_purple;
-  style.shader_id = "healer_carthage";
 
   style.show_helmet = false;
   style.show_armor = false;

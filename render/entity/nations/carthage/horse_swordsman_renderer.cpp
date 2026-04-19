@@ -2,10 +2,7 @@
 
 #include "../../../equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "../../../equipment/horse/tack/reins_renderer.h"
-#include "../../../gl/backend.h"
-#include "../../../gl/shader.h"
 #include "../../../humanoid/style_palette.h"
-#include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../mounted_knight_renderer_base.h"
 #include "swordsman_style.h"
@@ -25,7 +22,6 @@ auto carthage_style() -> KnightStyleConfig {
   style.leather_color = QVector3D(0.32F, 0.22F, 0.12F);
   style.leather_dark_color = QVector3D(0.20F, 0.14F, 0.09F);
   style.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
-  style.shader_id = "horse_swordsman_carthage";
   return style;
 }
 
@@ -52,13 +48,6 @@ public:
     apply_color(style.metal_color, v.palette.metal);
   }
 
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const KnightStyleConfig style = carthage_style();
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return MountedKnightRendererBase::resolve_shader_key(ctx);
-  }
 };
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
@@ -82,28 +71,11 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/horse_swordsman",
-      [](const DrawContext &ctx, ISubmitter &out) {
-        static CarthageMountedKnightRenderer const static_renderer(
-            make_mounted_knight_config());
-        Shader *horse_swordsman_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          horse_swordsman_shader = ctx.backend->shader(shader_key);
-          if (horse_swordsman_shader == nullptr) {
-            horse_swordsman_shader =
-                ctx.backend->shader(QStringLiteral("horse_swordsman"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) &&
-            (horse_swordsman_shader != nullptr)) {
-          scene_renderer->set_current_shader(horse_swordsman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+	    [](const DrawContext &ctx, ISubmitter &out) {
+	        static CarthageMountedKnightRenderer const static_renderer(
+	            make_mounted_knight_config());
+	        static_renderer.render(ctx, out);
+	      });
 }
 
 } // namespace Render::GL::Carthage

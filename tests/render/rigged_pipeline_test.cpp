@@ -19,6 +19,7 @@
 // through the queue, and does not silently fall off the type-order table.
 
 #include "render/draw_queue.h"
+#include "render/submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -111,6 +112,36 @@ TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
   for (std::size_t i = 0; i < queue.size(); ++i) {
     EXPECT_NO_THROW((void)extract_cmd_priority(queue.get_sorted(i)));
   }
+}
+
+TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+  QueueSubmitter submitter(&queue);
+
+  auto *mesh = reinterpret_cast<RiggedMesh *>(0x1000);
+  auto *shader_a = reinterpret_cast<Shader *>(0x2000);
+  auto *shader_b = reinterpret_cast<Shader *>(0x3000);
+
+  RiggedCreatureCmd first;
+  first.mesh = mesh;
+  first.bone_count = 12;
+
+  RiggedCreatureCmd second = first;
+
+  submitter.set_shader(shader_a);
+  submitter.rigged(first);
+  submitter.set_shader(shader_b);
+  submitter.rigged(second);
+
+  ASSERT_EQ(queue.size(), 2U);
+
+  queue.sort_for_batching();
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches.front().kind, PreparedBatchKind::RiggedCreatureInstanced);
+  EXPECT_EQ(batches.front().count, 2U);
 }
 
 } // namespace

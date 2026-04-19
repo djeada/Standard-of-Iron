@@ -26,7 +26,6 @@ void register_roman_swordsman_style() {
   style.shield_aspect_ratio = 0.65F;
   style.has_scabbard = true;
   style.shield_cross_decal = false;
-  style.shader_id = "swordsman_roman_republic";
 
   register_swordsman_style("roman_republic", style);
 }

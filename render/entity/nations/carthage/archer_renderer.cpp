@@ -420,15 +420,6 @@ private:
     return default_style;
   }
 
-public:
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const ArcherStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return QStringLiteral("archer");
-  }
-
 private:
   void apply_palette_overrides(const ArcherStyleConfig &style,
                                const QVector3D &team_tint,
@@ -450,32 +441,10 @@ private:
 void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_archer_styles_registered();
   static ArcherRenderer const renderer;
-  registry.register_renderer(
-      "troops/carthage/archer", [](const DrawContext &ctx, ISubmitter &out) {
-        static ArcherRenderer const static_renderer;
-        Shader *archer_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          archer_shader = ctx.backend->shader(shader_key);
-          if ((archer_shader == nullptr) &&
-              shader_key == QStringLiteral("archer_carthage")) {
-            archer_shader = ctx.backend->get_or_load_shader(
-                shader_key,
-                QStringLiteral(":/assets/shaders/archer_carthage.vert"),
-                QStringLiteral(":/assets/shaders/archer_carthage.frag"));
-          }
-          if (archer_shader == nullptr) {
-            archer_shader = ctx.backend->shader(QStringLiteral("archer"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (archer_shader != nullptr)) {
-          scene_renderer->set_current_shader(archer_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+	  registry.register_renderer(
+	      "troops/carthage/archer", [](const DrawContext &ctx, ISubmitter &out) {
+	        static ArcherRenderer const static_renderer;
+	        static_renderer.render(ctx, out);
+	      });
 }
 } // namespace Render::GL::Carthage

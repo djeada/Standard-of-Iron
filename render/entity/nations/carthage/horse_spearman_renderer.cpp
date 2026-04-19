@@ -2,9 +2,6 @@
 
 #include "../../../equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "../../../equipment/horse/tack/reins_renderer.h"
-#include "../../../gl/backend.h"
-#include "../../../gl/shader.h"
-#include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../horse_spearman_renderer_base.h"
 
@@ -32,27 +29,11 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
 void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/horse_spearman",
-      [](const DrawContext &ctx, ISubmitter &out) {
-        static HorseSpearmanRendererBase const static_renderer(
-            make_horse_spearman_config());
-        Shader *horse_spearman_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          horse_spearman_shader = ctx.backend->shader(shader_key);
-          if (horse_spearman_shader == nullptr) {
-            horse_spearman_shader =
-                ctx.backend->shader(QStringLiteral("horse_spearman"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (horse_spearman_shader != nullptr)) {
-          scene_renderer->set_current_shader(horse_spearman_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+	    [](const DrawContext &ctx, ISubmitter &out) {
+	        static HorseSpearmanRendererBase const static_renderer(
+	            make_horse_spearman_config());
+	        static_renderer.render(ctx, out);
+	      });
 }
 
 } // namespace Render::GL::Carthage
