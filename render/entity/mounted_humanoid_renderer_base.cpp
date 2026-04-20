@@ -1,5 +1,6 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../gl/camera.h"
 #include "../graphics_settings.h"
@@ -143,6 +144,8 @@ void MountedHumanoidRendererBase::add_attachments(
   HorseLOD horse_lod = HorseLOD::Full;
   {
     namespace RCP = Render::Creature::Pipeline;
+    const auto lod_config = RCP::horse_lod_config_from_settings();
+    
     RCP::CreatureLodDecisionInputs in{};
     if (ctx.force_horse_lod) {
       in.forced_lod = static_cast<Render::Creature::CreatureLOD>(
@@ -155,13 +158,9 @@ void MountedHumanoidRendererBase::add_attachments(
       in.distance =
           (horse_world_pos - ctx.camera->get_position()).length();
     }
-    {
-      const auto &gs = Render::GraphicsSettings::instance();
-      in.thresholds = {gs.horse_full_detail_distance(),
-                       gs.horse_reduced_detail_distance(),
-                       gs.horse_minimal_detail_distance()};
-      in.apply_visibility_budget = gs.visibility_budget().enabled;
-    }
+    in.thresholds = lod_config.thresholds;
+    in.apply_visibility_budget = lod_config.apply_visibility_budget;
+    in.temporal = lod_config.temporal;
     in.budget_grant_full = true;
     if (in.apply_visibility_budget && !ctx.force_horse_lod &&
         ctx.camera != nullptr) {

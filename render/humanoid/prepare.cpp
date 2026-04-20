@@ -8,6 +8,7 @@
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
+#include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
@@ -336,6 +337,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
   out.post_body_draws.reserve(out.post_body_draws.size() +
                               static_cast<std::size_t>(visible_count));
 
+  // Pre-compute LOD config once for all soldiers in this unit
+  namespace RCP = Render::Creature::Pipeline;
+  const auto lod_config = RCP::humanoid_lod_config_from_settings();
+
   auto enqueue_prepared_body =
       [&](const HumanoidPose &pose, const HumanoidVariant &variant,
           const HumanoidAnimationContext &anim_ctx, const DrawContext &inst_ctx,
@@ -429,7 +434,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       continue;
     }
 
-    namespace RCP = Render::Creature::Pipeline;
+    // Use pre-computed LOD config with per-instance data
     RCP::CreatureLodDecisionInputs lod_in{};
     if (ctx.force_humanoid_lod) {
       lod_in.forced_lod =
@@ -442,18 +447,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
           (soldier_world_pos - ctx.camera->get_position()).length();
     }
     lod_in.distance = soldier_distance;
-    {
-      const auto &gs = Render::GraphicsSettings::instance();
-      lod_in.thresholds = {gs.humanoid_full_detail_distance(),
-                           gs.humanoid_reduced_detail_distance(),
-                           gs.humanoid_minimal_detail_distance()};
-      lod_in.apply_visibility_budget = gs.visibility_budget().enabled;
-    }
+    lod_in.thresholds = lod_config.thresholds;
+    lod_in.apply_visibility_budget = lod_config.apply_visibility_budget;
     lod_in.budget_grant_full = true;
-    lod_in.temporal = {k_temporal_skip_distance_reduced,
-                       k_temporal_skip_distance_minimal,
-                       k_temporal_skip_period_reduced,
-                       k_temporal_skip_period_minimal};
+    lod_in.temporal = lod_config.temporal;
     lod_in.frame_index = frame_index;
     lod_in.instance_seed = inst_seed;
 

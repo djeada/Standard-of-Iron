@@ -88,6 +88,42 @@ TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
   EXPECT_GE(elephant.thresholds.full, humanoid.thresholds.full);
 }
 
+// --- Settings-based Config Tests ---
+
+TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
+  auto config = humanoid_lod_config_from_settings();
+  EXPECT_GT(config.thresholds.full, 0.0F);
+  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+  EXPECT_GT(config.temporal.period_reduced, 0U);
+  EXPECT_GT(config.temporal.period_minimal, 0U);
+}
+
+TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
+  auto config = horse_lod_config_from_settings();
+  EXPECT_GT(config.thresholds.full, 0.0F);
+  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+}
+
+TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
+  auto config = elephant_lod_config_from_settings();
+  EXPECT_GT(config.thresholds.full, 0.0F);
+  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+}
+
+TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
+  auto humanoid = humanoid_lod_config_from_settings();
+  auto horse = horse_lod_config_from_settings();
+  auto elephant = elephant_lod_config_from_settings();
+  
+  // All species should have temporal skip parameters
+  EXPECT_GT(humanoid.temporal.distance_reduced, 0.0F);
+  EXPECT_GT(horse.temporal.distance_reduced, 0.0F);
+  EXPECT_GT(elephant.temporal.distance_reduced, 0.0F);
+}
+
 // --- LOD Evaluation Tests ---
 
 TEST(CreatureRenderGraph, EvaluateLodReturnsFullAtCloseDistance) {
