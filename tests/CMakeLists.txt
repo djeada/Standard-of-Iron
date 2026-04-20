@@ -69,6 +69,8 @@ add_executable(standard_of_iron_tests
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
     render/creature/mounted_prepare_test.cpp
+    render/creature/creature_render_graph_test.cpp
+    render/creature/template_prewarm_regression_test.cpp
     render/rigged_visual_parity_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp

@@ -156,6 +156,7 @@ add_library(render_gl STATIC
     creature/pipeline/equipment_registry.cpp
     creature/pipeline/lod_decision.cpp
     creature/pipeline/preparation_common.cpp
+    creature/pipeline/creature_render_graph.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp
