@@ -45,6 +45,7 @@ TEST(RiggedPipeline, DefaultsAreSane) {
   EXPECT_EQ(cmd.material, nullptr);
   EXPECT_EQ(cmd.bone_palette, nullptr);
   EXPECT_EQ(cmd.bone_count, 0U);
+  EXPECT_EQ(cmd.role_color_count, 0U);
   EXPECT_EQ(cmd.texture, nullptr);
   EXPECT_EQ(cmd.material_id, 0);
   EXPECT_FLOAT_EQ(cmd.alpha, 1.0F);

@@ -1,6 +1,8 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "../creature/pipeline/lod_decision.h"
 #include "../gl/camera.h"
+#include "../graphics_settings.h"
 #include "../horse/lod.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
@@ -139,16 +141,42 @@ void MountedHumanoidRendererBase::add_attachments(
   const AnimationInputs &anim = anim_ctx.inputs;
 
   HorseLOD horse_lod = HorseLOD::Full;
-  if (ctx.force_horse_lod) {
-    horse_lod = ctx.forced_horse_lod;
-  } else if (ctx.camera != nullptr) {
-    QVector3D const horse_world_pos =
-        ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    float const distance =
-        (horse_world_pos - ctx.camera->get_position()).length();
-    horse_lod = calculate_horse_lod(distance);
-    horse_lod = Render::VisibilityBudgetTracker::instance().request_horse_lod(
-        horse_lod);
+  {
+    namespace RCP = Render::Creature::Pipeline;
+    RCP::CreatureLodDecisionInputs in{};
+    if (ctx.force_horse_lod) {
+      in.forced_lod = static_cast<Render::Creature::CreatureLOD>(
+          ctx.forced_horse_lod);
+    }
+    in.has_camera = (ctx.camera != nullptr);
+    if (ctx.camera != nullptr) {
+      QVector3D const horse_world_pos =
+          ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+      in.distance =
+          (horse_world_pos - ctx.camera->get_position()).length();
+    }
+    {
+      const auto &gs = Render::GraphicsSettings::instance();
+      in.thresholds = {gs.horse_full_detail_distance(),
+                       gs.horse_reduced_detail_distance(),
+                       gs.horse_minimal_detail_distance()};
+      in.apply_visibility_budget = gs.visibility_budget().enabled;
+    }
+    in.budget_grant_full = true;
+    if (in.apply_visibility_budget && !ctx.force_horse_lod &&
+        ctx.camera != nullptr) {
+      const auto distance_lod = RCP::select_distance_lod(in.distance, in.thresholds);
+      if (distance_lod == Render::Creature::CreatureLOD::Full) {
+        const auto granted =
+            Render::VisibilityBudgetTracker::instance().request_horse_lod(
+                HorseLOD::Full);
+        in.budget_grant_full = (granted == HorseLOD::Full);
+      }
+    }
+    const auto decision = RCP::decide_creature_lod(in);
+    horse_lod = decision.culled
+                    ? HorseLOD::Billboard
+                    : static_cast<HorseLOD>(decision.lod);
   }
 
   m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,

@@ -37,13 +37,14 @@ void RomanScutumRenderer::render(const DrawContext &ctx,
       saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
   QVector3D const wood_color = saturate_color(QVector3D(0.5F, 0.35F, 0.25F));
 
-  constexpr float shield_height = 1.2F;
-  constexpr float shield_width = 0.65F;
-  constexpr float shield_curve = 0.25F;
+  constexpr float shield_height = 1.05F;
+  constexpr float shield_width = 0.56F;
+  constexpr float shield_curve = 0.22F;
   constexpr float rim_thickness = 0.015F;
-  constexpr float boss_radius = 0.12F;
+  constexpr float boss_radius = 0.10F;
 
-  QVector3D const shield_center = hand_l.origin + hand_l.forward * 0.15F;
+  QVector3D const shield_center =
+      hand_l.origin + hand_l.forward * 0.12F + hand_l.up * 0.02F;
   QVector3D const shield_up = hand_l.up;
   QVector3D const shield_right = hand_l.right;
   QVector3D const shield_forward = hand_l.forward;

@@ -52,6 +52,11 @@ constexpr std::uint8_t kRoleSkinShadow = 2;
 constexpr std::uint8_t kRoleSkinReducedLeg = 3;
 constexpr std::uint8_t kRoleSkinReducedFootPad = 4;
 constexpr std::uint8_t kRoleSkinReducedTrunk = 5;
+constexpr std::uint8_t kRoleEarInner = 6;
+constexpr std::uint8_t kRoleTusk = 7;
+constexpr std::uint8_t kRoleEye = 8;
+constexpr std::uint8_t kRoleToenail = 9;
+constexpr std::uint8_t kRoleTailTip = 10;
 
 constexpr float k_pi = 3.14159265358979323846F;
 
@@ -138,7 +143,7 @@ struct ReducedLegResult {
     lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * 0.8F : 0.0F;
   }
 
-  QVector3D const shoulder(lateral_sign * d.body_width * 0.40F,
+  QVector3D const shoulder(lateral_sign * d.body_width * 0.58F,
                            -d.body_height * 0.30F, forward_bias + stride);
   QVector3D const foot =
       shoulder + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.3F);
@@ -317,13 +322,19 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
       translation_matrix(pose.trunk_end);
 }
 
-void fill_elephant_role_colors(const Render::GL::ElephantVariant &variant,
-                               std::array<QVector3D, 5> &out_roles) noexcept {
+void fill_elephant_role_colors(
+    const Render::GL::ElephantVariant &variant,
+    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept {
   out_roles[0] = variant.skin_color;
-  out_roles[1] = darken(variant.skin_color, 0.80F);
-  out_roles[2] = darken(variant.skin_color, 0.88F);
-  out_roles[3] = darken(variant.skin_color, 0.75F);
-  out_roles[4] = darken(variant.skin_color, 0.90F);
+  out_roles[1] = variant.skin_color;
+  out_roles[2] = darken(variant.skin_color, 0.92F);
+  out_roles[3] = darken(variant.skin_color, 0.88F);
+  out_roles[4] = darken(variant.skin_color, 0.94F);
+  out_roles[5] = variant.ear_inner_color;
+  out_roles[6] = variant.tusk_color;
+  out_roles[7] = QVector3D(0.04F, 0.03F, 0.03F);
+  out_roles[8] = variant.toenail_color;
+  out_roles[9] = QVector3D(0.05F, 0.04F, 0.04F);
 }
 
 void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
@@ -335,8 +346,8 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.body_ellipsoid_y = dims.body_height + dims.neck_length * 0.3F;
   out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.3F;
 
-  float const shoulder_dx = dims.body_width * 0.38F;
-  float const shoulder_dy = -dims.body_height * 0.25F;
+  float const shoulder_dx = dims.body_width * 0.56F;
+  float const shoulder_dy = -dims.body_height * 0.30F;
   float const front_dz = dims.body_length * 0.30F;
   float const rear_dz = -dims.body_length * 0.30F;
 
@@ -345,7 +356,7 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.shoulder_offset_bl = QVector3D(shoulder_dx, shoulder_dy, rear_dz);
   out_pose.shoulder_offset_br = QVector3D(-shoulder_dx, shoulder_dy, rear_dz);
 
-  float const drop = -dims.leg_length * 0.70F;
+  float const drop = -dims.leg_length * 0.85F;
   out_pose.foot_fl =
       center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
   out_pose.foot_fr =
@@ -355,7 +366,7 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.foot_br =
       center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
-  out_pose.leg_radius = dims.leg_radius * 0.70F;
+  out_pose.leg_radius = dims.leg_radius * 0.85F;
 }
 
 void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
@@ -368,7 +379,7 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
   QVector3D const center = out_pose.barrel_center;
 
   out_pose.reduced_body_half =
-      QVector3D(dims.body_width * 0.5F, dims.body_height * 0.45F,
+      QVector3D(dims.body_width * 0.5F, dims.body_height * 0.50F,
                 dims.body_length * 0.375F);
 
   QVector3D const neck_base_world =
@@ -445,53 +456,370 @@ auto baseline_pose() noexcept -> const ElephantSpecPose & {
   return pose;
 }
 
-auto build_static_full_parts() noexcept -> std::array<PrimitiveInstance, 15> {
+constexpr std::size_t kElephantFullPartCount = 50;
+
+auto build_static_full_parts() noexcept
+    -> std::array<PrimitiveInstance, kElephantFullPartCount> {
   ElephantSpecPose const &pose = baseline_pose();
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
-  std::array<PrimitiveInstance, 15> out{};
+  std::array<PrimitiveInstance, kElephantFullPartCount> out{};
 
-  std::array<PrimitiveInstance, 12> reduced_buf{};
-  build_reduced_primitives(pose, reduced_buf);
-  for (std::size_t i = 0; i < 12; ++i) {
-    out[i] = reduced_buf[i];
-    out[i].lod_mask = Render::Creature::kLodFull;
-  }
+  using Render::Creature::kLodFull;
 
-  auto ell = [](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                const QVector3D &half_extents,
-                const QVector3D &offset_from_anchor) {
+  auto root = static_cast<BoneIndex>(ElephantBone::Root);
+  auto head_bone = static_cast<BoneIndex>(ElephantBone::Head);
+
+  // OrientedSphere (ellipsoid bulk).
+  auto ell = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &half_extents, const QVector3D &offset,
+                 std::uint8_t role = kRoleSkin, int material_id = 6) {
     p.debug_name = name;
     p.shape = PrimitiveShape::OrientedSphere;
     p.params.anchor_bone = anchor;
-    p.params.head_offset = offset_from_anchor;
+    p.params.head_offset = offset;
     p.params.half_extents = half_extents;
-    p.color_role = kRoleSkin;
-    p.material_id = 6;
-    p.lod_mask = Render::Creature::kLodFull;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
   };
 
-  QVector3D const chest_off(0.0F, dims.body_height * 0.10F,
-                            dims.body_length * 0.30F);
-  QVector3D const rump_off(0.0F, dims.body_height * 0.02F,
-                           -dims.body_length * 0.32F);
-  QVector3D const belly_off(0.0F, -dims.body_height * 0.22F,
-                            dims.body_length * 0.05F);
+  // Sphere (uniform radius).
+  auto sph = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &offset, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Sphere;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = offset;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
 
-  ell(out[12], "elephant.full.chest",
-      static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.59F, dims.body_height * 0.50F,
-                dims.body_length * 0.18F),
-      chest_off);
-  ell(out[13], "elephant.full.rump", static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.55F, dims.body_height * 0.49F,
-                dims.body_length * 0.17F),
-      rump_off);
-  ell(out[14], "elephant.full.belly",
-      static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.50F, dims.body_height * 0.35F,
-                dims.body_length * 0.275F),
-      belly_off);
+  // Capsule between two anchored points.
+  auto cap = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Capsule;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  // Cylinder between two anchored points.
+  auto cyl = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Cylinder;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  // Cone (tapers to a point at the tail end).
+  auto cone_p = [&](PrimitiveInstance &p, std::string_view name,
+                    BoneIndex anchor, const QVector3D &head_off, BoneIndex tail,
+                    const QVector3D &tail_off, float radius, std::uint8_t role,
+                    int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Cone;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  // Box (flattened slab — used for ears).
+  auto box = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &half_extents, const QVector3D &offset,
+                 std::uint8_t role, int material_id = 6) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Box;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = offset;
+    p.params.half_extents = half_extents;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  float const bw = dims.body_width;
+  float const bh = dims.body_height;
+  float const bl = dims.body_length;
+  float const hl = dims.head_length;
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+
+  std::size_t i = 0;
+
+  // ---- Body / barrel (9 primitives) ----------------------------------
+  // Visual width/height override so the barrel reads wider + flatter from
+  // the RTS camera angle (elephants have massively wide bodies).
+  float const bw_v = bw * 1.35F;
+  float const bh_v = bh * 0.88F;
+
+  // Main barrel — massive rounded mass; width clearly exceeds the head so
+  // the silhouette reads as a barrel-bodied elephant from the front.
+  ell(out[i++], "elephant.full.body.barrel", root,
+      QVector3D(bw_v * 0.78F, bh_v * 0.58F, bl * 0.46F),
+      QVector3D(0.0F, bh_v * 0.05F, 0.0F));
+  // Shoulder hump (Asian elephants have a pronounced hump above shoulders).
+  ell(out[i++], "elephant.full.body.shoulder_hump", root,
+      QVector3D(bw_v * 0.58F, bh_v * 0.26F, bl * 0.20F),
+      QVector3D(0.0F, bh_v * 0.52F, bl * 0.20F));
+  // Mid-back dip filler (lower, smaller — produces double-domed silhouette).
+  ell(out[i++], "elephant.full.body.midback", root,
+      QVector3D(bw_v * 0.55F, bh_v * 0.12F, bl * 0.20F),
+      QVector3D(0.0F, bh_v * 0.42F, -bl * 0.02F));
+  // Rump dome (rear hump, slightly lower than shoulder hump).
+  ell(out[i++], "elephant.full.body.rump", root,
+      QVector3D(bw_v * 0.66F, bh_v * 0.26F, bl * 0.22F),
+      QVector3D(0.0F, bh_v * 0.45F, -bl * 0.28F));
+  // Belly (rounded, low-hanging mass under the barrel).
+  ell(out[i++], "elephant.full.body.belly", root,
+      QVector3D(bw_v * 0.72F, bh_v * 0.40F, bl * 0.40F),
+      QVector3D(0.0F, -bh_v * 0.26F, 0.0F));
+  // Chest plate (forward-facing mass between the front legs).
+  ell(out[i++], "elephant.full.body.chest", root,
+      QVector3D(bw_v * 0.66F, bh_v * 0.48F, bl * 0.20F),
+      QVector3D(0.0F, bh_v * 0.05F, bl * 0.36F));
+  // Brisket (low forward bump under the chest, between front legs).
+  ell(out[i++], "elephant.full.body.brisket", root,
+      QVector3D(bw_v * 0.46F, bh_v * 0.24F, bl * 0.18F),
+      QVector3D(0.0F, -bh_v * 0.28F, bl * 0.34F));
+  // Flank L/R (full ribcage→hindquarter transition spheres).
+  sph(out[i++], "elephant.full.body.flank.l", root,
+      QVector3D(bw_v * 0.55F, -bh_v * 0.02F, -bl * 0.10F), bw_v * 0.32F,
+      kRoleSkin, 6);
+  sph(out[i++], "elephant.full.body.flank.r", root,
+      QVector3D(-bw_v * 0.55F, -bh_v * 0.02F, -bl * 0.10F), bw_v * 0.32F,
+      kRoleSkin, 6);
+
+  // ---- Head (8 primitives) -------------------------------------------
+  // Skull dome — large rounded mass, double-domed forehead.
+  ell(out[i++], "elephant.full.head.skull", head_bone,
+      QVector3D(hw * 0.45F, hh * 0.48F, hl * 0.42F),
+      QVector3D(0.0F, hh * 0.05F, 0.0F));
+  // Forehead bulge L/R (the characteristic "knobs" of an Asian elephant).
+  ell(out[i++], "elephant.full.head.forehead.l", head_bone,
+      QVector3D(hw * 0.20F, hh * 0.22F, hl * 0.18F),
+      QVector3D(hw * 0.18F, hh * 0.32F, -hl * 0.05F));
+  ell(out[i++], "elephant.full.head.forehead.r", head_bone,
+      QVector3D(hw * 0.20F, hh * 0.22F, hl * 0.18F),
+      QVector3D(-hw * 0.18F, hh * 0.32F, -hl * 0.05F));
+  // Cheek L/R (rounded mass at the sides of the skull).
+  ell(out[i++], "elephant.full.head.cheek.l", head_bone,
+      QVector3D(hw * 0.18F, hh * 0.24F, hl * 0.26F),
+      QVector3D(hw * 0.32F, -hh * 0.05F, hl * 0.05F));
+  ell(out[i++], "elephant.full.head.cheek.r", head_bone,
+      QVector3D(hw * 0.18F, hh * 0.24F, hl * 0.26F),
+      QVector3D(-hw * 0.32F, -hh * 0.05F, hl * 0.05F));
+  // Jaw under the muzzle.
+  ell(out[i++], "elephant.full.head.jaw", head_bone,
+      QVector3D(hw * 0.30F, hh * 0.16F, hl * 0.28F),
+      QVector3D(0.0F, -hh * 0.30F, hl * 0.18F));
+  // Eyes L/R — tiny dark spheres on the sides of the skull.
+  sph(out[i++], "elephant.full.head.eye.l", head_bone,
+      QVector3D(hw * 0.36F, hh * 0.10F, hl * 0.20F), hw * 0.05F, kRoleEye, 0);
+  sph(out[i++], "elephant.full.head.eye.r", head_bone,
+      QVector3D(-hw * 0.36F, hh * 0.10F, hl * 0.20F), hw * 0.05F, kRoleEye, 0);
+
+  // ---- Trunk (8 primitives: 7 segments + tip) ------------------------
+  // The trunk hangs from the front-lower face, droops down, then curls
+  // forward at the tip — a J-shape rest pose. All segments anchor to
+  // Head (with their own local offsets) so they ride the head bone but
+  // don't articulate per-segment in the static rig (acceptable at RTS
+  // distance; pose code can re-articulate later if needed).
+  float const tl = dims.trunk_length;
+  // Beef up the trunk base so it reads as a muscular extension of the
+  // head/cheek mass, then taper to ~30% of the base radius at the tip.
+  float const tbr = dims.trunk_base_radius * 1.45F;
+  float const ttr = std::max(dims.trunk_tip_radius, tbr * 0.30F);
+  // Trunk base attaches at the lower front of the face.
+  QVector3D const trunk_base(0.0F, -hh * 0.20F, hl * 0.45F);
+  constexpr int kTrunkSegments = 7;
+  std::array<QVector3D, kTrunkSegments + 1> trunk_pts{};
+  for (int s = 0; s <= kTrunkSegments; ++s) {
+    float const t = static_cast<float>(s) / static_cast<float>(kTrunkSegments);
+    // Base hang: drop downward by ~0.85 of trunk length.
+    float drop = tl * 0.85F * t;
+    float fwd = tl * 0.05F * t;
+    // Tip curl forward (last 30% curls forward, slight rise).
+    if (t > 0.65F) {
+      float const u = (t - 0.65F) / 0.35F;
+      float const curl = u * u;
+      fwd += tl * 0.45F * curl;
+      drop -= tl * 0.10F * curl;
+    }
+    trunk_pts[s] = trunk_base + QVector3D(0.0F, -drop, fwd);
+  }
+  std::array<std::string_view, kTrunkSegments> const trunk_names{{
+      "elephant.full.trunk.seg.0", "elephant.full.trunk.seg.1",
+      "elephant.full.trunk.seg.2", "elephant.full.trunk.seg.3",
+      "elephant.full.trunk.seg.4", "elephant.full.trunk.seg.5",
+      "elephant.full.trunk.seg.6",
+  }};
+  for (int s = 0; s < kTrunkSegments; ++s) {
+    float const t0 = static_cast<float>(s) / static_cast<float>(kTrunkSegments);
+    // Average radius of the segment (gradual taper base→tip).
+    float const r = tbr + (ttr - tbr) * (t0 + 0.5F / kTrunkSegments);
+    cap(out[i++], trunk_names[s], head_bone, trunk_pts[s], head_bone,
+        trunk_pts[s + 1], r, kRoleSkin, 6);
+  }
+  // Trunk tip "finger".
+  sph(out[i++], "elephant.full.trunk.tip", head_bone,
+      trunk_pts[kTrunkSegments], ttr * 1.05F, kRoleSkin, 6);
+
+  // ---- Ears (4 primitives: outer + inner each side) ------------------
+  // Large fan-shaped ears flaring outward from the side of the head.
+  float const ear_w = dims.ear_width;
+  float const ear_h = dims.ear_height;
+  float const ear_t = dims.ear_thickness;
+  // Use ellipsoids (OrientedSphere) instead of Box for organic ear shapes.
+  // Thickness is proportional to width so the ears read as soft organic fans.
+  QVector3D const ear_half(ear_w * 0.70F, ear_h * 0.62F, ear_w * 0.08F);
+  QVector3D const ear_inner_half(ear_w * 0.50F, ear_h * 0.46F, ear_w * 0.06F);
+  // Outer ear L/R — soft ellipsoid fanning outward & slightly back.
+  ell(out[i++], "elephant.full.ear.outer.l", head_bone, ear_half,
+      QVector3D(hw * 0.55F + ear_w * 0.55F, hh * 0.05F, -hl * 0.05F), kRoleSkin,
+      6);
+  ell(out[i++], "elephant.full.ear.outer.r", head_bone, ear_half,
+      QVector3D(-(hw * 0.55F + ear_w * 0.55F), hh * 0.05F, -hl * 0.05F),
+      kRoleSkin, 6);
+  // Inner ear L/R — slightly smaller pinker ellipsoid in front of the outer.
+  ell(out[i++], "elephant.full.ear.inner.l", head_bone, ear_inner_half,
+      QVector3D(hw * 0.55F + ear_w * 0.50F, hh * 0.05F,
+                -hl * 0.05F + ear_w * 0.10F),
+      kRoleEarInner, 6);
+  ell(out[i++], "elephant.full.ear.inner.r", head_bone, ear_inner_half,
+      QVector3D(-(hw * 0.55F + ear_w * 0.50F), hh * 0.05F,
+                -hl * 0.05F + ear_w * 0.10F),
+      kRoleEarInner, 6);
+
+  // ---- Tusks (2 primitives) ------------------------------------------
+  // Tapered cones extending forward & curving outward + slightly upward
+  // from the cheek area, visible from the side and front.
+  float const tk_l = dims.tusk_length;
+  float const tk_r = dims.tusk_radius * 1.6F;
+  QVector3D const tusk_root_l(hw * 0.22F, -hh * 0.18F, hl * 0.42F);
+  QVector3D const tusk_root_r(-hw * 0.22F, -hh * 0.18F, hl * 0.42F);
+  QVector3D const tusk_tip_l(hw * 0.55F, -hh * 0.18F + tk_l * 0.10F,
+                             hl * 0.42F + tk_l * 0.95F);
+  QVector3D const tusk_tip_r(-hw * 0.55F, -hh * 0.18F + tk_l * 0.10F,
+                             hl * 0.42F + tk_l * 0.95F);
+  cone_p(out[i++], "elephant.full.tusk.l", head_bone, tusk_root_l, head_bone,
+         tusk_tip_l, tk_r, kRoleTusk, 0);
+  cone_p(out[i++], "elephant.full.tusk.r", head_bone, tusk_root_r, head_bone,
+         tusk_tip_r, tk_r, kRoleTusk, 0);
+
+  // ---- Tail (3 primitives) -------------------------------------------
+  // Tail dock from rump backward, mid section, and tip switch hair tuft.
+  float const tail_l = dims.tail_length;
+  QVector3D const tail_root(0.0F, bh * 0.18F, -bl * 0.50F);
+  QVector3D const tail_mid =
+      tail_root + QVector3D(0.0F, -tail_l * 0.30F, -tail_l * 0.30F);
+  QVector3D const tail_end =
+      tail_root + QVector3D(0.0F, -tail_l * 0.85F, -tail_l * 0.45F);
+  cap(out[i++], "elephant.full.tail.dock", root, tail_root, root, tail_mid,
+      bw * 0.06F, kRoleSkin, 6);
+  cap(out[i++], "elephant.full.tail.mid", root, tail_mid, root, tail_end,
+      bw * 0.04F, kRoleSkinShadow, 6);
+  sph(out[i++], "elephant.full.tail.switch", root,
+      tail_end + QVector3D(0.0F, -bw * 0.04F, -bw * 0.02F), bw * 0.07F,
+      kRoleTailTip, 0);
+
+  // ---- Legs (4 × 4 = 16 primitives: upper, knee, lower, foot) --------
+  // Elephant legs are columnar (NOT tapered like a horse cannon). Each
+  // leg adds: thick upper from shoulder to mid-leg height (Capsule),
+  // an obvious knee/elbow joint sphere, an almost-cylindrical lower
+  // segment, and a wide flat footpad cylinder mesh. Shoulder/hip bulk
+  // is handled by the body chest/rump primitives above.
+  struct LegSpec {
+    std::string_view upper_name;
+    std::string_view knee_name;
+    std::string_view lower_name;
+    std::string_view foot_name;
+    ElephantBone foot_bone;
+    QVector3D shoulder_offset;
+    bool is_front;
+  };
+  std::array<LegSpec, 4> const legs{{
+      {"elephant.full.leg.fl.upper", "elephant.full.leg.fl.knee",
+       "elephant.full.leg.fl.lower", "elephant.full.foot.fl",
+       ElephantBone::FootFL, pose.shoulder_offset_reduced_fl, true},
+      {"elephant.full.leg.fr.upper", "elephant.full.leg.fr.knee",
+       "elephant.full.leg.fr.lower", "elephant.full.foot.fr",
+       ElephantBone::FootFR, pose.shoulder_offset_reduced_fr, true},
+      {"elephant.full.leg.bl.upper", "elephant.full.leg.bl.knee",
+       "elephant.full.leg.bl.lower", "elephant.full.foot.bl",
+       ElephantBone::FootBL, pose.shoulder_offset_reduced_bl, false},
+      {"elephant.full.leg.br.upper", "elephant.full.leg.br.knee",
+       "elephant.full.leg.br.lower", "elephant.full.foot.br",
+       ElephantBone::FootBR, pose.shoulder_offset_reduced_br, false},
+  }};
+  float const leg_len = dims.leg_length;
+  // Columnar legs: keep upper only marginally thicker than the lower so
+  // each leg reads as a single thick pillar rather than tapering like a
+  // horse cannon.
+  float const upper_r_front = dims.leg_radius * 1.85F;
+  float const upper_r_rear = dims.leg_radius * 1.78F;
+  float const lower_r_front = dims.leg_radius * 1.72F;
+  float const lower_r_rear = dims.leg_radius * 1.65F;
+  float const knee_r = dims.leg_radius * 1.75F;
+  float const foot_pad_y = -dims.foot_radius * 0.18F;
+  // Foot pad — visibly wider than the ankle (~1.5× the lower leg radius).
+  QVector3D const foot_half(dims.foot_radius * 1.90F, dims.foot_radius * 0.65F,
+                            dims.foot_radius * 1.90F);
+  for (auto const &leg : legs) {
+    auto foot_b = static_cast<BoneIndex>(leg.foot_bone);
+    float const upper_r = leg.is_front ? upper_r_front : upper_r_rear;
+    float const lower_r = leg.is_front ? lower_r_front : lower_r_rear;
+    // Upper leg: from shoulder/hip down to knee height (~mid-leg).
+    cap(out[i++], leg.upper_name, root, leg.shoulder_offset, foot_b,
+        QVector3D(0.0F, leg_len * 0.50F, 0.0F), upper_r, kRoleSkin, 6);
+    // Knee/elbow joint — sphere at the upper/lower transition.
+    sph(out[i++], leg.knee_name, foot_b,
+        QVector3D(0.0F, leg_len * 0.50F, 0.0F), knee_r, kRoleSkinShadow, 0);
+    // Lower leg: nearly cylindrical, from knee down to just above the
+    // foot pad. Slightly thinner than the upper for a column-like look.
+    cyl(out[i++], leg.lower_name, foot_b,
+        QVector3D(0.0F, leg_len * 0.50F, 0.0F), foot_b,
+        QVector3D(0.0F, dims.foot_radius * 0.4F, 0.0F), lower_r, kRoleSkin, 6);
+    // Foot pad — wide, low cylinder mesh (the elephant footpad).
+    PrimitiveInstance &foot = out[i++];
+    foot.debug_name = leg.foot_name;
+    foot.shape = PrimitiveShape::Mesh;
+    foot.custom_mesh = Render::GL::get_unit_sphere();
+    foot.params.anchor_bone = foot_b;
+    foot.params.head_offset = QVector3D(0.0F, foot_pad_y, 0.0F);
+    foot.params.half_extents = foot_half;
+    foot.color_role = kRoleSkinShadow;
+    foot.material_id = 8;
+    foot.lod_mask = kLodFull;
+  }
+
+  // Sanity: every slot must be filled.
+  (void)i;
 
   return out;
 }
@@ -515,7 +843,8 @@ auto static_minimal_parts() noexcept
   return parts;
 }
 
-auto static_full_parts() noexcept -> const std::array<PrimitiveInstance, 15> & {
+auto static_full_parts() noexcept
+    -> const std::array<PrimitiveInstance, kElephantFullPartCount> & {
   static const auto parts = build_static_full_parts();
   return parts;
 }
@@ -562,7 +891,7 @@ void submit_elephant_rigged_impl(const ElephantSpecPose &pose,
     if (lod == Render::Creature::CreatureLOD::Billboard) {
       return;
     }
-    std::array<QVector3D, 5> role_colors{};
+    std::array<QVector3D, kElephantRoleCount> role_colors{};
     fill_elephant_role_colors(variant, role_colors);
     Render::Creature::submit_creature(
         elephant_creature_spec(),
@@ -591,6 +920,9 @@ void submit_elephant_rigged_impl(const ElephantSpecPose &pose,
     palette_slot[i] = tmp[i] * entry->inverse_bind[i];
   }
 
+  std::array<QVector3D, kElephantRoleCount> role_colors{};
+  fill_elephant_role_colors(variant, role_colors);
+
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = entry->mesh.get();
   cmd.material = nullptr;
@@ -599,6 +931,10 @@ void submit_elephant_rigged_impl(const ElephantSpecPose &pose,
   cmd.palette_ubo = palette_slot_h.ubo;
   cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
   cmd.bone_count = static_cast<std::uint32_t>(n);
+  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
+  for (std::size_t i = 0; i < role_colors.size(); ++i) {
+    cmd.role_colors[i] = role_colors[i];
+  }
   cmd.color = variant.skin_color;
   cmd.alpha = 1.0F;
   cmd.texture = nullptr;

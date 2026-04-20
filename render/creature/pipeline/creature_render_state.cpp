@@ -1,5 +1,7 @@
 #include "creature_render_state.h"
 
+#include "creature_asset.h"
+
 namespace Render::Creature::Pipeline {
 
 auto make_prepared_humanoid_row(
@@ -67,28 +69,21 @@ auto make_prepared_elephant_row(
 void append_prepared_row(CreatureFrame &frame,
                          const PreparedCreatureRenderRow &row,
                          SpecId spec_id) noexcept {
-  switch (row.spec.kind) {
-  case CreatureKind::Humanoid:
-    frame.push_humanoid(row.entity_id, row.world_from_unit, spec_id, row.seed,
-                        row.lod, row.humanoid_pose, row.humanoid_variant,
-                        row.humanoid_anim);
-    if (row.legacy_ctx != nullptr && !frame.legacy_ctx.empty()) {
-      frame.legacy_ctx.back() = row.legacy_ctx;
+  CreatureAssetId asset_id = row.spec.creature_asset_id;
+  if (asset_id == kInvalidCreatureAsset) {
+    if (const auto *asset = CreatureAssetRegistry::instance().resolve(row.spec)) {
+      asset_id = asset->id;
     }
-    break;
+  }
 
-  case CreatureKind::Horse:
-    frame.push_horse(row.entity_id, row.world_from_unit, spec_id, row.seed,
-                     row.lod, row.horse_pose, row.horse_variant);
-    break;
+  frame.push_creature(row.spec.kind, row.entity_id, row.world_from_unit,
+                       spec_id, row.seed, row.lod, row.humanoid_pose,
+                       row.humanoid_variant, row.humanoid_anim, row.horse_pose,
+                       row.horse_variant, row.elephant_pose,
+                       row.elephant_variant, row.spec.palette_id, asset_id);
 
-  case CreatureKind::Elephant:
-    frame.push_elephant(row.entity_id, row.world_from_unit, spec_id, row.seed,
-                        row.lod, row.elephant_pose, row.elephant_variant);
-    break;
-
-  case CreatureKind::Mounted:
-    break;
+  if (row.legacy_ctx != nullptr && !frame.legacy_ctx.empty()) {
+    frame.legacy_ctx.back() = row.legacy_ctx;
   }
 }
 

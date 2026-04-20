@@ -77,6 +77,25 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
 }
 
+TEST_F(HorseAnimationControllerTest, WalkAndTrotUseDistinctStrideProfiles) {
+  HorseAnimationController controller(profile, anim, rider_ctx);
+
+  controller.set_gait(GaitType::WALK);
+  controller.update_gait_parameters();
+  float const walk_front_phase = profile.gait.front_leg_phase;
+  float const walk_stride_swing = profile.gait.stride_swing;
+  float const walk_stride_lift = profile.gait.stride_lift;
+
+  controller.set_gait(GaitType::TROT);
+  controller.update_gait_parameters();
+
+  EXPECT_TRUE(approxEqual(walk_front_phase, 0.25F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.front_leg_phase, 0.0F, 0.01F));
+  EXPECT_TRUE(approxEqual(profile.gait.rear_leg_phase, 0.50F, 0.01F));
+  EXPECT_GT(profile.gait.stride_swing, walk_stride_swing);
+  EXPECT_GT(profile.gait.stride_lift, walk_stride_lift);
+}
+
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
@@ -312,4 +331,20 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   anim.time += 0.5F;
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+}
+
+TEST_F(HorseAnimationControllerTest,
+       EvaluateHorseMotionUsesRunningInputForFasterGait) {
+  anim.is_moving = true;
+  anim.is_running = true;
+  rider_ctx.inputs = anim;
+  rider_ctx.gait.state = HumanoidMotionState::Idle;
+  rider_ctx.gait.speed = 0.0F;
+  rider_ctx.gait.normalized_speed = 0.0F;
+
+  auto motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  EXPECT_TRUE(motion.is_moving);
+  EXPECT_GT(motion.rider_intensity, 0.5F);
+  EXPECT_LT(profile.gait.cycle_time, 1.0F);
 }

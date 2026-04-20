@@ -17,8 +17,29 @@ class UnitComponent;
 } // namespace Engine::Core
 
 namespace Render::GL {
+struct DrawContext;
+struct AnimationInputs;
+class HumanoidRendererBase;
+} // namespace Render::GL
+
+namespace Render::Humanoid {
+struct HumanoidPreparation;
+void prepare_humanoid_instances(const ::Render::GL::HumanoidRendererBase &owner,
+                                const ::Render::GL::DrawContext &ctx,
+                                const ::Render::GL::AnimationInputs &anim,
+                                std::uint32_t frame_index,
+                                HumanoidPreparation &out);
+} // namespace Render::Humanoid
+
+namespace Render::GL {
 
 class HumanoidRendererBase {
+  friend void ::Render::Humanoid::prepare_humanoid_instances(
+      const ::Render::GL::HumanoidRendererBase &owner,
+      const ::Render::GL::DrawContext &ctx,
+      const ::Render::GL::AnimationInputs &anim, std::uint32_t frame_index,
+      ::Render::Humanoid::HumanoidPreparation &out);
+
 public:
   virtual ~HumanoidRendererBase() = default;
 

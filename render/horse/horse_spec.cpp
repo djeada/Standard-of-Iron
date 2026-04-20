@@ -51,6 +51,11 @@ constexpr std::uint8_t kRoleCoat = 1;
 constexpr std::uint8_t kRoleCoatDark = 2;
 constexpr std::uint8_t kRoleCoatReducedLeg = 3;
 constexpr std::uint8_t kRoleHoof = 4;
+constexpr std::uint8_t kRoleMane = 5;
+constexpr std::uint8_t kRoleTail = 6;
+constexpr std::uint8_t kRoleMuzzle = 7;
+constexpr std::uint8_t kRoleEye = 8;
+constexpr std::size_t kHorseRoleCount = 8;
 
 [[nodiscard]] auto
 translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
@@ -94,12 +99,16 @@ void evaluate_horse_skeleton(const HorseSpecPose &pose,
 }
 
 void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
-                            std::array<QVector3D, 4> &out_roles) noexcept {
+                            std::array<QVector3D, 8> &out_roles) noexcept {
   QVector3D const coat = variant.coat_color;
   out_roles[0] = coat;
   out_roles[1] = coat * 0.75F;
   out_roles[2] = coat * 0.85F;
   out_roles[3] = variant.hoof_color;
+  out_roles[4] = variant.mane_color;
+  out_roles[5] = variant.tail_color;
+  out_roles[6] = variant.muzzle_color;
+  out_roles[7] = QVector3D(0.04F, 0.03F, 0.03F);
 }
 
 void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
@@ -107,21 +116,21 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   QVector3D const center(0.0F, dims.barrel_center_y + bob, 0.0F);
   out_pose.barrel_center = center;
 
-  out_pose.body_ellipsoid_x = dims.body_width * 1.2F;
-  out_pose.body_ellipsoid_y = dims.body_height + dims.neck_rise * 0.5F;
-  out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.5F;
+  out_pose.body_ellipsoid_x = dims.body_width * 1.90F;
+  out_pose.body_ellipsoid_y = dims.body_height * 0.52F + dims.neck_rise * 0.18F;
+  out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.68F;
 
-  float const shoulder_dx = dims.body_width * 0.40F;
-  float const shoulder_dy = -dims.body_height * 0.3F;
-  float const front_dz = dims.body_length * 0.25F;
-  float const rear_dz = -dims.body_length * 0.25F;
+  float const shoulder_dx = dims.body_width * 0.58F;
+  float const shoulder_dy = -dims.body_height * 0.18F;
+  float const front_dz = dims.body_length * 0.28F;
+  float const rear_dz = -dims.body_length * 0.30F;
 
   out_pose.shoulder_offset_fl = QVector3D(shoulder_dx, shoulder_dy, front_dz);
   out_pose.shoulder_offset_fr = QVector3D(-shoulder_dx, shoulder_dy, front_dz);
   out_pose.shoulder_offset_bl = QVector3D(shoulder_dx, shoulder_dy, rear_dz);
   out_pose.shoulder_offset_br = QVector3D(-shoulder_dx, shoulder_dy, rear_dz);
 
-  float const drop = -dims.leg_length * 0.60F;
+  float const drop = -dims.leg_length * 0.84F;
   out_pose.foot_fl =
       center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
   out_pose.foot_fr =
@@ -131,7 +140,7 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   out_pose.foot_br =
       center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
-  out_pose.leg_radius = dims.body_width * 0.15F;
+  out_pose.leg_radius = dims.body_width * 0.11F;
 }
 
 namespace {
@@ -147,22 +156,39 @@ auto compute_reduced_leg(
     float forward_bias, bool is_moving,
     const QVector3D &anchor_offset) noexcept -> ReducedLegSample {
   constexpr float k_two_pi = 2.0F * std::numbers::pi_v<float>;
+  auto ease_in_out = [](float t) {
+    t = std::clamp(t, 0.0F, 1.0F);
+    return t * t * (3.0F - 2.0F * t);
+  };
   float const leg_phase = std::fmod(phase_base + phase_offset, 1.0F);
   float stride = 0.0F;
   float lift = 0.0F;
+  float shoulder_compress = 0.0F;
   if (is_moving) {
-    float const angle = leg_phase * k_two_pi;
-    stride = std::sin(angle) * gait.stride_swing * 0.6F + forward_bias;
-    float const lift_raw = std::sin(angle);
-    lift = lift_raw > 0.0F ? lift_raw * gait.stride_lift * 0.8F : 0.0F;
+    float const stance_fraction = gait.cycle_time > 0.9F
+                                      ? 0.52F
+                                      : (gait.cycle_time > 0.5F ? 0.38F : 0.28F);
+    float const stride_extent = gait.stride_swing * 0.62F;
+    if (leg_phase < stance_fraction) {
+      float const t = ease_in_out(leg_phase / stance_fraction);
+      stride = forward_bias + stride_extent * (0.45F - 1.10F * t);
+      shoulder_compress =
+          std::sin(t * std::numbers::pi_v<float>) * gait.stride_lift * 0.10F;
+    } else {
+      float const t = ease_in_out((leg_phase - stance_fraction) /
+                                  (1.0F - stance_fraction));
+      stride = forward_bias - stride_extent * 0.65F + stride_extent * 1.10F * t;
+      lift = std::sin(t * std::numbers::pi_v<float>) * gait.stride_lift * 0.92F;
+    }
   }
 
-  float const shoulder_out = dims.body_width * 0.45F;
+  float const shoulder_out = dims.body_width * 0.82F;
   QVector3D const shoulder =
       anchor_offset +
-      QVector3D(lateral_sign * shoulder_out, lift * 0.05F, stride);
+      QVector3D(lateral_sign * shoulder_out, lift * 0.05F - shoulder_compress,
+                stride);
 
-  float const leg_length = dims.leg_length * 0.85F;
+  float const leg_length = dims.leg_length * 0.95F;
   QVector3D const foot = shoulder + QVector3D(0.0F, -leg_length + lift, 0.0F);
 
   return {shoulder, foot};
@@ -180,40 +206,49 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
   QVector3D const center = out_pose.barrel_center;
 
   out_pose.reduced_body_half =
-      QVector3D(dims.body_width * 0.5F, dims.body_height * 0.425F,
-                dims.body_length * 0.40F);
+      QVector3D(dims.body_width * 0.90F, dims.body_height * 0.42F,
+                dims.body_length * 0.56F);
 
-  out_pose.neck_base = center + QVector3D(0.0F, dims.body_height * 0.35F,
-                                          dims.body_length * 0.35F);
+  float const head_height_scale = 1.0F + gait.head_height_jitter;
+  out_pose.neck_base =
+      center + QVector3D(0.0F, dims.body_height * 0.42F * head_height_scale,
+                         dims.body_length * 0.38F);
   out_pose.neck_top =
-      out_pose.neck_base + QVector3D(0.0F, dims.neck_rise, dims.neck_length);
-  out_pose.neck_radius = dims.body_width * 0.40F;
+      out_pose.neck_base +
+      QVector3D(0.0F, dims.neck_rise * head_height_scale,
+                dims.neck_length * 1.10F);
+  out_pose.neck_radius = dims.body_width * 0.48F;
 
   out_pose.head_center =
       out_pose.neck_top +
-      QVector3D(0.0F, dims.head_height * 0.10F, dims.head_length * 0.40F);
+      QVector3D(0.0F, dims.head_height * 0.18F, dims.head_length * 0.56F);
   out_pose.head_half =
-      QVector3D(dims.head_width * 0.45F, dims.head_height * 0.425F,
-                dims.head_length * 0.375F);
+      QVector3D(dims.head_width * 0.46F, dims.head_height * 0.40F,
+                dims.head_length * 0.44F);
 
   QVector3D const front_anchor =
-      QVector3D(0.0F, dims.body_height * 0.05F, dims.body_length * 0.30F);
+      QVector3D(0.0F, dims.body_height * 0.12F, dims.body_length * 0.34F);
   QVector3D const rear_anchor =
-      QVector3D(0.0F, dims.body_height * 0.02F, -dims.body_length * 0.28F);
+      QVector3D(0.0F, dims.body_height * 0.10F, -dims.body_length * 0.30F);
 
-  float const front_bias = dims.body_length * 0.15F;
-  float const rear_bias = -dims.body_length * 0.15F;
+  float const front_bias = dims.body_length * 0.13F;
+  float const rear_bias = -dims.body_length * 0.13F;
+
+  Render::GL::HorseGait jittered = gait;
+  jittered.stride_swing *= (1.0F + gait.stride_jitter);
+  float const front_lat = gait.lateral_lead_front == 0.0F ? 0.48F : gait.lateral_lead_front;
+  float const rear_lat = gait.lateral_lead_rear == 0.0F ? 0.52F : gait.lateral_lead_rear;
 
   auto fl =
-      compute_reduced_leg(dims, gait, motion.phase, gait.front_leg_phase, 1.0F,
+      compute_reduced_leg(dims, jittered, motion.phase, gait.front_leg_phase, 1.0F,
                           front_bias, motion.is_moving, front_anchor);
-  auto fr = compute_reduced_leg(dims, gait, motion.phase,
-                                gait.front_leg_phase + 0.48F, -1.0F, front_bias,
+  auto fr = compute_reduced_leg(dims, jittered, motion.phase,
+                                gait.front_leg_phase + front_lat, -1.0F, front_bias,
                                 motion.is_moving, front_anchor);
-  auto bl = compute_reduced_leg(dims, gait, motion.phase, gait.rear_leg_phase,
+  auto bl = compute_reduced_leg(dims, jittered, motion.phase, gait.rear_leg_phase,
                                 1.0F, rear_bias, motion.is_moving, rear_anchor);
   auto br =
-      compute_reduced_leg(dims, gait, motion.phase, gait.rear_leg_phase + 0.52F,
+      compute_reduced_leg(dims, jittered, motion.phase, gait.rear_leg_phase + rear_lat,
                           -1.0F, rear_bias, motion.is_moving, rear_anchor);
 
   out_pose.shoulder_offset_reduced_fl = fl.shoulder;
@@ -226,10 +261,10 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
   out_pose.foot_bl = center + bl.foot;
   out_pose.foot_br = center + br.foot;
 
-  out_pose.leg_radius_reduced = dims.body_width * 0.22F;
+  out_pose.leg_radius_reduced = dims.body_width * 0.28F;
 
-  out_pose.hoof_scale = QVector3D(dims.body_width * 0.28F, dims.hoof_height,
-                                  dims.body_width * 0.30F);
+  out_pose.hoof_scale = QVector3D(dims.body_width * 0.42F, dims.hoof_height,
+                                  dims.body_width * 0.45F);
 }
 
 namespace {
@@ -243,7 +278,7 @@ auto build_minimal_primitives(const HorseSpecPose &pose,
     p.shape = PrimitiveShape::Mesh;
     p.custom_mesh = Render::GL::get_unit_sphere();
     p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Body);
-    p.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+    p.params.half_extents = QVector3D(1.0F, 1.12F, 1.0F);
     p.color_role = kRoleCoat;
     p.material_id = 6;
     p.lod_mask = kLodMinimal;
@@ -269,7 +304,7 @@ auto build_minimal_primitives(const HorseSpecPose &pose,
     p.params.head_offset = legs[i].shoulder_offset;
     p.params.tail_bone = static_cast<BoneIndex>(legs[i].foot_bone);
     p.params.tail_offset = QVector3D();
-    p.params.radius = pose.leg_radius;
+    p.params.radius = pose.leg_radius * 1.08F;
     p.color_role = kRoleCoatDark;
     p.material_id = 6;
     p.lod_mask = kLodMinimal;
@@ -278,7 +313,7 @@ auto build_minimal_primitives(const HorseSpecPose &pose,
 }
 
 auto build_reduced_primitives(const HorseSpecPose &pose,
-                              std::array<PrimitiveInstance, 11> &out) noexcept
+                              std::array<PrimitiveInstance, 9> &out) noexcept
     -> std::size_t {
 
   {
@@ -294,23 +329,48 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
 
   {
     PrimitiveInstance &p = out[1];
-    p.debug_name = "horse.neck";
-    p.shape = PrimitiveShape::Cylinder;
+    p.debug_name = "horse.chest.reduced";
+    p.shape = PrimitiveShape::OrientedSphere;
     p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
-    p.params.head_offset = pose.neck_base - pose.barrel_center;
-    p.params.tail_bone = static_cast<BoneIndex>(HorseBone::NeckTop);
-    p.params.radius = pose.neck_radius;
+    p.params.head_offset =
+        QVector3D(0.0F, pose.reduced_body_half.y() * 0.18F,
+                  pose.reduced_body_half.z() * 0.62F);
+    p.params.half_extents =
+        QVector3D(pose.reduced_body_half.x() * 0.84F,
+                  pose.reduced_body_half.y() * 0.90F,
+                  pose.reduced_body_half.z() * 0.42F);
     p.color_role = kRoleCoat;
-    p.material_id = 0;
+    p.material_id = 6;
     p.lod_mask = kLodReduced;
   }
 
   {
     PrimitiveInstance &p = out[2];
-    p.debug_name = "horse.head";
+    p.debug_name = "horse.rump.reduced";
     p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Head);
-    p.params.half_extents = pose.head_half;
+    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
+    p.params.head_offset =
+        QVector3D(0.0F, pose.reduced_body_half.y() * 0.10F,
+                  -pose.reduced_body_half.z() * 0.64F);
+    p.params.half_extents =
+        QVector3D(pose.reduced_body_half.x() * 0.88F,
+                  pose.reduced_body_half.y() * 0.78F,
+                  pose.reduced_body_half.z() * 0.32F);
+    p.color_role = kRoleCoatDark;
+    p.material_id = 6;
+    p.lod_mask = kLodReduced;
+  }
+
+  {
+    PrimitiveInstance &p = out[3];
+    p.debug_name = "horse.neck_head.reduced";
+    p.shape = PrimitiveShape::Capsule;
+    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
+    p.params.head_offset = pose.neck_base - pose.barrel_center;
+    p.params.tail_bone = static_cast<BoneIndex>(HorseBone::Head);
+    p.params.tail_offset =
+        QVector3D(0.0F, pose.head_half.y() * 0.02F, pose.head_half.z() * 0.58F);
+    p.params.radius = pose.neck_radius * 0.78F;
     p.color_role = kRoleCoat;
     p.material_id = 0;
     p.lod_mask = kLodReduced;
@@ -318,23 +378,18 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
 
   struct RLeg {
     std::string_view leg_name;
-    std::string_view hoof_name;
     HorseBone foot_bone;
     QVector3D shoulder_offset;
   };
   std::array<RLeg, 4> const legs{{
-      {"horse.leg.fl.r", "horse.hoof.fl.r", HorseBone::FootFL,
-       pose.shoulder_offset_reduced_fl},
-      {"horse.leg.fr.r", "horse.hoof.fr.r", HorseBone::FootFR,
-       pose.shoulder_offset_reduced_fr},
-      {"horse.leg.bl.r", "horse.hoof.bl.r", HorseBone::FootBL,
-       pose.shoulder_offset_reduced_bl},
-      {"horse.leg.br.r", "horse.hoof.br.r", HorseBone::FootBR,
-       pose.shoulder_offset_reduced_br},
+      {"horse.leg.fl.r", HorseBone::FootFL, pose.shoulder_offset_reduced_fl},
+      {"horse.leg.fr.r", HorseBone::FootFR, pose.shoulder_offset_reduced_fr},
+      {"horse.leg.bl.r", HorseBone::FootBL, pose.shoulder_offset_reduced_bl},
+      {"horse.leg.br.r", HorseBone::FootBR, pose.shoulder_offset_reduced_br},
   }};
   for (std::size_t i = 0; i < 4; ++i) {
 
-    PrimitiveInstance &leg = out[3 + (i * 2)];
+    PrimitiveInstance &leg = out[4 + i];
     leg.debug_name = legs[i].leg_name;
     leg.shape = PrimitiveShape::Cylinder;
     leg.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
@@ -345,18 +400,27 @@ auto build_reduced_primitives(const HorseSpecPose &pose,
     leg.color_role = kRoleCoatReducedLeg;
     leg.material_id = 0;
     leg.lod_mask = kLodReduced;
-
-    PrimitiveInstance &hoof = out[4 + (i * 2)];
-    hoof.debug_name = legs[i].hoof_name;
-    hoof.shape = PrimitiveShape::Mesh;
-    hoof.custom_mesh = Render::GL::get_unit_cylinder();
-    hoof.params.anchor_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    hoof.params.half_extents = pose.hoof_scale;
-    hoof.color_role = kRoleHoof;
-    hoof.material_id = 8;
-    hoof.lod_mask = kLodReduced;
   }
-  return 11;
+
+  {
+    PrimitiveInstance &p = out[8];
+    p.debug_name = "horse.tail.reduced";
+    p.shape = PrimitiveShape::Cylinder;
+    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
+    p.params.head_offset =
+        QVector3D(0.0F, pose.reduced_body_half.y() * 0.28F,
+                  -pose.reduced_body_half.z() * 0.94F);
+    p.params.tail_bone = static_cast<BoneIndex>(HorseBone::Root);
+    p.params.tail_offset =
+        QVector3D(0.0F, -pose.reduced_body_half.y() * 0.52F,
+                  -pose.reduced_body_half.z() * 0.34F);
+    p.params.radius = pose.leg_radius_reduced * 0.38F;
+    p.color_role = kRoleTail;
+    p.material_id = 0;
+    p.lod_mask = kLodReduced;
+  }
+
+  return 9;
 }
 
 } // namespace
@@ -386,14 +450,14 @@ auto baseline_pose() noexcept -> const HorseSpecPose & {
 }
 
 auto build_static_reduced_parts() noexcept
-    -> std::array<PrimitiveInstance, 11> {
-  std::array<PrimitiveInstance, 11> out{};
+    -> std::array<PrimitiveInstance, 9> {
+  std::array<PrimitiveInstance, 9> out{};
   build_reduced_primitives(baseline_pose(), out);
   return out;
 }
 
 auto static_reduced_parts() noexcept
-    -> const std::array<PrimitiveInstance, 11> & {
+    -> const std::array<PrimitiveInstance, 9> & {
   static const auto parts = build_static_reduced_parts();
   return parts;
 }
@@ -410,134 +474,319 @@ auto static_minimal_parts() noexcept
   return parts;
 }
 
-auto build_static_full_parts() noexcept -> std::array<PrimitiveInstance, 16> {
+constexpr std::size_t kHorseFullPartCount = 43;
+
+auto build_static_full_parts() noexcept
+    -> std::array<PrimitiveInstance, kHorseFullPartCount> {
   HorseSpecPose const &pose = baseline_pose();
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
-  std::array<PrimitiveInstance, 16> out{};
+  std::array<PrimitiveInstance, kHorseFullPartCount> out{};
 
-  auto ell = [](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                const QVector3D &half_extents,
-                const QVector3D &offset_from_anchor) {
+  using Render::Creature::kLodFull;
+
+  auto root = static_cast<BoneIndex>(HorseBone::Root);
+  auto head_bone = static_cast<BoneIndex>(HorseBone::Head);
+  auto neck_top_bone = static_cast<BoneIndex>(HorseBone::NeckTop);
+
+  auto ell = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &half_extents, const QVector3D &offset,
+                 std::uint8_t role = kRoleCoat, int material_id = 6) {
     p.debug_name = name;
     p.shape = PrimitiveShape::OrientedSphere;
     p.params.anchor_bone = anchor;
-    p.params.head_offset = offset_from_anchor;
+    p.params.head_offset = offset;
     p.params.half_extents = half_extents;
-    p.color_role = kRoleCoat;
-    p.material_id = 6;
-    p.lod_mask = Render::Creature::kLodFull;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
   };
 
-  QVector3D const chest_off(0.0F, dims.body_height * 0.12F,
-                            dims.body_length * 0.34F);
-  QVector3D const withers_off =
-      chest_off +
-      QVector3D(0.0F, dims.body_height * 0.55F, -dims.body_length * 0.03F);
-  QVector3D const belly_off(0.0F, -dims.body_height * 0.35F,
-                            -dims.body_length * 0.05F);
-  QVector3D const rump_off(0.0F, dims.body_height * 0.08F,
-                           -dims.body_length * 0.36F);
-  QVector3D const wp = chest_off + QVector3D(0.0F, dims.body_height * 0.65F,
-                                             -dims.body_length * 0.04F);
-  QVector3D const cp = rump_off + QVector3D(0.0F, dims.body_height * 0.50F,
-                                            -dims.body_length * 0.16F);
-  QVector3D const spine_off = wp + (cp - wp) * 0.42F;
-  QVector3D const sternum_off(0.0F, -dims.body_height * 0.42F,
-                              dims.body_length * 0.30F);
+  auto sph = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &offset, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Sphere;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = offset;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
 
-  ell(out[0], "horse.full.chest", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.56F, dims.body_height * 0.475F,
-                dims.body_length * 0.18F),
-      chest_off);
-  ell(out[1], "horse.full.withers", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.375F, dims.body_height * 0.175F,
-                dims.body_length * 0.09F),
-      withers_off);
-  ell(out[2], "horse.full.belly", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.49F, dims.body_height * 0.32F,
-                dims.body_length * 0.20F),
-      belly_off);
-  ell(out[3], "horse.full.rump", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.61F, dims.body_height * 0.525F,
-                dims.body_length * 0.19F),
-      rump_off);
-  ell(out[4], "horse.full.spine", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.275F, dims.body_height * 0.08F,
-                dims.body_length * 0.29F),
-      spine_off);
-  ell(out[5], "horse.full.sternum", static_cast<BoneIndex>(HorseBone::Root),
-      QVector3D(dims.body_width * 0.275F, dims.body_height * 0.09F,
-                dims.body_length * 0.07F),
-      sternum_off);
-
-  {
-    PrimitiveInstance &p = out[6];
-    p.debug_name = "horse.full.neck";
+  auto cyl = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
     p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
-    p.params.head_offset = pose.neck_base - pose.barrel_center;
-    p.params.tail_bone = static_cast<BoneIndex>(HorseBone::NeckTop);
-    p.params.radius = pose.neck_radius;
-    p.color_role = kRoleCoat;
-    p.material_id = 0;
-    p.lod_mask = Render::Creature::kLodFull;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  auto cap = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Capsule;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  auto cone_p = [&](PrimitiveInstance &p, std::string_view name,
+                    BoneIndex anchor, const QVector3D &head_off, BoneIndex tail,
+                    const QVector3D &tail_off, float radius, std::uint8_t role,
+                    int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Cone;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  float const bw = dims.body_width;
+  float const bh = dims.body_height;
+  float const bl = dims.body_length;
+  float const hl = dims.head_length;
+
+  std::size_t i = 0;
+
+  // ---- Body / barrel (10 primitives) ----------------------------------
+  // Visual width/height override so the barrel reads wider + flatter from
+  // the RTS camera angle (original bw/bh are structural, used elsewhere).
+  float const bw_v = bw * 1.40F;
+  float const bh_v = bh * 0.88F;
+
+  // Ribcage: wide flat oval, elongated along Z.
+  ell(out[i++], "horse.full.ribcage", root,
+      QVector3D(bw_v * 0.60F, bh_v * 0.60F, bl * 0.52F),
+      QVector3D(0.0F, bh_v * 0.08F, bl * 0.10F));
+  // Withers hump (highest point of the back, just behind shoulders).
+  ell(out[i++], "horse.full.withers", root,
+      QVector3D(bw_v * 0.34F, bh_v * 0.30F, bl * 0.16F),
+      QVector3D(0.0F, bh_v * 0.68F, bl * 0.22F));
+  // Belly (rounded under the barrel, deeper and longer for a barrel-chest).
+  ell(out[i++], "horse.full.belly", root,
+      QVector3D(bw_v * 0.56F, bh_v * 0.40F, bl * 0.46F),
+      QVector3D(0.0F, -bh_v * 0.30F, 0.0F));
+  // Chest/prow (forward-facing mass between the front legs).
+  ell(out[i++], "horse.full.chest", root,
+      QVector3D(bw_v * 0.50F, bh_v * 0.46F, bl * 0.30F),
+      QVector3D(0.0F, bh_v * 0.12F, bl * 0.38F));
+  // Sternum (under-chest prow filler).
+  ell(out[i++], "horse.full.sternum", root,
+      QVector3D(bw_v * 0.36F, bh_v * 0.22F, bl * 0.20F),
+      QVector3D(0.0F, -bh_v * 0.28F, bl * 0.34F));
+  // Croup (top of rump, slightly lower than withers).
+  ell(out[i++], "horse.full.croup", root,
+      QVector3D(bw_v * 0.44F, bh_v * 0.32F, bl * 0.22F),
+      QVector3D(0.0F, bh_v * 0.44F, -bl * 0.28F));
+  // Hindquarter L/R (the powerful muscle that defines a horse's rear).
+  ell(out[i++], "horse.full.hq.l", root,
+      QVector3D(bw_v * 0.42F, bh_v * 0.60F, bl * 0.40F),
+      QVector3D(bw_v * 0.30F, bh_v * 0.14F, -bl * 0.30F));
+  ell(out[i++], "horse.full.hq.r", root,
+      QVector3D(bw_v * 0.42F, bh_v * 0.60F, bl * 0.40F),
+      QVector3D(-bw_v * 0.30F, bh_v * 0.14F, -bl * 0.30F));
+  // Shoulder mass L/R (in front of withers, sloping into chest).
+  ell(out[i++], "horse.full.shoulder.l", root,
+      QVector3D(bw_v * 0.32F, bh_v * 0.44F, bl * 0.26F),
+      QVector3D(bw_v * 0.28F, bh_v * 0.18F, bl * 0.28F));
+  ell(out[i++], "horse.full.shoulder.r", root,
+      QVector3D(bw_v * 0.32F, bh_v * 0.44F, bl * 0.26F),
+      QVector3D(-bw_v * 0.28F, bh_v * 0.18F, bl * 0.28F));
+
+  // ---- Neck + mane (8 primitives) ------------------------------------
+  // Neck crest: thick at base, blends into withers; capsule for soft taper.
+  cap(out[i++], "horse.full.neck.crest", root,
+      pose.neck_base - pose.barrel_center, neck_top_bone,
+      QVector3D(0.0F, 0.0F, 0.0F), pose.neck_radius * 1.72F, kRoleCoat);
+  // Throat curve under the neck — bulked up so the neck base reads
+  // noticeably thicker than the head end (trapezoidal silhouette).
+  ell(out[i++], "horse.full.neck.throat", root,
+      QVector3D(bw_v * 0.32F, bh_v * 0.26F, bl * 0.18F),
+      (pose.neck_base - pose.barrel_center) +
+          QVector3D(0.0F, -bh_v * 0.02F, bl * 0.10F));
+  // Mane: row of small flattened ellipsoids along the crest, base→poll.
+  for (int m = 0; m < 5; ++m) {
+    float const t = static_cast<float>(m) / 4.0F;
+    QVector3D const along =
+        (pose.neck_base - pose.barrel_center) * (1.0F - t) +
+        (pose.neck_top - pose.barrel_center) * t;
+    ell(out[i++],
+        m == 0   ? "horse.full.mane.0"
+        : m == 1 ? "horse.full.mane.1"
+        : m == 2 ? "horse.full.mane.2"
+        : m == 3 ? "horse.full.mane.3"
+                 : "horse.full.mane.4",
+        root,
+        QVector3D(bw_v * 0.08F, bh_v * 0.10F, bl * 0.05F),
+        along + QVector3D(0.0F, bh_v * 0.18F, 0.0F),
+        kRoleMane, 0);
+  }
+  // Forelock: tuft on the forehead between the ears.
+  ell(out[i++], "horse.full.forelock", head_bone,
+      QVector3D(dims.head_width * 0.20F, dims.head_height * 0.10F,
+                hl * 0.10F),
+      QVector3D(0.0F, dims.head_height * 0.32F, -hl * 0.12F), kRoleMane, 0);
+
+  // ---- Head (9 primitives) -------------------------------------------
+  // Cranium (oblong front-to-back).
+  ell(out[i++], "horse.full.head.cranium", head_bone,
+      QVector3D(dims.head_width * 0.44F, dims.head_height * 0.44F,
+                hl * 0.44F),
+      QVector3D(0.0F, dims.head_height * 0.05F, -hl * 0.10F));
+  // Muzzle (tapered front of the head — narrower than the cheek/jaw).
+  cap(out[i++], "horse.full.head.muzzle", head_bone,
+      QVector3D(0.0F, -dims.head_height * 0.10F, hl * 0.06F), head_bone,
+      QVector3D(0.0F, -dims.head_height * 0.18F, hl * 0.48F),
+      dims.head_width * 0.20F, kRoleMuzzle);
+  // Lower jaw (heavier mass under the cheek — defines the wedge shape).
+  ell(out[i++], "horse.full.head.jaw", head_bone,
+      QVector3D(dims.head_width * 0.28F, dims.head_height * 0.17F,
+                hl * 0.26F),
+      QVector3D(0.0F, -dims.head_height * 0.24F, hl * 0.10F), kRoleMuzzle);
+  // Cheeks L/R — fuller so the head reads wedge-shaped (wide cheek, narrow muzzle).
+  sph(out[i++], "horse.full.head.cheek.l", head_bone,
+      QVector3D(dims.head_width * 0.32F, -dims.head_height * 0.05F,
+                -hl * 0.02F),
+      dims.head_width * 0.26F, kRoleCoat);
+  sph(out[i++], "horse.full.head.cheek.r", head_bone,
+      QVector3D(-dims.head_width * 0.32F, -dims.head_height * 0.05F,
+                -hl * 0.02F),
+      dims.head_width * 0.26F, kRoleCoat);
+  // Ears L/R: small upward cones.
+  cone_p(out[i++], "horse.full.head.ear.l", head_bone,
+         QVector3D(dims.head_width * 0.22F, dims.head_height * 0.30F,
+                   -hl * 0.18F),
+         head_bone,
+         QVector3D(dims.head_width * 0.24F, dims.head_height * 0.62F,
+                   -hl * 0.22F),
+         dims.head_width * 0.10F, kRoleCoat);
+  cone_p(out[i++], "horse.full.head.ear.r", head_bone,
+         QVector3D(-dims.head_width * 0.22F, dims.head_height * 0.30F,
+                   -hl * 0.18F),
+         head_bone,
+         QVector3D(-dims.head_width * 0.24F, dims.head_height * 0.62F,
+                   -hl * 0.22F),
+         dims.head_width * 0.10F, kRoleCoat);
+  // Eyes L/R: tiny dark spheres.
+  sph(out[i++], "horse.full.head.eye.l", head_bone,
+      QVector3D(dims.head_width * 0.36F, dims.head_height * 0.18F,
+                hl * 0.02F),
+      dims.head_width * 0.07F, kRoleEye, 0);
+  sph(out[i++], "horse.full.head.eye.r", head_bone,
+      QVector3D(-dims.head_width * 0.36F, dims.head_height * 0.18F,
+                hl * 0.02F),
+      dims.head_width * 0.07F, kRoleEye, 0);
+
+  // ---- Tail (4 primitives) -------------------------------------------
+  // Tail dock anchored on the rump.
+  QVector3D const tail_root_off(0.0F, bh_v * 0.32F, -bl * 0.50F);
+  ell(out[i++], "horse.full.tail.dock", root,
+      QVector3D(bw_v * 0.10F, bh_v * 0.10F, bl * 0.09F), tail_root_off,
+      kRoleCoat);
+  // Tail switch: 3 drooping flattened ellipsoids cascading down.
+  for (int t_i = 0; t_i < 3; ++t_i) {
+    float const tt = static_cast<float>(t_i + 1) / 3.0F;
+    QVector3D const off = tail_root_off +
+                          QVector3D(0.0F, -bh_v * 0.18F * tt - bh_v * 0.05F,
+                                    -bl * 0.10F * tt - bl * 0.04F);
+    ell(out[i++],
+        t_i == 0   ? "horse.full.tail.switch.0"
+        : t_i == 1 ? "horse.full.tail.switch.1"
+                   : "horse.full.tail.switch.2",
+        root,
+        QVector3D(bw_v * 0.13F - bw_v * 0.02F * tt,
+                  bh_v * 0.20F + bh_v * 0.02F * tt,
+                  bl * 0.07F),
+        off, kRoleTail, 0);
   }
 
-  {
-    PrimitiveInstance &p = out[7];
-    p.debug_name = "horse.full.head";
-    p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Head);
-    p.params.half_extents = pose.head_half;
-    p.color_role = kRoleCoat;
-    p.material_id = 0;
-    p.lod_mask = Render::Creature::kLodFull;
-  }
-
-  struct Leg {
-    std::string_view leg_name;
+  // ---- Legs (4 × 3 = 12 primitives: thigh, cannon+joint, hoof) -------
+  // For each leg we add: (a) a thicker upper limb capsule from the
+  // shoulder/hindquarter down to a knee-height point on the foot bone,
+  // (b) a narrower cannon cylinder co-located on the foot bone, and
+  // (c) the hoof. Joints (knee/fetlock) are implied by the radius
+  // change between the two segments.
+  struct LegSpec {
+    std::string_view upper_name;
+    std::string_view cannon_name;
     std::string_view hoof_name;
     HorseBone foot_bone;
     QVector3D shoulder_offset;
+    bool is_rear;
   };
-  std::array<Leg, 4> const legs{{
-      {"horse.full.leg.fl", "horse.full.hoof.fl", HorseBone::FootFL,
-       pose.shoulder_offset_reduced_fl},
-      {"horse.full.leg.fr", "horse.full.hoof.fr", HorseBone::FootFR,
-       pose.shoulder_offset_reduced_fr},
-      {"horse.full.leg.bl", "horse.full.hoof.bl", HorseBone::FootBL,
-       pose.shoulder_offset_reduced_bl},
-      {"horse.full.leg.br", "horse.full.hoof.br", HorseBone::FootBR,
-       pose.shoulder_offset_reduced_br},
+  std::array<LegSpec, 4> const legs{{
+      {"horse.full.leg.fl.upper", "horse.full.leg.fl.cannon",
+       "horse.full.hoof.fl", HorseBone::FootFL, pose.shoulder_offset_reduced_fl,
+       false},
+      {"horse.full.leg.fr.upper", "horse.full.leg.fr.cannon",
+       "horse.full.hoof.fr", HorseBone::FootFR, pose.shoulder_offset_reduced_fr,
+       false},
+      {"horse.full.leg.bl.upper", "horse.full.leg.bl.cannon",
+       "horse.full.hoof.bl", HorseBone::FootBL, pose.shoulder_offset_reduced_bl,
+       true},
+      {"horse.full.leg.br.upper", "horse.full.leg.br.cannon",
+       "horse.full.hoof.br", HorseBone::FootBR, pose.shoulder_offset_reduced_br,
+       true},
   }};
-  for (std::size_t i = 0; i < 4; ++i) {
-    PrimitiveInstance &leg = out[8 + i];
-    leg.debug_name = legs[i].leg_name;
-    leg.shape = PrimitiveShape::Cylinder;
-    leg.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
-    leg.params.head_offset = legs[i].shoulder_offset;
-    leg.params.tail_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    leg.params.radius = pose.leg_radius_reduced;
-    leg.color_role = kRoleCoat;
-    leg.material_id = 0;
-    leg.lod_mask = Render::Creature::kLodFull;
-
-    PrimitiveInstance &hoof = out[12 + i];
-    hoof.debug_name = legs[i].hoof_name;
+  float const leg_len = dims.leg_length;
+  // Stronger taper from upper limb (gaskin/forearm) down to cannon bone,
+  // and the hoof is wider still — leg silhouette tapers visibly top→bottom.
+  float const upper_r = pose.leg_radius_reduced * 2.35F;
+  float const cannon_r = pose.leg_radius_reduced * 0.92F;
+  for (auto const &leg : legs) {
+    auto foot_b = static_cast<BoneIndex>(leg.foot_bone);
+    // Upper leg: from shoulder/hindquarter down to ~mid-leg height,
+    // tapered via a Capsule (rounded ends look like muscle).
+    cap(out[i++], leg.upper_name, root, leg.shoulder_offset, foot_b,
+        QVector3D(0.0F, leg_len * 0.42F, 0.0F), upper_r, kRoleCoat);
+    // Cannon bone + pastern: thinner cylinder rigid to the foot bone,
+    // from knee height down to just above the hoof.
+    cyl(out[i++], leg.cannon_name, foot_b,
+        QVector3D(0.0F, leg_len * 0.42F, 0.0F), foot_b,
+        QVector3D(0.0F, dims.hoof_height * 0.5F, 0.0F), cannon_r,
+        kRoleCoatDark);
+    // Hoof (existing horizontal cylinder mesh).
+    PrimitiveInstance &hoof = out[i++];
+    hoof.debug_name = leg.hoof_name;
     hoof.shape = PrimitiveShape::Mesh;
     hoof.custom_mesh = Render::GL::get_unit_cylinder();
-    hoof.params.anchor_bone = static_cast<BoneIndex>(legs[i].foot_bone);
+    hoof.params.anchor_bone = foot_b;
     hoof.params.half_extents = pose.hoof_scale;
     hoof.color_role = kRoleHoof;
     hoof.material_id = 8;
-    hoof.lod_mask = Render::Creature::kLodFull;
+    hoof.lod_mask = kLodFull;
   }
+
+  // Sanity: every slot must be filled.
+  (void)i;
 
   return out;
 }
 
-auto static_full_parts() noexcept -> const std::array<PrimitiveInstance, 16> & {
+auto static_full_parts() noexcept
+    -> const std::array<PrimitiveInstance, kHorseFullPartCount> & {
   static const auto parts = build_static_full_parts();
   return parts;
 }
@@ -578,7 +827,7 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
     if (lod == Render::Creature::CreatureLOD::Billboard) {
       return;
     }
-    std::array<QVector3D, 4> role_colors{};
+    std::array<QVector3D, 8> role_colors{};
     fill_horse_role_colors(variant, role_colors);
     Render::Creature::submit_creature(
         horse_creature_spec(),
@@ -607,6 +856,9 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
     palette_slot[i] = tmp[i] * entry->inverse_bind[i];
   }
 
+  std::array<QVector3D, 8> role_colors{};
+  fill_horse_role_colors(variant, role_colors);
+
   Render::GL::RiggedCreatureCmd cmd{};
   cmd.mesh = entry->mesh.get();
   cmd.material = nullptr;
@@ -615,6 +867,10 @@ void submit_horse_rigged_impl(const HorseSpecPose &pose,
   cmd.palette_ubo = palette_slot_h.ubo;
   cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
   cmd.bone_count = static_cast<std::uint32_t>(n);
+  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
+  for (std::size_t i = 0; i < role_colors.size(); ++i) {
+    cmd.role_colors[i] = role_colors[i];
+  }
   cmd.color = variant.coat_color;
   cmd.alpha = 1.0F;
   cmd.texture = nullptr;

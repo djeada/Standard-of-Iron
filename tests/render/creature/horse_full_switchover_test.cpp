@@ -1,12 +1,12 @@
 // Stage 15.5e — horse Full + Reduced LOD switchover regression.
 //
-// Verifies that the static k_horse_full_parts (16 prims) and
-// k_horse_reduced_parts (11 prims) PartGraphs each bake into a
-// single RiggedMesh, and that the bone palette resolved from a
-// per-entity pose is well-formed. Also exercises the cache key:
-// two units with different `variation_scale` values must hit the
-// SAME mesh pointer (proving variation flows through the cmd, not
-// the bake).
+// Verifies that the static k_horse_full_parts (anatomically enriched
+// to 43 prims) and k_horse_reduced_parts (11 prims) PartGraphs each
+// bake into a single RiggedMesh, and that the bone palette resolved
+// from a per-entity pose is well-formed. Also exercises the cache
+// key: two units with different `variation_scale` values must hit
+// the SAME mesh pointer (proving variation flows through the cmd,
+// not the bake).
 
 #include "render/bone_palette_arena.h"
 #include "render/creature/spec.h"
@@ -55,8 +55,8 @@ TEST(HorseFullSwitchover, FullLodBakesMoreGeometryThanReduced) {
 
   ASSERT_GT(spec.lod_full.primitives.size(), 0U);
   ASSERT_GT(spec.lod_reduced.primitives.size(), 0U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 16U);
-  EXPECT_EQ(spec.lod_reduced.primitives.size(), 11U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 43U);
+  EXPECT_EQ(spec.lod_reduced.primitives.size(), 9U);
 
   Render::GL::RiggedMeshCache cache;
   const auto *full_entry =
@@ -228,7 +228,7 @@ TEST(HorseFullSwitchover, FullPartGraphSpansAreContiguous) {
   // Sanity check that the static k_horse_full_parts span exposed by
   // the spec matches the contracted size and that primitive 0 is the
   // first body-shell ellipsoid.
-  ASSERT_EQ(spec.lod_full.primitives.size(), 16U);
+  ASSERT_EQ(spec.lod_full.primitives.size(), 43U);
   EXPECT_EQ(spec.lod_full.primitives[0].shape,
             Render::Creature::PrimitiveShape::OrientedSphere);
   EXPECT_EQ(spec.lod_full.primitives.back().shape,

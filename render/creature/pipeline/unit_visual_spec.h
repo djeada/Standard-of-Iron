@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "../part_graph.h"
 #include "../skeleton.h"
 
 #include <QMatrix4x4>
@@ -25,7 +26,7 @@ struct HorseProfile;
 struct MountedAttachmentFrame;
 struct ReinState;
 struct HorseMotionSample;
-enum class HorseLOD : std::uint8_t;
+using HorseLOD = ::Render::Creature::CreatureLOD;
 struct VariationParams;
 struct EquipmentBatch;
 class ISubmitter;
@@ -47,6 +48,10 @@ inline constexpr PaletteId kDefaultPalette = 0u;
 
 using SpecId = std::uint32_t;
 inline constexpr SpecId kInvalidSpec = static_cast<SpecId>(0xFFFFFFFFu);
+
+using CreatureAssetId = std::uint16_t;
+inline constexpr CreatureAssetId kInvalidCreatureAsset =
+    static_cast<CreatureAssetId>(0xFFFFu);
 
 using MaterialId = std::uint16_t;
 inline constexpr MaterialId kDefaultMaterial = 0u;
@@ -200,6 +205,7 @@ struct MountedSpec;
 struct UnitVisualSpec {
   std::string_view debug_name{};
   CreatureKind kind{CreatureKind::Humanoid};
+  CreatureAssetId creature_asset_id{kInvalidCreatureAsset};
   PaletteId palette_id{kDefaultPalette};
   EquipmentLoadout equipment{};
   PoseHookFn pose_hook{nullptr};

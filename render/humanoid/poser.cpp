@@ -21,25 +21,36 @@ void HumanoidRendererBase::compute_locomotion_pose(
     HumanoidPose &pose) {
   using HP = HumanProportions;
 
+  auto ease_in_out = [](float t) {
+    t = std::clamp(t, 0.0F, 1.0F);
+    return t * t * (3.0F - 2.0F * t);
+  };
+
   float const h_scale = variation.height_scale;
-
-  pose.head_pos = QVector3D(0.0F, HP::HEAD_CENTER_Y * h_scale, 0.0F);
-  pose.head_r = HP::HEAD_RADIUS * h_scale;
-  pose.neck_base = QVector3D(0.0F, HP::NECK_BASE_Y * h_scale, 0.0F);
-
   float const b_scale = variation.bulk_scale;
   float const s_width = variation.stance_width;
+  float const shoulder_span =
+      HP::SHOULDER_WIDTH * (1.02F + (b_scale - 1.0F) * 0.12F);
+  float const half_shoulder_span = 0.5F * shoulder_span;
+  float const chest_forward = 0.024F + variation.posture_slump * 0.10F;
+  float const pelvis_setback = -0.018F * h_scale;
 
-  float const half_shoulder_span = 0.5F * HP::SHOULDER_WIDTH * b_scale;
-  pose.shoulder_l =
-      QVector3D(-half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
-  pose.shoulder_r =
-      QVector3D(half_shoulder_span, HP::SHOULDER_Y * h_scale, 0.0F);
+  pose.head_pos = QVector3D(0.0F, HP::HEAD_CENTER_Y * h_scale,
+                            chest_forward * 0.70F);
+  pose.head_r = HP::HEAD_RADIUS * h_scale;
+  pose.neck_base =
+      QVector3D(0.0F, HP::NECK_BASE_Y * h_scale, chest_forward * 0.45F);
 
-  pose.pelvis_pos = QVector3D(0.0F, HP::WAIST_Y * h_scale, 0.0F);
+  pose.shoulder_l = QVector3D(-half_shoulder_span, HP::SHOULDER_Y * h_scale,
+                              chest_forward);
+  pose.shoulder_r = QVector3D(half_shoulder_span, HP::SHOULDER_Y * h_scale,
+                              chest_forward);
 
-  float const rest_stride = 0.06F + (variation.arm_swing_amp - 1.0F) * 0.045F;
-  float const foot_x_span = HP::SHOULDER_WIDTH * 0.62F * s_width;
+  pose.pelvis_pos =
+      QVector3D(0.0F, HP::WAIST_Y * h_scale - 0.018F * h_scale, pelvis_setback);
+
+  float const rest_stride = 0.030F + (s_width - 1.0F) * 0.030F;
+  float const foot_x_span = shoulder_span * 0.44F * s_width;
   pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
   pose.foot_l =
       QVector3D(-foot_x_span, HP::GROUND_Y + pose.foot_y_offset, rest_stride);
@@ -52,101 +63,121 @@ void HumanoidRendererBase::compute_locomotion_pose(
   float const slouch_offset = variation.posture_slump * 0.15F;
   pose.shoulder_l.setZ(pose.shoulder_l.z() + slouch_offset);
   pose.shoulder_r.setZ(pose.shoulder_r.z() + slouch_offset);
+  pose.neck_base.setZ(pose.neck_base.z() + slouch_offset * 0.85F);
+  pose.head_pos.setZ(pose.head_pos.z() + slouch_offset * 0.65F);
 
-  float const foot_inward_jitter = (hash_01(seed ^ 0x5678U) - 0.5F) * 0.02F;
-  float const foot_forward_jitter = (hash_01(seed ^ 0x9ABCU) - 0.5F) * 0.035F;
+  float const foot_inward_jitter = (hash_01(seed ^ 0x5678U) - 0.5F) * 0.012F;
+  float const foot_forward_jitter = (hash_01(seed ^ 0x9ABCU) - 0.5F) * 0.024F;
 
   pose.foot_l.setX(pose.foot_l.x() + foot_inward_jitter);
   pose.foot_r.setX(pose.foot_r.x() - foot_inward_jitter);
   pose.foot_l.setZ(pose.foot_l.z() + foot_forward_jitter);
   pose.foot_r.setZ(pose.foot_r.z() - foot_forward_jitter);
 
-  float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-  float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+  float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.020F;
+  float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.025F;
+  float const relaxed_hand_y =
+      HP::CHEST_Y * h_scale - 0.040F + arm_height_jitter;
+  float const hand_forward = 0.072F + variation.posture_slump * 0.06F;
 
   pose.hand_l =
-      QVector3D(-0.05F + arm_asymmetry,
-                HP::SHOULDER_Y * h_scale + 0.05F + arm_height_jitter, 0.55F);
-  pose.hand_r = QVector3D(
-      0.15F - arm_asymmetry * 0.5F,
-      HP::SHOULDER_Y * h_scale + 0.15F + arm_height_jitter * 0.8F, 0.20F);
+      QVector3D(-half_shoulder_span * 0.82F - 0.04F + arm_asymmetry,
+                relaxed_hand_y, hand_forward + 0.020F);
+  pose.hand_r = QVector3D(half_shoulder_span * 0.82F + 0.04F -
+                              arm_asymmetry * 0.60F,
+                          relaxed_hand_y + 0.018F, hand_forward - 0.015F);
 
   if (is_moving) {
 
-    float const walk_cycle_time = 0.8F / variation.walk_speed_mult;
+    float const walk_cycle_time = 0.82F / variation.walk_speed_mult;
     float const walk_phase = std::fmod(time * (1.0F / walk_cycle_time), 1.0F);
     float const left_phase = walk_phase;
     float const right_phase = std::fmod(walk_phase + 0.5F, 1.0F);
 
     const float ground_y = HP::GROUND_Y;
 
-    const float stride_length = 0.35F * variation.arm_swing_amp;
-
-    float const bob_phase = walk_phase * 2.0F;
+    constexpr float planted_fraction = 0.48F;
+    float const stride_length =
+        0.24F * variation.walk_speed_mult *
+        (0.92F + 0.18F * variation.arm_swing_amp);
+    float const step_height = 0.070F * variation.walk_speed_mult;
+    float const cycle_radians = walk_phase * 2.0F * std::numbers::pi_v<float>;
     float const vertical_bob =
-        std::sin(bob_phase * std::numbers::pi_v<float>) * 0.018F;
+        -std::abs(std::sin(cycle_radians)) * 0.010F * variation.walk_speed_mult;
+    float const sway_raw = std::sin(cycle_radians);
+    float const hip_sway = sway_raw * (0.020F * s_width);
+    float const shoulder_counter_sway = -sway_raw * 0.014F;
+    float const shoulder_twist = sway_raw * 0.016F;
+    float const forward_lean =
+        0.038F + (variation.walk_speed_mult - 1.0F) * 0.015F;
 
-    float const hip_sway_amount = 0.002F;
-    float const sway_raw =
-        std::sin(walk_phase * 2.0F * std::numbers::pi_v<float>);
-    float const hip_sway = sway_raw * hip_sway_amount;
-
-    float const torso_sway_z = 0.0F;
-
-    auto animate_foot = [ground_y, &pose, stride_length](QVector3D &foot,
-                                                         float phase) {
-      float const lift_raw = std::sin(phase * 2.0F * std::numbers::pi_v<float>);
-      float lift = 0.0F;
-      if (lift_raw > 0.0F) {
-
-        float const lift_phase =
-            phase < 0.5F ? phase * 2.0F : (1.0F - phase) * 2.0F;
-        float const ease_t =
-            lift_phase * lift_phase * (3.0F - 2.0F * lift_phase);
-        lift = lift_raw * ease_t;
-        foot.setY(ground_y + pose.foot_y_offset + lift * 0.15F);
+    auto animate_foot = [&](QVector3D &foot, float base_x, float phase,
+                            float lateral_sign) {
+      float z_pos = 0.0F;
+      if (phase < planted_fraction) {
+        float const t = ease_in_out(phase / planted_fraction);
+        z_pos = stride_length * 0.55F +
+                (-stride_length * 1.20F) * t;
+        foot.setY(ground_y + pose.foot_y_offset -
+                  std::sin(t * std::numbers::pi_v<float>) * 0.003F);
       } else {
-        foot.setY(ground_y + pose.foot_y_offset);
+        float const t =
+            ease_in_out((phase - planted_fraction) / (1.0F - planted_fraction));
+        z_pos = -stride_length * 0.65F +
+                (stride_length * 1.20F) * t;
+        foot.setY(ground_y + pose.foot_y_offset +
+                  std::sin(t * std::numbers::pi_v<float>) * step_height);
       }
 
-      float const stride_phase =
-          (phase - 0.25F) * 2.0F * std::numbers::pi_v<float>;
-      foot.setZ(foot.z() + std::sin(stride_phase) * stride_length);
+      foot.setZ(z_pos);
+      foot.setX(base_x - lateral_sign * std::abs(std::sin(phase * 2.0F *
+                                                          std::numbers::pi_v<float>)) *
+                             0.012F);
     };
 
-    animate_foot(pose.foot_l, left_phase);
-    animate_foot(pose.foot_r, right_phase);
+    float const base_foot_l_x = pose.foot_l.x();
+    float const base_foot_r_x = pose.foot_r.x();
+    animate_foot(pose.foot_l, base_foot_l_x, left_phase, -1.0F);
+    animate_foot(pose.foot_r, base_foot_r_x, right_phase, 1.0F);
 
     pose.pelvis_pos.setY(pose.pelvis_pos.y() + vertical_bob);
-    pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob);
-    pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob);
-    pose.neck_base.setY(pose.neck_base.y() + vertical_bob);
-    pose.head_pos.setY(pose.head_pos.y() + vertical_bob);
+    pose.shoulder_l.setY(pose.shoulder_l.y() + vertical_bob * 0.45F);
+    pose.shoulder_r.setY(pose.shoulder_r.y() + vertical_bob * 0.45F);
+    pose.neck_base.setY(pose.neck_base.y() + vertical_bob * 0.28F);
+    pose.head_pos.setY(pose.head_pos.y() + vertical_bob * 0.18F);
 
     pose.pelvis_pos.setX(pose.pelvis_pos.x() + hip_sway);
+    pose.shoulder_l.setX(pose.shoulder_l.x() + shoulder_counter_sway);
+    pose.shoulder_r.setX(pose.shoulder_r.x() + shoulder_counter_sway);
+    pose.neck_base.setX(pose.neck_base.x() + shoulder_counter_sway * 0.75F);
+    pose.head_pos.setX(pose.head_pos.x() + shoulder_counter_sway * 0.55F);
 
-    pose.shoulder_l.setZ(pose.shoulder_l.z() + torso_sway_z);
-    pose.shoulder_r.setZ(pose.shoulder_r.z() + torso_sway_z);
-    pose.neck_base.setZ(pose.neck_base.z() + torso_sway_z * 0.7F);
-    pose.head_pos.setZ(pose.head_pos.z() + torso_sway_z * 0.5F);
+    pose.pelvis_pos.setZ(pose.pelvis_pos.z() + forward_lean * 0.20F);
+    pose.shoulder_l.setZ(pose.shoulder_l.z() + forward_lean + shoulder_twist);
+    pose.shoulder_r.setZ(pose.shoulder_r.z() + forward_lean - shoulder_twist);
+    pose.neck_base.setZ(pose.neck_base.z() + forward_lean * 0.78F);
+    pose.head_pos.setZ(pose.head_pos.z() + forward_lean * 0.68F);
 
-    float const arm_swing_amp = 0.04F * variation.arm_swing_amp;
-    float const arm_phase_offset = 0.15F;
-    constexpr float max_arm_displacement = 0.06F;
+    float const arm_swing_amp = 0.14F * variation.arm_swing_amp;
+    constexpr float max_arm_displacement = 0.14F;
 
-    float const left_swing_raw = std::sin((left_phase + arm_phase_offset) *
-                                          2.0F * std::numbers::pi_v<float>);
+    float const left_swing_raw =
+        std::sin(left_phase * 2.0F * std::numbers::pi_v<float>);
     float const left_arm_swing =
         std::clamp(left_swing_raw * arm_swing_amp, -max_arm_displacement,
                    max_arm_displacement);
-    pose.hand_l.setZ(pose.hand_l.z() - left_arm_swing);
+    pose.hand_l.setZ(pose.hand_l.z() + left_arm_swing);
+    pose.hand_l.setY(pose.hand_l.y() + std::abs(left_arm_swing) * 0.14F);
+    pose.hand_l.setX(pose.hand_l.x() - left_arm_swing * 0.14F);
 
-    float const right_swing_raw = std::sin((right_phase + arm_phase_offset) *
-                                           2.0F * std::numbers::pi_v<float>);
+    float const right_swing_raw =
+        std::sin(right_phase * 2.0F * std::numbers::pi_v<float>);
     float const right_arm_swing =
         std::clamp(right_swing_raw * arm_swing_amp, -max_arm_displacement,
                    max_arm_displacement);
-    pose.hand_r.setZ(pose.hand_r.z() - right_arm_swing);
+    pose.hand_r.setZ(pose.hand_r.z() + right_arm_swing);
+    pose.hand_r.setY(pose.hand_r.y() + std::abs(right_arm_swing) * 0.14F);
+    pose.hand_r.setX(pose.hand_r.x() - right_arm_swing * 0.14F);
 
     auto clamp_hand_reach = [&](const QVector3D &shoulder, QVector3D &hand) {
       float const max_reach =
@@ -236,10 +267,13 @@ void HumanoidRendererBase::compute_locomotion_pose(
   QVector3D const outward_l = -right_axis;
   QVector3D const outward_r = right_axis;
 
+  float const elbow_along_bias = (variation.bulk_scale - 1.0F) * 0.05F;
   pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l,
-                                  0.45F, 0.15F, -0.08F, +1.0F);
+                                  0.43F - elbow_along_bias, 0.14F, -0.06F,
+                                  +1.0F);
   pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r,
-                                  0.48F, 0.12F, 0.02F, +1.0F);
+                                  0.46F - elbow_along_bias, 0.11F, 0.01F,
+                                  +1.0F);
 }
 
 } // namespace Render::GL

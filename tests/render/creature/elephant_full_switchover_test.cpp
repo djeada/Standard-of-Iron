@@ -53,7 +53,7 @@ TEST(ElephantFullSwitchover, FullLodBakesMoreGeometryThanReduced) {
 
   ASSERT_GT(spec.lod_full.primitives.size(), 0U);
   ASSERT_GT(spec.lod_reduced.primitives.size(), 0U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 15U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 50U);
   EXPECT_EQ(spec.lod_reduced.primitives.size(), 12U);
 
   Render::GL::RiggedMeshCache cache;
@@ -243,7 +243,7 @@ TEST(ElephantFullSwitchover, VariationScaleSharedMeshDifferentUnits) {
 
 TEST(ElephantFullSwitchover, FullPartGraphFirstPrimIsBodyEllipsoid) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
-  ASSERT_EQ(spec.lod_full.primitives.size(), 15U);
+  ASSERT_EQ(spec.lod_full.primitives.size(), 50U);
   EXPECT_EQ(spec.lod_full.primitives[0].shape,
             Render::Creature::PrimitiveShape::OrientedSphere);
 }

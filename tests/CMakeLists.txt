@@ -41,6 +41,8 @@ add_executable(standard_of_iron_tests
     render/bone_palette_arena_ubo_test.cpp
     render/gpu_skinning_perf_sentinel_test.cpp
     render/pipeline/lod_selector_test.cpp
+    render/pipeline/creature_lod_decision_test.cpp
+    render/pipeline/creature_asset_registry_test.cpp
     render/pipeline/instance_coalescer_test.cpp
     render/pass/frame_pass_runner_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
@@ -58,10 +60,15 @@ add_executable(standard_of_iron_tests
     render/creature/skeleton_test.cpp
     render/creature/part_graph_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
+    render/creature/rigged_mesh_cache_test.cpp
     render/creature/humanoid_reduced_switchover_test.cpp
     render/creature/humanoid_full_switchover_test.cpp
     render/creature/horse_full_switchover_test.cpp
     render/creature/elephant_full_switchover_test.cpp
+    render/creature/humanoid_prepare_test.cpp
+    render/creature/horse_prepare_test.cpp
+    render/creature/elephant_prepare_test.cpp
+    render/creature/mounted_prepare_test.cpp
     render/rigged_visual_parity_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp

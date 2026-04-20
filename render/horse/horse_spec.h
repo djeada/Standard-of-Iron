@@ -92,7 +92,7 @@ void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
                                   HorseSpecPose &out_pose) noexcept;
 
 void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
-                            std::array<QVector3D, 4> &out_roles) noexcept;
+                            std::array<QVector3D, 8> &out_roles) noexcept;
 
 [[nodiscard]] auto
 horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;

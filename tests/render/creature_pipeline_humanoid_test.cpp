@@ -225,6 +225,11 @@ TEST(CreatureRenderStatePrep, HumanoidRowAppendsResolvedState) {
   EXPECT_TRUE(frame_columns_consistent(frame));
   EXPECT_EQ(frame.seed[0], 321u);
   EXPECT_EQ(frame.lod[0], CreatureLOD::Reduced);
+  EXPECT_EQ(frame.render_kind[0], CreatureKind::Humanoid);
+  EXPECT_NE(frame.creature_asset_id[0], kInvalidCreatureAsset);
+  EXPECT_EQ(frame.role_color_count[0], Render::Humanoid::kHumanoidRoleCount);
+  EXPECT_EQ(frame.role_colors[0][0], variant.palette.cloth);
+  EXPECT_EQ(frame.palette_id[0], spec.palette_id);
   EXPECT_FLOAT_EQ(frame.humanoid_pose[0].head_pos.y(), 2.0F);
 }
 

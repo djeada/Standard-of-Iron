@@ -227,6 +227,7 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
     rv.position_bone_local = {world_pos.x(), world_pos.y(), world_pos.z()};
     rv.normal_bone_local = {world_norm.x(), world_norm.y(), world_norm.z()};
     rv.tex_coord = v.tex_coord;
+    rv.color_role = prim.color_role;
 
     if (two_bone) {
 

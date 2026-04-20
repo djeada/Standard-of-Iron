@@ -106,7 +106,7 @@ TEST(HorseSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
   EXPECT_EQ(sub.calls.size(), 5U);
 }
 
-TEST(HorseSpecTest, ReducedRiggedFallbackEmitsElevenPrimitives) {
+TEST(HorseSpecTest, ReducedRiggedFallbackEmitsNinePrimitives) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
   auto variant = make_horse_variant();
@@ -119,10 +119,10 @@ TEST(HorseSpecTest, ReducedRiggedFallbackEmitsElevenPrimitives) {
   CapturingSubmitter sub;
   Render::Horse::submit_horse_reduced_rigged(pose, variant, identity, sub);
 
-  EXPECT_EQ(sub.calls.size(), 11U);
+  EXPECT_EQ(sub.calls.size(), 9U);
 }
 
-TEST(HorseSpecTest, FullRiggedFallbackEmitsSixteenPrimitives) {
+TEST(HorseSpecTest, FullRiggedFallbackEmitsAnatomicalPrimitives) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
   auto variant = make_horse_variant();
@@ -135,12 +135,34 @@ TEST(HorseSpecTest, FullRiggedFallbackEmitsSixteenPrimitives) {
   CapturingSubmitter sub;
   Render::Horse::submit_horse_full_rigged(pose, variant, identity, sub);
 
-  EXPECT_EQ(sub.calls.size(), 16U);
+  EXPECT_EQ(sub.calls.size(), 43U);
 }
 
 TEST(HorseSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Horse::horse_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
-  EXPECT_EQ(spec.lod_reduced.primitives.size(), 11U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 16U);
+  EXPECT_EQ(spec.lod_reduced.primitives.size(), 9U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 43U);
+}
+
+TEST(HorseSpecTest, ReducedWalkKeepsRearHoofLowerDuringStanceThanSwing) {
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+  gait.cycle_time = 1.1F;
+  gait.front_leg_phase = 0.25F;
+  gait.rear_leg_phase = 0.0F;
+  gait.stride_swing = 0.34F;
+  gait.stride_lift = 0.14F;
+
+  Render::Horse::HorseSpecPose stance_pose;
+  Render::Horse::HorseSpecPose swing_pose;
+  Render::Horse::make_horse_spec_pose_reduced(
+      dims, gait, Render::Horse::HorseReducedMotion{0.0F, 0.0F, true},
+      stance_pose);
+  Render::Horse::make_horse_spec_pose_reduced(
+      dims, gait, Render::Horse::HorseReducedMotion{0.75F, 0.0F, true},
+      swing_pose);
+
+  EXPECT_LT(stance_pose.foot_bl.y(), swing_pose.foot_bl.y());
+  EXPECT_GT(swing_pose.foot_bl.y() - stance_pose.foot_bl.y(), 0.05F);
 }

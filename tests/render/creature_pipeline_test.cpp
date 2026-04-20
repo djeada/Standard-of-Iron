@@ -65,6 +65,10 @@ TEST(CreaturePipelineFrame, PushKeepsColumnsAligned) {
          PoseState{});
   EXPECT_EQ(f.size(), 2u);
   EXPECT_TRUE(frame_columns_consistent(f));
+  EXPECT_EQ(f.render_kind.size(), 2u);
+  EXPECT_EQ(f.creature_asset_id.size(), 2u);
+  EXPECT_EQ(f.variant_bucket.size(), 2u);
+  EXPECT_EQ(f.role_colors.size(), 2u);
   f.clear();
   EXPECT_TRUE(f.empty());
   EXPECT_TRUE(frame_columns_consistent(f));

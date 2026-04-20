@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../creature/part_graph.h"
 #include "../submitter.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -25,19 +26,10 @@ struct AnimationInputs;
 
 namespace Render::GL {
 
-enum class HumanoidLOD : uint8_t {
-  Full = 0,
-  Reduced = 1,
-  Minimal = 2,
-  Billboard = 3
-};
-
-enum class HorseLOD : uint8_t {
-  Full = 0,
-  Reduced = 1,
-  Minimal = 2,
-  Billboard = 3
-};
+// Per-species LOD enums are aliases of the unified Render::Creature::CreatureLOD
+// so the render pipeline shares a single LOD vocabulary.
+using HumanoidLOD = ::Render::Creature::CreatureLOD;
+using HorseLOD = ::Render::Creature::CreatureLOD;
 
 struct DrawContext {
   ResourceManager *resources = nullptr;

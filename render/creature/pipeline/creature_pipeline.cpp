@@ -1,13 +1,14 @@
 #include "creature_pipeline.h"
 
-#include "../../elephant/elephant_spec.h"
+#include "creature_asset.h"
+#include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
 #include "../../equipment/equipment_submit.h"
-#include "../../horse/horse_spec.h"
-#include "../../humanoid/humanoid_spec.h"
+#include "../../scene_renderer.h"
 #include "../../submitter.h"
 #include "../skeleton.h"
 
+#include <array>
 #include <algorithm>
 
 namespace Render::Creature::Pipeline {
@@ -68,13 +69,6 @@ auto CreaturePipeline::process(const FrameContext &ctx,
         spec.pose_hook(synth_ctx, frame.humanoid_anim[i], frame.seed[i],
                        frame.humanoid_pose[i]);
       }
-    } else if (spec.kind == CreatureKind::Mounted &&
-               spec.pose_hook != nullptr && i < frame.humanoid_anim.size() &&
-               i < frame.humanoid_pose.size()) {
-
-      Render::GL::DrawContext synth_ctx{};
-      spec.pose_hook(synth_ctx, frame.humanoid_anim[i], frame.seed[i],
-                     frame.humanoid_pose[i]);
     }
 
     switch (frame.lod[i]) {
@@ -98,6 +92,52 @@ auto CreaturePipeline::process(const FrameContext &ctx,
 }
 
 namespace {
+
+auto resolve_tint_from_roles(
+    TintRole role,
+    std::span<const QVector3D> role_colors,
+    const Render::GL::HumanoidPalette &fallback) noexcept -> QVector3D {
+  // TintRole values 1..6 map directly to role_colors indices 0..5.
+  // TeamTint maps to Cloth (index 0) for backward compatibility.
+  const std::size_t idx = (role == TintRole::TeamTint)
+                              ? std::size_t{0}
+                              : static_cast<std::size_t>(role) - 1;
+
+  if (idx < role_colors.size()) {
+    return role_colors[idx];
+  }
+
+  switch (role) {
+  case TintRole::Cloth:
+    return fallback.cloth;
+  case TintRole::Skin:
+    return fallback.skin;
+  case TintRole::Leather:
+    return fallback.leather;
+  case TintRole::LeatherDark:
+    return fallback.leather_dark;
+  case TintRole::Wood:
+    return fallback.wood;
+  case TintRole::Metal:
+    return fallback.metal;
+  case TintRole::TeamTint:
+    return fallback.cloth;
+  case TintRole::None:
+    break;
+  }
+  return {};
+}
+
+auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
+    -> Render::GL::Renderer * {
+  if (auto *renderer = dynamic_cast<Render::GL::Renderer *>(&out)) {
+    return renderer;
+  }
+  if (auto *batch = dynamic_cast<Render::GL::BatchingSubmitter *>(&out)) {
+    return dynamic_cast<Render::GL::Renderer *>(batch->fallback_submitter());
+  }
+  return nullptr;
+}
 
 void submit_equipment_loadout(const UnitVisualSpec &spec,
                               const CreatureFrame &frame, std::size_t i,
@@ -178,32 +218,13 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
 
     QVector3D color = record.override_color;
     if (record.tint_role != TintRole::None) {
-      const auto &p = variant.palette;
-      switch (record.tint_role) {
-      case TintRole::Cloth:
-        color = p.cloth;
-        break;
-      case TintRole::Skin:
-        color = p.skin;
-        break;
-      case TintRole::Leather:
-        color = p.leather;
-        break;
-      case TintRole::LeatherDark:
-        color = p.leather_dark;
-        break;
-      case TintRole::Wood:
-        color = p.wood;
-        break;
-      case TintRole::Metal:
-        color = p.metal;
-        break;
-      case TintRole::TeamTint:
-        color = p.cloth;
-        break;
-      case TintRole::None:
-        break;
-      }
+      const std::uint32_t rc_count =
+          (i < frame.role_color_count.size()) ? frame.role_color_count[i] : 0U;
+      const std::span<const QVector3D> roles =
+          (i < frame.role_colors.size())
+              ? std::span<const QVector3D>(frame.role_colors[i].data(), rc_count)
+              : std::span<const QVector3D>{};
+      color = resolve_tint_from_roles(record.tint_role, roles, variant.palette);
     }
 
     out.mesh(mesh, model, color, nullptr, 1.0F,
@@ -211,87 +232,173 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
   }
 }
 
-void submit_humanoid_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
-                         std::size_t i, Render::GL::ISubmitter &out,
-                         SubmitStats &stats) {
-  const auto &world = frame.world_matrix[i];
-  const auto &pose = frame.humanoid_pose[i];
-  const auto &variant = frame.humanoid_variant[i];
-  const auto &anim = frame.humanoid_anim[i];
-
-  switch (frame.lod[i]) {
-  case CreatureLOD::Full:
-    Render::Humanoid::submit_humanoid_full_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Reduced:
-    Render::Humanoid::submit_humanoid_reduced_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Minimal:
-    Render::Humanoid::submit_humanoid_minimal_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Billboard:
-
-    break;
+void submit_rigged_creature(const CreatureAsset &asset,
+                            const void *species_pose,
+                            CreatureLOD lod,
+                            std::span<const QVector3D> role_colors,
+                            std::uint16_t variant_bucket,
+                            const QVector3D &base_color,
+                            const QMatrix4x4 &world_from_unit,
+                            Render::GL::ISubmitter &out) {
+  if (lod == CreatureLOD::Billboard || asset.spec == nullptr ||
+      asset.compute_bones == nullptr || asset.bind_palette == nullptr) {
+    return;
   }
-  ++stats.entities_submitted;
-  submit_equipment_loadout(spec, frame, i, world, variant, pose, anim, out,
-                           stats);
+
+  std::array<QMatrix4x4, kMaxCreatureBones> current_palette{};
+  const auto bone_count = asset.compute_bones(
+      species_pose,
+      std::span<QMatrix4x4>(current_palette.data(), asset.max_bones));
+
+  auto *renderer = resolve_renderer(out);
+  if (renderer == nullptr) {
+    Render::Creature::submit_creature(
+        *asset.spec,
+        std::span<const QMatrix4x4>(current_palette.data(), bone_count), lod,
+        world_from_unit, out, role_colors);
+    return;
+  }
+
+  auto bind = asset.bind_palette();
+  auto *entry = renderer->rigged_mesh_cache().get_or_bake(*asset.spec, lod,
+                                                          bind, variant_bucket);
+  if (entry == nullptr || entry->mesh == nullptr ||
+      entry->mesh->index_count() == 0U) {
+    return;
+  }
+
+  auto &arena = renderer->bone_palette_arena();
+  Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
+  QMatrix4x4 *palette_slot = palette_slot_h.cpu;
+
+  const std::size_t n =
+      std::min<std::size_t>(entry->inverse_bind.size(), bone_count);
+  for (std::size_t i = 0; i < n; ++i) {
+    palette_slot[i] = current_palette[i] * entry->inverse_bind[i];
+  }
+
+  Render::GL::RiggedCreatureCmd cmd{};
+  cmd.mesh = entry->mesh.get();
+  cmd.world = world_from_unit;
+  cmd.bone_palette = palette_slot;
+  cmd.palette_ubo = palette_slot_h.ubo;
+  cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
+  cmd.bone_count = static_cast<std::uint32_t>(n);
+  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
+  for (std::size_t i = 0; i < role_colors.size(); ++i) {
+    cmd.role_colors[i] = role_colors[i];
+  }
+  cmd.color = base_color;
+  cmd.alpha = 1.0F;
+  cmd.texture = nullptr;
+  cmd.material_id = 0;
+  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
+
+  out.rigged(cmd);
 }
 
-void submit_horse_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
-                      std::size_t i, const QMatrix4x4 &world,
-                      Render::GL::ISubmitter &out, SubmitStats &stats) {
-  const auto &pose = frame.horse_pose[i];
-  const auto &variant = frame.horse_variant[i];
-
-  switch (frame.lod[i]) {
-  case CreatureLOD::Full:
-    Render::Horse::submit_horse_full_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Reduced:
-    Render::Horse::submit_horse_reduced_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Minimal:
-    Render::Horse::submit_horse_minimal_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Billboard:
-    break;
+const void *resolve_species_pose(const CreatureFrame &frame, std::size_t i,
+                                 CreatureKind kind) {
+  switch (kind) {
+  case CreatureKind::Humanoid:
+    return (i < frame.humanoid_pose.size()) ? &frame.humanoid_pose[i] : nullptr;
+  case CreatureKind::Horse:
+    return (i < frame.horse_pose.size()) ? &frame.horse_pose[i] : nullptr;
+  case CreatureKind::Elephant:
+    return (i < frame.elephant_pose.size()) ? &frame.elephant_pose[i] : nullptr;
+  case CreatureKind::Mounted:
+    return nullptr;
   }
-  ++stats.entities_submitted;
-
-  Render::GL::HumanoidPose blank_pose{};
-  Render::GL::HumanoidVariant blank_variant{};
-  Render::GL::HumanoidAnimationContext blank_anim{};
-  submit_equipment_loadout(spec, frame, i, world, blank_variant, blank_pose,
-                           blank_anim, out, stats);
+  return nullptr;
 }
 
-void submit_elephant_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
-                         std::size_t i, const QMatrix4x4 &world,
+const void *resolve_species_variant(const CreatureFrame &frame, std::size_t i,
+                                    CreatureKind kind) {
+  switch (kind) {
+  case CreatureKind::Humanoid:
+    return (i < frame.humanoid_variant.size()) ? &frame.humanoid_variant[i]
+                                               : nullptr;
+  case CreatureKind::Horse:
+    return (i < frame.horse_variant.size()) ? &frame.horse_variant[i] : nullptr;
+  case CreatureKind::Elephant:
+    return (i < frame.elephant_variant.size()) ? &frame.elephant_variant[i]
+                                               : nullptr;
+  case CreatureKind::Mounted:
+    return nullptr;
+  }
+  return nullptr;
+}
+
+auto resolve_base_color(const CreatureFrame &frame, std::size_t i) -> QVector3D {
+  if (i < frame.base_color.size()) {
+    return frame.base_color[i];
+  }
+  return QVector3D(0.5F, 0.5F, 0.5F);
+}
+
+void resolve_role_colors(const CreatureFrame &frame, std::size_t i,
+                          CreatureKind kind, const CreatureAsset *asset,
+                          RoleColorArray &fallback,
+                          std::span<const QVector3D> &out_roles) {
+  // Row-level role colors (pre-computed during push_humanoid/horse/elephant)
+  if (i < frame.role_color_count.size() && i < frame.role_colors.size() &&
+      frame.role_color_count[i] > 0U) {
+    out_roles = std::span<const QVector3D>(frame.role_colors[i].data(),
+                                           frame.role_color_count[i]);
+    return;
+  }
+
+  // Fallback: resolve via asset callback from species variant data.
+  if (asset != nullptr && asset->fill_role_colors != nullptr) {
+    const void *variant = resolve_species_variant(frame, i, kind);
+    if (variant != nullptr) {
+      const auto count =
+          asset->fill_role_colors(variant, fallback.data(), fallback.size());
+      out_roles = std::span<const QVector3D>(fallback.data(), count);
+      return;
+    }
+  }
+}
+
+void submit_creature_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
+                         std::size_t i, CreatureKind kind,
                          Render::GL::ISubmitter &out, SubmitStats &stats) {
-  const auto &pose = frame.elephant_pose[i];
-  const auto &variant = frame.elephant_variant[i];
+  const auto &world = frame.world_matrix[i];
 
-  switch (frame.lod[i]) {
-  case CreatureLOD::Full:
-    Render::Elephant::submit_elephant_full_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Reduced:
-    Render::Elephant::submit_elephant_reduced_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Minimal:
-    Render::Elephant::submit_elephant_minimal_rigged(pose, variant, world, out);
-    break;
-  case CreatureLOD::Billboard:
-    break;
+  const auto *asset =
+      (i < frame.creature_asset_id.size() &&
+       frame.creature_asset_id[i] != kInvalidCreatureAsset)
+          ? CreatureAssetRegistry::instance().get(frame.creature_asset_id[i])
+          : CreatureAssetRegistry::instance().resolve(spec);
+
+  RoleColorArray fallback_roles{};
+  std::span<const QVector3D> role_colors{};
+  resolve_role_colors(frame, i, kind, asset, fallback_roles, role_colors);
+
+  const std::uint16_t variant_bucket =
+      (i < frame.variant_bucket.size()) ? frame.variant_bucket[i] : 0U;
+
+  const void *species_pose = resolve_species_pose(frame, i, kind);
+  const QVector3D base = resolve_base_color(frame, i);
+
+  if (asset != nullptr && species_pose != nullptr) {
+    submit_rigged_creature(*asset, species_pose, frame.lod[i], role_colors,
+                           variant_bucket, base, world, out);
   }
   ++stats.entities_submitted;
 
-  Render::GL::HumanoidPose blank_pose{};
-  Render::GL::HumanoidVariant blank_variant{};
-  Render::GL::HumanoidAnimationContext blank_anim{};
-  submit_equipment_loadout(spec, frame, i, world, blank_variant, blank_pose,
-                           blank_anim, out, stats);
+  // Equipment: use humanoid context if available, blank otherwise
+  const auto &h_pose = (kind == CreatureKind::Humanoid && i < frame.humanoid_pose.size())
+                            ? frame.humanoid_pose[i]
+                            : Render::GL::HumanoidPose{};
+  const auto &h_variant = (kind == CreatureKind::Humanoid && i < frame.humanoid_variant.size())
+                               ? frame.humanoid_variant[i]
+                               : Render::GL::HumanoidVariant{};
+  const auto &h_anim = (kind == CreatureKind::Humanoid && i < frame.humanoid_anim.size())
+                             ? frame.humanoid_anim[i]
+                             : Render::GL::HumanoidAnimationContext{};
+  submit_equipment_loadout(spec, frame, i, world, h_variant, h_pose, h_anim,
+                           out, stats);
 }
 
 void bump_lod_counters(CreatureLOD lod, SubmitStats &stats) {
@@ -331,43 +438,16 @@ auto CreaturePipeline::submit(
     }
     const auto &spec = specs[sid];
 
-    switch (spec.kind) {
-    case CreatureKind::Humanoid:
-      submit_humanoid_row(spec, frame, i, out, stats);
-      bump_lod_counters(frame.lod[i], stats);
-      break;
+    // Use row-level render_kind when available, fall back to spec.kind.
+    const CreatureKind kind =
+        (i < frame.render_kind.size()) ? frame.render_kind[i] : spec.kind;
 
-    case CreatureKind::Horse:
-      submit_horse_row(spec, frame, i, frame.world_matrix[i], out, stats);
-      bump_lod_counters(frame.lod[i], stats);
-      break;
-
-    case CreatureKind::Elephant:
-      submit_elephant_row(spec, frame, i, frame.world_matrix[i], out, stats);
-      bump_lod_counters(frame.lod[i], stats);
-      break;
-
-    case CreatureKind::Mounted: {
-
-      if (spec.mounted == nullptr) {
-        ++stats.entities_submitted;
-        bump_lod_counters(frame.lod[i], stats);
-        break;
-      }
-      const auto &mounted = *spec.mounted;
-      const auto &mount_world = frame.mount_world_matrix[i];
-      if (mounted.mount.kind == CreatureKind::Elephant) {
-        submit_elephant_row(mounted.mount, frame, i, mount_world, out, stats);
-      } else {
-        submit_horse_row(mounted.mount, frame, i, mount_world, out, stats);
-      }
-
-      submit_humanoid_row(mounted.rider, frame, i, out, stats);
-
-      bump_lod_counters(frame.lod[i], stats);
-      break;
+    if (kind == CreatureKind::Mounted) {
+      continue;
     }
-    }
+
+    submit_creature_row(spec, frame, i, kind, out, stats);
+    bump_lod_counters(frame.lod[i], stats);
   }
 
   return stats;

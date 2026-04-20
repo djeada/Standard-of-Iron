@@ -66,10 +66,13 @@ add_library(render_gl STATIC
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
     horse/rig.cpp
+    horse/prepare.cpp
     horse/horse_spec.cpp
     horse/horse_animation_controller.cpp
+    horse/horse_motion.cpp
     entity/horse_renderer.cpp
     entity/mounted_humanoid_renderer_base.cpp
+    entity/mounted_prepare.cpp
     entity/mounted_knight_renderer_base.cpp
     entity/horse_archer_renderer_base.cpp
     entity/horse_spearman_renderer_base.cpp
@@ -107,6 +110,8 @@ add_library(render_gl STATIC
     entity/nations/roman/ballista_renderer.cpp
     entity/nations/carthage/ballista_renderer.cpp
     elephant/rig.cpp
+    elephant/elephant_motion.cpp
+    elephant/prepare.cpp
     elephant/elephant_spec.cpp
     entity/elephant_renderer.cpp
     entity/nations/carthage/elephant_renderer.cpp
@@ -128,6 +133,7 @@ add_library(render_gl STATIC
     gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
+    humanoid/prepare.cpp
     humanoid/poser.cpp
     humanoid/skin.cpp
     humanoid/formation_calculator.cpp
@@ -145,8 +151,11 @@ add_library(render_gl STATIC
     creature/spec.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
+    creature/pipeline/creature_asset.cpp
     creature/pipeline/prepared_submit.cpp
     creature/pipeline/equipment_registry.cpp
+    creature/pipeline/lod_decision.cpp
+    creature/pipeline/preparation_common.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp

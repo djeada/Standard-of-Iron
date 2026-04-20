@@ -58,6 +58,11 @@ auto submit_prepared_creatures(std::span<const PreparedCreatureRenderRow> rows,
   specs.reserve(rows.size());
 
   for (const PreparedCreatureRenderRow &row : rows) {
+    
+    
+    if (row.pass == RenderPassIntent::Shadow) {
+      continue;
+    }
     const SpecId spec_id = static_cast<SpecId>(specs.size());
     specs.push_back(row.spec);
     append_prepared_row(frame, row, spec_id);

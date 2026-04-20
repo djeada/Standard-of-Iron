@@ -92,7 +92,7 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
                                     const HumanoidAnimationContext &,
                                     EquipmentBatch &batch) {
   constexpr float k_shield_yaw_degrees = -70.0F;
-  constexpr float k_scale_factor = 2.5F;
+  constexpr float k_scale_factor = 1.95F;
 
   QMatrix4x4 rot;
   rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
@@ -106,13 +106,13 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
 
   QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_radius * 0.35F) +
-                            axis_y * (-0.05F) + n * (0.06F);
+                            axis_y * (-0.02F) + n * (0.05F);
 
   QVector3D const shield_color{0.20F, 0.46F, 0.62F};
   QVector3D const trim_color{0.76F, 0.68F, 0.42F};
   QVector3D const metal_color{0.70F, 0.68F, 0.52F};
 
-  float const dome_depth = shield_radius * 0.55F;
+  float const dome_depth = shield_radius * 0.48F;
   {
     QMatrix4x4 m = ctx.model;
     m.translate(shield_center);

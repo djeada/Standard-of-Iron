@@ -1,6 +1,6 @@
 // Stage 15.5d — humanoid Full LOD switchover regression.
 //
-// Verifies that the Full LOD baked PartGraph (k_full_parts, 19
+// Verifies that the Full LOD baked PartGraph (k_full_parts, 41
 // primitives) bakes into a single RiggedMesh and that
 // `submit_humanoid_full_rigged` emits exactly ONE RiggedCreatureCmd
 // with a valid bone palette — just like the Reduced LOD test does but
@@ -55,7 +55,7 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   auto bind = Render::Humanoid::humanoid_bind_palette();
   EXPECT_EQ(bind.size(), Render::Humanoid::kBoneCount);
 
-  // Full LOD PartGraph must be populated (19 prims — see k_full_parts).
+  // Full LOD PartGraph must be populated (41 prims — see k_full_parts).
   ASSERT_GT(spec.lod_full.primitives.size(), 0U)
       << "Stage 15.5d populates Full LOD PartGraph";
 
@@ -71,7 +71,7 @@ TEST(HumanoidFullSwitchover, FullLodBakesAndEmitsOneRiggedCmd) {
   EXPECT_EQ(entry->inverse_bind.size(), Render::Humanoid::kBoneCount);
 
   // Full bake should have strictly more vertices than Reduced (6 vs
-  // 19 primitives) — this is a quick sanity check that the static
+  // 41 primitives) — this is a quick sanity check that the static
   // Full PartGraph actually drove the bake and we didn't accidentally
   // reuse the Reduced bake.
   const auto *reduced_entry =
@@ -191,6 +191,12 @@ TEST(HumanoidFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
   EXPECT_NE(renderer.rigged_calls[0].mesh, nullptr);
   EXPECT_GT(renderer.rigged_calls[0].bone_count, 0U);
   EXPECT_NE(renderer.rigged_calls[0].bone_palette, nullptr);
+  EXPECT_EQ(renderer.rigged_calls[0].role_color_count,
+            Render::Humanoid::kHumanoidRoleCount);
+  EXPECT_EQ(renderer.rigged_calls[0].role_colors[0],
+            renderer.rigged_calls[0].color);
+  EXPECT_NE(renderer.rigged_calls[0].role_colors[1],
+            renderer.rigged_calls[0].role_colors[0]);
 }
 
 TEST(HumanoidFullSwitchover, CacheDistinguishesLodsAndBucket) {
@@ -241,6 +247,63 @@ TEST(HumanoidFullSwitchover, BonePaletteMatricesAreFinite) {
       }
     }
   }
+}
+
+TEST(HumanoidFullSwitchover, IdlePoseUsesRelaxedHumanStance) {
+  using HP = Render::GL::HumanProportions;
+
+  HumanoidPose pose{};
+  Render::GL::VariationParams var{};
+  var.height_scale = 1.0F;
+  var.bulk_scale = 1.0F;
+  var.stance_width = 1.0F;
+  var.arm_swing_amp = 1.0F;
+  var.walk_speed_mult = 1.0F;
+
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0x1234U, 0.0F,
+                                                            false, var, pose);
+
+  float const shoulder_span = pose.shoulder_r.x() - pose.shoulder_l.x();
+  float const foot_span = pose.foot_r.x() - pose.foot_l.x();
+
+  EXPECT_GT(foot_span, shoulder_span * 0.70F);
+  EXPECT_LT(foot_span, shoulder_span * 1.00F);
+  EXPECT_LT(pose.hand_l.y(), pose.shoulder_l.y());
+  EXPECT_LT(pose.hand_r.y(), pose.shoulder_r.y());
+  EXPECT_GT(std::abs(pose.hand_l.x()), std::abs(pose.shoulder_l.x()) * 0.75F);
+  EXPECT_GT(std::abs(pose.hand_r.x()), std::abs(pose.shoulder_r.x()) * 0.75F);
+  EXPECT_GT(pose.head_pos.z(), pose.pelvis_pos.z());
+  EXPECT_GE(pose.foot_l.y(), HP::GROUND_Y);
+  EXPECT_GE(pose.foot_r.y(), HP::GROUND_Y);
+}
+
+TEST(HumanoidFullSwitchover,
+     MovingPoseAddsGroundedSupportAndCounterSwing) {
+  using HP = Render::GL::HumanProportions;
+
+  HumanoidPose pose{};
+  Render::GL::VariationParams var{};
+  var.height_scale = 1.0F;
+  var.bulk_scale = 1.0F;
+  var.stance_width = 1.0F;
+  var.arm_swing_amp = 1.0F;
+  var.walk_speed_mult = 1.0F;
+
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.2F, true,
+                                                            var, pose);
+
+  float const ground = HP::GROUND_Y + pose.foot_y_offset;
+  float const left_foot_rel = pose.foot_l.z() - pose.pelvis_pos.z();
+  float const right_foot_rel = pose.foot_r.z() - pose.pelvis_pos.z();
+  float const left_hand_rel = pose.hand_l.z() - pose.shoulder_l.z();
+  float const right_hand_rel = pose.hand_r.z() - pose.shoulder_r.z();
+
+  EXPECT_NEAR(std::min(pose.foot_l.y(), pose.foot_r.y()), ground, 0.01F);
+  EXPECT_GT(std::abs(pose.foot_l.y() - pose.foot_r.y()), 0.03F);
+  EXPECT_GT(pose.shoulder_l.z(), pose.pelvis_pos.z());
+  EXPECT_GT(pose.shoulder_r.z(), pose.pelvis_pos.z());
+  EXPECT_LT(left_hand_rel * left_foot_rel, 0.0F);
+  EXPECT_LT(right_hand_rel * right_foot_rel, 0.0F);
 }
 
 } // namespace

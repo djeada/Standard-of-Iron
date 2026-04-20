@@ -103,8 +103,11 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
                                      const ElephantReducedMotion &motion,
                                      ElephantSpecPose &out_pose) noexcept;
 
-void fill_elephant_role_colors(const Render::GL::ElephantVariant &variant,
-                               std::array<QVector3D, 5> &out_roles) noexcept;
+inline constexpr std::size_t kElephantRoleCount = 10;
+
+void fill_elephant_role_colors(
+    const Render::GL::ElephantVariant &variant,
+    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept;
 
 [[nodiscard]] auto
 elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
