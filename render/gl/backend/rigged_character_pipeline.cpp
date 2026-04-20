@@ -491,18 +491,28 @@ auto RiggedCharacterPipeline::draw_instanced(
   m_instance_scratch.resize(count);
   GLuint const palette_ubo = static_cast<GLuint>(cmds[0].palette_ubo);
   if (palette_ubo == 0) {
+    qWarning() << "RiggedCharacterPipeline::draw_instanced missing palette UBO";
     return false;
   }
   std::uint32_t max_palette_slot = 0;
   for (std::size_t k = 0; k < count; ++k) {
     const auto &c = cmds[k];
-    if (c.palette_ubo != cmds[0].palette_ubo ||
-        (c.palette_offset % BonePaletteArena::kPaletteBytes) != 0U) {
+    if (c.palette_ubo != cmds[0].palette_ubo) {
+      qWarning() << "RiggedCharacterPipeline::draw_instanced mixed palette UBOs";
+      return false;
+    }
+    if ((c.palette_offset % BonePaletteArena::kPaletteBytes) != 0U) {
+      qWarning() << "RiggedCharacterPipeline::draw_instanced misaligned palette "
+                    "offset"
+                 << c.palette_offset;
       return false;
     }
     const std::uint32_t palette_slot =
         c.palette_offset / BonePaletteArena::kPaletteBytes;
     if (palette_slot >= BonePaletteArena::kSlotsPerSlab) {
+      qWarning() << "RiggedCharacterPipeline::draw_instanced palette slot out "
+                    "of range"
+                 << palette_slot;
       return false;
     }
     max_palette_slot = std::max(max_palette_slot, palette_slot);
