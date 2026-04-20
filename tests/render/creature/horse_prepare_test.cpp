@@ -6,6 +6,8 @@
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/prepare.h"
+#include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
 #include "render/submitter.h"
 
@@ -84,6 +86,50 @@ TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
   const auto stats = batch.submit(sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(HorsePrepare, PrepareMinimalUsesShadowPassForTemplatePrewarm) {
+  Render::GL::HorseRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.template_prewarm = true;
+
+  Render::GL::HorseProfile profile{};
+  profile.dims = Render::GL::make_horse_dimensions(1U);
+
+  Render::Horse::HorsePreparation prep{};
+  Render::Horse::prepare_horse_minimal(owner, ctx, profile, nullptr, prep);
+
+  ASSERT_EQ(prep.rows.size(), 1u);
+  EXPECT_EQ(prep.rows[0].pass, Render::Creature::Pipeline::RenderPassIntent::Shadow);
+}
+
+TEST(HorsePrepare, ShadowOnlyPreparationSkipsPostBodyDraws) {
+  Render::Horse::HorsePreparation prep{};
+  Render::Creature::Pipeline::PreparedCreatureRenderRow row{};
+  row.spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  row.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
+  prep.rows.push_back(row);
+
+  int post_draw_calls = 0;
+  prep.post_body_draws.emplace_back([&post_draw_calls](Render::GL::ISubmitter &) {
+    ++post_draw_calls;
+  });
+
+  NullSubmitter sink;
+  Render::Creature::Pipeline::submit_preparation(prep, sink);
+  EXPECT_EQ(post_draw_calls, 0);
+}
+
+TEST(HorsePrepare, EmptyPreparationStillRunsPostBodyDraws) {
+  Render::Horse::HorsePreparation prep{};
+  int post_draw_calls = 0;
+  prep.post_body_draws.emplace_back([&post_draw_calls](Render::GL::ISubmitter &) {
+    ++post_draw_calls;
+  });
+
+  NullSubmitter sink;
+  Render::Creature::Pipeline::submit_preparation(prep, sink);
+  EXPECT_EQ(post_draw_calls, 1);
 }
 
 } // namespace

@@ -1,6 +1,7 @@
 #include "prepare.h"
 
 #include "../creature/pipeline/prepared_submit.h"
+#include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
@@ -264,6 +265,8 @@ void prepare_elephant_full(
   using Render::GL::ElephantVariant;
   using Render::GL::HowdahAttachmentFrame;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const ElephantDimensions &d = profile.dims;
   const ElephantVariant &v = profile.variant;
   const ElephantGait &g = profile.gait;
@@ -335,7 +338,7 @@ void prepare_elephant_full(
 
   out.rows.emplace_back(make_elephant_prepared_row(
       owner, pose, v, elephant_ctx.model, 0,
-      Render::Creature::CreatureLOD::Full));
+      Render::Creature::CreatureLOD::Full, pass_intent));
 }
 
 void prepare_elephant_simplified(
@@ -352,6 +355,8 @@ void prepare_elephant_simplified(
   using Render::GL::ElephantVariant;
   using Render::GL::HowdahAttachmentFrame;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const ElephantDimensions &d = profile.dims;
   const ElephantVariant &v = profile.variant;
   const ElephantGait &g = profile.gait;
@@ -379,7 +384,7 @@ void prepare_elephant_simplified(
   Render::Elephant::make_elephant_spec_pose_reduced(d, g, rm, pose);
   out.rows.emplace_back(make_elephant_prepared_row(
       owner, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Reduced));
+      Render::Creature::CreatureLOD::Reduced, pass_intent));
 }
 
 void prepare_elephant_minimal(
@@ -391,6 +396,8 @@ void prepare_elephant_minimal(
   using Render::GL::ElephantVariant;
   using Render::GL::HowdahAttachmentFrame;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const ElephantDimensions &d = profile.dims;
   const ElephantVariant &v = profile.variant;
 
@@ -407,7 +414,7 @@ void prepare_elephant_minimal(
 
   out.rows.emplace_back(make_elephant_prepared_row(
       owner, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Minimal));
+      Render::Creature::CreatureLOD::Minimal, pass_intent));
 }
 
 } // namespace Render::Elephant

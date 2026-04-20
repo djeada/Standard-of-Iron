@@ -2,6 +2,8 @@
 
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/elephant/prepare.h"
+#include "render/elephant/elephant_renderer_base.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
@@ -82,6 +84,22 @@ TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
   const auto stats = batch.submit(sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(ElephantPrepare, PrepareMinimalUsesShadowPassForTemplatePrewarm) {
+  Render::GL::ElephantRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.template_prewarm = true;
+
+  Render::GL::ElephantProfile profile{};
+  profile.dims = Render::GL::make_elephant_dimensions(2U);
+
+  Render::Elephant::ElephantPreparation prep{};
+  Render::Elephant::prepare_elephant_minimal(owner, ctx, profile, nullptr, prep);
+
+  ASSERT_EQ(prep.rows.size(), 1u);
+  EXPECT_EQ(prep.rows[0].pass,
+            Render::Creature::Pipeline::RenderPassIntent::Shadow);
 }
 
 } // namespace

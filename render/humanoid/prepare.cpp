@@ -9,6 +9,7 @@
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../creature/pipeline/lod_decision.h"
+#include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../graphics_settings.h"
@@ -227,8 +228,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                                 std::uint32_t frame_index,
                                 HumanoidPreparation &out) {
   using namespace Render::GL;
+  namespace RCP = Render::Creature::Pipeline;
 
   FormationParams const formation = HumanoidRendererBase::resolve_formation(ctx);
+  const auto pass_intent = RCP::pass_intent_from_ctx(ctx);
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {
@@ -342,7 +345,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
           std::uint32_t inst_seed, Render::Creature::CreatureLOD lod) {
         out.rows.push_back(make_humanoid_prepared_row(
             owner, pose, variant, anim_ctx, inst_ctx.model, inst_seed, lod,
-            nullptr));
+            nullptr, pass_intent));
         out.per_instance_ctx.push_back(inst_ctx);
       };
 
@@ -429,7 +432,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       continue;
     }
 
-    namespace RCP = Render::Creature::Pipeline;
     RCP::CreatureLodDecisionInputs lod_in{};
     if (ctx.force_humanoid_lod) {
       lod_in.forced_lod =

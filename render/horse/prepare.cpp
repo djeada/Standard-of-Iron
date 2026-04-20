@@ -1,6 +1,7 @@
 #include "prepare.h"
 
 #include "../creature/pipeline/prepared_submit.h"
+#include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../equipment/equipment_submit.h"
 #include "../equipment/horse/i_horse_equipment_renderer.h"
@@ -235,6 +236,8 @@ void prepare_horse_full(
   using Render::GL::MountedAttachmentFrame;
   using Render::GL::ReinState;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
 
@@ -324,7 +327,7 @@ void prepare_horse_full(
 
   out.rows.emplace_back(make_horse_prepared_row(
       owner, pose, v, horse_ctx.model, horse_seed,
-      Render::Creature::CreatureLOD::Full));
+      Render::Creature::CreatureLOD::Full, pass_intent));
 
   QVector3D const bit_left =
       muzzle_center + QVector3D(d.head_width * 0.55F, -d.head_height * 0.08F,
@@ -466,6 +469,8 @@ void prepare_horse_simplified(
   using Render::GL::HorseVariant;
   using Render::GL::MountedAttachmentFrame;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
   const HorseGait &g = profile.gait;
@@ -491,7 +496,7 @@ void prepare_horse_simplified(
       pose);
   out.rows.emplace_back(make_horse_prepared_row(
       owner, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Reduced));
+      Render::Creature::CreatureLOD::Reduced, pass_intent));
 }
 
 void prepare_horse_minimal(
@@ -503,6 +508,8 @@ void prepare_horse_minimal(
   using Render::GL::HorseVariant;
   using Render::GL::MountedAttachmentFrame;
 
+  const auto pass_intent =
+      Render::Creature::Pipeline::pass_intent_from_ctx(ctx);
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
 
@@ -519,7 +526,7 @@ void prepare_horse_minimal(
 
   out.rows.emplace_back(make_horse_prepared_row(
       owner, pose, v, world_from_unit, 0,
-      Render::Creature::CreatureLOD::Minimal));
+      Render::Creature::CreatureLOD::Minimal, pass_intent));
 }
 
 } // namespace Render::Horse
