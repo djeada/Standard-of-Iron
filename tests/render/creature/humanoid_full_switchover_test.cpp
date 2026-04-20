@@ -199,6 +199,37 @@ TEST(HumanoidFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
             renderer.rigged_calls[0].role_colors[0]);
 }
 
+TEST(HumanoidFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
+  Render::GL::HumanoidRendererBase humanoid;
+  RecordingRenderer renderer;
+
+  Engine::Core::Entity entity(11);
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->owner_id = 1;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 0.0F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.force_single_soldier = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = Render::GL::HumanoidLOD::Full;
+  ctx.animation_override = &anim;
+  ctx.has_seed_override = true;
+  ctx.seed_override = 1U;
+  ctx.template_prewarm = true;
+
+  humanoid.render(ctx, renderer);
+  EXPECT_TRUE(renderer.rigged_calls.empty());
+}
+
 TEST(HumanoidFullSwitchover, CacheDistinguishesLodsAndBucket) {
   auto const &spec = Render::Humanoid::humanoid_creature_spec();
   auto bind = Render::Humanoid::humanoid_bind_palette();

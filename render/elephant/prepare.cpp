@@ -198,15 +198,6 @@ void ElephantRendererBase::render(const DrawContext &ctx,
     effective_lod = ctx.forced_horse_lod;
   }
 
-  if (ctx.template_prewarm) {
-    // Prewarm contexts are tagged RenderPassIntent::Shadow and filtered out by
-    // PreparedCreatureSubmitBatch::submit, but the per-LOD render_full /
-    // render_simplified / render_minimal helpers below emit primitives directly
-    // through ISubmitter (not via the prepared batch) and also bump per-frame
-    // stats counters. Keep this guard so prewarm doesn't record those draws.
-    return;
-  }
-
   ++s_elephantRenderStats.elephants_total;
 
   if (effective_lod == HorseLOD::Billboard) {

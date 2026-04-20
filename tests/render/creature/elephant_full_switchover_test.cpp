@@ -185,6 +185,39 @@ TEST(ElephantFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
   EXPECT_NE(renderer.rigged_calls[0].bone_palette, nullptr);
 }
 
+TEST(ElephantFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
+  Render::GL::ElephantRendererBase elephant;
+  RecordingRenderer renderer;
+
+  Engine::Core::Entity entity(12);
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(800, 800, 1.0F, 12.0F);
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  unit->owner_id = 1;
+
+  Render::GL::AnimationInputs anim{};
+  anim.time = 0.0F;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.force_horse_lod = true;
+  ctx.forced_horse_lod = Render::GL::HorseLOD::Full;
+  ctx.has_seed_override = true;
+  ctx.seed_override = 77U;
+  ctx.template_prewarm = true;
+
+  auto profile = Render::GL::make_elephant_profile(
+      77U, QVector3D(0.45F, 0.16F, 0.10F), QVector3D(0.55F, 0.50F, 0.42F));
+
+  elephant.render(ctx, anim, profile, nullptr, nullptr, renderer,
+                  Render::GL::HorseLOD::Full);
+  EXPECT_TRUE(renderer.rigged_calls.empty());
+}
+
 } // namespace
 
 namespace more {

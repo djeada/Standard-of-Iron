@@ -197,17 +197,6 @@ auto HumanoidRendererBase::resolve_formation(const DrawContext &ctx)
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   AnimationInputs anim = sample_anim_state(ctx);
-
-  if (ctx.template_prewarm) {
-    // Template-prewarm contexts are flagged as RenderPassIntent::Shadow by
-    // pass_intent_from_ctx; PreparedCreatureSubmitBatch::submit drops Shadow
-    // rows. We still early-return here because render_procedural also runs
-    // post_body_draws (direct ISubmitter emissions) and pose/animation cache
-    // mutations that are not gated by the Shadow filter. Removing this guard
-    // would record extra draws into the prewarm TemplateRecorder.
-    return;
-  }
-
   render_procedural(ctx, anim, out);
 }
 
