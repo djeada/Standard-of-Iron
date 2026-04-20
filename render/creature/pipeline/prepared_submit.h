@@ -45,10 +45,8 @@ template <typename Preparation>
 inline void submit_preparation(Preparation &prep, Render::GL::ISubmitter &out) {
   PreparedCreatureSubmitBatch prepared_bodies;
   prepared_bodies.reserve(prep.rows.size());
-  bool has_rows = false;
   bool has_main_pass_rows = false;
   for (std::size_t i = 0; i < prep.rows.size(); ++i) {
-    has_rows = true;
     if (prep.rows[i].pass != RenderPassIntent::Shadow) {
       has_main_pass_rows = true;
     }
@@ -64,7 +62,7 @@ inline void submit_preparation(Preparation &prep, Render::GL::ISubmitter &out) {
   if (!prepared_bodies.empty()) {
     (void)prepared_bodies.submit(out);
   }
-  if (has_rows && !has_main_pass_rows) {
+  if (!prep.rows.empty() && !has_main_pass_rows) {
     return;
   }
   for (auto &draw : prep.post_body_draws) {
