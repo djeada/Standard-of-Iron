@@ -229,6 +229,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                                 HumanoidPreparation &out) {
   using namespace Render::GL;
   namespace RCP = Render::Creature::Pipeline;
+  const bool count_stats = !ctx.template_prewarm;
 
   FormationParams const formation = HumanoidRendererBase::resolve_formation(ctx);
   const auto pass_intent = RCP::pass_intent_from_ctx(ctx);
@@ -331,7 +332,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
   };
 
-  s_render_stats.soldiers_total += visible_count;
+  if (count_stats) {
+    s_render_stats.soldiers_total += visible_count;
+  }
 
   out.rows.reserve(out.rows.size() + static_cast<std::size_t>(visible_count));
   out.per_instance_ctx.reserve(out.per_instance_ctx.size() +
@@ -428,7 +431,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     constexpr float k_soldier_cull_radius = 0.6F;
     if (ctx.camera != nullptr &&
         !ctx.camera->is_in_frustum(soldier_world_pos, k_soldier_cull_radius)) {
-      ++s_render_stats.soldiers_skipped_frustum;
+      if (count_stats) {
+        ++s_render_stats.soldiers_skipped_frustum;
+      }
       continue;
     }
 
@@ -474,15 +479,21 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     const auto lod_decision = RCP::decide_creature_lod(lod_in);
     if (lod_decision.culled) {
       if (lod_decision.reason == RCP::CullReason::Billboard) {
-        ++s_render_stats.soldiers_skipped_lod;
+        if (count_stats) {
+          ++s_render_stats.soldiers_skipped_lod;
+        }
       } else if (lod_decision.reason == RCP::CullReason::Temporal) {
-        ++s_render_stats.soldiers_skipped_temporal;
+        if (count_stats) {
+          ++s_render_stats.soldiers_skipped_temporal;
+        }
       }
       continue;
     }
     HumanoidLOD soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
 
-    ++s_render_stats.soldiers_rendered;
+    if (count_stats) {
+      ++s_render_stats.soldiers_rendered;
+    }
 
     DrawContext inst_ctx{ctx.resources, ctx.entity, ctx.world, inst_model};
     inst_ctx.selected = ctx.selected;
@@ -527,7 +538,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         variation = cached.variation;
         cached.frame_number = frame_index;
         used_cached_pose = true;
-        ++s_render_stats.poses_cached;
+        if (count_stats) {
+          ++s_render_stats.poses_cached;
+        }
       }
     }
 
@@ -547,7 +560,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         if (palette_entry != nullptr) {
           pose = palette_entry->pose;
           used_palette = true;
-          ++s_render_stats.poses_cached;
+          if (count_stats) {
+            ++s_render_stats.poses_cached;
+          }
         }
       }
 
@@ -555,7 +570,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         HumanoidRendererBase::compute_locomotion_pose(
             inst_seed, anim.time + phase_offset, anim.is_moving, variation,
             pose);
-        ++s_render_stats.poses_computed;
+        if (count_stats) {
+          ++s_render_stats.poses_computed;
+        }
       }
 
       CachedPoseEntry &entry = s_pose_cache[cache_key];
@@ -1011,7 +1028,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     switch (soldier_lod) {
     case HumanoidLOD::Full: {
 
-      ++s_render_stats.lod_full;
+      if (count_stats) {
+        ++s_render_stats.lod_full;
+      }
 
       Render::Humanoid::HumanoidBodyMetrics metrics{};
       Render::Humanoid::compute_humanoid_body_metrics(
@@ -1061,7 +1080,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
     case HumanoidLOD::Reduced: {
 
-      ++s_render_stats.lod_reduced;
+      if (count_stats) {
+        ++s_render_stats.lod_reduced;
+      }
       enqueue_prepared_body(pose, variant, anim_ctx, inst_ctx, inst_seed,
                             Render::Creature::CreatureLOD::Reduced);
       using Render::Creature::Pipeline::LegacySlotMask;
@@ -1080,7 +1101,9 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
     case HumanoidLOD::Minimal:
 
-      ++s_render_stats.lod_minimal;
+      if (count_stats) {
+        ++s_render_stats.lod_minimal;
+      }
       enqueue_prepared_body(pose, variant, anim_ctx, inst_ctx, inst_seed,
                             Render::Creature::CreatureLOD::Minimal);
       break;

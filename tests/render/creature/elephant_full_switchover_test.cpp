@@ -8,6 +8,7 @@
 #include "render/creature/spec.h"
 #include "render/draw_queue.h"
 #include "render/elephant/elephant_renderer_base.h"
+#include "render/elephant/render_stats.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
@@ -188,6 +189,7 @@ TEST(ElephantFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
 TEST(ElephantFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
   Render::GL::ElephantRendererBase elephant;
   RecordingRenderer renderer;
+  Render::GL::reset_elephant_render_stats();
 
   Engine::Core::Entity entity(12);
   auto *transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -216,6 +218,10 @@ TEST(ElephantFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
   elephant.render(ctx, anim, profile, nullptr, nullptr, renderer,
                   Render::GL::HorseLOD::Full);
   EXPECT_TRUE(renderer.rigged_calls.empty());
+  const auto &stats = Render::GL::get_elephant_render_stats();
+  EXPECT_EQ(stats.elephants_total, 0u);
+  EXPECT_EQ(stats.elephants_rendered, 0u);
+  EXPECT_EQ(stats.lod_full, 0u);
 }
 
 } // namespace

@@ -193,31 +193,44 @@ void ElephantRendererBase::render(const DrawContext &ctx,
                                   const HowdahAttachmentFrame *shared_howdah,
                                   const ElephantMotionSample *shared_motion,
                                   ISubmitter &out, HorseLOD lod) const {
+  const bool count_stats = !ctx.template_prewarm;
   HorseLOD effective_lod = lod;
   if (ctx.force_horse_lod) {
     effective_lod = ctx.forced_horse_lod;
   }
 
-  ++s_elephantRenderStats.elephants_total;
+  if (count_stats) {
+    ++s_elephantRenderStats.elephants_total;
+  }
 
   if (effective_lod == HorseLOD::Billboard) {
-    ++s_elephantRenderStats.elephants_skipped_lod;
+    if (count_stats) {
+      ++s_elephantRenderStats.elephants_skipped_lod;
+    }
     return;
   }
 
-  ++s_elephantRenderStats.elephants_rendered;
+  if (count_stats) {
+    ++s_elephantRenderStats.elephants_rendered;
+  }
 
   switch (effective_lod) {
   case HorseLOD::Full:
-    ++s_elephantRenderStats.lod_full;
+    if (count_stats) {
+      ++s_elephantRenderStats.lod_full;
+    }
     render_full(ctx, anim, profile, shared_howdah, shared_motion, out);
     break;
   case HorseLOD::Reduced:
-    ++s_elephantRenderStats.lod_reduced;
+    if (count_stats) {
+      ++s_elephantRenderStats.lod_reduced;
+    }
     render_simplified(ctx, anim, profile, shared_howdah, shared_motion, out);
     break;
   case HorseLOD::Minimal:
-    ++s_elephantRenderStats.lod_minimal;
+    if (count_stats) {
+      ++s_elephantRenderStats.lod_minimal;
+    }
     render_minimal(ctx, profile, shared_motion, out);
     break;
   case HorseLOD::Billboard:

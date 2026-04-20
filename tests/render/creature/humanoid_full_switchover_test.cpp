@@ -18,6 +18,7 @@
 #include "render/creature/spec.h"
 #include "render/draw_queue.h"
 #include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/render_stats.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
@@ -202,6 +203,7 @@ TEST(HumanoidFullSwitchover, CacheEnabledRenderStillSubmitsRiggedBody) {
 TEST(HumanoidFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
   Render::GL::HumanoidRendererBase humanoid;
   RecordingRenderer renderer;
+  Render::GL::reset_humanoid_render_stats();
 
   Engine::Core::Entity entity(11);
   auto *transform = entity.add_component<Engine::Core::TransformComponent>();
@@ -228,6 +230,10 @@ TEST(HumanoidFullSwitchover, TemplatePrewarmRenderProducesNoDraws) {
 
   humanoid.render(ctx, renderer);
   EXPECT_TRUE(renderer.rigged_calls.empty());
+  const auto &stats = Render::GL::get_humanoid_render_stats();
+  EXPECT_EQ(stats.soldiers_total, 0u);
+  EXPECT_EQ(stats.soldiers_rendered, 0u);
+  EXPECT_EQ(stats.lod_full, 0u);
 }
 
 TEST(HumanoidFullSwitchover, CacheDistinguishesLodsAndBucket) {
