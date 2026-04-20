@@ -25,6 +25,7 @@
 namespace Render::GL::BackendPipelines {
 
 namespace {
+constexpr GLuint k_instance_palette_slot_loc = 12;
 
 auto gl_funcs() -> QOpenGLFunctions_3_3_Core * {
   auto *ctx = QOpenGLContext::currentContext();
@@ -341,7 +342,7 @@ void RiggedCharacterPipeline::compute_groups(
     while (j < count && (j - i) < cap) {
       const auto &nxt = cmds[j];
       if (nxt.mesh != head.mesh || nxt.material != head.material ||
-          nxt.texture != nullptr) {
+          nxt.texture != nullptr || nxt.palette_ubo != head.palette_ubo) {
         break;
       }
       ++j;
@@ -447,6 +448,11 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   fn->glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
                             reinterpret_cast<void *>(off));
   fn->glVertexAttribDivisor(11, 1);
+  off += sizeof(float) * 4;
+  fn->glEnableVertexAttribArray(k_instance_palette_slot_loc);
+  fn->glVertexAttribIPointer(k_instance_palette_slot_loc, 1, GL_UNSIGNED_INT,
+                             k_inst_stride, reinterpret_cast<void *>(off));
+  fn->glVertexAttribDivisor(k_instance_palette_slot_loc, 1);
 
   ebo->bind();
 
@@ -483,8 +489,23 @@ auto RiggedCharacterPipeline::draw_instanced(
   }
 
   m_instance_scratch.resize(count);
+  GLuint const palette_ubo = static_cast<GLuint>(cmds[0].palette_ubo);
+  if (palette_ubo == 0) {
+    return false;
+  }
+  std::uint32_t max_palette_slot = 0;
   for (std::size_t k = 0; k < count; ++k) {
     const auto &c = cmds[k];
+    if (c.palette_ubo != cmds[0].palette_ubo ||
+        (c.palette_offset % BonePaletteArena::kPaletteBytes) != 0U) {
+      return false;
+    }
+    const std::uint32_t palette_slot =
+        c.palette_offset / BonePaletteArena::kPaletteBytes;
+    if (palette_slot >= BonePaletteArena::kSlotsPerSlab) {
+      return false;
+    }
+    max_palette_slot = std::max(max_palette_slot, palette_slot);
     InstanceAttrib &ia = m_instance_scratch[k];
     const float *src = c.world.constData();
     std::memcpy(ia.world, src, sizeof(float) * 16);
@@ -496,6 +517,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     ia.variation_material[1] = c.variation_scale.y();
     ia.variation_material[2] = c.variation_scale.z();
     ia.variation_material[3] = static_cast<float>(c.material_id);
+    ia.palette_slot = palette_slot;
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
@@ -522,39 +544,11 @@ auto RiggedCharacterPipeline::draw_instanced(
   set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
                             m_instanced_role_color_count, cmds[0]);
 
-  std::size_t const upload_palette_bytes =
-      count * BonePaletteArena::kPaletteBytes;
   std::size_t const bound_palette_bytes =
-      palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
-  if (m_palette_ubo == 0) {
-    fn->glGenBuffers(1, &m_palette_ubo);
-  }
-  if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
-    fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-    fn->glBufferData(GL_UNIFORM_BUFFER,
-                     static_cast<GLsizeiptr>(bound_palette_bytes), nullptr,
-                     GL_DYNAMIC_DRAW);
-    m_palette_ubo_capacity_bytes = bound_palette_bytes;
-  }
-
-  std::size_t const floats_per_palette = BonePaletteArena::kPaletteFloats;
-  m_palette_scratch.resize(count * floats_per_palette);
-  for (std::size_t k = 0; k < count; ++k) {
-    const auto &c = cmds[k];
-    float *dst = m_palette_scratch.data() + k * floats_per_palette;
-    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
-  }
-  fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-
-  fn->glBufferData(GL_UNIFORM_BUFFER,
-                   static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
-                   nullptr, GL_DYNAMIC_DRAW);
-  fn->glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                      static_cast<GLsizeiptr>(upload_palette_bytes),
-                      m_palette_scratch.data());
-  fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
-                        m_palette_ubo, 0,
-                        static_cast<GLsizeiptr>(bound_palette_bytes));
+      static_cast<std::size_t>(max_palette_slot + 1U) *
+      BonePaletteArena::kPaletteBytes;
+  fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint, palette_ubo,
+                        0, static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);
   GLsizei const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());

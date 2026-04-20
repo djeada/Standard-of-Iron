@@ -624,7 +624,8 @@ private:
     const auto &rig_b = std::get<RiggedCreatureCmdIndex>(b);
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
-           rig_a.material == rig_b.material;
+           rig_a.material == rig_b.material &&
+           rig_a.palette_ubo == rig_b.palette_ubo;
   }
 
   void clear_sort_id_maps() {

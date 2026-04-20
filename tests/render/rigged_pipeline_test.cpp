@@ -145,4 +145,29 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   EXPECT_EQ(batches.front().count, 2U);
 }
 
+TEST(RiggedPipeline, DifferentPaletteUboSplitsRiggedPreparedBatches) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+
+  RiggedCreatureCmd first;
+  first.mesh = reinterpret_cast<RiggedMesh *>(0x1000);
+  first.material = reinterpret_cast<const Material *>(0x2000);
+  first.palette_ubo = 1U;
+
+  RiggedCreatureCmd second = first;
+  second.palette_ubo = 2U;
+
+  queue.submit(first);
+  queue.submit(second);
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].type, DrawCmdType::RiggedCreature);
+  EXPECT_EQ(batches[0].count, 1U);
+  EXPECT_EQ(batches[1].type, DrawCmdType::RiggedCreature);
+  EXPECT_EQ(batches[1].count, 1U);
+}
+
 } // namespace

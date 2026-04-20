@@ -52,6 +52,7 @@ auto make_cmd(Render::GL::RiggedMesh *mesh, const Render::GL::Material *mat,
   c.mesh = mesh;
   c.material = mat;
   c.texture = tex;
+  c.palette_ubo = 1U;
   c.world.setToIdentity();
   return c;
 }
@@ -87,6 +88,22 @@ TEST(RiggedPipelineInstanced, MixedMaterialsSplitIntoMultipleGroups) {
   EXPECT_EQ(sum, cmds.size());
   // First group: two compatible mat_a cmds.
   EXPECT_EQ(groups.front(), 2U);
+}
+
+TEST(RiggedPipelineInstanced, DifferentPaletteUboSplitsGroups) {
+  std::vector<RiggedCreatureCmd> cmds;
+  cmds.push_back(make_cmd(k_mesh_a, k_mat_a));
+  cmds.push_back(make_cmd(k_mesh_a, k_mat_a));
+  auto different_ubo = make_cmd(k_mesh_a, k_mat_a);
+  different_ubo.palette_ubo = 2U;
+  cmds.push_back(different_ubo);
+
+  std::vector<std::size_t> groups;
+  RiggedCharacterPipeline::compute_groups(cmds.data(), cmds.size(),
+                                          /*cap=*/64, groups);
+  ASSERT_EQ(groups.size(), 2U);
+  EXPECT_EQ(groups[0], 2U);
+  EXPECT_EQ(groups[1], 1U);
 }
 
 TEST(RiggedPipelineInstanced, TexturedCmdsDoNotInstance) {

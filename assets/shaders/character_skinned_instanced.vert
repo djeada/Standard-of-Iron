@@ -17,6 +17,7 @@ layout(location = 8) in vec4 i_world_c2;
 layout(location = 9) in vec4 i_world_c3;
 layout(location = 10) in vec4 i_color_alpha;
 layout(location = 11) in vec4 i_variation_material;
+layout(location = 12) in uint i_palette_slot;
 
 uniform mat4 u_view_proj;
 
@@ -32,7 +33,7 @@ flat out int v_material_id;
 flat out int v_color_role;
 
 void main() {
-  int base = gl_InstanceID * 64;
+  int base = int(i_palette_slot) * 64;
   mat4 skin = a_bone_weights.x * u_palette.bones[base + a_bone_indices.x] +
               a_bone_weights.y * u_palette.bones[base + a_bone_indices.y] +
               a_bone_weights.z * u_palette.bones[base + a_bone_indices.z] +
