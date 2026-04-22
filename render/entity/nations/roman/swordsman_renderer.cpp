@@ -408,11 +408,11 @@ private:
 void register_knight_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_swordsman_styles_registered();
   static KnightRenderer const renderer;
-	  registry.register_renderer(
-	      "troops/roman/swordsman", [](const DrawContext &ctx, ISubmitter &out) {
-	        static KnightRenderer const static_renderer;
-	        static_renderer.render(ctx, out);
-	      });
+  registry.register_renderer("troops/roman/swordsman",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static KnightRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

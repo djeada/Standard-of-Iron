@@ -245,7 +245,7 @@ void MountedKnightRendererBase::build_visual_spec() {
   m_spec.equipment =
       std::span<const EquipmentRecord>{m_loadout.data(), m_loadout.size()};
 
-  m_spec.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor;
+  m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
 }
 
 } // namespace Render::GL

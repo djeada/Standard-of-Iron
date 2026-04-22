@@ -6,6 +6,7 @@
 #include "render/creature/pipeline/creature_frame.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/equipment_registry.h"
+#include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
@@ -150,6 +151,86 @@ TEST(CreaturePipelineHumanoidSubmit, EmitsOneRiggedCallPerLodRow) {
   // checking that at least one mesh was emitted per Full/Reduced/
   // Minimal LOD.
   EXPECT_GT(sink.meshes.size(), 0u);
+}
+
+TEST(CreaturePipelinePreparedSubmit, HumanoidUsesPreparedPipelineBridge) {
+  RecordingSubmitter sink;
+
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  PreparedCreatureSubmitBatch batch;
+  batch.add(make_prepared_humanoid_row(spec, pose, variant, anim, world,
+                                       /*seed*/ 123, CreatureLOD::Full));
+  const SubmitStats stats = batch.submit(sink);
+
+  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_GT(sink.meshes.size() + sink.rigged_calls.size(), 0u);
+}
+
+TEST(CreaturePipelinePreparedSubmit, BatchOwnsHumanoidLegacyContextCopies) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Humanoid;
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  Render::GL::DrawContext legacy_ctx{};
+  legacy_ctx.animation_time = 4.0F;
+
+  PreparedCreatureSubmitBatch batch;
+  batch.reserve(1);
+  batch.add_with_legacy_context(
+      make_prepared_humanoid_row(spec, pose, variant, anim, world,
+                                 /*seed*/ 123, CreatureLOD::Full),
+      legacy_ctx);
+
+  ASSERT_EQ(batch.size(), 1u);
+  ASSERT_NE(batch.rows()[0].legacy_ctx, nullptr);
+  EXPECT_FLOAT_EQ(batch.rows()[0].legacy_ctx->animation_time, 4.0F);
+
+  legacy_ctx.animation_time = 8.0F;
+  EXPECT_FLOAT_EQ(batch.rows()[0].legacy_ctx->animation_time, 4.0F);
+}
+
+TEST(CreatureRenderStatePrep, HumanoidRowAppendsResolvedState) {
+  UnitVisualSpec spec{};
+  spec.kind = CreatureKind::Horse;
+  Render::GL::HumanoidPose pose{};
+  pose.head_pos = QVector3D(1.0F, 2.0F, 3.0F);
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  QMatrix4x4 world;
+  world.setToIdentity();
+
+  const PreparedCreatureRenderRow row = make_prepared_humanoid_row(
+      spec, pose, variant, anim, world, /*seed*/ 321, CreatureLOD::Reduced);
+
+  EXPECT_EQ(row.spec.kind, CreatureKind::Humanoid);
+  EXPECT_EQ(row.seed, 321u);
+  EXPECT_EQ(row.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(row.pass, RenderPassIntent::Main);
+
+  CreatureFrame frame;
+  append_prepared_row(frame, row);
+
+  ASSERT_EQ(frame.size(), 1u);
+  EXPECT_TRUE(frame_columns_consistent(frame));
+  EXPECT_EQ(frame.seed[0], 321u);
+  EXPECT_EQ(frame.lod[0], CreatureLOD::Reduced);
+  EXPECT_EQ(frame.render_kind[0], CreatureKind::Humanoid);
+  EXPECT_NE(frame.creature_asset_id[0], kInvalidCreatureAsset);
+  EXPECT_EQ(frame.role_color_count[0], Render::Humanoid::kHumanoidRoleCount);
+  EXPECT_EQ(frame.role_colors[0][0], variant.palette.cloth);
+  EXPECT_EQ(frame.palette_id[0], spec.palette_id);
+  EXPECT_FLOAT_EQ(frame.humanoid_pose[0].head_pos.y(), 2.0F);
 }
 
 TEST(CreaturePipelineHumanoidSubmit, EquipmentLoadoutDrawsOncePerRecordPerRow) {

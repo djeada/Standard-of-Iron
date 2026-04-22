@@ -15,40 +15,26 @@ constexpr float k_idle_breathing_primary_weight = 0.6F;
 constexpr float k_idle_breathing_secondary_weight = 0.4F;
 constexpr float k_idle_phase_speed = 0.15F;
 
-struct GaitParameters {
-  float cycle_time;
-  float front_leg_phase;
-  float rear_leg_phase;
-  float stride_swing;
-  float stride_lift;
-  float bob_amplitude;
-};
-
-constexpr GaitParameters getGaitParams(GaitType gait) {
+auto bob_scale_for_gait(GaitType gait) noexcept -> float {
   switch (gait) {
   case GaitType::IDLE:
-
-    return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
+    return 0.30F;
   case GaitType::WALK:
-
-    return {1.1F, 0.50F, 0.0F, 0.42F, 0.18F, 0.016F};
+    return 0.50F;
   case GaitType::TROT:
-
-    return {0.55F, 0.0F, 0.50F, 0.62F, 0.32F, 0.028F};
+    return 0.85F;
   case GaitType::CANTER:
-
-    return {0.48F, 0.62F, 0.35F, 0.65F, 0.35F, 0.032F};
+    return 1.00F;
   case GaitType::GALLOP:
-
-    return {0.38F, 0.50F, 0.15F, 0.85F, 0.48F, 0.042F};
+    return 1.12F;
   }
-  return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
+  return 0.30F;
 }
 
 } // namespace
 
 HorseAnimationController::HorseAnimationController(
-    HorseProfile &profile, const AnimationInputs &anim,
+    const HorseProfile &profile, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx)
     : m_profile(profile), m_anim(anim), m_rider_ctx(rider_ctx) {
 
@@ -71,13 +57,14 @@ HorseAnimationController::HorseAnimationController(
   m_target_gait = GaitType::IDLE;
   m_gait_transition_progress = 1.0F;
   m_transition_start_time = 0.0F;
+  m_resolved_gait = gait_for_type(GaitType::IDLE, m_profile.gait);
 }
 
 void HorseAnimationController::set_gait(GaitType gait) {
-
   m_current_gait = gait;
   m_target_gait = gait;
   m_gait_transition_progress = 1.0F;
+  m_idle_bob_intensity = 1.0F;
 
   switch (gait) {
   case GaitType::IDLE:
@@ -102,12 +89,10 @@ void HorseAnimationController::set_gait(GaitType gait) {
 
 void HorseAnimationController::idle(float bob_intensity) {
   m_current_gait = GaitType::IDLE;
+  m_target_gait = GaitType::IDLE;
+  m_gait_transition_progress = 1.0F;
   m_speed = 0.0F;
-
-  float const phase = std::fmod(m_anim.time * 0.25F, 1.0F);
-  m_phase = phase;
-  m_bob = std::sin(phase * 2.0F * k_pi) * m_profile.dims.idle_bob_amplitude *
-          bob_intensity;
+  m_idle_bob_intensity = std::clamp(bob_intensity, 0.0F, 1.5F);
 
   update_gait_parameters();
 }
@@ -116,18 +101,7 @@ void HorseAnimationController::accelerate(float speed_delta) {
   m_speed += speed_delta;
   m_speed = std::max(0.0F, m_speed);
 
-  GaitType new_gait;
-  if (m_speed < 0.5F) {
-    new_gait = GaitType::IDLE;
-  } else if (m_speed < 3.0F) {
-    new_gait = GaitType::WALK;
-  } else if (m_speed < 5.5F) {
-    new_gait = GaitType::TROT;
-  } else if (m_speed < 8.0F) {
-    new_gait = GaitType::CANTER;
-  } else {
-    new_gait = GaitType::GALLOP;
-  }
+  GaitType const new_gait = gait_from_speed(m_speed);
 
   if (m_current_gait != new_gait) {
     m_target_gait = new_gait;
@@ -184,12 +158,14 @@ auto HorseAnimationController::get_current_bob() const -> float {
 }
 
 auto HorseAnimationController::get_stride_cycle() const -> float {
-  GaitParameters const params = getGaitParams(m_current_gait);
-  return params.cycle_time;
+  return m_resolved_gait.cycle_time;
+}
+
+auto HorseAnimationController::get_resolved_gait() const -> const HorseGait & {
+  return m_resolved_gait;
 }
 
 void HorseAnimationController::update_gait_parameters() {
-
   constexpr float transition_duration = 0.3F;
   if (m_gait_transition_progress < 1.0F) {
     float const elapsed = m_anim.time - m_transition_start_time;
@@ -199,80 +175,74 @@ void HorseAnimationController::update_gait_parameters() {
     }
   }
 
-  GaitParameters const current_params = getGaitParams(m_current_gait);
-  GaitParameters target_params = current_params;
+  HorseGait const current_gait = gait_for_type(m_current_gait, m_profile.gait);
+  HorseGait target_gait = current_gait;
 
   if (m_gait_transition_progress < 1.0F) {
-    target_params = getGaitParams(m_target_gait);
+    target_gait = gait_for_type(m_target_gait, m_profile.gait);
     float const t = m_gait_transition_progress;
-
     float const ease_t = t * t * (3.0F - 2.0F * t);
-
-    m_profile.gait.cycle_time =
-        current_params.cycle_time +
-        ease_t * (target_params.cycle_time - current_params.cycle_time);
-    m_profile.gait.front_leg_phase = current_params.front_leg_phase +
-                                     ease_t * (target_params.front_leg_phase -
-                                               current_params.front_leg_phase);
-    m_profile.gait.rear_leg_phase =
-        current_params.rear_leg_phase +
-        ease_t * (target_params.rear_leg_phase - current_params.rear_leg_phase);
-    m_profile.gait.stride_swing =
-        current_params.stride_swing +
-        ease_t * (target_params.stride_swing - current_params.stride_swing);
-    m_profile.gait.stride_lift =
-        current_params.stride_lift +
-        ease_t * (target_params.stride_lift - current_params.stride_lift);
+    m_resolved_gait = blend_gaits(current_gait, target_gait, ease_t);
   } else {
-    m_profile.gait.cycle_time = current_params.cycle_time;
-    m_profile.gait.front_leg_phase = current_params.front_leg_phase;
-    m_profile.gait.rear_leg_phase = current_params.rear_leg_phase;
-    m_profile.gait.stride_swing = current_params.stride_swing;
-    m_profile.gait.stride_lift = current_params.stride_lift;
+    m_resolved_gait = current_gait;
   }
 
-  bool const is_moving = m_current_gait != GaitType::IDLE;
+  bool const is_moving =
+      m_current_gait != GaitType::IDLE || m_target_gait != GaitType::IDLE;
+  float const phase_offset = m_resolved_gait.phase_offset;
 
   if (is_moving) {
-
     if (m_rider_ctx.gait.cycle_time > 0.0001F) {
+      // Rider drives gait — keep horse synchronized so reins/saddle align.
       m_phase = m_rider_ctx.gait.cycle_phase;
     } else {
-      m_phase = std::fmod(m_anim.time / m_profile.gait.cycle_time, 1.0F);
+      m_phase = std::fmod(m_anim.time / m_resolved_gait.cycle_time + phase_offset,
+                          1.0F);
     }
 
-    float const rider_intensity = m_rider_ctx.locomotion_normalized_speed();
-    float const bob_amp = m_profile.dims.idle_bob_amplitude +
-                          rider_intensity * (m_profile.dims.move_bob_amplitude -
-                                             m_profile.dims.idle_bob_amplitude);
+    float const rider_intensity = std::max(
+        m_rider_ctx.locomotion_normalized_speed(),
+        std::clamp(m_speed / 10.0F, 0.0F, 1.0F));
+    float const base_bob_amp =
+        m_profile.dims.idle_bob_amplitude +
+        rider_intensity * (m_profile.dims.move_bob_amplitude -
+                           m_profile.dims.idle_bob_amplitude);
+    float const bob_amp =
+        base_bob_amp * bob_scale_for_gait(m_target_gait);
 
     float const primary_bob = std::sin(m_phase * 2.0F * k_pi);
     float const secondary_bob = std::sin(m_phase * 4.0F * k_pi) * 0.25F;
     float const tertiary_variation =
-        std::sin(m_anim.time * 0.7F) * 0.08F + 1.0F;
+        std::sin(m_anim.time * 0.7F + phase_offset * k_pi) * 0.08F + 1.0F;
 
     float bob_pattern = primary_bob;
     if (m_current_gait == GaitType::TROT) {
-
+      // Diagonal-pair trot: stronger 2x harmonic.
       bob_pattern = (primary_bob + secondary_bob * 0.5F);
     } else if (m_current_gait == GaitType::CANTER) {
-
+      // 3-beat lift pattern.
       bob_pattern = primary_bob + std::sin(m_phase * 3.0F * k_pi) * 0.15F;
     } else if (m_current_gait == GaitType::GALLOP) {
-
+      // Suspension phase amplifies primary bob.
       bob_pattern = primary_bob * 1.2F + secondary_bob * 0.3F;
     }
 
     m_bob = bob_pattern * bob_amp * tertiary_variation;
   } else {
-
+    // Slow horse breathing (~0.5 Hz primary) + low-frequency weight shift +
+    // an irregular ear flick / muzzle twitch derived from per-unit offset.
     float const breathing =
-        std::sin(m_anim.time * k_idle_breathing_primary_freq) *
+        std::sin((m_anim.time + phase_offset * 2.0F) *
+                 k_idle_breathing_primary_freq * 2.0F * k_pi) *
             k_idle_breathing_primary_weight +
-        std::sin(m_anim.time * k_idle_breathing_secondary_freq) *
+        std::sin((m_anim.time + phase_offset) *
+                 k_idle_breathing_secondary_freq * 2.0F * k_pi) *
             k_idle_breathing_secondary_weight;
-    m_phase = std::fmod(m_anim.time * k_idle_phase_speed, 1.0F);
-    m_bob = breathing * m_profile.dims.idle_bob_amplitude * 0.8F;
+    float const weight_shift =
+        std::sin(m_anim.time * 0.18F + phase_offset * 3.0F) * 0.20F;
+    m_phase = std::fmod(m_anim.time * k_idle_phase_speed + phase_offset, 1.0F);
+    m_bob = (breathing + weight_shift) * m_profile.dims.idle_bob_amplitude *
+            0.8F * m_idle_bob_intensity;
   }
 
   float rein_tension = m_rider_ctx.locomotion_normalized_speed();

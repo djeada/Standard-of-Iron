@@ -6,9 +6,16 @@
 
 namespace Render::GL {
 
+struct RomanScutumConfig {};
+
 class RomanScutumRenderer : public IEquipmentRenderer {
 public:
   RomanScutumRenderer() = default;
+
+  static void submit(const RomanScutumConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,

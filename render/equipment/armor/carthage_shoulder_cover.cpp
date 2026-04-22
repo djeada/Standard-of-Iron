@@ -15,6 +15,13 @@ void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
                                            const HumanoidPalette &palette,
                                            const HumanoidAnimationContext &anim,
                                            EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void CarthageShoulderCoverRenderer::submit(
+    const CarthageShoulderCoverConfig &config, const DrawContext &ctx,
+    const BodyFrames &frames, const HumanoidPalette &palette,
+    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
@@ -29,11 +36,11 @@ void CarthageShoulderCoverRenderer::render(const DrawContext &ctx,
                                  const QVector3D &outward) {
     float const upper_arm_r = HP::UPPER_ARM_R;
 
-    bool const is_infantry = m_outward_scale <= 1.1F;
+    bool const is_infantry = config.outward_scale <= 1.1F;
     float const outward_offset =
-        (is_infantry ? 0.0035F : 0.0065F) * m_outward_scale;
+        (is_infantry ? 0.0035F : 0.0065F) * config.outward_scale;
     float const inward_offset =
-        (is_infantry ? 0.012F : 0.018F) * m_outward_scale;
+        (is_infantry ? 0.012F : 0.018F) * config.outward_scale;
     float const upper_y_offset = is_infantry ? 0.062F : 0.074F;
 
     QVector3D anchor = shoulder_pos + outward * (-inward_offset);

@@ -232,6 +232,27 @@ TEST(HumanoidSocketTest, AttachmentFrameMatchesSocketTransform) {
   EXPECT_NEAR(QVector3D::dotProduct(frame.right, frame.up), 0.0F, 1e-4F);
 }
 
+TEST(HumanoidSocketTest, FootSocketsStayLevelInsteadOfFollowingShinTilt) {
+  auto pose = make_upright_pose();
+  pose.knee_l = QVector3D(-0.10F, 0.62F, 0.08F);
+  pose.knee_r = QVector3D(0.10F, 0.60F, -0.06F);
+  pose.foot_l = QVector3D(-0.14F, 0.02F, 0.06F);
+  pose.foot_r = QVector3D(0.14F, 0.02F, -0.05F);
+
+  BonePalette palette;
+  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+
+  auto const foot_l = socket_attachment_frame(palette, HumanoidSocket::FootL);
+  auto const foot_r = socket_attachment_frame(palette, HumanoidSocket::FootR);
+
+  EXPECT_GT(foot_l.up.y(), 0.95F);
+  EXPECT_GT(foot_r.up.y(), 0.95F);
+  EXPECT_LT(std::abs(foot_l.up.x()), 0.10F);
+  EXPECT_LT(std::abs(foot_r.up.x()), 0.10F);
+  EXPECT_LT(std::abs(foot_l.up.z()), 0.10F);
+  EXPECT_LT(std::abs(foot_r.up.z()), 0.10F);
+}
+
 TEST(HumanoidStateMachineTest, PriorityHitOverridesAttack) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;

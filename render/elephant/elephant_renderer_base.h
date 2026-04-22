@@ -32,23 +32,6 @@ public:
               ElephantProfile &profile,
               const HowdahAttachmentFrame *shared_howdah,
               const ElephantMotionSample *shared_motion, ISubmitter &out) const;
-
-  void render_simplified(const DrawContext &ctx, const AnimationInputs &anim,
-                         ElephantProfile &profile,
-                         const HowdahAttachmentFrame *shared_howdah,
-                         const ElephantMotionSample *shared_motion,
-                         ISubmitter &out) const;
-
-  void render_minimal(const DrawContext &ctx, ElephantProfile &profile,
-                      const ElephantMotionSample *shared_motion,
-                      ISubmitter &out) const;
-
-private:
-  void render_full(const DrawContext &ctx, const AnimationInputs &anim,
-                   ElephantProfile &profile,
-                   const HowdahAttachmentFrame *shared_howdah,
-                   const ElephantMotionSample *shared_motion,
-                   ISubmitter &out) const;
 };
 
 } // namespace Render::GL

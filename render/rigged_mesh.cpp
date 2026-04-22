@@ -41,6 +41,7 @@ void RiggedMesh::setup_buffers() {
   auto const tex_off = offset_of(&RiggedVertex::tex_coord);
   auto const bi_off = offset_of(&RiggedVertex::bone_indices);
   auto const bw_off = offset_of(&RiggedVertex::bone_weights);
+  auto const role_off = offset_of(&RiggedVertex::color_role);
 
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, k_stride,
@@ -57,6 +58,9 @@ void RiggedMesh::setup_buffers() {
   glEnableVertexAttribArray(4);
   glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, k_stride,
                         reinterpret_cast<void *>(bw_off));
+  glEnableVertexAttribArray(5);
+  glVertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, k_stride,
+                         reinterpret_cast<void *>(role_off));
 
   m_vao->unbind();
 

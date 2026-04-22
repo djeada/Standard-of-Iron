@@ -30,6 +30,15 @@ RomanShieldRenderer::RomanShieldRenderer()
 void RomanShieldRenderer::render(const DrawContext &ctx,
                                  const BodyFrames &frames,
                                  const HumanoidPalette &palette,
+                                 const HumanoidAnimationContext &anim,
+                                 EquipmentBatch &batch) {
+  submit({}, ctx, frames, palette, anim, batch);
+}
+
+void RomanShieldRenderer::submit(const RomanShieldConfig & /*config*/,
+                                 const DrawContext &ctx,
+                                 const BodyFrames &frames,
+                                 const HumanoidPalette &palette,
                                  const HumanoidAnimationContext &,
                                  EquipmentBatch &batch) {
 
@@ -42,12 +51,12 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
   const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
 
-  float const shield_width = 0.45F;
-  float const shield_height = 1.0F;
+  float const shield_width = 0.38F;
+  float const shield_height = 0.90F;
 
   QVector3D shield_center = frames.hand_l.origin +
-                            axis_x * (-shield_width * 0.45F) + axis_y * 0.08F +
-                            n * 0.06F;
+                            axis_x * (-shield_width * 0.40F) + axis_y * 0.06F +
+                            n * 0.05F;
 
   QVector3D const shield_color{0.68F, 0.14F, 0.12F};
   QVector3D const trim_color{0.88F, 0.75F, 0.42F};
@@ -82,7 +91,7 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
        cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
        trim_color, nullptr, 1.0F, 4});
 
-  float const boss_radius = 0.08F;
+  float const boss_radius = 0.07F;
   batch.meshes.push_back(
       {get_unit_sphere(), nullptr,
        sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),

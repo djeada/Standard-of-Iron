@@ -36,9 +36,7 @@ TEST(MountedBaseLoadoutMigration, MountedKnightLoadoutIsPopulated) {
   EXPECT_FALSE(spec.equipment.empty());
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Helmet));
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Armor));
-  // Attachments slot stays unmasked so the horse renderer keeps
-  // running through MountedHumanoidRendererBase::add_attachments.
-  EXPECT_FALSE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Attachments));
+  EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Attachments));
 
   const auto &mspec = renderer.mounted_visual_spec();
   EXPECT_FALSE(mspec.rider.equipment.empty());
@@ -61,6 +59,7 @@ TEST(MountedBaseLoadoutMigration, HorseSpearmanLoadoutIsPopulated) {
   EXPECT_FALSE(spec.equipment.empty());
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Helmet));
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Armor));
+  EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Attachments));
 
   const auto &mspec = renderer.mounted_visual_spec();
   EXPECT_FALSE(mspec.rider.equipment.empty());
@@ -82,6 +81,7 @@ TEST(MountedBaseLoadoutMigration, HorseArcherLoadoutIsPopulated) {
   EXPECT_FALSE(spec.equipment.empty());
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Helmet));
   EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Armor));
+  EXPECT_TRUE(owns_slot(spec.owned_legacy_slots, LegacySlotMask::Attachments));
 
   const auto &mspec = renderer.mounted_visual_spec();
   EXPECT_FALSE(mspec.rider.equipment.empty());

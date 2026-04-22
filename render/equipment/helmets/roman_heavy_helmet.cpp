@@ -18,28 +18,28 @@ using Render::GL::Humanoid::saturate_color;
 
 namespace {
 
-constexpr float helm_scale = 1.18f;
-constexpr float cap_scale = 0.96f;
-constexpr float brow_scale = 1.10f;
+constexpr float helm_scale = 1.52f;
+constexpr float cap_scale = 0.94f;
+constexpr float brow_scale = 1.06f;
 
-constexpr float helmet_bottom_y = -0.25f;
-constexpr float helmet_top_y = 1.42f;
-constexpr float cap_top_y = 1.52f;
+constexpr float helmet_bottom_y = -0.38f;
+constexpr float helmet_top_y = 1.70f;
+constexpr float cap_top_y = 1.92f;
 
-constexpr float brow_center_y = 0.12f;
-constexpr float brow_top_offset = 0.035f;
-constexpr float brow_bottom_offset = 0.025f;
-constexpr float neck_scale = 0.98f;
+constexpr float brow_center_y = 0.10f;
+constexpr float brow_top_offset = 0.045f;
+constexpr float brow_bottom_offset = 0.032f;
+constexpr float neck_scale = 0.90f;
 constexpr float neck_top_y = -0.12f;
 constexpr float neck_top_z = -1.08f;
 constexpr float neck_bottom_y = -0.35f;
 constexpr float neck_bottom_z = -1.02f;
 
-constexpr float crest_mid_offset = 0.10f;
-constexpr float crest_top_offset = 0.18f;
-constexpr float crest_mount_radius = 0.022f;
-constexpr float crest_cone_radius = 0.052f;
-constexpr float crest_top_sphere_r = 0.024f;
+constexpr float crest_mid_offset = 0.15f;
+constexpr float crest_top_offset = 0.28f;
+constexpr float crest_mount_radius = 0.032f;
+constexpr float crest_cone_radius = 0.075f;
+constexpr float crest_top_sphere_r = 0.034f;
 
 constexpr float steel_color_mul[3] = {0.88f, 0.92f, 1.08f};
 constexpr float brass_color_mul[3] = {1.40f, 1.15f, 0.65f};

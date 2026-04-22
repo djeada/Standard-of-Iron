@@ -19,6 +19,15 @@ void RomanGreavesRenderer::render(const DrawContext &ctx,
                                   const HumanoidPalette &palette,
                                   const HumanoidAnimationContext &anim,
                                   EquipmentBatch &batch) {
+  submit({}, ctx, frames, palette, anim, batch);
+}
+
+void RomanGreavesRenderer::submit(const RomanGreavesConfig & /*config*/,
+                                  const DrawContext &ctx,
+                                  const BodyFrames &frames,
+                                  const HumanoidPalette &palette,
+                                  const HumanoidAnimationContext &anim,
+                                  EquipmentBatch &batch) {
   (void)anim;
 
   using HP = HumanProportions;

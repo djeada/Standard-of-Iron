@@ -1,11 +1,15 @@
-
-
 #pragma once
 
+#include "../render_archetype.h"
 #include "../submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <cstdint>
+#include <span>
 #include <vector>
 
 namespace Render::GL {
@@ -38,22 +42,46 @@ struct EquipmentCylinderPrim {
   float alpha{1.0F};
 };
 
+inline constexpr std::size_t kEquipmentArchetypePaletteCapacity = 4;
+
+struct EquipmentArchetypePrim {
+  const RenderArchetype *archetype{nullptr};
+  QMatrix4x4 world{};
+  std::array<QVector3D, kEquipmentArchetypePaletteCapacity> palette{};
+  std::uint8_t palette_count{0U};
+  Texture *default_texture{nullptr};
+  float alpha_multiplier{1.0F};
+  RenderArchetypeLod lod{RenderArchetypeLod::Full};
+};
+
 struct EquipmentBatch {
   std::vector<EquipmentMeshPrim> meshes;
   std::vector<EquipmentCylinderPrim> cylinders;
+  std::vector<EquipmentArchetypePrim> archetypes;
 
   void clear() {
     meshes.clear();
     cylinders.clear();
+    archetypes.clear();
   }
 
-  void reserve(std::size_t mesh_count, std::size_t cyl_count = 0) {
+  void reserve(std::size_t mesh_count, std::size_t cyl_count = 0,
+               std::size_t archetype_count = 0) {
     meshes.reserve(mesh_count);
     if (cyl_count > 0) {
       cylinders.reserve(cyl_count);
     }
+    if (archetype_count > 0) {
+      archetypes.reserve(archetype_count);
+    }
   }
 };
+
+void append_equipment_archetype(
+    EquipmentBatch &batch, const RenderArchetype &archetype,
+    const QMatrix4x4 &world, std::span<const QVector3D> palette = {},
+    Texture *default_texture = nullptr, float alpha_multiplier = 1.0F,
+    RenderArchetypeLod lod = RenderArchetypeLod::Full);
 
 void submit_equipment_batch(const EquipmentBatch &batch,
                             ISubmitter &out) noexcept;

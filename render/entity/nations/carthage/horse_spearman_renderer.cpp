@@ -29,11 +29,11 @@ auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
 void register_horse_spearman_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/horse_spearman",
-	    [](const DrawContext &ctx, ISubmitter &out) {
-	        static HorseSpearmanRendererBase const static_renderer(
-	            make_horse_spearman_config());
-	        static_renderer.render(ctx, out);
-	      });
+      [](const DrawContext &ctx, ISubmitter &out) {
+        static HorseSpearmanRendererBase const static_renderer(
+            make_horse_spearman_config());
+        static_renderer.render(ctx, out);
+      });
 }
 
 } // namespace Render::GL::Carthage

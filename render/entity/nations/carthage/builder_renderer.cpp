@@ -656,11 +656,11 @@ private:
 void register_builder_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_builder_styles_registered();
   static BuilderRenderer const renderer;
-	  registry.register_renderer(
-	      "troops/carthage/builder", [](const DrawContext &ctx, ISubmitter &out) {
-	        static BuilderRenderer const r;
-	        r.render(ctx, out);
-	      });
+  registry.register_renderer("troops/carthage/builder",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static BuilderRenderer const r;
+                               r.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Carthage

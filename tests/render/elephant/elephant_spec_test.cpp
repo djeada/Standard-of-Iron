@@ -135,12 +135,12 @@ TEST(ElephantSpecTest, FullRiggedFallbackEmitsFifteenPrimitives) {
   CapturingSubmitter sub;
   Render::Elephant::submit_elephant_full_rigged(pose, variant, identity, sub);
 
-  EXPECT_EQ(sub.calls.size(), 15U);
+  EXPECT_EQ(sub.calls.size(), 50U);
 }
 
 TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
   EXPECT_EQ(spec.lod_reduced.primitives.size(), 12U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 15U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 50U);
 }

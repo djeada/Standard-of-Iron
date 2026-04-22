@@ -1,4 +1,5 @@
 #include "render/horse/horse_animation_controller.h"
+#include "render/horse/horse_motion.h"
 #include "render/horse/horse_renderer_base.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include <QVector3D>
@@ -59,22 +60,71 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   // Test walk gait
   controller.set_gait(GaitType::WALK);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.1F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 1.1F, 0.01F));
 
   // Test trot gait
   controller.set_gait(GaitType::TROT);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.55F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.55F, 0.01F));
 
   // Test canter gait
   controller.set_gait(GaitType::CANTER);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.48F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.48F, 0.01F));
 
   // Test gallop gait
   controller.set_gait(GaitType::GALLOP);
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.38F, 0.01F));
+}
+
+TEST_F(HorseAnimationControllerTest, WalkAndTrotUseDistinctStrideProfiles) {
+  HorseAnimationController controller(profile, anim, rider_ctx);
+
+  controller.set_gait(GaitType::WALK);
+  controller.update_gait_parameters();
+  HorseGait const walk_gait = controller.get_resolved_gait();
+
+  controller.set_gait(GaitType::TROT);
+  controller.update_gait_parameters();
+  HorseGait const trot_gait = controller.get_resolved_gait();
+
+  EXPECT_TRUE(approxEqual(walk_gait.front_leg_phase, 0.25F, 0.01F));
+  EXPECT_TRUE(approxEqual(trot_gait.front_leg_phase, 0.0F, 0.01F));
+  EXPECT_TRUE(approxEqual(trot_gait.rear_leg_phase, 0.50F, 0.01F));
+  EXPECT_GT(trot_gait.stride_swing, walk_gait.stride_swing);
+  EXPECT_GT(trot_gait.stride_lift, walk_gait.stride_lift);
+}
+
+TEST_F(HorseAnimationControllerTest, FasterGaitsIncreaseStrideDemandProgressively) {
+  HorseAnimationController controller(profile, anim, rider_ctx);
+
+  controller.set_gait(GaitType::WALK);
+  controller.update_gait_parameters();
+  HorseGait const walk_gait = controller.get_resolved_gait();
+
+  controller.set_gait(GaitType::TROT);
+  controller.update_gait_parameters();
+  HorseGait const trot_gait = controller.get_resolved_gait();
+
+  controller.set_gait(GaitType::CANTER);
+  controller.update_gait_parameters();
+  HorseGait const canter_gait = controller.get_resolved_gait();
+
+  controller.set_gait(GaitType::GALLOP);
+  controller.update_gait_parameters();
+  HorseGait const gallop_gait = controller.get_resolved_gait();
+
+  EXPECT_LT(walk_gait.stride_swing, trot_gait.stride_swing);
+  EXPECT_LT(trot_gait.stride_swing, canter_gait.stride_swing);
+  EXPECT_LT(canter_gait.stride_swing, gallop_gait.stride_swing);
+  EXPECT_LT(walk_gait.stride_lift, trot_gait.stride_lift);
+  EXPECT_LT(trot_gait.stride_lift, canter_gait.stride_lift);
+  EXPECT_LT(canter_gait.stride_lift, gallop_gait.stride_lift);
 }
 
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
@@ -108,19 +158,22 @@ TEST_F(HorseAnimationControllerTest, AccelerateChangesGait) {
   // Advance time to complete transition
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 1.1F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 1.1F, 0.01F));
 
   // Accelerate to trot speed
   controller.accelerate(3.0F);
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.55F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.55F, 0.01F));
 
   // Accelerate to gallop speed
   controller.accelerate(6.0F);
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.38F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
@@ -134,13 +187,15 @@ TEST_F(HorseAnimationControllerTest, DecelerateChangesGait) {
   // Advance time to complete transition
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.48F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.48F, 0.01F));
 
   // Decelerate to trot
   controller.decelerate(2.0F);
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.55F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.55F, 0.01F));
 }
 
 TEST_F(HorseAnimationControllerTest, TurnSetsAngles) {
@@ -296,7 +351,7 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
 
   // Start at walk
   controller.set_gait(GaitType::WALK);
-  float const walk_cycle = profile.gait.cycle_time;
+  float const walk_cycle = controller.get_resolved_gait().cycle_time;
 
   // Accelerate to gallop
   controller.accelerate(10.0F);
@@ -304,12 +359,52 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   // After short time, should be transitioning (not at final value)
   anim.time += 0.1F;
   controller.update_gait_parameters();
-  float const transition_cycle1 = profile.gait.cycle_time;
+  float const transition_cycle1 = controller.get_resolved_gait().cycle_time;
   EXPECT_GT(transition_cycle1, 0.38F);      // Not yet at gallop cycle time
   EXPECT_LT(transition_cycle1, walk_cycle); // But moving toward it
 
   // After enough time, should reach final value
   anim.time += 0.5F;
   controller.update_gait_parameters();
-  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+  EXPECT_TRUE(
+      approxEqual(controller.get_resolved_gait().cycle_time, 0.38F, 0.01F));
+}
+
+TEST_F(HorseAnimationControllerTest,
+       EvaluateHorseMotionUsesRunningInputForFasterGait) {
+  anim.is_moving = true;
+  anim.is_running = true;
+  rider_ctx.inputs = anim;
+  rider_ctx.gait.state = HumanoidMotionState::Idle;
+  rider_ctx.gait.speed = 0.0F;
+  rider_ctx.gait.normalized_speed = 0.0F;
+
+  float const baseline_cycle = profile.gait.cycle_time;
+  auto motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  EXPECT_TRUE(motion.is_moving);
+  EXPECT_GT(motion.rider_intensity, 0.5F);
+  EXPECT_LT(motion.gait.cycle_time, 1.0F);
+  EXPECT_TRUE(approxEqual(profile.gait.cycle_time, baseline_cycle, 0.0001F));
+}
+
+TEST_F(HorseAnimationControllerTest,
+       EvaluateHorseMotionCarriesResolvedBodyShapingState) {
+  anim.time = 0.35F;
+  anim.is_moving = true;
+  rider_ctx.inputs = anim;
+  rider_ctx.gait.state = HumanoidMotionState::Walk;
+  rider_ctx.gait.speed = 2.4F;
+  rider_ctx.gait.normalized_speed = 0.65F;
+  rider_ctx.gait.cycle_time = 0.92F;
+  rider_ctx.gait.cycle_phase = 0.35F;
+
+  auto motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  EXPECT_TRUE(motion.is_moving);
+  EXPECT_NE(motion.body_sway, 0.0F);
+  EXPECT_NE(motion.body_pitch, 0.0F);
+  EXPECT_NE(motion.head_nod, 0.0F);
+  EXPECT_NE(motion.spine_flex, 0.0F);
+  EXPECT_EQ(std::signbit(motion.head_lateral), std::signbit(motion.body_sway));
 }

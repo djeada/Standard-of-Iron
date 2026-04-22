@@ -385,7 +385,9 @@ auto Shader::bind_uniform_block(const char *block_name,
   return true;
 }
 
-void set_shader_bind_audit_enabled(bool enabled) { shader_audit_flag() = enabled; }
+void set_shader_bind_audit_enabled(bool enabled) {
+  shader_audit_flag() = enabled;
+}
 
 auto shader_bind_audit_enabled() -> bool { return shader_audit_flag(); }
 

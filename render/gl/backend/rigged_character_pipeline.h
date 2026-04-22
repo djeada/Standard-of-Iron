@@ -84,6 +84,8 @@ public:
     GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle material_id{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle role_colors{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle role_color_count{GL::Shader::InvalidUniform};
   };
 
   [[nodiscard]] auto uniforms() const -> const Uniforms & { return m_uniforms; }
@@ -98,6 +100,9 @@ private:
   Uniforms m_uniforms{};
 
   GL::Shader::UniformHandle m_instanced_view_proj{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_role_colors{GL::Shader::InvalidUniform};
+  GL::Shader::UniformHandle m_instanced_role_color_count{
+      GL::Shader::InvalidUniform};
 
   std::size_t m_max_instances_per_batch = 0;
 

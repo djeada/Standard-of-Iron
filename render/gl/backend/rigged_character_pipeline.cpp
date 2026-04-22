@@ -17,6 +17,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLVersionFunctionsFactory>
 #include <QTextStream>
+#include <array>
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
@@ -58,6 +59,60 @@ void copy_palette_to_scratch(const QMatrix4x4 *palette,
                              std::vector<float> &scratch) {
   scratch.resize(BonePaletteArena::kPaletteFloats);
   BonePaletteArena::pack_palette_for_gpu(palette, scratch.data());
+}
+
+void flatten_role_colors(
+    const RiggedCreatureCmd &cmd,
+    std::array<float, RiggedCreatureCmd::kMaxRoleColors * 3> &out_flat) {
+  out_flat.fill(0.0F);
+  const auto n =
+      std::min<std::size_t>(cmd.role_color_count, cmd.role_colors.size());
+  for (std::size_t i = 0; i < n; ++i) {
+    out_flat[i * 3 + 0] = cmd.role_colors[i].x();
+    out_flat[i * 3 + 1] = cmd.role_colors[i].y();
+    out_flat[i * 3 + 2] = cmd.role_colors[i].z();
+  }
+}
+
+auto same_role_palette(const RiggedCreatureCmd &a,
+                       const RiggedCreatureCmd &b) -> bool {
+  if (a.role_color_count != b.role_color_count) {
+    return false;
+  }
+  const auto n =
+      std::min<std::size_t>(a.role_color_count, a.role_colors.size());
+  for (std::size_t i = 0; i < n; ++i) {
+    if (a.role_colors[i] != b.role_colors[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void set_role_palette_uniforms(GL::Shader *shader,
+                               GL::Shader::UniformHandle colors_handle,
+                               GL::Shader::UniformHandle count_handle,
+                               const RiggedCreatureCmd &cmd) {
+  if (shader == nullptr) {
+    return;
+  }
+  if (count_handle != GL::Shader::InvalidUniform) {
+    shader->set_uniform(count_handle, static_cast<int>(cmd.role_color_count));
+  }
+  if (colors_handle == GL::Shader::InvalidUniform) {
+    return;
+  }
+
+  auto *fn = gl_funcs();
+  if (fn == nullptr) {
+    return;
+  }
+
+  std::array<float, RiggedCreatureCmd::kMaxRoleColors * 3> flat{};
+  flatten_role_colors(cmd, flat);
+  fn->glUniform3fv(colors_handle,
+                   static_cast<GLsizei>(RiggedCreatureCmd::kMaxRoleColors),
+                   flat.data());
 }
 
 } // namespace
@@ -121,10 +176,10 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   }
   vert_src.insert(newline, define_line);
 
-	  m_instanced_shader_storage = std::make_unique<Shader>();
-	  m_instanced_shader_storage->set_debug_name(
-	      QStringLiteral("character_skinned_instanced"));
-	  if (!m_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
+  m_instanced_shader_storage = std::make_unique<Shader>();
+  m_instanced_shader_storage->set_debug_name(
+      QStringLiteral("character_skinned_instanced"));
+  if (!m_instanced_shader_storage->load_from_source(vert_src, frag_src)) {
     qWarning() << "RiggedCharacterPipeline: failed to compile instanced shader";
     m_instanced_shader_storage.reset();
     return false;
@@ -133,6 +188,10 @@ auto RiggedCharacterPipeline::build_instanced_shader_source() -> bool {
   m_instanced_shader->bind_uniform_block("BonePalette",
                                          kBonePaletteBindingPoint);
   m_instanced_view_proj = m_instanced_shader->uniform_handle("u_view_proj");
+  m_instanced_role_colors =
+      m_instanced_shader->optional_uniform_handle("u_role_colors[0]");
+  m_instanced_role_color_count =
+      m_instanced_shader->optional_uniform_handle("u_role_color_count");
   return true;
 }
 
@@ -141,6 +200,9 @@ void RiggedCharacterPipeline::shutdown() {
   m_instanced_shader = nullptr;
   m_instanced_shader_storage.reset();
   m_uniforms = Uniforms{};
+  m_instanced_view_proj = GL::Shader::InvalidUniform;
+  m_instanced_role_colors = GL::Shader::InvalidUniform;
+  m_instanced_role_color_count = GL::Shader::InvalidUniform;
 
   auto *fn = gl_funcs();
   if (fn != nullptr) {
@@ -177,6 +239,9 @@ void RiggedCharacterPipeline::cache_uniforms() {
   m_uniforms.use_texture = m_shader->optional_uniform_handle("u_useTexture");
   m_uniforms.texture = m_shader->optional_uniform_handle("u_texture");
   m_uniforms.material_id = m_shader->optional_uniform_handle("u_materialId");
+  m_uniforms.role_colors = m_shader->optional_uniform_handle("u_role_colors[0]");
+  m_uniforms.role_color_count =
+      m_shader->optional_uniform_handle("u_role_color_count");
 }
 
 auto RiggedCharacterPipeline::is_initialized() const -> bool {
@@ -203,6 +268,8 @@ auto RiggedCharacterPipeline::draw(const RiggedCreatureCmd &cmd,
     m_shader->set_uniform(m_uniforms.material_id,
                           static_cast<int>(cmd.material_id));
   }
+  set_role_palette_uniforms(m_shader, m_uniforms.role_colors,
+                            m_uniforms.role_color_count, cmd);
 
   const bool has_texture = (cmd.texture != nullptr) &&
                            m_uniforms.texture != GL::Shader::InvalidUniform;
@@ -339,6 +406,7 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   auto const tex_off = offset_of(&RiggedVertex::tex_coord);
   auto const bi_off = offset_of(&RiggedVertex::bone_indices);
   auto const bw_off = offset_of(&RiggedVertex::bone_weights);
+  auto const role_off = offset_of(&RiggedVertex::color_role);
 
   fn->glEnableVertexAttribArray(0);
   fn->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, k_stride,
@@ -355,27 +423,30 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   fn->glEnableVertexAttribArray(4);
   fn->glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, k_stride,
                             reinterpret_cast<void *>(bw_off));
+  fn->glEnableVertexAttribArray(5);
+  fn->glVertexAttribIPointer(5, 1, GL_UNSIGNED_BYTE, k_stride,
+                             reinterpret_cast<void *>(role_off));
 
   fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
   constexpr GLsizei k_inst_stride = sizeof(InstanceAttrib);
   std::size_t off = 0;
   for (int col = 0; col < 4; ++col) {
-    GLuint loc = static_cast<GLuint>(5 + col);
+    GLuint loc = static_cast<GLuint>(6 + col);
     fn->glEnableVertexAttribArray(loc);
     fn->glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
                               reinterpret_cast<void *>(off));
     fn->glVertexAttribDivisor(loc, 1);
     off += sizeof(float) * 4;
   }
-  fn->glEnableVertexAttribArray(9);
-  fn->glVertexAttribPointer(9, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
-                            reinterpret_cast<void *>(off));
-  fn->glVertexAttribDivisor(9, 1);
-  off += sizeof(float) * 4;
   fn->glEnableVertexAttribArray(10);
   fn->glVertexAttribPointer(10, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
                             reinterpret_cast<void *>(off));
   fn->glVertexAttribDivisor(10, 1);
+  off += sizeof(float) * 4;
+  fn->glEnableVertexAttribArray(11);
+  fn->glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
+                            reinterpret_cast<void *>(off));
+  fn->glVertexAttribDivisor(11, 1);
 
   ebo->bind();
 
@@ -397,6 +468,11 @@ auto RiggedCharacterPipeline::draw_instanced(
   }
   if (cmds[0].mesh == nullptr || cmds[0].texture != nullptr) {
     return false;
+  }
+  for (std::size_t k = 1; k < count; ++k) {
+    if (!same_role_palette(cmds[0], cmds[k])) {
+      return false;
+    }
   }
 
   auto *fn = gl_funcs();
@@ -443,6 +519,8 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (m_instanced_view_proj != Shader::InvalidUniform) {
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
+  set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
+                            m_instanced_role_color_count, cmds[0]);
 
   std::size_t const upload_palette_bytes =
       count * BonePaletteArena::kPaletteBytes;

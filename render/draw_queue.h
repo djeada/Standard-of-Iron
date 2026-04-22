@@ -8,6 +8,7 @@
 #include "world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -176,6 +177,8 @@ struct ModeIndicatorCmd {
 };
 
 struct RiggedCreatureCmd {
+  static constexpr std::size_t kMaxRoleColors = 16;
+
   RiggedMesh *mesh = nullptr;
   const Material *material = nullptr;
   QMatrix4x4 world;
@@ -185,6 +188,8 @@ struct RiggedCreatureCmd {
   std::uint32_t palette_ubo = 0;
   std::uint32_t palette_offset = 0;
   std::uint32_t bone_count = 0;
+  std::array<QVector3D, kMaxRoleColors> role_colors{};
+  std::uint32_t role_color_count = 0;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
   Texture *texture = nullptr;

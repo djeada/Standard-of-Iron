@@ -8,6 +8,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
 #include <span>
 
 namespace Render::GL {
@@ -23,6 +24,8 @@ struct CreatureSpec;
 
 namespace Render::Humanoid {
 
+inline constexpr std::size_t kHumanoidRoleCount = 7;
+
 [[nodiscard]] auto
 humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
 
@@ -31,6 +34,10 @@ auto compute_bone_palette(const Render::GL::HumanoidPose &pose,
     -> std::uint32_t;
 
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4>;
+
+void fill_humanoid_role_colors(
+    const Render::GL::HumanoidVariant &variant,
+    std::array<QVector3D, kHumanoidRoleCount> &out_roles) noexcept;
 
 void submit_humanoid_reduced_rigged(const Render::GL::HumanoidPose &pose,
                                     const Render::GL::HumanoidVariant &variant,

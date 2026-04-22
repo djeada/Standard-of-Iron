@@ -16,9 +16,34 @@ class TransformComponent;
 class UnitComponent;
 } // namespace Engine::Core
 
+namespace Render::Creature::Pipeline {
+struct CreaturePreparationResult;
+}
+
+namespace Render::GL {
+struct DrawContext;
+struct AnimationInputs;
+class HumanoidRendererBase;
+} // namespace Render::GL
+
+namespace Render::Humanoid {
+using HumanoidPreparation = Render::Creature::Pipeline::CreaturePreparationResult;
+void prepare_humanoid_instances(const ::Render::GL::HumanoidRendererBase &owner,
+                                const ::Render::GL::DrawContext &ctx,
+                                const ::Render::GL::AnimationInputs &anim,
+                                std::uint32_t frame_index,
+                                HumanoidPreparation &out);
+} // namespace Render::Humanoid
+
 namespace Render::GL {
 
 class HumanoidRendererBase {
+  friend void ::Render::Humanoid::prepare_humanoid_instances(
+      const ::Render::GL::HumanoidRendererBase &owner,
+      const ::Render::GL::DrawContext &ctx,
+      const ::Render::GL::AnimationInputs &anim, std::uint32_t frame_index,
+      ::Render::Humanoid::HumanoidPreparation &out);
+
 public:
   virtual ~HumanoidRendererBase() = default;
 
@@ -90,6 +115,11 @@ public:
                                         const QVector3D &local_offset,
                                         float uniform_scale) -> QMatrix4x4;
 
+  static void compute_locomotion_pose(uint32_t seed, float time,
+                                      const HumanoidGaitDescriptor &gait,
+                                      const VariationParams &variation,
+                                      HumanoidPose &io_pose);
+
   static void compute_locomotion_pose(uint32_t seed, float time, bool is_moving,
                                       const VariationParams &variation,
                                       HumanoidPose &io_pose);
@@ -101,6 +131,12 @@ protected:
   static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
   static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;
+
+  virtual void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t seed, Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult &out) const;
 
   void render_procedural(const DrawContext &ctx, const AnimationInputs &anim,
                          ISubmitter &out) const;

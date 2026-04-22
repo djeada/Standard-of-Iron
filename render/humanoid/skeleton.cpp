@@ -165,7 +165,7 @@ auto humanoid_provider(void *user, Creature::BoneIndex bone) noexcept
     r.tail = p->foot_l;
     break;
   case HumanoidBone::FootL:
-    r.kind = Creature::BoneBasisKind::FromParent;
+    r.kind = Creature::BoneBasisKind::FromRootUp;
     r.head = p->foot_l;
     break;
   case HumanoidBone::HipR:
@@ -179,7 +179,7 @@ auto humanoid_provider(void *user, Creature::BoneIndex bone) noexcept
     r.tail = p->foot_r;
     break;
   case HumanoidBone::FootR:
-    r.kind = Creature::BoneBasisKind::FromParent;
+    r.kind = Creature::BoneBasisKind::FromRootUp;
     r.head = p->foot_r;
     break;
   case HumanoidBone::Count:

@@ -89,10 +89,19 @@ CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
 void CarthageShieldRenderer::render(const DrawContext &ctx,
                                     const BodyFrames &frames,
                                     const HumanoidPalette &palette,
+                                    const HumanoidAnimationContext &anim,
+                                    EquipmentBatch &batch) {
+  submit({m_scale_multiplier}, ctx, frames, palette, anim, batch);
+}
+
+void CarthageShieldRenderer::submit(const CarthageShieldConfig &config,
+                                    const DrawContext &ctx,
+                                    const BodyFrames &frames,
+                                    const HumanoidPalette &palette,
                                     const HumanoidAnimationContext &,
                                     EquipmentBatch &batch) {
   constexpr float k_shield_yaw_degrees = -70.0F;
-  constexpr float k_scale_factor = 2.5F;
+  constexpr float k_scale_factor = 1.95F;
 
   QMatrix4x4 rot;
   rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
@@ -102,17 +111,17 @@ void CarthageShieldRenderer::render(const DrawContext &ctx,
   const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
 
   float const shield_radius =
-      0.18F * 0.9F * k_scale_factor * m_scale_multiplier;
+      0.18F * 0.9F * k_scale_factor * config.scale_multiplier;
 
   QVector3D shield_center = frames.hand_l.origin +
                             axis_x * (-shield_radius * 0.35F) +
-                            axis_y * (-0.05F) + n * (0.06F);
+                            axis_y * (-0.02F) + n * (0.05F);
 
   QVector3D const shield_color{0.20F, 0.46F, 0.62F};
   QVector3D const trim_color{0.76F, 0.68F, 0.42F};
   QVector3D const metal_color{0.70F, 0.68F, 0.52F};
 
-  float const dome_depth = shield_radius * 0.55F;
+  float const dome_depth = shield_radius * 0.48F;
   {
     QMatrix4x4 m = ctx.model;
     m.translate(shield_center);

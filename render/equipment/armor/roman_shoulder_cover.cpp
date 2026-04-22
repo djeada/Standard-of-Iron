@@ -15,6 +15,13 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
                                         const HumanoidPalette &palette,
                                         const HumanoidAnimationContext &anim,
                                         EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
+
+void RomanShoulderCoverRenderer::submit(
+    const RomanShoulderCoverConfig &config, const DrawContext &ctx,
+    const BodyFrames &frames, const HumanoidPalette &palette,
+    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 
@@ -47,12 +54,12 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
       return ctx.model * local;
     };
 
-    bool const is_infantry = m_outward_scale <= 1.1F;
+    bool const is_infantry = config.outward_scale <= 1.1F;
     float const outward_offset =
-        (is_infantry ? 0.003F : 0.009F) * m_outward_scale;
+        (is_infantry ? 0.003F : 0.009F) * config.outward_scale;
     float const upward_offset = is_infantry ? 0.052F : 0.054F;
     float const back_offset =
-        (is_infantry ? -0.018F : -0.012F) * m_outward_scale;
+        (is_infantry ? -0.018F : -0.012F) * config.outward_scale;
 
     QVector3D anchor = shoulder_pos + outward_n * outward_offset +
                        up_n * upward_offset + forward_n * back_offset;
@@ -64,7 +71,7 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
         {get_unit_sphere(), nullptr, dome, metal_base, nullptr, 1.0F, 1});
 
     QVector3D inner_center =
-        anchor + up_n * (-0.030F) + outward_n * (0.006F * m_outward_scale);
+        anchor + up_n * (-0.030F) + outward_n * (0.006F * config.outward_scale);
     QMatrix4x4 inner = oriented_transform(
         inner_center,
         {upper_arm_r * 1.22F, upper_arm_r * 0.94F, upper_arm_r * 1.05F});
@@ -72,7 +79,7 @@ void RomanShoulderCoverRenderer::render(const DrawContext &ctx,
         {get_unit_sphere(), nullptr, inner, metal_dark, nullptr, 1.0F, 1});
 
     QVector3D rim_center = inner_center + up_n * (-0.028F) +
-                           outward_n * (0.006F * m_outward_scale);
+                           outward_n * (0.006F * config.outward_scale);
     QMatrix4x4 rim = oriented_transform(
         rim_center,
         {upper_arm_r * 1.10F, upper_arm_r * 0.40F, upper_arm_r * 0.98F});

@@ -30,11 +30,11 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/roman/horse_swordsman",
-	    [](const DrawContext &ctx, ISubmitter &out) {
-	        static MountedKnightRendererBase const static_renderer(
-	            make_mounted_knight_config());
-	        static_renderer.render(ctx, out);
-	      });
+      [](const DrawContext &ctx, ISubmitter &out) {
+        static MountedKnightRendererBase const static_renderer(
+            make_mounted_knight_config());
+        static_renderer.render(ctx, out);
+      });
 }
 
 } // namespace Render::GL::Roman

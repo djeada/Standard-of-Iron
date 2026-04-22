@@ -1,7 +1,12 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "../creature/pipeline/creature_render_graph.h"
+#include "../creature/pipeline/lod_decision.h"
 #include "../gl/camera.h"
+#include "../graphics_settings.h"
 #include "../horse/lod.h"
+#include "../horse/horse_motion.h"
+#include "../horse/prepare.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -78,34 +83,81 @@ auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
   return offset;
 }
 
+void MountedHumanoidRendererBase::resolve_mount_render_state(
+    const DrawContext &ctx, std::uint32_t seed, const HumanoidVariant &variant,
+    const HumanoidAnimationContext &anim_ctx, bool use_cached_profile,
+    HorseProfile &profile, HorseDimensions &dims, MountedAttachmentFrame &mount,
+    HorseMotionSample &motion, ReinState &reins) const {
+  const AnimationInputs &anim = anim_ctx.inputs;
+
+  std::uint32_t horse_seed = seed;
+  if (ctx.entity != nullptr) {
+    horse_seed = static_cast<std::uint32_t>(
+        reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+  }
+
+  dims = get_scaled_horse_dimensions(horse_seed);
+  if (use_cached_profile) {
+    profile = get_cached_horse_profile(horse_seed, variant);
+  } else {
+    profile = make_horse_profile(horse_seed, variant.palette.leather,
+                                 variant.palette.cloth);
+    profile.dims = dims;
+  }
+  dims = profile.dims;
+  mount = compute_mount_frame(profile);
+  tune_mounted_knight_frame(dims, mount);
+  motion = evaluate_horse_motion(profile, anim, anim_ctx);
+  apply_mount_vertical_offset(mount, motion.bob);
+  reins = compute_rein_state(horse_seed, anim_ctx);
+}
+
+auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext &ctx) const
+    -> HorseLOD {
+  namespace RCP = Render::Creature::Pipeline;
+
+  const auto lod_config = RCP::horse_lod_config_from_settings();
+  RCP::CreatureGraphInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.entity = ctx.entity;
+  inputs.has_camera = (ctx.camera != nullptr);
+  if (ctx.force_horse_lod) {
+    inputs.forced_lod =
+        static_cast<Render::Creature::CreatureLOD>(ctx.forced_horse_lod);
+  }
+  if (ctx.camera != nullptr) {
+    const QVector3D horse_world_pos = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    inputs.camera_distance =
+        (horse_world_pos - ctx.camera->get_position()).length();
+  }
+
+  if (lod_config.apply_visibility_budget && !ctx.force_horse_lod &&
+      ctx.camera != nullptr) {
+    const auto distance_lod =
+        RCP::select_distance_lod(inputs.camera_distance, lod_config.thresholds);
+    if (distance_lod == Render::Creature::CreatureLOD::Full) {
+      const auto granted =
+          Render::VisibilityBudgetTracker::instance().request_horse_lod(
+              HorseLOD::Full);
+      inputs.budget_grant_full = (granted == HorseLOD::Full);
+    }
+  }
+
+  const auto decision = RCP::evaluate_creature_lod(inputs, lod_config);
+  return decision.culled ? HorseLOD::Billboard
+                         : static_cast<HorseLOD>(decision.lod);
+}
+
 void MountedHumanoidRendererBase::customize_pose(
     const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
     uint32_t seed, HumanoidPose &pose) const {
-  const AnimationInputs &anim = anim_ctx.inputs;
-
-  uint32_t horse_seed = seed;
-  if (ctx.entity != nullptr) {
-    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
-                                       0xFFFFFFFFU);
-  }
-
-  HorseDimensions dims = get_scaled_horse_dimensions(horse_seed);
   HorseProfile mount_profile{};
-  mount_profile.dims = dims;
-  MountedAttachmentFrame mount = compute_mount_frame(mount_profile);
-  tune_mounted_knight_frame(dims, mount);
-  HorseMotionSample const motion =
-      evaluate_horse_motion(mount_profile, anim, anim_ctx);
-  apply_mount_vertical_offset(mount, motion.bob);
-
-  ReinState const reins = compute_rein_state(horse_seed, anim_ctx);
-  if (!ctx.template_prewarm) {
-    m_last_pose = &pose;
-    m_last_mount = mount;
-    m_last_motion = motion;
-    m_last_rein_state = reins;
-    m_has_last_reins = true;
-  }
+  HorseDimensions dims{};
+  MountedAttachmentFrame mount{};
+  HorseMotionSample motion{};
+  ReinState reins{};
+  resolve_mount_render_state(ctx, seed, HumanoidVariant{}, anim_ctx, false,
+                             mount_profile, dims, mount, motion, reins);
 
   MountedPoseController mounted_controller(pose, anim_ctx);
 
@@ -119,45 +171,28 @@ void MountedHumanoidRendererBase::customize_pose(
   mounted_controller.finalize_head_sync(mount, "customize_pose_final_sync");
 }
 
-void MountedHumanoidRendererBase::add_attachments(
-    const DrawContext &ctx, const HumanoidVariant &v, const HumanoidPose &pose,
-    const HumanoidAnimationContext &anim_ctx, ISubmitter &out) const {
-  uint32_t horse_seed = 0U;
-  if (ctx.entity != nullptr) {
-    horse_seed = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(ctx.entity) &
-                                       0xFFFFFFFFU);
+void MountedHumanoidRendererBase::append_companion_preparation(
+    const DrawContext &ctx, const HumanoidVariant &variant,
+    const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+    std::uint32_t seed, Render::Creature::CreatureLOD lod,
+    Render::Creature::Pipeline::CreaturePreparationResult &out) const {
+  (void)pose;
+  if (lod == Render::Creature::CreatureLOD::Minimal ||
+      lod == Render::Creature::CreatureLOD::Billboard) {
+    return;
   }
 
-  HorseProfile profile = get_cached_horse_profile(horse_seed, v);
-  const bool is_current_pose = !ctx.template_prewarm && (m_last_pose == &pose);
-  const MountedAttachmentFrame *mount_ptr =
-      (is_current_pose) ? &m_last_mount : nullptr;
-  const ReinState *rein_ptr =
-      (is_current_pose && m_has_last_reins) ? &m_last_rein_state : nullptr;
-  const HorseMotionSample *motion_ptr =
-      (is_current_pose) ? &m_last_motion : nullptr;
-  const AnimationInputs &anim = anim_ctx.inputs;
+  HorseProfile profile{};
+  HorseDimensions dims{};
+  MountedAttachmentFrame mount{};
+  HorseMotionSample motion{};
+  ReinState reins{};
+  resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile, dims,
+                             mount, motion, reins);
 
-  HorseLOD horse_lod = HorseLOD::Full;
-  if (ctx.force_horse_lod) {
-    horse_lod = ctx.forced_horse_lod;
-  } else if (ctx.camera != nullptr) {
-    QVector3D const horse_world_pos =
-        ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-    float const distance =
-        (horse_world_pos - ctx.camera->get_position()).length();
-    horse_lod = calculate_horse_lod(distance);
-    horse_lod = Render::VisibilityBudgetTracker::instance().request_horse_lod(
-        horse_lod);
-  }
-
-  m_horseRenderer.render(ctx, anim, anim_ctx, profile, mount_ptr, rein_ptr,
-                         motion_ptr, out, horse_lod);
-
-  if (!ctx.template_prewarm) {
-    m_last_pose = nullptr;
-    m_has_last_reins = false;
-  }
+  Render::Horse::prepare_horse_render(
+      m_horseRenderer, ctx, anim_ctx.inputs, anim_ctx, profile, &mount, &reins,
+      &motion, resolve_mount_lod(ctx), {}, nullptr, out);
 }
 
 } // namespace Render::GL

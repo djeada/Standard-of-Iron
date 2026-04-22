@@ -280,13 +280,13 @@ private:
   }
 
   static constexpr float kBaseHumanoidFull = 10.0F;
-  static constexpr float kBaseHumanoidReduced = 22.0F;
-  static constexpr float kBaseHumanoidMinimal = 45.0F;
+  static constexpr float kBaseHumanoidReduced = 35.0F;
+  static constexpr float kBaseHumanoidMinimal = 70.0F;
   static constexpr float kBaseHumanoidBillboard = 80.0F;
 
   static constexpr float kBaseHorseFull = 20.0F;
-  static constexpr float kBaseHorseReduced = 40.0F;
-  static constexpr float kBaseHorseMinimal = 70.0F;
+  static constexpr float kBaseHorseReduced = 55.0F;
+  static constexpr float kBaseHorseMinimal = 110.0F;
   static constexpr float kBaseHorseBillboard = 100.0F;
 
   GraphicsQuality m_quality{GraphicsQuality::Ultra};

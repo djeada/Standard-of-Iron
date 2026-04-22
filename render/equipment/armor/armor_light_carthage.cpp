@@ -25,6 +25,13 @@ void ArmorLightCarthageRenderer::render(const DrawContext &ctx,
                                         const HumanoidPalette &palette,
                                         const HumanoidAnimationContext &anim,
                                         EquipmentBatch &batch) {
+  submit({}, ctx, frames, palette, anim, batch);
+}
+
+void ArmorLightCarthageRenderer::submit(
+    const ArmorLightCarthageConfig & /*config*/, const DrawContext &ctx,
+    const BodyFrames &frames, const HumanoidPalette &palette,
+    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 

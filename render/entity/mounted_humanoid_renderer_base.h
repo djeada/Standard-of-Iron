@@ -22,11 +22,6 @@ public:
                       const HumanoidAnimationContext &anim_ctx, uint32_t seed,
                       HumanoidPose &pose) const override;
 
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override;
-
   virtual auto get_mount_scale() const -> float = 0;
 
 protected:
@@ -47,16 +42,26 @@ protected:
 
   HorseRenderer m_horseRenderer;
 
+  void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t seed, Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult &out) const
+      override;
+
 private:
   mutable std::mutex m_profile_cache_mutex;
   mutable std::unordered_map<uint32_t, HorseProfile> m_profile_cache;
   static constexpr size_t MAX_PROFILE_CACHE_SIZE = 100;
 
-  mutable const HumanoidPose *m_last_pose = nullptr;
-  mutable MountedAttachmentFrame m_last_mount{};
-  mutable HorseMotionSample m_last_motion{};
-  mutable ReinState m_last_rein_state{};
-  mutable bool m_has_last_reins = false;
+  void resolve_mount_render_state(
+      const DrawContext &ctx, std::uint32_t seed, const HumanoidVariant &variant,
+      const HumanoidAnimationContext &anim_ctx, bool use_cached_profile,
+      HorseProfile &profile, HorseDimensions &dims, MountedAttachmentFrame &mount,
+      HorseMotionSample &motion, ReinState &reins) const;
+
+  [[nodiscard]] auto resolve_mount_lod(const DrawContext &ctx) const
+      -> HorseLOD;
 };
 
 } // namespace Render::GL

@@ -47,7 +47,6 @@ public:
     apply_color(style.leather_dark_color, v.palette.leather_dark);
     apply_color(style.metal_color, v.palette.metal);
   }
-
 };
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
@@ -71,11 +70,11 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
 void register_mounted_knight_renderer(EntityRendererRegistry &registry) {
   registry.register_renderer(
       "troops/carthage/horse_swordsman",
-	    [](const DrawContext &ctx, ISubmitter &out) {
-	        static CarthageMountedKnightRenderer const static_renderer(
-	            make_mounted_knight_config());
-	        static_renderer.render(ctx, out);
-	      });
+      [](const DrawContext &ctx, ISubmitter &out) {
+        static CarthageMountedKnightRenderer const static_renderer(
+            make_mounted_knight_config());
+        static_renderer.render(ctx, out);
+      });
 }
 
 } // namespace Render::GL::Carthage

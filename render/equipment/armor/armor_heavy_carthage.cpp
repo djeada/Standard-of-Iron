@@ -19,6 +19,13 @@ void ArmorHeavyCarthageRenderer::render(const DrawContext &ctx,
                                         const HumanoidPalette &palette,
                                         const HumanoidAnimationContext &anim,
                                         EquipmentBatch &batch) {
+  submit({}, ctx, frames, palette, anim, batch);
+}
+
+void ArmorHeavyCarthageRenderer::submit(
+    const ArmorHeavyCarthageConfig & /*config*/, const DrawContext &ctx,
+    const BodyFrames &frames, const HumanoidPalette &palette,
+    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
   (void)anim;
   (void)palette;
 

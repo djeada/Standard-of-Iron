@@ -6,17 +6,32 @@
 
 namespace Render::GL {
 
+struct RomanShoulderCoverConfig {
+  float outward_scale = 1.0F;
+};
+
 class RomanShoulderCoverRenderer : public IEquipmentRenderer {
 public:
   explicit RomanShoulderCoverRenderer(float outward_scale = 1.0F)
-      : m_outward_scale(outward_scale) {}
+      : m_config{outward_scale} {}
+
+  static void submit(const RomanShoulderCoverConfig &config,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
+  [[nodiscard]] auto base_config() const -> const RomanShoulderCoverConfig & {
+    return m_config;
+  }
+
 private:
-  float m_outward_scale = 1.0F;
+  RomanShoulderCoverConfig m_config;
 };
 
 } // namespace Render::GL

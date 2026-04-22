@@ -47,6 +47,7 @@ struct ToyGraph {
     prims[0].shape = PrimitiveShape::Sphere;
     prims[0].params.anchor_bone = kBoneA;
     prims[0].params.radius = 1.0F;
+    prims[0].color_role = 3;
 
     prims[1].debug_name = "cylinder_A_to_B";
     prims[1].shape = PrimitiveShape::Cylinder;
@@ -55,6 +56,7 @@ struct ToyGraph {
     prims[1].params.head_offset = QVector3D{0.0F, 0.0F, 0.0F};
     prims[1].params.tail_offset = QVector3D{0.0F, 2.0F, 0.0F};
     prims[1].params.radius = 0.5F;
+    prims[1].color_role = 5;
 
     graph.primitives = std::span<const PrimitiveInstance>{prims};
   }
@@ -100,6 +102,7 @@ TEST(RiggedMeshBake, SphereVerticesAreSingleBoneAnchor) {
     EXPECT_FLOAT_EQ(v.bone_weights[1], 0.0F) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F) << "vertex " << i;
     EXPECT_FLOAT_EQ(v.bone_weights[3], 0.0F) << "vertex " << i;
+    EXPECT_EQ(v.color_role, 3U) << "vertex " << i;
   }
 }
 
@@ -147,6 +150,7 @@ TEST(RiggedMeshBake, CylinderVerticesBlendAlongAxis) {
       EXPECT_NEAR(v.bone_weights[1], 1.0F, kEps);
       saw_tail_end = true;
     }
+    EXPECT_EQ(v.color_role, 5U);
   }
   EXPECT_TRUE(saw_anchor_end);
   EXPECT_TRUE(saw_tail_end);

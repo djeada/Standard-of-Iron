@@ -6,18 +6,33 @@
 
 namespace Render::GL {
 
+struct CarthageShoulderCoverConfig {
+  float outward_scale = 1.0F;
+};
+
 class CarthageShoulderCoverRenderer : public IEquipmentRenderer {
 public:
   explicit CarthageShoulderCoverRenderer(float outward_scale = 1.0F)
-      : m_outward_scale(outward_scale) {}
+      : m_config{outward_scale} {}
+
+  static void submit(const CarthageShoulderCoverConfig &config,
+                     const DrawContext &ctx, const BodyFrames &frames,
+                     const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
 
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
+  [[nodiscard]] auto base_config() const
+      -> const CarthageShoulderCoverConfig & {
+    return m_config;
+  }
+
 private:
-  float m_outward_scale = 1.0F;
+  CarthageShoulderCoverConfig m_config;
 };
 
 } // namespace Render::GL

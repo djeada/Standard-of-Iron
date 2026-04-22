@@ -1,6 +1,7 @@
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
+#include "render/equipment/helmets/carthage_light_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
@@ -84,8 +85,7 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetRendersWithValidFrames) {
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  // Carthage heavy helmet should render multiple mesh components
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_GE(mesh_count_of(submitter), 12);
 }
 
 TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
@@ -95,6 +95,23 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
   helmet.render(ctx, frames, palette, anim, submitter);
 
   // Should not render anything when head radius is zero
+  EXPECT_EQ(mesh_count_of(submitter), 0);
+}
+
+TEST_F(HelmetRenderersTest, CarthageLightHelmetRendersWithValidFrames) {
+  CarthageLightHelmetRenderer helmet;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GE(mesh_count_of(submitter), 20);
+}
+
+TEST_F(HelmetRenderersTest, CarthageLightHelmetHandlesZeroHeadRadius) {
+  CarthageLightHelmetRenderer helmet;
+  frames.head.radius = 0.0F;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
   EXPECT_EQ(mesh_count_of(submitter), 0);
 }
 
@@ -126,6 +143,11 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
       registry.get(EquipmentCategory::Helmet, "carthage_heavy");
   ASSERT_NE(carthage_heavy, nullptr);
 
+  EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_light"));
+  auto carthage_light =
+      registry.get(EquipmentCategory::Helmet, "carthage_light");
+  ASSERT_NE(carthage_light, nullptr);
+
   // Verify headwrap is registered
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
   auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
@@ -140,6 +162,16 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
   helmet->render(ctx, frames, palette, anim, submitter);
 
   EXPECT_GT(mesh_count_of(submitter), 0);
+}
+
+TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
+  auto &registry = EquipmentRegistry::instance();
+  auto helmet = registry.get(EquipmentCategory::Helmet, "carthage_light");
+  ASSERT_NE(helmet, nullptr);
+
+  helmet->render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GE(mesh_count_of(submitter), 20);
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
@@ -164,8 +196,12 @@ TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
   MockSubmitter submitter1;
   helmet.render(ctx, frames, palette, anim, submitter1);
 
-  // Helmet should still render even with rotated frame
-  EXPECT_GT(mesh_count_of(submitter1), 0);
+  EXPECT_GE(mesh_count_of(submitter1), 12);
+
+  CarthageLightHelmetRenderer light_helmet;
+  MockSubmitter submitter_light;
+  light_helmet.render(ctx, frames, palette, anim, submitter_light);
+  EXPECT_GE(mesh_count_of(submitter_light), 20);
 
   HeadwrapRenderer headwrap;
   MockSubmitter submitter2;

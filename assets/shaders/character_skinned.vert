@@ -4,6 +4,7 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_tex;
 layout(location = 3) in ivec4 a_bone_indices;
 layout(location = 4) in vec4 a_bone_weights;
+layout(location = 5) in uint a_color_role;
 
 uniform mat4 u_view_proj;
 uniform mat4 u_model;
@@ -15,6 +16,7 @@ u_palette;
 out vec3 v_normal_ws;
 out vec2 v_tex;
 out vec3 v_pos_ws;
+flat out int v_color_role;
 
 void main() {
   mat4 skin = a_bone_weights.x * u_palette.bones[a_bone_indices.x] +
@@ -37,4 +39,5 @@ void main() {
   v_normal_ws = normalize(model_rot * skin_rot * a_normal);
   v_pos_ws = pos_world.xyz;
   v_tex = a_tex;
+  v_color_role = int(a_color_role);
 }

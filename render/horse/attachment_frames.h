@@ -1,5 +1,7 @@
 #pragma once
 
+#include "horse_gait.h"
+
 #include <QMatrix4x4>
 #include <QVector3D>
 
@@ -67,10 +69,16 @@ struct ReinState {
 };
 
 struct HorseMotionSample {
+  HorseGait gait{};
   float phase = 0.0F;
   float bob = 0.0F;
   bool is_moving = false;
   float rider_intensity = 0.0F;
+  float body_sway = 0.0F;
+  float body_pitch = 0.0F;
+  float head_nod = 0.0F;
+  float head_lateral = 0.0F;
+  float spine_flex = 0.0F;
 };
 
 } // namespace Render::GL

@@ -1,14 +1,14 @@
 #pragma once
 
+#include "horse_gait.h"
 #include "horse_renderer_base.h"
 
 namespace Render::GL {
 
-enum class GaitType { IDLE, WALK, TROT, CANTER, GALLOP };
-
 class HorseAnimationController {
 public:
-  HorseAnimationController(HorseProfile &profile, const AnimationInputs &anim,
+  HorseAnimationController(const HorseProfile &profile,
+                           const AnimationInputs &anim,
                            const HumanoidAnimationContext &rider_ctx);
 
   void set_gait(GaitType gait);
@@ -27,11 +27,12 @@ public:
   auto get_current_phase() const -> float;
   auto get_current_bob() const -> float;
   auto get_stride_cycle() const -> float;
+  auto get_resolved_gait() const -> const HorseGait &;
 
   void update_gait_parameters();
 
 private:
-  HorseProfile &m_profile;
+  const HorseProfile &m_profile;
   const AnimationInputs &m_anim;
   const HumanoidAnimationContext &m_rider_ctx;
 
@@ -56,6 +57,8 @@ private:
   bool m_is_jumping{};
   float m_jump_height{};
   float m_jump_distance{};
+  float m_idle_bob_intensity{1.0F};
+  HorseGait m_resolved_gait{};
 };
 
 } // namespace Render::GL
