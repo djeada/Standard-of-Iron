@@ -79,21 +79,22 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
       QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.8F), c.brick);
 
   if (state != BuildingState::Destroyed) {
-    builder.add_box(QVector3D(0.0F, 1.15F, 0.0F),
-                    QVector3D(1.0F, 0.05F, 1.0F), c.tile_red);
+    builder.add_box(QVector3D(0.0F, 1.15F, 0.0F), QVector3D(1.0F, 0.05F, 1.0F),
+                    c.tile_red);
     for (float z = -0.8F; z <= 0.8F; z += 0.3F) {
-      builder.add_box(QVector3D(0.0F, 1.18F, z),
-                      QVector3D(0.95F, 0.02F, 0.06F), c.tile_dark);
+      builder.add_box(QVector3D(0.0F, 1.18F, z), QVector3D(0.95F, 0.02F, 0.06F),
+                      c.tile_dark);
     }
   }
 
-  builder.add_box(QVector3D(0.0F, 0.4F, 0.95F),
-                  QVector3D(0.3F, 0.4F, 0.05F), c.wood_dark);
+  builder.add_box(QVector3D(0.0F, 0.4F, 0.95F), QVector3D(0.3F, 0.4F, 0.05F),
+                  c.wood_dark);
   return std::move(builder).build();
 }
 
 auto home_archetype(BuildingState state) -> const RenderArchetype & {
-  static const RenderArchetype k_normal = build_home_archetype(BuildingState::Normal);
+  static const RenderArchetype k_normal =
+      build_home_archetype(BuildingState::Normal);
   static const RenderArchetype k_damaged =
       build_home_archetype(BuildingState::Damaged);
   static const RenderArchetype k_destroyed =

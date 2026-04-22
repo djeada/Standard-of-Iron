@@ -27,22 +27,6 @@ public:
 
 private:
   TunicConfig m_config;
-
-  void renderTorsoArmor(const DrawContext &ctx, const AttachmentFrame &torso,
-                        const QVector3D &steel_color,
-                        const QVector3D &brass_color, EquipmentBatch &batch);
-
-  void renderPauldrons(const DrawContext &ctx, const BodyFrames &frames,
-                       const QVector3D &steel_color,
-                       const QVector3D &brass_color, EquipmentBatch &batch);
-
-  void renderGorget(const DrawContext &ctx, const AttachmentFrame &torso,
-                    float y_top, const QVector3D &steel_color,
-                    const QVector3D &brass_color, EquipmentBatch &batch);
-
-  void renderBelt(const DrawContext &ctx, const AttachmentFrame &waist,
-                  const QVector3D &steel_color, const QVector3D &brass_color,
-                  EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

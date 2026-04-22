@@ -194,7 +194,8 @@ TEST(CreaturePipelineSubmit, FallsBackToRegistryWhenSpecHasNoInlineEquipment) {
   std::array<UnitVisualSpec, 4> specs{};
   ASSERT_LT(static_cast<std::size_t>(id), specs.size());
   // Leave specs[id].equipment empty — pipeline must consult the
-  // registry by spec_id.
+  // explicitly assigned equipment registry id.
+  specs[id].equipment_registry_id = id;
 
   CreaturePipeline pipeline;
   FrameContext ctx;

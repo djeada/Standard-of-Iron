@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../entity/registry.h"
-#include "creature_render_graph.h"
 #include "creature_pipeline.h"
+#include "creature_render_graph.h"
 #include "creature_render_state.h"
 
 #include <cstddef>

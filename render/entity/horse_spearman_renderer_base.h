@@ -20,7 +20,7 @@ struct HorseSpearmanRendererConfig {
   std::string armor_equipment_id;
   std::string shoulder_equipment_id;
   QVector3D metal_color{0.72F, 0.73F, 0.78F};
-  float mount_scale = 0.75F;
+  float mount_scale = 0.95F;
   bool has_spear = true;
   bool has_shield = false;
   bool has_shoulder = false;

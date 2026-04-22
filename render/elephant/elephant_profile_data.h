@@ -1,8 +1,5 @@
 #pragma once
 
-/// Declarative elephant creature profile data: dimension ranges, color/material
-/// variant constants, and gait timing/stride constants used by the elephant rig.
-
 #include <cstdint>
 
 namespace Render::GL {

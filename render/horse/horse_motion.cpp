@@ -20,7 +20,7 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 
-} // namespace
+}
 
 auto compute_mount_frame(const HorseProfile &profile)
     -> MountedAttachmentFrame {
@@ -131,9 +131,9 @@ auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
   return bit + dir * rein_length;
 }
 
-auto evaluate_horse_motion(const HorseProfile &profile, const AnimationInputs &anim,
-                           const HumanoidAnimationContext &rider_ctx)
-    -> HorseMotionSample {
+auto evaluate_horse_motion(
+    const HorseProfile &profile, const AnimationInputs &anim,
+    const HumanoidAnimationContext &rider_ctx) -> HorseMotionSample {
   HorseMotionSample sample{};
   HorseAnimationController controller(profile, anim, rider_ctx);
   bool const rider_has_motion =
@@ -187,26 +187,24 @@ auto evaluate_horse_motion(const HorseProfile &profile, const AnimationInputs &a
                          : std::sin(anim.time * 0.4F) * 0.005F;
 
   float const pitch_intensity = sample.rider_intensity * 0.7F + 0.1F;
-  sample.body_pitch =
-      sample.is_moving
-          ? std::sin((sample.phase + 0.22F) * 2.0F * k_pi) *
-                (0.004F + gait_lift * 0.004F) * pitch_intensity
-          : std::sin(anim.time * 0.25F) * 0.003F;
+  sample.body_pitch = sample.is_moving
+                          ? std::sin((sample.phase + 0.22F) * 2.0F * k_pi) *
+                                (0.004F + gait_lift * 0.004F) * pitch_intensity
+                          : std::sin(anim.time * 0.25F) * 0.003F;
 
   float const nod_base =
       sample.is_moving
           ? std::sin((sample.phase + 0.18F) * 2.0F * k_pi) *
-                (0.014F + gait_lift * 0.015F +
-                 sample.rider_intensity * 0.010F)
+                (0.014F + gait_lift * 0.015F + sample.rider_intensity * 0.010F)
           : std::sin(anim.time * 1.5F) * 0.008F;
   float const nod_secondary = std::sin(anim.time * 0.8F) * 0.003F;
   sample.head_nod = nod_base + nod_secondary;
   sample.head_lateral = sample.body_sway * (0.40F + gait_swing * 0.10F);
-  sample.spine_flex =
-      sample.is_moving
-          ? std::sin((sample.phase + 0.08F) * 2.0F * k_pi) *
-                (0.002F + gait_lift * 0.0025F) * sample.rider_intensity
-          : 0.0F;
+  sample.spine_flex = sample.is_moving
+                          ? std::sin((sample.phase + 0.08F) * 2.0F * k_pi) *
+                                (0.002F + gait_lift * 0.0025F) *
+                                sample.rider_intensity
+                          : 0.0F;
   return sample;
 }
 

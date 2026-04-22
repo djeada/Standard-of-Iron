@@ -22,7 +22,8 @@ enum class AmbientIdleType : std::uint8_t;
 
 namespace Render::Humanoid {
 
-using HumanoidPreparation = Render::Creature::Pipeline::CreaturePreparationResult;
+using HumanoidPreparation =
+    Render::Creature::Pipeline::CreaturePreparationResult;
 
 struct SoldierLayout {
   float offset_x{0.0F};
@@ -46,9 +47,9 @@ struct SoldierLayoutInputs {
   float animation_time{0.0F};
 };
 
-[[nodiscard]] auto
-build_soldier_layout(const Render::GL::IFormationCalculator &formation_calculator,
-                     const SoldierLayoutInputs &inputs) -> SoldierLayout;
+[[nodiscard]] auto build_soldier_layout(
+    const Render::GL::IFormationCalculator &formation_calculator,
+    const SoldierLayoutInputs &inputs) -> SoldierLayout;
 
 struct HumanoidAmbientIdleState {
   Render::GL::AmbientIdleType idle_type{};
@@ -57,11 +58,9 @@ struct HumanoidAmbientIdleState {
   int secondary_index{-1};
 };
 
-[[nodiscard]] auto
-build_humanoid_ambient_idle_state(const Render::GL::AnimationInputs &anim,
-                                  std::uint32_t unit_seed, int visible_count,
-                                  float animation_time)
-    -> HumanoidAmbientIdleState;
+[[nodiscard]] auto build_humanoid_ambient_idle_state(
+    const Render::GL::AnimationInputs &anim, std::uint32_t unit_seed,
+    int visible_count, float animation_time) -> HumanoidAmbientIdleState;
 
 [[nodiscard]] auto
 is_humanoid_ambient_idle_active(const HumanoidAmbientIdleState &state,
@@ -89,9 +88,8 @@ struct HumanoidLocomotionState {
   bool has_movement_target{false};
 };
 
-[[nodiscard]] auto
-build_humanoid_locomotion_state(const HumanoidLocomotionInputs &inputs)
-    -> HumanoidLocomotionState;
+[[nodiscard]] auto build_humanoid_locomotion_state(
+    const HumanoidLocomotionInputs &inputs) -> HumanoidLocomotionState;
 
 struct HumanoidRunPoseShaping {
   float lean{0.0F};
@@ -111,9 +109,8 @@ struct HumanoidRunPoseShaping {
   float elbow_depth_right{0.0F};
 };
 
-[[nodiscard]] auto
-build_humanoid_run_pose_shaping(const Render::GL::HumanoidAnimationContext &anim)
-    -> HumanoidRunPoseShaping;
+[[nodiscard]] auto build_humanoid_run_pose_shaping(
+    const Render::GL::HumanoidAnimationContext &anim) -> HumanoidRunPoseShaping;
 
 void apply_humanoid_run_pose_shaping(
     Render::GL::HumanoidPose &pose,

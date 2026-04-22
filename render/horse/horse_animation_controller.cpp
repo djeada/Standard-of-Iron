@@ -193,22 +193,21 @@ void HorseAnimationController::update_gait_parameters() {
 
   if (is_moving) {
     if (m_rider_ctx.gait.cycle_time > 0.0001F) {
-      // Rider drives gait — keep horse synchronized so reins/saddle align.
+
       m_phase = m_rider_ctx.gait.cycle_phase;
     } else {
-      m_phase = std::fmod(m_anim.time / m_resolved_gait.cycle_time + phase_offset,
-                          1.0F);
+      m_phase = std::fmod(
+          m_anim.time / m_resolved_gait.cycle_time + phase_offset, 1.0F);
     }
 
-    float const rider_intensity = std::max(
-        m_rider_ctx.locomotion_normalized_speed(),
-        std::clamp(m_speed / 10.0F, 0.0F, 1.0F));
+    float const rider_intensity =
+        std::max(m_rider_ctx.locomotion_normalized_speed(),
+                 std::clamp(m_speed / 10.0F, 0.0F, 1.0F));
     float const base_bob_amp =
         m_profile.dims.idle_bob_amplitude +
         rider_intensity * (m_profile.dims.move_bob_amplitude -
                            m_profile.dims.idle_bob_amplitude);
-    float const bob_amp =
-        base_bob_amp * bob_scale_for_gait(m_target_gait);
+    float const bob_amp = base_bob_amp * bob_scale_for_gait(m_target_gait);
 
     float const primary_bob = std::sin(m_phase * 2.0F * k_pi);
     float const secondary_bob = std::sin(m_phase * 4.0F * k_pi) * 0.25F;
@@ -217,20 +216,19 @@ void HorseAnimationController::update_gait_parameters() {
 
     float bob_pattern = primary_bob;
     if (m_current_gait == GaitType::TROT) {
-      // Diagonal-pair trot: stronger 2x harmonic.
+
       bob_pattern = (primary_bob + secondary_bob * 0.5F);
     } else if (m_current_gait == GaitType::CANTER) {
-      // 3-beat lift pattern.
+
       bob_pattern = primary_bob + std::sin(m_phase * 3.0F * k_pi) * 0.15F;
     } else if (m_current_gait == GaitType::GALLOP) {
-      // Suspension phase amplifies primary bob.
+
       bob_pattern = primary_bob * 1.2F + secondary_bob * 0.3F;
     }
 
     m_bob = bob_pattern * bob_amp * tertiary_variation;
   } else {
-    // Slow horse breathing (~0.5 Hz primary) + low-frequency weight shift +
-    // an irregular ear flick / muzzle twitch derived from per-unit offset.
+
     float const breathing =
         std::sin((m_anim.time + phase_offset * 2.0F) *
                  k_idle_breathing_primary_freq * 2.0F * k_pi) *

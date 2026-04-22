@@ -1,59 +1,177 @@
 #include "carthage_light_helmet.h"
 
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_renderer_base.h"
+#include "../generated_equipment.h"
+#include "../humanoid_attachment_archetype.h"
+
 #include "../../humanoid/style_palette.h"
-#include "../equipment_submit.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-
-#include <algorithm>
-#include <cmath>
-#include <numbers>
-
-// Phrygian / Chalcidian-style Punic light helmet.
-//
-// Visual design (rebuilt after the flat-ring failure):
-//   - Main bowl is a SPHERE — dome shape from all camera angles
-//   - Low-profile narrow brim ring (not a wide flat disc)
-//   - Tall Phrygian cone (1.05 × helm_r high) with wide base and forward lean
-//     — the primary visual identity cue from RTS camera
-//   - Nasal guard, cheek guards, neck guard, hair crest
-//
-// Key proportions:
-//   helm_r = head_r × 1.10
-//   dome sphere centre at +0.50 × head_r → encapsulates head
-//   Phrygian cone height = 1.05 × helm_r, base radius = 0.30 × helm_r
+#include <array>
 
 namespace Render::GL {
 
-using Render::Geom::cone_from_to;
-using Render::Geom::cylinder_between;
-using Render::Geom::sphere_at;
 using Render::GL::Humanoid::saturate_color;
 
 namespace {
-// Dome sphere — radius = kHelmScale × head_r
-// Pushed to 1.55 so the helmet is clearly visible from the RTS camera.
-constexpr float kHelmScale    = 1.55F;
-constexpr float kDomeCenterY  = 0.58F;
-// Narrow brim
-constexpr float kBrimBottomY  = -0.38F;
-constexpr float kBrimTopY     = -0.05F;
-constexpr float kBrimScale    = 1.06F;
-// Phrygian cone — tall and wide (mounted above dome top)
-// kDomeTopY = kDomeCenterY + kHelmScale ≈ 2.13 × head_r (constexpr below)
-constexpr float kConeHeight   = 1.05F;   // mult of helm_r above dome top
-constexpr float kConeFwdLean  = 0.30F;   // forward tilt (× helm_r)
-constexpr float kConeBaseR    = 0.30F;   // cone base radius (× helm_r)
-constexpr float kConeTipR     = 0.10F;   // sphere at cone tip (× helm_r)
-// Dome top Y in head_r units (used for cone base placement)
-constexpr float kDomeTopY     = kDomeCenterY + kHelmScale; // ≈ 2.13
-constexpr float kYOffset      = 0.05F;
-// Bronze colour
-constexpr float kBzR = 1.32F, kBzG = 1.08F, kBzB = 0.62F;
+
+enum CarthageLightPaletteSlot : std::uint8_t {
+  k_metal_slot = 0U,
+  k_metal_dark_slot = 1U,
+  k_leather_slot = 2U,
+  k_crest_slot = 3U,
+};
+
+auto carthage_light_shell_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
+        generated_sphere(QVector3D(0.0F, 0.58F, 0.0F), 1.55F, k_metal_slot,
+                         1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, -0.38F, 0.0F),
+                           QVector3D(0.0F, -0.05F, 0.0F), 1.64F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, -0.20F, 0.0F),
+                           QVector3D(0.0F, -0.02F, 0.0F), 1.16F, k_leather_slot,
+                           1.0F, 2),
+        generated_cone(QVector3D(0.0F, 2.13F, 0.0F),
+                       QVector3D(0.0F, 3.76F, 0.47F), 0.465F, k_metal_slot,
+                       1.0F, 2),
+        generated_sphere(QVector3D(0.0F, 3.76F, 0.47F), 0.155F, k_metal_slot,
+                         1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_shell",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_neck_guard_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.30F, -0.96F),
+                           QVector3D(0.0F, -0.12F, -1.00F), 1.36F,
+                           k_metal_dark_slot, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_neck_guard",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_nasal_guard_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.08F, 0.90F),
+                           QVector3D(0.0F, 0.56F, 0.72F), 0.09F, k_metal_slot,
+                           1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_nasal_guard",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_cheek_guards_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+        generated_cylinder(QVector3D(-1.44F, 0.06F, 0.20F),
+                           QVector3D(-1.48F, -0.18F, 0.28F), 0.19F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(-1.48F, -0.18F, 0.28F),
+                           QVector3D(-1.28F, -0.38F, 0.36F), 0.16F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(1.44F, 0.06F, 0.20F),
+                           QVector3D(1.48F, -0.18F, 0.28F), 0.19F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(1.48F, -0.18F, 0.28F),
+                           QVector3D(1.28F, -0.38F, 0.36F), 0.16F,
+                           k_metal_dark_slot, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_cheek_guards",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_crest_archetype(bool high_detail)
+    -> const RenderArchetype & {
+  static const RenderArchetype low_detail = [] {
+    std::array<GeneratedEquipmentPrimitive, 9> primitives{};
+    QVector3D const crest_front{0.0F, 2.22F, 0.08F};
+    QVector3D const crest_back{0.0F, 2.06F, -0.24F};
+    primitives[0] = generated_cylinder(crest_front, crest_back, 0.044F,
+                                       k_metal_slot, 1.0F, 2);
+
+    for (int i = 0; i < 8; ++i) {
+      float const t = (i == 0) ? 0.0F : static_cast<float>(i) / 7.0F;
+      QVector3D const base = crest_front * (1.0F - t) + crest_back * t +
+                             QVector3D(0.0F, 0.03F, 0.0F);
+      float const lateral = (static_cast<float>(i % 3) - 1.0F) * 0.022F;
+      float const lift = 0.44F - 0.12F * std::abs(t - 0.5F);
+      float const droop = 0.10F + 0.20F * t;
+      QVector3D const tip = base + QVector3D(lateral, lift, -droop);
+      primitives[1 + i] =
+          generated_cylinder(base, tip, 0.048F, k_crest_slot, 0.90F, 0);
+    }
+
+    return build_generated_equipment_archetype("carthage_light_crest_low",
+                                               primitives);
+  }();
+
+  static const RenderArchetype high_detail_archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 15> primitives{};
+    QVector3D const crest_front{0.0F, 2.22F, 0.08F};
+    QVector3D const crest_back{0.0F, 2.06F, -0.24F};
+    primitives[0] = generated_cylinder(crest_front, crest_back, 0.044F,
+                                       k_metal_slot, 1.0F, 2);
+
+    for (int i = 0; i < 14; ++i) {
+      float const t = (i == 0) ? 0.0F : static_cast<float>(i) / 13.0F;
+      QVector3D const base = crest_front * (1.0F - t) + crest_back * t +
+                             QVector3D(0.0F, 0.03F, 0.0F);
+      float const lateral = (static_cast<float>(i % 3) - 1.0F) * 0.022F;
+      float const lift = 0.44F - 0.12F * std::abs(t - 0.5F);
+      float const droop = 0.10F + 0.20F * t;
+      QVector3D const tip = base + QVector3D(lateral, lift, -droop);
+      primitives[1 + i] =
+          generated_cylinder(base, tip, 0.048F, k_crest_slot, 0.90F, 0);
+    }
+
+    return build_generated_equipment_archetype("carthage_light_crest_high",
+                                               primitives);
+  }();
+
+  return high_detail ? high_detail_archetype : low_detail;
+}
+
+auto carthage_light_rivets_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
+        generated_sphere(QVector3D(-0.50F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(-0.25F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.0F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.25F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.50F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_rivets",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_palette(const HumanoidPalette &palette)
+    -> std::array<QVector3D, 4> {
+  QVector3D const metal =
+      saturate_color(palette.metal * QVector3D(1.32F, 1.08F, 0.62F));
+  QVector3D const metal_dark = metal * 0.78F;
+  QVector3D const leather =
+      saturate_color(palette.leather_dark * QVector3D(0.96F, 0.88F, 0.78F));
+  return {metal, metal_dark, leather, QVector3D(0.78F, 0.08F, 0.08F)};
+}
+
 } // namespace
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
@@ -70,157 +188,39 @@ void CarthageLightHelmetRenderer::submit(
     const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
   (void)anim;
 
-  const AttachmentFrame &head = frames.head;
-  if (head.radius <= 0.0F) {
+  if (frames.head.radius <= 0.0F) {
     return;
   }
 
-  auto head_point = [&](const QVector3D &n) -> QVector3D {
-    return HumanoidRendererBase::frame_local_position(head, n)
-           + head.up * kYOffset;
-  };
+  auto const equipment_palette = carthage_light_palette(palette);
+  QVector3D const head_offset{0.0F, 0.05F, 0.0F};
 
-  QVector3D const bronze = saturate_color(
-      palette.metal * QVector3D(kBzR, kBzG, kBzB));
-  QVector3D const bronze_dark  = bronze * 0.78F;
-  QVector3D const bronze_light = saturate_color(bronze * 1.08F);
-  QVector3D const leather_col  = saturate_color(
-      palette.leather_dark * QVector3D(0.96F, 0.88F, 0.78F));
+  append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                       carthage_light_shell_archetype(),
+                                       equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                       carthage_light_neck_guard_archetype(),
+                                       equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                       carthage_light_cheek_guards_archetype(),
+                                       equipment_palette, head_offset);
 
-  const float R       = head.radius;
-  const float helm_r  = R * kHelmScale;
-
-  // ── Main dome — SPHERE ────────────────────────────────────────────────
-  QVector3D const dome_c = head_point({0.0F, kDomeCenterY, 0.0F});
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, dome_c, helm_r),
-       bronze, nullptr, 1.0F, 2});
-
-  // ── Narrow brim ring ─────────────────────────────────────────────────
-  QVector3D const brim_bot = head_point({0.0F, kBrimBottomY, 0.0F});
-  QVector3D const brim_top = head_point({0.0F, kBrimTopY,    0.0F});
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, brim_bot, brim_top, helm_r * kBrimScale),
-       bronze_dark, nullptr, 1.0F, 2});
-
-  // ── Leather liner band ────────────────────────────────────────────────
-  QVector3D const liner_bot = head_point({0.0F, -0.20F, 0.0F});
-  QVector3D const liner_top = head_point({0.0F, -0.02F, 0.0F});
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, liner_bot, liner_top, helm_r * 0.75F),
-       leather_col, nullptr, 1.0F, 2});
-
-  // ── Phrygian cone ─────────────────────────────────────────────────────
-  // TALL (1.05 × helm_r above the dome top) and wide base (0.30 × helm_r).
-  // This is the main visual identifier of a Phrygian helmet from above.
-  QVector3D const cone_base = head_point({0.0F, kDomeTopY,   0.0F});
-  QVector3D const cone_tip  = cone_base
-      + head.up      * (helm_r * kConeHeight)
-      + head.forward * (helm_r * kConeFwdLean);
-  batch.meshes.push_back(
-      {get_unit_cone(), nullptr,
-       cone_from_to(ctx.model, cone_base, cone_tip, helm_r * kConeBaseR),
-       bronze_light, nullptr, 1.0F, 2});
-  // Sphere cap at tip
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, cone_tip, helm_r * kConeTipR),
-       bronze_light, nullptr, 1.0F, 2});
-
-  // ── Neck guard ────────────────────────────────────────────────────────
-  QVector3D const neck_top = head_point({0.0F, -0.12F, -1.00F});
-  QVector3D const neck_bot = head_point({0.0F, -0.30F, -0.96F});
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, neck_bot, neck_top, helm_r * 0.88F),
-       bronze_dark * 0.96F, nullptr, 1.0F, 2});
-
-  // ── Nasal guard ───────────────────────────────────────────────────────
   if (config.has_nasal_guard) {
-    QVector3D const n_top = head_point({0.0F,  0.56F, 0.72F});
-    QVector3D const n_bot = head_point({0.0F, -0.08F, 0.90F});
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, n_bot, n_top, R * 0.09F),
-         bronze, nullptr, 1.0F, 2});
+    append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                         carthage_light_nasal_guard_archetype(),
+                                         equipment_palette, head_offset);
   }
-
-  // ── Cheek guards ─────────────────────────────────────────────────────
-  for (float side : {-1.0F, 1.0F}) {
-    QVector3D const g_top = head_point({1.44F * side,  0.06F, 0.20F});
-    QVector3D const g_mid = head_point({1.48F * side, -0.18F, 0.28F});
-    QVector3D const g_bot = head_point({1.28F * side, -0.38F, 0.36F});
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, g_top, g_mid, R * 0.19F),
-         bronze_dark, nullptr, 1.0F, 2});
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, g_mid, g_bot, R * 0.16F),
-         bronze_dark * 0.94F, nullptr, 1.0F, 2});
-  }
-
-  // ── Horsehair crest ───────────────────────────────────────────────────
   if (config.has_crest) {
-    QVector3D const crest_col(0.78F, 0.08F, 0.08F);
-    QVector3D const crest_front = head_point({0.0F, 2.22F,  0.08F});
-    QVector3D const crest_back  = head_point({0.0F, 2.06F, -0.24F});
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, crest_front, crest_back, R * 0.044F),
-         bronze_light, nullptr, 1.0F, 2});
-    const int strands = (config.detail_level >= 2) ? 14 : 8;
-    for (int i = 0; i < strands; ++i) {
-      float const t = (strands > 1)
-          ? static_cast<float>(i) / static_cast<float>(strands - 1)
-          : 0.0F;
-      QVector3D const base = crest_front * (1.0F - t) + crest_back * t
-                             + head.up * (R * 0.03F);
-      float const lat = (static_cast<float>(i % 3) - 1.0F) * R * 0.022F;
-      QVector3D const tip = base
-          + head.up      * (R * (0.44F - 0.12F * std::abs(t - 0.5F)))
-          - head.forward * (R * (0.10F + 0.20F * t))
-          + head.right   * lat;
-      batch.meshes.push_back(
-          {get_unit_cylinder(), nullptr,
-           cylinder_between(ctx.model, base, tip, R * 0.048F),
-           crest_col * (0.90F + 0.10F * static_cast<float>(i % 2)),
-           nullptr, 0.90F, 0});
-    }
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head,
+        carthage_light_crest_archetype(config.detail_level >= 2),
+        equipment_palette, head_offset);
   }
-
-  // ── Rivets ────────────────────────────────────────────────────────────
   if (config.detail_level > 0) {
-    for (float ax : {-0.50F, -0.25F, 0.0F, 0.25F, 0.50F}) {
-      batch.meshes.push_back(
-          {get_unit_sphere(), nullptr,
-           sphere_at(ctx.model, head_point({ax, 0.46F, 0.64F}), R * 0.05F),
-           bronze_light, nullptr, 1.0F, 2});
-    }
+    append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                         carthage_light_rivets_archetype(),
+                                         equipment_palette, head_offset);
   }
 }
-
-// ── Sub-method stubs (kept for ABI / test compatibility) ─────────────────────
-void CarthageLightHelmetRenderer::render_bowl(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
-void CarthageLightHelmetRenderer::render_brim(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
-void CarthageLightHelmetRenderer::render_cheek_guards(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
-void CarthageLightHelmetRenderer::render_nasal_guard(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
-void CarthageLightHelmetRenderer::render_crest(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
-void CarthageLightHelmetRenderer::render_rivets(
-    const CarthageLightHelmetConfig &, const DrawContext &,
-    const AttachmentFrame &, EquipmentBatch &) {}
 
 } // namespace Render::GL

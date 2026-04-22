@@ -26,7 +26,7 @@ namespace Render::GL {
 
 namespace {
 
-constexpr QVector3D k_default_proportion_scale{0.80F, 0.88F, 0.88F};
+constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 
 }
 

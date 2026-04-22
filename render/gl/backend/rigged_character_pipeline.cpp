@@ -17,8 +17,8 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLVersionFunctionsFactory>
 #include <QTextStream>
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstring>
 
@@ -239,7 +239,8 @@ void RiggedCharacterPipeline::cache_uniforms() {
   m_uniforms.use_texture = m_shader->optional_uniform_handle("u_useTexture");
   m_uniforms.texture = m_shader->optional_uniform_handle("u_texture");
   m_uniforms.material_id = m_shader->optional_uniform_handle("u_materialId");
-  m_uniforms.role_colors = m_shader->optional_uniform_handle("u_role_colors[0]");
+  m_uniforms.role_colors =
+      m_shader->optional_uniform_handle("u_role_colors[0]");
   m_uniforms.role_color_count =
       m_shader->optional_uniform_handle("u_role_color_count");
 }

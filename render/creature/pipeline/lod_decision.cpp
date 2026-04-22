@@ -2,9 +2,8 @@
 
 namespace Render::Creature::Pipeline {
 
-auto select_distance_lod(float distance,
-                         const LodDistanceThresholds &t) noexcept
-    -> CreatureLOD {
+auto select_distance_lod(
+    float distance, const LodDistanceThresholds &t) noexcept -> CreatureLOD {
   if (distance < t.full) {
     return CreatureLOD::Full;
   }

@@ -89,9 +89,8 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
   sample.gait = g;
 
   sample.is_moving = anim.is_moving;
-  sample.is_fighting =
-      anim.is_attacking ||
-      (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
+  sample.is_fighting = anim.is_attacking ||
+                       (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
 
   if (sample.is_moving) {
     float const cycle_progress = std::fmod(anim.time / g.cycle_time, 1.0F);
@@ -123,12 +122,10 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
   sample.neck_base =
       sample.chest_center +
       QVector3D(0.0F, d.body_height * 0.25F, d.body_length * 0.15F);
-  sample.neck_top =
-      sample.neck_base +
-      QVector3D(0.0F, d.neck_length * 0.60F, d.neck_length * 0.50F);
-  sample.head_center =
-      sample.neck_top +
-      QVector3D(0.0F, d.head_height * 0.20F, d.head_length * 0.35F);
+  sample.neck_top = sample.neck_base + QVector3D(0.0F, d.neck_length * 0.60F,
+                                                 d.neck_length * 0.50F);
+  sample.head_center = sample.neck_top + QVector3D(0.0F, d.head_height * 0.20F,
+                                                   d.head_length * 0.35F);
 
   sample.howdah = compute_howdah_frame(profile);
   apply_howdah_vertical_offset(sample.howdah, sample.bob);

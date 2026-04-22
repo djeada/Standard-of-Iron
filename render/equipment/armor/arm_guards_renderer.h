@@ -4,6 +4,8 @@
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 
+#include <span>
+
 namespace Render::GL {
 
 struct ArmGuardsConfig {
@@ -36,7 +38,9 @@ private:
 
   static void renderArmGuard(const ArmGuardsConfig &config,
                              const DrawContext &ctx, const QVector3D &elbow,
-                             const QVector3D &wrist, EquipmentBatch &batch);
+                             const QVector3D &wrist,
+                             std::span<const QVector3D> palette,
+                             EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

@@ -53,8 +53,8 @@ auto tower_archetype() -> const RenderArchetype & {
     RenderArchetypeBuilder builder("carthage_defense_tower");
     builder.set_max_distance(std::numeric_limits<float>::infinity());
 
-    builder.add_box(QVector3D(0.0F, 0.15F, 0.0F),
-                    QVector3D(1.0F, 0.15F, 1.0F), c.stone_base);
+    builder.add_box(QVector3D(0.0F, 0.15F, 0.0F), QVector3D(1.0F, 0.15F, 1.0F),
+                    c.stone_base);
     for (float x = -0.9F; x <= 0.9F; x += 0.45F) {
       builder.add_box(QVector3D(x, 0.35F, -0.85F),
                       QVector3D(0.12F, 0.08F, 0.08F), c.brick_dark);
@@ -67,11 +67,11 @@ auto tower_archetype() -> const RenderArchetype & {
       builder.add_box(QVector3D(0.85F, 0.35F, z),
                       QVector3D(0.08F, 0.08F, 0.12F), c.brick_dark);
     }
-    builder.add_box(QVector3D(0.0F, 0.5F, 0.0F),
-                    QVector3D(0.9F, 0.1F, 0.9F), c.stone_light);
+    builder.add_box(QVector3D(0.0F, 0.5F, 0.0F), QVector3D(0.9F, 0.1F, 0.9F),
+                    c.stone_light);
 
-    builder.add_box(QVector3D(0.0F, 1.2F, 0.0F),
-                    QVector3D(0.75F, 0.7F, 0.75F), c.stone_light);
+    builder.add_box(QVector3D(0.0F, 1.2F, 0.0F), QVector3D(0.75F, 0.7F, 0.75F),
+                    c.stone_light);
     for (int i = 0; i < 4; ++i) {
       float const angle = static_cast<float>(i) * 1.57F;
       float const ox = sinf(angle) * 0.65F;
@@ -84,8 +84,8 @@ auto tower_archetype() -> const RenderArchetype & {
       float const angle = static_cast<float>(i) * 1.57F + 0.785F;
       float const ox = sinf(angle) * 0.62F;
       float const oz = cosf(angle) * 0.62F;
-      builder.add_box(QVector3D(ox, 0.9F, oz),
-                      QVector3D(0.12F, 0.4F, 0.12F), c.brick);
+      builder.add_box(QVector3D(ox, 0.9F, oz), QVector3D(0.12F, 0.4F, 0.12F),
+                      c.brick);
     }
     builder.add_box(QVector3D(0.0F, 1.65F, 0.0F),
                     QVector3D(0.82F, 0.08F, 0.82F), c.brick_dark);
@@ -96,11 +96,11 @@ auto tower_archetype() -> const RenderArchetype & {
       float const angle = static_cast<float>(i) * 0.785F;
       float const ox = sinf(angle) * 0.82F;
       float const oz = cosf(angle) * 0.82F;
-      builder.add_box(QVector3D(ox, 2.12F, oz),
-                      QVector3D(0.12F, 0.17F, 0.12F), c.brick);
+      builder.add_box(QVector3D(ox, 2.12F, oz), QVector3D(0.12F, 0.17F, 0.12F),
+                      c.brick);
     }
-    builder.add_box(QVector3D(0.0F, 2.32F, 0.0F),
-                    QVector3D(1.0F, 0.03F, 1.0F), c.tile_red);
+    builder.add_box(QVector3D(0.0F, 2.32F, 0.0F), QVector3D(1.0F, 0.03F, 1.0F),
+                    c.tile_red);
 
     builder.add_cylinder(QVector3D(0.0F, 2.05F, 0.0F),
                          QVector3D(0.0F, 2.9F, 0.0F), 0.08F, c.wood_dark);
@@ -112,14 +112,15 @@ auto tower_archetype() -> const RenderArchetype & {
                            QVector3D(0.0F, ring_y + 0.03F, 0.0F), 0.12F,
                            c.iron);
     }
-    builder.add_box(QVector3D(0.0F, 2.95F, 0.0F),
-                    QVector3D(0.1F, 0.08F, 0.1F), c.iron);
+    builder.add_box(QVector3D(0.0F, 2.95F, 0.0F), QVector3D(0.1F, 0.08F, 0.1F),
+                    c.iron);
     return std::move(builder).build();
   }();
   return k_tower;
 }
 
-auto tower_palette_slots(const TowerPalette &palette) -> std::array<QVector3D, 1> {
+auto tower_palette_slots(const TowerPalette &palette)
+    -> std::array<QVector3D, 1> {
   return {palette.team};
 }
 

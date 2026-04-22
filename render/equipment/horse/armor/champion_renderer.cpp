@@ -1,6 +1,6 @@
 #include "champion_renderer.h"
-#include "../horse_attachment_archetype.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
 #include "../../../gl/primitives.h"
 #include "../../../render_archetype.h"
@@ -39,8 +39,8 @@ void ChampionRenderer::submit(const DrawContext &ctx,
                               const HorseAnimationContext &,
                               EquipmentBatch &batch) {
   QVector3D const armor_color = variant.tack_color * 0.82F;
-  std::array<QVector3D, 3> const palette{
-      armor_color, armor_color * 1.05F, armor_color * 0.95F};
+  std::array<QVector3D, 3> const palette{armor_color, armor_color * 1.05F,
+                                         armor_color * 0.95F};
   append_horse_attachment_archetype(batch, ctx, frames.chest,
                                     champion_barding_archetype(), palette);
 }

@@ -26,8 +26,8 @@ public:
               const HumanoidAnimationContext &anim,
               EquipmentBatch &batch) override;
 
-  [[nodiscard]] auto base_config() const
-      -> const CarthageShoulderCoverConfig & {
+  [[nodiscard]] auto
+  base_config() const -> const CarthageShoulderCoverConfig & {
     return m_config;
   }
 

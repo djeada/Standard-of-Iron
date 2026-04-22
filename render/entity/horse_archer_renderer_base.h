@@ -25,7 +25,7 @@ struct HorseArcherRendererConfig {
   QVector3D cloak_trim_color{0.75F, 0.66F, 0.42F};
   int cloak_back_material_id = 5;
   int cloak_shoulder_material_id = 6;
-  float mount_scale = 0.75F;
+  float mount_scale = 0.95F;
   bool has_bow = true;
   bool has_quiver = true;
   bool has_cloak = false;

@@ -46,22 +46,25 @@ protected:
       const DrawContext &ctx, const HumanoidVariant &variant,
       const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
       std::uint32_t seed, Render::Creature::CreatureLOD lod,
-      Render::Creature::Pipeline::CreaturePreparationResult &out) const
-      override;
+      Render::Creature::Pipeline::CreaturePreparationResult &out)
+      const override;
 
 private:
   mutable std::mutex m_profile_cache_mutex;
   mutable std::unordered_map<uint32_t, HorseProfile> m_profile_cache;
   static constexpr size_t MAX_PROFILE_CACHE_SIZE = 100;
 
-  void resolve_mount_render_state(
-      const DrawContext &ctx, std::uint32_t seed, const HumanoidVariant &variant,
-      const HumanoidAnimationContext &anim_ctx, bool use_cached_profile,
-      HorseProfile &profile, HorseDimensions &dims, MountedAttachmentFrame &mount,
-      HorseMotionSample &motion, ReinState &reins) const;
+  void resolve_mount_render_state(const DrawContext &ctx, std::uint32_t seed,
+                                  const HumanoidVariant &variant,
+                                  const HumanoidAnimationContext &anim_ctx,
+                                  bool use_cached_profile,
+                                  HorseProfile &profile, HorseDimensions &dims,
+                                  MountedAttachmentFrame &mount,
+                                  HorseMotionSample &motion,
+                                  ReinState &reins) const;
 
-  [[nodiscard]] auto resolve_mount_lod(const DrawContext &ctx) const
-      -> HorseLOD;
+  [[nodiscard]] auto
+  resolve_mount_lod(const DrawContext &ctx) const -> HorseLOD;
 };
 
 } // namespace Render::GL

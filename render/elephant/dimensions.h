@@ -75,7 +75,6 @@ auto get_or_create_cached_elephant_profile(
     const QVector3D &metal_base) -> ElephantProfile;
 void advance_elephant_profile_cache_frame();
 
-
 inline void scale_elephant_dimensions(ElephantDimensions &dims, float scale) {
   dims.body_length *= scale;
   dims.body_width *= scale;

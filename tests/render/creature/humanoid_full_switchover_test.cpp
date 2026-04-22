@@ -282,8 +282,7 @@ TEST(HumanoidFullSwitchover, IdlePoseUsesRelaxedHumanStance) {
   EXPECT_GE(pose.foot_r.y(), HP::GROUND_Y);
 }
 
-TEST(HumanoidFullSwitchover,
-     MovingPoseAddsGroundedSupportAndCounterSwing) {
+TEST(HumanoidFullSwitchover, MovingPoseAddsGroundedSupportAndCounterSwing) {
   using HP = Render::GL::HumanProportions;
 
   HumanoidPose pose{};
@@ -294,8 +293,8 @@ TEST(HumanoidFullSwitchover,
   var.arm_swing_amp = 1.0F;
   var.walk_speed_mult = 1.0F;
 
-  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.2F, true,
-                                                            var, pose);
+  Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.2F, true, var,
+                                                            pose);
 
   float const ground = HP::GROUND_Y + pose.foot_y_offset;
   float const left_foot_rel = pose.foot_l.z() - pose.pelvis_pos.z();

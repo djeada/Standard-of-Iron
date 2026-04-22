@@ -24,7 +24,8 @@ namespace Render::Elephant {
 namespace {
 
 void ground_elephant_model(QMatrix4x4 &model) {
-  QVector3D const origin = Render::Creature::Pipeline::model_world_origin(model);
+  QVector3D const origin =
+      Render::Creature::Pipeline::model_world_origin(model);
   float const grounded_y =
       Render::Creature::Pipeline::sample_terrain_height_or_fallback(
           origin.x(), origin.z(), origin.y());
@@ -42,8 +43,7 @@ auto make_elephant_prepared_row(
     Render::Creature::Pipeline::RenderPassIntent pass) noexcept
     -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
   return Render::Creature::Pipeline::make_prepared_elephant_row(
-      owner.visual_spec(), pose, variant, world_from_unit, seed, lod,
-      /*entity_id*/ 0, pass);
+      owner.visual_spec(), pose, variant, world_from_unit, seed, lod, 0, pass);
 }
 
 void submit_prepared_elephant_body(
@@ -253,8 +253,7 @@ namespace Render::Elephant {
 
 void prepare_elephant_full(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,
@@ -331,8 +330,7 @@ void prepare_elephant_full(
 
 void prepare_elephant_simplified(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,
@@ -417,8 +415,7 @@ void prepare_elephant_minimal(
 
 void prepare_elephant_render(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,

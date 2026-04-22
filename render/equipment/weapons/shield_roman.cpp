@@ -1,19 +1,93 @@
 #include "shield_roman.h"
+
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../equipment_submit.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
-#include <algorithm>
-#include <cmath>
-#include <numbers>
+#include "../../render_archetype.h"
+
+#include <array>
 
 namespace Render::GL {
 
 using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
+
+namespace {
+
+enum RomanShieldPaletteSlot : std::uint8_t {
+  k_shield_slot = 0U,
+  k_trim_slot = 1U,
+  k_metal_slot = 2U,
+  k_grip_slot = 3U,
+};
+
+constexpr float k_shield_yaw_degrees = -70.0F;
+constexpr float k_shield_width = 0.38F;
+constexpr float k_shield_height = 0.90F;
+
+auto roman_shield_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    RenderArchetypeBuilder builder{"roman_shield"};
+
+    QVector3D const shield_center_local{-k_shield_width * 0.40F, 0.06F, 0.05F};
+
+    QMatrix4x4 shield_body;
+    shield_body.translate(shield_center_local);
+    shield_body.rotate(90.0F, 0.0F, 1.0F, 0.0F);
+    shield_body.scale(k_shield_width * 0.005F, k_shield_height * 0.5F, 0.24F);
+    builder.add_palette_mesh(get_unit_cube(), shield_body, k_shield_slot,
+                             nullptr, 1.0F, 4);
+
+    float const rim_thickness = 0.020F;
+    QVector3D const top_left =
+        shield_center_local +
+        QVector3D(-k_shield_width * 0.5F, k_shield_height * 0.5F, 0.0F);
+    QVector3D const top_right =
+        shield_center_local +
+        QVector3D(k_shield_width * 0.5F, k_shield_height * 0.5F, 0.0F);
+    QVector3D const bot_left =
+        shield_center_local +
+        QVector3D(-k_shield_width * 0.5F, -k_shield_height * 0.5F, 0.0F);
+    QVector3D const bot_right =
+        shield_center_local +
+        QVector3D(k_shield_width * 0.5F, -k_shield_height * 0.5F, 0.0F);
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(top_left, top_right, rim_thickness), k_trim_slot,
+        nullptr, 1.0F, 4);
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(bot_left, bot_right, rim_thickness), k_trim_slot,
+        nullptr, 1.0F, 4);
+
+    builder.add_palette_mesh(
+        get_unit_sphere(),
+        sphere_at(shield_center_local + QVector3D(0.0F, 0.0F, 0.05F), 0.07F),
+        k_metal_slot, nullptr, 1.0F, 4);
+
+    builder.add_palette_mesh(
+        get_unit_cylinder(),
+        cylinder_between(shield_center_local + QVector3D(-0.06F, 0.0F, -0.03F),
+                         shield_center_local + QVector3D(0.06F, 0.0F, -0.03F),
+                         0.012F),
+        k_grip_slot, nullptr, 1.0F, 0);
+
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+auto roman_shield_transform(const QMatrix4x4 &parent,
+                            const QVector3D &origin) -> QMatrix4x4 {
+  QMatrix4x4 local;
+  local.translate(origin);
+  local.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  return parent * local;
+}
+
+} // namespace
 
 RomanShieldRenderer::RomanShieldRenderer()
     : ShieldRenderer([]() {
@@ -35,73 +109,18 @@ void RomanShieldRenderer::render(const DrawContext &ctx,
   submit({}, ctx, frames, palette, anim, batch);
 }
 
-void RomanShieldRenderer::submit(const RomanShieldConfig & /*config*/,
+void RomanShieldRenderer::submit(const RomanShieldConfig &,
                                  const DrawContext &ctx,
                                  const BodyFrames &frames,
                                  const HumanoidPalette &palette,
                                  const HumanoidAnimationContext &,
                                  EquipmentBatch &batch) {
-
-  constexpr float k_shield_yaw_degrees = -70.0F;
-
-  QMatrix4x4 rot;
-  rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-
-  const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
-  const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
-  const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
-
-  float const shield_width = 0.38F;
-  float const shield_height = 0.90F;
-
-  QVector3D shield_center = frames.hand_l.origin +
-                            axis_x * (-shield_width * 0.40F) + axis_y * 0.06F +
-                            n * 0.05F;
-
-  QVector3D const shield_color{0.68F, 0.14F, 0.12F};
-  QVector3D const trim_color{0.88F, 0.75F, 0.42F};
-  QVector3D const metal_color{0.82F, 0.84F, 0.88F};
-
-  QMatrix4x4 shield_body = ctx.model;
-  shield_body.translate(shield_center);
-  shield_body.rotate(90.0F, 0.0F, 1.0F, 0.0F);
-  shield_body.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-  shield_body.scale(shield_width * 0.005F, shield_height * 0.5F, 0.24F);
-
-  batch.meshes.push_back(
-      {get_unit_cube(), nullptr, shield_body, shield_color, nullptr, 1.0F, 4});
-
-  float const rim_thickness = 0.020F;
-
-  QVector3D top_left = shield_center + axis_y * (shield_height * 0.5F) -
-                       axis_x * (shield_width * 0.5F);
-  QVector3D top_right = shield_center + axis_y * (shield_height * 0.5F) +
-                        axis_x * (shield_width * 0.5F);
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, top_left, top_right, rim_thickness),
-       trim_color, nullptr, 1.0F, 4});
-
-  QVector3D bot_left = shield_center - axis_y * (shield_height * 0.5F) -
-                       axis_x * (shield_width * 0.5F);
-  QVector3D bot_right = shield_center - axis_y * (shield_height * 0.5F) +
-                        axis_x * (shield_width * 0.5F);
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, bot_left, bot_right, rim_thickness),
-       trim_color, nullptr, 1.0F, 4});
-
-  float const boss_radius = 0.07F;
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, shield_center + n * 0.05F, boss_radius),
-       metal_color, nullptr, 1.0F, 4});
-
-  QVector3D const grip_a = shield_center - axis_x * 0.06F - n * 0.03F;
-  QVector3D const grip_b = shield_center + axis_x * 0.06F - n * 0.03F;
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, grip_a, grip_b, 0.012F),
-                          palette.leather, nullptr, 1.0F, 0});
+  std::array<QVector3D, 4> const palette_slots{
+      QVector3D(0.68F, 0.14F, 0.12F), QVector3D(0.88F, 0.75F, 0.42F),
+      QVector3D(0.82F, 0.84F, 0.88F), palette.leather};
+  append_equipment_archetype(
+      batch, roman_shield_archetype(),
+      roman_shield_transform(ctx.model, frames.hand_l.origin), palette_slots);
 }
 
 } // namespace Render::GL

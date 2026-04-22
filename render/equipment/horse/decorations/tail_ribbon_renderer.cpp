@@ -1,9 +1,10 @@
 #include "tail_ribbon_renderer.h"
 #include "../../equipment_submit.h"
+#include "../../oriented_archetype_utils.h"
+#include "../../primitive_archetype_utils.h"
 
-#include "../../../entity/registry.h"
-#include "../../../gl/primitives.h"
 #include <QMatrix4x4>
+#include <array>
 #include <cmath>
 
 namespace Render::GL {
@@ -25,17 +26,24 @@ void TailRibbonRenderer::submit(const DrawContext &ctx,
   float const wave = std::sin(anim.time * 3.0F + anim.phase * 6.28F) * 0.05F;
   QVector3D const ribbon_mid =
       (ribbon_start + ribbon_end) * 0.5F + tail.right * wave;
+  std::array<QVector3D, 1> const palette{ribbon_color};
 
-  batch.cylinders.push_back(
-      {ribbon_start, ribbon_mid, 0.015F, ribbon_color, 0.90F});
-  batch.cylinders.push_back(
-      {ribbon_mid, ribbon_end, 0.015F, ribbon_color, 0.90F});
+  append_equipment_archetype(
+      batch, single_cylinder_archetype(0.015F, 4, "horse_tail_ribbon"),
+      oriented_segment_transform(ctx.model, ribbon_start,
+                                 ribbon_mid - ribbon_start, tail.right),
+      palette, nullptr, 0.90F);
+  append_equipment_archetype(
+      batch, single_cylinder_archetype(0.015F, 4, "horse_tail_ribbon"),
+      oriented_segment_transform(ctx.model, ribbon_mid, ribbon_end - ribbon_mid,
+                                 tail.right),
+      palette, nullptr, 0.90F);
 
   QMatrix4x4 bow = ctx.model;
   bow.translate(ribbon_start);
   bow.scale(0.08F, 0.08F, 0.06F);
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr, bow, ribbon_color, nullptr, 1.0F, 4});
+  append_equipment_archetype(
+      batch, single_sphere_archetype(4, "horse_tail_bow"), bow, palette);
 }
 
 } // namespace Render::GL

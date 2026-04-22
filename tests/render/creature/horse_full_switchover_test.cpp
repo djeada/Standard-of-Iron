@@ -1,7 +1,7 @@
 // Stage 15.5e — horse Full + Reduced LOD switchover regression.
 //
 // Verifies that the static k_horse_full_parts (anatomically enriched
-// to 43 prims) and k_horse_reduced_parts (17 prims) PartGraphs each
+// to 43 prims) and k_horse_reduced_parts (29 prims) PartGraphs each
 // bake into a single RiggedMesh, and that the bone palette resolved
 // from a per-entity pose is well-formed. Also exercises the cache
 // key: two units with different `variation_scale` values must hit
@@ -56,7 +56,7 @@ TEST(HorseFullSwitchover, FullLodBakesMoreGeometryThanReduced) {
   ASSERT_GT(spec.lod_full.primitives.size(), 0U);
   ASSERT_GT(spec.lod_reduced.primitives.size(), 0U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 43U);
-  EXPECT_EQ(spec.lod_reduced.primitives.size(), 17U);
+  EXPECT_EQ(spec.lod_reduced.primitives.size(), 29U);
 
   Render::GL::RiggedMeshCache cache;
   const auto *full_entry =
@@ -226,12 +226,11 @@ TEST(HorseReducedSwitchover, SpecTopologyHasExpectedBones) {
 TEST(HorseFullSwitchover, FullPartGraphSpansAreContiguous) {
   auto const &spec = Render::Horse::horse_creature_spec();
   // Sanity check: correct primitive count and that primitive 0 is the
-  // anatomically correct ribcage ellipsoid (OrientedSphere), not a
-  // flat box blob. The anatomy refactor replaced the flat torso-core
-  // Box with a ribcage OrientedSphere for a rounded barrel from all views.
+  // faceted torso mesh. The horse body must stay long and readable from
+  // the game camera instead of baking into a round blob or rectangular crate.
   ASSERT_EQ(spec.lod_full.primitives.size(), 43U);
   EXPECT_EQ(spec.lod_full.primitives[0].shape,
-            Render::Creature::PrimitiveShape::OrientedSphere);
+            Render::Creature::PrimitiveShape::Mesh);
   EXPECT_EQ(spec.lod_full.primitives.back().shape,
             Render::Creature::PrimitiveShape::Mesh);
 }

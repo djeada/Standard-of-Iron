@@ -4,8 +4,8 @@
 #include "../creature/pipeline/lod_decision.h"
 #include "../gl/camera.h"
 #include "../graphics_settings.h"
-#include "../horse/lod.h"
 #include "../horse/horse_motion.h"
+#include "../horse/lod.h"
 #include "../horse/prepare.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
@@ -112,8 +112,8 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
   reins = compute_rein_state(horse_seed, anim_ctx);
 }
 
-auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext &ctx) const
-    -> HorseLOD {
+auto MountedHumanoidRendererBase::resolve_mount_lod(
+    const DrawContext &ctx) const -> HorseLOD {
   namespace RCP = Render::Creature::Pipeline;
 
   const auto lod_config = RCP::horse_lod_config_from_settings();
@@ -126,7 +126,8 @@ auto MountedHumanoidRendererBase::resolve_mount_lod(const DrawContext &ctx) cons
         static_cast<Render::Creature::CreatureLOD>(ctx.forced_horse_lod);
   }
   if (ctx.camera != nullptr) {
-    const QVector3D horse_world_pos = ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+    const QVector3D horse_world_pos =
+        ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
     inputs.camera_distance =
         (horse_world_pos - ctx.camera->get_position()).length();
   }

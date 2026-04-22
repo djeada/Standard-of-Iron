@@ -281,26 +281,22 @@ struct CreatureFrame {
     horse_anim.emplace_back();
   }
 
-  /// Generic push that dispatches to the species-specific push method
-  /// based on \p kind.  Accepts all species-specific data as defaulted
-  /// parameters so callers only fill in what their species needs.
-  void push_creature(
-      CreatureKind kind, EntityId id, const QMatrix4x4 &world, SpecId sid,
-      std::uint32_t s, CreatureLOD l,
-      const Render::GL::HumanoidPose &hpose = {},
-      const Render::GL::HumanoidVariant &hvariant = {},
-      const Render::GL::HumanoidAnimationContext &hanim = {},
-      const Render::Horse::HorseSpecPose &hrpose = {},
-      const Render::GL::HorseVariant &hrvariant = {},
-      const Render::Elephant::ElephantSpecPose &epose = {},
-      const Render::GL::ElephantVariant &evariant = {},
-      PaletteId pid = kDefaultPalette,
-      CreatureAssetId asset_id = kInvalidCreatureAsset,
-      std::uint16_t bucket = 0) {
+  void push_creature(CreatureKind kind, EntityId id, const QMatrix4x4 &world,
+                     SpecId sid, std::uint32_t s, CreatureLOD l,
+                     const Render::GL::HumanoidPose &hpose = {},
+                     const Render::GL::HumanoidVariant &hvariant = {},
+                     const Render::GL::HumanoidAnimationContext &hanim = {},
+                     const Render::Horse::HorseSpecPose &hrpose = {},
+                     const Render::GL::HorseVariant &hrvariant = {},
+                     const Render::Elephant::ElephantSpecPose &epose = {},
+                     const Render::GL::ElephantVariant &evariant = {},
+                     PaletteId pid = kDefaultPalette,
+                     CreatureAssetId asset_id = kInvalidCreatureAsset,
+                     std::uint16_t bucket = 0) {
     switch (kind) {
     case CreatureKind::Humanoid:
-      push_humanoid(id, world, sid, s, l, hpose, hvariant, hanim, pid,
-                    asset_id, bucket);
+      push_humanoid(id, world, sid, s, l, hpose, hvariant, hanim, pid, asset_id,
+                    bucket);
       break;
     case CreatureKind::Horse:
       push_horse(id, world, sid, s, l, hrpose, hrvariant, pid, asset_id,
@@ -325,12 +321,12 @@ frame_columns_consistent(const CreatureFrame &f) noexcept -> bool {
          f.variant_bucket.size() == n && f.lod.size() == n &&
          f.pose.size() == n && f.bone_palette.size() == n &&
          f.role_color_count.size() == n && f.role_colors.size() == n &&
-         f.base_color.size() == n &&
-         f.humanoid_pose.size() == n && f.humanoid_variant.size() == n &&
-         f.humanoid_anim.size() == n && f.horse_pose.size() == n &&
-         f.horse_variant.size() == n && f.elephant_pose.size() == n &&
-         f.elephant_variant.size() == n && f.legacy_ctx.size() == n &&
-         f.horse_frames.size() == n && f.horse_anim.size() == n;
+         f.base_color.size() == n && f.humanoid_pose.size() == n &&
+         f.humanoid_variant.size() == n && f.humanoid_anim.size() == n &&
+         f.horse_pose.size() == n && f.horse_variant.size() == n &&
+         f.elephant_pose.size() == n && f.elephant_variant.size() == n &&
+         f.legacy_ctx.size() == n && f.horse_frames.size() == n &&
+         f.horse_anim.size() == n;
 }
 
 } // namespace Render::Creature::Pipeline

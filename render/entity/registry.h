@@ -26,8 +26,6 @@ struct AnimationInputs;
 
 namespace Render::GL {
 
-// Per-species LOD enums are aliases of the unified Render::Creature::CreatureLOD
-// so the render pipeline shares a single LOD vocabulary.
 using HumanoidLOD = ::Render::Creature::CreatureLOD;
 using HorseLOD = ::Render::Creature::CreatureLOD;
 

@@ -1,7 +1,6 @@
 // Phase D — stateless weapon renderer guarantees.
 //
-// Verifies that the four refactored weapon renderers (SwordRenderer,
-// ShieldRenderer, SpearRenderer, BowRenderer) behave as pure mesh
+// Verifies that the refactored weapon renderers behave as pure draw-batch
 // providers: a single shared instance, invoked through the static
 // `submit(config, ...)` API, must produce different draw batches for
 // different configs in the same frame, must not be perturbed by
@@ -10,11 +9,16 @@
 // fed the same base config.
 
 #include "render/equipment/weapons/bow_renderer.h"
+#include "render/equipment/weapons/quiver_renderer.h"
+#include "render/equipment/weapons/roman_scutum.h"
+#include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/shield_renderer.h"
+#include "render/equipment/weapons/shield_roman.h"
 #include "render/equipment/weapons/spear_renderer.h"
 #include "render/equipment/weapons/sword_renderer.h"
 
 #include "render/entity/registry.h"
+#include "render/entity/renderer_constants.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/palette.h"
@@ -28,11 +32,19 @@ namespace {
 using Render::GL::BodyFrames;
 using Render::GL::BowRenderConfig;
 using Render::GL::BowRenderer;
+using Render::GL::CarthageShieldConfig;
+using Render::GL::CarthageShieldRenderer;
 using Render::GL::DrawContext;
 using Render::GL::EquipmentBatch;
-using Render::GL::EquipmentMeshPrim;
 using Render::GL::HumanoidAnimationContext;
 using Render::GL::HumanoidPalette;
+using Render::GL::ISubmitter;
+using Render::GL::QuiverRenderConfig;
+using Render::GL::QuiverRenderer;
+using Render::GL::RomanScutumConfig;
+using Render::GL::RomanScutumRenderer;
+using Render::GL::RomanShieldConfig;
+using Render::GL::RomanShieldRenderer;
 using Render::GL::ShieldRenderConfig;
 using Render::GL::ShieldRenderer;
 using Render::GL::SpearRenderConfig;
@@ -42,6 +54,12 @@ using Render::GL::SwordRenderer;
 
 auto make_frames() -> BodyFrames {
   BodyFrames f{};
+  f.waist.origin = {0.00F, 0.72F, 0.00F};
+  f.waist.right = {1.0F, 0.0F, 0.0F};
+  f.waist.up = {0.0F, 1.0F, 0.0F};
+  f.waist.forward = {0.0F, 0.0F, 1.0F};
+  f.waist.radius = 0.28F;
+  f.waist.depth = 0.22F;
   f.hand_r.origin = {0.30F, 1.10F, 0.20F};
   f.hand_r.right = {1.0F, 0.0F, 0.0F};
   f.hand_r.up = {0.0F, 1.0F, 0.0F};
@@ -70,6 +88,43 @@ auto make_ctx() -> DrawContext {
   DrawContext ctx{};
   ctx.model.setToIdentity();
   return ctx;
+}
+
+class CountingSubmitter : public ISubmitter {
+public:
+  void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
+            Render::GL::Texture * = nullptr, float = 1.0F, int = 0) override {
+    ++draw_count;
+  }
+
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float = 1.0F) override {
+    ++draw_count;
+  }
+
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
+  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
+            float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
+  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
+                    float, float, float, float) override {}
+  void healer_aura(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void combat_dust(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+                    float) override {}
+  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
+                      float = 1.0F) override {}
+
+  int draw_count{0};
+};
+
+inline int draw_count_of(const EquipmentBatch &batch) {
+  CountingSubmitter submitter;
+  submit_equipment_batch(batch, submitter);
+  return submitter.draw_count;
 }
 
 // Concatenate every batch primitive into a deterministic byte
@@ -111,6 +166,17 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
     mix_v(c.color);
     mix_f(c.alpha);
   }
+  mix(b.archetypes.size());
+  for (const auto &a : b.archetypes) {
+    mix(reinterpret_cast<std::uintptr_t>(a.archetype));
+    mix_m(a.world);
+    mix(static_cast<std::size_t>(a.palette_count));
+    for (std::size_t i = 0; i < a.palette_count; ++i) {
+      mix_v(a.palette[i]);
+    }
+    mix_f(a.alpha_multiplier);
+    mix(static_cast<std::size_t>(a.lod));
+  }
   return h;
 }
 
@@ -127,8 +193,8 @@ void run_stateless_battery(Renderer &renderer, const Cfg &cfg_a,
   EquipmentBatch b;
   Renderer::submit(cfg_a, ctx, frames, palette, anim, a);
   Renderer::submit(cfg_b, ctx, frames, palette, anim, b);
-  EXPECT_FALSE(a.meshes.empty());
-  EXPECT_FALSE(b.meshes.empty());
+  EXPECT_GT(draw_count_of(a), 0);
+  EXPECT_GT(draw_count_of(b), 0);
   EXPECT_NE(hash_batch(a), hash_batch(b))
       << "two configs should yield distinct draw batches";
 
@@ -161,6 +227,47 @@ TEST(StatelessWeaponRenderers, SwordSubmitIsStateless) {
   run_stateless_battery<SwordRenderer>(renderer, a, b);
 }
 
+TEST(StatelessWeaponRenderers, SwordUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim,
+                        via_submit);
+  SwordRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 1U);
+  EXPECT_EQ(draw_count_of(via_submit), 15);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, SwordTrailUsesArchetypePath) {
+  const auto frames = make_frames();
+  auto anim = make_anim();
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = true;
+  anim.inputs.time = Render::GL::KNIGHT_ATTACK_CYCLE_TIME * 0.40F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  SwordRenderer::submit(SwordRenderConfig{}, ctx, frames, palette, anim,
+                        via_submit);
+  SwordRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 2U);
+  EXPECT_EQ(draw_count_of(via_submit), 16);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
 TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
   ShieldRenderer renderer{};
   ShieldRenderConfig a;
@@ -174,6 +281,33 @@ TEST(StatelessWeaponRenderers, ShieldSubmitIsStateless) {
   run_stateless_battery<ShieldRenderer>(renderer, a, b);
 }
 
+TEST(StatelessWeaponRenderers, ShieldUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch base_submit;
+  EquipmentBatch cross_submit;
+  EquipmentBatch via_render;
+  ShieldRenderConfig cross_config;
+  cross_config.has_cross_decal = true;
+
+  ShieldRenderer::submit(ShieldRenderConfig{}, ctx, frames, palette, anim,
+                         base_submit);
+  ShieldRenderer::submit(cross_config, ctx, frames, palette, anim,
+                         cross_submit);
+  ShieldRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(base_submit.meshes.empty());
+  EXPECT_EQ(base_submit.archetypes.size(), 1U);
+  EXPECT_EQ(draw_count_of(base_submit), 40);
+  EXPECT_EQ(draw_count_of(cross_submit), 42);
+  EXPECT_EQ(hash_batch(base_submit), hash_batch(via_render));
+  EXPECT_NE(hash_batch(base_submit), hash_batch(cross_submit));
+}
+
 TEST(StatelessWeaponRenderers, SpearSubmitIsStateless) {
   SpearRenderer renderer{};
   SpearRenderConfig a;
@@ -184,6 +318,25 @@ TEST(StatelessWeaponRenderers, SpearSubmitIsStateless) {
   b.shaft_radius = 0.024F;
   b.spearhead_color = {0.9F, 0.85F, 0.7F};
   run_stateless_battery<SpearRenderer>(renderer, a, b);
+}
+
+TEST(StatelessWeaponRenderers, SpearUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  SpearRenderer::submit(SpearRenderConfig{}, ctx, frames, palette, anim,
+                        via_submit);
+  SpearRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 4U);
+  EXPECT_EQ(draw_count_of(via_submit), 4);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
 TEST(StatelessWeaponRenderers, BowSubmitIsStateless) {
@@ -199,6 +352,155 @@ TEST(StatelessWeaponRenderers, BowSubmitIsStateless) {
   b.bow_curve_factor = 1.3F;
   b.fletching_color = {0.9F, 0.2F, 0.1F};
   run_stateless_battery<BowRenderer>(renderer, a, b);
+}
+
+TEST(StatelessWeaponRenderers, BowBodyUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  BowRenderConfig config;
+  config.bow_top_y = 1.4F;
+  config.bow_bot_y = 0.6F;
+  config.bow_depth = 0.22F;
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  BowRenderer::submit(config, ctx, frames, palette, anim, via_submit);
+  BowRenderer renderer{config};
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 3U);
+  EXPECT_EQ(draw_count_of(via_submit), 25);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, BowArrowUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  BowRenderConfig config;
+  config.bow_top_y = 1.4F;
+  config.bow_bot_y = 0.6F;
+  config.bow_depth = 0.22F;
+  config.arrow_visibility = Render::GL::ArrowVisibility::IdleAndAttackCycle;
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  BowRenderer::submit(config, ctx, frames, palette, anim, via_submit);
+  BowRenderer renderer{config};
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 7U);
+  EXPECT_EQ(draw_count_of(via_submit), 29);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, BowAttackStringUsesArchetypePath) {
+  const auto frames = make_frames();
+  auto anim = make_anim();
+  anim.inputs.is_attacking = true;
+  anim.inputs.is_melee = false;
+  anim.inputs.time = Render::GL::ARCHER_ATTACK_CYCLE_TIME * 0.25F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  BowRenderConfig config;
+  config.bow_top_y = 1.4F;
+  config.bow_bot_y = 0.6F;
+  config.bow_depth = 0.22F;
+  config.arrow_visibility = Render::GL::ArrowVisibility::Hidden;
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  BowRenderer::submit(config, ctx, frames, palette, anim, via_submit);
+  BowRenderer renderer{config};
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 4U);
+  EXPECT_EQ(draw_count_of(via_submit), 26);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
+  QuiverRenderer renderer{};
+  QuiverRenderConfig a;
+  a.quiver_radius = 0.08F;
+  a.num_arrows = 1;
+  QuiverRenderConfig b;
+  b.quiver_radius = 0.10F;
+  b.num_arrows = 2;
+  b.fletching_color = {0.2F, 0.7F, 0.3F};
+  run_stateless_battery<QuiverRenderer>(renderer, a, b);
+}
+
+TEST(StatelessWeaponRenderers, RomanShieldUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  RomanShieldRenderer::submit(RomanShieldConfig{}, ctx, frames, palette, anim,
+                              via_submit);
+  RomanShieldRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 1U);
+  EXPECT_EQ(draw_count_of(via_submit), 5);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
+}
+
+TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {
+  const auto frames = make_frames();
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch base_submit;
+  EquipmentBatch cavalry_submit;
+  CarthageShieldRenderer::submit(CarthageShieldConfig{1.0F}, ctx, frames,
+                                 palette, anim, base_submit);
+  CarthageShieldRenderer::submit(CarthageShieldConfig{0.84F}, ctx, frames,
+                                 palette, anim, cavalry_submit);
+
+  CarthageShieldRenderer renderer;
+  EquipmentBatch via_render;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(base_submit.meshes.empty());
+  EXPECT_EQ(base_submit.archetypes.size(), 1U);
+  EXPECT_EQ(draw_count_of(base_submit), 31);
+  EXPECT_EQ(hash_batch(base_submit), hash_batch(via_render));
+  EXPECT_NE(hash_batch(base_submit), hash_batch(cavalry_submit));
+}
+
+TEST(StatelessWeaponRenderers, RomanScutumUsesArchetypePath) {
+  auto frames = make_frames();
+  frames.hand_l.radius = 0.05F;
+  const auto anim = make_anim();
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch via_submit;
+  EquipmentBatch via_render;
+  RomanScutumRenderer::submit(RomanScutumConfig{}, ctx, frames, palette, anim,
+                              via_submit);
+  RomanScutumRenderer renderer;
+  renderer.render(ctx, frames, palette, anim, via_render);
+
+  EXPECT_TRUE(via_submit.meshes.empty());
+  EXPECT_EQ(via_submit.archetypes.size(), 1U);
+  EXPECT_EQ(draw_count_of(via_submit), 267);
+  EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
 // Visual-parity regression: a ShieldRenderer instance carrying a

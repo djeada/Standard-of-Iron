@@ -8,8 +8,8 @@
 #include "world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
-#include <array>
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>

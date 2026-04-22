@@ -1,6 +1,6 @@
 #include "leather_barding_renderer.h"
-#include "../horse_attachment_archetype.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
 #include "../../../gl/primitives.h"
 #include "../../../render_archetype.h"
@@ -49,8 +49,8 @@ void LeatherBardingRenderer::submit(const DrawContext &ctx,
   std::array<QVector3D, 1> const palette{variant.saddle_color * 0.90F};
   append_horse_attachment_archetype(batch, ctx, frames.chest,
                                     leather_chest_barding_archetype(), palette);
-  append_horse_attachment_archetype(batch, ctx, frames.barrel,
-                                    leather_barrel_barding_archetype(), palette);
+  append_horse_attachment_archetype(
+      batch, ctx, frames.barrel, leather_barrel_barding_archetype(), palette);
 }
 
 } // namespace Render::GL

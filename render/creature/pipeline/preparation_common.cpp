@@ -1,8 +1,8 @@
 #include "preparation_common.h"
 
-#include "../../entity/registry.h"
 #include "../../../game/core/component.h"
 #include "../../../game/map/terrain_service.h"
+#include "../../entity/registry.h"
 
 #include <QVector4D>
 #include <cstdint>

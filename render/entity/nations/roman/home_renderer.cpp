@@ -102,10 +102,11 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
     builder.add_box(QVector3D(column.x(), 0.18F, column.z()),
                     QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F),
                     c.marble);
-    builder.add_cylinder(
-        QVector3D(column.x(), 0.16F, column.z()),
-        QVector3D(column.x(), 0.16F + col_height * height_multiplier, column.z()),
-        col_radius, c.limestone_shade);
+    builder.add_cylinder(QVector3D(column.x(), 0.16F, column.z()),
+                         QVector3D(column.x(),
+                                   0.16F + col_height * height_multiplier,
+                                   column.z()),
+                         col_radius, c.limestone_shade);
 
     if (state != BuildingState::Destroyed) {
       builder.add_box(
@@ -118,19 +119,20 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   if (state != BuildingState::Destroyed) {
     builder.add_box(QVector3D(0.0F, 1.25F, 0.0F),
                     QVector3D(1.05F, 0.06F, 1.05F), c.terracotta);
-    builder.add_box(QVector3D(0.0F, 1.3F, 0.0F),
-                    QVector3D(1.0F, 0.04F, 1.0F), c.terracotta_dark);
+    builder.add_box(QVector3D(0.0F, 1.3F, 0.0F), QVector3D(1.0F, 0.04F, 1.0F),
+                    c.terracotta_dark);
   }
 
-  builder.add_box(QVector3D(0.0F, 0.45F, 0.9F),
-                  QVector3D(0.3F, 0.4F, 0.05F), c.cedar_dark);
-  builder.add_box(QVector3D(0.0F, 0.62F, 0.92F),
-                  QVector3D(0.32F, 0.04F, 0.02F), c.blue_accent);
+  builder.add_box(QVector3D(0.0F, 0.45F, 0.9F), QVector3D(0.3F, 0.4F, 0.05F),
+                  c.cedar_dark);
+  builder.add_box(QVector3D(0.0F, 0.62F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
+                  c.blue_accent);
   return std::move(builder).build();
 }
 
 auto home_archetype(BuildingState state) -> const RenderArchetype & {
-  static const RenderArchetype k_normal = build_home_archetype(BuildingState::Normal);
+  static const RenderArchetype k_normal =
+      build_home_archetype(BuildingState::Normal);
   static const RenderArchetype k_damaged =
       build_home_archetype(BuildingState::Damaged);
   static const RenderArchetype k_destroyed =

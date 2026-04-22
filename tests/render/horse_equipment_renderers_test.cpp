@@ -158,23 +158,40 @@ TEST_F(HorseEquipmentRenderersTest, LightCavalrySaddleRendererProducesMeshes) {
   EXPECT_LT(axis_scale_of(submitter.meshes.front().model, 2), 0.12F);
 }
 
-TEST_F(HorseEquipmentRenderersTest, BridleRendererProducesCylinders) {
+TEST_F(HorseEquipmentRenderersTest, BridleRendererUsesArchetypePath) {
   BridleRenderer renderer;
+  EquipmentBatch batch;
+
+  renderer.render(ctx, frames, variant, anim, batch);
+
+  EXPECT_EQ(cylinder_count_of(batch), 0);
+  EXPECT_EQ(mesh_count_of(batch), 0);
+  ASSERT_EQ(archetype_count_of(batch), 5);
+
   MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
 
-  renderer.render(ctx, frames, variant, anim, submitter);
-
-  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 5);
 }
 
-TEST_F(HorseEquipmentRenderersTest, StirrupRendererProducesBoth) {
+TEST_F(HorseEquipmentRenderersTest, StirrupRendererUsesArchetypePath) {
   StirrupRenderer renderer;
+  EquipmentBatch batch;
+
+  renderer.render(ctx, frames, variant, anim, batch);
+
+  EXPECT_EQ(cylinder_count_of(batch), 0);
+  EXPECT_EQ(mesh_count_of(batch), 0);
+  ASSERT_EQ(archetype_count_of(batch), 1);
+
   MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
 
-  renderer.render(ctx, frames, variant, anim, submitter);
-
-  EXPECT_GT(cylinder_count_of(submitter), 0);
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 4);
 }
 
 TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
@@ -196,51 +213,64 @@ TEST_F(HorseEquipmentRenderersTest, BlanketRendererProducesMeshes) {
   EXPECT_LT(axis_scale_of(submitter.meshes.front().model, 2), 0.35F);
 }
 
-TEST_F(HorseEquipmentRenderersTest, ReinsRendererProducesCylinders) {
+TEST_F(HorseEquipmentRenderersTest, ReinsRendererUsesArchetypePath) {
   ReinsRenderer renderer;
+  EquipmentBatch batch;
+
+  renderer.render(ctx, frames, variant, anim, batch);
+
+  EXPECT_EQ(cylinder_count_of(batch), 0);
+  EXPECT_EQ(mesh_count_of(batch), 0);
+  ASSERT_EQ(archetype_count_of(batch), 6);
+
   MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
 
-  renderer.render(ctx, frames, variant, anim, submitter);
-
-  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 6);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
-  CapturingSubmitter submitter;
+  EquipmentBatch batch;
 
   ctx.model.translate(2.0F, 1.0F, -3.0F);
 
   ReinsRenderer renderer;
-  renderer.render(ctx, frames, variant, anim, submitter);
+  renderer.render(ctx, frames, variant, anim, batch);
 
-  ASSERT_FALSE(submitter.cylinders.empty());
+  ASSERT_FALSE(batch.archetypes.empty());
 
   const HorseAttachmentFrame &muzzle = frames.muzzle;
   QVector3D const expected_local =
       muzzle.origin + muzzle.right * 0.10F + muzzle.forward * 0.10F;
   QVector3D const expected_world = ctx.model.map(expected_local);
 
-  QVector3D const actual = submitter.cylinders.front().start;
+  QVector3D const actual =
+      batch.archetypes.front().world.column(3).toVector3D();
   EXPECT_NEAR(actual.x(), expected_world.x(), 1e-4F);
   EXPECT_NEAR(actual.y(), expected_world.y(), 1e-4F);
   EXPECT_NEAR(actual.z(), expected_world.z(), 1e-4F);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
-  CapturingSubmitter submitter;
+  EquipmentBatch batch;
   ReinsRenderer renderer;
 
-  renderer.render(ctx, frames, variant, anim, submitter);
+  renderer.render(ctx, frames, variant, anim, batch);
 
-  ASSERT_GE(static_cast<int>(submitter.cylinders.size()), 6);
+  ASSERT_GE(static_cast<int>(batch.archetypes.size()), 6);
 
   auto const connectors = std::count_if(
-      submitter.cylinders.begin(), submitter.cylinders.end(),
-      [](const auto &c) { return c.start.x() * c.end.x() < 0.0F; });
+      batch.archetypes.begin(), batch.archetypes.end(), [](const auto &a) {
+        QVector3D const start = a.world.column(3).toVector3D();
+        QVector3D const end = start + a.world.column(1).toVector3D();
+        return start.x() * end.x() < 0.0F;
+      });
   EXPECT_GE(connectors, 2);
 
-  ASSERT_FALSE(submitter.cylinders.empty());
-  EXPECT_NEAR(submitter.cylinders.front().radius, 0.004F, 1e-4F);
+  ASSERT_FALSE(batch.archetypes.empty());
+  EXPECT_GT(axis_scale_of(batch.archetypes.front().world, 1), 0.5F);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {
@@ -283,32 +313,56 @@ TEST_F(HorseEquipmentRenderersTest, CrupperRendererProducesMeshes) {
   EXPECT_EQ(archetype_count_of(batch), 1);
 }
 
-TEST_F(HorseEquipmentRenderersTest, PlumeRendererProducesCylinders) {
+TEST_F(HorseEquipmentRenderersTest, PlumeRendererUsesArchetypePath) {
   PlumeRenderer renderer;
+  EquipmentBatch batch;
+
+  renderer.render(ctx, frames, variant, anim, batch);
+
+  EXPECT_EQ(cylinder_count_of(batch), 0);
+  EXPECT_EQ(mesh_count_of(batch), 0);
+  ASSERT_EQ(archetype_count_of(batch), 3);
+
   MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
 
-  renderer.render(ctx, frames, variant, anim, submitter);
-
-  EXPECT_GT(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 3);
 }
 
-TEST_F(HorseEquipmentRenderersTest, TailRibbonRendererProducesBoth) {
+TEST_F(HorseEquipmentRenderersTest, TailRibbonRendererUsesArchetypePath) {
   TailRibbonRenderer renderer;
+  EquipmentBatch batch;
+
+  renderer.render(ctx, frames, variant, anim, batch);
+
+  EXPECT_EQ(cylinder_count_of(batch), 0);
+  EXPECT_EQ(mesh_count_of(batch), 0);
+  ASSERT_EQ(archetype_count_of(batch), 3);
+
   MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
 
-  renderer.render(ctx, frames, variant, anim, submitter);
-
-  EXPECT_GT(cylinder_count_of(submitter), 0);
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 3);
 }
 
-TEST_F(HorseEquipmentRenderersTest, SaddleBagRendererProducesBoth) {
+TEST_F(HorseEquipmentRenderersTest, SaddleBagRendererUsesArchetypePath) {
   SaddleBagRenderer renderer;
   EquipmentBatch batch;
 
   renderer.render(ctx, frames, variant, anim, batch);
 
-  EXPECT_GT(cylinder_count_of(batch), 0);
+  EXPECT_EQ(cylinder_count_of(batch), 0);
   EXPECT_EQ(mesh_count_of(batch), 0);
-  EXPECT_EQ(archetype_count_of(batch), 1);
+  ASSERT_EQ(archetype_count_of(batch), 1);
+
+  MockSubmitter submitter;
+  BatchSubmitterAdapter adapter(submitter);
+  submit_equipment_batch(batch, adapter);
+
+  EXPECT_EQ(cylinder_count_of(submitter), 0);
+  EXPECT_EQ(mesh_count_of(submitter), 4);
 }

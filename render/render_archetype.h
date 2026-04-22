@@ -63,12 +63,12 @@ struct RenderInstance {
 };
 
 auto empty_bounding_box() -> BoundingBox;
-auto box_local_model(const QVector3D &center, const QVector3D &scale)
-    -> QMatrix4x4;
+auto box_local_model(const QVector3D &center,
+                     const QVector3D &scale) -> QMatrix4x4;
 auto cylinder_local_model(const QVector3D &start, const QVector3D &end,
                           float radius) -> QMatrix4x4;
-auto select_render_archetype_lod(const RenderArchetype &archetype, float distance)
-    -> RenderArchetypeLod;
+auto select_render_archetype_lod(const RenderArchetype &archetype,
+                                 float distance) -> RenderArchetypeLod;
 void submit_render_instance(ISubmitter &out, const RenderInstance &instance);
 
 class RenderArchetypeBuilder {
@@ -83,18 +83,18 @@ public:
                 float alpha = 1.0F, int material_id = 0,
                 Material *material = nullptr);
   void add_palette_mesh(Mesh *mesh, const QMatrix4x4 &local_model,
-                        std::uint8_t palette_slot,
-                        Texture *texture = nullptr, float alpha = 1.0F,
-                        int material_id = 0, Material *material = nullptr);
+                        std::uint8_t palette_slot, Texture *texture = nullptr,
+                        float alpha = 1.0F, int material_id = 0,
+                        Material *material = nullptr);
 
   void add_box(const QVector3D &center, const QVector3D &scale,
                const QVector3D &color, Texture *texture = nullptr,
                float alpha = 1.0F, int material_id = 0,
                Material *material = nullptr);
   void add_palette_box(const QVector3D &center, const QVector3D &scale,
-                       std::uint8_t palette_slot,
-                       Texture *texture = nullptr, float alpha = 1.0F,
-                       int material_id = 0, Material *material = nullptr);
+                       std::uint8_t palette_slot, Texture *texture = nullptr,
+                       float alpha = 1.0F, int material_id = 0,
+                       Material *material = nullptr);
 
   void add_cylinder(const QVector3D &start, const QVector3D &end, float radius,
                     const QVector3D &color, Texture *texture = nullptr,
@@ -103,8 +103,7 @@ public:
   void add_palette_cylinder(const QVector3D &start, const QVector3D &end,
                             float radius, std::uint8_t palette_slot,
                             Texture *texture = nullptr, float alpha = 1.0F,
-                            int material_id = 0,
-                            Material *material = nullptr);
+                            int material_id = 0, Material *material = nullptr);
 
   auto build() && -> RenderArchetype;
 

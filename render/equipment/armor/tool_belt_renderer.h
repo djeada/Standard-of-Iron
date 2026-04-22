@@ -35,24 +35,6 @@ public:
 
 private:
   ToolBeltConfig m_config;
-
-  static void renderBelt(const ToolBeltConfig &config, const DrawContext &ctx,
-                         const AttachmentFrame &waist, EquipmentBatch &batch);
-
-  static void renderHammerLoop(const ToolBeltConfig &config,
-                               const DrawContext &ctx,
-                               const AttachmentFrame &waist,
-                               EquipmentBatch &batch);
-
-  static void renderChiselHolder(const ToolBeltConfig &config,
-                                 const DrawContext &ctx,
-                                 const AttachmentFrame &waist,
-                                 EquipmentBatch &batch);
-
-  static void renderPouches(const ToolBeltConfig &config,
-                            const DrawContext &ctx,
-                            const AttachmentFrame &waist,
-                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

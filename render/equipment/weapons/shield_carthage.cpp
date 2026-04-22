@@ -1,15 +1,19 @@
 #include "shield_carthage.h"
+
 #include "../../geom/transforms.h"
 #include "../../gl/mesh.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../equipment_submit.h"
 
-#include <QMatrix4x4>
-#include <QVector3D>
+#include "../../render_archetype.h"
+
+#include <array>
 #include <cmath>
+#include <deque>
 #include <memory>
 #include <numbers>
+#include <string>
 #include <vector>
 
 namespace Render::GL {
@@ -19,6 +23,13 @@ using Render::Geom::cylinder_between;
 using Render::Geom::sphere_at;
 
 namespace {
+
+enum CarthageShieldPaletteSlot : std::uint8_t {
+  k_shield_slot = 0U,
+  k_trim_slot = 1U,
+  k_metal_slot = 2U,
+  k_grip_slot = 3U,
+};
 
 auto create_unit_hemisphere_mesh(int lat_segments = 12, int lon_segments = 32)
     -> std::unique_ptr<Mesh> {
@@ -71,6 +82,116 @@ auto get_unit_hemisphere_mesh() -> Mesh * {
   return mesh.get();
 }
 
+constexpr float k_shield_yaw_degrees = -70.0F;
+constexpr float k_scale_factor = 1.95F;
+
+auto carthage_shield_archetype(float scale_multiplier)
+    -> const RenderArchetype & {
+  struct CachedArchetype {
+    int scale_key{0};
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  int const scale_key = std::lround(scale_multiplier * 1000.0F);
+  for (const auto &entry : cache) {
+    if (entry.scale_key == scale_key) {
+      return entry.archetype;
+    }
+  }
+
+  float const shield_radius = 0.18F * 0.9F * k_scale_factor * scale_multiplier;
+  float const dome_depth = shield_radius * 0.48F;
+  QVector3D const shield_center_local{-shield_radius * 0.35F, -0.02F, 0.05F};
+
+  RenderArchetypeBuilder builder{"carthage_shield_" +
+                                 std::to_string(scale_key)};
+
+  QMatrix4x4 dome;
+  dome.translate(shield_center_local);
+  dome.scale(shield_radius, shield_radius, dome_depth);
+  builder.add_palette_mesh(get_unit_hemisphere_mesh(), dome, k_shield_slot,
+                           nullptr, 1.0F, 4);
+
+  constexpr int rim_segments = 24;
+  for (int i = 0; i < rim_segments; ++i) {
+    float const a0 =
+        (static_cast<float>(i) / static_cast<float>(rim_segments)) * 2.0F *
+        std::numbers::pi_v<float>;
+    float const a1 =
+        (static_cast<float>(i + 1) / static_cast<float>(rim_segments)) * 2.0F *
+        std::numbers::pi_v<float>;
+
+    QVector3D const p0 =
+        shield_center_local + QVector3D(shield_radius * std::cos(a0),
+                                        shield_radius * std::sin(a0), 0.0F);
+    QVector3D const p1 =
+        shield_center_local + QVector3D(shield_radius * std::cos(a1),
+                                        shield_radius * std::sin(a1), 0.0F);
+    builder.add_palette_mesh(get_unit_cylinder(),
+                             cylinder_between(p0, p1, 0.012F), k_trim_slot,
+                             nullptr, 1.0F, 4);
+  }
+
+  QVector3D const emblem_plane =
+      shield_center_local + QVector3D(0.0F, 0.0F, dome_depth * 0.92F);
+  QMatrix4x4 medallion;
+  medallion.translate(emblem_plane);
+  medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F,
+                  shield_radius * 0.08F);
+  builder.add_palette_mesh(get_unit_cylinder(), medallion, k_trim_slot, nullptr,
+                           1.0F, 4);
+
+  QVector3D const emblem_body_top =
+      emblem_plane + QVector3D(0.0F, shield_radius * 0.14F, 0.0F);
+  QVector3D const emblem_body_bot =
+      emblem_plane - QVector3D(0.0F, shield_radius * 0.08F, 0.0F);
+  float const emblem_radius = shield_radius * 0.028F;
+
+  builder.add_palette_mesh(
+      get_unit_cylinder(),
+      cylinder_between(emblem_body_bot, emblem_body_top, emblem_radius),
+      k_metal_slot, nullptr, 1.0F, 4);
+  builder.add_palette_mesh(
+      get_unit_cylinder(),
+      cylinder_between(emblem_plane + QVector3D(-shield_radius * 0.22F,
+                                                shield_radius * 0.02F, 0.0F),
+                       emblem_plane + QVector3D(shield_radius * 0.22F,
+                                                shield_radius * 0.02F, 0.0F),
+                       emblem_radius * 0.75F),
+      k_metal_slot, nullptr, 1.0F, 4);
+  builder.add_palette_mesh(
+      get_unit_sphere(),
+      sphere_at(emblem_body_top + QVector3D(0.0F, shield_radius * 0.05F, 0.0F),
+                emblem_radius * 1.4F),
+      k_metal_slot, nullptr, 1.0F, 4);
+  builder.add_palette_mesh(
+      get_unit_cone(),
+      cone_from_to(emblem_body_bot -
+                       QVector3D(0.0F, shield_radius * 0.04F, 0.0F),
+                   emblem_plane - QVector3D(0.0F, shield_radius * 0.22F, 0.0F),
+                   emblem_radius * 1.6F),
+      k_metal_slot, nullptr, 1.0F, 4);
+
+  builder.add_palette_mesh(
+      get_unit_cylinder(),
+      cylinder_between(shield_center_local + QVector3D(-0.035F, 0.0F, -0.030F),
+                       shield_center_local + QVector3D(0.035F, 0.0F, -0.030F),
+                       0.010F),
+      k_grip_slot, nullptr, 1.0F, 4);
+
+  cache.push_back({scale_key, std::move(builder).build()});
+  return cache.back().archetype;
+}
+
+auto carthage_shield_transform(const QMatrix4x4 &parent,
+                               const QVector3D &origin) -> QMatrix4x4 {
+  QMatrix4x4 local;
+  local.translate(origin);
+  local.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  return parent * local;
+}
+
 } // namespace
 
 CarthageShieldRenderer::CarthageShieldRenderer(float scale_multiplier)
@@ -100,113 +221,13 @@ void CarthageShieldRenderer::submit(const CarthageShieldConfig &config,
                                     const HumanoidPalette &palette,
                                     const HumanoidAnimationContext &,
                                     EquipmentBatch &batch) {
-  constexpr float k_shield_yaw_degrees = -70.0F;
-  constexpr float k_scale_factor = 1.95F;
-
-  QMatrix4x4 rot;
-  rot.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-
-  const QVector3D n = rot.map(QVector3D(0.0F, 0.0F, 1.0F));
-  const QVector3D axis_x = rot.map(QVector3D(1.0F, 0.0F, 0.0F));
-  const QVector3D axis_y = rot.map(QVector3D(0.0F, 1.0F, 0.0F));
-
-  float const shield_radius =
-      0.18F * 0.9F * k_scale_factor * config.scale_multiplier;
-
-  QVector3D shield_center = frames.hand_l.origin +
-                            axis_x * (-shield_radius * 0.35F) +
-                            axis_y * (-0.02F) + n * (0.05F);
-
-  QVector3D const shield_color{0.20F, 0.46F, 0.62F};
-  QVector3D const trim_color{0.76F, 0.68F, 0.42F};
-  QVector3D const metal_color{0.70F, 0.68F, 0.52F};
-
-  float const dome_depth = shield_radius * 0.48F;
-  {
-    QMatrix4x4 m = ctx.model;
-    m.translate(shield_center);
-    m.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-    m.scale(shield_radius, shield_radius, dome_depth);
-
-    batch.meshes.push_back({get_unit_hemisphere_mesh(), nullptr, m,
-                            shield_color, nullptr, 1.0F, 4});
-  }
-
-  constexpr int rim_segments = 24;
-  for (int i = 0; i < rim_segments; ++i) {
-    float const a0 =
-        (static_cast<float>(i) / static_cast<float>(rim_segments)) * 2.0F *
-        std::numbers::pi_v<float>;
-    float const a1 =
-        (static_cast<float>(i + 1) / static_cast<float>(rim_segments)) * 2.0F *
-        std::numbers::pi_v<float>;
-
-    QVector3D const p0 = shield_center +
-                         axis_x * (shield_radius * std::cos(a0)) +
-                         axis_y * (shield_radius * std::sin(a0));
-    QVector3D const p1 = shield_center +
-                         axis_x * (shield_radius * std::cos(a1)) +
-                         axis_y * (shield_radius * std::sin(a1));
-
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                            cylinder_between(ctx.model, p0, p1, 0.012F),
-                            trim_color, nullptr, 1.0F, 4});
-  }
-
-  QVector3D const emblem_plane = shield_center + n * (dome_depth * 0.92F);
-  {
-    QMatrix4x4 medallion = ctx.model;
-    medallion.translate(emblem_plane);
-    medallion.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
-    medallion.scale(shield_radius * 0.34F, shield_radius * 0.34F,
-                    shield_radius * 0.08F);
-    batch.meshes.push_back({get_unit_cylinder(), nullptr, medallion,
-                            trim_color * 0.95F, nullptr, 1.0F, 4});
-  }
-
-  QVector3D const emblem_body_top =
-      emblem_plane + axis_y * (shield_radius * 0.14F);
-  QVector3D const emblem_body_bot =
-      emblem_plane - axis_y * (shield_radius * 0.08F);
-  float const emblem_radius = shield_radius * 0.028F;
-
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, emblem_body_bot,
-                                           emblem_body_top, emblem_radius),
-                          metal_color, nullptr, 1.0F, 4});
-
-  QVector3D const emblem_arm_height =
-      emblem_plane + axis_y * (shield_radius * 0.02F);
-  QVector3D const emblem_arm_left =
-      emblem_arm_height - axis_x * (shield_radius * 0.22F);
-  QVector3D const emblem_arm_right =
-      emblem_arm_height + axis_x * (shield_radius * 0.22F);
-
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, emblem_arm_left, emblem_arm_right,
-                        emblem_radius * 0.75F),
-       metal_color, nullptr, 1.0F, 4});
-
-  batch.meshes.push_back(
-      {get_unit_sphere(), nullptr,
-       sphere_at(ctx.model, emblem_body_top + axis_y * (shield_radius * 0.05F),
-                 emblem_radius * 1.4F),
-       metal_color, nullptr, 1.0F, 4});
-
-  batch.meshes.push_back(
-      {get_unit_cone(), nullptr,
-       cone_from_to(ctx.model,
-                    emblem_body_bot - axis_y * (shield_radius * 0.04F),
-                    emblem_plane - axis_y * (shield_radius * 0.22F),
-                    emblem_radius * 1.6F),
-       metal_color, nullptr, 1.0F, 4});
-
-  QVector3D const grip_a = shield_center - axis_x * 0.035F - n * 0.030F;
-  QVector3D const grip_b = shield_center + axis_x * 0.035F - n * 0.030F;
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, grip_a, grip_b, 0.010F),
-                          palette.leather, nullptr, 1.0F, 4});
+  std::array<QVector3D, 4> const palette_slots{
+      QVector3D(0.20F, 0.46F, 0.62F), QVector3D(0.76F, 0.68F, 0.42F),
+      QVector3D(0.70F, 0.68F, 0.52F), palette.leather};
+  append_equipment_archetype(
+      batch, carthage_shield_archetype(config.scale_multiplier),
+      carthage_shield_transform(ctx.model, frames.hand_l.origin),
+      palette_slots);
 }
 
 } // namespace Render::GL

@@ -33,17 +33,13 @@ void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   float const head_phase_off =
       hash_to_unit(seed ^ 0x9CDE0F12U) * 2.0F * std::numbers::pi_v<float>;
 
-  float const breath_freq =
-      0.85F + hash_to_unit(seed ^ 0x33445566U) * 0.45F;
-  float const sway_freq =
-      0.18F + hash_to_unit(seed ^ 0x778899AAU) * 0.10F;
-  float const head_freq =
-      0.32F + hash_to_unit(seed ^ 0xBBCCDDEEU) * 0.18F;
+  float const breath_freq = 0.85F + hash_to_unit(seed ^ 0x33445566U) * 0.45F;
+  float const sway_freq = 0.18F + hash_to_unit(seed ^ 0x778899AAU) * 0.10F;
+  float const head_freq = 0.32F + hash_to_unit(seed ^ 0xBBCCDDEEU) * 0.18F;
 
   float const two_pi = 2.0F * std::numbers::pi_v<float>;
 
-  float const breath =
-      std::sin(time * breath_freq * two_pi + breath_phase_off);
+  float const breath = std::sin(time * breath_freq * two_pi + breath_phase_off);
   float const breath_amp = 0.012F;
   float const chest_lift = breath * breath_amp;
 
@@ -67,8 +63,7 @@ void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
   float const weight_dip = -std::abs(weight_shift) * 0.005F;
   m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + weight_dip);
 
-  float const head_yaw =
-      std::sin(time * head_freq * two_pi + head_phase_off);
+  float const head_yaw = std::sin(time * head_freq * two_pi + head_phase_off);
   float const head_yaw_amp = 0.014F;
   m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw * head_yaw_amp);
   float const head_nod =

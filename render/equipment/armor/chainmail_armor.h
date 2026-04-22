@@ -40,21 +40,6 @@ public:
 private:
   ChainmailArmorConfig m_config;
 
-  static void renderTorsoMail(const ChainmailArmorConfig &config,
-                              const DrawContext &ctx, const BodyFrames &frames,
-                              EquipmentBatch &batch);
-  static void renderShoulderGuards(const ChainmailArmorConfig &config,
-                                   const DrawContext &ctx,
-                                   const BodyFrames &frames,
-                                   EquipmentBatch &batch);
-  static void renderArmMail(const ChainmailArmorConfig &config,
-                            const DrawContext &ctx, const BodyFrames &frames,
-                            EquipmentBatch &batch);
-  static void renderRingDetails(const ChainmailArmorConfig &config,
-                                const DrawContext &ctx, const QVector3D &center,
-                                float radius, float height, const QVector3D &up,
-                                const QVector3D &right, EquipmentBatch &batch);
-
   static auto calculate_ring_color(const ChainmailArmorConfig &config, float x,
                                    float y, float z) -> QVector3D;
 };

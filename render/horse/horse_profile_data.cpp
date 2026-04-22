@@ -156,39 +156,33 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   using namespace HorseVariantConstants;
   HorseVariant v;
 
-  // Naturalistic distribution: bay 32%, chestnut 28%, dapple grey 14%,
-  // black 12%, dun 8%, palomino 6%.
   float const coat_hue = hash01(seed ^ kSaltCoatHue);
-  if (coat_hue < 0.32F) {
+  if (coat_hue < 0.34F) {
     v.coat_kind = HorseCoatKind::Bay;
-    v.coat_color = QVector3D(0.42F, 0.27F, 0.16F);
-  } else if (coat_hue < 0.60F) {
+    v.coat_color = QVector3D(0.46F, 0.29F, 0.17F);
+  } else if (coat_hue < 0.64F) {
     v.coat_kind = HorseCoatKind::Chestnut;
-    v.coat_color = QVector3D(0.55F, 0.30F, 0.18F);
-  } else if (coat_hue < 0.74F) {
+    v.coat_color = QVector3D(0.58F, 0.33F, 0.19F);
+  } else if (coat_hue < 0.76F) {
     v.coat_kind = HorseCoatKind::DappleGrey;
     v.coat_color = QVector3D(0.72F, 0.71F, 0.68F);
-    v.dapple_amount =
-        rand_between(seed, 0xD421EU, 0.20F, 0.55F);
-  } else if (coat_hue < 0.86F) {
+    v.dapple_amount = rand_between(seed, 0xD421EU, 0.20F, 0.55F);
+  } else if (coat_hue < 0.80F) {
     v.coat_kind = HorseCoatKind::Black;
-    v.coat_color = QVector3D(0.13F, 0.11F, 0.10F);
-  } else if (coat_hue < 0.94F) {
+    v.coat_color = QVector3D(0.20F, 0.17F, 0.14F);
+  } else if (coat_hue < 0.92F) {
     v.coat_kind = HorseCoatKind::Dun;
-    v.coat_color = QVector3D(0.62F, 0.52F, 0.34F);
+    v.coat_color = QVector3D(0.64F, 0.54F, 0.35F);
   } else {
     v.coat_kind = HorseCoatKind::Palomino;
     v.coat_color = QVector3D(0.84F, 0.68F, 0.40F);
   }
 
-  // Slight per-unit hue jitter so two bays don't look identical.
-  float const hue_jitter =
-      (hash01(seed ^ 0x55AAU) - 0.5F) * 0.06F;
+  float const hue_jitter = (hash01(seed ^ 0x55AAU) - 0.5F) * 0.06F;
   v.coat_color = QVector3D(saturate(v.coat_color.x() + hue_jitter * 0.8F),
                            saturate(v.coat_color.y() + hue_jitter * 0.6F),
                            saturate(v.coat_color.z() + hue_jitter * 0.4F));
 
-  // Mane / tail color depends on coat type.
   switch (v.coat_kind) {
   case HorseCoatKind::Bay:
   case HorseCoatKind::Black:
@@ -196,7 +190,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
     v.tail_color = QVector3D(0.06F, 0.05F, 0.05F);
     break;
   case HorseCoatKind::Chestnut:
-    // Chestnut: matching mane, sometimes flaxen lighter.
+
     if (hash01(seed ^ 0x9090U) > 0.78F) {
       v.mane_color = QVector3D(0.86F, 0.74F, 0.52F);
     } else {
@@ -218,12 +212,10 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
     break;
   }
 
-  // Markings.
   float const marking_roll = hash01(seed ^ kSaltBlazeChance);
   v.has_blaze = marking_roll > 0.78F;
   v.has_star = !v.has_blaze && marking_roll > 0.55F;
 
-  // Sock mask: each leg has small chance of a white sock.
   v.sock_mask = 0U;
   for (std::uint8_t leg = 0U; leg < 4U; ++leg) {
     if (hash01(seed ^ (0x1A2BU + leg * 17U)) > 0.82F) {
@@ -235,21 +227,21 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
       lerp(v.coat_color, QVector3D(kMuzzleBaseR, kMuzzleBaseG, kMuzzleBaseB),
            kMuzzleBlendFactor);
   if (v.has_blaze) {
-    v.muzzle_color = lerp(v.muzzle_color, QVector3D(0.92F, 0.90F, 0.86F), 0.35F);
+    v.muzzle_color =
+        lerp(v.muzzle_color, QVector3D(0.92F, 0.90F, 0.86F), 0.35F);
   } else if (v.has_star) {
-    v.muzzle_color = lerp(v.muzzle_color, QVector3D(0.88F, 0.86F, 0.82F), 0.18F);
+    v.muzzle_color =
+        lerp(v.muzzle_color, QVector3D(0.88F, 0.86F, 0.82F), 0.18F);
   }
 
-  // Hooves: dark by default; white sock implies pale hoof.
   QVector3D const dark_hoof(0.14F, 0.12F, 0.10F);
   QVector3D const pale_hoof(0.78F, 0.74F, 0.66F);
   bool const any_sock = v.sock_mask != 0U;
-  v.hoof_color =
-      any_sock
-          ? lerp(dark_hoof, pale_hoof,
-                 rand_between(seed, kSaltHoofBlend, 0.30F, 0.55F))
-          : lerp(dark_hoof, QVector3D(0.32F, 0.28F, 0.24F),
-                 rand_between(seed, kSaltHoofBlend, 0.10F, 0.45F));
+  v.hoof_color = any_sock
+                     ? lerp(dark_hoof, pale_hoof,
+                            rand_between(seed, kSaltHoofBlend, 0.30F, 0.55F))
+                     : lerp(dark_hoof, QVector3D(0.32F, 0.28F, 0.24F),
+                            rand_between(seed, kSaltHoofBlend, 0.10F, 0.45F));
 
   float const leather_tone =
       rand_between(seed, kSaltLeatherTone, kLeatherToneMin, kLeatherToneMax);
@@ -291,13 +283,9 @@ auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
   profile.gait.stride_lift =
       rand_between(seed, kSaltStrideLift, kStrideLiftMin, kStrideLiftMax);
 
-  // Per-instance jitters so adjacent horses don't sync.
-  // phase_offset spans a full cycle (±π in radians ≈ ±0.5 in phase).
   profile.gait.phase_offset = hash01(seed ^ 0xF105E7U);
-  profile.gait.stride_jitter =
-      (hash01(seed ^ 0xA17B2U) - 0.5F) * 0.10F; // ±5%
-  profile.gait.head_height_jitter =
-      (hash01(seed ^ 0xC0DECU) - 0.5F) * 0.06F; // ±3%
+  profile.gait.stride_jitter = (hash01(seed ^ 0xA17B2U) - 0.5F) * 0.10F;
+  profile.gait.head_height_jitter = (hash01(seed ^ 0xC0DECU) - 0.5F) * 0.06F;
   profile.gait.lateral_lead_front = 0.5F;
   profile.gait.lateral_lead_rear = 0.5F;
   profile.gait.ear_pin = 0.0F;

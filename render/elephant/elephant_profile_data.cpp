@@ -152,9 +152,6 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   d.move_bob_amplitude = rand_between(seed, kSaltMoveBob, kMoveBobAmplitudeMin,
                                       kMoveBobAmplitudeMax);
 
-  // Barrel center must place feet near ground: center_y = shoulder_drop +
-  // leg_drop + foot_pad half-height. Reduced-LOD leg path uses 0.30×body_height
-  // shoulder and 0.85×leg_length drop — match that so all LODs are grounded.
   d.barrel_center_y =
       d.body_height * 0.30F + d.leg_length * 0.85F + d.foot_radius * 0.6F;
 

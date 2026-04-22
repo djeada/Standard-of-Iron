@@ -1,13 +1,13 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/nations/roman/defense_tower_renderer.h"
+#include "render/entity/nations/roman/home_renderer.h"
+#include "render/entity/registry.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/scale_barding_renderer.h"
 #include "render/equipment/horse/decorations/saddle_bag_renderer.h"
 #include "render/equipment/horse/i_horse_equipment_renderer.h"
 #include "render/equipment/horse/saddles/roman_saddle_renderer.h"
-#include "render/entity/registry.h"
-#include "render/entity/nations/roman/defense_tower_renderer.h"
-#include "render/entity/nations/roman/home_renderer.h"
 #include "render/gl/resources.h"
 #include "render/horse/attachment_frames.h"
 #include "render/horse/dimensions.h"
@@ -102,10 +102,10 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
   using namespace Render::GL;
 
   RenderArchetypeBuilder builder("test_archetype");
-  builder.add_mesh(fake_mesh(1),
-                   box_local_model(QVector3D(2.0F, 1.0F, 3.0F),
-                                   QVector3D(2.0F, 4.0F, 6.0F)),
-                   QVector3D(0.2F, 0.3F, 0.4F));
+  builder.add_mesh(
+      fake_mesh(1),
+      box_local_model(QVector3D(2.0F, 1.0F, 3.0F), QVector3D(2.0F, 4.0F, 6.0F)),
+      QVector3D(0.2F, 0.3F, 0.4F));
   builder.add_palette_mesh(fake_mesh(2),
                            box_local_model(QVector3D(-1.0F, 0.0F, 0.0F),
                                            QVector3D(1.0F, 1.0F, 1.0F)),
@@ -136,8 +136,8 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
                         QVector3D(12.0F, 1.0F, 3.0F)));
   EXPECT_TRUE(near_vec3(submitter.meshes[1].model.column(3).toVector3D(),
                         QVector3D(9.0F, 0.0F, 0.0F)));
-  EXPECT_TRUE(near_vec3(submitter.meshes[0].color,
-                        QVector3D(0.2F, 0.3F, 0.4F)));
+  EXPECT_TRUE(
+      near_vec3(submitter.meshes[0].color, QVector3D(0.2F, 0.3F, 0.4F)));
   EXPECT_TRUE(near_vec3(submitter.meshes[1].color, palette[0]));
   EXPECT_EQ(submitter.meshes[0].texture, fake_texture(7));
   EXPECT_FLOAT_EQ(submitter.meshes[0].alpha, 0.5F);
@@ -179,7 +179,8 @@ TEST(RenderArchetypeEquipment, RomanSaddleUsesSingleArchetypeInstance) {
   variant.saddle_color = QVector3D(0.55F, 0.29F, 0.12F);
 
   EquipmentBatch batch;
-  RomanSaddleRenderer::submit(ctx, make_test_horse_frames(), variant, {}, batch);
+  RomanSaddleRenderer::submit(ctx, make_test_horse_frames(), variant, {},
+                              batch);
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_TRUE(batch.cylinders.empty());
@@ -203,7 +204,8 @@ TEST(RenderArchetypeEquipment, ScaleBardingUsesMultipleAnchoredArchetypes) {
   variant.tack_color = QVector3D(0.45F, 0.40F, 0.34F);
 
   EquipmentBatch batch;
-  ScaleBardingRenderer::submit(ctx, make_test_horse_frames(), variant, {}, batch);
+  ScaleBardingRenderer::submit(ctx, make_test_horse_frames(), variant, {},
+                               batch);
 
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_TRUE(batch.cylinders.empty());
@@ -214,7 +216,7 @@ TEST(RenderArchetypeEquipment, ScaleBardingUsesMultipleAnchoredArchetypes) {
   ASSERT_EQ(submitter.meshes.size(), 4u);
 }
 
-TEST(RenderArchetypeEquipment, SaddleBagsBakeBagsButKeepStrapsDynamic) {
+TEST(RenderArchetypeEquipment, SaddleBagsBakeAllRigidPieces) {
   using namespace Render::GL;
 
   DrawContext ctx;
@@ -229,12 +231,12 @@ TEST(RenderArchetypeEquipment, SaddleBagsBakeBagsButKeepStrapsDynamic) {
 
   EXPECT_TRUE(batch.meshes.empty());
   ASSERT_EQ(batch.archetypes.size(), 1u);
-  EXPECT_EQ(batch.cylinders.size(), 2u);
+  EXPECT_TRUE(batch.cylinders.empty());
 
   RecordingSubmitter submitter;
   submit_equipment_batch(batch, submitter);
-  EXPECT_EQ(submitter.meshes.size(), 2u);
-  EXPECT_EQ(submitter.cylinder_count, 2u);
+  EXPECT_EQ(submitter.meshes.size(), 4u);
+  EXPECT_EQ(submitter.cylinder_count, 0u);
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
@@ -249,8 +251,8 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   auto *renderable =
       entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F,
-                                                                 0.0F);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;
@@ -278,8 +280,8 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
       entity.add_component<Engine::Core::RenderableComponent>("", "");
   ASSERT_NE(renderable, nullptr);
   renderable->color = {1.2F, -0.1F, 0.35F};
-  auto *unit = entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F,
-                                                                 0.0F);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
   ASSERT_NE(unit, nullptr);
 
   DrawContext ctx;

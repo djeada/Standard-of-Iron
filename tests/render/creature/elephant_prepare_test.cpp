@@ -1,16 +1,16 @@
 // Phase A regression — elephant prepare module.
 
+#include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_motion.h"
 #include "render/elephant/elephant_renderer_base.h"
-#include "render/elephant/prepare.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/elephant/prepare.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
-#include "game/map/terrain.h"
-#include "game/map/terrain_service.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -24,7 +24,9 @@ public:
   int rigged_calls{0};
   void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
             Render::GL::Texture *, float, int) override {}
-  void rigged(const Render::GL::RiggedCreatureCmd &) override { ++rigged_calls; }
+  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+    ++rigged_calls;
+  }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -88,8 +90,7 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
   const auto row = Render::Creature::Pipeline::make_prepared_elephant_row(
       spec, pose, variant, world, /*seed*/ 23,
       Render::Creature::CreatureLOD::Minimal,
-      /*entity_id*/ 0,
-      Render::Creature::Pipeline::RenderPassIntent::Shadow);
+      /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
@@ -212,17 +213,17 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
   Render::GL::DrawContext ctx{};
   ctx.model.translate(0.2F, 11.0F, -0.35F);
 
-  Render::GL::ElephantProfile profile =
-      Render::GL::make_elephant_profile(29U, QVector3D(0.5F, 0.2F, 0.1F),
-                                        QVector3D(0.7F, 0.7F, 0.2F));
+  Render::GL::ElephantProfile profile = Render::GL::make_elephant_profile(
+      29U, QVector3D(0.5F, 0.2F, 0.1F), QVector3D(0.7F, 0.7F, 0.2F));
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_minimal(owner, ctx, profile, nullptr, prep);
+  Render::Elephant::prepare_elephant_minimal(owner, ctx, profile, nullptr,
+                                             prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_NEAR(rows[0].world_from_unit.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 3.1F,
-              0.0001F);
+  EXPECT_NEAR(rows[0].world_from_unit.map(QVector3D(0.0F, 0.0F, 0.0F)).y(),
+              3.1F, 0.0001F);
 }
 
 } // namespace

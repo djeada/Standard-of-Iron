@@ -3,16 +3,16 @@
 // Verifies make_horse_prepared_row stamps the correct kind/pass/lod and that
 // Shadow-tagged horse rows are filtered by submit().
 
+#include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/horse/dimensions.h"
+#include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
 #include "render/horse/prepare.h"
-#include "render/horse/horse_renderer_base.h"
-#include "render/horse/dimensions.h"
 #include "render/submitter.h"
-#include "game/map/terrain.h"
-#include "game/map/terrain_service.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -26,7 +26,9 @@ public:
   int rigged_calls{0};
   void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
             Render::GL::Texture *, float, int) override {}
-  void rigged(const Render::GL::RiggedCreatureCmd &) override { ++rigged_calls; }
+  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+    ++rigged_calls;
+  }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -67,9 +69,9 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
   Render::GL::HorseVariant variant{};
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_horse_row(
-      spec, pose, variant, world, /*seed*/ 11, Render::Creature::CreatureLOD::Reduced,
-      /*entity_id*/ 0,
-      Render::Creature::Pipeline::RenderPassIntent::Shadow);
+      spec, pose, variant, world, /*seed*/ 11,
+      Render::Creature::CreatureLOD::Reduced,
+      /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Reduced);
@@ -112,17 +114,16 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseBodyToTerrainHeight) {
   Render::GL::DrawContext ctx{};
   ctx.model.translate(-0.3F, 6.0F, 0.45F);
 
-  Render::GL::HorseProfile profile =
-      Render::GL::make_horse_profile(17U, QVector3D(0.4F, 0.3F, 0.2F),
-                                     QVector3D(0.6F, 0.1F, 0.1F));
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   Render::Horse::HorsePreparation prep;
   Render::Horse::prepare_horse_minimal(owner, ctx, profile, nullptr, prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_NEAR(rows[0].world_from_unit.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 1.9F,
-              0.0001F);
+  EXPECT_NEAR(rows[0].world_from_unit.map(QVector3D(0.0F, 0.0F, 0.0F)).y(),
+              1.9F, 0.0001F);
 }
 
 } // namespace

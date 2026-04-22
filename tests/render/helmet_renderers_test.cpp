@@ -3,8 +3,11 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/carthage_light_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
+#include "render/equipment/helmets/roman_heavy_helmet.h"
+#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
+#include "render/submitter.h"
 #include <gtest/gtest.h>
 #include <memory>
 
@@ -14,8 +17,46 @@ namespace {
 
 using MockSubmitter = EquipmentBatch;
 
-inline int mesh_count_of(const EquipmentBatch &b) {
-  return static_cast<int>(b.meshes.size());
+class CountingSubmitter : public ISubmitter {
+public:
+  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
+            float = 1.0F, int = 0) override {
+    ++draw_count;
+  }
+
+  void part(Mesh *, Material *, const QMatrix4x4 &, const QVector3D &,
+            Texture * = nullptr, float = 1.0F, int = 0) override {
+    ++draw_count;
+  }
+
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float = 1.0F) override {
+    ++draw_count;
+  }
+
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
+  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
+            float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
+  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
+                    float, float, float, float) override {}
+  void healer_aura(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void combat_dust(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+                    float) override {}
+  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
+                      float) override {}
+
+  int draw_count{0};
+};
+
+inline int draw_count_of(const EquipmentBatch &b) {
+  CountingSubmitter submitter;
+  submit_equipment_batch(b, submitter);
+  return submitter.draw_count;
 }
 
 } // namespace
@@ -85,7 +126,8 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetRendersWithValidFrames) {
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_GE(mesh_count_of(submitter), 12);
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 12);
 }
 
 TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
@@ -95,7 +137,7 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
   helmet.render(ctx, frames, palette, anim, submitter);
 
   // Should not render anything when head radius is zero
-  EXPECT_EQ(mesh_count_of(submitter), 0);
+  EXPECT_EQ(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, CarthageLightHelmetRendersWithValidFrames) {
@@ -103,7 +145,8 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetRendersWithValidFrames) {
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_GE(mesh_count_of(submitter), 20);
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 20);
 }
 
 TEST_F(HelmetRenderersTest, CarthageLightHelmetHandlesZeroHeadRadius) {
@@ -112,7 +155,25 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetHandlesZeroHeadRadius) {
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_EQ(mesh_count_of(submitter), 0);
+  EXPECT_EQ(draw_count_of(submitter), 0);
+}
+
+TEST_F(HelmetRenderersTest, RomanHeavyHelmetRendersWithValidFrames) {
+  RomanHeavyHelmetRenderer helmet;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 7);
+}
+
+TEST_F(HelmetRenderersTest, RomanLightHelmetRendersWithValidFrames) {
+  RomanLightHelmetRenderer helmet;
+
+  helmet.render(ctx, frames, palette, anim, submitter);
+
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GE(draw_count_of(submitter), 8);
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapRendersWithValidFrames) {
@@ -120,8 +181,8 @@ TEST_F(HelmetRenderersTest, HeadwrapRendersWithValidFrames) {
 
   headwrap.render(ctx, frames, palette, anim, submitter);
 
-  // Headwrap should render band, knot, and tail
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GT(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapHandlesZeroHeadRadius) {
@@ -131,7 +192,7 @@ TEST_F(HelmetRenderersTest, HeadwrapHandlesZeroHeadRadius) {
   headwrap.render(ctx, frames, palette, anim, submitter);
 
   // Should not render anything when head radius is zero
-  EXPECT_EQ(mesh_count_of(submitter), 0);
+  EXPECT_EQ(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
@@ -161,7 +222,7 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetFromRegistryRenders) {
 
   helmet->render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_GT(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
@@ -171,7 +232,7 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetFromRegistryRenders) {
 
   helmet->render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_GE(mesh_count_of(submitter), 20);
+  EXPECT_GE(draw_count_of(submitter), 20);
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
@@ -181,7 +242,8 @@ TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
 
   headwrap->render(ctx, frames, palette, anim, submitter);
 
-  EXPECT_GT(mesh_count_of(submitter), 0);
+  EXPECT_GT(submitter.archetypes.size(), 0U);
+  EXPECT_GT(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
@@ -196,16 +258,16 @@ TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
   MockSubmitter submitter1;
   helmet.render(ctx, frames, palette, anim, submitter1);
 
-  EXPECT_GE(mesh_count_of(submitter1), 12);
+  EXPECT_GE(draw_count_of(submitter1), 12);
 
   CarthageLightHelmetRenderer light_helmet;
   MockSubmitter submitter_light;
   light_helmet.render(ctx, frames, palette, anim, submitter_light);
-  EXPECT_GE(mesh_count_of(submitter_light), 20);
+  EXPECT_GE(draw_count_of(submitter_light), 20);
 
   HeadwrapRenderer headwrap;
   MockSubmitter submitter2;
   headwrap.render(ctx, frames, palette, anim, submitter2);
 
-  EXPECT_GT(mesh_count_of(submitter2), 0);
+  EXPECT_GT(draw_count_of(submitter2), 0);
 }

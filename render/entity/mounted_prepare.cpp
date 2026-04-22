@@ -17,11 +17,10 @@ auto prepare_mounted_rows(
   MountedPreparedSet set{};
   set.mount_row = Render::Creature::Pipeline::make_prepared_horse_row(
       mounted_spec.mount, mount_pose, mount_variant, mount_world_from_unit,
-      seed, lod, /*entity_id*/ 0, pass);
+      seed, lod, 0, pass);
   set.rider_row = Render::Creature::Pipeline::make_prepared_humanoid_row(
       mounted_spec.rider, rider_pose, rider_variant, rider_anim,
-      rider_world_from_unit, seed, lod, /*legacy_ctx*/ nullptr,
-      /*entity_id*/ 0, pass);
+      rider_world_from_unit, seed, lod, nullptr, 0, pass);
   return set;
 }
 

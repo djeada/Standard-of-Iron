@@ -42,7 +42,7 @@ struct EquipmentCylinderPrim {
   float alpha{1.0F};
 };
 
-inline constexpr std::size_t kEquipmentArchetypePaletteCapacity = 4;
+inline constexpr std::size_t kEquipmentArchetypePaletteCapacity = 8;
 
 struct EquipmentArchetypePrim {
   const RenderArchetype *archetype{nullptr};

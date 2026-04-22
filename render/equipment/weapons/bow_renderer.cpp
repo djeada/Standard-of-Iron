@@ -8,21 +8,136 @@
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../humanoid/humanoid_specs.h"
 #include "../equipment_submit.h"
+#include "../generated_equipment.h"
+#include "../oriented_archetype_utils.h"
+#include "../primitive_archetype_utils.h"
+#include "arrow_archetype_utils.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <QVector4D>
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
+#include <deque>
+#include <string>
 
 namespace Render::GL {
 
 using Render::Geom::clamp_f;
-using Render::Geom::cone_from_to;
-using Render::Geom::cylinder_between;
 
 namespace {
 constexpr QVector3D k_dark_bow_color(0.05F, 0.035F, 0.02F);
+
+enum BowPaletteSlot : std::uint8_t {
+  k_bow_body_slot = 0U,
+};
+
+struct BowBodyKey {
+  int rod_radius_key{0};
+  int bow_depth_key{0};
+  int bow_x_key{0};
+  int bow_top_y_key{0};
+  int bow_bot_y_key{0};
+  int bow_height_scale_key{0};
+  int bow_curve_factor_key{0};
+  int material_id{0};
+};
+
+auto operator==(const BowBodyKey &lhs, const BowBodyKey &rhs) -> bool {
+  return lhs.rod_radius_key == rhs.rod_radius_key &&
+         lhs.bow_depth_key == rhs.bow_depth_key &&
+         lhs.bow_x_key == rhs.bow_x_key &&
+         lhs.bow_top_y_key == rhs.bow_top_y_key &&
+         lhs.bow_bot_y_key == rhs.bow_bot_y_key &&
+         lhs.bow_height_scale_key == rhs.bow_height_scale_key &&
+         lhs.bow_curve_factor_key == rhs.bow_curve_factor_key &&
+         lhs.material_id == rhs.material_id;
 }
+
+auto quantize_bow_value(float value) -> int {
+  return std::lround(value * 1000.0F);
+}
+
+auto bow_body_archetype(const BowRenderConfig &config)
+    -> const RenderArchetype & {
+  struct CachedArchetype {
+    BowBodyKey key;
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  BowBodyKey const key{
+      quantize_bow_value(config.bow_rod_radius),
+      quantize_bow_value(config.bow_depth),
+      quantize_bow_value(config.bow_x),
+      quantize_bow_value(config.bow_top_y),
+      quantize_bow_value(config.bow_bot_y),
+      quantize_bow_value(config.bow_height_scale),
+      quantize_bow_value(config.bow_curve_factor),
+      config.material_id,
+  };
+  for (const auto &entry : cache) {
+    if (entry.key == key) {
+      return entry.archetype;
+    }
+  }
+
+  float const bow_half_height =
+      (config.bow_top_y - config.bow_bot_y) * 0.5F * config.bow_height_scale;
+  float const bow_plane_x = config.bow_x + 0.02F;
+  QVector3D const top_end(bow_plane_x, bow_half_height, 0.0F);
+  QVector3D const bot_end(bow_plane_x, -bow_half_height, 0.0F);
+  QVector3D const ctrl(bow_plane_x, 0.45F * config.bow_curve_factor,
+                       config.bow_depth * 0.6F * config.bow_curve_factor);
+
+  auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
+                     float t) {
+    float const u = 1.0F - t;
+    return u * u * a + 2.0F * u * t * c + t * t * b;
+  };
+
+  constexpr int k_bow_segments = 22;
+  RenderArchetypeBuilder builder{
+      "bow_body_" + std::to_string(key.rod_radius_key) + "_" +
+      std::to_string(key.bow_depth_key) + "_" + std::to_string(key.bow_x_key) +
+      "_" + std::to_string(key.bow_top_y_key) + "_" +
+      std::to_string(key.bow_bot_y_key) + "_" +
+      std::to_string(key.bow_height_scale_key) + "_" +
+      std::to_string(key.bow_curve_factor_key) + "_" +
+      std::to_string(key.material_id)};
+
+  QVector3D prev = bot_end;
+  for (int i = 1; i <= k_bow_segments; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(k_bow_segments);
+    QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
+    add_generated_equipment_primitive(
+        builder, generated_cylinder(prev, cur, config.bow_rod_radius,
+                                    k_bow_body_slot, 1.0F, config.material_id));
+    prev = cur;
+  }
+
+  add_generated_equipment_primitive(
+      builder, generated_cylinder(QVector3D(0.0F, -0.05F, 0.0F),
+                                  QVector3D(0.0F, 0.05F, 0.0F),
+                                  config.bow_rod_radius * 1.45F,
+                                  k_bow_body_slot, 1.0F, config.material_id));
+
+  cache.push_back({key, std::move(builder).build()});
+  return cache.back().archetype;
+}
+
+auto bow_body_transform(const QMatrix4x4 &parent, const QVector3D &grip,
+                        const QVector3D &outward) -> QMatrix4x4 {
+  QMatrix4x4 local;
+  local.setColumn(0, QVector4D(outward, 0.0F));
+  local.setColumn(1, QVector4D(0.0F, 1.0F, 0.0F, 0.0F));
+  local.setColumn(2, QVector4D(0.0F, 0.0F, 1.0F, 0.0F));
+  local.setColumn(3, QVector4D(grip, 1.0F));
+  return parent * local;
+}
+} // namespace
 
 BowRenderer::BowRenderer(BowRenderConfig config) : m_base(std::move(config)) {}
 
@@ -61,6 +176,11 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
   }
 
   QVector3D const side = outward * 0.02F;
+  std::array<QVector3D, 1> const body_palette{k_dark_bow_color};
+
+  append_equipment_archetype(batch, bow_body_archetype(m_config),
+                             bow_body_transform(ctx.model, grip, outward),
+                             body_palette);
 
   float const bow_plane_x = grip.x() + m_config.bow_x + side.x();
   float const bow_plane_z = grip.z() + side.z();
@@ -73,52 +193,33 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
       bow_plane_x,
       clamp_f(string_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
       clamp_f(string_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
+  std::array<QVector3D, 1> const string_palette{m_config.string_color};
 
-  constexpr int k_bowstring_segments = 22;
-  auto q_bezier = [](const QVector3D &a, const QVector3D &c, const QVector3D &b,
-                     float t) {
-    float const u = 1.0F - t;
-    return u * u * a + 2.0F * u * t * c + t * t * b;
-  };
-
-  float const ctrl_y = bow_mid_y + (0.45F * m_config.bow_curve_factor);
-  QVector3D const ctrl(bow_plane_x, ctrl_y,
-                       bow_plane_z + m_config.bow_depth * 0.6F *
-                                         m_config.bow_curve_factor);
-
-  QVector3D prev = bot_end;
-  for (int i = 1; i <= k_bowstring_segments; ++i) {
-    float const t = float(i) / float(k_bowstring_segments);
-    QVector3D const cur = q_bezier(bot_end, ctrl, top_end, t);
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, prev, cur, m_config.bow_rod_radius),
-         k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
-    prev = cur;
-  }
-
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, grip - up * 0.05F, grip + up * 0.05F,
-                        m_config.bow_rod_radius * 1.45F),
-       k_dark_bow_color, nullptr, 1.0F, m_config.material_id});
-
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, top_end, nock, m_config.string_radius),
-       m_config.string_color, nullptr, 1.0F, m_config.material_id});
-  batch.meshes.push_back(
-      {get_unit_cylinder(), nullptr,
-       cylinder_between(ctx.model, nock, bot_end, m_config.string_radius),
-       m_config.string_color, nullptr, 1.0F, m_config.material_id});
+  append_equipment_archetype(
+      batch,
+      single_cylinder_archetype(m_config.string_radius, m_config.material_id,
+                                "bow_string"),
+      oriented_segment_transform(ctx.model, top_end, nock - top_end, outward),
+      string_palette);
+  append_equipment_archetype(
+      batch,
+      single_cylinder_archetype(m_config.string_radius, m_config.material_id,
+                                "bow_string"),
+      oriented_segment_transform(ctx.model, nock, bot_end - nock, outward),
+      string_palette);
 
   bool const is_bow_attacking =
       anim.inputs.is_attacking && !anim.inputs.is_melee;
   if (is_bow_attacking) {
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, frames.hand_l.origin, nock, 0.0045F),
-         m_config.string_color * 0.9F, nullptr, 1.0F, m_config.material_id});
+    std::array<QVector3D, 1> const attack_string_palette{m_config.string_color *
+                                                         0.9F};
+    append_equipment_archetype(
+        batch,
+        single_cylinder_archetype(0.0045F, m_config.material_id,
+                                  "bow_attack_string"),
+        oriented_segment_transform(ctx.model, frames.hand_l.origin,
+                                   nock - frames.hand_l.origin, outward),
+        attack_string_palette);
   }
 
   float attack_phase = 0.0F;
@@ -153,28 +254,39 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
   if (show_arrow) {
     QVector3D const tail = nock - forward * 0.06F;
     QVector3D const tip = tail + forward * 0.90F;
-
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                            cylinder_between(ctx.model, tail, tip, 0.018F),
-                            palette.wood, nullptr, 1.0F, m_config.material_id});
+    std::array<QVector3D, 3> const arrow_palette{
+        palette.wood, m_config.metal_color, m_config.fletching_color};
+    append_equipment_archetype(
+        batch,
+        arrow_shaft_archetype(0.018F, m_config.material_id, "bow_arrow_shaft"),
+        oriented_segment_transform(ctx.model, tail, tip - tail, outward),
+        arrow_palette);
 
     QVector3D const head_base = tip - forward * 0.10F;
-    batch.meshes.push_back({get_unit_cone(), nullptr,
-                            cone_from_to(ctx.model, head_base, tip, 0.05F),
-                            m_config.metal_color, nullptr, 1.0F,
-                            m_config.material_id});
+    append_equipment_archetype(
+        batch,
+        arrow_head_archetype(0.05F, m_config.material_id, "bow_arrow_head"),
+        oriented_segment_transform(ctx.model, head_base, tip - head_base,
+                                   outward),
+        arrow_palette);
 
     QVector3D const f1b = tail - forward * 0.02F;
     QVector3D const f1a = f1b - forward * 0.06F;
     QVector3D const f2b = tail + forward * 0.02F;
     QVector3D const f2a = f2b + forward * 0.06F;
 
-    batch.meshes.push_back(
-        {get_unit_cone(), nullptr, cone_from_to(ctx.model, f1b, f1a, 0.04F),
-         m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
-    batch.meshes.push_back(
-        {get_unit_cone(), nullptr, cone_from_to(ctx.model, f2a, f2b, 0.04F),
-         m_config.fletching_color, nullptr, 1.0F, m_config.material_id});
+    append_equipment_archetype(
+        batch,
+        arrow_fletching_archetype(0.04F, m_config.material_id,
+                                  "bow_arrow_fletching"),
+        oriented_segment_transform(ctx.model, f1b, f1a - f1b, outward),
+        arrow_palette);
+    append_equipment_archetype(
+        batch,
+        arrow_fletching_archetype(0.04F, m_config.material_id,
+                                  "bow_arrow_fletching"),
+        oriented_segment_transform(ctx.model, f2a, f2b - f2a, outward),
+        arrow_palette);
   }
 }
 

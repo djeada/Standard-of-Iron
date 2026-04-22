@@ -331,6 +331,13 @@ target_link_libraries(standard_of_iron
         audio_system
 )
 
+add_dependencies(standard_of_iron
+    engine_core
+    render_gl
+    game_systems
+    audio_system
+)
+
 # Windows-specific OpenGL linking
 if(WIN32)
     target_link_libraries(standard_of_iron PRIVATE opengl32)

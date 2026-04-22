@@ -6,13 +6,10 @@
 
 namespace Render::GL {
 
-void append_equipment_archetype(EquipmentBatch &batch,
-                                const RenderArchetype &archetype,
-                                const QMatrix4x4 &world,
-                                std::span<const QVector3D> palette,
-                                Texture *default_texture,
-                                float alpha_multiplier,
-                                RenderArchetypeLod lod) {
+void append_equipment_archetype(
+    EquipmentBatch &batch, const RenderArchetype &archetype,
+    const QMatrix4x4 &world, std::span<const QVector3D> palette,
+    Texture *default_texture, float alpha_multiplier, RenderArchetypeLod lod) {
   assert(palette.size() <= kEquipmentArchetypePaletteCapacity);
 
   EquipmentArchetypePrim prim;

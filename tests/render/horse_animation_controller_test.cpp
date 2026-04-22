@@ -100,7 +100,8 @@ TEST_F(HorseAnimationControllerTest, WalkAndTrotUseDistinctStrideProfiles) {
   EXPECT_GT(trot_gait.stride_lift, walk_gait.stride_lift);
 }
 
-TEST_F(HorseAnimationControllerTest, FasterGaitsIncreaseStrideDemandProgressively) {
+TEST_F(HorseAnimationControllerTest,
+       FasterGaitsIncreaseStrideDemandProgressively) {
   HorseAnimationController controller(profile, anim, rider_ctx);
 
   controller.set_gait(GaitType::WALK);

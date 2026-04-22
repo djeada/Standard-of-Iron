@@ -15,9 +15,8 @@ class CarthageShieldRenderer : public ShieldRenderer {
 public:
   explicit CarthageShieldRenderer(float scale_multiplier = 1.0F);
 
-  static void submit(const CarthageShieldConfig &config,
-                     const DrawContext &ctx, const BodyFrames &frames,
-                     const HumanoidPalette &palette,
+  static void submit(const CarthageShieldConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
                      const HumanoidAnimationContext &anim,
                      EquipmentBatch &batch);
 

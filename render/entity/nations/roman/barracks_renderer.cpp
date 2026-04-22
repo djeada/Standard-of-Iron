@@ -83,14 +83,15 @@ auto build_archetype_from_recorded(
   RenderArchetypeBuilder builder(std::move(name));
   builder.set_max_distance(std::numeric_limits<float>::infinity());
   for (const auto &cmd : commands) {
-    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture, cmd.alpha,
-                     cmd.material_id, const_cast<Material *>(cmd.material));
+    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture,
+                     cmd.alpha, cmd.material_id,
+                     const_cast<Material *>(cmd.material));
   }
   return std::move(builder).build();
 }
 
-auto build_barracks_archetype(BuildingState state, Mesh *unit, Texture *white)
-    -> RenderArchetype {
+auto build_barracks_archetype(BuildingState state, Mesh *unit,
+                              Texture *white) -> RenderArchetype {
   TemplateRecorder recorder;
   recorder.reset(96);
 
@@ -106,8 +107,8 @@ auto build_barracks_archetype(BuildingState state, Mesh *unit, Texture *white)
                                        recorder.take_commands());
 }
 
-auto barracks_archetype(BuildingState state, Mesh *unit, Texture *white)
-    -> const RenderArchetype & {
+auto barracks_archetype(BuildingState state, Mesh *unit,
+                        Texture *white) -> const RenderArchetype & {
   static const RenderArchetype k_normal =
       build_barracks_archetype(BuildingState::Normal, unit, white);
   static const RenderArchetype k_damaged =

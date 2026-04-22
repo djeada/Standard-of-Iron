@@ -1,9 +1,8 @@
 #include "reins_renderer.h"
 #include "../../equipment_submit.h"
+#include "../../oriented_archetype_utils.h"
+#include "../../primitive_archetype_utils.h"
 
-#include "../../../entity/registry.h"
-#include "../../../gl/primitives.h"
-#include <QMatrix4x4>
 #include <array>
 
 namespace Render::GL {
@@ -25,8 +24,14 @@ void ReinsRenderer::submit(const DrawContext &ctx,
   constexpr float k_handle_forward_offset = 0.05F;
   constexpr float k_mid_drop = 0.12F;
 
-  auto toWorld = [&ctx](const QVector3D &local) -> QVector3D {
-    return ctx.model.map(local);
+  auto append_segment = [&](const QVector3D &start, const QVector3D &end,
+                            const QVector3D &right_hint) {
+    std::array<QVector3D, 1> const palette{variant.tack_color};
+    append_equipment_archetype(
+        batch,
+        single_cylinder_archetype(k_rein_radius, 4, "horse_rein_segment"),
+        oriented_segment_transform(ctx.model, start, end - start, right_hint),
+        palette);
   };
 
   struct ReinEndpoints {
@@ -49,23 +54,15 @@ void ReinsRenderer::submit(const DrawContext &ctx,
     QVector3D const mid_point_local =
         (bit_pos_local + rein_handle_local) * 0.5F - back.up * k_mid_drop;
 
-    QVector3D const bit_pos = toWorld(bit_pos_local);
-    QVector3D const rein_handle = toWorld(rein_handle_local);
-    QVector3D const mid_point = toWorld(mid_point_local);
+    endpoints[i].bit = bit_pos_local;
+    endpoints[i].handle = rein_handle_local;
 
-    endpoints[i].bit = bit_pos;
-    endpoints[i].handle = rein_handle;
-
-    batch.cylinders.push_back(
-        {bit_pos, mid_point, k_rein_radius, variant.tack_color, 1.0F});
-    batch.cylinders.push_back(
-        {mid_point, rein_handle, k_rein_radius, variant.tack_color, 1.0F});
+    append_segment(bit_pos_local, mid_point_local, muzzle.right * side);
+    append_segment(mid_point_local, rein_handle_local, back.right * side);
   }
 
-  batch.cylinders.push_back({endpoints[0].bit, endpoints[1].bit, k_rein_radius,
-                             variant.tack_color, 1.0F});
-  batch.cylinders.push_back({endpoints[0].handle, endpoints[1].handle,
-                             k_rein_radius, variant.tack_color, 1.0F});
+  append_segment(endpoints[0].bit, endpoints[1].bit, muzzle.forward);
+  append_segment(endpoints[0].handle, endpoints[1].handle, back.forward);
 }
 
 } // namespace Render::GL

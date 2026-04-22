@@ -4,19 +4,19 @@
 // retain the visual_spec/pose/seed they were given, and that submit() of a
 // Shadow-tagged row produces zero rigged calls (declarative skip).
 
+#include "game/map/terrain.h"
+#include "game/map/terrain_service.h"
 #include "render/creature/pipeline/creature_render_state.h"
-#include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/preparation_common.h"
+#include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/formation_calculator.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/prepare.h"
-#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/submitter.h"
-#include "game/map/terrain.h"
-#include "game/map/terrain_service.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -33,7 +33,9 @@ public:
             Render::GL::Texture *, float, int) override {
     ++meshes;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override { ++rigged_calls; }
+  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+    ++rigged_calls;
+  }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -121,8 +123,7 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
     PreparedCreatureRenderRow row{};
     row.spec.kind = CreatureKind::Humanoid;
     row.lod = Render::Creature::CreatureLOD::Full;
-    row.pass = (i % 2 == 0) ? RenderPassIntent::Main
-                            : RenderPassIntent::Shadow;
+    row.pass = (i % 2 == 0) ? RenderPassIntent::Main : RenderPassIntent::Shadow;
     row.seed = static_cast<std::uint32_t>(i + 1);
     batch.add(row);
   }
@@ -166,7 +167,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutIsDeterministic) {
   inputs.melee_attack = true;
   inputs.animation_time = 2.5F;
 
-  auto const first = Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const first =
+      Render::Humanoid::build_soldier_layout(*calculator, inputs);
   auto const second =
       Render::Humanoid::build_soldier_layout(*calculator, inputs);
 
@@ -197,7 +199,8 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   inputs.melee_attack = false;
   inputs.animation_time = 0.0F;
 
-  auto const layout = Render::Humanoid::build_soldier_layout(*calculator, inputs);
+  auto const layout =
+      Render::Humanoid::build_soldier_layout(*calculator, inputs);
 
   EXPECT_FLOAT_EQ(layout.offset_x, 0.0F);
   EXPECT_FLOAT_EQ(layout.offset_z, 0.0F);
@@ -228,8 +231,8 @@ TEST(HumanoidPrepare, BuildAmbientIdleStateIsDeterministicPerUnit) {
     EXPECT_LT(first.secondary_index, 4);
     EXPECT_NE(first.secondary_index, first.primary_index);
   }
-  EXPECT_TRUE(
-      Render::Humanoid::is_humanoid_ambient_idle_active(first, first.primary_index));
+  EXPECT_TRUE(Render::Humanoid::is_humanoid_ambient_idle_active(
+      first, first.primary_index));
 }
 
 TEST(HumanoidPrepare, BuildAmbientIdleStateDisablesOutsideIdleWindow) {
@@ -297,7 +300,8 @@ TEST(HumanoidPrepare, RunPoseShapingAppliesExplicitOffsets) {
   anim_ctx.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
   anim_ctx.variation.height_scale = 1.0F;
 
-  auto const shaping = Render::Humanoid::build_humanoid_run_pose_shaping(anim_ctx);
+  auto const shaping =
+      Render::Humanoid::build_humanoid_run_pose_shaping(anim_ctx);
 
   Render::GL::HumanoidPose pose{};
   pose.pelvis_pos = QVector3D(0.0F, 1.0F, 0.0F);

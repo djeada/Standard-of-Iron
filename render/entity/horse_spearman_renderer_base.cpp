@@ -52,7 +52,7 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
 }
 
 auto HorseSpearmanRendererBase::get_proportion_scaling() const -> QVector3D {
-  return QVector3D{0.78F, 0.84F, 0.84F};
+  return QVector3D{0.72F, 0.80F, 0.80F};
 }
 
 auto HorseSpearmanRendererBase::mounted_visual_spec() const

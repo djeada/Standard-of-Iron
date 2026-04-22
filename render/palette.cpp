@@ -18,8 +18,7 @@ auto make_humanoid_palette(const QVector3D &team_tint,
   p.skin = [&]() {
     float const t = hash_01(seed ^ 0x53C17F0BU);
     float const tint = hash_01(seed ^ 0x914A6FE3U);
-    float const value_jitter =
-        (hash_01(seed ^ 0x2B7Cu) - 0.5F) * 0.06F;
+    float const value_jitter = (hash_01(seed ^ 0x2B7Cu) - 0.5F) * 0.06F;
 
     QVector3D const cool_light(0.97F, 0.83F, 0.74F);
     QVector3D const warm_light(0.96F, 0.78F, 0.66F);
@@ -47,8 +46,7 @@ auto make_humanoid_palette(const QVector3D &team_tint,
     }
 
     float const warm_bias = (tint - 0.5F) * 0.04F;
-    QVector3D tinted(base.x() + warm_bias,
-                     base.y() + warm_bias * 0.3F,
+    QVector3D tinted(base.x() + warm_bias, base.y() + warm_bias * 0.3F,
                      base.z() - warm_bias * 0.5F);
     tinted *= (1.0F + value_jitter);
     return clamp_vec_01(tinted);

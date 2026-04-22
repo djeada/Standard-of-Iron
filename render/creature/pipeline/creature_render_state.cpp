@@ -71,16 +71,17 @@ void append_prepared_row(CreatureFrame &frame,
                          SpecId spec_id) noexcept {
   CreatureAssetId asset_id = row.spec.creature_asset_id;
   if (asset_id == kInvalidCreatureAsset) {
-    if (const auto *asset = CreatureAssetRegistry::instance().resolve(row.spec)) {
+    if (const auto *asset =
+            CreatureAssetRegistry::instance().resolve(row.spec)) {
       asset_id = asset->id;
     }
   }
 
   frame.push_creature(row.spec.kind, row.entity_id, row.world_from_unit,
-                       spec_id, row.seed, row.lod, row.humanoid_pose,
-                       row.humanoid_variant, row.humanoid_anim, row.horse_pose,
-                       row.horse_variant, row.elephant_pose,
-                       row.elephant_variant, row.spec.palette_id, asset_id);
+                      spec_id, row.seed, row.lod, row.humanoid_pose,
+                      row.humanoid_variant, row.humanoid_anim, row.horse_pose,
+                      row.horse_variant, row.elephant_pose,
+                      row.elephant_variant, row.spec.palette_id, asset_id);
 
   if (row.legacy_ctx != nullptr && !frame.legacy_ctx.empty()) {
     frame.legacy_ctx.back() = row.legacy_ctx;

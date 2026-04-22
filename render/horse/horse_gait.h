@@ -21,9 +21,8 @@ struct HorseGait {
   float ear_pin{0.0F};
 };
 
-[[nodiscard]] inline auto gait_for_type(GaitType gait,
-                                        const HorseGait &base) noexcept
-    -> HorseGait {
+[[nodiscard]] inline auto
+gait_for_type(GaitType gait, const HorseGait &base) noexcept -> HorseGait {
   HorseGait resolved = base;
   switch (gait) {
   case GaitType::IDLE:
@@ -80,7 +79,8 @@ struct HorseGait {
   return resolved;
 }
 
-[[nodiscard]] inline auto blend_gaits(const HorseGait &from, const HorseGait &to,
+[[nodiscard]] inline auto blend_gaits(const HorseGait &from,
+                                      const HorseGait &to,
                                       float t) noexcept -> HorseGait {
   t = std::clamp(t, 0.0F, 1.0F);
   HorseGait out = from;

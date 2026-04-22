@@ -5,16 +5,17 @@
 // the rigged wrappers. With a non-Renderer submitter we exercise the
 // software fallback inside `submit_horse_*_rigged`, which routes
 // through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (5/17/43 for Minimal/Reduced/Full).
+// PartGraph primitive (5/29/43 for Minimal/Reduced/Full).
 
 #include "render/creature/spec.h"
+#include "render/gl/mesh.h"
 #include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
 #include "render/submitter.h"
 
-#include <algorithm>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -105,6 +106,20 @@ auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
   return it == prims.end() ? nullptr : &*it;
 }
 
+auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
+  auto const &vertices = mesh.get_vertices();
+  if (vertices.empty()) {
+    return 0.0F;
+  }
+  float min_v = vertices.front().position[axis];
+  float max_v = vertices.front().position[axis];
+  for (auto const &vertex : vertices) {
+    min_v = std::min(min_v, vertex.position[axis]);
+    max_v = std::max(max_v, vertex.position[axis]);
+  }
+  return max_v - min_v;
+}
+
 } // namespace
 
 TEST(HorseSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
@@ -121,7 +136,7 @@ TEST(HorseSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
   EXPECT_EQ(sub.calls.size(), 5U);
 }
 
-TEST(HorseSpecTest, ReducedRiggedFallbackEmitsSeventeenPrimitives) {
+TEST(HorseSpecTest, ReducedRiggedFallbackEmitsBlockedAnatomyAndLegPrimitives) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
   auto variant = make_horse_variant();
@@ -134,7 +149,7 @@ TEST(HorseSpecTest, ReducedRiggedFallbackEmitsSeventeenPrimitives) {
   CapturingSubmitter sub;
   Render::Horse::submit_horse_reduced_rigged(pose, variant, identity, sub);
 
-  EXPECT_EQ(sub.calls.size(), 17U);
+  EXPECT_EQ(sub.calls.size(), 29U);
 }
 
 TEST(HorseSpecTest, FullRiggedFallbackEmitsAnatomicalPrimitives) {
@@ -156,7 +171,7 @@ TEST(HorseSpecTest, FullRiggedFallbackEmitsAnatomicalPrimitives) {
 TEST(HorseSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Horse::horse_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
-  EXPECT_EQ(spec.lod_reduced.primitives.size(), 17U);
+  EXPECT_EQ(spec.lod_reduced.primitives.size(), 29U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 43U);
 }
 
@@ -172,7 +187,7 @@ TEST(HorseSpecTest, BasePoseKeepsForehandBroaderAndHindFeetTuckedUnderCroup) {
   EXPECT_LT(pose.shoulder_offset_bl.y(),
             pose.shoulder_offset_fl.y() - dims.body_height * 0.06F);
   EXPECT_GT(pose.foot_fl.z(), pose.foot_bl.z());
-  EXPECT_LT(pose.leg_radius, dims.body_width * 0.10F);
+  EXPECT_LT(pose.leg_radius, dims.body_width * 0.14F);
 }
 
 TEST(HorseSpecTest, ReducedPoseKeepsLegsOutsideNarrowerTorsoRead) {
@@ -183,14 +198,20 @@ TEST(HorseSpecTest, ReducedPoseKeepsLegsOutsideNarrowerTorsoRead) {
   Render::Horse::make_horse_spec_pose_reduced(
       dims, gait, Render::Horse::HorseReducedMotion{0.0F, 0.0F, false}, pose);
 
-  // body_half.x is now bw*0.88 so the barrel spans the full horse width.
-  EXPECT_LT(pose.reduced_body_half.x(), dims.body_width * 1.05F);
-  // Shoulders must still be outside the body half-width (anatomically correct).
-  EXPECT_GT(std::abs(pose.shoulder_offset_reduced_fl.x()), dims.body_width * 0.60F);
+  EXPECT_LT(pose.reduced_body_half.x(), dims.body_width * 0.75F);
   EXPECT_GT(std::abs(pose.shoulder_offset_reduced_fl.x()),
-             std::abs(pose.shoulder_offset_reduced_bl.x()));
+            dims.body_width * 0.65F);
+  EXPECT_GT(std::abs(pose.shoulder_offset_reduced_fl.x()),
+            std::abs(pose.shoulder_offset_reduced_bl.x()));
   EXPECT_GT(std::abs(pose.shoulder_offset_reduced_bl.x()),
-            dims.body_width * 0.40F);
+            dims.body_width * 0.50F);
+  EXPECT_LT(pose.shoulder_offset_reduced_fl.y(), 0.0F);
+  EXPECT_LT(pose.shoulder_offset_reduced_bl.y(),
+            pose.shoulder_offset_reduced_fl.y() - dims.body_height * 0.04F);
+  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y() - dims.leg_length * 1.04F);
+  EXPECT_LT(pose.foot_bl.y(), pose.barrel_center.y() - dims.leg_length * 1.00F);
+  EXPECT_GT(pose.neck_top.z(), pose.neck_base.z() + dims.neck_length * 0.88F);
+  EXPECT_GT(pose.head_center.z(), pose.neck_top.z() + dims.head_length * 0.64F);
   EXPECT_LT(pose.neck_radius, pose.reduced_body_half.x());
 }
 
@@ -208,49 +229,95 @@ TEST(HorseSpecTest, BasePoseBodyKeepsDepthCloserToWidthThanFlatBlob) {
 TEST(HorseSpecTest, ReducedSpecSeparatesChestRumpAndTailSilhouette) {
   auto const &spec = Render::Horse::horse_creature_spec();
 
-  auto const *body =
-      find_primitive(spec.lod_reduced.primitives, "horse.body.reduced");
+  auto const *ribcage =
+      find_primitive(spec.lod_reduced.primitives, "horse.body.ribcage.reduced");
   auto const *chest =
-      find_primitive(spec.lod_reduced.primitives, "horse.chest.reduced");
-  auto const *rump =
-      find_primitive(spec.lod_reduced.primitives, "horse.rump.reduced");
-  auto const *neck_head =
-      find_primitive(spec.lod_reduced.primitives, "horse.neck_head.reduced");
+      find_primitive(spec.lod_reduced.primitives, "horse.body.chest.reduced");
+  auto const *pelvis =
+      find_primitive(spec.lod_reduced.primitives, "horse.body.pelvis.reduced");
+  auto const *belly =
+      find_primitive(spec.lod_reduced.primitives, "horse.body.belly.reduced");
+  auto const *withers =
+      find_primitive(spec.lod_reduced.primitives, "horse.withers.reduced");
+  auto const *neck =
+      find_primitive(spec.lod_reduced.primitives, "horse.neck.reduced");
+  auto const *mane =
+      find_primitive(spec.lod_reduced.primitives, "horse.mane.reduced");
+  auto const *cranium =
+      find_primitive(spec.lod_reduced.primitives, "horse.head.cranium.reduced");
+  auto const *muzzle =
+      find_primitive(spec.lod_reduced.primitives, "horse.head.muzzle.reduced");
+  auto const *jaw =
+      find_primitive(spec.lod_reduced.primitives, "horse.head.jaw.reduced");
+  auto const *ear_l =
+      find_primitive(spec.lod_reduced.primitives, "horse.head.ear.l.reduced");
+  auto const *ear_r =
+      find_primitive(spec.lod_reduced.primitives, "horse.head.ear.r.reduced");
   auto const *tail =
       find_primitive(spec.lod_reduced.primitives, "horse.tail.reduced");
   auto const *front_upper =
       find_primitive(spec.lod_reduced.primitives, "horse.leg.fl.upper.r");
+  auto const *front_knee =
+      find_primitive(spec.lod_reduced.primitives, "horse.leg.fl.knee.r");
   auto const *front_lower =
       find_primitive(spec.lod_reduced.primitives, "horse.leg.fl.lower.r");
   auto const *front_hoof =
       find_primitive(spec.lod_reduced.primitives, "horse.hoof.fl.r");
 
-  ASSERT_NE(body, nullptr);
+  ASSERT_NE(ribcage, nullptr);
   ASSERT_NE(chest, nullptr);
-  ASSERT_NE(rump, nullptr);
-  ASSERT_NE(neck_head, nullptr);
+  ASSERT_NE(pelvis, nullptr);
+  ASSERT_NE(belly, nullptr);
+  ASSERT_NE(withers, nullptr);
+  ASSERT_NE(neck, nullptr);
+  ASSERT_NE(mane, nullptr);
+  ASSERT_NE(cranium, nullptr);
+  ASSERT_NE(muzzle, nullptr);
+  ASSERT_NE(jaw, nullptr);
+  ASSERT_NE(ear_l, nullptr);
+  ASSERT_NE(ear_r, nullptr);
   ASSERT_NE(tail, nullptr);
   ASSERT_NE(front_upper, nullptr);
+  ASSERT_NE(front_knee, nullptr);
   ASSERT_NE(front_lower, nullptr);
   ASSERT_NE(front_hoof, nullptr);
 
-  // Body/chest/rump are now Capsules for organic rounded silhouette.
-  EXPECT_EQ(body->shape, Render::Creature::PrimitiveShape::Capsule);
-  EXPECT_EQ(chest->shape, Render::Creature::PrimitiveShape::Capsule);
-  EXPECT_EQ(rump->shape, Render::Creature::PrimitiveShape::Capsule);
-  // Chest head is forward of the barrel center; rump head is behind it.
-  EXPECT_GT(chest->params.head_offset.z(), body->params.head_offset.z());
-  EXPECT_LE(rump->params.head_offset.z(), body->params.tail_offset.z());
-  // Chest sits above ground level, rump behind zero.
-  EXPECT_GT(chest->params.head_offset.z(), 0.0F);
-  EXPECT_LT(rump->params.head_offset.z(), 0.0F);
-  // Neck cylinder must be narrower than the body capsule radius.
-  EXPECT_LT(neck_head->params.radius, body->params.radius);
+  EXPECT_EQ(ribcage->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(ribcage->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*ribcage->custom_mesh, 2),
+            mesh_axis_span(*ribcage->custom_mesh, 1) * 1.5F);
+  EXPECT_EQ(chest->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(pelvis->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(belly->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(withers->shape, Render::Creature::PrimitiveShape::Cone);
+  EXPECT_EQ(neck->shape, Render::Creature::PrimitiveShape::Capsule);
+  EXPECT_EQ(mane->shape, Render::Creature::PrimitiveShape::Capsule);
+  EXPECT_EQ(cranium->shape, Render::Creature::PrimitiveShape::Box);
+  EXPECT_EQ(muzzle->shape, Render::Creature::PrimitiveShape::Cone);
+  EXPECT_EQ(jaw->shape, Render::Creature::PrimitiveShape::Box);
+  EXPECT_EQ(ear_l->shape, Render::Creature::PrimitiveShape::Cone);
+  EXPECT_EQ(ear_r->shape, Render::Creature::PrimitiveShape::Cone);
+  EXPECT_EQ(ribcage->color_role, 1U);
+  EXPECT_EQ(mane->color_role, 5U);
+  EXPECT_GT(chest->params.head_offset.z(), ribcage->params.head_offset.z());
+  EXPECT_LT(pelvis->params.head_offset.z(), ribcage->params.head_offset.z());
+  EXPECT_LT(belly->params.head_offset.y(), ribcage->params.head_offset.y());
+  EXPECT_GT(withers->params.tail_offset.y(), withers->params.head_offset.y());
+  EXPECT_GT(neck->params.radius, mane->params.radius);
+  EXPECT_GT(mane->params.radius, 0.0F);
+  EXPECT_GT(muzzle->params.radius, 0.0F);
+  EXPECT_GT(jaw->params.half_extents.y(), 0.0F);
+  EXPECT_GT(muzzle->params.tail_offset.z(), 0.0F);
+  EXPECT_LT(jaw->params.head_offset.y(), 0.0F);
+  EXPECT_GT(ear_l->params.tail_offset.y(), ear_l->params.head_offset.y());
+  EXPECT_GT(ear_r->params.tail_offset.y(), ear_r->params.head_offset.y());
   EXPECT_EQ(tail->shape, Render::Creature::PrimitiveShape::Capsule);
-  EXPECT_EQ(front_upper->shape, Render::Creature::PrimitiveShape::Capsule);
+  EXPECT_EQ(front_upper->shape, Render::Creature::PrimitiveShape::Cone);
+  EXPECT_EQ(front_knee->shape, Render::Creature::PrimitiveShape::Sphere);
   EXPECT_EQ(front_lower->shape, Render::Creature::PrimitiveShape::Cylinder);
   EXPECT_EQ(front_hoof->shape, Render::Creature::PrimitiveShape::Mesh);
   EXPECT_GT(front_upper->params.radius, front_lower->params.radius);
+  EXPECT_GT(front_knee->params.radius, front_lower->params.radius);
 }
 
 TEST(HorseSpecTest, FullSpecPreservesToplineDepthAndHeadTaper) {
@@ -294,12 +361,20 @@ TEST(HorseSpecTest, FullSpecPreservesToplineDepthAndHeadTaper) {
   ASSERT_NE(cheek, nullptr);
   ASSERT_NE(cranium, nullptr);
 
+  EXPECT_EQ(ribcage->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(ribcage->custom_mesh, nullptr);
+  EXPECT_EQ(chest->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(croup->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_GT(mesh_axis_span(*ribcage->custom_mesh, 2),
+            mesh_axis_span(*ribcage->custom_mesh, 1) * 1.5F);
   EXPECT_GT(withers->params.head_offset.y(), croup->params.head_offset.y());
   EXPECT_GT(chest->params.head_offset.z(), ribcage->params.head_offset.z());
   EXPECT_LT(sternum->params.head_offset.y(), chest->params.head_offset.y());
   EXPECT_LT(belly->params.half_extents.z(), ribcage->params.half_extents.z());
-  EXPECT_LT(shoulder->params.half_extents.x(), ribcage->params.half_extents.x());
-  EXPECT_LT(hindquarter->params.half_extents.x(), ribcage->params.half_extents.x());
+  EXPECT_LT(shoulder->params.half_extents.x(),
+            ribcage->params.half_extents.x());
+  EXPECT_LT(hindquarter->params.half_extents.x(),
+            ribcage->params.half_extents.x());
   EXPECT_LT(muzzle->params.radius, jaw->params.half_extents.x());
   EXPECT_LT(muzzle->params.radius, cheek->params.radius);
   EXPECT_GT(cranium->params.half_extents.z(), jaw->params.half_extents.z());

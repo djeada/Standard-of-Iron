@@ -13,7 +13,6 @@
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
-#include "../graphics_settings.h"
 #include "../creature/spec.h"
 #include "../entity/registry.h"
 #include "../geom/math_utils.h"
@@ -27,6 +26,7 @@
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
 #include "../gl/resources.h"
+#include "../graphics_settings.h"
 #include "../palette.h"
 #include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
@@ -70,7 +70,7 @@ auto make_humanoid_prepared_row(
     -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
   return Render::Creature::Pipeline::make_prepared_humanoid_row(
       owner.visual_spec(), pose, variant, anim_ctx, inst_model, inst_seed, lod,
-      legacy_ctx, /*entity_id*/ 0, pass);
+      legacy_ctx, 0, pass);
 }
 
 } // namespace Render::Humanoid
@@ -129,12 +129,7 @@ void HumanoidRendererBase::render(const DrawContext &ctx,
   AnimationInputs anim = sample_anim_state(ctx);
 
   if (ctx.template_prewarm) {
-    // Template-prewarm contexts are flagged as RenderPassIntent::Shadow by
-    // pass_intent_from_ctx; PreparedCreatureSubmitBatch::submit drops Shadow
-    // rows. We still early-return here because render_procedural also runs
-    // post_body_draws (direct ISubmitter emissions) and pose/animation cache
-    // mutations that are not gated by the Shadow filter. Removing this guard
-    // would record extra draws into the prewarm TemplateRecorder.
+
     return;
   }
 
@@ -209,13 +204,13 @@ inline auto fast_random(uint32_t &state) -> float {
   return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
 }
 
-void ground_humanoid_instance_model(
-    QMatrix4x4 &model, bool skip_ground_offset, float entity_ground_offset,
-    float scale_y) {
+void ground_humanoid_instance_model(QMatrix4x4 &model, bool skip_ground_offset,
+                                    float entity_ground_offset, float scale_y) {
   QVector3D const origin =
       Render::Creature::Pipeline::model_world_origin(model);
-  float grounded_y = Render::Creature::Pipeline::sample_terrain_height_or_fallback(
-      origin.x(), origin.z(), origin.y());
+  float grounded_y =
+      Render::Creature::Pipeline::sample_terrain_height_or_fallback(
+          origin.x(), origin.z(), origin.y());
   if (!skip_ground_offset && entity_ground_offset != 0.0F) {
     grounded_y -= entity_ground_offset * scale_y;
   }
@@ -288,7 +283,10 @@ namespace Render::Humanoid {
 
 using Render::GL::AmbientIdleType;
 using Render::GL::AnimationInputs;
+using Render::GL::AnimState;
+using Render::GL::classify_motion_state;
 using Render::GL::DrawContext;
+using Render::GL::elbow_bend_torso;
 using Render::GL::FormationCalculatorFactory;
 using Render::GL::FormationOffset;
 using Render::GL::FormationParams;
@@ -299,45 +297,43 @@ using Render::GL::HumanoidPose;
 using Render::GL::HumanoidPoseController;
 using Render::GL::HumanoidRendererBase;
 using Render::GL::HumanoidVariant;
+using Render::GL::HumanProportions;
 using Render::GL::IFormationCalculator;
 using Render::GL::ISubmitter;
+using Render::GL::k_reference_run_speed;
+using Render::GL::k_reference_walk_speed;
 using Render::GL::PosePaletteCache;
 using Render::GL::PosePaletteKey;
 using Render::GL::Renderer;
 using Render::GL::Shader;
 using Render::GL::VariationParams;
-using Render::GL::AnimState;
-using Render::GL::HumanProportions;
-using Render::GL::elbow_bend_torso;
-using Render::GL::classify_motion_state;
-using Render::GL::k_reference_run_speed;
-using Render::GL::k_reference_walk_speed;
 
 auto build_soldier_layout(const IFormationCalculator &formation_calculator,
-                          const SoldierLayoutInputs &inputs)
-    -> SoldierLayout {
+                          const SoldierLayoutInputs &inputs) -> SoldierLayout {
   SoldierLayout layout{};
   layout.inst_seed = inputs.seed ^ std::uint32_t(inputs.idx * 9176U);
 
   std::uint32_t rng_state = layout.inst_seed;
   if (!inputs.force_single_soldier) {
-    FormationOffset const formation_offset = formation_calculator.calculate_offset(
-        inputs.idx, inputs.row, inputs.col, inputs.rows, inputs.cols,
-        inputs.formation_spacing, inputs.seed);
+    FormationOffset const formation_offset =
+        formation_calculator.calculate_offset(
+            inputs.idx, inputs.row, inputs.col, inputs.rows, inputs.cols,
+            inputs.formation_spacing, inputs.seed);
     layout.offset_x = formation_offset.offset_x;
     layout.offset_z = formation_offset.offset_z;
-    layout.vertical_jitter = (::Render::GL::fast_random(rng_state) - 0.5F) * 0.03F;
+    layout.vertical_jitter =
+        (::Render::GL::fast_random(rng_state) - 0.5F) * 0.03F;
     layout.yaw_offset = (::Render::GL::fast_random(rng_state) - 0.5F) * 5.0F;
     layout.phase_offset = ::Render::GL::fast_random(rng_state) * 0.25F;
   }
 
   if (inputs.melee_attack) {
     float const combat_jitter_x =
-        (::Render::GL::fast_random(rng_state) - 0.5F) * inputs.formation_spacing *
-        0.4F;
+        (::Render::GL::fast_random(rng_state) - 0.5F) *
+        inputs.formation_spacing * 0.4F;
     float const combat_jitter_z =
-        (::Render::GL::fast_random(rng_state) - 0.5F) * inputs.formation_spacing *
-        0.3F;
+        (::Render::GL::fast_random(rng_state) - 0.5F) *
+        inputs.formation_spacing * 0.3F;
     float const sway_time = inputs.animation_time + layout.phase_offset * 2.0F;
     float const sway_x = std::sin(sway_time * 1.5F) * 0.05F;
     float const sway_z = std::cos(sway_time * 1.2F) * 0.04F;
@@ -351,10 +347,9 @@ auto build_soldier_layout(const IFormationCalculator &formation_calculator,
   return layout;
 }
 
-auto build_humanoid_ambient_idle_state(const AnimationInputs &anim,
-                                       std::uint32_t unit_seed,
-                                       int visible_count, float animation_time)
-    -> HumanoidAmbientIdleState {
+auto build_humanoid_ambient_idle_state(
+    const AnimationInputs &anim, std::uint32_t unit_seed, int visible_count,
+    float animation_time) -> HumanoidAmbientIdleState {
   HumanoidAmbientIdleState state{};
   if (anim.is_moving || anim.is_attacking || visible_count <= 0) {
     return state;
@@ -382,18 +377,18 @@ auto build_humanoid_ambient_idle_state(const AnimationInputs &anim,
   int const slot_count =
       1 + static_cast<int>(cycle_rng % static_cast<std::uint32_t>(max_slots));
 
-  state.primary_index = static_cast<int>(
-      ::Render::GL::hash_u32(cycle_rng ^ 0xA341316CU) %
-      static_cast<std::uint32_t>(visible_count));
+  state.primary_index =
+      static_cast<int>(::Render::GL::hash_u32(cycle_rng ^ 0xA341316CU) %
+                       static_cast<std::uint32_t>(visible_count));
   if (slot_count > 1) {
-    state.secondary_index = static_cast<int>(
-        ::Render::GL::hash_u32(cycle_rng ^ 0xC8013EA4U) %
-        static_cast<std::uint32_t>(visible_count));
+    state.secondary_index =
+        static_cast<int>(::Render::GL::hash_u32(cycle_rng ^ 0xC8013EA4U) %
+                         static_cast<std::uint32_t>(visible_count));
     if (visible_count > 1 && state.secondary_index == state.primary_index) {
       state.secondary_index =
-          (state.primary_index +
-           1 + static_cast<int>(cycle_rng % static_cast<std::uint32_t>(
-                                        visible_count - 1))) %
+          (state.primary_index + 1 +
+           static_cast<int>(cycle_rng %
+                            static_cast<std::uint32_t>(visible_count - 1))) %
           visible_count;
     }
   }
@@ -461,9 +456,10 @@ auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs &inputs)
         (state.motion_state == HumanoidMotionState::Run ? 0.56F : 0.92F) /
         std::max(0.1F, inputs.variation.walk_speed_mult);
     state.gait.cycle_time = base_cycle;
-    state.gait.cycle_phase = std::fmod(
-        (inputs.animation_time + inputs.phase_offset) / std::max(0.001F, base_cycle),
-        1.0F);
+    state.gait.cycle_phase =
+        std::fmod((inputs.animation_time + inputs.phase_offset) /
+                      std::max(0.001F, base_cycle),
+                  1.0F);
     state.gait.stride_distance = state.gait.speed * state.gait.cycle_time;
   } else {
     state.gait.cycle_time = 0.0F;
@@ -481,8 +477,7 @@ auto build_humanoid_run_pose_shaping(const HumanoidAnimationContext &anim)
     return shaping;
   }
 
-  float const run_amount =
-      std::clamp(anim.gait.normalized_speed, 0.55F, 1.0F);
+  float const run_amount = std::clamp(anim.gait.normalized_speed, 0.55F, 1.0F);
   shaping.lean = 0.055F + run_amount * 0.030F;
   shaping.pelvis_setback = 0.028F + run_amount * 0.010F;
   shaping.pelvis_drop = 0.014F + run_amount * 0.010F;
@@ -527,10 +522,9 @@ void apply_humanoid_run_pose_shaping(
         std::sin(foot_phase * 2.0F * std::numbers::pi_v<float>);
     if (lift_raw > 0.0F) {
       foot.setY(foot.y() + lift_raw * shaping.foot_extra_lift);
-      foot.setZ(foot.z() +
-                std::sin((foot_phase - 0.25F) * 2.0F *
-                         std::numbers::pi_v<float>) *
-                    shaping.stride_enhancement);
+      foot.setZ(foot.z() + std::sin((foot_phase - 0.25F) * 2.0F *
+                                    std::numbers::pi_v<float>) *
+                               shaping.stride_enhancement);
     }
   };
 
@@ -552,9 +546,8 @@ void apply_humanoid_run_pose_shaping(
   pose.hand_r.setY(pose.hand_r.y() + shaping.hand_raise);
 
   using HP = HumanProportions;
-  float const max_reach =
-      (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) * anim_ctx.variation.height_scale *
-      0.98F;
+  float const max_reach = (HP::UPPER_ARM_LEN + HP::FORE_ARM_LEN) *
+                          anim_ctx.variation.height_scale * 0.98F;
   auto clamp_hand = [&](const QVector3D &shoulder, QVector3D &hand) {
     QVector3D diff = hand - shoulder;
     float const len = diff.length();
@@ -577,14 +570,12 @@ void apply_humanoid_run_pose_shaping(
 
   QVector3D const outward_l = -right_axis;
   QVector3D const outward_r = right_axis;
-  pose.elbow_l = elbow_bend_torso(pose.shoulder_l, pose.hand_l, outward_l,
-                                  shaping.elbow_along_left,
-                                  shaping.elbow_width_left,
-                                  shaping.elbow_depth_left, +1.0F);
-  pose.elbow_r = elbow_bend_torso(pose.shoulder_r, pose.hand_r, outward_r,
-                                  shaping.elbow_along_right,
-                                  shaping.elbow_width_right,
-                                  shaping.elbow_depth_right, +1.0F);
+  pose.elbow_l = elbow_bend_torso(
+      pose.shoulder_l, pose.hand_l, outward_l, shaping.elbow_along_left,
+      shaping.elbow_width_left, shaping.elbow_depth_left, +1.0F);
+  pose.elbow_r = elbow_bend_torso(
+      pose.shoulder_r, pose.hand_r, outward_r, shaping.elbow_along_right,
+      shaping.elbow_width_right, shaping.elbow_depth_right, +1.0F);
 
   float const hip_rotation =
       std::sin(phase * 2.0F * std::numbers::pi_v<float>) * 0.002F;
@@ -626,7 +617,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                                 HumanoidPreparation &out) {
   using namespace Render::GL;
 
-  FormationParams const formation = HumanoidRendererBase::resolve_formation(ctx);
+  FormationParams const formation =
+      HumanoidRendererBase::resolve_formation(ctx);
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {
@@ -717,11 +709,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
   s_render_stats.soldiers_total += visible_count;
 
-  out.bodies.reserve(out.bodies.size() + static_cast<std::size_t>(visible_count));
+  out.bodies.reserve(out.bodies.size() +
+                     static_cast<std::size_t>(visible_count));
   out.post_body_draws.reserve(out.post_body_draws.size() +
                               static_cast<std::size_t>(visible_count));
 
-  // Pre-compute LOD config once for all soldiers in this unit
   namespace RCP = Render::Creature::Pipeline;
   const auto lod_config = RCP::humanoid_lod_config_from_settings();
   const auto ambient_idle_state =
@@ -737,18 +729,18 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       auto &entry = cache_it->second;
       bool const matches =
           entry.seed == seed && entry.rows == rows && entry.cols == cols &&
-          entry.formation.individuals_per_unit == formation.individuals_per_unit &&
+          entry.formation.individuals_per_unit ==
+              formation.individuals_per_unit &&
           entry.formation.max_per_row == formation.max_per_row &&
-          entry.formation.spacing == formation.spacing && entry.nation == nation &&
-          entry.category == category &&
+          entry.formation.spacing == formation.spacing &&
+          entry.nation == nation && entry.category == category &&
           entry.soldiers.size() == static_cast<std::size_t>(visible_count);
       bool const cache_valid =
-          !matches
-              ? false
-              : ((anim.is_attacking && anim.is_melee)
-                     ? (entry.frame_number == frame_index)
-                     : (frame_index - entry.frame_number <=
-                        ::Render::GL::k_layout_cache_max_age));
+          !matches ? false
+                   : ((anim.is_attacking && anim.is_melee)
+                          ? (entry.frame_number == frame_index)
+                          : (frame_index - entry.frame_number <=
+                             ::Render::GL::k_layout_cache_max_age));
       if (cache_valid) {
         soldier_layouts = entry.soldiers;
         entry.frame_number = frame_index;
@@ -771,7 +763,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       inputs.force_single_soldier = ctx.force_single_soldier;
       inputs.melee_attack = anim.is_attacking && anim.is_melee;
       inputs.animation_time = anim.time;
-      soldier_layouts.push_back(build_soldier_layout(*formation_calculator, inputs));
+      soldier_layouts.push_back(
+          build_soldier_layout(*formation_calculator, inputs));
     }
 
     if (layout_cache_key != 0U) {
@@ -830,7 +823,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       continue;
     }
 
-    // Use pre-computed LOD config with per-instance data
     RCP::CreatureLodDecisionInputs lod_in{};
     if (ctx.force_humanoid_lod) {
       lod_in.forced_lod =
@@ -884,7 +876,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       variation.walk_speed_mult *= 1.25F;
       variation.arm_swing_amp *= 1.12F;
       variation.stance_width *= 0.96F;
-      variation.posture_slump = std::min(0.16F, variation.posture_slump + 0.020F);
+      variation.posture_slump =
+          std::min(0.16F, variation.posture_slump + 0.020F);
     } else if (anim.is_moving) {
       variation.walk_speed_mult *= 1.05F;
     }
@@ -981,8 +974,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
       if (!used_palette) {
         HumanoidRendererBase::compute_locomotion_pose(
-            inst_seed, anim.time + phase_offset, locomotion_state.gait, variation,
-            pose);
+            inst_seed, anim.time + phase_offset, locomotion_state.gait,
+            variation, pose);
         ++s_render_stats.poses_computed;
       }
 
@@ -1071,7 +1064,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     graph_inputs.entity = ctx.entity;
     graph_inputs.unit = unit_comp;
     graph_inputs.transform = transform_comp;
-    auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
+    auto graph_output =
+        RCP::build_base_graph_output(graph_inputs, lod_decision);
     graph_output.spec = owner.visual_spec();
     graph_output.seed = inst_seed;
 
@@ -1240,13 +1234,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       using Render::Creature::Pipeline::owns_slot;
       const auto owned_slots = owner.visual_spec().owned_legacy_slots;
       if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
-        out.add_post_body_draw(
-            graph_output.pass_intent,
-            [&owner, inst_ctx, variant, pose,
-             anim_ctx](Render::GL::ISubmitter &submitter) {
-              owner.add_attachments(inst_ctx, variant, pose, anim_ctx,
-                                    submitter);
-            });
+        out.add_post_body_draw(graph_output.pass_intent,
+                               [&owner, inst_ctx, variant, pose,
+                                anim_ctx](Render::GL::ISubmitter &submitter) {
+                                 owner.add_attachments(inst_ctx, variant, pose,
+                                                       anim_ctx, submitter);
+                               });
       }
       break;
     }

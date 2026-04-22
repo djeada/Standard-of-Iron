@@ -14,11 +14,11 @@ namespace Render::Creature::Pipeline {
 
 inline constexpr std::size_t kMaxCreatureBones = 24;
 
-using ComputeBonePaletteFn =
-    std::uint32_t (*)(const void *pose, std::span<QMatrix4x4> out);
+using ComputeBonePaletteFn = std::uint32_t (*)(const void *pose,
+                                               std::span<QMatrix4x4> out);
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
-using FillRoleColorsFn =
-    std::uint32_t (*)(const void *variant, QVector3D *out, std::size_t max_roles);
+using FillRoleColorsFn = std::uint32_t (*)(const void *variant, QVector3D *out,
+                                           std::size_t max_roles);
 
 struct CreatureAsset {
   CreatureAssetId id{kInvalidCreatureAsset};
@@ -35,12 +35,13 @@ struct CreatureAsset {
 
 class CreatureAssetRegistry {
 public:
-  [[nodiscard]] static auto instance() noexcept -> const CreatureAssetRegistry &;
+  [[nodiscard]] static auto
+  instance() noexcept -> const CreatureAssetRegistry &;
 
-  [[nodiscard]] auto get(CreatureAssetId id) const noexcept
-      -> const CreatureAsset *;
-  [[nodiscard]] auto resolve(const UnitVisualSpec &spec) const noexcept
-      -> const CreatureAsset *;
+  [[nodiscard]] auto
+  get(CreatureAssetId id) const noexcept -> const CreatureAsset *;
+  [[nodiscard]] auto
+  resolve(const UnitVisualSpec &spec) const noexcept -> const CreatureAsset *;
 
 private:
   CreatureAssetRegistry();

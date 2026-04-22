@@ -1,36 +1,48 @@
 #include "stirrup_renderer.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
-#include "../../../entity/registry.h"
+#include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
-#include <QMatrix4x4>
+#include "../../../render_archetype.h"
+
+#include <array>
 
 namespace Render::GL {
+
+namespace {
+
+auto stirrup_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    RenderArchetypeBuilder builder("horse_stirrups");
+    for (float side : {1.0F, -1.0F}) {
+      QVector3D const stirrup_attach(side * 0.45F, -0.02F, 0.0F);
+      QVector3D const stirrup_bottom =
+          stirrup_attach - QVector3D(0.0F, 0.30F, 0.0F);
+      builder.add_palette_mesh(get_unit_cylinder(),
+                               Render::Geom::cylinder_between(
+                                   stirrup_attach, stirrup_bottom, 0.008F),
+                               0, nullptr, 1.0F, 4);
+      builder.add_palette_mesh(
+          get_unit_sphere(),
+          box_local_model(stirrup_bottom, QVector3D(0.10F, 0.015F, 0.12F)), 0,
+          nullptr, 1.0F, 4);
+    }
+    return std::move(builder).build();
+  }();
+  return archetype;
+}
+
+} // namespace
 
 void StirrupRenderer::submit(const DrawContext &ctx,
                              const HorseBodyFrames &frames,
                              const HorseVariant &variant,
                              const HorseAnimationContext &,
                              EquipmentBatch &batch) {
-
-  const HorseAttachmentFrame &back = frames.back_center;
-
-  for (int i = 0; i < 2; ++i) {
-    float const side = (i == 0) ? 1.0F : -1.0F;
-
-    QVector3D const stirrup_attach =
-        back.origin + back.right * side * 0.45F - back.up * 0.02F;
-    QVector3D const stirrup_bottom = stirrup_attach - back.up * 0.30F;
-
-    batch.cylinders.push_back(
-        {stirrup_attach, stirrup_bottom, 0.008F, variant.tack_color, 1.0F});
-
-    QMatrix4x4 foot_plate = ctx.model;
-    foot_plate.translate(stirrup_bottom);
-    foot_plate.scale(0.10F, 0.015F, 0.12F);
-    batch.meshes.push_back({get_unit_sphere(), nullptr, foot_plate,
-                            variant.tack_color, nullptr, 1.0F, 4});
-  }
+  std::array<QVector3D, 1> const palette{variant.tack_color};
+  append_horse_attachment_archetype(batch, ctx, frames.back_center,
+                                    stirrup_archetype(), palette);
 }
 
 } // namespace Render::GL

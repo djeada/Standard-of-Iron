@@ -27,7 +27,8 @@ class HumanoidRendererBase;
 } // namespace Render::GL
 
 namespace Render::Humanoid {
-using HumanoidPreparation = Render::Creature::Pipeline::CreaturePreparationResult;
+using HumanoidPreparation =
+    Render::Creature::Pipeline::CreaturePreparationResult;
 void prepare_humanoid_instances(const ::Render::GL::HumanoidRendererBase &owner,
                                 const ::Render::GL::DrawContext &ctx,
                                 const ::Render::GL::AnimationInputs &anim,

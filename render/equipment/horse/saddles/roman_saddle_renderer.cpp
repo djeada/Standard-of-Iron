@@ -1,6 +1,6 @@
 #include "roman_saddle_renderer.h"
-#include "../horse_attachment_archetype.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
 #include "../../../render_archetype.h"
 

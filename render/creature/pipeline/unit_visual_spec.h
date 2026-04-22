@@ -207,6 +207,7 @@ struct UnitVisualSpec {
   CreatureKind kind{CreatureKind::Humanoid};
   CreatureAssetId creature_asset_id{kInvalidCreatureAsset};
   PaletteId palette_id{kDefaultPalette};
+  SpecId equipment_registry_id{kInvalidSpec};
   EquipmentLoadout equipment{};
   PoseHookFn pose_hook{nullptr};
   VariantHookFn variant_hook{nullptr};

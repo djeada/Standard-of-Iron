@@ -5,7 +5,6 @@
 #include "../../palette.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
-#include <memory>
 
 namespace Render::GL {
 
@@ -38,9 +37,7 @@ public:
     return m_config;
   }
 
-  [[nodiscard]] auto meshes() const noexcept -> CloakMeshes {
-    return {m_back_mesh.get(), m_shoulder_mesh.get()};
-  }
+  [[nodiscard]] auto meshes() const noexcept -> CloakMeshes;
 
   void set_config(const CloakConfig &config);
 
@@ -51,8 +48,6 @@ public:
 
 private:
   CloakConfig m_config;
-  std::unique_ptr<Mesh> m_back_mesh;
-  std::unique_ptr<Mesh> m_shoulder_mesh;
 };
 
 } // namespace Render::GL

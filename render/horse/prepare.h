@@ -47,8 +47,7 @@ void submit_prepared_horse_body(const Render::GL::HorseRendererBase &owner,
 
 void prepare_horse_full(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
@@ -60,23 +59,21 @@ void prepare_horse_full(
 
 void prepare_horse_simplified(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion,
-    HorsePreparation &out);
-
-void prepare_horse_minimal(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, Render::GL::HorseProfile &profile,
     const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out);
+
+void prepare_horse_minimal(const Render::GL::HorseRendererBase &owner,
+                           const Render::GL::DrawContext &ctx,
+                           Render::GL::HorseProfile &profile,
+                           const Render::GL::HorseMotionSample *shared_motion,
+                           HorsePreparation &out);
 
 void prepare_horse_render(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,

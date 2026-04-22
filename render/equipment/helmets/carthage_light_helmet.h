@@ -40,27 +40,6 @@ public:
 
 private:
   CarthageLightHelmetConfig m_config;
-
-  static void render_bowl(const CarthageLightHelmetConfig &config,
-                          const DrawContext &ctx, const AttachmentFrame &head,
-                          EquipmentBatch &batch);
-  static void render_brim(const CarthageLightHelmetConfig &config,
-                          const DrawContext &ctx, const AttachmentFrame &head,
-                          EquipmentBatch &batch);
-  static void render_cheek_guards(const CarthageLightHelmetConfig &config,
-                                  const DrawContext &ctx,
-                                  const AttachmentFrame &head,
-                                  EquipmentBatch &batch);
-  static void render_nasal_guard(const CarthageLightHelmetConfig &config,
-                                 const DrawContext &ctx,
-                                 const AttachmentFrame &head,
-                                 EquipmentBatch &batch);
-  static void render_crest(const CarthageLightHelmetConfig &config,
-                           const DrawContext &ctx, const AttachmentFrame &head,
-                           EquipmentBatch &batch);
-  static void render_rivets(const CarthageLightHelmetConfig &config,
-                            const DrawContext &ctx, const AttachmentFrame &head,
-                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

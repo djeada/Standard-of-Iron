@@ -12,8 +12,8 @@
 #include "render/entity/mounted_knight_renderer_base.h"
 #include "render/entity/mounted_prepare.h"
 #include "render/gl/humanoid/humanoid_types.h"
-#include "render/humanoid/prepare.h"
 #include "render/horse/horse_spec.h"
+#include "render/humanoid/prepare.h"
 #include "render/submitter.h"
 
 #include <QMatrix4x4>
@@ -31,7 +31,9 @@ public:
             Render::GL::Texture *, float, int) override {
     ++meshes;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override { ++rigged_calls; }
+  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+    ++rigged_calls;
+  }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -137,7 +139,6 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   batch.add(set.rider_row);
   const auto stats = batch.submit(sink);
 
-  
   EXPECT_EQ(stats.entities_submitted, 2u);
 }
 
@@ -206,9 +207,8 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
 
   EXPECT_EQ(rider_rows, 1);
   EXPECT_EQ(horse_rows, 1);
-  EXPECT_TRUE(
-      owns_slot(renderer.visual_spec().owned_legacy_slots,
-                LegacySlotMask::Attachments));
+  EXPECT_TRUE(owns_slot(renderer.visual_spec().owned_legacy_slots,
+                        LegacySlotMask::Attachments));
 }
 
 } // namespace

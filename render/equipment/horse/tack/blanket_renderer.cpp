@@ -1,6 +1,6 @@
 #include "blanket_renderer.h"
-#include "../horse_attachment_archetype.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
 #include "../../../render_archetype.h"
 
@@ -14,14 +14,14 @@ auto blanket_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     RenderArchetypeBuilder builder("horse_blanket");
     builder.add_palette_box(QVector3D(0.0F, -0.005F, 0.0F),
-                            QVector3D(0.20F, 0.015F, 0.34F) * 0.86F, 0,
-                            nullptr, 1.0F, 4);
+                            QVector3D(0.20F, 0.015F, 0.34F) * 0.86F, 0, nullptr,
+                            1.0F, 4);
     builder.add_palette_box(QVector3D(0.18F, -0.055F, 0.0F),
-                            QVector3D(0.06F, 0.11F, 0.25F) * 0.70F, 0,
-                            nullptr, 1.0F, 4);
+                            QVector3D(0.06F, 0.11F, 0.25F) * 0.70F, 0, nullptr,
+                            1.0F, 4);
     builder.add_palette_box(QVector3D(-0.18F, -0.055F, 0.0F),
-                            QVector3D(0.06F, 0.11F, 0.25F) * 0.70F, 0,
-                            nullptr, 1.0F, 4);
+                            QVector3D(0.06F, 0.11F, 0.25F) * 0.70F, 0, nullptr,
+                            1.0F, 4);
     return std::move(builder).build();
   }();
   return archetype;

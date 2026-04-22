@@ -36,8 +36,8 @@ auto empty_bounding_box() -> BoundingBox {
   return bounds;
 }
 
-auto box_local_model(const QVector3D &center, const QVector3D &scale)
-    -> QMatrix4x4 {
+auto box_local_model(const QVector3D &center,
+                     const QVector3D &scale) -> QMatrix4x4 {
   QMatrix4x4 model;
   model.translate(center);
   model.scale(scale);
@@ -49,14 +49,14 @@ auto cylinder_local_model(const QVector3D &start, const QVector3D &end,
   return Render::Geom::cylinder_between(start, end, radius);
 }
 
-auto select_render_archetype_lod(const RenderArchetype &archetype, float distance)
-    -> RenderArchetypeLod {
+auto select_render_archetype_lod(const RenderArchetype &archetype,
+                                 float distance) -> RenderArchetypeLod {
   RenderArchetypeLod fallback = RenderArchetypeLod::Full;
   bool has_fallback = false;
 
-  for (RenderArchetypeLod lod : {RenderArchetypeLod::Full,
-                                 RenderArchetypeLod::Reduced,
-                                 RenderArchetypeLod::Minimal}) {
+  for (RenderArchetypeLod lod :
+       {RenderArchetypeLod::Full, RenderArchetypeLod::Reduced,
+        RenderArchetypeLod::Minimal}) {
     const RenderArchetypeSlice &slice = archetype.lods[lod_index(lod)];
     if (slice.draws.empty()) {
       continue;
@@ -132,12 +132,9 @@ void RenderArchetypeBuilder::add_mesh(Mesh *mesh, const QMatrix4x4 &local_model,
   add_draw(std::move(draw));
 }
 
-void RenderArchetypeBuilder::add_palette_mesh(Mesh *mesh,
-                                              const QMatrix4x4 &local_model,
-                                              std::uint8_t palette_slot,
-                                              Texture *texture, float alpha,
-                                              int material_id,
-                                              Material *material) {
+void RenderArchetypeBuilder::add_palette_mesh(
+    Mesh *mesh, const QMatrix4x4 &local_model, std::uint8_t palette_slot,
+    Texture *texture, float alpha, int material_id, Material *material) {
   RenderArchetypeDraw draw;
   draw.mesh = mesh;
   draw.material = material;
@@ -158,33 +155,26 @@ void RenderArchetypeBuilder::add_box(const QVector3D &center,
            alpha, material_id, material);
 }
 
-void RenderArchetypeBuilder::add_palette_box(const QVector3D &center,
-                                             const QVector3D &scale,
-                                             std::uint8_t palette_slot,
-                                             Texture *texture, float alpha,
-                                             int material_id,
-                                             Material *material) {
-  add_palette_mesh(get_unit_cube(), box_local_model(center, scale), palette_slot,
-                   texture, alpha, material_id, material);
+void RenderArchetypeBuilder::add_palette_box(
+    const QVector3D &center, const QVector3D &scale, std::uint8_t palette_slot,
+    Texture *texture, float alpha, int material_id, Material *material) {
+  add_palette_mesh(get_unit_cube(), box_local_model(center, scale),
+                   palette_slot, texture, alpha, material_id, material);
 }
 
 void RenderArchetypeBuilder::add_cylinder(const QVector3D &start,
                                           const QVector3D &end, float radius,
                                           const QVector3D &color,
                                           Texture *texture, float alpha,
-                                          int material_id,
-                                          Material *material) {
+                                          int material_id, Material *material) {
   add_mesh(get_unit_cylinder(), cylinder_local_model(start, end, radius), color,
            texture, alpha, material_id, material);
 }
 
-void RenderArchetypeBuilder::add_palette_cylinder(const QVector3D &start,
-                                                  const QVector3D &end,
-                                                  float radius,
-                                                  std::uint8_t palette_slot,
-                                                  Texture *texture,
-                                                  float alpha, int material_id,
-                                                  Material *material) {
+void RenderArchetypeBuilder::add_palette_cylinder(
+    const QVector3D &start, const QVector3D &end, float radius,
+    std::uint8_t palette_slot, Texture *texture, float alpha, int material_id,
+    Material *material) {
   add_palette_mesh(get_unit_cylinder(),
                    cylinder_local_model(start, end, radius), palette_slot,
                    texture, alpha, material_id, material);

@@ -99,7 +99,7 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 }
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
-  // Elephants use the same settings as horses for LOD (they're both large mounts)
+
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
@@ -126,7 +126,6 @@ auto evaluate_creature_lod(const CreatureGraphInputs &inputs,
   lod_inputs.temporal = config.temporal;
   lod_inputs.frame_index = inputs.frame_index;
 
-  // Derive instance seed for temporal skipping
   std::uint32_t seed = 0U;
   if (inputs.ctx != nullptr) {
     seed = derive_unit_seed(*inputs.ctx, inputs.unit);
@@ -144,22 +143,18 @@ auto build_base_graph_output(const CreatureGraphInputs &inputs,
   output.culled = lod_decision.culled;
   output.cull_reason = lod_decision.reason;
 
-  // Derive render pass intent
   if (inputs.ctx != nullptr) {
     output.pass_intent = pass_intent_from_ctx(*inputs.ctx);
   }
 
-  // Derive instance seed
   if (inputs.ctx != nullptr) {
     output.seed = derive_unit_seed(*inputs.ctx, inputs.unit);
   }
 
-  // Copy world matrix from context
   if (inputs.ctx != nullptr) {
     output.world_matrix = inputs.ctx->model;
   }
 
-  // Set entity ID
   if (inputs.entity != nullptr) {
     output.entity_id = static_cast<EntityId>(
         reinterpret_cast<std::uintptr_t>(inputs.entity) & 0xFFFFFFFFU);
@@ -167,8 +162,6 @@ auto build_base_graph_output(const CreatureGraphInputs &inputs,
 
   return output;
 }
-
-// CreatureRenderBatch implementation
 
 void CreatureRenderBatch::clear() noexcept {
   rows_.clear();
@@ -195,17 +188,15 @@ void CreatureRenderBatch::add_humanoid(
       output.lod, stored_ctx, output.entity_id, output.pass_intent));
 }
 
-void CreatureRenderBatch::add_horse(
-    const CreatureGraphOutput &output,
-    const Render::Horse::HorseSpecPose &pose,
-    const Render::GL::HorseVariant &variant) {
+void CreatureRenderBatch::add_horse(const CreatureGraphOutput &output,
+                                    const Render::Horse::HorseSpecPose &pose,
+                                    const Render::GL::HorseVariant &variant) {
   if (output.culled) {
     return;
   }
-  rows_.push_back(make_prepared_horse_row(output.spec, pose, variant,
-                                          output.world_matrix, output.seed,
-                                          output.lod, output.entity_id,
-                                          output.pass_intent));
+  rows_.push_back(make_prepared_horse_row(
+      output.spec, pose, variant, output.world_matrix, output.seed, output.lod,
+      output.entity_id, output.pass_intent));
 }
 
 void CreatureRenderBatch::add_elephant(
@@ -215,10 +206,9 @@ void CreatureRenderBatch::add_elephant(
   if (output.culled) {
     return;
   }
-  rows_.push_back(make_prepared_elephant_row(output.spec, pose, variant,
-                                             output.world_matrix, output.seed,
-                                             output.lod, output.entity_id,
-                                             output.pass_intent));
+  rows_.push_back(make_prepared_elephant_row(
+      output.spec, pose, variant, output.world_matrix, output.seed, output.lod,
+      output.entity_id, output.pass_intent));
 }
 
 auto CreatureRenderBatch::rows() const noexcept

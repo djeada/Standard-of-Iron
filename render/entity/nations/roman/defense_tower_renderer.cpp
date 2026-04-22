@@ -59,10 +59,10 @@ auto tower_archetype() -> const RenderArchetype & {
     RenderArchetypeBuilder builder("roman_defense_tower");
     builder.set_max_distance(std::numeric_limits<float>::infinity());
 
-    builder.add_box(QVector3D(0.0F, 0.12F, 0.0F),
-                    QVector3D(1.1F, 0.12F, 1.1F), c.limestone_dark);
-    builder.add_box(QVector3D(0.0F, 0.26F, 0.0F),
-                    QVector3D(1.0F, 0.02F, 1.0F), c.limestone);
+    builder.add_box(QVector3D(0.0F, 0.12F, 0.0F), QVector3D(1.1F, 0.12F, 1.1F),
+                    c.limestone_dark);
+    builder.add_box(QVector3D(0.0F, 0.26F, 0.0F), QVector3D(1.0F, 0.02F, 1.0F),
+                    c.limestone);
 
     for (float x = -0.85F; x <= 0.85F; x += 0.425F) {
       for (float z = -0.85F; z <= 0.85F; z += 0.425F) {
@@ -73,8 +73,8 @@ auto tower_archetype() -> const RenderArchetype & {
       }
     }
 
-    builder.add_box(QVector3D(0.0F, 0.42F, 0.0F),
-                    QVector3D(0.9F, 0.12F, 0.9F), c.sandstone_light);
+    builder.add_box(QVector3D(0.0F, 0.42F, 0.0F), QVector3D(0.9F, 0.12F, 0.9F),
+                    c.sandstone_light);
     builder.add_cylinder(QVector3D(0.0F, 0.5F, 0.0F),
                          QVector3D(0.0F, 2.2F, 0.0F), 0.55F, c.limestone);
 
@@ -85,38 +85,38 @@ auto tower_archetype() -> const RenderArchetype & {
 
       builder.add_cylinder(QVector3D(ox, 0.5F, oz), QVector3D(ox, 1.9F, oz),
                            0.08F, c.marble);
-      builder.add_box(QVector3D(ox, 0.58F, oz),
-                      QVector3D(0.12F, 0.08F, 0.12F), c.marble);
-      builder.add_box(QVector3D(ox, 1.95F, oz),
-                      QVector3D(0.13F, 0.08F, 0.13F), c.marble);
-      builder.add_box(QVector3D(ox, 2.05F, oz),
-                      QVector3D(0.10F, 0.04F, 0.10F), c.gold);
+      builder.add_box(QVector3D(ox, 0.58F, oz), QVector3D(0.12F, 0.08F, 0.12F),
+                      c.marble);
+      builder.add_box(QVector3D(ox, 1.95F, oz), QVector3D(0.13F, 0.08F, 0.13F),
+                      c.marble);
+      builder.add_box(QVector3D(ox, 2.05F, oz), QVector3D(0.10F, 0.04F, 0.10F),
+                      c.gold);
     }
 
     for (int i = 0; i < 8; ++i) {
       float const angle = static_cast<float>(i) * 0.785F;
       float const ox = sinf(angle) * 0.45F;
       float const oz = cosf(angle) * 0.45F;
-      builder.add_box(QVector3D(ox, 1.2F, oz),
-                      QVector3D(0.06F, 0.25F, 0.06F), c.sandstone_dark);
+      builder.add_box(QVector3D(ox, 1.2F, oz), QVector3D(0.06F, 0.25F, 0.06F),
+                      c.sandstone_dark);
     }
 
-    builder.add_box(QVector3D(0.0F, 2.28F, 0.0F),
-                    QVector3D(0.8F, 0.05F, 0.8F), c.cedar);
+    builder.add_box(QVector3D(0.0F, 2.28F, 0.0F), QVector3D(0.8F, 0.05F, 0.8F),
+                    c.cedar);
     for (int i = 0; i < 8; ++i) {
       float const angle = static_cast<float>(i) * 0.785F;
       float const ox = sinf(angle) * 0.7F;
       float const oz = cosf(angle) * 0.7F;
-      builder.add_box(QVector3D(ox, 2.45F, oz),
-                      QVector3D(0.14F, 0.17F, 0.14F), c.terracotta);
+      builder.add_box(QVector3D(ox, 2.45F, oz), QVector3D(0.14F, 0.17F, 0.14F),
+                      c.terracotta);
     }
 
     builder.add_box(QVector3D(0.0F, 2.58F, 0.0F),
                     QVector3D(0.85F, 0.04F, 0.85F), c.limestone);
     for (float x : {-0.75F, 0.75F}) {
       for (float z : {-0.75F, 0.75F}) {
-        builder.add_box(QVector3D(x, 2.64F, z),
-                        QVector3D(0.06F, 0.06F, 0.06F), c.blue_accent);
+        builder.add_box(QVector3D(x, 2.64F, z), QVector3D(0.06F, 0.06F, 0.06F),
+                        c.blue_accent);
       }
     }
 
@@ -137,7 +137,8 @@ auto tower_archetype() -> const RenderArchetype & {
   return k_tower;
 }
 
-auto tower_palette_slots(const TowerPalette &palette) -> std::array<QVector3D, 1> {
+auto tower_palette_slots(const TowerPalette &palette)
+    -> std::array<QVector3D, 1> {
   return {palette.team};
 }
 

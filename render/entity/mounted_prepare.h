@@ -11,7 +11,7 @@
 
 namespace Render::GL {
 struct DrawContext;
-} // namespace Render::GL
+}
 
 namespace Render::GL {
 

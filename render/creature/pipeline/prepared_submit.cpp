@@ -58,8 +58,7 @@ auto submit_prepared_creatures(std::span<const PreparedCreatureRenderRow> rows,
   specs.reserve(rows.size());
 
   for (const PreparedCreatureRenderRow &row : rows) {
-    
-    
+
     if (row.pass == RenderPassIntent::Shadow) {
       continue;
     }

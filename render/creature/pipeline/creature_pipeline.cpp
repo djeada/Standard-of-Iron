@@ -1,15 +1,15 @@
 #include "creature_pipeline.h"
 
-#include "creature_asset.h"
 #include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
 #include "../../equipment/equipment_submit.h"
 #include "../../scene_renderer.h"
 #include "../../submitter.h"
 #include "../skeleton.h"
+#include "creature_asset.h"
 
-#include <array>
 #include <algorithm>
+#include <array>
 
 namespace Render::Creature::Pipeline {
 
@@ -94,11 +94,9 @@ auto CreaturePipeline::process(const FrameContext &ctx,
 namespace {
 
 auto resolve_tint_from_roles(
-    TintRole role,
-    std::span<const QVector3D> role_colors,
+    TintRole role, std::span<const QVector3D> role_colors,
     const Render::GL::HumanoidPalette &fallback) noexcept -> QVector3D {
-  // TintRole values 1..6 map directly to role_colors indices 0..5.
-  // TeamTint maps to Cloth (index 0) for backward compatibility.
+
   const std::size_t idx = (role == TintRole::TeamTint)
                               ? std::size_t{0}
                               : static_cast<std::size_t>(role) - 1;
@@ -147,8 +145,8 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
                               const Render::GL::HumanoidAnimationContext &anim,
                               Render::GL::ISubmitter &out, SubmitStats &stats) {
   auto loadout = spec.equipment;
-  if (loadout.empty()) {
-    loadout = EquipmentRegistry::instance().get(frame.spec_id[i]);
+  if (loadout.empty() && spec.equipment_registry_id != kInvalidSpec) {
+    loadout = EquipmentRegistry::instance().get(spec.equipment_registry_id);
   }
   if (loadout.empty()) {
     return;
@@ -222,7 +220,8 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
           (i < frame.role_color_count.size()) ? frame.role_color_count[i] : 0U;
       const std::span<const QVector3D> roles =
           (i < frame.role_colors.size())
-              ? std::span<const QVector3D>(frame.role_colors[i].data(), rc_count)
+              ? std::span<const QVector3D>(frame.role_colors[i].data(),
+                                           rc_count)
               : std::span<const QVector3D>{};
       color = resolve_tint_from_roles(record.tint_role, roles, variant.palette);
     }
@@ -233,8 +232,7 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
 }
 
 void submit_rigged_creature(const CreatureAsset &asset,
-                            const void *species_pose,
-                            CreatureLOD lod,
+                            const void *species_pose, CreatureLOD lod,
                             std::span<const QVector3D> role_colors,
                             std::uint16_t variant_bucket,
                             const QVector3D &base_color,
@@ -329,7 +327,8 @@ const void *resolve_species_variant(const CreatureFrame &frame, std::size_t i,
   return nullptr;
 }
 
-auto resolve_base_color(const CreatureFrame &frame, std::size_t i) -> QVector3D {
+auto resolve_base_color(const CreatureFrame &frame,
+                        std::size_t i) -> QVector3D {
   if (i < frame.base_color.size()) {
     return frame.base_color[i];
   }
@@ -337,10 +336,10 @@ auto resolve_base_color(const CreatureFrame &frame, std::size_t i) -> QVector3D 
 }
 
 void resolve_role_colors(const CreatureFrame &frame, std::size_t i,
-                          CreatureKind kind, const CreatureAsset *asset,
-                          RoleColorArray &fallback,
-                          std::span<const QVector3D> &out_roles) {
-  // Row-level role colors (pre-computed during push_humanoid/horse/elephant)
+                         CreatureKind kind, const CreatureAsset *asset,
+                         RoleColorArray &fallback,
+                         std::span<const QVector3D> &out_roles) {
+
   if (i < frame.role_color_count.size() && i < frame.role_colors.size() &&
       frame.role_color_count[i] > 0U) {
     out_roles = std::span<const QVector3D>(frame.role_colors[i].data(),
@@ -348,7 +347,6 @@ void resolve_role_colors(const CreatureFrame &frame, std::size_t i,
     return;
   }
 
-  // Fallback: resolve via asset callback from species variant data.
   if (asset != nullptr && asset->fill_role_colors != nullptr) {
     const void *variant = resolve_species_variant(frame, i, kind);
     if (variant != nullptr) {
@@ -387,16 +385,18 @@ void submit_creature_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
   }
   ++stats.entities_submitted;
 
-  // Equipment: use humanoid context if available, blank otherwise
-  const auto &h_pose = (kind == CreatureKind::Humanoid && i < frame.humanoid_pose.size())
-                            ? frame.humanoid_pose[i]
-                            : Render::GL::HumanoidPose{};
-  const auto &h_variant = (kind == CreatureKind::Humanoid && i < frame.humanoid_variant.size())
-                               ? frame.humanoid_variant[i]
-                               : Render::GL::HumanoidVariant{};
-  const auto &h_anim = (kind == CreatureKind::Humanoid && i < frame.humanoid_anim.size())
-                             ? frame.humanoid_anim[i]
-                             : Render::GL::HumanoidAnimationContext{};
+  const auto &h_pose =
+      (kind == CreatureKind::Humanoid && i < frame.humanoid_pose.size())
+          ? frame.humanoid_pose[i]
+          : Render::GL::HumanoidPose{};
+  const auto &h_variant =
+      (kind == CreatureKind::Humanoid && i < frame.humanoid_variant.size())
+          ? frame.humanoid_variant[i]
+          : Render::GL::HumanoidVariant{};
+  const auto &h_anim =
+      (kind == CreatureKind::Humanoid && i < frame.humanoid_anim.size())
+          ? frame.humanoid_anim[i]
+          : Render::GL::HumanoidAnimationContext{};
   submit_equipment_loadout(spec, frame, i, world, h_variant, h_pose, h_anim,
                            out, stats);
 }
@@ -438,7 +438,6 @@ auto CreaturePipeline::submit(
     }
     const auto &spec = specs[sid];
 
-    // Use row-level render_kind when available, fall back to spec.kind.
     const CreatureKind kind =
         (i < frame.render_kind.size()) ? frame.render_kind[i] : spec.kind;
 

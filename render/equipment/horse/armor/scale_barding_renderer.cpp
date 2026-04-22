@@ -1,6 +1,6 @@
 #include "scale_barding_renderer.h"
-#include "../horse_attachment_archetype.h"
 #include "../../equipment_submit.h"
+#include "../horse_attachment_archetype.h"
 
 #include "../../../gl/primitives.h"
 #include "../../../render_archetype.h"

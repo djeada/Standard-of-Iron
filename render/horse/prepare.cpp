@@ -29,7 +29,8 @@ namespace Render::Horse {
 namespace {
 
 void ground_horse_model(QMatrix4x4 &model) {
-  QVector3D const origin = Render::Creature::Pipeline::model_world_origin(model);
+  QVector3D const origin =
+      Render::Creature::Pipeline::model_world_origin(model);
   float const grounded_y =
       Render::Creature::Pipeline::sample_terrain_height_or_fallback(
           origin.x(), origin.z(), origin.y());
@@ -46,8 +47,7 @@ auto make_horse_prepared_row(
     Render::Creature::Pipeline::RenderPassIntent pass) noexcept
     -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
   return Render::Creature::Pipeline::make_prepared_horse_row(
-      owner.visual_spec(), pose, variant, world_from_unit, seed, lod,
-      /*entity_id*/ 0, pass);
+      owner.visual_spec(), pose, variant, world_from_unit, seed, lod, 0, pass);
 }
 
 void submit_prepared_horse_body(const Render::GL::HorseRendererBase &owner,
@@ -224,12 +224,11 @@ namespace Render::Horse {
 
 namespace {
 constexpr float k_pi = std::numbers::pi_v<float>;
-} // namespace
+}
 
 void prepare_horse_full(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
@@ -389,7 +388,8 @@ void prepare_horse_full(
   body_frames.rump.forward = forward;
 
   QVector3D const tail_base_pos =
-      rump_center + QVector3D(0.0F, d.body_height * 0.20F, -100.05F);
+      rump_center +
+      QVector3D(0.0F, d.body_height * 0.20F, -d.body_length * 0.46F);
   body_frames.tail_base.origin = tail_base_pos;
   body_frames.tail_base.right = right;
   body_frames.tail_base.up = up;
@@ -402,9 +402,8 @@ void prepare_horse_full(
 
   using Render::Creature::Pipeline::LegacySlotMask;
   using Render::Creature::Pipeline::owns_slot;
-  bool const draw_attachments_enabled =
-      !owns_slot(owner.visual_spec().owned_legacy_slots,
-                 LegacySlotMask::HorseAttachments);
+  bool const draw_attachments_enabled = !owns_slot(
+      owner.visual_spec().owned_legacy_slots, LegacySlotMask::HorseAttachments);
   bool const has_equipment =
       !horse_loadout.empty() && sub_ctx_template != nullptr;
 
@@ -414,8 +413,8 @@ void prepare_horse_full(
 
   out.add_post_body_draw(
       graph_output.pass_intent,
-      [&owner, anim, rider_ctx, profile, horse_ctx, mount, body_frames,
-       phase, bob, rein_slack, rein_state, motion, is_moving, rider_intensity,
+      [&owner, anim, rider_ctx, profile, horse_ctx, mount, body_frames, phase,
+       bob, rein_slack, rein_state, motion, is_moving, rider_intensity,
        horse_loadout, sub_ctx_template, draw_attachments_enabled,
        has_equipment](Render::GL::ISubmitter &out_sub) mutable {
         if (draw_attachments_enabled) {
@@ -456,13 +455,11 @@ void prepare_horse_full(
 
 void prepare_horse_simplified(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion,
-    HorsePreparation &out) {
+    const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out) {
   using Render::GL::HorseDimensions;
   using Render::GL::HorseGait;
   using Render::GL::HorseMotionSample;
@@ -508,11 +505,11 @@ void prepare_horse_simplified(
   out.bodies.add_horse(graph_output, pose, v);
 }
 
-void prepare_horse_minimal(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, Render::GL::HorseProfile &profile,
-    const Render::GL::HorseMotionSample *shared_motion,
-    HorsePreparation &out) {
+void prepare_horse_minimal(const Render::GL::HorseRendererBase &owner,
+                           const Render::GL::DrawContext &ctx,
+                           Render::GL::HorseProfile &profile,
+                           const Render::GL::HorseMotionSample *shared_motion,
+                           HorsePreparation &out) {
   using Render::GL::HorseDimensions;
   using Render::GL::HorseVariant;
   using Render::GL::MountedAttachmentFrame;
@@ -548,8 +545,7 @@ void prepare_horse_minimal(
 
 void prepare_horse_render(
     const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,

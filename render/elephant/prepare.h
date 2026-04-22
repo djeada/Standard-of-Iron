@@ -48,8 +48,7 @@ void submit_prepared_elephant_body(
 
 void prepare_elephant_full(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,
@@ -57,8 +56,7 @@ void prepare_elephant_full(
 
 void prepare_elephant_simplified(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,
@@ -72,8 +70,7 @@ void prepare_elephant_minimal(
 
 void prepare_elephant_render(
     const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx,
-    const Render::GL::AnimationInputs &anim,
+    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     Render::GL::ElephantProfile &profile,
     const Render::GL::HowdahAttachmentFrame *shared_howdah,
     const Render::GL::ElephantMotionSample *shared_motion,
