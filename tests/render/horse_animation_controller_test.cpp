@@ -409,3 +409,48 @@ TEST_F(HorseAnimationControllerTest,
   EXPECT_NE(motion.spine_flex, 0.0F);
   EXPECT_EQ(std::signbit(motion.head_lateral), std::signbit(motion.body_sway));
 }
+
+TEST_F(HorseAnimationControllerTest, EvaluateHorseMotionUsesTurnControlSignals) {
+  anim.time = 0.20F;
+  anim.is_moving = true;
+  rider_ctx.inputs = anim;
+  rider_ctx.gait.state = HumanoidMotionState::Walk;
+  rider_ctx.gait.speed = 2.8F;
+  rider_ctx.gait.normalized_speed = 0.60F;
+  rider_ctx.gait.cycle_time = 1.10F;
+  rider_ctx.gait.cycle_phase = 0.0F;
+  rider_ctx.gait.velocity = QVector3D(1.0F, 0.0F, 0.4F);
+  rider_ctx.yaw_radians = 0.45F;
+
+  auto motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  EXPECT_GT(motion.turn_amount, 0.0F);
+  EXPECT_LT(motion.gait.lateral_lead_front, 0.50F);
+  EXPECT_LT(motion.gait.lateral_lead_rear, 0.50F);
+  EXPECT_GT(motion.body_sway, 0.0F);
+}
+
+TEST_F(HorseAnimationControllerTest,
+       EvaluateHorseMotionAppliesStoppingStrideCompression) {
+  anim.time = 0.40F;
+  anim.is_moving = true;
+  rider_ctx.inputs = anim;
+  rider_ctx.gait.state = HumanoidMotionState::Walk;
+  rider_ctx.gait.cycle_time = 1.10F;
+  rider_ctx.gait.cycle_phase = 0.30F;
+
+  rider_ctx.gait.speed = 2.6F;
+  rider_ctx.gait.normalized_speed = 0.70F;
+  rider_ctx.gait.has_target = false;
+  auto fast_motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  rider_ctx.gait.speed = 0.35F;
+  rider_ctx.gait.normalized_speed = 0.08F;
+  rider_ctx.gait.has_target = true;
+  auto braking_motion = evaluate_horse_motion(profile, anim, rider_ctx);
+
+  EXPECT_GT(braking_motion.stop_intent, fast_motion.stop_intent);
+  EXPECT_LT(braking_motion.gait.stride_swing, fast_motion.gait.stride_swing);
+  EXPECT_LT(braking_motion.gait.stride_lift, fast_motion.gait.stride_lift);
+  EXPECT_GT(braking_motion.gait.cycle_time, fast_motion.gait.cycle_time);
+}
