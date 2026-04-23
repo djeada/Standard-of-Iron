@@ -18,6 +18,12 @@ namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
 constexpr float k_two_pi = 2.0F * k_pi;
+constexpr float kWeightShiftSmoothingX = 0.22F;
+constexpr float kWeightShiftSmoothingZ = 0.20F;
+constexpr float kLagSmoothing = 0.28F;
+constexpr float kIdleLagDamping = 0.86F;
+constexpr float kPositionPhaseDesyncX = 0.173F;
+constexpr float kPositionPhaseDesyncZ = 0.127F;
 
 inline auto swing_ease(float t) -> float { return t * t * (3.0F - 2.0F * t); }
 
@@ -316,8 +322,12 @@ void update_elephant_gait(ElephantGaitState &state,
   const ElephantGait &g = profile.gait;
   float const cycle_time = std::max(g.cycle_time, 0.001F);
   float const locomotion_scale = anim.is_running ? 1.18F : 1.0F;
-  (void)body_world_pos;
-  (void)body_forward_z;
+  float const position_phase_offset = std::fmod(
+      body_world_pos.x() * kPositionPhaseDesyncX +
+          body_world_pos.z() * kPositionPhaseDesyncZ,
+      1.0F);
+  float const forward_alignment =
+      std::clamp(std::abs(body_forward_z), 0.2F, 1.0F);
 
   if (!state.initialized) {
     QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
@@ -333,7 +343,8 @@ void update_elephant_gait(ElephantGaitState &state,
   }
 
   if (anim.is_moving) {
-    state.cycle_phase = std::fmod(anim.time / cycle_time, 1.0F);
+    state.cycle_phase =
+        std::fmod(anim.time / cycle_time + position_phase_offset + 1.0F, 1.0F);
   } else {
 
     state.cycle_phase = 0.0F;
@@ -390,9 +401,12 @@ void update_elephant_gait(ElephantGaitState &state,
     float const center_z = total_z / static_cast<float>(planted_count);
 
     float const target_shift_x = -center_x * kWeightShiftLateral;
-    float const target_shift_z = -center_z * kWeightShiftForeAft * 0.5F;
-    state.weight_shift_x += (target_shift_x - state.weight_shift_x) * 0.22F;
-    state.weight_shift_z += (target_shift_z - state.weight_shift_z) * 0.20F;
+    float const target_shift_z =
+        -center_z * kWeightShiftForeAft * 0.5F * forward_alignment;
+    state.weight_shift_x +=
+        (target_shift_x - state.weight_shift_x) * kWeightShiftSmoothingX;
+    state.weight_shift_z +=
+        (target_shift_z - state.weight_shift_z) * kWeightShiftSmoothingZ;
   }
 
   if (anim.is_moving) {
@@ -401,11 +415,11 @@ void update_elephant_gait(ElephantGaitState &state,
         cycle_sin * kShoulderLagFactor * (0.90F + 0.15F * locomotion_scale);
     float const hip_target =
         -cycle_sin * kHipLagFactor * (0.90F + 0.10F * locomotion_scale);
-    state.shoulder_lag += (shoulder_target - state.shoulder_lag) * 0.28F;
-    state.hip_lag += (hip_target - state.hip_lag) * 0.28F;
+    state.shoulder_lag += (shoulder_target - state.shoulder_lag) * kLagSmoothing;
+    state.hip_lag += (hip_target - state.hip_lag) * kLagSmoothing;
   } else {
-    state.shoulder_lag *= 0.86F;
-    state.hip_lag *= 0.86F;
+    state.shoulder_lag *= kIdleLagDamping;
+    state.hip_lag *= kIdleLagDamping;
   }
 }
 
