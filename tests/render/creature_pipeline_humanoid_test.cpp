@@ -144,13 +144,9 @@ TEST(CreaturePipelineHumanoidSubmit, EmitsOneRiggedCallPerLodRow) {
   EXPECT_EQ(stats.lod_billboard, 1u);
   EXPECT_EQ(stats.equipment_submitted, 0u);
 
-  // Without a Renderer attached, submit_humanoid_*_rigged falls back
-  // to the part-graph walker which emits primitive meshes (Full LOD
-  // alone has 19 primitives). Billboard rows skip the body draw
-  // entirely. We just assert the walker fired for 3 of 4 rows by
-  // checking that at least one mesh was emitted per Full/Reduced/
-  // Minimal LOD.
-  EXPECT_GT(sink.meshes.size(), 0u);
+  // Body submission always routes through the generic rigged creature
+  // path. Billboard rows skip body submission entirely.
+  EXPECT_EQ(sink.rigged_calls.size(), 3u);
 }
 
 TEST(CreaturePipelinePreparedSubmit, HumanoidUsesPreparedPipelineBridge) {

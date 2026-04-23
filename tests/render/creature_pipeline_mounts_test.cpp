@@ -181,10 +181,7 @@ TEST(CreaturePipelineHorseSubmit, EmitsOneRiggedCallPerLodRow) {
   EXPECT_EQ(stats.lod_billboard, 1u);
   EXPECT_EQ(stats.equipment_submitted, 0u);
 
-  // Without a Renderer attached the rigged-mesh path falls back to
-  // primitive meshes; we just assert the walker fired for at least
-  // one of the non-billboard rows.
-  EXPECT_GT(sink.mesh_calls, 0u);
+  EXPECT_EQ(sink.rigged_calls.size(), 3u);
 }
 
 TEST(CreaturePipelineHorseSubmit, RendererPathUsesGenericHorseAsset) {
@@ -233,7 +230,7 @@ TEST(CreaturePipelinePreparedSubmit, HorseUsesPreparedPipelineBridge) {
   const SubmitStats stats = batch.submit(sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
-  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
+  EXPECT_GT(sink.rigged_calls.size(), 0u);
 }
 
 TEST(CreatureRenderStatePrep, HorseRowAppendsResolvedState) {
@@ -290,7 +287,7 @@ TEST(CreaturePipelineElephantSubmit, EmitsOneRiggedCallPerLodRow) {
   EXPECT_EQ(stats.lod_reduced, 1u);
   EXPECT_EQ(stats.lod_minimal, 1u);
   EXPECT_EQ(stats.lod_billboard, 1u);
-  EXPECT_GT(sink.mesh_calls, 0u);
+  EXPECT_EQ(sink.rigged_calls.size(), 3u);
 }
 
 TEST(CreaturePipelineElephantSubmit, RendererPathUsesGenericElephantAsset) {
@@ -340,7 +337,7 @@ TEST(CreaturePipelinePreparedSubmit, ElephantUsesPreparedPipelineBridge) {
   const SubmitStats stats = batch.submit(sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
-  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
+  EXPECT_GT(sink.rigged_calls.size(), 0u);
 }
 
 TEST(CreatureRenderStatePrep, ElephantRowAppendsResolvedState) {
@@ -408,7 +405,7 @@ TEST(CreaturePipelinePreparedSubmit, MixedRowsSubmitAsPreparedFrame) {
   EXPECT_EQ(stats.lod_full, 1u);
   EXPECT_EQ(stats.lod_reduced, 1u);
   EXPECT_EQ(stats.lod_billboard, 1u);
-  EXPECT_GT(sink.mesh_calls + sink.rigged_calls.size(), 0u);
+  EXPECT_GT(sink.rigged_calls.size(), 0u);
 }
 
 TEST(CreaturePipelineMountedSubmit,
@@ -457,7 +454,7 @@ TEST(CreaturePipelineMountedSubmit,
   EXPECT_EQ(stats.lod_full, 2u);
   EXPECT_EQ(stats.lod_reduced, 0u);
   EXPECT_EQ(stats.equipment_submitted, 0u);
-  EXPECT_GT(sink.mesh_calls, 0u);
+  EXPECT_EQ(sink.rigged_calls.size(), 2u);
 }
 
 TEST(CreaturePipelineMountedSubmit, ElephantHowdahCompositionDispatches) {
@@ -495,7 +492,7 @@ TEST(CreaturePipelineMountedSubmit, ElephantHowdahCompositionDispatches) {
 
   EXPECT_EQ(stats.entities_submitted, 2u);
   EXPECT_EQ(stats.lod_reduced, 2u);
-  EXPECT_GT(sink.mesh_calls, 0u);
+  EXPECT_EQ(sink.rigged_calls.size(), 2u);
 }
 
 } // namespace

@@ -27,17 +27,24 @@
 #include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_renderer_base.h"
+#include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <array>
 #include <gtest/gtest.h>
+#include <vector>
 
 namespace {
 
 using namespace Render::Creature::Pipeline;
 using Render::Creature::CreatureLOD;
+
+auto fake_mesh() -> Render::GL::Mesh * {
+  static int sentinel = 0;
+  return reinterpret_cast<Render::GL::Mesh *>(&sentinel);
+}
 
 class NullSubmitter : public Render::GL::ISubmitter {
 public:
@@ -52,6 +59,33 @@ public:
                 float) override {
     ++cylinder_calls;
   }
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
+  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
+            float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
+  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
+                    float, float, float, float) override {}
+  void healer_aura(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void combat_dust(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+                    float) override {}
+  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
+                      float) override {}
+};
+
+class ModelRecordingSubmitter : public Render::GL::ISubmitter {
+public:
+  std::vector<QMatrix4x4> models;
+
+  void mesh(Render::GL::Mesh *, const QMatrix4x4 &model, const QVector3D &,
+            Render::GL::Texture *, float, int) override {
+    models.push_back(model);
+  }
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
                       const QVector3D &) override {}
   void grid(const QMatrix4x4 &, const QVector3D &, float, float,
@@ -505,6 +539,54 @@ TEST(PhaseEEquipment, DispatchContextPosePopulatedOnHorseRows) {
   ASSERT_NE(observed_pose, nullptr)
       << "EquipmentSubmitContext.pose must be non-null on horse rows too "
          "(blank pose) so closures need not branch";
+}
+
+TEST(PhaseEEquipment, SocketBoundEquipmentUsesResolvedSkeletonSocket) {
+  std::array<EquipmentRecord, 1> no_socket{};
+  no_socket[0].static_mesh = fake_mesh();
+  no_socket[0].local_offset.setToIdentity();
+  no_socket[0].local_offset.translate(0.0F, 0.5F, 0.0F);
+
+  std::array<EquipmentRecord, 1> with_socket = no_socket;
+  with_socket[0].socket =
+      static_cast<Render::Creature::SocketIndex>(Render::Humanoid::HumanoidSocket::HandR);
+
+  std::array<UnitVisualSpec, 2> specs{};
+  specs[0].kind = CreatureKind::Humanoid;
+  specs[0].equipment = no_socket;
+  specs[1].kind = CreatureKind::Humanoid;
+  specs[1].equipment = with_socket;
+
+  Render::GL::DrawContext ctx{};
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+
+  QMatrix4x4 world;
+  world.setToIdentity();
+  world.translate(10.0F, 0.0F, 0.0F);
+
+  CreatureFrame frame;
+  frame.push_humanoid(/*id*/ 0, world, /*spec*/ 0, /*seed*/ 1,
+                      CreatureLOD::Billboard, pose, variant, anim);
+  frame.push_humanoid(/*id*/ 1, world, /*spec*/ 1, /*seed*/ 1,
+                      CreatureLOD::Billboard, pose, variant, anim);
+  frame.legacy_ctx[0] = &ctx;
+  frame.legacy_ctx[1] = &ctx;
+
+  CreaturePipeline pipeline;
+  FrameContext fctx;
+  ModelRecordingSubmitter sink;
+  const auto stats = pipeline.submit(fctx, specs, frame, sink);
+
+  EXPECT_EQ(stats.equipment_submitted, 2u);
+  ASSERT_EQ(sink.models.size(), 2u);
+  const QVector3D a = sink.models[0].column(3).toVector3D();
+  const QVector3D b = sink.models[1].column(3).toVector3D();
+  EXPECT_NEAR(a.x(), 10.0F, 1e-4F);
+  EXPECT_NEAR(a.y(), 0.5F, 1e-4F);
+  EXPECT_NEAR(a.z(), 0.0F, 1e-4F);
+  EXPECT_NE(a, b);
 }
 
 } // namespace
