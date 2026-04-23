@@ -3,6 +3,7 @@
 #include "../../bone_palette_arena.h"
 #include "../../entity/registry.h"
 #include "../../equipment/equipment_submit.h"
+#include "../../rigged_mesh_cache.h"
 #include "../../scene_renderer.h"
 #include "../../submitter.h"
 #include "../skeleton.h"
@@ -140,6 +141,8 @@ auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
 void submit_equipment_loadout(const UnitVisualSpec &spec,
                               const CreatureFrame &frame, std::size_t i,
                               const QMatrix4x4 &world,
+                              const Render::Creature::SkeletonTopology *topology,
+                              std::span<const QMatrix4x4> bone_palette,
                               const Render::GL::HumanoidVariant &variant,
                               const Render::GL::HumanoidPose &pose,
                               const Render::GL::HumanoidAnimationContext &anim,
@@ -212,7 +215,8 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
       continue;
     }
 
-    const QMatrix4x4 model = compose_equipment_world(world, record);
+    const QMatrix4x4 model =
+        compose_equipment_world(world, record, topology, bone_palette);
 
     QVector3D color = record.override_color;
     if (record.tint_role != TintRole::None) {
@@ -232,45 +236,48 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
 }
 
 void submit_rigged_creature(const CreatureAsset &asset,
-                            const void *species_pose, CreatureLOD lod,
+                            std::span<const QMatrix4x4> current_palette,
+                            CreatureLOD lod,
                             std::span<const QVector3D> role_colors,
                             std::uint16_t variant_bucket,
                             const QVector3D &base_color,
                             const QMatrix4x4 &world_from_unit,
                             Render::GL::ISubmitter &out) {
   if (lod == CreatureLOD::Billboard || asset.spec == nullptr ||
-      asset.compute_bones == nullptr || asset.bind_palette == nullptr) {
+      asset.bind_palette == nullptr || current_palette.empty()) {
     return;
   }
 
-  std::array<QMatrix4x4, kMaxCreatureBones> current_palette{};
-  const auto bone_count = asset.compute_bones(
-      species_pose,
-      std::span<QMatrix4x4>(current_palette.data(), asset.max_bones));
+  const std::size_t bone_count = current_palette.size();
 
   auto *renderer = resolve_renderer(out);
-  if (renderer == nullptr) {
-    Render::Creature::submit_creature(
-        *asset.spec,
-        std::span<const QMatrix4x4>(current_palette.data(), bone_count), lod,
-        world_from_unit, out, role_colors);
-    return;
-  }
-
   auto bind = asset.bind_palette();
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(*asset.spec, lod,
-                                                          bind, variant_bucket);
+  auto &cache = (renderer != nullptr) ? renderer->rigged_mesh_cache()
+                                      : ([]() -> Render::GL::RiggedMeshCache & {
+                                          static Render::GL::RiggedMeshCache c;
+                                          return c;
+                                        })();
+  auto *entry = cache.get_or_bake(*asset.spec, lod, bind, variant_bucket);
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
     return;
   }
 
-  auto &arena = renderer->bone_palette_arena();
-  Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
-  QMatrix4x4 *palette_slot = palette_slot_h.cpu;
+  std::array<QMatrix4x4, kMaxCreatureBones> cpu_palette{};
+  QMatrix4x4 *palette_slot = cpu_palette.data();
+  std::uint32_t palette_ubo = 0;
+  std::uint32_t palette_offset = 0;
+  if (renderer != nullptr) {
+    auto &arena = renderer->bone_palette_arena();
+    Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
+    palette_slot = palette_slot_h.cpu;
+    palette_ubo = palette_slot_h.ubo;
+    palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
+  }
 
-  const std::size_t n =
-      std::min<std::size_t>(entry->inverse_bind.size(), bone_count);
+  const std::size_t n = std::min<std::size_t>(
+      std::min<std::size_t>(entry->inverse_bind.size(), bone_count),
+      static_cast<std::size_t>(kMaxCreatureBones));
   for (std::size_t i = 0; i < n; ++i) {
     palette_slot[i] = current_palette[i] * entry->inverse_bind[i];
   }
@@ -279,8 +286,8 @@ void submit_rigged_creature(const CreatureAsset &asset,
   cmd.mesh = entry->mesh.get();
   cmd.world = world_from_unit;
   cmd.bone_palette = palette_slot;
-  cmd.palette_ubo = palette_slot_h.ubo;
-  cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
+  cmd.palette_ubo = palette_ubo;
+  cmd.palette_offset = palette_offset;
   cmd.bone_count = static_cast<std::uint32_t>(n);
   cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
   for (std::size_t i = 0; i < role_colors.size(); ++i) {
@@ -378,9 +385,20 @@ void submit_creature_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
 
   const void *species_pose = resolve_species_pose(frame, i, kind);
   const QVector3D base = resolve_base_color(frame, i);
+  std::array<QMatrix4x4, kMaxCreatureBones> current_palette{};
+  std::span<const QMatrix4x4> palette{};
+  if (asset != nullptr && species_pose != nullptr && asset->compute_bones != nullptr) {
+    const auto bone_count =
+        std::min<std::size_t>(asset->compute_bones(
+                                  species_pose,
+                                  std::span<QMatrix4x4>(current_palette.data(),
+                                                        asset->max_bones)),
+                              static_cast<std::size_t>(kMaxCreatureBones));
+    palette = std::span<const QMatrix4x4>(current_palette.data(), bone_count);
+  }
 
-  if (asset != nullptr && species_pose != nullptr) {
-    submit_rigged_creature(*asset, species_pose, frame.lod[i], role_colors,
+  if (asset != nullptr && !palette.empty()) {
+    submit_rigged_creature(*asset, palette, frame.lod[i], role_colors,
                            variant_bucket, base, world, out);
   }
   ++stats.entities_submitted;
@@ -397,8 +415,9 @@ void submit_creature_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
       (kind == CreatureKind::Humanoid && i < frame.humanoid_anim.size())
           ? frame.humanoid_anim[i]
           : Render::GL::HumanoidAnimationContext{};
-  submit_equipment_loadout(spec, frame, i, world, h_variant, h_pose, h_anim,
-                           out, stats);
+  submit_equipment_loadout(spec, frame, i, world,
+                           (asset != nullptr) ? asset->topology : nullptr,
+                           palette, h_variant, h_pose, h_anim, out, stats);
 }
 
 void bump_lod_counters(CreatureLOD lod, SubmitStats &stats) {
