@@ -144,3 +144,15 @@ TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
   EXPECT_EQ(spec.lod_reduced.primitives.size(), 12U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 50U);
 }
+
+TEST(ElephantSpecTest, PoseKeepsHeavyBodyAndPillarLegReadability) {
+  auto const dims = make_dims();
+  Render::Elephant::ElephantSpecPose pose{};
+  Render::Elephant::make_elephant_spec_pose(dims, 0.0F, pose);
+
+  EXPECT_GT(pose.body_ellipsoid_x, dims.body_width);
+  EXPECT_GT(pose.body_ellipsoid_z, dims.body_length);
+  EXPECT_GE(pose.leg_radius, dims.leg_radius * 0.9F);
+  EXPECT_LT(pose.shoulder_offset_fl.y(), -dims.body_height * 0.3F);
+  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y());
+}

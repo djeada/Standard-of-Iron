@@ -14,6 +14,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -204,6 +205,47 @@ TEST(ElephantPrepare, ReducedMotionBuildsFromPreparedSample) {
   EXPECT_EQ(reduced.is_fighting, motion.is_fighting);
   EXPECT_FLOAT_EQ(reduced.anim_time, anim.time);
   EXPECT_EQ(reduced.combat_phase, anim.combat_phase);
+}
+
+TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
+  Render::GL::ElephantProfile low = make_test_elephant_profile();
+  Render::GL::ElephantProfile high = low;
+  low.gait.stride_swing = 0.10F;
+  high.gait.stride_swing = 0.80F;
+  low.gait.stride_lift = 0.08F;
+  high.gait.stride_lift = 0.24F;
+
+  Render::GL::AnimationInputs anim{
+      .time = high.gait.cycle_time * 0.25F,
+      .is_moving = true,
+      .is_running = true,
+  };
+
+  Render::GL::ElephantMotionSample const low_motion =
+      Render::GL::evaluate_elephant_motion(low, anim);
+  Render::GL::ElephantMotionSample const high_motion =
+      Render::GL::evaluate_elephant_motion(high, anim);
+
+  EXPECT_GT(std::abs(high_motion.body_sway), std::abs(low_motion.body_sway));
+  EXPECT_GT(std::abs(high_motion.bob), std::abs(low_motion.bob));
+}
+
+TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {
+  Render::GL::ElephantProfile profile = make_test_elephant_profile();
+  Render::GL::AnimationInputs anim{
+      .time = profile.gait.cycle_time * 0.25F,
+      .is_moving = true,
+      .is_running = false,
+  };
+
+  Render::GL::ElephantMotionSample const motion =
+      Render::GL::evaluate_elephant_motion(profile, anim);
+
+  EXPECT_GT(motion.chest_center.z(), motion.barrel_center.z());
+  EXPECT_LT(motion.rump_center.z(), motion.barrel_center.z());
+  EXPECT_NEAR(motion.chest_center.y(), motion.rump_center.y(), 0.3F);
+  EXPECT_GT(std::abs(motion.chest_center.y() - motion.rump_center.y()),
+            0.0001F);
 }
 
 TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
