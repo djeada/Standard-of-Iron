@@ -46,11 +46,13 @@ void HorseRenderer::draw_attachments(
 
 auto HorseRenderer::visual_spec() const
     -> const Render::Creature::Pipeline::UnitVisualSpec & {
-  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
-  spec = Render::Creature::Pipeline::UnitVisualSpec{};
-  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-  spec.debug_name = "horse/with_attachments";
-  return spec;
+  if (!m_visual_spec_baked) {
+    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+    m_visual_spec_cache.debug_name = "horse/with_attachments";
+    m_visual_spec_baked = true;
+  }
+  return m_visual_spec_cache;
 }
 
 } // namespace Render::GL

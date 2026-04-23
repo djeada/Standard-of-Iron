@@ -4,6 +4,10 @@
 
 #include <QVector3D>
 
+namespace Render::Creature {
+struct ElephantAnimationStateComponent;
+}
+
 namespace Render::Elephant {
 struct ElephantReducedMotion;
 }
@@ -50,8 +54,9 @@ auto compute_howdah_frame(const ElephantProfile &profile)
     -> HowdahAttachmentFrame;
 
 auto evaluate_elephant_motion(const ElephantProfile &profile,
-                              const AnimationInputs &anim)
-    -> ElephantMotionSample;
+                              const AnimationInputs &anim,
+                              Render::Creature::ElephantAnimationStateComponent
+                                  *io_state = nullptr) -> ElephantMotionSample;
 
 auto build_elephant_reduced_motion(const ElephantMotionSample &motion,
                                    const AnimationInputs &anim)

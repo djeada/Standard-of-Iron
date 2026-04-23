@@ -14,7 +14,6 @@
 #include "../gl/primitives.h"
 #include "../humanoid/humanoid_renderer_base.h"
 #include "../submitter.h"
-#include "horse_animation_controller.h"
 #include "horse_spec.h"
 
 #include <vector>
@@ -33,15 +32,16 @@ namespace Render::GL {
 
 auto HorseRendererBase::visual_spec() const
     -> const Render::Creature::Pipeline::UnitVisualSpec & {
-
-  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
-  spec = Render::Creature::Pipeline::UnitVisualSpec{};
-  spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-  spec.debug_name = "horse/default";
-  const QVector3D ps = get_proportion_scaling();
-  spec.scaling =
-      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
-  return spec;
+  if (!m_visual_spec_baked) {
+    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+    m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+    m_visual_spec_cache.debug_name = "horse/default";
+    const QVector3D ps = get_proportion_scaling();
+    m_visual_spec_cache.scaling =
+        Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+    m_visual_spec_baked = true;
+  }
+  return m_visual_spec_cache;
 }
 
 using Render::Geom::lerp;

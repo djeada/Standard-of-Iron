@@ -138,15 +138,14 @@ auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
   return nullptr;
 }
 
-void submit_equipment_loadout(const UnitVisualSpec &spec,
-                              const CreatureFrame &frame, std::size_t i,
-                              const QMatrix4x4 &world,
-                              const Render::Creature::SkeletonTopology *topology,
-                              std::span<const QMatrix4x4> bone_palette,
-                              const Render::GL::HumanoidVariant &variant,
-                              const Render::GL::HumanoidPose &pose,
-                              const Render::GL::HumanoidAnimationContext &anim,
-                              Render::GL::ISubmitter &out, SubmitStats &stats) {
+void submit_equipment_loadout(
+    const UnitVisualSpec &spec, const CreatureFrame &frame, std::size_t i,
+    const QMatrix4x4 &world, const Render::Creature::SkeletonTopology *topology,
+    std::span<const QMatrix4x4> bone_palette,
+    const Render::GL::HumanoidVariant &variant,
+    const Render::GL::HumanoidPose &pose,
+    const Render::GL::HumanoidAnimationContext &anim,
+    Render::GL::ISubmitter &out, SubmitStats &stats) {
   auto loadout = spec.equipment;
   if (loadout.empty() && spec.equipment_registry_id != kInvalidSpec) {
     loadout = EquipmentRegistry::instance().get(spec.equipment_registry_id);
@@ -235,14 +234,11 @@ void submit_equipment_loadout(const UnitVisualSpec &spec,
   }
 }
 
-void submit_rigged_creature(const CreatureAsset &asset,
-                            std::span<const QMatrix4x4> current_palette,
-                            CreatureLOD lod,
-                            std::span<const QVector3D> role_colors,
-                            std::uint16_t variant_bucket,
-                            const QVector3D &base_color,
-                            const QMatrix4x4 &world_from_unit,
-                            Render::GL::ISubmitter &out) {
+void submit_rigged_creature(
+    const CreatureAsset &asset, std::span<const QMatrix4x4> current_palette,
+    CreatureLOD lod, std::span<const QVector3D> role_colors,
+    std::uint16_t variant_bucket, const QVector3D &base_color,
+    const QMatrix4x4 &world_from_unit, Render::GL::ISubmitter &out) {
   if (lod == CreatureLOD::Billboard || asset.spec == nullptr ||
       asset.bind_palette == nullptr || current_palette.empty()) {
     return;
@@ -252,11 +248,12 @@ void submit_rigged_creature(const CreatureAsset &asset,
 
   auto *renderer = resolve_renderer(out);
   auto bind = asset.bind_palette();
-  auto &cache = (renderer != nullptr) ? renderer->rigged_mesh_cache()
-                                      : ([]() -> Render::GL::RiggedMeshCache & {
-                                          thread_local Render::GL::RiggedMeshCache c;
-                                          return c;
-                                        })();
+  auto &cache = (renderer != nullptr)
+                    ? renderer->rigged_mesh_cache()
+                    : ([]() -> Render::GL::RiggedMeshCache & {
+                        thread_local Render::GL::RiggedMeshCache c;
+                        return c;
+                      })();
   auto *entry = cache.get_or_bake(*asset.spec, lod, bind, variant_bucket);
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
@@ -388,13 +385,13 @@ void submit_creature_row(const UnitVisualSpec &spec, const CreatureFrame &frame,
   const QVector3D base = resolve_base_color(frame, i);
   std::array<QMatrix4x4, kMaxCreatureBones> current_palette{};
   std::span<const QMatrix4x4> palette{};
-  if (asset != nullptr && species_pose != nullptr && asset->compute_bones != nullptr) {
-    const auto bone_count =
-        std::min<std::size_t>(asset->compute_bones(
-                                  species_pose,
-                                  std::span<QMatrix4x4>(current_palette.data(),
-                                                        asset->max_bones)),
-                              static_cast<std::size_t>(kMaxCreatureBones));
+  if (asset != nullptr && species_pose != nullptr &&
+      asset->compute_bones != nullptr) {
+    const auto bone_count = std::min<std::size_t>(
+        asset->compute_bones(
+            species_pose,
+            std::span<QMatrix4x4>(current_palette.data(), asset->max_bones)),
+        static_cast<std::size_t>(kMaxCreatureBones));
     palette = std::span<const QMatrix4x4>(current_palette.data(), bone_count);
   }
 

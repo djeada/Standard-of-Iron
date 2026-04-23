@@ -33,14 +33,17 @@ namespace Render::GL {
 
 auto ElephantRendererBase::visual_spec() const
     -> const Render::Creature::Pipeline::UnitVisualSpec & {
-  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
-  spec = Render::Creature::Pipeline::UnitVisualSpec{};
-  spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-  spec.debug_name = "elephant/default";
-  const QVector3D ps = get_proportion_scaling();
-  spec.scaling =
-      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
-  return spec;
+  if (!m_visual_spec_baked) {
+    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+    m_visual_spec_cache.kind =
+        Render::Creature::Pipeline::CreatureKind::Elephant;
+    m_visual_spec_cache.debug_name = "elephant/default";
+    const QVector3D ps = get_proportion_scaling();
+    m_visual_spec_cache.scaling =
+        Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+    m_visual_spec_baked = true;
+  }
+  return m_visual_spec_cache;
 }
 
 namespace {

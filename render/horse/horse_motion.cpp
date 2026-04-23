@@ -1,9 +1,9 @@
 #include "horse_motion.h"
 
+#include "../creature/animation_state_components.h"
 #include "../creature/creature_math_utils.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "dimensions.h"
-#include "horse_animation_controller.h"
 
 #include <QVector3D>
 
@@ -169,11 +169,136 @@ auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
   return bit + dir * rein_length;
 }
 
-auto evaluate_horse_motion(
+namespace {
+
+constexpr float k_idle_breathing_primary_freq = 0.4F;
+constexpr float k_idle_breathing_secondary_freq = 0.15F;
+constexpr float k_idle_breathing_primary_weight = 0.6F;
+constexpr float k_idle_breathing_secondary_weight = 0.4F;
+constexpr float k_idle_phase_speed = 0.15F;
+constexpr float k_gait_transition_duration = 0.3F;
+
+auto bob_scale_for_gait(GaitType gait) noexcept -> float {
+  switch (gait) {
+  case GaitType::IDLE:
+    return 0.30F;
+  case GaitType::WALK:
+    return 0.50F;
+  case GaitType::TROT:
+    return 0.85F;
+  case GaitType::CANTER:
+    return 1.00F;
+  case GaitType::GALLOP:
+    return 1.12F;
+  }
+  return 0.30F;
+}
+
+void update_target_gait(Render::Creature::HorseAnimationStateComponent &state,
+                        GaitType desired, float anim_time,
+                        float idle_bob_intensity) {
+  if (desired == GaitType::IDLE) {
+    state.idle_bob_intensity = std::clamp(idle_bob_intensity, 0.0F, 1.5F);
+  } else {
+    state.idle_bob_intensity = 1.0F;
+  }
+  if (state.target_gait != desired) {
+    state.target_gait = desired;
+    state.gait_transition_progress = 0.0F;
+    state.transition_start_time = anim_time;
+  }
+}
+
+auto resolve_persistent_gait(
+    Render::Creature::HorseAnimationStateComponent &state,
+    const HorseProfile &profile, float anim_time) -> HorseGait {
+  if (state.gait_transition_progress < 1.0F) {
+    float const elapsed = anim_time - state.transition_start_time;
+    state.gait_transition_progress =
+        std::clamp(elapsed / k_gait_transition_duration, 0.0F, 1.0F);
+    if (state.gait_transition_progress >= 1.0F) {
+      state.current_gait = state.target_gait;
+    }
+  } else {
+    state.current_gait = state.target_gait;
+  }
+
+  HorseGait const current = gait_for_type(state.current_gait, profile.gait);
+  if (state.gait_transition_progress < 1.0F &&
+      state.current_gait != state.target_gait) {
+    HorseGait const target = gait_for_type(state.target_gait, profile.gait);
+    float const t = state.gait_transition_progress;
+    float const eased = t * t * (3.0F - 2.0F * t);
+    return blend_gaits(current, target, eased);
+  }
+  return current;
+}
+
+void evaluate_phase_and_bob(
+    const Render::Creature::HorseAnimationStateComponent &state,
     const HorseProfile &profile, const AnimationInputs &anim,
-    const HumanoidAnimationContext &rider_ctx) -> HorseMotionSample {
+    const HumanoidAnimationContext &rider_ctx, const HorseGait &resolved,
+    float rider_intensity, float &out_phase, float &out_bob) {
+  bool const is_moving = state.current_gait != GaitType::IDLE ||
+                         state.target_gait != GaitType::IDLE;
+  float const phase_offset = resolved.phase_offset;
+
+  if (is_moving) {
+    if (rider_ctx.gait.cycle_time > 0.0001F) {
+      out_phase = rider_ctx.gait.cycle_phase;
+    } else {
+      out_phase = std::fmod(anim.time / std::max(resolved.cycle_time, 0.0001F) +
+                                phase_offset,
+                            1.0F);
+    }
+    float const base_bob_amp =
+        profile.dims.idle_bob_amplitude +
+        rider_intensity *
+            (profile.dims.move_bob_amplitude - profile.dims.idle_bob_amplitude);
+    float const bob_amp = base_bob_amp * bob_scale_for_gait(state.target_gait);
+
+    float const primary_bob = std::sin(out_phase * 2.0F * k_pi);
+    float const secondary_bob = std::sin(out_phase * 4.0F * k_pi) * 0.25F;
+    float const tertiary_variation =
+        std::sin(anim.time * 0.7F + phase_offset * k_pi) * 0.08F + 1.0F;
+
+    float bob_pattern = primary_bob;
+    if (state.current_gait == GaitType::TROT) {
+      bob_pattern = primary_bob + secondary_bob * 0.5F;
+    } else if (state.current_gait == GaitType::CANTER) {
+      bob_pattern = primary_bob + std::sin(out_phase * 3.0F * k_pi) * 0.15F;
+    } else if (state.current_gait == GaitType::GALLOP) {
+      bob_pattern = primary_bob * 1.2F + secondary_bob * 0.3F;
+    }
+    out_bob = bob_pattern * bob_amp * tertiary_variation;
+  } else {
+    float const breathing =
+        std::sin((anim.time + phase_offset * 2.0F) *
+                 k_idle_breathing_primary_freq * 2.0F * k_pi) *
+            k_idle_breathing_primary_weight +
+        std::sin((anim.time + phase_offset) * k_idle_breathing_secondary_freq *
+                 2.0F * k_pi) *
+            k_idle_breathing_secondary_weight;
+    float const weight_shift =
+        std::sin(anim.time * 0.18F + phase_offset * 3.0F) * 0.20F;
+    out_phase = std::fmod(anim.time * k_idle_phase_speed + phase_offset, 1.0F);
+    out_bob = (breathing + weight_shift) * profile.dims.idle_bob_amplitude *
+              0.8F * state.idle_bob_intensity;
+  }
+}
+
+} // namespace
+
+auto evaluate_horse_motion(const HorseProfile &profile,
+                           const AnimationInputs &anim,
+                           const HumanoidAnimationContext &rider_ctx,
+                           Render::Creature::HorseAnimationStateComponent
+                               *io_state) -> HorseMotionSample {
+  Render::Creature::HorseAnimationStateComponent fallback_state{};
+  Render::Creature::HorseAnimationStateComponent &state =
+      io_state != nullptr ? *io_state : fallback_state;
+
   HorseMotionSample sample{};
-  HorseAnimationController controller(profile, anim, rider_ctx);
   bool const rider_has_motion =
       rider_ctx.is_walking() || rider_ctx.is_running();
   sample.is_moving = rider_has_motion || anim.is_moving;
@@ -193,26 +318,26 @@ auto evaluate_horse_motion(
       std::max(rider_ctx.locomotion_normalized_speed(),
                std::clamp(speed / kCanterSpeedMax, 0.0F, 1.0F));
 
+  GaitType desired_gait = GaitType::IDLE;
   if (sample.is_moving) {
     if (speed < kIdleSpeedMax && !anim.is_moving) {
-      controller.idle(1.0F);
+      desired_gait = GaitType::IDLE;
     } else if (speed < kWalkSpeedMax) {
-      controller.set_gait(GaitType::WALK);
+      desired_gait = GaitType::WALK;
     } else if (speed < kTrotSpeedMax) {
-      controller.set_gait(GaitType::TROT);
+      desired_gait = GaitType::TROT;
     } else if (speed < kCanterSpeedMax) {
-      controller.set_gait(GaitType::CANTER);
+      desired_gait = GaitType::CANTER;
     } else {
-      controller.set_gait(GaitType::GALLOP);
+      desired_gait = GaitType::GALLOP;
     }
-  } else {
-    controller.idle(1.0F);
   }
+  update_target_gait(state, desired_gait, anim.time, 1.0F);
 
-  controller.update_gait_parameters();
-  sample.gait = controller.get_resolved_gait();
-  sample.phase = controller.get_current_phase();
-  sample.bob = controller.get_current_bob();
+  HorseGait resolved = resolve_persistent_gait(state, profile, anim.time);
+  evaluate_phase_and_bob(state, profile, anim, rider_ctx, resolved,
+                         sample.rider_intensity, sample.phase, sample.bob);
+  sample.gait = resolved;
   sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
   sample.stop_intent = resolve_stop_intent(speed, sample.is_moving, rider_ctx);
 
@@ -240,8 +365,8 @@ auto evaluate_horse_motion(
                          ? std::sin(sample.phase * 2.0F * k_pi) *
                                (0.007F + gait_swing * 0.004F) * sway_intensity
                          : std::sin(anim.time * 0.4F) * 0.005F;
-  sample.body_sway += sample.turn_amount *
-                      (0.004F + sample.rider_intensity * 0.006F);
+  sample.body_sway +=
+      sample.turn_amount * (0.004F + sample.rider_intensity * 0.006F);
 
   float const pitch_intensity = sample.rider_intensity * 0.7F + 0.1F;
   sample.body_pitch = sample.is_moving
@@ -254,7 +379,7 @@ auto evaluate_horse_motion(
       sample.is_moving
           ? std::sin((sample.phase + 0.18F) * 2.0F * k_pi) *
                 (0.014F + gait_lift * 0.015F + sample.rider_intensity * 0.010F)
-           : std::sin(anim.time * 1.5F) * 0.008F;
+          : std::sin(anim.time * 1.5F) * 0.008F;
   float const nod_secondary = std::sin(anim.time * 0.8F) * 0.003F;
   sample.head_nod =
       (nod_base + nod_secondary) * (1.0F - sample.stop_intent * 0.15F);

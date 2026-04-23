@@ -69,7 +69,6 @@ add_library(render_gl STATIC
     horse/horse_profile_data.cpp
     horse/prepare.cpp
     horse/horse_spec.cpp
-    horse/horse_animation_controller.cpp
     horse/horse_motion.cpp
     entity/horse_renderer.cpp
     entity/mounted_humanoid_renderer_base.cpp
@@ -150,6 +149,7 @@ add_library(render_gl STATIC
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
+    creature/anatomy_bake.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
     creature/pipeline/creature_asset.cpp

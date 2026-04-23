@@ -70,10 +70,6 @@ auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantVariant;
 auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantProfile;
-auto get_or_create_cached_elephant_profile(
-    uint32_t seed, const QVector3D &fabric_base,
-    const QVector3D &metal_base) -> ElephantProfile;
-void advance_elephant_profile_cache_frame();
 
 inline void scale_elephant_dimensions(ElephantDimensions &dims, float scale) {
   dims.body_length *= scale;

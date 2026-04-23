@@ -57,13 +57,19 @@ auto MountedKnightRendererBase::get_proportion_scaling() const -> QVector3D {
 
 auto MountedKnightRendererBase::mounted_visual_spec() const
     -> const Render::Creature::Pipeline::MountedSpec & {
-  static thread_local Render::Creature::Pipeline::MountedSpec spec;
-  spec = MountedHumanoidRendererBase::mounted_visual_spec();
-  spec.rider = visual_spec();
-  spec.rider.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  spec.rider.debug_name = "troops/mounted_knight/rider";
-  spec.mount.debug_name = "troops/mounted_knight/horse";
-  return spec;
+  if (!m_mounted_visual_spec_baked) {
+    m_mounted_visual_spec_cache =
+        MountedHumanoidRendererBase::mounted_visual_spec();
+    m_mounted_visual_spec_cache.rider = visual_spec();
+    m_mounted_visual_spec_cache.rider.kind =
+        Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_mounted_visual_spec_cache.rider.debug_name =
+        "troops/mounted_knight/rider";
+    m_mounted_visual_spec_cache.mount.debug_name =
+        "troops/mounted_knight/horse";
+    m_mounted_visual_spec_baked = true;
+  }
+  return m_mounted_visual_spec_cache;
 }
 
 auto MountedKnightRendererBase::visual_spec() const

@@ -93,6 +93,9 @@ protected:
                                 HorseProfile &, const MountedAttachmentFrame &,
                                 float, float, float, const HorseBodyFrames &,
                                 ISubmitter &) const {}
+
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked{false};
 };
 
 } // namespace Render::GL

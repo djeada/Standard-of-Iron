@@ -1,5 +1,6 @@
 #include "prepare.h"
 
+#include "../creature/animation_state_components.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
@@ -78,97 +79,8 @@ void reset_horse_render_stats() { s_horseRenderStats.reset(); }
 
 namespace {
 
-struct CachedHorseProfileEntry {
-  HorseProfile profile;
-  QVector3D leather_base;
-  QVector3D cloth_base;
-  uint32_t frame_number{0};
-};
-
-using HorseProfileCacheKey = uint64_t;
-static std::unordered_map<HorseProfileCacheKey, CachedHorseProfileEntry>
-    s_horse_profile_cache;
-static std::mutex s_horse_profile_cache_mutex;
-static uint32_t s_horse_cache_frame = 0;
-constexpr uint32_t k_horse_profile_cache_max_age = 600;
-
-constexpr uint32_t k_cache_cleanup_interval_mask = 0x1FFU;
-
-constexpr float k_color_hash_multiplier = 31.0F;
-
-constexpr float k_color_comparison_tolerance = 0.001F;
-
-inline auto make_horse_profile_cache_key(
-    uint32_t seed, const QVector3D &leather_base,
-    const QVector3D &cloth_base) -> HorseProfileCacheKey {
-
-  auto color_to_5bit = [](float c) -> uint32_t {
-    return static_cast<uint32_t>(std::clamp(c, 0.0F, 1.0F) *
-                                 k_color_hash_multiplier);
-  };
-
-  uint32_t color_hash = color_to_5bit(leather_base.x());
-  color_hash |= color_to_5bit(leather_base.y()) << 5;
-  color_hash |= color_to_5bit(leather_base.z()) << 10;
-  color_hash |= color_to_5bit(cloth_base.x()) << 15;
-  color_hash |= color_to_5bit(cloth_base.y()) << 20;
-  color_hash |= color_to_5bit(cloth_base.z()) << 25;
-  return (static_cast<uint64_t>(seed) << 32) |
-         static_cast<uint64_t>(color_hash);
-}
-
 constexpr float k_pi = std::numbers::pi_v<float>;
 
-} // namespace
-
-auto get_or_create_cached_horse_profile(
-    uint32_t seed, const QVector3D &leather_base,
-    const QVector3D &cloth_base) -> HorseProfile {
-  std::lock_guard<std::mutex> lock(s_horse_profile_cache_mutex);
-  HorseProfileCacheKey cache_key =
-      make_horse_profile_cache_key(seed, leather_base, cloth_base);
-
-  auto cache_it = s_horse_profile_cache.find(cache_key);
-  if (cache_it != s_horse_profile_cache.end()) {
-
-    CachedHorseProfileEntry &entry = cache_it->second;
-    if ((entry.leather_base - leather_base).lengthSquared() <
-            k_color_comparison_tolerance &&
-        (entry.cloth_base - cloth_base).lengthSquared() <
-            k_color_comparison_tolerance) {
-      entry.frame_number = s_horse_cache_frame;
-      ++s_horseRenderStats.profiles_cached;
-      return entry.profile;
-    }
-  }
-
-  ++s_horseRenderStats.profiles_computed;
-  HorseProfile profile = make_horse_profile(seed, leather_base, cloth_base);
-
-  CachedHorseProfileEntry &new_entry = s_horse_profile_cache[cache_key];
-  new_entry.profile = profile;
-  new_entry.leather_base = leather_base;
-  new_entry.cloth_base = cloth_base;
-  new_entry.frame_number = s_horse_cache_frame;
-
-  return profile;
-}
-
-void advance_horse_profile_cache_frame() {
-  std::lock_guard<std::mutex> lock(s_horse_profile_cache_mutex);
-  ++s_horse_cache_frame;
-
-  if ((s_horse_cache_frame & k_cache_cleanup_interval_mask) == 0) {
-    auto it = s_horse_profile_cache.begin();
-    while (it != s_horse_profile_cache.end()) {
-      if (s_horse_cache_frame - it->second.frame_number >
-          k_horse_profile_cache_max_age) {
-        it = s_horse_profile_cache.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
 }
 
 void HorseRendererBase::render(
@@ -249,7 +161,11 @@ void prepare_horse_full(
 
   HorseMotionSample const motion =
       shared_motion ? *shared_motion
-                    : evaluate_horse_motion(profile, anim, rider_ctx);
+                    : evaluate_horse_motion(
+                          profile, anim, rider_ctx,
+                          Engine::Core::get_or_add_component<
+                              Render::Creature::HorseAnimationStateComponent>(
+                              ctx.entity));
   const HorseGait &g = motion.gait;
   float const phase = motion.phase;
   float const bob = motion.bob;
@@ -451,7 +367,11 @@ void prepare_horse_simplified(
 
   HorseMotionSample const motion =
       shared_motion ? *shared_motion
-                    : evaluate_horse_motion(profile, anim, rider_ctx);
+                    : evaluate_horse_motion(
+                          profile, anim, rider_ctx,
+                          Engine::Core::get_or_add_component<
+                              Render::Creature::HorseAnimationStateComponent>(
+                              ctx.entity));
   const HorseGait &g = motion.gait;
 
   MountedAttachmentFrame mount =

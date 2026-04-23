@@ -5,9 +5,6 @@
 #include "../humanoid/mounted_pose_controller.h"
 #include "horse_renderer.h"
 
-#include <mutex>
-#include <unordered_map>
-
 namespace Render::GL {
 
 class MountedHumanoidRendererBase : public HumanoidRendererBase {
@@ -25,6 +22,9 @@ public:
   virtual auto get_mount_scale() const -> float = 0;
 
 protected:
+  mutable Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec_cache{};
+  mutable bool m_mounted_visual_spec_baked{false};
+
   virtual void apply_riding_animation(MountedPoseController &controller,
                                       MountedAttachmentFrame &mount,
                                       const HumanoidAnimationContext &anim_ctx,
@@ -37,8 +37,6 @@ protected:
       Engine::Core::TransformComponent *transform_comp) const -> float override;
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
-  auto get_cached_horse_profile(uint32_t seed,
-                                const HumanoidVariant &v) const -> HorseProfile;
 
   HorseRenderer m_horseRenderer;
 
@@ -50,10 +48,6 @@ protected:
       const override;
 
 private:
-  mutable std::mutex m_profile_cache_mutex;
-  mutable std::unordered_map<uint32_t, HorseProfile> m_profile_cache;
-  static constexpr size_t MAX_PROFILE_CACHE_SIZE = 100;
-
   void resolve_mount_render_state(const DrawContext &ctx, std::uint32_t seed,
                                   const HumanoidVariant &variant,
                                   const HumanoidAnimationContext &anim_ctx,

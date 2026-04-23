@@ -32,6 +32,10 @@ public:
               ElephantProfile &profile,
               const HowdahAttachmentFrame *shared_howdah,
               const ElephantMotionSample *shared_motion, ISubmitter &out) const;
+
+protected:
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked{false};
 };
 
 } // namespace Render::GL

@@ -428,9 +428,9 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
   out_pose.leg_radius_reduced = dims.leg_radius * 0.95F;
 
   out_pose.foot_pad_offset_y = -dims.foot_radius * 0.18F;
-  out_pose.foot_pad_half = QVector3D(dims.foot_radius * 1.15F,
-                                     dims.foot_radius * 0.70F,
-                                     dims.foot_radius * 1.20F);
+  out_pose.foot_pad_half =
+      QVector3D(dims.foot_radius * 1.15F, dims.foot_radius * 0.70F,
+                dims.foot_radius * 1.20F);
 }
 
 } // namespace Render::Elephant

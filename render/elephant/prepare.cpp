@@ -1,5 +1,6 @@
 #include "prepare.h"
 
+#include "../creature/animation_state_components.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
@@ -73,44 +74,6 @@ void reset_elephant_render_stats() { s_elephantRenderStats.reset(); }
 
 namespace {
 
-struct CachedElephantProfileEntry {
-  ElephantProfile profile;
-  QVector3D fabric_base;
-  QVector3D metal_base;
-  uint32_t frame_number{0};
-};
-
-using ElephantProfileCacheKey = uint64_t;
-static std::unordered_map<ElephantProfileCacheKey, CachedElephantProfileEntry>
-    s_elephant_profile_cache;
-static uint32_t s_elephant_cache_frame = 0;
-constexpr uint32_t k_elephant_profile_cache_max_age = 600;
-
-constexpr uint32_t k_cache_cleanup_interval_mask = 0x1FFU;
-
-constexpr float k_color_hash_multiplier = 31.0F;
-
-constexpr float k_color_comparison_tolerance = 0.001F;
-
-inline auto make_elephant_profile_cache_key(
-    uint32_t seed, const QVector3D &fabric_base,
-    const QVector3D &metal_base) -> ElephantProfileCacheKey {
-
-  auto color_to_5bit = [](float c) -> uint32_t {
-    return static_cast<uint32_t>(std::clamp(c, 0.0F, 1.0F) *
-                                 k_color_hash_multiplier);
-  };
-
-  uint32_t color_hash = color_to_5bit(fabric_base.x());
-  color_hash |= color_to_5bit(fabric_base.y()) << 5;
-  color_hash |= color_to_5bit(fabric_base.z()) << 10;
-  color_hash |= color_to_5bit(metal_base.x()) << 15;
-  color_hash |= color_to_5bit(metal_base.y()) << 20;
-  color_hash |= color_to_5bit(metal_base.z()) << 25;
-  return (static_cast<uint64_t>(seed) << 32) |
-         static_cast<uint64_t>(color_hash);
-}
-
 constexpr int k_hash_shift_16 = 16;
 constexpr int k_hash_shift_15 = 15;
 constexpr uint32_t k_hash_mult_1 = 0x7Feb352dU;
@@ -150,52 +113,6 @@ inline auto color_hash(const QVector3D &c) -> uint32_t {
 }
 
 } // namespace
-
-auto get_or_create_cached_elephant_profile(
-    uint32_t seed, const QVector3D &fabric_base,
-    const QVector3D &metal_base) -> ElephantProfile {
-  ElephantProfileCacheKey cache_key =
-      make_elephant_profile_cache_key(seed, fabric_base, metal_base);
-
-  auto cache_it = s_elephant_profile_cache.find(cache_key);
-  if (cache_it != s_elephant_profile_cache.end()) {
-    CachedElephantProfileEntry &entry = cache_it->second;
-    if ((entry.fabric_base - fabric_base).lengthSquared() <
-            k_color_comparison_tolerance &&
-        (entry.metal_base - metal_base).lengthSquared() <
-            k_color_comparison_tolerance) {
-      entry.frame_number = s_elephant_cache_frame;
-      return entry.profile;
-    }
-  }
-
-  ElephantProfile profile =
-      make_elephant_profile(seed, fabric_base, metal_base);
-
-  CachedElephantProfileEntry &new_entry = s_elephant_profile_cache[cache_key];
-  new_entry.profile = profile;
-  new_entry.fabric_base = fabric_base;
-  new_entry.metal_base = metal_base;
-  new_entry.frame_number = s_elephant_cache_frame;
-
-  return profile;
-}
-
-void advance_elephant_profile_cache_frame() {
-  ++s_elephant_cache_frame;
-
-  if ((s_elephant_cache_frame & k_cache_cleanup_interval_mask) == 0) {
-    auto it = s_elephant_profile_cache.begin();
-    while (it != s_elephant_profile_cache.end()) {
-      if (s_elephant_cache_frame - it->second.frame_number >
-          k_elephant_profile_cache_max_age) {
-        it = s_elephant_profile_cache.erase(it);
-      } else {
-        ++it;
-      }
-    }
-  }
-}
 
 void ElephantRendererBase::render(const DrawContext &ctx,
                                   const AnimationInputs &anim,
@@ -267,7 +184,13 @@ void prepare_elephant_full(
   const ElephantDimensions &d = profile.dims;
   const ElephantVariant &v = profile.variant;
   ElephantMotionSample const motion =
-      shared_motion ? *shared_motion : evaluate_elephant_motion(profile, anim);
+      shared_motion
+          ? *shared_motion
+          : evaluate_elephant_motion(
+                profile, anim,
+                Engine::Core::get_or_add_component<
+                    Render::Creature::ElephantAnimationStateComponent>(
+                    ctx.entity));
   const ElephantGait &g = motion.gait;
 
   float const trunk_swing = motion.trunk_swing;
@@ -344,7 +267,13 @@ void prepare_elephant_simplified(
   const ElephantDimensions &d = profile.dims;
   const ElephantVariant &v = profile.variant;
   ElephantMotionSample const motion =
-      shared_motion ? *shared_motion : evaluate_elephant_motion(profile, anim);
+      shared_motion
+          ? *shared_motion
+          : evaluate_elephant_motion(
+                profile, anim,
+                Engine::Core::get_or_add_component<
+                    Render::Creature::ElephantAnimationStateComponent>(
+                    ctx.entity));
   const ElephantGait &g = motion.gait;
 
   HowdahAttachmentFrame const howdah =

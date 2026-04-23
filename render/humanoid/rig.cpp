@@ -132,17 +132,20 @@ void HumanoidRendererBase::append_companion_preparation(
 
 auto HumanoidRendererBase::visual_spec() const
     -> const Render::Creature::Pipeline::UnitVisualSpec & {
-
-  static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
-  spec.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  spec.debug_name = "humanoid/default";
-  spec.equipment = {};
-  spec.pose_hook = nullptr;
-  spec.variant_hook = nullptr;
-  const QVector3D ps = get_proportion_scaling();
-  spec.scaling =
-      Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
-  return spec;
+  if (!m_visual_spec_baked) {
+    m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+    m_visual_spec_cache.kind =
+        Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_visual_spec_cache.debug_name = "humanoid/default";
+    m_visual_spec_cache.equipment = {};
+    m_visual_spec_cache.pose_hook = nullptr;
+    m_visual_spec_cache.variant_hook = nullptr;
+    const QVector3D ps = get_proportion_scaling();
+    m_visual_spec_cache.scaling =
+        Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};
+    m_visual_spec_baked = true;
+  }
+  return m_visual_spec_cache;
 }
 
 auto HumanoidRendererBase::resolve_entity_ground_offset(

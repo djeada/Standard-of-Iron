@@ -1,5 +1,7 @@
 #include "mounted_humanoid_renderer_base.h"
 
+#include "../creature/anatomy_bake.h"
+#include "../creature/animation_state_components.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../gl/camera.h"
@@ -27,14 +29,17 @@ MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
 
 auto MountedHumanoidRendererBase::mounted_visual_spec() const
     -> const Render::Creature::Pipeline::MountedSpec & {
-
-  static thread_local Render::Creature::Pipeline::MountedSpec spec;
-  spec.rider = HumanoidRendererBase::visual_spec();
-  spec.rider.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  spec.mount = m_horseRenderer.visual_spec();
-  spec.mount.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-  spec.mount_socket = Render::Creature::kInvalidSocket;
-  return spec;
+  if (!m_mounted_visual_spec_baked) {
+    m_mounted_visual_spec_cache.rider = HumanoidRendererBase::visual_spec();
+    m_mounted_visual_spec_cache.rider.kind =
+        Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_mounted_visual_spec_cache.mount = m_horseRenderer.visual_spec();
+    m_mounted_visual_spec_cache.mount.kind =
+        Render::Creature::Pipeline::CreatureKind::Horse;
+    m_mounted_visual_spec_cache.mount_socket = Render::Creature::kInvalidSocket;
+    m_mounted_visual_spec_baked = true;
+  }
+  return m_mounted_visual_spec_cache;
 }
 
 auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
@@ -42,26 +47,6 @@ auto MountedHumanoidRendererBase::get_scaled_horse_dimensions(
   HorseDimensions dims = make_horse_dimensions(seed);
   scale_horse_dimensions(dims, get_mount_scale());
   return dims;
-}
-
-auto MountedHumanoidRendererBase::get_cached_horse_profile(
-    uint32_t seed, const HumanoidVariant &v) const -> HorseProfile {
-  std::lock_guard<std::mutex> lock(m_profile_cache_mutex);
-  auto it = m_profile_cache.find(seed);
-  if (it != m_profile_cache.end()) {
-    return it->second;
-  }
-
-  HorseDimensions dims = get_scaled_horse_dimensions(seed);
-  HorseProfile profile =
-      make_horse_profile(seed, v.palette.leather, v.palette.cloth);
-  profile.dims = dims;
-
-  m_profile_cache[seed] = std::move(profile);
-  if (m_profile_cache.size() > MAX_PROFILE_CACHE_SIZE) {
-    m_profile_cache.clear();
-  }
-  return m_profile_cache[seed];
 }
 
 auto MountedHumanoidRendererBase::resolve_entity_ground_offset(
@@ -98,7 +83,10 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
 
   dims = get_scaled_horse_dimensions(horse_seed);
   if (use_cached_profile) {
-    profile = get_cached_horse_profile(horse_seed, variant);
+    profile = Render::Creature::get_or_bake_horse_anatomy(
+                  ctx.entity, horse_seed, variant.palette.leather,
+                  variant.palette.cloth, get_mount_scale())
+                  .profile;
   } else {
     profile = make_horse_profile(horse_seed, variant.palette.leather,
                                  variant.palette.cloth);
@@ -107,7 +95,10 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
   dims = profile.dims;
   mount = compute_mount_frame(profile);
   tune_mounted_knight_frame(dims, mount);
-  motion = evaluate_horse_motion(profile, anim, anim_ctx);
+  motion = evaluate_horse_motion(
+      profile, anim, anim_ctx,
+      Engine::Core::get_or_add_component<
+          Render::Creature::HorseAnimationStateComponent>(ctx.entity));
   apply_mount_vertical_offset(mount, motion.bob);
   reins = compute_rein_state(horse_seed, anim_ctx);
 }

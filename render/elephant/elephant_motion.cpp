@@ -1,5 +1,6 @@
 #include "elephant_motion.h"
 
+#include "../creature/animation_state_components.h"
 #include "dimensions.h"
 #include "elephant_spec.h"
 
@@ -108,8 +109,10 @@ auto compute_howdah_frame(const ElephantProfile &profile)
 }
 
 auto evaluate_elephant_motion(const ElephantProfile &profile,
-                              const AnimationInputs &anim)
-    -> ElephantMotionSample {
+                              const AnimationInputs &anim,
+                              Render::Creature::ElephantAnimationStateComponent
+                                  *io_state) -> ElephantMotionSample {
+  (void)io_state;
   ElephantMotionSample sample{};
   const ElephantGait &g = profile.gait;
   const ElephantDimensions &d = profile.dims;
@@ -126,7 +129,8 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
     float const cycle_progress = std::fmod(anim.time / cycle_time, 1.0F);
     sample.phase = cycle_progress;
     float const primary = std::sin(cycle_progress * k_two_pi);
-    float const secondary = std::sin((cycle_progress + 0.19F) * 2.0F * k_two_pi);
+    float const secondary =
+        std::sin((cycle_progress + 0.19F) * 2.0F * k_two_pi);
     sample.bob = (primary * 0.70F + secondary * 0.30F) * d.move_bob_amplitude *
                  (0.88F + locomotion_intensity * 0.18F);
   } else {
@@ -135,39 +139,37 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
   }
 
   float const trunk_primary =
+      sample.is_moving ? std::sin((sample.phase + 0.11F) * k_two_pi) *
+                             (0.10F + locomotion_intensity * 0.05F)
+                       : std::sin(anim.time * 0.8F) * 0.09F;
+  float const trunk_secondary =
       sample.is_moving
-          ? std::sin((sample.phase + 0.11F) * k_two_pi) *
-                (0.10F + locomotion_intensity * 0.05F)
-          : std::sin(anim.time * 0.8F) * 0.09F;
-  float const trunk_secondary = sample.is_moving
-                                    ? std::sin((sample.phase + 0.39F) *
-                                               2.0F * k_two_pi) *
-                                          0.03F
-                                    : std::sin(anim.time * 1.3F + 0.5F) * 0.05F;
+          ? std::sin((sample.phase + 0.39F) * 2.0F * k_two_pi) * 0.03F
+          : std::sin(anim.time * 1.3F + 0.5F) * 0.05F;
   sample.trunk_swing = trunk_primary + trunk_secondary;
 
-  float const ear_base = sample.is_moving
-                             ? std::sin((sample.phase + 0.33F) * 2.0F * k_two_pi)
-                             : std::sin(anim.time * 0.6F);
+  float const ear_base =
+      sample.is_moving ? std::sin((sample.phase + 0.33F) * 2.0F * k_two_pi)
+                       : std::sin(anim.time * 0.6F);
   sample.ear_flap = sample.is_moving
                         ? ear_base * (0.16F + locomotion_intensity * 0.08F)
                         : ear_base * 0.10F;
 
-  sample.body_sway = body_sway_for_motion(sample.is_moving, sample.phase,
-                                          anim.time, locomotion_intensity,
-                                          g.stride_swing);
+  sample.body_sway =
+      body_sway_for_motion(sample.is_moving, sample.phase, anim.time,
+                           locomotion_intensity, g.stride_swing);
 
   float const weight_transfer = std::sin((sample.phase + 0.20F) * k_two_pi);
-  float const shoulder_settle =
-      sample.is_moving
-          ? std::max(0.0F, weight_transfer) * d.move_bob_amplitude *
-                (0.50F + locomotion_intensity * 0.10F)
-          : 0.0F;
-  float const hip_settle =
-      sample.is_moving
-          ? std::max(0.0F, -weight_transfer) * d.move_bob_amplitude *
-                (0.42F + locomotion_intensity * 0.10F)
-          : 0.0F;
+  float const shoulder_settle = sample.is_moving
+                                    ? std::max(0.0F, weight_transfer) *
+                                          d.move_bob_amplitude *
+                                          (0.50F + locomotion_intensity * 0.10F)
+                                    : 0.0F;
+  float const hip_settle = sample.is_moving
+                               ? std::max(0.0F, -weight_transfer) *
+                                     d.move_bob_amplitude *
+                                     (0.42F + locomotion_intensity * 0.10F)
+                               : 0.0F;
   float const spine_wave = sample.is_moving
                                ? std::sin((sample.phase + 0.47F) * k_two_pi) *
                                      d.move_bob_amplitude * 0.18F
@@ -184,10 +186,9 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
       sample.barrel_center +
       QVector3D(0.0F, d.body_height * 0.04F - hip_settle - spine_wave * 0.35F,
                 -d.body_length * 0.32F);
-  sample.neck_base =
-      sample.chest_center +
-      QVector3D(0.0F, d.body_height * 0.23F + head_nod * 0.35F,
-                d.body_length * 0.14F);
+  sample.neck_base = sample.chest_center +
+                     QVector3D(0.0F, d.body_height * 0.23F + head_nod * 0.35F,
+                               d.body_length * 0.14F);
   sample.neck_top = sample.neck_base + QVector3D(0.0F, d.neck_length * 0.60F,
                                                  d.neck_length * 0.46F);
   sample.head_center =
@@ -322,10 +323,10 @@ void update_elephant_gait(ElephantGaitState &state,
   const ElephantGait &g = profile.gait;
   float const cycle_time = std::max(g.cycle_time, 0.001F);
   float const locomotion_scale = anim.is_running ? 1.18F : 1.0F;
-  float const position_phase_offset = std::fmod(
-      body_world_pos.x() * kPositionPhaseDesyncX +
-          body_world_pos.z() * kPositionPhaseDesyncZ,
-      1.0F);
+  float const position_phase_offset =
+      std::fmod(body_world_pos.x() * kPositionPhaseDesyncX +
+                    body_world_pos.z() * kPositionPhaseDesyncZ,
+                1.0F);
   float const forward_alignment =
       std::clamp(std::abs(body_forward_z), 0.2F, 1.0F);
 
@@ -415,7 +416,8 @@ void update_elephant_gait(ElephantGaitState &state,
         cycle_sin * kShoulderLagFactor * (0.90F + 0.15F * locomotion_scale);
     float const hip_target =
         -cycle_sin * kHipLagFactor * (0.90F + 0.10F * locomotion_scale);
-    state.shoulder_lag += (shoulder_target - state.shoulder_lag) * kLagSmoothing;
+    state.shoulder_lag +=
+        (shoulder_target - state.shoulder_lag) * kLagSmoothing;
     state.hip_lag += (hip_target - state.hip_lag) * kLagSmoothing;
   } else {
     state.shoulder_lag *= kIdleLagDamping;

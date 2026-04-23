@@ -129,6 +129,9 @@ protected:
   mutable QVector3D m_cached_proportion_scale;
   mutable bool m_proportion_scale_cached = false;
 
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked{false};
+
   static auto resolve_formation(const DrawContext &ctx) -> FormationParams;
 
   static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;

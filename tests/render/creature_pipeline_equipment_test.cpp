@@ -548,8 +548,8 @@ TEST(PhaseEEquipment, SocketBoundEquipmentUsesResolvedSkeletonSocket) {
   no_socket[0].local_offset.translate(0.0F, 0.5F, 0.0F);
 
   std::array<EquipmentRecord, 1> with_socket = no_socket;
-  with_socket[0].socket =
-      static_cast<Render::Creature::SocketIndex>(Render::Humanoid::HumanoidSocket::HandR);
+  with_socket[0].socket = static_cast<Render::Creature::SocketIndex>(
+      Render::Humanoid::HumanoidSocket::HandR);
 
   std::array<UnitVisualSpec, 2> specs{};
   specs[0].kind = CreatureKind::Humanoid;
