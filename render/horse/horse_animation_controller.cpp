@@ -21,28 +21,28 @@ struct GaitParameters {
   float rear_leg_phase;
   float stride_swing;
   float stride_lift;
-  float bob_amplitude;
+  float swing_phase_end;
 };
 
 constexpr GaitParameters getGaitParams(GaitType gait) {
   switch (gait) {
   case GaitType::IDLE:
 
-    return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
+    return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.50F};
   case GaitType::WALK:
 
-    return {1.1F, 0.50F, 0.0F, 0.42F, 0.18F, 0.016F};
+    return {1.1F, 0.50F, 0.0F, 0.38F, 0.15F, 0.38F};
   case GaitType::TROT:
 
-    return {0.55F, 0.0F, 0.50F, 0.62F, 0.32F, 0.028F};
+    return {0.55F, 0.0F, 0.50F, 0.56F, 0.28F, 0.48F};
   case GaitType::CANTER:
 
-    return {0.48F, 0.62F, 0.35F, 0.65F, 0.35F, 0.032F};
+    return {0.48F, 0.62F, 0.35F, 0.62F, 0.32F, 0.44F};
   case GaitType::GALLOP:
 
-    return {0.38F, 0.50F, 0.15F, 0.85F, 0.48F, 0.042F};
+    return {0.38F, 0.50F, 0.15F, 0.78F, 0.42F, 0.36F};
   }
-  return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.004F};
+  return {2.5F, 0.0F, 0.0F, 0.015F, 0.008F, 0.50F};
 }
 
 } // namespace
@@ -223,12 +223,16 @@ void HorseAnimationController::update_gait_parameters() {
     m_profile.gait.stride_lift =
         current_params.stride_lift +
         ease_t * (target_params.stride_lift - current_params.stride_lift);
+    m_profile.gait.swing_phase_end =
+        current_params.swing_phase_end +
+        ease_t * (target_params.swing_phase_end - current_params.swing_phase_end);
   } else {
     m_profile.gait.cycle_time = current_params.cycle_time;
     m_profile.gait.front_leg_phase = current_params.front_leg_phase;
     m_profile.gait.rear_leg_phase = current_params.rear_leg_phase;
     m_profile.gait.stride_swing = current_params.stride_swing;
     m_profile.gait.stride_lift = current_params.stride_lift;
+    m_profile.gait.swing_phase_end = current_params.swing_phase_end;
   }
 
   bool const is_moving = m_current_gait != GaitType::IDLE;
