@@ -87,6 +87,7 @@ struct HorseGait {
   float rear_leg_phase{};
   float stride_swing{};
   float stride_lift{};
+  float swing_phase_end{0.5F};
 };
 
 struct HorseProfile {
@@ -161,6 +162,8 @@ struct HorseMotionSample {
   float bob = 0.0F;
   bool is_moving = false;
   float rider_intensity = 0.0F;
+  float locomotion_blend = 0.0F;
+  float steering = 0.0F;
 };
 
 auto make_horse_dimensions(uint32_t seed) -> HorseDimensions;
