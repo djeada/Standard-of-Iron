@@ -178,6 +178,10 @@ constexpr float k_skin_longitudinal_factor = 0.15F;
 constexpr float k_skin_seed_factor = 0.10F;
 constexpr float k_skin_bright_factor = 1.06F;
 constexpr float k_skin_shadow_factor = 0.88F;
+constexpr float kMovingBodyPitchAmplitude = 2.2F;
+constexpr float kMovingBodyRollAmplitude = 1.5F;
+constexpr float kIdleBodyPitchAmplitude = 0.6F;
+constexpr float kIdleBodyRollAmplitude = 0.4F;
 
 inline auto skin_gradient(const QVector3D &skin, float vertical_factor,
                           float longitudinal_factor, float seed) -> QVector3D {
@@ -559,15 +563,16 @@ auto evaluate_elephant_motion(ElephantProfile &profile,
     sample.weight_compression = impact_wave * d.move_bob_amplitude * 0.65F;
     sample.bob =
         (gait_wave * 0.45F - impact_wave * 0.75F) * d.move_bob_amplitude;
-    sample.body_pitch = gait_wave * 2.2F;
+    sample.body_pitch = gait_wave * kMovingBodyPitchAmplitude;
     sample.body_roll = std::sin(cycle_progress * 2.0F * k_pi + k_pi * 0.5F) *
-                       1.5F;
+                       kMovingBodyRollAmplitude;
   } else {
     sample.phase = std::fmod(anim.time * 0.3F, 1.0F);
     float const breathe = std::sin(anim.time * 0.45F);
     sample.bob = breathe * d.idle_bob_amplitude;
-    sample.body_pitch = breathe * 0.6F;
-    sample.body_roll = std::sin(anim.time * 0.30F + 1.0F) * 0.4F;
+    sample.body_pitch = breathe * kIdleBodyPitchAmplitude;
+    sample.body_roll =
+        std::sin(anim.time * 0.30F + 1.0F) * kIdleBodyRollAmplitude;
     sample.weight_compression = 0.0F;
   }
 

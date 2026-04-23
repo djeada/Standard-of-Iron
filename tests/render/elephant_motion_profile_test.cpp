@@ -1,5 +1,5 @@
 #include "render/elephant/rig.h"
-#include "render/humanoid/rig.h"
+#include "render/gl/humanoid/humanoid_types.h"
 #include <QVector3D>
 #include <cmath>
 #include <gtest/gtest.h>
