@@ -75,6 +75,8 @@ TEST_F(HorseAnimationControllerTest, SetGaitUpdatesParameters) {
   controller.set_gait(GaitType::GALLOP);
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+  EXPECT_LT(profile.gait.swing_phase_end, 0.5F);
+  EXPECT_GT(profile.gait.swing_phase_end, 0.3F);
 }
 
 TEST_F(HorseAnimationControllerTest, IdleGeneratesBobbing) {
@@ -312,4 +314,27 @@ TEST_F(HorseAnimationControllerTest, GaitTransitionsAreSmoothAndGradual) {
   anim.time += 0.5F;
   controller.update_gait_parameters();
   EXPECT_TRUE(approxEqual(profile.gait.cycle_time, 0.38F, 0.01F));
+}
+
+TEST_F(HorseAnimationControllerTest, GeneratedDimensionsStayHorseLike) {
+  for (uint32_t seed = 1; seed < 64; ++seed) {
+    HorseDimensions const dims = make_horse_dimensions(seed);
+    float const body_aspect = dims.body_height / dims.body_width;
+    EXPECT_GE(body_aspect, 1.2F);
+    EXPECT_LE(body_aspect, 1.5F);
+    EXPECT_GE(dims.head_length / dims.head_width, 2.0F);
+  }
+}
+
+TEST_F(HorseAnimationControllerTest, EvaluatedMotionIncludesSteeringAndBlend) {
+  anim.is_moving = true;
+  rider_ctx.gait.state = HumanoidMotionState::Walk;
+  rider_ctx.gait.speed = 1.8F;
+  rider_ctx.gait.normalized_speed = 0.6F;
+  rider_ctx.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
+  rider_ctx.locomotion_direction = QVector3D(1.0F, 0.0F, 0.0F);
+
+  HorseMotionSample const sample = evaluate_horse_motion(profile, anim, rider_ctx);
+  EXPECT_GT(sample.locomotion_blend, 0.0F);
+  EXPECT_GT(sample.steering, 0.0F);
 }

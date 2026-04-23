@@ -216,27 +216,27 @@ namespace HorseDimensionRange {
 
 constexpr float kBodyLengthMin = 0.92F;
 constexpr float kBodyLengthMax = 1.08F;
-constexpr float kBodyWidthMin = 0.20F;
-constexpr float kBodyWidthMax = 0.28F;
-constexpr float kBodyHeightMin = 0.42F;
-constexpr float kBodyHeightMax = 0.52F;
+constexpr float kBodyWidthMin = 0.24F;
+constexpr float kBodyWidthMax = 0.33F;
+constexpr float kBodyHeightMin = 0.37F;
+constexpr float kBodyHeightMax = 0.46F;
 
-constexpr float kNeckLengthMin = 0.48F;
-constexpr float kNeckLengthMax = 0.58F;
-constexpr float kNeckRiseMin = 0.30F;
-constexpr float kNeckRiseMax = 0.38F;
+constexpr float kNeckLengthMin = 0.45F;
+constexpr float kNeckLengthMax = 0.56F;
+constexpr float kNeckRiseMin = 0.26F;
+constexpr float kNeckRiseMax = 0.34F;
 
-constexpr float kHeadLengthMin = 0.34F;
-constexpr float kHeadLengthMax = 0.42F;
-constexpr float kHeadWidthMin = 0.16F;
-constexpr float kHeadWidthMax = 0.20F;
-constexpr float kHeadHeightMin = 0.22F;
-constexpr float kHeadHeightMax = 0.28F;
-constexpr float kMuzzleLengthMin = 0.16F;
-constexpr float kMuzzleLengthMax = 0.20F;
+constexpr float kHeadLengthMin = 0.36F;
+constexpr float kHeadLengthMax = 0.44F;
+constexpr float kHeadWidthMin = 0.14F;
+constexpr float kHeadWidthMax = 0.19F;
+constexpr float kHeadHeightMin = 0.19F;
+constexpr float kHeadHeightMax = 0.25F;
+constexpr float kMuzzleLengthMin = 0.17F;
+constexpr float kMuzzleLengthMax = 0.22F;
 
-constexpr float kLegLengthMin = 1.05F;
-constexpr float kLegLengthMax = 1.18F;
+constexpr float kLegLengthMin = 1.00F;
+constexpr float kLegLengthMax = 1.14F;
 constexpr float kHoofHeightMin = 0.095F;
 constexpr float kHoofHeightMax = 0.115F;
 
@@ -263,6 +263,9 @@ constexpr float kLegSegmentRatioLower = 0.12F;
 constexpr float kShoulderBarrelOffsetScale = 0.05F;
 constexpr float kShoulderBarrelOffsetBase = 0.05F;
 constexpr float kSaddleHeightBodyScale = 0.55F;
+constexpr float kBodyAspectMin = 1.25F;
+constexpr float kBodyAspectMax = 1.45F;
+constexpr float kHeadLengthWidthMin = 2.15F;
 
 constexpr uint32_t kSaltBodyLength = 0x12U;
 constexpr uint32_t kSaltBodyWidth = 0x34U;
@@ -295,6 +298,8 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
       rand_between(seed, kSaltBodyWidth, kBodyWidthMin, kBodyWidthMax);
   d.body_height =
       rand_between(seed, kSaltBodyHeight, kBodyHeightMin, kBodyHeightMax);
+  d.body_height = std::clamp(
+      d.body_height, d.body_width * kBodyAspectMin, d.body_width * kBodyAspectMax);
 
   d.neck_length =
       rand_between(seed, kSaltNeckLength, kNeckLengthMin, kNeckLengthMax);
@@ -307,6 +312,8 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
       rand_between(seed, kSaltHeadHeight, kHeadHeightMin, kHeadHeightMax);
   d.muzzle_length =
       rand_between(seed, kSaltMuzzleLength, kMuzzleLengthMin, kMuzzleLengthMax);
+  d.head_width =
+      std::min(d.head_width, d.head_length / std::max(kHeadLengthWidthMin, 1e-4F));
 
   d.leg_length =
       rand_between(seed, kSaltLegLength, kLegLengthMin, kLegLengthMax);
@@ -435,12 +442,15 @@ constexpr float kStrideSwingMin = 0.26F;
 constexpr float kStrideSwingMax = 0.32F;
 constexpr float kStrideLiftMin = 0.10F;
 constexpr float kStrideLiftMax = 0.14F;
+constexpr float kSwingPhaseEndMin = 0.42F;
+constexpr float kSwingPhaseEndMax = 0.50F;
 
 constexpr uint32_t kSaltCycleTime = 0xAA12U;
 constexpr uint32_t kSaltFrontLegPhase = 0xBB34U;
 constexpr uint32_t kSaltDiagonalLead = 0xCC56U;
 constexpr uint32_t kSaltStrideSwing = 0xDD78U;
 constexpr uint32_t kSaltStrideLift = 0xEE9AU;
+constexpr uint32_t kSaltSwingPhaseEnd = 0xFA12U;
 
 } // namespace HorseGaitConstants
 
@@ -521,6 +531,8 @@ auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
       rand_between(seed, kSaltStrideSwing, kStrideSwingMin, kStrideSwingMax);
   profile.gait.stride_lift =
       rand_between(seed, kSaltStrideLift, kStrideLiftMin, kStrideLiftMax);
+  profile.gait.swing_phase_end = rand_between(
+      seed, kSaltSwingPhaseEnd, kSwingPhaseEndMin, kSwingPhaseEndMax);
 
   return profile;
 }
@@ -747,18 +759,25 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
     -> HorseMotionSample {
   HorseMotionSample sample{};
   HorseAnimationController controller(profile, anim, rider_ctx);
-  sample.rider_intensity = rider_ctx.locomotion_normalized_speed();
-  bool const rider_has_motion =
-      rider_ctx.is_walking() || rider_ctx.is_running();
-  sample.is_moving = rider_has_motion || anim.is_moving;
-
   constexpr float kIdleSpeedMax = 0.5F;
   constexpr float kWalkSpeedMax = 3.0F;
   constexpr float kTrotSpeedMax = 5.5F;
   constexpr float kCanterSpeedMax = 8.0F;
+  sample.rider_intensity = rider_ctx.locomotion_normalized_speed();
+  float const speed = std::max(0.0F, rider_ctx.locomotion_speed());
+  sample.locomotion_blend = std::clamp(speed / kWalkSpeedMax, 0.0F, 1.0F);
+  if (anim.is_moving && sample.locomotion_blend < 0.15F) {
+    sample.locomotion_blend = 0.15F;
+  }
+  QVector3D const heading = rider_ctx.heading_forward().normalized();
+  QVector3D const locomotion = rider_ctx.locomotion_forward().normalized();
+  sample.steering =
+      std::clamp(QVector3D::crossProduct(heading, locomotion).y(), -1.0F, 1.0F);
+  bool const rider_has_motion =
+      rider_ctx.is_walking() || rider_ctx.is_running();
+  sample.is_moving = rider_has_motion || anim.is_moving;
 
   if (sample.is_moving) {
-    float const speed = rider_ctx.locomotion_speed();
     if (speed < kIdleSpeedMax && !anim.is_moving) {
       controller.idle(1.0F);
     } else if (speed < kWalkSpeedMax) {
@@ -809,6 +828,8 @@ void HorseRendererBase::render_full(
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
   const float rider_intensity = motion.rider_intensity;
+  float const locomotion_blend = motion.locomotion_blend;
+  float const steering = motion.steering;
 
   MountedAttachmentFrame mount =
       shared_mount ? *shared_mount : compute_mount_frame(profile);
@@ -829,7 +850,8 @@ void HorseRendererBase::render_full(
   float const sway_intensity =
       is_moving ? (1.0F - rider_intensity * 0.5F) : 0.3F;
   float const body_sway =
-      is_moving ? std::sin(phase * 2.0F * k_pi) * 0.012F * sway_intensity
+      is_moving ? std::sin(phase * 2.0F * k_pi) * 0.012F * sway_intensity +
+                      steering * 0.012F * locomotion_blend
                 : std::sin(anim.time * 0.4F) * 0.005F;
 
   float const pitch_intensity = rider_intensity * 0.7F + 0.1F;
@@ -844,6 +866,7 @@ void HorseRendererBase::render_full(
   float const head_nod = nod_base + nod_secondary;
 
   float const head_lateral = body_sway * 0.6F;
+  float const head_steer = steering * 0.022F * locomotion_blend;
 
   float const spine_flex =
       is_moving ? std::sin(phase * 2.0F * k_pi) * 0.006F * rider_intensity
@@ -873,10 +896,10 @@ void HorseRendererBase::render_full(
 
   QVector3D const chest_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.12F, d.body_length * 0.34F);
+      QVector3D(0.0F, d.body_height * 0.10F, d.body_length * 0.35F);
   QVector3D const rump_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.08F, -d.body_length * 0.36F);
+      QVector3D(0.0F, d.body_height * 0.10F, -d.body_length * 0.34F);
   QVector3D const belly_center =
       barrel_center +
       QVector3D(0.0F, -d.body_height * 0.35F, -d.body_length * 0.05F);
@@ -884,7 +907,7 @@ void HorseRendererBase::render_full(
   {
     QMatrix4x4 chest = horse_ctx.model;
     chest.translate(chest_center);
-    chest.scale(d.body_width * 1.12F, d.body_height * 0.95F,
+    chest.scale(d.body_width * 1.15F, d.body_height * 0.88F,
                 d.body_length * 0.36F);
     QVector3D const chest_color =
         coat_gradient(v.coat_color, 0.75F, 0.20F, coat_seed_a);
@@ -915,7 +938,7 @@ void HorseRendererBase::render_full(
   {
     QMatrix4x4 rump = horse_ctx.model;
     rump.translate(rump_center);
-    rump.scale(d.body_width * 1.22F, d.body_height * 1.05F,
+    rump.scale(d.body_width * 1.18F, d.body_height * 0.95F,
                d.body_length * 0.38F);
     QVector3D const rump_color =
         coat_gradient(v.coat_color, 0.62F, -0.28F, coat_seed_a * 0.7F);
@@ -949,10 +972,11 @@ void HorseRendererBase::render_full(
   }
 
   QVector3D const neck_base =
-      chest_center + QVector3D(head_lateral * 0.3F, d.body_height * 0.42F,
+      chest_center + QVector3D(head_lateral * 0.3F, d.body_height * 0.45F,
                                d.body_length * 0.08F);
   QVector3D const neck_top =
-      neck_base + QVector3D(head_lateral * 0.8F, d.neck_rise + head_nod * 0.4F,
+      neck_base + QVector3D(head_lateral * 0.8F + head_steer,
+                            d.neck_rise + head_nod * 0.4F,
                             d.neck_length);
   float const neck_radius = d.body_width * 0.48F;
 
@@ -1000,7 +1024,7 @@ void HorseRendererBase::render_full(
   }
 
   QVector3D const head_center =
-      neck_top + QVector3D(head_lateral,
+      neck_top + QVector3D(head_lateral + head_steer,
                            d.head_height * (0.10F - head_nod * 0.20F),
                            d.head_length * 0.40F + head_nod * 0.03F);
 
@@ -1308,7 +1332,6 @@ void HorseRendererBase::render_full(
              1.0F, 8);
   };
 
-  constexpr float k_swing_phase_end = 0.5F;
   constexpr float k_impact_settle_duration = 0.15F;
   constexpr float k_impact_settle_intensity = 0.08F;
 
@@ -1331,12 +1354,17 @@ void HorseRendererBase::render_full(
     if (is_moving) {
 
       bool const is_galloping = (g.stride_swing > 0.7F);
+      float const swing_phase_end = std::clamp(g.swing_phase_end, 0.32F, 0.64F);
+      float const stride_swing =
+          g.stride_swing * (0.55F + locomotion_blend * 0.45F);
+      float const stride_lift =
+          g.stride_lift * (0.60F + locomotion_blend * 0.40F);
 
       float const swing_progress =
-          leg_phase < k_swing_phase_end ? leg_phase / k_swing_phase_end : 0.0F;
+          leg_phase < swing_phase_end ? leg_phase / swing_phase_end : 0.0F;
       float const stance_progress =
-          leg_phase >= k_swing_phase_end
-              ? (leg_phase - k_swing_phase_end) / (1.0F - k_swing_phase_end)
+          leg_phase >= swing_phase_end
+              ? (leg_phase - swing_phase_end) / (1.0F - swing_phase_end)
               : 0.0F;
 
       float const swing_ease =
@@ -1361,10 +1389,10 @@ void HorseRendererBase::render_full(
         stride_mult *= reach_factor;
       }
 
-      float const rest_stride = forwardBias - g.stride_swing * 0.25F;
+      float const rest_stride = forwardBias - stride_swing * 0.25F;
       float const peak_stride =
-          g.stride_swing * stride_mult + forwardBias - g.stride_swing * 0.25F;
-      stride = leg_phase < k_swing_phase_end
+          stride_swing * stride_mult + forwardBias - stride_swing * 0.25F;
+      stride = leg_phase < swing_phase_end
                    ? rest_stride + swing_ease * (peak_stride - rest_stride)
                    : peak_stride - stance_ease * (peak_stride - rest_stride);
 
@@ -1374,9 +1402,9 @@ void HorseRendererBase::render_full(
               ? std::sin(stance_progress / k_impact_settle_duration * k_pi) *
                     k_impact_settle_intensity
               : 0.0F;
-      lift = leg_phase < k_swing_phase_end
-                 ? lift_curve * g.stride_lift * lift_mult
-                 : -impact_settle * g.stride_lift;
+      lift = leg_phase < swing_phase_end
+                 ? lift_curve * stride_lift * lift_mult
+                 : -impact_settle * stride_lift;
 
     } else {
 
@@ -1406,6 +1434,9 @@ void HorseRendererBase::render_full(
         anchor + QVector3D(lateralSign * shoulder_out,
                            shoulder_height + lift * 0.04F,
                            stride + stance_pull + stance_stagger);
+    float const turn_stride_bias =
+        steering * locomotion_blend * lateralSign * d.body_length * 0.045F;
+    shoulder.setZ(shoulder.z() + turn_stride_bias);
 
     float const gallop_angle = leg_phase * 2.0F * k_pi;
     bool const is_galloping = (g.stride_swing > 0.7F);
@@ -1675,8 +1706,7 @@ void HorseRendererBase::render_full(
   body_frames.rump.up = up;
   body_frames.rump.forward = forward;
 
-  QVector3D const tail_base_pos =
-      rump_center + QVector3D(0.0F, d.body_height * 0.20F, -100.05F);
+  QVector3D const tail_base_pos = tail_base;
   body_frames.tail_base.origin = tail_base_pos;
   body_frames.tail_base.right = right;
   body_frames.tail_base.up = up;
@@ -1723,7 +1753,7 @@ void HorseRendererBase::render_simplified(
   {
     QMatrix4x4 body = horse_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width * 1.0F, d.body_height * 0.85F,
+    body.scale(d.body_width * 1.08F, d.body_height * 0.78F,
                d.body_length * 0.80F);
     out.mesh(get_unit_sphere(), body, v.coat_color, nullptr, 1.0F, 6);
   }
