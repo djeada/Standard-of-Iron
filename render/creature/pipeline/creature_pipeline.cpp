@@ -254,7 +254,7 @@ void submit_rigged_creature(const CreatureAsset &asset,
   auto bind = asset.bind_palette();
   auto &cache = (renderer != nullptr) ? renderer->rigged_mesh_cache()
                                       : ([]() -> Render::GL::RiggedMeshCache & {
-                                          static Render::GL::RiggedMeshCache c;
+                                          thread_local Render::GL::RiggedMeshCache c;
                                           return c;
                                         })();
   auto *entry = cache.get_or_bake(*asset.spec, lod, bind, variant_bucket);
@@ -275,9 +275,10 @@ void submit_rigged_creature(const CreatureAsset &asset,
     palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
   }
 
-  const std::size_t n = std::min<std::size_t>(
-      std::min<std::size_t>(entry->inverse_bind.size(), bone_count),
-      static_cast<std::size_t>(kMaxCreatureBones));
+  const std::size_t capped_count =
+      std::min(entry->inverse_bind.size(), bone_count);
+  const std::size_t n =
+      std::min(capped_count, static_cast<std::size_t>(kMaxCreatureBones));
   for (std::size_t i = 0; i < n; ++i) {
     palette_slot[i] = current_palette[i] * entry->inverse_bind[i];
   }
