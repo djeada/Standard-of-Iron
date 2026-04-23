@@ -178,6 +178,10 @@ constexpr float k_skin_longitudinal_factor = 0.15F;
 constexpr float k_skin_seed_factor = 0.10F;
 constexpr float k_skin_bright_factor = 1.06F;
 constexpr float k_skin_shadow_factor = 0.88F;
+constexpr float kMovingBodyPitchAmplitude = 2.2F;
+constexpr float kMovingBodyRollAmplitude = 1.5F;
+constexpr float kIdleBodyPitchAmplitude = 0.6F;
+constexpr float kIdleBodyRollAmplitude = 0.4F;
 
 inline auto skin_gradient(const QVector3D &skin, float vertical_factor,
                           float longitudinal_factor, float seed) -> QVector3D {
@@ -196,27 +200,27 @@ namespace ElephantDimensionRange {
 
 constexpr float kBodyLengthMin = 0.7333333F;
 constexpr float kBodyLengthMax = 0.8666667F;
-constexpr float kBodyWidthMin = 0.30F;
-constexpr float kBodyWidthMax = 0.3666667F;
-constexpr float kBodyHeightMin = 0.40F;
-constexpr float kBodyHeightMax = 0.50F;
+constexpr float kBodyWidthMin = 0.34F;
+constexpr float kBodyWidthMax = 0.42F;
+constexpr float kBodyHeightMin = 0.34F;
+constexpr float kBodyHeightMax = 0.43F;
 
-constexpr float kNeckLengthMin = 0.175F;
-constexpr float kNeckLengthMax = 0.25F;
-constexpr float kNeckWidthMin = 0.225F;
-constexpr float kNeckWidthMax = 0.275F;
+constexpr float kNeckLengthMin = 0.15F;
+constexpr float kNeckLengthMax = 0.22F;
+constexpr float kNeckWidthMin = 0.24F;
+constexpr float kNeckWidthMax = 0.32F;
 
-constexpr float kHeadLengthMin = 0.275F;
-constexpr float kHeadLengthMax = 0.35F;
-constexpr float kHeadWidthMin = 0.25F;
-constexpr float kHeadWidthMax = 0.325F;
-constexpr float kHeadHeightMin = 0.275F;
-constexpr float kHeadHeightMax = 0.35F;
+constexpr float kHeadLengthMin = 0.30F;
+constexpr float kHeadLengthMax = 0.38F;
+constexpr float kHeadWidthMin = 0.28F;
+constexpr float kHeadWidthMax = 0.36F;
+constexpr float kHeadHeightMin = 0.24F;
+constexpr float kHeadHeightMax = 0.31F;
 
-constexpr float kTrunkLengthMin = 0.80F;
-constexpr float kTrunkLengthMax = 1.00F;
-constexpr float kTrunkBaseRadiusMin = 0.09F;
-constexpr float kTrunkBaseRadiusMax = 0.12F;
+constexpr float kTrunkLengthMin = 0.88F;
+constexpr float kTrunkLengthMax = 1.12F;
+constexpr float kTrunkBaseRadiusMin = 0.10F;
+constexpr float kTrunkBaseRadiusMax = 0.13F;
 constexpr float kTrunkTipRadiusMin = 0.02F;
 constexpr float kTrunkTipRadiusMax = 0.035F;
 
@@ -227,12 +231,12 @@ constexpr float kEarHeightMax = 0.50F;
 constexpr float kEarThicknessMin = 0.012F;
 constexpr float kEarThicknessMax = 0.022F;
 
-constexpr float kLegLengthMin = 0.70F;
-constexpr float kLegLengthMax = 0.85F;
-constexpr float kLegRadiusMin = 0.09F;
-constexpr float kLegRadiusMax = 0.125F;
-constexpr float kFootRadiusMin = 0.11F;
-constexpr float kFootRadiusMax = 0.15F;
+constexpr float kLegLengthMin = 0.68F;
+constexpr float kLegLengthMax = 0.82F;
+constexpr float kLegRadiusMin = 0.105F;
+constexpr float kLegRadiusMax = 0.145F;
+constexpr float kFootRadiusMin = 0.125F;
+constexpr float kFootRadiusMax = 0.18F;
 
 constexpr float kTailLengthMin = 0.35F;
 constexpr float kTailLengthMax = 0.475F;
@@ -249,10 +253,10 @@ constexpr float kHowdahLengthMax = 0.65F;
 constexpr float kHowdahHeightMin = 0.20F;
 constexpr float kHowdahHeightMax = 0.275F;
 
-constexpr float kIdleBobAmplitudeMin = 0.004F;
-constexpr float kIdleBobAmplitudeMax = 0.0075F;
-constexpr float kMoveBobAmplitudeMin = 0.0175F;
-constexpr float kMoveBobAmplitudeMax = 0.0275F;
+constexpr float kIdleBobAmplitudeMin = 0.0025F;
+constexpr float kIdleBobAmplitudeMax = 0.0050F;
+constexpr float kMoveBobAmplitudeMin = 0.0125F;
+constexpr float kMoveBobAmplitudeMax = 0.0200F;
 
 constexpr uint32_t kSaltBodyLength = 0x12U;
 constexpr uint32_t kSaltBodyWidth = 0x34U;
@@ -325,7 +329,7 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
   d.foot_radius =
       rand_between(seed, kSaltFootRadius, kFootRadiusMin, kFootRadiusMax);
 
-  d.foot_radius *= (1.0F / 1.2F);
+  d.foot_radius *= (1.0F / 1.12F);
 
   d.tail_length =
       rand_between(seed, kSaltTailLength, kTailLengthMin, kTailLengthMax);
@@ -348,7 +352,7 @@ auto make_elephant_dimensions(uint32_t seed) -> ElephantDimensions {
                                       kMoveBobAmplitudeMax);
 
   d.barrel_center_y =
-      d.leg_length + d.body_height * 0.35F + d.foot_radius * 0.8F;
+      d.leg_length + d.body_height * 0.28F + d.foot_radius * 0.70F;
 
   return d;
 }
@@ -418,18 +422,18 @@ auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
 
 namespace ElephantGaitConstants {
 
-constexpr float kCycleTimeMin = 2.20F;
-constexpr float kCycleTimeMax = 2.80F;
+constexpr float kCycleTimeMin = 2.40F;
+constexpr float kCycleTimeMax = 3.00F;
 constexpr float kFrontLegPhaseMin = 0.0F;
 constexpr float kFrontLegPhaseMax = 0.10F;
 constexpr float kDiagonalLeadMin = 0.48F;
 constexpr float kDiagonalLeadMax = 0.52F;
 
-constexpr float kStrideSwingMin = 0.55F;
-constexpr float kStrideSwingMax = 0.75F;
+constexpr float kStrideSwingMin = 0.42F;
+constexpr float kStrideSwingMax = 0.58F;
 
-constexpr float kStrideLiftMin = 0.18F;
-constexpr float kStrideLiftMax = 0.26F;
+constexpr float kStrideLiftMin = 0.11F;
+constexpr float kStrideLiftMax = 0.17F;
 
 constexpr uint32_t kSaltCycleTime = 0x657U;
 constexpr uint32_t kSaltFrontLegPhase = 0x768U;
@@ -553,18 +557,33 @@ auto evaluate_elephant_motion(ElephantProfile &profile,
   if (sample.is_moving) {
     float const cycle_progress = std::fmod(anim.time / g.cycle_time, 1.0F);
     sample.phase = cycle_progress;
-    sample.bob = std::sin(cycle_progress * 2.0F * k_pi) * d.move_bob_amplitude;
+    float const gait_wave = std::sin(cycle_progress * 2.0F * k_pi);
+    float const impact_wave =
+        std::max(0.0F, std::sin(cycle_progress * 4.0F * k_pi + k_pi * 0.5F));
+    sample.weight_compression = impact_wave * d.move_bob_amplitude * 0.65F;
+    sample.bob =
+        (gait_wave * 0.45F - impact_wave * 0.75F) * d.move_bob_amplitude;
+    sample.body_pitch = gait_wave * kMovingBodyPitchAmplitude;
+    sample.body_roll = std::sin(cycle_progress * 2.0F * k_pi + k_pi * 0.5F) *
+                       kMovingBodyRollAmplitude;
   } else {
     sample.phase = std::fmod(anim.time * 0.3F, 1.0F);
-    sample.bob = std::sin(anim.time * 0.5F) * d.idle_bob_amplitude;
+    float const breathe = std::sin(anim.time * 0.45F);
+    sample.bob = breathe * d.idle_bob_amplitude;
+    sample.body_pitch = breathe * kIdleBodyPitchAmplitude;
+    sample.body_roll =
+        std::sin(anim.time * 0.30F + 1.0F) * kIdleBodyRollAmplitude;
+    sample.weight_compression = 0.0F;
   }
 
-  float const trunk_primary = std::sin(anim.time * 0.8F) * 0.15F;
-  float const trunk_secondary = std::sin(anim.time * 1.3F + 0.5F) * 0.08F;
+  float const trunk_primary =
+      std::sin(anim.time * (sample.is_moving ? 0.9F : 0.55F)) *
+      (sample.is_moving ? 0.11F : 0.07F);
+  float const trunk_secondary = std::sin(anim.time * 1.2F + 0.5F) * 0.05F;
   sample.trunk_swing = trunk_primary + trunk_secondary;
 
-  float const ear_base = std::sin(anim.time * 0.6F);
-  sample.ear_flap = sample.is_moving ? ear_base * 0.25F : ear_base * 0.12F;
+  float const ear_base = std::sin(anim.time * 0.55F);
+  sample.ear_flap = sample.is_moving ? ear_base * 0.18F : ear_base * 0.08F;
 
   return sample;
 }
@@ -587,8 +606,8 @@ constexpr float kSwingDuration = 0.25F;
 constexpr float kSwingLiftPeak = 0.22F;
 constexpr float kSwingForwardReach = 0.60F;
 
-constexpr float kWeightShiftLateral = 0.025F;
-constexpr float kWeightShiftForeAft = 0.015F;
+constexpr float kWeightShiftLateral = 0.035F;
+constexpr float kWeightShiftForeAft = 0.020F;
 
 constexpr float kShoulderLagFactor = 0.08F;
 constexpr float kHipLagFactor = 0.06F;
@@ -754,7 +773,7 @@ void update_elephant_gait(ElephantGaitState &state,
 
   QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
 
-  float const stride_length = g.stride_swing * 1.8F;
+  float const stride_length = g.stride_swing * 1.35F;
 
   for (int i = 0; i < 4; ++i) {
     ElephantLegState &leg = state.legs[i];
@@ -824,6 +843,9 @@ void ElephantRendererBase::render_full(
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
+  float const body_pitch = motion.body_pitch;
+  float const body_roll = motion.body_roll;
+  float const weight_compression = motion.weight_compression;
 
   bool const is_fighting =
       anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
@@ -839,6 +861,13 @@ void ElephantRendererBase::render_full(
   DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
+  QMatrix4x4 body_space = elephant_ctx.model;
+  body_space.translate(0.0F, d.barrel_center_y + bob - weight_compression, 0.0F);
+  body_space.rotate(body_roll, 0.0F, 0.0F, 1.0F);
+  body_space.rotate(body_pitch, 1.0F, 0.0F, 0.0F);
+  body_space.translate(0.0F, -(d.barrel_center_y + bob - weight_compression),
+                       0.0F);
+  elephant_ctx.model = body_space;
 
   uint32_t const vhash = color_hash(v.skin_color);
   float const skin_seed_a = hash01(vhash ^ 0x701U);
@@ -847,14 +876,16 @@ void ElephantRendererBase::render_full(
   float const body_sway = is_moving ? std::sin(phase * 2.0F * k_pi) * 0.015F
                                     : std::sin(anim.time * 0.3F) * 0.008F;
 
-  QVector3D const barrel_center(body_sway, d.barrel_center_y + bob, 0.0F);
+  QVector3D const barrel_center(body_sway,
+                                d.barrel_center_y + bob - weight_compression,
+                                0.0F);
 
   {
     QMatrix4x4 body_main = elephant_ctx.model;
     body_main.translate(barrel_center);
 
-    body_main.scale(d.body_width * 1.05F * 1.2F, d.body_height * 0.95F * 1.2F,
-                    d.body_length * 0.55F * 1.2F);
+    body_main.scale(d.body_width * 1.30F, d.body_height * 0.90F,
+                    d.body_length * 0.66F);
     QVector3D const body_color =
         skin_gradient(v.skin_color, 0.60F, 0.0F, skin_seed_a);
     out.mesh(get_unit_sphere(), body_main, body_color, nullptr, 1.0F, 6);
@@ -867,8 +898,8 @@ void ElephantRendererBase::render_full(
     QMatrix4x4 chest = elephant_ctx.model;
     chest.translate(chest_center);
 
-    chest.scale(d.body_width * 1.18F * 1.1F, d.body_height * 1.00F * 1.1F,
-                d.body_length * 0.36F * 1.1F);
+    chest.scale(d.body_width * 1.34F, d.body_height * 1.02F,
+                d.body_length * 0.42F);
     out.mesh(get_unit_sphere(), chest,
              skin_gradient(v.skin_color, 0.70F, 0.15F, skin_seed_a), nullptr,
              1.0F, 6);
@@ -881,8 +912,8 @@ void ElephantRendererBase::render_full(
     QMatrix4x4 rump = elephant_ctx.model;
     rump.translate(rump_center);
 
-    rump.scale(d.body_width * 1.10F * 1.1F, d.body_height * 0.98F * 1.1F,
-               d.body_length * 0.34F * 1.1F);
+    rump.scale(d.body_width * 1.25F, d.body_height * 0.96F,
+               d.body_length * 0.40F);
     out.mesh(get_unit_sphere(), rump,
              skin_gradient(v.skin_color, 0.55F, -0.20F, skin_seed_b), nullptr,
              1.0F, 6);
@@ -894,8 +925,8 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 belly = elephant_ctx.model;
     belly.translate(belly_center);
-    belly.scale(d.body_width * 1.00F, d.body_height * 0.70F,
-                d.body_length * 0.55F);
+    belly.scale(d.body_width * 1.06F, d.body_height * 0.74F,
+                d.body_length * 0.60F);
     out.mesh(get_unit_sphere(), belly, darken(v.skin_color, 0.92F), nullptr,
              1.0F, 6);
   }
@@ -913,8 +944,8 @@ void ElephantRendererBase::render_full(
   {
     QMatrix4x4 head = elephant_ctx.model;
     head.translate(head_center);
-    head.scale(d.head_width * 1.0F, d.head_height * 0.90F,
-               d.head_length * 0.80F);
+    head.scale(d.head_width * 1.05F, d.head_height * 0.95F,
+               d.head_length * 0.82F);
     out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
   }
 
@@ -1064,12 +1095,12 @@ void ElephantRendererBase::render_full(
     out.mesh(get_unit_sphere(), eye_r, eye_color, nullptr, 1.0F);
   }
 
-  float const upper_len = d.leg_length * 0.55F;
-  float const lower_len = d.leg_length * 0.45F;
+  float const upper_len = d.leg_length * 0.50F;
+  float const lower_len = d.leg_length * 0.50F;
 
-  float const full_stride = g.stride_swing * 1.2F;
+  float const full_stride = g.stride_swing * 0.95F;
 
-  float const lift_height = d.leg_length * 0.18F;
+  float const lift_height = d.leg_length * 0.12F;
 
   auto draw_leg_phase = [&](int leg_index) {
     bool const is_front = (leg_index < 2);
@@ -1188,7 +1219,7 @@ void ElephantRendererBase::render_full(
     }
 
     QVector3D const hip =
-        barrel_center + QVector3D(lateral_sign * d.body_width * 0.48F,
+        barrel_center + QVector3D(lateral_sign * d.body_width * 0.56F,
                                   -d.body_height * 0.40F, base_forward);
 
     QVector3D const foot_target(
@@ -1328,6 +1359,9 @@ void ElephantRendererBase::render_simplified(
   float const phase = motion.phase;
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
+  float const body_pitch = motion.body_pitch * 0.55F;
+  float const body_roll = motion.body_roll * 0.45F;
+  float const weight_compression = motion.weight_compression * 0.80F;
 
   bool const is_fighting =
       anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
@@ -1341,14 +1375,22 @@ void ElephantRendererBase::render_simplified(
   DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
   elephant_ctx.model.translate(howdah.ground_offset);
+  QMatrix4x4 body_space = elephant_ctx.model;
+  body_space.translate(0.0F, d.barrel_center_y + bob - weight_compression, 0.0F);
+  body_space.rotate(body_roll, 0.0F, 0.0F, 1.0F);
+  body_space.rotate(body_pitch, 1.0F, 0.0F, 0.0F);
+  body_space.translate(0.0F, -(d.barrel_center_y + bob - weight_compression),
+                       0.0F);
+  elephant_ctx.model = body_space;
 
-  QVector3D const barrel_center(0.0F, d.barrel_center_y + bob, 0.0F);
+  QVector3D const barrel_center(0.0F, d.barrel_center_y + bob - weight_compression,
+                                0.0F);
 
   {
     QMatrix4x4 body = elephant_ctx.model;
     body.translate(barrel_center);
-    body.scale(d.body_width * 1.0F, d.body_height * 0.90F,
-               d.body_length * 0.75F);
+    body.scale(d.body_width * 1.15F, d.body_height * 0.88F,
+               d.body_length * 0.78F);
     out.mesh(get_unit_sphere(), body, v.skin_color, nullptr, 1.0F, 6);
   }
 
@@ -1358,13 +1400,13 @@ void ElephantRendererBase::render_simplified(
   QVector3D const head_center =
       neck_base + QVector3D(0.0F, d.neck_length * 0.50F, d.head_length * 0.60F);
   draw_cylinder(out, elephant_ctx.model, neck_base, head_center,
-                d.neck_width * 0.85F, v.skin_color, 1.0F);
+                d.neck_width * 0.92F, v.skin_color, 1.0F);
 
   {
     QMatrix4x4 head = elephant_ctx.model;
     head.translate(head_center);
-    head.scale(d.head_width * 0.85F, d.head_height * 0.80F,
-               d.head_length * 0.70F);
+    head.scale(d.head_width * 0.90F, d.head_height * 0.84F,
+               d.head_length * 0.74F);
     out.mesh(get_unit_sphere(), head, v.skin_color, nullptr, 1.0F);
   }
 
