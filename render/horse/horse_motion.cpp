@@ -19,8 +19,46 @@ using Render::Creature::hash01;
 namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
+constexpr float kEpsilon = 1.0e-4F;
 
+auto normalized_or(const QVector3D &v, const QVector3D &fallback) -> QVector3D {
+  if (v.lengthSquared() <= kEpsilon) {
+    return fallback;
+  }
+  return v.normalized();
 }
+
+auto resolve_turn_amount(const HumanoidAnimationContext &rider_ctx,
+                         float rider_intensity) -> float {
+  QVector3D heading = rider_ctx.heading_forward();
+  heading.setY(0.0F);
+  heading = normalized_or(heading, QVector3D(0.0F, 0.0F, 1.0F));
+
+  QVector3D velocity = rider_ctx.locomotion_velocity_flat();
+  velocity.setY(0.0F);
+  QVector3D const velocity_dir = normalized_or(velocity, heading);
+
+  float const signed_vel_turn = std::clamp(
+      QVector3D::crossProduct(heading, velocity_dir).y(), -1.0F, 1.0F);
+  float const yaw_turn =
+      std::clamp(rider_ctx.yaw_radians / (k_pi * (1.0F / 3.0F)), -1.0F, 1.0F);
+  return std::clamp((yaw_turn * 0.55F + signed_vel_turn * 0.45F) *
+                        rider_intensity,
+                    -1.0F, 1.0F);
+}
+
+auto resolve_stop_intent(float speed, bool is_moving,
+                         const HumanoidAnimationContext &rider_ctx) -> float {
+  if (!is_moving) {
+    return 1.0F;
+  }
+  float const normalized_low_speed =
+      std::clamp((3.0F - speed) / 3.0F, 0.0F, 1.0F);
+  float const target_bias = rider_ctx.gait.has_target ? 1.0F : 0.70F;
+  return normalized_low_speed * target_bias;
+}
+
+} // namespace
 
 auto compute_mount_frame(const HorseProfile &profile)
     -> MountedAttachmentFrame {
@@ -175,6 +213,23 @@ auto evaluate_horse_motion(
   sample.gait = controller.get_resolved_gait();
   sample.phase = controller.get_current_phase();
   sample.bob = controller.get_current_bob();
+  sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
+  sample.stop_intent = resolve_stop_intent(speed, sample.is_moving, rider_ctx);
+
+  sample.gait.lateral_lead_front =
+      std::clamp(0.50F - sample.turn_amount * 0.18F, 0.15F, 0.85F);
+  sample.gait.lateral_lead_rear =
+      std::clamp(0.50F - sample.turn_amount * 0.12F, 0.18F, 0.82F);
+
+  float const turn_speed_penalty = std::abs(sample.turn_amount);
+  sample.gait.cycle_time *=
+      1.0F + sample.stop_intent * 0.10F + turn_speed_penalty * 0.04F;
+  sample.gait.stride_swing *=
+      1.0F - sample.stop_intent * 0.20F - turn_speed_penalty * 0.06F;
+  sample.gait.stride_lift *=
+      1.0F - sample.stop_intent * 0.26F - turn_speed_penalty * 0.05F;
+  sample.gait.stride_swing = std::max(sample.gait.stride_swing, 0.02F);
+  sample.gait.stride_lift = std::max(sample.gait.stride_lift, 0.01F);
 
   float const sway_intensity =
       sample.is_moving ? (1.0F - sample.rider_intensity * 0.5F) : 0.3F;
@@ -185,26 +240,32 @@ auto evaluate_horse_motion(
                          ? std::sin(sample.phase * 2.0F * k_pi) *
                                (0.007F + gait_swing * 0.004F) * sway_intensity
                          : std::sin(anim.time * 0.4F) * 0.005F;
+  sample.body_sway += sample.turn_amount *
+                      (0.004F + sample.rider_intensity * 0.006F);
 
   float const pitch_intensity = sample.rider_intensity * 0.7F + 0.1F;
   sample.body_pitch = sample.is_moving
                           ? std::sin((sample.phase + 0.22F) * 2.0F * k_pi) *
                                 (0.004F + gait_lift * 0.004F) * pitch_intensity
                           : std::sin(anim.time * 0.25F) * 0.003F;
+  sample.body_pitch -= sample.stop_intent * sample.rider_intensity * 0.003F;
 
   float const nod_base =
       sample.is_moving
           ? std::sin((sample.phase + 0.18F) * 2.0F * k_pi) *
                 (0.014F + gait_lift * 0.015F + sample.rider_intensity * 0.010F)
-          : std::sin(anim.time * 1.5F) * 0.008F;
+           : std::sin(anim.time * 1.5F) * 0.008F;
   float const nod_secondary = std::sin(anim.time * 0.8F) * 0.003F;
-  sample.head_nod = nod_base + nod_secondary;
-  sample.head_lateral = sample.body_sway * (0.40F + gait_swing * 0.10F);
+  sample.head_nod =
+      (nod_base + nod_secondary) * (1.0F - sample.stop_intent * 0.15F);
+  sample.head_lateral = sample.body_sway * (0.40F + gait_swing * 0.10F) +
+                        sample.turn_amount * 0.006F;
   sample.spine_flex = sample.is_moving
                           ? std::sin((sample.phase + 0.08F) * 2.0F * k_pi) *
                                 (0.002F + gait_lift * 0.0025F) *
                                 sample.rider_intensity
                           : 0.0F;
+  sample.spine_flex += sample.turn_amount * (0.0015F + gait_lift * 0.001F);
   return sample;
 }
 

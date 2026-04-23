@@ -245,14 +245,14 @@ struct reduced_anatomy_profile {
   QVector3D rear_anchor_scale{0.0F, -0.20F, -0.36F};
   float front_bias_scale{0.08F};
   float rear_bias_scale{-0.12F};
-  float front_shoulder_out_scale{0.92F};
-  float rear_shoulder_out_scale{0.78F};
+  float front_shoulder_out_scale{0.96F};
+  float rear_shoulder_out_scale{0.74F};
   float front_vertical_bias_scale{-0.30F};
   float rear_vertical_bias_scale{-0.44F};
   float front_longitudinal_bias_scale{0.08F};
   float rear_longitudinal_bias_scale{-0.11F};
-  float front_leg_length_scale{1.12F};
-  float rear_leg_length_scale{1.10F};
+  float front_leg_length_scale{1.14F};
+  float rear_leg_length_scale{1.12F};
   float leg_radius_scale{0.22F};
   float front_upper_radius_scale{1.70F};
   float rear_upper_radius_scale{1.85F};
@@ -354,10 +354,10 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
 
   float const front_shoulder_dx = dims.body_width * 0.92F;
   float const rear_hip_dx = dims.body_width * 0.62F;
-  float const front_shoulder_dy = -dims.body_height * 0.11F;
-  float const rear_hip_dy = -dims.body_height * 0.19F;
-  float const front_dz = dims.body_length * 0.50F;
-  float const rear_dz = -dims.body_length * 0.44F;
+  float const front_shoulder_dy = -dims.body_height * 0.10F;
+  float const rear_hip_dy = -dims.body_height * 0.20F;
+  float const front_dz = dims.body_length * 0.48F;
+  float const rear_dz = -dims.body_length * 0.42F;
 
   out_pose.shoulder_offset_fl =
       QVector3D(front_shoulder_dx, front_shoulder_dy, front_dz);
@@ -366,16 +366,16 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   out_pose.shoulder_offset_bl = QVector3D(rear_hip_dx, rear_hip_dy, rear_dz);
   out_pose.shoulder_offset_br = QVector3D(-rear_hip_dx, rear_hip_dy, rear_dz);
 
-  float const front_drop = -dims.leg_length * 0.78F;
-  float const rear_drop = -dims.leg_length * 0.76F;
+  float const front_drop = -dims.leg_length * 0.80F;
+  float const rear_drop = -dims.leg_length * 0.79F;
   out_pose.foot_fl = center + out_pose.shoulder_offset_fl +
-                     QVector3D(0.0F, front_drop, dims.body_length * 0.04F);
+                     QVector3D(0.0F, front_drop, dims.body_length * 0.03F);
   out_pose.foot_fr = center + out_pose.shoulder_offset_fr +
-                     QVector3D(0.0F, front_drop, dims.body_length * 0.04F);
+                     QVector3D(0.0F, front_drop, dims.body_length * 0.03F);
   out_pose.foot_bl = center + out_pose.shoulder_offset_bl +
-                     QVector3D(0.0F, rear_drop, -dims.body_length * 0.08F);
+                     QVector3D(0.0F, rear_drop, -dims.body_length * 0.10F);
   out_pose.foot_br = center + out_pose.shoulder_offset_br +
-                     QVector3D(0.0F, rear_drop, -dims.body_length * 0.08F);
+                     QVector3D(0.0F, rear_drop, -dims.body_length * 0.10F);
 
   out_pose.leg_radius = dims.body_width * 0.108F;
 }

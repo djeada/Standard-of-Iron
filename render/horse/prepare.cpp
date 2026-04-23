@@ -255,6 +255,8 @@ void prepare_horse_full(
   float const bob = motion.bob;
   const bool is_moving = motion.is_moving;
   const float rider_intensity = motion.rider_intensity;
+  float const turn_amount = motion.turn_amount;
+  float const stop_intent = motion.stop_intent;
   float const body_sway = motion.body_sway;
   float const body_pitch = motion.body_pitch;
   float const head_nod = motion.head_nod;
@@ -288,14 +290,20 @@ void prepare_horse_full(
 
   QVector3D const chest_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.12F, d.body_length * 0.34F);
+      QVector3D(-turn_amount * d.body_width * 0.08F + body_sway * 0.2F,
+                d.body_height * (0.12F + stop_intent * 0.04F),
+                d.body_length * 0.34F);
   QVector3D const rump_center =
       barrel_center +
-      QVector3D(0.0F, d.body_height * 0.08F, -d.body_length * 0.36F);
+      QVector3D(turn_amount * d.body_width * 0.06F - body_sway * 0.1F,
+                d.body_height * (0.08F - stop_intent * 0.02F),
+                -d.body_length * 0.36F);
 
   QVector3D const neck_base =
-      chest_center + QVector3D(head_lateral * 0.3F, d.body_height * 0.42F,
-                               d.body_length * 0.08F);
+      chest_center +
+      QVector3D(head_lateral * 0.3F + turn_amount * d.head_width * 0.30F,
+                d.body_height * (0.42F + stop_intent * 0.05F),
+                d.body_length * 0.08F);
   QVector3D const neck_top =
       neck_base + QVector3D(head_lateral * 0.8F, d.neck_rise + head_nod * 0.4F,
                             d.neck_length);
@@ -337,68 +345,40 @@ void prepare_horse_full(
   mount.rein_bit_right = bit_right;
 
   Render::GL::HorseBodyFrames body_frames;
+  auto set_frame = [](Render::GL::HorseAttachmentFrame &frame,
+                      const QVector3D &origin, const QVector3D &right,
+                      const QVector3D &up, const QVector3D &forward) {
+    frame.origin = origin;
+    frame.right = right;
+    frame.up = up;
+    frame.forward = forward;
+  };
   QVector3D const forward(0.0F, 0.0F, 1.0F);
   QVector3D const up(0.0F, 1.0F, 0.0F);
   QVector3D const right(1.0F, 0.0F, 0.0F);
 
-  body_frames.head.origin = head_center;
-  body_frames.head.right = right;
-  body_frames.head.up = up;
-  body_frames.head.forward = forward;
-
-  body_frames.neck_base.origin = neck_base;
-  body_frames.neck_base.right = right;
-  body_frames.neck_base.up = up;
-  body_frames.neck_base.forward = forward;
+  set_frame(body_frames.head, head_center, right, up, forward);
+  set_frame(body_frames.neck_base, neck_base, right, up, forward);
 
   QVector3D const withers_pos =
       chest_center +
       QVector3D(0.0F, d.body_height * 0.55F, -d.body_length * 0.06F);
-  body_frames.withers.origin = withers_pos;
-  body_frames.withers.right = right;
-  body_frames.withers.up = up;
-  body_frames.withers.forward = forward;
-
-  body_frames.back_center.origin = mount.saddle_center;
-  body_frames.back_center.right = right;
-  body_frames.back_center.up = up;
-  body_frames.back_center.forward = forward;
+  set_frame(body_frames.withers, withers_pos, right, up, forward);
+  set_frame(body_frames.back_center, mount.saddle_center, right, up, forward);
 
   QVector3D const croup_pos =
       rump_center +
       QVector3D(0.0F, d.body_height * 0.46F, -d.body_length * 0.18F);
-  body_frames.croup.origin = croup_pos;
-  body_frames.croup.right = right;
-  body_frames.croup.up = up;
-  body_frames.croup.forward = forward;
-
-  body_frames.chest.origin = chest_center;
-  body_frames.chest.right = right;
-  body_frames.chest.up = up;
-  body_frames.chest.forward = forward;
-
-  body_frames.barrel.origin = barrel_center;
-  body_frames.barrel.right = right;
-  body_frames.barrel.up = up;
-  body_frames.barrel.forward = forward;
-
-  body_frames.rump.origin = rump_center;
-  body_frames.rump.right = right;
-  body_frames.rump.up = up;
-  body_frames.rump.forward = forward;
+  set_frame(body_frames.croup, croup_pos, right, up, forward);
+  set_frame(body_frames.chest, chest_center, right, up, forward);
+  set_frame(body_frames.barrel, barrel_center, right, up, forward);
+  set_frame(body_frames.rump, rump_center, right, up, forward);
 
   QVector3D const tail_base_pos =
       rump_center +
       QVector3D(0.0F, d.body_height * 0.20F, -d.body_length * 0.46F);
-  body_frames.tail_base.origin = tail_base_pos;
-  body_frames.tail_base.right = right;
-  body_frames.tail_base.up = up;
-  body_frames.tail_base.forward = forward;
-
-  body_frames.muzzle.origin = muzzle_center;
-  body_frames.muzzle.right = right;
-  body_frames.muzzle.up = up;
-  body_frames.muzzle.forward = forward;
+  set_frame(body_frames.tail_base, tail_base_pos, right, up, forward);
+  set_frame(body_frames.muzzle, muzzle_center, right, up, forward);
 
   using Render::Creature::Pipeline::LegacySlotMask;
   using Render::Creature::Pipeline::owns_slot;
