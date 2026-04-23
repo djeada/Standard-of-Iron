@@ -27,6 +27,7 @@ add_executable(standard_of_iron_tests
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
     render/horse_animation_controller_test.cpp
+    render/elephant_motion_profile_test.cpp
     render/rider_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
