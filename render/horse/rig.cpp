@@ -769,10 +769,13 @@ auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
   if (anim.is_moving && sample.locomotion_blend < 0.15F) {
     sample.locomotion_blend = 0.15F;
   }
-  QVector3D const heading = rider_ctx.heading_forward().normalized();
-  QVector3D const locomotion = rider_ctx.locomotion_forward().normalized();
+  QVector3D const heading_direction = rider_ctx.heading_forward().normalized();
+  QVector3D const locomotion_direction =
+      rider_ctx.locomotion_forward().normalized();
   sample.steering =
-      std::clamp(QVector3D::crossProduct(heading, locomotion).y(), -1.0F, 1.0F);
+      std::clamp(
+          QVector3D::crossProduct(heading_direction, locomotion_direction).y(),
+          -1.0F, 1.0F);
   bool const rider_has_motion =
       rider_ctx.is_walking() || rider_ctx.is_running();
   sample.is_moving = rider_has_motion || anim.is_moving;
@@ -1706,7 +1709,8 @@ void HorseRendererBase::render_full(
   body_frames.rump.up = up;
   body_frames.rump.forward = forward;
 
-  QVector3D const tail_base_pos = tail_base;
+  QVector3D const tail_base_pos =
+      rump_center + QVector3D(0.0F, d.body_height * 0.36F, -d.body_length * 0.34F);
   body_frames.tail_base.origin = tail_base_pos;
   body_frames.tail_base.right = right;
   body_frames.tail_base.up = up;

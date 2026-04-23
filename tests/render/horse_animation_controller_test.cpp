@@ -320,8 +320,8 @@ TEST_F(HorseAnimationControllerTest, GeneratedDimensionsStayHorseLike) {
   for (uint32_t seed = 1; seed < 64; ++seed) {
     HorseDimensions const dims = make_horse_dimensions(seed);
     float const body_aspect = dims.body_height / dims.body_width;
-    EXPECT_GE(body_aspect, 1.2F);
-    EXPECT_LE(body_aspect, 1.5F);
+    EXPECT_GE(body_aspect, 1.25F);
+    EXPECT_LE(body_aspect, 1.45F);
     EXPECT_GE(dims.head_length / dims.head_width, 2.0F);
   }
 }
