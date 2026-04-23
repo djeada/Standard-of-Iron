@@ -342,21 +342,21 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   QVector3D const center(0.0F, dims.barrel_center_y + bob, 0.0F);
   out_pose.barrel_center = center;
 
-  out_pose.body_ellipsoid_x = dims.body_width * 1.2F;
-  out_pose.body_ellipsoid_y = dims.body_height + dims.neck_length * 0.3F;
-  out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.3F;
+  out_pose.body_ellipsoid_x = dims.body_width * 1.34F;
+  out_pose.body_ellipsoid_y = dims.body_height + dims.neck_length * 0.22F;
+  out_pose.body_ellipsoid_z = dims.body_length + dims.head_length * 0.24F;
 
-  float const shoulder_dx = dims.body_width * 0.56F;
-  float const shoulder_dy = -dims.body_height * 0.30F;
-  float const front_dz = dims.body_length * 0.30F;
-  float const rear_dz = -dims.body_length * 0.30F;
+  float const shoulder_dx = dims.body_width * 0.60F;
+  float const shoulder_dy = -dims.body_height * 0.34F;
+  float const front_dz = dims.body_length * 0.33F;
+  float const rear_dz = -dims.body_length * 0.31F;
 
   out_pose.shoulder_offset_fl = QVector3D(shoulder_dx, shoulder_dy, front_dz);
   out_pose.shoulder_offset_fr = QVector3D(-shoulder_dx, shoulder_dy, front_dz);
   out_pose.shoulder_offset_bl = QVector3D(shoulder_dx, shoulder_dy, rear_dz);
   out_pose.shoulder_offset_br = QVector3D(-shoulder_dx, shoulder_dy, rear_dz);
 
-  float const drop = -dims.leg_length * 0.85F;
+  float const drop = -dims.leg_length * 0.88F;
   out_pose.foot_fl =
       center + out_pose.shoulder_offset_fl + QVector3D(0, drop, 0);
   out_pose.foot_fr =
@@ -366,7 +366,7 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.foot_br =
       center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
-  out_pose.leg_radius = dims.leg_radius * 0.85F;
+  out_pose.leg_radius = dims.leg_radius * 0.95F;
 }
 
 void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
@@ -379,26 +379,26 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
   QVector3D const center = out_pose.barrel_center;
 
   out_pose.reduced_body_half =
-      QVector3D(dims.body_width * 0.5F, dims.body_height * 0.50F,
-                dims.body_length * 0.375F);
+      QVector3D(dims.body_width * 0.58F, dims.body_height * 0.46F,
+                dims.body_length * 0.40F);
 
   QVector3D const neck_base_world =
       center +
-      QVector3D(0.0F, dims.body_height * 0.20F, dims.body_length * 0.45F);
+      QVector3D(0.0F, dims.body_height * 0.22F, dims.body_length * 0.42F);
   out_pose.neck_base_offset = neck_base_world - center;
-  out_pose.neck_radius = dims.neck_width * 0.85F;
+  out_pose.neck_radius = dims.neck_width * 0.95F;
 
   out_pose.head_center =
       neck_base_world +
-      QVector3D(0.0F, dims.neck_length * 0.50F, dims.head_length * 0.60F);
+      QVector3D(0.0F, dims.neck_length * 0.46F, dims.head_length * 0.58F);
 
   out_pose.head_half =
-      QVector3D(dims.head_width * 0.425F, dims.head_height * 0.40F,
-                dims.head_length * 0.35F);
+      QVector3D(dims.head_width * 0.46F, dims.head_height * 0.42F,
+                dims.head_length * 0.40F);
 
   out_pose.trunk_end =
       out_pose.head_center +
-      QVector3D(0.0F, -dims.trunk_length * 0.50F, dims.trunk_length * 0.40F);
+      QVector3D(0.0F, -dims.trunk_length * 0.58F, dims.trunk_length * 0.28F);
   out_pose.trunk_base_radius = dims.trunk_base_radius * 0.8F;
 
   float const front_forward = dims.body_length * 0.35F;
@@ -425,11 +425,12 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
   out_pose.foot_bl = out_pose.foot_reduced_bl;
   out_pose.foot_br = out_pose.foot_reduced_br;
 
-  out_pose.leg_radius_reduced = dims.leg_radius * 0.85F;
+  out_pose.leg_radius_reduced = dims.leg_radius * 0.95F;
 
   out_pose.foot_pad_offset_y = -dims.foot_radius * 0.18F;
-  out_pose.foot_pad_half = QVector3D(dims.foot_radius, dims.foot_radius * 0.65F,
-                                     dims.foot_radius * 1.10F);
+  out_pose.foot_pad_half = QVector3D(dims.foot_radius * 1.15F,
+                                     dims.foot_radius * 0.70F,
+                                     dims.foot_radius * 1.20F);
 }
 
 } // namespace Render::Elephant

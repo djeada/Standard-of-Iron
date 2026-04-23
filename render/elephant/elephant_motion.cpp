@@ -17,10 +17,30 @@ namespace Render::GL {
 namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
+constexpr float k_two_pi = 2.0F * k_pi;
+constexpr float kWeightShiftSmoothingX = 0.22F;
+constexpr float kWeightShiftSmoothingZ = 0.20F;
+constexpr float kLagSmoothing = 0.28F;
+constexpr float kIdleLagDamping = 0.86F;
+constexpr float kPositionPhaseDesyncX = 0.173F;
+constexpr float kPositionPhaseDesyncZ = 0.127F;
 
 inline auto swing_ease(float t) -> float { return t * t * (3.0F - 2.0F * t); }
 
 inline auto swing_arc(float t) -> float { return 4.0F * t * (1.0F - t); }
+
+inline auto normalized_locomotion_intensity(bool is_moving, bool is_running,
+                                            const ElephantGait &g) -> float {
+  if (!is_moving) {
+    return 0.0F;
+  }
+  float const stride_swing = std::clamp(g.stride_swing, 0.0F, 1.0F);
+  float const stride_lift = std::clamp(g.stride_lift * 2.2F, 0.0F, 1.0F);
+  float const locomotion_boost = is_running ? 0.22F : 0.0F;
+  return std::clamp(0.62F + stride_swing * 0.24F + stride_lift * 0.14F +
+                        locomotion_boost,
+                    0.0F, 1.0F);
+}
 
 inline auto
 get_default_foot_position(const ElephantDimensions &d, int leg_index,
@@ -48,10 +68,17 @@ inline auto calculate_swing_target(const ElephantDimensions &d, int leg_index,
   return default_pos + QVector3D(0.0F, 0.0F, stride_length);
 }
 
-inline auto body_sway_for_motion(bool is_moving, float phase,
-                                 float time) -> float {
-  return is_moving ? std::sin(phase * 2.0F * k_pi) * 0.015F
-                   : std::sin(time * 0.3F) * 0.008F;
+inline auto body_sway_for_motion(bool is_moving, float phase, float time,
+                                 float locomotion_intensity,
+                                 float stride_swing) -> float {
+  if (!is_moving) {
+    return std::sin(time * 0.3F) * 0.008F;
+  }
+  float const primary = std::sin(phase * k_two_pi);
+  float const secondary = std::sin((phase + 0.17F) * 2.0F * k_two_pi) * 0.35F;
+  float const sway_scale =
+      0.008F + std::clamp(stride_swing, 0.0F, 1.0F) * 0.0035F;
+  return (primary + secondary) * sway_scale * (0.8F + locomotion_intensity);
 }
 
 } // namespace
@@ -91,41 +118,82 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
   sample.is_moving = anim.is_moving;
   sample.is_fighting = anim.is_attacking ||
                        (anim.combat_phase != Render::GL::CombatAnimPhase::Idle);
+  float const locomotion_intensity =
+      normalized_locomotion_intensity(sample.is_moving, anim.is_running, g);
+  float const cycle_time = std::max(g.cycle_time, 0.001F);
 
   if (sample.is_moving) {
-    float const cycle_progress = std::fmod(anim.time / g.cycle_time, 1.0F);
+    float const cycle_progress = std::fmod(anim.time / cycle_time, 1.0F);
     sample.phase = cycle_progress;
-    sample.bob = std::sin(cycle_progress * 2.0F * k_pi) * d.move_bob_amplitude;
+    float const primary = std::sin(cycle_progress * k_two_pi);
+    float const secondary = std::sin((cycle_progress + 0.19F) * 2.0F * k_two_pi);
+    sample.bob = (primary * 0.70F + secondary * 0.30F) * d.move_bob_amplitude *
+                 (0.88F + locomotion_intensity * 0.18F);
   } else {
     sample.phase = std::fmod(anim.time * 0.3F, 1.0F);
-    sample.bob = std::sin(anim.time * 0.5F) * d.idle_bob_amplitude;
+    sample.bob = std::sin(anim.time * 0.45F) * d.idle_bob_amplitude;
   }
 
-  float const trunk_primary = std::sin(anim.time * 0.8F) * 0.15F;
-  float const trunk_secondary = std::sin(anim.time * 1.3F + 0.5F) * 0.08F;
+  float const trunk_primary =
+      sample.is_moving
+          ? std::sin((sample.phase + 0.11F) * k_two_pi) *
+                (0.10F + locomotion_intensity * 0.05F)
+          : std::sin(anim.time * 0.8F) * 0.09F;
+  float const trunk_secondary = sample.is_moving
+                                    ? std::sin((sample.phase + 0.39F) *
+                                               2.0F * k_two_pi) *
+                                          0.03F
+                                    : std::sin(anim.time * 1.3F + 0.5F) * 0.05F;
   sample.trunk_swing = trunk_primary + trunk_secondary;
 
-  float const ear_base = std::sin(anim.time * 0.6F);
-  sample.ear_flap = sample.is_moving ? ear_base * 0.25F : ear_base * 0.12F;
+  float const ear_base = sample.is_moving
+                             ? std::sin((sample.phase + 0.33F) * 2.0F * k_two_pi)
+                             : std::sin(anim.time * 0.6F);
+  sample.ear_flap = sample.is_moving
+                        ? ear_base * (0.16F + locomotion_intensity * 0.08F)
+                        : ear_base * 0.10F;
 
-  sample.body_sway =
-      body_sway_for_motion(sample.is_moving, sample.phase, anim.time);
+  sample.body_sway = body_sway_for_motion(sample.is_moving, sample.phase,
+                                          anim.time, locomotion_intensity,
+                                          g.stride_swing);
+
+  float const weight_transfer = std::sin((sample.phase + 0.20F) * k_two_pi);
+  float const shoulder_settle =
+      sample.is_moving
+          ? std::max(0.0F, weight_transfer) * d.move_bob_amplitude *
+                (0.50F + locomotion_intensity * 0.10F)
+          : 0.0F;
+  float const hip_settle =
+      sample.is_moving
+          ? std::max(0.0F, -weight_transfer) * d.move_bob_amplitude *
+                (0.42F + locomotion_intensity * 0.10F)
+          : 0.0F;
+  float const spine_wave = sample.is_moving
+                               ? std::sin((sample.phase + 0.47F) * k_two_pi) *
+                                     d.move_bob_amplitude * 0.18F
+                               : 0.0F;
+  float const head_nod = sample.trunk_swing * 0.16F;
 
   sample.barrel_center =
       QVector3D(sample.body_sway, d.barrel_center_y + sample.bob, 0.0F);
   sample.chest_center =
       sample.barrel_center +
-      QVector3D(0.0F, d.body_height * 0.10F, d.body_length * 0.30F);
+      QVector3D(0.0F, d.body_height * 0.12F - shoulder_settle + spine_wave,
+                d.body_length * 0.30F);
   sample.rump_center =
       sample.barrel_center +
-      QVector3D(0.0F, d.body_height * 0.02F, -d.body_length * 0.32F);
+      QVector3D(0.0F, d.body_height * 0.04F - hip_settle - spine_wave * 0.35F,
+                -d.body_length * 0.32F);
   sample.neck_base =
       sample.chest_center +
-      QVector3D(0.0F, d.body_height * 0.25F, d.body_length * 0.15F);
+      QVector3D(0.0F, d.body_height * 0.23F + head_nod * 0.35F,
+                d.body_length * 0.14F);
   sample.neck_top = sample.neck_base + QVector3D(0.0F, d.neck_length * 0.60F,
-                                                 d.neck_length * 0.50F);
-  sample.head_center = sample.neck_top + QVector3D(0.0F, d.head_height * 0.20F,
-                                                   d.head_length * 0.35F);
+                                                 d.neck_length * 0.46F);
+  sample.head_center =
+      sample.neck_top +
+      QVector3D(0.0F, d.head_height * 0.18F + head_nod,
+                d.head_length * (0.35F + sample.trunk_swing * 0.04F));
 
   sample.howdah = compute_howdah_frame(profile);
   apply_howdah_vertical_offset(sample.howdah, sample.bob);
@@ -252,6 +320,14 @@ void update_elephant_gait(ElephantGaitState &state,
   using namespace GaitSystemConstants;
   const ElephantDimensions &d = profile.dims;
   const ElephantGait &g = profile.gait;
+  float const cycle_time = std::max(g.cycle_time, 0.001F);
+  float const locomotion_scale = anim.is_running ? 1.18F : 1.0F;
+  float const position_phase_offset = std::fmod(
+      body_world_pos.x() * kPositionPhaseDesyncX +
+          body_world_pos.z() * kPositionPhaseDesyncZ,
+      1.0F);
+  float const forward_alignment =
+      std::clamp(std::abs(body_forward_z), 0.2F, 1.0F);
 
   if (!state.initialized) {
     QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
@@ -267,7 +343,8 @@ void update_elephant_gait(ElephantGaitState &state,
   }
 
   if (anim.is_moving) {
-    state.cycle_phase = std::fmod(anim.time / g.cycle_time, 1.0F);
+    state.cycle_phase =
+        std::fmod(anim.time / cycle_time + position_phase_offset + 1.0F, 1.0F);
   } else {
 
     state.cycle_phase = 0.0F;
@@ -278,7 +355,9 @@ void update_elephant_gait(ElephantGaitState &state,
 
   QVector3D const barrel_center(0.0F, d.barrel_center_y, 0.0F);
 
-  float const stride_length = g.stride_swing * 1.8F;
+  float const stride_length =
+      d.body_length * (0.18F + std::clamp(g.stride_swing, 0.0F, 1.0F) * 0.28F) *
+      locomotion_scale;
 
   for (int i = 0; i < 4; ++i) {
     ElephantLegState &leg = state.legs[i];
@@ -321,17 +400,26 @@ void update_elephant_gait(ElephantGaitState &state,
     float const center_x = total_x / static_cast<float>(planted_count);
     float const center_z = total_z / static_cast<float>(planted_count);
 
-    state.weight_shift_x = -center_x * kWeightShiftLateral;
-    state.weight_shift_z = -center_z * kWeightShiftForeAft * 0.5F;
+    float const target_shift_x = -center_x * kWeightShiftLateral;
+    float const target_shift_z =
+        -center_z * kWeightShiftForeAft * 0.5F * forward_alignment;
+    state.weight_shift_x +=
+        (target_shift_x - state.weight_shift_x) * kWeightShiftSmoothingX;
+    state.weight_shift_z +=
+        (target_shift_z - state.weight_shift_z) * kWeightShiftSmoothingZ;
   }
 
   if (anim.is_moving) {
     float const cycle_sin = std::sin(state.cycle_phase * 2.0F * k_pi);
-    state.shoulder_lag = cycle_sin * kShoulderLagFactor;
-    state.hip_lag = -cycle_sin * kHipLagFactor;
+    float const shoulder_target =
+        cycle_sin * kShoulderLagFactor * (0.90F + 0.15F * locomotion_scale);
+    float const hip_target =
+        -cycle_sin * kHipLagFactor * (0.90F + 0.10F * locomotion_scale);
+    state.shoulder_lag += (shoulder_target - state.shoulder_lag) * kLagSmoothing;
+    state.hip_lag += (hip_target - state.hip_lag) * kLagSmoothing;
   } else {
-    state.shoulder_lag *= 0.9F;
-    state.hip_lag *= 0.9F;
+    state.shoulder_lag *= kIdleLagDamping;
+    state.hip_lag *= kIdleLagDamping;
   }
 }
 
