@@ -151,6 +151,9 @@ struct ElephantMotionSample {
   bool is_moving = false;
   float trunk_swing = 0.0F;
   float ear_flap = 0.0F;
+  float body_pitch = 0.0F;
+  float body_roll = 0.0F;
+  float weight_compression = 0.0F;
 };
 
 enum class LegIndex : int {
