@@ -115,16 +115,6 @@ void HumanoidRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
   v.palette = make_humanoid_palette(team_tint, seed);
 }
 
-void HumanoidRendererBase::customize_pose(const DrawContext &,
-                                          const HumanoidAnimationContext &,
-                                          uint32_t, HumanoidPose &) const {}
-
-void HumanoidRendererBase::add_attachments(const DrawContext &,
-                                           const HumanoidVariant &,
-                                           const HumanoidPose &,
-                                           const HumanoidAnimationContext &,
-                                           ISubmitter &) const {}
-
 void HumanoidRendererBase::append_companion_preparation(
     const DrawContext &, const HumanoidVariant &, const HumanoidPose &,
     const HumanoidAnimationContext &, uint32_t, Render::Creature::CreatureLOD,

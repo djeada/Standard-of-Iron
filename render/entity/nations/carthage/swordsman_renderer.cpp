@@ -19,7 +19,6 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -353,34 +352,6 @@ public:
     v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
-  }
-
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    if (anim.is_attacking && anim.is_melee) {
-      float const attack_phase =
-          std::fmod(anim_ctx.attack_phase * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.sword_slash_variant(attack_phase, anim.attack_variant);
-    } else {
-      QVector3D const idle_hand_r(0.30F + arm_asymmetry,
-                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
-                                  0.35F);
-      QVector3D const idle_hand_l(-0.22F - 0.5F * arm_asymmetry,
-                                  HP::SHOULDER_Y + 0.5F * arm_height_jitter,
-                                  0.18F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
-    }
   }
 
 private:

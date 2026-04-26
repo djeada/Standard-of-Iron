@@ -19,7 +19,6 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -367,68 +366,6 @@ public:
     v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
-  }
-
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.06F;
-
-    if (anim.is_healing) {
-
-      float const healing_time = anim.time * 2.5F;
-      float const sway_phase = std::sin(healing_time);
-      float const sway_phase_offset = std::sin(healing_time + 0.5F);
-
-      float const base_arm_height = HP::SHOULDER_Y - 0.02F + arm_height_jitter;
-      float const sway_height = 0.03F * sway_phase;
-
-      float const target_dist =
-          std::sqrt(anim.healing_target_dx * anim.healing_target_dx +
-                    anim.healing_target_dz * anim.healing_target_dz);
-      float target_dir_x = 0.0F;
-      float target_dir_z = 1.0F;
-      if (target_dist > 0.01F) {
-        target_dir_x = anim.healing_target_dx / target_dist;
-        target_dir_z = anim.healing_target_dz / target_dist;
-      }
-
-      float const arm_spread = 0.18F + 0.02F * sway_phase_offset;
-      float const forward_reach = 0.22F + 0.03F * std::sin(healing_time * 0.7F);
-
-      QVector3D const heal_hand_l(-arm_spread + arm_asymmetry * 0.3F,
-                                  base_arm_height + sway_height, forward_reach);
-      QVector3D const heal_hand_r(arm_spread - arm_asymmetry * 0.3F,
-                                  base_arm_height + sway_height + 0.01F,
-                                  forward_reach * 0.95F);
-
-      controller.place_hand_at(true, heal_hand_l);
-      controller.place_hand_at(false, heal_hand_r);
-
-      QVector3D const look_dir(target_dir_x, 0.0F, target_dir_z);
-      QVector3D const head_focus =
-          pose.head_pos +
-          QVector3D(look_dir.x() * 0.18F, 0.0F, look_dir.z() * 0.45F);
-      controller.look_at(head_focus);
-
-    } else {
-
-      float const forward_offset = 0.16F + (anim.is_moving ? 0.05F : 0.0F);
-      float const hand_height = HP::WAIST_Y + 0.04F + arm_height_jitter;
-      QVector3D const idle_hand_l(-0.16F + arm_asymmetry, hand_height,
-                                  forward_offset);
-      QVector3D const idle_hand_r(0.12F - arm_asymmetry * 0.6F,
-                                  hand_height + 0.01F, forward_offset * 0.9F);
-
-      controller.place_hand_at(true, idle_hand_l);
-      controller.place_hand_at(false, idle_hand_r);
-    }
   }
 
 private:

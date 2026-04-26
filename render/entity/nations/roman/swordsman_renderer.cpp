@@ -21,7 +21,6 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -341,34 +340,6 @@ public:
     apply_palette_overrides(style, team_tint, v);
   }
 
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    if (anim.is_attacking && anim.is_melee) {
-      float const attack_phase =
-          std::fmod(anim_ctx.attack_phase * KNIGHT_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.sword_slash_variant(attack_phase, anim.attack_variant);
-    } else {
-      QVector3D const idle_hand_r(0.30F + arm_asymmetry,
-                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
-                                  0.35F);
-      QVector3D const idle_hand_l(-0.22F - 0.5F * arm_asymmetry,
-                                  HP::SHOULDER_Y + 0.5F * arm_height_jitter,
-                                  0.18F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
-    }
-  }
-
 private:
   static auto computeKnightExtras(uint32_t seed,
                                   const HumanoidVariant &v) -> KnightExtras {
@@ -404,26 +375,6 @@ private:
     e.shield_trim_color = e.metal_color * 0.95F;
     e.shield_aspect = 1.0F;
     return e;
-  }
-
-  static void drawScabbard(const DrawContext &ctx, const HumanoidPose &,
-                           const HumanoidVariant &v, const KnightExtras &extras,
-                           EquipmentBatch &batch) {
-    using HP = HumanProportions;
-
-    QVector3D const hip(0.10F, HP::WAIST_Y - 0.04F, -0.02F);
-    QVector3D const tip = hip + QVector3D(-0.05F, -0.22F, -0.12F);
-    float const sheath_r = extras.swordWidth * 0.85F;
-
-    batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                            cylinder_between(ctx.model, hip, tip, sheath_r),
-                            v.palette.leather * 0.9F, nullptr, 1.0F, 0});
-
-    batch.meshes.push_back(
-        {get_unit_cone(), nullptr,
-         cone_from_to(ctx.model, tip, tip + QVector3D(-0.02F, -0.02F, -0.02F),
-                      sheath_r),
-         extras.metal_color, nullptr, 1.0F, 0});
   }
 
   auto

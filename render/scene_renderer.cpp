@@ -43,6 +43,7 @@
 #include "primitive_batch.h"
 #include "profiling/frame_profile.h"
 #include "render_backend_factory.h"
+#include "selection_ring_layout.h"
 #include "software_backend.h"
 #include "submitter.h"
 #include "template_cache.h"
@@ -789,6 +790,7 @@ void Renderer::enqueue_selection_ring(
   float ring_offset = 0.05F;
   float ground_offset = 0.0F;
   float scale_y = 1.0F;
+  std::vector<SelectionRingPlacement> placements;
 
   if (unit_comp != nullptr) {
     auto troop_type_opt =
@@ -808,6 +810,23 @@ void Renderer::enqueue_selection_ring(
       ring_size = profile.visuals.selection_ring_size;
       ring_offset += profile.visuals.selection_ring_y_offset;
       ground_offset = profile.visuals.selection_ring_ground_offset;
+      placements = build_selection_ring_layout(
+          {.spawn_type = unit_comp->spawn_type,
+           .formation_type = profile.formation_type,
+           .individuals_per_unit = profile.individuals_per_unit,
+           .max_units_per_row = profile.max_units_per_row,
+           .health_ratio =
+               unit_comp->max_health > 0
+                   ? std::clamp(unit_comp->health / float(unit_comp->max_health),
+                                0.0F, 1.0F)
+                   : 1.0F,
+           .ring_size = ring_size,
+           .position = QVector3D(transform->position.x, transform->position.y,
+                                 transform->position.z),
+           .rotation = QVector3D(transform->rotation.x, transform->rotation.y,
+                                 transform->rotation.z),
+           .scale = QVector3D(transform->scale.x, transform->scale.y,
+                              transform->scale.z)});
     } else {
 
       auto &config = Game::Units::TroopConfig::instance();
@@ -821,25 +840,32 @@ void Renderer::enqueue_selection_ring(
     scale_y = transform->scale.y;
   }
 
-  QVector3D pos(transform->position.x, transform->position.y,
-                transform->position.z);
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  float terrain_y = transform->position.y;
-  if (terrain_service.is_initialized()) {
-    terrain_y = terrain_service.get_terrain_height(pos.x(), pos.z());
-  } else {
-    terrain_y -= ground_offset * scale_y;
+  if (placements.empty()) {
+    placements.push_back({transform->position.x, transform->position.z,
+                          ring_size});
   }
-  pos.setY(terrain_y);
 
-  QMatrix4x4 ring_model;
-  ring_model.translate(pos.x(), pos.y() + ring_offset, pos.z());
-  ring_model.scale(ring_size, 1.0F, ring_size);
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  for (const SelectionRingPlacement &placement : placements) {
+    float terrain_y = transform->position.y;
+    if (terrain_service.is_initialized()) {
+      terrain_y =
+          terrain_service.get_terrain_height(placement.world_x, placement.world_z);
+    } else {
+      terrain_y -= ground_offset * scale_y;
+    }
 
-  if (selected) {
-    selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
-  } else if (hovered) {
-    selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
+    QMatrix4x4 ring_model;
+    ring_model.translate(placement.world_x, terrain_y + ring_offset,
+                         placement.world_z);
+    ring_model.scale(placement.ring_size, 1.0F, placement.ring_size);
+
+    if (selected) {
+      selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
+    } else if (hovered) {
+      selection_ring(ring_model, 0.35F, 0.15F,
+                     QVector3D(0.90F, 0.90F, 0.25F));
+    }
   }
 }
 

@@ -182,8 +182,8 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
           .draws;
   ASSERT_GE(static_cast<int>(draws.size()), 6);
 
-  auto const connectors = std::count_if(
-      draws.begin(), draws.end(), [](const auto &draw) {
+  auto const connectors =
+      std::count_if(draws.begin(), draws.end(), [](const auto &draw) {
         return std::abs(draw.local_model.column(3).x()) < 1e-4F;
       });
   EXPECT_GE(connectors, 2);

@@ -53,8 +53,12 @@ auto MountedHumanoidRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider = HumanoidRendererBase::visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
-    m_mounted_visual_spec_cache.rider.archetype_id =
-        Render::Creature::ArchetypeRegistry::kRiderBase;
+    if (m_mounted_visual_spec_cache.rider.archetype_id ==
+        Render::Creature::kInvalidArchetype) {
+      m_mounted_visual_spec_cache.rider.archetype_id =
+          Render::Creature::ArchetypeRegistry::kRiderBase;
+    }
+    m_mounted_visual_spec_cache.rider.inherits_parent_world = true;
     m_mounted_visual_spec_cache.mount = m_horseRenderer.visual_spec();
     m_mounted_visual_spec_cache.mount.kind =
         Render::Creature::Pipeline::CreatureKind::Horse;

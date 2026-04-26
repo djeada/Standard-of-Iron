@@ -22,7 +22,6 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
@@ -268,69 +267,6 @@ public:
     v.palette = make_humanoid_palette(team_tint, seed);
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
-  }
-
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    float const bow_x = 0.0F;
-
-    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const t =
-          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
-
-      controller.kneel(t * k_kneel_depth_multiplier);
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
-                      t * k_lean_amount_multiplier);
-
-      QVector3D const hold_hand_r(
-          bow_x + 0.03F, controller.get_shoulder_y(false) + 0.30F, 0.55F);
-      QVector3D const hold_hand_l(
-          bow_x - 0.02F, controller.get_shoulder_y(true) + 0.12F, 0.55F);
-      QVector3D const normal_hand_r(bow_x + 0.03F - arm_asymmetry,
-                                    HP::SHOULDER_Y + 0.05F + arm_height_jitter,
-                                    0.55F);
-      QVector3D const normal_hand_l(
-          bow_x - 0.02F + arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.12F + arm_height_jitter * 0.8F, 0.50F);
-
-      QVector3D const blended_hand_r =
-          normal_hand_r * (1.0F - t) + hold_hand_r * t;
-      QVector3D const blended_hand_l =
-          normal_hand_l * (1.0F - t) + hold_hand_l * t;
-
-      controller.place_hand_at(false, blended_hand_r);
-      controller.place_hand_at(true, blended_hand_l);
-    } else {
-      QVector3D const idle_hand_r(bow_x + 0.03F - arm_asymmetry,
-                                  HP::SHOULDER_Y + 0.05F + arm_height_jitter,
-                                  0.55F);
-      QVector3D const idle_hand_l(
-          bow_x - 0.05F + arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.14F + arm_height_jitter * 0.8F, 0.48F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
-    }
-
-    if (anim.is_attacking && !anim.is_in_hold_mode) {
-      float const attack_phase =
-          std::fmod(anim_ctx.attack_phase * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
-
-      if (anim.is_melee) {
-        controller.melee_strike(attack_phase);
-      } else {
-        controller.aim_bow(attack_phase);
-      }
-    }
   }
 
 private:

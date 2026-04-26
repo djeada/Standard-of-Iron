@@ -17,7 +17,6 @@
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/spear_pose_utils.h"
 #include "../../../humanoid/style_palette.h"
@@ -327,70 +326,6 @@ public:
       }
     } else {
       v.facial_hair.style = FacialHairStyle::None;
-    }
-  }
-
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const hold_t =
-          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
-
-      if (anim.is_exiting_hold) {
-        controller.kneel_transition(anim.hold_exit_progress, true);
-      } else {
-        controller.kneel(hold_t * k_kneel_depth_multiplier);
-      }
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
-                      hold_t * k_lean_amount_multiplier);
-
-      if (anim.is_attacking && anim.is_melee && anim.is_in_hold_mode) {
-        float const attack_phase = std::fmod(
-            anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-        controller.spear_thrust_from_hold(attack_phase,
-                                          hold_t * k_kneel_depth_multiplier);
-      } else {
-
-        float const lowered_shoulder_y = controller.get_shoulder_y(true);
-        float const pelvis_y = controller.get_pelvis_y();
-
-        QVector3D const hand_r_pos(0.18F * (1.0F - hold_t) + 0.22F * hold_t,
-                                   lowered_shoulder_y * (1.0F - hold_t) +
-                                       (pelvis_y + 0.05F) * hold_t,
-                                   0.15F * (1.0F - hold_t) + 0.20F * hold_t);
-
-        float const offhand_along = lerp(-0.06F, -0.02F, hold_t);
-        float const offhand_drop = 0.10F + 0.02F * hold_t;
-        QVector3D const hand_l_pos =
-            compute_offhand_spear_grip(pose, anim_ctx, hand_r_pos, false,
-                                       offhand_along, offhand_drop, -0.08F);
-
-        controller.place_hand_at(false, hand_r_pos);
-        controller.place_hand_at(true, hand_l_pos);
-      }
-
-    } else if (anim.is_attacking && anim.is_melee && !anim.is_in_hold_mode) {
-      float const attack_phase = std::fmod(
-          anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.spear_thrust_variant(attack_phase, anim.attack_variant);
-    } else {
-      QVector3D const idle_hand_r(0.28F + arm_asymmetry,
-                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
-                                  0.30F);
-      QVector3D const idle_hand_l = compute_offhand_spear_grip(
-          pose, anim_ctx, idle_hand_r, false, -0.04F, 0.10F, -0.08F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
     }
   }
 

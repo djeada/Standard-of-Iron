@@ -7,6 +7,7 @@
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/entity/horse_spearman_renderer_base.h"
 #include "render/entity/mounted_knight_renderer_base.h"
 #include "render/entity/mounted_prepare.h"
 #include "render/gl/humanoid/humanoid_types.h"
@@ -198,6 +199,32 @@ TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
   Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_GT(sink.rigged_calls, 0);
+}
+
+TEST(MountedPrepare, MountedKnightKeepsConfiguredRiderArchetype) {
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+  cfg.rider_archetype_id = 77U;
+
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  auto const &mounted = renderer.mounted_visual_spec();
+
+  EXPECT_EQ(mounted.rider.archetype_id, 77U);
+  EXPECT_TRUE(mounted.rider.inherits_parent_world);
+}
+
+TEST(MountedPrepare, HorseSpearmanKeepsConfiguredRiderArchetype) {
+  Render::GL::HorseSpearmanRendererConfig cfg;
+  cfg.has_spear = false;
+  cfg.has_shield = false;
+  cfg.rider_archetype_id = 91U;
+
+  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+  auto const &mounted = renderer.mounted_visual_spec();
+
+  EXPECT_EQ(mounted.rider.archetype_id, 91U);
+  EXPECT_TRUE(mounted.rider.inherits_parent_world);
 }
 
 } // namespace

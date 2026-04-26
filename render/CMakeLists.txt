@@ -136,7 +136,6 @@ add_library(render_gl STATIC
     humanoid/prepare.cpp
     humanoid/poser.cpp
     humanoid/facial_hair_catalog.cpp
-    humanoid/skin.cpp
     humanoid/formation_calculator.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
@@ -146,7 +145,6 @@ add_library(render_gl STATIC
     humanoid/humanoid_spec.cpp
     humanoid/humanoid_state_machine.cpp
     humanoid/humanoid_clip_registry.cpp
-    humanoid/clip_driver_cache.cpp
     creature/bpat/bpat_writer.cpp
     creature/bpat/bpat_reader.cpp
     creature/bpat/bpat_registry.cpp

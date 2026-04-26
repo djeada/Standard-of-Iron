@@ -47,9 +47,9 @@ struct ArchetypeDescriptor {
   }
 
   void append_extra_role_colors_fn(ExtraRoleColorsFn fn) noexcept {
-    if (fn == nullptr || extra_role_color_fn_count >=
-                             static_cast<std::uint8_t>(
-                                 extra_role_color_fns.size())) {
+    if (fn == nullptr ||
+        extra_role_color_fn_count >=
+            static_cast<std::uint8_t>(extra_role_color_fns.size())) {
       return;
     }
     extra_role_color_fns[extra_role_color_fn_count++] = fn;

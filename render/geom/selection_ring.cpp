@@ -32,11 +32,11 @@ static auto create_ring_mesh() -> std::unique_ptr<Render::GL::Mesh> {
     verts.push_back({{v1o.x(), 0.0F, v1o.z()}, {n.x(), n.y(), n.z()}, {1, 1}});
     verts.push_back({{v1i.x(), 0.0F, v1i.z()}, {n.x(), n.y(), n.z()}, {0, 1}});
     idx.push_back(base + 0);
+    idx.push_back(base + 2);
     idx.push_back(base + 1);
     idx.push_back(base + 2);
-    idx.push_back(base + 2);
-    idx.push_back(base + 3);
     idx.push_back(base + 0);
+    idx.push_back(base + 3);
   }
   return std::make_unique<Mesh>(verts, idx);
 }

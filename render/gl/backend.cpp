@@ -1790,11 +1790,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.useTexture, false);
       m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.instanced, false);
+      m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.color, sc.color);
 
       DepthMaskScope const depth_mask(false);
       PolygonOffsetScope const poly(-1.0F, -1.0F);
       BlendScope const blend(true);
+      CullFaceScope const cull(false);
 
       {
         QMatrix4x4 m = sc.model;
@@ -1834,6 +1837,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       }
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.useTexture, false);
+      m_effectsPipeline->m_basicShader->set_uniform(
+          m_effectsPipeline->m_basicUniforms.instanced, false);
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.color, sm.color);
       DepthMaskScope const depth_mask(false);

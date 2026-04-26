@@ -86,8 +86,8 @@ auto horse_baseline_muzzle_frame() noexcept -> HorseAttachmentFrame {
       neck_base + QVector3D(0.0F, d.neck_rise, d.neck_length);
   const QVector3D head_center =
       neck_top + QVector3D(0.0F, d.head_height * 0.10F, d.head_length * 0.40F);
-  const QVector3D muzzle =
-      head_center + QVector3D(0.0F, -d.head_height * 0.18F, d.head_length * 0.58F);
+  const QVector3D muzzle = head_center + QVector3D(0.0F, -d.head_height * 0.18F,
+                                                   d.head_length * 0.58F);
   return make_identity_frame(muzzle);
 }
 

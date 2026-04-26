@@ -119,6 +119,7 @@ auto HorseArcherRendererBase::mounted_visual_spec() const
                    ? m_config.rider_archetype_id
                    : Render::Creature::ArchetypeRegistry::kRiderBase);
     m_mounted_visual_spec_cache.rider.archetype_id = rider_id;
+    m_mounted_visual_spec_cache.rider.inherits_parent_world = true;
     m_mounted_visual_spec_cache.rider.debug_name = "troops/horse_archer/rider";
     m_mounted_visual_spec_cache.mount.debug_name = "troops/horse_archer/horse";
     m_mounted_visual_spec_baked = true;

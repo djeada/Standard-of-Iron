@@ -44,6 +44,7 @@ inline constexpr ArchetypeId kInvalidArchetype =
 
 using VariantId = std::uint16_t;
 inline constexpr VariantId kCanonicalVariant = static_cast<VariantId>(0u);
+using WorldKey = std::uint64_t;
 
 struct CreatureRenderRequest {
   ArchetypeId archetype{kInvalidArchetype};
@@ -53,10 +54,13 @@ struct CreatureRenderRequest {
   float phase{0.0F};
 
   QMatrix4x4 world{};
+  QMatrix4x4 parent_local_world{};
 
   std::uint32_t entity_id{0};
   std::uint32_t parent_entity_id{0};
   std::uint32_t seed{0};
+  WorldKey world_key{0};
+  WorldKey parent_world_key{0};
 
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
 

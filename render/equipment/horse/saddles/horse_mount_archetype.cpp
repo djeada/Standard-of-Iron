@@ -4,8 +4,8 @@
 #include "../../../horse/dimensions.h"
 #include "../../../horse/horse_renderer_base.h"
 #include "../../../horse/horse_spec.h"
-#include "../tack/reins_renderer.h"
 #include "../horse_attachment_archetype.h"
+#include "../tack/reins_renderer.h"
 
 #include <array>
 #include <span>

@@ -31,13 +31,15 @@ class CountingSubmitter : public Render::GL::ISubmitter {
 public:
   std::uint32_t mesh_calls{0};
   std::uint32_t rigged_calls{0};
+  std::vector<float> rigged_world_y;
 
   void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
             Render::GL::Texture *, float, int) override {
     ++mesh_calls;
   }
-  void rigged(const Render::GL::RiggedCreatureCmd &) override {
+  void rigged(const Render::GL::RiggedCreatureCmd &cmd) override {
     ++rigged_calls;
+    rigged_world_y.push_back(cmd.world.column(3).y());
   }
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
@@ -167,6 +169,64 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
   EXPECT_EQ(stats.lod_reduced, 1U);
   EXPECT_EQ(stats.lod_minimal, 1U);
   EXPECT_EQ(stats.lod_billboard, 1U);
+}
+
+TEST(SubmitRequests, ParentWorldKeyKeepsMountedPairsSeparatedInsideOneUnit) {
+  CreaturePipeline pipeline;
+  CountingSubmitter sink;
+
+  auto make_world_key = [](std::uint32_t entity_id,
+                           std::uint32_t seed) -> Render::Creature::WorldKey {
+    return (static_cast<Render::Creature::WorldKey>(entity_id) << 32U) |
+           static_cast<Render::Creature::WorldKey>(seed);
+  };
+
+  std::array<CreatureRenderRequest, 4> reqs{};
+
+  reqs[0].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[0].state = AnimationStateId::Run;
+  reqs[0].lod = Render::Creature::CreatureLOD::Full;
+  reqs[0].entity_id = 77U;
+  reqs[0].seed = 1001U;
+  reqs[0].world_key = make_world_key(reqs[0].entity_id, reqs[0].seed);
+  reqs[0].world.translate(0.0F, 1.0F, 0.0F);
+
+  reqs[1].archetype = ArchetypeRegistry::kHorseBase;
+  reqs[1].state = AnimationStateId::Run;
+  reqs[1].lod = Render::Creature::CreatureLOD::Full;
+  reqs[1].entity_id = 77U;
+  reqs[1].seed = 2002U;
+  reqs[1].world_key = make_world_key(reqs[1].entity_id, reqs[1].seed);
+  reqs[1].world.translate(0.0F, 2.0F, 0.0F);
+
+  reqs[2].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[2].state = AnimationStateId::Run;
+  reqs[2].lod = Render::Creature::CreatureLOD::Full;
+  reqs[2].entity_id = 77U;
+  reqs[2].seed = 1001U;
+  reqs[2].world.translate(0.0F, 10.0F, 0.0F);
+  reqs[2].parent_entity_id = 77U;
+  reqs[2].parent_world_key = reqs[0].world_key;
+
+  reqs[3].archetype = ArchetypeRegistry::kHumanoidBase;
+  reqs[3].state = AnimationStateId::Run;
+  reqs[3].lod = Render::Creature::CreatureLOD::Full;
+  reqs[3].entity_id = 77U;
+  reqs[3].seed = 2002U;
+  reqs[3].world.translate(0.0F, 20.0F, 0.0F);
+  reqs[3].parent_entity_id = 77U;
+  reqs[3].parent_world_key = reqs[1].world_key;
+
+  const auto stats = pipeline.submit_requests(reqs, sink);
+
+  EXPECT_EQ(stats.entities_submitted, 4U);
+  EXPECT_EQ(sink.rigged_calls, 4U);
+  EXPECT_EQ(std::count(sink.rigged_world_y.begin(), sink.rigged_world_y.end(),
+                       1.0F),
+            2);
+  EXPECT_EQ(std::count(sink.rigged_world_y.begin(), sink.rigged_world_y.end(),
+                       2.0F),
+            2);
 }
 
 TEST(ArchetypeRegistry, RegisterArchetypeAssignsStableId) {

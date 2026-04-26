@@ -122,6 +122,7 @@ struct UnitVisualSpec {
 
   Render::Creature::ArchetypeId archetype_id{
       Render::Creature::kInvalidArchetype};
+  bool inherits_parent_world{false};
 
   const MountedSpec *mounted{nullptr};
 };

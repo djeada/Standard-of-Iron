@@ -10,18 +10,6 @@
 
 namespace Render::Humanoid {
 
-struct HumanoidPoseSlot {
-  Render::GL::HumanoidPose pose{};
-  Render::GL::VariationParams variation{};
-  std::uint32_t frame_number{0};
-  bool was_moving{false};
-  bool valid{false};
-};
-
-struct HumanoidPoseCacheComponent : public Engine::Core::Component {
-  std::vector<HumanoidPoseSlot> entries;
-};
-
 struct HumanoidLayoutCacheComponent : public Engine::Core::Component {
   std::vector<SoldierLayout> soldiers;
   Render::GL::FormationParams formation{};

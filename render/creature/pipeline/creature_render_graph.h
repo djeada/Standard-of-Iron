@@ -71,6 +71,7 @@ struct CreatureGraphOutput {
   std::uint32_t seed{0};
 
   QMatrix4x4 world_matrix{};
+  QMatrix4x4 parent_local_world{};
 
   EntityId entity_id{0};
 

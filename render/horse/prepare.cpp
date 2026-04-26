@@ -105,11 +105,13 @@ void HorseRendererBase::render(const DrawContext &ctx,
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }
 
-void HorseRendererBase::render(
-    const DrawContext &ctx, const AnimationInputs &anim,
-    const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
-    const MountedAttachmentFrame *shared_mount,
-    const HorseMotionSample *shared_motion, ISubmitter &out) const {
+void HorseRendererBase::render(const DrawContext &ctx,
+                               const AnimationInputs &anim,
+                               const HumanoidAnimationContext &rider_ctx,
+                               HorseProfile &profile,
+                               const MountedAttachmentFrame *shared_mount,
+                               const HorseMotionSample *shared_motion,
+                               ISubmitter &out) const {
   render(ctx, anim, rider_ctx, profile, shared_mount, shared_motion, out,
          HorseLOD::Full);
 }

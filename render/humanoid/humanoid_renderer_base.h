@@ -69,28 +69,6 @@ public:
   virtual void get_variant(const DrawContext &ctx, uint32_t seed,
                            HumanoidVariant &v) const;
 
-  virtual void customize_pose(const DrawContext &ctx,
-                              const HumanoidAnimationContext &anim_ctx,
-                              uint32_t seed, HumanoidPose &io_pose) const;
-
-  virtual void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                               const HumanoidPose &pose,
-                               const HumanoidAnimationContext &anim_ctx,
-                               ISubmitter &out) const;
-
-  virtual void
-  draw_armor_overlay(const DrawContext &ctx, const HumanoidVariant &v,
-                     const HumanoidPose &pose, float y_top_cover, float torso_r,
-                     float shoulder_half_span, float upper_arm_r,
-                     const QVector3D &right_axis, ISubmitter &out) const;
-
-  virtual void draw_shoulder_decorations(const DrawContext &ctx,
-                                         const HumanoidVariant &v,
-                                         const HumanoidPose &pose,
-                                         float y_top_cover, float y_neck,
-                                         const QVector3D &right_axis,
-                                         ISubmitter &out) const;
-
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
   virtual auto resolve_entity_ground_offset(

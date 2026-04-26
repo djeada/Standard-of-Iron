@@ -20,6 +20,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <unordered_map>
 
 namespace Render::Creature::Pipeline {
 
@@ -345,7 +346,7 @@ auto CreaturePipeline::submit_requests(
   const auto &arch_reg = Render::Creature::ArchetypeRegistry::instance();
   const auto &asset_reg = CreatureAssetRegistry::instance();
 
-  std::unordered_map<std::uint32_t, QMatrix4x4> parent_worlds;
+  std::unordered_map<Render::Creature::WorldKey, QMatrix4x4> parent_worlds;
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest &req) {
     ++stats.entities_submitted;
@@ -394,21 +395,29 @@ auto CreaturePipeline::submit_requests(
   };
 
   for (const auto &req : requests) {
-    if (req.parent_entity_id != 0u) {
+    if (req.parent_world_key != 0u || req.parent_entity_id != 0u) {
       continue;
     }
-    if (req.entity_id != 0u) {
-      parent_worlds.emplace(req.entity_id, req.world);
+    Render::Creature::WorldKey const world_key =
+        req.world_key != 0u ? req.world_key
+                            : static_cast<Render::Creature::WorldKey>(
+                                  req.entity_id);
+    if (world_key != 0u) {
+      parent_worlds.emplace(world_key, req.world);
     }
     emit_request(req);
   }
 
   for (const auto &req : requests) {
-    if (req.parent_entity_id == 0u) {
+    if (req.parent_world_key == 0u && req.parent_entity_id == 0u) {
       continue;
     }
     Render::Creature::CreatureRenderRequest child = req;
-    auto it = parent_worlds.find(req.parent_entity_id);
+    Render::Creature::WorldKey const parent_key =
+        req.parent_world_key != 0u
+            ? req.parent_world_key
+            : static_cast<Render::Creature::WorldKey>(req.parent_entity_id);
+    auto it = parent_worlds.find(parent_key);
     if (it != parent_worlds.end()) {
       child.world = it->second;
     }

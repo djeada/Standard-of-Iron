@@ -51,21 +51,6 @@ struct SoldierLayoutInputs {
     const Render::GL::IFormationCalculator &formation_calculator,
     const SoldierLayoutInputs &inputs) -> SoldierLayout;
 
-struct HumanoidAmbientIdleState {
-  Render::GL::AmbientIdleType idle_type{};
-  float phase{0.0F};
-  int primary_index{-1};
-  int secondary_index{-1};
-};
-
-[[nodiscard]] auto build_humanoid_ambient_idle_state(
-    const Render::GL::AnimationInputs &anim, std::uint32_t unit_seed,
-    int visible_count, float animation_time) -> HumanoidAmbientIdleState;
-
-[[nodiscard]] auto
-is_humanoid_ambient_idle_active(const HumanoidAmbientIdleState &state,
-                                int soldier_idx) -> bool;
-
 struct HumanoidLocomotionInputs {
   Render::GL::AnimationInputs anim{};
   Render::GL::VariationParams variation{};
@@ -90,32 +75,6 @@ struct HumanoidLocomotionState {
 
 [[nodiscard]] auto build_humanoid_locomotion_state(
     const HumanoidLocomotionInputs &inputs) -> HumanoidLocomotionState;
-
-struct HumanoidRunPoseShaping {
-  float lean{0.0F};
-  float pelvis_setback{0.0F};
-  float pelvis_drop{0.0F};
-  float shoulder_drop{0.0F};
-  float foot_extra_lift{0.0F};
-  float stride_enhancement{0.0F};
-  float arm_swing{0.0F};
-  float max_arm_displacement{0.0F};
-  float hand_raise{0.0F};
-  float elbow_along_left{0.45F};
-  float elbow_width_left{0.10F};
-  float elbow_depth_left{-0.03F};
-  float elbow_along_right{0.45F};
-  float elbow_width_right{0.08F};
-  float elbow_depth_right{0.0F};
-};
-
-[[nodiscard]] auto build_humanoid_run_pose_shaping(
-    const Render::GL::HumanoidAnimationContext &anim) -> HumanoidRunPoseShaping;
-
-void apply_humanoid_run_pose_shaping(
-    Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidAnimationContext &anim_ctx,
-    const HumanoidRunPoseShaping &shaping) noexcept;
 
 void prepare_humanoid_instances(const Render::GL::HumanoidRendererBase &owner,
                                 const Render::GL::DrawContext &ctx,

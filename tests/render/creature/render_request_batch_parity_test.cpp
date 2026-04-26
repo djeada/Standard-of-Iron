@@ -56,8 +56,32 @@ TEST(CreatureRenderBatch, RequestMirrorsHumanoidAdd) {
   EXPECT_FLOAT_EQ(req.phase, 0.42F);
   EXPECT_EQ(req.entity_id, output.entity_id);
   EXPECT_EQ(req.seed, output.seed);
+  EXPECT_EQ(req.world_key,
+            (static_cast<Render::Creature::WorldKey>(output.entity_id) << 32U) |
+                static_cast<Render::Creature::WorldKey>(output.seed));
   EXPECT_EQ(req.lod, Render::Creature::CreatureLOD::Full);
   EXPECT_FLOAT_EQ(req.world.column(3).y(), 1.5F);
+}
+
+TEST(CreatureRenderBatch, ChildRequestCarriesParentWorldKey) {
+  CreatureRenderBatch batch;
+  auto output = make_output(CreatureKind::Humanoid, 9U, 0.0F);
+  output.spec.archetype_id = ArchetypeRegistry::kRiderBase;
+  output.spec.inherits_parent_world = true;
+
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.motion_state = Render::GL::HumanoidMotionState::Run;
+
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 1u);
+  auto const expected_key =
+      (static_cast<Render::Creature::WorldKey>(output.entity_id) << 32U) |
+      static_cast<Render::Creature::WorldKey>(output.seed);
+  EXPECT_EQ(batch.requests()[0].world_key, expected_key);
+  EXPECT_EQ(batch.requests()[0].parent_world_key, expected_key);
 }
 
 TEST(CreatureRenderBatch, RequestStateForHumanoidHoldAndAttack) {

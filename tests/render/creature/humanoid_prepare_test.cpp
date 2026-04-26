@@ -259,61 +259,6 @@ TEST(HumanoidPrepare, BuildSoldierLayoutLeavesSingleSoldierUnjittered) {
   EXPECT_EQ(layout.inst_seed, inputs.seed);
 }
 
-TEST(HumanoidPrepare, BuildAmbientIdleStateIsDeterministicPerUnit) {
-  Render::GL::AnimationInputs anim{};
-  anim.time = 2.5F;
-  anim.is_moving = false;
-  anim.is_attacking = false;
-
-  auto const first = Render::Humanoid::build_humanoid_ambient_idle_state(
-      anim, 0x1234ABCDU, 4, anim.time);
-  auto const second = Render::Humanoid::build_humanoid_ambient_idle_state(
-      anim, 0x1234ABCDU, 4, anim.time);
-
-  EXPECT_EQ(first.idle_type, second.idle_type);
-  EXPECT_FLOAT_EQ(first.phase, second.phase);
-  EXPECT_EQ(first.primary_index, second.primary_index);
-  EXPECT_EQ(first.secondary_index, second.secondary_index);
-  EXPECT_GE(first.primary_index, 0);
-  EXPECT_LT(first.primary_index, 4);
-  if (first.secondary_index >= 0) {
-    EXPECT_LT(first.secondary_index, 4);
-    EXPECT_NE(first.secondary_index, first.primary_index);
-  }
-  EXPECT_TRUE(Render::Humanoid::is_humanoid_ambient_idle_active(
-      first, first.primary_index));
-}
-
-TEST(HumanoidPrepare, BuildAmbientIdleStateDisablesOutsideIdleWindow) {
-  Render::GL::AnimationInputs anim{};
-  anim.time = 7.5F;
-  anim.is_moving = false;
-  anim.is_attacking = false;
-
-  auto const state = Render::Humanoid::build_humanoid_ambient_idle_state(
-      anim, 0xABCD1234U, 5, anim.time);
-
-  EXPECT_EQ(state.idle_type, Render::GL::AmbientIdleType::None);
-  EXPECT_FLOAT_EQ(state.phase, 0.0F);
-  EXPECT_EQ(state.primary_index, -1);
-  EXPECT_EQ(state.secondary_index, -1);
-  EXPECT_FALSE(Render::Humanoid::is_humanoid_ambient_idle_active(state, 0));
-}
-
-TEST(HumanoidPrepare, BuildAmbientIdleStateDisablesDuringMovement) {
-  Render::GL::AnimationInputs anim{};
-  anim.time = 2.0F;
-  anim.is_moving = true;
-  anim.is_attacking = false;
-
-  auto const state = Render::Humanoid::build_humanoid_ambient_idle_state(
-      anim, 0xABCD1234U, 5, anim.time);
-
-  EXPECT_EQ(state.idle_type, Render::GL::AmbientIdleType::None);
-  EXPECT_EQ(state.primary_index, -1);
-  EXPECT_EQ(state.secondary_index, -1);
-}
-
 TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   Render::Humanoid::HumanoidLocomotionInputs inputs{};
   inputs.anim.time = 1.5F;
@@ -339,42 +284,6 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   EXPECT_EQ(first.has_movement_target, second.has_movement_target);
   EXPECT_GT(first.gait.cycle_time, 0.0F);
   EXPECT_GT(first.gait.stride_distance, 0.0F);
-}
-
-TEST(HumanoidPrepare, RunPoseShapingAppliesExplicitOffsets) {
-  Render::GL::HumanoidAnimationContext anim_ctx{};
-  anim_ctx.motion_state = Render::GL::HumanoidMotionState::Run;
-  anim_ctx.gait.normalized_speed = 0.85F;
-  anim_ctx.locomotion_phase = 0.30F;
-  anim_ctx.entity_forward = QVector3D(0.0F, 0.0F, 1.0F);
-  anim_ctx.variation.height_scale = 1.0F;
-
-  auto const shaping =
-      Render::Humanoid::build_humanoid_run_pose_shaping(anim_ctx);
-
-  Render::GL::HumanoidPose pose{};
-  pose.pelvis_pos = QVector3D(0.0F, 1.0F, 0.0F);
-  pose.shoulder_l = QVector3D(-0.20F, 1.55F, 0.0F);
-  pose.shoulder_r = QVector3D(0.20F, 1.55F, 0.0F);
-  pose.neck_base = QVector3D(0.0F, 1.62F, 0.0F);
-  pose.head_pos = QVector3D(0.0F, 1.78F, 0.0F);
-  pose.hand_l = QVector3D(-0.14F, 1.05F, 0.02F);
-  pose.hand_r = QVector3D(0.14F, 1.05F, -0.02F);
-  pose.foot_l = QVector3D(-0.12F, 0.02F, 0.08F);
-  pose.foot_r = QVector3D(0.12F, 0.02F, -0.08F);
-  pose.head_frame.radius = 0.10F;
-  pose.head_frame.up = QVector3D(0.0F, 1.0F, 0.0F);
-  pose.head_frame.right = QVector3D(1.0F, 0.0F, 0.0F);
-  pose.head_frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
-
-  Render::Humanoid::apply_humanoid_run_pose_shaping(pose, anim_ctx, shaping);
-
-  EXPECT_LT(pose.pelvis_pos.z(), 0.0F);
-  EXPECT_LT(pose.pelvis_pos.y(), 1.0F);
-  EXPECT_GT(pose.shoulder_l.z(), 0.0F);
-  EXPECT_GT(pose.shoulder_r.z(), 0.0F);
-  EXPECT_NE(pose.hand_l.z(), 0.02F);
-  EXPECT_NE(pose.hand_r.z(), -0.02F);
 }
 
 TEST(HumanoidPrepare, PreparedSingleSoldierSnapsToTerrainHeight) {

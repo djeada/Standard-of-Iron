@@ -20,10 +20,10 @@ constexpr float k_mid_drop = 0.12F;
 
 auto local_from_frame(const HorseAttachmentFrame &base,
                       const QVector3D &world_point) -> QVector3D {
-  return QVector3D(QVector3D::dotProduct(world_point - base.origin, base.right),
-                   QVector3D::dotProduct(world_point - base.origin, base.up),
-                   QVector3D::dotProduct(world_point - base.origin,
-                                         base.forward));
+  return QVector3D(
+      QVector3D::dotProduct(world_point - base.origin, base.right),
+      QVector3D::dotProduct(world_point - base.origin, base.up),
+      QVector3D::dotProduct(world_point - base.origin, base.forward));
 }
 
 void add_rein_segments(RenderArchetypeBuilder &builder,
@@ -38,9 +38,9 @@ void add_rein_segments(RenderArchetypeBuilder &builder,
   for (int i = 0; i < 2; ++i) {
     const float side = (i == 0) ? 1.0F : -1.0F;
 
-    const QVector3D bit_pos_world =
-        muzzle.origin + muzzle.right * side * k_bit_side_offset +
-        muzzle.forward * k_bit_forward_offset;
+    const QVector3D bit_pos_world = muzzle.origin +
+                                    muzzle.right * side * k_bit_side_offset +
+                                    muzzle.forward * k_bit_forward_offset;
 
     const QVector3D handle_world =
         back.origin + back.right * side * k_handle_side_offset +
@@ -52,15 +52,16 @@ void add_rein_segments(RenderArchetypeBuilder &builder,
     endpoints[i].bit = local_from_frame(back, bit_pos_world);
     endpoints[i].handle = local_from_frame(back, handle_world);
 
-    builder.add_palette_cylinder(endpoints[i].bit, local_from_frame(back, mid_world),
+    builder.add_palette_cylinder(endpoints[i].bit,
+                                 local_from_frame(back, mid_world),
                                  k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
     builder.add_palette_cylinder(local_from_frame(back, mid_world),
                                  endpoints[i].handle, k_rein_radius,
                                  k_rein_slot, nullptr, 1.0F, 4);
   }
 
-  builder.add_palette_cylinder(endpoints[0].bit, endpoints[1].bit, k_rein_radius,
-                               k_rein_slot, nullptr, 1.0F, 4);
+  builder.add_palette_cylinder(endpoints[0].bit, endpoints[1].bit,
+                               k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
   builder.add_palette_cylinder(endpoints[0].handle, endpoints[1].handle,
                                k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
 }

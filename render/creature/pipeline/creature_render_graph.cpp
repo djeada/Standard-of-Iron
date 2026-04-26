@@ -278,6 +278,14 @@ auto resolve_playback(std::uint32_t species_id, std::uint16_t clip_id,
   }
 }
 
+[[nodiscard]] auto compose_world_key(std::uint32_t entity_id,
+                                     std::uint32_t seed) noexcept
+    -> Render::Creature::WorldKey {
+  auto const key = (static_cast<Render::Creature::WorldKey>(entity_id) << 32U) |
+                   static_cast<Render::Creature::WorldKey>(seed);
+  return key != 0U ? key : Render::Creature::WorldKey{1U};
+}
+
 [[nodiscard]] auto
 build_request(const CreatureGraphOutput &output,
               Render::Creature::ArchetypeId archetype,
@@ -291,6 +299,7 @@ build_request(const CreatureGraphOutput &output,
   req.world = output.world_matrix;
   req.entity_id = static_cast<std::uint32_t>(output.entity_id);
   req.seed = output.seed;
+  req.world_key = compose_world_key(req.entity_id, req.seed);
   req.lod = output.lod;
   return req;
 }
@@ -324,11 +333,6 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest &req,
   }
   req.role_color_count = static_cast<std::uint8_t>(std::min<std::uint32_t>(
       count, static_cast<std::uint32_t>(req.role_colors.size())));
-}
-
-[[nodiscard]] auto
-is_rider_archetype(Render::Creature::ArchetypeId archetype) noexcept -> bool {
-  return archetype == Render::Creature::ArchetypeRegistry::kRiderBase;
 }
 
 } // namespace
@@ -375,8 +379,9 @@ void CreatureRenderBatch::add_humanoid(
   rows_.push_back(std::move(row));
   auto req = build_request(output, archetype_id, state, phase);
   req.clip_variant = clip_var;
-  if (is_rider_archetype(archetype_id)) {
+  if (output.spec.inherits_parent_world) {
     req.parent_entity_id = static_cast<std::uint32_t>(output.entity_id);
+    req.parent_world_key = req.world_key;
   }
   populate_role_colors(req, CreatureKind::Humanoid, variant);
   requests_.push_back(req);

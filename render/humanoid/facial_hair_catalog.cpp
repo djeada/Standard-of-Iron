@@ -22,8 +22,7 @@ enum FacialHairPaletteSlot : std::uint8_t {
 };
 
 auto saturate_color(const QVector3D &color) -> QVector3D {
-  return {std::clamp(color.x(), 0.0F, 1.0F),
-          std::clamp(color.y(), 0.0F, 1.0F),
+  return {std::clamp(color.x(), 0.0F, 1.0F), std::clamp(color.y(), 0.0F, 1.0F),
           std::clamp(color.z(), 0.0F, 1.0F)};
 }
 
@@ -279,7 +278,8 @@ auto goatee_archetype() -> const Render::GL::RenderArchetype & {
                                      kHairHighlightSlot),
     }};
     return Render::GL::build_generated_equipment_archetype(
-        facial_hair_debug_name(Render::GL::FacialHairStyle::Goatee), primitives);
+        facial_hair_debug_name(Render::GL::FacialHairStyle::Goatee),
+        primitives);
   }();
   return archetype;
 }
@@ -430,7 +430,8 @@ auto facial_hair_make_static_attachment(Render::GL::FacialHairStyle style,
 }
 
 struct FacialHairKey {
-  Render::Creature::ArchetypeId base_archetype{Render::Creature::kInvalidArchetype};
+  Render::Creature::ArchetypeId base_archetype{
+      Render::Creature::kInvalidArchetype};
   Render::GL::FacialHairStyle style{Render::GL::FacialHairStyle::None};
 
   auto operator==(const FacialHairKey &other) const noexcept -> bool = default;
@@ -443,9 +444,9 @@ struct FacialHairKeyHash {
   }
 };
 
-auto facial_hair_cache() -> std::unordered_map<FacialHairKey,
-                                               Render::Creature::ArchetypeId,
-                                               FacialHairKeyHash> & {
+auto facial_hair_cache()
+    -> std::unordered_map<FacialHairKey, Render::Creature::ArchetypeId,
+                          FacialHairKeyHash> & {
   static std::unordered_map<FacialHairKey, Render::Creature::ArchetypeId,
                             FacialHairKeyHash>
       cache;
@@ -507,14 +508,14 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
 
   Render::Creature::ArchetypeDescriptor desc = *base_desc;
   desc.debug_name = facial_hair_debug_name(variant.facial_hair.style);
-  desc.bake_attachments[desc.bake_attachment_count++] = facial_hair_make_static_attachment(
-      variant.facial_hair.style, desc.role_count);
+  desc.bake_attachments[desc.bake_attachment_count++] =
+      facial_hair_make_static_attachment(variant.facial_hair.style,
+                                         desc.role_count);
   desc.role_count =
       static_cast<std::uint8_t>(desc.role_count + kFacialHairRoleCount);
   desc.append_extra_role_colors_fn(+[](const void *variant_void, QVector3D *out,
                                        std::uint32_t base_count,
-                                       std::size_t max_count)
-                                       -> std::uint32_t {
+                                       std::size_t max_count) -> std::uint32_t {
     if (variant_void == nullptr) {
       return base_count;
     }
