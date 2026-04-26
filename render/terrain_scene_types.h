@@ -32,4 +32,16 @@ struct LinearFeatureChunk {
   std::size_t geometry_count = 0;
 };
 
+enum class ScatterSpeciesId { Grass, Stone, Plant, Pine, Olive, FireCamp };
+
+enum class ScatterVisibilityMode { None, InstanceFiltered };
+
+struct ScatterChunk {
+  ScatterSpeciesId species = ScatterSpeciesId::Grass;
+  ScatterVisibilityMode visibility_mode = ScatterVisibilityMode::None;
+  IRenderPass *pass = nullptr;
+  std::size_t instance_count = 0;
+  bool gpu_ready = false;
+};
+
 } // namespace Render::GL

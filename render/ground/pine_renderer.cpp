@@ -1,12 +1,11 @@
 #include "pine_renderer.h"
-#include "../../game/map/visibility_service.h"
-#include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QVector2D>
 #include <algorithm>
@@ -20,22 +19,6 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
-
-inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
-  int const x0 = int(std::floor(x));
-  int const z0 = int(std::floor(z));
-  int const x1 = x0 + 1;
-  int const z1 = z0 + 1;
-  float const tx = x - float(x0);
-  float const tz = z - float(z0);
-  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
-  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
-  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
-  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
-  float const nx0 = n00 * (1 - tx) + n10 * tx;
-  float const nx1 = n01 * (1 - tx) + n11 * tx;
-  return nx0 * (1 - tz) + nx1 * tz;
-}
 
 } // namespace
 
@@ -55,9 +38,12 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_noiseSeed = biome_settings.seed;
 
   m_pineInstances.clear();
+  m_visibleInstances.clear();
   m_pineInstanceBuffer.reset();
   m_pineInstanceCount = 0;
   m_pineInstancesDirty = false;
+  m_cachedVisibilityVersion = 0;
+  m_visibilityDirty = true;
 
   m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_pineParams.time = 0.0F;
@@ -70,59 +56,17 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_pineInstanceCount = static_cast<uint32_t>(m_pineInstances.size());
-
-  if (m_pineInstanceCount == 0) {
-    m_pineInstanceBuffer.reset();
-    m_visibleInstances.clear();
-    return;
-  }
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  const std::uint64_t current_version =
-      use_visibility ? visibility.version() : 0;
-
-  const bool needs_visibility_update =
-      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
-
-  if (needs_visibility_update) {
-    Game::Map::VisibilityService::Snapshot visibility_snapshot;
-    if (use_visibility) {
-      visibility_snapshot = visibility.snapshot();
-    }
-
-    m_visibleInstances.clear();
-
-    if (use_visibility) {
-      m_visibleInstances.reserve(m_pineInstanceCount);
-      for (const auto &instance : m_pineInstances) {
-        float const world_x = instance.pos_scale.x();
-        float const world_z = instance.pos_scale.z();
-        if (visibility_snapshot.isVisibleWorld(world_x, world_z)) {
-          m_visibleInstances.push_back(instance);
-        }
-      }
-    } else {
-      m_visibleInstances = m_pineInstances;
-    }
-
-    m_cachedVisibilityVersion = current_version;
-    m_visibilityDirty = false;
-
-    if (!m_visibleInstances.empty()) {
-      if (!m_pineInstanceBuffer) {
-        m_pineInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      m_pineInstanceBuffer->set_data(m_visibleInstances, Buffer::Usage::Static);
-    }
-  }
-
-  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  const auto visible_count = Scatter::sync_filtered_instances(
+      m_pineInstances, m_visibleInstances, m_pineInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibilityDirty,
+      [](const PineInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_scale;
+      });
   if (visible_count == 0 || !m_pineInstanceBuffer) {
     return;
   }
 
+  m_pineInstanceCount = visible_count;
   PineBatchParams params = m_pineParams;
   params.time = renderer.get_animation_time();
   renderer.pine_batch(m_pineInstanceBuffer.get(), visible_count, params);

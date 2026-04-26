@@ -34,6 +34,10 @@ public:
     return (m_oliveInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_oliveInstances.size();
+  }
+
 private:
   void generate_olive_instances();
 

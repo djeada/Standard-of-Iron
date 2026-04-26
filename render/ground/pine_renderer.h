@@ -34,6 +34,10 @@ public:
     return (m_pineInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_pineInstances.size();
+  }
+
 private:
   void generate_pine_instances();
 

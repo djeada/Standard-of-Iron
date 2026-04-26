@@ -1,6 +1,20 @@
 #pragma once
 
 #include "../game/map/terrain_service.h"
+#include "ground/biome_renderer.h"
+#include "ground/bridge_renderer.h"
+#include "ground/firecamp_renderer.h"
+#include "ground/fog_renderer.h"
+#include "ground/ground_renderer.h"
+#include "ground/olive_renderer.h"
+#include "ground/pine_renderer.h"
+#include "ground/plant_renderer.h"
+#include "ground/rain_renderer.h"
+#include "ground/river_renderer.h"
+#include "ground/riverbank_renderer.h"
+#include "ground/road_renderer.h"
+#include "ground/stone_renderer.h"
+#include "ground/terrain_renderer.h"
 #include "terrain_scene_types.h"
 #include <vector>
 
@@ -8,20 +22,6 @@ namespace Render::GL {
 
 class Renderer;
 class ResourceManager;
-class GroundRenderer;
-class TerrainRenderer;
-class BiomeRenderer;
-class RiverRenderer;
-class RoadRenderer;
-class RiverbankRenderer;
-class BridgeRenderer;
-class FogRenderer;
-class StoneRenderer;
-class PlantRenderer;
-class PineRenderer;
-class OliveRenderer;
-class FireCampRenderer;
-class RainRenderer;
 
 class TerrainSceneProxy {
 public:
@@ -45,13 +45,10 @@ public:
   void submit(Renderer &renderer, ResourceManager *resources) const {
     submit_surfaces(renderer, resources);
     submit_features(renderer, resources);
+    submit_scatters(renderer, resources);
 
-    for (auto *pass :
-         {static_cast<IRenderPass *>(m_biome), static_cast<IRenderPass *>(m_stone),
-          static_cast<IRenderPass *>(m_plant), static_cast<IRenderPass *>(m_pine),
-          static_cast<IRenderPass *>(m_olive),
-          static_cast<IRenderPass *>(m_firecamp),
-          static_cast<IRenderPass *>(m_rain), static_cast<IRenderPass *>(m_fog)}) {
+    for (auto *pass : {static_cast<IRenderPass *>(m_rain),
+                       static_cast<IRenderPass *>(m_fog)}) {
       if (pass != nullptr) {
         pass->submit(renderer, resources);
       }
@@ -127,6 +124,28 @@ public:
              bridge_count}};
   }
 
+  [[nodiscard]] auto scatter_chunks() const -> std::vector<ScatterChunk> {
+    return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::None, m_biome,
+             m_biome != nullptr ? m_biome->instance_count() : 0U,
+             m_biome == nullptr || m_biome->is_gpu_ready()},
+            {ScatterSpeciesId::Stone, ScatterVisibilityMode::None, m_stone,
+             m_stone != nullptr ? m_stone->instance_count() : 0U,
+             m_stone == nullptr || m_stone->is_gpu_ready()},
+            {ScatterSpeciesId::Plant, ScatterVisibilityMode::InstanceFiltered,
+             m_plant, m_plant != nullptr ? m_plant->instance_count() : 0U,
+             m_plant == nullptr || m_plant->is_gpu_ready()},
+            {ScatterSpeciesId::Pine, ScatterVisibilityMode::InstanceFiltered,
+             m_pine, m_pine != nullptr ? m_pine->instance_count() : 0U,
+             m_pine == nullptr || m_pine->is_gpu_ready()},
+            {ScatterSpeciesId::Olive, ScatterVisibilityMode::InstanceFiltered,
+             m_olive, m_olive != nullptr ? m_olive->instance_count() : 0U,
+             m_olive == nullptr || m_olive->is_gpu_ready()},
+            {ScatterSpeciesId::FireCamp, ScatterVisibilityMode::InstanceFiltered,
+             m_firecamp,
+             m_firecamp != nullptr ? m_firecamp->instance_count() : 0U,
+             m_firecamp == nullptr || m_firecamp->is_gpu_ready()}};
+  }
+
   // Exposes the ordered pass list for focused tests and adapter code that
   // still needs to inspect the legacy terrain pass sequence directly.
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass *> & {
@@ -144,6 +163,14 @@ private:
 
   void submit_features(Renderer &renderer, ResourceManager *resources) const {
     for (const auto &chunk : feature_chunks()) {
+      if (chunk.pass != nullptr) {
+        chunk.pass->submit(renderer, resources);
+      }
+    }
+  }
+
+  void submit_scatters(Renderer &renderer, ResourceManager *resources) const {
+    for (const auto &chunk : scatter_chunks()) {
       if (chunk.pass != nullptr) {
         chunk.pass->submit(renderer, resources);
       }

@@ -71,4 +71,20 @@ inline auto noise_hash(float x, float y) -> float {
   return n - std::floor(n);
 }
 
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
+  int const x0 = int(std::floor(x));
+  int const z0 = int(std::floor(z));
+  int const x1 = x0 + 1;
+  int const z1 = z0 + 1;
+  float const tx = x - float(x0);
+  float const tz = z - float(z0);
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
+  float const nx0 = n00 * (1.0F - tx) + n10 * tx;
+  float const nx1 = n01 * (1.0F - tx) + n11 * tx;
+  return nx0 * (1.0F - tz) + nx1 * tz;
+}
+
 } // namespace Render::Ground

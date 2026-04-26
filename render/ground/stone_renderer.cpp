@@ -6,6 +6,7 @@
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QDebug>
 #include <QElapsedTimer>
@@ -23,22 +24,6 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
-
-inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
-  int const x0 = int(std::floor(x));
-  int const z0 = int(std::floor(z));
-  int const x1 = x0 + 1;
-  int const z1 = z0 + 1;
-  float const tx = x - float(x0);
-  float const tz = z - float(z0);
-  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
-  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
-  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
-  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
-  float const nx0 = n00 * (1 - tx) + n10 * tx;
-  float const nx1 = n01 * (1 - tx) + n11 * tx;
-  return nx0 * (1 - tz) + nx1 * tz;
-}
 
 } // namespace
 
@@ -70,16 +55,9 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
 void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  if (m_stoneInstanceCount > 0) {
-    if (!m_stoneInstanceBuffer) {
-      m_stoneInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-    }
-    if (m_stoneInstancesDirty && m_stoneInstanceBuffer) {
-      m_stoneInstanceBuffer->set_data(m_stoneInstances, Buffer::Usage::Static);
-      m_stoneInstancesDirty = false;
-    }
-  } else {
-    m_stoneInstanceBuffer.reset();
+  m_stoneInstanceCount = Scatter::sync_direct_instances(
+      m_stoneInstances, m_stoneInstanceBuffer, m_stoneInstancesDirty);
+  if (m_stoneInstanceCount == 0 || !m_stoneInstanceBuffer) {
     return;
   }
 

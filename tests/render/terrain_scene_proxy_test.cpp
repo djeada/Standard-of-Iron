@@ -130,6 +130,22 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(features[2].geometry_count, 1U);
   EXPECT_EQ(features[3].kind, Render::GL::LinearFeatureKind::Bridge);
   EXPECT_EQ(features[3].geometry_count, 1U);
+
+  const auto scatters = proxy.scatter_chunks();
+  ASSERT_EQ(scatters.size(), 6U);
+  EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
+  EXPECT_EQ(scatters[0].visibility_mode,
+            Render::GL::ScatterVisibilityMode::None);
+  EXPECT_EQ(scatters[0].instance_count, 0U);
+  EXPECT_TRUE(scatters[0].gpu_ready);
+  EXPECT_EQ(scatters[1].species, Render::GL::ScatterSpeciesId::Stone);
+  EXPECT_EQ(scatters[2].species, Render::GL::ScatterSpeciesId::Plant);
+  EXPECT_EQ(scatters[2].visibility_mode,
+            Render::GL::ScatterVisibilityMode::InstanceFiltered);
+  EXPECT_EQ(scatters[3].species, Render::GL::ScatterSpeciesId::Pine);
+  EXPECT_EQ(scatters[4].species, Render::GL::ScatterSpeciesId::Olive);
+  EXPECT_EQ(scatters[5].species, Render::GL::ScatterSpeciesId::FireCamp);
+  EXPECT_TRUE(scatters[5].gpu_ready);
 }
 
 } // namespace

@@ -1,12 +1,11 @@
 #include "firecamp_renderer.h"
-#include "../../game/map/visibility_service.h"
-#include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QDebug>
 #include <QVector2D>
@@ -67,9 +66,12 @@ void FireCampRenderer::configure(
   m_noiseSeed = biome_settings.seed;
 
   m_fireCampInstances.clear();
+  m_visibleInstances.clear();
   m_fireCampInstanceBuffer.reset();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
+  m_cachedVisibilityVersion = 0;
+  m_visibilityDirty = true;
 
   m_fireCampParams.time = 0.0F;
   m_fireCampParams.flicker_speed = 5.0F;
@@ -82,61 +84,17 @@ void FireCampRenderer::configure(
 void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_fireCampInstanceCount = static_cast<uint32_t>(m_fireCampInstances.size());
-
-  if (m_fireCampInstanceCount == 0) {
-    m_fireCampInstanceBuffer.reset();
-    m_visibleInstances.clear();
-    return;
-  }
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  const std::uint64_t current_version =
-      use_visibility ? visibility.version() : 0;
-
-  const bool needs_visibility_update =
-      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
-
-  if (needs_visibility_update) {
-    Game::Map::VisibilityService::Snapshot visibility_snapshot;
-    if (use_visibility) {
-      visibility_snapshot = visibility.snapshot();
-    }
-
-    m_visibleInstances.clear();
-
-    if (use_visibility) {
-      m_visibleInstances.reserve(m_fireCampInstanceCount);
-      for (const auto &instance : m_fireCampInstances) {
-        float const world_x = instance.pos_intensity.x();
-        float const world_z = instance.pos_intensity.z();
-        if (visibility_snapshot.isVisibleWorld(world_x, world_z)) {
-          m_visibleInstances.push_back(instance);
-        }
-      }
-    } else {
-      m_visibleInstances = m_fireCampInstances;
-    }
-
-    m_cachedVisibilityVersion = current_version;
-    m_visibilityDirty = false;
-
-    if (!m_visibleInstances.empty()) {
-      if (!m_fireCampInstanceBuffer) {
-        m_fireCampInstanceBuffer =
-            std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      m_fireCampInstanceBuffer->set_data(m_visibleInstances,
-                                         Buffer::Usage::Static);
-    }
-  }
-
-  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  const auto visible_count = Scatter::sync_filtered_instances(
+      m_fireCampInstances, m_visibleInstances, m_fireCampInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibilityDirty,
+      [](const FireCampInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_intensity;
+      });
   if (visible_count == 0 || !m_fireCampInstanceBuffer) {
     return;
   }
 
+  m_fireCampInstanceCount = visible_count;
   FireCampBatchParams params = m_fireCampParams;
   params.time = renderer.get_animation_time();
   params.flicker_amount = m_fireCampParams.flicker_amount *
