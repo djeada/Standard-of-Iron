@@ -13,6 +13,21 @@
 
 namespace Game::Map {
 
+namespace {
+
+auto sample_grid_clamped(const std::vector<float> &values, int width, int height,
+                         int x, int z) -> float {
+  if (values.empty() || width <= 0 || height <= 0) {
+    return 0.0F;
+  }
+
+  x = std::clamp(x, 0, width - 1);
+  z = std::clamp(z, 0, height - 1);
+  return values[static_cast<size_t>(z * width + x)];
+}
+
+} // namespace
+
 auto TerrainService::instance() -> TerrainService & {
   static TerrainService s_instance;
   return s_instance;
@@ -29,10 +44,12 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_height_map->applyBiomeVariation(m_biome_settings);
   m_fire_camps = mapDef.firecamps;
   m_road_segments = mapDef.roads;
+  rebuild_terrain_field();
 }
 
 void TerrainService::clear() {
   m_height_map.reset();
+  m_terrain_field.clear();
   m_biome_settings = BiomeSettings();
   m_fire_camps.clear();
   m_road_segments.clear();
@@ -144,6 +161,7 @@ void TerrainService::restore_from_serialized(
   m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
   m_biome_settings = biome;
   m_road_segments = roads;
+  rebuild_terrain_field();
 }
 
 auto TerrainService::is_point_on_road(float world_x,
@@ -199,6 +217,51 @@ auto TerrainService::get_bridge_center_position(
     return std::nullopt;
   }
   return m_height_map->getBridgeCenterPosition(world_x, world_z);
+}
+
+void TerrainService::rebuild_terrain_field() {
+  m_terrain_field.clear();
+
+  if (!m_height_map) {
+    return;
+  }
+
+  m_terrain_field.width = m_height_map->getWidth();
+  m_terrain_field.height = m_height_map->getHeight();
+  m_terrain_field.tile_size = m_height_map->getTileSize();
+  m_terrain_field.heights = m_height_map->getHeightData();
+
+  const int width = m_terrain_field.width;
+  const int height = m_terrain_field.height;
+  const float tile = std::max(0.001F, m_terrain_field.tile_size);
+  const size_t count = static_cast<size_t>(width * height);
+  m_terrain_field.slopes.assign(count, 0.0F);
+  m_terrain_field.curvature.assign(count, 0.0F);
+
+  for (int z = 0; z < height; ++z) {
+    for (int x = 0; x < width; ++x) {
+      const float h_c =
+          sample_grid_clamped(m_terrain_field.heights, width, height, x, z);
+      const float h_l =
+          sample_grid_clamped(m_terrain_field.heights, width, height, x - 1, z);
+      const float h_r =
+          sample_grid_clamped(m_terrain_field.heights, width, height, x + 1, z);
+      const float h_d =
+          sample_grid_clamped(m_terrain_field.heights, width, height, x, z - 1);
+      const float h_u =
+          sample_grid_clamped(m_terrain_field.heights, width, height, x, z + 1);
+
+      const float dx = (h_r - h_l) / (2.0F * tile);
+      const float dz = (h_u - h_d) / (2.0F * tile);
+      const float normal_y = 1.0F / std::sqrt(1.0F + dx * dx + dz * dz);
+      const float avg_neighbors = 0.25F * (h_l + h_r + h_d + h_u);
+      const size_t index = static_cast<size_t>(z * width + x);
+
+      m_terrain_field.slopes[index] =
+          1.0F - std::clamp(normal_y, 0.0F, 1.0F);
+      m_terrain_field.curvature[index] = h_c - avg_neighbors;
+    }
+  }
 }
 
 } // namespace Game::Map

@@ -45,6 +45,10 @@ public:
     return m_biome_settings;
   }
 
+  [[nodiscard]] auto terrain_field() const -> const TerrainField & {
+    return m_terrain_field;
+  }
+
   [[nodiscard]] auto fire_camps() const -> const std::vector<FireCamp> & {
     return m_fire_camps;
   }
@@ -81,7 +85,10 @@ private:
   TerrainService(const TerrainService &) = delete;
   auto operator=(const TerrainService &) -> TerrainService & = delete;
 
+  void rebuild_terrain_field();
+
   std::unique_ptr<TerrainHeightMap> m_height_map;
+  TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
   std::vector<FireCamp> m_fire_camps;
   std::vector<RoadSegment> m_road_segments;

@@ -75,6 +75,63 @@ inline auto valueNoise2D(float x, float z, std::uint32_t seed) -> float {
 
 namespace Game::Map {
 
+void TerrainField::clear() {
+  width = 0;
+  height = 0;
+  tile_size = 1.0F;
+  heights.clear();
+  slopes.clear();
+  curvature.clear();
+}
+
+auto TerrainField::empty() const -> bool {
+  return width <= 0 || height <= 0 || heights.empty();
+}
+
+auto TerrainField::sample_height_at(float gx, float gz) const -> float {
+  if (empty()) {
+    return 0.0F;
+  }
+
+  gx = std::clamp(gx, 0.0F, static_cast<float>(width - 1));
+  gz = std::clamp(gz, 0.0F, static_cast<float>(height - 1));
+
+  int const x0 = static_cast<int>(std::floor(gx));
+  int const z0 = static_cast<int>(std::floor(gz));
+  int const x1 = std::min(x0 + 1, width - 1);
+  int const z1 = std::min(z0 + 1, height - 1);
+
+  float const tx = gx - static_cast<float>(x0);
+  float const tz = gz - static_cast<float>(z0);
+
+  float const h00 = heights[static_cast<size_t>(z0 * width + x0)];
+  float const h10 = heights[static_cast<size_t>(z0 * width + x1)];
+  float const h01 = heights[static_cast<size_t>(z1 * width + x0)];
+  float const h11 = heights[static_cast<size_t>(z1 * width + x1)];
+
+  float const h0 = h00 * (1.0F - tx) + h10 * tx;
+  float const h1 = h01 * (1.0F - tx) + h11 * tx;
+  return h0 * (1.0F - tz) + h1 * tz;
+}
+
+auto TerrainField::sample_slope_at(int grid_x, int grid_z) const -> float {
+  if (slopes.empty() || grid_x < 0 || grid_x >= width || grid_z < 0 ||
+      grid_z >= height) {
+    return 0.0F;
+  }
+
+  return slopes[static_cast<size_t>(grid_z * width + grid_x)];
+}
+
+auto TerrainField::sample_curvature_at(int grid_x, int grid_z) const -> float {
+  if (curvature.empty() || grid_x < 0 || grid_x >= width || grid_z < 0 ||
+      grid_z >= height) {
+    return 0.0F;
+  }
+
+  return curvature[static_cast<size_t>(grid_z * width + grid_x)];
+}
+
 TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
     : m_width(width), m_height(height), m_tile_size(tile_size) {
   const int count = width * height;

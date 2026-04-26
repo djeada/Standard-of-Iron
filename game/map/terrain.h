@@ -425,6 +425,25 @@ struct Bridge {
   float height = 0.5F;
 };
 
+struct TerrainField {
+  int width = 0;
+  int height = 0;
+  float tile_size = 1.0F;
+  std::vector<float> heights;
+  std::vector<float> slopes;
+  std::vector<float> curvature;
+
+  void clear();
+
+  [[nodiscard]] auto empty() const -> bool;
+
+  [[nodiscard]] auto sample_height_at(float gx, float gz) const -> float;
+
+  [[nodiscard]] auto sample_slope_at(int grid_x, int grid_z) const -> float;
+
+  [[nodiscard]] auto sample_curvature_at(int grid_x, int grid_z) const -> float;
+};
+
 class TerrainHeightMap {
 public:
   TerrainHeightMap(int width, int height, float tile_size);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../game/map/terrain_service.h"
 #include "i_render_pass.h"
 #include <vector>
 
@@ -67,6 +68,19 @@ public:
   }
   [[nodiscard]] auto rain() const -> RainRenderer * { return m_rain; }
   [[nodiscard]] auto fog() const -> FogRenderer * { return m_fog; }
+
+  [[nodiscard]] auto has_field() const -> bool {
+    return Game::Map::TerrainService::instance().is_initialized();
+  }
+
+  [[nodiscard]] auto field() const -> const Game::Map::TerrainField & {
+    return Game::Map::TerrainService::instance().terrain_field();
+  }
+
+  [[nodiscard]] auto road_segments() const
+      -> const std::vector<Game::Map::RoadSegment> & {
+    return Game::Map::TerrainService::instance().road_segments();
+  }
 
   // Exposes the ordered pass list for focused tests and adapter code that
   // still needs to inspect the legacy terrain pass sequence directly.

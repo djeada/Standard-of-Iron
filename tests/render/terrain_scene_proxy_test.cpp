@@ -1,3 +1,5 @@
+#include "game/map/map_definition.h"
+#include "game/map/terrain_service.h"
 #include "render/ground/biome_renderer.h"
 #include "render/ground/bridge_renderer.h"
 #include "render/ground/firecamp_renderer.h"
@@ -16,6 +18,11 @@
 #include <gtest/gtest.h>
 
 namespace {
+
+class TerrainSceneProxyServiceTest : public ::testing::Test {
+protected:
+  void TearDown() override { Game::Map::TerrainService::instance().clear(); }
+};
 
 TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   Render::GL::GroundRenderer ground;
@@ -69,6 +76,29 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_EQ(passes[11], &firecamp);
   EXPECT_EQ(passes[12], &rain);
   EXPECT_EQ(passes[13], &fog);
+}
+
+TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
+  Game::Map::MapDefinition map_def;
+  map_def.grid.width = 8;
+  map_def.grid.height = 8;
+  map_def.grid.tile_size = 1.0F;
+  map_def.roads.push_back({QVector3D(-1.0F, 0.0F, -1.0F),
+                           QVector3D(1.0F, 0.0F, 1.0F), 2.5F});
+
+  Game::Map::TerrainService::instance().initialize(map_def);
+
+  Render::GL::TerrainSceneProxy proxy(nullptr, nullptr, nullptr, nullptr,
+                                      nullptr, nullptr, nullptr, nullptr,
+                                      nullptr, nullptr, nullptr, nullptr,
+                                      nullptr, nullptr);
+
+  ASSERT_TRUE(proxy.has_field());
+  const auto &field = proxy.field();
+  EXPECT_EQ(field.width, 8);
+  EXPECT_EQ(field.height, 8);
+  ASSERT_EQ(proxy.road_segments().size(), 1U);
+  EXPECT_FLOAT_EQ(proxy.road_segments().front().width, 2.5F);
 }
 
 } // namespace
