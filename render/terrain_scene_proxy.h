@@ -38,6 +38,9 @@ public:
         m_passes{ground, terrain, river, road, riverbank, bridge, biome, stone,
                  plant, pine, olive, firecamp, rain, fog} {}
 
+  // Submits each terrain pass through the shared terrain scene boundary.
+  // Null entries are tolerated so legacy bootstrap or tests can omit passes
+  // while preserving the established terrain submission order.
   void submit(Renderer &renderer, ResourceManager *resources) const {
     for (auto *pass : m_passes) {
       if (pass != nullptr) {
@@ -65,6 +68,8 @@ public:
   [[nodiscard]] auto rain() const -> RainRenderer * { return m_rain; }
   [[nodiscard]] auto fog() const -> FogRenderer * { return m_fog; }
 
+  // Exposes the ordered pass list for focused tests and adapter code that
+  // still needs to inspect the legacy terrain pass sequence directly.
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass *> & {
     return m_passes;
   }
