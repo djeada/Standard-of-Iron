@@ -7,7 +7,6 @@
 #include "../../../equipment/horse/horse_attachment_archetype.h"
 #include "../../../equipment/horse/saddles/carthage_saddle_renderer.h"
 #include "../../../equipment/horse/saddles/horse_mount_archetype.h"
-#include "../../../equipment/horse/tack/reins_renderer.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/skeleton.h"
@@ -127,7 +126,6 @@ auto make_horse_archer_config() -> HorseArcherRendererConfig {
                                       &carthage_saddle_make_static_attachment,
                                       &carthage_saddle_fill_role_colors);
   config.mount_archetype_id = k_mount_archetype;
-  config.horse_attachments.emplace_back(std::make_shared<ReinsRenderer>());
   return config;
 }
 

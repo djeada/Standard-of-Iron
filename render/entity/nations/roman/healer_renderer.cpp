@@ -354,7 +354,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/healer";
       s.scaling = ProportionScaling{0.86F, 0.99F, 0.90F};
-      s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor;
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = k_archetype;
       return s;
     }();

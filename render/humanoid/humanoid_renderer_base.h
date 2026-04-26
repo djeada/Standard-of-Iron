@@ -91,11 +91,6 @@ public:
                                          const QVector3D &right_axis,
                                          ISubmitter &out) const;
 
-  virtual void draw_facial_hair(const DrawContext &ctx,
-                                const HumanoidVariant &v,
-                                const HumanoidPose &pose,
-                                ISubmitter &out) const;
-
   void render(const DrawContext &ctx, ISubmitter &out) const;
 
   virtual auto resolve_entity_ground_offset(

@@ -180,7 +180,9 @@ auto ArchetypeRegistry::register_unit_archetype(
     desc.bake_attachments[i] = attachments[i];
   }
   desc.bake_attachment_count = static_cast<std::uint8_t>(n);
-  desc.extra_role_colors_fn = extra_role_colors_fn;
+  if (extra_role_colors_fn != nullptr) {
+    desc.append_extra_role_colors_fn(extra_role_colors_fn);
+  }
   return register_archetype(desc);
 }
 

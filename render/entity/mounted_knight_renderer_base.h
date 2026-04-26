@@ -2,7 +2,6 @@
 
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
-#include "../equipment/horse/i_horse_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QVector3D>
@@ -30,7 +29,6 @@ struct MountedKnightRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
-  std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
 
 class MountedKnightRendererBase : public MountedHumanoidRendererBase {
@@ -58,12 +56,6 @@ public:
 
 protected:
   const MountedKnightRendererConfig &config() const { return m_config; }
-
-  void apply_riding_animation(MountedPoseController &controller,
-                              MountedAttachmentFrame &mount,
-                              const HumanoidAnimationContext &anim_ctx,
-                              HumanoidPose &pose, const HorseDimensions &dims,
-                              const ReinState &reins) const override;
 
 private:
   MountedKnightRendererConfig m_config;

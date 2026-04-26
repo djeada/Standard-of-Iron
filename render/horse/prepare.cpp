@@ -74,7 +74,6 @@ void HorseRendererBase::render(const DrawContext &ctx,
                                const HumanoidAnimationContext &rider_ctx,
                                HorseProfile &profile,
                                const MountedAttachmentFrame *shared_mount,
-                               const ReinState *shared_reins,
                                const HorseMotionSample *shared_motion,
                                ISubmitter &out, HorseLOD lod) const {
 
@@ -102,18 +101,17 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
   Render::Horse::HorsePreparation prep;
   Render::Horse::prepare_horse_render(*this, ctx, anim, rider_ctx, profile,
-                                      shared_mount, shared_reins, shared_motion,
-                                      lod, prep);
+                                      shared_mount, shared_motion, lod, prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }
 
 void HorseRendererBase::render(
     const DrawContext &ctx, const AnimationInputs &anim,
     const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
-    const MountedAttachmentFrame *shared_mount, const ReinState *shared_reins,
+    const MountedAttachmentFrame *shared_mount,
     const HorseMotionSample *shared_motion, ISubmitter &out) const {
-  render(ctx, anim, rider_ctx, profile, shared_mount, shared_reins,
-         shared_motion, out, HorseLOD::Full);
+  render(ctx, anim, rider_ctx, profile, shared_mount, shared_motion, out,
+         HorseLOD::Full);
 }
 
 } // namespace Render::GL
@@ -146,15 +144,12 @@ void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
                         const Render::GL::HumanoidAnimationContext &rider_ctx,
                         Render::GL::HorseProfile &profile,
                         const Render::GL::MountedAttachmentFrame *shared_mount,
-                        const Render::GL::ReinState *shared_reins,
                         const Render::GL::HorseMotionSample *shared_motion,
                         HorsePreparation &out) {
   using Render::GL::HorseDimensions;
   using Render::GL::HorseMotionSample;
   using Render::GL::HorseVariant;
   using Render::GL::MountedAttachmentFrame;
-  using Render::GL::ReinState;
-
   const HorseDimensions &d = profile.dims;
   const HorseVariant &v = profile.variant;
 
@@ -196,107 +191,6 @@ void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
   graph_output.seed = horse_seed;
   std::uint16_t const horse_clip = horse_clip_for_gait(motion.gait_type);
   out.bodies.add_horse(graph_output, pose, v, horse_clip, phase);
-
-  using Render::Creature::Pipeline::LegacySlotMask;
-  using Render::Creature::Pipeline::owns_slot;
-  bool const draw_attachments_enabled = !owns_slot(
-      owner.visual_spec().owned_legacy_slots, LegacySlotMask::HorseAttachments);
-  if (!draw_attachments_enabled) {
-    return;
-  }
-
-  ReinState const rein_state =
-      shared_reins ? *shared_reins : compute_rein_state(horse_seed, rider_ctx);
-  float const rein_slack = rein_state.slack;
-
-  float const turn_amount = motion.turn_amount;
-  float const stop_intent = motion.stop_intent;
-  float const body_sway = motion.body_sway;
-  float const body_pitch = motion.body_pitch;
-  float const head_nod = motion.head_nod;
-  float const head_lateral = motion.head_lateral;
-  float const spine_flex = motion.spine_flex;
-
-  QVector3D const barrel_center(body_sway, d.barrel_center_y + bob + body_pitch,
-                                spine_flex);
-  QVector3D const chest_center =
-      barrel_center +
-      QVector3D(-turn_amount * d.body_width * 0.08F + body_sway * 0.2F,
-                d.body_height * (0.12F + stop_intent * 0.04F),
-                d.body_length * 0.34F);
-  QVector3D const rump_center =
-      barrel_center +
-      QVector3D(turn_amount * d.body_width * 0.06F - body_sway * 0.1F,
-                d.body_height * (0.08F - stop_intent * 0.02F),
-                -d.body_length * 0.36F);
-  QVector3D const neck_base =
-      chest_center +
-      QVector3D(head_lateral * 0.3F + turn_amount * d.head_width * 0.30F,
-                d.body_height * (0.42F + stop_intent * 0.05F),
-                d.body_length * 0.08F);
-  QVector3D const neck_top =
-      neck_base + QVector3D(head_lateral * 0.8F, d.neck_rise + head_nod * 0.4F,
-                            d.neck_length);
-  QVector3D const head_center =
-      neck_top + QVector3D(head_lateral,
-                           d.head_height * (0.10F - head_nod * 0.20F),
-                           d.head_length * 0.40F + head_nod * 0.03F);
-  QVector3D const muzzle_center =
-      head_center +
-      QVector3D(0.0F, -d.head_height * 0.18F, d.head_length * 0.58F);
-
-  QVector3D const bit_left =
-      muzzle_center + QVector3D(d.head_width * 0.55F, -d.head_height * 0.08F,
-                                d.muzzle_length * 0.10F);
-  QVector3D const bit_right =
-      muzzle_center + QVector3D(-d.head_width * 0.55F, -d.head_height * 0.08F,
-                                d.muzzle_length * 0.10F);
-  mount.rein_bit_left = bit_left;
-  mount.rein_bit_right = bit_right;
-
-  Render::GL::HorseBodyFrames body_frames;
-  auto set_frame = [](Render::GL::HorseAttachmentFrame &frame,
-                      const QVector3D &origin, const QVector3D &right,
-                      const QVector3D &up, const QVector3D &forward) {
-    frame.origin = origin;
-    frame.right = right;
-    frame.up = up;
-    frame.forward = forward;
-  };
-  QVector3D const forward(0.0F, 0.0F, 1.0F);
-  QVector3D const up(0.0F, 1.0F, 0.0F);
-  QVector3D const right(1.0F, 0.0F, 0.0F);
-
-  set_frame(body_frames.head, head_center, right, up, forward);
-  set_frame(body_frames.neck_base, neck_base, right, up, forward);
-
-  QVector3D const withers_pos =
-      chest_center +
-      QVector3D(0.0F, d.body_height * 0.55F, -d.body_length * 0.06F);
-  set_frame(body_frames.withers, withers_pos, right, up, forward);
-  set_frame(body_frames.back_center, mount.saddle_center, right, up, forward);
-
-  QVector3D const croup_pos =
-      rump_center +
-      QVector3D(0.0F, d.body_height * 0.46F, -d.body_length * 0.18F);
-  set_frame(body_frames.croup, croup_pos, right, up, forward);
-  set_frame(body_frames.chest, chest_center, right, up, forward);
-  set_frame(body_frames.barrel, barrel_center, right, up, forward);
-  set_frame(body_frames.rump, rump_center, right, up, forward);
-
-  QVector3D const tail_base_pos =
-      rump_center +
-      QVector3D(0.0F, d.body_height * 0.20F, -d.body_length * 0.46F);
-  set_frame(body_frames.tail_base, tail_base_pos, right, up, forward);
-  set_frame(body_frames.muzzle, muzzle_center, right, up, forward);
-
-  out.add_post_body_draw(
-      graph_output.pass_intent,
-      [&owner, anim, rider_ctx, profile, horse_ctx, mount, body_frames, phase,
-       bob, rein_slack](Render::GL::ISubmitter &out_sub) mutable {
-        owner.draw_attachments(horse_ctx, anim, rider_ctx, profile, mount,
-                               phase, bob, rein_slack, body_frames, out_sub);
-      });
 }
 
 void prepare_horse_simplified(
@@ -387,13 +281,12 @@ void prepare_horse_render(
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::ReinState *shared_reins,
     const Render::GL::HorseMotionSample *shared_motion,
     Render::Creature::CreatureLOD lod, HorsePreparation &out) {
   switch (lod) {
   case Render::Creature::CreatureLOD::Full:
     prepare_horse_full(owner, ctx, anim, rider_ctx, profile, shared_mount,
-                       shared_reins, shared_motion, out);
+                       shared_motion, out);
     break;
   case Render::Creature::CreatureLOD::Reduced:
     prepare_horse_simplified(owner, ctx, anim, rider_ctx, profile, shared_mount,

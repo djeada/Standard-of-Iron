@@ -6,7 +6,6 @@
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_spec.h"
 #include "../humanoid/humanoid_specs.h"
-#include "../humanoid/mounted_pose_controller.h"
 #include "../humanoid/skeleton.h"
 #include "../palette.h"
 
@@ -95,7 +94,6 @@ HorseArcherRendererBase::HorseArcherRendererBase(
     m_config.quiver_equipment_id.clear();
   }
 
-  m_horseRenderer.set_attachments(m_config.horse_attachments);
   set_mount_archetype_id(m_config.mount_archetype_id);
 
   build_visual_spec();
@@ -152,23 +150,6 @@ void HorseArcherRendererBase::get_variant(const DrawContext &ctx, uint32_t seed,
                                           HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = make_humanoid_palette(team_tint, seed);
-}
-
-void HorseArcherRendererBase::apply_riding_animation(
-    MountedPoseController &mounted_controller, MountedAttachmentFrame &mount,
-    const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
-    const HorseDimensions &dims, const ReinState &reins) const {
-  (void)pose;
-  (void)dims;
-  (void)reins;
-  const AnimationInputs &anim = anim_ctx.inputs;
-  if (anim.is_attacking && !anim.is_melee) {
-    float const attack_phase =
-        std::fmod(anim.time * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
-    mounted_controller.riding_bow_shot(mount, attack_phase);
-  } else {
-    mounted_controller.riding_idle(mount);
-  }
 }
 
 void HorseArcherRendererBase::build_visual_spec() {
@@ -245,7 +226,7 @@ void HorseArcherRendererBase::build_visual_spec() {
         }
 
         desc.role_count = base_role_byte;
-        desc.extra_role_colors_fn = &horse_archer_extra_role_colors;
+        desc.append_extra_role_colors_fn(&horse_archer_extra_role_colors);
 
         auto const new_id =
             ArchetypeRegistry::instance().register_archetype(desc);

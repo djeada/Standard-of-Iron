@@ -4,6 +4,7 @@
 #include "../../../horse/dimensions.h"
 #include "../../../horse/horse_renderer_base.h"
 #include "../../../horse/horse_spec.h"
+#include "../tack/reins_renderer.h"
 #include "../horse_attachment_archetype.h"
 
 #include <array>
@@ -14,7 +15,8 @@ namespace Render::GL {
 namespace {
 
 struct Slot {
-  std::uint32_t (*fn)(const HorseVariant &, QVector3D *, std::size_t);
+  std::uint32_t (*saddle_fn)(const HorseVariant &, QVector3D *, std::size_t);
+  std::uint32_t (*reins_fn)(const HorseVariant &, QVector3D *, std::size_t);
 };
 constexpr std::size_t kMaxSlots = 16;
 std::array<Slot, kMaxSlots> g_slots{};
@@ -27,12 +29,18 @@ auto trampoline(const void *variant_void, QVector3D *out,
   if (variant_void == nullptr || max_count <= base_count) {
     return base_count;
   }
-  auto const slot_fn = g_slots[IDX].fn;
-  if (slot_fn == nullptr) {
+  auto const slot = g_slots[IDX];
+  if (slot.saddle_fn == nullptr || slot.reins_fn == nullptr) {
     return base_count;
   }
   const auto &v = *static_cast<const HorseVariant *>(variant_void);
-  return base_count + slot_fn(v, out + base_count, max_count - base_count);
+  auto count = base_count;
+  count += slot.saddle_fn(v, out + count, max_count - count);
+  if (count >= max_count) {
+    return count;
+  }
+  count += slot.reins_fn(v, out + count, max_count - count);
+  return count;
 }
 
 using ExtraFn = Render::Creature::ArchetypeDescriptor::ExtraRoleColorsFn;
@@ -62,6 +70,8 @@ auto register_mount_saddle_archetype(
       static_cast<std::uint16_t>(Render::Horse::HorseBone::Root);
 
   constexpr std::uint8_t k_saddle_base_role_byte = 9U;
+  constexpr std::uint8_t k_reins_base_role_byte =
+      static_cast<std::uint8_t>(k_saddle_base_role_byte + 1U);
 
   auto const root_bind_matrix =
       Render::Horse::horse_bind_palette()[static_cast<std::size_t>(
@@ -71,12 +81,16 @@ auto register_mount_saddle_archetype(
   auto const saddle_spec =
       make_static_attachment(k_root_bone, k_saddle_base_role_byte,
                              back_center_bind_frame, root_bind_matrix);
+  auto const reins_spec =
+      reins_make_static_attachment(k_root_bone, k_reins_base_role_byte,
+                                   back_center_bind_frame, root_bind_matrix);
 
-  std::array<Render::Creature::StaticAttachmentSpec, 1> const attachments{
-      saddle_spec};
+  std::array<Render::Creature::StaticAttachmentSpec, 2> const attachments{
+      saddle_spec, reins_spec};
 
   std::size_t const slot_index = g_slot_count++;
-  g_slots[slot_index].fn = fill_role_colors;
+  g_slots[slot_index].saddle_fn = fill_role_colors;
+  g_slots[slot_index].reins_fn = &reins_fill_role_colors;
 
   return Render::Creature::ArchetypeRegistry::instance()
       .register_unit_archetype(

@@ -311,10 +311,16 @@ void populate_role_colors(Render::Creature::CreatureRenderRequest &req,
 
   const auto *desc =
       Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
-  if (desc != nullptr && desc->extra_role_colors_fn != nullptr) {
-    count = desc->extra_role_colors_fn(static_cast<const void *>(&variant),
-                                       req.role_colors.data(), count,
-                                       req.role_colors.size());
+  if (desc != nullptr) {
+    for (std::size_t i = 0;
+         i < static_cast<std::size_t>(desc->extra_role_color_fn_count); ++i) {
+      auto const fn = desc->extra_role_color_fns[i];
+      if (fn == nullptr) {
+        continue;
+      }
+      count = fn(static_cast<const void *>(&variant), req.role_colors.data(),
+                 count, req.role_colors.size());
+    }
   }
   req.role_color_count = static_cast<std::uint8_t>(std::min<std::uint32_t>(
       count, static_cast<std::uint32_t>(req.role_colors.size())));

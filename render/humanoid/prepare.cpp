@@ -34,6 +34,7 @@
 #include "../visibility_budget.h"
 #include "cache_control.h"
 #include "clip_driver_cache.h"
+#include "facial_hair_catalog.h"
 #include "formation_calculator.h"
 #include "humanoid_math.h"
 #include "humanoid_renderer_base.h"
@@ -877,12 +878,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     const bool unowned_overlays_full =
         !owns_slot(owned_slots_for_gate, LegacySlotMask::ArmorOverlay) ||
         !owns_slot(owned_slots_for_gate, LegacySlotMask::ShoulderDecorations) ||
-        !owns_slot(owned_slots_for_gate, LegacySlotMask::FacialHair) ||
         !owns_slot(owned_slots_for_gate, LegacySlotMask::Attachments);
     const bool unowned_attachments =
         !owns_slot(owned_slots_for_gate, LegacySlotMask::Attachments);
     const bool needs_anatomy_pose =
-        is_mounted_spawn ||
         (soldier_lod == HumanoidLOD::Full && unowned_overlays_full) ||
         (soldier_lod == HumanoidLOD::Reduced && unowned_attachments);
 
@@ -1031,6 +1030,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     auto graph_output =
         RCP::build_base_graph_output(graph_inputs, lod_decision);
     graph_output.spec = owner.visual_spec();
+    graph_output.spec.owned_legacy_slots =
+        graph_output.spec.owned_legacy_slots | LegacySlotMask::FacialHair;
+    graph_output.spec.archetype_id =
+        Render::Humanoid::resolve_facial_hair_archetype(
+            graph_output.spec.archetype_id, variant);
     graph_output.seed = inst_seed;
 
     const auto &gfx_settings = Render::GraphicsSettings::instance();
@@ -1159,7 +1163,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
 
-      const auto owned_slots = owner.visual_spec().owned_legacy_slots;
+      const auto owned_slots = graph_output.spec.owned_legacy_slots;
       if (unowned_overlays_full) {
         out.add_post_body_draw(
             graph_output.pass_intent,
@@ -1178,9 +1182,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                 owner.draw_shoulder_decorations(
                     inst_ctx, variant, pose, metrics.y_top_cover,
                     pose.neck_base.y(), metrics.right_axis, submitter);
-              }
-              if (!owns_slot(owned_slots, LegacySlotMask::FacialHair)) {
-                owner.draw_facial_hair(inst_ctx, variant, pose, submitter);
               }
               if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
                 owner.add_attachments(inst_ctx, variant, pose, anim_ctx,
@@ -1204,7 +1205,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
-      const auto owned_slots = owner.visual_spec().owned_legacy_slots;
+      const auto owned_slots = graph_output.spec.owned_legacy_slots;
       if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
         out.add_post_body_draw(graph_output.pass_intent,
                                [&owner, inst_ctx, variant, pose,

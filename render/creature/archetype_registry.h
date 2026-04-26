@@ -32,7 +32,9 @@ struct ArchetypeDescriptor {
                                               QVector3D *out,
                                               std::uint32_t base_count,
                                               std::size_t max_count);
-  ExtraRoleColorsFn extra_role_colors_fn{nullptr};
+  static constexpr std::size_t kMaxExtraRoleColorFns = 4;
+  std::array<ExtraRoleColorsFn, kMaxExtraRoleColorFns> extra_role_color_fns{};
+  std::uint8_t extra_role_color_fn_count{0};
 
   static constexpr std::size_t kMaxBakeAttachments = 16;
   std::array<StaticAttachmentSpec, kMaxBakeAttachments> bake_attachments{};
@@ -42,6 +44,15 @@ struct ArchetypeDescriptor {
   attachments_view() const noexcept -> std::span<const StaticAttachmentSpec> {
     return {bake_attachments.data(),
             static_cast<std::size_t>(bake_attachment_count)};
+  }
+
+  void append_extra_role_colors_fn(ExtraRoleColorsFn fn) noexcept {
+    if (fn == nullptr || extra_role_color_fn_count >=
+                             static_cast<std::uint8_t>(
+                                 extra_role_color_fns.size())) {
+      return;
+    }
+    extra_role_color_fns[extra_role_color_fn_count++] = fn;
   }
 };
 

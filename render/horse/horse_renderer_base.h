@@ -25,7 +25,6 @@ void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
                         const Render::GL::HumanoidAnimationContext &rider_ctx,
                         Render::GL::HorseProfile &profile,
                         const Render::GL::MountedAttachmentFrame *shared_mount,
-                        const Render::GL::ReinState *shared_reins,
                         const Render::GL::HorseMotionSample *shared_motion,
                         HorsePreparation &out);
 void prepare_horse_simplified(
@@ -52,7 +51,6 @@ class HorseRendererBase {
       const ::Render::GL::HumanoidAnimationContext &rider_ctx,
       ::Render::GL::HorseProfile &profile,
       const ::Render::GL::MountedAttachmentFrame *shared_mount,
-      const ::Render::GL::ReinState *shared_reins,
       const ::Render::GL::HorseMotionSample *shared_motion,
       ::Render::Horse::HorsePreparation &out);
 
@@ -69,22 +67,13 @@ public:
   void render(const DrawContext &ctx, const AnimationInputs &anim,
               const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
               const MountedAttachmentFrame *shared_mount,
-              const ReinState *shared_reins,
               const HorseMotionSample *shared_motion, ISubmitter &out,
               HorseLOD lod) const;
 
   void render(const DrawContext &ctx, const AnimationInputs &anim,
               const HumanoidAnimationContext &rider_ctx, HorseProfile &profile,
               const MountedAttachmentFrame *shared_mount,
-              const ReinState *shared_reins,
               const HorseMotionSample *shared_motion, ISubmitter &out) const;
-
-protected:
-  virtual void draw_attachments(const DrawContext &, const AnimationInputs &,
-                                const HumanoidAnimationContext &,
-                                HorseProfile &, const MountedAttachmentFrame &,
-                                float, float, float, const HorseBodyFrames &,
-                                ISubmitter &) const {}
 
   mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
   mutable bool m_visual_spec_baked{false};

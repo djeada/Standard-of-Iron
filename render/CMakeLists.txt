@@ -135,6 +135,7 @@ add_library(render_gl STATIC
     humanoid/rig.cpp
     humanoid/prepare.cpp
     humanoid/poser.cpp
+    humanoid/facial_hair_catalog.cpp
     humanoid/skin.cpp
     humanoid/formation_calculator.cpp
     humanoid/style_palette.cpp

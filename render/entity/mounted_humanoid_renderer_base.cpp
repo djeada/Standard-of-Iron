@@ -13,8 +13,6 @@
 #include "../horse/prepare.h"
 #include "../humanoid/cache_control.h"
 #include "../humanoid/humanoid_full_builder.h"
-#include "../humanoid/humanoid_math.h"
-#include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
 #include "../visibility_budget.h"
 
@@ -97,7 +95,7 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
     const DrawContext &ctx, std::uint32_t seed, const HumanoidVariant &variant,
     const HumanoidAnimationContext &anim_ctx, bool use_cached_profile,
     HorseProfile &profile, HorseDimensions &dims, MountedAttachmentFrame &mount,
-    HorseMotionSample &motion, ReinState &reins) const {
+    HorseMotionSample &motion) const {
   const AnimationInputs &anim = anim_ctx.inputs;
 
   std::uint32_t horse_seed = seed;
@@ -124,7 +122,6 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
       profile, anim, anim_ctx,
       Engine::Core::get_or_add_component<
           Render::Creature::HorseAnimationStateComponent>(ctx.entity));
-  reins = compute_rein_state(horse_seed, anim_ctx);
 }
 
 auto MountedHumanoidRendererBase::resolve_mount_lod(
@@ -164,49 +161,6 @@ auto MountedHumanoidRendererBase::resolve_mount_lod(
                          : static_cast<HorseLOD>(decision.lod);
 }
 
-void MountedHumanoidRendererBase::customize_pose(
-    const DrawContext &ctx, const HumanoidAnimationContext &anim_ctx,
-    uint32_t seed, HumanoidPose &pose) const {
-  HorseProfile mount_profile{};
-  HorseDimensions dims{};
-  MountedAttachmentFrame mount{};
-  HorseMotionSample motion{};
-  ReinState reins{};
-  resolve_mount_render_state(ctx, seed, HumanoidVariant{}, anim_ctx, false,
-                             mount_profile, dims, mount, motion, reins);
-
-  MountedPoseController mounted_controller(pose, anim_ctx);
-
-  mounted_controller.mount_on_horse(mount);
-
-  apply_riding_animation(mounted_controller, mount, anim_ctx, pose, dims,
-                         reins);
-
-  applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
-
-  mounted_controller.finalize_head_sync(mount, "customize_pose_final_sync");
-
-  Render::Humanoid::HumanoidBodyMetrics metrics{};
-  Render::Humanoid::compute_humanoid_body_metrics(
-      pose, get_proportion_scaling(), get_torso_scale(), metrics);
-  Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
-  Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
-
-  if (ctx.entity != nullptr) {
-    auto *state = Engine::Core::get_or_add_component<
-        Render::Creature::MountedRenderStateComponent>(ctx.entity);
-    if (state != nullptr) {
-      state->dims = dims;
-      state->mount_frame = mount;
-      state->motion = motion;
-      state->reins = reins;
-      state->seed = seed;
-      state->frame = humanoid_current_frame();
-      state->valid = true;
-    }
-  }
-}
-
 void MountedHumanoidRendererBase::append_companion_preparation(
     const DrawContext &ctx, const HumanoidVariant &variant,
     const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
@@ -222,37 +176,12 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   HorseDimensions dims{};
   MountedAttachmentFrame mount{};
   HorseMotionSample motion{};
-  ReinState reins{};
-  bool used_cached_mount_state = false;
-  if (ctx.entity != nullptr) {
-    const auto *state =
-        ctx.entity
-            ->get_component<Render::Creature::MountedRenderStateComponent>();
-    if (state != nullptr && state->valid && state->seed == seed &&
-        state->frame == humanoid_current_frame()) {
-      std::uint32_t horse_seed = seed;
-      horse_seed = static_cast<std::uint32_t>(
-          reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
-      profile = Render::Creature::get_or_bake_horse_anatomy(
-                    ctx.entity, horse_seed, variant.palette.leather,
-                    variant.palette.cloth, get_mount_scale())
-                    .profile;
-      dims = state->dims;
-      profile.dims = dims;
-      mount = state->mount_frame;
-      motion = state->motion;
-      reins = state->reins;
-      used_cached_mount_state = true;
-    }
-  }
-  if (!used_cached_mount_state) {
-    resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile,
-                               dims, mount, motion, reins);
-  }
+  resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile, dims,
+                             mount, motion);
 
   Render::Horse::prepare_horse_render(m_horseRenderer, ctx, anim_ctx.inputs,
-                                      anim_ctx, profile, &mount, &reins,
-                                      &motion, resolve_mount_lod(ctx), out);
+                                      anim_ctx, profile, &mount, &motion,
+                                      resolve_mount_lod(ctx), out);
 
   DrawContext rider_ctx = ctx;
   rider_ctx.model = grounded_horse_world_from_mount(ctx, mount);

@@ -3,7 +3,6 @@
 #include "../creature/archetype_registry.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
-#include "../humanoid/mounted_pose_controller.h"
 #include "../palette.h"
 
 #include "../../game/core/component.h"
@@ -41,7 +40,6 @@ HorseSpearmanRendererBase::HorseSpearmanRendererBase(
     m_config.shield_equipment_id.clear();
   }
 
-  m_horseRenderer.set_attachments(m_config.horse_attachments);
   set_mount_archetype_id(m_config.mount_archetype_id);
   build_visual_spec();
 }
@@ -94,32 +92,6 @@ void HorseSpearmanRendererBase::get_variant(const DrawContext &ctx,
                                             HumanoidVariant &v) const {
   QVector3D const team_tint = resolve_team_tint(ctx);
   v.palette = make_humanoid_palette(team_tint, seed);
-}
-
-void HorseSpearmanRendererBase::apply_riding_animation(
-    MountedPoseController &mounted_controller, MountedAttachmentFrame &mount,
-    const HumanoidAnimationContext &anim_ctx, HumanoidPose &pose,
-    const HorseDimensions &dims, const ReinState &reins) const {
-  (void)dims;
-  (void)reins;
-  const AnimationInputs &anim = anim_ctx.inputs;
-  float const speed_norm = anim_ctx.locomotion_normalized_speed();
-  bool const is_charging = speed_norm > 0.65F;
-
-  if (anim.is_attacking && anim.is_melee) {
-    if (is_charging) {
-      mounted_controller.riding_charging(mount, 1.0F);
-      mounted_controller.hold_spear_mounted(mount, SpearGrip::COUCHED);
-
-      pose.neck_base -= mount.seat_forward * 0.03F;
-    } else {
-      float const attack_phase =
-          std::fmod(anim.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-      mounted_controller.riding_spear_thrust(mount, attack_phase);
-    }
-  } else {
-    mounted_controller.riding_idle(mount);
-  }
 }
 
 void HorseSpearmanRendererBase::build_visual_spec() {

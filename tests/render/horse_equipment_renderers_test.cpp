@@ -140,7 +140,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererUsesArchetypePath) {
 
   EXPECT_EQ(cylinder_count_of(batch), 0);
   EXPECT_EQ(mesh_count_of(batch), 0);
-  ASSERT_EQ(archetype_count_of(batch), 6);
+  ASSERT_EQ(archetype_count_of(batch), 1);
 
   MockSubmitter submitter;
   BatchSubmitterAdapter adapter(submitter);
@@ -160,10 +160,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
 
   ASSERT_FALSE(batch.archetypes.empty());
 
-  const HorseAttachmentFrame &muzzle = frames.muzzle;
-  QVector3D const expected_local =
-      muzzle.origin + muzzle.right * 0.10F + muzzle.forward * 0.10F;
-  QVector3D const expected_world = ctx.model.map(expected_local);
+  QVector3D const expected_world = ctx.model.map(frames.back_center.origin);
 
   QVector3D const actual =
       batch.archetypes.front().world.column(3).toVector3D();
@@ -177,19 +174,21 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
   ReinsRenderer renderer;
 
   renderer.render(ctx, frames, variant, anim, batch);
+  ASSERT_EQ(archetype_count_of(batch), 1);
 
-  ASSERT_GE(static_cast<int>(batch.archetypes.size()), 6);
+  const auto &draws =
+      batch.archetypes.front()
+          .archetype->lods[static_cast<std::size_t>(RenderArchetypeLod::Full)]
+          .draws;
+  ASSERT_GE(static_cast<int>(draws.size()), 6);
 
   auto const connectors = std::count_if(
-      batch.archetypes.begin(), batch.archetypes.end(), [](const auto &a) {
-        QVector3D const start = a.world.column(3).toVector3D();
-        QVector3D const end = start + a.world.column(1).toVector3D();
-        return start.x() * end.x() < 0.0F;
+      draws.begin(), draws.end(), [](const auto &draw) {
+        return std::abs(draw.local_model.column(3).x()) < 1e-4F;
       });
   EXPECT_GE(connectors, 2);
 
-  ASSERT_FALSE(batch.archetypes.empty());
-  EXPECT_GT(axis_scale_of(batch.archetypes.front().world, 1), 0.5F);
+  EXPECT_GT(axis_scale_of(draws.front().local_model, 1), 0.5F);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {

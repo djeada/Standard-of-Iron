@@ -13,7 +13,6 @@
 #include "../../../equipment/horse/horse_attachment_archetype.h"
 #include "../../../equipment/horse/saddles/horse_mount_archetype.h"
 #include "../../../equipment/horse/saddles/roman_saddle_renderer.h"
-#include "../../../equipment/horse/tack/reins_renderer.h"
 #include "../../../equipment/weapons/shield_renderer.h"
 #include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../submitter.h"
@@ -187,7 +186,6 @@ auto make_mounted_knight_config() -> MountedKnightRendererConfig {
       "troops/roman/horse_swordsman/mount",
       &roman_saddle_make_static_attachment, &roman_saddle_fill_role_colors);
   config.mount_archetype_id = k_mount_archetype;
-  config.horse_attachments.emplace_back(std::make_shared<ReinsRenderer>());
   return config;
 }
 

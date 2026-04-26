@@ -6,6 +6,7 @@
 
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -68,6 +69,31 @@ struct ScopedFlatTerrain {
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
 
+class BeardRenderer : public Render::GL::HumanoidRendererBase {
+public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    static const auto spec = [] {
+      Render::Creature::Pipeline::UnitVisualSpec s{};
+      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      s.debug_name = "tests/beard_renderer";
+      s.owned_legacy_slots =
+          Render::Creature::Pipeline::LegacySlotMask::ArmorOverlay |
+          Render::Creature::Pipeline::LegacySlotMask::ShoulderDecorations |
+          Render::Creature::Pipeline::LegacySlotMask::Attachments;
+      return s;
+    }();
+    return spec;
+  }
+
+  void get_variant(const Render::GL::DrawContext &, std::uint32_t,
+                   Render::GL::HumanoidVariant &v) const override {
+    v.facial_hair.style = Render::GL::FacialHairStyle::FullBeard;
+    v.facial_hair.color = QVector3D(0.20F, 0.14F, 0.10F);
+    v.facial_hair.greyness = 0.10F;
+  }
+};
+
 TEST(HumanoidPrepare, PassIntentFromCtxIsShadowOnPrewarm) {
   Render::GL::DrawContext ctx{};
   EXPECT_EQ(Render::Creature::Pipeline::pass_intent_from_ctx(ctx),
@@ -112,6 +138,29 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
 
   EXPECT_EQ(stats.entities_submitted, 1u);
   EXPECT_GT(sink.rigged_calls + sink.meshes, 0);
+}
+
+TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
+  BeardRenderer renderer;
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+  Render::GL::AnimationInputs anim{};
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  ASSERT_EQ(prep.bodies.requests().size(), 1u);
+  EXPECT_TRUE(prep.post_body_draws.empty());
+
+  auto const &req = prep.bodies.requests().front();
+  EXPECT_NE(req.archetype, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+
+  auto const *desc =
+      Render::Creature::ArchetypeRegistry::instance().get(req.archetype);
+  ASSERT_NE(desc, nullptr);
+  EXPECT_EQ(desc->bake_attachment_count, 1U);
+  EXPECT_GT(req.role_color_count, 7U);
 }
 
 TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {

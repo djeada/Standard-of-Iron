@@ -28,7 +28,6 @@ struct LODMultipliers {
 };
 
 struct GraphicsFeatures {
-  bool enable_facial_hair;
   bool enable_mane_detail;
   bool enable_tail_detail;
   bool enable_armor_detail;
@@ -174,8 +173,7 @@ private:
                            .horse_billboard = 0.8F,
                            .shadow_distance = 25.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = false,
-                    .enable_mane_detail = false,
+      m_features = {.enable_mane_detail = false,
                     .enable_tail_detail = false,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -202,8 +200,7 @@ private:
                            .horse_billboard = 1.0F,
                            .shadow_distance = 40.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -231,8 +228,7 @@ private:
                            .horse_billboard = 2.0F,
                            .shadow_distance = 80.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -260,8 +256,7 @@ private:
                            .horse_billboard = 3.0F,
                            .shadow_distance = 200.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,

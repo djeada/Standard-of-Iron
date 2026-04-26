@@ -51,7 +51,6 @@ void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
                         const Render::GL::HumanoidAnimationContext &rider_ctx,
                         Render::GL::HorseProfile &profile,
                         const Render::GL::MountedAttachmentFrame *shared_mount,
-                        const Render::GL::ReinState *shared_reins,
                         const Render::GL::HorseMotionSample *shared_motion,
                         HorsePreparation &out);
 
@@ -75,7 +74,6 @@ void prepare_horse_render(
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::ReinState *shared_reins,
     const Render::GL::HorseMotionSample *shared_motion,
     Render::Creature::CreatureLOD lod, HorsePreparation &out);
 

@@ -74,4 +74,21 @@ auto horse_baseline_neck_base_frame() noexcept -> HorseAttachmentFrame {
   return make_identity_frame(neck_base);
 }
 
+auto horse_baseline_muzzle_frame() noexcept -> HorseAttachmentFrame {
+  const auto d = make_baseline_dims();
+
+  const QVector3D barrel(0.0F, d.barrel_center_y, 0.0F);
+  const QVector3D chest =
+      barrel + QVector3D(0.0F, d.body_height * 0.12F, d.body_length * 0.34F);
+  const QVector3D neck_base =
+      chest + QVector3D(0.0F, d.body_height * 0.42F, d.body_length * 0.08F);
+  const QVector3D neck_top =
+      neck_base + QVector3D(0.0F, d.neck_rise, d.neck_length);
+  const QVector3D head_center =
+      neck_top + QVector3D(0.0F, d.head_height * 0.10F, d.head_length * 0.40F);
+  const QVector3D muzzle =
+      head_center + QVector3D(0.0F, -d.head_height * 0.18F, d.head_length * 0.58F);
+  return make_identity_frame(muzzle);
+}
+
 } // namespace Render::GL

@@ -278,7 +278,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/archer";
       s.scaling = ProportionScaling{1.03F, 1.08F, 0.98F};
-      s.owned_legacy_slots = {};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = k_archer_archetype;
       return s;
     }();

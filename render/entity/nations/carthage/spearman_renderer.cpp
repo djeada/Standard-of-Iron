@@ -262,8 +262,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/spearman";
       s.scaling = ProportionScaling{0.72F, 1.02F, 0.74F};
-      s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor |
-                             LegacySlotMask::Attachments;
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = k_archetype;
       return s;
     }();

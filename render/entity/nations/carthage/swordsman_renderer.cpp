@@ -340,8 +340,7 @@ public:
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/carthage/swordsman";
       s.scaling = ProportionScaling{0.90F, 1.03F, 0.46F};
-      s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor |
-                             LegacySlotMask::Attachments;
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
       s.archetype_id = k_archetype;
       return s;
     }();
