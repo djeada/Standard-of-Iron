@@ -20,7 +20,7 @@ auto prepare_mounted_rows(
       seed, lod, 0, pass);
   set.rider_row = Render::Creature::Pipeline::make_prepared_humanoid_row(
       mounted_spec.rider, rider_pose, rider_variant, rider_anim,
-      rider_world_from_unit, seed, lod, nullptr, 0, pass);
+      rider_world_from_unit, seed, lod, 0, pass);
   return set;
 }
 

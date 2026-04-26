@@ -1,6 +1,7 @@
 #pragma once
 
-#include "creature_frame.h"
+#include "../render_request.h"
+#include "bpat_playback.h"
 #include "creature_render_state.h"
 #include "lod_decision.h"
 #include "unit_visual_spec.h"
@@ -8,7 +9,6 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
-#include <deque>
 #include <functional>
 #include <optional>
 #include <span>
@@ -115,19 +115,26 @@ public:
   void add_humanoid(const CreatureGraphOutput &output,
                     const Render::GL::HumanoidPose &pose,
                     const Render::GL::HumanoidVariant &variant,
-                    const Render::GL::HumanoidAnimationContext &anim,
-                    const Render::GL::DrawContext *legacy_ctx = nullptr);
+                    const Render::GL::HumanoidAnimationContext &anim);
 
   void add_horse(const CreatureGraphOutput &output,
                  const Render::Horse::HorseSpecPose &pose,
-                 const Render::GL::HorseVariant &variant);
+                 const Render::GL::HorseVariant &variant,
+                 std::uint16_t bpat_clip_id = 0xFFFFu, float bpat_phase = 0.0F);
 
   void add_elephant(const CreatureGraphOutput &output,
                     const Render::Elephant::ElephantSpecPose &pose,
-                    const Render::GL::ElephantVariant &variant);
+                    const Render::GL::ElephantVariant &variant,
+                    std::uint16_t bpat_clip_id = 0xFFFFu,
+                    float bpat_phase = 0.0F);
+
+  void add_request(const Render::Creature::CreatureRenderRequest &request);
 
   [[nodiscard]] auto
   rows() const noexcept -> std::span<const PreparedCreatureRenderRow>;
+
+  [[nodiscard]] auto requests() const noexcept
+      -> std::span<const Render::Creature::CreatureRenderRequest>;
 
   [[nodiscard]] auto size() const noexcept -> std::size_t;
 
@@ -135,7 +142,7 @@ public:
 
 private:
   std::vector<PreparedCreatureRenderRow> rows_{};
-  std::deque<Render::GL::DrawContext> legacy_contexts_{};
+  std::vector<Render::Creature::CreatureRenderRequest> requests_{};
 };
 
 using PostBodyDrawFn = std::function<void(Render::GL::ISubmitter &)>;

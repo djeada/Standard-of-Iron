@@ -1,5 +1,6 @@
 #include "carthage_light_helmet.h"
 
+#include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
 
@@ -20,7 +21,11 @@ enum CarthageLightPaletteSlot : std::uint8_t {
   k_crest_slot = 3U,
 };
 
-auto carthage_light_shell_archetype() -> const RenderArchetype & {
+constexpr QVector3D k_authored_local_offset{0.0F, 0.05F, 0.0F};
+
+} // namespace
+
+auto carthage_light_helmet_shell_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
         generated_sphere(QVector3D(0.0F, 0.58F, 0.0F), 1.55F, k_metal_slot,
@@ -43,7 +48,7 @@ auto carthage_light_shell_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
-auto carthage_light_neck_guard_archetype() -> const RenderArchetype & {
+auto carthage_light_helmet_neck_guard_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
         generated_cylinder(QVector3D(0.0F, -0.30F, -0.96F),
@@ -56,7 +61,7 @@ auto carthage_light_neck_guard_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
-auto carthage_light_nasal_guard_archetype() -> const RenderArchetype & {
+auto carthage_light_helmet_nasal_guard_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
         generated_cylinder(QVector3D(0.0F, -0.08F, 0.90F),
@@ -69,7 +74,7 @@ auto carthage_light_nasal_guard_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
-auto carthage_light_cheek_guards_archetype() -> const RenderArchetype & {
+auto carthage_light_helmet_cheek_guards_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
         generated_cylinder(QVector3D(-1.44F, 0.06F, 0.20F),
@@ -91,7 +96,7 @@ auto carthage_light_cheek_guards_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
-auto carthage_light_crest_archetype(bool high_detail)
+auto carthage_light_helmet_crest_archetype(bool high_detail)
     -> const RenderArchetype & {
   static const RenderArchetype low_detail = [] {
     std::array<GeneratedEquipmentPrimitive, 9> primitives{};
@@ -142,7 +147,7 @@ auto carthage_light_crest_archetype(bool high_detail)
   return high_detail ? high_detail_archetype : low_detail;
 }
 
-auto carthage_light_rivets_archetype() -> const RenderArchetype & {
+auto carthage_light_helmet_rivets_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
         generated_sphere(QVector3D(-0.50F, 0.46F, 0.64F), 0.05F, k_metal_slot,
@@ -162,6 +167,8 @@ auto carthage_light_rivets_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
+namespace {
+
 auto carthage_light_palette(const HumanoidPalette &palette)
     -> std::array<QVector3D, 4> {
   QVector3D const metal =
@@ -173,6 +180,43 @@ auto carthage_light_palette(const HumanoidPalette &palette)
 }
 
 } // namespace
+
+auto carthage_light_helmet_fill_role_colors(const HumanoidPalette &palette,
+                                            QVector3D *out,
+                                            std::size_t max) -> std::uint32_t {
+  if (max < kCarthageLightHelmetRoleCount) {
+    return 0;
+  }
+  auto const colors = carthage_light_palette(palette);
+  out[0] = colors[0];
+  out[1] = colors[1];
+  out[2] = colors[2];
+  out[3] = colors[3];
+  return kCarthageLightHelmetRoleCount;
+}
+
+auto carthage_light_helmet_make_static_attachment(
+    const RenderArchetype &sub_archetype, std::uint16_t socket_bone_index,
+    std::uint8_t base_role_byte, const QMatrix4x4 &bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+
+  constexpr float kHeadSocketRadius = 0.16F;
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &sub_archetype,
+      .socket_bone_index = socket_bone_index,
+      .authored_local_offset = k_authored_local_offset,
+      .bind_radius = kHeadSocketRadius,
+      .bind_socket_transform = bind_palette_socket_bone,
+  });
+  spec.palette_role_remap[k_metal_slot] = base_role_byte;
+  spec.palette_role_remap[k_metal_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_leather_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  spec.palette_role_remap[k_crest_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 3U);
+  return spec;
+}
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
                                          const BodyFrames &frames,
@@ -196,30 +240,30 @@ void CarthageLightHelmetRenderer::submit(
   QVector3D const head_offset{0.0F, 0.05F, 0.0F};
 
   append_humanoid_attachment_archetype(batch, ctx, frames.head,
-                                       carthage_light_shell_archetype(),
+                                       carthage_light_helmet_shell_archetype(),
                                        equipment_palette, head_offset);
-  append_humanoid_attachment_archetype(batch, ctx, frames.head,
-                                       carthage_light_neck_guard_archetype(),
-                                       equipment_palette, head_offset);
-  append_humanoid_attachment_archetype(batch, ctx, frames.head,
-                                       carthage_light_cheek_guards_archetype(),
-                                       equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(
+      batch, ctx, frames.head, carthage_light_helmet_neck_guard_archetype(),
+      equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(
+      batch, ctx, frames.head, carthage_light_helmet_cheek_guards_archetype(),
+      equipment_palette, head_offset);
 
   if (config.has_nasal_guard) {
-    append_humanoid_attachment_archetype(batch, ctx, frames.head,
-                                         carthage_light_nasal_guard_archetype(),
-                                         equipment_palette, head_offset);
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head, carthage_light_helmet_nasal_guard_archetype(),
+        equipment_palette, head_offset);
   }
   if (config.has_crest) {
     append_humanoid_attachment_archetype(
         batch, ctx, frames.head,
-        carthage_light_crest_archetype(config.detail_level >= 2),
+        carthage_light_helmet_crest_archetype(config.detail_level >= 2),
         equipment_palette, head_offset);
   }
   if (config.detail_level > 0) {
-    append_humanoid_attachment_archetype(batch, ctx, frames.head,
-                                         carthage_light_rivets_archetype(),
-                                         equipment_palette, head_offset);
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head, carthage_light_helmet_rivets_archetype(),
+        equipment_palette, head_offset);
   }
 }
 

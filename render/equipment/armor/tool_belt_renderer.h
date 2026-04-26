@@ -2,7 +2,13 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <QVector3D>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -14,6 +20,15 @@ struct ToolBeltConfig {
   bool include_chisel = true;
   bool include_pouches = true;
 };
+
+inline constexpr std::uint32_t kToolBeltRoleCount = 5;
+
+auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                std::size_t max) -> std::uint32_t;
+
+auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                       std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 5>;
 
 class ToolBeltRenderer : public IEquipmentRenderer {
 public:

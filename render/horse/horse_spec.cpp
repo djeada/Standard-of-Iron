@@ -1185,85 +1185,6 @@ auto build_horse_bind_palette() noexcept
   return out;
 }
 
-auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
-    -> Render::GL::Renderer * {
-  if (auto *renderer = dynamic_cast<Render::GL::Renderer *>(&out)) {
-    return renderer;
-  }
-  if (auto *batch = dynamic_cast<Render::GL::BatchingSubmitter *>(&out)) {
-    return dynamic_cast<Render::GL::Renderer *>(batch->fallback_submitter());
-  }
-  return nullptr;
-}
-
-void submit_horse_rigged_impl(const HorseSpecPose &pose,
-                              const Render::GL::HorseVariant &variant,
-                              Render::Creature::CreatureLOD lod,
-                              const QMatrix4x4 &world_from_unit,
-                              Render::GL::ISubmitter &out) noexcept {
-
-  BonePalette tmp{};
-  evaluate_horse_skeleton(pose, tmp);
-
-  auto *renderer = resolve_renderer(out);
-  if (renderer == nullptr) {
-    if (lod == Render::Creature::CreatureLOD::Billboard) {
-      return;
-    }
-    std::array<QVector3D, 8> role_colors{};
-    fill_horse_role_colors(variant, role_colors);
-    Render::Creature::submit_creature(
-        horse_creature_spec(),
-        std::span<const QMatrix4x4>(tmp.data(), tmp.size()), lod,
-        world_from_unit, out,
-        std::span<const QVector3D>(role_colors.data(), role_colors.size()));
-    return;
-  }
-
-  auto const &spec = horse_creature_spec();
-  auto bind = horse_bind_palette();
-
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind, 0);
-  if (entry == nullptr || entry->mesh == nullptr ||
-      entry->mesh->index_count() == 0U) {
-    return;
-  }
-
-  auto &arena = renderer->bone_palette_arena();
-  Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
-  QMatrix4x4 *palette_slot = palette_slot_h.cpu;
-
-  std::size_t const n =
-      std::min<std::size_t>(entry->inverse_bind.size(), kHorseBoneCount);
-  for (std::size_t i = 0; i < n; ++i) {
-    palette_slot[i] = tmp[i] * entry->inverse_bind[i];
-  }
-
-  std::array<QVector3D, 8> role_colors{};
-  fill_horse_role_colors(variant, role_colors);
-
-  Render::GL::RiggedCreatureCmd cmd{};
-  cmd.mesh = entry->mesh.get();
-  cmd.material = nullptr;
-  cmd.world = world_from_unit;
-  cmd.bone_palette = palette_slot;
-  cmd.palette_ubo = palette_slot_h.ubo;
-  cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
-  cmd.bone_count = static_cast<std::uint32_t>(n);
-  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
-  for (std::size_t i = 0; i < role_colors.size(); ++i) {
-    cmd.role_colors[i] = role_colors[i];
-  }
-  cmd.color = variant.coat_color;
-  cmd.alpha = 1.0F;
-  cmd.texture = nullptr;
-  cmd.material_id = 0;
-
-  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
-
-  out.rigged(cmd);
-}
-
 } // namespace
 
 auto horse_creature_spec() noexcept -> const Render::Creature::CreatureSpec & {
@@ -1306,32 +1227,6 @@ auto horse_bind_palette() noexcept -> std::span<const QMatrix4x4> {
   static const std::array<QMatrix4x4, kHorseBoneCount> palette =
       build_horse_bind_palette();
   return std::span<const QMatrix4x4>(palette.data(), palette.size());
-}
-
-void submit_horse_reduced_rigged(const HorseSpecPose &pose,
-                                 const Render::GL::HorseVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-  submit_horse_rigged_impl(pose, variant,
-                           Render::Creature::CreatureLOD::Reduced,
-                           world_from_unit, out);
-}
-
-void submit_horse_full_rigged(const HorseSpecPose &pose,
-                              const Render::GL::HorseVariant &variant,
-                              const QMatrix4x4 &world_from_unit,
-                              Render::GL::ISubmitter &out) noexcept {
-  submit_horse_rigged_impl(pose, variant, Render::Creature::CreatureLOD::Full,
-                           world_from_unit, out);
-}
-
-void submit_horse_minimal_rigged(const HorseSpecPose &pose,
-                                 const Render::GL::HorseVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-  submit_horse_rigged_impl(pose, variant,
-                           Render::Creature::CreatureLOD::Minimal,
-                           world_from_unit, out);
 }
 
 } // namespace Render::Horse

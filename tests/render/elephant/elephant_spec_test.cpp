@@ -91,53 +91,6 @@ Render::GL::ElephantGait make_gait() {
 
 } // namespace
 
-TEST(ElephantSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
-  auto dims = make_dims();
-  auto variant = make_variant();
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::make_elephant_spec_pose(dims, 0.0F, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_minimal_rigged(pose, variant, identity,
-                                                   sub);
-
-  EXPECT_EQ(sub.calls.size(), 5U);
-}
-
-TEST(ElephantSpecTest, ReducedRiggedFallbackEmitsTwelvePrimitives) {
-  auto dims = make_dims();
-  auto gait = make_gait();
-  auto variant = make_variant();
-
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::ElephantReducedMotion motion{};
-  Render::Elephant::make_elephant_spec_pose_reduced(dims, gait, motion, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_reduced_rigged(pose, variant, identity,
-                                                   sub);
-
-  EXPECT_EQ(sub.calls.size(), 12U);
-}
-
-TEST(ElephantSpecTest, FullRiggedFallbackEmitsFifteenPrimitives) {
-  auto dims = make_dims();
-  auto gait = make_gait();
-  auto variant = make_variant();
-
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::ElephantReducedMotion motion{};
-  Render::Elephant::make_elephant_spec_pose_reduced(dims, gait, motion, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_full_rigged(pose, variant, identity, sub);
-
-  EXPECT_EQ(sub.calls.size(), 50U);
-}
-
 TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);

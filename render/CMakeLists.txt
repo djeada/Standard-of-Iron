@@ -146,29 +146,34 @@ add_library(render_gl STATIC
     humanoid/humanoid_state_machine.cpp
     humanoid/humanoid_clip_registry.cpp
     humanoid/clip_driver_cache.cpp
+    creature/bpat/bpat_writer.cpp
+    creature/bpat/bpat_reader.cpp
+    creature/bpat/bpat_registry.cpp
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
     creature/anatomy_bake.cpp
+    creature/archetype_registry.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
     creature/pipeline/creature_asset.cpp
     creature/pipeline/prepared_submit.cpp
-    creature/pipeline/equipment_registry.cpp
     creature/pipeline/lod_decision.cpp
     creature/pipeline/preparation_common.cpp
     creature/pipeline/creature_render_graph.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp
+    snapshot_mesh_cache.cpp
+    static_attachment_spec.cpp
     bone_palette_arena.cpp
     unit_render_cache.cpp
     pose_palette_cache.cpp
     mesh_geometry_pool.cpp
     equipment/equipment_registry.cpp
     equipment/equipment_submit.cpp
+    equipment/attachment_builder.cpp
     equipment/register_equipment.cpp
-    equipment/armor/tunic_renderer.cpp
     equipment/armor/roman_armor.cpp
     equipment/armor/armor_light_carthage.cpp
     equipment/armor/armor_heavy_carthage.cpp
@@ -194,20 +199,18 @@ add_library(render_gl STATIC
     equipment/helmets/roman_light_helmet.cpp
     equipment/helmets/carthage_heavy_helmet.cpp
     equipment/helmets/carthage_light_helmet.cpp
-    equipment/armor/chainmail_armor.cpp
     equipment/horse/saddles/roman_saddle_renderer.cpp
     equipment/horse/saddles/carthage_saddle_renderer.cpp
     equipment/horse/saddles/light_cavalry_saddle_renderer.cpp
+    equipment/horse/saddles/horse_mount_archetype.cpp
+    equipment/horse/horse_attachment_archetype.cpp
     equipment/horse/tack/bridle_renderer.cpp
-    equipment/horse/tack/stirrup_renderer.cpp
     equipment/horse/tack/blanket_renderer.cpp
     equipment/horse/tack/reins_renderer.cpp
     equipment/horse/armor/scale_barding_renderer.cpp
     equipment/horse/armor/leather_barding_renderer.cpp
     equipment/horse/armor/champion_renderer.cpp
     equipment/horse/armor/crupper_renderer.cpp
-    equipment/horse/decorations/plume_renderer.cpp
-    equipment/horse/decorations/tail_ribbon_renderer.cpp
     equipment/horse/decorations/saddle_bag_renderer.cpp
     software/software_rasterizer.cpp
     software_backend.cpp

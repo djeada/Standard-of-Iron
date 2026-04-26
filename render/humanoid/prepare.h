@@ -123,16 +123,4 @@ void prepare_humanoid_instances(const Render::GL::HumanoidRendererBase &owner,
                                 std::uint32_t frame_index,
                                 HumanoidPreparation &out);
 
-[[nodiscard]] auto make_humanoid_prepared_row(
-    const Render::GL::HumanoidRendererBase &owner,
-    const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidVariant &variant,
-    const Render::GL::HumanoidAnimationContext &anim_ctx,
-    const QMatrix4x4 &inst_model, std::uint32_t inst_seed,
-    Render::Creature::CreatureLOD lod,
-    const Render::GL::DrawContext *legacy_ctx = nullptr,
-    Render::Creature::Pipeline::RenderPassIntent pass =
-        Render::Creature::Pipeline::RenderPassIntent::Main) noexcept
-    -> Render::Creature::Pipeline::PreparedCreatureRenderRow;
-
 } // namespace Render::Humanoid

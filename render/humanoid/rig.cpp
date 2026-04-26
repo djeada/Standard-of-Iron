@@ -137,7 +137,6 @@ auto HumanoidRendererBase::visual_spec() const
     m_visual_spec_cache.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
     m_visual_spec_cache.debug_name = "humanoid/default";
-    m_visual_spec_cache.equipment = {};
     m_visual_spec_cache.pose_hook = nullptr;
     m_visual_spec_cache.variant_hook = nullptr;
     const QVector3D ps = get_proportion_scaling();

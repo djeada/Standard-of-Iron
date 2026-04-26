@@ -2,13 +2,11 @@
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
 #include "render/equipment/armor/carthage_shoulder_cover.h"
-#include "render/equipment/armor/chainmail_armor.h"
 #include "render/equipment/armor/cloak_renderer.h"
 #include "render/equipment/armor/roman_armor.h"
 #include "render/equipment/armor/roman_greaves.h"
 #include "render/equipment/armor/roman_shoulder_cover.h"
 #include "render/equipment/armor/tool_belt_renderer.h"
-#include "render/equipment/armor/tunic_renderer.h"
 #include "render/equipment/armor/work_apron_renderer.h"
 #include "render/equipment/equipment_registry.h"
 #include "render/equipment/equipment_submit.h"
@@ -169,17 +167,6 @@ TEST_F(ArmorRendererTest, CarthageArcherArmorSharesHelmet) {
   ASSERT_NE(shared_helmet, nullptr);
 }
 
-TEST_F(ArmorRendererTest, TunicRendererCreation) {
-  TunicConfig config;
-  config.torso_scale = 1.1F;
-  config.include_pauldrons = true;
-  config.include_gorget = true;
-  config.include_belt = true;
-
-  auto tunic = std::make_shared<TunicRenderer>(config);
-  ASSERT_NE(tunic, nullptr);
-}
-
 TEST_F(ArmorRendererTest, CloakRendererCreation) {
   CloakConfig config;
   config.length_scale = 1.1F;
@@ -189,13 +176,8 @@ TEST_F(ArmorRendererTest, CloakRendererCreation) {
   ASSERT_NE(cloak, nullptr);
 }
 
-TEST_F(ArmorRendererTest, ChainmailRendererCreation) {
-  auto chainmail = std::make_shared<ChainmailArmorRenderer>();
-  ASSERT_NE(chainmail, nullptr);
-}
-
 TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
-  auto helmet = registry->get(EquipmentCategory::Helmet, "roman_heavy");
+  auto helmet = registry->get(EquipmentCategory::Helmet, "carthage_heavy");
   auto armor = registry->get(EquipmentCategory::Armor, "roman_heavy_armor");
   auto weapon = registry->get(EquipmentCategory::Weapon, "bow");
 
@@ -203,7 +185,7 @@ TEST_F(ArmorRendererTest, ArmorCategoryIsDistinct) {
   ASSERT_NE(armor, nullptr);
   ASSERT_NE(weapon, nullptr);
 
-  EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "roman_heavy"));
+  EXPECT_FALSE(registry->has(EquipmentCategory::Armor, "carthage_heavy"));
   EXPECT_FALSE(registry->has(EquipmentCategory::Helmet, "roman_heavy_armor"));
 }
 
@@ -356,32 +338,6 @@ TEST_F(ArmorRendererTest, ArmorHeavyCarthageRendersThroughArchetypePath) {
   EXPECT_EQ(draw_count_of(batch), 3);
 }
 
-TEST_F(ArmorRendererTest, TunicRendersThroughArchetypePath) {
-  BodyFrames frames{};
-  frames.torso.origin = QVector3D(0.0F, 1.10F, 0.0F);
-  frames.torso.right = QVector3D(1.0F, 0.0F, 0.0F);
-  frames.torso.up = QVector3D(0.0F, 1.0F, 0.0F);
-  frames.torso.forward = QVector3D(0.0F, 0.0F, 1.0F);
-  frames.torso.radius = 0.34F;
-  frames.torso.depth = 0.25F;
-  frames.waist.origin = QVector3D(0.0F, 0.72F, 0.0F);
-  frames.waist.radius = 0.28F;
-  frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
-  frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
-
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
-  EquipmentBatch batch;
-
-  TunicRenderer tunic;
-  tunic.render(ctx, frames, palette, anim, batch);
-
-  EXPECT_TRUE(batch.meshes.empty());
-  EXPECT_EQ(batch.archetypes.size(), 5U);
-  EXPECT_EQ(draw_count_of(batch), 114);
-}
-
 TEST_F(ArmorRendererTest, CloakRendersThroughArchetypePath) {
   BodyFrames frames{};
   frames.torso.origin = QVector3D(0.0F, 1.10F, 0.0F);
@@ -403,34 +359,6 @@ TEST_F(ArmorRendererTest, CloakRendersThroughArchetypePath) {
   EXPECT_TRUE(batch.meshes.empty());
   EXPECT_EQ(batch.archetypes.size(), 1U);
   EXPECT_EQ(draw_count_of(batch), 3);
-}
-
-TEST_F(ArmorRendererTest, ChainmailRendersThroughArchetypePath) {
-  BodyFrames frames{};
-  frames.torso.origin = QVector3D(0.0F, 1.10F, 0.0F);
-  frames.torso.right = QVector3D(1.0F, 0.0F, 0.0F);
-  frames.torso.up = QVector3D(0.0F, 1.0F, 0.0F);
-  frames.torso.forward = QVector3D(0.0F, 0.0F, 1.0F);
-  frames.torso.radius = 0.34F;
-  frames.torso.depth = 0.25F;
-  frames.waist.origin = QVector3D(0.0F, 0.72F, 0.0F);
-  frames.waist.up = frames.torso.up;
-  frames.shoulder_l.origin = QVector3D(-0.22F, 1.32F, 0.0F);
-  frames.shoulder_r.origin = QVector3D(0.22F, 1.32F, 0.0F);
-  frames.hand_l.origin = QVector3D(-0.42F, 0.98F, 0.12F);
-  frames.hand_r.origin = QVector3D(0.42F, 0.98F, 0.12F);
-
-  DrawContext ctx{};
-  HumanoidPalette palette{};
-  HumanoidAnimationContext anim{};
-  EquipmentBatch batch;
-
-  ChainmailArmorRenderer chainmail;
-  chainmail.render(ctx, frames, palette, anim, batch);
-
-  EXPECT_TRUE(batch.meshes.empty());
-  EXPECT_EQ(batch.archetypes.size(), 1U);
-  EXPECT_EQ(draw_count_of(batch), 21);
 }
 
 TEST_F(ArmorRendererTest, ToolBeltRendersThroughArchetypePath) {

@@ -2,8 +2,12 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -40,5 +44,16 @@ public:
 private:
   QuiverRenderConfig m_config;
 };
+
+inline constexpr std::uint32_t kQuiverRoleCount = 3;
+
+auto quiver_fill_role_colors(const HumanoidPalette &palette,
+                             const QuiverRenderConfig &config, QVector3D *out,
+                             std::size_t max) -> std::uint32_t;
+
+auto quiver_make_static_attachments(const QuiverRenderConfig &config,
+                                    std::uint16_t socket_bone_index,
+                                    std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 5>;
 
 } // namespace Render::GL

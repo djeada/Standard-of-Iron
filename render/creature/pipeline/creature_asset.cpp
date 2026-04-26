@@ -12,24 +12,6 @@ constexpr CreatureAssetId kHumanoidAssetId = 0;
 constexpr CreatureAssetId kHorseAssetId = 1;
 constexpr CreatureAssetId kElephantAssetId = 2;
 
-auto humanoid_compute_bones(const void *pose,
-                            std::span<QMatrix4x4> out) -> std::uint32_t {
-  return Render::Humanoid::compute_bone_palette(
-      *static_cast<const Render::GL::HumanoidPose *>(pose), out);
-}
-
-auto horse_compute_bones(const void *pose,
-                         std::span<QMatrix4x4> out) -> std::uint32_t {
-  return Render::Horse::compute_horse_bone_palette(
-      *static_cast<const Render::Horse::HorseSpecPose *>(pose), out);
-}
-
-auto elephant_compute_bones(const void *pose,
-                            std::span<QMatrix4x4> out) -> std::uint32_t {
-  return Render::Elephant::compute_elephant_bone_palette(
-      *static_cast<const Render::Elephant::ElephantSpecPose *>(pose), out);
-}
-
 auto humanoid_bind() noexcept -> std::span<const QMatrix4x4> {
   return Render::Humanoid::humanoid_bind_palette();
 }
@@ -93,7 +75,6 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount);
   m_humanoid.max_bones =
       static_cast<std::uint8_t>(Render::Humanoid::kBoneCount);
-  m_humanoid.compute_bones = &humanoid_compute_bones;
   m_humanoid.bind_palette = &humanoid_bind;
   m_humanoid.fill_role_colors = &humanoid_fill_roles;
 
@@ -104,7 +85,6 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_horse.topology = &m_horse.spec->topology;
   m_horse.role_count = 8;
   m_horse.max_bones = static_cast<std::uint8_t>(Render::Horse::kHorseBoneCount);
-  m_horse.compute_bones = &horse_compute_bones;
   m_horse.bind_palette = &horse_bind;
   m_horse.fill_role_colors = &horse_fill_roles;
 
@@ -117,7 +97,6 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Elephant::kElephantRoleCount);
   m_elephant.max_bones =
       static_cast<std::uint8_t>(Render::Elephant::kElephantBoneCount);
-  m_elephant.compute_bones = &elephant_compute_bones;
   m_elephant.bind_palette = &elephant_bind;
   m_elephant.fill_role_colors = &elephant_fill_roles;
 }
@@ -143,8 +122,12 @@ auto CreatureAssetRegistry::resolve(const UnitVisualSpec &spec) const noexcept
       return asset;
     }
   }
+  return for_species(spec.kind);
+}
 
-  switch (spec.kind) {
+auto CreatureAssetRegistry::for_species(CreatureKind kind) const noexcept
+    -> const CreatureAsset * {
+  switch (kind) {
   case CreatureKind::Humanoid:
     return &m_humanoid;
   case CreatureKind::Horse:

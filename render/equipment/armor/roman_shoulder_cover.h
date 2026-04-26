@@ -1,8 +1,15 @@
 #pragma once
 
 #include "../../humanoid/humanoid_renderer_base.h"
+#include "../../palette.h"
+#include "../../render_archetype.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -33,5 +40,18 @@ public:
 private:
   RomanShoulderCoverConfig m_config;
 };
+
+auto roman_shoulder_cover_archetype() -> const RenderArchetype &;
+
+inline constexpr std::uint32_t kRomanShoulderCoverRoleCount = 3;
+
+auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
+                                           QVector3D *out,
+                                           std::size_t max) -> std::uint32_t;
+
+auto roman_shoulder_cover_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_shoulder_frame)
+    -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

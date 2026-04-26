@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../creature/pipeline/unit_visual_spec.h"
+#include "../creature/render_request.h"
 #include "../equipment/horse/i_horse_equipment_renderer.h"
 #include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
@@ -30,6 +31,12 @@ struct HorseArcherRendererConfig {
   bool has_quiver = true;
   bool has_cloak = false;
   float helmet_offset_moving = 0.0F;
+
+  Render::Creature::ArchetypeId rider_archetype_id{
+      Render::Creature::kInvalidArchetype};
+
+  Render::Creature::ArchetypeId mount_archetype_id{
+      Render::Creature::kInvalidArchetype};
   std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
 };
 
@@ -65,17 +72,12 @@ protected:
                               const ReinState &reins) const override;
 
 private:
-  void cache_equipment();
   void build_visual_spec();
 
   HorseArcherRendererConfig m_config;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_bow;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_quiver;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_cloak;
+  Render::Creature::ArchetypeId m_rider_archetype_with_bow{
+      Render::Creature::kInvalidArchetype};
 
-  std::vector<Render::Creature::Pipeline::EquipmentRecord> m_loadout;
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

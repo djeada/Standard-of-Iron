@@ -2,7 +2,9 @@
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_renderer_base.h"
+#include "../../humanoid/humanoid_spec.h"
 #include "../../render_archetype.h"
+#include "../attachment_builder.h"
 #include "../equipment_submit.h"
 
 #include <QMatrix4x4>
@@ -195,6 +197,49 @@ void ShieldRenderer::submit(const ShieldRenderConfig &m_config,
   append_equipment_archetype(batch, shield_archetype(m_config),
                              shield_transform(ctx.model, frames.hand_l.origin),
                              palette_slots);
+}
+
+auto shield_fill_role_colors(const HumanoidPalette &palette,
+                             const ShieldRenderConfig &config, QVector3D *out,
+                             std::size_t max) -> std::uint32_t {
+  if (max < kShieldRoleCount) {
+    return 0;
+  }
+  out[k_shield_slot] = config.shield_color;
+  out[k_back_slot] = palette.leather * 0.8F;
+  out[k_trim_slot] = config.trim_color * 0.95F;
+  out[k_inner_ring_slot] = palette.leather * 0.90F;
+  out[k_metal_slot] = config.metal_color;
+  out[k_grip_slot] = palette.leather;
+  return kShieldRoleCount;
+}
+
+auto shield_make_static_attachment(const ShieldRenderConfig &config,
+                                   std::uint16_t socket_bone_index,
+                                   std::uint8_t base_role_byte,
+                                   const QMatrix4x4 &bind_hand_l_matrix)
+    -> Render::Creature::StaticAttachmentSpec {
+  QVector3D const bind_origin = bind_hand_l_matrix.column(3).toVector3D();
+  QMatrix4x4 shield_pose;
+  shield_pose.translate(bind_origin);
+  shield_pose.rotate(k_shield_yaw_degrees, 0.0F, 1.0F, 0.0F);
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &shield_archetype(config),
+      .socket_bone_index = socket_bone_index,
+      .unit_local_pose_at_bind = shield_pose,
+  });
+  spec.palette_role_remap[k_shield_slot] = base_role_byte;
+  spec.palette_role_remap[k_back_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_trim_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  spec.palette_role_remap[k_inner_ring_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 3U);
+  spec.palette_role_remap[k_metal_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 4U);
+  spec.palette_role_remap[k_grip_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 5U);
+  return spec;
 }
 
 } // namespace Render::GL

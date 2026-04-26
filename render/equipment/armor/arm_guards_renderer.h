@@ -2,8 +2,12 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
 
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <span>
 
 namespace Render::GL {
@@ -14,6 +18,16 @@ struct ArmGuardsConfig {
   float guard_length = 0.18F;
   bool include_straps = true;
 };
+
+inline constexpr std::uint32_t kArmGuardsRoleCount = 2;
+
+auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t;
+
+auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
+                                        std::uint16_t shoulder_r_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 2>;
 
 class ArmGuardsRenderer : public IEquipmentRenderer {
 public:

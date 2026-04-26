@@ -4,6 +4,7 @@
 #include "../../gl/primitives.h"
 #include "../../humanoid/humanoid_specs.h"
 #include "../../humanoid/style_palette.h"
+#include "../attachment_builder.h"
 #include "../equipment_submit.h"
 
 #include "../../render_archetype.h"
@@ -123,6 +124,34 @@ void RomanGreavesRenderer::submit(const RomanGreavesConfig &,
 
   render_greave(frames.shin_l);
   render_greave(frames.shin_r);
+}
+
+auto roman_greaves_archetype() -> const RenderArchetype & {
+  using HP = HumanProportions;
+  return roman_greaves_archetype(HP::LOWER_LEG_R);
+}
+
+auto roman_greaves_fill_role_colors(const HumanoidPalette &palette,
+                                    QVector3D *out,
+                                    std::size_t max) -> std::uint32_t {
+  if (max < kRomanGreavesRoleCount) {
+    return 0;
+  }
+  out[0] = saturate_color(palette.metal * QVector3D(0.95F, 0.88F, 0.68F));
+  return kRomanGreavesRoleCount;
+}
+
+auto roman_greaves_make_static_attachment(std::uint16_t socket_bone_index,
+                                          std::uint8_t base_role_byte,
+                                          const QMatrix4x4 &bind_shin_frame)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &roman_greaves_archetype(),
+      .socket_bone_index = socket_bone_index,
+      .unit_local_pose_at_bind = bind_shin_frame,
+  });
+  spec.palette_role_remap[k_greaves_slot] = base_role_byte;
+  return spec;
 }
 
 } // namespace Render::GL

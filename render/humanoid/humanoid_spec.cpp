@@ -597,17 +597,6 @@ namespace Render::Humanoid {
 
 namespace {
 
-auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
-    -> Render::GL::Renderer * {
-  if (auto *renderer = dynamic_cast<Render::GL::Renderer *>(&out)) {
-    return renderer;
-  }
-  if (auto *batch = dynamic_cast<Render::GL::BatchingSubmitter *>(&out)) {
-    return dynamic_cast<Render::GL::Renderer *>(batch->fallback_submitter());
-  }
-  return nullptr;
-}
-
 auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
   Render::GL::VariationParams variation{};
   variation.height_scale = 1.0F;
@@ -633,125 +622,41 @@ auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
 
 } // namespace
 
-auto compute_bone_palette(const Render::GL::HumanoidPose &pose,
-                          std::span<QMatrix4x4> out_bones) noexcept
-    -> std::uint32_t {
-  if (out_bones.size() < kBoneCount) {
-    return 0U;
-  }
-  BonePalette tmp{};
-  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), tmp);
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
-    out_bones[i] = tmp[i];
-  }
-  return static_cast<std::uint32_t>(kBoneCount);
-}
-
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4> {
   static const std::array<QMatrix4x4, kBoneCount> palette =
       build_humanoid_bind_palette();
   return std::span<const QMatrix4x4>(palette.data(), palette.size());
 }
 
+auto humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames & {
+  static const Render::GL::BodyFrames frames = []() -> Render::GL::BodyFrames {
+    Render::GL::VariationParams variation{};
+    variation.height_scale = 1.0F;
+    variation.bulk_scale = 1.0F;
+    variation.stance_width = 1.0F;
+    variation.arm_swing_amp = 1.0F;
+    variation.walk_speed_mult = 1.0F;
+    variation.posture_slump = 0.0F;
+    variation.shoulder_tilt = 0.0F;
+
+    Render::GL::HumanoidPose pose{};
+    Render::GL::HumanoidRendererBase::compute_locomotion_pose(0, 0.0F, false,
+                                                              variation, pose);
+
+    HumanoidBodyMetrics metrics{};
+    compute_humanoid_body_metrics(pose, QVector3D(1.0F, 1.0F, 1.0F), 1.0F,
+                                  metrics);
+    compute_humanoid_head_frame(pose, metrics);
+    compute_humanoid_body_frames(pose, metrics);
+    return pose.body_frames;
+  }();
+  return frames;
+}
+
 void fill_humanoid_role_colors(
     const Render::GL::HumanoidVariant &variant,
     std::array<QVector3D, kHumanoidRoleCount> &out_roles) noexcept {
   fill_humanoid_role_colors_impl(variant, out_roles);
-}
-
-namespace {
-
-void submit_humanoid_rigged_impl(const Render::GL::HumanoidPose &pose,
-                                 const Render::GL::HumanoidVariant &variant,
-                                 Creature::CreatureLOD lod,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-
-  BonePalette tmp{};
-  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), tmp);
-
-  auto *renderer = resolve_renderer(out);
-  if (renderer == nullptr) {
-    if (lod == Creature::CreatureLOD::Billboard) {
-      return;
-    }
-    std::array<QVector3D, kHumanoidRoleCount> roles{};
-    fill_humanoid_role_colors(variant, roles);
-    Creature::submit_creature(
-        humanoid_creature_spec(),
-        std::span<const QMatrix4x4>(tmp.data(), tmp.size()), lod,
-        world_from_unit, out,
-        std::span<const QVector3D>(roles.data(), roles.size()));
-    return;
-  }
-
-  auto const &spec = humanoid_creature_spec();
-  auto bind = humanoid_bind_palette();
-
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind, 0);
-  if (entry == nullptr || entry->mesh == nullptr ||
-      entry->mesh->index_count() == 0U) {
-    return;
-  }
-
-  auto &arena = renderer->bone_palette_arena();
-  Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
-  QMatrix4x4 *palette_slot = palette_slot_h.cpu;
-
-  std::size_t const n =
-      std::min<std::size_t>(entry->inverse_bind.size(), kBoneCount);
-  for (std::size_t i = 0; i < n; ++i) {
-    palette_slot[i] = tmp[i] * entry->inverse_bind[i];
-  }
-
-  std::array<QVector3D, kHumanoidRoleCount> role_colors{};
-  fill_humanoid_role_colors(variant, role_colors);
-
-  Render::GL::RiggedCreatureCmd cmd{};
-  cmd.mesh = entry->mesh.get();
-  cmd.material = nullptr;
-  cmd.world = world_from_unit;
-  cmd.bone_palette = palette_slot;
-  cmd.palette_ubo = palette_slot_h.ubo;
-  cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
-  cmd.bone_count = static_cast<std::uint32_t>(n);
-  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
-  for (std::size_t i = 0; i < role_colors.size(); ++i) {
-    cmd.role_colors[i] = role_colors[i];
-  }
-  cmd.color = variant.palette.cloth;
-  cmd.alpha = 1.0F;
-  cmd.texture = nullptr;
-  cmd.material_id = 0;
-  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
-
-  out.rigged(cmd);
-}
-
-} // namespace
-
-void submit_humanoid_reduced_rigged(const Render::GL::HumanoidPose &pose,
-                                    const Render::GL::HumanoidVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept {
-  submit_humanoid_rigged_impl(pose, variant, Creature::CreatureLOD::Reduced,
-                              world_from_unit, out);
-}
-
-void submit_humanoid_full_rigged(const Render::GL::HumanoidPose &pose,
-                                 const Render::GL::HumanoidVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-  submit_humanoid_rigged_impl(pose, variant, Creature::CreatureLOD::Full,
-                              world_from_unit, out);
-}
-
-void submit_humanoid_minimal_rigged(const Render::GL::HumanoidPose &pose,
-                                    const Render::GL::HumanoidVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept {
-  submit_humanoid_rigged_impl(pose, variant, Creature::CreatureLOD::Minimal,
-                              world_from_unit, out);
 }
 
 } // namespace Render::Humanoid

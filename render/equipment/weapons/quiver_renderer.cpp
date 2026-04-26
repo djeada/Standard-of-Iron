@@ -9,6 +9,9 @@
 #include "../oriented_archetype_utils.h"
 #include "arrow_archetype_utils.h"
 
+#include "../../humanoid/humanoid_spec.h"
+#include "../attachment_builder.h"
+
 #include <array>
 #include <cmath>
 #include <deque>
@@ -151,6 +154,91 @@ void QuiverRenderer::submit(const QuiverRenderConfig &config,
     append_quiver_arrow(batch, ctx, waist, config, palette_slots, q_top_local,
                         QVector3D(0.02F - j, 0.07F, 0.02F - k));
   }
+}
+
+auto quiver_fill_role_colors(const HumanoidPalette &palette,
+                             const QuiverRenderConfig &config, QVector3D *out,
+                             std::size_t max) -> std::uint32_t {
+  if (max < kQuiverRoleCount) {
+    return 0;
+  }
+  out[k_leather_slot] = palette.leather;
+  out[k_wood_slot] = palette.wood;
+  out[k_fletching_slot] = config.fletching_color;
+  return kQuiverRoleCount;
+}
+
+auto quiver_make_static_attachments(const QuiverRenderConfig &config,
+                                    std::uint16_t socket_bone_index,
+                                    std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 5> {
+  const AttachmentFrame &bw =
+      Render::Humanoid::humanoid_bind_body_frames().waist;
+  QVector3D const quiver_pos_local(bw.radius * 0.9F + 0.15F, -0.10F, 0.0F);
+  QVector3D const q_top_local =
+      quiver_pos_local + QVector3D(0.0F, 0.15F, -0.10F);
+
+  auto make_spec =
+      [&](const RenderArchetype &arch, const QMatrix4x4 &unit_local_transform,
+          std::uint8_t slot0_role,
+          std::uint8_t slot2_role) -> Render::Creature::StaticAttachmentSpec {
+    auto spec = Render::Equipment::build_static_attachment({
+        .archetype = &arch,
+        .socket_bone_index = socket_bone_index,
+        .unit_local_pose_at_bind = unit_local_transform,
+    });
+    spec.palette_role_remap[0] = slot0_role;
+    spec.palette_role_remap[2] = slot2_role;
+    return spec;
+  };
+
+  const std::uint8_t leather_role = base_role_byte;
+  const std::uint8_t fletching_role =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+
+  QMatrix4x4 const body_transform =
+      waist_basis_transform(QMatrix4x4{}, bw, quiver_pos_local);
+
+  QVector3D const shaft1_end_local(0.0F, 0.08F, 0.0F);
+  QVector3D const arrow1_origin_UL = waist_basis_point(bw, q_top_local);
+  QVector3D const arrow1_tip_UL =
+      waist_basis_point(bw, q_top_local + shaft1_end_local);
+  QMatrix4x4 const shaft1_transform = oriented_segment_transform(
+      QMatrix4x4{}, arrow1_origin_UL, arrow1_tip_UL - arrow1_origin_UL);
+  QMatrix4x4 scale1;
+  scale1.scale(1.0F, 0.05F, 1.0F);
+  QMatrix4x4 const fletching1_transform =
+      waist_basis_transform(QMatrix4x4{}, bw, q_top_local + shaft1_end_local) *
+      scale1;
+
+  QVector3D const shaft2_end_local(0.02F, 0.07F, 0.02F);
+  QVector3D const arrow2_origin_UL = waist_basis_point(bw, q_top_local);
+  QVector3D const arrow2_tip_UL =
+      waist_basis_point(bw, q_top_local + shaft2_end_local);
+  QMatrix4x4 const shaft2_transform = oriented_segment_transform(
+      QMatrix4x4{}, arrow2_origin_UL, arrow2_tip_UL - arrow2_origin_UL);
+  QMatrix4x4 scale2;
+  scale2.scale(1.0F, 0.05F, 1.0F);
+  QMatrix4x4 const fletching2_transform =
+      waist_basis_transform(QMatrix4x4{}, bw, q_top_local + shaft2_end_local) *
+      scale2;
+
+  return {
+      make_spec(quiver_body_archetype(config), body_transform, leather_role,
+                leather_role),
+      make_spec(
+          arrow_shaft_archetype(0.010F, config.material_id, "quiver_shaft"),
+          shaft1_transform, leather_role, fletching_role),
+      make_spec(arrow_fletching_archetype(0.025F, config.material_id,
+                                          "quiver_fletching"),
+                fletching1_transform, leather_role, fletching_role),
+      make_spec(
+          arrow_shaft_archetype(0.010F, config.material_id, "quiver_shaft"),
+          shaft2_transform, leather_role, fletching_role),
+      make_spec(arrow_fletching_archetype(0.025F, config.material_id,
+                                          "quiver_fletching"),
+                fletching2_transform, leather_role, fletching_role),
+  };
 }
 
 } // namespace Render::GL

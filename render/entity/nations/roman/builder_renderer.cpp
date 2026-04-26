@@ -2,10 +2,15 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
-#include "../../../creature/pipeline/equipment_registry.h"
+#include "../../../creature/archetype_registry.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
-#include "../../../equipment/equipment_registry.h"
-#include "../../../equipment/equipment_submit.h"
+#include "../../../equipment/armor/arm_guards_renderer.h"
+#include "../../../equipment/armor/tool_belt_renderer.h"
+#include "../../../equipment/armor/torso_local_archetype_utils.h"
+#include "../../../equipment/armor/work_apron_renderer.h"
+#include "../../../equipment/attachment_builder.h"
+#include "../../../equipment/generated_equipment.h"
+#include "../../../equipment/helmets/roman_light_helmet.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/backend.h"
@@ -14,8 +19,10 @@
 #include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
 #include "../../../humanoid/humanoid_renderer_base.h"
+#include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
+#include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -62,6 +69,178 @@ void ensure_builder_styles_registered() {
 
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
+constexpr std::uint32_t kBuilderWorkTunicRoleCount = 2;
+constexpr std::uint32_t kBuilderHammerRoleCount = 3;
+
+enum BuilderWorkTunicPaletteSlot : std::uint8_t {
+  k_builder_tunic_base_slot = 0U,
+  k_builder_tunic_dark_slot = 1U,
+};
+
+enum BuilderHammerPaletteSlot : std::uint8_t {
+  k_builder_hammer_wood_slot = 0U,
+  k_builder_hammer_stone_slot = 1U,
+  k_builder_hammer_stone_dark_slot = 2U,
+};
+
+auto builder_work_tunic_fill_role_colors(const HumanoidPalette &palette,
+                                         QVector3D *out,
+                                         std::size_t max) -> std::uint32_t {
+  if (max < kBuilderWorkTunicRoleCount) {
+    return 0U;
+  }
+  out[0] = palette.cloth;
+  out[1] = palette.cloth * 0.85F;
+  return kBuilderWorkTunicRoleCount;
+}
+
+auto builder_hammer_fill_role_colors(const HumanoidPalette &palette,
+                                     QVector3D *out,
+                                     std::size_t max) -> std::uint32_t {
+  if (max < kBuilderHammerRoleCount) {
+    return 0U;
+  }
+  out[0] = palette.wood;
+  out[1] = QVector3D(0.55F, 0.52F, 0.48F);
+  out[2] = QVector3D(0.45F, 0.42F, 0.38F);
+  return kBuilderHammerRoleCount;
+}
+
+auto builder_work_tunic_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    using GP = Render::GL::GeneratedEquipmentPrimitive;
+    std::vector<GP> primitives;
+    const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+    const AttachmentFrame &torso = bind_frames.torso;
+    const AttachmentFrame &waist = bind_frames.waist;
+    const TorsoLocalFrame torso_local =
+        make_torso_local_frame(QMatrix4x4{}, torso);
+
+    float const torso_r = torso.radius * 1.08F;
+    float const torso_d =
+        (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
+    float const y_shoulder = 0.032F;
+    float const y_waist = torso_local.point(waist.origin).y();
+    float const y_hem = y_waist - 0.16F;
+
+    constexpr int segs = 12;
+    constexpr float pi = std::numbers::pi_v<float>;
+    auto add_ring = [&](float y, float w, float d, std::uint8_t slot,
+                        float thickness) {
+      for (int i = 0; i < segs; ++i) {
+        float const a1 = (static_cast<float>(i) / segs) * 2.0F * pi;
+        float const a2 = (static_cast<float>(i + 1) / segs) * 2.0F * pi;
+        primitives.push_back(generated_cylinder(
+            QVector3D(w * std::sin(a1), y, d * std::cos(a1)),
+            QVector3D(w * std::sin(a2), y, d * std::cos(a2)), thickness, slot));
+      }
+    };
+
+    add_ring(y_shoulder + 0.04F, torso_r * 0.68F, torso_d * 0.60F,
+             k_builder_tunic_dark_slot, 0.022F);
+    add_ring(y_shoulder + 0.02F, torso_r * 1.08F, torso_d * 1.02F,
+             k_builder_tunic_base_slot, 0.032F);
+
+    for (int i = 0; i < 5; ++i) {
+      float const t = static_cast<float>(i) / 4.0F;
+      float const y = y_shoulder - 0.01F - t * (y_shoulder - y_waist - 0.03F);
+      float const w = torso_r * (1.04F - t * 0.14F);
+      float const d = torso_d * (0.98F - t * 0.10F);
+      add_ring(y, w, d, k_builder_tunic_base_slot, 0.026F - t * 0.004F);
+    }
+
+    for (int i = 0; i < 4; ++i) {
+      float const t = static_cast<float>(i) / 3.0F;
+      float const y = y_waist - 0.01F - t * (y_waist - y_hem);
+      float const flare = 1.0F + t * 0.18F;
+      add_ring(y, torso_r * 0.80F * flare, torso_d * 0.76F * flare,
+               k_builder_tunic_base_slot, 0.018F + t * 0.006F);
+    }
+
+    auto add_sleeve = [&](const AttachmentFrame &shoulder,
+                          const AttachmentFrame &hand, float side_sign) {
+      QVector3D const shoulder_local = torso_local.point(shoulder.origin);
+      QVector3D const elbow_local = torso_local.point(
+          shoulder.origin + (hand.origin - shoulder.origin) * 0.55F);
+      for (int i = 0; i < 3; ++i) {
+        float const t = static_cast<float>(i) / 3.0F;
+        QVector3D const pos = shoulder_local * (1.0F - t) +
+                              elbow_local * t * 0.6F +
+                              QVector3D(side_sign * 0.008F, 0.0F, 0.0F);
+        float const r = HumanProportions::UPPER_ARM_R * (1.40F - t * 0.25F);
+        primitives.push_back(generated_sphere(
+            pos, r,
+            t < 0.34F ? k_builder_tunic_dark_slot : k_builder_tunic_base_slot));
+      }
+    };
+
+    add_sleeve(bind_frames.shoulder_l, bind_frames.hand_l, -1.0F);
+    add_sleeve(bind_frames.shoulder_r, bind_frames.hand_r, 1.0F);
+
+    return build_generated_equipment_archetype(
+        "roman_builder_work_tunic",
+        std::span<const GP>(primitives.data(), primitives.size()));
+  }();
+  return archetype;
+}
+
+auto builder_work_tunic_make_static_attachment(std::uint16_t chest_bone_index,
+                                               std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const TorsoLocalFrame torso_local =
+      make_torso_local_frame(QMatrix4x4{}, bind_frames.torso);
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &builder_work_tunic_archetype(),
+      .socket_bone_index = chest_bone_index,
+      .unit_local_pose_at_bind = torso_local.world,
+  });
+  spec.palette_role_remap[k_builder_tunic_base_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 0U);
+  spec.palette_role_remap[k_builder_tunic_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  return spec;
+}
+
+auto builder_hammer_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.20F, 0.02F),
+                           QVector3D(0.0F, 0.12F, 0.02F), 0.016F,
+                           k_builder_hammer_wood_slot),
+        generated_cylinder(QVector3D(-0.05F, 0.155F, 0.02F),
+                           QVector3D(0.05F, 0.155F, 0.02F), 0.030F,
+                           k_builder_hammer_stone_slot),
+        generated_sphere(QVector3D(0.05F, 0.155F, 0.02F), 0.0345F,
+                         k_builder_hammer_stone_dark_slot),
+        generated_sphere(QVector3D(-0.05F, 0.155F, 0.02F), 0.027F,
+                         k_builder_hammer_stone_slot),
+    }};
+    return build_generated_equipment_archetype("roman_builder_hammer",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto builder_hammer_make_static_attachment(std::uint16_t hand_l_bone_index,
+                                           std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec {
+  const auto hand_l_bind_matrix =
+      Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
+          Render::Humanoid::HumanoidBone::HandL)];
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &builder_hammer_archetype(),
+      .socket_bone_index = hand_l_bone_index,
+      .unit_local_pose_at_bind = hand_l_bind_matrix,
+  });
+  spec.palette_role_remap[k_builder_hammer_wood_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 0U);
+  spec.palette_role_remap[k_builder_hammer_stone_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_builder_hammer_stone_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  return spec;
+}
 
 } // namespace
 
@@ -87,61 +266,112 @@ public:
   auto visual_spec() const
       -> const Render::Creature::Pipeline::UnitVisualSpec & override {
     using namespace Render::Creature::Pipeline;
-    static auto &reg = Render::GL::EquipmentRegistry::instance();
-    static auto helmet =
-        reg.get(Render::GL::EquipmentCategory::Helmet, "roman_light");
-    static auto work_apron =
-        reg.get(Render::GL::EquipmentCategory::Armor, "work_apron_roman");
-    static auto tool_belt =
-        reg.get(Render::GL::EquipmentCategory::Armor, "tool_belt_roman");
-    static auto arm_guards =
-        reg.get(Render::GL::EquipmentCategory::Armor, "arm_guards");
-
-    static const std::array<EquipmentRecord, 6> records{
-        make_legacy_equipment_record(*helmet),
-        make_legacy_equipment_record(*work_apron),
-        make_legacy_equipment_record(*tool_belt),
-        make_legacy_equipment_record(*arm_guards),
-
-        EquipmentRecord{
-            .dispatch =
-                [](const EquipmentSubmitContext &sub,
-                   Render::GL::EquipmentBatch &batch) {
-                  if (sub.ctx == nullptr || sub.frames == nullptr ||
-                      sub.palette == nullptr || sub.pose == nullptr) {
-                    return;
-                  }
-                  HumanoidVariant tmp_v{};
-                  tmp_v.palette = *sub.palette;
-                  draw_work_tunic(*sub.ctx, tmp_v, *sub.pose, sub.seed, batch);
-                },
-        },
-
-        EquipmentRecord{
-            .dispatch =
-                [](const EquipmentSubmitContext &sub,
-                   Render::GL::EquipmentBatch &batch) {
-                  if (sub.ctx == nullptr || sub.palette == nullptr ||
-                      sub.pose == nullptr || sub.anim == nullptr) {
-                    return;
-                  }
-                  HumanoidVariant tmp_v{};
-                  tmp_v.palette = *sub.palette;
-                  draw_stone_hammer(*sub.ctx, tmp_v, *sub.pose, *sub.anim,
-                                    batch);
-                },
-        },
-    };
-
     static const UnitVisualSpec spec = []() {
+      static const auto k_head_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
+      static const auto k_pelvis_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
+      static const auto k_chest_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
+      static const auto k_helmet_base_role_byte =
+          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_tool_belt_base_role_byte = static_cast<std::uint8_t>(
+          k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
+      static const auto k_work_apron_base_role_byte = static_cast<std::uint8_t>(
+          k_tool_belt_base_role_byte + Render::GL::kToolBeltRoleCount);
+      static const auto k_arm_guards_base_role_byte = static_cast<std::uint8_t>(
+          k_work_apron_base_role_byte + Render::GL::kWorkApronRoleCount);
+      static const auto k_work_tunic_base_role_byte = static_cast<std::uint8_t>(
+          k_arm_guards_base_role_byte + Render::GL::kArmGuardsRoleCount);
+      static const auto k_hammer_base_role_byte = static_cast<std::uint8_t>(
+          k_work_tunic_base_role_byte + kBuilderWorkTunicRoleCount);
+      static const auto k_forearm_l_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmL);
+      static const auto k_forearm_r_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmR);
+      static const auto k_hand_l_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandL);
+      static const auto k_head_bind_matrix =
+          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
+              Render::Humanoid::HumanoidBone::Head)];
+      static const Render::Creature::StaticAttachmentSpec k_helmet_spec =
+          Render::GL::roman_light_helmet_make_static_attachment(
+              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 5>
+          k_tool_belt_specs = Render::GL::tool_belt_make_static_attachments(
+              k_pelvis_bone, k_tool_belt_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 3>
+          k_work_apron_specs = Render::GL::work_apron_make_static_attachments(
+              k_pelvis_bone, k_chest_bone, k_work_apron_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 2>
+          k_arm_guards_specs = Render::GL::arm_guards_make_static_attachments(
+              k_forearm_l_bone, k_forearm_r_bone, k_arm_guards_base_role_byte);
+      static const Render::Creature::StaticAttachmentSpec k_work_tunic_spec =
+          builder_work_tunic_make_static_attachment(
+              k_chest_bone, k_work_tunic_base_role_byte);
+      static const Render::Creature::StaticAttachmentSpec k_hammer_spec =
+          builder_hammer_make_static_attachment(k_hand_l_bone,
+                                                k_hammer_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 13>
+          k_attachments{k_helmet_spec,         k_tool_belt_specs[0],
+                        k_tool_belt_specs[1],  k_tool_belt_specs[2],
+                        k_tool_belt_specs[3],  k_tool_belt_specs[4],
+                        k_work_apron_specs[0], k_work_apron_specs[1],
+                        k_work_apron_specs[2], k_arm_guards_specs[0],
+                        k_arm_guards_specs[1], k_work_tunic_spec,
+                        k_hammer_spec};
+      static const auto k_archetype =
+          Render::Creature::ArchetypeRegistry::instance()
+              .register_unit_archetype(
+                  "troops/roman/builder", CreatureKind::Humanoid,
+                  std::span<const Render::Creature::StaticAttachmentSpec>(
+                      k_attachments.data(), k_attachments.size()),
+                  +[](const void *variant_void, QVector3D *out,
+                      std::uint32_t base_count,
+                      std::size_t max_count) -> std::uint32_t {
+                    if (variant_void == nullptr || max_count <= base_count) {
+                      return base_count;
+                    }
+                    const auto &v =
+                        *static_cast<const HumanoidVariant *>(variant_void);
+                    auto count = base_count;
+                    count += Render::GL::roman_light_helmet_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::tool_belt_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::work_apron_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::arm_guards_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += builder_work_tunic_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += builder_hammer_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    return count;
+                  });
+
       UnitVisualSpec s{};
       s.kind = CreatureKind::Humanoid;
       s.debug_name = "troops/roman/builder";
       s.scaling = ProportionScaling{1.05F, 0.98F, 1.02F};
-      s.equipment =
-          std::span<const EquipmentRecord>{records.data(), records.size()};
       s.owned_legacy_slots = LegacySlotMask::Helmet | LegacySlotMask::Armor |
                              LegacySlotMask::Attachments;
+      s.archetype_id = k_archetype;
       return s;
     }();
     return spec;
@@ -340,187 +570,6 @@ private:
 
     if (crouch > 0.0F) {
       controller.kneel(crouch);
-    }
-  }
-
-  static void draw_stone_hammer(const DrawContext &ctx,
-                                const HumanoidVariant &v,
-                                const HumanoidPose &pose,
-                                const HumanoidAnimationContext &anim_ctx,
-                                EquipmentBatch &batch) {
-
-    QVector3D const stone_color(0.55F, 0.52F, 0.48F);
-    QVector3D const stone_dark(0.45F, 0.42F, 0.38F);
-
-    QVector3D const hand = pose.hand_l;
-    QVector3D const up(0.0F, 1.0F, 0.0F);
-    QVector3D const forward(0.0F, 0.0F, 1.0F);
-    QVector3D const right(1.0F, 0.0F, 0.0F);
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    QVector3D handle_axis;
-    QVector3D head_axis;
-
-    if (anim.is_constructing) {
-
-      handle_axis = forward;
-      head_axis = up;
-    } else {
-
-      handle_axis = up;
-      head_axis = right;
-    }
-
-    float const handle_len = 0.32F;
-    float const handle_r = 0.016F;
-    QVector3D const handle_offset = anim.is_constructing
-                                        ? (forward * 0.12F + up * 0.02F)
-                                        : (up * 0.12F + forward * 0.02F);
-    QVector3D const handle_top = hand + handle_offset;
-    QVector3D const handle_bot = handle_top - handle_axis * handle_len;
-
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model, handle_bot, handle_top, handle_r),
-         v.palette.wood, nullptr, 1.0F, 0});
-
-    float const head_len = 0.10F;
-    float const head_r = 0.030F;
-    QVector3D const head_center = handle_top + handle_axis * 0.035F;
-
-    batch.meshes.push_back(
-        {get_unit_cylinder(), nullptr,
-         cylinder_between(ctx.model,
-                          head_center - head_axis * (head_len * 0.5F),
-                          head_center + head_axis * (head_len * 0.5F), head_r),
-         stone_color, nullptr, 1.0F, 0});
-
-    batch.meshes.push_back(
-        {get_unit_sphere(), nullptr,
-         sphere_at(ctx.model, head_center + head_axis * (head_len * 0.5F),
-                   head_r * 1.15F),
-         stone_dark, nullptr, 1.0F, 0});
-
-    batch.meshes.push_back(
-        {get_unit_sphere(), nullptr,
-         sphere_at(ctx.model, head_center - head_axis * (head_len * 0.5F),
-                   head_r * 0.9F),
-         stone_color * 0.95F, nullptr, 1.0F, 0});
-  }
-
-  static void draw_work_tunic(const DrawContext &ctx, const HumanoidVariant &v,
-                              const HumanoidPose &pose, uint32_t seed,
-                              EquipmentBatch &batch) {
-    using HP = HumanProportions;
-    const BodyFrames &frames = pose.body_frames;
-    const AttachmentFrame &torso = frames.torso;
-    const AttachmentFrame &waist = frames.waist;
-
-    if (torso.radius <= 0.0F) {
-      return;
-    }
-
-    float const color_var = hash_01(seed ^ 0xABCU);
-    QVector3D tunic_base;
-    if (color_var < 0.4F) {
-      tunic_base = QVector3D(0.65F, 0.52F, 0.38F);
-    } else if (color_var < 0.7F) {
-      tunic_base = QVector3D(0.58F, 0.48F, 0.35F);
-    } else {
-      tunic_base = QVector3D(0.72F, 0.62F, 0.48F);
-    }
-
-    QVector3D const tunic_dark = tunic_base * 0.85F;
-
-    const QVector3D &origin = torso.origin;
-    const QVector3D &right = torso.right;
-    const QVector3D &up = torso.up;
-    const QVector3D &forward = torso.forward;
-    float const torso_r = torso.radius * 1.08F;
-    float const torso_d =
-        (torso.depth > 0.0F) ? torso.depth * 0.92F : torso.radius * 0.80F;
-
-    float const y_shoulder = origin.y() + 0.032F;
-    float const y_waist = waist.origin.y();
-    float const y_hem = y_waist - 0.16F;
-
-    constexpr int segs = 12;
-    constexpr float pi = std::numbers::pi_v<float>;
-
-    auto drawRing = [&](float y, float w, float d, const QVector3D &col,
-                        float th) {
-      for (int i = 0; i < segs; ++i) {
-        float a1 = (float(i) / segs) * 2.0F * pi;
-        float a2 = (float(i + 1) / segs) * 2.0F * pi;
-        QVector3D p1 = origin + right * (w * std::sin(a1)) +
-                       forward * (d * std::cos(a1)) + up * (y - origin.y());
-        QVector3D p2 = origin + right * (w * std::sin(a2)) +
-                       forward * (d * std::cos(a2)) + up * (y - origin.y());
-        batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                                cylinder_between(ctx.model, p1, p2, th), col,
-                                nullptr, 1.0F, 0});
-      }
-    };
-
-    drawRing(y_shoulder + 0.04F, torso_r * 0.68F, torso_d * 0.60F, tunic_dark,
-             0.022F);
-
-    drawRing(y_shoulder + 0.02F, torso_r * 1.08F, torso_d * 1.02F, tunic_base,
-             0.032F);
-
-    for (int i = 0; i < 5; ++i) {
-      float t = float(i) / 4.0F;
-      float y = y_shoulder - 0.01F - t * (y_shoulder - y_waist - 0.03F);
-      float w = torso_r * (1.04F - t * 0.14F);
-      float d = torso_d * (0.98F - t * 0.10F);
-      QVector3D col = tunic_base * (1.0F - t * 0.06F);
-      drawRing(y, w, d, col, 0.026F - t * 0.004F);
-    }
-
-    for (int i = 0; i < 4; ++i) {
-      float t = float(i) / 3.0F;
-      float y = y_waist - 0.01F - t * (y_waist - y_hem);
-      float flare = 1.0F + t * 0.18F;
-      QVector3D col = tunic_base * (1.0F - t * 0.08F);
-      drawRing(y, torso_r * 0.80F * flare, torso_d * 0.76F * flare, col,
-               0.018F + t * 0.006F);
-    }
-
-    auto drawSleeve = [&](const QVector3D &shoulder, const QVector3D &out_dir,
-                          const QVector3D &elbow) {
-      for (int i = 0; i < 3; ++i) {
-        float t = float(i) / 3.0F;
-        QVector3D pos =
-            shoulder * (1.0F - t) + elbow * t * 0.6F + out_dir * 0.008F;
-        float r = HP::UPPER_ARM_R * (1.40F - t * 0.25F);
-        batch.meshes.push_back(
-            {get_unit_sphere(), nullptr, sphere_at(ctx.model, pos, r),
-             tunic_base * (1.0F - t * 0.04F), nullptr, 1.0F, 0});
-      }
-    };
-    drawSleeve(frames.shoulder_l.origin, -right, pose.elbow_l);
-    drawSleeve(frames.shoulder_r.origin, right, pose.elbow_r);
-
-    draw_extended_forearm(ctx, v, pose, batch);
-  }
-
-  static void draw_extended_forearm(const DrawContext &ctx,
-                                    const HumanoidVariant &v,
-                                    const HumanoidPose &pose,
-                                    EquipmentBatch &batch) {
-
-    QVector3D const skin_color = v.palette.skin;
-
-    QVector3D const elbow_r = pose.elbow_r;
-    QVector3D const hand_r = pose.hand_r;
-
-    for (int i = 0; i < 4; ++i) {
-      float t = 0.25F + float(i) * 0.20F;
-      QVector3D pos = elbow_r * (1.0F - t) + hand_r * t;
-      float r = 0.024F - float(i) * 0.002F;
-      batch.meshes.push_back({get_unit_sphere(), nullptr,
-                              sphere_at(ctx.model, pos, r), skin_color, nullptr,
-                              1.0F, 0});
     }
   }
 

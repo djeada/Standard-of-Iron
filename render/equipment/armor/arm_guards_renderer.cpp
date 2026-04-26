@@ -3,12 +3,16 @@
 #include "../../entity/registry.h"
 #include "../../geom/transforms.h"
 #include "../../gl/primitives.h"
+#include "../../humanoid/humanoid_spec.h"
+#include "../../static_attachment_spec.h"
+#include "../attachment_builder.h"
 #include "../equipment_submit.h"
 
 #include "../../render_archetype.h"
 
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <deque>
 #include <string>
 
@@ -143,6 +147,67 @@ void ArmGuardsRenderer::renderArmGuard(const ArmGuardsConfig &config,
   append_equipment_archetype(batch, arm_guards_archetype(config, arm_length),
                              arm_guard_transform(ctx.model, elbow, wrist),
                              palette);
+}
+
+auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t {
+  (void)palette;
+  if (max < kArmGuardsRoleCount) {
+    return 0U;
+  }
+  constexpr ArmGuardsConfig cfg{};
+  out[0] = cfg.leather_color;
+  out[1] = cfg.strap_color;
+  return kArmGuardsRoleCount;
+}
+
+auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
+                                        std::uint16_t shoulder_r_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 2> {
+  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const AttachmentFrame &shoulder_l = bind_frames.shoulder_l;
+  const AttachmentFrame &shoulder_r = bind_frames.shoulder_r;
+  const AttachmentFrame &hand_l = bind_frames.hand_l;
+  const AttachmentFrame &hand_r = bind_frames.hand_r;
+
+  QVector3D const elbow_l =
+      shoulder_l.origin + (hand_l.origin - shoulder_l.origin) * 0.55F;
+  QVector3D const elbow_r =
+      shoulder_r.origin + (hand_r.origin - shoulder_r.origin) * 0.55F;
+
+  float const arm_length_l = (hand_l.origin - elbow_l).length();
+  float const arm_length_r = (hand_r.origin - elbow_r).length();
+
+  constexpr ArmGuardsConfig default_cfg{};
+
+  QMatrix4x4 const bind_mat_l =
+      arm_guard_transform(QMatrix4x4{}, elbow_l, hand_l.origin);
+
+  auto spec_l = Render::Equipment::build_static_attachment({
+      .archetype = &arm_guards_archetype(default_cfg, arm_length_l),
+      .socket_bone_index = shoulder_l_bone_index,
+      .unit_local_pose_at_bind = bind_mat_l,
+  });
+  spec_l.palette_role_remap[k_guard_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 0U);
+  spec_l.palette_role_remap[k_strap_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+
+  QMatrix4x4 const bind_mat_r =
+      arm_guard_transform(QMatrix4x4{}, elbow_r, hand_r.origin);
+
+  auto spec_r = Render::Equipment::build_static_attachment({
+      .archetype = &arm_guards_archetype(default_cfg, arm_length_r),
+      .socket_bone_index = shoulder_r_bone_index,
+      .unit_local_pose_at_bind = bind_mat_r,
+  });
+  spec_r.palette_role_remap[k_guard_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 0U);
+  spec_r.palette_role_remap[k_strap_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+
+  return {spec_l, spec_r};
 }
 
 } // namespace Render::GL

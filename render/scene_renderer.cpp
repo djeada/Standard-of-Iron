@@ -9,6 +9,7 @@
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
+#include "creature/bpat/bpat_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
@@ -47,6 +48,7 @@
 #include "template_cache.h"
 #include "visibility_budget.h"
 #include "world_chunk.h"
+#include <QDebug>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -140,6 +142,16 @@ auto Renderer::initialize() -> bool {
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
+
+  const std::size_t loaded_bpat =
+      Render::Creature::Bpat::BpatRegistry::instance().load_all(
+          "assets/creatures");
+  if (loaded_bpat != 3U) {
+    qWarning()
+        << "Renderer: loaded" << loaded_bpat << "of 3 BPAT creature assets:"
+        << QString::fromStdString(std::string(
+               Render::Creature::Bpat::BpatRegistry::instance().last_error()));
+  }
   return true;
 }
 
@@ -170,8 +182,6 @@ void Renderer::begin_frame() {
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
-
-  m_bone_palette_arena.reset_frame();
 
   if (m_camera != nullptr) {
     m_view_proj =
@@ -204,7 +214,6 @@ void Renderer::end_frame() {
       Render::Profiling::PhaseScope const play_scope(
           &profile, Render::Profiling::Phase::Playback);
 
-      m_bone_palette_arena.flush_to_gpu();
       m_backend->execute(render_queue, *m_camera);
     }
     constexpr double k_frame_budget_ms = 16.67;

@@ -1,7 +1,7 @@
 #include "roman_heavy_helmet.h"
 
+#include "../attachment_builder.h"
 #include "../generated_equipment.h"
-#include "../humanoid_attachment_archetype.h"
 
 #include "../../humanoid/style_palette.h"
 
@@ -19,6 +19,20 @@ enum RomanHeavyPaletteSlot : std::uint8_t {
   k_brass_slot = 2U,
   k_crest_slot = 3U,
 };
+
+auto roman_heavy_palette(const HumanoidPalette &palette)
+    -> std::array<QVector3D, 4> {
+  QVector3D const steel =
+      saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
+  QVector3D const steel_light = saturate_color(steel * 1.06F);
+  QVector3D const brass =
+      saturate_color(palette.metal * QVector3D(1.40F, 1.15F, 0.65F));
+  return {steel, steel_light, brass, QVector3D(0.96F, 0.12F, 0.12F)};
+}
+
+constexpr QVector3D k_authored_local_offset(0.0F, 0.05F, 0.0F);
+
+} // namespace
 
 auto roman_heavy_helmet_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
@@ -50,42 +64,40 @@ auto roman_heavy_helmet_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
-auto roman_heavy_palette(const HumanoidPalette &palette)
-    -> std::array<QVector3D, 4> {
-  QVector3D const steel =
-      saturate_color(palette.metal * QVector3D(0.88F, 0.92F, 1.08F));
-  QVector3D const steel_light = saturate_color(steel * 1.06F);
-  QVector3D const brass =
-      saturate_color(palette.metal * QVector3D(1.40F, 1.15F, 0.65F));
-  return {steel, steel_light, brass, QVector3D(0.96F, 0.12F, 0.12F)};
-}
-
-} // namespace
-
-void RomanHeavyHelmetRenderer::render(const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      EquipmentBatch &batch) {
-  submit({}, ctx, frames, palette, anim, batch);
-}
-
-void RomanHeavyHelmetRenderer::submit(const RomanHeavyHelmetConfig &,
-                                      const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      EquipmentBatch &batch) {
-  (void)anim;
-
-  if (frames.head.radius <= 0.0F) {
-    return;
+auto roman_heavy_helmet_fill_role_colors(const HumanoidPalette &palette,
+                                         QVector3D *out,
+                                         std::size_t max) -> std::uint32_t {
+  if (max < kRomanHeavyHelmetRoleCount) {
+    return 0;
   }
+  auto const colors = roman_heavy_palette(palette);
+  out[0] = colors[0];
+  out[1] = colors[1];
+  out[2] = colors[2];
+  out[3] = colors[3];
+  return kRomanHeavyHelmetRoleCount;
+}
 
-  auto const equipment_palette = roman_heavy_palette(palette);
-  append_humanoid_attachment_archetype(
-      batch, ctx, frames.head, roman_heavy_helmet_archetype(),
-      equipment_palette, QVector3D(0.0F, 0.05F, 0.0F));
+auto roman_heavy_helmet_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+  constexpr float kHeadSocketRadius = 0.16F;
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &roman_heavy_helmet_archetype(),
+      .socket_bone_index = socket_bone_index,
+      .authored_local_offset = k_authored_local_offset,
+      .bind_radius = kHeadSocketRadius,
+      .bind_socket_transform = bind_palette_socket_bone,
+  });
+  spec.palette_role_remap[k_steel_slot] = base_role_byte;
+  spec.palette_role_remap[k_steel_light_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_brass_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  spec.palette_role_remap[k_crest_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 3U);
+  return spec;
 }
 
 } // namespace Render::GL

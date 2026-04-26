@@ -1,5 +1,7 @@
 #include "tool_belt_renderer.h"
 
+#include "../../humanoid/humanoid_spec.h"
+#include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
 
@@ -171,6 +173,61 @@ void ToolBeltRenderer::submit(const ToolBeltConfig &config,
     append_humanoid_attachment_archetype(
         batch, ctx, waist, tool_belt_pouches_archetype(), palette);
   }
+}
+
+auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                std::size_t max) -> std::uint32_t {
+  (void)palette;
+  if (max < kToolBeltRoleCount) {
+    return 0U;
+  }
+  constexpr ToolBeltConfig cfg{};
+  out[0] = cfg.leather_color;
+  out[1] = cfg.leather_color * 0.90F;
+  out[2] = cfg.metal_color;
+  out[3] = cfg.metal_color * 0.92F;
+  out[4] = cfg.wood_color;
+  return kToolBeltRoleCount;
+}
+
+auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                       std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 5> {
+  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const AttachmentFrame &waist = bind_frames.waist;
+
+  float const waist_r = waist.radius * 1.05F;
+  float const waist_d =
+      (waist.depth > 0.0F) ? waist.depth * 0.90F : waist.radius * 0.80F;
+
+  QMatrix4x4 const ring_bind = make_humanoid_attachment_transform_scaled(
+      QMatrix4x4{}, waist, QVector3D(0.0F, 0.0F, 0.0F),
+      QVector3D(waist_r, waist.radius, waist_d));
+  QMatrix4x4 const uniform_bind = make_humanoid_attachment_transform(
+      QMatrix4x4{}, waist, QVector3D(0.0F, 0.0F, 0.0F), 1.0F);
+
+  auto make_spec = [&](const RenderArchetype &arch,
+                       const QMatrix4x4 &bind_mat) {
+    auto spec = Render::Equipment::build_static_attachment({
+        .archetype = &arch,
+        .socket_bone_index = waist_socket_bone_index,
+        .unit_local_pose_at_bind = bind_mat,
+    });
+    for (std::uint8_t i = 0; i < static_cast<std::uint8_t>(kToolBeltRoleCount);
+         ++i) {
+      spec.palette_role_remap[i] =
+          static_cast<std::uint8_t>(base_role_byte + i);
+    }
+    return spec;
+  };
+
+  return {
+      make_spec(tool_belt_ring_archetype(), ring_bind),
+      make_spec(tool_belt_buckle_archetype(), uniform_bind),
+      make_spec(tool_belt_hammer_archetype(), uniform_bind),
+      make_spec(tool_belt_chisel_archetype(), uniform_bind),
+      make_spec(tool_belt_pouches_archetype(), uniform_bind),
+  };
 }
 
 } // namespace Render::GL

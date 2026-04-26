@@ -1,11 +1,14 @@
-
-
 #pragma once
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -39,5 +42,18 @@ public:
 private:
   SpearRenderConfig m_base;
 };
+
+inline constexpr std::size_t kSpearRoleCount = 4;
+
+auto spear_fill_role_colors(const HumanoidPalette &palette,
+                            const SpearRenderConfig &config, QVector3D *out,
+                            std::size_t max) -> std::uint32_t;
+
+auto spear_make_static_attachments(const SpearRenderConfig &config,
+                                   std::uint16_t socket_bone_index,
+                                   std::uint8_t base_role_byte,
+                                   const QMatrix4x4 &bind_hand_r_matrix,
+                                   const QVector3D &bind_hand_r_right)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 4>;
 
 } // namespace Render::GL

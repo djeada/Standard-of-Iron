@@ -227,7 +227,8 @@ TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
       Render::GL::evaluate_elephant_motion(high, anim);
 
   EXPECT_GT(std::abs(high_motion.body_sway), std::abs(low_motion.body_sway));
-  EXPECT_GT(std::abs(high_motion.bob), std::abs(low_motion.bob));
+  EXPECT_FLOAT_EQ(low_motion.bob, 0.0F);
+  EXPECT_FLOAT_EQ(high_motion.bob, 0.0F);
 }
 
 TEST(ElephantPrepare, MovingMotionAddsForeAftWeightTransfer) {

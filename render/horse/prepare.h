@@ -45,17 +45,15 @@ void submit_prepared_horse_body(const Render::GL::HorseRendererBase &owner,
                                 Render::Creature::CreatureLOD lod,
                                 Render::GL::ISubmitter &out) noexcept;
 
-void prepare_horse_full(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    const Render::GL::HumanoidAnimationContext &rider_ctx,
-    Render::GL::HorseProfile &profile,
-    const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::ReinState *shared_reins,
-    const Render::GL::HorseMotionSample *shared_motion,
-    Render::Creature::Pipeline::EquipmentLoadout horse_loadout,
-    const Render::Creature::Pipeline::EquipmentSubmitContext *sub_ctx_template,
-    HorsePreparation &out);
+void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
+                        const Render::GL::DrawContext &ctx,
+                        const Render::GL::AnimationInputs &anim,
+                        const Render::GL::HumanoidAnimationContext &rider_ctx,
+                        Render::GL::HorseProfile &profile,
+                        const Render::GL::MountedAttachmentFrame *shared_mount,
+                        const Render::GL::ReinState *shared_reins,
+                        const Render::GL::HorseMotionSample *shared_motion,
+                        HorsePreparation &out);
 
 void prepare_horse_simplified(
     const Render::GL::HorseRendererBase &owner,
@@ -79,9 +77,6 @@ void prepare_horse_render(
     const Render::GL::MountedAttachmentFrame *shared_mount,
     const Render::GL::ReinState *shared_reins,
     const Render::GL::HorseMotionSample *shared_motion,
-    Render::Creature::CreatureLOD lod,
-    Render::Creature::Pipeline::EquipmentLoadout horse_loadout,
-    const Render::Creature::Pipeline::EquipmentSubmitContext *sub_ctx_template,
-    HorsePreparation &out);
+    Render::Creature::CreatureLOD lod, HorsePreparation &out);
 
 } // namespace Render::Horse

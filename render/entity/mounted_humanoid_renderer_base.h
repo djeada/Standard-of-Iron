@@ -15,15 +15,28 @@ public:
   virtual auto mounted_visual_spec() const
       -> const Render::Creature::Pipeline::MountedSpec &;
 
+  auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
+
   void customize_pose(const DrawContext &ctx,
                       const HumanoidAnimationContext &anim_ctx, uint32_t seed,
                       HumanoidPose &pose) const override;
 
   virtual auto get_mount_scale() const -> float = 0;
 
+  void set_mount_archetype_id(Render::Creature::ArchetypeId id) {
+    m_mount_archetype_id = id;
+    m_mounted_visual_spec_baked = false;
+  }
+  [[nodiscard]] auto
+  mount_archetype_id() const noexcept -> Render::Creature::ArchetypeId {
+    return m_mount_archetype_id;
+  }
+
 protected:
   mutable Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec_cache{};
   mutable bool m_mounted_visual_spec_baked{false};
+  Render::Creature::ArchetypeId m_mount_archetype_id{
+      Render::Creature::kInvalidArchetype};
 
   virtual void apply_riding_animation(MountedPoseController &controller,
                                       MountedAttachmentFrame &mount,

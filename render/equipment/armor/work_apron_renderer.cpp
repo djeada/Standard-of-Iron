@@ -1,5 +1,7 @@
 #include "work_apron_renderer.h"
 
+#include "../../humanoid/humanoid_spec.h"
+#include "../attachment_builder.h"
 #include "../generated_equipment.h"
 #include "../humanoid_attachment_archetype.h"
 
@@ -230,9 +232,7 @@ void WorkApronRenderer::submit(const WorkApronConfig &config,
     renderStraps(config, ctx, frames.torso, frames, batch);
   }
 
-  if (config.include_pockets) {
-    renderPockets(config, ctx, frames.waist, batch);
-  }
+  renderPockets(config, ctx, frames.waist, batch);
 }
 
 void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
@@ -279,6 +279,72 @@ void WorkApronRenderer::renderPockets(const WorkApronConfig &config,
   append_humanoid_attachment_archetype_scaled(
       batch, ctx, waist, work_apron_pockets_archetype(waist),
       QVector3D(1.0F, 1.0F, 1.0F), palette);
+}
+
+auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t {
+  (void)palette;
+  if (max < kWorkApronRoleCount) {
+    return 0U;
+  }
+  constexpr WorkApronConfig cfg{};
+
+  for (int i = 0; i < 7; ++i) {
+    float const t = static_cast<float>(i) / 5.0F * 0.12F;
+    out[i] = cfg.leather_color * (1.0F - t);
+  }
+
+  out[7] = cfg.leather_color * 0.88F;
+
+  out[8] = cfg.strap_color;
+  return kWorkApronRoleCount;
+}
+
+auto work_apron_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                        std::uint16_t chest_socket_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 3> {
+  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const AttachmentFrame &waist = bind_frames.waist;
+  const AttachmentFrame &torso = bind_frames.torso;
+
+  QMatrix4x4 const waist_bind_mat = make_humanoid_attachment_transform_scaled(
+      QMatrix4x4{}, waist, QVector3D(0.0F, 0.0F, 0.0F),
+      QVector3D(1.0F, 1.0F, 1.0F));
+
+  QMatrix4x4 const torso_bind_mat = make_humanoid_attachment_transform_scaled(
+      QMatrix4x4{}, torso, QVector3D(0.0F, 0.0F, 0.0F),
+      QVector3D(1.0F, 1.0F, 1.0F));
+
+  WorkApronConfig const default_cfg{};
+
+  auto body_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_body_archetype(default_cfg, waist),
+      .socket_bone_index = waist_socket_bone_index,
+      .unit_local_pose_at_bind = waist_bind_mat,
+  });
+  for (std::uint8_t i = 0; i < 7; ++i) {
+    body_spec.palette_role_remap[i] =
+        static_cast<std::uint8_t>(base_role_byte + i);
+  }
+
+  auto pockets_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_pockets_archetype(waist),
+      .socket_bone_index = waist_socket_bone_index,
+      .unit_local_pose_at_bind = waist_bind_mat,
+  });
+  pockets_spec.palette_role_remap[0] =
+      static_cast<std::uint8_t>(base_role_byte + 7U);
+
+  auto straps_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_straps_archetype(torso),
+      .socket_bone_index = chest_socket_bone_index,
+      .unit_local_pose_at_bind = torso_bind_mat,
+  });
+  straps_spec.palette_role_remap[0] =
+      static_cast<std::uint8_t>(base_role_byte + 8U);
+
+  return {body_spec, pockets_spec, straps_spec};
 }
 
 } // namespace Render::GL

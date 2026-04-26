@@ -2,11 +2,26 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
 struct ArmorLightCarthageConfig {};
+
+inline constexpr std::uint32_t kArmorLightCarthageRoleCount = 4;
+
+auto armor_light_carthage_fill_role_colors(const HumanoidPalette &palette,
+                                           QVector3D *out,
+                                           std::size_t max) -> std::uint32_t;
+
+auto armor_light_carthage_make_static_attachment(
+    std::uint16_t torso_socket_bone_index,
+    std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
 
 class ArmorLightCarthageRenderer : public IEquipmentRenderer {
 public:

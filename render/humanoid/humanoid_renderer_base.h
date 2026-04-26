@@ -61,6 +61,8 @@ public:
   virtual auto
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec &;
 
+  virtual auto uses_mounted_pipeline() const noexcept -> bool { return false; }
+
   virtual void adjust_variation(const DrawContext &, uint32_t,
                                 VariationParams &) const {}
 

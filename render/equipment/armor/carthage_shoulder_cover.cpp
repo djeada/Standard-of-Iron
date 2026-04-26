@@ -2,6 +2,7 @@
 #include "shoulder_cover_archetype.h"
 
 #include "../../humanoid/humanoid_specs.h"
+#include "../attachment_builder.h"
 
 #include <array>
 #include <cmath>
@@ -100,6 +101,38 @@ void CarthageShoulderCoverRenderer::submit(
                                   up, archetype, palette_colors);
   append_shoulder_cover_archetype(batch, ctx, frames.shoulder_r.origin, right,
                                   up, archetype, palette_colors);
+}
+
+auto carthage_shoulder_cover_archetype() -> const RenderArchetype & {
+  return carthage_shoulder_cover_archetype(1.0F);
+}
+
+auto carthage_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
+                                              QVector3D *out, std::size_t max)
+    -> std::uint32_t {
+  (void)palette;
+  if (max < kCarthageShoulderCoverRoleCount) {
+    return 0;
+  }
+  auto const colors = carthage_shoulder_cover_palette();
+  out[0] = colors[0];
+  out[1] = colors[1];
+  return kCarthageShoulderCoverRoleCount;
+}
+
+auto carthage_shoulder_cover_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_shoulder_frame)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &carthage_shoulder_cover_archetype(),
+      .socket_bone_index = socket_bone_index,
+      .unit_local_pose_at_bind = bind_shoulder_frame,
+  });
+  spec.palette_role_remap[k_leather_base_slot] = base_role_byte;
+  spec.palette_role_remap[k_leather_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  return spec;
 }
 
 } // namespace Render::GL

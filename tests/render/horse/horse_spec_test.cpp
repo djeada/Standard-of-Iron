@@ -122,52 +122,6 @@ auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
 
 } // namespace
 
-TEST(HorseSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
-  auto dims = make_horse_dims();
-  auto variant = make_horse_variant();
-
-  Render::Horse::HorseSpecPose pose;
-  Render::Horse::make_horse_spec_pose(dims, /*bob=*/0.0F, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Horse::submit_horse_minimal_rigged(pose, variant, identity, sub);
-
-  EXPECT_EQ(sub.calls.size(), 5U);
-}
-
-TEST(HorseSpecTest, ReducedRiggedFallbackEmitsBlockedAnatomyAndLegPrimitives) {
-  auto dims = make_horse_dims();
-  auto gait = make_horse_gait();
-  auto variant = make_horse_variant();
-
-  Render::Horse::HorseSpecPose pose;
-  Render::Horse::make_horse_spec_pose_reduced(
-      dims, gait, Render::Horse::HorseReducedMotion{0.0F, 0.0F, false}, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Horse::submit_horse_reduced_rigged(pose, variant, identity, sub);
-
-  EXPECT_EQ(sub.calls.size(), 29U);
-}
-
-TEST(HorseSpecTest, FullRiggedFallbackEmitsAnatomicalPrimitives) {
-  auto dims = make_horse_dims();
-  auto gait = make_horse_gait();
-  auto variant = make_horse_variant();
-
-  Render::Horse::HorseSpecPose pose;
-  Render::Horse::make_horse_spec_pose_reduced(
-      dims, gait, Render::Horse::HorseReducedMotion{0.0F, 0.0F, false}, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Horse::submit_horse_full_rigged(pose, variant, identity, sub);
-
-  EXPECT_EQ(sub.calls.size(), 43U);
-}
-
 TEST(HorseSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Horse::horse_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);

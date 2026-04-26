@@ -11,6 +11,7 @@
 #include "gl/texture.h"
 #include "i_render_backend.h"
 #include "rigged_mesh_cache.h"
+#include "snapshot_mesh_cache.h"
 #include "submitter.h"
 #include "unit_render_cache.h"
 #include <QImage>
@@ -227,8 +228,9 @@ public:
   auto rigged_mesh_cache() noexcept -> RiggedMeshCache & {
     return m_rigged_mesh_cache;
   }
-  auto bone_palette_arena() noexcept -> BonePaletteArena & {
-    return m_bone_palette_arena;
+
+  auto snapshot_mesh_cache() noexcept -> SnapshotMeshCache & {
+    return m_snapshot_mesh_cache;
   }
 
 private:
@@ -317,7 +319,7 @@ private:
   UnitRenderCache m_unit_render_cache;
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
-  BonePaletteArena m_bone_palette_arena;
+  SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
 
   std::mutex m_async_prewarm_mutex;

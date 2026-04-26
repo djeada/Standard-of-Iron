@@ -2,6 +2,7 @@
 #include "shoulder_cover_archetype.h"
 
 #include "../../humanoid/humanoid_specs.h"
+#include "../attachment_builder.h"
 
 #include <array>
 #include <cmath>
@@ -94,6 +95,41 @@ void RomanShoulderCoverRenderer::submit(const RomanShoulderCoverConfig &config,
                                   up, archetype, palette_colors);
   append_shoulder_cover_archetype(batch, ctx, frames.shoulder_r.origin, right,
                                   up, archetype, palette_colors);
+}
+
+auto roman_shoulder_cover_archetype() -> const RenderArchetype & {
+  return roman_shoulder_cover_archetype(1.0F);
+}
+
+auto roman_shoulder_cover_fill_role_colors(const HumanoidPalette &palette,
+                                           QVector3D *out,
+                                           std::size_t max) -> std::uint32_t {
+  (void)palette;
+  if (max < kRomanShoulderCoverRoleCount) {
+    return 0;
+  }
+  auto const colors = roman_shoulder_cover_palette();
+  out[0] = colors[0];
+  out[1] = colors[1];
+  out[2] = colors[2];
+  return kRomanShoulderCoverRoleCount;
+}
+
+auto roman_shoulder_cover_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_shoulder_frame)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &roman_shoulder_cover_archetype(),
+      .socket_bone_index = socket_bone_index,
+      .unit_local_pose_at_bind = bind_shoulder_frame,
+  });
+  spec.palette_role_remap[k_metal_base_slot] = base_role_byte;
+  spec.palette_role_remap[k_metal_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_edge_highlight_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  return spec;
 }
 
 } // namespace Render::GL

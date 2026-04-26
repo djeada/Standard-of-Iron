@@ -2,13 +2,17 @@
 
 #include "../creature/anatomy_bake.h"
 #include "../creature/animation_state_components.h"
+#include "../creature/archetype_registry.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
+#include "../creature/pipeline/preparation_common.h"
 #include "../gl/camera.h"
 #include "../graphics_settings.h"
 #include "../horse/horse_motion.h"
 #include "../horse/lod.h"
 #include "../horse/prepare.h"
+#include "../humanoid/cache_control.h"
+#include "../humanoid/humanoid_full_builder.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -25,6 +29,24 @@
 
 namespace Render::GL {
 
+namespace {
+
+auto grounded_horse_world_from_mount(
+    const DrawContext &ctx,
+    const MountedAttachmentFrame &mount) noexcept -> QMatrix4x4 {
+  QMatrix4x4 world = ctx.model;
+  world.translate(mount.ground_offset);
+  const QVector3D origin =
+      Render::Creature::Pipeline::model_world_origin(world);
+  const float ground_y =
+      Render::Creature::Pipeline::sample_terrain_height_or_fallback(
+          origin.x(), origin.z(), origin.y());
+  Render::Creature::Pipeline::set_model_world_y(world, ground_y);
+  return world;
+}
+
+} // namespace
+
 MountedHumanoidRendererBase::MountedHumanoidRendererBase() = default;
 
 auto MountedHumanoidRendererBase::mounted_visual_spec() const
@@ -33,9 +55,12 @@ auto MountedHumanoidRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider = HumanoidRendererBase::visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_mounted_visual_spec_cache.rider.archetype_id =
+        Render::Creature::ArchetypeRegistry::kRiderBase;
     m_mounted_visual_spec_cache.mount = m_horseRenderer.visual_spec();
     m_mounted_visual_spec_cache.mount.kind =
         Render::Creature::Pipeline::CreatureKind::Horse;
+    m_mounted_visual_spec_cache.mount.archetype_id = m_mount_archetype_id;
     m_mounted_visual_spec_cache.mount_socket = Render::Creature::kInvalidSocket;
     m_mounted_visual_spec_baked = true;
   }
@@ -99,7 +124,6 @@ void MountedHumanoidRendererBase::resolve_mount_render_state(
       profile, anim, anim_ctx,
       Engine::Core::get_or_add_component<
           Render::Creature::HorseAnimationStateComponent>(ctx.entity));
-  apply_mount_vertical_offset(mount, motion.bob);
   reins = compute_rein_state(horse_seed, anim_ctx);
 }
 
@@ -161,6 +185,26 @@ void MountedHumanoidRendererBase::customize_pose(
   applyMountedKnightLowerBody(dims, mount, anim_ctx, pose);
 
   mounted_controller.finalize_head_sync(mount, "customize_pose_final_sync");
+
+  Render::Humanoid::HumanoidBodyMetrics metrics{};
+  Render::Humanoid::compute_humanoid_body_metrics(
+      pose, get_proportion_scaling(), get_torso_scale(), metrics);
+  Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
+  Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
+
+  if (ctx.entity != nullptr) {
+    auto *state = Engine::Core::get_or_add_component<
+        Render::Creature::MountedRenderStateComponent>(ctx.entity);
+    if (state != nullptr) {
+      state->dims = dims;
+      state->mount_frame = mount;
+      state->motion = motion;
+      state->reins = reins;
+      state->seed = seed;
+      state->frame = humanoid_current_frame();
+      state->valid = true;
+    }
+  }
 }
 
 void MountedHumanoidRendererBase::append_companion_preparation(
@@ -179,12 +223,51 @@ void MountedHumanoidRendererBase::append_companion_preparation(
   MountedAttachmentFrame mount{};
   HorseMotionSample motion{};
   ReinState reins{};
-  resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile, dims,
-                             mount, motion, reins);
+  bool used_cached_mount_state = false;
+  if (ctx.entity != nullptr) {
+    const auto *state =
+        ctx.entity
+            ->get_component<Render::Creature::MountedRenderStateComponent>();
+    if (state != nullptr && state->valid && state->seed == seed &&
+        state->frame == humanoid_current_frame()) {
+      std::uint32_t horse_seed = seed;
+      horse_seed = static_cast<std::uint32_t>(
+          reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+      profile = Render::Creature::get_or_bake_horse_anatomy(
+                    ctx.entity, horse_seed, variant.palette.leather,
+                    variant.palette.cloth, get_mount_scale())
+                    .profile;
+      dims = state->dims;
+      profile.dims = dims;
+      mount = state->mount_frame;
+      motion = state->motion;
+      reins = state->reins;
+      used_cached_mount_state = true;
+    }
+  }
+  if (!used_cached_mount_state) {
+    resolve_mount_render_state(ctx, seed, variant, anim_ctx, true, profile,
+                               dims, mount, motion, reins);
+  }
 
-  Render::Horse::prepare_horse_render(
-      m_horseRenderer, ctx, anim_ctx.inputs, anim_ctx, profile, &mount, &reins,
-      &motion, resolve_mount_lod(ctx), {}, nullptr, out);
+  Render::Horse::prepare_horse_render(m_horseRenderer, ctx, anim_ctx.inputs,
+                                      anim_ctx, profile, &mount, &reins,
+                                      &motion, resolve_mount_lod(ctx), out);
+
+  DrawContext rider_ctx = ctx;
+  rider_ctx.model = grounded_horse_world_from_mount(ctx, mount);
+
+  namespace RCP = Render::Creature::Pipeline;
+  RCP::CreatureGraphInputs rider_inputs{};
+  rider_inputs.ctx = &rider_ctx;
+  rider_inputs.anim = &anim_ctx.inputs;
+  rider_inputs.entity = ctx.entity;
+  RCP::CreatureLodDecision rider_lod{};
+  rider_lod.lod = lod;
+  auto rider_output = RCP::build_base_graph_output(rider_inputs, rider_lod);
+  rider_output.spec = mounted_visual_spec().rider;
+  rider_output.seed = seed;
+  out.bodies.add_humanoid(rider_output, pose, variant, anim_ctx);
 }
 
 } // namespace Render::GL

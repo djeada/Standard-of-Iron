@@ -14,8 +14,6 @@ namespace Render::Creature::Pipeline {
 
 inline constexpr std::size_t kMaxCreatureBones = 24;
 
-using ComputeBonePaletteFn = std::uint32_t (*)(const void *pose,
-                                               std::span<QMatrix4x4> out);
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
 using FillRoleColorsFn = std::uint32_t (*)(const void *variant, QVector3D *out,
                                            std::size_t max_roles);
@@ -28,7 +26,6 @@ struct CreatureAsset {
   const Render::Creature::SkeletonTopology *topology{nullptr};
   std::uint8_t role_count{0};
   std::uint8_t max_bones{0};
-  ComputeBonePaletteFn compute_bones{nullptr};
   BindPaletteFn bind_palette{nullptr};
   FillRoleColorsFn fill_role_colors{nullptr};
 };
@@ -42,6 +39,9 @@ public:
   get(CreatureAssetId id) const noexcept -> const CreatureAsset *;
   [[nodiscard]] auto
   resolve(const UnitVisualSpec &spec) const noexcept -> const CreatureAsset *;
+
+  [[nodiscard]] auto
+  for_species(CreatureKind kind) const noexcept -> const CreatureAsset *;
 
 private:
   CreatureAssetRegistry();

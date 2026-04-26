@@ -6,6 +6,7 @@
 #include "geom/transforms.h"
 #include "gl/mesh.h"
 #include "gl/primitives.h"
+#include "render_archetype.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -249,27 +250,99 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
   }
 }
 
+void append_static_attachment(const StaticAttachmentSpec &spec,
+                              BakedRiggedMeshCpu &out) {
+  if (spec.archetype == nullptr) {
+    return;
+  }
+
+  const auto &slice = spec.archetype->lods[0];
+  if (slice.draws.empty()) {
+    return;
+  }
+
+  for (const Render::GL::RenderArchetypeDraw &draw : slice.draws) {
+    Mesh *src = draw.mesh;
+    if (src == nullptr) {
+      continue;
+    }
+    auto const &src_verts = src->get_vertices();
+    auto const &src_idx = src->get_indices();
+    if (src_verts.empty() || src_idx.empty()) {
+      continue;
+    }
+
+    QMatrix4x4 scale_mat;
+    if (spec.uniform_scale != 1.0F) {
+      scale_mat.scale(spec.uniform_scale);
+    }
+    const QMatrix4x4 attach_model =
+        spec.local_offset * scale_mat * draw.local_model;
+
+    std::uint8_t role = 0;
+    if (draw.palette_slot != Render::GL::kRenderArchetypeFixedColorSlot) {
+      const auto slot = static_cast<std::size_t>(draw.palette_slot);
+      if (slot < spec.palette_role_remap.size()) {
+        role = spec.palette_role_remap[slot];
+      }
+    } else {
+      role = spec.override_color_role;
+    }
+
+    auto const base_vertex = static_cast<std::uint32_t>(out.vertices.size());
+    auto const bone = static_cast<std::uint8_t>(spec.socket_bone_index & 0xFFu);
+
+    out.vertices.reserve(out.vertices.size() + src_verts.size());
+    for (Render::GL::Vertex const &v : src_verts) {
+      QVector3D const local_pos{v.position[0], v.position[1], v.position[2]};
+      QVector3D const local_norm{v.normal[0], v.normal[1], v.normal[2]};
+      QVector3D const baked_pos = attach_model.map(local_pos);
+      QVector3D const baked_norm = transform_normal(attach_model, local_norm);
+
+      RiggedVertex rv;
+      rv.position_bone_local = {baked_pos.x(), baked_pos.y(), baked_pos.z()};
+      rv.normal_bone_local = {baked_norm.x(), baked_norm.y(), baked_norm.z()};
+      rv.tex_coord = v.tex_coord;
+      rv.color_role = role;
+      rv.bone_indices = {bone, 0, 0, 0};
+      rv.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+      out.vertices.push_back(rv);
+    }
+
+    out.indices.reserve(out.indices.size() + src_idx.size());
+    for (unsigned int idx : src_idx) {
+      out.indices.push_back(base_vertex + static_cast<std::uint32_t>(idx));
+    }
+  }
+}
+
 } // namespace
 
 auto bake_rigged_mesh_cpu(const BakeInput &in) -> BakedRiggedMeshCpu {
   BakedRiggedMeshCpu out;
-  if (in.graph == nullptr) {
-    return out;
+  if (in.graph != nullptr) {
+    for (PrimitiveInstance const &prim : in.graph->primitives) {
+      if (prim.shape == PrimitiveShape::None) {
+        continue;
+      }
+      Mesh *unit_mesh = resolve_unit_mesh(prim);
+      if (unit_mesh == nullptr) {
+        continue;
+      }
+      QMatrix4x4 unit_model;
+      if (!compute_unit_model(prim, in.bind_pose, unit_model)) {
+        continue;
+      }
+      append_primitive_vertices(prim, *unit_mesh, unit_model, out);
+    }
   }
 
-  for (PrimitiveInstance const &prim : in.graph->primitives) {
-    if (prim.shape == PrimitiveShape::None) {
+  for (StaticAttachmentSpec const &spec : in.attachments) {
+    if (!in.bind_pose.empty() &&
+        spec.socket_bone_index >= in.bind_pose.size()) {
       continue;
     }
-    Mesh *unit_mesh = resolve_unit_mesh(prim);
-    if (unit_mesh == nullptr) {
-      continue;
-    }
-    QMatrix4x4 unit_model;
-    if (!compute_unit_model(prim, in.bind_pose, unit_model)) {
-      continue;
-    }
-    append_primitive_vertices(prim, *unit_mesh, unit_model, out);
+    append_static_attachment(spec, out);
   }
 
   return out;

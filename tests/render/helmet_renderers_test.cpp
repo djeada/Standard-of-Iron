@@ -3,8 +3,6 @@
 #include "render/equipment/helmets/carthage_heavy_helmet.h"
 #include "render/equipment/helmets/carthage_light_helmet.h"
 #include "render/equipment/helmets/headwrap.h"
-#include "render/equipment/helmets/roman_heavy_helmet.h"
-#include "render/equipment/helmets/roman_light_helmet.h"
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/palette.h"
 #include "render/submitter.h"
@@ -156,24 +154,6 @@ TEST_F(HelmetRenderersTest, CarthageLightHelmetHandlesZeroHeadRadius) {
   helmet.render(ctx, frames, palette, anim, submitter);
 
   EXPECT_EQ(draw_count_of(submitter), 0);
-}
-
-TEST_F(HelmetRenderersTest, RomanHeavyHelmetRendersWithValidFrames) {
-  RomanHeavyHelmetRenderer helmet;
-
-  helmet.render(ctx, frames, palette, anim, submitter);
-
-  EXPECT_GT(submitter.archetypes.size(), 0U);
-  EXPECT_GE(draw_count_of(submitter), 7);
-}
-
-TEST_F(HelmetRenderersTest, RomanLightHelmetRendersWithValidFrames) {
-  RomanLightHelmetRenderer helmet;
-
-  helmet.render(ctx, frames, palette, anim, submitter);
-
-  EXPECT_GT(submitter.archetypes.size(), 0U);
-  EXPECT_GE(draw_count_of(submitter), 8);
 }
 
 TEST_F(HelmetRenderersTest, HeadwrapRendersWithValidFrames) {

@@ -118,19 +118,4 @@ auto compute_elephant_bone_palette(const ElephantSpecPose &pose,
 
 auto elephant_bind_palette() noexcept -> std::span<const QMatrix4x4>;
 
-void submit_elephant_reduced_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept;
-
-void submit_elephant_full_rigged(const ElephantSpecPose &pose,
-                                 const Render::GL::ElephantVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept;
-
-void submit_elephant_minimal_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept;
-
 } // namespace Render::Elephant

@@ -6,8 +6,6 @@
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/scale_barding_renderer.h"
 #include "render/equipment/horse/decorations/saddle_bag_renderer.h"
-#include "render/equipment/horse/i_horse_equipment_renderer.h"
-#include "render/equipment/horse/saddles/roman_saddle_renderer.h"
 #include "render/gl/resources.h"
 #include "render/horse/attachment_frames.h"
 #include "render/horse/dimensions.h"
@@ -167,31 +165,6 @@ TEST(RenderArchetypeEquipment, ReplaysArchetypeInstancesThroughEquipmentBatch) {
   EXPECT_TRUE(near_vec3(submitter.meshes[0].color, palette[0]));
   EXPECT_EQ(submitter.meshes[0].texture, fake_texture(9));
   EXPECT_FLOAT_EQ(submitter.meshes[0].alpha, 0.75F);
-}
-
-TEST(RenderArchetypeEquipment, RomanSaddleUsesSingleArchetypeInstance) {
-  using namespace Render::GL;
-
-  DrawContext ctx;
-  ctx.model = QMatrix4x4{};
-
-  HorseVariant variant{};
-  variant.saddle_color = QVector3D(0.55F, 0.29F, 0.12F);
-
-  EquipmentBatch batch;
-  RomanSaddleRenderer::submit(ctx, make_test_horse_frames(), variant, {},
-                              batch);
-
-  EXPECT_TRUE(batch.meshes.empty());
-  EXPECT_TRUE(batch.cylinders.empty());
-  ASSERT_EQ(batch.archetypes.size(), 1u);
-
-  RecordingSubmitter submitter;
-  submit_equipment_batch(batch, submitter);
-  ASSERT_EQ(submitter.meshes.size(), 5u);
-  for (const RecordedMesh &mesh : submitter.meshes) {
-    EXPECT_TRUE(near_vec3(mesh.color, variant.saddle_color));
-  }
 }
 
 TEST(RenderArchetypeEquipment, ScaleBardingUsesMultipleAnchoredArchetypes) {

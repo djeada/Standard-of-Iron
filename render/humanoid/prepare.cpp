@@ -38,6 +38,7 @@
 #include "humanoid_math.h"
 #include "humanoid_renderer_base.h"
 #include "humanoid_spec.h"
+#include "pose_cache_components.h"
 #include "pose_controller.h"
 #include "render_stats.h"
 #include "rig_stats_shim.h"
@@ -55,25 +56,6 @@
 #include <numbers>
 #include <unordered_map>
 #include <vector>
-
-namespace Render::Humanoid {
-
-auto make_humanoid_prepared_row(
-    const Render::GL::HumanoidRendererBase &owner,
-    const Render::GL::HumanoidPose &pose,
-    const Render::GL::HumanoidVariant &variant,
-    const Render::GL::HumanoidAnimationContext &anim_ctx,
-    const QMatrix4x4 &inst_model, std::uint32_t inst_seed,
-    Render::Creature::CreatureLOD lod,
-    const Render::GL::DrawContext *legacy_ctx,
-    Render::Creature::Pipeline::RenderPassIntent pass) noexcept
-    -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
-  return Render::Creature::Pipeline::make_prepared_humanoid_row(
-      owner.visual_spec(), pose, variant, anim_ctx, inst_model, inst_seed, lod,
-      legacy_ctx, 0, pass);
-}
-
-} // namespace Render::Humanoid
 
 namespace Render::GL {
 
@@ -151,39 +133,9 @@ namespace {
 constexpr float k_shadow_size_infantry = 0.16F;
 constexpr float k_shadow_size_mounted = 0.35F;
 
-struct CachedPoseEntry {
-  HumanoidPose pose;
-  VariationParams variation;
-  uint32_t frame_number{0};
-  bool was_moving{false};
-};
-
-using PoseCacheKey = uint64_t;
-std::unordered_map<PoseCacheKey, CachedPoseEntry> s_pose_cache;
 uint32_t s_current_frame = 0;
 constexpr uint32_t k_pose_cache_max_age = 300;
-
-struct UnitLayoutCacheEntry {
-  std::vector<::Render::Humanoid::SoldierLayout> soldiers;
-  FormationParams formation{};
-  FormationCalculatorFactory::Nation nation{
-      FormationCalculatorFactory::Nation::Roman};
-  FormationCalculatorFactory::UnitCategory category{
-      FormationCalculatorFactory::UnitCategory::Infantry};
-  int rows{0};
-  int cols{0};
-  std::uint32_t seed{0};
-  std::uint32_t frame_number{0};
-};
-
-std::unordered_map<std::uintptr_t, UnitLayoutCacheEntry> s_layout_cache;
 constexpr uint32_t k_layout_cache_max_age = 600;
-
-inline auto make_pose_cache_key(uintptr_t entity_ptr,
-                                int soldier_idx) -> PoseCacheKey {
-  return (static_cast<uint64_t>(entity_ptr) << 16) |
-         static_cast<uint64_t>(soldier_idx & 0xFFFF);
-}
 
 HumanoidRenderStats s_render_stats;
 
@@ -234,33 +186,9 @@ void advance_pose_cache_frame() {
   ++s_current_frame;
   ::Render::Humanoid::ClipDriverCache::instance().advance_frame(
       s_current_frame);
-
-  if ((s_current_frame & 0x1FF) == 0) {
-    auto it = s_pose_cache.begin();
-    while (it != s_pose_cache.end()) {
-      if (s_current_frame - it->second.frame_number >
-          k_pose_cache_max_age * 2) {
-        it = s_pose_cache.erase(it);
-      } else {
-        ++it;
-      }
-    }
-
-    auto layout_it = s_layout_cache.begin();
-    while (layout_it != s_layout_cache.end()) {
-      if (s_current_frame - layout_it->second.frame_number >
-          k_layout_cache_max_age * 2) {
-        layout_it = s_layout_cache.erase(layout_it);
-      } else {
-        ++layout_it;
-      }
-    }
-  }
 }
 
 void clear_humanoid_caches() {
-  s_pose_cache.clear();
-  s_layout_cache.clear();
   s_current_frame = 0;
   ::Render::Humanoid::ClipDriverCache::instance().clear();
 }
@@ -659,13 +587,13 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     effective_rows = 1;
   }
 
-  bool is_mounted_spawn = false;
+  bool is_mounted_spawn = owner.uses_mounted_pipeline();
   if (unit_comp != nullptr) {
     using Game::Units::SpawnType;
     auto const st = unit_comp->spawn_type;
-    is_mounted_spawn =
-        (st == SpawnType::MountedKnight || st == SpawnType::HorseArcher ||
-         st == SpawnType::HorseSpearman);
+    is_mounted_spawn = is_mounted_spawn || st == SpawnType::MountedKnight ||
+                       st == SpawnType::HorseArcher ||
+                       st == SpawnType::HorseSpearman;
   }
 
   int visible_count = effective_rows * cols;
@@ -720,32 +648,32 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       build_humanoid_ambient_idle_state(anim, seed, visible_count, anim.time);
 
   std::vector<SoldierLayout> soldier_layouts;
-  std::uintptr_t const layout_cache_key =
-      reinterpret_cast<std::uintptr_t>(ctx.entity);
+  HumanoidLayoutCacheComponent *layout_cache_comp =
+      (ctx.entity != nullptr)
+          ? Engine::Core::get_or_add_component<HumanoidLayoutCacheComponent>(
+                ctx.entity)
+          : nullptr;
   bool loaded_cached_layouts = false;
-  if (layout_cache_key != 0U) {
-    auto cache_it = ::Render::GL::s_layout_cache.find(layout_cache_key);
-    if (cache_it != ::Render::GL::s_layout_cache.end()) {
-      auto &entry = cache_it->second;
-      bool const matches =
-          entry.seed == seed && entry.rows == rows && entry.cols == cols &&
-          entry.formation.individuals_per_unit ==
-              formation.individuals_per_unit &&
-          entry.formation.max_per_row == formation.max_per_row &&
-          entry.formation.spacing == formation.spacing &&
-          entry.nation == nation && entry.category == category &&
-          entry.soldiers.size() == static_cast<std::size_t>(visible_count);
-      bool const cache_valid =
-          !matches ? false
-                   : ((anim.is_attacking && anim.is_melee)
-                          ? (entry.frame_number == frame_index)
-                          : (frame_index - entry.frame_number <=
-                             ::Render::GL::k_layout_cache_max_age));
-      if (cache_valid) {
-        soldier_layouts = entry.soldiers;
-        entry.frame_number = frame_index;
-        loaded_cached_layouts = true;
-      }
+  if (layout_cache_comp != nullptr && layout_cache_comp->valid) {
+    auto &entry = *layout_cache_comp;
+    bool const matches =
+        entry.seed == seed && entry.rows == rows && entry.cols == cols &&
+        entry.formation.individuals_per_unit ==
+            formation.individuals_per_unit &&
+        entry.formation.max_per_row == formation.max_per_row &&
+        entry.formation.spacing == formation.spacing &&
+        entry.nation == nation && entry.category == category &&
+        entry.soldiers.size() == static_cast<std::size_t>(visible_count);
+    bool const cache_valid =
+        !matches ? false
+                 : ((anim.is_attacking && anim.is_melee)
+                        ? (entry.frame_number == frame_index)
+                        : (frame_index - entry.frame_number <=
+                           ::Render::GL::k_layout_cache_max_age));
+    if (cache_valid) {
+      soldier_layouts = entry.soldiers;
+      entry.frame_number = frame_index;
+      loaded_cached_layouts = true;
     }
   }
 
@@ -767,17 +695,28 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
           build_soldier_layout(*formation_calculator, inputs));
     }
 
-    if (layout_cache_key != 0U) {
-      auto &entry = ::Render::GL::s_layout_cache[layout_cache_key];
-      entry.soldiers = soldier_layouts;
-      entry.formation = formation;
-      entry.nation = nation;
-      entry.category = category;
-      entry.rows = rows;
-      entry.cols = cols;
-      entry.seed = seed;
-      entry.frame_number = frame_index;
+    if (layout_cache_comp != nullptr) {
+      layout_cache_comp->soldiers = soldier_layouts;
+      layout_cache_comp->formation = formation;
+      layout_cache_comp->nation = nation;
+      layout_cache_comp->category = category;
+      layout_cache_comp->rows = rows;
+      layout_cache_comp->cols = cols;
+      layout_cache_comp->seed = seed;
+      layout_cache_comp->frame_number = frame_index;
+      layout_cache_comp->valid = true;
     }
+  }
+
+  HumanoidPoseCacheComponent *pose_cache_comp =
+      (ctx.entity != nullptr)
+          ? Engine::Core::get_or_add_component<HumanoidPoseCacheComponent>(
+                ctx.entity)
+          : nullptr;
+  if (pose_cache_comp != nullptr &&
+      pose_cache_comp->entries.size() <
+          static_cast<std::size_t>(visible_count)) {
+    pose_cache_comp->entries.resize(static_cast<std::size_t>(visible_count));
   }
 
   for (int idx = 0; idx < visible_count; ++idx) {
@@ -932,58 +871,80 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     HumanoidLocomotionState locomotion_state =
         build_humanoid_locomotion_state(locomotion_inputs);
 
+    using Render::Creature::Pipeline::LegacySlotMask;
+    using Render::Creature::Pipeline::owns_slot;
+    const auto owned_slots_for_gate = owner.visual_spec().owned_legacy_slots;
+    const bool unowned_overlays_full =
+        !owns_slot(owned_slots_for_gate, LegacySlotMask::ArmorOverlay) ||
+        !owns_slot(owned_slots_for_gate, LegacySlotMask::ShoulderDecorations) ||
+        !owns_slot(owned_slots_for_gate, LegacySlotMask::FacialHair) ||
+        !owns_slot(owned_slots_for_gate, LegacySlotMask::Attachments);
+    const bool unowned_attachments =
+        !owns_slot(owned_slots_for_gate, LegacySlotMask::Attachments);
+    const bool needs_anatomy_pose =
+        is_mounted_spawn ||
+        (soldier_lod == HumanoidLOD::Full && unowned_overlays_full) ||
+        (soldier_lod == HumanoidLOD::Reduced && unowned_attachments);
+
     HumanoidPose pose;
-    bool used_cached_pose = false;
+    if (needs_anatomy_pose) {
+      bool used_cached_pose = false;
 
-    PoseCacheKey cache_key =
-        make_pose_cache_key(reinterpret_cast<uintptr_t>(ctx.entity), idx);
+      HumanoidPoseSlot *pose_slot =
+          (pose_cache_comp != nullptr &&
+           static_cast<std::size_t>(idx) < pose_cache_comp->entries.size())
+              ? &pose_cache_comp->entries[static_cast<std::size_t>(idx)]
+              : nullptr;
 
-    auto cache_it = s_pose_cache.find(cache_key);
-    const bool allow_cached_pose = (!anim.is_moving) || ctx.animation_throttled;
-    if (allow_cached_pose && cache_it != s_pose_cache.end()) {
-      CachedPoseEntry &cached = cache_it->second;
-      if ((ctx.animation_throttled || !cached.was_moving) &&
-          frame_index - cached.frame_number < k_pose_cache_max_age) {
-        pose = cached.pose;
-        variation = cached.variation;
-        cached.frame_number = frame_index;
-        used_cached_pose = true;
-        ++s_render_stats.poses_cached;
-      }
-    }
-
-    if (!used_cached_pose) {
-
-      bool used_palette = false;
-      if (!anim.is_moving && !anim.is_attacking &&
-          PosePaletteCache::instance().is_generated() &&
-          (soldier_lod == HumanoidLOD::Reduced ||
-           soldier_lod == HumanoidLOD::Minimal)) {
-        PosePaletteKey palette_key;
-        palette_key.state = AnimState::Idle;
-        palette_key.frame = 0;
-        palette_key.is_moving = false;
-        const auto *palette_entry =
-            PosePaletteCache::instance().get(palette_key);
-        if (palette_entry != nullptr) {
-          pose = palette_entry->pose;
-          used_palette = true;
+      const bool allow_cached_pose =
+          (!anim.is_moving) || ctx.animation_throttled;
+      if (allow_cached_pose && pose_slot != nullptr && pose_slot->valid) {
+        if ((ctx.animation_throttled || !pose_slot->was_moving) &&
+            frame_index - pose_slot->frame_number <
+                ::Render::GL::k_pose_cache_max_age) {
+          pose = pose_slot->pose;
+          variation = pose_slot->variation;
+          pose_slot->frame_number = frame_index;
+          used_cached_pose = true;
           ++s_render_stats.poses_cached;
         }
       }
 
-      if (!used_palette) {
-        HumanoidRendererBase::compute_locomotion_pose(
-            inst_seed, anim.time + phase_offset, locomotion_state.gait,
-            variation, pose);
-        ++s_render_stats.poses_computed;
-      }
+      if (!used_cached_pose) {
 
-      CachedPoseEntry &entry = s_pose_cache[cache_key];
-      entry.pose = pose;
-      entry.variation = variation;
-      entry.frame_number = frame_index;
-      entry.was_moving = anim.is_moving;
+        bool used_palette = false;
+        if (!anim.is_moving && !anim.is_attacking &&
+            PosePaletteCache::instance().is_generated() &&
+            (soldier_lod == HumanoidLOD::Reduced ||
+             soldier_lod == HumanoidLOD::Minimal)) {
+          PosePaletteKey palette_key;
+          palette_key.state = AnimState::Idle;
+          palette_key.frame = 0;
+          palette_key.is_moving = false;
+          const auto *palette_entry =
+              PosePaletteCache::instance().get(palette_key);
+          if (palette_entry != nullptr) {
+            pose = palette_entry->pose;
+            used_palette = true;
+            ++s_render_stats.poses_cached;
+          }
+        }
+
+        if (!used_palette) {
+          HumanoidRendererBase::compute_locomotion_pose(
+              inst_seed, anim.time + phase_offset, locomotion_state.gait,
+              variation, pose);
+          ++s_render_stats.poses_computed;
+        }
+
+        if (pose_slot != nullptr) {
+          pose_slot->pose = pose;
+          pose_slot->variation = variation;
+          pose_slot->frame_number = frame_index;
+          pose_slot->was_moving = anim.is_moving;
+          pose_slot->valid = true;
+        }
+      }
     }
 
     HumanoidAnimationContext anim_ctx{};
@@ -1019,43 +980,46 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       }
     }
 
-    owner.customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
+    if (needs_anatomy_pose) {
+      owner.customize_pose(inst_ctx, anim_ctx, inst_seed, pose);
 
-    if (ctx.entity != nullptr) {
-      auto const entity_id = static_cast<std::uint32_t>(ctx.entity->get_id());
-      auto &cache_entry =
-          ::Render::Humanoid::ClipDriverCache::instance().get_or_create(
-              entity_id);
-      float const now = anim.time + phase_offset;
-      float dt = 0.0F;
-      if (cache_entry.initialised) {
-        dt = now - cache_entry.last_time;
-        if (dt < 0.0F || dt > 1.0F) {
-          dt = 0.0F;
+      if (!is_mounted_spawn && ctx.entity != nullptr) {
+        auto const entity_id = static_cast<std::uint32_t>(ctx.entity->get_id());
+        auto &cache_entry =
+            ::Render::Humanoid::ClipDriverCache::instance().get_or_create(
+                entity_id);
+        float const now = anim.time + phase_offset;
+        float dt = 0.0F;
+        if (cache_entry.initialised) {
+          dt = now - cache_entry.last_time;
+          if (dt < 0.0F || dt > 1.0F) {
+            dt = 0.0F;
+          }
+        } else {
+          cache_entry.initialised = true;
         }
-      } else {
-        cache_entry.initialised = true;
+        cache_entry.last_time = now;
+        cache_entry.driver.tick(dt, anim);
+        auto const overlays = cache_entry.driver.sample(now);
+        ::Render::Humanoid::apply_overlays_to_pose(pose, overlays,
+                                                   anim_ctx.entity_right);
       }
-      cache_entry.last_time = now;
-      cache_entry.driver.tick(dt, anim);
-      auto const overlays = cache_entry.driver.sample(now);
-      ::Render::Humanoid::apply_overlays_to_pose(pose, overlays,
-                                                 anim_ctx.entity_right);
-    }
 
-    if (!anim.is_moving && !anim.is_attacking) {
-      HumanoidPoseController pose_ctrl(pose, anim_ctx);
+      if (!is_mounted_spawn && !anim.is_moving && !anim.is_attacking) {
+        HumanoidPoseController pose_ctrl(pose, anim_ctx);
 
-      pose_ctrl.apply_micro_idle(anim.time + phase_offset, inst_seed);
-      if (is_humanoid_ambient_idle_active(ambient_idle_state, idx)) {
-        pose_ctrl.apply_ambient_idle_explicit(ambient_idle_state.idle_type,
-                                              ambient_idle_state.phase);
+        pose_ctrl.apply_micro_idle(anim.time + phase_offset, inst_seed);
+        if (is_humanoid_ambient_idle_active(ambient_idle_state, idx)) {
+          pose_ctrl.apply_ambient_idle_explicit(ambient_idle_state.idle_type,
+                                                ambient_idle_state.phase);
+        }
       }
-    }
 
-    if (anim_ctx.motion_state == HumanoidMotionState::Run) {
-      auto const run_shaping = build_humanoid_run_pose_shaping(anim_ctx);
-      apply_humanoid_run_pose_shaping(pose, anim_ctx, run_shaping);
+      if (!is_mounted_spawn &&
+          anim_ctx.motion_state == HumanoidMotionState::Run) {
+        auto const run_shaping = build_humanoid_run_pose_shaping(anim_ctx);
+        apply_humanoid_run_pose_shaping(pose, anim_ctx, run_shaping);
+      }
     }
 
     RCP::CreatureGraphInputs graph_inputs{};
@@ -1176,24 +1140,27 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
       ++s_render_stats.lod_full;
 
-      Render::Humanoid::HumanoidBodyMetrics metrics{};
-      Render::Humanoid::compute_humanoid_body_metrics(
-          pose, owner.get_proportion_scaling(), owner.get_torso_scale(),
-          metrics);
-      Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
-      Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
+      if (is_mounted_spawn) {
+        owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
+                                           inst_seed, graph_output.lod, out);
+        break;
+      }
 
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx, &inst_ctx);
+      Render::Humanoid::HumanoidBodyMetrics metrics{};
+      if (needs_anatomy_pose) {
+        Render::Humanoid::compute_humanoid_body_metrics(
+            pose, owner.get_proportion_scaling(), owner.get_torso_scale(),
+            metrics);
+        Render::Humanoid::compute_humanoid_head_frame(pose, metrics);
+        Render::Humanoid::compute_humanoid_body_frames(pose, metrics);
+      }
+
+      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
 
-      using Render::Creature::Pipeline::LegacySlotMask;
-      using Render::Creature::Pipeline::owns_slot;
       const auto owned_slots = owner.visual_spec().owned_legacy_slots;
-      if (!owns_slot(owned_slots, LegacySlotMask::ArmorOverlay) ||
-          !owns_slot(owned_slots, LegacySlotMask::ShoulderDecorations) ||
-          !owns_slot(owned_slots, LegacySlotMask::FacialHair) ||
-          !owns_slot(owned_slots, LegacySlotMask::Attachments)) {
+      if (unowned_overlays_full) {
         out.add_post_body_draw(
             graph_output.pass_intent,
             [&owner, inst_ctx, variant, pose, anim_ctx, metrics,
@@ -1227,11 +1194,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     case HumanoidLOD::Reduced: {
 
       ++s_render_stats.lod_reduced;
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx, &inst_ctx);
+
+      if (is_mounted_spawn) {
+        owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
+                                           inst_seed, graph_output.lod, out);
+        break;
+      }
+
+      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
-      using Render::Creature::Pipeline::LegacySlotMask;
-      using Render::Creature::Pipeline::owns_slot;
       const auto owned_slots = owner.visual_spec().owned_legacy_slots;
       if (!owns_slot(owned_slots, LegacySlotMask::Attachments)) {
         out.add_post_body_draw(graph_output.pass_intent,
@@ -1247,7 +1219,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     case HumanoidLOD::Minimal:
 
       ++s_render_stats.lod_minimal;
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx, &inst_ctx);
+      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
       break;
 
     case HumanoidLOD::Billboard:

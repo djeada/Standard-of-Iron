@@ -59,14 +59,13 @@ TEST(CreatureAssetRegistry, MountedSpecsRequireExplicitSplitRows) {
   EXPECT_EQ(CreatureAssetRegistry::instance().resolve(spec), nullptr);
 }
 
-TEST(CreatureAssetRegistry, AllAssetsHaveBonePaletteCallbacks) {
+TEST(CreatureAssetRegistry, AllAssetsHaveBindPaletteCallbacks) {
   const auto &reg = CreatureAssetRegistry::instance();
 
   UnitVisualSpec humanoid{};
   humanoid.kind = CreatureKind::Humanoid;
   const auto *h = reg.resolve(humanoid);
   ASSERT_NE(h, nullptr);
-  EXPECT_NE(h->compute_bones, nullptr);
   EXPECT_NE(h->bind_palette, nullptr);
   EXPECT_EQ(h->max_bones, Render::Humanoid::kBoneCount);
 
@@ -74,7 +73,6 @@ TEST(CreatureAssetRegistry, AllAssetsHaveBonePaletteCallbacks) {
   horse.kind = CreatureKind::Horse;
   const auto *hr = reg.resolve(horse);
   ASSERT_NE(hr, nullptr);
-  EXPECT_NE(hr->compute_bones, nullptr);
   EXPECT_NE(hr->bind_palette, nullptr);
   EXPECT_EQ(hr->max_bones, Render::Horse::kHorseBoneCount);
 
@@ -82,50 +80,31 @@ TEST(CreatureAssetRegistry, AllAssetsHaveBonePaletteCallbacks) {
   elephant.kind = CreatureKind::Elephant;
   const auto *el = reg.resolve(elephant);
   ASSERT_NE(el, nullptr);
-  EXPECT_NE(el->compute_bones, nullptr);
   EXPECT_NE(el->bind_palette, nullptr);
   EXPECT_EQ(el->max_bones, Render::Elephant::kElephantBoneCount);
 }
 
-TEST(CreatureAssetRegistry, BonePaletteCallbacksProduceValidOutput) {
+TEST(CreatureAssetRegistry, BindPaletteCallbacksProduceValidOutput) {
   const auto &reg = CreatureAssetRegistry::instance();
 
-  // Humanoid
   UnitVisualSpec hspec{};
   hspec.kind = CreatureKind::Humanoid;
   const auto *h = reg.resolve(hspec);
   ASSERT_NE(h, nullptr);
-  Render::GL::HumanoidPose hpose{};
-  std::array<QMatrix4x4, kMaxCreatureBones> hbones{};
-  auto hcount = h->compute_bones(&hpose, hbones);
-  EXPECT_GT(hcount, 0U);
-  EXPECT_LE(hcount, Render::Humanoid::kBoneCount);
   auto hbind = h->bind_palette();
   EXPECT_FALSE(hbind.empty());
 
-  // Horse
   UnitVisualSpec hrspec{};
   hrspec.kind = CreatureKind::Horse;
   const auto *hr = reg.resolve(hrspec);
   ASSERT_NE(hr, nullptr);
-  Render::Horse::HorseSpecPose hrpose{};
-  std::array<QMatrix4x4, kMaxCreatureBones> hrbones{};
-  auto hrcount = hr->compute_bones(&hrpose, hrbones);
-  EXPECT_GT(hrcount, 0U);
-  EXPECT_LE(hrcount, Render::Horse::kHorseBoneCount);
   auto hrbind = hr->bind_palette();
   EXPECT_FALSE(hrbind.empty());
 
-  // Elephant
   UnitVisualSpec elspec{};
   elspec.kind = CreatureKind::Elephant;
   const auto *el = reg.resolve(elspec);
   ASSERT_NE(el, nullptr);
-  Render::Elephant::ElephantSpecPose elpose{};
-  std::array<QMatrix4x4, kMaxCreatureBones> elbones{};
-  auto elcount = el->compute_bones(&elpose, elbones);
-  EXPECT_GT(elcount, 0U);
-  EXPECT_LE(elcount, Render::Elephant::kElephantBoneCount);
   auto elbind = el->bind_palette();
   EXPECT_FALSE(elbind.empty());
 }

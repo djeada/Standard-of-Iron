@@ -3,6 +3,7 @@
 #include "equipment_submit.h"
 
 #include "../gl/humanoid/humanoid_types.h"
+#include "../static_attachment_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>

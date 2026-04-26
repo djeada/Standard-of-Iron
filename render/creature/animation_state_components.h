@@ -33,6 +33,16 @@ struct HorseAnatomyComponent : public Engine::Core::Component {
   bool baked{false};
 };
 
+struct MountedRenderStateComponent : public Engine::Core::Component {
+  Render::GL::HorseDimensions dims{};
+  Render::GL::MountedAttachmentFrame mount_frame{};
+  Render::GL::HorseMotionSample motion{};
+  Render::GL::ReinState reins{};
+  std::uint32_t seed{0};
+  std::uint32_t frame{0};
+  bool valid{false};
+};
+
 struct ElephantAnatomyComponent : public Engine::Core::Component {
   Render::GL::ElephantProfile profile{};
   Render::GL::HowdahAttachmentFrame howdah_frame{};

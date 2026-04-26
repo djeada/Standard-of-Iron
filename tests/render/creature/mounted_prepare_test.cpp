@@ -2,11 +2,9 @@
 //
 // Exercises render/entity/mounted_prepare.{h,cpp}: prepare_mounted_rows
 // must produce a horse mount row + humanoid rider row carrying the supplied
-// pass intent. Loadout entries set on the visual specs survive the row
-// construction (verified via spec.equipment.size() round-trip).
+// pass intent.
 
 #include "render/creature/pipeline/creature_render_state.h"
-#include "render/creature/pipeline/equipment_registry.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/entity/mounted_knight_renderer_base.h"
@@ -142,42 +140,6 @@ TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
   EXPECT_EQ(stats.entities_submitted, 2u);
 }
 
-TEST(MountedPrepare, EquipmentLoadoutOnSpecSurvivesRowConstruction) {
-  using namespace Render::Creature::Pipeline;
-
-  EquipmentRecord shield{};
-  shield.material_id = 7;
-  EquipmentRecord howdah{};
-  howdah.material_id = 13;
-
-  std::array<EquipmentRecord, 1> rider_loadout{shield};
-  std::array<EquipmentRecord, 1> mount_loadout{howdah};
-
-  MountedSpec mounted{};
-  mounted.mount.kind = CreatureKind::Horse;
-  mounted.rider.kind = CreatureKind::Humanoid;
-  mounted.rider.equipment = EquipmentLoadout(rider_loadout);
-  mounted.mount.equipment = EquipmentLoadout(mount_loadout);
-
-  Render::Horse::HorseSpecPose mount_pose{};
-  Render::GL::HorseVariant mount_variant{};
-  Render::GL::HumanoidPose rider_pose{};
-  Render::GL::HumanoidVariant rider_variant{};
-  Render::GL::HumanoidAnimationContext rider_anim{};
-  QMatrix4x4 mount_world;
-  QMatrix4x4 rider_world;
-
-  auto set = Render::GL::prepare_mounted_rows(
-      mounted, mount_world, rider_world, mount_pose, mount_variant, rider_pose,
-      rider_variant, rider_anim, /*seed*/ 5,
-      Render::Creature::CreatureLOD::Full, RenderPassIntent::Shadow);
-
-  ASSERT_EQ(set.rider_row.spec.equipment.size(), 1u);
-  EXPECT_EQ(set.rider_row.spec.equipment[0].material_id, 7u);
-  ASSERT_EQ(set.mount_row.spec.equipment.size(), 1u);
-  EXPECT_EQ(set.mount_row.spec.equipment[0].material_id, 13u);
-}
-
 TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   using namespace Render::Creature::Pipeline;
 
@@ -196,19 +158,46 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
   ASSERT_EQ(prep.bodies.size(), 2u);
   int rider_rows = 0;
   int horse_rows = 0;
+  float rider_world_y = 0.0F;
+  float horse_world_y = 0.0F;
   for (const auto &row : prep.bodies.rows()) {
     if (row.spec.kind == CreatureKind::Humanoid) {
       ++rider_rows;
+      rider_world_y = row.world_from_unit.column(3).y();
     }
     if (row.spec.kind == CreatureKind::Horse) {
       ++horse_rows;
+      horse_world_y = row.world_from_unit.column(3).y();
     }
   }
 
   EXPECT_EQ(rider_rows, 1);
   EXPECT_EQ(horse_rows, 1);
+  EXPECT_NEAR(rider_world_y, horse_world_y, 0.0001F);
+  EXPECT_EQ(prep.bodies.requests().size(), 2u);
   EXPECT_TRUE(owns_slot(renderer.visual_spec().owned_legacy_slots,
                         LegacySlotMask::Attachments));
+}
+
+TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
+  using namespace Render::Creature::Pipeline;
+
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  Render::GL::AnimationInputs anim{};
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  NullSubmitter sink;
+  Render::Creature::Pipeline::submit_preparation(prep, sink);
+
+  EXPECT_GT(sink.rigged_calls, 0);
 }
 
 } // namespace

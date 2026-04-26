@@ -1,10 +1,6 @@
 #include "mounted_knight_renderer_base.h"
 
-#include "../creature/pipeline/equipment_registry.h"
-#include "../equipment/equipment_registry.h"
-#include "../equipment/equipment_submit.h"
-#include "../equipment/weapons/shield_renderer.h"
-#include "../equipment/weapons/sword_renderer.h"
+#include "../creature/archetype_registry.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../humanoid/mounted_pose_controller.h"
@@ -46,8 +42,7 @@ MountedKnightRendererBase::MountedKnightRendererBase(
   }
 
   m_horseRenderer.set_attachments(m_config.horse_attachments);
-
-  cache_equipment();
+  set_mount_archetype_id(m_config.mount_archetype_id);
   build_visual_spec();
 }
 
@@ -63,6 +58,8 @@ auto MountedKnightRendererBase::mounted_visual_spec() const
     m_mounted_visual_spec_cache.rider = visual_spec();
     m_mounted_visual_spec_cache.rider.kind =
         Render::Creature::Pipeline::CreatureKind::Humanoid;
+    m_mounted_visual_spec_cache.rider.archetype_id =
+        Render::Creature::ArchetypeRegistry::kRiderBase;
     m_mounted_visual_spec_cache.rider.debug_name =
         "troops/mounted_knight/rider";
     m_mounted_visual_spec_cache.mount.debug_name =
@@ -156,102 +153,19 @@ void MountedKnightRendererBase::apply_riding_animation(
   mounted_controller.apply_pose(mount, pose_request);
 }
 
-void MountedKnightRendererBase::cache_equipment() {
-  auto &registry = EquipmentRegistry::instance();
-  if (!m_config.helmet_equipment_id.empty()) {
-    m_cached_helmet =
-        registry.get(EquipmentCategory::Helmet, m_config.helmet_equipment_id);
-  }
-  if (!m_config.armor_equipment_id.empty()) {
-    m_cached_armor =
-        registry.get(EquipmentCategory::Armor, m_config.armor_equipment_id);
-  }
-  if (!m_config.shoulder_equipment_id.empty()) {
-    m_cached_shoulder =
-        registry.get(EquipmentCategory::Armor, m_config.shoulder_equipment_id);
-  }
-  if (!m_config.shield_equipment_id.empty()) {
-    m_cached_shield =
-        registry.get(EquipmentCategory::Weapon, m_config.shield_equipment_id);
-  }
-}
-
 void MountedKnightRendererBase::build_visual_spec() {
   using namespace Render::Creature::Pipeline;
-
-  m_loadout.clear();
-
-  if (m_cached_helmet) {
-    auto *helmet_ptr = m_cached_helmet.get();
-    float const helmet_offset = m_config.helmet_offset_moving;
-    EquipmentRecord rec{};
-    rec.dispatch = [helmet_ptr,
-                    helmet_offset](const EquipmentSubmitContext &sub,
-                                   Render::GL::EquipmentBatch &batch) {
-      if (helmet_ptr == nullptr || sub.ctx == nullptr ||
-          sub.frames == nullptr || sub.palette == nullptr) {
-        return;
-      }
-      BodyFrames frames = *sub.frames;
-      if (sub.ctx->entity != nullptr && helmet_offset > 0.0F) {
-        if (auto *move = sub.ctx->entity
-                             ->get_component<Engine::Core::MovementComponent>();
-            move != nullptr) {
-          float const speed_sq = move->vx * move->vx + move->vz * move->vz;
-          if (speed_sq > 0.0001F) {
-            frames.head.origin += frames.head.forward * helmet_offset;
-          }
-        }
-      }
-      HumanoidAnimationContext anim_ctx{};
-      helmet_ptr->render(*sub.ctx, frames, *sub.palette, anim_ctx, batch);
-    };
-    m_loadout.push_back(std::move(rec));
-  }
-
-  if (m_cached_armor) {
-    m_loadout.push_back(make_legacy_equipment_record(*m_cached_armor));
-  }
-
-  if (m_config.has_shoulder && m_cached_shoulder) {
-    m_loadout.push_back(make_legacy_equipment_record(*m_cached_shoulder));
-  }
-
-  if (m_config.has_sword) {
-    QVector3D const metal_color = m_config.metal_color;
-    EquipmentRecord rec{};
-    rec.dispatch = [metal_color](const EquipmentSubmitContext &sub,
-                                 Render::GL::EquipmentBatch &batch) {
-      if (sub.ctx == nullptr || sub.frames == nullptr ||
-          sub.palette == nullptr || sub.anim == nullptr) {
-        return;
-      }
-      uint32_t const seed = sub.seed;
-      SwordRenderConfig sword_config;
-      sword_config.metal_color = metal_color;
-      sword_config.sword_length =
-          0.82F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.12F;
-      sword_config.sword_width =
-          0.042F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.008F;
-      SwordRenderer::submit(sword_config, *sub.ctx, *sub.frames, *sub.palette,
-                            *sub.anim, batch);
-    };
-    m_loadout.push_back(std::move(rec));
-  }
-
-  if (m_config.has_cavalry_shield && m_cached_shield) {
-    m_loadout.push_back(make_legacy_equipment_record(*m_cached_shield));
-  }
 
   m_spec = UnitVisualSpec{};
   m_spec.kind = CreatureKind::Humanoid;
   m_spec.debug_name = "troops/mounted_knight/rider";
   QVector3D const ps = get_proportion_scaling();
   m_spec.scaling = ProportionScaling{ps.x(), ps.y(), ps.z()};
-  m_spec.equipment =
-      std::span<const EquipmentRecord>{m_loadout.data(), m_loadout.size()};
-
   m_spec.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+  m_spec.archetype_id =
+      (m_config.rider_archetype_id != Render::Creature::kInvalidArchetype)
+          ? m_config.rider_archetype_id
+          : Render::Creature::ArchetypeRegistry::kRiderBase;
 }
 
 } // namespace Render::GL
