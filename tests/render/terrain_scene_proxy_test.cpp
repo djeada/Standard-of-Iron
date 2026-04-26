@@ -83,8 +83,12 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   map_def.grid.width = 8;
   map_def.grid.height = 8;
   map_def.grid.tile_size = 1.0F;
+  map_def.rivers.push_back({QVector3D(-2.0F, 0.0F, 0.0F),
+                            QVector3D(2.0F, 0.0F, 0.0F), 1.5F});
   map_def.roads.push_back({QVector3D(-1.0F, 0.0F, -1.0F),
                            QVector3D(1.0F, 0.0F, 1.0F), 2.5F});
+  map_def.bridges.push_back({QVector3D(-0.5F, 0.0F, 0.0F),
+                             QVector3D(0.5F, 0.0F, 0.0F), 2.0F, 0.4F});
 
   Game::Map::TerrainService::instance().initialize(map_def);
 
@@ -99,6 +103,33 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(field.height, 8);
   ASSERT_EQ(proxy.road_segments().size(), 1U);
   EXPECT_FLOAT_EQ(proxy.road_segments().front().width, 2.5F);
+
+  const auto surfaces = proxy.surface_chunks();
+  ASSERT_EQ(surfaces.size(), 2U);
+  EXPECT_EQ(surfaces[0].kind, Render::GL::TerrainSurfaceKind::GroundPlane);
+  EXPECT_EQ(surfaces[0].pass, proxy.ground());
+  EXPECT_TRUE(surfaces[0].params.is_ground_plane);
+  EXPECT_EQ(surfaces[0].params.field, &field);
+  EXPECT_NE(surfaces[0].params.biome_settings, nullptr);
+  EXPECT_EQ(surfaces[1].kind, Render::GL::TerrainSurfaceKind::TerrainMesh);
+  EXPECT_EQ(surfaces[1].pass, proxy.terrain());
+  EXPECT_FALSE(surfaces[1].params.is_ground_plane);
+  EXPECT_EQ(surfaces[1].params.field, &field);
+
+  const auto features = proxy.feature_chunks();
+  ASSERT_EQ(features.size(), 4U);
+  EXPECT_EQ(features[0].kind, Render::GL::LinearFeatureKind::River);
+  EXPECT_EQ(features[0].visibility_mode,
+            Render::GL::LinearFeatureVisibilityMode::SegmentSampled);
+  EXPECT_EQ(features[0].geometry_count, 1U);
+  EXPECT_EQ(features[1].kind, Render::GL::LinearFeatureKind::Road);
+  EXPECT_EQ(features[1].geometry_count, 1U);
+  EXPECT_EQ(features[2].kind, Render::GL::LinearFeatureKind::Riverbank);
+  EXPECT_EQ(features[2].visibility_mode,
+            Render::GL::LinearFeatureVisibilityMode::TextureDriven);
+  EXPECT_EQ(features[2].geometry_count, 1U);
+  EXPECT_EQ(features[3].kind, Render::GL::LinearFeatureKind::Bridge);
+  EXPECT_EQ(features[3].geometry_count, 1U);
 }
 
 } // namespace

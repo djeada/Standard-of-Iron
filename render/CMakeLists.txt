@@ -38,6 +38,7 @@ add_library(render_gl STATIC
     pass/primitive_flush_pass.cpp
     pass/construction_preview_pass.cpp
     ground/spawn_validator.cpp
+    ground/linear_feature_geometry.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
     ground/terrain_renderer.cpp
