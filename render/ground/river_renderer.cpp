@@ -68,13 +68,6 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     visibility_snapshot = visibility.snapshot();
   }
 
-  auto *shader = renderer.get_shader("river");
-  if (shader == nullptr) {
-    return;
-  }
-
-  renderer.set_current_shader(shader);
-
   QMatrix4x4 model;
   model.setToIdentity();
 
@@ -135,10 +128,9 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     QVector3D const final_color(color_multiplier.x(), color_multiplier.y(),
                                 color_multiplier.z());
 
-    renderer.mesh(mesh, model, final_color, nullptr, alpha);
+    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::River, model,
+                             final_color, alpha);
   }
-
-  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

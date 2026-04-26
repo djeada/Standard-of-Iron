@@ -443,13 +443,6 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   Q_UNUSED(resources);
 
-  auto *shader = renderer.get_shader("riverbank");
-  if (shader == nullptr) {
-    return;
-  }
-
-  renderer.set_current_shader(shader);
-
   auto *backend = renderer.backend();
   auto &visibility = Game::Map::VisibilityService::instance();
   const bool use_visibility = visibility.is_initialized();
@@ -570,11 +563,9 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
           (state == SegmentState::Visible) ? 1.0F : m_explored_dim_factor;
     }
 
-    renderer.mesh(mesh, model, QVector3D(1.0F, 1.0F, 1.0F), nullptr,
-                  segment_visibility);
+    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Riverbank, model,
+                             QVector3D(1.0F, 1.0F, 1.0F), segment_visibility);
   }
-
-  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

@@ -18,6 +18,10 @@ using Render::GL::MeshCmd;
 using Render::GL::MeshCmdIndex;
 using Render::GL::SelectionRingCmd;
 using Render::GL::SelectionRingCmdIndex;
+using Render::GL::TerrainFeatureCmd;
+using Render::GL::TerrainFeatureCmdIndex;
+using Render::GL::TerrainSurfaceCmd;
+using Render::GL::TerrainSurfaceCmdIndex;
 using Render::GL::WorldChunkCmd;
 using Render::GL::WorldChunkCmdIndex;
 
@@ -48,6 +52,27 @@ TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
   EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex)
       << "Selection rings must render last so they appear on top of units "
          "and terrain, regardless of CommandPriority.";
+}
+
+TEST(DrawQueueSortOrder, ExplicitTerrainCommandsStayBeforeGameplayMeshes) {
+  DrawQueue queue;
+
+  MeshCmd mesh;
+  queue.submit(mesh);
+
+  TerrainFeatureCmd feature;
+  feature.kind = TerrainFeatureCmd::Kind::Road;
+  queue.submit(feature);
+
+  TerrainSurfaceCmd surface;
+  queue.submit(surface);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), TerrainFeatureCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), MeshCmdIndex);
 }
 
 TEST(DrawQueueSortOrder, PriorityDoesNotInvertTypeOrder) {

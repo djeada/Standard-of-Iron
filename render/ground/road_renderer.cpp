@@ -67,17 +67,6 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     visibility_snapshot = visibility.snapshot();
   }
 
-  auto *shader = renderer.get_shader("road");
-  if (shader == nullptr) {
-
-    shader = renderer.get_shader("terrain");
-    if (shader == nullptr) {
-      return;
-    }
-  }
-
-  renderer.set_current_shader(shader);
-
   QMatrix4x4 model;
   model.setToIdentity();
 
@@ -134,10 +123,9 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                                 road_base_color.y() * color_multiplier.y(),
                                 road_base_color.z() * color_multiplier.z());
 
-    renderer.mesh(mesh, model, final_color, nullptr, alpha);
+    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Road, model,
+                             final_color, alpha);
   }
-
-  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

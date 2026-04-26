@@ -377,8 +377,8 @@ void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Grass;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Grass;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.grass = params;
@@ -392,8 +392,8 @@ void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Stone;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Stone;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.stone = params;
@@ -406,8 +406,8 @@ void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Plant;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Plant;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.plant = params;
@@ -421,8 +421,8 @@ void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Pine;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Pine;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.pine = params;
@@ -436,8 +436,8 @@ void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Olive;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Olive;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.olive = params;
@@ -452,8 +452,8 @@ void Renderer::firecamp_batch(Buffer *instance_buffer,
       (m_active_queue == nullptr)) {
     return;
   }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::FireCamp;
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::FireCamp;
   cmd.instance_buffer = instance_buffer;
   cmd.instance_count = instance_count;
   cmd.firecamp = params;
@@ -482,13 +482,28 @@ void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
   if ((mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
-  WorldChunkCmd cmd;
+  TerrainSurfaceCmd cmd;
   cmd.mesh = mesh;
   cmd.model = model;
   cmd.params = params;
   cmd.sort_key = sort_key;
   cmd.depth_write = depth_write;
   cmd.depth_bias = depth_bias;
+  m_active_queue->submit(std::move(cmd));
+}
+
+void Renderer::terrain_feature(Mesh *mesh, TerrainFeatureCmd::Kind kind,
+                               const QMatrix4x4 &model, const QVector3D &color,
+                               float alpha) {
+  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
+    return;
+  }
+  TerrainFeatureCmd cmd;
+  cmd.mesh = mesh;
+  cmd.kind = kind;
+  cmd.model = model;
+  cmd.color = color;
+  cmd.alpha = alpha * m_alpha_override;
   m_active_queue->submit(std::move(cmd));
 }
 

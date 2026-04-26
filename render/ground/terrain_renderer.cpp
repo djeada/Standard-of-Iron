@@ -170,6 +170,7 @@ void TerrainRenderer::build_meshes() {
   }
 
   std::vector<float> height_data = m_height_data;
+  const auto surface_profile = Game::Map::make_surface_profile(m_biome_settings);
   std::vector<float> entry_weight;
   if (!m_hill_entrances.empty() &&
       m_hill_entrances.size() == height_data.size()) {
@@ -787,18 +788,18 @@ void TerrainRenderer::build_meshes() {
         auto tint_color = [&](const QVector3D &base) {
           return clamp01(applyTint(base, chunk.tint));
         };
-        params.grass_primary = tint_color(m_biome_settings.grass_primary);
-        params.grass_secondary = tint_color(m_biome_settings.grass_secondary);
-        params.grass_dry = tint_color(m_biome_settings.grass_dry);
-        params.soil_color = tint_color(m_biome_settings.soil_color);
-        params.rock_low = tint_color(m_biome_settings.rock_low);
-        params.rock_high = tint_color(m_biome_settings.rock_high);
+        params.grass_primary = tint_color(surface_profile.grass_primary);
+        params.grass_secondary = tint_color(surface_profile.grass_secondary);
+        params.grass_dry = tint_color(surface_profile.grass_dry);
+        params.soil_color = tint_color(surface_profile.soil_color);
+        params.rock_low = tint_color(surface_profile.rock_low);
+        params.rock_high = tint_color(surface_profile.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        params.macro_noise_scale = m_biome_settings.terrain_macro_noise_scale;
-        params.detail_noise_scale = m_biome_settings.terrain_detail_noise_scale;
+        params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
+        params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
 
-        float slope_threshold = m_biome_settings.terrain_rock_threshold;
+        float slope_threshold = surface_profile.terrain_rock_threshold;
         float sharpness_mul = 1.0F;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           slope_threshold -= 0.06F;
@@ -815,9 +816,9 @@ void TerrainRenderer::build_meshes() {
 
         params.slope_rock_threshold = slope_threshold;
         params.slope_rock_sharpness = std::max(
-            1.0F, m_biome_settings.terrain_rock_sharpness * sharpness_mul);
+            1.0F, surface_profile.terrain_rock_sharpness * sharpness_mul);
 
-        float soil_height = m_biome_settings.terrain_soil_height;
+        float soil_height = surface_profile.terrain_soil_height;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           soil_height -= 0.04F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
@@ -827,10 +828,10 @@ void TerrainRenderer::build_meshes() {
         params.soil_blend_height = soil_height;
 
         params.soil_blend_sharpness =
-            std::max(0.75F, m_biome_settings.terrain_soil_sharpness *
-                                (chunk.type == Game::Map::TerrainType::Mountain
-                                     ? 0.80F
-                                     : 0.95F));
+            std::max(0.75F, surface_profile.terrain_soil_sharpness *
+                                 (chunk.type == Game::Map::TerrainType::Mountain
+                                      ? 0.80F
+                                      : 0.95F));
 
         const uint32_t noise_key_a =
             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0xB5297A4DU);
@@ -842,7 +843,7 @@ void TerrainRenderer::build_meshes() {
                       hash_to_01(noise_key_b) * k_noise_offset_scale);
 
         float base_amp =
-            m_biome_settings.height_noise_amplitude *
+            surface_profile.height_noise_amplitude *
             (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));
         if (chunk.type == Game::Map::TerrainType::Hill) {
           base_amp *= 1.12F;
@@ -852,15 +853,15 @@ void TerrainRenderer::build_meshes() {
         base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
                      0.06F * entrance_factor);
         params.height_noise_strength = base_amp;
-        params.height_noise_frequency = m_biome_settings.height_noise_frequency;
+        params.height_noise_frequency = surface_profile.height_noise_frequency;
 
         params.ambient_boost =
-            m_biome_settings.terrain_ambient_boost *
+            surface_profile.terrain_ambient_boost *
             ((chunk.type == Game::Map::TerrainType::Hill)       ? 0.97F
              : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F
                                                                 : 0.95F);
         params.rock_detail_strength =
-            m_biome_settings.terrain_rock_detail_strength *
+            surface_profile.terrain_rock_detail_strength *
             (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
              0.15F * edge_factor - 0.10F * plateau_factor -
              0.08F * entrance_factor);

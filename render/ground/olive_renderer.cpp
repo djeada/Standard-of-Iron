@@ -89,22 +89,19 @@ void OliveRenderer::generate_olive_instances() {
     return;
   }
 
-  if (m_biome_settings.ground_type != Game::Map::GroundType::GrassDry) {
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
+  const auto scatter_rules = Game::Map::make_scatter_rules(scatter_profile.ground_type);
+  if (!scatter_rules.allow_olives) {
     m_oliveInstancesDirty = false;
     return;
   }
 
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  float olive_density =
-      (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
-                                                                        : 0.05F;
-  if (m_biome_settings.plant_density > 0.0F) {
-    float const density_mult =
-        (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry)
-            ? 0.15F
-            : 0.08F;
-    olive_density = m_biome_settings.plant_density * density_mult;
+  float olive_density = scatter_rules.olive_dry_base_density;
+  if (scatter_profile.plant_density > 0.0F) {
+    olive_density =
+        scatter_profile.plant_density * scatter_rules.olive_density_scale_dry;
   }
 
   SpawnTerrainCache terrain_cache;
@@ -115,7 +112,7 @@ void OliveRenderer::generate_olive_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
   config.max_slope = 0.65F;
 
   SpawnValidator validator(terrain_cache, config);

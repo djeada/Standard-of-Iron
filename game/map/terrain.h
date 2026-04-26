@@ -175,6 +175,141 @@ struct BiomeSettings {
   QVector3D snow_color{0.92F, 0.94F, 0.98F};
 };
 
+struct TerrainSurfaceProfile {
+  GroundType ground_type = GroundType::ForestMud;
+  QVector3D grass_primary{0.30F, 0.60F, 0.28F};
+  QVector3D grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D grass_dry{0.72F, 0.66F, 0.48F};
+  QVector3D soil_color{0.28F, 0.24F, 0.18F};
+  QVector3D rock_low{0.48F, 0.46F, 0.44F};
+  QVector3D rock_high{0.68F, 0.69F, 0.73F};
+  float height_noise_amplitude = 0.16F;
+  float height_noise_frequency = 0.05F;
+  float terrain_macro_noise_scale = 0.035F;
+  float terrain_detail_noise_scale = 0.14F;
+  float terrain_soil_height = 0.6F;
+  float terrain_soil_sharpness = 3.8F;
+  float terrain_rock_threshold = 0.42F;
+  float terrain_rock_sharpness = 3.1F;
+  float terrain_ambient_boost = 1.08F;
+  float terrain_rock_detail_strength = 0.35F;
+  bool ground_irregularity_enabled = true;
+  float irregularity_scale = 0.15F;
+  float irregularity_amplitude = 0.08F;
+  std::uint32_t seed = 1337U;
+  float snow_coverage = 0.0F;
+  float moisture_level = 0.5F;
+  float crack_intensity = 0.0F;
+  float rock_exposure = 0.3F;
+  float grass_saturation = 1.0F;
+  float soil_roughness = 0.5F;
+  QVector3D snow_color{0.92F, 0.94F, 0.98F};
+};
+
+struct TerrainScatterProfile {
+  GroundType ground_type = GroundType::ForestMud;
+  QVector3D grass_primary{0.30F, 0.60F, 0.28F};
+  QVector3D grass_secondary{0.44F, 0.70F, 0.32F};
+  QVector3D grass_dry{0.72F, 0.66F, 0.48F};
+  QVector3D soil_color{0.28F, 0.24F, 0.18F};
+  QVector3D rock_low{0.48F, 0.46F, 0.44F};
+  QVector3D rock_high{0.68F, 0.69F, 0.73F};
+  float patch_density = 4.5F;
+  float patch_jitter = 0.95F;
+  float background_blade_density = 0.65F;
+  float blade_height_min = 0.55F;
+  float blade_height_max = 1.35F;
+  float blade_width_min = 0.025F;
+  float blade_width_max = 0.055F;
+  float sway_strength = 0.25F;
+  float sway_speed = 1.4F;
+  float plant_density = 0.5F;
+  float spawn_edge_padding = 0.08F;
+  std::uint32_t seed = 1337U;
+};
+
+struct TerrainScatterRules {
+  bool allow_pines = true;
+  bool allow_olives = false;
+  float pine_base_density = 0.2F;
+  float pine_density_scale = 0.3F;
+  float olive_base_density = 0.05F;
+  float olive_dry_base_density = 0.12F;
+  float olive_density_scale_dry = 0.15F;
+  float olive_density_scale_default = 0.08F;
+};
+
+inline auto make_surface_profile(const BiomeSettings &settings)
+    -> TerrainSurfaceProfile {
+  return {settings.ground_type,
+          settings.grass_primary,
+          settings.grass_secondary,
+          settings.grass_dry,
+          settings.soil_color,
+          settings.rock_low,
+          settings.rock_high,
+          settings.height_noise_amplitude,
+          settings.height_noise_frequency,
+          settings.terrain_macro_noise_scale,
+          settings.terrain_detail_noise_scale,
+          settings.terrain_soil_height,
+          settings.terrain_soil_sharpness,
+          settings.terrain_rock_threshold,
+          settings.terrain_rock_sharpness,
+          settings.terrain_ambient_boost,
+          settings.terrain_rock_detail_strength,
+          settings.ground_irregularity_enabled,
+          settings.irregularity_scale,
+          settings.irregularity_amplitude,
+          settings.seed,
+          settings.snow_coverage,
+          settings.moisture_level,
+          settings.crack_intensity,
+          settings.rock_exposure,
+          settings.grass_saturation,
+          settings.soil_roughness,
+          settings.snow_color};
+}
+
+inline auto make_scatter_profile(const BiomeSettings &settings)
+    -> TerrainScatterProfile {
+  return {settings.ground_type,
+          settings.grass_primary,
+          settings.grass_secondary,
+          settings.grass_dry,
+          settings.soil_color,
+          settings.rock_low,
+          settings.rock_high,
+          settings.patch_density,
+          settings.patch_jitter,
+          settings.background_blade_density,
+          settings.blade_height_min,
+          settings.blade_height_max,
+          settings.blade_width_min,
+          settings.blade_width_max,
+          settings.sway_strength,
+          settings.sway_speed,
+          settings.plant_density,
+          settings.spawn_edge_padding,
+          settings.seed};
+}
+
+inline auto make_scatter_rules(GroundType ground_type) -> TerrainScatterRules {
+  TerrainScatterRules rules;
+  switch (ground_type) {
+  case GroundType::GrassDry:
+    rules.allow_pines = false;
+    rules.allow_olives = true;
+    break;
+  case GroundType::ForestMud:
+  case GroundType::SoilRocky:
+  case GroundType::AlpineMix:
+  case GroundType::SoilFertile:
+    break;
+  }
+  return rules;
+}
+
 inline void apply_ground_type_defaults(BiomeSettings &settings,
                                        GroundType ground_type) {
   settings.ground_type = ground_type;

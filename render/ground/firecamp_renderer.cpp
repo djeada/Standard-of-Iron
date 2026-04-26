@@ -222,6 +222,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     return;
   }
 
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   SpawnTerrainCache terrain_cache;
@@ -232,7 +233,7 @@ void FireCampRenderer::generate_firecamp_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
 
   SpawnValidator validator(terrain_cache, config);
 

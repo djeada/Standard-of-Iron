@@ -89,16 +89,18 @@ void PineRenderer::generate_pine_instances() {
     return;
   }
 
-  if (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry) {
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
+  const auto scatter_rules = Game::Map::make_scatter_rules(scatter_profile.ground_type);
+  if (!scatter_rules.allow_pines) {
     m_pineInstancesDirty = false;
     return;
   }
 
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  float pine_density = 0.2F;
-  if (m_biome_settings.plant_density > 0.0F) {
-    pine_density = m_biome_settings.plant_density * 0.3F;
+  float pine_density = scatter_rules.pine_base_density;
+  if (scatter_profile.plant_density > 0.0F) {
+    pine_density = scatter_profile.plant_density * scatter_rules.pine_density_scale;
   }
 
   SpawnTerrainCache terrain_cache;
@@ -109,7 +111,7 @@ void PineRenderer::generate_pine_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
 
   SpawnValidator validator(terrain_cache, config);
 

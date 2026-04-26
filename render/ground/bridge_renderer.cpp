@@ -226,16 +226,6 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     visibility_snapshot = visibility.snapshot();
   }
 
-  auto *shader = renderer.get_shader("bridge");
-  if (shader == nullptr) {
-    shader = renderer.get_shader("basic");
-    if (shader == nullptr) {
-      return;
-    }
-  }
-
-  renderer.set_current_shader(shader);
-
   QMatrix4x4 model;
   model.setToIdentity();
 
@@ -292,10 +282,9 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                                 stone_color.y() * color_multiplier.y(),
                                 stone_color.z() * color_multiplier.z());
 
-    renderer.mesh(mesh, model, final_color, nullptr, alpha);
+    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Bridge, model,
+                             final_color, alpha);
   }
-
-  renderer.set_current_shader(nullptr);
 }
 
 } // namespace Render::GL

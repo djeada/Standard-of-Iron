@@ -62,10 +62,11 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_grassInstanceBuffer.reset();
   m_grassInstanceCount = 0;
   m_grassInstancesDirty = false;
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
 
-  m_grassParams.soil_color = m_biome_settings.soil_color;
-  m_grassParams.wind_strength = m_biome_settings.sway_strength;
-  m_grassParams.wind_speed = m_biome_settings.sway_speed;
+  m_grassParams.soil_color = scatter_profile.soil_color;
+  m_grassParams.wind_strength = scatter_profile.sway_strength;
+  m_grassParams.wind_speed = scatter_profile.sway_speed;
   m_grassParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_grassParams.time = 0.0F;
 
@@ -106,7 +107,8 @@ void BiomeRenderer::generate_grass_instances() {
     return;
   }
 
-  if (m_biome_settings.patch_density < 0.01F) {
+  const auto scatter_profile = Game::Map::make_scatter_profile(m_biome_settings);
+  if (scatter_profile.patch_density < 0.01F) {
     m_grassInstanceCount = 0;
     m_grassInstancesDirty = false;
     return;
@@ -122,7 +124,7 @@ void BiomeRenderer::generate_grass_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
 
   config.check_river_margin = false;
 

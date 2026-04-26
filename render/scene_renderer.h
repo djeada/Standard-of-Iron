@@ -175,6 +175,9 @@ public:
                      const TerrainChunkParams &params,
                      std::uint16_t sort_key = 0x8000U, bool depth_write = true,
                      float depth_bias = 0.0F);
+  void terrain_feature(Mesh *mesh, TerrainFeatureCmd::Kind kind,
+                       const QMatrix4x4 &model, const QVector3D &color,
+                       float alpha = 1.0F);
 
   struct TemplatePrewarmProgress {
     enum class Phase {

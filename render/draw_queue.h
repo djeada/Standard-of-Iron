@@ -93,6 +93,32 @@ struct DecorationBatchCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
+struct TerrainScatterCmd {
+
+  enum class Species : std::uint8_t {
+    Grass = 0,
+    Stone,
+    Plant,
+    Pine,
+    Olive,
+    FireCamp
+  };
+
+  Species species = Species::Grass;
+  const Material *material = nullptr;
+  Buffer *instance_buffer = nullptr;
+  std::size_t instance_count = 0;
+
+  GrassBatchParams grass{};
+  StoneBatchParams stone{};
+  PlantBatchParams plant{};
+  PineBatchParams pine{};
+  OliveBatchParams olive{};
+  FireCampBatchParams firecamp{};
+
+  CommandPriority priority{CommandPriority::Low};
+};
+
 struct RainBatchCmd {
   Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
@@ -110,6 +136,31 @@ struct WorldChunkCmd {
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
   float depth_bias = 0.0F;
+  CommandPriority priority{CommandPriority::High};
+};
+
+struct TerrainSurfaceCmd {
+
+  Mesh *mesh = nullptr;
+  const Material *material = nullptr;
+  QMatrix4x4 model;
+  BoundingBox aabb;
+  TerrainChunkParams params;
+  std::uint16_t sort_key = 0x8000U;
+  bool depth_write = true;
+  float depth_bias = 0.0F;
+  CommandPriority priority{CommandPriority::High};
+};
+
+struct TerrainFeatureCmd {
+
+  enum class Kind : std::uint8_t { River = 0, Road, Riverbank, Bridge };
+
+  Mesh *mesh = nullptr;
+  QMatrix4x4 model;
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float alpha = 1.0F;
+  Kind kind = Kind::River;
   CommandPriority priority{CommandPriority::High};
 };
 
@@ -200,8 +251,9 @@ struct RiggedCreatureCmd {
 
 using DrawCmd =
     std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, DecorationBatchCmd, RainBatchCmd,
-                 WorldChunkCmd, PrimitiveBatchCmd, EffectBatchCmd,
+                 MeshCmd, FogBatchCmd, DecorationBatchCmd, TerrainScatterCmd,
+                 RainBatchCmd, WorldChunkCmd, TerrainSurfaceCmd,
+                 TerrainFeatureCmd, PrimitiveBatchCmd, EffectBatchCmd,
                  ModeIndicatorCmd, DrawPartCmd, RiggedCreatureCmd>;
 
 enum class DrawCmdType : std::uint8_t {
@@ -212,13 +264,16 @@ enum class DrawCmdType : std::uint8_t {
   Mesh = 4,
   FogBatch = 5,
   DecorationBatch = 6,
-  RainBatch = 7,
-  WorldChunk = 8,
-  PrimitiveBatch = 9,
-  EffectBatch = 10,
-  ModeIndicator = 11,
-  DrawPart = 12,
-  RiggedCreature = 13
+  TerrainScatter = 7,
+  RainBatch = 8,
+  WorldChunk = 9,
+  TerrainSurface = 10,
+  TerrainFeature = 11,
+  PrimitiveBatch = 12,
+  EffectBatch = 13,
+  ModeIndicator = 14,
+  DrawPart = 15,
+  RiggedCreature = 16
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -235,10 +290,16 @@ constexpr std::size_t FogBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FogBatch);
 constexpr std::size_t DecorationBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::DecorationBatch);
+constexpr std::size_t TerrainScatterCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainScatter);
 constexpr std::size_t RainBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::RainBatch);
 constexpr std::size_t WorldChunkCmdIndex =
     static_cast<std::size_t>(DrawCmdType::WorldChunk);
+constexpr std::size_t TerrainSurfaceCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainSurface);
+constexpr std::size_t TerrainFeatureCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainFeature);
 constexpr std::size_t PrimitiveBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
 constexpr std::size_t EffectBatchCmdIndex =
@@ -391,16 +452,27 @@ private:
     DecorationPine = 11,
     DecorationOlive = 12,
     DecorationFireCamp = 13,
-    Rain = 16,
-    WorldChunk = 17,
-    PrimitiveSphere = 18,
-    PrimitiveCylinder = 19,
-    PrimitiveCone = 20,
-    Effect = 24,
-    Grid = 25,
-    SelectionSmoke = 26,
-    SelectionRing = 27,
-    ModeIndicator = 28
+    TerrainScatterGrass = 14,
+    TerrainScatterStone = 15,
+    TerrainScatterPlant = 16,
+    TerrainScatterPine = 17,
+    TerrainScatterOlive = 18,
+    TerrainScatterFireCamp = 19,
+    Rain = 20,
+    WorldChunk = 21,
+    TerrainSurface = 22,
+    TerrainFeatureRiver = 23,
+    TerrainFeatureRoad = 24,
+    TerrainFeatureRiverbank = 25,
+    TerrainFeatureBridge = 26,
+    PrimitiveSphere = 27,
+    PrimitiveCylinder = 28,
+    PrimitiveCone = 29,
+    Effect = 30,
+    Grid = 31,
+    SelectionSmoke = 32,
+    SelectionRing = 33,
+    ModeIndicator = 34
   };
 
   void sort_full_keys(std::size_t count) {
@@ -417,15 +489,16 @@ private:
 
     enum class RenderOrder : uint8_t {
       WorldChunk = 0,
-      DecorationBatch = 1,
-      RainBatch = 2,
-      PrimitiveBatch = 3,
-      Mesh = 4,
-      Cylinder = 5,
-      FogBatch = 6,
-      SelectionSmoke = 7,
-      Grid = 8,
-      EffectBatch = 9,
+      TerrainFeature = 1,
+      DecorationBatch = 2,
+      RainBatch = 3,
+      PrimitiveBatch = 4,
+      Mesh = 5,
+      Cylinder = 6,
+      FogBatch = 7,
+      SelectionSmoke = 8,
+      Grid = 9,
+      EffectBatch = 10,
       SelectionRing = 16,
       ModeIndicator = 17
     };
@@ -438,8 +511,11 @@ private:
         static_cast<uint8_t>(RenderOrder::Mesh),
         static_cast<uint8_t>(RenderOrder::FogBatch),
         static_cast<uint8_t>(RenderOrder::DecorationBatch),
+        static_cast<uint8_t>(RenderOrder::DecorationBatch),
         static_cast<uint8_t>(RenderOrder::RainBatch),
         static_cast<uint8_t>(RenderOrder::WorldChunk),
+        static_cast<uint8_t>(RenderOrder::WorldChunk),
+        static_cast<uint8_t>(RenderOrder::TerrainFeature),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
         static_cast<uint8_t>(RenderOrder::EffectBatch),
         static_cast<uint8_t>(RenderOrder::ModeIndicator),
@@ -470,12 +546,32 @@ private:
           static_cast<std::uint8_t>(deco.kind);
       identity.material = pack_12(intern_material_id(deco.material));
       identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
+    } else if (cmd.index() == TerrainScatterCmdIndex) {
+      const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::TerrainScatterGrass) +
+          static_cast<std::uint8_t>(deco.species);
+      identity.material = pack_12(intern_material_id(deco.material));
+      identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
     } else if (cmd.index() == WorldChunkCmdIndex) {
       const auto &chunk = std::get<WorldChunkCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::WorldChunk);
       identity.material = pack_12(chunk.sort_key);
       identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
       identity.texture = pack_12(intern_material_id(chunk.material));
+    } else if (cmd.index() == TerrainSurfaceCmdIndex) {
+      const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::TerrainSurface);
+      identity.material = pack_12(chunk.sort_key);
+      identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
+      identity.texture = pack_12(intern_material_id(chunk.material));
+    } else if (cmd.index() == TerrainFeatureCmdIndex) {
+      const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::TerrainFeatureRiver) +
+          static_cast<std::uint8_t>(feature.kind);
+      identity.transparency_bucket = transparency_bucket(feature.alpha);
+      identity.mesh = pack_16(intern_mesh_id(feature.mesh));
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.pipeline =
