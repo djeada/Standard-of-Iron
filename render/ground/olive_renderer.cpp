@@ -98,10 +98,16 @@ void OliveRenderer::generate_olive_instances() {
 
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  float olive_density = scatter_rules.olive_dry_base_density;
+  float olive_density =
+      (scatter_profile.ground_type == Game::Map::GroundType::GrassDry)
+          ? scatter_rules.olive_dry_base_density
+          : scatter_rules.olive_base_density;
   if (scatter_profile.plant_density > 0.0F) {
-    olive_density =
-        scatter_profile.plant_density * scatter_rules.olive_density_scale_dry;
+    float const density_scale =
+        (scatter_profile.ground_type == Game::Map::GroundType::GrassDry)
+            ? scatter_rules.olive_density_scale_dry
+            : scatter_rules.olive_density_scale_default;
+    olive_density = scatter_profile.plant_density * density_scale;
   }
 
   SpawnTerrainCache terrain_cache;
