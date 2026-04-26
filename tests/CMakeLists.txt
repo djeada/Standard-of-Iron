@@ -32,6 +32,7 @@ add_executable(standard_of_iron_tests
     render/battle_render_optimizer_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/terrain_scene_proxy_test.cpp
     render/oriented_parts_test.cpp
     render/draw_part_material_test.cpp
     render/pose_template_cache_test.cpp

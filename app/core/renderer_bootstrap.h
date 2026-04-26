@@ -1,11 +1,11 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
 namespace Render::GL {
 class Renderer;
 class Camera;
+class TerrainSceneProxy;
 class GroundRenderer;
 class TerrainRenderer;
 class BiomeRenderer;
@@ -20,7 +20,6 @@ class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
-struct IRenderPass;
 } // namespace Render::GL
 
 namespace Engine::Core {
@@ -32,6 +31,7 @@ public:
   struct RenderingComponents {
     std::unique_ptr<Render::GL::Renderer> renderer;
     std::unique_ptr<Render::GL::Camera> camera;
+    std::unique_ptr<Render::GL::TerrainSceneProxy> terrain_scene;
     std::unique_ptr<Render::GL::GroundRenderer> ground;
     std::unique_ptr<Render::GL::TerrainRenderer> terrain;
     std::unique_ptr<Render::GL::BiomeRenderer> biome;
@@ -46,7 +46,6 @@ public:
     std::unique_ptr<Render::GL::OliveRenderer> olive;
     std::unique_ptr<Render::GL::FireCampRenderer> firecamp;
     std::unique_ptr<Render::GL::RainRenderer> rain;
-    std::vector<Render::GL::IRenderPass *> passes;
   };
 
   static RenderingComponents initialize_rendering();

@@ -38,6 +38,7 @@
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_scene_proxy.h"
 
 auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   RenderingComponents components;
@@ -59,14 +60,14 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   components.olive = std::make_unique<Render::GL::OliveRenderer>();
   components.firecamp = std::make_unique<Render::GL::FireCampRenderer>();
   components.rain = std::make_unique<Render::GL::RainRenderer>();
-
-  components.passes = {components.ground.get(),    components.terrain.get(),
-                       components.river.get(),     components.road.get(),
-                       components.riverbank.get(), components.bridge.get(),
-                       components.biome.get(),     components.stone.get(),
-                       components.plant.get(),     components.pine.get(),
-                       components.olive.get(),     components.firecamp.get(),
-                       components.rain.get(),      components.fog.get()};
+  components.terrain_scene = std::make_unique<Render::GL::TerrainSceneProxy>(
+      components.ground.get(),    components.terrain.get(),
+      components.river.get(),     components.road.get(),
+      components.riverbank.get(), components.bridge.get(),
+      components.biome.get(),     components.stone.get(),
+      components.plant.get(),     components.pine.get(),
+      components.olive.get(),     components.firecamp.get(),
+      components.rain.get(),      components.fog.get());
 
   return components;
 }

@@ -46,6 +46,7 @@ struct RenderableComponent;
 namespace Render::GL {
 class Renderer;
 class Camera;
+class TerrainSceneProxy;
 class ResourceManager;
 class GroundRenderer;
 class TerrainRenderer;
@@ -61,7 +62,6 @@ class PineRenderer;
 class OliveRenderer;
 class FireCampRenderer;
 class RainRenderer;
-struct IRenderPass;
 } // namespace Render::GL
 
 namespace Game {
@@ -400,6 +400,7 @@ private:
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_camera;
+  std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
   std::unique_ptr<Render::GL::GroundRenderer> m_ground;
   std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
@@ -416,7 +417,6 @@ private:
   std::unique_ptr<Render::GL::FireCampRenderer> m_firecamp;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::RainManager> m_rainManager;
-  std::vector<Render::GL::IRenderPass *> m_passes;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;

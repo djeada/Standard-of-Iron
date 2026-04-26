@@ -26,6 +26,7 @@
 #include "minimap_manager.h"
 #include "production_manager.h"
 #include "renderer_bootstrap.h"
+#include "render/terrain_scene_proxy.h"
 #include "selection_query_service.h"
 #include <QBuffer>
 #include <QCoreApplication>
@@ -325,6 +326,7 @@ GameEngine::GameEngine(QObject *parent)
   auto rendering = RendererBootstrap::initialize_rendering();
   m_renderer = std::move(rendering.renderer);
   m_camera = std::move(rendering.camera);
+  m_terrain_scene = std::move(rendering.terrain_scene);
   m_ground = std::move(rendering.ground);
   m_terrain = std::move(rendering.terrain);
   m_biome = std::move(rendering.biome);
@@ -339,7 +341,6 @@ GameEngine::GameEngine(QObject *parent)
   m_olive = std::move(rendering.olive);
   m_firecamp = std::move(rendering.firecamp);
   m_rain = std::move(rendering.rain);
-  m_passes = std::move(rendering.passes);
 
   RendererBootstrap::initialize_world_systems(*m_world);
 
@@ -561,7 +562,7 @@ void GameEngine::cleanup_opengl_resources() {
     qInfo() << "Renderer shut down";
   }
 
-  m_passes.clear();
+  m_terrain_scene.reset();
 
   m_ground.reset();
   m_terrain.reset();
@@ -1070,12 +1071,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   m_renderer->begin_frame();
 
-  if (auto *res = m_renderer->resources()) {
-    for (auto *pass : m_passes) {
-      if (pass != nullptr) {
-        pass->submit(*m_renderer, res);
-      }
-    }
+  if (m_terrain_scene) {
+    m_terrain_scene->submit(*m_renderer, m_renderer->resources());
   }
 
   if (m_renderer && m_hoverTracker) {
