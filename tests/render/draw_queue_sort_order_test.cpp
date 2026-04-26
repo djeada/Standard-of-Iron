@@ -22,8 +22,6 @@ using Render::GL::TerrainFeatureCmd;
 using Render::GL::TerrainFeatureCmdIndex;
 using Render::GL::TerrainSurfaceCmd;
 using Render::GL::TerrainSurfaceCmdIndex;
-using Render::GL::WorldChunkCmd;
-using Render::GL::WorldChunkCmdIndex;
 
 TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
   DrawQueue queue;
@@ -38,14 +36,14 @@ TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
   mesh.priority = CommandPriority::Low;
   queue.submit(mesh);
 
-  WorldChunkCmd terrain;
+  TerrainSurfaceCmd terrain;
   terrain.priority = CommandPriority::Low;
   queue.submit(terrain);
 
   queue.sort_for_batching();
 
   ASSERT_EQ(queue.size(), 3U);
-  EXPECT_EQ(queue.get_sorted(0).index(), WorldChunkCmdIndex)
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex)
       << "Terrain must render first (beneath everything).";
   EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex)
       << "Meshes (units) must render between terrain and selection rings.";

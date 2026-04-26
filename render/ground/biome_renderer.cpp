@@ -83,7 +83,12 @@ void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
   GrassBatchParams params = m_grassParams;
   params.time = renderer.get_animation_time();
-  renderer.grass_batch(m_grassInstanceBuffer.get(), m_grassInstanceCount, params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Grass;
+  cmd.instance_buffer = m_grassInstanceBuffer.get();
+  cmd.instance_count = m_grassInstanceCount;
+  cmd.grass = params;
+  renderer.terrain_scatter(cmd);
 }
 
 void BiomeRenderer::clear() {

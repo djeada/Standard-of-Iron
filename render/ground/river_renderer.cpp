@@ -128,8 +128,13 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     QVector3D const final_color(color_multiplier.x(), color_multiplier.y(),
                                 color_multiplier.z());
 
-    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::River, model,
-                             final_color, alpha);
+    TerrainFeatureCmd cmd;
+    cmd.mesh = mesh;
+    cmd.kind = TerrainFeatureCmd::Kind::River;
+    cmd.model = model;
+    cmd.color = final_color;
+    cmd.alpha = alpha;
+    renderer.terrain_feature(cmd);
   }
 }
 

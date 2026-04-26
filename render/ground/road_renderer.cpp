@@ -123,8 +123,13 @@ void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                                 road_base_color.y() * color_multiplier.y(),
                                 road_base_color.z() * color_multiplier.z());
 
-    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Road, model,
-                             final_color, alpha);
+    TerrainFeatureCmd cmd;
+    cmd.mesh = mesh;
+    cmd.kind = TerrainFeatureCmd::Kind::Road;
+    cmd.model = model;
+    cmd.color = final_color;
+    cmd.alpha = alpha;
+    renderer.terrain_feature(cmd);
   }
 }
 

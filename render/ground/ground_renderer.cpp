@@ -166,7 +166,14 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       (void)model_changed;
       (void)state_changed;
 
-      renderer.terrain_chunk(plane, m_model, params, 0x0040U, true, +0.0008F);
+      TerrainSurfaceCmd cmd;
+      cmd.mesh = plane;
+      cmd.model = m_model;
+      cmd.params = params;
+      cmd.sort_key = 0x0040U;
+      cmd.depth_write = true;
+      cmd.depth_bias = +0.0008F;
+      renderer.terrain_surface(cmd);
 
       m_last_submitted_model = m_model;
       m_model_dirty = false;

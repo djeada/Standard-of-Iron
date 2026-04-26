@@ -563,8 +563,13 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
           (state == SegmentState::Visible) ? 1.0F : m_explored_dim_factor;
     }
 
-    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Riverbank, model,
-                             QVector3D(1.0F, 1.0F, 1.0F), segment_visibility);
+    TerrainFeatureCmd cmd;
+    cmd.mesh = mesh;
+    cmd.kind = TerrainFeatureCmd::Kind::Riverbank;
+    cmd.model = model;
+    cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
+    cmd.alpha = segment_visibility;
+    renderer.terrain_feature(cmd);
   }
 }
 

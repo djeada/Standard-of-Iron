@@ -101,8 +101,12 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                           (0.9F + 0.25F * std::sin(params.time * 1.3F));
   params.glow_strength = m_fireCampParams.glow_strength *
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
-  renderer.firecamp_batch(m_fireCampInstanceBuffer.get(), visible_count,
-                          params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::FireCamp;
+  cmd.instance_buffer = m_fireCampInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.firecamp = params;
+  renderer.terrain_scatter(cmd);
 
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);

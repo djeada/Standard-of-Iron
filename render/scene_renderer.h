@@ -171,13 +171,9 @@ public:
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override;
   void rigged(const RiggedCreatureCmd &cmd) override;
-  void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
-                     const TerrainChunkParams &params,
-                     std::uint16_t sort_key = 0x8000U, bool depth_write = true,
-                     float depth_bias = 0.0F);
-  void terrain_feature(Mesh *mesh, TerrainFeatureCmd::Kind kind,
-                       const QMatrix4x4 &model, const QVector3D &color,
-                       float alpha = 1.0F);
+  void terrain_surface(const TerrainSurfaceCmd &cmd);
+  void terrain_feature(const TerrainFeatureCmd &cmd);
+  void terrain_scatter(const TerrainScatterCmd &cmd);
 
   struct TemplatePrewarmProgress {
     enum class Phase {
@@ -205,18 +201,6 @@ public:
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
   void fog_batch(const FogInstanceData *instances, std::size_t count);
-  void grass_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const GrassBatchParams &params);
-  void stone_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const StoneBatchParams &params);
-  void plant_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const PlantBatchParams &params);
-  void pine_batch(Buffer *instance_buffer, std::size_t instance_count,
-                  const PineBatchParams &params);
-  void olive_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const OliveBatchParams &params);
-  void firecamp_batch(Buffer *instance_buffer, std::size_t instance_count,
-                      const FireCampBatchParams &params);
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 

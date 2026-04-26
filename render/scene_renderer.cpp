@@ -371,96 +371,6 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const GrassBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Grass;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.grass = params;
-  cmd.grass.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const StoneBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Stone;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.stone = params;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const PlantBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Plant;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.plant = params;
-  cmd.plant.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
-                          const PineBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Pine;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.pine = params;
-  cmd.pine.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const OliveBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::Olive;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.olive = params;
-  cmd.olive.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::firecamp_batch(Buffer *instance_buffer,
-                              std::size_t instance_count,
-                              const FireCampBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  TerrainScatterCmd cmd;
-  cmd.species = TerrainScatterCmd::Species::FireCamp;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.firecamp = params;
-  cmd.firecamp.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
 void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const RainBatchParams &params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
@@ -475,36 +385,48 @@ void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
-                             const TerrainChunkParams &params,
-                             std::uint16_t sort_key, bool depth_write,
-                             float depth_bias) {
-  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
+void Renderer::terrain_surface(const TerrainSurfaceCmd &cmd) {
+  if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
-  TerrainSurfaceCmd cmd;
-  cmd.mesh = mesh;
-  cmd.model = model;
-  cmd.params = params;
-  cmd.sort_key = sort_key;
-  cmd.depth_write = depth_write;
-  cmd.depth_bias = depth_bias;
-  m_active_queue->submit(std::move(cmd));
+  m_active_queue->submit(cmd);
 }
 
-void Renderer::terrain_feature(Mesh *mesh, TerrainFeatureCmd::Kind kind,
-                               const QMatrix4x4 &model, const QVector3D &color,
-                               float alpha) {
-  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
+void Renderer::terrain_feature(const TerrainFeatureCmd &cmd) {
+  if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
-  TerrainFeatureCmd cmd;
-  cmd.mesh = mesh;
-  cmd.kind = kind;
-  cmd.model = model;
-  cmd.color = color;
-  cmd.alpha = alpha * m_alpha_override;
-  m_active_queue->submit(std::move(cmd));
+  TerrainFeatureCmd submitted = cmd;
+  submitted.alpha *= m_alpha_override;
+  m_active_queue->submit(std::move(submitted));
+}
+
+void Renderer::terrain_scatter(const TerrainScatterCmd &cmd) {
+  if ((cmd.instance_buffer == nullptr) || cmd.instance_count == 0 ||
+      (m_active_queue == nullptr)) {
+    return;
+  }
+  TerrainScatterCmd submitted = cmd;
+  switch (submitted.species) {
+  case TerrainScatterCmd::Species::Grass:
+    submitted.grass.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Plant:
+    submitted.plant.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Pine:
+    submitted.pine.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Olive:
+    submitted.olive.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::FireCamp:
+    submitted.firecamp.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Stone:
+    break;
+  }
+  m_active_queue->submit(std::move(submitted));
 }
 
 void Renderer::cancel_async_template_prewarm() {

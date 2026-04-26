@@ -69,7 +69,12 @@ void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   m_oliveInstanceCount = visible_count;
   OliveBatchParams params = m_oliveParams;
   params.time = renderer.get_animation_time();
-  renderer.olive_batch(m_oliveInstanceBuffer.get(), visible_count, params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Olive;
+  cmd.instance_buffer = m_oliveInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.olive = params;
+  renderer.terrain_scatter(cmd);
 }
 
 void OliveRenderer::clear() {

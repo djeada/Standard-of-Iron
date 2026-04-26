@@ -140,8 +140,14 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       }
     }
 
-    renderer.terrain_chunk(chunk.mesh.get(), k_identity_matrix, chunk.params,
-                           0x0080U, true, 0.0F);
+    TerrainSurfaceCmd cmd;
+    cmd.mesh = chunk.mesh.get();
+    cmd.model = k_identity_matrix;
+    cmd.params = chunk.params;
+    cmd.sort_key = 0x0080U;
+    cmd.depth_write = true;
+    cmd.depth_bias = 0.0F;
+    renderer.terrain_surface(cmd);
   }
 }
 

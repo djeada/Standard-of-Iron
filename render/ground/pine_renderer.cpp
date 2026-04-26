@@ -69,7 +69,12 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   m_pineInstanceCount = visible_count;
   PineBatchParams params = m_pineParams;
   params.time = renderer.get_animation_time();
-  renderer.pine_batch(m_pineInstanceBuffer.get(), visible_count, params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Pine;
+  cmd.instance_buffer = m_pineInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.pine = params;
+  renderer.terrain_scatter(cmd);
 }
 
 void PineRenderer::clear() {

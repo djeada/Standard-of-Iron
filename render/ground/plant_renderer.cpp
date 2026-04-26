@@ -69,7 +69,12 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   m_plantInstanceCount = visible_count;
   PlantBatchParams params = m_plantParams;
   params.time = renderer.get_animation_time();
-  renderer.plant_batch(m_visibleInstanceBuffer.get(), visible_count, params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Plant;
+  cmd.instance_buffer = m_visibleInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.plant = params;
+  renderer.terrain_scatter(cmd);
 }
 
 void PlantRenderer::clear() {

@@ -282,8 +282,13 @@ void BridgeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
                                 stone_color.y() * color_multiplier.y(),
                                 stone_color.z() * color_multiplier.z());
 
-    renderer.terrain_feature(mesh, TerrainFeatureCmd::Kind::Bridge, model,
-                             final_color, alpha);
+    TerrainFeatureCmd cmd;
+    cmd.mesh = mesh;
+    cmd.kind = TerrainFeatureCmd::Kind::Bridge;
+    cmd.model = model;
+    cmd.color = final_color;
+    cmd.alpha = alpha;
+    renderer.terrain_feature(cmd);
   }
 }
 

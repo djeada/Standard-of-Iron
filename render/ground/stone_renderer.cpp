@@ -61,8 +61,12 @@ void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     return;
   }
 
-  renderer.stone_batch(m_stoneInstanceBuffer.get(), m_stoneInstanceCount,
-                       m_stoneParams);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Stone;
+  cmd.instance_buffer = m_stoneInstanceBuffer.get();
+  cmd.instance_count = m_stoneInstanceCount;
+  cmd.stone = m_stoneParams;
+  renderer.terrain_scatter(cmd);
 }
 
 void StoneRenderer::clear() {
