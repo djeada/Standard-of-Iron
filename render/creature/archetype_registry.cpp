@@ -54,13 +54,13 @@ make_horse_clip_table() -> std::array<std::uint16_t, kStateCount> {
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 4U;
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 2U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 5U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 2U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 5U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 5U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 5U;
   return t;
 }
 
@@ -71,13 +71,13 @@ make_elephant_clip_table() -> std::array<std::uint16_t, kStateCount> {
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 2U;
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 2U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 2U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 3U;
   return t;
 }
 

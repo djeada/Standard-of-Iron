@@ -935,6 +935,7 @@ auto compute_pose_leg(
     const Render::GL::HorseDimensions &dims, const Render::GL::HorseGait &gait,
     const horse_pose_profile &profile, float phase_base, float phase_offset,
     float lateral_sign, bool is_rear, float forward_bias, bool is_moving,
+    bool is_fighting,
     const QVector3D &anchor_offset) noexcept -> pose_leg_sample {
   auto ease_in_out = [](float t) {
     t = std::clamp(t, 0.0F, 1.0F);
@@ -944,7 +945,42 @@ auto compute_pose_leg(
   float stride = 0.0F;
   float lift = 0.0F;
   float shoulder_compress = 0.0F;
-  if (is_moving) {
+  if (is_fighting) {
+    if (!is_rear) {
+      // Front legs: alternating paw/strike cycle driven by leg_phase.
+      // 0.00-0.45: raise leg (ease in)
+      // 0.45-0.65: hold at peak
+      // 0.65-0.78: strike down with force
+      // 0.78-1.00: recover from impact
+      float const paw_height = dims.leg_length * 0.42F;
+      float const strike_reach = dims.body_length * 0.08F;
+      float const impact_sink = dims.hoof_height * 0.12F;
+      if (leg_phase < 0.45F) {
+        float const u = ease_in_out(leg_phase / 0.45F);
+        lift = u * paw_height;
+        stride = forward_bias + u * strike_reach;
+      } else if (leg_phase < 0.65F) {
+        lift = paw_height;
+        stride = forward_bias + strike_reach;
+      } else if (leg_phase < 0.78F) {
+        float const u = (leg_phase - 0.65F) / 0.13F;
+        float const slam = 1.0F - u;
+        lift = slam * slam * slam * slam * paw_height - impact_sink * u * u;
+        stride = forward_bias + strike_reach * (1.0F - u * 0.5F);
+      } else {
+        float const u = (leg_phase - 0.78F) / 0.22F;
+        lift = -impact_sink * (1.0F - u * u);
+        stride = forward_bias + strike_reach * 0.5F * (1.0F - u);
+      }
+    } else {
+      // Rear legs: braced and planted during fight, minimal sway for stability.
+      float const brace_sway =
+          std::sin(leg_phase * 2.0F * std::numbers::pi_v<float>) *
+          dims.body_length * 0.015F;
+      stride = forward_bias - dims.body_length * 0.04F + brace_sway;
+      lift = 0.0F;
+    }
+  } else if (is_moving) {
     float const stance_fraction =
         gait.cycle_time > 0.9F ? 0.60F
                                : (gait.cycle_time > 0.5F ? 0.44F : 0.34F);
@@ -1049,19 +1085,19 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
 
   auto fl = compute_pose_leg(
       dims, jittered, profile, motion.phase, gait.front_leg_phase, 1.0F, false,
-      front_bias, motion.is_moving,
+      front_bias, motion.is_moving, motion.is_fighting,
       front_anchor + QVector3D(dims.body_width * 0.10F, 0.0F, 0.0F));
   auto fr = compute_pose_leg(
       dims, jittered, profile, motion.phase, gait.front_leg_phase + front_lat,
-      -1.0F, false, front_bias, motion.is_moving,
+      -1.0F, false, front_bias, motion.is_moving, motion.is_fighting,
       front_anchor + QVector3D(-dims.body_width * 0.10F, 0.0F, 0.0F));
   auto bl = compute_pose_leg(
       dims, jittered, profile, motion.phase, gait.rear_leg_phase, 1.0F, true,
-      rear_bias, motion.is_moving,
+      rear_bias, motion.is_moving, motion.is_fighting,
       rear_anchor + QVector3D(-dims.body_width * 0.10F, 0.0F, 0.0F));
   auto br = compute_pose_leg(
       dims, jittered, profile, motion.phase, gait.rear_leg_phase + rear_lat,
-      -1.0F, true, rear_bias, motion.is_moving,
+      -1.0F, true, rear_bias, motion.is_moving, motion.is_fighting,
       rear_anchor + QVector3D(dims.body_width * 0.10F, 0.0F, 0.0F));
 
   out_pose.shoulder_offset_pose_fl = fl.shoulder;

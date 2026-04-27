@@ -31,12 +31,12 @@ auto default_full_horse_request_seed(
 }
 
 auto make_grounding_pose(const Render::GL::HorseProfile &profile, float phase,
-                         float bob, bool is_moving) noexcept
+                         float bob, bool is_moving, bool is_fighting) noexcept
     -> Render::Horse::HorseSpecPose {
   Render::Horse::HorseSpecPose pose{};
   Render::Horse::make_horse_spec_pose_animated(
       profile.dims, profile.gait,
-      Render::Horse::HorsePoseMotion{phase, bob, is_moving}, pose);
+      Render::Horse::HorsePoseMotion{phase, bob, is_moving, is_fighting}, pose);
   return pose;
 }
 
@@ -147,6 +147,15 @@ horse_clip_for_gait(Render::GL::GaitType gait) noexcept -> std::uint16_t {
   return 0U;
 }
 
+[[nodiscard]] inline auto
+horse_clip_for_motion(Render::GL::GaitType gait, bool is_fighting) noexcept
+    -> std::uint16_t {
+  if (is_fighting) {
+    return 5U;
+  }
+  return horse_clip_for_gait(gait);
+}
+
 } // namespace
 
 void prepare_horse_full_impl(
@@ -199,8 +208,10 @@ void prepare_horse_full_impl(
   float const phase = motion.phase;
   (void)shared_mount;
   Render::Horse::HorseSpecPose const pose =
-      make_grounding_pose(profile, motion.phase, motion.bob, motion.is_moving);
-  std::uint16_t const horse_clip = horse_clip_for_gait(motion.gait_type);
+      make_grounding_pose(profile, motion.phase, motion.bob, motion.is_moving,
+                          motion.is_fighting);
+  std::uint16_t const horse_clip =
+      horse_clip_for_motion(motion.gait_type, motion.is_fighting);
 
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = ctx.model;
@@ -238,7 +249,7 @@ void prepare_horse_minimal_impl(
   (void)shared_motion;
 
   Render::Horse::HorseSpecPose const pose =
-      make_grounding_pose(profile, 0.0F, 0.0F, false);
+      make_grounding_pose(profile, 0.0F, 0.0F, false, false);
 
   QMatrix4x4 world_from_unit = ctx.model;
   ground_horse_model(world_from_unit, pose, 0U, 0.0F);

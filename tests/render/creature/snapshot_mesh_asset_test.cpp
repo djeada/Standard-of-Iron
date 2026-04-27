@@ -60,9 +60,9 @@ TEST(SnapshotMeshAsset, WriteAndReadbackRoundTripsMinimalClip) {
   auto const frame_vertices = blob.frame_vertices_view(0U);
   ASSERT_EQ(frame_vertices.size(), 3U);
   EXPECT_FLOAT_EQ(frame_vertices[1].position_bone_local[0], 1.0F);
-  auto const indices = blob.indices_view();
-  ASSERT_EQ(indices.size(), 3U);
-  EXPECT_EQ(indices[2], 2U);
+  auto const read_indices = blob.indices_view();
+  ASSERT_EQ(read_indices.size(), 3U);
+  EXPECT_EQ(read_indices[2], 2U);
 }
 
 TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {

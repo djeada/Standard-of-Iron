@@ -171,6 +171,8 @@ namespace {
   case 3U:
   case 4U:
     return Render::Creature::AnimationStateId::Run;
+  case 5U:
+    return Render::Creature::AnimationStateId::AttackMelee;
   default:
     return Render::Creature::AnimationStateId::Idle;
   }
@@ -185,6 +187,8 @@ namespace {
     return Render::Creature::AnimationStateId::Walk;
   case 2U:
     return Render::Creature::AnimationStateId::Run;
+  case 3U:
+    return Render::Creature::AnimationStateId::AttackMelee;
   default:
     return Render::Creature::AnimationStateId::Idle;
   }

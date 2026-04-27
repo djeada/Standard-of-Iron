@@ -406,7 +406,8 @@ auto evaluate_horse_motion(const HorseProfile &profile,
                      state.target_gait != GaitType::IDLE;
   evaluate_phase_and_bob(state, profile, anim, rider_ctx, resolved,
                          sample.rider_intensity, sample.phase, sample.bob);
-  sample.bob = 0.0F;
+  sample.is_fighting = anim.is_attacking ||
+                       (anim.combat_phase != CombatAnimPhase::Idle);
   sample.gait = resolved;
   sample.gait_type = state.current_gait;
   sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
