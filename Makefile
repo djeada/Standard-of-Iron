@@ -9,6 +9,7 @@ BUILD_DIR := build
 BUILD_TIDY_DIR := build-tidy
 BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
+ARENA_BINARY := arena_app
 DEFAULT_LANG ?= en
 
 # Clang-tidy auto-fixer (git-only by default; --all scans whole project)
@@ -51,6 +52,7 @@ help:
 	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
 	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
 	@echo "  $(GREEN)run$(RESET)           - Run the main application (includes map pipeline)"
+	@echo "  $(GREEN)arena$(RESET)         - Run the arena playground tool"
 	@echo "  $(GREEN)run-map-pipeline$(RESET) - Run map preprocessing pipeline only"
 	@echo "  $(GREEN)editor$(RESET)        - Run the map editor"
 	@echo "  $(GREEN)clean$(RESET)         - Clean build directory"
@@ -94,6 +96,14 @@ build-dir:
 .PHONY: configure
 configure: build-dir
 	@echo "$(BOLD)$(BLUE)Configuring build with CMake...$(RESET)"
+	@if [ -f "$(BUILD_DIR)/CMakeCache.txt" ]; then \
+		CACHED_SRC=$$(grep '^CMAKE_HOME_DIRECTORY:INTERNAL=' "$(BUILD_DIR)/CMakeCache.txt" | cut -d= -f2-); \
+		if [ "$$CACHED_SRC" != "$$(pwd)" ]; then \
+			echo "$(YELLOW)Build cache points at $$CACHED_SRC; resetting stale build tree$(RESET)"; \
+			find "$(BUILD_DIR)" -mindepth 1 -maxdepth 1 -exec rm -rf {} +; \
+		fi; \
+	fi
+	@rm -rf "$(BUILD_DIR)/_deps/googletest-subbuild"
 	@cd $(BUILD_DIR) && cmake -DENABLE_CLANG_TIDY=OFF -DDEFAULT_LANG=$(DEFAULT_LANG) ..
 	@echo "$(GREEN)✓ Configuration complete$(RESET)"
 
@@ -185,6 +195,36 @@ editor: build
 	@echo "$(BOLD)$(BLUE)Running Map Editor...$(RESET)"
 	@cd $(BUILD_DIR) && ./bin/$(MAP_EDITOR_BINARY)
 
+.PHONY: arena
+arena: run-map-pipeline configure
+	@echo "$(BOLD)$(BLUE)Building Arena playground...$(RESET)"
+	@cmake --build $(BUILD_DIR) -j$$(nproc) --target $(ARENA_BINARY)
+	@echo "$(BOLD)$(BLUE)Running Arena playground...$(RESET)"
+	@cd $(BUILD_DIR) && \
+	BIN_PATH="./bin/$(ARENA_BINARY)"; \
+	if [ ! -x "$$BIN_PATH" ]; then \
+		echo "$(RED)$(ARENA_BINARY) not found at $$BIN_PATH$(RESET)"; \
+		exit 127; \
+	fi; \
+	PLATFORM="$$(uname -s)"; \
+	DEFAULT_QPA="offscreen"; \
+	case "$$PLATFORM" in \
+		Darwin) DEFAULT_QPA="cocoa" ;; \
+		MINGW*|MSYS*|CYGWIN*) DEFAULT_QPA="windows" ;; \
+		*) \
+			if [ -n "$$WAYLAND_DISPLAY" ]; then \
+				DEFAULT_QPA="wayland"; \
+			elif [ -n "$$DISPLAY" ]; then \
+				DEFAULT_QPA="xcb"; \
+			fi ;; \
+	esac; \
+	if [ -z "$$QT_QPA_PLATFORM" ]; then \
+		echo "$(YELLOW)QT_QPA_PLATFORM not set; defaulting to $$DEFAULT_QPA$(RESET)"; \
+		QT_QPA_PLATFORM="$$DEFAULT_QPA" "$${BIN_PATH}"; \
+	else \
+		"$${BIN_PATH}"; \
+	fi
+
 # Clean build directory
 .PHONY: clean
 clean:
@@ -202,6 +242,7 @@ dev: install build
 	@echo "$(GREEN)✓ Development environment ready!$(RESET)"
 	@echo "$(BOLD)You can now run:$(RESET)"
 	@echo "  make run      # Run the game"
+	@echo "  make arena    # Run the arena playground"
 	@echo "  make editor   # Run the map editor"
 
 # Run tests (placeholder for future test implementation)
@@ -411,5 +452,6 @@ quickstart:
 	@echo "1. Install dependencies: $(BLUE)make install$(RESET)"
 	@echo "2. Build the project: $(BLUE)make build$(RESET)"
 	@echo "3. Run the game: $(BLUE)make run$(RESET)"
+	@echo "4. Run the arena playground: $(BLUE)make arena$(RESET)"
 	@echo ""
 	@echo "Or use the shortcut: $(BLUE)make dev$(RESET)"
