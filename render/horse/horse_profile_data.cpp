@@ -6,6 +6,7 @@
 #include "horse_profile_data.h"
 
 #include "../creature/creature_math_utils.h"
+#include "../creature/pipeline/creature_visual_definition.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
@@ -36,6 +37,8 @@ auto HorseRendererBase::visual_spec() const
     m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
     m_visual_spec_cache.kind = Render::Creature::Pipeline::CreatureKind::Horse;
     m_visual_spec_cache.debug_name = "horse/default";
+    m_visual_spec_cache.creature_definition =
+        &Render::Creature::Pipeline::horse_creature_visual_definition();
     const QVector3D ps = get_proportion_scaling();
     m_visual_spec_cache.scaling =
         Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};

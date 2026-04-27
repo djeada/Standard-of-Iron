@@ -259,12 +259,14 @@ TEST(HorseSpecTest, FullSpecPreservesToplineDepthAndHeadTaper) {
   EXPECT_LT(hindquarter->params.half_extents.x(),
             ribcage->params.half_extents.x());
   EXPECT_EQ(neck_crest->shape, Render::Creature::PrimitiveShape::Cylinder);
-  EXPECT_EQ(cranium->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_EQ(cranium->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(cranium->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*cranium->custom_mesh, 2),
+            mesh_axis_span(*cranium->custom_mesh, 1) * 1.6F);
   EXPECT_LT(neck_crest->params.tail_offset.z(), 0.0F);
   EXPECT_LT(muzzle->params.radius, cheek->params.radius);
-  EXPECT_LT(jaw->params.half_extents.x(), cranium->params.half_extents.x());
-  EXPECT_GT(cranium->params.half_extents.z(), jaw->params.half_extents.z());
-  EXPECT_GT(cranium->params.half_extents.z(), cranium->params.half_extents.y());
+  EXPECT_LT(jaw->params.half_extents.z(),
+            mesh_axis_span(*cranium->custom_mesh, 2));
   EXPECT_GT(muzzle->params.tail_offset.z(), muzzle->params.head_offset.z());
   EXPECT_LT(muzzle->params.tail_offset.y(), muzzle->params.head_offset.y());
   EXPECT_LT(cheek->params.head_offset.z(), jaw->params.head_offset.z());

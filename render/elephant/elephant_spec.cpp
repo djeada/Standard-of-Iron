@@ -3,6 +3,7 @@
 #include "../creature/part_graph.h"
 #include "../creature/skeleton.h"
 #include "../geom/transforms.h"
+#include "../gl/mesh.h"
 #include "../gl/primitives.h"
 #include "../submitter.h"
 
@@ -12,7 +13,9 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <memory>
 #include <span>
+#include <vector>
 
 namespace Render::Elephant {
 
@@ -69,6 +72,127 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
 
 [[nodiscard]] auto darken(const QVector3D &c, float s) noexcept -> QVector3D {
   return c * s;
+}
+
+struct torso_ring {
+  float z{0.0F};
+  float y{0.0F};
+  float half_width{0.0F};
+  float top{0.0F};
+  float bottom{0.0F};
+};
+
+auto make_faceted_vertex(const QVector3D &pos, const QVector3D &normal, float u,
+                         float v) -> Render::GL::Vertex {
+  QVector3D n = normal;
+  if (n.lengthSquared() < 1.0e-8F) {
+    n = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    n.normalize();
+  }
+  return {{pos.x(), pos.y(), pos.z()}, {n.x(), n.y(), n.z()}, {u, v}};
+}
+
+auto create_faceted_elephant_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::ElephantDimensions const dims =
+      Render::GL::make_elephant_dimensions(0U);
+  float const bw = dims.body_width;
+  float const bh = dims.body_height;
+  float const bl = dims.body_length;
+
+  std::array<torso_ring, 7> const rings{{
+      {-0.52F, -0.02F, 0.32F, 0.30F, 0.28F},
+      {-0.36F, 0.02F, 0.46F, 0.38F, 0.34F},
+      {-0.16F, 0.04F, 0.55F, 0.44F, 0.38F},
+      {0.08F, 0.05F, 0.58F, 0.46F, 0.38F},
+      {0.30F, 0.07F, 0.52F, 0.42F, 0.34F},
+      {0.46F, 0.04F, 0.42F, 0.36F, 0.30F},
+      {0.58F, -0.01F, 0.24F, 0.28F, 0.24F},
+  }};
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(rings.size() * 8U + 2U);
+  indices.reserve((rings.size() - 1U) * 8U * 6U + 48U);
+
+  for (std::size_t r = 0; r < rings.size(); ++r) {
+    torso_ring const &ring = rings[r];
+    float const z = ring.z * bl;
+    float const yc = ring.y * bh;
+    float const hw = ring.half_width * bw;
+    float const top = yc + ring.top * bh;
+    float const bot = yc - ring.bottom * bh;
+    float const upper = yc + ring.top * bh * 0.62F;
+    float const lower = yc - ring.bottom * bh * 0.70F;
+    float const side_high = hw * 0.84F;
+    float const side_mid = hw;
+    float const v =
+        static_cast<float>(r) / static_cast<float>(rings.size() - 1U);
+
+    std::array<QVector3D, 8> const pts{{
+        {0.0F, top, z},
+        {side_high, upper, z},
+        {side_mid, yc, z},
+        {side_high, lower, z},
+        {0.0F, bot, z},
+        {-side_high, lower, z},
+        {-side_mid, yc, z},
+        {-side_high, upper, z},
+    }};
+
+    for (std::size_t p = 0; p < pts.size(); ++p) {
+      QVector3D const normal(pts[p].x() / std::max(0.001F, hw),
+                             (pts[p].y() - yc) / std::max(0.001F, bh * 0.46F),
+                             0.0F);
+      vertices.push_back(
+          make_faceted_vertex(pts[p], normal, static_cast<float>(p) / 7.0F, v));
+    }
+  }
+
+  constexpr unsigned int kRingVertexCount = 8U;
+  for (unsigned int r = 0; r + 1U < rings.size(); ++r) {
+    unsigned int const row = r * kRingVertexCount;
+    unsigned int const next = (r + 1U) * kRingVertexCount;
+    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
+      unsigned int const a = row + p;
+      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
+      unsigned int const c = next + ((p + 1U) % kRingVertexCount);
+      unsigned int const d = next + p;
+      indices.insert(indices.end(), {a, b, c, c, d, a});
+    }
+  }
+
+  auto add_cap = [&](unsigned int row, QVector3D normal, bool reverse) {
+    QVector3D center;
+    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
+      auto const &v = vertices[row + p].position;
+      center += QVector3D(v[0], v[1], v[2]);
+    }
+    center /= static_cast<float>(kRingVertexCount);
+    unsigned int const ci = static_cast<unsigned int>(vertices.size());
+    vertices.push_back(make_faceted_vertex(center, normal, 0.5F, 0.5F));
+    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
+      unsigned int const a = row + p;
+      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
+      if (reverse) {
+        indices.insert(indices.end(), {ci, b, a});
+      } else {
+        indices.insert(indices.end(), {ci, a, b});
+      }
+    }
+  };
+
+  add_cap(0U, QVector3D(0.0F, 0.0F, -1.0F), true);
+  add_cap(static_cast<unsigned int>((rings.size() - 1U) * kRingVertexCount),
+          QVector3D(0.0F, 0.0F, 1.0F), false);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_faceted_elephant_torso_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_faceted_elephant_torso_mesh();
+  return mesh.get();
 }
 
 struct LegResult {
@@ -456,9 +580,15 @@ auto build_static_full_parts() noexcept
   float const hh = dims.head_height;
   std::size_t i = 0;
 
-  ell(out[i++], "elephant.full.body.barrel", root,
-      QVector3D(bw * 0.56F, bh * 0.48F, bl * 0.34F),
-      QVector3D(0.0F, bh * 0.02F, -bl * 0.01F));
+  PrimitiveInstance &barrel = out[i++];
+  barrel.debug_name = "elephant.full.body.barrel";
+  barrel.shape = PrimitiveShape::Mesh;
+  barrel.params.anchor_bone = root;
+  barrel.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  barrel.custom_mesh = get_faceted_elephant_torso_mesh();
+  barrel.color_role = kRoleSkin;
+  barrel.material_id = 6;
+  barrel.lod_mask = kLodFull;
   ell(out[i++], "elephant.full.body.shoulders", root,
       QVector3D(bw * 0.48F, bh * 0.24F, bl * 0.18F),
       QVector3D(0.0F, bh * 0.24F, bl * 0.18F));
