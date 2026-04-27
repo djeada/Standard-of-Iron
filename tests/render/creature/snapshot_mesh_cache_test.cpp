@@ -1,5 +1,5 @@
-// Tests for SnapshotMeshCache: pre-skinned body geometry for low-frame
-// animation states (Idle, Dead). The cache lives on the Renderer and is
+// Tests for SnapshotMeshCache: pre-skinned body geometry for snapshot-backed
+// animation states. The cache lives on the Renderer and is
 // consulted by CreaturePipeline::submit_requests when the target
 // archetype + state is flagged as a snapshot state. These tests work
 // directly against the cache (no GL context needed) by feeding a hand-

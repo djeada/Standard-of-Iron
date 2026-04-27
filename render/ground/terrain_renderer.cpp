@@ -163,6 +163,8 @@ void TerrainRenderer::build_meshes() {
   std::vector<float> height_data = m_height_data;
   const auto surface_profile =
       Game::Map::make_surface_profile(m_biome_settings);
+  const auto climate_profile =
+      Game::Map::make_climate_profile(m_biome_settings);
   std::vector<float> entry_weight;
   if (!m_hill_entrances.empty() &&
       m_hill_entrances.size() == height_data.size()) {
@@ -432,6 +434,9 @@ void TerrainRenderer::build_meshes() {
         int aoCount = 0;
         float curvatureSum = 0.0F;
         int curvatureCount = 0;
+        float entrySum = 0.0F;
+        float entryPeak = 0.0F;
+        int entryCount = 0;
       };
 
       SectionData sections[3];
@@ -596,6 +601,9 @@ void TerrainRenderer::build_meshes() {
               entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
                                       entry_weight[idx2] + entry_weight[idx3]);
             }
+            section.entrySum += entry_factor;
+            section.entryPeak = std::max(section.entryPeak, entry_factor);
+            section.entryCount += 1;
             bool const subdivide = entry_factor > 0.25F;
 
             if (subdivide) {
@@ -743,6 +751,11 @@ void TerrainRenderer::build_meshes() {
             (section.curvatureCount > 0)
                 ? (section.curvatureSum / float(section.curvatureCount))
                 : 0.0F;
+        const float avg_entry =
+            (section.entryCount > 0)
+                ? (section.entrySum / float(section.entryCount))
+                : 0.0F;
+        const float entry_peak = section.entryPeak;
 
         const float center_gx = 0.5F * (chunk.min_x + chunk.max_x);
         const float center_gz = 0.5F * (chunk.min_z + chunk.max_z);
@@ -761,15 +774,19 @@ void TerrainRenderer::build_meshes() {
         const float convexity = h_c - 0.25F * (h_l + h_r + h_d + h_u);
 
         const float edge_factor = smooth(0.25F, 0.55F, avg_slope);
-        const float entrance_factor =
-            (1.0F - edge_factor) * smooth(0.00F, 0.15F, -convexity);
         const float plateau_flat = 1.0F - smooth(0.10F, 0.25F, avg_slope);
         const float plateau_height = smooth(0.60F, 0.80F, nh_chunk);
         const float plateau_factor = plateau_flat * plateau_height;
+        const float concavity_entry_hint =
+            (1.0F - edge_factor) * smooth(0.00F, 0.15F, -convexity);
+        const float entry_coverage =
+            std::clamp(avg_entry * 0.65F + entry_peak * 0.35F, 0.0F, 1.0F);
+        const float entry_factor = compute_entry_shading_factor(
+            entry_coverage, avg_slope, plateau_factor, concavity_entry_hint);
         const CurvatureShadingResponse curvature_response =
             compute_curvature_shading_response(chunk.type, avg_curvature,
                                                avg_slope, edge_factor,
-                                               plateau_factor, entrance_factor);
+                                               plateau_factor, entry_factor);
 
         QVector3D const base_color =
             get_terrain_color(chunk.type, chunk.average_height);
@@ -783,8 +800,10 @@ void TerrainRenderer::build_meshes() {
             0.0F, 1.0F);
 
         slope_mix += 0.15F * edge_factor;
-        slope_mix -= 0.10F * entrance_factor;
+        slope_mix += 0.08F * curvature_response.ridge_response;
+        slope_mix -= 0.18F * entry_factor;
         slope_mix -= 0.08F * plateau_factor;
+        slope_mix -= 0.06F * curvature_response.gully_response;
         slope_mix = std::clamp(slope_mix, 0.0F, 1.0F);
 
         float const center_wx = (center_gx - half_width) * m_tile_size;
@@ -811,11 +830,13 @@ void TerrainRenderer::build_meshes() {
             cool_tint * northness + warm_tint * (1.0F - northness);
 
         float const feature_bright =
-            1.0F + 0.08F * plateau_factor - 0.05F * entrance_factor;
+            1.0F + 0.08F * plateau_factor - 0.05F * edge_factor -
+            0.04F * entry_factor + 0.03F * curvature_response.gully_response;
         QVector3D const feature_tint =
-            QVector3D(1.0F + 0.03F * plateau_factor - 0.03F * entrance_factor,
-                      1.0F + 0.01F * plateau_factor - 0.01F * entrance_factor,
-                      1.0F - 0.02F * plateau_factor + 0.03F * entrance_factor);
+            QVector3D(1.0F + 0.03F * plateau_factor - 0.02F * entry_factor,
+                      1.0F + 0.01F * plateau_factor + 0.02F * entry_factor -
+                          0.01F * edge_factor,
+                      1.0F - 0.02F * plateau_factor + 0.05F * entry_factor);
 
         chunk.tint = section.tint;
 
@@ -856,7 +877,7 @@ void TerrainRenderer::build_meshes() {
           sharpness_mul = 1.60F;
         }
         slope_threshold -= 0.05F * edge_factor;
-        slope_threshold += 0.04F * entrance_factor;
+        slope_threshold += 0.08F * entry_factor;
         slope_threshold -= 0.04F * curvature_response.ridge_response;
         slope_threshold = std::clamp(
             slope_threshold - std::clamp(avg_slope * 0.20F, 0.0F, 0.12F), 0.05F,
@@ -872,7 +893,7 @@ void TerrainRenderer::build_meshes() {
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           soil_height -= 0.12F;
         }
-        soil_height += 0.05F * entrance_factor - 0.03F * plateau_factor;
+        soil_height += 0.10F * entry_factor - 0.03F * plateau_factor;
         soil_height += 0.03F * curvature_response.gully_response -
                        0.02F * curvature_response.ridge_response;
         params.soil_blend_height = soil_height;
@@ -901,7 +922,7 @@ void TerrainRenderer::build_meshes() {
           base_amp *= 1.25F;
         }
         base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
-                     0.06F * entrance_factor);
+                     0.10F * entry_factor);
         params.height_noise_strength = base_amp;
         params.height_noise_frequency = surface_profile.height_noise_frequency;
 
@@ -916,7 +937,7 @@ void TerrainRenderer::build_meshes() {
             surface_profile.terrain_rock_detail_strength *
             (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
              0.15F * edge_factor - 0.10F * plateau_factor -
-             0.08F * entrance_factor);
+             0.14F * entry_factor);
         params.rock_detail_strength *=
             1.0F + 0.18F * curvature_response.curvature_emphasis;
 
@@ -925,6 +946,71 @@ void TerrainRenderer::build_meshes() {
         params.curvature_response = curvature_response.curvature_emphasis;
         params.ridge_response = curvature_response.ridge_response;
         params.gully_response = curvature_response.gully_response;
+        params.snow_coverage =
+            std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
+        params.moisture_level =
+            std::clamp(climate_profile.moisture_level + 0.12F * entry_factor -
+                           0.08F * edge_factor +
+                           0.08F * curvature_response.gully_response -
+                           0.05F * curvature_response.ridge_response,
+                       0.0F, 1.0F);
+        params.crack_intensity =
+            std::clamp(climate_profile.crack_intensity *
+                           (1.0F + 0.10F * edge_factor +
+                            0.12F * curvature_response.ridge_response -
+                            0.30F * entry_factor -
+                            0.18F * curvature_response.gully_response),
+                       0.0F, 1.0F);
+        float rock_exposure = climate_profile.rock_exposure;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          rock_exposure *= 0.90F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          rock_exposure *= 1.15F;
+        }
+        rock_exposure +=
+            0.18F * edge_factor + 0.12F * curvature_response.ridge_response;
+        rock_exposure -=
+            0.24F * entry_factor + 0.10F * curvature_response.gully_response;
+        params.rock_exposure = std::clamp(rock_exposure, 0.0F, 1.0F);
+        float grass_saturation = climate_profile.grass_saturation;
+        if (chunk.type == Game::Map::TerrainType::Mountain) {
+          grass_saturation *= 0.92F;
+        }
+        grass_saturation +=
+            0.08F * entry_factor + 0.05F * curvature_response.gully_response;
+        grass_saturation -=
+            0.06F * edge_factor + 0.05F * curvature_response.ridge_response;
+        params.grass_saturation = std::clamp(grass_saturation, 0.0F, 1.5F);
+        float soil_roughness = climate_profile.soil_roughness;
+        if (chunk.type == Game::Map::TerrainType::Hill) {
+          soil_roughness += 0.04F;
+        } else if (chunk.type == Game::Map::TerrainType::Mountain) {
+          soil_roughness += 0.10F;
+        }
+        soil_roughness +=
+            0.10F * edge_factor + 0.06F * curvature_response.ridge_response;
+        soil_roughness -=
+            0.12F * entry_factor + 0.08F * curvature_response.gully_response;
+        params.soil_roughness = std::clamp(soil_roughness, 0.0F, 1.0F);
+        params.snow_color = clamp01(climate_profile.snow_color);
+        if (chunk.type == Game::Map::TerrainType::Hill ||
+            chunk.type == Game::Map::TerrainType::Mountain) {
+          float soil_foot_height =
+              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.16F : 0.22F;
+          soil_foot_height *=
+              0.85F + 0.35F * edge_factor + 0.45F * entry_factor;
+          soil_foot_height += 0.06F * curvature_response.gully_response;
+          params.soil_foot_height = std::clamp(soil_foot_height, 0.08F, 0.36F);
+          float screen_toe_mul =
+              (chunk.type == Game::Map::TerrainType::Mountain) ? 0.75F : 0.95F;
+          screen_toe_mul *= 0.70F + 0.30F * std::max(edge_factor, entry_factor);
+          params.screen_toe_mul = screen_toe_mul;
+          params.screen_toe_clamp =
+              ((chunk.type == Game::Map::TerrainType::Mountain) ? 0.18F
+                                                                : 0.24F) *
+              (0.70F + 0.30F * std::max(entry_factor,
+                                        curvature_response.gully_response));
+        }
 
         chunk.params = params;
 

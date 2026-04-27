@@ -23,6 +23,7 @@
 #include "render/humanoid/prepare.h"
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
+#include "render/template_cache.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -163,62 +164,78 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
 }
 
 TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {
-  using namespace Render::Creature::Pipeline;
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
 
-  MountedSpec mounted{};
-  mounted.mount.kind = CreatureKind::Horse;
-  mounted.rider.kind = CreatureKind::Humanoid;
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.template_prewarm = true;
+  ctx.force_single_soldier = true;
+  Render::GL::AnimationInputs anim{};
 
-  Render::Horse::HorseSpecPose mount_pose{};
-  Render::GL::HorseVariant mount_variant{};
-  Render::GL::HumanoidPose rider_pose{};
-  Render::GL::HumanoidVariant rider_variant{};
-  Render::GL::HumanoidAnimationContext rider_anim{};
-  QMatrix4x4 mount_world;
-  QMatrix4x4 rider_world;
-
-  auto set = Render::GL::prepare_mounted_rows(
-      mounted, mount_world, rider_world, mount_pose, mount_variant, rider_pose,
-      rider_variant, rider_anim, /*seed*/ 1,
-      Render::Creature::CreatureLOD::Full, RenderPassIntent::Shadow);
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
   NullSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(set.mount_row);
-  batch.add(set.rider_row);
-  (void)batch.submit(sink);
+  const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
+  EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(sink.rigged_calls, 0);
   EXPECT_EQ(sink.meshes, 0);
 }
 
 TEST(MountedPrepare, MainPairProducesTwoEntitySubmissions) {
-  using namespace Render::Creature::Pipeline;
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
 
-  MountedSpec mounted{};
-  mounted.mount.kind = CreatureKind::Horse;
-  mounted.rider.kind = CreatureKind::Humanoid;
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  Render::GL::AnimationInputs anim{};
 
-  Render::Horse::HorseSpecPose mount_pose{};
-  Render::GL::HorseVariant mount_variant{};
-  Render::GL::HumanoidPose rider_pose{};
-  Render::GL::HumanoidVariant rider_variant{};
-  Render::GL::HumanoidAnimationContext rider_anim{};
-  QMatrix4x4 mount_world;
-  QMatrix4x4 rider_world;
-
-  auto set = Render::GL::prepare_mounted_rows(
-      mounted, mount_world, rider_world, mount_pose, mount_variant, rider_pose,
-      rider_variant, rider_anim, /*seed*/ 1,
-      Render::Creature::CreatureLOD::Full, RenderPassIntent::Main);
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
 
   NullSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(set.mount_row);
-  batch.add(set.rider_row);
-  const auto stats = batch.submit(sink);
+  const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 2u);
+}
+
+TEST(MountedPrepare, TemplatePrewarmRenderWarmsMountedSnapshotCache) {
+  Render::GL::MountedKnightRendererConfig cfg;
+  cfg.has_sword = false;
+  cfg.has_cavalry_shield = false;
+
+  Render::GL::MountedKnightRendererBase renderer(cfg);
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->owner_id = 1;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.template_prewarm = true;
+  ctx.force_single_soldier = true;
+
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  renderer.render(ctx, recorder);
+
+  EXPECT_GE(recorder.snapshot_mesh_cache().size(), 2u);
+  EXPECT_TRUE(recorder.commands().empty());
 }
 
 TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {

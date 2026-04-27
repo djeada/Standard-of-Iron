@@ -9,19 +9,18 @@ auto make_prepared_humanoid_row(
     const QMatrix4x4 &world_from_unit, std::uint32_t seed,
     Render::Creature::CreatureLOD lod, EntityId entity_id,
     RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
+  (void)pose;
+  (void)variant;
+  (void)anim;
+  (void)world_from_unit;
+  (void)entity_id;
   spec.kind = CreatureKind::Humanoid;
 
   PreparedCreatureRenderRow row{};
   row.spec = spec;
-  row.entity_id = entity_id;
-  row.world_from_unit = world_from_unit;
   row.seed = seed;
   row.lod = lod;
   row.pass = pass;
-  row.humanoid_pose = pose;
-  row.humanoid_variant = variant;
-  row.humanoid_anim = anim;
-  row.bpat_playback = BpatPlayback{0U, 0U};
   return row;
 }
 
@@ -30,18 +29,17 @@ auto make_prepared_horse_row(
     const Render::GL::HorseVariant &variant, const QMatrix4x4 &world_from_unit,
     std::uint32_t seed, Render::Creature::CreatureLOD lod, EntityId entity_id,
     RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
+  (void)pose;
+  (void)variant;
+  (void)world_from_unit;
+  (void)entity_id;
   spec.kind = CreatureKind::Horse;
 
   PreparedCreatureRenderRow row{};
   row.spec = spec;
-  row.entity_id = entity_id;
-  row.world_from_unit = world_from_unit;
   row.seed = seed;
   row.lod = lod;
   row.pass = pass;
-  row.horse_pose = pose;
-  row.horse_variant = variant;
-  row.bpat_playback = BpatPlayback{0U, 0U};
   return row;
 }
 
@@ -51,18 +49,17 @@ auto make_prepared_elephant_row(
     const QMatrix4x4 &world_from_unit, std::uint32_t seed,
     Render::Creature::CreatureLOD lod, EntityId entity_id,
     RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
+  (void)variant;
+  (void)world_from_unit;
+  (void)entity_id;
   spec.kind = CreatureKind::Elephant;
 
   PreparedCreatureRenderRow row{};
   row.spec = spec;
-  row.entity_id = entity_id;
-  row.world_from_unit = world_from_unit;
   row.seed = seed;
   row.lod = lod;
   row.pass = pass;
   row.elephant_pose = pose;
-  row.elephant_variant = variant;
-  row.bpat_playback = BpatPlayback{0U, 0U};
   return row;
 }
 

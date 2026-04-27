@@ -1322,6 +1322,24 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               m_terrainPipeline->m_terrainUniforms.snow_color,
               terrain.params.snow_color);
         }
+        if (m_terrainPipeline->m_terrainUniforms.soil_foot_height !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_terrainPipeline->m_terrainUniforms.soil_foot_height,
+              terrain.params.soil_foot_height);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.screen_toe_mul !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_terrainPipeline->m_terrainUniforms.screen_toe_mul,
+              terrain.params.screen_toe_mul);
+        }
+        if (m_terrainPipeline->m_terrainUniforms.screen_toe_clamp !=
+            Shader::InvalidUniform) {
+          active_shader->set_uniform(
+              m_terrainPipeline->m_terrainUniforms.screen_toe_clamp,
+              terrain.params.screen_toe_clamp);
+        }
       }
 
       DepthMaskScope const depth_mask(terrain.depth_write);
