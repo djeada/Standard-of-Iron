@@ -134,11 +134,15 @@ make build
 
 # Launch the game
 make run
+
+# Launch the arena playground tool
+make arena
 ```
 
 ### Map Pipeline Assets
 
 - `make run` invokes the campaign map pipeline when any required outputs are missing (base textures, mesh, rivers/coastlines, provinces, and Hannibal path).
+- `make arena` uses the same map-pipeline/bootstrap flow, then builds just `arena_app` before launching the standalone Qt/OpenGL playground.
 - The pipeline downloads Natural Earth data and installs Python dependencies, so it needs network access the first time it runs.
 - Generated outputs live in `assets/campaign_map/` and are gitignored; tracked defaults include `campaign_state.json` and `hannibal_path.json`.
 - To force a rebuild: `make run-map-pipeline map_pipeline_rebuild=1`
