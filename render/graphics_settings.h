@@ -14,12 +14,10 @@ enum class GraphicsQuality : uint8_t {
 
 struct LODMultipliers {
   float humanoid_full;
-  float humanoid_reduced;
   float humanoid_minimal;
   float humanoid_billboard;
 
   float horse_full;
-  float horse_reduced;
   float horse_minimal;
   float horse_billboard;
 
@@ -125,10 +123,6 @@ public:
     return kBaseHumanoidFull * m_lod_multipliers.humanoid_full;
   }
   [[nodiscard]] auto
-  humanoid_reduced_detail_distance() const noexcept -> float {
-    return kBaseHumanoidReduced * m_lod_multipliers.humanoid_reduced;
-  }
-  [[nodiscard]] auto
   humanoid_minimal_detail_distance() const noexcept -> float {
     return kBaseHumanoidMinimal * m_lod_multipliers.humanoid_minimal;
   }
@@ -138,9 +132,6 @@ public:
 
   [[nodiscard]] auto horse_full_detail_distance() const noexcept -> float {
     return kBaseHorseFull * m_lod_multipliers.horse_full;
-  }
-  [[nodiscard]] auto horse_reduced_detail_distance() const noexcept -> float {
-    return kBaseHorseReduced * m_lod_multipliers.horse_reduced;
   }
   [[nodiscard]] auto horse_minimal_detail_distance() const noexcept -> float {
     return kBaseHorseMinimal * m_lod_multipliers.horse_minimal;
@@ -164,11 +155,9 @@ private:
     case GraphicsQuality::Low:
 
       m_lod_multipliers = {.humanoid_full = 0.8F,
-                           .humanoid_reduced = 0.8F,
                            .humanoid_minimal = 0.8F,
                            .humanoid_billboard = 0.8F,
                            .horse_full = 0.8F,
-                           .horse_reduced = 0.8F,
                            .horse_minimal = 0.8F,
                            .horse_billboard = 0.8F,
                            .shadow_distance = 25.0F,
@@ -191,11 +180,9 @@ private:
     case GraphicsQuality::Medium:
 
       m_lod_multipliers = {.humanoid_full = 1.0F,
-                           .humanoid_reduced = 1.0F,
                            .humanoid_minimal = 1.0F,
                            .humanoid_billboard = 1.0F,
                            .horse_full = 1.0F,
-                           .horse_reduced = 1.0F,
                            .horse_minimal = 1.0F,
                            .horse_billboard = 1.0F,
                            .shadow_distance = 40.0F,
@@ -219,11 +206,9 @@ private:
     case GraphicsQuality::High:
 
       m_lod_multipliers = {.humanoid_full = 2.0F,
-                           .humanoid_reduced = 2.0F,
                            .humanoid_minimal = 2.0F,
                            .humanoid_billboard = 2.0F,
                            .horse_full = 2.0F,
-                           .horse_reduced = 2.0F,
                            .horse_minimal = 2.0F,
                            .horse_billboard = 2.0F,
                            .shadow_distance = 80.0F,
@@ -247,11 +232,9 @@ private:
     case GraphicsQuality::Ultra:
 
       m_lod_multipliers = {.humanoid_full = 3.0F,
-                           .humanoid_reduced = 3.0F,
                            .humanoid_minimal = 1000.0F,
                            .humanoid_billboard = 1000.0F,
                            .horse_full = 3.0F,
-                           .horse_reduced = 3.0F,
                            .horse_minimal = 1000.0F,
                            .horse_billboard = 1000.0F,
                            .shadow_distance = 200.0F,
@@ -275,12 +258,10 @@ private:
   }
 
   static constexpr float kBaseHumanoidFull = 10.0F;
-  static constexpr float kBaseHumanoidReduced = 35.0F;
   static constexpr float kBaseHumanoidMinimal = 70.0F;
   static constexpr float kBaseHumanoidBillboard = 80.0F;
 
   static constexpr float kBaseHorseFull = 20.0F;
-  static constexpr float kBaseHorseReduced = 55.0F;
   static constexpr float kBaseHorseMinimal = 110.0F;
   static constexpr float kBaseHorseBillboard = 100.0F;
 

@@ -92,11 +92,11 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_horse_row(
       spec, pose, variant, world, /*seed*/ 11,
-      Render::Creature::CreatureLOD::Reduced,
+      Render::Creature::CreatureLOD::Minimal,
       /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
-  EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Reduced);
+  EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
   EXPECT_EQ(row.pass, Render::Creature::Pipeline::RenderPassIntent::Shadow);
   EXPECT_EQ(row.seed, 11u);
 }
@@ -181,8 +181,8 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
   ASSERT_EQ(requests.size(), 1u);
 
   Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_reduced(
-      profile.dims, profile.gait, Render::Horse::HorseReducedMotion{}, pose);
+  Render::Horse::make_horse_spec_pose_animated(
+      profile.dims, profile.gait, Render::Horse::HorsePoseMotion{}, pose);
   float const hoof_contact_y =
       Render::Creature::Pipeline::grounded_horse_contact_y(pose, 0U, 0.0F);
 

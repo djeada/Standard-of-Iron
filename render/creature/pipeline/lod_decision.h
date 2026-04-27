@@ -9,14 +9,11 @@ namespace Render::Creature::Pipeline {
 
 struct LodDistanceThresholds {
   float full{12.0F};
-  float reduced{20.0F};
   float minimal{40.0F};
 };
 
 struct TemporalSkipParams {
-  float distance_reduced{35.0F};
   float distance_minimal{45.0F};
-  std::uint32_t period_reduced{2};
   std::uint32_t period_minimal{3};
 };
 

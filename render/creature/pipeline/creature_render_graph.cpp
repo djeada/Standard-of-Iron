@@ -22,20 +22,15 @@ namespace Render::Creature::Pipeline {
 namespace {
 
 constexpr float kHumanoidFullDistance = 10.0F;
-constexpr float kHumanoidReducedDistance = 20.0F;
 constexpr float kHumanoidMinimalDistance = 40.0F;
 
 constexpr float kHorseFullDistance = 20.0F;
-constexpr float kHorseReducedDistance = 40.0F;
 constexpr float kHorseMinimalDistance = 60.0F;
 
 constexpr float kElephantFullDistance = 20.0F;
-constexpr float kElephantReducedDistance = 40.0F;
 constexpr float kElephantMinimalDistance = 60.0F;
 
-constexpr float kTemporalReducedDistance = 35.0F;
 constexpr float kTemporalMinimalDistance = 45.0F;
-constexpr std::uint32_t kTemporalReducedPeriod = 2;
 constexpr std::uint32_t kTemporalMinimalPeriod = 3;
 
 } // namespace
@@ -43,11 +38,8 @@ constexpr std::uint32_t kTemporalMinimalPeriod = 3;
 auto humanoid_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = kHumanoidFullDistance;
-  config.thresholds.reduced = kHumanoidReducedDistance;
   config.thresholds.minimal = kHumanoidMinimalDistance;
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = false;
   return config;
@@ -56,11 +48,8 @@ auto humanoid_lod_config() noexcept -> CreatureLodConfig {
 auto horse_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = kHorseFullDistance;
-  config.thresholds.reduced = kHorseReducedDistance;
   config.thresholds.minimal = kHorseMinimalDistance;
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = false;
   return config;
@@ -69,11 +58,8 @@ auto horse_lod_config() noexcept -> CreatureLodConfig {
 auto elephant_lod_config() noexcept -> CreatureLodConfig {
   CreatureLodConfig config;
   config.thresholds.full = kElephantFullDistance;
-  config.thresholds.reduced = kElephantReducedDistance;
   config.thresholds.minimal = kElephantMinimalDistance;
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = false;
   return config;
@@ -83,11 +69,8 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
   config.thresholds.full = gs.humanoid_full_detail_distance();
-  config.thresholds.reduced = gs.humanoid_reduced_detail_distance();
   config.thresholds.minimal = gs.humanoid_minimal_detail_distance();
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
@@ -97,11 +80,8 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
-  config.thresholds.reduced = gs.horse_reduced_detail_distance();
   config.thresholds.minimal = gs.horse_minimal_detail_distance();
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
@@ -112,11 +92,8 @@ auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
-  config.thresholds.reduced = gs.horse_reduced_detail_distance();
   config.thresholds.minimal = gs.horse_minimal_detail_distance();
-  config.temporal.distance_reduced = kTemporalReducedDistance;
   config.temporal.distance_minimal = kTemporalMinimalDistance;
-  config.temporal.period_reduced = kTemporalReducedPeriod;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;

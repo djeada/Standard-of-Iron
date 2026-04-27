@@ -18,7 +18,6 @@ namespace Render::Creature::Pipeline {
 struct SubmitStats {
   std::uint32_t entities_submitted{0};
   std::uint32_t lod_full{0};
-  std::uint32_t lod_reduced{0};
   std::uint32_t lod_minimal{0};
   std::uint32_t lod_billboard{0};
 
@@ -27,7 +26,6 @@ struct SubmitStats {
   void operator+=(const SubmitStats &other) noexcept {
     entities_submitted += other.entities_submitted;
     lod_full += other.lod_full;
-    lod_reduced += other.lod_reduced;
     lod_minimal += other.lod_minimal;
     lod_billboard += other.lod_billboard;
   }

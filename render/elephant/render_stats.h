@@ -9,7 +9,6 @@ struct ElephantRenderStats {
   uint32_t elephants_rendered{0};
   uint32_t elephants_skipped_lod{0};
   uint32_t lod_full{0};
-  uint32_t lod_reduced{0};
   uint32_t lod_minimal{0};
 
   void reset() {
@@ -17,7 +16,6 @@ struct ElephantRenderStats {
     elephants_rendered = 0;
     elephants_skipped_lod = 0;
     lod_full = 0;
-    lod_reduced = 0;
     lod_minimal = 0;
   }
 };

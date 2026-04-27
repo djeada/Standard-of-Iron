@@ -53,7 +53,7 @@ struct HorseSpecPose {
 
   float leg_radius{0.08F};
 
-  QVector3D reduced_body_half{};
+  QVector3D body_half{};
 
   QVector3D neck_base{};
   QVector3D neck_top{};
@@ -62,12 +62,12 @@ struct HorseSpecPose {
   QVector3D head_center{};
   QVector3D head_half{};
 
-  QVector3D shoulder_offset_reduced_fl{};
-  QVector3D shoulder_offset_reduced_fr{};
-  QVector3D shoulder_offset_reduced_bl{};
-  QVector3D shoulder_offset_reduced_br{};
+  QVector3D shoulder_offset_pose_fl{};
+  QVector3D shoulder_offset_pose_fr{};
+  QVector3D shoulder_offset_pose_bl{};
+  QVector3D shoulder_offset_pose_br{};
 
-  float leg_radius_reduced{0.11F};
+  float pose_leg_radius{0.11F};
 
   QVector3D hoof_scale{};
 };
@@ -81,14 +81,14 @@ void evaluate_horse_skeleton(const HorseSpecPose &pose,
 void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
                           HorseSpecPose &out_pose) noexcept;
 
-struct HorseReducedMotion {
+struct HorsePoseMotion {
   float phase{0.0F};
   float bob{0.0F};
   bool is_moving{false};
 };
-void make_horse_spec_pose_reduced(const Render::GL::HorseDimensions &dims,
+void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
                                   const Render::GL::HorseGait &gait,
-                                  HorseReducedMotion motion,
+                                  HorsePoseMotion motion,
                                   HorseSpecPose &out_pose) noexcept;
 
 void fill_horse_role_colors(const Render::GL::HorseVariant &variant,

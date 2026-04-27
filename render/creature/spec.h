@@ -22,7 +22,6 @@ struct CreatureSpec {
   SkeletonTopology topology{};
 
   PartGraph lod_full{};
-  PartGraph lod_reduced{};
   PartGraph lod_minimal{};
   PartGraph lod_billboard{};
 };
@@ -33,8 +32,6 @@ part_graph_for(const CreatureSpec &spec,
   switch (lod) {
   case CreatureLOD::Full:
     return spec.lod_full;
-  case CreatureLOD::Reduced:
-    return spec.lod_reduced;
   case CreatureLOD::Minimal:
     return spec.lod_minimal;
   case CreatureLOD::Billboard:
