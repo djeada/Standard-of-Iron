@@ -842,7 +842,6 @@ void Renderer::enqueue_mode_indicator(
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
-
     }
   }
 
