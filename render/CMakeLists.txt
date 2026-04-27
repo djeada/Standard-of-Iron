@@ -159,6 +159,7 @@ add_library(render_gl STATIC
     creature/archetype_registry.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
+    creature/pipeline/creature_visual_definition.cpp
     creature/pipeline/creature_asset.cpp
     creature/pipeline/prepared_submit.cpp
     creature/pipeline/lod_decision.cpp
