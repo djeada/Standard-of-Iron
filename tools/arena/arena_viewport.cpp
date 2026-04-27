@@ -43,6 +43,7 @@ namespace {
 
 constexpr int k_local_owner_id = 1;
 constexpr int k_enemy_owner_id = 2;
+constexpr int k_all_owners_filter = 0;
 constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
@@ -375,7 +376,7 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
           Game::Systems::PickingService::pick_unit_first(
                static_cast<float>(click_pos.x()),
                static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
-               height(), 0);
+               height(), k_all_owners_filter);
       select_entity(picked, additive);
     }
     m_selection_drag_active = false;
@@ -451,7 +452,7 @@ void ArenaViewport::select_entities_in_rect(const QRect &selection_rect,
       static_cast<float>(normalized.left()), static_cast<float>(normalized.top()),
       static_cast<float>(normalized.right()),
       static_cast<float>(normalized.bottom()), *m_world, *m_camera, width(),
-      height(), 0);
+      height(), k_all_owners_filter);
   for (auto entity_id : picked) {
     selection->select_unit(entity_id);
   }
