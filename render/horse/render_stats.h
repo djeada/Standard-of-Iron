@@ -11,7 +11,6 @@ struct HorseRenderStats {
   uint32_t profiles_computed{0};
   uint32_t profiles_cached{0};
   uint32_t lod_full{0};
-  uint32_t lod_reduced{0};
   uint32_t lod_minimal{0};
 
   void reset() {
@@ -21,7 +20,6 @@ struct HorseRenderStats {
     profiles_computed = 0;
     profiles_cached = 0;
     lod_full = 0;
-    lod_reduced = 0;
     lod_minimal = 0;
   }
 };

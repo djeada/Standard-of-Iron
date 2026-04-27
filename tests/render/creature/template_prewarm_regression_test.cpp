@@ -266,8 +266,7 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   prewarm_ctx.template_prewarm = true;
 
   std::vector<CreatureRenderRequest> requests;
-  for (auto lod :
-       {CreatureLOD::Full, CreatureLOD::Reduced, CreatureLOD::Minimal}) {
+  for (auto lod : {CreatureLOD::Full, CreatureLOD::Minimal}) {
     requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase, lod,
                                     pass_intent_from_ctx(prewarm_ctx),
                                     static_cast<std::uint32_t>(lod)));
@@ -279,7 +278,6 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   // All LOD levels should be filtered when prewarm
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(stats.lod_full, 0u);
-  EXPECT_EQ(stats.lod_reduced, 0u);
   EXPECT_EQ(stats.lod_minimal, 0u);
 }
 
@@ -314,9 +312,6 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
                                   CreatureLOD::Full, RenderPassIntent::Shadow));
   requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
-                                  CreatureLOD::Reduced,
-                                  RenderPassIntent::Shadow));
-  requests.push_back(make_request(ArchetypeRegistry::kElephantBase,
                                   CreatureLOD::Minimal,
                                   RenderPassIntent::Shadow));
 
@@ -326,7 +321,6 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   // Shadow requests should not count toward LOD stats.
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(stats.lod_full, 0u);
-  EXPECT_EQ(stats.lod_reduced, 0u);
   EXPECT_EQ(stats.lod_minimal, 0u);
 }
 
@@ -335,7 +329,7 @@ TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
   requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
                                   CreatureLOD::Full, RenderPassIntent::Main));
   requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
-                                  CreatureLOD::Reduced,
+                                  CreatureLOD::Minimal,
                                   RenderPassIntent::Main));
 
   PrewarmCountingSubmitter sink;
@@ -343,7 +337,7 @@ TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
 
   EXPECT_EQ(stats.entities_submitted, 2u);
   EXPECT_EQ(stats.lod_full, 1u);
-  EXPECT_EQ(stats.lod_reduced, 1u);
+  EXPECT_EQ(stats.lod_minimal, 1u);
 }
 
 } // namespace

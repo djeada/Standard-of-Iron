@@ -204,10 +204,10 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
   return sample;
 }
 
-auto build_elephant_reduced_motion(const ElephantMotionSample &motion,
+auto build_elephant_pose_motion(const ElephantMotionSample &motion,
                                    const AnimationInputs &anim)
-    -> Render::Elephant::ElephantReducedMotion {
-  return Render::Elephant::ElephantReducedMotion{
+    -> Render::Elephant::ElephantPoseMotion {
+  return Render::Elephant::ElephantPoseMotion{
       .phase = motion.phase,
       .bob = motion.bob,
       .is_moving = motion.is_moving,

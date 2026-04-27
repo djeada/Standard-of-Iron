@@ -209,9 +209,6 @@ void bump_lod_counters(CreatureLOD lod, SubmitStats &stats) {
   case CreatureLOD::Full:
     ++stats.lod_full;
     break;
-  case CreatureLOD::Reduced:
-    ++stats.lod_reduced;
-    break;
   case CreatureLOD::Minimal:
     ++stats.lod_minimal;
     break;
