@@ -1,0 +1,97 @@
+#include "arena_window.h"
+
+#include "arena_viewport.h"
+#include "terrain_panel.h"
+#include "unit_panel.h"
+
+#include <QAction>
+#include <QHBoxLayout>
+#include <QToolBar>
+#include <QVBoxLayout>
+#include <QWidget>
+
+ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
+  setWindowTitle("Standard of Iron Arena");
+
+  auto *toolbar = addToolBar("Arena");
+  toolbar->setMovable(false);
+  auto *regenerate_action = toolbar->addAction("Regenerate");
+  auto *pause_action = toolbar->addAction("Pause");
+  pause_action->setCheckable(true);
+  auto *reset_camera_action = toolbar->addAction("Reset Camera");
+
+  auto *central = new QWidget(this);
+  auto *main_layout = new QHBoxLayout(central);
+  main_layout->setContentsMargins(8, 8, 8, 8);
+  main_layout->setSpacing(8);
+
+  m_viewport = new ArenaViewport(central);
+  m_viewport->setMinimumSize(960, 720);
+  main_layout->addWidget(m_viewport, 1);
+
+  auto *side_panel = new QWidget(central);
+  side_panel->setMinimumWidth(320);
+  side_panel->setMaximumWidth(380);
+  auto *side_layout = new QVBoxLayout(side_panel);
+  side_layout->setContentsMargins(0, 0, 0, 0);
+  side_layout->setSpacing(8);
+
+  m_terrain_panel = new TerrainPanel(side_panel);
+  m_unit_panel = new UnitPanel(side_panel);
+  side_layout->addWidget(m_terrain_panel);
+  side_layout->addWidget(m_unit_panel);
+  side_layout->addStretch(1);
+
+  main_layout->addWidget(side_panel);
+  setCentralWidget(central);
+
+  connect(regenerate_action, &QAction::triggered, m_viewport,
+          &ArenaViewport::regenerateTerrain);
+  connect(reset_camera_action, &QAction::triggered, m_viewport,
+          &ArenaViewport::resetCamera);
+  connect(pause_action, &QAction::toggled, m_viewport,
+          &ArenaViewport::pauseSimulation);
+  connect(m_viewport, &ArenaViewport::pausedChanged, pause_action,
+          &QAction::setChecked);
+  connect(m_viewport, &ArenaViewport::pausedChanged, m_unit_panel,
+          &UnitPanel::setAnimationPaused);
+
+  connect(m_terrain_panel, &TerrainPanel::seedChanged, m_viewport,
+          &ArenaViewport::setTerrainSeed);
+  connect(m_terrain_panel, &TerrainPanel::heightScaleChanged, m_viewport,
+          &ArenaViewport::setTerrainHeightScale);
+  connect(m_terrain_panel, &TerrainPanel::octavesChanged, m_viewport,
+          &ArenaViewport::setTerrainOctaves);
+  connect(m_terrain_panel, &TerrainPanel::frequencyChanged, m_viewport,
+          &ArenaViewport::setTerrainFrequency);
+  connect(m_terrain_panel, &TerrainPanel::regenerateRequested, m_viewport,
+          &ArenaViewport::regenerateTerrain);
+  connect(m_terrain_panel, &TerrainPanel::wireframeToggled, m_viewport,
+          &ArenaViewport::setWireframeEnabled);
+  connect(m_terrain_panel, &TerrainPanel::normalsToggled, m_viewport,
+          &ArenaViewport::setNormalsOverlayEnabled);
+
+  connect(m_unit_panel, &UnitPanel::spawnUnitRequested, m_viewport,
+          &ArenaViewport::spawnUnit);
+  connect(m_unit_panel, &UnitPanel::clearUnitsRequested, m_viewport,
+          &ArenaViewport::clearUnits);
+  connect(m_unit_panel, &UnitPanel::nationSelected, m_viewport,
+          &ArenaViewport::setSpawnNation);
+  connect(m_unit_panel, &UnitPanel::unitTypeSelected, m_viewport,
+          &ArenaViewport::setSpawnUnitType);
+  connect(m_unit_panel, &UnitPanel::animationSelected, m_viewport,
+          &ArenaViewport::setAnimationName);
+  connect(m_unit_panel, &UnitPanel::playAnimationRequested, m_viewport,
+          &ArenaViewport::playSelectedAnimation);
+  connect(m_unit_panel, &UnitPanel::animationPausedToggled, m_viewport,
+          &ArenaViewport::pauseSimulation);
+  connect(m_unit_panel, &UnitPanel::moveSelectedUnitRequested, m_viewport,
+          &ArenaViewport::moveSelectedUnitForward);
+  connect(m_unit_panel, &UnitPanel::movementSpeedChanged, m_viewport,
+          &ArenaViewport::setMovementSpeed);
+  connect(m_unit_panel, &UnitPanel::skeletonDebugToggled, m_viewport,
+          &ArenaViewport::setSkeletonDebugEnabled);
+
+  m_viewport->setSpawnNation(m_unit_panel->selectedNationId());
+  m_viewport->setSpawnUnitType(m_unit_panel->selectedUnitTypeId());
+}

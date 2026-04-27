@@ -69,7 +69,7 @@ endif()
 
 # ---- Qt ----
 # Try Qt6 first, fall back to Qt5 if not available
-find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL Quick Qml QuickControls2 Sql OPTIONAL_COMPONENTS Multimedia)
+find_package(Qt6 QUIET COMPONENTS Core Widgets OpenGL OpenGLWidgets Quick Qml QuickControls2 Sql OPTIONAL_COMPONENTS Multimedia)
 if(Qt6_FOUND)
     message(STATUS "Using Qt6")
     set(QT_VERSION_MAJOR 6)
