@@ -27,7 +27,6 @@ struct NationTroopVariant {
   std::optional<int> individuals_per_unit;
   std::optional<int> max_units_per_row;
   std::optional<float> selection_ring_size;
-  std::optional<float> selection_ring_y_offset;
   std::optional<float> selection_ring_ground_offset;
   std::optional<float> render_scale;
   std::optional<FormationType> formation_type;

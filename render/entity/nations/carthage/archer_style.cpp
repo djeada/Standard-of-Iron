@@ -34,7 +34,6 @@ void register_carthage_archer_style() {
   style.show_cape = true;
   style.force_beard = true;
   style.attachment_profile.clear();
-  style.shader_id = "archer_carthage";
   style.armor_id = "armor_light_carthage";
 
   register_archer_style("carthage", style);

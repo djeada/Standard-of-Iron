@@ -23,6 +23,9 @@ uniform float u_crackIntensity;
 uniform float u_rockExposure;
 uniform float u_grassSaturation;
 uniform float u_soilRoughness;
+uniform float u_curvatureResponse;
+uniform float u_ridgeResponse;
+uniform float u_gullyResponse;
 uniform vec3 u_snowColor;
 
 uniform float u_soilFootHeight;
@@ -183,6 +186,16 @@ void main() {
 
   slope *= (1.0 - 0.25 * entryMask);
   float curvature = computeCurvature();
+  float curvatureResponse = clamp(u_curvatureResponse, 0.0, 1.0);
+  float ridgeResponse = clamp(u_ridgeResponse, 0.0, 1.0);
+  float gullyResponse = clamp(u_gullyResponse, 0.0, 1.0);
+  float curvatureGain = mix(1.0, 2.2, curvatureResponse);
+  float ridgeThreshold = mix(0.02, 0.008, ridgeResponse);
+  float gullyThreshold = mix(0.02, 0.008, gullyResponse);
+  float ridgeMask =
+      smoothstep(0.0, ridgeThreshold, max(0.0, curvature * curvatureGain));
+  float gullyMask =
+      smoothstep(0.0, gullyThreshold, max(0.0, -curvature * curvatureGain));
 
   float tileScale = max(u_tileSize, 0.0001);
   vec2 world_coord = (v_worldPos.xz / tileScale) + u_noiseOffset;
@@ -200,6 +213,9 @@ void main() {
   lushFactor = mix(lushFactor, moistureVar, 0.3);
   vec3 lushGrass = mix(u_grassPrimary, u_grassSecondary, lushFactor);
   float dryness = clamp(0.55 * slope + 0.45 * detailNoise, 0.0, 1.0);
+  dryness = clamp(dryness + ridgeMask * 0.12 * ridgeResponse -
+                      gullyMask * 0.10 * gullyResponse,
+                  0.0, 1.0);
   dryness += moistureVar * 0.15;
 
   float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
@@ -237,7 +253,7 @@ void main() {
       max(toeLocal, max(toeHM, toeSS / max(1e-6, u_soilFootHeight)));
 
   float concavityLift =
-      smoothstep(0.0, 0.02, -curvature) * (0.25 * u_soilFootHeight);
+      gullyMask * ((0.25 + 0.25 * gullyResponse) * u_soilFootHeight);
 
   float soilHeight = u_soilBlendHeight + heightNoise + concavityLift;
   float bandWidth = soilWidth + u_soilFootHeight * toeProximity;
@@ -296,14 +312,14 @@ void main() {
   float isHigh = smoothstep(u_soilBlendHeight + 0.5, u_soilBlendHeight + 1.5,
                             v_worldPos.y);
   float plateauFactor = isFlat * isHigh;
-  float isGully =
-      smoothstep(0.0, 0.02, -curvature) * (1.0 - smoothstep(0.25, 0.6, slope));
+  float isGully = gullyMask * (1.0 - smoothstep(0.25, 0.6, slope));
   float isSteep = smoothstep(0.3, 0.5, slope);
-  float isRim = smoothstep(0.0, 0.02, curvature);
+  float isRim = ridgeMask;
   float rimFactor = isSteep * isRim;
 
   rockMask =
-      clamp(rockMask + rimFactor * 0.10 - plateauFactor * 0.06 - isGully * 0.08,
+      clamp(rockMask + rimFactor * (0.10 + 0.16 * ridgeResponse) -
+                plateauFactor * 0.06 - isGully * (0.08 + 0.12 * gullyResponse),
             0.0, 1.0);
 
   rockMask = clamp(rockMask + (u_rockExposure - 0.3) * 0.4, 0.0, 1.0);
@@ -352,8 +368,10 @@ void main() {
   vec3 L = normalize(u_lightDir);
   float ndl = max(dot(microNormal, L), 0.0);
 
-  float skyOcclusion = smoothstep(-0.03, 0.01, -curvature);
-  float ao = mix(1.0, 0.75, skyOcclusion * (1.0 - slope * 0.5));
+  float skyOcclusion =
+      max(smoothstep(-0.03, 0.01, -curvature), gullyMask * gullyResponse);
+  float ao =
+      mix(1.0, 0.75 - 0.08 * gullyResponse, skyOcclusion * (1.0 - slope * 0.5));
 
   float ambient = 0.32 * ao;
   float fresnel =
@@ -381,8 +399,8 @@ void main() {
   terrainColor = mix(terrainColor, vec3(lumaP), plateauDesat);
 
   float plateauBrightness = 1.0 - plateauDim;
-  float gullyDarkness = 1.0 - isGully * 0.04;
-  float rimContrast = 1.0 + rimFactor * 0.03;
+  float gullyDarkness = 1.0 - isGully * (0.04 + 0.07 * gullyResponse);
+  float rimContrast = 1.0 + rimFactor * (0.03 + 0.05 * ridgeResponse);
 
   terrainColor *= plateauBrightness * gullyDarkness * rimContrast;
   vec3 litColor = terrainColor * shade * u_ambientBoost;

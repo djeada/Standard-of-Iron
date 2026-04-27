@@ -1,2 +1,3 @@
 add_subdirectory(map_editor)
 add_subdirectory(content_validator)
+add_subdirectory(bpat_baker)

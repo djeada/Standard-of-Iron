@@ -22,49 +22,29 @@
 #include "game/systems/stamina_system.h"
 #include "game/systems/terrain_alignment_system.h"
 #include "render/gl/camera.h"
-#include "render/ground/biome_renderer.h"
-#include "render/ground/bridge_renderer.h"
-#include "render/ground/firecamp_renderer.h"
+#include "render/graphics_settings.h"
 #include "render/ground/fog_renderer.h"
-#include "render/ground/ground_renderer.h"
-#include "render/ground/olive_renderer.h"
-#include "render/ground/pine_renderer.h"
-#include "render/ground/plant_renderer.h"
 #include "render/ground/rain_renderer.h"
-#include "render/ground/river_renderer.h"
-#include "render/ground/riverbank_renderer.h"
-#include "render/ground/road_renderer.h"
-#include "render/ground/stone_renderer.h"
-#include "render/ground/terrain_renderer.h"
+#include "render/ground/terrain_feature_manager.h"
+#include "render/ground/terrain_scatter_manager.h"
+#include "render/ground/terrain_surface_manager.h"
 #include "render/scene_renderer.h"
+#include "render/terrain_scene_proxy.h"
 
 auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   RenderingComponents components;
 
-  components.renderer = std::make_unique<Render::GL::Renderer>();
+  components.renderer = std::make_unique<Render::GL::Renderer>(
+      Render::GraphicsSettings::instance().features().shader_quality);
   components.camera = std::make_unique<Render::GL::Camera>();
-  components.ground = std::make_unique<Render::GL::GroundRenderer>();
-  components.terrain = std::make_unique<Render::GL::TerrainRenderer>();
-  components.biome = std::make_unique<Render::GL::BiomeRenderer>();
-  components.river = std::make_unique<Render::GL::RiverRenderer>();
-  components.road = std::make_unique<Render::GL::RoadRenderer>();
-  components.riverbank = std::make_unique<Render::GL::RiverbankRenderer>();
-  components.bridge = std::make_unique<Render::GL::BridgeRenderer>();
+  components.surface = std::make_unique<Render::GL::TerrainSurfaceManager>();
+  components.features = std::make_unique<Render::GL::TerrainFeatureManager>();
+  components.scatter = std::make_unique<Render::GL::TerrainScatterManager>();
   components.fog = std::make_unique<Render::GL::FogRenderer>();
-  components.stone = std::make_unique<Render::GL::StoneRenderer>();
-  components.plant = std::make_unique<Render::GL::PlantRenderer>();
-  components.pine = std::make_unique<Render::GL::PineRenderer>();
-  components.olive = std::make_unique<Render::GL::OliveRenderer>();
-  components.firecamp = std::make_unique<Render::GL::FireCampRenderer>();
   components.rain = std::make_unique<Render::GL::RainRenderer>();
-
-  components.passes = {components.ground.get(),    components.terrain.get(),
-                       components.river.get(),     components.road.get(),
-                       components.riverbank.get(), components.bridge.get(),
-                       components.biome.get(),     components.stone.get(),
-                       components.plant.get(),     components.pine.get(),
-                       components.olive.get(),     components.firecamp.get(),
-                       components.rain.get(),      components.fog.get()};
+  components.terrain_scene = std::make_unique<Render::GL::TerrainSceneProxy>(
+      components.surface.get(), components.features.get(),
+      components.scatter.get(), components.rain.get(), components.fog.get());
 
   return components;
 }

@@ -1,0 +1,125 @@
+#pragma once
+
+#include "../creature/pipeline/unit_visual_spec.h"
+#include "../entity/registry.h"
+#include "../gl/humanoid/humanoid_types.h"
+#include "humanoid_specs.h"
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <cstdint>
+
+namespace Engine::Core {
+class Entity;
+class World;
+class MovementComponent;
+class TransformComponent;
+class UnitComponent;
+} // namespace Engine::Core
+
+namespace Render::Creature::Pipeline {
+struct CreaturePreparationResult;
+}
+
+namespace Render::GL {
+struct DrawContext;
+struct AnimationInputs;
+class HumanoidRendererBase;
+} // namespace Render::GL
+
+namespace Render::Humanoid {
+using HumanoidPreparation =
+    Render::Creature::Pipeline::CreaturePreparationResult;
+void prepare_humanoid_instances(const ::Render::GL::HumanoidRendererBase &owner,
+                                const ::Render::GL::DrawContext &ctx,
+                                const ::Render::GL::AnimationInputs &anim,
+                                std::uint32_t frame_index,
+                                HumanoidPreparation &out);
+} // namespace Render::Humanoid
+
+namespace Render::GL {
+
+class HumanoidRendererBase {
+  friend void ::Render::Humanoid::prepare_humanoid_instances(
+      const ::Render::GL::HumanoidRendererBase &owner,
+      const ::Render::GL::DrawContext &ctx,
+      const ::Render::GL::AnimationInputs &anim, std::uint32_t frame_index,
+      ::Render::Humanoid::HumanoidPreparation &out);
+
+public:
+  virtual ~HumanoidRendererBase() = default;
+
+  virtual auto get_proportion_scaling() const -> QVector3D {
+    return {1.0F, 1.0F, 1.0F};
+  }
+
+  virtual auto get_torso_scale() const -> float {
+    return get_proportion_scaling().x();
+  }
+
+  virtual auto get_mount_scale() const -> float { return 1.0F; }
+
+  virtual auto
+  visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec &;
+
+  virtual auto uses_mounted_pipeline() const noexcept -> bool { return false; }
+
+  virtual void adjust_variation(const DrawContext &, uint32_t,
+                                VariationParams &) const {}
+
+  virtual void get_variant(const DrawContext &ctx, uint32_t seed,
+                           HumanoidVariant &v) const;
+
+  void render(const DrawContext &ctx, ISubmitter &out) const;
+
+  virtual auto resolve_entity_ground_offset(
+      const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
+      Engine::Core::TransformComponent *transform_comp) const -> float;
+
+  static auto frame_local_position(const AttachmentFrame &frame,
+                                   const QVector3D &local) -> QVector3D;
+
+  static auto make_frame_local_transform(const QMatrix4x4 &parent,
+                                         const AttachmentFrame &frame,
+                                         const QVector3D &local_offset,
+                                         float uniform_scale) -> QMatrix4x4;
+
+  static auto head_local_position(const HeadFrame &frame,
+                                  const QVector3D &local) -> QVector3D;
+
+  static auto make_head_local_transform(const QMatrix4x4 &parent,
+                                        const HeadFrame &frame,
+                                        const QVector3D &local_offset,
+                                        float uniform_scale) -> QMatrix4x4;
+
+  static void compute_locomotion_pose(uint32_t seed, float time,
+                                      const HumanoidGaitDescriptor &gait,
+                                      const VariationParams &variation,
+                                      HumanoidPose &io_pose);
+
+  static void compute_locomotion_pose(uint32_t seed, float time, bool is_moving,
+                                      const VariationParams &variation,
+                                      HumanoidPose &io_pose);
+
+protected:
+  mutable QVector3D m_cached_proportion_scale;
+  mutable bool m_proportion_scale_cached = false;
+
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked{false};
+
+  static auto resolve_formation(const HumanoidRendererBase &owner,
+                                const DrawContext &ctx) -> FormationParams;
+
+  static auto resolve_team_tint(const DrawContext &ctx) -> QVector3D;
+
+  virtual void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t seed, Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult &out) const;
+
+  void render_procedural(const DrawContext &ctx, const AnimationInputs &anim,
+                         ISubmitter &out) const;
+};
+
+} // namespace Render::GL

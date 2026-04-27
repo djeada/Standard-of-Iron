@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../../horse/rig.h"
-#include "../../submitter.h"
+#include "../../horse/horse_renderer_base.h"
 
 namespace Render::GL {
 
 struct DrawContext;
+struct EquipmentBatch;
 
 struct HorseAnimationContext {
   float time{0.0F};
@@ -22,7 +22,7 @@ public:
   virtual void render(const DrawContext &ctx, const HorseBodyFrames &frames,
                       const HorseVariant &variant,
                       const HorseAnimationContext &anim,
-                      ISubmitter &out) const = 0;
+                      EquipmentBatch &batch) const = 0;
 };
 
 } // namespace Render::GL

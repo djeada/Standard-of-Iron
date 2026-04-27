@@ -176,6 +176,12 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrainShader->uniform_handle("u_grassSaturation");
   m_terrainUniforms.soil_roughness =
       m_terrainShader->uniform_handle("u_soilRoughness");
+  m_terrainUniforms.curvature_response =
+      m_terrainShader->uniform_handle("u_curvatureResponse");
+  m_terrainUniforms.ridge_response =
+      m_terrainShader->uniform_handle("u_ridgeResponse");
+  m_terrainUniforms.gully_response =
+      m_terrainShader->uniform_handle("u_gullyResponse");
   m_terrainUniforms.snow_color = m_terrainShader->uniform_handle("u_snowColor");
 }
 

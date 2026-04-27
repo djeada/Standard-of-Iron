@@ -1,5 +1,5 @@
 #include "rain_pipeline.h"
-#include "../../ground/rain_gpu.h"
+#include "../../rain_gpu.h"
 #include "../backend.h"
 #include "../camera.h"
 #include "../render_constants.h"

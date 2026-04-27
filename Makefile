@@ -102,7 +102,16 @@ configure: build-dir
 build: run-map-pipeline configure
 	@echo "$(BOLD)$(BLUE)Building project...$(RESET)"
 	@cd $(BUILD_DIR) && make -j$$(nproc)
+	@$(MAKE) bake-bpat
 	@echo "$(GREEN)✓ Build complete$(RESET)"
+
+# Bake creature animation textures (BPAT) into assets/creatures/.
+# Runs after build so the bpat_baker binary exists. Idempotent.
+.PHONY: bake-bpat
+bake-bpat:
+	@echo "$(BOLD)$(BLUE)Baking creature animation textures (BPAT)...$(RESET)"
+	@$(BUILD_DIR)/bin/bpat_baker assets/creatures
+	@echo "$(GREEN)✓ BPAT baking complete$(RESET)"
 
 # Build with clang-tidy enabled
 .PHONY: build-tidy

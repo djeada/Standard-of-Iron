@@ -28,7 +28,6 @@ void register_roman_healer_style() {
   style.metal_color = k_roman_bronze;
   style.wood_color = k_roman_wood;
   style.cape_color = k_roman_sash;
-  style.shader_id = "healer_roman_republic";
 
   style.show_helmet = false;
   style.show_armor = false;

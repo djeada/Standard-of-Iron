@@ -16,6 +16,11 @@ constexpr float ROMAN_LINE_SPACING = 3.5F;
 constexpr float ROMAN_UNIT_SPACING = 2.5F;
 constexpr float CARTHAGE_LINE_SPACING = 3.0F;
 constexpr float CARTHAGE_UNIT_SPACING = 2.8F;
+constexpr float kRomanInfantryLateralSpacingScale = 1.10F;
+constexpr float kRomanInfantryDepthSpacingScale = 1.12F;
+constexpr float kCavalryLateralSpacingScale = 0.72F;
+constexpr float kCavalryRankStaggerScale = 0.50F;
+constexpr float kCavalryRearDepthBiasScale = 0.18F;
 
 auto get_unit_spacing(Game::Units::TroopType type,
                       float base_spacing) -> float {
@@ -75,6 +80,129 @@ auto calculate_balanced_rows(int total_units, int max_per_row,
   }
 
   return row_sizes;
+}
+
+auto cavalry_lateral_spacing(float forward_spacing) -> float {
+  return forward_spacing * kCavalryLateralSpacingScale;
+}
+
+auto cavalry_front_rank_index(int row, int rows) -> int {
+  return std::max(0, rows - 1 - row);
+}
+
+auto cavalry_row_yaw(int row, int rows) -> float {
+  switch (cavalry_front_rank_index(row, rows) % 3) {
+  case 1:
+    return -5.0F;
+  case 2:
+    return 5.0F;
+  default:
+    return 0.0F;
+  }
+}
+
+auto roman_infantry_local_offset(int row, int col, int rows, int cols,
+                                 float spacing) -> FormationOffset {
+  return {(col - (cols - 1) * 0.5F) * spacing *
+              kRomanInfantryLateralSpacingScale,
+          (row - (rows - 1) * 0.5F) * spacing * kRomanInfantryDepthSpacingScale,
+          0.0F};
+}
+
+auto cavalry_local_offset(int row, int col, int rows, int cols,
+                          float spacing) -> FormationOffset {
+  float const side_spacing = cavalry_lateral_spacing(spacing);
+  float const centered_col = float(col) - float(cols - 1) * 0.5F;
+  float const centered_row = float(row) - float(rows - 1) * 0.5F;
+  float const stagger =
+      (row % 2 == 1) ? side_spacing * kCavalryRankStaggerScale : 0.0F;
+  float const rear_depth_bias = float(cavalry_front_rank_index(row, rows)) *
+                                spacing * kCavalryRearDepthBiasScale;
+  return {(centered_col * side_spacing) + stagger,
+          (centered_row * spacing) - rear_depth_bias,
+          cavalry_row_yaw(row, rows)};
+}
+
+auto carthage_infantry_local_offset(int idx, int row, int col, int rows,
+                                    int cols, float spacing,
+                                    std::uint32_t seed) -> FormationOffset {
+  float const row_normalized = float(row) / float(rows > 1 ? rows - 1 : 1);
+  float const col_normalized =
+      float(col - (cols - 1) * 0.5F) / float(cols > 1 ? (cols - 1) * 0.5F : 1);
+
+  float const spread_factor = 1.0F + row_normalized * 0.3F;
+  float const row_spacing = spacing * (1.0F + row_normalized * 0.15F);
+
+  float offset_x = (col - (cols - 1) * 0.5F) * spacing * spread_factor;
+  float offset_z = (row - (rows - 1) * 0.5F) * row_spacing;
+
+  if (row % 2 == 1) {
+    offset_x += spacing * 0.35F;
+  }
+
+  float const rank_wave = std::sin(col_normalized * 3.14159F) * spacing *
+                          0.12F * (1.0F + row_normalized);
+  offset_z += rank_wave;
+
+  float const center_push = (1.0F - std::abs(col_normalized)) * spacing * 0.2F;
+  offset_z -= center_push;
+
+  std::uint32_t const variation_seed =
+      seed ^ (std::uint32_t(idx) * 2654435761U);
+  float const phase = float(variation_seed & 0xFFU) / 255.0F * 6.28318F;
+
+  float const jitter_scale = spacing * 0.08F * (1.0F + row_normalized * 0.5F);
+  offset_x += std::sin(phase) * jitter_scale;
+  offset_z += std::cos(phase * 1.3F) * jitter_scale * 0.7F;
+
+  int const cluster_id = idx / 4;
+  float const cluster_phase = float(cluster_id * 137 + (seed & 0xFFU)) * 0.1F;
+  float const cluster_pull = spacing * 0.06F;
+  offset_x += std::sin(cluster_phase) * cluster_pull;
+  offset_z += std::cos(cluster_phase * 0.7F) * cluster_pull;
+
+  return {offset_x, offset_z, 0.0F};
+}
+
+auto carthage_cavalry_local_offset(int idx, int row, int col, int rows,
+                                   int cols, float spacing,
+                                   std::uint32_t seed) -> FormationOffset {
+  FormationOffset offset = cavalry_local_offset(row, col, rows, cols, spacing);
+  std::uint32_t rng_state = seed ^ (std::uint32_t(idx) * 7919U);
+
+  auto fast_random = [](std::uint32_t &state) -> float {
+    state = state * 1664525U + 1013904223U;
+    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
+  };
+
+  offset.offset_x += (fast_random(rng_state) - 0.5F) *
+                     cavalry_lateral_spacing(spacing) * 0.18F;
+  offset.offset_z += (fast_random(rng_state) - 0.5F) * spacing * 0.12F;
+
+  offset.offset_x +=
+      std::sin(float(idx) * 0.7F) * cavalry_lateral_spacing(spacing) * 0.08F;
+  offset.offset_z += std::cos(float(idx) * 0.5F) * spacing * 0.06F;
+  return offset;
+}
+
+auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
+                                 std::uint32_t seed) -> FormationOffset {
+  int const total_units = rows * cols;
+  float const angle =
+      (float(idx) / float(total_units)) * 2.0F * 3.14159265358979F;
+  float const radius = spacing * 1.8F;
+  float offset_x = std::cos(angle) * radius;
+  float offset_z = std::sin(angle) * radius;
+
+  auto fast_random = [](std::uint32_t &state) -> float {
+    state = state * 1664525U + 1013904223U;
+    return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
+  };
+  std::uint32_t rng_state = seed ^ (std::uint32_t(idx) * 2654435761U);
+  float const jitter = spacing * 0.08F;
+  offset_x += (fast_random(rng_state) - 0.5F) * jitter;
+  offset_z += (fast_random(rng_state) - 0.5F) * jitter;
+  return {offset_x, offset_z, 0.0F};
 }
 } // namespace
 
@@ -623,6 +751,34 @@ auto FormationSystem::get_formation(FormationType type) const
     return nullptr;
   }
   return it->second.get();
+}
+
+auto FormationSystem::get_local_offset(
+    FormationType type, FormationUnitCategory category, int idx, int row,
+    int col, int rows, int cols, float spacing,
+    std::uint32_t seed) const -> FormationOffset {
+  if (category == FormationUnitCategory::BuilderConstruction) {
+    return builder_circle_local_offset(idx, rows, cols, spacing, seed);
+  }
+
+  switch (type) {
+  case FormationType::Roman:
+    if (category == FormationUnitCategory::Cavalry) {
+      return cavalry_local_offset(row, col, rows, cols, spacing);
+    }
+    return roman_infantry_local_offset(row, col, rows, cols, spacing);
+  case FormationType::Carthage:
+    if (category == FormationUnitCategory::Cavalry) {
+      return carthage_cavalry_local_offset(idx, row, col, rows, cols, spacing,
+                                           seed);
+    }
+    return carthage_infantry_local_offset(idx, row, col, rows, cols, spacing,
+                                          seed);
+  case FormationType::Barbarian:
+    return roman_infantry_local_offset(row, col, rows, cols, spacing);
+  }
+
+  return roman_infantry_local_offset(row, col, rows, cols, spacing);
 }
 
 } // namespace Game::Systems

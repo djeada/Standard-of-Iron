@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
+#include "../decoration_gpu.h"
 #include "../i_render_pass.h"
-#include "pine_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -32,6 +32,10 @@ public:
       return true;
     }
     return (m_pineInstanceBuffer != nullptr) && !m_visibilityDirty;
+  }
+
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_pineInstances.size();
   }
 
 private:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gl/humanoid/humanoid_types.h"
+#include "material.h"
 #include "scene_renderer.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -69,6 +70,9 @@ struct RecordedMeshCmd {
   Mesh *mesh{nullptr};
   Texture *texture{nullptr};
   Shader *shader{nullptr};
+
+  const Material *material{nullptr};
+
   QMatrix4x4 local_model;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha{1.0F};
@@ -93,9 +97,19 @@ public:
     return m_commands;
   }
 
+  void set_current_material(const Material *material) {
+    m_current_material = material;
+  }
+  [[nodiscard]] auto get_current_material() const -> const Material * {
+    return m_current_material;
+  }
+
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *texture = nullptr, float alpha = 1.0F,
             int material_id = 0) override;
+  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+            const QVector3D &color, Texture *texture = nullptr,
+            float alpha = 1.0F, int material_id = 0) override;
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -116,6 +130,7 @@ public:
 
 private:
   std::vector<RecordedMeshCmd> m_commands;
+  const Material *m_current_material = nullptr;
 };
 
 class TemplateCache {

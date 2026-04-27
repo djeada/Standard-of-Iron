@@ -2,7 +2,7 @@
 #include "../draw_queue.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
-#include "ground/terrain_gpu.h"
+#include "world_chunk.h"
 #include <algorithm>
 #include <cmath>
 #include <qmatrix4x4.h>
@@ -22,7 +22,6 @@ static auto clamp01(const QVector3D &c) -> QVector3D { return saturate(c); }
 
 void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
-  new_model.translate(0.0F, -0.5F, 0.0F);
 
   if (m_width > 0 && m_height > 0) {
     const float scale_x = std::sqrt(float(m_width)) * m_tile_size;
@@ -62,53 +61,56 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   }
 
   TerrainChunkParams params;
+  const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
+  const auto &surface_profile = profiles.surface;
+  const auto &climate_profile = profiles.climate;
 
-  const QVector3D primary = m_biome_settings.grass_primary * 0.97F;
-  const QVector3D secondary = m_biome_settings.grass_secondary * 0.93F;
-  const QVector3D dry = m_biome_settings.grass_dry * 0.90F;
-  const QVector3D soil = m_biome_settings.soil_color * 0.68F;
+  const QVector3D primary = surface_profile.grass_primary * 0.97F;
+  const QVector3D secondary = surface_profile.grass_secondary * 0.93F;
+  const QVector3D dry = surface_profile.grass_dry * 0.90F;
+  const QVector3D soil = surface_profile.soil_color * 0.68F;
 
   params.grass_primary = saturate(primary);
   params.grass_secondary = saturate(secondary);
   params.grass_dry = saturate(dry);
   params.soil_color = saturate(soil);
-  params.rock_low = saturate(m_biome_settings.rock_low);
-  params.rock_high = saturate(m_biome_settings.rock_high);
+  params.rock_low = saturate(surface_profile.rock_low);
+  params.rock_high = saturate(surface_profile.rock_high);
 
   params.tint = QVector3D(0.96F, 0.98F, 0.96F);
 
   params.tile_size = std::max(0.25F, m_tile_size);
 
   params.macro_noise_scale =
-      std::max(0.012F, m_biome_settings.terrain_macro_noise_scale * 0.60F);
+      std::max(0.012F, surface_profile.terrain_macro_noise_scale * 0.60F);
   params.detail_noise_scale =
-      std::max(0.045F, m_biome_settings.terrain_detail_noise_scale * 0.75F);
+      std::max(0.045F, surface_profile.terrain_detail_noise_scale * 0.75F);
 
   params.slope_rock_threshold =
-      std::clamp(m_biome_settings.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
+      std::clamp(surface_profile.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
   params.slope_rock_sharpness =
-      std::clamp(m_biome_settings.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
+      std::clamp(surface_profile.terrain_rock_sharpness + 1.5F, 2.0F, 6.0F);
 
-  params.soil_blend_height = m_biome_settings.terrain_soil_height - 1.25F;
+  params.soil_blend_height = surface_profile.terrain_soil_height - 1.25F;
   params.soil_blend_sharpness =
-      std::clamp(m_biome_settings.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
+      std::clamp(surface_profile.terrain_soil_sharpness * 0.75F, 1.5F, 5.0F);
 
   params.noise_offset = m_noise_offset;
   params.noise_angle = m_noise_angle;
 
   float target_amp;
   float target_freq;
-  if (m_biome_settings.ground_irregularity_enabled) {
+  if (surface_profile.ground_irregularity_enabled) {
 
-    target_amp = std::clamp(m_biome_settings.irregularity_amplitude * 0.85F,
+    target_amp = std::clamp(surface_profile.irregularity_amplitude * 0.85F,
                             0.15F, 0.70F);
-    target_freq = std::max(0.45F, m_biome_settings.irregularity_scale * 2.5F);
+    target_freq = std::max(0.45F, surface_profile.irregularity_scale * 2.5F);
   } else {
 
-    target_amp = std::clamp(m_biome_settings.height_noise_amplitude * 0.22F,
+    target_amp = std::clamp(surface_profile.height_noise_amplitude * 0.22F,
                             0.10F, 0.20F);
     target_freq =
-        std::max(0.6F, m_biome_settings.height_noise_frequency * 1.05F);
+        std::max(0.6F, surface_profile.height_noise_frequency * 1.05F);
   }
   params.height_noise_strength = target_amp;
   params.height_noise_frequency = target_freq;
@@ -119,27 +121,27 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
 
   params.albedo_jitter = 0.05F;
 
-  params.ambient_boost = m_biome_settings.terrain_ambient_boost * 0.85F;
+  params.ambient_boost = surface_profile.terrain_ambient_boost * 0.85F;
 
   params.rock_detail_strength =
-      m_biome_settings.terrain_rock_detail_strength * 0.18F;
+      surface_profile.terrain_rock_detail_strength * 0.18F;
 
   QVector3D const l(0.35F, 0.85F, 0.42F);
   params.light_direction = l.normalized();
 
   params.is_ground_plane = true;
 
-  params.snow_coverage = std::clamp(m_biome_settings.snow_coverage, 0.0F, 1.0F);
+  params.snow_coverage = std::clamp(climate_profile.snow_coverage, 0.0F, 1.0F);
   params.moisture_level =
-      std::clamp(m_biome_settings.moisture_level, 0.0F, 1.0F);
+      std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
   params.crack_intensity =
-      std::clamp(m_biome_settings.crack_intensity, 0.0F, 1.0F);
-  params.rock_exposure = std::clamp(m_biome_settings.rock_exposure, 0.0F, 1.0F);
+      std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
+  params.rock_exposure = std::clamp(climate_profile.rock_exposure, 0.0F, 1.0F);
   params.grass_saturation =
-      std::clamp(m_biome_settings.grass_saturation, 0.0F, 1.5F);
+      std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
   params.soil_roughness =
-      std::clamp(m_biome_settings.soil_roughness, 0.0F, 1.0F);
-  params.snow_color = saturate(m_biome_settings.snow_color);
+      std::clamp(climate_profile.soil_roughness, 0.0F, 1.0F);
+  params.snow_color = saturate(climate_profile.snow_color);
 
   m_cached_params = params;
   m_cached_params_valid = true;
@@ -165,7 +167,14 @@ void GroundRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       (void)model_changed;
       (void)state_changed;
 
-      renderer.terrain_chunk(plane, m_model, params, 0x0040U, true, +0.0008F);
+      TerrainSurfaceCmd cmd;
+      cmd.mesh = plane;
+      cmd.model = m_model;
+      cmd.params = params;
+      cmd.sort_key = 0x0040U;
+      cmd.depth_write = true;
+      cmd.depth_bias = +0.0008F;
+      renderer.terrain_surface(cmd);
 
       m_last_submitted_model = m_model;
       m_model_dirty = false;

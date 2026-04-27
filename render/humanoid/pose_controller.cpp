@@ -14,7 +14,71 @@ HumanoidPoseController::HumanoidPoseController(
 
 void HumanoidPoseController::stand_idle() {}
 
-void HumanoidPoseController::apply_micro_idle(float, std::uint32_t) {}
+void HumanoidPoseController::apply_micro_idle(float time, std::uint32_t seed) {
+  using HP = HumanProportions;
+
+  auto hash_to_unit = [](std::uint32_t x) -> float {
+    x ^= x >> 16;
+    x *= 0x7feb352dU;
+    x ^= x >> 15;
+    x *= 0x846ca68bU;
+    x ^= x >> 16;
+    return float(x & 0x7FFFFFU) / float(0x7FFFFFU);
+  };
+
+  float const breath_phase_off =
+      hash_to_unit(seed ^ 0x1A2B3C4DU) * 2.0F * std::numbers::pi_v<float>;
+  float const sway_phase_off =
+      hash_to_unit(seed ^ 0x5E6F7A8BU) * 2.0F * std::numbers::pi_v<float>;
+  float const head_phase_off =
+      hash_to_unit(seed ^ 0x9CDE0F12U) * 2.0F * std::numbers::pi_v<float>;
+
+  float const breath_freq = 0.85F + hash_to_unit(seed ^ 0x33445566U) * 0.45F;
+  float const sway_freq = 0.18F + hash_to_unit(seed ^ 0x778899AAU) * 0.10F;
+  float const head_freq = 0.32F + hash_to_unit(seed ^ 0xBBCCDDEEU) * 0.18F;
+
+  float const two_pi = 2.0F * std::numbers::pi_v<float>;
+
+  float const breath = std::sin(time * breath_freq * two_pi + breath_phase_off);
+  float const breath_amp = 0.012F;
+  float const chest_lift = breath * breath_amp;
+
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + chest_lift);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() + chest_lift);
+  m_pose.neck_base.setY(m_pose.neck_base.y() + chest_lift * 0.75F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() + chest_lift * 0.55F);
+
+  float const breath_torso_z = breath * 0.005F;
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() - breath_torso_z);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() - breath_torso_z);
+
+  float const weight_shift =
+      std::sin(time * sway_freq * two_pi + sway_phase_off);
+  float const sway_amp = 0.016F;
+  float const lateral = weight_shift * sway_amp;
+  m_pose.pelvis_pos.setX(m_pose.pelvis_pos.x() + lateral);
+  m_pose.shoulder_l.setX(m_pose.shoulder_l.x() + lateral * 0.4F);
+  m_pose.shoulder_r.setX(m_pose.shoulder_r.x() + lateral * 0.4F);
+  m_pose.head_pos.setX(m_pose.head_pos.x() + lateral * 0.25F);
+  float const weight_dip = -std::abs(weight_shift) * 0.005F;
+  m_pose.pelvis_pos.setY(m_pose.pelvis_pos.y() + weight_dip);
+
+  float const head_yaw = std::sin(time * head_freq * two_pi + head_phase_off);
+  float const head_yaw_amp = 0.014F;
+  m_pose.head_pos.setX(m_pose.head_pos.x() + head_yaw * head_yaw_amp);
+  float const head_nod =
+      std::sin(time * head_freq * 0.7F * two_pi + head_phase_off * 0.6F) *
+      0.006F;
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + head_nod);
+
+  float const arm_drift =
+      std::sin(time * (breath_freq * 0.55F) * two_pi + breath_phase_off);
+  float const arm_drift_amp = 0.009F;
+  m_pose.hand_l.setY(m_pose.hand_l.y() + arm_drift * arm_drift_amp);
+  m_pose.hand_r.setY(m_pose.hand_r.y() + arm_drift * arm_drift_amp * 0.85F);
+
+  (void)HP::SHOULDER_Y;
+}
 
 namespace {
 constexpr float k_min_idle_duration = 5.0F;
@@ -562,6 +626,13 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
   QVector3D hand_l_target;
   float shoulder_twist = 0.0F;
   float head_recoil = 0.0F;
+  float forward_lean = 0.0F;
+  float exhale_dip = 0.0F;
+  float draw_sway_x = 0.0F;
+  float draw_sway_y = 0.0F;
+
+  float const two_pi = 2.0F * std::numbers::pi_v<float>;
+  float const jitter_phase = m_anim_ctx.jitter_seed * two_pi;
 
   if (draw_phase < 0.20F) {
 
@@ -569,10 +640,22 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
     t = t * t;
     hand_l_target = aim_pos * (1.0F - t) + draw_pos * t;
     shoulder_twist = t * 0.08F;
+    forward_lean = t * 0.025F;
   } else if (draw_phase < 0.50F) {
 
     hand_l_target = draw_pos;
     shoulder_twist = 0.08F;
+    forward_lean = 0.025F;
+
+    float const tension_t = (draw_phase - 0.20F) / 0.30F;
+    float const sway_freq_a = 5.0F;
+    float const sway_freq_b = 7.3F;
+    float const sway_amp = 0.004F + tension_t * 0.004F;
+    draw_sway_x =
+        std::sin(draw_phase * sway_freq_a * two_pi + jitter_phase) * sway_amp;
+    draw_sway_y =
+        std::cos(draw_phase * sway_freq_b * two_pi + jitter_phase * 1.7F) *
+        sway_amp * 0.7F;
   } else if (draw_phase < 0.58F) {
 
     float t = (draw_phase - 0.50F) / 0.08F;
@@ -580,6 +663,8 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
     hand_l_target = draw_pos * (1.0F - t) + release_pos * t;
     shoulder_twist = 0.08F * (1.0F - t * 0.6F);
     head_recoil = t * 0.04F;
+    forward_lean = 0.025F * (1.0F - t);
+    exhale_dip = t * 0.012F;
   } else {
 
     float t = (draw_phase - 0.58F) / 0.42F;
@@ -587,15 +672,34 @@ void HumanoidPoseController::aim_bow(float draw_phase) {
     hand_l_target = release_pos * (1.0F - t) + aim_pos * t;
     shoulder_twist = 0.08F * 0.4F * (1.0F - t);
     head_recoil = 0.04F * (1.0F - t);
+    exhale_dip = 0.012F * (1.0F - t);
   }
 
-  QVector3D const hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
+  hand_l_target.setX(hand_l_target.x() + draw_sway_x);
+  hand_l_target.setY(hand_l_target.y() + draw_sway_y);
+
+  QVector3D hand_r_target(0.03F, HP::SHOULDER_Y + 0.08F, 0.55F);
+  hand_r_target.setX(hand_r_target.x() + draw_sway_x * 0.3F);
+  hand_r_target.setY(hand_r_target.y() + draw_sway_y * 0.3F);
   place_hand_at(false, hand_r_target);
   place_hand_at(true, hand_l_target);
 
   if (shoulder_twist > 0.01F) {
     m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + shoulder_twist);
     m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - shoulder_twist * 0.5F);
+  }
+
+  if (forward_lean > 0.001F) {
+    m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + forward_lean);
+    m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + forward_lean);
+    m_pose.neck_base.setZ(m_pose.neck_base.z() + forward_lean * 0.7F);
+    m_pose.head_pos.setZ(m_pose.head_pos.z() + forward_lean * 0.5F);
+  }
+
+  if (exhale_dip > 0.001F) {
+    m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - exhale_dip);
+    m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - exhale_dip);
+    m_pose.neck_base.setY(m_pose.neck_base.y() - exhale_dip * 0.7F);
   }
 
   if (head_recoil > 0.01F) {
@@ -1100,8 +1204,15 @@ void HumanoidPoseController::mount_on_horse(float saddle_height) {
 void HumanoidPoseController::hold_sword_and_shield() {
   using HP = HumanProportions;
 
-  QVector3D const sword_hand_pos(0.30F, HP::SHOULDER_Y - 0.02F, 0.35F);
-  QVector3D const shield_hand_pos(-0.22F, HP::SHOULDER_Y, 0.18F);
+  float const moving_mix =
+      (m_anim_ctx.inputs.is_moving || m_anim_ctx.gait.speed > 0.1F) ? 1.0F
+                                                                    : 0.0F;
+  QVector3D const sword_hand_pos(0.34F + moving_mix * 0.03F,
+                                 HP::SHOULDER_Y - 0.06F - moving_mix * 0.05F,
+                                 0.44F + moving_mix * 0.06F);
+  QVector3D const shield_hand_pos(-0.32F - moving_mix * 0.03F,
+                                  HP::SHOULDER_Y - 0.02F - moving_mix * 0.03F,
+                                  0.28F + moving_mix * 0.05F);
 
   place_hand_at(false, sword_hand_pos);
   place_hand_at(true, shield_hand_pos);

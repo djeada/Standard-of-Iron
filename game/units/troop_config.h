@@ -55,14 +55,6 @@ public:
     return 0.5F;
   }
 
-  auto getSelectionRingYOffset(TroopType unit_type) const -> float {
-    auto it = m_selectionRingYOffset.find(unit_type);
-    if (it != m_selectionRingYOffset.end()) {
-      return it->second;
-    }
-    return 0.0F;
-  }
-
   auto getIndividualsPerUnit(const std::string &unit_type) const -> int {
     return getIndividualsPerUnit(troop_typeFromString(unit_type));
   }
@@ -123,18 +115,6 @@ public:
     return 0.5F;
   }
 
-  auto getSelectionRingYOffset(const std::string &unit_type) const -> float {
-    return getSelectionRingYOffset(troop_typeFromString(unit_type));
-  }
-
-  auto getSelectionRingYOffset(SpawnType spawn_type) const -> float {
-    auto troop_type_opt = spawn_typeToTroopType(spawn_type);
-    if (troop_type_opt) {
-      return getSelectionRingYOffset(*troop_type_opt);
-    }
-    return 0.0F;
-  }
-
   auto getSelectionRingGroundOffset(TroopType unit_type) const -> float {
     auto it = m_selectionRingGroundOffset.find(unit_type);
     if (it != m_selectionRingGroundOffset.end()) {
@@ -174,10 +154,6 @@ public:
     m_selectionRingSize[unit_type] = selectionRingSize;
   }
 
-  void registerSelectionRingYOffset(TroopType unit_type, float offset) {
-    m_selectionRingYOffset[unit_type] = offset;
-  }
-
   void registerSelectionRingGroundOffset(TroopType unit_type, float offset) {
     m_selectionRingGroundOffset[unit_type] = offset;
   }
@@ -193,7 +169,6 @@ private:
     m_buildTime.clear();
     m_maxUnitsPerRow.clear();
     m_selectionRingSize.clear();
-    m_selectionRingYOffset.clear();
     m_selectionRingGroundOffset.clear();
 
     const auto &classes = TroopCatalog::instance().get_all_classes();
@@ -205,8 +180,6 @@ private:
       m_buildTime[type] = troop_class.production.build_time;
       m_maxUnitsPerRow[type] = troop_class.max_units_per_row;
       m_selectionRingSize[type] = troop_class.visuals.selection_ring_size;
-      m_selectionRingYOffset[type] =
-          troop_class.visuals.selection_ring_y_offset;
       m_selectionRingGroundOffset[type] =
           troop_class.visuals.selection_ring_ground_offset;
     }
@@ -217,7 +190,6 @@ private:
   std::unordered_map<TroopType, float> m_buildTime;
   std::unordered_map<TroopType, int> m_maxUnitsPerRow;
   std::unordered_map<TroopType, float> m_selectionRingSize;
-  std::unordered_map<TroopType, float> m_selectionRingYOffset;
   std::unordered_map<TroopType, float> m_selectionRingGroundOffset;
 };
 

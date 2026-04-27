@@ -26,7 +26,6 @@
       "visuals": {
         "render_scale": 0.5,
         "selection_ring_size": 1.2,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/archer"
       },
@@ -61,7 +60,6 @@
       "visuals": {
         "render_scale": 0.6,
         "selection_ring_size": 1.1,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/swordsman"
       },
@@ -96,7 +94,6 @@
       "visuals": {
         "render_scale": 0.55,
         "selection_ring_size": 1.4,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/spearman"
       },
@@ -131,7 +128,6 @@
       "visuals": {
         "render_scale": 0.8,
         "selection_ring_size": 2.0,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/roman/horse_swordsman"
       },
       "formation": {
@@ -165,7 +161,6 @@
       "visuals": {
         "render_scale": 0.75,
         "selection_ring_size": 1.8,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/roman/horse_archer"
       },
       "formation": {
@@ -199,7 +194,6 @@
       "visuals": {
         "render_scale": 0.78,
         "selection_ring_size": 1.9,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/roman/horse_spearman"
       },
       "formation": {
@@ -233,7 +227,6 @@
       "visuals": {
         "render_scale": 0.55,
         "selection_ring_size": 1.2,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/healer"
       },
@@ -268,7 +261,6 @@
       "visuals": {
         "render_scale": 1.2,
         "selection_ring_size": 1.25,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/catapult"
       },
@@ -303,7 +295,6 @@
       "visuals": {
         "render_scale": 1.0,
         "selection_ring_size": 1.0,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/ballista"
       },
@@ -337,8 +328,7 @@
       },
       "visuals": {
         "render_scale": 2.0,
-        "selection_ring_size": 3.0,
-        "selection_ring_y_offset": -0.6,
+        "selection_ring_size": 1.5,
         "selection_ring_ground_offset": 0.6,
         "renderer_id": "troops/carthage/elephant"
       },
@@ -373,7 +363,6 @@
       "visuals": {
         "render_scale": 0.50,
         "selection_ring_size": 1.0,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/builder"
       },

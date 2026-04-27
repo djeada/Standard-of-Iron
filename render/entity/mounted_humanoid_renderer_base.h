@@ -1,11 +1,8 @@
 #pragma once
 
-#include "../humanoid/mounted_pose_controller.h"
-#include "../humanoid/rig.h"
+#include "../creature/pipeline/unit_visual_spec.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include "horse_renderer.h"
-
-#include <mutex>
-#include <unordered_map>
 
 namespace Render::GL {
 
@@ -14,50 +11,54 @@ public:
   MountedHumanoidRendererBase();
   ~MountedHumanoidRendererBase() override = default;
 
-  void customize_pose(const DrawContext &ctx,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override;
+  virtual auto mounted_visual_spec() const
+      -> const Render::Creature::Pipeline::MountedSpec &;
 
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override;
+  auto uses_mounted_pipeline() const noexcept -> bool override { return true; }
 
   virtual auto get_mount_scale() const -> float = 0;
 
-protected:
-  virtual void apply_riding_animation(MountedPoseController &controller,
-                                      MountedAttachmentFrame &mount,
-                                      const HumanoidAnimationContext &anim_ctx,
-                                      HumanoidPose &pose,
-                                      const HorseDimensions &dims,
-                                      const ReinState &reins) const = 0;
+  void set_mount_archetype_id(Render::Creature::ArchetypeId id) {
+    m_mount_archetype_id = id;
+    m_mounted_visual_spec_baked = false;
+  }
+  [[nodiscard]] auto
+  mount_archetype_id() const noexcept -> Render::Creature::ArchetypeId {
+    return m_mount_archetype_id;
+  }
 
-  virtual void draw_equipment(const DrawContext &ctx, const HumanoidVariant &v,
-                              const HumanoidPose &pose,
-                              const HumanoidAnimationContext &anim_ctx,
-                              ISubmitter &out) const {}
+protected:
+  mutable Render::Creature::Pipeline::MountedSpec m_mounted_visual_spec_cache{};
+  mutable bool m_mounted_visual_spec_baked{false};
+  Render::Creature::ArchetypeId m_mount_archetype_id{
+      Render::Creature::kInvalidArchetype};
 
   auto resolve_entity_ground_offset(
       const DrawContext &ctx, Engine::Core::UnitComponent *unit_comp,
       Engine::Core::TransformComponent *transform_comp) const -> float override;
 
   auto get_scaled_horse_dimensions(uint32_t seed) const -> HorseDimensions;
-  auto get_cached_horse_profile(uint32_t seed,
-                                const HumanoidVariant &v) const -> HorseProfile;
 
   HorseRenderer m_horseRenderer;
 
-private:
-  mutable std::mutex m_profile_cache_mutex;
-  mutable std::unordered_map<uint32_t, HorseProfile> m_profile_cache;
-  static constexpr size_t MAX_PROFILE_CACHE_SIZE = 100;
+  void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t seed, Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult &out)
+      const override;
 
-  mutable const HumanoidPose *m_last_pose = nullptr;
-  mutable MountedAttachmentFrame m_last_mount{};
-  mutable HorseMotionSample m_last_motion{};
-  mutable ReinState m_last_rein_state{};
-  mutable bool m_has_last_reins = false;
+  void resolve_mount_render_state(const DrawContext &ctx, std::uint32_t seed,
+                                  const HumanoidVariant &variant,
+                                  const HumanoidAnimationContext &anim_ctx,
+                                  bool use_cached_profile,
+                                  HorseProfile &profile, HorseDimensions &dims,
+                                  MountedAttachmentFrame &mount,
+                                  HorseMotionSample &motion) const;
+
+private:
+  [[nodiscard]] auto
+  resolve_mount_lod(const DrawContext &ctx) const -> HorseLOD;
 };
 
 } // namespace Render::GL

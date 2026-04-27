@@ -712,8 +712,8 @@ void MinimapGenerator::draw_compass_rose(QPainter &painter, int width,
 
 auto MinimapGenerator::biome_to_base_color(const BiomeSettings &biome)
     -> QColor {
-
-  const auto &grass = biome.grass_primary;
+  const auto surface_profile = make_surface_profile(biome);
+  const auto &grass = surface_profile.grass_primary;
   QColor base = QColor::fromRgbF(static_cast<double>(grass.x()),
                                  static_cast<double>(grass.y()),
                                  static_cast<double>(grass.z()));

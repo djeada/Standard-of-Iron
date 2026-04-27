@@ -24,13 +24,10 @@ public:
   void submit(Renderer &renderer, ResourceManager *resources) override;
 
 private:
-  void build_meshes();
+  void build_meshes(const Game::Map::TerrainHeightMap &height_map);
 
   std::vector<Game::Map::RiverSegment> m_river_segments;
   float m_tile_size = 1.0F;
-  int m_grid_width = 0;
-  int m_grid_height = 0;
-  std::vector<float> m_heights;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
   std::vector<std::vector<QVector3D>> m_visibility_samples;
 

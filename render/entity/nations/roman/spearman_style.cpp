@@ -23,7 +23,6 @@ void register_roman_spearman_style() {
   style.spear_shaft_color = k_legionary_spear_shaft;
   style.spearhead_color = k_legionary_spearhead;
   style.spear_length_scale = 1.05F;
-  style.shader_id = "spearman_roman_republic";
 
   register_spearman_style("roman_republic", style);
 }

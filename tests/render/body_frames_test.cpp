@@ -1,5 +1,5 @@
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
-#include "render/humanoid/rig.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>

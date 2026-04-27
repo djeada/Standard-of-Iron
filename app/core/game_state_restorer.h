@@ -11,17 +11,9 @@ class Renderer;
 class Camera;
 class GroundRenderer;
 class TerrainRenderer;
-class BiomeRenderer;
-class RiverRenderer;
-class RoadRenderer;
-class RiverbankRenderer;
-class BridgeRenderer;
+class TerrainFeatureManager;
+class TerrainScatterManager;
 class FogRenderer;
-class StoneRenderer;
-class PlantRenderer;
-class PineRenderer;
-class OliveRenderer;
-class FireCampRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -41,17 +33,9 @@ public:
     Render::GL::Camera *camera;
     Render::GL::GroundRenderer *ground;
     Render::GL::TerrainRenderer *terrain;
-    Render::GL::BiomeRenderer *biome;
-    Render::GL::RiverRenderer *river;
-    Render::GL::RoadRenderer *road;
-    Render::GL::RiverbankRenderer *riverbank;
-    Render::GL::BridgeRenderer *bridge;
+    Render::GL::TerrainFeatureManager *features;
+    Render::GL::TerrainScatterManager *scatter;
     Render::GL::FogRenderer *fog;
-    Render::GL::StoneRenderer *stone;
-    Render::GL::PlantRenderer *plant;
-    Render::GL::PineRenderer *pine;
-    Render::GL::OliveRenderer *olive;
-    Render::GL::FireCampRenderer *firecamp;
     Render::GL::RainRenderer *rain;
   };
 

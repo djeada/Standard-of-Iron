@@ -2,7 +2,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
-#include "terrain_gpu.h"
+#include "../world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cmath>

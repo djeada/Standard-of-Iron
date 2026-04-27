@@ -63,6 +63,8 @@ struct BodyFrames {
   AttachmentFrame shoulder_r{};
   AttachmentFrame hand_l{};
   AttachmentFrame hand_r{};
+  AttachmentFrame grip_l{};
+  AttachmentFrame grip_r{};
   AttachmentFrame foot_l{};
   AttachmentFrame foot_r{};
 

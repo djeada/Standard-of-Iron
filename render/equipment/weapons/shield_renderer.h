@@ -2,10 +2,15 @@
 
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../render_archetype.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -23,15 +28,33 @@ class ShieldRenderer : public IEquipmentRenderer {
 public:
   explicit ShieldRenderer(ShieldRenderConfig config = {});
 
+  static void submit(const ShieldRenderConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto
+  base_config() const noexcept -> const ShieldRenderConfig & {
+    return m_base;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
-
-  void set_config(const ShieldRenderConfig &config) { m_config = config; }
+              EquipmentBatch &batch) override;
 
 private:
-  ShieldRenderConfig m_config;
+  ShieldRenderConfig m_base;
 };
+
+inline constexpr std::uint32_t kShieldRoleCount = 6;
+
+auto shield_fill_role_colors(const HumanoidPalette &palette,
+                             const ShieldRenderConfig &config, QVector3D *out,
+                             std::size_t max) -> std::uint32_t;
+
+auto shield_make_static_attachment(const ShieldRenderConfig &config,
+                                   std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

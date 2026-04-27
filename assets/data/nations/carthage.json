@@ -30,7 +30,6 @@
       "visuals": {
         "render_scale": 0.5,
         "selection_ring_size": 0.9,
-        "selection_ring_y_offset": -0.6,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/archer"
       },
@@ -65,7 +64,6 @@
       "visuals": {
         "render_scale": 0.6,
         "selection_ring_size": 1.4,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/swordsman"
       },
@@ -100,7 +98,6 @@
       "visuals": {
         "render_scale": 0.57,
         "selection_ring_size": 2.0,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/spearman"
       },
@@ -135,7 +132,6 @@
       "visuals": {
         "render_scale": 0.82,
         "selection_ring_size": 2.1,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/carthage/horse_swordsman"
       },
       "formation": {
@@ -169,7 +165,6 @@
       "visuals": {
         "render_scale": 0.54,
         "selection_ring_size": 0.4,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/healer"
       },
@@ -204,7 +199,6 @@
       "visuals": {
         "render_scale": 0.75,
         "selection_ring_size": 1.8,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/carthage/horse_archer"
       },
       "formation": {
@@ -238,7 +232,6 @@
       "visuals": {
         "render_scale": 0.78,
         "selection_ring_size": 1.9,
-        "selection_ring_y_offset": 0.0,
         "renderer_id": "troops/carthage/horse_spearman"
       },
       "formation": {
@@ -272,7 +265,6 @@
       "visuals": {
         "render_scale": 2.1,
         "selection_ring_size": 3.2,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/elephant"
       },
@@ -307,7 +299,6 @@
       "visuals": {
         "render_scale": 0.50,
         "selection_ring_size": 1.0,
-        "selection_ring_y_offset": 0.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/builder"
       },
