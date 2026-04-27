@@ -34,24 +34,19 @@ enum class PrimitiveShape : std::uint8_t {
 
 enum class CreatureLOD : std::uint8_t {
   Full = 0,
-  Reduced = 1,
-  Minimal = 2,
-  Billboard = 3,
+  Minimal = 1,
+  Billboard = 2,
 };
 
 inline constexpr std::uint8_t kLodFull = 1U << 0;
-inline constexpr std::uint8_t kLodReduced = 1U << 1;
-inline constexpr std::uint8_t kLodMinimal = 1U << 2;
-inline constexpr std::uint8_t kLodBillboard = 1U << 3;
-inline constexpr std::uint8_t kLodAll =
-    kLodFull | kLodReduced | kLodMinimal | kLodBillboard;
+inline constexpr std::uint8_t kLodMinimal = 1U << 1;
+inline constexpr std::uint8_t kLodBillboard = 1U << 2;
+inline constexpr std::uint8_t kLodAll = kLodFull | kLodMinimal | kLodBillboard;
 
 [[nodiscard]] constexpr auto lod_bit(CreatureLOD l) noexcept -> std::uint8_t {
   switch (l) {
   case CreatureLOD::Full:
     return kLodFull;
-  case CreatureLOD::Reduced:
-    return kLodReduced;
   case CreatureLOD::Minimal:
     return kLodMinimal;
   case CreatureLOD::Billboard:

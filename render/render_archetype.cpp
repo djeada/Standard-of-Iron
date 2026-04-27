@@ -55,8 +55,7 @@ auto select_render_archetype_lod(const RenderArchetype &archetype,
   bool has_fallback = false;
 
   for (RenderArchetypeLod lod :
-       {RenderArchetypeLod::Full, RenderArchetypeLod::Reduced,
-        RenderArchetypeLod::Minimal}) {
+       {RenderArchetypeLod::Full, RenderArchetypeLod::Minimal}) {
     const RenderArchetypeSlice &slice = archetype.lods[lod_index(lod)];
     if (slice.draws.empty()) {
       continue;

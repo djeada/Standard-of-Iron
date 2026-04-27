@@ -24,8 +24,7 @@ inline constexpr std::uint8_t kRenderArchetypeFixedColorSlot =
 
 enum class RenderArchetypeLod : std::uint8_t {
   Full = 0,
-  Reduced = 1,
-  Minimal = 2,
+  Minimal = 1,
   Count
 };
 

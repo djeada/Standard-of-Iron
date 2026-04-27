@@ -9,7 +9,7 @@ struct ElephantAnimationStateComponent;
 }
 
 namespace Render::Elephant {
-struct ElephantReducedMotion;
+struct ElephantPoseMotion;
 }
 
 namespace Render::GL {
@@ -58,9 +58,9 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
                               Render::Creature::ElephantAnimationStateComponent
                                   *io_state = nullptr) -> ElephantMotionSample;
 
-auto build_elephant_reduced_motion(const ElephantMotionSample &motion,
+auto build_elephant_pose_motion(const ElephantMotionSample &motion,
                                    const AnimationInputs &anim)
-    -> Render::Elephant::ElephantReducedMotion;
+    -> Render::Elephant::ElephantPoseMotion;
 
 void apply_howdah_vertical_offset(HowdahAttachmentFrame &frame, float bob);
 
