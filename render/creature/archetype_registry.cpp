@@ -11,8 +11,28 @@ namespace {
 constexpr std::size_t kStateCount = animation_state_count();
 
 constexpr auto
-make_humanoid_clip_table() -> std::array<std::uint16_t, kStateCount> {
+make_unmapped_clip_table() -> std::array<std::uint16_t, kStateCount> {
   std::array<std::uint16_t, kStateCount> t{};
+  for (std::size_t i = 0; i < kStateCount; ++i) {
+    t[i] = ArchetypeDescriptor::kUnmappedClip;
+  }
+  return t;
+}
+
+constexpr auto make_snapshot_table_for_clips(
+    const std::array<std::uint16_t, kStateCount> &clips)
+    -> std::array<bool, kStateCount> {
+  std::array<bool, kStateCount> t{};
+  for (std::size_t i = 0; i < kStateCount; ++i) {
+    t[i] = (clips[i] != ArchetypeDescriptor::kUnmappedClip);
+  }
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = false;
+  return t;
+}
+
+constexpr auto
+make_humanoid_clip_table() -> std::array<std::uint16_t, kStateCount> {
+  auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 2U;
@@ -29,7 +49,7 @@ make_humanoid_clip_table() -> std::array<std::uint16_t, kStateCount> {
 
 constexpr auto
 make_horse_clip_table() -> std::array<std::uint16_t, kStateCount> {
-  std::array<std::uint16_t, kStateCount> t{};
+  auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 4U;
@@ -46,7 +66,7 @@ make_horse_clip_table() -> std::array<std::uint16_t, kStateCount> {
 
 constexpr auto
 make_elephant_clip_table() -> std::array<std::uint16_t, kStateCount> {
-  std::array<std::uint16_t, kStateCount> t{};
+  auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 2U;
@@ -63,7 +83,7 @@ make_elephant_clip_table() -> std::array<std::uint16_t, kStateCount> {
 
 constexpr auto
 make_rider_clip_table() -> std::array<std::uint16_t, kStateCount> {
-  std::array<std::uint16_t, kStateCount> t{};
+  auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 11U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 11U;
   t[static_cast<std::size_t>(AnimationStateId::Run)] = 12U;
@@ -82,14 +102,6 @@ make_rider_clip_table() -> std::array<std::uint16_t, kStateCount> {
   return t;
 }
 
-constexpr auto make_snapshot_table() -> std::array<bool, kStateCount> {
-  std::array<bool, kStateCount> t{};
-
-  t[static_cast<std::size_t>(AnimationStateId::Idle)] = true;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = true;
-  return t;
-}
-
 } // namespace
 
 auto ArchetypeRegistry::instance() noexcept -> ArchetypeRegistry & {
@@ -100,35 +112,39 @@ auto ArchetypeRegistry::instance() noexcept -> ArchetypeRegistry & {
 ArchetypeRegistry::ArchetypeRegistry() { seed_baseline(); }
 
 void ArchetypeRegistry::seed_baseline() {
+  auto const humanoid_clips = make_humanoid_clip_table();
   ArchetypeDescriptor humanoid{};
   humanoid.debug_name = "humanoid_base";
   humanoid.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  humanoid.bpat_clip = make_humanoid_clip_table();
-  humanoid.snapshot = make_snapshot_table();
+  humanoid.bpat_clip = humanoid_clips;
+  humanoid.snapshot = make_snapshot_table_for_clips(humanoid_clips);
   humanoid.role_count = 6;
   register_archetype(humanoid);
 
+  auto const horse_clips = make_horse_clip_table();
   ArchetypeDescriptor horse{};
   horse.debug_name = "horse_base";
   horse.species = Render::Creature::Pipeline::CreatureKind::Horse;
-  horse.bpat_clip = make_horse_clip_table();
-  horse.snapshot = make_snapshot_table();
+  horse.bpat_clip = horse_clips;
+  horse.snapshot = make_snapshot_table_for_clips(horse_clips);
   horse.role_count = 8;
   register_archetype(horse);
 
+  auto const elephant_clips = make_elephant_clip_table();
   ArchetypeDescriptor elephant{};
   elephant.debug_name = "elephant_base";
   elephant.species = Render::Creature::Pipeline::CreatureKind::Elephant;
-  elephant.bpat_clip = make_elephant_clip_table();
-  elephant.snapshot = make_snapshot_table();
+  elephant.bpat_clip = elephant_clips;
+  elephant.snapshot = make_snapshot_table_for_clips(elephant_clips);
   elephant.role_count = 6;
   register_archetype(elephant);
 
+  auto const rider_clips = make_rider_clip_table();
   ArchetypeDescriptor rider{};
   rider.debug_name = "rider_base";
   rider.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
-  rider.bpat_clip = make_rider_clip_table();
-  rider.snapshot = make_snapshot_table();
+  rider.bpat_clip = rider_clips;
+  rider.snapshot = make_snapshot_table_for_clips(rider_clips);
   rider.role_count = 6;
   register_archetype(rider);
 }

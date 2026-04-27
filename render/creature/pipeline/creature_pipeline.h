@@ -42,7 +42,4 @@ public:
       Render::GL::ISubmitter &out) const -> SubmitStats;
 };
 
-void submit_row_body(const PreparedCreatureRenderRow &row,
-                     Render::GL::ISubmitter &out, SubmitStats &stats) noexcept;
-
 } // namespace Render::Creature::Pipeline

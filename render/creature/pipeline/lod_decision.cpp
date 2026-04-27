@@ -7,9 +7,6 @@ auto select_distance_lod(
   if (distance < t.full) {
     return CreatureLOD::Full;
   }
-  if (distance < t.reduced) {
-    return CreatureLOD::Reduced;
-  }
   if (distance < t.minimal) {
     return CreatureLOD::Minimal;
   }
@@ -48,7 +45,7 @@ auto decide_creature_lod(const CreatureLodDecisionInputs &in) noexcept
 
   if (in.apply_visibility_budget && out.lod == CreatureLOD::Full &&
       !in.budget_grant_full) {
-    out.lod = CreatureLOD::Reduced;
+    out.lod = CreatureLOD::Minimal;
   }
 
   if (out.lod == CreatureLOD::Reduced &&

@@ -95,6 +95,9 @@ public:
     GL::Shader::UniformHandle ridge_response{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle gully_response{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle soil_foot_height{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle screen_toe_mul{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle screen_toe_clamp{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_grassShader = nullptr;

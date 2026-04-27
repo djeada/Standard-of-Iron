@@ -78,6 +78,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]) << "state idx " << i;
+    EXPECT_EQ(desc->snapshot[i], base->snapshot[i]) << "snapshot idx " << i;
   }
 }
 
@@ -104,6 +105,7 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeForHorseInheritsHorseClipTable) {
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {
     EXPECT_EQ(desc->bpat_clip[i], base->bpat_clip[i]);
+    EXPECT_EQ(desc->snapshot[i], base->snapshot[i]);
   }
 }
 

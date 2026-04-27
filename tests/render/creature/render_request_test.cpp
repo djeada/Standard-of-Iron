@@ -159,16 +159,34 @@ TEST(ArchetypeRegistryBaseline, IdleClipIsZeroForEverySpecies) {
       0U);
 }
 
-TEST(ArchetypeRegistryBaseline, IdleAndDeadAreSnapshotStates) {
+TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
   const auto &reg = ArchetypeRegistry::instance();
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
                               AnimationStateId::Idle));
   EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
-                              AnimationStateId::Dead));
-  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
-                               AnimationStateId::Walk));
-  EXPECT_FALSE(
+                              AnimationStateId::Walk));
+  EXPECT_TRUE(
       reg.is_snapshot(ArchetypeRegistry::kHumanoidBase, AnimationStateId::Run));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+                              AnimationStateId::Hold));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+                              AnimationStateId::AttackSword));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+                              AnimationStateId::AttackBow));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+                              AnimationStateId::Dead));
+  EXPECT_FALSE(
+      reg.is_snapshot(ArchetypeRegistry::kHumanoidBase, AnimationStateId::Die));
+  EXPECT_FALSE(reg.is_snapshot(ArchetypeRegistry::kHumanoidBase,
+                               AnimationStateId::RidingIdle));
+  EXPECT_TRUE(
+      reg.is_snapshot(ArchetypeRegistry::kHorseBase, AnimationStateId::Run));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kElephantBase,
+                              AnimationStateId::Walk));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kRiderBase,
+                              AnimationStateId::RidingIdle));
+  EXPECT_TRUE(reg.is_snapshot(ArchetypeRegistry::kRiderBase,
+                              AnimationStateId::RidingCharge));
 }
 
 TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {

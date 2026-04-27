@@ -90,6 +90,9 @@ struct TerrainChunkParams {
   static constexpr float kDefaultSnowColorR = 0.92F;
   static constexpr float kDefaultSnowColorG = 0.94F;
   static constexpr float kDefaultSnowColorB = 0.98F;
+  static constexpr float kDefaultSoilFootHeight = 0.0F;
+  static constexpr float kDefaultScreenToeMul = 0.0F;
+  static constexpr float kDefaultScreenToeClamp = 0.0F;
 
   static auto default_grass_primary() -> QVector3D {
     return {kDefaultGrassPrimaryR, kDefaultGrassPrimaryG,
@@ -164,6 +167,9 @@ struct TerrainChunkParams {
   float ridge_response = kDefaultRidgeResponse;
   float gully_response = kDefaultGullyResponse;
   QVector3D snow_color = default_snow_color();
+  float soil_foot_height = kDefaultSoilFootHeight;
+  float screen_toe_mul = kDefaultScreenToeMul;
+  float screen_toe_clamp = kDefaultScreenToeClamp;
 };
 
 } // namespace Render::GL

@@ -183,6 +183,12 @@ void TerrainPipeline::cache_terrain_uniforms() {
   m_terrainUniforms.gully_response =
       m_terrainShader->uniform_handle("u_gullyResponse");
   m_terrainUniforms.snow_color = m_terrainShader->uniform_handle("u_snowColor");
+  m_terrainUniforms.soil_foot_height =
+      m_terrainShader->uniform_handle("u_soilFootHeight");
+  m_terrainUniforms.screen_toe_mul =
+      m_terrainShader->uniform_handle("u_screenToeMul");
+  m_terrainUniforms.screen_toe_clamp =
+      m_terrainShader->uniform_handle("u_screenToeClamp");
 }
 
 void TerrainPipeline::initialize_grass_geometry() {

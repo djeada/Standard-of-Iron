@@ -3,7 +3,6 @@
 #include "../../elephant/elephant_spec.h"
 #include "../../gl/humanoid/humanoid_types.h"
 #include "../../horse/horse_spec.h"
-#include "bpat_playback.h"
 #include "render_pass_intent.h"
 #include "unit_visual_spec.h"
 
@@ -20,23 +19,11 @@ using EntityId = std::uint32_t;
 
 struct PreparedCreatureRenderRow {
   UnitVisualSpec spec{};
-  EntityId entity_id{0};
-  QMatrix4x4 world_from_unit{};
   std::uint32_t seed{0};
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
   RenderPassIntent pass{RenderPassIntent::Main};
 
-  Render::GL::HumanoidPose humanoid_pose{};
-  Render::GL::HumanoidVariant humanoid_variant{};
-  Render::GL::HumanoidAnimationContext humanoid_anim{};
-
-  Render::Horse::HorseSpecPose horse_pose{};
-  Render::GL::HorseVariant horse_variant{};
-
   Render::Elephant::ElephantSpecPose elephant_pose{};
-  Render::GL::ElephantVariant elephant_variant{};
-
-  BpatPlayback bpat_playback{};
 };
 
 [[nodiscard]] auto make_prepared_humanoid_row(
