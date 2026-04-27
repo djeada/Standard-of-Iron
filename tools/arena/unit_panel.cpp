@@ -17,6 +17,9 @@
 
 namespace {
 
+constexpr int kArenaLocalOwnerId = 1;
+constexpr int kArenaOpponentOwnerId = 2;
+
 auto prettifyIdentifier(const QString &value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
@@ -40,12 +43,16 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   layout->addWidget(clear_button);
 
   auto *form = new QFormLayout();
+  m_owner_box = new QComboBox(this);
   m_nation_box = new QComboBox(this);
   m_unit_box = new QComboBox(this);
+  m_owner_box->addItem(QStringLiteral("Local Player"), kArenaLocalOwnerId);
+  m_owner_box->addItem(QStringLiteral("Arena Opponent"), kArenaOpponentOwnerId);
   auto *animation_box = new QComboBox(this);
   animation_box->addItems(
       {QStringLiteral("Idle"), QStringLiteral("Walk"),
        QStringLiteral("Attack"), QStringLiteral("Death")});
+  form->addRow("Side", m_owner_box);
   form->addRow("Nation", m_nation_box);
   form->addRow("Unit", m_unit_box);
   form->addRow("Animation", animation_box);
@@ -53,7 +60,7 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   auto *play_button = new QPushButton("Play Animation", this);
   form->addRow("", play_button);
 
-  m_pause_checkbox = new QCheckBox("Pause Animation", this);
+  m_pause_checkbox = new QCheckBox("Pause Simulation", this);
   form->addRow("", m_pause_checkbox);
 
   auto *move_button = new QPushButton("Move Selected Unit", this);
@@ -83,6 +90,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
           &UnitPanel::spawnUnitRequested);
   connect(clear_button, &QPushButton::clicked, this,
           &UnitPanel::clearUnitsRequested);
+  connect(m_owner_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
+          [this](int) { emit spawnOwnerSelected(selectedOwnerId()); });
   connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
           [this](int) {
     if (m_nation_box == nullptr) {
@@ -131,6 +140,11 @@ void UnitPanel::setAnimationPaused(bool paused) {
   }
   const QSignalBlocker blocker(m_pause_checkbox);
   m_pause_checkbox->setChecked(paused);
+}
+
+auto UnitPanel::selectedOwnerId() const -> int {
+  return m_owner_box != nullptr ? m_owner_box->currentData().toInt()
+                                : kArenaLocalOwnerId;
 }
 
 auto UnitPanel::selectedNationId() const -> QString {
