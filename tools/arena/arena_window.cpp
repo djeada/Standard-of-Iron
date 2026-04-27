@@ -75,6 +75,8 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &ArenaViewport::spawnUnit);
   connect(m_unit_panel, &UnitPanel::clearUnitsRequested, m_viewport,
           &ArenaViewport::clearUnits);
+  connect(m_unit_panel, &UnitPanel::spawnOwnerSelected, m_viewport,
+          &ArenaViewport::setSpawnOwner);
   connect(m_unit_panel, &UnitPanel::nationSelected, m_viewport,
           &ArenaViewport::setSpawnNation);
   connect(m_unit_panel, &UnitPanel::unitTypeSelected, m_viewport,
@@ -92,6 +94,7 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_unit_panel, &UnitPanel::skeletonDebugToggled, m_viewport,
           &ArenaViewport::setSkeletonDebugEnabled);
 
+  m_viewport->setSpawnOwner(m_unit_panel->selectedOwnerId());
   m_viewport->setSpawnNation(m_unit_panel->selectedNationId());
   m_viewport->setSpawnUnitType(m_unit_panel->selectedUnitTypeId());
 }

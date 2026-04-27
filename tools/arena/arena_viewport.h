@@ -59,6 +59,7 @@ public slots:
   void setWireframeEnabled(bool enabled);
   void setNormalsOverlayEnabled(bool enabled);
 
+  void setSpawnOwner(int ownerId);
   void setSpawnNation(const QString &nationId);
   void setSpawnUnitType(const QString &unitType);
   void spawnUnit();
@@ -134,6 +135,7 @@ private:
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;
   std::shared_ptr<Game::Units::UnitFactoryRegistry> m_unit_factory;
   std::vector<std::unique_ptr<Game::Units::Unit>> m_units;
+  int m_spawn_owner_id = 1;
   Game::Systems::NationID m_spawn_nation_id;
   Game::Units::TroopType m_spawn_unit_type;
 
