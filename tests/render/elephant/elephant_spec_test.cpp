@@ -10,11 +10,15 @@
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_renderer_base.h"
 #include "render/elephant/elephant_spec.h"
+#include "render/gl/mesh.h"
 #include "render/submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <span>
+#include <string_view>
 #include <vector>
 
 namespace {
@@ -102,6 +106,29 @@ Render::GL::ElephantGait make_gait() {
   return g;
 }
 
+auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
+                    std::string_view name)
+    -> const Render::Creature::PrimitiveInstance * {
+  auto it = std::find_if(prims.begin(), prims.end(), [&](auto const &prim) {
+    return prim.debug_name == name;
+  });
+  return it == prims.end() ? nullptr : &*it;
+}
+
+auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
+  auto const &vertices = mesh.get_vertices();
+  if (vertices.empty()) {
+    return 0.0F;
+  }
+  float min_v = vertices.front().position[axis];
+  float max_v = vertices.front().position[axis];
+  for (auto const &vertex : vertices) {
+    min_v = std::min(min_v, vertex.position[axis]);
+    max_v = std::max(max_v, vertex.position[axis]);
+  }
+  return max_v - min_v;
+}
+
 } // namespace
 
 TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
@@ -139,4 +166,25 @@ TEST(ElephantSpecTest, ReducedPoseKeepsForwardTrunkAndLighterHeadRead) {
   EXPECT_LT(pose.trunk_end.y(),
             pose.head_center.y() - dims.trunk_length * 0.45F);
   EXPECT_LT(pose.leg_radius_reduced, dims.leg_radius * 0.9F);
+}
+
+TEST(ElephantSpecTest, CreatureSpecUsesFacetedLowPolyBodyMeshes) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+
+  auto const *full_body =
+      find_primitive(spec.lod_full.primitives, "elephant.full.body.barrel");
+  auto const *reduced_body =
+      find_primitive(spec.lod_reduced.primitives, "elephant.body.reduced");
+
+  ASSERT_NE(full_body, nullptr);
+  ASSERT_NE(reduced_body, nullptr);
+  EXPECT_EQ(full_body->shape, Render::Creature::PrimitiveShape::Mesh);
+  EXPECT_EQ(reduced_body->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(full_body->custom_mesh, nullptr);
+  ASSERT_NE(reduced_body->custom_mesh, nullptr);
+  EXPECT_EQ(full_body->custom_mesh, reduced_body->custom_mesh);
+  EXPECT_GT(mesh_axis_span(*full_body->custom_mesh, 2),
+            mesh_axis_span(*full_body->custom_mesh, 1) * 1.3F);
+  EXPECT_GT(mesh_axis_span(*full_body->custom_mesh, 0),
+            mesh_axis_span(*full_body->custom_mesh, 1) * 0.5F);
 }

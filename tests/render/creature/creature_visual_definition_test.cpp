@@ -23,6 +23,13 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   ASSERT_NE(horse_definition->lod_strategy, nullptr);
   EXPECT_EQ(horse_definition->rig_definition->bone_count,
             Render::Horse::kHorseBoneCount);
+  EXPECT_EQ(horse_definition->mesh_recipe->resolve_spec,
+            &Render::Horse::horse_creature_spec);
+  ASSERT_NE(horse_definition->mesh_recipe->resolve_part_graph, nullptr);
+  EXPECT_EQ(horse_definition->mesh_recipe
+                ->resolve_part_graph(Render::Creature::CreatureLOD::Full)
+                .primitives.size(),
+            Render::Horse::horse_creature_spec().lod_full.primitives.size());
 
   UnitVisualSpec elephant{};
   elephant.kind = CreatureKind::Elephant;
@@ -38,6 +45,14 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   ASSERT_NE(elephant_definition->lod_strategy, nullptr);
   EXPECT_EQ(elephant_definition->rig_definition->bone_count,
             Render::Elephant::kElephantBoneCount);
+  EXPECT_EQ(elephant_definition->mesh_recipe->resolve_spec,
+            &Render::Elephant::elephant_creature_spec);
+  ASSERT_NE(elephant_definition->mesh_recipe->resolve_part_graph, nullptr);
+  EXPECT_EQ(
+      elephant_definition->mesh_recipe
+          ->resolve_part_graph(Render::Creature::CreatureLOD::Full)
+          .primitives.size(),
+      Render::Elephant::elephant_creature_spec().lod_full.primitives.size());
 }
 
 TEST(CreatureVisualDefinition, ExplicitUnitVisualDefinitionWins) {

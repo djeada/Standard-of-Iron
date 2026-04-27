@@ -215,6 +215,63 @@ auto get_faceted_horse_torso_mesh() -> Render::GL::Mesh * {
   return mesh.get();
 }
 
+auto create_faceted_horse_head_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::HorseDimensions const dims =
+      Render::GL::make_horse_dimensions(0U);
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  float const hl = dims.head_length;
+
+  std::vector<Render::GL::Vertex> vertices;
+  vertices.reserve(10);
+
+  auto add = [&](QVector3D pos, QVector3D normal, float u, float v) {
+    vertices.push_back(make_torso_vertex(pos, normal, u, v));
+  };
+
+  float const back_z = -hl * 0.36F;
+  float const brow_z = -hl * 0.05F;
+  float const muzzle_z = hl * 0.42F;
+  float const back_w = hw * 0.30F;
+  float const brow_w = hw * 0.24F;
+  float const muzzle_w = hw * 0.13F;
+  float const top_back = hh * 0.17F;
+  float const top_brow = hh * 0.12F;
+  float const top_muzzle = hh * 0.02F;
+  float const bot_back = -hh * 0.12F;
+  float const bot_brow = -hh * 0.16F;
+  float const bot_muzzle = -hh * 0.19F;
+
+  add({-back_w, top_back, back_z}, {-1.0F, 0.5F, -0.4F}, 0.0F, 1.0F);
+  add({back_w, top_back, back_z}, {1.0F, 0.5F, -0.4F}, 1.0F, 1.0F);
+  add({-back_w, bot_back, back_z}, {-1.0F, -0.5F, -0.4F}, 0.0F, 0.0F);
+  add({back_w, bot_back, back_z}, {1.0F, -0.5F, -0.4F}, 1.0F, 0.0F);
+
+  add({-brow_w, top_brow, brow_z}, {-1.0F, 0.45F, 0.0F}, 0.0F, 1.0F);
+  add({brow_w, top_brow, brow_z}, {1.0F, 0.45F, 0.0F}, 1.0F, 1.0F);
+  add({-brow_w, bot_brow, brow_z}, {-1.0F, -0.45F, 0.0F}, 0.0F, 0.0F);
+  add({brow_w, bot_brow, brow_z}, {1.0F, -0.45F, 0.0F}, 1.0F, 0.0F);
+
+  add({-muzzle_w, top_muzzle, muzzle_z}, {-0.8F, 0.2F, 0.8F}, 0.0F, 1.0F);
+  add({muzzle_w, top_muzzle, muzzle_z}, {0.8F, 0.2F, 0.8F}, 1.0F, 1.0F);
+  add({-muzzle_w, bot_muzzle, muzzle_z}, {-0.8F, -0.3F, 0.8F}, 0.0F, 0.0F);
+  add({muzzle_w, bot_muzzle, muzzle_z}, {0.8F, -0.3F, 0.8F}, 1.0F, 0.0F);
+
+  std::vector<unsigned int> indices{
+      0, 1, 5, 5, 4,  0,  2, 6, 7, 7, 3,  2,  0,  4,  6, 6, 2, 0, 1,  3,
+      7, 7, 5, 1, 4,  5,  9, 9, 8, 4, 6,  10, 11, 11, 7, 6, 4, 8, 10, 10,
+      6, 4, 5, 7, 11, 11, 9, 5, 8, 9, 11, 11, 10, 8,  0, 2, 3, 3, 1,  0,
+  };
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_faceted_horse_head_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_faceted_horse_head_mesh();
+  return mesh.get();
+}
+
 [[nodiscard]] auto make_primitive_instance(
     const primitive_instance_desc &desc) noexcept -> PrimitiveInstance {
   PrimitiveInstance primitive{};
@@ -657,16 +714,12 @@ auto build_reduced_primitives(
                  -pose.head_half.z() * 0.20F),
        QVector3D(), pose.neck_radius * 0.30F, kRoleMane, 0, kLodReduced,
        nullptr},
-      {"horse.head.cranium.reduced", PrimitiveShape::OrientedSphere, head_bone,
-       head_bone,
+      {"horse.head.cranium.reduced", PrimitiveShape::Mesh, head_bone, head_bone,
        QVector3D(dims.head_width * profile.cranium_offset_scale.x(),
                  dims.head_height * profile.cranium_offset_scale.y(),
                  dims.head_length * profile.cranium_offset_scale.z()),
-       QVector3D(),
-       QVector3D(dims.head_width * profile.cranium_half_extents_scale.x(),
-                 dims.head_height * profile.cranium_half_extents_scale.y(),
-                 dims.head_length * profile.cranium_half_extents_scale.z()),
-       0.0F, kRoleCoat, 6, kLodReduced, nullptr},
+       QVector3D(), QVector3D(1.0F, 1.0F, 1.0F), 0.0F, kRoleCoat, 6,
+       kLodReduced, get_faceted_horse_head_mesh()},
       {"horse.head.muzzle.reduced", PrimitiveShape::Cone, head_bone, head_bone,
        QVector3D(dims.head_width * profile.muzzle_head_scale.x(),
                  dims.head_height * profile.muzzle_head_scale.y(),
@@ -1046,9 +1099,17 @@ auto build_static_full_parts() noexcept
       QVector3D(dims.head_width * 0.15F, dims.head_height * 0.10F, hl * 0.10F),
       QVector3D(0.0F, dims.head_height * 0.18F, -hl * 0.24F), kRoleMane, 0);
 
-  ell(out[i++], "horse.full.head.cranium", head_bone,
-      QVector3D(dims.head_width * 0.25F, dims.head_height * 0.19F, hl * 0.38F),
-      QVector3D(0.0F, dims.head_height * 0.05F, -hl * 0.10F));
+  PrimitiveInstance &cranium = out[i++];
+  cranium.debug_name = "horse.full.head.cranium";
+  cranium.shape = PrimitiveShape::Mesh;
+  cranium.params.anchor_bone = head_bone;
+  cranium.params.head_offset =
+      QVector3D(0.0F, dims.head_height * 0.05F, -hl * 0.10F);
+  cranium.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  cranium.custom_mesh = get_faceted_horse_head_mesh();
+  cranium.color_role = kRoleCoat;
+  cranium.material_id = 6;
+  cranium.lod_mask = kLodFull;
 
   cap(out[i++], "horse.full.head.muzzle", head_bone,
       QVector3D(0.0F, -dims.head_height * 0.02F, hl * 0.00F), head_bone,

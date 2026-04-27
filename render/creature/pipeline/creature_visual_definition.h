@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../spec.h"
 #include "unit_visual_spec.h"
 
 #include <QMatrix4x4>
@@ -36,10 +37,17 @@ enum class CreatureLocomotionMode : std::uint8_t {
 inline constexpr std::size_t kLargeCreatureLegCount = 4;
 
 using CreatureBindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
+using CreatureSpecResolveFn =
+    const Render::Creature::CreatureSpec &(*)() noexcept;
+using CreaturePartGraphResolveFn = const Render::Creature::PartGraph
+    &(*)(Render::Creature::CreatureLOD) noexcept;
 
 struct CreatureMeshRecipe {
   std::string_view debug_name{};
   std::uint8_t lod_mask{0};
+  CreatureSpecResolveFn resolve_spec{nullptr};
+  CreaturePartGraphResolveFn resolve_part_graph{nullptr};
+  std::array<std::uint16_t, 3> part_counts{};
 };
 
 struct CreatureRigDefinition {

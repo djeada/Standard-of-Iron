@@ -19,10 +19,25 @@ lod_mask(std::initializer_list<CreatureMeshLod> lods) -> std::uint8_t {
   return mask;
 }
 
+auto horse_part_graph(Render::Creature::CreatureLOD lod) noexcept
+    -> const Render::Creature::PartGraph & {
+  return Render::Creature::part_graph_for(Render::Horse::horse_creature_spec(),
+                                          lod);
+}
+
+auto elephant_part_graph(Render::Creature::CreatureLOD lod) noexcept
+    -> const Render::Creature::PartGraph & {
+  return Render::Creature::part_graph_for(
+      Render::Elephant::elephant_creature_spec(), lod);
+}
+
 const CreatureMeshRecipe kHorseMeshRecipe{
     "horse.procedural.low_poly",
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Reduced,
               CreatureMeshLod::Minimal}),
+    &Render::Horse::horse_creature_spec,
+    &horse_part_graph,
+    {43, 29, 5},
 };
 
 const CreatureRigDefinition kHorseRigDefinition{
@@ -75,6 +90,9 @@ const CreatureMeshRecipe kElephantMeshRecipe{
     "elephant.procedural.low_poly",
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Reduced,
               CreatureMeshLod::Minimal}),
+    &Render::Elephant::elephant_creature_spec,
+    &elephant_part_graph,
+    {41, 12, 5},
 };
 
 const CreatureRigDefinition kElephantRigDefinition{
