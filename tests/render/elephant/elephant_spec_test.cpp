@@ -5,7 +5,7 @@
 // calls the rigged wrappers. With a non-Renderer submitter we exercise
 // the software fallback inside `submit_elephant_*_rigged`, which routes
 // through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (5/12/41 for Minimal/Reduced/Full).
+// PartGraph primitive (5/41 for Minimal/Full).
 
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_renderer_base.h"
@@ -104,10 +104,9 @@ Render::GL::ElephantGait make_gait() {
 
 } // namespace
 
-TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
+TEST(ElephantSpecTest, CreatureSpecHasTwoLods) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
-  EXPECT_EQ(spec.lod_reduced.primitives.size(), 12U);
   EXPECT_EQ(spec.lod_full.primitives.size(), 41U);
 }
 
@@ -125,12 +124,12 @@ TEST(ElephantSpecTest, PoseKeepsHeavyBodyAndPillarLegReadability) {
   EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y() - dims.leg_length * 0.6F);
 }
 
-TEST(ElephantSpecTest, ReducedPoseKeepsForwardTrunkAndLighterHeadRead) {
+TEST(ElephantSpecTest, AnimatedPoseKeepsForwardTrunkAndLighterHeadRead) {
   auto const dims = make_dims();
   auto const gait = make_gait();
   Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_reduced(
-      dims, gait, Render::Elephant::ElephantReducedMotion{}, pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, Render::Elephant::ElephantPoseMotion{}, pose);
 
   EXPECT_LT(pose.head_half.x(), dims.head_width * 0.45F);
   EXPECT_LT(pose.head_half.y(), dims.head_height * 0.41F);
@@ -138,5 +137,5 @@ TEST(ElephantSpecTest, ReducedPoseKeepsForwardTrunkAndLighterHeadRead) {
             pose.head_center.z() + dims.trunk_length * 0.35F);
   EXPECT_LT(pose.trunk_end.y(),
             pose.head_center.y() - dims.trunk_length * 0.45F);
-  EXPECT_LT(pose.leg_radius_reduced, dims.leg_radius * 0.9F);
+  EXPECT_LT(pose.pose_leg_radius, dims.leg_radius * 0.9F);
 }

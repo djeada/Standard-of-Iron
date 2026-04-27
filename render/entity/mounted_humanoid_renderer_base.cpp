@@ -54,9 +54,9 @@ auto grounded_horse_world_from_mount(
     const HorseMotionSample &motion) noexcept -> QMatrix4x4 {
   QMatrix4x4 world = ctx.model;
   Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_reduced(
+  Render::Horse::make_horse_spec_pose_animated(
       profile.dims, profile.gait,
-      Render::Horse::HorseReducedMotion{motion.phase, motion.bob,
+      Render::Horse::HorsePoseMotion{motion.phase, motion.bob,
                                         motion.is_moving},
       pose);
   float const y_scale = world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();

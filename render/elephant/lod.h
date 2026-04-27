@@ -10,9 +10,6 @@ inline auto calculate_elephant_lod(float distance) -> HorseLOD {
   if (distance < settings.horse_full_detail_distance()) {
     return HorseLOD::Full;
   }
-  if (distance < settings.horse_reduced_detail_distance()) {
-    return HorseLOD::Reduced;
-  }
   if (distance < settings.horse_minimal_detail_distance()) {
     return HorseLOD::Minimal;
   }

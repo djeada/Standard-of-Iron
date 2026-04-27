@@ -165,9 +165,7 @@ constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
 
-constexpr float k_temporal_skip_distance_reduced = 35.0F;
 constexpr float k_temporal_skip_distance_minimal = 45.0F;
-constexpr uint32_t k_temporal_skip_period_reduced = 2;
 constexpr uint32_t k_temporal_skip_period_minimal = 3;
 constexpr float k_unit_ambient_anim_duration = 6.0F;
 constexpr float k_unit_cycle_base = 15.0F;
@@ -827,22 +825,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     case HumanoidLOD::Full: {
 
       ++s_render_stats.lod_full;
-
-      if (is_mounted_spawn) {
-        owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
-                                           inst_seed, graph_output.lod, out);
-        break;
-      }
-
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
-      owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
-                                         inst_seed, graph_output.lod, out);
-      break;
-    }
-
-    case HumanoidLOD::Reduced: {
-
-      ++s_render_stats.lod_reduced;
 
       if (is_mounted_spawn) {
         owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,

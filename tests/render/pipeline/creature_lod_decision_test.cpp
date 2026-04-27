@@ -17,7 +17,7 @@ using Render::Creature::Pipeline::TemporalSkipParams;
 
 namespace {
 
-constexpr LodDistanceThresholds kDefaults{12.0F, 20.0F, 40.0F};
+constexpr LodDistanceThresholds kDefaults{12.0F, 40.0F};
 
 auto make_inputs(float distance) -> CreatureLodDecisionInputs {
   CreatureLodDecisionInputs in{};
@@ -33,8 +33,6 @@ TEST(CreatureLodDecision, SelectDistanceLodMatchesThresholds) {
   EXPECT_EQ(select_distance_lod(0.0F, kDefaults), CreatureLOD::Full);
   EXPECT_EQ(select_distance_lod(11.99F, kDefaults), CreatureLOD::Full);
   EXPECT_EQ(select_distance_lod(12.0F, kDefaults), CreatureLOD::Minimal);
-  EXPECT_EQ(select_distance_lod(19.99F, kDefaults), CreatureLOD::Minimal);
-  EXPECT_EQ(select_distance_lod(20.0F, kDefaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(39.99F, kDefaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(40.0F, kDefaults), CreatureLOD::Billboard);
   EXPECT_EQ(select_distance_lod(1000.0F, kDefaults), CreatureLOD::Billboard);
@@ -42,12 +40,12 @@ TEST(CreatureLodDecision, SelectDistanceLodMatchesThresholds) {
 
 TEST(CreatureLodDecision, ForcedLodBypassesEverything) {
   auto in = make_inputs(1000.0F);
-  in.forced_lod = CreatureLOD::Reduced;
+  in.forced_lod = CreatureLOD::Minimal;
   in.apply_visibility_budget = true;
   in.budget_grant_full = false;
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
 }
 
 TEST(CreatureLodDecision, NoCameraDefaultsToFull) {
@@ -92,8 +90,8 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
 
 TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
   auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 20.0F, 80.0F}; // 46 -> Minimal
-  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
+  in.thresholds = {12.0F, 80.0F}; // 46 -> Minimal
+  in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 1U;
   in.instance_seed = 0U; // (1+0)%3 == 1 != 0 -> temporal skip culls
   const auto d = decide_creature_lod(in);
@@ -104,8 +102,8 @@ TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
 
 TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
   auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 20.0F, 80.0F};
-  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
+  in.thresholds = {12.0F, 80.0F};
+  in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 2U;
   in.instance_seed = 1U; // (2+1)%3 == 0 -> render
   const auto d = decide_creature_lod(in);
@@ -115,8 +113,8 @@ TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
 
 TEST(CreatureLodDecision, TemporalSkipDoesNotApplyBelowThreshold) {
   auto in = make_inputs(20.0F);
-  in.thresholds = {12.0F, 20.0F, 80.0F}; // 20 -> Minimal
-  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
+  in.thresholds = {12.0F, 80.0F}; // 20 -> Minimal
+  in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 1U;
   in.instance_seed = 0U; // would skip if applied
   const auto d = decide_creature_lod(in);

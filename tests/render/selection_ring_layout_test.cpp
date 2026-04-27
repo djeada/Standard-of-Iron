@@ -80,7 +80,7 @@ TEST(SelectionRingLayout, MountedFormationUsesDeepStaggeredRows) {
   EXPECT_GT(row_shift_z, Render::GL::cavalry_formation_spacing() * 0.95F);
 }
 
-TEST(SelectionRingLayout, MultiSoldierRingsUseReducedVisualSize) {
+TEST(SelectionRingLayout, MultiSoldierRingsUseCompactVisualSize) {
   float const size = Render::GL::Detail::selection_ring_visual_size(
       Game::Units::SpawnType::Archer, 20, 1.2F);
 

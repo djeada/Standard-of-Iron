@@ -184,7 +184,7 @@ TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   EXPECT_TRUE(motion.is_fighting);
 }
 
-TEST(ElephantPrepare, ReducedMotionBuildsFromPreparedSample) {
+TEST(ElephantPrepare, PoseMotionBuildsFromPreparedSample) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::GL::AnimationInputs anim{
       .time = 0.75F,
@@ -209,14 +209,14 @@ TEST(ElephantPrepare, ReducedMotionBuildsFromPreparedSample) {
 
   Render::GL::ElephantMotionSample const motion =
       Render::GL::evaluate_elephant_motion(profile, anim);
-  auto const reduced = Render::GL::build_elephant_reduced_motion(motion, anim);
+  auto const pose_motion = Render::GL::build_elephant_pose_motion(motion, anim);
 
-  EXPECT_FLOAT_EQ(reduced.phase, motion.phase);
-  EXPECT_FLOAT_EQ(reduced.bob, motion.bob);
-  EXPECT_EQ(reduced.is_moving, motion.is_moving);
-  EXPECT_EQ(reduced.is_fighting, motion.is_fighting);
-  EXPECT_FLOAT_EQ(reduced.anim_time, anim.time);
-  EXPECT_EQ(reduced.combat_phase, anim.combat_phase);
+  EXPECT_FLOAT_EQ(pose_motion.phase, motion.phase);
+  EXPECT_FLOAT_EQ(pose_motion.bob, motion.bob);
+  EXPECT_EQ(pose_motion.is_moving, motion.is_moving);
+  EXPECT_EQ(pose_motion.is_fighting, motion.is_fighting);
+  EXPECT_FLOAT_EQ(pose_motion.anim_time, anim.time);
+  EXPECT_EQ(pose_motion.combat_phase, anim.combat_phase);
 }
 
 TEST(ElephantPrepare, MotionScalesSwayWithGaitIntensity) {
@@ -306,7 +306,7 @@ TEST(ElephantPrepare, FullPreparationPopulatesVisibleElephantPose) {
   EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y());
 }
 
-TEST(ElephantPrepare, SimplifiedPreparationPopulatesVisibleElephantPose) {
+TEST(ElephantPrepare, FullStationaryPreparationPopulatesVisibleElephantPose) {
   ScopedFlatTerrain terrain(0.0F);
 
   Render::GL::ElephantRendererBase owner;
@@ -320,15 +320,15 @@ TEST(ElephantPrepare, SimplifiedPreparationPopulatesVisibleElephantPose) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_simplified(owner, ctx, anim, profile,
-                                                nullptr, nullptr, prep);
+  Render::Elephant::prepare_elephant_full(owner, ctx, anim, profile, nullptr,
+                                          nullptr, prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
   auto const &pose = rows[0].elephant_pose;
   EXPECT_GT(pose.head_center.z(), 0.0F);
   EXPECT_GT(pose.trunk_end.z(), pose.head_center.z());
-  EXPECT_LT(pose.foot_reduced_fl.y(), pose.barrel_center.y());
+  EXPECT_LT(pose.foot_pose_fl.y(), pose.barrel_center.y());
 }
 
 TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {

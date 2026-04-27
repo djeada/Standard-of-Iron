@@ -298,48 +298,6 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
   EXPECT_TRUE(sub.parts.empty());
 }
 
-TEST(HumanoidSpecTest, ReducedLodEmitsSixPrimitives) {
-  CreatureSpec const &s = humanoid_creature_spec();
-  HumanoidPose const pose = make_upright_pose();
-
-  std::array<QMatrix4x4, kBoneCount> palette;
-  Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
-                                      palette);
-  std::span<const QMatrix4x4> palette_view(palette);
-
-  QMatrix4x4 identity;
-  RecordingSubmitter sub;
-  auto stats = Render::Creature::submit_creature(
-      s, palette_view, CreatureLOD::Reduced, identity, sub);
-  EXPECT_EQ(stats.submitted, 6U);
-  EXPECT_EQ(stats.skipped_invalid, 0U);
-  EXPECT_EQ(sub.parts.size(), 6U);
-}
-
-TEST(HumanoidSpecTest,
-     ReducedSpecKeepsTorsoSlimmerThanLimbsAndHeadFromTopDownView) {
-  auto const &spec = humanoid_creature_spec();
-
-  auto const *torso =
-      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_torso");
-  auto const *head =
-      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_head");
-  auto const *arm =
-      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_arm_l");
-  auto const *leg =
-      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_leg_l");
-
-  ASSERT_NE(torso, nullptr);
-  ASSERT_NE(head, nullptr);
-  ASSERT_NE(arm, nullptr);
-  ASSERT_NE(leg, nullptr);
-
-  EXPECT_LT(torso->params.depth_radius, torso->params.radius);
-  EXPECT_GT(torso->params.radius, head->params.half_extents.x());
-  EXPECT_GT(torso->params.radius, arm->params.radius * 1.8F);
-  EXPECT_GT(leg->params.radius, arm->params.radius);
-}
-
 TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
   auto const &spec = humanoid_creature_spec();
 

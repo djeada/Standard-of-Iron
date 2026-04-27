@@ -10,9 +10,6 @@ inline auto calculate_humanoid_lod(float distance) -> HumanoidLOD {
   if (distance < settings.humanoid_full_detail_distance()) {
     return HumanoidLOD::Full;
   }
-  if (distance < settings.humanoid_reduced_detail_distance()) {
-    return HumanoidLOD::Reduced;
-  }
   if (distance < settings.humanoid_minimal_detail_distance()) {
     return HumanoidLOD::Minimal;
   }

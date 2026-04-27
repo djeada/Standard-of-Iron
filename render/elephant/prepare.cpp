@@ -83,9 +83,6 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   case HorseLOD::Full:
     ++s_elephantRenderStats.lod_full;
     break;
-  case HorseLOD::Reduced:
-    ++s_elephantRenderStats.lod_reduced;
-    break;
   case HorseLOD::Minimal:
     ++s_elephantRenderStats.lod_minimal;
     break;
@@ -142,10 +139,10 @@ void prepare_elephant_full(
   elephant_ctx.model.translate(howdah.ground_offset);
   Render::Creature::Pipeline::ground_model_to_terrain(elephant_ctx.model);
 
-  Render::Elephant::ElephantReducedMotion const rm =
-      build_elephant_reduced_motion(motion, anim);
+  Render::Elephant::ElephantPoseMotion const rm =
+      build_elephant_pose_motion(motion, anim);
   Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_reduced(profile.dims, profile.gait,
+  Render::Elephant::make_elephant_spec_pose_animated(profile.dims, profile.gait,
                                                     rm, pose);
   pose.barrel_center = motion.barrel_center;
   pose.head_center = motion.head_center;
@@ -163,56 +160,6 @@ void prepare_elephant_full(
   std::uint16_t const eleph_clip_full =
       elephant_clip_for_motion(rm.is_moving, anim.is_running);
   out.bodies.add_elephant(graph_output, pose, v, eleph_clip_full, rm.phase);
-}
-
-void prepare_elephant_simplified(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    Render::GL::ElephantProfile &profile,
-    const Render::GL::HowdahAttachmentFrame *shared_howdah,
-    const Render::GL::ElephantMotionSample *shared_motion,
-    ElephantPreparation &out) {
-  using Render::GL::ElephantMotionSample;
-  using Render::GL::ElephantVariant;
-  using Render::GL::HowdahAttachmentFrame;
-
-  const ElephantVariant &v = profile.variant;
-  ElephantMotionSample const motion =
-      shared_motion
-          ? *shared_motion
-          : evaluate_elephant_motion(
-                profile, anim,
-                Engine::Core::get_or_add_component<
-                    Render::Creature::ElephantAnimationStateComponent>(
-                    ctx.entity));
-
-  HowdahAttachmentFrame const howdah =
-      shared_howdah ? *shared_howdah : motion.howdah;
-
-  QMatrix4x4 world_from_unit = ctx.model;
-  world_from_unit.translate(howdah.ground_offset);
-  Render::Creature::Pipeline::ground_model_to_terrain(world_from_unit);
-
-  Render::Elephant::ElephantReducedMotion const rm =
-      build_elephant_reduced_motion(motion, anim);
-  Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_reduced(profile.dims, profile.gait,
-                                                    rm, pose);
-  namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  Render::GL::DrawContext elephant_ctx = ctx;
-  elephant_ctx.model = world_from_unit;
-  graph_inputs.ctx = &elephant_ctx;
-  graph_inputs.anim = &anim;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = Render::Creature::CreatureLOD::Reduced;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = 0U;
-  std::uint16_t const eleph_clip_red =
-      elephant_clip_for_motion(rm.is_moving, anim.is_running);
-  out.bodies.add_elephant(graph_output, pose, v, eleph_clip_red, rm.phase);
 }
 
 void prepare_elephant_minimal(
@@ -265,10 +212,6 @@ void prepare_elephant_render(
   case Render::Creature::CreatureLOD::Full:
     prepare_elephant_full(owner, ctx, anim, profile, shared_howdah,
                           shared_motion, out);
-    break;
-  case Render::Creature::CreatureLOD::Reduced:
-    prepare_elephant_simplified(owner, ctx, anim, profile, shared_howdah,
-                                shared_motion, out);
     break;
   case Render::Creature::CreatureLOD::Minimal:
     prepare_elephant_minimal(owner, ctx, profile, shared_motion, out);

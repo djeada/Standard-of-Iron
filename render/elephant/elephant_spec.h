@@ -52,7 +52,7 @@ struct ElephantSpecPose {
 
   float leg_radius{0.1F};
 
-  QVector3D reduced_body_half{};
+  QVector3D body_half{};
 
   QVector3D neck_base_offset{};
   float neck_radius{0.1F};
@@ -63,17 +63,17 @@ struct ElephantSpecPose {
   QVector3D trunk_end{};
   float trunk_base_radius{0.1F};
 
-  QVector3D shoulder_offset_reduced_fl{};
-  QVector3D shoulder_offset_reduced_fr{};
-  QVector3D shoulder_offset_reduced_bl{};
-  QVector3D shoulder_offset_reduced_br{};
+  QVector3D shoulder_offset_pose_fl{};
+  QVector3D shoulder_offset_pose_fr{};
+  QVector3D shoulder_offset_pose_bl{};
+  QVector3D shoulder_offset_pose_br{};
 
-  QVector3D foot_reduced_fl{};
-  QVector3D foot_reduced_fr{};
-  QVector3D foot_reduced_bl{};
-  QVector3D foot_reduced_br{};
+  QVector3D foot_pose_fl{};
+  QVector3D foot_pose_fr{};
+  QVector3D foot_pose_bl{};
+  QVector3D foot_pose_br{};
 
-  float leg_radius_reduced{0.1F};
+  float pose_leg_radius{0.1F};
 
   float foot_pad_offset_y{0.0F};
   QVector3D foot_pad_half{};
@@ -88,7 +88,7 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
 void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
                              float bob, ElephantSpecPose &out_pose) noexcept;
 
-struct ElephantReducedMotion {
+struct ElephantPoseMotion {
   float phase{0.0F};
   float bob{0.0F};
   bool is_moving{false};
@@ -98,9 +98,9 @@ struct ElephantReducedMotion {
   Render::GL::CombatAnimPhase combat_phase{Render::GL::CombatAnimPhase::Idle};
 };
 
-void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
+void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions &dims,
                                      const Render::GL::ElephantGait &gait,
-                                     const ElephantReducedMotion &motion,
+                                     const ElephantPoseMotion &motion,
                                      ElephantSpecPose &out_pose) noexcept;
 
 inline constexpr std::size_t kElephantRoleCount = 10;

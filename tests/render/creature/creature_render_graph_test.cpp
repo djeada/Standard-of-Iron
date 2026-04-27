@@ -61,24 +61,20 @@ public:
 TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
   auto config = humanoid_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
-  EXPECT_GT(config.temporal.period_reduced, 0U);
-  EXPECT_GT(config.temporal.period_minimal, 0U);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+    EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseLodConfigHasReasonableDefaults) {
   auto config = horse_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, ElephantLodConfigHasReasonableDefaults) {
   auto config = elephant_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
@@ -96,24 +92,20 @@ TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
 TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
   auto config = humanoid_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
-  EXPECT_GT(config.temporal.period_reduced, 0U);
-  EXPECT_GT(config.temporal.period_minimal, 0U);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+    EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
   auto config = horse_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
   auto config = elephant_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-  EXPECT_GT(config.thresholds.reduced, config.thresholds.full);
-  EXPECT_GT(config.thresholds.minimal, config.thresholds.reduced);
+    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
@@ -122,10 +114,7 @@ TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
   auto elephant = elephant_lod_config_from_settings();
 
   // All species should have temporal skip parameters
-  EXPECT_GT(humanoid.temporal.distance_reduced, 0.0F);
-  EXPECT_GT(horse.temporal.distance_reduced, 0.0F);
-  EXPECT_GT(elephant.temporal.distance_reduced, 0.0F);
-}
+      }
 
 // --- LOD Evaluation Tests ---
 
@@ -207,12 +196,12 @@ TEST(CreatureRenderGraph, NoCameraMeansFullLod) {
 TEST(CreatureRenderGraph, BuildBaseOutputSetsLodFromDecision) {
   CreatureGraphInputs inputs;
   CreatureLodDecision decision;
-  decision.lod = CreatureLOD::Reduced;
+  decision.lod = CreatureLOD::Minimal;
   decision.culled = false;
 
   auto output = build_base_graph_output(inputs, decision);
 
-  EXPECT_EQ(output.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(output.lod, CreatureLOD::Minimal);
   EXPECT_FALSE(output.culled);
 }
 
