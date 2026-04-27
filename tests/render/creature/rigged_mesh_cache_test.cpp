@@ -74,28 +74,23 @@ TEST(RiggedMeshCache, PerUnitVariantBucketDefaultsToZeroAndDeduplicates) {
   EXPECT_EQ(cache.size(), 1U);
 }
 
-TEST(RiggedMeshCache, DifferentLodsBakeIndependentlyButOnlyOnceEach) {
+TEST(RiggedMeshCache, FullAndMinimalBakeIndependentlyButOnlyOnceEach) {
   RiggedMeshCache cache;
   auto const &spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
   const auto *full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
-  const auto *reduced = cache.get_or_bake(spec, CreatureLOD::Reduced, bind);
   const auto *minimal = cache.get_or_bake(spec, CreatureLOD::Minimal, bind);
 
   ASSERT_NE(full, nullptr);
-  ASSERT_NE(reduced, nullptr);
   ASSERT_NE(minimal, nullptr);
-  EXPECT_NE(full, reduced);
-  EXPECT_NE(reduced, minimal);
   EXPECT_NE(full, minimal);
-  EXPECT_EQ(cache.size(), 3U);
+  EXPECT_EQ(cache.size(), 2U);
 
   // Asking for each LOD again must not re-bake.
   EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), full);
-  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Reduced, bind), reduced);
   EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Minimal, bind), minimal);
-  EXPECT_EQ(cache.size(), 3U);
+  EXPECT_EQ(cache.size(), 2U);
 }
 
 TEST(RiggedMeshCache, DifferentSpeciesProduceDistinctEntries) {

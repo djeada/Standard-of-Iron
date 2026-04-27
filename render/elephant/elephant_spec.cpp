@@ -22,7 +22,6 @@ using Render::Creature::BoneDef;
 using Render::Creature::BoneIndex;
 using Render::Creature::CreatureLOD;
 using Render::Creature::kLodMinimal;
-using Render::Creature::kLodReduced;
 using Render::Creature::PartGraph;
 using Render::Creature::PrimitiveInstance;
 using Render::Creature::PrimitiveParams;
@@ -49,9 +48,9 @@ constexpr SkeletonTopology kElephantTopology{
 
 constexpr std::uint8_t kRoleSkin = 1;
 constexpr std::uint8_t kRoleSkinShadow = 2;
-constexpr std::uint8_t kRoleSkinReducedLeg = 3;
-constexpr std::uint8_t kRoleSkinReducedFootPad = 4;
-constexpr std::uint8_t kRoleSkinReducedTrunk = 5;
+constexpr std::uint8_t kRoleSkinLeg = 3;
+constexpr std::uint8_t kRoleSkinFootPad = 4;
+constexpr std::uint8_t kRoleSkinTrunk = 5;
 constexpr std::uint8_t kRoleEarInner = 6;
 constexpr std::uint8_t kRoleTusk = 7;
 constexpr std::uint8_t kRoleEye = 8;
@@ -72,15 +71,15 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
   return c * s;
 }
 
-struct ReducedLegResult {
+struct LegResult {
   QVector3D shoulder;
   QVector3D foot;
 };
 
-[[nodiscard]] auto compute_reduced_leg(
+[[nodiscard]] auto compute_pose_leg(
     const Render::GL::ElephantDimensions &d, const Render::GL::ElephantGait &g,
-    const ElephantReducedMotion &motion, float lateral_sign, float forward_bias,
-    float phase_offset) noexcept -> ReducedLegResult {
+    const ElephantPoseMotion &motion, float lateral_sign, float forward_bias,
+    float phase_offset) noexcept -> LegResult {
   float const leg_phase =
       motion.is_fighting
           ? std::fmod(motion.anim_time / 1.15F + phase_offset, 1.0F)
@@ -194,101 +193,6 @@ auto build_minimal_primitives(const ElephantSpecPose &pose,
   return 5;
 }
 
-auto build_reduced_primitives(const ElephantSpecPose &pose,
-                              std::array<PrimitiveInstance, 12> &out) noexcept
-    -> std::size_t {
-
-  {
-    PrimitiveInstance &p = out[0];
-    p.debug_name = "elephant.body.reduced";
-    p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Root);
-    p.params.half_extents = pose.reduced_body_half;
-    p.color_role = kRoleSkin;
-    p.material_id = 6;
-    p.lod_mask = kLodReduced;
-  }
-
-  {
-    PrimitiveInstance &p = out[1];
-    p.debug_name = "elephant.neck";
-    p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Root);
-    p.params.head_offset = pose.neck_base_offset;
-    p.params.tail_bone = static_cast<BoneIndex>(ElephantBone::Head);
-    p.params.radius = pose.neck_radius;
-    p.color_role = kRoleSkin;
-    p.material_id = 0;
-    p.lod_mask = kLodReduced;
-  }
-
-  {
-    PrimitiveInstance &p = out[2];
-    p.debug_name = "elephant.head";
-    p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Head);
-    p.params.half_extents = pose.head_half;
-    p.color_role = kRoleSkin;
-    p.material_id = 0;
-    p.lod_mask = kLodReduced;
-  }
-
-  {
-    PrimitiveInstance &p = out[3];
-    p.debug_name = "elephant.trunk";
-    p.shape = PrimitiveShape::Cone;
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::TrunkTip);
-    p.params.tail_bone = static_cast<BoneIndex>(ElephantBone::Head);
-    p.params.radius = pose.trunk_base_radius;
-    p.color_role = kRoleSkinReducedTrunk;
-    p.material_id = 0;
-    p.lod_mask = kLodReduced;
-  }
-
-  struct RLeg {
-    std::string_view leg_name;
-    std::string_view pad_name;
-    ElephantBone foot_bone;
-    QVector3D shoulder_offset;
-  };
-  std::array<RLeg, 4> const legs{{
-      {"elephant.leg.fl.r", "elephant.foot_pad.fl.r", ElephantBone::FootFL,
-       pose.shoulder_offset_reduced_fl},
-      {"elephant.leg.fr.r", "elephant.foot_pad.fr.r", ElephantBone::FootFR,
-       pose.shoulder_offset_reduced_fr},
-      {"elephant.leg.bl.r", "elephant.foot_pad.bl.r", ElephantBone::FootBL,
-       pose.shoulder_offset_reduced_bl},
-      {"elephant.leg.br.r", "elephant.foot_pad.br.r", ElephantBone::FootBR,
-       pose.shoulder_offset_reduced_br},
-  }};
-
-  for (std::size_t i = 0; i < 4; ++i) {
-    PrimitiveInstance &leg = out[4 + (i * 2)];
-    leg.debug_name = legs[i].leg_name;
-    leg.shape = PrimitiveShape::Cylinder;
-    leg.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Root);
-    leg.params.head_offset = legs[i].shoulder_offset;
-    leg.params.tail_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    leg.params.tail_offset = QVector3D();
-    leg.params.radius = pose.leg_radius_reduced;
-    leg.color_role = kRoleSkinReducedLeg;
-    leg.material_id = 0;
-    leg.lod_mask = kLodReduced;
-
-    PrimitiveInstance &pad = out[5 + (i * 2)];
-    pad.debug_name = legs[i].pad_name;
-    pad.shape = PrimitiveShape::Mesh;
-    pad.custom_mesh = Render::GL::get_unit_sphere();
-    pad.params.anchor_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    pad.params.head_offset = QVector3D(0.0F, pose.foot_pad_offset_y, 0.0F);
-    pad.params.half_extents = pose.foot_pad_half;
-    pad.color_role = kRoleSkinReducedFootPad;
-    pad.material_id = 8;
-    pad.lod_mask = kLodReduced;
-  }
-  return 12;
-}
-
 } // namespace
 
 auto elephant_topology() noexcept -> const SkeletonTopology & {
@@ -369,16 +273,16 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.leg_radius = dims.leg_radius * 0.70F;
 }
 
-void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
+void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions &dims,
                                      const Render::GL::ElephantGait &gait,
-                                     const ElephantReducedMotion &motion,
+                                     const ElephantPoseMotion &motion,
                                      ElephantSpecPose &out_pose) noexcept {
 
   make_elephant_spec_pose(dims, motion.bob, out_pose);
 
   QVector3D const center = out_pose.barrel_center;
 
-  out_pose.reduced_body_half =
+  out_pose.body_half =
       QVector3D(dims.body_width * 0.50F, dims.body_height * 0.45F,
                 dims.body_length * 0.375F);
 
@@ -406,26 +310,26 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
 
   auto apply_leg = [&](float lat, float fwd, float phase_offset,
                        QVector3D &shoulder_out, QVector3D &foot_out) noexcept {
-    auto r = compute_reduced_leg(dims, gait, motion, lat, fwd, phase_offset);
+    auto r = compute_pose_leg(dims, gait, motion, lat, fwd, phase_offset);
     shoulder_out = r.shoulder;
     foot_out = center + r.foot;
   };
 
   apply_leg(1.0F, front_forward, gait.front_leg_phase,
-            out_pose.shoulder_offset_reduced_fl, out_pose.foot_reduced_fl);
+            out_pose.shoulder_offset_pose_fl, out_pose.foot_pose_fl);
   apply_leg(-1.0F, front_forward, gait.front_leg_phase + 0.50F,
-            out_pose.shoulder_offset_reduced_fr, out_pose.foot_reduced_fr);
+            out_pose.shoulder_offset_pose_fr, out_pose.foot_pose_fr);
   apply_leg(1.0F, rear_forward, gait.rear_leg_phase,
-            out_pose.shoulder_offset_reduced_bl, out_pose.foot_reduced_bl);
+            out_pose.shoulder_offset_pose_bl, out_pose.foot_pose_bl);
   apply_leg(-1.0F, rear_forward, gait.rear_leg_phase + 0.50F,
-            out_pose.shoulder_offset_reduced_br, out_pose.foot_reduced_br);
+            out_pose.shoulder_offset_pose_br, out_pose.foot_pose_br);
 
-  out_pose.foot_fl = out_pose.foot_reduced_fl;
-  out_pose.foot_fr = out_pose.foot_reduced_fr;
-  out_pose.foot_bl = out_pose.foot_reduced_bl;
-  out_pose.foot_br = out_pose.foot_reduced_br;
+  out_pose.foot_fl = out_pose.foot_pose_fl;
+  out_pose.foot_fr = out_pose.foot_pose_fr;
+  out_pose.foot_bl = out_pose.foot_pose_bl;
+  out_pose.foot_br = out_pose.foot_pose_br;
 
-  out_pose.leg_radius_reduced = dims.leg_radius * 0.85F;
+  out_pose.pose_leg_radius = dims.leg_radius * 0.85F;
 
   out_pose.foot_pad_offset_y = -dims.foot_radius * 0.18F;
   out_pose.foot_pad_half = QVector3D(dims.foot_radius, dims.foot_radius * 0.65F,
@@ -447,7 +351,7 @@ auto build_baseline_pose() noexcept -> ElephantSpecPose {
       Render::GL::make_elephant_dimensions(0U);
   Render::GL::ElephantGait gait{};
   ElephantSpecPose pose{};
-  make_elephant_spec_pose_reduced(dims, gait, ElephantReducedMotion{}, pose);
+  make_elephant_spec_pose_animated(dims, gait, ElephantPoseMotion{}, pose);
   return pose;
 }
 
@@ -666,16 +570,16 @@ auto build_static_full_parts() noexcept
   std::array<LegSpec, 4> const legs{{
       {"elephant.full.leg.fl.upper", "elephant.full.leg.fl.lower",
        "elephant.full.foot.fl", ElephantBone::FootFL,
-       pose.shoulder_offset_reduced_fl, true},
+       pose.shoulder_offset_pose_fl, true},
       {"elephant.full.leg.fr.upper", "elephant.full.leg.fr.lower",
        "elephant.full.foot.fr", ElephantBone::FootFR,
-       pose.shoulder_offset_reduced_fr, true},
+       pose.shoulder_offset_pose_fr, true},
       {"elephant.full.leg.bl.upper", "elephant.full.leg.bl.lower",
        "elephant.full.foot.bl", ElephantBone::FootBL,
-       pose.shoulder_offset_reduced_bl, false},
+       pose.shoulder_offset_pose_bl, false},
       {"elephant.full.leg.br.upper", "elephant.full.leg.br.lower",
        "elephant.full.foot.br", ElephantBone::FootBR,
-       pose.shoulder_offset_reduced_br, false},
+       pose.shoulder_offset_pose_br, false},
   }};
   float const leg_len = dims.leg_length;
   float const upper_r_front = dims.leg_radius * 1.10F;
@@ -722,13 +626,6 @@ auto build_static_full_parts() noexcept
   return out;
 }
 
-auto build_static_reduced_parts() noexcept
-    -> std::array<PrimitiveInstance, 12> {
-  std::array<PrimitiveInstance, 12> out{};
-  build_reduced_primitives(baseline_pose(), out);
-  return out;
-}
-
 auto build_static_minimal_parts() noexcept -> std::array<PrimitiveInstance, 5> {
   std::array<PrimitiveInstance, 5> out{};
   build_minimal_primitives(baseline_pose(), out);
@@ -744,12 +641,6 @@ auto static_minimal_parts() noexcept
 auto static_full_parts() noexcept
     -> const std::array<PrimitiveInstance, kElephantFullPartCount> & {
   static const auto parts = build_static_full_parts();
-  return parts;
-}
-
-auto static_reduced_parts() noexcept
-    -> const std::array<PrimitiveInstance, 12> & {
-  static const auto parts = build_static_reduced_parts();
   return parts;
 }
 
@@ -775,10 +666,6 @@ auto elephant_creature_spec() noexcept
     s.lod_minimal = PartGraph{
         std::span<const PrimitiveInstance>(static_minimal_parts().data(),
                                            static_minimal_parts().size()),
-    };
-    s.lod_reduced = PartGraph{
-        std::span<const PrimitiveInstance>(static_reduced_parts().data(),
-                                           static_reduced_parts().size()),
     };
     s.lod_full = PartGraph{
         std::span<const PrimitiveInstance>(static_full_parts().data(),

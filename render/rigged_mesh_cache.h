@@ -37,7 +37,7 @@ class RiggedMeshCache {
 public:
   struct Key {
     const Render::Creature::CreatureSpec *spec{nullptr};
-    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Reduced};
+    Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
     std::uint16_t variant_bucket{0};
     std::uint32_t skin_species_id{0};
     std::uint64_t attachments_hash{0};

@@ -7,7 +7,6 @@ auto validate_creature_spec(const CreatureSpec &spec) noexcept -> bool {
     return false;
   }
   return validate_part_graph(spec.topology, spec.lod_full) &&
-         validate_part_graph(spec.topology, spec.lod_reduced) &&
          validate_part_graph(spec.topology, spec.lod_minimal) &&
          validate_part_graph(spec.topology, spec.lod_billboard);
 }

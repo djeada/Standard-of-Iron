@@ -12,7 +12,6 @@ struct HumanoidRenderStats {
   uint32_t soldiers_skipped_temporal{0};
   uint32_t facial_hair_skipped_distance{0};
   uint32_t lod_full{0};
-  uint32_t lod_reduced{0};
   uint32_t lod_minimal{0};
 
   void reset() {
@@ -23,7 +22,6 @@ struct HumanoidRenderStats {
     soldiers_skipped_temporal = 0;
     facial_hair_skipped_distance = 0;
     lod_full = 0;
-    lod_reduced = 0;
     lod_minimal = 0;
   }
 };

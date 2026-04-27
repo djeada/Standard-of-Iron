@@ -65,71 +65,6 @@ constexpr std::array<Creature::PrimitiveInstance, 1> k_minimal_parts = {
     make_minimal_capsule(),
 };
 
-constexpr auto make_reduced_torso() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_reduced_torso";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = static_cast<Creature::BoneIndex>(HumanoidBone::Chest);
-  p.params.tail_bone = static_cast<Creature::BoneIndex>(HumanoidBone::Pelvis);
-  p.params.radius = HP::TORSO_TOP_R * 1.00F;
-  p.params.depth_radius = HP::TORSO_TOP_R * 0.52F;
-  p.color_role = Cloth;
-  p.lod_mask = Creature::kLodReduced;
-  return p;
-}
-
-constexpr auto make_reduced_head() noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = "humanoid_reduced_head";
-  p.shape = Creature::PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = static_cast<Creature::BoneIndex>(HumanoidBone::Head);
-  p.params.head_offset =
-      QVector3D(0.0F, HP::HEAD_RADIUS * 0.06F, HP::HEAD_RADIUS * 0.05F);
-  p.params.half_extents =
-      QVector3D(HP::HEAD_RADIUS * 0.74F, HP::HEAD_RADIUS * 0.92F,
-                HP::HEAD_RADIUS * 0.78F);
-  p.color_role = Skin;
-  p.lod_mask = Creature::kLodReduced;
-  return p;
-}
-
-constexpr auto
-make_reduced_arm(bool left) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_reduced_arm_l" : "humanoid_reduced_arm_r";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = static_cast<Creature::BoneIndex>(
-      left ? HumanoidBone::ShoulderL : HumanoidBone::ShoulderR);
-  p.params.tail_bone = static_cast<Creature::BoneIndex>(
-      left ? HumanoidBone::HandL : HumanoidBone::HandR);
-  p.params.radius = (HP::UPPER_ARM_R * 1.10F + HP::FORE_ARM_R * 0.85F) * 0.64F;
-  p.params.depth_radius = p.params.radius * 0.64F;
-  p.color_role = Cloth;
-  p.lod_mask = Creature::kLodReduced;
-  return p;
-}
-
-constexpr auto
-make_reduced_leg(bool left) noexcept -> Creature::PrimitiveInstance {
-  Creature::PrimitiveInstance p{};
-  p.debug_name = left ? "humanoid_reduced_leg_l" : "humanoid_reduced_leg_r";
-  p.shape = Creature::PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = static_cast<Creature::BoneIndex>(
-      left ? HumanoidBone::HipL : HumanoidBone::HipR);
-  p.params.tail_bone = static_cast<Creature::BoneIndex>(
-      left ? HumanoidBone::FootL : HumanoidBone::FootR);
-  p.params.radius = (HP::UPPER_LEG_R * 1.10F + HP::LOWER_LEG_R * 0.78F) * 0.68F;
-  p.params.depth_radius = p.params.radius * 0.62F;
-  p.color_role = ClothDark;
-  p.lod_mask = Creature::kLodReduced;
-  return p;
-}
-
-constexpr std::array<Creature::PrimitiveInstance, 6> k_reduced_parts = {
-    make_reduced_torso(),    make_reduced_head(),    make_reduced_arm(true),
-    make_reduced_arm(false), make_reduced_leg(true), make_reduced_leg(false),
-};
-
 constexpr auto bone(HumanoidBone b) noexcept -> Creature::BoneIndex {
   return static_cast<Creature::BoneIndex>(b);
 }
@@ -576,10 +511,6 @@ auto humanoid_creature_spec() noexcept -> const Creature::CreatureSpec & {
     s.lod_minimal = Creature::PartGraph{
         std::span<const Creature::PrimitiveInstance>(k_minimal_parts.data(),
                                                      k_minimal_parts.size()),
-    };
-    s.lod_reduced = Creature::PartGraph{
-        std::span<const Creature::PrimitiveInstance>(k_reduced_parts.data(),
-                                                     k_reduced_parts.size()),
     };
     s.lod_full = Creature::PartGraph{
         std::span<const Creature::PrimitiveInstance>(k_full_parts.data(),

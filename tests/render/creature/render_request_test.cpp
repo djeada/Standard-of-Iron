@@ -330,7 +330,7 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
   reqs[0].lod = Render::Creature::CreatureLOD::Full;
   reqs[1].archetype = ArchetypeRegistry::kHorseBase;
   reqs[1].state = AnimationStateId::Run;
-  reqs[1].lod = Render::Creature::CreatureLOD::Reduced;
+  reqs[1].lod = Render::Creature::CreatureLOD::Minimal;
   reqs[2].archetype = ArchetypeRegistry::kElephantBase;
   reqs[2].state = AnimationStateId::Idle;
   reqs[2].lod = Render::Creature::CreatureLOD::Minimal;
@@ -341,8 +341,7 @@ TEST(SubmitRequests, BatchOfMixedRequestsCountsCorrectly) {
   const auto stats = pipeline.submit_requests(reqs, sink);
   EXPECT_EQ(stats.entities_submitted, 4U);
   EXPECT_EQ(stats.lod_full, 1U);
-  EXPECT_EQ(stats.lod_reduced, 1U);
-  EXPECT_EQ(stats.lod_minimal, 1U);
+  EXPECT_EQ(stats.lod_minimal, 2U);
   EXPECT_EQ(stats.lod_billboard, 1U);
 }
 
