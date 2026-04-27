@@ -88,11 +88,10 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 }
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
-
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
-  config.thresholds.full = gs.horse_full_detail_distance();
-  config.thresholds.minimal = gs.horse_minimal_detail_distance();
+  config.thresholds.full = gs.elephant_full_detail_distance();
+  config.thresholds.minimal = gs.elephant_minimal_detail_distance();
   config.temporal.distance_minimal = kTemporalMinimalDistance;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = gs.visibility_budget().enabled;

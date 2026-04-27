@@ -340,13 +340,13 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   Render::GL::HorseGait base{};
   Render::GL::HorseGait const gait = Render::GL::gait_for_type(clip.gait, base);
 
-  Render::Horse::HorseReducedMotion motion{};
+  Render::Horse::HorsePoseMotion motion{};
   motion.phase = phase;
   motion.bob = 0.0F;
   motion.is_moving = clip.is_moving;
 
   Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_reduced(dims, gait, motion, pose);
+  Render::Horse::make_horse_spec_pose_animated(dims, gait, motion, pose);
 
   Render::Horse::BonePalette palette{};
   Render::Horse::evaluate_horse_skeleton(pose, palette);
@@ -424,7 +424,7 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   float const phase =
       static_cast<float>(frame_index) / static_cast<float>(clip.frames);
 
-  Render::Elephant::ElephantReducedMotion motion{};
+  Render::Elephant::ElephantPoseMotion motion{};
   motion.phase = phase;
   motion.bob = 0.0F;
   motion.is_moving = clip.is_moving;
@@ -432,8 +432,8 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   motion.anim_time = phase * clip.gait.cycle_time;
 
   Render::Elephant::ElephantSpecPose pose{};
-  Render::Elephant::make_elephant_spec_pose_reduced(dims, clip.gait, motion,
-                                                    pose);
+  Render::Elephant::make_elephant_spec_pose_animated(dims, clip.gait, motion,
+                                                     pose);
 
   Render::Elephant::BonePalette palette{};
   Render::Elephant::evaluate_elephant_skeleton(pose, palette);

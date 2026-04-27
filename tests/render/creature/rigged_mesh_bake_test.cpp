@@ -8,7 +8,9 @@
 
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
+#include "render/elephant/elephant_spec.h"
 #include "render/gl/primitives.h"
+#include "render/horse/horse_spec.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_bake.h"
 
@@ -62,6 +64,18 @@ struct ToyGraph {
   }
 };
 
+auto has_bone_influence(const BakedRiggedMeshCpu &baked,
+                        std::uint8_t bone) -> bool {
+  for (auto const &v : baked.vertices) {
+    for (std::size_t i = 0; i < v.bone_indices.size(); ++i) {
+      if (v.bone_indices[i] == bone && v.bone_weights[i] > 0.05F) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 TEST(RiggedMeshBake, EmptyGraphProducesEmptyOutput) {
   BakeInput input{};
   auto baked = bake_rigged_mesh_cpu(input);
@@ -83,6 +97,23 @@ TEST(RiggedMeshBake, TwoPrimitiveGraphAccumulatesVertexAndIndexCounts) {
             sphere->get_vertices().size() + cylinder->get_vertices().size());
   EXPECT_EQ(baked.indices.size(),
             sphere->get_indices().size() + cylinder->get_indices().size());
+}
+
+TEST(RiggedMeshBake, CylinderUsesCustomMeshOverrideWhenProvided) {
+  ToyGraph t;
+  t.prims[1].custom_mesh = Render::GL::get_unit_cube();
+  BakeInput input{&t.graph, std::span<const BoneWorldMatrix>{t.bind_pose}};
+  auto baked = bake_rigged_mesh_cpu(input);
+
+  auto *sphere = Render::GL::get_unit_sphere();
+  auto *cube = Render::GL::get_unit_cube();
+  ASSERT_NE(sphere, nullptr);
+  ASSERT_NE(cube, nullptr);
+
+  EXPECT_EQ(baked.vertices.size(),
+            sphere->get_vertices().size() + cube->get_vertices().size());
+  EXPECT_EQ(baked.indices.size(),
+            sphere->get_indices().size() + cube->get_indices().size());
 }
 
 TEST(RiggedMeshBake, SphereVerticesAreSingleBoneAnchor) {
@@ -201,6 +232,37 @@ TEST(RiggedMeshBake, GlWrapperExposesCpuSizes) {
             sphere->get_vertices().size() + cylinder->get_vertices().size());
   EXPECT_EQ(mesh->index_count(),
             sphere->get_indices().size() + cylinder->get_indices().size());
+}
+
+TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
+  auto const &spec = Render::Horse::horse_creature_spec();
+  BakeInput input{&spec.lod_full, Render::Horse::horse_bind_palette()};
+  auto baked = bake_rigged_mesh_cpu(input);
+
+  ASSERT_FALSE(baked.vertices.empty());
+  EXPECT_TRUE(has_bone_influence(
+      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::KneeFL)));
+  EXPECT_TRUE(has_bone_influence(
+      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::ShoulderBR)));
+  EXPECT_TRUE(has_bone_influence(
+      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::Head)));
+}
+
+TEST(RiggedMeshBake, ElephantWholeMeshUsesKneeAndTrunkBones) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+  BakeInput input{&spec.lod_full, Render::Elephant::elephant_bind_palette()};
+  auto baked = bake_rigged_mesh_cpu(input);
+
+  ASSERT_FALSE(baked.vertices.empty());
+  EXPECT_TRUE(has_bone_influence(
+      baked,
+      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::KneeFL)));
+  EXPECT_TRUE(has_bone_influence(
+      baked,
+      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::FootBR)));
+  EXPECT_TRUE(has_bone_influence(
+      baked,
+      static_cast<std::uint8_t>(Render::Elephant::ElephantBone::TrunkTip)));
 }
 
 } // namespace

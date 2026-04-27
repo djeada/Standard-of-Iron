@@ -36,7 +36,7 @@ const CreatureMeshRecipe kHorseMeshRecipe{
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
     &Render::Horse::horse_creature_spec,
     &horse_part_graph,
-    {43, 5},
+    {1, 1},
 };
 
 const CreatureRigDefinition kHorseRigDefinition{
@@ -90,7 +90,7 @@ const CreatureMeshRecipe kElephantMeshRecipe{
     lod_mask({CreatureMeshLod::Full, CreatureMeshLod::Minimal}),
     &Render::Elephant::elephant_creature_spec,
     &elephant_part_graph,
-    {41, 5},
+    {1, 1},
 };
 
 const CreatureRigDefinition kElephantRigDefinition{

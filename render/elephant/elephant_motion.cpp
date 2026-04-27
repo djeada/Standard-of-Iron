@@ -205,7 +205,7 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
 }
 
 auto build_elephant_pose_motion(const ElephantMotionSample &motion,
-                                   const AnimationInputs &anim)
+                                const AnimationInputs &anim)
     -> Render::Elephant::ElephantPoseMotion {
   return Render::Elephant::ElephantPoseMotion{
       .phase = motion.phase,

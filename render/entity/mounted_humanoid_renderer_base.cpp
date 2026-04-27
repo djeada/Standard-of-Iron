@@ -57,7 +57,7 @@ auto grounded_horse_world_from_mount(
   Render::Horse::make_horse_spec_pose_animated(
       profile.dims, profile.gait,
       Render::Horse::HorsePoseMotion{motion.phase, motion.bob,
-                                        motion.is_moving},
+                                     motion.is_moving},
       pose);
   float const y_scale = world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
   Render::Creature::Pipeline::ground_model_contact_to_surface(

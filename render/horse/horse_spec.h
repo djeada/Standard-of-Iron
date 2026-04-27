@@ -20,9 +20,17 @@ namespace Render::Horse {
 enum class HorseBone : std::uint8_t {
   Root = 0,
   Body,
+  ShoulderFL,
+  KneeFL,
   FootFL,
+  ShoulderFR,
+  KneeFR,
   FootFR,
+  ShoulderBL,
+  KneeBL,
   FootBL,
+  ShoulderBR,
+  KneeBR,
   FootBR,
   NeckTop,
   Head,
@@ -67,6 +75,11 @@ struct HorseSpecPose {
   QVector3D shoulder_offset_pose_bl{};
   QVector3D shoulder_offset_pose_br{};
 
+  QVector3D knee_fl{};
+  QVector3D knee_fr{};
+  QVector3D knee_bl{};
+  QVector3D knee_br{};
+
   float pose_leg_radius{0.11F};
 
   QVector3D hoof_scale{};
@@ -87,9 +100,9 @@ struct HorsePoseMotion {
   bool is_moving{false};
 };
 void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
-                                  const Render::GL::HorseGait &gait,
-                                  HorsePoseMotion motion,
-                                  HorseSpecPose &out_pose) noexcept;
+                                   const Render::GL::HorseGait &gait,
+                                   HorsePoseMotion motion,
+                                   HorseSpecPose &out_pose) noexcept;
 
 void fill_horse_role_colors(const Render::GL::HorseVariant &variant,
                             std::array<QVector3D, 8> &out_roles) noexcept;

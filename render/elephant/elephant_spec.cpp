@@ -33,13 +33,21 @@ using Render::Creature::SkeletonTopology;
 
 constexpr std::array<BoneDef, kElephantBoneCount> kElephantBones = {{
     {"Root", Render::Creature::kInvalidBone},
-    {"Body", 0},
-    {"FootFL", 0},
-    {"FootFR", 0},
-    {"FootBL", 0},
-    {"FootBR", 0},
-    {"Head", 0},
-    {"TrunkTip", 0},
+    {"Body", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"ShoulderFL", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"KneeFL", static_cast<BoneIndex>(ElephantBone::ShoulderFL)},
+    {"FootFL", static_cast<BoneIndex>(ElephantBone::KneeFL)},
+    {"ShoulderFR", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"KneeFR", static_cast<BoneIndex>(ElephantBone::ShoulderFR)},
+    {"FootFR", static_cast<BoneIndex>(ElephantBone::KneeFR)},
+    {"ShoulderBL", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"KneeBL", static_cast<BoneIndex>(ElephantBone::ShoulderBL)},
+    {"FootBL", static_cast<BoneIndex>(ElephantBone::KneeBL)},
+    {"ShoulderBR", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"KneeBR", static_cast<BoneIndex>(ElephantBone::ShoulderBR)},
+    {"FootBR", static_cast<BoneIndex>(ElephantBone::KneeBR)},
+    {"Head", static_cast<BoneIndex>(ElephantBone::Root)},
+    {"TrunkTip", static_cast<BoneIndex>(ElephantBone::Head)},
 }};
 
 constexpr std::array<Render::Creature::SocketDef, 0> kElephantSockets{};
@@ -61,6 +69,7 @@ constexpr std::uint8_t kRoleToenail = 9;
 constexpr std::uint8_t kRoleTailTip = 10;
 
 constexpr float k_pi = 3.14159265358979323846F;
+constexpr float k_two_pi = 2.0F * k_pi;
 
 [[nodiscard]] auto
 translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
@@ -68,6 +77,42 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
   m.setToIdentity();
   m.setColumn(3, QVector4D(origin, 1.0F));
   return m;
+}
+
+[[nodiscard]] auto
+solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
+                     float upper_len, float lower_len,
+                     const QVector3D &bend_hint) noexcept -> QVector3D {
+  QVector3D shoulder_to_foot = foot - shoulder;
+  float const dist_sq =
+      QVector3D::dotProduct(shoulder_to_foot, shoulder_to_foot);
+  if (dist_sq <= 1.0e-6F) {
+    return shoulder + QVector3D(0.0F, -upper_len, 0.0F);
+  }
+
+  float const total_len = std::max(upper_len + lower_len, 1.0e-4F);
+  float const min_len =
+      std::max(std::abs(upper_len - lower_len) + 1.0e-4F, total_len * 0.10F);
+  float const dist =
+      std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
+  QVector3D const dir = shoulder_to_foot / std::sqrt(dist_sq);
+
+  QVector3D bend_axis = bend_hint - dir * QVector3D::dotProduct(bend_hint, dir);
+  if (bend_axis.lengthSquared() <= 1.0e-6F) {
+    bend_axis = QVector3D(0.0F, 0.0F, 1.0F) -
+                dir * QVector3D::dotProduct(QVector3D(0.0F, 0.0F, 1.0F), dir);
+  }
+  if (bend_axis.lengthSquared() <= 1.0e-6F) {
+    bend_axis = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  bend_axis.normalize();
+
+  float const along =
+      (upper_len * upper_len - lower_len * lower_len + dist * dist) /
+      (2.0F * dist);
+  float const height =
+      std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
+  return shoulder + dir * along + bend_axis * height;
 }
 
 [[nodiscard]] auto darken(const QVector3D &c, float s) noexcept -> QVector3D {
@@ -93,6 +138,148 @@ auto make_faceted_vertex(const QVector3D &pos, const QVector3D &normal, float u,
   return {{pos.x(), pos.y(), pos.z()}, {n.x(), n.y(), n.z()}, {u, v}};
 }
 
+void append_flat_triangle(std::vector<Render::GL::Vertex> &vertices,
+                          std::vector<unsigned int> &indices,
+                          const QVector3D &a, const QVector3D &b,
+                          const QVector3D &c) {
+  QVector3D normal = QVector3D::crossProduct(b - a, c - a);
+  if (normal.lengthSquared() < 1.0e-8F) {
+    normal = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    normal.normalize();
+  }
+
+  unsigned int const base = static_cast<unsigned int>(vertices.size());
+  vertices.push_back(make_faceted_vertex(a, normal, 0.0F, 0.0F));
+  vertices.push_back(make_faceted_vertex(b, normal, 1.0F, 0.0F));
+  vertices.push_back(make_faceted_vertex(c, normal, 0.5F, 1.0F));
+  indices.insert(indices.end(), {base, base + 1U, base + 2U});
+}
+
+void append_flat_quad(std::vector<Render::GL::Vertex> &vertices,
+                      std::vector<unsigned int> &indices, const QVector3D &a,
+                      const QVector3D &b, const QVector3D &c,
+                      const QVector3D &d) {
+  QVector3D normal = QVector3D::crossProduct(b - a, c - a);
+  if (normal.lengthSquared() < 1.0e-8F) {
+    normal = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    normal.normalize();
+  }
+
+  unsigned int const base = static_cast<unsigned int>(vertices.size());
+  vertices.push_back(make_faceted_vertex(a, normal, 0.0F, 0.0F));
+  vertices.push_back(make_faceted_vertex(b, normal, 1.0F, 0.0F));
+  vertices.push_back(make_faceted_vertex(c, normal, 1.0F, 1.0F));
+  vertices.push_back(make_faceted_vertex(d, normal, 0.0F, 1.0F));
+  indices.insert(indices.end(),
+                 {base, base + 1U, base + 2U, base + 2U, base + 3U, base});
+}
+
+template <std::size_t RingCount, std::size_t RingVertexCount>
+auto build_closed_ring_mesh(
+    const std::array<std::array<QVector3D, RingVertexCount>, RingCount> &rings)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve((RingCount - 1U) * RingVertexCount * 4U + 64U);
+  indices.reserve((RingCount - 1U) * RingVertexCount * 6U + 96U);
+
+  for (std::size_t r = 0; r + 1U < RingCount; ++r) {
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      append_flat_quad(vertices, indices, rings[r][p], rings[r][next],
+                       rings[r + 1U][next], rings[r + 1U][p]);
+    }
+  }
+
+  auto add_cap = [&](std::size_t row, bool reverse) {
+    QVector3D center;
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      center += rings[row][p];
+    }
+    center /= static_cast<float>(RingVertexCount);
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      if (reverse) {
+        append_flat_triangle(vertices, indices, center, rings[row][next],
+                             rings[row][p]);
+      } else {
+        append_flat_triangle(vertices, indices, center, rings[row][p],
+                             rings[row][next]);
+      }
+    }
+  };
+
+  add_cap(0U, true);
+  add_cap(RingCount - 1U, false);
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+template <std::size_t RingCount, std::size_t RingVertexCount>
+void append_closed_ring_mesh(
+    std::vector<Render::GL::Vertex> &vertices,
+    std::vector<unsigned int> &indices,
+    const std::array<std::array<QVector3D, RingVertexCount>, RingCount>
+        &rings) {
+  for (std::size_t r = 0; r + 1U < RingCount; ++r) {
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      append_flat_quad(vertices, indices, rings[r][p], rings[r][next],
+                       rings[r + 1U][next], rings[r + 1U][p]);
+    }
+  }
+
+  auto add_cap = [&](std::size_t row, bool reverse) {
+    QVector3D center;
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      center += rings[row][p];
+    }
+    center /= static_cast<float>(RingVertexCount);
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      if (reverse) {
+        append_flat_triangle(vertices, indices, center, rings[row][next],
+                             rings[row][p]);
+      } else {
+        append_flat_triangle(vertices, indices, center, rings[row][p],
+                             rings[row][next]);
+      }
+    }
+  };
+
+  add_cap(0U, true);
+  add_cap(RingCount - 1U, false);
+}
+
+template <std::size_t VertexCount>
+void append_closed_prism(std::vector<Render::GL::Vertex> &vertices,
+                         std::vector<unsigned int> &indices,
+                         const std::array<QVector3D, VertexCount> &front,
+                         const std::array<QVector3D, VertexCount> &back) {
+  for (std::size_t i = 0; i < VertexCount; ++i) {
+    std::size_t const next = (i + 1U) % VertexCount;
+    append_flat_quad(vertices, indices, front[i], front[next], back[next],
+                     back[i]);
+  }
+
+  QVector3D front_center;
+  QVector3D back_center;
+  for (std::size_t i = 0; i < VertexCount; ++i) {
+    front_center += front[i];
+    back_center += back[i];
+  }
+  front_center /= static_cast<float>(VertexCount);
+  back_center /= static_cast<float>(VertexCount);
+
+  for (std::size_t i = 0; i < VertexCount; ++i) {
+    std::size_t const next = (i + 1U) % VertexCount;
+    append_flat_triangle(vertices, indices, front_center, front[i],
+                         front[next]);
+    append_flat_triangle(vertices, indices, back_center, back[next], back[i]);
+  }
+}
+
 auto create_faceted_elephant_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
@@ -100,21 +287,18 @@ auto create_faceted_elephant_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   float const bh = dims.body_height;
   float const bl = dims.body_length;
 
-  std::array<torso_ring, 7> const rings{{
-      {-0.52F, -0.02F, 0.32F, 0.30F, 0.28F},
-      {-0.36F, 0.02F, 0.46F, 0.38F, 0.34F},
-      {-0.16F, 0.04F, 0.55F, 0.44F, 0.38F},
-      {0.08F, 0.05F, 0.58F, 0.46F, 0.38F},
-      {0.30F, 0.07F, 0.52F, 0.42F, 0.34F},
-      {0.46F, 0.04F, 0.42F, 0.36F, 0.30F},
-      {0.58F, -0.01F, 0.24F, 0.28F, 0.24F},
+  std::array<torso_ring, 8> const rings{{
+      {-0.58F, 0.00F, 0.18F, 0.16F, 0.14F},
+      {-0.46F, 0.04F, 0.34F, 0.30F, 0.20F},
+      {-0.24F, 0.10F, 0.50F, 0.42F, 0.28F},
+      {0.00F, 0.12F, 0.58F, 0.48F, 0.34F},
+      {0.22F, 0.14F, 0.60F, 0.52F, 0.36F},
+      {0.40F, 0.10F, 0.54F, 0.46F, 0.30F},
+      {0.54F, 0.02F, 0.42F, 0.34F, 0.24F},
+      {0.66F, -0.06F, 0.24F, 0.22F, 0.18F},
   }};
 
-  std::vector<Render::GL::Vertex> vertices;
-  std::vector<unsigned int> indices;
-  vertices.reserve(rings.size() * 8U + 2U);
-  indices.reserve((rings.size() - 1U) * 8U * 6U + 48U);
-
+  std::array<std::array<QVector3D, 10>, 8> ring_points{};
   for (std::size_t r = 0; r < rings.size(); ++r) {
     torso_ring const &ring = rings[r];
     float const z = ring.z * bl;
@@ -122,71 +306,30 @@ auto create_faceted_elephant_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
     float const hw = ring.half_width * bw;
     float const top = yc + ring.top * bh;
     float const bot = yc - ring.bottom * bh;
-    float const upper = yc + ring.top * bh * 0.62F;
-    float const lower = yc - ring.bottom * bh * 0.70F;
-    float const side_high = hw * 0.84F;
-    float const side_mid = hw;
-    float const v =
-        static_cast<float>(r) / static_cast<float>(rings.size() - 1U);
+    float const shoulder_y = yc + ring.top * bh * 0.78F;
+    float const side_high_y = yc + ring.top * bh * 0.24F;
+    float const side_low_y = yc - ring.bottom * bh * 0.18F;
+    float const belly_y = yc - ring.bottom * bh * 0.76F;
+    float const shoulder = hw * 0.58F;
+    float const side_high = hw * 0.90F;
+    float const side_low = hw * 1.02F;
+    float const belly = hw * 0.66F;
 
-    std::array<QVector3D, 8> const pts{{
+    ring_points[r] = {{
         {0.0F, top, z},
-        {side_high, upper, z},
-        {side_mid, yc, z},
-        {side_high, lower, z},
+        {shoulder, shoulder_y, z},
+        {side_high, side_high_y, z},
+        {side_low, side_low_y, z},
+        {belly, belly_y, z},
         {0.0F, bot, z},
-        {-side_high, lower, z},
-        {-side_mid, yc, z},
-        {-side_high, upper, z},
+        {-belly, belly_y, z},
+        {-side_low, side_low_y, z},
+        {-side_high, side_high_y, z},
+        {-shoulder, shoulder_y, z},
     }};
-
-    for (std::size_t p = 0; p < pts.size(); ++p) {
-      QVector3D const normal(pts[p].x() / std::max(0.001F, hw),
-                             (pts[p].y() - yc) / std::max(0.001F, bh * 0.46F),
-                             0.0F);
-      vertices.push_back(
-          make_faceted_vertex(pts[p], normal, static_cast<float>(p) / 7.0F, v));
-    }
   }
 
-  constexpr unsigned int kRingVertexCount = 8U;
-  for (unsigned int r = 0; r + 1U < rings.size(); ++r) {
-    unsigned int const row = r * kRingVertexCount;
-    unsigned int const next = (r + 1U) * kRingVertexCount;
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      unsigned int const a = row + p;
-      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
-      unsigned int const c = next + ((p + 1U) % kRingVertexCount);
-      unsigned int const d = next + p;
-      indices.insert(indices.end(), {a, b, c, c, d, a});
-    }
-  }
-
-  auto add_cap = [&](unsigned int row, QVector3D normal, bool reverse) {
-    QVector3D center;
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      auto const &v = vertices[row + p].position;
-      center += QVector3D(v[0], v[1], v[2]);
-    }
-    center /= static_cast<float>(kRingVertexCount);
-    unsigned int const ci = static_cast<unsigned int>(vertices.size());
-    vertices.push_back(make_faceted_vertex(center, normal, 0.5F, 0.5F));
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      unsigned int const a = row + p;
-      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
-      if (reverse) {
-        indices.insert(indices.end(), {ci, b, a});
-      } else {
-        indices.insert(indices.end(), {ci, a, b});
-      }
-    }
-  };
-
-  add_cap(0U, QVector3D(0.0F, 0.0F, -1.0F), true);
-  add_cap(static_cast<unsigned int>((rings.size() - 1U) * kRingVertexCount),
-          QVector3D(0.0F, 0.0F, 1.0F), false);
-
-  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+  return build_closed_ring_mesh(ring_points);
 }
 
 auto get_faceted_elephant_torso_mesh() -> Render::GL::Mesh * {
@@ -195,15 +338,545 @@ auto get_faceted_elephant_torso_mesh() -> Render::GL::Mesh * {
   return mesh.get();
 }
 
+auto create_whole_elephant_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::ElephantDimensions const dims =
+      Render::GL::make_elephant_dimensions(0U);
+  float const bw = dims.body_width;
+  float const bh = dims.body_height;
+  float const bl = dims.body_length;
+  float const hl = dims.head_length;
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  float const torso_width_scale = 2.0F;
+  float const torso_height_scale = 2.0F;
+  float const torso_lift = bh * 0.18F;
+  float const trunk_thickness_scale = 0.50F;
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(560);
+  indices.reserve(900);
+
+  auto make_ring = [](QVector3D c, float rx,
+                      float ry) -> std::array<QVector3D, 8> {
+    return {{
+        {c.x(), c.y() + ry, c.z()},
+        {c.x() + rx * 0.70F, c.y() + ry * 0.62F, c.z()},
+        {c.x() + rx, c.y(), c.z()},
+        {c.x() + rx * 0.72F, c.y() - ry * 0.70F, c.z()},
+        {c.x(), c.y() - ry, c.z()},
+        {c.x() - rx * 0.72F, c.y() - ry * 0.70F, c.z()},
+        {c.x() - rx, c.y(), c.z()},
+        {c.x() - rx * 0.70F, c.y() + ry * 0.62F, c.z()},
+    }};
+  };
+
+  std::array<std::array<QVector3D, 8>, 8> body{{
+      make_ring({0.0F, -bh * 0.02F + torso_lift, -bl * 0.58F},
+                bw * 0.20F * torso_width_scale,
+                bh * 0.20F * torso_height_scale),
+      make_ring({0.0F, bh * 0.04F + torso_lift, -bl * 0.44F},
+                bw * 0.44F * torso_width_scale,
+                bh * 0.34F * torso_height_scale),
+      make_ring({0.0F, bh * 0.10F + torso_lift, -bl * 0.22F},
+                bw * 0.58F * torso_width_scale,
+                bh * 0.46F * torso_height_scale),
+      make_ring({0.0F, bh * 0.12F + torso_lift, 0.02F},
+                bw * 0.64F * torso_width_scale,
+                bh * 0.50F * torso_height_scale),
+      make_ring({0.0F, bh * 0.14F + torso_lift, bl * 0.22F},
+                bw * 0.62F * torso_width_scale,
+                bh * 0.52F * torso_height_scale),
+      make_ring({0.0F, bh * 0.08F + torso_lift, bl * 0.42F},
+                bw * 0.52F * torso_width_scale,
+                bh * 0.42F * torso_height_scale),
+      make_ring({0.0F, -bh * 0.02F + torso_lift, bl * 0.58F},
+                bw * 0.36F * torso_width_scale,
+                bh * 0.30F * torso_height_scale),
+      make_ring({0.0F, -bh * 0.08F + torso_lift, bl * 0.68F},
+                bw * 0.20F * torso_width_scale,
+                bh * 0.18F * torso_height_scale),
+  }};
+  append_closed_ring_mesh(vertices, indices, body);
+
+  std::array<std::array<QVector3D, 8>, 5> head{{
+      make_ring({0.0F, bh * 0.30F, bl * 0.62F}, hw * 0.22F, hh * 0.18F),
+      make_ring({0.0F, bh * 0.42F, bl * 0.78F}, hw * 0.44F, hh * 0.34F),
+      make_ring({0.0F, bh * 0.42F, bl * 0.98F}, hw * 0.50F, hh * 0.38F),
+      make_ring({0.0F, bh * 0.28F, bl * 1.13F}, hw * 0.34F, hh * 0.26F),
+      make_ring({0.0F, bh * 0.14F, bl * 1.23F}, hw * 0.16F, hh * 0.14F),
+  }};
+  append_closed_ring_mesh(vertices, indices, head);
+
+  auto make_cylinder_ring = [](QVector3D c, float rx,
+                               float rz) -> std::array<QVector3D, 6> {
+    return {{
+        {c.x(), c.y(), c.z() + rz},
+        {c.x() + rx, c.y(), c.z() + rz * 0.45F},
+        {c.x() + rx * 0.88F, c.y(), c.z() - rz * 0.52F},
+        {c.x(), c.y(), c.z() - rz},
+        {c.x() - rx * 0.88F, c.y(), c.z() - rz * 0.52F},
+        {c.x() - rx, c.y(), c.z() + rz * 0.45F},
+    }};
+  };
+
+  auto append_leg = [&](float x, float z, bool front) {
+    float const top_y = -bh * 0.22F;
+    float const bottom_y = -dims.leg_length * 0.82F;
+    float const r = dims.leg_radius * (front ? 1.20F : 1.12F);
+    std::array<std::array<QVector3D, 6>, 5> leg{{
+        make_cylinder_ring({x, top_y, z}, r * 1.18F, r * 0.92F),
+        make_cylinder_ring({x * 0.98F, (top_y + bottom_y) * 0.38F, z},
+                           r * 1.02F, r * 0.82F),
+        make_cylinder_ring({x * 0.96F, (top_y + bottom_y) * 0.62F, z},
+                           r * 0.86F, r * 0.72F),
+        make_cylinder_ring({x * 0.94F, bottom_y + dims.foot_radius * 0.20F, z},
+                           r * 1.10F, r * 0.88F),
+        make_cylinder_ring({x * 0.94F, bottom_y, z + dims.foot_radius * 0.14F},
+                           r * 1.42F, r * 1.22F),
+    }};
+    append_closed_ring_mesh(vertices, indices, leg);
+  };
+  append_leg(bw * 0.42F, bl * 0.34F, true);
+  append_leg(-bw * 0.42F, bl * 0.34F, true);
+  append_leg(bw * 0.38F, -bl * 0.34F, false);
+  append_leg(-bw * 0.38F, -bl * 0.34F, false);
+
+  std::array<std::array<QVector3D, 6>, 6> trunk{{
+      make_cylinder_ring({0.0F, bh * 0.12F, bl * 1.18F},
+                         dims.trunk_base_radius * 1.20F * trunk_thickness_scale,
+                         dims.trunk_base_radius * 0.92F *
+                             trunk_thickness_scale),
+      make_cylinder_ring({0.0F, -bh * 0.04F, bl * 1.28F},
+                         dims.trunk_base_radius * 1.02F * trunk_thickness_scale,
+                         dims.trunk_base_radius * 0.84F *
+                             trunk_thickness_scale),
+      make_cylinder_ring({0.0F, -bh * 0.26F, bl * 1.34F},
+                         dims.trunk_base_radius * 0.82F * trunk_thickness_scale,
+                         dims.trunk_base_radius * 0.70F *
+                             trunk_thickness_scale),
+      make_cylinder_ring({0.0F, -bh * 0.48F, bl * 1.36F},
+                         dims.trunk_base_radius * 0.62F * trunk_thickness_scale,
+                         dims.trunk_base_radius * 0.54F *
+                             trunk_thickness_scale),
+      make_cylinder_ring({0.0F, -bh * 0.66F, bl * 1.33F},
+                         dims.trunk_base_radius * 0.44F * trunk_thickness_scale,
+                         dims.trunk_base_radius * 0.40F *
+                             trunk_thickness_scale),
+      make_cylinder_ring({0.0F, -bh * 0.78F, bl * 1.25F},
+                         dims.trunk_tip_radius * 1.60F * trunk_thickness_scale,
+                         dims.trunk_tip_radius * 1.40F * trunk_thickness_scale),
+  }};
+  append_closed_ring_mesh(vertices, indices, trunk);
+
+  auto append_ear = [&](float side) {
+    float const x_outer = side * (hw * 0.72F);
+    float const x_inner = side * (hw * 0.30F);
+    std::array<QVector3D, 7> const front{{
+        {x_inner, bh * 0.66F, bl * 0.78F},
+        {x_outer, bh * 0.58F, bl * 0.78F},
+        {side * (hw * 0.88F), bh * 0.24F, bl * 0.82F},
+        {side * (hw * 0.72F), -bh * 0.18F, bl * 0.86F},
+        {side * (hw * 0.24F), -bh * 0.26F, bl * 0.84F},
+        {side * (hw * 0.14F), bh * 0.12F, bl * 0.78F},
+        {x_inner, bh * 0.44F, bl * 0.74F},
+    }};
+    std::array<QVector3D, 7> back = front;
+    for (auto &p : back) {
+      p.setZ(p.z() - hw * 0.08F);
+    }
+    append_closed_prism(vertices, indices, front, back);
+  };
+  append_ear(1.0F);
+  append_ear(-1.0F);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_whole_elephant_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_whole_elephant_mesh();
+  return mesh.get();
+}
+
+auto create_faceted_elephant_head_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::ElephantDimensions const dims =
+      Render::GL::make_elephant_dimensions(0U);
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  float const hl = dims.head_length;
+
+  std::array<torso_ring, 6> const sections{{
+      {-0.42F, 0.02F, 0.18F, 0.16F, 0.12F},
+      {-0.22F, 0.12F, 0.30F, 0.28F, 0.18F},
+      {0.00F, 0.16F, 0.42F, 0.34F, 0.20F},
+      {0.20F, 0.08F, 0.36F, 0.24F, 0.26F},
+      {0.38F, -0.02F, 0.24F, 0.14F, 0.24F},
+      {0.52F, -0.14F, 0.12F, 0.06F, 0.16F},
+  }};
+
+  std::array<std::array<QVector3D, 8>, 6> section_points{};
+  for (std::size_t s = 0; s < sections.size(); ++s) {
+    torso_ring const &section = sections[s];
+    float const z = section.z * hl;
+    float const yc = section.y * hh;
+    float const half_width = section.half_width * hw;
+    float const top = yc + section.top * hh;
+    float const bot = yc - section.bottom * hh;
+    float const crown_y = yc + section.top * hh * 0.58F;
+    float const jaw_y = yc - section.bottom * hh * 0.42F;
+    float const crown_w = half_width * 0.54F;
+    float const side_w = half_width;
+    float const jaw_w = half_width * 0.74F;
+
+    section_points[s] = {{
+        {0.0F, top, z},
+        {crown_w, crown_y, z},
+        {side_w, yc, z},
+        {jaw_w, jaw_y, z},
+        {0.0F, bot, z},
+        {-jaw_w, jaw_y, z},
+        {-side_w, yc, z},
+        {-crown_w, crown_y, z},
+    }};
+  }
+
+  return build_closed_ring_mesh(section_points);
+}
+
+auto get_faceted_elephant_head_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_faceted_elephant_head_mesh();
+  return mesh.get();
+}
+
+auto create_minimal_elephant_head_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::ElephantDimensions const dims =
+      Render::GL::make_elephant_dimensions(0U);
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  float const hl = dims.head_length;
+
+  std::array<torso_ring, 5> const sections{{
+      {-0.34F, 0.04F, 0.22F, 0.14F, 0.10F},
+      {-0.16F, 0.12F, 0.34F, 0.24F, 0.16F},
+      {0.08F, 0.12F, 0.42F, 0.28F, 0.18F},
+      {0.30F, 0.00F, 0.28F, 0.16F, 0.20F},
+      {0.48F, -0.12F, 0.14F, 0.06F, 0.14F},
+  }};
+
+  std::array<std::array<QVector3D, 8>, 5> rings{};
+  for (std::size_t s = 0; s < sections.size(); ++s) {
+    torso_ring const &section = sections[s];
+    float const z = section.z * hl;
+    float const yc = section.y * hh;
+    float const half_width = section.half_width * hw;
+    float const top = yc + section.top * hh;
+    float const bot = yc - section.bottom * hh;
+    float const crown_y = yc + section.top * hh * 0.56F;
+    float const jaw_y = yc - section.bottom * hh * 0.38F;
+    float const crown_w = half_width * 0.52F;
+    float const side_w = half_width;
+    float const jaw_w = half_width * 0.74F;
+
+    rings[s] = {{
+        {0.0F, top, z},
+        {crown_w, crown_y, z},
+        {side_w, yc, z},
+        {jaw_w, jaw_y, z},
+        {0.0F, bot, z},
+        {-jaw_w, jaw_y, z},
+        {-side_w, yc, z},
+        {-crown_w, crown_y, z},
+    }};
+  }
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  auto head_shell = build_closed_ring_mesh(rings);
+  vertices = head_shell->get_vertices();
+  indices = head_shell->get_indices();
+
+  auto append_ear = [&](float lateral_sign) {
+    QVector3D const ear_scale(hw * 0.56F, hh * 0.72F, hl * 0.045F);
+    QVector3D const ear_offset(lateral_sign * hw * 0.36F, -hh * 0.02F,
+                               -hl * 0.04F);
+    std::array<QVector3D, 6> front{};
+    std::array<QVector3D, 6> back{};
+    std::array<QVector3D, 6> const profile{{
+        {0.00F, 0.92F, 1.0F},
+        {0.68F, 0.72F, 1.0F},
+        {0.96F, 0.12F, 1.0F},
+        {0.78F, -0.62F, 1.0F},
+        {0.08F, -1.0F, 1.0F},
+        {-0.18F, -0.26F, 1.0F},
+    }};
+    for (std::size_t i = 0; i < profile.size(); ++i) {
+      QVector3D p = profile[i];
+      p.setX(p.x() * lateral_sign);
+      front[i] = ear_offset + QVector3D(p.x() * ear_scale.x(),
+                                        p.y() * ear_scale.y(), ear_scale.z());
+      back[i] = ear_offset + QVector3D(p.x() * ear_scale.x(),
+                                       p.y() * ear_scale.y(), -ear_scale.z());
+    }
+    append_closed_prism(vertices, indices, front, back);
+  };
+
+  append_ear(1.0F);
+  append_ear(-1.0F);
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_minimal_elephant_head_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_minimal_elephant_head_mesh();
+  return mesh.get();
+}
+
+auto create_unit_elephant_ear_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  constexpr float kThickness = 0.08F;
+  std::array<QVector3D, 8> const front{{
+      {0.0F, 1.0F, kThickness},
+      {0.68F, 0.78F, kThickness},
+      {1.0F, 0.18F, kThickness},
+      {0.82F, -0.58F, kThickness},
+      {0.12F, -1.0F, kThickness},
+      {-0.62F, -0.70F, kThickness},
+      {-0.92F, -0.06F, kThickness},
+      {-0.48F, 0.72F, kThickness},
+  }};
+  std::array<QVector3D, 8> const back{{
+      {0.0F, 1.0F, -kThickness},
+      {0.68F, 0.78F, -kThickness},
+      {1.0F, 0.18F, -kThickness},
+      {0.82F, -0.58F, -kThickness},
+      {0.12F, -1.0F, -kThickness},
+      {-0.62F, -0.70F, -kThickness},
+      {-0.92F, -0.06F, -kThickness},
+      {-0.48F, 0.72F, -kThickness},
+  }};
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(80);
+  indices.reserve(132);
+  append_closed_prism(vertices, indices, front, back);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_elephant_ear_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_elephant_ear_mesh();
+  return mesh.get();
+}
+
+auto create_unit_elephant_minimal_leg_mesh()
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::array<std::array<QVector3D, 6>, 5> const rings{{
+      {{{0.0F, 0.50F, 0.30F},
+        {0.32F, 0.50F, 0.20F},
+        {0.34F, 0.50F, -0.18F},
+        {0.0F, 0.50F, -0.24F},
+        {-0.34F, 0.50F, -0.18F},
+        {-0.32F, 0.50F, 0.20F}}},
+      {{{0.0F, 0.18F, 0.28F},
+        {0.30F, 0.18F, 0.18F},
+        {0.31F, 0.18F, -0.18F},
+        {0.0F, 0.18F, -0.22F},
+        {-0.31F, 0.18F, -0.18F},
+        {-0.30F, 0.18F, 0.18F}}},
+      {{{0.0F, -0.12F, 0.22F},
+        {0.24F, -0.12F, 0.14F},
+        {0.25F, -0.12F, -0.14F},
+        {0.0F, -0.12F, -0.18F},
+        {-0.25F, -0.12F, -0.14F},
+        {-0.24F, -0.12F, 0.14F}}},
+      {{{0.0F, -0.42F, 0.30F},
+        {0.34F, -0.42F, 0.18F},
+        {0.32F, -0.42F, -0.16F},
+        {0.0F, -0.42F, -0.20F},
+        {-0.32F, -0.42F, -0.16F},
+        {-0.34F, -0.42F, 0.18F}}},
+      {{{0.0F, -0.58F, 0.36F},
+        {0.38F, -0.58F, 0.22F},
+        {0.36F, -0.58F, -0.18F},
+        {0.0F, -0.58F, -0.22F},
+        {-0.36F, -0.58F, -0.18F},
+        {-0.38F, -0.58F, 0.22F}}},
+  }};
+  return build_closed_ring_mesh(rings);
+}
+
+auto get_unit_elephant_minimal_leg_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_elephant_minimal_leg_mesh();
+  return mesh.get();
+}
+
+auto create_unit_elephant_minimal_trunk_mesh()
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::array<std::array<QVector3D, 6>, 5> const rings{{
+      {{{0.0F, 0.50F, 0.18F},
+        {0.26F, 0.50F, 0.10F},
+        {0.24F, 0.50F, -0.12F},
+        {0.0F, 0.50F, -0.16F},
+        {-0.24F, 0.50F, -0.12F},
+        {-0.26F, 0.50F, 0.10F}}},
+      {{{0.0F, 0.20F, 0.30F},
+        {0.22F, 0.20F, 0.24F},
+        {0.20F, 0.20F, 0.04F},
+        {0.0F, 0.20F, 0.00F},
+        {-0.20F, 0.20F, 0.04F},
+        {-0.22F, 0.20F, 0.24F}}},
+      {{{0.0F, -0.05F, 0.42F},
+        {0.16F, -0.05F, 0.36F},
+        {0.14F, -0.05F, 0.20F},
+        {0.0F, -0.05F, 0.16F},
+        {-0.14F, -0.05F, 0.20F},
+        {-0.16F, -0.05F, 0.36F}}},
+      {{{0.0F, -0.30F, 0.52F},
+        {0.11F, -0.30F, 0.48F},
+        {0.10F, -0.30F, 0.34F},
+        {0.0F, -0.30F, 0.30F},
+        {-0.10F, -0.30F, 0.34F},
+        {-0.11F, -0.30F, 0.48F}}},
+      {{{0.0F, -0.56F, 0.62F},
+        {0.07F, -0.56F, 0.60F},
+        {0.06F, -0.56F, 0.50F},
+        {0.0F, -0.56F, 0.46F},
+        {-0.06F, -0.56F, 0.50F},
+        {-0.07F, -0.56F, 0.60F}}},
+  }};
+  return build_closed_ring_mesh(rings);
+}
+
+auto get_unit_elephant_minimal_trunk_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_elephant_minimal_trunk_mesh();
+  return mesh.get();
+}
+
+auto create_unit_elephant_foot_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  QVector3D const v0(-0.96F, 0.34F, -0.82F);
+  QVector3D const v1(0.96F, 0.34F, -0.82F);
+  QVector3D const v2(1.0F, 0.12F, 0.88F);
+  QVector3D const v3(-1.0F, 0.12F, 0.88F);
+  QVector3D const v4(-0.92F, -0.58F, -0.76F);
+  QVector3D const v5(0.92F, -0.58F, -0.76F);
+  QVector3D const v6(0.98F, -0.58F, 0.94F);
+  QVector3D const v7(-0.98F, -0.58F, 0.94F);
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(24);
+  indices.reserve(36);
+  append_flat_quad(vertices, indices, v0, v1, v2, v3);
+  append_flat_quad(vertices, indices, v4, v7, v6, v5);
+  append_flat_quad(vertices, indices, v0, v3, v7, v4);
+  append_flat_quad(vertices, indices, v1, v5, v6, v2);
+  append_flat_quad(vertices, indices, v0, v4, v5, v1);
+  append_flat_quad(vertices, indices, v3, v2, v6, v7);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_elephant_foot_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_elephant_foot_mesh();
+  return mesh.get();
+}
+
+auto create_unit_prism_segment_mesh(int sides)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(static_cast<std::size_t>(sides) * 18U);
+  indices.reserve(static_cast<std::size_t>(sides) * 18U);
+
+  std::vector<QVector3D> top;
+  std::vector<QVector3D> bottom;
+  top.reserve(sides);
+  bottom.reserve(sides);
+  for (int i = 0; i < sides; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(sides);
+    float const ang = t * k_two_pi;
+    float const x = std::cos(ang);
+    float const z = std::sin(ang);
+    top.push_back(QVector3D(x, 0.5F, z));
+    bottom.push_back(QVector3D(x, -0.5F, z));
+  }
+
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_quad(vertices, indices, bottom[i], bottom[next], top[next],
+                     top[i]);
+  }
+
+  QVector3D const top_center(0.0F, 0.5F, 0.0F);
+  QVector3D const bottom_center(0.0F, -0.5F, 0.0F);
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, top_center, top[i], top[next]);
+    append_flat_triangle(vertices, indices, bottom_center, bottom[next],
+                         bottom[i]);
+  }
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_elephant_segment_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_prism_segment_mesh(6);
+  return mesh.get();
+}
+
+auto create_unit_pyramid_cone_mesh(int sides)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(static_cast<std::size_t>(sides) * 9U);
+  indices.reserve(static_cast<std::size_t>(sides) * 9U);
+
+  QVector3D const apex(0.0F, 0.5F, 0.0F);
+  std::vector<QVector3D> base;
+  base.reserve(sides);
+  for (int i = 0; i < sides; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(sides);
+    float const ang = t * k_two_pi;
+    base.push_back(QVector3D(std::cos(ang), -0.5F, std::sin(ang)));
+  }
+
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, apex, base[i], base[next]);
+  }
+
+  QVector3D const base_center(0.0F, -0.5F, 0.0F);
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, base_center, base[next], base[i]);
+  }
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_elephant_tusk_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_pyramid_cone_mesh(5);
+  return mesh.get();
+}
+
 struct LegResult {
   QVector3D shoulder;
   QVector3D foot;
 };
 
-[[nodiscard]] auto compute_pose_leg(
-    const Render::GL::ElephantDimensions &d, const Render::GL::ElephantGait &g,
-    const ElephantPoseMotion &motion, float lateral_sign, float forward_bias,
-    float phase_offset) noexcept -> LegResult {
+[[nodiscard]] auto compute_pose_leg(const Render::GL::ElephantDimensions &d,
+                                    const Render::GL::ElephantGait &g,
+                                    const ElephantPoseMotion &motion,
+                                    float lateral_sign, float forward_bias,
+                                    float phase_offset) noexcept -> LegResult {
   float const leg_phase =
       motion.is_fighting
           ? std::fmod(motion.anim_time / 1.15F + phase_offset, 1.0F)
@@ -275,46 +948,22 @@ struct LegResult {
 }
 
 auto build_minimal_primitives(const ElephantSpecPose &pose,
-                              std::array<PrimitiveInstance, 5> &out) noexcept
+                              std::array<PrimitiveInstance, 1> &out) noexcept
     -> std::size_t {
+  (void)pose;
   {
     PrimitiveInstance &p = out[0];
-    p.debug_name = "elephant.body";
+    p.debug_name = "elephant.minimal.whole";
     p.shape = PrimitiveShape::Mesh;
-    p.custom_mesh = Render::GL::get_unit_sphere();
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Body);
+    p.custom_mesh = get_whole_elephant_mesh();
+    p.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
+    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Root);
     p.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
     p.color_role = kRoleSkin;
     p.material_id = 6;
     p.lod_mask = kLodMinimal;
   }
-
-  struct LegSpec {
-    std::string_view name;
-    ElephantBone foot_bone;
-    QVector3D shoulder_offset;
-  };
-  std::array<LegSpec, 4> const legs{{
-      {"elephant.leg.fl", ElephantBone::FootFL, pose.shoulder_offset_fl},
-      {"elephant.leg.fr", ElephantBone::FootFR, pose.shoulder_offset_fr},
-      {"elephant.leg.bl", ElephantBone::FootBL, pose.shoulder_offset_bl},
-      {"elephant.leg.br", ElephantBone::FootBR, pose.shoulder_offset_br},
-  }};
-
-  for (std::size_t i = 0; i < 4; ++i) {
-    PrimitiveInstance &p = out[1 + i];
-    p.debug_name = legs[i].name;
-    p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = static_cast<BoneIndex>(ElephantBone::Root);
-    p.params.head_offset = legs[i].shoulder_offset;
-    p.params.tail_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    p.params.tail_offset = QVector3D();
-    p.params.radius = pose.leg_radius;
-    p.color_role = kRoleSkinShadow;
-    p.material_id = 6;
-    p.lod_mask = kLodMinimal;
-  }
-  return 5;
+  return 1;
 }
 
 } // namespace
@@ -334,6 +983,24 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
   body.setColumn(2, QVector4D(0.0F, 0.0F, pose.body_ellipsoid_z, 0.0F));
   body.setColumn(3, QVector4D(pose.barrel_center, 1.0F));
   out_palette[static_cast<std::size_t>(ElephantBone::Body)] = body;
+
+  out_palette[static_cast<std::size_t>(ElephantBone::ShoulderFL)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_fl);
+  out_palette[static_cast<std::size_t>(ElephantBone::ShoulderFR)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_fr);
+  out_palette[static_cast<std::size_t>(ElephantBone::ShoulderBL)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_bl);
+  out_palette[static_cast<std::size_t>(ElephantBone::ShoulderBR)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_br);
+
+  out_palette[static_cast<std::size_t>(ElephantBone::KneeFL)] =
+      translation_matrix(pose.knee_fl);
+  out_palette[static_cast<std::size_t>(ElephantBone::KneeFR)] =
+      translation_matrix(pose.knee_fr);
+  out_palette[static_cast<std::size_t>(ElephantBone::KneeBL)] =
+      translation_matrix(pose.knee_bl);
+  out_palette[static_cast<std::size_t>(ElephantBone::KneeBR)] =
+      translation_matrix(pose.knee_br);
 
   out_palette[static_cast<std::size_t>(ElephantBone::FootFL)] =
       translation_matrix(pose.foot_fl);
@@ -394,13 +1061,35 @@ void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
   out_pose.foot_br =
       center + out_pose.shoulder_offset_br + QVector3D(0, drop, 0);
 
+  out_pose.shoulder_offset_pose_fl = out_pose.shoulder_offset_fl;
+  out_pose.shoulder_offset_pose_fr = out_pose.shoulder_offset_fr;
+  out_pose.shoulder_offset_pose_bl = out_pose.shoulder_offset_bl;
+  out_pose.shoulder_offset_pose_br = out_pose.shoulder_offset_br;
+
+  QVector3D const shoulder_fl = center + out_pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fr = center + out_pose.shoulder_offset_pose_fr;
+  QVector3D const shoulder_bl = center + out_pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_br = center + out_pose.shoulder_offset_pose_br;
+  float const upper_len = dims.leg_length * 0.46F;
+  float const lower_len = dims.leg_length * 0.44F;
+  QVector3D const front_bend_hint(0.0F, 0.0F, dims.body_length * 0.10F);
+  QVector3D const rear_bend_hint(0.0F, 0.0F, -dims.body_length * 0.08F);
+  out_pose.knee_fl = solve_bent_leg_joint(
+      shoulder_fl, out_pose.foot_fl, upper_len, lower_len, front_bend_hint);
+  out_pose.knee_fr = solve_bent_leg_joint(
+      shoulder_fr, out_pose.foot_fr, upper_len, lower_len, front_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl,
+                                          upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(shoulder_br, out_pose.foot_br,
+                                          upper_len, lower_len, rear_bend_hint);
+
   out_pose.leg_radius = dims.leg_radius * 0.70F;
 }
 
-void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions &dims,
-                                     const Render::GL::ElephantGait &gait,
-                                     const ElephantPoseMotion &motion,
-                                     ElephantSpecPose &out_pose) noexcept {
+void make_elephant_spec_pose_animated(
+    const Render::GL::ElephantDimensions &dims,
+    const Render::GL::ElephantGait &gait, const ElephantPoseMotion &motion,
+    ElephantSpecPose &out_pose) noexcept {
 
   make_elephant_spec_pose(dims, motion.bob, out_pose);
 
@@ -453,6 +1142,28 @@ void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions &dims
   out_pose.foot_bl = out_pose.foot_pose_bl;
   out_pose.foot_br = out_pose.foot_pose_br;
 
+  QVector3D const shoulder_fl = center + out_pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fr = center + out_pose.shoulder_offset_pose_fr;
+  QVector3D const shoulder_bl = center + out_pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_br = center + out_pose.shoulder_offset_pose_br;
+  float const upper_len = dims.leg_length * 0.46F;
+  float const lower_len = dims.leg_length * 0.44F;
+  float const bend_scale = motion.is_moving || motion.is_fighting
+                               ? 1.0F + std::min(gait.stride_lift * 5.0F, 0.45F)
+                               : 1.0F;
+  QVector3D const front_bend_hint(0.0F, 0.0F,
+                                  dims.body_length * 0.08F * bend_scale);
+  QVector3D const rear_bend_hint(0.0F, 0.0F,
+                                 -dims.body_length * 0.06F * bend_scale);
+  out_pose.knee_fl = solve_bent_leg_joint(
+      shoulder_fl, out_pose.foot_fl, upper_len, lower_len, front_bend_hint);
+  out_pose.knee_fr = solve_bent_leg_joint(
+      shoulder_fr, out_pose.foot_fr, upper_len, lower_len, front_bend_hint);
+  out_pose.knee_bl = solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl,
+                                          upper_len, lower_len, rear_bend_hint);
+  out_pose.knee_br = solve_bent_leg_joint(shoulder_br, out_pose.foot_br,
+                                          upper_len, lower_len, rear_bend_hint);
+
   out_pose.pose_leg_radius = dims.leg_radius * 0.85F;
 
   out_pose.foot_pad_offset_y = -dims.foot_radius * 0.18F;
@@ -484,286 +1195,41 @@ auto baseline_pose() noexcept -> const ElephantSpecPose & {
   return pose;
 }
 
-constexpr std::size_t kElephantFullPartCount = 41;
+constexpr std::size_t kElephantFullPartCount = 1;
 
 auto build_static_full_parts() noexcept
     -> std::array<PrimitiveInstance, kElephantFullPartCount> {
-  ElephantSpecPose const &pose = baseline_pose();
-  Render::GL::ElephantDimensions const dims =
-      Render::GL::make_elephant_dimensions(0U);
+  (void)baseline_pose();
   std::array<PrimitiveInstance, kElephantFullPartCount> out{};
 
   using Render::Creature::kLodFull;
 
   auto root = static_cast<BoneIndex>(ElephantBone::Root);
-  auto head_bone = static_cast<BoneIndex>(ElephantBone::Head);
 
-  auto ell = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &half_extents, const QVector3D &offset,
-                 std::uint8_t role = kRoleSkin, int material_id = 6) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = offset;
-    p.params.half_extents = half_extents;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto sph = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &offset, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Sphere;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = offset;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cap = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &head_off, BoneIndex tail,
-                 const QVector3D &tail_off, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Capsule;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cyl = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &head_off, BoneIndex tail,
-                 const QVector3D &tail_off, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cone_p = [&](PrimitiveInstance &p, std::string_view name,
-                    BoneIndex anchor, const QVector3D &head_off, BoneIndex tail,
-                    const QVector3D &tail_off, float radius, std::uint8_t role,
-                    int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Cone;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  float const bw = dims.body_width;
-  float const bh = dims.body_height;
-  float const bl = dims.body_length;
-  float const hl = dims.head_length;
-  float const hw = dims.head_width;
-  float const hh = dims.head_height;
-  std::size_t i = 0;
-
-  PrimitiveInstance &barrel = out[i++];
-  barrel.debug_name = "elephant.full.body.barrel";
-  barrel.shape = PrimitiveShape::Mesh;
-  barrel.params.anchor_bone = root;
-  barrel.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
-  barrel.custom_mesh = get_faceted_elephant_torso_mesh();
-  barrel.color_role = kRoleSkin;
-  barrel.material_id = 6;
-  barrel.lod_mask = kLodFull;
-  ell(out[i++], "elephant.full.body.shoulders", root,
-      QVector3D(bw * 0.48F, bh * 0.24F, bl * 0.18F),
-      QVector3D(0.0F, bh * 0.24F, bl * 0.18F));
-  ell(out[i++], "elephant.full.body.chest", root,
-      QVector3D(bw * 0.50F, bh * 0.42F, bl * 0.18F),
-      QVector3D(0.0F, bh * 0.05F, bl * 0.29F));
-  ell(out[i++], "elephant.full.body.rump", root,
-      QVector3D(bw * 0.46F, bh * 0.34F, bl * 0.18F),
-      QVector3D(0.0F, bh * 0.02F, -bl * 0.28F));
-  ell(out[i++], "elephant.full.body.belly", root,
-      QVector3D(bw * 0.40F, bh * 0.24F, bl * 0.22F),
-      QVector3D(0.0F, -bh * 0.18F, 0.0F));
-  sph(out[i++], "elephant.full.body.flank.l", root,
-      QVector3D(bw * 0.34F, -bh * 0.02F, -bl * 0.03F), bw * 0.13F, kRoleSkin,
-      6);
-  sph(out[i++], "elephant.full.body.flank.r", root,
-      QVector3D(-bw * 0.34F, -bh * 0.02F, -bl * 0.03F), bw * 0.13F, kRoleSkin,
-      6);
-
-  cap(out[i++], "elephant.full.neck", root, pose.neck_base_offset, head_bone,
-      QVector3D(0.0F, -hh * 0.02F, -hl * 0.16F), dims.neck_width * 0.62F,
-      kRoleSkin, 6);
-  ell(out[i++], "elephant.full.head.skull", head_bone,
-      QVector3D(hw * 0.34F, hh * 0.36F, hl * 0.26F),
-      QVector3D(0.0F, hh * 0.08F, -hl * 0.06F));
-  ell(out[i++], "elephant.full.head.forehead.l", head_bone,
-      QVector3D(hw * 0.14F, hh * 0.16F, hl * 0.12F),
-      QVector3D(hw * 0.10F, hh * 0.22F, -hl * 0.06F));
-  ell(out[i++], "elephant.full.head.forehead.r", head_bone,
-      QVector3D(hw * 0.14F, hh * 0.16F, hl * 0.12F),
-      QVector3D(-hw * 0.10F, hh * 0.22F, -hl * 0.06F));
-  ell(out[i++], "elephant.full.head.cheek.l", head_bone,
-      QVector3D(hw * 0.10F, hh * 0.12F, hl * 0.16F),
-      QVector3D(hw * 0.18F, -hh * 0.02F, hl * 0.02F));
-  ell(out[i++], "elephant.full.head.cheek.r", head_bone,
-      QVector3D(hw * 0.10F, hh * 0.12F, hl * 0.16F),
-      QVector3D(-hw * 0.18F, -hh * 0.02F, hl * 0.02F));
-  ell(out[i++], "elephant.full.head.jaw", head_bone,
-      QVector3D(hw * 0.18F, hh * 0.10F, hl * 0.16F),
-      QVector3D(0.0F, -hh * 0.18F, hl * 0.10F));
-
-  float const tl = dims.trunk_length;
-  float const tbr = dims.trunk_base_radius * 1.05F;
-  std::array<QVector3D, 6> const trunk_pts{{
-      QVector3D(0.0F, -hh * 0.08F, hl * 0.24F),
-      QVector3D(0.0F, -tl * 0.18F, hl * 0.34F),
-      QVector3D(0.0F, -tl * 0.40F, hl * 0.46F),
-      QVector3D(0.0F, -tl * 0.62F, hl * 0.54F),
-      QVector3D(0.0F, -tl * 0.82F, hl * 0.60F),
-      QVector3D(0.0F, -tl * 0.96F, hl * 0.63F),
-  }};
-  std::array<float, 5> const trunk_radii{tbr, tbr * 0.88F, tbr * 0.72F,
-                                         tbr * 0.56F, tbr * 0.40F};
-  std::array<std::string_view, 5> const trunk_names{{
-      "elephant.full.trunk.seg.0",
-      "elephant.full.trunk.seg.1",
-      "elephant.full.trunk.seg.2",
-      "elephant.full.trunk.seg.3",
-      "elephant.full.trunk.seg.4",
-  }};
-  for (std::size_t t = 0; t < trunk_names.size(); ++t) {
-    cap(out[i++], trunk_names[t], head_bone, trunk_pts[t], head_bone,
-        trunk_pts[t + 1], trunk_radii[t], kRoleSkin, 6);
-  }
-  sph(out[i++], "elephant.full.trunk.tip", head_bone, trunk_pts.back(),
-      std::max(dims.trunk_tip_radius, tbr * 0.18F), kRoleSkin, 6);
-
-  float const ear_w = dims.ear_width;
-  float const ear_h = dims.ear_height;
-  float const ear_t = dims.ear_thickness;
-  QVector3D const ear_outer_half(ear_w * 0.22F, ear_h * 0.28F,
-                                 std::max(ear_t * 1.5F, ear_w * 0.012F));
-  QVector3D const ear_inner_half(ear_w * 0.16F, ear_h * 0.20F,
-                                 std::max(ear_t, ear_w * 0.008F));
-  ell(out[i++], "elephant.full.ear.outer.l", head_bone, ear_outer_half,
-      QVector3D(hw * 0.22F + ear_w * 0.18F, hh * 0.04F, -hl * 0.18F));
-  ell(out[i++], "elephant.full.ear.outer.r", head_bone, ear_outer_half,
-      QVector3D(-(hw * 0.22F + ear_w * 0.18F), hh * 0.04F, -hl * 0.18F));
-  ell(out[i++], "elephant.full.ear.inner.l", head_bone, ear_inner_half,
-      QVector3D(hw * 0.20F + ear_w * 0.15F, hh * 0.04F,
-                -hl * 0.16F + ear_w * 0.03F),
-      kRoleEarInner);
-  ell(out[i++], "elephant.full.ear.inner.r", head_bone, ear_inner_half,
-      QVector3D(-(hw * 0.20F + ear_w * 0.15F), hh * 0.04F,
-                -hl * 0.16F + ear_w * 0.03F),
-      kRoleEarInner);
-
-  float const tk_l = dims.tusk_length;
-  float const tk_r = dims.tusk_radius * 0.95F;
-  QVector3D const tusk_root_l(hw * 0.10F, -hh * 0.12F, hl * 0.22F);
-  QVector3D const tusk_root_r(-hw * 0.10F, -hh * 0.12F, hl * 0.22F);
-  QVector3D const tusk_tip_l(hw * 0.22F, -hh * 0.08F + tk_l * 0.12F,
-                             hl * 0.22F + tk_l * 1.02F);
-  QVector3D const tusk_tip_r(-hw * 0.22F, -hh * 0.08F + tk_l * 0.12F,
-                             hl * 0.22F + tk_l * 1.02F);
-  cone_p(out[i++], "elephant.full.tusk.l", head_bone, tusk_root_l, head_bone,
-         tusk_tip_l, tk_r, kRoleTusk, 0);
-  cone_p(out[i++], "elephant.full.tusk.r", head_bone, tusk_root_r, head_bone,
-         tusk_tip_r, tk_r, kRoleTusk, 0);
-
-  struct LegSpec {
-    std::string_view upper_name;
-    std::string_view lower_name;
-    std::string_view foot_name;
-    ElephantBone foot_bone;
-    QVector3D shoulder_offset;
-    bool is_front;
-  };
-  std::array<LegSpec, 4> const legs{{
-      {"elephant.full.leg.fl.upper", "elephant.full.leg.fl.lower",
-       "elephant.full.foot.fl", ElephantBone::FootFL,
-       pose.shoulder_offset_pose_fl, true},
-      {"elephant.full.leg.fr.upper", "elephant.full.leg.fr.lower",
-       "elephant.full.foot.fr", ElephantBone::FootFR,
-       pose.shoulder_offset_pose_fr, true},
-      {"elephant.full.leg.bl.upper", "elephant.full.leg.bl.lower",
-       "elephant.full.foot.bl", ElephantBone::FootBL,
-       pose.shoulder_offset_pose_bl, false},
-      {"elephant.full.leg.br.upper", "elephant.full.leg.br.lower",
-       "elephant.full.foot.br", ElephantBone::FootBR,
-       pose.shoulder_offset_pose_br, false},
-  }};
-  float const leg_len = dims.leg_length;
-  float const upper_r_front = dims.leg_radius * 1.10F;
-  float const upper_r_rear = dims.leg_radius * 1.04F;
-  float const lower_r_front = dims.leg_radius * 0.92F;
-  float const lower_r_rear = dims.leg_radius * 0.88F;
-  QVector3D const foot_half(dims.foot_radius * 1.18F, dims.foot_radius * 0.54F,
-                            dims.foot_radius * 1.24F);
-  for (auto const &leg : legs) {
-    auto foot_b = static_cast<BoneIndex>(leg.foot_bone);
-    float const upper_r = leg.is_front ? upper_r_front : upper_r_rear;
-    float const lower_r = leg.is_front ? lower_r_front : lower_r_rear;
-    cap(out[i++], leg.upper_name, root, leg.shoulder_offset, foot_b,
-        QVector3D(0.0F, leg_len * 0.46F, 0.0F), upper_r, kRoleSkin, 6);
-    cyl(out[i++], leg.lower_name, foot_b,
-        QVector3D(0.0F, leg_len * 0.46F, 0.0F), foot_b,
-        QVector3D(0.0F, dims.foot_radius * 0.34F, 0.0F), lower_r, kRoleSkin, 6);
-    PrimitiveInstance &foot = out[i++];
-    foot.debug_name = leg.foot_name;
-    foot.shape = PrimitiveShape::Mesh;
-    foot.custom_mesh = Render::GL::get_unit_sphere();
-    foot.params.anchor_bone = foot_b;
-    foot.params.head_offset = QVector3D(0.0F, -dims.foot_radius * 0.12F, 0.0F);
-    foot.params.half_extents = foot_half;
-    foot.color_role = kRoleSkinShadow;
-    foot.material_id = 8;
-    foot.lod_mask = kLodFull;
-  }
-
-  float const tail_l = dims.tail_length;
-  QVector3D const tail_root(0.0F, bh * 0.16F, -bl * 0.46F);
-  QVector3D const tail_mid =
-      tail_root + QVector3D(0.0F, -tail_l * 0.30F, -tail_l * 0.24F);
-  QVector3D const tail_end =
-      tail_root + QVector3D(0.0F, -tail_l * 0.82F, -tail_l * 0.38F);
-  cap(out[i++], "elephant.full.tail.dock", root, tail_root, root, tail_mid,
-      bw * 0.05F, kRoleSkin, 6);
-  cap(out[i++], "elephant.full.tail.mid", root, tail_mid, root, tail_end,
-      bw * 0.032F, kRoleSkinShadow, 6);
-  sph(out[i++], "elephant.full.tail.switch", root,
-      tail_end + QVector3D(0.0F, -bw * 0.03F, -bw * 0.015F), bw * 0.04F,
-      kRoleTailTip, 0);
-
+  PrimitiveInstance &whole = out[0];
+  whole.debug_name = "elephant.full.whole";
+  whole.shape = PrimitiveShape::Mesh;
+  whole.params.anchor_bone = root;
+  whole.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  whole.custom_mesh = get_whole_elephant_mesh();
+  whole.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
+  whole.color_role = kRoleSkin;
+  whole.material_id = 6;
+  whole.lod_mask = kLodFull;
   return out;
 }
 
-auto build_static_minimal_parts() noexcept -> std::array<PrimitiveInstance, 5> {
-  std::array<PrimitiveInstance, 5> out{};
+constexpr std::size_t kElephantMinimalPartCount = 1;
+
+auto build_static_minimal_parts() noexcept
+    -> std::array<PrimitiveInstance, kElephantMinimalPartCount> {
+  std::array<PrimitiveInstance, kElephantMinimalPartCount> out{};
   build_minimal_primitives(baseline_pose(), out);
   return out;
 }
 
 auto static_minimal_parts() noexcept
-    -> const std::array<PrimitiveInstance, 5> & {
+    -> const std::array<PrimitiveInstance, kElephantMinimalPartCount> & {
   static const auto parts = build_static_minimal_parts();
   return parts;
 }

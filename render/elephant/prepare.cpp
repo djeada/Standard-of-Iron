@@ -143,7 +143,7 @@ void prepare_elephant_full(
       build_elephant_pose_motion(motion, anim);
   Render::Elephant::ElephantSpecPose pose{};
   Render::Elephant::make_elephant_spec_pose_animated(profile.dims, profile.gait,
-                                                    rm, pose);
+                                                     rm, pose);
   pose.barrel_center = motion.barrel_center;
   pose.head_center = motion.head_center;
 

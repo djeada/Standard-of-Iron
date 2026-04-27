@@ -5,10 +5,11 @@
 // the rigged wrappers. With a non-Renderer submitter we exercise the
 // software fallback inside `submit_horse_*_rigged`, which routes
 // through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (5/43 for Minimal/Full).
+// PartGraph primitive (7/43 for Minimal/Full).
 
 #include "render/creature/spec.h"
 #include "render/gl/mesh.h"
+#include "render/horse/horse_gait.h"
 #include "render/horse/horse_profile_data.h"
 #include "render/horse/horse_renderer_base.h"
 #include "render/horse/horse_spec.h"
@@ -121,12 +122,24 @@ auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
   return max_v - min_v;
 }
 
+auto point_to_segment_distance(const QVector3D &point, const QVector3D &a,
+                               const QVector3D &b) -> float {
+  QVector3D const ab = b - a;
+  float const denom = QVector3D::dotProduct(ab, ab);
+  if (denom <= 1.0e-6F) {
+    return (point - a).length();
+  }
+  float const t =
+      std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
+  return (point - (a + ab * t)).length();
+}
+
 } // namespace
 
 TEST(HorseSpecTest, CreatureSpecHasTwoLods) {
   auto const &spec = Render::Horse::horse_creature_spec();
-  EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 43U);
+  EXPECT_EQ(spec.lod_minimal.primitives.size(), 1U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 1U);
 }
 
 TEST(HorseSpecTest, BasePoseKeepsForehandBroaderAndHindFeetTuckedUnderCroup) {
@@ -200,108 +213,66 @@ TEST(HorseSpecTest, GeneratedHorseDimensionsUseWiderTallerTorso) {
             Render::GL::HorseDimensionRange::kBodyHeightMax * 1.2F);
 }
 
-TEST(HorseSpecTest, FullSpecPreservesToplineDepthAndHeadTaper) {
+TEST(HorseSpecTest, FullSpecUsesTallThickTorsoWithCompressedHeadReach) {
   auto const &spec = Render::Horse::horse_creature_spec();
 
-  auto const *ribcage =
-      find_primitive(spec.lod_full.primitives, "horse.full.ribcage");
-  auto const *withers =
-      find_primitive(spec.lod_full.primitives, "horse.full.withers");
-  auto const *belly =
-      find_primitive(spec.lod_full.primitives, "horse.full.belly");
-  auto const *chest =
-      find_primitive(spec.lod_full.primitives, "horse.full.chest");
-  auto const *sternum =
-      find_primitive(spec.lod_full.primitives, "horse.full.sternum");
-  auto const *croup =
-      find_primitive(spec.lod_full.primitives, "horse.full.croup");
-  auto const *shoulder =
-      find_primitive(spec.lod_full.primitives, "horse.full.shoulder.l");
-  auto const *hindquarter =
-      find_primitive(spec.lod_full.primitives, "horse.full.hq.l");
-  auto const *muzzle =
-      find_primitive(spec.lod_full.primitives, "horse.full.head.muzzle");
-  auto const *jaw =
-      find_primitive(spec.lod_full.primitives, "horse.full.head.jaw");
-  auto const *cheek =
-      find_primitive(spec.lod_full.primitives, "horse.full.head.cheek.l");
-  auto const *cranium =
-      find_primitive(spec.lod_full.primitives, "horse.full.head.cranium");
-  auto const *neck_crest =
-      find_primitive(spec.lod_full.primitives, "horse.full.neck.crest");
+  auto const *whole =
+      find_primitive(spec.lod_full.primitives, "horse.full.whole");
 
-  ASSERT_NE(ribcage, nullptr);
-  ASSERT_NE(withers, nullptr);
-  ASSERT_NE(belly, nullptr);
-  ASSERT_NE(chest, nullptr);
-  ASSERT_NE(sternum, nullptr);
-  ASSERT_NE(croup, nullptr);
-  ASSERT_NE(shoulder, nullptr);
-  ASSERT_NE(hindquarter, nullptr);
-  ASSERT_NE(muzzle, nullptr);
-  ASSERT_NE(jaw, nullptr);
-  ASSERT_NE(cheek, nullptr);
-  ASSERT_NE(cranium, nullptr);
-  ASSERT_NE(neck_crest, nullptr);
-
-  EXPECT_EQ(ribcage->shape, Render::Creature::PrimitiveShape::Mesh);
-  ASSERT_NE(ribcage->custom_mesh, nullptr);
-  EXPECT_EQ(chest->shape, Render::Creature::PrimitiveShape::OrientedSphere);
-  EXPECT_EQ(croup->shape, Render::Creature::PrimitiveShape::OrientedSphere);
-  EXPECT_GT(mesh_axis_span(*ribcage->custom_mesh, 2),
-            mesh_axis_span(*ribcage->custom_mesh, 1) * 1.5F);
-  EXPECT_GT(withers->params.head_offset.y(), croup->params.head_offset.y());
-  EXPECT_GT(chest->params.head_offset.z(), ribcage->params.head_offset.z());
-  EXPECT_LT(sternum->params.head_offset.y(), chest->params.head_offset.y());
-  EXPECT_LT(belly->params.half_extents.z(), ribcage->params.half_extents.z());
-  EXPECT_LT(shoulder->params.half_extents.x(),
-            ribcage->params.half_extents.x());
-  EXPECT_LT(hindquarter->params.half_extents.x(),
-            ribcage->params.half_extents.x());
-  EXPECT_EQ(neck_crest->shape, Render::Creature::PrimitiveShape::Cylinder);
-  EXPECT_EQ(cranium->shape, Render::Creature::PrimitiveShape::Mesh);
-  ASSERT_NE(cranium->custom_mesh, nullptr);
-  EXPECT_GT(mesh_axis_span(*cranium->custom_mesh, 2),
-            mesh_axis_span(*cranium->custom_mesh, 1) * 1.6F);
-  EXPECT_LT(neck_crest->params.tail_offset.z(), 0.0F);
-  EXPECT_LT(muzzle->params.radius, cheek->params.radius);
-  EXPECT_LT(jaw->params.half_extents.z(),
-            mesh_axis_span(*cranium->custom_mesh, 2));
-  EXPECT_GT(muzzle->params.tail_offset.z(), muzzle->params.head_offset.z());
-  EXPECT_LT(muzzle->params.tail_offset.y(), muzzle->params.head_offset.y());
-  EXPECT_LT(cheek->params.head_offset.z(), jaw->params.head_offset.z());
+  ASSERT_NE(whole, nullptr);
+  EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  float const x_span = mesh_axis_span(*whole->custom_mesh, 0);
+  float const y_span = mesh_axis_span(*whole->custom_mesh, 1);
+  float const z_span = mesh_axis_span(*whole->custom_mesh, 2);
+  EXPECT_GT(y_span, z_span * 1.2F);
+  EXPECT_GT(y_span, x_span * 1.3F);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.chest"),
+            nullptr);
+  EXPECT_EQ(find_primitive(spec.lod_full.primitives, "horse.full.head.cheek.l"),
+            nullptr);
 }
 
 TEST(HorseSpecTest, FullSpecForearmStaysHeavierThanRearUpperLeg) {
   auto const &spec = Render::Horse::horse_creature_spec();
 
-  auto const *forearm =
-      find_primitive(spec.lod_full.primitives, "horse.full.leg.fl.upper");
-  auto const *gaskin =
-      find_primitive(spec.lod_full.primitives, "horse.full.leg.bl.upper");
+  auto const *whole =
+      find_primitive(spec.lod_full.primitives, "horse.full.whole");
 
-  ASSERT_NE(forearm, nullptr);
-  ASSERT_NE(gaskin, nullptr);
-
-  EXPECT_GT(forearm->params.radius, gaskin->params.radius);
+  ASSERT_NE(whole, nullptr);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 1),
+            mesh_axis_span(*whole->custom_mesh, 0));
 }
 
 TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
   auto const &spec = Render::Horse::horse_creature_spec();
 
-  auto const *front_cannon =
-      find_primitive(spec.lod_full.primitives, "horse.full.leg.fl.cannon");
-  auto const *front_hoof =
-      find_primitive(spec.lod_full.primitives, "horse.full.hoof.fl");
+  auto const *whole =
+      find_primitive(spec.lod_full.primitives, "horse.full.whole");
 
-  ASSERT_NE(front_cannon, nullptr);
-  ASSERT_NE(front_hoof, nullptr);
+  ASSERT_NE(whole, nullptr);
 
-  EXPECT_GT(front_hoof->params.head_offset.y(), 0.0F);
-  EXPECT_NEAR(front_hoof->params.head_offset.x(),
-              front_cannon->params.tail_offset.x(), 1.0e-4F);
-  EXPECT_NEAR(front_hoof->params.head_offset.z(),
-              front_cannon->params.tail_offset.z(), 1.0e-4F);
+  EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 2),
+            mesh_axis_span(*whole->custom_mesh, 0) * 2.0F);
+}
+
+TEST(HorseSpecTest, MinimalSpecMatchesTallRetunedSilhouette) {
+  auto const &spec = Render::Horse::horse_creature_spec();
+
+  auto const *whole =
+      find_primitive(spec.lod_minimal.primitives, "horse.minimal.whole");
+
+  ASSERT_NE(whole, nullptr);
+  EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  float const y_span = mesh_axis_span(*whole->custom_mesh, 1);
+  float const z_span = mesh_axis_span(*whole->custom_mesh, 2);
+  EXPECT_GT(y_span, z_span * 1.2F);
+  EXPECT_EQ(find_primitive(spec.lod_minimal.primitives, "horse.minimal.leg.fl"),
+            nullptr);
 }
 
 TEST(HorseSpecTest, AnimatedWalkKeepsRearHoofLowerDuringStanceThanSwing) {
@@ -324,4 +295,57 @@ TEST(HorseSpecTest, AnimatedWalkKeepsRearHoofLowerDuringStanceThanSwing) {
 
   EXPECT_LT(stance_pose.foot_bl.y(), swing_pose.foot_bl.y());
   EXPECT_GT(swing_pose.foot_bl.y() - stance_pose.foot_bl.y(), 0.05F);
+}
+
+TEST(HorseSpecTest, AnimatedPoseBendsFrontAndRearKneesDuringMotion) {
+  auto dims = make_horse_dims();
+  auto gait =
+      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.70F, 0.0F, true}, pose);
+
+  QVector3D const shoulder_fl =
+      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl =
+      pose.barrel_center + pose.shoulder_offset_pose_bl;
+  float const front_mid_z = (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F;
+  float const rear_mid_z = (shoulder_bl.z() + pose.foot_bl.z()) * 0.5F;
+
+  EXPECT_LT(pose.knee_fl.y(), shoulder_fl.y());
+  EXPECT_GT(pose.knee_fl.y(), pose.foot_fl.y());
+  EXPECT_GT(pose.knee_fl.z(), front_mid_z);
+  EXPECT_GT(point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl),
+            dims.body_length * 0.05F);
+
+  EXPECT_LT(pose.knee_bl.y(), shoulder_bl.y());
+  EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
+  EXPECT_LT(pose.knee_bl.z(), rear_mid_z);
+}
+
+TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {
+  auto dims = make_horse_dims();
+  auto walk =
+      Render::GL::gait_for_type(Render::GL::GaitType::WALK, make_horse_gait());
+  auto trot =
+      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+
+  Render::Horse::HorseSpecPose walk_pose;
+  Render::Horse::HorseSpecPose trot_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, walk, Render::Horse::HorsePoseMotion{0.72F, 0.0F, true}, walk_pose);
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, trot, Render::Horse::HorsePoseMotion{0.72F, 0.0F, true}, trot_pose);
+
+  QVector3D const walk_shoulder =
+      walk_pose.barrel_center + walk_pose.shoulder_offset_pose_fl;
+  QVector3D const trot_shoulder =
+      trot_pose.barrel_center + trot_pose.shoulder_offset_pose_fl;
+  float const walk_bend = point_to_segment_distance(
+      walk_pose.knee_fl, walk_shoulder, walk_pose.foot_fl);
+  float const trot_bend = point_to_segment_distance(
+      trot_pose.knee_fl, trot_shoulder, trot_pose.foot_fl);
+
+  EXPECT_GT(trot_bend, walk_bend * 1.15F);
 }

@@ -34,13 +34,21 @@ using Render::Creature::SkeletonTopology;
 
 constexpr std::array<BoneDef, kHorseBoneCount> kHorseBones = {{
     {"Root", Render::Creature::kInvalidBone},
-    {"Body", 0},
-    {"FootFL", 0},
-    {"FootFR", 0},
-    {"FootBL", 0},
-    {"FootBR", 0},
-    {"NeckTop", 0},
-    {"Head", 0},
+    {"Body", static_cast<BoneIndex>(HorseBone::Root)},
+    {"ShoulderFL", static_cast<BoneIndex>(HorseBone::Root)},
+    {"KneeFL", static_cast<BoneIndex>(HorseBone::ShoulderFL)},
+    {"FootFL", static_cast<BoneIndex>(HorseBone::KneeFL)},
+    {"ShoulderFR", static_cast<BoneIndex>(HorseBone::Root)},
+    {"KneeFR", static_cast<BoneIndex>(HorseBone::ShoulderFR)},
+    {"FootFR", static_cast<BoneIndex>(HorseBone::KneeFR)},
+    {"ShoulderBL", static_cast<BoneIndex>(HorseBone::Root)},
+    {"KneeBL", static_cast<BoneIndex>(HorseBone::ShoulderBL)},
+    {"FootBL", static_cast<BoneIndex>(HorseBone::KneeBL)},
+    {"ShoulderBR", static_cast<BoneIndex>(HorseBone::Root)},
+    {"KneeBR", static_cast<BoneIndex>(HorseBone::ShoulderBR)},
+    {"FootBR", static_cast<BoneIndex>(HorseBone::KneeBR)},
+    {"NeckTop", static_cast<BoneIndex>(HorseBone::Root)},
+    {"Head", static_cast<BoneIndex>(HorseBone::NeckTop)},
 }};
 
 constexpr std::array<Render::Creature::SocketDef, 0> kHorseSockets{};
@@ -69,6 +77,41 @@ translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
   m.setToIdentity();
   m.setColumn(3, QVector4D(origin, 1.0F));
   return m;
+}
+
+[[nodiscard]] auto
+solve_bent_leg_joint(const QVector3D &shoulder, const QVector3D &foot,
+                     float upper_len, float lower_len,
+                     const QVector3D &bend_hint) noexcept -> QVector3D {
+  QVector3D hip_to_foot = foot - shoulder;
+  float const dist_sq = QVector3D::dotProduct(hip_to_foot, hip_to_foot);
+  if (dist_sq <= 1.0e-6F) {
+    return shoulder + QVector3D(0.0F, -upper_len, 0.0F);
+  }
+
+  float const total_len = std::max(upper_len + lower_len, 1.0e-4F);
+  float const min_len =
+      std::max(std::abs(upper_len - lower_len) + 1.0e-4F, total_len * 0.10F);
+  float const dist =
+      std::clamp(std::sqrt(dist_sq), min_len, total_len - 1.0e-4F);
+  QVector3D const dir = hip_to_foot / std::sqrt(dist_sq);
+
+  QVector3D bend_axis = bend_hint - dir * QVector3D::dotProduct(bend_hint, dir);
+  if (bend_axis.lengthSquared() <= 1.0e-6F) {
+    bend_axis = QVector3D(0.0F, 0.0F, 1.0F) -
+                dir * QVector3D::dotProduct(QVector3D(0.0F, 0.0F, 1.0F), dir);
+  }
+  if (bend_axis.lengthSquared() <= 1.0e-6F) {
+    bend_axis = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+  bend_axis.normalize();
+
+  float const along =
+      (upper_len * upper_len - lower_len * lower_len + dist * dist) /
+      (2.0F * dist);
+  float const height =
+      std::sqrt(std::max(upper_len * upper_len - along * along, 0.0F));
+  return shoulder + dir * along + bend_axis * height;
 }
 
 struct primitive_instance_desc {
@@ -105,6 +148,120 @@ auto make_torso_vertex(const QVector3D &pos, const QVector3D &normal, float u,
   return {{pos.x(), pos.y(), pos.z()}, {n.x(), n.y(), n.z()}, {u, v}};
 }
 
+void append_flat_triangle(std::vector<Render::GL::Vertex> &vertices,
+                          std::vector<unsigned int> &indices,
+                          const QVector3D &a, const QVector3D &b,
+                          const QVector3D &c) {
+  QVector3D normal = QVector3D::crossProduct(b - a, c - a);
+  if (normal.lengthSquared() < 1.0e-8F) {
+    normal = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    normal.normalize();
+  }
+
+  unsigned int const base = static_cast<unsigned int>(vertices.size());
+  vertices.push_back(make_torso_vertex(a, normal, 0.0F, 0.0F));
+  vertices.push_back(make_torso_vertex(b, normal, 1.0F, 0.0F));
+  vertices.push_back(make_torso_vertex(c, normal, 0.5F, 1.0F));
+  indices.insert(indices.end(), {base, base + 1U, base + 2U});
+}
+
+void append_flat_quad(std::vector<Render::GL::Vertex> &vertices,
+                      std::vector<unsigned int> &indices, const QVector3D &a,
+                      const QVector3D &b, const QVector3D &c,
+                      const QVector3D &d) {
+  QVector3D normal = QVector3D::crossProduct(b - a, c - a);
+  if (normal.lengthSquared() < 1.0e-8F) {
+    normal = QVector3D(0.0F, 1.0F, 0.0F);
+  } else {
+    normal.normalize();
+  }
+
+  unsigned int const base = static_cast<unsigned int>(vertices.size());
+  vertices.push_back(make_torso_vertex(a, normal, 0.0F, 0.0F));
+  vertices.push_back(make_torso_vertex(b, normal, 1.0F, 0.0F));
+  vertices.push_back(make_torso_vertex(c, normal, 1.0F, 1.0F));
+  vertices.push_back(make_torso_vertex(d, normal, 0.0F, 1.0F));
+  indices.insert(indices.end(),
+                 {base, base + 1U, base + 2U, base + 2U, base + 3U, base});
+}
+
+template <std::size_t RingCount, std::size_t RingVertexCount>
+auto build_closed_ring_mesh(
+    const std::array<std::array<QVector3D, RingVertexCount>, RingCount> &rings)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve((RingCount - 1U) * RingVertexCount * 4U + 64U);
+  indices.reserve((RingCount - 1U) * RingVertexCount * 6U + 96U);
+
+  for (std::size_t r = 0; r + 1U < RingCount; ++r) {
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      append_flat_quad(vertices, indices, rings[r][p], rings[r][next],
+                       rings[r + 1U][next], rings[r + 1U][p]);
+    }
+  }
+
+  auto add_cap = [&](std::size_t row, bool reverse) {
+    QVector3D center;
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      center += rings[row][p];
+    }
+    center /= static_cast<float>(RingVertexCount);
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      if (reverse) {
+        append_flat_triangle(vertices, indices, center, rings[row][next],
+                             rings[row][p]);
+      } else {
+        append_flat_triangle(vertices, indices, center, rings[row][p],
+                             rings[row][next]);
+      }
+    }
+  };
+
+  add_cap(0U, true);
+  add_cap(RingCount - 1U, false);
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+template <std::size_t RingCount, std::size_t RingVertexCount>
+void append_closed_ring_mesh(
+    std::vector<Render::GL::Vertex> &vertices,
+    std::vector<unsigned int> &indices,
+    const std::array<std::array<QVector3D, RingVertexCount>, RingCount>
+        &rings) {
+  for (std::size_t r = 0; r + 1U < RingCount; ++r) {
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      append_flat_quad(vertices, indices, rings[r][p], rings[r][next],
+                       rings[r + 1U][next], rings[r + 1U][p]);
+    }
+  }
+
+  auto add_cap = [&](std::size_t row, bool reverse) {
+    QVector3D center;
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      center += rings[row][p];
+    }
+    center /= static_cast<float>(RingVertexCount);
+    for (std::size_t p = 0; p < RingVertexCount; ++p) {
+      std::size_t const next = (p + 1U) % RingVertexCount;
+      if (reverse) {
+        append_flat_triangle(vertices, indices, center, rings[row][next],
+                             rings[row][p]);
+      } else {
+        append_flat_triangle(vertices, indices, center, rings[row][p],
+                             rings[row][next]);
+      }
+    }
+  };
+
+  add_cap(0U, true);
+  add_cap(RingCount - 1U, false);
+}
+
 auto create_faceted_horse_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
@@ -112,20 +269,17 @@ auto create_faceted_horse_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   float const bh = dims.body_height * kHorseBodyVisualHeightScale;
   float const bl = dims.body_length;
 
-  std::array<torso_ring, 6> const rings{{
-      {-0.56F, 0.08F, 0.16F, 0.19F, 0.13F},
-      {-0.38F, 0.06F, 0.29F, 0.25F, 0.18F},
-      {-0.12F, 0.02F, 0.35F, 0.23F, 0.20F},
-      {0.16F, 0.02F, 0.34F, 0.24F, 0.20F},
-      {0.38F, 0.06F, 0.31F, 0.30F, 0.18F},
-      {0.56F, 0.04F, 0.19F, 0.22F, 0.16F},
+  std::array<torso_ring, 7> const rings{{
+      {-0.62F, 0.10F, 0.16F, 0.14F, 0.12F},
+      {-0.46F, 0.16F, 0.28F, 0.26F, 0.18F},
+      {-0.22F, 0.10F, 0.38F, 0.30F, 0.24F},
+      {0.04F, 0.04F, 0.40F, 0.40F, 0.28F},
+      {0.28F, 0.12F, 0.34F, 0.46F, 0.22F},
+      {0.50F, 0.18F, 0.24F, 0.42F, 0.16F},
+      {0.66F, 0.08F, 0.16F, 0.22F, 0.12F},
   }};
 
-  std::vector<Render::GL::Vertex> vertices;
-  std::vector<unsigned int> indices;
-  vertices.reserve(rings.size() * 8U + 2U);
-  indices.reserve((rings.size() - 1U) * 8U * 6U + 48U);
-
+  std::array<std::array<QVector3D, 10>, 7> ring_points{};
   for (std::size_t r = 0; r < rings.size(); ++r) {
     torso_ring const &ring = rings[r];
     float const z = ring.z * bl;
@@ -133,84 +287,192 @@ auto create_faceted_horse_torso_mesh() -> std::unique_ptr<Render::GL::Mesh> {
     float const hw = ring.half_width * bw;
     float const top = yc + ring.top * bh;
     float const bot = yc - ring.bottom * bh;
-    float const upper = yc + ring.top * bh * 0.55F;
-    float const lower = yc - ring.bottom * bh * 0.62F;
-    float const shoulder = hw * 0.82F;
-    float const rib = hw;
-    float const v =
-        static_cast<float>(r) / static_cast<float>(rings.size() - 1U);
-
-    std::array<QVector3D, 8> const pts{{
+    float const shoulder_y = yc + ring.top * bh * 0.82F;
+    float const side_high_y = yc + ring.top * bh * 0.36F;
+    float const side_low_y = yc - ring.bottom * bh * 0.18F;
+    float const belly_y = yc - ring.bottom * bh * 0.78F;
+    float const shoulder = hw * 0.44F;
+    float const side_high = hw * 0.86F;
+    float const side_low = hw;
+    float const belly = hw * 0.38F;
+    ring_points[r] = {{
         {0.0F, top, z},
-        {shoulder, upper, z},
-        {rib, yc, z},
-        {shoulder, lower, z},
+        {shoulder, shoulder_y, z},
+        {side_high, side_high_y, z},
+        {side_low, side_low_y, z},
+        {belly, belly_y, z},
         {0.0F, bot, z},
-        {-shoulder, lower, z},
-        {-rib, yc, z},
-        {-shoulder, upper, z},
+        {-belly, belly_y, z},
+        {-side_low, side_low_y, z},
+        {-side_high, side_high_y, z},
+        {-shoulder, shoulder_y, z},
     }};
-
-    for (std::size_t p = 0; p < pts.size(); ++p) {
-      QVector3D normal(pts[p].x() / std::max(0.001F, hw),
-                       (pts[p].y() - yc) / std::max(0.001F, bh * 0.30F), 0.0F);
-      vertices.push_back(
-          make_torso_vertex(pts[p], normal, static_cast<float>(p) / 7.0F, v));
-    }
   }
 
-  constexpr unsigned int kRingVertexCount = 8U;
-  for (unsigned int r = 0; r + 1U < rings.size(); ++r) {
-    unsigned int const row = r * kRingVertexCount;
-    unsigned int const next = (r + 1U) * kRingVertexCount;
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      unsigned int const a = row + p;
-      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
-      unsigned int const c = next + ((p + 1U) % kRingVertexCount);
-      unsigned int const d = next + p;
-      indices.push_back(a);
-      indices.push_back(b);
-      indices.push_back(c);
-      indices.push_back(c);
-      indices.push_back(d);
-      indices.push_back(a);
-    }
-  }
-
-  auto add_cap = [&](unsigned int row, QVector3D normal, bool reverse) {
-    QVector3D center;
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      auto const &v = vertices[row + p].position;
-      center += QVector3D(v[0], v[1], v[2]);
-    }
-    center /= static_cast<float>(kRingVertexCount);
-    unsigned int const ci = static_cast<unsigned int>(vertices.size());
-    vertices.push_back(make_torso_vertex(center, normal, 0.5F, 0.5F));
-    for (unsigned int p = 0; p < kRingVertexCount; ++p) {
-      unsigned int const a = row + p;
-      unsigned int const b = row + ((p + 1U) % kRingVertexCount);
-      if (reverse) {
-        indices.push_back(ci);
-        indices.push_back(b);
-        indices.push_back(a);
-      } else {
-        indices.push_back(ci);
-        indices.push_back(a);
-        indices.push_back(b);
-      }
-    }
-  };
-
-  add_cap(0U, QVector3D(0.0F, 0.0F, -1.0F), true);
-  add_cap(static_cast<unsigned int>((rings.size() - 1U) * kRingVertexCount),
-          QVector3D(0.0F, 0.0F, 1.0F), false);
-
-  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+  return build_closed_ring_mesh(ring_points);
 }
 
 auto get_faceted_horse_torso_mesh() -> Render::GL::Mesh * {
   static std::unique_ptr<Render::GL::Mesh> const mesh =
       create_faceted_horse_torso_mesh();
+  return mesh.get();
+}
+
+auto create_whole_horse_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  Render::GL::HorseDimensions const dims =
+      Render::GL::make_horse_dimensions(0U);
+  float const bw = dims.body_width * kHorseBodyVisualWidthScale;
+  float const bh = dims.body_height * kHorseBodyVisualHeightScale;
+  float const bl = dims.body_length;
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  float const hl = dims.head_length;
+  float const torso_width_scale = 2.0F;
+  float const torso_height_scale = 2.0F;
+  float const torso_lift = bh * 0.16F;
+  float const neck_width_scale = 2.0F;
+  float const neck_height_scale = 2.0F;
+  float const head_length_scale = 1.0F / 3.0F;
+  float const leg_length_scale = 2.0F;
+  float const leg_thickness_scale = 3.0F;
+
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(460);
+  indices.reserve(760);
+
+  auto make_ring = [](QVector3D c, float rx,
+                      float ry) -> std::array<QVector3D, 8> {
+    return {{
+        {c.x(), c.y() + ry, c.z()},
+        {c.x() + rx * 0.62F, c.y() + ry * 0.68F, c.z()},
+        {c.x() + rx, c.y(), c.z()},
+        {c.x() + rx * 0.66F, c.y() - ry * 0.72F, c.z()},
+        {c.x(), c.y() - ry, c.z()},
+        {c.x() - rx * 0.66F, c.y() - ry * 0.72F, c.z()},
+        {c.x() - rx, c.y(), c.z()},
+        {c.x() - rx * 0.62F, c.y() + ry * 0.68F, c.z()},
+    }};
+  };
+
+  std::array<std::array<QVector3D, 8>, 7> body{{
+      make_ring({0.0F, bh * 0.10F + torso_lift, -bl * 0.56F},
+                bw * 0.18F * torso_width_scale,
+                bh * 0.18F * torso_height_scale),
+      make_ring({0.0F, bh * 0.18F + torso_lift, -bl * 0.40F},
+                bw * 0.28F * torso_width_scale,
+                bh * 0.32F * torso_height_scale),
+      make_ring({0.0F, bh * 0.10F + torso_lift, -bl * 0.16F},
+                bw * 0.42F * torso_width_scale,
+                bh * 0.34F * torso_height_scale),
+      make_ring({0.0F, bh * 0.04F + torso_lift, bl * 0.08F},
+                bw * 0.44F * torso_width_scale,
+                bh * 0.38F * torso_height_scale),
+      make_ring({0.0F, bh * 0.16F + torso_lift, bl * 0.32F},
+                bw * 0.36F * torso_width_scale,
+                bh * 0.42F * torso_height_scale),
+      make_ring({0.0F, bh * 0.24F + torso_lift, bl * 0.52F},
+                bw * 0.24F * torso_width_scale,
+                bh * 0.34F * torso_height_scale),
+      make_ring({0.0F, bh * 0.12F + torso_lift, bl * 0.66F},
+                bw * 0.14F * torso_width_scale,
+                bh * 0.18F * torso_height_scale),
+  }};
+  append_closed_ring_mesh(vertices, indices, body);
+
+  std::array<std::array<QVector3D, 8>, 4> neck{{
+      make_ring({0.0F, bh * 0.36F, bl * 0.48F}, bw * 0.16F * neck_width_scale,
+                bh * 0.18F * neck_height_scale),
+      make_ring({0.0F, bh * 0.54F, bl * 0.66F}, bw * 0.14F * neck_width_scale,
+                bh * 0.18F * neck_height_scale),
+      make_ring({0.0F, bh * 0.66F, bl * 0.86F}, bw * 0.12F * neck_width_scale,
+                bh * 0.16F * neck_height_scale),
+      make_ring({0.0F, bh * 0.60F, bl * 1.02F}, bw * 0.10F * neck_width_scale,
+                bh * 0.12F * neck_height_scale),
+  }};
+  append_closed_ring_mesh(vertices, indices, neck);
+
+  std::array<std::array<QVector3D, 8>, 5> head{{
+      make_ring({0.0F, bh * 0.60F, bl * 0.98F}, hw * 0.22F, hh * 0.18F),
+      make_ring({0.0F, bh * 0.58F,
+                 bl * (0.98F + (1.12F - 0.98F) * head_length_scale)},
+                hw * 0.28F, hh * 0.20F),
+      make_ring({0.0F, bh * 0.48F,
+                 bl * (0.98F + (1.30F - 0.98F) * head_length_scale)},
+                hw * 0.20F, hh * 0.18F),
+      make_ring({0.0F, bh * 0.40F,
+                 bl * (0.98F + (1.48F - 0.98F) * head_length_scale)},
+                hw * 0.12F, hh * 0.12F),
+      make_ring({0.0F, bh * 0.36F,
+                 bl * (0.98F + (1.58F - 0.98F) * head_length_scale)},
+                hw * 0.07F, hh * 0.08F),
+  }};
+  append_closed_ring_mesh(vertices, indices, head);
+
+  auto make_leg_ring = [](QVector3D c, float rx,
+                          float rz) -> std::array<QVector3D, 6> {
+    return {{
+        {c.x(), c.y(), c.z() + rz},
+        {c.x() + rx, c.y(), c.z() + rz * 0.50F},
+        {c.x() + rx * 0.82F, c.y(), c.z() - rz * 0.50F},
+        {c.x(), c.y(), c.z() - rz},
+        {c.x() - rx * 0.82F, c.y(), c.z() - rz * 0.50F},
+        {c.x() - rx, c.y(), c.z() + rz * 0.50F},
+    }};
+  };
+
+  auto append_leg = [&](float x, float z, bool rear) {
+    float const top_y = -bh * 0.10F;
+    float const bottom_y = -dims.leg_length * 0.82F * leg_length_scale;
+    float const upper =
+        dims.body_width * (rear ? 0.17F : 0.16F) * leg_thickness_scale;
+    float const lower = dims.body_width * 0.075F * leg_thickness_scale;
+    std::array<std::array<QVector3D, 6>, 5> leg{{
+        make_leg_ring({x, top_y, z}, upper, upper * 0.78F),
+        make_leg_ring({x * 0.96F, (top_y + bottom_y) * 0.36F,
+                       z + (rear ? bl * 0.04F : -bl * 0.02F)},
+                      upper * 0.72F, upper * 0.58F),
+        make_leg_ring({x * 0.94F, (top_y + bottom_y) * 0.62F, z}, lower,
+                      lower * 0.72F),
+        make_leg_ring({x * 0.92F, bottom_y + dims.hoof_height * 1.3F, z},
+                      lower * 1.15F, lower * 0.82F),
+        make_leg_ring({x * 0.92F, bottom_y, z + bl * 0.025F},
+                      dims.body_width * 0.16F * leg_thickness_scale,
+                      dims.body_width * 0.13F * leg_thickness_scale),
+    }};
+    append_closed_ring_mesh(vertices, indices, leg);
+  };
+  append_leg(bw * 0.34F, bl * 0.38F, false);
+  append_leg(-bw * 0.34F, bl * 0.38F, false);
+  append_leg(bw * 0.30F, -bl * 0.36F, true);
+  append_leg(-bw * 0.30F, -bl * 0.36F, true);
+
+  auto append_ear = [&](float side) {
+    QVector3D const base(side * hw * 0.12F, bh * 0.64F, bl * 1.02F);
+    QVector3D const tip(side * hw * 0.14F, bh * 0.84F, bl * 0.96F);
+    QVector3D const rear(side * hw * 0.04F, bh * 0.62F, bl * 0.92F);
+    append_flat_triangle(vertices, indices, base, tip, rear);
+    append_flat_triangle(vertices, indices,
+                         base + QVector3D(side * hw * 0.06F, 0, 0),
+                         rear + QVector3D(side * hw * 0.06F, 0, 0), tip);
+  };
+  append_ear(1.0F);
+  append_ear(-1.0F);
+
+  std::array<std::array<QVector3D, 6>, 4> tail{{
+      make_leg_ring({0.0F, bh * 0.20F, -bl * 0.60F}, bw * 0.08F, bw * 0.06F),
+      make_leg_ring({0.0F, bh * 0.02F, -bl * 0.72F}, bw * 0.07F, bw * 0.06F),
+      make_leg_ring({0.0F, -bh * 0.18F, -bl * 0.78F}, bw * 0.05F, bw * 0.05F),
+      make_leg_ring({0.0F, -bh * 0.34F, -bl * 0.80F}, bw * 0.03F, bw * 0.035F),
+  }};
+  append_closed_ring_mesh(vertices, indices, tail);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_whole_horse_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_whole_horse_mesh();
   return mesh.get();
 }
 
@@ -221,53 +483,234 @@ auto create_faceted_horse_head_mesh() -> std::unique_ptr<Render::GL::Mesh> {
   float const hh = dims.head_height;
   float const hl = dims.head_length;
 
-  std::vector<Render::GL::Vertex> vertices;
-  vertices.reserve(10);
+  std::array<torso_ring, 6> const sections{{
+      {-0.46F, 0.10F, 0.18F, 0.14F, 0.10F},
+      {-0.28F, 0.14F, 0.26F, 0.18F, 0.12F},
+      {-0.06F, 0.08F, 0.24F, 0.14F, 0.16F},
+      {0.18F, 0.00F, 0.16F, 0.08F, 0.16F},
+      {0.38F, -0.06F, 0.10F, 0.04F, 0.12F},
+      {0.52F, -0.10F, 0.06F, 0.02F, 0.08F},
+  }};
 
-  auto add = [&](QVector3D pos, QVector3D normal, float u, float v) {
-    vertices.push_back(make_torso_vertex(pos, normal, u, v));
-  };
+  std::array<std::array<QVector3D, 8>, 6> section_points{};
+  for (std::size_t s = 0; s < sections.size(); ++s) {
+    torso_ring const &section = sections[s];
+    float const z = section.z * hl;
+    float const yc = section.y * hh;
+    float const half_width = section.half_width * hw;
+    float const top = yc + section.top * hh;
+    float const bot = yc - section.bottom * hh;
+    float const crown_y = yc + section.top * hh * 0.52F;
+    float const jaw_y = yc - section.bottom * hh * 0.36F;
+    float const crown_w = half_width * 0.54F;
+    float const side_w = half_width;
+    float const jaw_w = half_width * 0.66F;
 
-  float const back_z = -hl * 0.36F;
-  float const brow_z = -hl * 0.05F;
-  float const muzzle_z = hl * 0.42F;
-  float const back_w = hw * 0.30F;
-  float const brow_w = hw * 0.24F;
-  float const muzzle_w = hw * 0.13F;
-  float const top_back = hh * 0.17F;
-  float const top_brow = hh * 0.12F;
-  float const top_muzzle = hh * 0.02F;
-  float const bot_back = -hh * 0.12F;
-  float const bot_brow = -hh * 0.16F;
-  float const bot_muzzle = -hh * 0.19F;
+    section_points[s] = {{
+        {0.0F, top, z},
+        {crown_w, crown_y, z},
+        {side_w, yc, z},
+        {jaw_w, jaw_y, z},
+        {0.0F, bot, z},
+        {-jaw_w, jaw_y, z},
+        {-side_w, yc, z},
+        {-crown_w, crown_y, z},
+    }};
+  }
 
-  add({-back_w, top_back, back_z}, {-1.0F, 0.5F, -0.4F}, 0.0F, 1.0F);
-  add({back_w, top_back, back_z}, {1.0F, 0.5F, -0.4F}, 1.0F, 1.0F);
-  add({-back_w, bot_back, back_z}, {-1.0F, -0.5F, -0.4F}, 0.0F, 0.0F);
-  add({back_w, bot_back, back_z}, {1.0F, -0.5F, -0.4F}, 1.0F, 0.0F);
-
-  add({-brow_w, top_brow, brow_z}, {-1.0F, 0.45F, 0.0F}, 0.0F, 1.0F);
-  add({brow_w, top_brow, brow_z}, {1.0F, 0.45F, 0.0F}, 1.0F, 1.0F);
-  add({-brow_w, bot_brow, brow_z}, {-1.0F, -0.45F, 0.0F}, 0.0F, 0.0F);
-  add({brow_w, bot_brow, brow_z}, {1.0F, -0.45F, 0.0F}, 1.0F, 0.0F);
-
-  add({-muzzle_w, top_muzzle, muzzle_z}, {-0.8F, 0.2F, 0.8F}, 0.0F, 1.0F);
-  add({muzzle_w, top_muzzle, muzzle_z}, {0.8F, 0.2F, 0.8F}, 1.0F, 1.0F);
-  add({-muzzle_w, bot_muzzle, muzzle_z}, {-0.8F, -0.3F, 0.8F}, 0.0F, 0.0F);
-  add({muzzle_w, bot_muzzle, muzzle_z}, {0.8F, -0.3F, 0.8F}, 1.0F, 0.0F);
-
-  std::vector<unsigned int> indices{
-      0, 1, 5, 5, 4,  0,  2, 6, 7, 7, 3,  2,  0,  4,  6, 6, 2, 0, 1,  3,
-      7, 7, 5, 1, 4,  5,  9, 9, 8, 4, 6,  10, 11, 11, 7, 6, 4, 8, 10, 10,
-      6, 4, 5, 7, 11, 11, 9, 5, 8, 9, 11, 11, 10, 8,  0, 2, 3, 3, 1,  0,
-  };
-
-  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+  return build_closed_ring_mesh(section_points);
 }
 
 auto get_faceted_horse_head_mesh() -> Render::GL::Mesh * {
   static std::unique_ptr<Render::GL::Mesh> const mesh =
       create_faceted_horse_head_mesh();
+  return mesh.get();
+}
+
+auto create_unit_horse_minimal_leg_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  std::array<std::array<QVector3D, 6>, 5> const rings{{
+      {{{0.0F, 0.50F, 0.14F},
+        {0.18F, 0.50F, 0.10F},
+        {0.18F, 0.50F, -0.08F},
+        {0.0F, 0.50F, -0.10F},
+        {-0.18F, 0.50F, -0.08F},
+        {-0.18F, 0.50F, 0.10F}}},
+      {{{0.0F, 0.18F, 0.12F},
+        {0.16F, 0.18F, 0.08F},
+        {0.16F, 0.18F, -0.07F},
+        {0.0F, 0.18F, -0.08F},
+        {-0.16F, 0.18F, -0.07F},
+        {-0.16F, 0.18F, 0.08F}}},
+      {{{0.0F, -0.12F, 0.08F},
+        {0.10F, -0.12F, 0.06F},
+        {0.10F, -0.12F, -0.05F},
+        {0.0F, -0.12F, -0.06F},
+        {-0.10F, -0.12F, -0.05F},
+        {-0.10F, -0.12F, 0.06F}}},
+      {{{0.0F, -0.42F, 0.12F},
+        {0.14F, -0.42F, 0.10F},
+        {0.13F, -0.42F, -0.05F},
+        {0.0F, -0.42F, -0.06F},
+        {-0.13F, -0.42F, -0.05F},
+        {-0.14F, -0.42F, 0.10F}}},
+      {{{0.0F, -0.58F, 0.18F},
+        {0.18F, -0.58F, 0.14F},
+        {0.16F, -0.58F, -0.06F},
+        {0.0F, -0.58F, -0.08F},
+        {-0.16F, -0.58F, -0.06F},
+        {-0.18F, -0.58F, 0.14F}}},
+  }};
+  return build_closed_ring_mesh(rings);
+}
+
+auto get_unit_horse_minimal_leg_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_horse_minimal_leg_mesh();
+  return mesh.get();
+}
+
+auto create_unit_horse_tail_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  std::array<std::array<QVector3D, 6>, 4> const rings{{
+      {{{0.0F, 0.50F, 0.10F},
+        {0.12F, 0.50F, 0.06F},
+        {0.10F, 0.50F, -0.06F},
+        {0.0F, 0.50F, -0.08F},
+        {-0.10F, 0.50F, -0.06F},
+        {-0.12F, 0.50F, 0.06F}}},
+      {{{0.0F, 0.18F, 0.14F},
+        {0.10F, 0.18F, 0.10F},
+        {0.08F, 0.18F, 0.00F},
+        {0.0F, 0.18F, -0.02F},
+        {-0.08F, 0.18F, 0.00F},
+        {-0.10F, 0.18F, 0.10F}}},
+      {{{0.0F, -0.14F, 0.18F},
+        {0.07F, -0.14F, 0.14F},
+        {0.05F, -0.14F, 0.06F},
+        {0.0F, -0.14F, 0.02F},
+        {-0.05F, -0.14F, 0.06F},
+        {-0.07F, -0.14F, 0.14F}}},
+      {{{0.0F, -0.48F, 0.22F},
+        {0.03F, -0.48F, 0.18F},
+        {0.02F, -0.48F, 0.12F},
+        {0.0F, -0.48F, 0.08F},
+        {-0.02F, -0.48F, 0.12F},
+        {-0.03F, -0.48F, 0.18F}}},
+  }};
+  return build_closed_ring_mesh(rings);
+}
+
+auto get_unit_horse_tail_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_horse_tail_mesh();
+  return mesh.get();
+}
+
+auto create_unit_horse_hoof_mesh() -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  vertices.reserve(8);
+
+  auto add = [&](QVector3D pos, QVector3D normal, float u, float v) {
+    vertices.push_back(make_torso_vertex(pos, normal, u, v));
+  };
+
+  add({-0.92F, 0.52F, -0.95F}, {-0.8F, 0.5F, -0.4F}, 0.0F, 1.0F);
+  add({0.92F, 0.52F, -0.95F}, {0.8F, 0.5F, -0.4F}, 1.0F, 1.0F);
+  add({-0.72F, 0.24F, 0.86F}, {-0.7F, 0.3F, 0.7F}, 0.0F, 0.8F);
+  add({0.72F, 0.24F, 0.86F}, {0.7F, 0.3F, 0.7F}, 1.0F, 0.8F);
+  add({-1.0F, -0.58F, -0.80F}, {-0.8F, -0.7F, -0.2F}, 0.0F, 0.0F);
+  add({1.0F, -0.58F, -0.80F}, {0.8F, -0.7F, -0.2F}, 1.0F, 0.0F);
+  add({-0.82F, -0.58F, 0.94F}, {-0.7F, -0.5F, 0.7F}, 0.0F, 0.2F);
+  add({0.82F, -0.58F, 0.94F}, {0.7F, -0.5F, 0.7F}, 1.0F, 0.2F);
+
+  std::vector<unsigned int> indices{
+      0, 1, 3, 3, 2, 0, 4, 6, 7, 7, 5, 4, 0, 2, 6, 6, 4, 0,
+      1, 5, 7, 7, 3, 1, 0, 4, 5, 5, 1, 0, 2, 3, 7, 7, 6, 2,
+  };
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_horse_hoof_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_horse_hoof_mesh();
+  return mesh.get();
+}
+
+auto create_unit_horse_segment_mesh(int sides)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(static_cast<std::size_t>(sides) * 18U);
+  indices.reserve(static_cast<std::size_t>(sides) * 18U);
+
+  std::vector<QVector3D> top;
+  std::vector<QVector3D> bottom;
+  top.reserve(sides);
+  bottom.reserve(sides);
+  for (int i = 0; i < sides; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(sides);
+    float const ang = t * (2.0F * std::numbers::pi_v<float>);
+    top.push_back(QVector3D(std::cos(ang), 0.5F, std::sin(ang)));
+    bottom.push_back(QVector3D(std::cos(ang), -0.5F, std::sin(ang)));
+  }
+
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_quad(vertices, indices, bottom[i], bottom[next], top[next],
+                     top[i]);
+  }
+
+  QVector3D const top_center(0.0F, 0.5F, 0.0F);
+  QVector3D const bottom_center(0.0F, -0.5F, 0.0F);
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, top_center, top[i], top[next]);
+    append_flat_triangle(vertices, indices, bottom_center, bottom[next],
+                         bottom[i]);
+  }
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_horse_segment_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_horse_segment_mesh(6);
+  return mesh.get();
+}
+
+auto create_unit_horse_cone_mesh(int sides)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(static_cast<std::size_t>(sides) * 9U);
+  indices.reserve(static_cast<std::size_t>(sides) * 9U);
+
+  QVector3D const apex(0.0F, 0.5F, 0.0F);
+  std::vector<QVector3D> base;
+  base.reserve(sides);
+  for (int i = 0; i < sides; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(sides);
+    float const ang = t * (2.0F * std::numbers::pi_v<float>);
+    base.push_back(QVector3D(std::cos(ang), -0.5F, std::sin(ang)));
+  }
+
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, apex, base[i], base[next]);
+  }
+
+  QVector3D const base_center(0.0F, -0.5F, 0.0F);
+  for (int i = 0; i < sides; ++i) {
+    int const next = (i + 1) % sides;
+    append_flat_triangle(vertices, indices, base_center, base[next], base[i]);
+  }
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto get_unit_horse_cone_mesh() -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> const mesh =
+      create_unit_horse_cone_mesh(5);
   return mesh.get();
 }
 
@@ -347,8 +790,7 @@ struct horse_pose_profile {
   QVector3D hoof_scale{0.30F, 0.88F, 0.50F};
 };
 
-[[nodiscard]] auto
-make_horse_pose_profile() noexcept -> horse_pose_profile {
+[[nodiscard]] auto make_horse_pose_profile() noexcept -> horse_pose_profile {
   return {};
 }
 
@@ -369,6 +811,24 @@ void evaluate_horse_skeleton(const HorseSpecPose &pose,
   body.setColumn(2, QVector4D(0.0F, 0.0F, pose.body_ellipsoid_z, 0.0F));
   body.setColumn(3, QVector4D(pose.barrel_center, 1.0F));
   out_palette[static_cast<std::size_t>(HorseBone::Body)] = body;
+
+  out_palette[static_cast<std::size_t>(HorseBone::ShoulderFL)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_fl);
+  out_palette[static_cast<std::size_t>(HorseBone::ShoulderFR)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_fr);
+  out_palette[static_cast<std::size_t>(HorseBone::ShoulderBL)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_bl);
+  out_palette[static_cast<std::size_t>(HorseBone::ShoulderBR)] =
+      translation_matrix(pose.barrel_center + pose.shoulder_offset_pose_br);
+
+  out_palette[static_cast<std::size_t>(HorseBone::KneeFL)] =
+      translation_matrix(pose.knee_fl);
+  out_palette[static_cast<std::size_t>(HorseBone::KneeFR)] =
+      translation_matrix(pose.knee_fr);
+  out_palette[static_cast<std::size_t>(HorseBone::KneeBL)] =
+      translation_matrix(pose.knee_bl);
+  out_palette[static_cast<std::size_t>(HorseBone::KneeBR)] =
+      translation_matrix(pose.knee_br);
 
   out_palette[static_cast<std::size_t>(HorseBone::FootFL)] =
       translation_matrix(pose.foot_fl);
@@ -433,6 +893,34 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   out_pose.foot_br = center + out_pose.shoulder_offset_br +
                      QVector3D(0.0F, rear_drop, -dims.body_length * 0.10F);
 
+  out_pose.shoulder_offset_pose_fl = out_pose.shoulder_offset_fl;
+  out_pose.shoulder_offset_pose_fr = out_pose.shoulder_offset_fr;
+  out_pose.shoulder_offset_pose_bl = out_pose.shoulder_offset_bl;
+  out_pose.shoulder_offset_pose_br = out_pose.shoulder_offset_br;
+
+  QVector3D const shoulder_fl = center + out_pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fr = center + out_pose.shoulder_offset_pose_fr;
+  QVector3D const shoulder_bl = center + out_pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_br = center + out_pose.shoulder_offset_pose_br;
+  float const front_upper_len = dims.leg_length * 0.50F;
+  float const front_lower_len = dims.leg_length * 0.46F;
+  float const rear_upper_len = dims.leg_length * 0.56F;
+  float const rear_lower_len = dims.leg_length * 0.50F;
+  QVector3D const front_bend_hint(0.0F, 0.0F, dims.body_length * 0.28F);
+  QVector3D const rear_bend_hint(0.0F, 0.0F, -dims.body_length * 0.40F);
+  out_pose.knee_fl =
+      solve_bent_leg_joint(shoulder_fl, out_pose.foot_fl, front_upper_len,
+                           front_lower_len, front_bend_hint);
+  out_pose.knee_fr =
+      solve_bent_leg_joint(shoulder_fr, out_pose.foot_fr, front_upper_len,
+                           front_lower_len, front_bend_hint);
+  out_pose.knee_bl =
+      solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl, rear_upper_len,
+                           rear_lower_len, rear_bend_hint);
+  out_pose.knee_br =
+      solve_bent_leg_joint(shoulder_br, out_pose.foot_br, rear_upper_len,
+                           rear_lower_len, rear_bend_hint);
+
   out_pose.leg_radius = dims.body_width * 0.108F;
 }
 
@@ -445,9 +933,8 @@ struct pose_leg_sample {
 
 auto compute_pose_leg(
     const Render::GL::HorseDimensions &dims, const Render::GL::HorseGait &gait,
-    const horse_pose_profile &profile, float phase_base,
-    float phase_offset, float lateral_sign, bool is_rear, float forward_bias,
-    bool is_moving,
+    const horse_pose_profile &profile, float phase_base, float phase_offset,
+    float lateral_sign, bool is_rear, float forward_bias, bool is_moving,
     const QVector3D &anchor_offset) noexcept -> pose_leg_sample {
   auto ease_in_out = [](float t) {
     t = std::clamp(t, 0.0F, 1.0F);
@@ -504,9 +991,9 @@ auto compute_pose_leg(
 } // namespace
 
 void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
-                                  const Render::GL::HorseGait &gait,
-                                  HorsePoseMotion motion,
-                                  HorseSpecPose &out_pose) noexcept {
+                                   const Render::GL::HorseGait &gait,
+                                   HorsePoseMotion motion,
+                                   HorseSpecPose &out_pose) noexcept {
 
   make_horse_spec_pose(dims, motion.bob, out_pose);
   horse_pose_profile const profile = make_horse_pose_profile();
@@ -587,6 +1074,33 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   out_pose.foot_bl = center + bl.foot;
   out_pose.foot_br = center + br.foot;
 
+  QVector3D const shoulder_fl = center + out_pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_fr = center + out_pose.shoulder_offset_pose_fr;
+  QVector3D const shoulder_bl = center + out_pose.shoulder_offset_pose_bl;
+  QVector3D const shoulder_br = center + out_pose.shoulder_offset_pose_br;
+  float const front_upper_len = dims.leg_length * 0.50F;
+  float const front_lower_len = dims.leg_length * 0.46F;
+  float const rear_upper_len = dims.leg_length * 0.56F;
+  float const rear_lower_len = dims.leg_length * 0.50F;
+  float const gait_bend =
+      motion.is_moving ? 1.0F + std::min(gait.stride_lift * 4.0F, 0.65F) : 1.0F;
+  QVector3D const front_bend_hint(0.0F, 0.0F,
+                                  dims.body_length * 0.26F * gait_bend);
+  QVector3D const rear_bend_hint(0.0F, 0.0F,
+                                 -dims.body_length * 0.40F * gait_bend);
+  out_pose.knee_fl =
+      solve_bent_leg_joint(shoulder_fl, out_pose.foot_fl, front_upper_len,
+                           front_lower_len, front_bend_hint);
+  out_pose.knee_fr =
+      solve_bent_leg_joint(shoulder_fr, out_pose.foot_fr, front_upper_len,
+                           front_lower_len, front_bend_hint);
+  out_pose.knee_bl =
+      solve_bent_leg_joint(shoulder_bl, out_pose.foot_bl, rear_upper_len,
+                           rear_lower_len, rear_bend_hint);
+  out_pose.knee_br =
+      solve_bent_leg_joint(shoulder_br, out_pose.foot_br, rear_upper_len,
+                           rear_lower_len, rear_bend_hint);
+
   out_pose.pose_leg_radius = dims.body_width * profile.leg_radius_scale;
 
   out_pose.hoof_scale = QVector3D(dims.body_width * profile.hoof_scale.x(),
@@ -597,46 +1111,22 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
 namespace {
 
 auto build_minimal_primitives(const HorseSpecPose &pose,
-                              std::array<PrimitiveInstance, 5> &out) noexcept
+                              std::array<PrimitiveInstance, 1> &out) noexcept
     -> std::size_t {
+  (void)pose;
   {
     PrimitiveInstance &p = out[0];
-    p.debug_name = "horse.body";
+    p.debug_name = "horse.minimal.whole";
     p.shape = PrimitiveShape::Mesh;
-    p.custom_mesh = Render::GL::get_unit_sphere();
-    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Body);
-    p.params.half_extents = QVector3D(0.82F, 1.08F, 0.92F);
+    p.custom_mesh = get_whole_horse_mesh();
+    p.mesh_skinning = Render::Creature::MeshSkinning::HorseWhole;
+    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
+    p.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
     p.color_role = kRoleCoat;
     p.material_id = 6;
     p.lod_mask = kLodMinimal;
   }
-
-  struct minimal_leg_desc {
-    std::string_view name;
-    HorseBone foot_bone;
-    QVector3D shoulder_offset;
-  };
-  std::array<minimal_leg_desc, 4> const legs{{
-      {"horse.leg.fl", HorseBone::FootFL, pose.shoulder_offset_fl},
-      {"horse.leg.fr", HorseBone::FootFR, pose.shoulder_offset_fr},
-      {"horse.leg.bl", HorseBone::FootBL, pose.shoulder_offset_bl},
-      {"horse.leg.br", HorseBone::FootBR, pose.shoulder_offset_br},
-  }};
-
-  for (std::size_t i = 0; i < 4; ++i) {
-    PrimitiveInstance &p = out[1 + i];
-    p.debug_name = legs[i].name;
-    p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = static_cast<BoneIndex>(HorseBone::Root);
-    p.params.head_offset = legs[i].shoulder_offset;
-    p.params.tail_bone = static_cast<BoneIndex>(legs[i].foot_bone);
-    p.params.tail_offset = QVector3D();
-    p.params.radius = pose.leg_radius * 1.08F;
-    p.color_role = kRoleCoatLeg;
-    p.material_id = 6;
-    p.lod_mask = kLodMinimal;
-  }
-  return 5;
+  return 1;
 }
 
 } // namespace
@@ -665,336 +1155,43 @@ auto baseline_pose() noexcept -> const HorseSpecPose & {
   return pose;
 }
 
-auto build_static_minimal_parts() noexcept -> std::array<PrimitiveInstance, 5> {
-  std::array<PrimitiveInstance, 5> out{};
+constexpr std::size_t kHorseMinimalPartCount = 1;
+
+auto build_static_minimal_parts() noexcept
+    -> std::array<PrimitiveInstance, kHorseMinimalPartCount> {
+  std::array<PrimitiveInstance, kHorseMinimalPartCount> out{};
   build_minimal_primitives(baseline_pose(), out);
   return out;
 }
 
 auto static_minimal_parts() noexcept
-    -> const std::array<PrimitiveInstance, 5> & {
+    -> const std::array<PrimitiveInstance, kHorseMinimalPartCount> & {
   static const auto parts = build_static_minimal_parts();
   return parts;
 }
 
-constexpr std::size_t kHorseFullPartCount = 43;
+constexpr std::size_t kHorseFullPartCount = 1;
 
 auto build_static_full_parts() noexcept
     -> std::array<PrimitiveInstance, kHorseFullPartCount> {
-  HorseSpecPose const &pose = baseline_pose();
-  Render::GL::HorseDimensions const dims =
-      Render::GL::make_horse_dimensions(0U);
+  (void)baseline_pose();
   std::array<PrimitiveInstance, kHorseFullPartCount> out{};
 
   using Render::Creature::kLodFull;
 
   auto root = static_cast<BoneIndex>(HorseBone::Root);
-  auto head_bone = static_cast<BoneIndex>(HorseBone::Head);
-  auto neck_top_bone = static_cast<BoneIndex>(HorseBone::NeckTop);
 
-  auto ell = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &half_extents, const QVector3D &offset,
-                 std::uint8_t role = kRoleCoat, int material_id = 6) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::OrientedSphere;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = offset;
-    p.params.half_extents = half_extents;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto box = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &half_extents, const QVector3D &offset,
-                 std::uint8_t role = kRoleCoat, int material_id = 6) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Box;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = offset;
-    p.params.half_extents = half_extents;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto sph = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &offset, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Sphere;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = offset;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cyl = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &head_off, BoneIndex tail,
-                 const QVector3D &tail_off, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Cylinder;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cap = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                 const QVector3D &head_off, BoneIndex tail,
-                 const QVector3D &tail_off, float radius, std::uint8_t role,
-                 int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Capsule;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  auto cone_p = [&](PrimitiveInstance &p, std::string_view name,
-                    BoneIndex anchor, const QVector3D &head_off, BoneIndex tail,
-                    const QVector3D &tail_off, float radius, std::uint8_t role,
-                    int material_id = 0) {
-    p.debug_name = name;
-    p.shape = PrimitiveShape::Cone;
-    p.params.anchor_bone = anchor;
-    p.params.head_offset = head_off;
-    p.params.tail_bone = tail;
-    p.params.tail_offset = tail_off;
-    p.params.radius = radius;
-    p.color_role = role;
-    p.material_id = material_id;
-    p.lod_mask = kLodFull;
-  };
-
-  float const bw = dims.body_width;
-  float const bh = dims.body_height;
-  float const bl = dims.body_length;
-  float const hl = dims.head_length;
-  float const bw_body = bw * kHorseBodyVisualWidthScale;
-  float const bh_body = bh * kHorseBodyVisualHeightScale;
-
-  float const bw_v = bw_body * 1.08F;
-  float const bh_v = bh_body * 0.88F;
-
-  std::size_t i = 0;
-
-  PrimitiveInstance &ribcage = out[i++];
-  ribcage.debug_name = "horse.full.ribcage";
-  ribcage.shape = PrimitiveShape::Mesh;
-  ribcage.params.anchor_bone = root;
-  ribcage.params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
-  ribcage.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
-  ribcage.custom_mesh = get_faceted_horse_torso_mesh();
-  ribcage.color_role = kRoleCoat;
-  ribcage.material_id = 6;
-  ribcage.lod_mask = kLodFull;
-  cone_p(out[i++], "horse.full.withers", root,
-         QVector3D(0.0F, bh_body * 0.30F, bl * 0.16F), root,
-         QVector3D(0.0F, bh_body * 0.54F, bl * 0.10F), bw_body * 0.11F,
-         kRoleCoatDark, 6);
-  ell(out[i++], "horse.full.belly", root,
-      QVector3D(bw_body * 0.28F, bh_body * 0.07F, bl * 0.25F),
-      QVector3D(0.0F, -bh_body * 0.17F, -bl * 0.04F), kRoleCoatDark);
-  ell(out[i++], "horse.full.chest", root,
-      QVector3D(bw_body * 0.35F, bh_body * 0.22F, bl * 0.15F),
-      QVector3D(0.0F, bh_body * 0.04F, bl * 0.44F));
-  ell(out[i++], "horse.full.sternum", root,
-      QVector3D(bw_body * 0.19F, bh_body * 0.09F, bl * 0.10F),
-      QVector3D(0.0F, -bh_body * 0.26F, bl * 0.36F));
-  ell(out[i++], "horse.full.croup", root,
-      QVector3D(bw_body * 0.34F, bh_body * 0.17F, bl * 0.18F),
-      QVector3D(0.0F, bh_body * 0.20F, -bl * 0.40F));
-  ell(out[i++], "horse.full.hq.l", root,
-      QVector3D(bw_body * 0.20F, bh_body * 0.31F, bl * 0.22F),
-      QVector3D(bw_body * 0.24F, bh_body * 0.05F, -bl * 0.35F));
-  ell(out[i++], "horse.full.hq.r", root,
-      QVector3D(bw_body * 0.20F, bh_body * 0.31F, bl * 0.22F),
-      QVector3D(-bw_body * 0.24F, bh_body * 0.05F, -bl * 0.35F));
-  ell(out[i++], "horse.full.shoulder.l", root,
-      QVector3D(bw_body * 0.12F, bh_body * 0.30F, bl * 0.17F),
-      QVector3D(bw_body * 0.25F, bh_body * 0.06F, bl * 0.31F));
-  ell(out[i++], "horse.full.shoulder.r", root,
-      QVector3D(bw_body * 0.12F, bh_body * 0.30F, bl * 0.17F),
-      QVector3D(-bw_body * 0.25F, bh_body * 0.06F, bl * 0.31F));
-
-  cyl(out[i++], "horse.full.neck.crest", root,
-      (pose.neck_base - pose.barrel_center) +
-          QVector3D(0.0F, -bh_v * 0.03F, bl * 0.04F),
-      neck_top_bone, QVector3D(0.0F, -dims.head_height * 0.06F, -hl * 0.06F),
-      pose.neck_radius * 1.28F, kRoleCoat);
-
-  ell(out[i++], "horse.full.neck.throat", root,
-      QVector3D(bw_v * 0.13F, bh_v * 0.13F, bl * 0.14F),
-      (pose.neck_base - pose.barrel_center) +
-          QVector3D(0.0F, -bh_v * 0.12F, bl * 0.10F));
-
-  for (int m = 0; m < 5; ++m) {
-    float const t = static_cast<float>(m) / 4.0F;
-    QVector3D const along = (pose.neck_base - pose.barrel_center) * (1.0F - t) +
-                            (pose.neck_top - pose.barrel_center) * t;
-    float const size = 1.0F - 0.16F * t;
-    ell(out[i++],
-        m == 0   ? "horse.full.mane.0"
-        : m == 1 ? "horse.full.mane.1"
-        : m == 2 ? "horse.full.mane.2"
-        : m == 3 ? "horse.full.mane.3"
-                 : "horse.full.mane.4",
-        root,
-        QVector3D(bw_v * 0.04F * size, bh_v * 0.06F * size, bl * 0.045F * size),
-        along + QVector3D(bw_v * 0.025F, bh_v * (0.17F - 0.06F * t),
-                          -bl * 0.02F * t),
-        kRoleMane, 0);
-  }
-
-  ell(out[i++], "horse.full.forelock", head_bone,
-      QVector3D(dims.head_width * 0.15F, dims.head_height * 0.10F, hl * 0.10F),
-      QVector3D(0.0F, dims.head_height * 0.18F, -hl * 0.24F), kRoleMane, 0);
-
-  PrimitiveInstance &cranium = out[i++];
-  cranium.debug_name = "horse.full.head.cranium";
-  cranium.shape = PrimitiveShape::Mesh;
-  cranium.params.anchor_bone = head_bone;
-  cranium.params.head_offset =
-      QVector3D(0.0F, dims.head_height * 0.05F, -hl * 0.10F);
-  cranium.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
-  cranium.custom_mesh = get_faceted_horse_head_mesh();
-  cranium.color_role = kRoleCoat;
-  cranium.material_id = 6;
-  cranium.lod_mask = kLodFull;
-
-  cap(out[i++], "horse.full.head.muzzle", head_bone,
-      QVector3D(0.0F, -dims.head_height * 0.02F, hl * 0.00F), head_bone,
-      QVector3D(0.0F, -dims.head_height * 0.20F, hl * 0.90F),
-      dims.muzzle_length * 0.09F, kRoleMuzzle);
-
-  box(out[i++], "horse.full.head.jaw", head_bone,
-      QVector3D(dims.head_width * 0.10F, dims.head_height * 0.05F, hl * 0.20F),
-      QVector3D(0.0F, -dims.head_height * 0.15F, hl * 0.16F), kRoleMuzzle);
-
-  sph(out[i++], "horse.full.head.cheek.l", head_bone,
-      QVector3D(dims.head_width * 0.21F, dims.head_height * 0.02F, -hl * 0.08F),
-      dims.head_width * 0.15F, kRoleCoat);
-  sph(out[i++], "horse.full.head.cheek.r", head_bone,
-      QVector3D(-dims.head_width * 0.21F, dims.head_height * 0.02F,
-                -hl * 0.08F),
-      dims.head_width * 0.15F, kRoleCoat);
-
-  cone_p(
-      out[i++], "horse.full.head.ear.l", head_bone,
-      QVector3D(dims.head_width * 0.10F, dims.head_height * 0.20F, -hl * 0.30F),
-      head_bone,
-      QVector3D(dims.head_width * 0.11F, dims.head_height * 0.34F, -hl * 0.40F),
-      dims.head_width * 0.045F, kRoleCoat);
-  cone_p(out[i++], "horse.full.head.ear.r", head_bone,
-         QVector3D(-dims.head_width * 0.10F, dims.head_height * 0.20F,
-                   -hl * 0.30F),
-         head_bone,
-         QVector3D(-dims.head_width * 0.11F, dims.head_height * 0.34F,
-                   -hl * 0.40F),
-         dims.head_width * 0.045F, kRoleCoat);
-
-  sph(out[i++], "horse.full.head.eye.l", head_bone,
-      QVector3D(dims.head_width * 0.24F, dims.head_height * 0.12F, -hl * 0.10F),
-      dims.head_width * 0.06F, kRoleEye, 0);
-  sph(out[i++], "horse.full.head.eye.r", head_bone,
-      QVector3D(-dims.head_width * 0.24F, dims.head_height * 0.12F,
-                -hl * 0.10F),
-      dims.head_width * 0.06F, kRoleEye, 0);
-
-  QVector3D const tail_root_off(0.0F, bh_v * 0.28F, -bl * 0.46F);
-  ell(out[i++], "horse.full.tail.dock", root,
-      QVector3D(bw_v * 0.05F, bh_v * 0.06F, bl * 0.07F), tail_root_off,
-      kRoleCoat);
-
-  for (int t_i = 0; t_i < 3; ++t_i) {
-    float const tt = static_cast<float>(t_i + 1) / 3.0F;
-    QVector3D const off =
-        tail_root_off + QVector3D(0.0F, -bh_v * 0.22F * tt - bh_v * 0.04F,
-                                  -bl * 0.08F * tt - bl * 0.02F);
-    ell(out[i++],
-        t_i == 0   ? "horse.full.tail.switch.0"
-        : t_i == 1 ? "horse.full.tail.switch.1"
-                   : "horse.full.tail.switch.2",
-        root,
-        QVector3D(bw_v * (0.08F - 0.02F * tt), bh_v * (0.14F + 0.04F * tt),
-                  bl * 0.08F),
-        off, kRoleTail, 0);
-  }
-
-  struct full_leg_desc {
-    std::string_view upper_name;
-    std::string_view cannon_name;
-    std::string_view hoof_name;
-    HorseBone foot_bone;
-    QVector3D shoulder_offset;
-    bool is_rear;
-  };
-  std::array<full_leg_desc, 4> const legs{{
-      {"horse.full.leg.fl.upper", "horse.full.leg.fl.cannon",
-       "horse.full.hoof.fl", HorseBone::FootFL, pose.shoulder_offset_fl, false},
-      {"horse.full.leg.fr.upper", "horse.full.leg.fr.cannon",
-       "horse.full.hoof.fr", HorseBone::FootFR, pose.shoulder_offset_fr, false},
-      {"horse.full.leg.bl.upper", "horse.full.leg.bl.cannon",
-       "horse.full.hoof.bl", HorseBone::FootBL, pose.shoulder_offset_bl, true},
-      {"horse.full.leg.br.upper", "horse.full.leg.br.cannon",
-       "horse.full.hoof.br", HorseBone::FootBR, pose.shoulder_offset_br, true},
-  }};
-  float const leg_len = dims.leg_length;
-
-  for (auto const &leg : legs) {
-    auto foot_b = static_cast<BoneIndex>(leg.foot_bone);
-    float const lateral = leg.shoulder_offset.x() >= 0.0F ? 1.0F : -1.0F;
-
-    float const upper_r = pose.leg_radius * (leg.is_rear ? 1.92F : 2.05F);
-    float const cannon_r = pose.leg_radius * (leg.is_rear ? 0.62F : 0.72F);
-
-    QVector3D const upper_tail =
-        leg.is_rear
-            ? QVector3D(lateral * bw_body * 0.05F, leg_len * 0.66F, -bl * 0.30F)
-            : QVector3D(lateral * bw_body * 0.04F, leg_len * 0.70F, bl * 0.08F);
-    QVector3D const cannon_head =
-        leg.is_rear
-            ? QVector3D(lateral * bw_body * 0.04F, leg_len * 0.66F, -bl * 0.25F)
-            : QVector3D(lateral * bw_body * 0.03F, leg_len * 0.70F, bl * 0.06F);
-    QVector3D const cannon_tail =
-        QVector3D(lateral * bw_body * 0.03F, dims.hoof_height * 0.90F,
-                  leg.is_rear ? -bl * 0.06F : bl * 0.06F);
-    QVector3D const hoof_center(cannon_tail.x(), dims.hoof_height * 0.50F,
-                                cannon_tail.z());
-
-    cone_p(out[i++], leg.upper_name, root, leg.shoulder_offset, foot_b,
-           upper_tail, upper_r, kRoleCoat);
-
-    cyl(out[i++], leg.cannon_name, foot_b, cannon_head, foot_b, cannon_tail,
-        cannon_r, kRoleCoatDark);
-
-    PrimitiveInstance &hoof = out[i++];
-    hoof.debug_name = leg.hoof_name;
-    hoof.shape = PrimitiveShape::Mesh;
-    hoof.custom_mesh = Render::GL::get_unit_cylinder();
-    hoof.params.anchor_bone = foot_b;
-    hoof.params.head_offset = hoof_center;
-    hoof.params.half_extents = pose.hoof_scale;
-    hoof.color_role = kRoleHoof;
-    hoof.material_id = 8;
-    hoof.lod_mask = kLodFull;
-  }
-
-  (void)i;
-
+  PrimitiveInstance &whole = out[0];
+  whole.debug_name = "horse.full.whole";
+  whole.shape = PrimitiveShape::Mesh;
+  whole.params.anchor_bone = root;
+  whole.params.head_offset = QVector3D(0.0F, 0.0F, 0.0F);
+  whole.params.half_extents = QVector3D(1.0F, 1.0F, 1.0F);
+  whole.custom_mesh = get_whole_horse_mesh();
+  whole.mesh_skinning = Render::Creature::MeshSkinning::HorseWhole;
+  whole.color_role = kRoleCoat;
+  whole.material_id = 6;
+  whole.lod_mask = kLodFull;
   return out;
 }
 

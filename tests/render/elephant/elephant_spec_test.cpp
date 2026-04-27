@@ -5,7 +5,7 @@
 // calls the rigged wrappers. With a non-Renderer submitter we exercise
 // the software fallback inside `submit_elephant_*_rigged`, which routes
 // through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (5/41 for Minimal/Full).
+// PartGraph primitive (7/41 for Minimal/Full).
 
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_renderer_base.h"
@@ -129,12 +129,24 @@ auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
   return max_v - min_v;
 }
 
+auto point_to_segment_distance(const QVector3D &point, const QVector3D &a,
+                               const QVector3D &b) -> float {
+  QVector3D const ab = b - a;
+  float const denom = QVector3D::dotProduct(ab, ab);
+  if (denom <= 1.0e-6F) {
+    return (point - a).length();
+  }
+  float const t =
+      std::clamp(QVector3D::dotProduct(point - a, ab) / denom, 0.0F, 1.0F);
+  return (point - (a + ab * t)).length();
+}
+
 } // namespace
 
 TEST(ElephantSpecTest, CreatureSpecHasTwoLods) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
-  EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 41U);
+  EXPECT_EQ(spec.lod_minimal.primitives.size(), 1U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 1U);
 }
 
 TEST(ElephantSpecTest, PoseKeepsHeavyBodyAndPillarLegReadability) {
@@ -167,17 +179,83 @@ TEST(ElephantSpecTest, AnimatedPoseKeepsForwardTrunkAndLighterHeadRead) {
   EXPECT_LT(pose.pose_leg_radius, dims.leg_radius * 0.9F);
 }
 
-TEST(ElephantSpecTest, CreatureSpecUsesFacetedLowPolyBodyMeshes) {
+TEST(ElephantSpecTest, CreatureSpecUsesFacetedLowPolyBodyAndHeadMeshes) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
 
-  auto const *full_body =
-      find_primitive(spec.lod_full.primitives, "elephant.full.body.barrel");
+  auto const *whole =
+      find_primitive(spec.lod_full.primitives, "elephant.full.whole");
 
-  ASSERT_NE(full_body, nullptr);
-  EXPECT_EQ(full_body->shape, Render::Creature::PrimitiveShape::Mesh);
-  ASSERT_NE(full_body->custom_mesh, nullptr);
-  EXPECT_GT(mesh_axis_span(*full_body->custom_mesh, 2),
-            mesh_axis_span(*full_body->custom_mesh, 1) * 1.3F);
-  EXPECT_GT(mesh_axis_span(*full_body->custom_mesh, 0),
-            mesh_axis_span(*full_body->custom_mesh, 1) * 0.5F);
+  ASSERT_NE(whole, nullptr);
+  EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 2),
+            mesh_axis_span(*whole->custom_mesh, 1) * 1.2F);
+  EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 0),
+            mesh_axis_span(*whole->custom_mesh, 1) * 0.35F);
+  EXPECT_EQ(
+      find_primitive(spec.lod_full.primitives, "elephant.full.body.chest"),
+      nullptr);
+  EXPECT_EQ(
+      find_primitive(spec.lod_full.primitives, "elephant.full.head.cheek.l"),
+      nullptr);
+}
+
+TEST(ElephantSpecTest, MinimalSpecKeepsHeadAndTrunkIdentity) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+
+  auto const *whole =
+      find_primitive(spec.lod_minimal.primitives, "elephant.minimal.whole");
+
+  ASSERT_NE(whole, nullptr);
+
+  EXPECT_EQ(whole->shape, Render::Creature::PrimitiveShape::Mesh);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  EXPECT_GT(mesh_axis_span(*whole->custom_mesh, 2),
+            mesh_axis_span(*whole->custom_mesh, 1) * 1.2F);
+  EXPECT_EQ(
+      find_primitive(spec.lod_minimal.primitives, "elephant.minimal.leg.fl"),
+      nullptr);
+}
+
+TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+
+  auto const *whole =
+      find_primitive(spec.lod_full.primitives, "elephant.full.whole");
+
+  ASSERT_NE(whole, nullptr);
+  ASSERT_NE(whole->custom_mesh, nullptr);
+  EXPECT_EQ(
+      find_primitive(spec.lod_full.primitives, "elephant.full.trunk.seg.0"),
+      nullptr);
+  EXPECT_EQ(
+      find_primitive(spec.lod_full.primitives, "elephant.full.leg.fl.lower"),
+      nullptr);
+}
+
+TEST(ElephantSpecTest, MovingPoseBendsKneesDuringStride) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+  Render::Elephant::ElephantSpecPose pose{};
+  Render::Elephant::ElephantPoseMotion motion{};
+  motion.phase = 0.30F;
+  motion.is_moving = true;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion, pose);
+
+  QVector3D const shoulder_fl =
+      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl =
+      pose.barrel_center + pose.shoulder_offset_pose_bl;
+  float const front_mid_z = (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F;
+  float const rear_mid_z = (shoulder_bl.z() + pose.foot_bl.z()) * 0.5F;
+
+  EXPECT_LT(pose.knee_fl.y(), shoulder_fl.y());
+  EXPECT_GT(pose.knee_fl.y(), pose.foot_fl.y());
+  EXPECT_GT(pose.knee_fl.z(), front_mid_z);
+  EXPECT_GT(point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl),
+            dims.body_length * 0.02F);
+
+  EXPECT_LT(pose.knee_bl.y(), shoulder_bl.y());
+  EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
+  EXPECT_LT(pose.knee_bl.z(), rear_mid_z);
 }
