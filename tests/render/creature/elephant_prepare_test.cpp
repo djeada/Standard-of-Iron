@@ -5,6 +5,10 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/bpat/bpat_format.h"
+#include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/elephant/dimensions.h"
@@ -18,7 +22,10 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -63,6 +70,17 @@ struct ScopedFlatTerrain {
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
+
+auto find_assets_dir() -> std::string {
+  for (auto const *candidate :
+       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
+    std::filesystem::path p{candidate};
+    if (std::filesystem::exists(p / "elephant.bpat")) {
+      return std::filesystem::absolute(p).string();
+    }
+  }
+  return {};
+}
 
 auto make_test_elephant_profile() -> Render::GL::ElephantProfile {
   Render::GL::ElephantProfile profile{};
@@ -137,6 +155,80 @@ TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
+  auto const root = find_assets_dir();
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesElephant,
+                                root + "/elephant.bpat"));
+
+  auto &snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  snapshot_reg.clear();
+
+  auto const temp_dir =
+      std::filesystem::temp_directory_path() / "soi_elephant_snapshot_test";
+  std::filesystem::create_directories(temp_dir);
+  auto const asset_path = temp_dir / "elephant_minimal.bpsm";
+
+  Render::Creature::Snapshot::SnapshotMeshWriter writer(
+      Render::Creature::Bpat::kSpeciesElephant,
+      Render::Creature::CreatureLOD::Minimal, 3U,
+      std::array<std::uint32_t, 3>{0U, 1U, 2U});
+  writer.add_clip({"idle", 1U});
+  std::array<Render::GL::RiggedVertex, 3> vertices{};
+  vertices[0].position_bone_local = {-1.0F, 0.0F, 0.0F};
+  vertices[1].position_bone_local = {1.0F, 0.0F, 0.0F};
+  vertices[2].position_bone_local = {0.0F, 1.0F, 0.0F};
+  for (auto &v : vertices) {
+    v.normal_bone_local = {0.0F, 1.0F, 0.0F};
+    v.bone_indices = {0, 0, 0, 0};
+    v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+  }
+  writer.append_clip_vertices(vertices);
+
+  std::ofstream out(asset_path, std::ios::binary | std::ios::trunc);
+  ASSERT_TRUE(out.good());
+  ASSERT_TRUE(writer.write(out));
+  out.close();
+  ASSERT_TRUE(
+      snapshot_reg.load_species(Render::Creature::Bpat::kSpeciesElephant,
+                                Render::Creature::CreatureLOD::Minimal,
+                                asset_path.string()))
+      << snapshot_reg.last_error();
+
+  Render::GL::ElephantRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::ElephantProfile profile = make_test_elephant_profile();
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  recorder.rigged_mesh_cache().clear();
+
+  renderer.render(ctx, anim, profile, nullptr, nullptr, recorder,
+                  Render::GL::HorseLOD::Minimal);
+
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
 TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {

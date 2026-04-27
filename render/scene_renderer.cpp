@@ -10,6 +10,7 @@
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
 #include "creature/bpat/bpat_registry.h"
+#include "creature/snapshot_mesh_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
@@ -153,6 +154,8 @@ auto Renderer::initialize() -> bool {
         << QString::fromStdString(std::string(
                Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
+  (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
+      "assets/creatures");
   return true;
 }
 

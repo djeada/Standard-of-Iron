@@ -8,6 +8,10 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
+#include "render/creature/bpat/bpat_format.h"
+#include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
@@ -25,7 +29,10 @@
 #include <QVector3D>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <vector>
 
 namespace {
@@ -69,6 +76,17 @@ struct ScopedFlatTerrain {
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
+
+auto find_assets_dir() -> std::string {
+  for (auto const *candidate :
+       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
+    std::filesystem::path p{candidate};
+    if (std::filesystem::exists(p / "horse.bpat")) {
+      return std::filesystem::absolute(p).string();
+    }
+  }
+  return {};
+}
 
 auto wrap_phase(float phase) -> float {
   phase = std::fmod(phase, 1.0F);
@@ -162,6 +180,81 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
 
   EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
   EXPECT_TRUE(recorder.commands().empty());
+}
+
+TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
+  auto const root = find_assets_dir();
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(
+      bpat.load_species(Render::Creature::Bpat::kSpeciesHorse, root + "/horse.bpat"));
+
+  auto &snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  snapshot_reg.clear();
+
+  auto const temp_dir =
+      std::filesystem::temp_directory_path() / "soi_horse_snapshot_test";
+  std::filesystem::create_directories(temp_dir);
+  auto const asset_path = temp_dir / "horse_minimal.bpsm";
+
+  Render::Creature::Snapshot::SnapshotMeshWriter writer(
+      Render::Creature::Bpat::kSpeciesHorse,
+      Render::Creature::CreatureLOD::Minimal, 3U,
+      std::array<std::uint32_t, 3>{0U, 1U, 2U});
+  writer.add_clip({"idle", 1U});
+  std::array<Render::GL::RiggedVertex, 3> vertices{};
+  vertices[0].position_bone_local = {-1.0F, 0.0F, 0.0F};
+  vertices[1].position_bone_local = {1.0F, 0.0F, 0.0F};
+  vertices[2].position_bone_local = {0.0F, 1.0F, 0.0F};
+  for (auto &v : vertices) {
+    v.normal_bone_local = {0.0F, 1.0F, 0.0F};
+    v.bone_indices = {0, 0, 0, 0};
+    v.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
+  }
+  writer.append_clip_vertices(vertices);
+
+  std::ofstream out(asset_path, std::ios::binary | std::ios::trunc);
+  ASSERT_TRUE(out.good());
+  ASSERT_TRUE(writer.write(out));
+  out.close();
+  ASSERT_TRUE(snapshot_reg.load_species(Render::Creature::Bpat::kSpeciesHorse,
+                                        Render::Creature::CreatureLOD::Minimal,
+                                        asset_path.string()))
+      << snapshot_reg.last_error();
+
+  Render::GL::HorseRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  recorder.rigged_mesh_cache().clear();
+
+  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder,
+                  Render::GL::HorseLOD::Minimal);
+
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
 TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
