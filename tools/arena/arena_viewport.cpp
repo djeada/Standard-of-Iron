@@ -12,6 +12,7 @@
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/command_service.h"
+#include "game/systems/ai_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -42,6 +43,7 @@ namespace {
 
 constexpr int k_local_owner_id = 1;
 constexpr int k_enemy_owner_id = 2;
+constexpr int k_all_owners_filter = 0;
 constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
@@ -137,6 +139,25 @@ auto classify_terrain(float normalized_height) -> Game::Map::TerrainType {
   return Game::Map::TerrainType::Flat;
 }
 
+auto spawn_count_for_owner(Engine::Core::World &world,
+                           const std::vector<std::unique_ptr<Game::Units::Unit>> &units,
+                           int owner_id) -> int {
+  int count = 0;
+  for (const auto &unit : units) {
+    if (unit == nullptr) {
+      continue;
+    }
+    auto *entity = world.get_entity(unit->id());
+    auto *unit_component =
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if (unit_component != nullptr && unit_component->owner_id == owner_id) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 } // namespace
 
 ArenaViewport::ArenaViewport(QWidget *parent)
@@ -221,6 +242,12 @@ void ArenaViewport::setup_default_players() {
                             Game::Systems::NationID::RomanRepublic);
   nations.set_player_nation(k_enemy_owner_id,
                             Game::Systems::NationID::Carthage);
+
+  if (m_world != nullptr) {
+    if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
+      ai_system->reinitialize();
+    }
+  }
 }
 
 void ArenaViewport::initializeGL() {
@@ -347,9 +374,9 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
       QPointF const click_pos = event->position();
       Engine::Core::EntityID const picked =
           Game::Systems::PickingService::pick_unit_first(
-              static_cast<float>(click_pos.x()),
-              static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
-              height(), k_local_owner_id);
+               static_cast<float>(click_pos.x()),
+               static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
+               height(), k_all_owners_filter);
       select_entity(picked, additive);
     }
     m_selection_drag_active = false;
@@ -425,7 +452,7 @@ void ArenaViewport::select_entities_in_rect(const QRect &selection_rect,
       static_cast<float>(normalized.left()), static_cast<float>(normalized.top()),
       static_cast<float>(normalized.right()),
       static_cast<float>(normalized.bottom()), *m_world, *m_camera, width(),
-      height(), k_local_owner_id);
+      height(), k_all_owners_filter);
   for (auto entity_id : picked) {
     selection->select_unit(entity_id);
   }
@@ -603,6 +630,14 @@ void ArenaViewport::setNormalsOverlayEnabled(bool enabled) {
   update();
 }
 
+void ArenaViewport::setSpawnOwner(int ownerId) {
+  if (ownerId == k_enemy_owner_id) {
+    m_spawn_owner_id = k_enemy_owner_id;
+    return;
+  }
+  m_spawn_owner_id = k_local_owner_id;
+}
+
 void ArenaViewport::setSpawnNation(const QString &nationId) {
   Game::Systems::NationID parsed{};
   if (!Game::Systems::try_parse_nation_id(nationId, parsed)) {
@@ -625,18 +660,22 @@ void ArenaViewport::spawnUnit() {
     return;
   }
 
-  float const column = static_cast<float>(m_units.size() % 4);
-  float const row = static_cast<float>(m_units.size() / 4);
+  int const owner_spawn_count =
+      spawn_count_for_owner(*m_world, m_units, m_spawn_owner_id);
+  float const column = static_cast<float>(owner_spawn_count % 4);
+  float const row = static_cast<float>(owner_spawn_count / 4);
   float const world_x = (column - 1.5F) * 3.5F;
-  float const world_z = row * 4.0F - 6.0F;
+  float const world_z =
+      m_spawn_owner_id == k_enemy_owner_id ? (6.0F + row * 4.0F)
+                                           : (-6.0F - row * 4.0F);
   float const world_y = Game::Map::TerrainService::instance().resolve_surface_world_y(
       world_x, world_z, 0.0F, 0.0F);
 
   Game::Units::SpawnParams params;
   params.position = {world_x, world_y, world_z};
-  params.player_id = k_local_owner_id;
+  params.player_id = m_spawn_owner_id;
   params.spawn_type = Game::Units::spawn_typeFromTroopType(m_spawn_unit_type);
-  params.ai_controlled = false;
+  params.ai_controlled = (m_spawn_owner_id == k_enemy_owner_id);
   params.nation_id = m_spawn_nation_id;
 
   auto unit = m_unit_factory->create(m_spawn_unit_type, *m_world, params);
@@ -645,8 +684,16 @@ void ArenaViewport::spawnUnit() {
   }
 
   auto *entity = m_world->get_entity(unit->id());
+  auto *transform =
+      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
+                        : nullptr;
   auto *unit_component =
       entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>() : nullptr;
+  if (transform != nullptr && m_spawn_owner_id == k_enemy_owner_id) {
+    transform->rotation.y = 180.0F;
+    transform->desired_yaw = 180.0F;
+    transform->has_desired_yaw = true;
+  }
   if (unit_component != nullptr) {
     unit_component->speed = m_default_unit_speed;
   }
