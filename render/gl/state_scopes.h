@@ -48,6 +48,24 @@ struct BlendScope {
   }
 };
 
+struct CullFaceScope {
+  GLboolean prevEnable;
+  explicit CullFaceScope(bool enable) : prevEnable(glIsEnabled(GL_CULL_FACE)) {
+    if (enable) {
+      glEnable(GL_CULL_FACE);
+    } else {
+      glDisable(GL_CULL_FACE);
+    }
+  }
+  ~CullFaceScope() {
+    if (prevEnable != 0U) {
+      glEnable(GL_CULL_FACE);
+    } else {
+      glDisable(GL_CULL_FACE);
+    }
+  }
+};
+
 struct DepthTestScope {
   GLboolean prevEnable;
   explicit DepthTestScope(bool enable)

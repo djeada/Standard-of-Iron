@@ -2,6 +2,7 @@
 
 #include <QPointer>
 #include <QQuickFramebufferObject>
+#include <chrono>
 
 class GameEngine;
 
@@ -33,5 +34,6 @@ private:
   private:
     QPointer<GameEngine> m_engine;
     QSize m_size;
+    std::chrono::steady_clock::time_point m_last_frame_time{};
   };
 };

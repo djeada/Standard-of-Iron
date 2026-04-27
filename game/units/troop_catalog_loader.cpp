@@ -165,7 +165,6 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
     troop_class.unit_type = *type_opt;
     troop_class.display_name =
         troop_obj.value("display_name").toString(troop_id).toStdString();
-
     const QJsonObject production = ensure_object(troop_obj.value("production"));
     troop_class.production.cost =
         read_int(production, "cost", troop_class.production.cost);
@@ -215,9 +214,6 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
     troop_class.visuals.selection_ring_size =
         read_float(visuals, "selection_ring_size",
                    troop_class.visuals.selection_ring_size);
-    troop_class.visuals.selection_ring_y_offset =
-        read_float(visuals, "selection_ring_y_offset",
-                   troop_class.visuals.selection_ring_y_offset);
     troop_class.visuals.selection_ring_ground_offset =
         read_float(visuals, "selection_ring_ground_offset",
                    troop_class.visuals.selection_ring_ground_offset);

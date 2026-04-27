@@ -1,6 +1,6 @@
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
-#include "render/humanoid/rig.h"
 #include <QVector3D>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -280,16 +280,38 @@ TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
   controller.hold_sword_and_shield();
 
   // Right hand (sword hand) should be positioned for sword holding
-  EXPECT_GT(pose.hand_r.x(), 0.0F); // To the right
-  EXPECT_GT(pose.hand_r.z(), 0.0F); // In front
+  EXPECT_GT(pose.hand_r.x(), 0.28F);
+  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
+  EXPECT_GT(pose.hand_r.z(), 0.36F);
 
   // Left hand (shield hand) should be positioned for shield holding
-  EXPECT_LT(pose.hand_l.x(), 0.0F); // To the left
-  EXPECT_GT(pose.hand_l.z(), 0.0F); // In front
+  EXPECT_LT(pose.hand_l.x(), -0.26F);
+  EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y + 0.01F);
+  EXPECT_GT(pose.hand_l.z(), 0.20F);
 
   // Both elbows should be computed
   EXPECT_GT((pose.elbow_r - pose.shoulder_r).length(), 0.0F);
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       HoldSwordAndShieldCarriesFartherForwardWhileMoving) {
+  HumanoidPose idle_pose = pose;
+  HumanoidAnimationContext idle_anim = anim_ctx;
+  HumanoidPoseController idle_controller(idle_pose, idle_anim);
+  idle_controller.hold_sword_and_shield();
+
+  HumanoidPose moving_pose = pose;
+  HumanoidAnimationContext moving_anim = anim_ctx;
+  moving_anim.inputs.is_moving = true;
+  moving_anim.gait.speed = 1.5F;
+  HumanoidPoseController moving_controller(moving_pose, moving_anim);
+  moving_controller.hold_sword_and_shield();
+
+  EXPECT_GT(moving_pose.hand_r.z(), idle_pose.hand_r.z());
+  EXPECT_LT(moving_pose.hand_r.y(), idle_pose.hand_r.y());
+  EXPECT_GT(moving_pose.hand_l.z(), idle_pose.hand_l.z());
+  EXPECT_LT(moving_pose.hand_l.y(), idle_pose.hand_l.y());
 }
 
 TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {

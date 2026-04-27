@@ -63,6 +63,13 @@ inline constexpr const char *BACKGROUND_SWAY_VARIANCE =
     "backgroundSwayVariance";
 inline constexpr const char *BACKGROUND_SCATTER_RADIUS =
     "backgroundScatterRadius";
+inline constexpr const char *SNOW_COVERAGE = "snowCoverage";
+inline constexpr const char *MOISTURE_LEVEL = "moistureLevel";
+inline constexpr const char *CRACK_INTENSITY = "crackIntensity";
+inline constexpr const char *ROCK_EXPOSURE = "rockExposure";
+inline constexpr const char *GRASS_SATURATION = "grassSaturation";
+inline constexpr const char *SOIL_ROUGHNESS = "soilRoughness";
+inline constexpr const char *SNOW_COLOR = "snowColor";
 inline constexpr const char *GROUND_IRREGULARITY_ENABLED =
     "groundIrregularityEnabled";
 inline constexpr const char *IRREGULARITY_SCALE = "irregularityScale";

@@ -2,6 +2,7 @@
 
 #include "../units/troop_type.h"
 #include <QVector3D>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -26,6 +27,14 @@ struct FormationPosition {
   QVector3D position;
   float facing_angle;
   Engine::Core::EntityID entity_id{0};
+};
+
+enum class FormationUnitCategory { Infantry, Cavalry, BuilderConstruction };
+
+struct FormationOffset {
+  float offset_x{0.0F};
+  float offset_z{0.0F};
+  float yaw_offset{0.0F};
 };
 
 } // namespace Game::Systems
@@ -124,6 +133,11 @@ public:
                           std::unique_ptr<IFormation> formation);
 
   auto get_formation(FormationType type) const -> const IFormation *;
+
+  [[nodiscard]] auto
+  get_local_offset(FormationType type, FormationUnitCategory category, int idx,
+                   int row, int col, int rows, int cols, float spacing,
+                   std::uint32_t seed) const -> FormationOffset;
 
 private:
   FormationSystem();

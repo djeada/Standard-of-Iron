@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../i_render_pass.h"
-#include "rain_gpu.h"
+#include "../rain_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>

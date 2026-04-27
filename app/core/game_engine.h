@@ -46,22 +46,13 @@ struct RenderableComponent;
 namespace Render::GL {
 class Renderer;
 class Camera;
+class TerrainSceneProxy;
+class TerrainSurfaceManager;
+class TerrainFeatureManager;
+class TerrainScatterManager;
 class ResourceManager;
-class GroundRenderer;
-class TerrainRenderer;
-class BiomeRenderer;
-class RiverRenderer;
-class RoadRenderer;
-class RiverbankRenderer;
-class BridgeRenderer;
 class FogRenderer;
-class StoneRenderer;
-class PlantRenderer;
-class PineRenderer;
-class OliveRenderer;
-class FireCampRenderer;
 class RainRenderer;
-struct IRenderPass;
 } // namespace Render::GL
 
 namespace Game {
@@ -400,23 +391,14 @@ private:
   std::unique_ptr<Engine::Core::World> m_world;
   std::unique_ptr<Render::GL::Renderer> m_renderer;
   std::unique_ptr<Render::GL::Camera> m_camera;
+  std::unique_ptr<Render::GL::TerrainSceneProxy> m_terrain_scene;
   std::shared_ptr<Render::GL::ResourceManager> m_resources;
-  std::unique_ptr<Render::GL::GroundRenderer> m_ground;
-  std::unique_ptr<Render::GL::TerrainRenderer> m_terrain;
-  std::unique_ptr<Render::GL::BiomeRenderer> m_biome;
-  std::unique_ptr<Render::GL::RiverRenderer> m_river;
-  std::unique_ptr<Render::GL::RoadRenderer> m_road;
-  std::unique_ptr<Render::GL::RiverbankRenderer> m_riverbank;
-  std::unique_ptr<Render::GL::BridgeRenderer> m_bridge;
+  std::unique_ptr<Render::GL::TerrainSurfaceManager> m_surface;
+  std::unique_ptr<Render::GL::TerrainFeatureManager> m_features;
+  std::unique_ptr<Render::GL::TerrainScatterManager> m_scatter;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
-  std::unique_ptr<Render::GL::StoneRenderer> m_stone;
-  std::unique_ptr<Render::GL::PlantRenderer> m_plant;
-  std::unique_ptr<Render::GL::PineRenderer> m_pine;
-  std::unique_ptr<Render::GL::OliveRenderer> m_olive;
-  std::unique_ptr<Render::GL::FireCampRenderer> m_firecamp;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::RainManager> m_rainManager;
-  std::vector<Render::GL::IRenderPass *> m_passes;
   std::unique_ptr<Game::Systems::PickingService> m_pickingService;
   std::unique_ptr<Game::Systems::VictoryService> m_victoryService;
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;

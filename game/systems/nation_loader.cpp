@@ -225,10 +225,6 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
     variant.selection_ring_size = value;
     has_variant = true;
   }
-  if (auto value = read_float_opt(visuals, "selection_ring_y_offset")) {
-    variant.selection_ring_y_offset = value;
-    has_variant = true;
-  }
   if (auto value = read_float_opt(visuals, "selection_ring_ground_offset")) {
     variant.selection_ring_ground_offset = value;
     has_variant = true;

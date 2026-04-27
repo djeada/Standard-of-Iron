@@ -48,10 +48,13 @@ void EffectsPipeline::cache_basic_uniforms() {
 
   m_basicUniforms.mvp = m_basicShader->optional_uniform_handle("u_mvp");
   m_basicUniforms.model = m_basicShader->uniform_handle("u_model");
+  m_basicUniforms.view_proj = m_basicShader->uniform_handle("u_viewProj");
   m_basicUniforms.texture = m_basicShader->uniform_handle("u_texture");
   m_basicUniforms.useTexture = m_basicShader->uniform_handle("u_useTexture");
   m_basicUniforms.color = m_basicShader->uniform_handle("u_color");
   m_basicUniforms.alpha = m_basicShader->uniform_handle("u_alpha");
+  m_basicUniforms.instanced =
+      m_basicShader->optional_uniform_handle("u_instanced");
 }
 
 void EffectsPipeline::cache_grid_uniforms() {

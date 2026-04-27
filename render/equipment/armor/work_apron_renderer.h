@@ -1,8 +1,14 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <QVector3D>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -15,28 +21,51 @@ struct WorkApronConfig {
   bool include_pockets = true;
 };
 
+inline constexpr std::uint32_t kWorkApronRoleCount = 9;
+
+auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t;
+
+auto work_apron_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                        std::uint16_t chest_socket_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 3>;
+
 class WorkApronRenderer : public IEquipmentRenderer {
 public:
   explicit WorkApronRenderer(const WorkApronConfig &config = WorkApronConfig{});
 
+  static void submit(const WorkApronConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const WorkApronConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
-
-  void set_config(const WorkApronConfig &config) { m_config = config; }
+              EquipmentBatch &batch) override;
 
 private:
   WorkApronConfig m_config;
 
-  void renderApronBody(const DrawContext &ctx, const AttachmentFrame &torso,
-                       const AttachmentFrame &waist, ISubmitter &submitter);
+  static void renderApronBody(const WorkApronConfig &config,
+                              const DrawContext &ctx,
+                              const AttachmentFrame &torso,
+                              const AttachmentFrame &waist,
+                              EquipmentBatch &batch);
 
-  void renderStraps(const DrawContext &ctx, const AttachmentFrame &torso,
-                    const BodyFrames &frames, ISubmitter &submitter);
+  static void renderStraps(const WorkApronConfig &config,
+                           const DrawContext &ctx, const AttachmentFrame &torso,
+                           const BodyFrames &frames, EquipmentBatch &batch);
 
-  void renderPockets(const DrawContext &ctx, const AttachmentFrame &waist,
-                     ISubmitter &submitter);
+  static void renderPockets(const WorkApronConfig &config,
+                            const DrawContext &ctx,
+                            const AttachmentFrame &waist,
+                            EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

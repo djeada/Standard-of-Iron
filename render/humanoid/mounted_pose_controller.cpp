@@ -1,5 +1,6 @@
 #include "mounted_pose_controller.h"
-#include "../horse/rig.h"
+#include "../horse/horse_motion.h"
+#include "../horse/horse_renderer_base.h"
 #include "humanoid_math.h"
 #include "humanoid_specs.h"
 #include "pose_controller.h"
@@ -15,15 +16,14 @@ namespace {
 
 auto seat_relative(const MountedAttachmentFrame &mount, float forward,
                    float right, float up) -> QVector3D {
-  QVector3D const base = mount.seat_position + mount.ground_offset;
+  QVector3D const base = mount.seat_position;
   return base + mount.seat_forward * forward + mount.seat_right * right +
          mount.seat_up * up;
 }
 
 auto rein_anchor(const MountedAttachmentFrame &mount, bool is_left, float slack,
                  float tension) -> QVector3D {
-  return compute_rein_handle(mount, is_left, slack, tension) +
-         mount.ground_offset;
+  return compute_rein_handle(mount, is_left, slack, tension);
 }
 
 } // namespace
@@ -761,13 +761,13 @@ void MountedPoseController::hold_reins_impl(const MountedAttachmentFrame &mount,
 void MountedPoseController::attach_feet_to_stirrups(
     const MountedAttachmentFrame &mount) {
 
-  m_pose.foot_l = mount.stirrup_bottom_left + mount.ground_offset;
-  m_pose.foot_r = mount.stirrup_bottom_right + mount.ground_offset;
+  m_pose.foot_l = mount.stirrup_bottom_left;
+  m_pose.foot_r = mount.stirrup_bottom_right;
 }
 
 void MountedPoseController::position_pelvis_on_saddle(
     const MountedAttachmentFrame &mount) {
-  QVector3D const seat_world = mount.seat_position + mount.ground_offset;
+  QVector3D const seat_world = mount.seat_position;
   QVector3D const delta = seat_world - m_pose.pelvis_pos;
   m_pose.pelvis_pos = seat_world;
   translate_upper_body(delta);

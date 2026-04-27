@@ -954,49 +954,64 @@ auto Serialization::serialize_terrain(
   }
   terrain_obj["roads"] = roads_array;
 
+  const auto profiles = Game::Map::make_biome_profiles(biome);
+  const auto &surface = profiles.surface;
+  const auto &scatter = profiles.scatter;
+  const auto &climate = profiles.climate;
+  const auto &wind = profiles.wind;
+
   QJsonObject biome_obj;
-  biome_obj["grassPrimaryR"] = biome.grass_primary.x();
-  biome_obj["grassPrimaryG"] = biome.grass_primary.y();
-  biome_obj["grassPrimaryB"] = biome.grass_primary.z();
-  biome_obj["grassSecondaryR"] = biome.grass_secondary.x();
-  biome_obj["grassSecondaryG"] = biome.grass_secondary.y();
-  biome_obj["grassSecondaryB"] = biome.grass_secondary.z();
-  biome_obj["grassDryR"] = biome.grass_dry.x();
-  biome_obj["grassDryG"] = biome.grass_dry.y();
-  biome_obj["grassDryB"] = biome.grass_dry.z();
-  biome_obj["soilColorR"] = biome.soil_color.x();
-  biome_obj["soilColorG"] = biome.soil_color.y();
-  biome_obj["soilColorB"] = biome.soil_color.z();
-  biome_obj["rockLowR"] = biome.rock_low.x();
-  biome_obj["rockLowG"] = biome.rock_low.y();
-  biome_obj["rockLowB"] = biome.rock_low.z();
-  biome_obj["rockHighR"] = biome.rock_high.x();
-  biome_obj["rockHighG"] = biome.rock_high.y();
-  biome_obj["rockHighB"] = biome.rock_high.z();
-  biome_obj["patchDensity"] = biome.patch_density;
-  biome_obj["patchJitter"] = biome.patch_jitter;
-  biome_obj["backgroundBladeDensity"] = biome.background_blade_density;
-  biome_obj["bladeHeightMin"] = biome.blade_height_min;
-  biome_obj["bladeHeightMax"] = biome.blade_height_max;
-  biome_obj["bladeWidthMin"] = biome.blade_width_min;
-  biome_obj["bladeWidthMax"] = biome.blade_width_max;
-  biome_obj["sway_strength"] = biome.sway_strength;
-  biome_obj["sway_speed"] = biome.sway_speed;
-  biome_obj["heightNoiseAmplitude"] = biome.height_noise_amplitude;
-  biome_obj["heightNoiseFrequency"] = biome.height_noise_frequency;
-  biome_obj["terrainMacroNoiseScale"] = biome.terrain_macro_noise_scale;
-  biome_obj["terrainDetailNoiseScale"] = biome.terrain_detail_noise_scale;
-  biome_obj["terrainSoilHeight"] = biome.terrain_soil_height;
-  biome_obj["terrainSoilSharpness"] = biome.terrain_soil_sharpness;
-  biome_obj["terrainRockThreshold"] = biome.terrain_rock_threshold;
-  biome_obj["terrainRockSharpness"] = biome.terrain_rock_sharpness;
-  biome_obj["terrainAmbientBoost"] = biome.terrain_ambient_boost;
-  biome_obj["terrainRockDetailStrength"] = biome.terrain_rock_detail_strength;
-  biome_obj["backgroundSwayVariance"] = biome.background_sway_variance;
-  biome_obj["backgroundScatterRadius"] = biome.background_scatter_radius;
-  biome_obj["plant_density"] = biome.plant_density;
-  biome_obj["spawnEdgePadding"] = biome.spawn_edge_padding;
-  biome_obj["seed"] = static_cast<qint64>(biome.seed);
+  biome_obj["grassPrimaryR"] = surface.grass_primary.x();
+  biome_obj["grassPrimaryG"] = surface.grass_primary.y();
+  biome_obj["grassPrimaryB"] = surface.grass_primary.z();
+  biome_obj["grassSecondaryR"] = surface.grass_secondary.x();
+  biome_obj["grassSecondaryG"] = surface.grass_secondary.y();
+  biome_obj["grassSecondaryB"] = surface.grass_secondary.z();
+  biome_obj["grassDryR"] = surface.grass_dry.x();
+  biome_obj["grassDryG"] = surface.grass_dry.y();
+  biome_obj["grassDryB"] = surface.grass_dry.z();
+  biome_obj["soilColorR"] = surface.soil_color.x();
+  biome_obj["soilColorG"] = surface.soil_color.y();
+  biome_obj["soilColorB"] = surface.soil_color.z();
+  biome_obj["rockLowR"] = surface.rock_low.x();
+  biome_obj["rockLowG"] = surface.rock_low.y();
+  biome_obj["rockLowB"] = surface.rock_low.z();
+  biome_obj["rockHighR"] = surface.rock_high.x();
+  biome_obj["rockHighG"] = surface.rock_high.y();
+  biome_obj["rockHighB"] = surface.rock_high.z();
+  biome_obj["patchDensity"] = scatter.patch_density;
+  biome_obj["patchJitter"] = scatter.patch_jitter;
+  biome_obj["backgroundBladeDensity"] = scatter.background_blade_density;
+  biome_obj["bladeHeightMin"] = scatter.blade_height_min;
+  biome_obj["bladeHeightMax"] = scatter.blade_height_max;
+  biome_obj["bladeWidthMin"] = scatter.blade_width_min;
+  biome_obj["bladeWidthMax"] = scatter.blade_width_max;
+  biome_obj["sway_strength"] = wind.sway_strength;
+  biome_obj["sway_speed"] = wind.sway_speed;
+  biome_obj["heightNoiseAmplitude"] = surface.height_noise_amplitude;
+  biome_obj["heightNoiseFrequency"] = surface.height_noise_frequency;
+  biome_obj["terrainMacroNoiseScale"] = surface.terrain_macro_noise_scale;
+  biome_obj["terrainDetailNoiseScale"] = surface.terrain_detail_noise_scale;
+  biome_obj["terrainSoilHeight"] = surface.terrain_soil_height;
+  biome_obj["terrainSoilSharpness"] = surface.terrain_soil_sharpness;
+  biome_obj["terrainRockThreshold"] = surface.terrain_rock_threshold;
+  biome_obj["terrainRockSharpness"] = surface.terrain_rock_sharpness;
+  biome_obj["terrainAmbientBoost"] = surface.terrain_ambient_boost;
+  biome_obj["terrainRockDetailStrength"] = surface.terrain_rock_detail_strength;
+  biome_obj["backgroundSwayVariance"] = wind.background_sway_variance;
+  biome_obj["backgroundScatterRadius"] = scatter.background_scatter_radius;
+  biome_obj["plant_density"] = scatter.plant_density;
+  biome_obj["spawnEdgePadding"] = scatter.spawn_edge_padding;
+  biome_obj["snowCoverage"] = climate.snow_coverage;
+  biome_obj["moistureLevel"] = climate.moisture_level;
+  biome_obj["crackIntensity"] = climate.crack_intensity;
+  biome_obj["rockExposure"] = climate.rock_exposure;
+  biome_obj["grassSaturation"] = climate.grass_saturation;
+  biome_obj["soilRoughness"] = climate.soil_roughness;
+  biome_obj["snowColorR"] = climate.snow_color.x();
+  biome_obj["snowColorG"] = climate.snow_color.y();
+  biome_obj["snowColorB"] = climate.snow_color.z();
+  biome_obj["seed"] = static_cast<qint64>(surface.seed);
   terrain_obj["biome"] = biome_obj;
 
   return terrain_obj;
@@ -1105,6 +1120,20 @@ void Serialization::deserialize_terrain(
     } else {
       biome.seed = default_biome.seed;
     }
+    biome.snow_coverage = static_cast<float>(
+        biome_obj["snowCoverage"].toDouble(default_biome.snow_coverage));
+    biome.moisture_level = static_cast<float>(
+        biome_obj["moistureLevel"].toDouble(default_biome.moisture_level));
+    biome.crack_intensity = static_cast<float>(
+        biome_obj["crackIntensity"].toDouble(default_biome.crack_intensity));
+    biome.rock_exposure = static_cast<float>(
+        biome_obj["rockExposure"].toDouble(default_biome.rock_exposure));
+    biome.grass_saturation = static_cast<float>(
+        biome_obj["grassSaturation"].toDouble(default_biome.grass_saturation));
+    biome.soil_roughness = static_cast<float>(
+        biome_obj["soilRoughness"].toDouble(default_biome.soil_roughness));
+    biome.snow_color =
+        read_color(QStringLiteral("snowColor"), default_biome.snow_color);
   }
 
   std::vector<float> heights;

@@ -3,7 +3,8 @@
 #include "../core/entity.h"
 #include "../core/world.h"
 #include "../map/terrain_service.h"
-#include "../units/troop_config.h"
+
+#include <QVector3D>
 
 namespace Game::Systems {
 
@@ -29,18 +30,12 @@ void TerrainAlignmentSystem::align_entity_to_terrain(
 
   auto &terrain_service = Game::Map::TerrainService::instance();
 
-  float const terrain_height = terrain_service.get_terrain_height(
-      transform->position.x, transform->position.z);
-
-  float entity_base_offset = 0.0F;
-  if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
-    entity_base_offset =
-        Game::Units::TroopConfig::instance().getSelectionRingGroundOffset(
-            unit->spawn_type);
-  }
-
-  transform->position.y =
-      terrain_height + entity_base_offset * transform->scale.y;
+  QVector3D const aligned = terrain_service.resolve_surface_world_position(
+      transform->position.x, transform->position.z, 0.0F,
+      transform->position.y);
+  transform->position.x = aligned.x();
+  transform->position.y = aligned.y();
+  transform->position.z = aligned.z();
 }
 
 } // namespace Game::Systems

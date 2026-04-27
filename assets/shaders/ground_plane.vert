@@ -62,8 +62,6 @@ void main() {
 
   disp += sin(uvWarp.x * 1.8) * 0.05 + sin(uvWarp.y * 2.1) * 0.05;
 
-  wp.y += disp;
-
   float gradStep = max(0.15, 0.35 / max(freq * 1.1, 0.05));
   float h_base_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 0.65);
   float h_det_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 1.6);

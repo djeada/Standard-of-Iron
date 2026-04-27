@@ -28,7 +28,6 @@ void register_roman_archer_style() {
   style.bow_string_color = k_roman_string;
   style.show_helmet = true;
 
-  style.shader_id = "archer_roman_republic";
   register_archer_style("roman_republic", style);
 }
 
