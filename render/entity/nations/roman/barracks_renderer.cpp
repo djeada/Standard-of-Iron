@@ -8,10 +8,12 @@
 #include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
+#include "../../../render_archetype.h"
 #include "../../../rig_dsl/defs/barracks_rig.h"
 #include "../../../rig_dsl/rig_interpreter.h"
 #include "../../../rig_dsl/static_resolver.h"
 #include "../../../submitter.h"
+#include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -65,6 +67,64 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &color, Texture *white) {
   out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
+}
+
+void draw_static_structure(const DrawContext &p, ISubmitter &out);
+void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const RomanPalette &c);
+void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                    Texture *white, const RomanPalette &c, BuildingState state);
+void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                  Texture *white, const RomanPalette &c, BuildingState state);
+
+auto build_archetype_from_recorded(
+    std::string name, const std::vector<Render::GL::RecordedMeshCmd> &commands)
+    -> RenderArchetype {
+  RenderArchetypeBuilder builder(std::move(name));
+  builder.set_max_distance(std::numeric_limits<float>::infinity());
+  for (const auto &cmd : commands) {
+    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture,
+                     cmd.alpha, cmd.material_id,
+                     const_cast<Material *>(cmd.material));
+  }
+  return std::move(builder).build();
+}
+
+auto build_barracks_archetype(BuildingState state, Mesh *unit,
+                              Texture *white) -> RenderArchetype {
+  TemplateRecorder recorder;
+  recorder.reset(96);
+
+  DrawContext local_ctx;
+  local_ctx.model = QMatrix4x4{};
+  RomanPalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+
+  draw_static_structure(local_ctx, recorder);
+  draw_platform(local_ctx, recorder, unit, white, palette);
+  draw_colonnade(local_ctx, recorder, unit, white, palette, state);
+  draw_terrace(local_ctx, recorder, unit, white, palette, state);
+  return build_archetype_from_recorded("roman_barracks",
+                                       recorder.take_commands());
+}
+
+auto barracks_archetype(BuildingState state, Mesh *unit,
+                        Texture *white) -> const RenderArchetype & {
+  static const RenderArchetype k_normal =
+      build_barracks_archetype(BuildingState::Normal, unit, white);
+  static const RenderArchetype k_damaged =
+      build_barracks_archetype(BuildingState::Damaged, unit, white);
+  static const RenderArchetype k_destroyed =
+      build_barracks_archetype(BuildingState::Destroyed, unit, white);
+
+  switch (state) {
+  case BuildingState::Normal:
+    return k_normal;
+  case BuildingState::Damaged:
+    return k_damaged;
+  case BuildingState::Destroyed:
+    return k_destroyed;
+  }
+  return k_normal;
 }
 
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -480,11 +540,14 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     cloth.bannerShader = p.backend->banner_shader();
   }
 
-  draw_static_structure(p, out);
+  const RenderArchetype &archetype = barracks_archetype(state, unit, white);
+  RenderInstance instance;
+  instance.archetype = &archetype;
+  instance.world = p.model;
+  instance.default_texture = white;
+  instance.lod = RenderArchetypeLod::Full;
+  submit_render_instance(out, instance);
 
-  draw_platform(p, out, unit, white, c);
-  draw_colonnade(p, out, unit, white, c, state);
-  draw_terrace(p, out, unit, white, c, state);
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);

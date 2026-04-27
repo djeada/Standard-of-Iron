@@ -9,13 +9,14 @@ layout(location = 1) in vec3 a_normal;
 layout(location = 2) in vec2 a_tex;
 layout(location = 3) in ivec4 a_bone_indices;
 layout(location = 4) in vec4 a_bone_weights;
+layout(location = 5) in uint a_color_role;
 
-layout(location = 5) in vec4 i_world_c0;
-layout(location = 6) in vec4 i_world_c1;
-layout(location = 7) in vec4 i_world_c2;
-layout(location = 8) in vec4 i_world_c3;
-layout(location = 9) in vec4 i_color_alpha;
-layout(location = 10) in vec4 i_variation_material;
+layout(location = 6) in vec4 i_world_c0;
+layout(location = 7) in vec4 i_world_c1;
+layout(location = 8) in vec4 i_world_c2;
+layout(location = 9) in vec4 i_world_c3;
+layout(location = 10) in vec4 i_color_alpha;
+layout(location = 11) in vec4 i_variation_material;
 
 uniform mat4 u_view_proj;
 
@@ -28,6 +29,7 @@ out vec3 v_pos_ws;
 flat out vec3 v_color;
 flat out float v_alpha;
 flat out int v_material_id;
+flat out int v_color_role;
 
 void main() {
   int base = gl_InstanceID * 64;
@@ -57,4 +59,5 @@ void main() {
   v_color = i_color_alpha.rgb;
   v_alpha = i_color_alpha.a;
   v_material_id = int(i_variation_material.w);
+  v_color_role = int(a_color_role);
 }

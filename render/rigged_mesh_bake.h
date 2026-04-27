@@ -4,6 +4,7 @@
 
 #include "creature/part_graph.h"
 #include "rigged_mesh.h"
+#include "static_attachment_spec.h"
 
 #include <QMatrix4x4>
 #include <cstdint>
@@ -18,6 +19,8 @@ using BoneWorldMatrix = QMatrix4x4;
 struct BakeInput {
   const PartGraph *graph{nullptr};
   std::span<const BoneWorldMatrix> bind_pose{};
+
+  std::span<const StaticAttachmentSpec> attachments{};
 };
 
 struct BakedRiggedMeshCpu {

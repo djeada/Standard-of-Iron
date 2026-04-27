@@ -7,6 +7,8 @@ add_executable(standard_of_iron_tests
     core/ground_type_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
+    map/terrain_profiles_test.cpp
+    map/terrain_service_test.cpp
     map/minimap_generator_test.cpp
     map/minimap_utils_test.cpp
     map/mission_loader_test.cpp
@@ -15,6 +17,8 @@ add_executable(standard_of_iron_tests
     systems/patrol_system_test.cpp
     systems/formation_system_test.cpp
     systems/guard_system_test.cpp
+    systems/nation_loader_test.cpp
+    systems/troop_catalog_loader_test.cpp
     systems/stamina_system_test.cpp
     systems/building_collision_test.cpp
     systems/combat_mode_test.cpp
@@ -26,43 +30,57 @@ add_executable(standard_of_iron_tests
     render/equipment_registry_test.cpp
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
-    render/horse_animation_controller_test.cpp
     render/rider_proportions_test.cpp
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
+    render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
+    render/linear_feature_geometry_test.cpp
+    render/linear_feature_visibility_test.cpp
+    render/ground_utils_test.cpp
+    render/scatter_runtime_test.cpp
+    render/terrain_scene_proxy_test.cpp
     render/oriented_parts_test.cpp
     render/draw_part_material_test.cpp
     render/pose_template_cache_test.cpp
     render/rig_dsl_interpreter_test.cpp
     render/rigged_pipeline_test.cpp
     render/rigged_pipeline_instanced_test.cpp
-    render/bone_palette_arena_ubo_test.cpp
-    render/gpu_skinning_perf_sentinel_test.cpp
     render/pipeline/lod_selector_test.cpp
+    render/pipeline/creature_lod_decision_test.cpp
+    render/pipeline/creature_asset_registry_test.cpp
     render/pipeline/instance_coalescer_test.cpp
     render/pass/frame_pass_runner_test.cpp
     render/rig_dsl/barracks_rig_test.cpp
     render/animation/animation_test.cpp
+    render/bpat/bpat_format_test.cpp
+    render/bpat/bpat_registry_test.cpp
     render/humanoid/skeleton_test.cpp
     render/humanoid/humanoid_spec_test.cpp
     render/horse/horse_spec_test.cpp
     render/elephant/elephant_spec_test.cpp
-    render/creature_pipeline_test.cpp
-    render/creature_pipeline_humanoid_test.cpp
-    render/creature_pipeline_mounts_test.cpp
-    render/mounted_base_loadout_migration_test.cpp
-    render/creature_pipeline_equipment_test.cpp
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
     render/creature/part_graph_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
-    render/creature/humanoid_reduced_switchover_test.cpp
-    render/creature/humanoid_full_switchover_test.cpp
-    render/creature/horse_full_switchover_test.cpp
-    render/creature/elephant_full_switchover_test.cpp
-    render/rigged_visual_parity_test.cpp
+    render/creature/rigged_mesh_cache_test.cpp
+    render/creature/humanoid_prepare_test.cpp
+    render/creature/horse_prepare_test.cpp
+    render/creature/elephant_prepare_test.cpp
+    render/creature/mounted_prepare_test.cpp
+    render/creature/creature_render_graph_test.cpp
+    render/creature/render_request_test.cpp
+    render/selection_ring_layout_test.cpp
+    render/selection_ring_mesh_test.cpp
+    render/creature/snapshot_mesh_cache_test.cpp
+    render/creature/static_attachment_bake_test.cpp
+    render/creature/per_unit_archetype_test.cpp
+    render/creature/riding_clip_test.cpp
+    render/creature/baked_attachment_world_position_test.cpp
+    render/creature/baked_horse_attachment_world_position_test.cpp
+    render/creature/render_request_batch_parity_test.cpp
+    render/creature/template_prewarm_regression_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp
     render/software/render_backend_factory_test.cpp

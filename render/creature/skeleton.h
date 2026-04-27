@@ -43,6 +43,9 @@ struct SocketDef {
   BoneIndex bone{kInvalidBone};
 
   QVector3D local_offset{};
+  QVector3D local_right{1.0F, 0.0F, 0.0F};
+  QVector3D local_up{0.0F, 1.0F, 0.0F};
+  QVector3D local_forward{0.0F, 0.0F, 1.0F};
 };
 
 struct SkeletonTopology {
@@ -58,6 +61,10 @@ void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
                                     std::span<const QMatrix4x4> palette,
                                     SocketIndex socket) noexcept -> QMatrix4x4;
 
+[[nodiscard]] auto
+socket_transform(const QMatrix4x4 &bone_transform,
+                 const SocketDef &socket) noexcept -> QMatrix4x4;
+
 [[nodiscard]] auto socket_position(const SkeletonTopology &topo,
                                    std::span<const QMatrix4x4> palette,
                                    SocketIndex socket) noexcept -> QVector3D;
@@ -65,6 +72,10 @@ void evaluate_skeleton(const SkeletonTopology &topo, JointProviderFn provider,
 [[nodiscard]] auto socket_attachment_frame(
     const SkeletonTopology &topo, std::span<const QMatrix4x4> palette,
     SocketIndex socket) noexcept -> Render::GL::AttachmentFrame;
+
+[[nodiscard]] auto socket_attachment_frame(
+    const Render::GL::AttachmentFrame &bone_frame,
+    const SocketDef &socket) noexcept -> Render::GL::AttachmentFrame;
 
 [[nodiscard]] auto find_bone(const SkeletonTopology &topo,
                              std::string_view name) noexcept -> BoneIndex;

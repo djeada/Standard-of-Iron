@@ -139,16 +139,6 @@ public:
     glPolygonOffset(factor, units);
   }
 
-  void set_riverbank_visibility(bool enabled, Texture *texture,
-                                const QVector2D &size, float tile_size,
-                                float explored_alpha) {
-    m_riverbankVisibility.enabled = enabled && (texture != nullptr);
-    m_riverbankVisibility.texture = texture;
-    m_riverbankVisibility.size = size;
-    m_riverbankVisibility.tile_size = tile_size;
-    m_riverbankVisibility.explored_alpha = explored_alpha;
-  }
-
   void set_frame_budget(const Render::FrameBudgetConfig &config) override {
     m_frame_budget_config = config;
   }
@@ -192,14 +182,6 @@ private:
   bool m_depth_testEnabled = true;
   bool m_blendEnabled = false;
   float m_animationTime = 0.0F;
-
-  struct {
-    Texture *texture = nullptr;
-    QVector2D size{0.0F, 0.0F};
-    float tile_size = 1.0F;
-    float explored_alpha = 0.6F;
-    bool enabled = false;
-  } m_riverbankVisibility;
 
   Render::FrameBudgetConfig m_frame_budget_config;
   Render::FrameTimeTracker m_frame_tracker;

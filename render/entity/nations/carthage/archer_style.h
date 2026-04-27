@@ -24,7 +24,6 @@ struct ArcherStyleConfig {
   bool force_beard = false;
 
   std::string attachment_profile;
-  std::string shader_id;
   std::string armor_id;
 };
 

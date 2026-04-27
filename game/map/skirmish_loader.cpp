@@ -16,7 +16,6 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/visuals/team_colors.h"
 #include "render/ground/biome_renderer.h"
-#include "render/ground/bridge_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
@@ -24,11 +23,10 @@
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/rain_renderer.h"
-#include "render/ground/river_renderer.h"
-#include "render/ground/riverbank_renderer.h"
-#include "render/ground/road_renderer.h"
 #include "render/ground/stone_renderer.h"
+#include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
+#include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
@@ -344,114 +342,23 @@ auto SkirmishLoader::start(const QString &map_path,
     }
   }
 
-  if (m_biome != nullptr) {
+  if (m_scatter != nullptr) {
     if (terrain_service.is_initialized() &&
         (terrain_service.get_height_map() != nullptr)) {
-      m_biome->configure(*terrain_service.get_height_map(),
-                         terrain_service.biome_settings());
+      m_scatter->configure(*terrain_service.get_height_map(),
+                           terrain_service.biome_settings(),
+                           terrain_service.fire_camps());
     }
   }
 
-  if (m_river != nullptr) {
+  if (m_features != nullptr) {
     if (terrain_service.is_initialized() &&
         (terrain_service.get_height_map() != nullptr)) {
-      m_river->configure(terrain_service.get_height_map()->getRiverSegments(),
-                         terrain_service.get_height_map()->getTileSize());
+      m_features->configure(*terrain_service.get_height_map(),
+                            terrain_service.road_segments());
     }
   }
 
-  if (m_road != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_road->configure(terrain_service.road_segments(),
-                        terrain_service.get_height_map()->getTileSize());
-    }
-  }
-
-  if (m_riverbank != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_riverbank->configure(
-          terrain_service.get_height_map()->getRiverSegments(),
-          *terrain_service.get_height_map());
-    }
-  }
-
-  if (m_bridge != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_bridge->configure(terrain_service.get_height_map()->getBridges(),
-                          terrain_service.get_height_map()->getTileSize());
-    }
-  }
-
-  if (m_stone != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_stone->configure(*terrain_service.get_height_map(),
-                         terrain_service.biome_settings());
-    }
-  }
-
-  if (m_plant != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_plant->configure(*terrain_service.get_height_map(),
-                         terrain_service.biome_settings());
-    }
-  }
-
-  if (m_pine != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_pine->configure(*terrain_service.get_height_map(),
-                        terrain_service.biome_settings());
-    }
-  }
-
-  if (m_olive != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_olive->configure(*terrain_service.get_height_map(),
-                         terrain_service.biome_settings());
-    }
-  }
-
-  if (m_firecamp != nullptr) {
-    if (terrain_service.is_initialized() &&
-        (terrain_service.get_height_map() != nullptr)) {
-      m_firecamp->configure(*terrain_service.get_height_map(),
-                            terrain_service.biome_settings());
-
-      const auto &fire_camps = terrain_service.fire_camps();
-      if (!fire_camps.empty()) {
-        std::vector<QVector3D> positions;
-        std::vector<float> intensities;
-        std::vector<float> radii;
-
-        const auto *height_map = terrain_service.get_height_map();
-        const float tile_size = height_map->getTileSize();
-        const int width = height_map->getWidth();
-        const int height = height_map->getHeight();
-        const float half_width = width * 0.5F;
-        const float half_height = height * 0.5F;
-
-        for (const auto &fc : fire_camps) {
-
-          float const world_x = (fc.x - half_width) * tile_size;
-          float const world_z = (fc.z - half_height) * tile_size;
-          float const world_y =
-              terrain_service.get_terrain_height(world_x, world_z);
-
-          positions.emplace_back(world_x, world_y, world_z);
-          intensities.push_back(fc.intensity);
-          radii.push_back(fc.radius);
-        }
-
-        m_firecamp->setExplicitFireCamps(positions, intensities, radii);
-      }
-    }
-  }
   pump_events();
 
   if (m_rain != nullptr) {
@@ -499,8 +406,8 @@ auto SkirmishLoader::start(const QString &map_path,
   }
   pump_events();
 
-  if (m_biome != nullptr) {
-    m_biome->refresh_grass();
+  if (m_scatter != nullptr) {
+    m_scatter->refresh_grass();
   }
 
   m_renderer.unlock_world_for_modification();

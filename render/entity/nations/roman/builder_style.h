@@ -19,7 +19,6 @@ struct BuilderStyleConfig {
   bool show_tool_belt = true;
 
   std::string attachment_profile;
-  std::string shader_id;
 };
 
 void register_roman_builder_style();

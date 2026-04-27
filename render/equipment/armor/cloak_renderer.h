@@ -3,9 +3,11 @@
 #include "../../gl/mesh.h"
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
 #include <QVector3D>
-#include <memory>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -24,6 +26,18 @@ struct CloakMeshes {
   Mesh *shoulder = nullptr;
 };
 
+inline constexpr std::uint32_t kCloakRoleCount = 2;
+
+auto cloak_fill_role_colors_with_primary(const QVector3D &primary_color,
+                                         const HumanoidPalette &palette,
+                                         QVector3D *out,
+                                         std::size_t max) -> std::uint32_t;
+
+auto cloak_make_static_attachment(
+    const CloakConfig &config, const CloakMeshes &meshes,
+    std::uint16_t torso_socket_bone_index,
+    std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
+
 class CloakRenderer : public IEquipmentRenderer {
 public:
   explicit CloakRenderer(const CloakConfig &config = CloakConfig{});
@@ -38,9 +52,7 @@ public:
     return m_config;
   }
 
-  [[nodiscard]] auto meshes() const noexcept -> CloakMeshes {
-    return {m_back_mesh.get(), m_shoulder_mesh.get()};
-  }
+  [[nodiscard]] auto meshes() const noexcept -> CloakMeshes;
 
   void set_config(const CloakConfig &config);
 
@@ -51,8 +63,6 @@ public:
 
 private:
   CloakConfig m_config;
-  std::unique_ptr<Mesh> m_back_mesh;
-  std::unique_ptr<Mesh> m_shoulder_mesh;
 };
 
 } // namespace Render::GL

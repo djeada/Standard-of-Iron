@@ -4,8 +4,13 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../render_archetype.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -41,5 +46,15 @@ public:
 private:
   ShieldRenderConfig m_base;
 };
+
+inline constexpr std::uint32_t kShieldRoleCount = 6;
+
+auto shield_fill_role_colors(const HumanoidPalette &palette,
+                             const ShieldRenderConfig &config, QVector3D *out,
+                             std::size_t max) -> std::uint32_t;
+
+auto shield_make_static_attachment(const ShieldRenderConfig &config,
+                                   std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

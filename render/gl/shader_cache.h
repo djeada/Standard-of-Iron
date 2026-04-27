@@ -26,6 +26,7 @@ public:
     const QString resolved_frag =
         Utils::Resources::resolveResourcePath(frag_path);
     auto sh = std::make_unique<Shader>();
+    sh->set_debug_name(name);
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader" << name;
       return nullptr;
@@ -52,6 +53,7 @@ public:
       return it->second.get();
     }
     auto sh = std::make_unique<Shader>();
+    sh->set_debug_name(resolved_vert + QStringLiteral("|") + resolved_frag);
     if (!sh->load_from_files(resolved_vert, resolved_frag)) {
       qWarning() << "ShaderCache: Failed to load shader from paths:"
                  << resolved_vert << "," << resolved_frag;
@@ -201,71 +203,6 @@ public:
     load(QStringLiteral("mode_indicator"),
          resolve(shader_base + QStringLiteral("mode_indicator.vert")),
          resolve(shader_base + QStringLiteral("mode_indicator.frag")));
-
-    const auto load_base_shader = [&](const QString &name) {
-      const QString vert =
-          resolve(shader_base + name + QStringLiteral(".vert"));
-      const QString frag =
-          resolve(shader_base + name + QStringLiteral(".frag"));
-      load(name, vert, frag);
-      return std::pair<QString, QString>{vert, frag};
-    };
-
-    const auto [archer_vert, archer_frag] =
-        load_base_shader(QStringLiteral("archer"));
-    const auto [swordsman_vert, swordsman_frag] =
-        load_base_shader(QStringLiteral("swordsman"));
-    const auto [horse_knight_vert, horse_knight_frag] =
-        load_base_shader(QStringLiteral("horse_swordsman"));
-    const auto [spearman_vert, spearman_frag] =
-        load_base_shader(QStringLiteral("spearman"));
-    const auto [healer_vert, healer_frag] =
-        load_base_shader(QStringLiteral("healer"));
-
-    const QStringList nation_variants = {QStringLiteral("roman_republic"),
-                                         QStringLiteral("carthage")};
-
-    auto resource_exists = [](const QString &path) -> bool {
-      QFileInfo const info(path);
-      return info.exists();
-    };
-
-    auto load_variant = [&](const QString &base_key,
-                            const QString &base_vert_path,
-                            const QString &base_frag_path) {
-      for (const QString &nation : nation_variants) {
-        const QString shader_name = base_key + QStringLiteral("_") + nation;
-        const QString variant_vert_res = shader_base + base_key +
-                                         QStringLiteral("_") + nation +
-                                         QStringLiteral(".vert");
-        const QString variant_frag_res = shader_base + base_key +
-                                         QStringLiteral("_") + nation +
-                                         QStringLiteral(".frag");
-
-        QString resolved_vert = resolve(variant_vert_res);
-        if (!resource_exists(resolved_vert)) {
-          resolved_vert = base_vert_path;
-        }
-
-        QString resolved_frag = resolve(variant_frag_res);
-        if (!resource_exists(resolved_frag)) {
-          resolved_frag = base_frag_path;
-        }
-
-        load(shader_name, resolved_vert, resolved_frag);
-      }
-    };
-
-    load_variant(QStringLiteral("archer"), archer_vert, archer_frag);
-    load_variant(QStringLiteral("spearman"), spearman_vert, spearman_frag);
-    load_variant(QStringLiteral("swordsman"), swordsman_vert, swordsman_frag);
-    load_variant(QStringLiteral("horse_swordsman"), horse_knight_vert,
-                 horse_knight_frag);
-    load_variant(QStringLiteral("healer"), healer_vert, healer_frag);
-    load_variant(QStringLiteral("horse_archer"), horse_knight_vert,
-                 horse_knight_frag);
-    load_variant(QStringLiteral("horse_spearman"), horse_knight_vert,
-                 horse_knight_frag);
   }
 
   void clear() {

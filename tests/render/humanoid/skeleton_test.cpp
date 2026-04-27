@@ -1,4 +1,4 @@
-// Stage 15 — tests for humanoid skeleton, state machine, clip driver,
+// Stage 15 — tests for humanoid skeleton, state machine,
 // and bone-socket API.
 //
 // Covers:
@@ -10,10 +10,7 @@
 //     plus local offset, and track when the underlying pose moves.
 //   * Humanoid state machine maps AnimationInputs to the correct
 //     discrete state under every documented priority rule.
-//   * Clip driver samples non-zero overlay values in Idle/Walk/Run
-//     and zero during Death.
 
-#include "render/humanoid/clip_driver_cache.h"
 #include "render/humanoid/humanoid_clip_registry.h"
 #include "render/humanoid/humanoid_state_machine.h"
 #include "render/humanoid/skeleton.h"
@@ -232,6 +229,27 @@ TEST(HumanoidSocketTest, AttachmentFrameMatchesSocketTransform) {
   EXPECT_NEAR(QVector3D::dotProduct(frame.right, frame.up), 0.0F, 1e-4F);
 }
 
+TEST(HumanoidSocketTest, FootSocketsStayLevelInsteadOfFollowingShinTilt) {
+  auto pose = make_upright_pose();
+  pose.knee_l = QVector3D(-0.10F, 0.62F, 0.08F);
+  pose.knee_r = QVector3D(0.10F, 0.60F, -0.06F);
+  pose.foot_l = QVector3D(-0.14F, 0.02F, 0.06F);
+  pose.foot_r = QVector3D(0.14F, 0.02F, -0.05F);
+
+  BonePalette palette;
+  evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
+
+  auto const foot_l = socket_attachment_frame(palette, HumanoidSocket::FootL);
+  auto const foot_r = socket_attachment_frame(palette, HumanoidSocket::FootR);
+
+  EXPECT_GT(foot_l.up.y(), 0.95F);
+  EXPECT_GT(foot_r.up.y(), 0.95F);
+  EXPECT_LT(std::abs(foot_l.up.x()), 0.10F);
+  EXPECT_LT(std::abs(foot_r.up.x()), 0.10F);
+  EXPECT_LT(std::abs(foot_l.up.z()), 0.10F);
+  EXPECT_LT(std::abs(foot_r.up.z()), 0.10F);
+}
+
 TEST(HumanoidStateMachineTest, PriorityHitOverridesAttack) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;
@@ -351,66 +369,4 @@ TEST(HumanoidClipDriverTest, TickDrivesStateFromInputs) {
   inputs.is_running = false;
   driver.tick(1.0F, inputs);
   EXPECT_EQ(driver.state(), HumanoidState::Idle);
-}
-
-TEST(ClipDriverCacheTest, GetOrCreateReturnsSameEntry) {
-  ClipDriverCache cache;
-  cache.advance_frame(1);
-  auto &a = cache.get_or_create(42U);
-  a.last_time = 3.5F;
-  auto &b = cache.get_or_create(42U);
-  EXPECT_EQ(&a, &b);
-  EXPECT_FLOAT_EQ(b.last_time, 3.5F);
-}
-
-TEST(ClipDriverCacheTest, EvictsStaleEntries) {
-  ClipDriverCache cache;
-  cache.advance_frame(1);
-  cache.get_or_create(7U);
-  EXPECT_EQ(cache.size(), 1U);
-  // advance past max_age; entry must be evicted.
-  cache.advance_frame(200, /*max_age=*/120);
-  EXPECT_EQ(cache.size(), 0U);
-}
-
-TEST(ClipDriverCacheTest, KeepsRecentlySeenEntries) {
-  ClipDriverCache cache;
-  for (std::uint32_t f = 1; f <= 200; ++f) {
-    cache.advance_frame(f, /*max_age=*/120);
-    cache.get_or_create(11U); // touch every frame
-  }
-  EXPECT_EQ(cache.size(), 1U);
-}
-
-TEST(ApplyOverlaysTest, ShiftsUpperTorsoOnly) {
-  Render::GL::HumanoidPose pose{};
-  pose.pelvis_pos = QVector3D(0.0F, 1.0F, 0.0F);
-  pose.neck_base = QVector3D(0.0F, 1.6F, 0.0F);
-  pose.head_pos = QVector3D(0.0F, 1.75F, 0.0F);
-  pose.shoulder_l = QVector3D(-0.2F, 1.55F, 0.0F);
-  pose.shoulder_r = QVector3D(0.2F, 1.55F, 0.0F);
-  pose.knee_l = QVector3D(-0.12F, 0.55F, 0.0F);
-  pose.knee_r = QVector3D(0.12F, 0.55F, 0.0F);
-  pose.foot_l = QVector3D(-0.12F, 0.05F, 0.0F);
-  pose.foot_r = QVector3D(0.12F, 0.05F, 0.0F);
-
-  HumanoidOverlays overlays;
-  overlays.torso_sway_x = 0.05F;
-  overlays.breathing_y = 0.02F;
-
-  auto const before_pelvis = pose.pelvis_pos;
-  auto const before_foot_l = pose.foot_l;
-  auto const before_shoulder_l = pose.shoulder_l;
-
-  apply_overlays_to_pose(pose, overlays, QVector3D(1.0F, 0.0F, 0.0F));
-
-  // Pelvis and feet must not move (legs untouched).
-  EXPECT_EQ(pose.pelvis_pos, before_pelvis);
-  EXPECT_EQ(pose.foot_l, before_foot_l);
-  // Upper torso shifted laterally + vertically at the neck/head, laterally
-  // only at shoulders.
-  EXPECT_NEAR(pose.head_pos.x() - 0.05F, 0.0F, 1e-5F);
-  EXPECT_NEAR(pose.head_pos.y() - 1.77F, 0.0F, 1e-5F);
-  EXPECT_NEAR(pose.shoulder_l.x() - before_shoulder_l.x() - 0.05F, 0.0F, 1e-5F);
-  EXPECT_NEAR(pose.shoulder_l.y() - before_shoulder_l.y(), 0.0F, 1e-5F);
 }

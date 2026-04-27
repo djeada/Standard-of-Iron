@@ -1,9 +1,6 @@
 #include "elephant_spec.h"
 
 #include "../creature/part_graph.h"
-#include "../creature/pipeline/creature_frame.h"
-#include "../creature/pipeline/creature_pipeline.h"
-#include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/skeleton.h"
 #include "../geom/transforms.h"
 #include "../gl/primitives.h"
@@ -55,6 +52,11 @@ constexpr std::uint8_t kRoleSkinShadow = 2;
 constexpr std::uint8_t kRoleSkinReducedLeg = 3;
 constexpr std::uint8_t kRoleSkinReducedFootPad = 4;
 constexpr std::uint8_t kRoleSkinReducedTrunk = 5;
+constexpr std::uint8_t kRoleEarInner = 6;
+constexpr std::uint8_t kRoleTusk = 7;
+constexpr std::uint8_t kRoleEye = 8;
+constexpr std::uint8_t kRoleToenail = 9;
+constexpr std::uint8_t kRoleTailTip = 10;
 
 constexpr float k_pi = 3.14159265358979323846F;
 
@@ -320,13 +322,19 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
       translation_matrix(pose.trunk_end);
 }
 
-void fill_elephant_role_colors(const Render::GL::ElephantVariant &variant,
-                               std::array<QVector3D, 5> &out_roles) noexcept {
+void fill_elephant_role_colors(
+    const Render::GL::ElephantVariant &variant,
+    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept {
   out_roles[0] = variant.skin_color;
-  out_roles[1] = darken(variant.skin_color, 0.80F);
-  out_roles[2] = darken(variant.skin_color, 0.88F);
-  out_roles[3] = darken(variant.skin_color, 0.75F);
-  out_roles[4] = darken(variant.skin_color, 0.90F);
+  out_roles[1] = variant.skin_color;
+  out_roles[2] = darken(variant.skin_color, 0.92F);
+  out_roles[3] = darken(variant.skin_color, 0.88F);
+  out_roles[4] = darken(variant.skin_color, 0.94F);
+  out_roles[5] = variant.ear_inner_color;
+  out_roles[6] = variant.tusk_color;
+  out_roles[7] = QVector3D(0.04F, 0.03F, 0.03F);
+  out_roles[8] = variant.toenail_color;
+  out_roles[9] = QVector3D(0.05F, 0.04F, 0.04F);
 }
 
 void make_elephant_spec_pose(const Render::GL::ElephantDimensions &dims,
@@ -371,7 +379,7 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
   QVector3D const center = out_pose.barrel_center;
 
   out_pose.reduced_body_half =
-      QVector3D(dims.body_width * 0.5F, dims.body_height * 0.45F,
+      QVector3D(dims.body_width * 0.50F, dims.body_height * 0.45F,
                 dims.body_length * 0.375F);
 
   QVector3D const neck_base_world =
@@ -448,53 +456,268 @@ auto baseline_pose() noexcept -> const ElephantSpecPose & {
   return pose;
 }
 
-auto build_static_full_parts() noexcept -> std::array<PrimitiveInstance, 15> {
+constexpr std::size_t kElephantFullPartCount = 41;
+
+auto build_static_full_parts() noexcept
+    -> std::array<PrimitiveInstance, kElephantFullPartCount> {
   ElephantSpecPose const &pose = baseline_pose();
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
-  std::array<PrimitiveInstance, 15> out{};
+  std::array<PrimitiveInstance, kElephantFullPartCount> out{};
 
-  std::array<PrimitiveInstance, 12> reduced_buf{};
-  build_reduced_primitives(pose, reduced_buf);
-  for (std::size_t i = 0; i < 12; ++i) {
-    out[i] = reduced_buf[i];
-    out[i].lod_mask = Render::Creature::kLodFull;
-  }
+  using Render::Creature::kLodFull;
 
-  auto ell = [](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
-                const QVector3D &half_extents,
-                const QVector3D &offset_from_anchor) {
+  auto root = static_cast<BoneIndex>(ElephantBone::Root);
+  auto head_bone = static_cast<BoneIndex>(ElephantBone::Head);
+
+  auto ell = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &half_extents, const QVector3D &offset,
+                 std::uint8_t role = kRoleSkin, int material_id = 6) {
     p.debug_name = name;
     p.shape = PrimitiveShape::OrientedSphere;
     p.params.anchor_bone = anchor;
-    p.params.head_offset = offset_from_anchor;
+    p.params.head_offset = offset;
     p.params.half_extents = half_extents;
-    p.color_role = kRoleSkin;
-    p.material_id = 6;
-    p.lod_mask = Render::Creature::kLodFull;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
   };
 
-  QVector3D const chest_off(0.0F, dims.body_height * 0.10F,
-                            dims.body_length * 0.30F);
-  QVector3D const rump_off(0.0F, dims.body_height * 0.02F,
-                           -dims.body_length * 0.32F);
-  QVector3D const belly_off(0.0F, -dims.body_height * 0.22F,
-                            dims.body_length * 0.05F);
+  auto sph = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &offset, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Sphere;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = offset;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
 
-  ell(out[12], "elephant.full.chest",
-      static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.59F, dims.body_height * 0.50F,
-                dims.body_length * 0.18F),
-      chest_off);
-  ell(out[13], "elephant.full.rump", static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.55F, dims.body_height * 0.49F,
-                dims.body_length * 0.17F),
-      rump_off);
-  ell(out[14], "elephant.full.belly",
-      static_cast<BoneIndex>(ElephantBone::Root),
-      QVector3D(dims.body_width * 0.50F, dims.body_height * 0.35F,
-                dims.body_length * 0.275F),
-      belly_off);
+  auto cap = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Capsule;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  auto cyl = [&](PrimitiveInstance &p, std::string_view name, BoneIndex anchor,
+                 const QVector3D &head_off, BoneIndex tail,
+                 const QVector3D &tail_off, float radius, std::uint8_t role,
+                 int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Cylinder;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  auto cone_p = [&](PrimitiveInstance &p, std::string_view name,
+                    BoneIndex anchor, const QVector3D &head_off, BoneIndex tail,
+                    const QVector3D &tail_off, float radius, std::uint8_t role,
+                    int material_id = 0) {
+    p.debug_name = name;
+    p.shape = PrimitiveShape::Cone;
+    p.params.anchor_bone = anchor;
+    p.params.head_offset = head_off;
+    p.params.tail_bone = tail;
+    p.params.tail_offset = tail_off;
+    p.params.radius = radius;
+    p.color_role = role;
+    p.material_id = material_id;
+    p.lod_mask = kLodFull;
+  };
+
+  float const bw = dims.body_width;
+  float const bh = dims.body_height;
+  float const bl = dims.body_length;
+  float const hl = dims.head_length;
+  float const hw = dims.head_width;
+  float const hh = dims.head_height;
+  std::size_t i = 0;
+
+  ell(out[i++], "elephant.full.body.barrel", root,
+      QVector3D(bw * 0.56F, bh * 0.48F, bl * 0.34F),
+      QVector3D(0.0F, bh * 0.02F, -bl * 0.01F));
+  ell(out[i++], "elephant.full.body.shoulders", root,
+      QVector3D(bw * 0.48F, bh * 0.24F, bl * 0.18F),
+      QVector3D(0.0F, bh * 0.24F, bl * 0.18F));
+  ell(out[i++], "elephant.full.body.chest", root,
+      QVector3D(bw * 0.50F, bh * 0.42F, bl * 0.18F),
+      QVector3D(0.0F, bh * 0.05F, bl * 0.29F));
+  ell(out[i++], "elephant.full.body.rump", root,
+      QVector3D(bw * 0.46F, bh * 0.34F, bl * 0.18F),
+      QVector3D(0.0F, bh * 0.02F, -bl * 0.28F));
+  ell(out[i++], "elephant.full.body.belly", root,
+      QVector3D(bw * 0.40F, bh * 0.24F, bl * 0.22F),
+      QVector3D(0.0F, -bh * 0.18F, 0.0F));
+  sph(out[i++], "elephant.full.body.flank.l", root,
+      QVector3D(bw * 0.34F, -bh * 0.02F, -bl * 0.03F), bw * 0.13F, kRoleSkin,
+      6);
+  sph(out[i++], "elephant.full.body.flank.r", root,
+      QVector3D(-bw * 0.34F, -bh * 0.02F, -bl * 0.03F), bw * 0.13F, kRoleSkin,
+      6);
+
+  cap(out[i++], "elephant.full.neck", root, pose.neck_base_offset, head_bone,
+      QVector3D(0.0F, -hh * 0.02F, -hl * 0.16F), dims.neck_width * 0.62F,
+      kRoleSkin, 6);
+  ell(out[i++], "elephant.full.head.skull", head_bone,
+      QVector3D(hw * 0.34F, hh * 0.36F, hl * 0.26F),
+      QVector3D(0.0F, hh * 0.08F, -hl * 0.06F));
+  ell(out[i++], "elephant.full.head.forehead.l", head_bone,
+      QVector3D(hw * 0.14F, hh * 0.16F, hl * 0.12F),
+      QVector3D(hw * 0.10F, hh * 0.22F, -hl * 0.06F));
+  ell(out[i++], "elephant.full.head.forehead.r", head_bone,
+      QVector3D(hw * 0.14F, hh * 0.16F, hl * 0.12F),
+      QVector3D(-hw * 0.10F, hh * 0.22F, -hl * 0.06F));
+  ell(out[i++], "elephant.full.head.cheek.l", head_bone,
+      QVector3D(hw * 0.10F, hh * 0.12F, hl * 0.16F),
+      QVector3D(hw * 0.18F, -hh * 0.02F, hl * 0.02F));
+  ell(out[i++], "elephant.full.head.cheek.r", head_bone,
+      QVector3D(hw * 0.10F, hh * 0.12F, hl * 0.16F),
+      QVector3D(-hw * 0.18F, -hh * 0.02F, hl * 0.02F));
+  ell(out[i++], "elephant.full.head.jaw", head_bone,
+      QVector3D(hw * 0.18F, hh * 0.10F, hl * 0.16F),
+      QVector3D(0.0F, -hh * 0.18F, hl * 0.10F));
+
+  float const tl = dims.trunk_length;
+  float const tbr = dims.trunk_base_radius * 1.05F;
+  std::array<QVector3D, 6> const trunk_pts{{
+      QVector3D(0.0F, -hh * 0.08F, hl * 0.24F),
+      QVector3D(0.0F, -tl * 0.18F, hl * 0.34F),
+      QVector3D(0.0F, -tl * 0.40F, hl * 0.46F),
+      QVector3D(0.0F, -tl * 0.62F, hl * 0.54F),
+      QVector3D(0.0F, -tl * 0.82F, hl * 0.60F),
+      QVector3D(0.0F, -tl * 0.96F, hl * 0.63F),
+  }};
+  std::array<float, 5> const trunk_radii{tbr, tbr * 0.88F, tbr * 0.72F,
+                                         tbr * 0.56F, tbr * 0.40F};
+  std::array<std::string_view, 5> const trunk_names{{
+      "elephant.full.trunk.seg.0",
+      "elephant.full.trunk.seg.1",
+      "elephant.full.trunk.seg.2",
+      "elephant.full.trunk.seg.3",
+      "elephant.full.trunk.seg.4",
+  }};
+  for (std::size_t t = 0; t < trunk_names.size(); ++t) {
+    cap(out[i++], trunk_names[t], head_bone, trunk_pts[t], head_bone,
+        trunk_pts[t + 1], trunk_radii[t], kRoleSkin, 6);
+  }
+  sph(out[i++], "elephant.full.trunk.tip", head_bone, trunk_pts.back(),
+      std::max(dims.trunk_tip_radius, tbr * 0.18F), kRoleSkin, 6);
+
+  float const ear_w = dims.ear_width;
+  float const ear_h = dims.ear_height;
+  float const ear_t = dims.ear_thickness;
+  QVector3D const ear_outer_half(ear_w * 0.22F, ear_h * 0.28F,
+                                 std::max(ear_t * 1.5F, ear_w * 0.012F));
+  QVector3D const ear_inner_half(ear_w * 0.16F, ear_h * 0.20F,
+                                 std::max(ear_t, ear_w * 0.008F));
+  ell(out[i++], "elephant.full.ear.outer.l", head_bone, ear_outer_half,
+      QVector3D(hw * 0.22F + ear_w * 0.18F, hh * 0.04F, -hl * 0.18F));
+  ell(out[i++], "elephant.full.ear.outer.r", head_bone, ear_outer_half,
+      QVector3D(-(hw * 0.22F + ear_w * 0.18F), hh * 0.04F, -hl * 0.18F));
+  ell(out[i++], "elephant.full.ear.inner.l", head_bone, ear_inner_half,
+      QVector3D(hw * 0.20F + ear_w * 0.15F, hh * 0.04F,
+                -hl * 0.16F + ear_w * 0.03F),
+      kRoleEarInner);
+  ell(out[i++], "elephant.full.ear.inner.r", head_bone, ear_inner_half,
+      QVector3D(-(hw * 0.20F + ear_w * 0.15F), hh * 0.04F,
+                -hl * 0.16F + ear_w * 0.03F),
+      kRoleEarInner);
+
+  float const tk_l = dims.tusk_length;
+  float const tk_r = dims.tusk_radius * 0.95F;
+  QVector3D const tusk_root_l(hw * 0.10F, -hh * 0.12F, hl * 0.22F);
+  QVector3D const tusk_root_r(-hw * 0.10F, -hh * 0.12F, hl * 0.22F);
+  QVector3D const tusk_tip_l(hw * 0.22F, -hh * 0.08F + tk_l * 0.12F,
+                             hl * 0.22F + tk_l * 1.02F);
+  QVector3D const tusk_tip_r(-hw * 0.22F, -hh * 0.08F + tk_l * 0.12F,
+                             hl * 0.22F + tk_l * 1.02F);
+  cone_p(out[i++], "elephant.full.tusk.l", head_bone, tusk_root_l, head_bone,
+         tusk_tip_l, tk_r, kRoleTusk, 0);
+  cone_p(out[i++], "elephant.full.tusk.r", head_bone, tusk_root_r, head_bone,
+         tusk_tip_r, tk_r, kRoleTusk, 0);
+
+  struct LegSpec {
+    std::string_view upper_name;
+    std::string_view lower_name;
+    std::string_view foot_name;
+    ElephantBone foot_bone;
+    QVector3D shoulder_offset;
+    bool is_front;
+  };
+  std::array<LegSpec, 4> const legs{{
+      {"elephant.full.leg.fl.upper", "elephant.full.leg.fl.lower",
+       "elephant.full.foot.fl", ElephantBone::FootFL,
+       pose.shoulder_offset_reduced_fl, true},
+      {"elephant.full.leg.fr.upper", "elephant.full.leg.fr.lower",
+       "elephant.full.foot.fr", ElephantBone::FootFR,
+       pose.shoulder_offset_reduced_fr, true},
+      {"elephant.full.leg.bl.upper", "elephant.full.leg.bl.lower",
+       "elephant.full.foot.bl", ElephantBone::FootBL,
+       pose.shoulder_offset_reduced_bl, false},
+      {"elephant.full.leg.br.upper", "elephant.full.leg.br.lower",
+       "elephant.full.foot.br", ElephantBone::FootBR,
+       pose.shoulder_offset_reduced_br, false},
+  }};
+  float const leg_len = dims.leg_length;
+  float const upper_r_front = dims.leg_radius * 1.10F;
+  float const upper_r_rear = dims.leg_radius * 1.04F;
+  float const lower_r_front = dims.leg_radius * 0.92F;
+  float const lower_r_rear = dims.leg_radius * 0.88F;
+  QVector3D const foot_half(dims.foot_radius * 1.18F, dims.foot_radius * 0.54F,
+                            dims.foot_radius * 1.24F);
+  for (auto const &leg : legs) {
+    auto foot_b = static_cast<BoneIndex>(leg.foot_bone);
+    float const upper_r = leg.is_front ? upper_r_front : upper_r_rear;
+    float const lower_r = leg.is_front ? lower_r_front : lower_r_rear;
+    cap(out[i++], leg.upper_name, root, leg.shoulder_offset, foot_b,
+        QVector3D(0.0F, leg_len * 0.46F, 0.0F), upper_r, kRoleSkin, 6);
+    cyl(out[i++], leg.lower_name, foot_b,
+        QVector3D(0.0F, leg_len * 0.46F, 0.0F), foot_b,
+        QVector3D(0.0F, dims.foot_radius * 0.34F, 0.0F), lower_r, kRoleSkin, 6);
+    PrimitiveInstance &foot = out[i++];
+    foot.debug_name = leg.foot_name;
+    foot.shape = PrimitiveShape::Mesh;
+    foot.custom_mesh = Render::GL::get_unit_sphere();
+    foot.params.anchor_bone = foot_b;
+    foot.params.head_offset = QVector3D(0.0F, -dims.foot_radius * 0.12F, 0.0F);
+    foot.params.half_extents = foot_half;
+    foot.color_role = kRoleSkinShadow;
+    foot.material_id = 8;
+    foot.lod_mask = kLodFull;
+  }
+
+  float const tail_l = dims.tail_length;
+  QVector3D const tail_root(0.0F, bh * 0.16F, -bl * 0.46F);
+  QVector3D const tail_mid =
+      tail_root + QVector3D(0.0F, -tail_l * 0.30F, -tail_l * 0.24F);
+  QVector3D const tail_end =
+      tail_root + QVector3D(0.0F, -tail_l * 0.82F, -tail_l * 0.38F);
+  cap(out[i++], "elephant.full.tail.dock", root, tail_root, root, tail_mid,
+      bw * 0.05F, kRoleSkin, 6);
+  cap(out[i++], "elephant.full.tail.mid", root, tail_mid, root, tail_end,
+      bw * 0.032F, kRoleSkinShadow, 6);
+  sph(out[i++], "elephant.full.tail.switch", root,
+      tail_end + QVector3D(0.0F, -bw * 0.03F, -bw * 0.015F), bw * 0.04F,
+      kRoleTailTip, 0);
 
   return out;
 }
@@ -518,7 +741,8 @@ auto static_minimal_parts() noexcept
   return parts;
 }
 
-auto static_full_parts() noexcept -> const std::array<PrimitiveInstance, 15> & {
+auto static_full_parts() noexcept
+    -> const std::array<PrimitiveInstance, kElephantFullPartCount> & {
   static const auto parts = build_static_full_parts();
   return parts;
 }
@@ -538,77 +762,6 @@ auto build_elephant_bind_palette() noexcept
     out[i] = tmp[i];
   }
   return out;
-}
-
-auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
-    -> Render::GL::Renderer * {
-  if (auto *renderer = dynamic_cast<Render::GL::Renderer *>(&out)) {
-    return renderer;
-  }
-  if (auto *batch = dynamic_cast<Render::GL::BatchingSubmitter *>(&out)) {
-    return dynamic_cast<Render::GL::Renderer *>(batch->fallback_submitter());
-  }
-  return nullptr;
-}
-
-void submit_elephant_rigged_impl(const ElephantSpecPose &pose,
-                                 const Render::GL::ElephantVariant &variant,
-                                 Render::Creature::CreatureLOD lod,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-
-  BonePalette tmp{};
-  evaluate_elephant_skeleton(pose, tmp);
-
-  auto *renderer = resolve_renderer(out);
-  if (renderer == nullptr) {
-    if (lod == Render::Creature::CreatureLOD::Billboard) {
-      return;
-    }
-    std::array<QVector3D, 5> role_colors{};
-    fill_elephant_role_colors(variant, role_colors);
-    Render::Creature::submit_creature(
-        elephant_creature_spec(),
-        std::span<const QMatrix4x4>(tmp.data(), tmp.size()), lod,
-        world_from_unit, out,
-        std::span<const QVector3D>(role_colors.data(), role_colors.size()));
-    return;
-  }
-
-  auto const &spec = elephant_creature_spec();
-  auto bind = elephant_bind_palette();
-
-  auto *entry = renderer->rigged_mesh_cache().get_or_bake(spec, lod, bind, 0);
-  if (entry == nullptr || entry->mesh == nullptr ||
-      entry->mesh->index_count() == 0U) {
-    return;
-  }
-
-  auto &arena = renderer->bone_palette_arena();
-  Render::GL::BonePaletteSlot palette_slot_h = arena.allocate_palette();
-  QMatrix4x4 *palette_slot = palette_slot_h.cpu;
-
-  std::size_t const n =
-      std::min<std::size_t>(entry->inverse_bind.size(), kElephantBoneCount);
-  for (std::size_t i = 0; i < n; ++i) {
-    palette_slot[i] = tmp[i] * entry->inverse_bind[i];
-  }
-
-  Render::GL::RiggedCreatureCmd cmd{};
-  cmd.mesh = entry->mesh.get();
-  cmd.material = nullptr;
-  cmd.world = world_from_unit;
-  cmd.bone_palette = palette_slot;
-  cmd.palette_ubo = palette_slot_h.ubo;
-  cmd.palette_offset = static_cast<std::uint32_t>(palette_slot_h.offset);
-  cmd.bone_count = static_cast<std::uint32_t>(n);
-  cmd.color = variant.skin_color;
-  cmd.alpha = 1.0F;
-  cmd.texture = nullptr;
-  cmd.material_id = 0;
-  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
-
-  out.rigged(cmd);
 }
 
 } // namespace
@@ -654,56 +807,6 @@ auto elephant_bind_palette() noexcept -> std::span<const QMatrix4x4> {
   static const std::array<QMatrix4x4, kElephantBoneCount> palette =
       build_elephant_bind_palette();
   return std::span<const QMatrix4x4>(palette.data(), palette.size());
-}
-
-void submit_elephant_reduced_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept {
-  submit_elephant_rigged_impl(pose, variant,
-                              Render::Creature::CreatureLOD::Reduced,
-                              world_from_unit, out);
-}
-
-void submit_elephant_full_rigged(const ElephantSpecPose &pose,
-                                 const Render::GL::ElephantVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept {
-  submit_elephant_rigged_impl(
-      pose, variant, Render::Creature::CreatureLOD::Full, world_from_unit, out);
-}
-
-void submit_elephant_minimal_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept {
-  submit_elephant_rigged_impl(pose, variant,
-                              Render::Creature::CreatureLOD::Minimal,
-                              world_from_unit, out);
-}
-
-void submit_elephant_via_pipeline(const Render::GL::ElephantRendererBase &owner,
-                                  const ElephantSpecPose &pose,
-                                  const Render::GL::ElephantVariant &variant,
-                                  const QMatrix4x4 &world_from_unit,
-                                  std::uint32_t inst_seed,
-                                  Render::Creature::CreatureLOD lod,
-                                  Render::GL::ISubmitter &out) noexcept {
-  thread_local Render::Creature::Pipeline::CreaturePipeline pipeline;
-  thread_local Render::Creature::Pipeline::CreatureFrame frame;
-  thread_local std::array<Render::Creature::Pipeline::UnitVisualSpec, 1> specs;
-
-  frame.clear();
-  specs[0] = owner.visual_spec();
-  specs[0].kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-
-  frame.push_elephant(0, world_from_unit, 0, inst_seed, lod, pose, variant);
-
-  Render::Creature::Pipeline::FrameContext fctx{};
-  pipeline.submit(fctx,
-                  std::span<const Render::Creature::Pipeline::UnitVisualSpec>{
-                      specs.data(), specs.size()},
-                  frame, out);
 }
 
 } // namespace Render::Elephant

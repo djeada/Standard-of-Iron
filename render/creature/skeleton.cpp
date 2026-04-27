@@ -34,6 +34,16 @@ auto orthonormalise_x(const QVector3D &right_hint, const QVector3D &y_axis,
   return x;
 }
 
+auto frame_matrix(const Render::GL::AttachmentFrame &frame) noexcept
+    -> QMatrix4x4 {
+  QMatrix4x4 m;
+  m.setColumn(0, QVector4D(frame.right, 0.0F));
+  m.setColumn(1, QVector4D(frame.up, 0.0F));
+  m.setColumn(2, QVector4D(frame.forward, 0.0F));
+  m.setColumn(3, QVector4D(frame.origin, 1.0F));
+  return m;
+}
+
 } // namespace
 
 auto make_bone_basis(const QVector3D &head, const QVector3D &tail,
@@ -135,18 +145,17 @@ auto socket_transform(const SkeletonTopology &topo,
   if (def.bone == kInvalidBone || def.bone >= palette.size()) {
     return QMatrix4x4{};
   }
-  QMatrix4x4 const &bone = palette[def.bone];
-  if (def.local_offset.isNull()) {
-    return bone;
-  }
-  QMatrix4x4 result = bone;
-  QVector3D const world_offset =
-      bone.column(0).toVector3D() * def.local_offset.x() +
-      bone.column(1).toVector3D() * def.local_offset.y() +
-      bone.column(2).toVector3D() * def.local_offset.z();
-  QVector3D const origin = bone.column(3).toVector3D() + world_offset;
-  result.setColumn(3, QVector4D(origin, 1.0F));
-  return result;
+  return socket_transform(palette[def.bone], def);
+}
+
+auto socket_transform(const QMatrix4x4 &bone_transform,
+                      const SocketDef &socket) noexcept -> QMatrix4x4 {
+  QMatrix4x4 local;
+  local.setColumn(0, QVector4D(socket.local_right, 0.0F));
+  local.setColumn(1, QVector4D(socket.local_up, 0.0F));
+  local.setColumn(2, QVector4D(socket.local_forward, 0.0F));
+  local.setColumn(3, QVector4D(socket.local_offset, 1.0F));
+  return bone_transform * local;
 }
 
 auto socket_position(const SkeletonTopology &topo,
@@ -164,6 +173,20 @@ auto socket_attachment_frame(
   f.right = m.column(0).toVector3D();
   f.up = m.column(1).toVector3D();
   f.forward = m.column(2).toVector3D();
+  return f;
+}
+
+auto socket_attachment_frame(const Render::GL::AttachmentFrame &bone_frame,
+                             const SocketDef &socket) noexcept
+    -> Render::GL::AttachmentFrame {
+  QMatrix4x4 const m = socket_transform(frame_matrix(bone_frame), socket);
+  Render::GL::AttachmentFrame f;
+  f.origin = m.column(3).toVector3D();
+  f.right = m.column(0).toVector3D();
+  f.up = m.column(1).toVector3D();
+  f.forward = m.column(2).toVector3D();
+  f.radius = bone_frame.radius;
+  f.depth = bone_frame.depth;
   return f;
 }
 

@@ -34,6 +34,10 @@ public:
     return (m_visibleInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_plantInstances.size();
+  }
+
 private:
   void generate_plant_instances();
 

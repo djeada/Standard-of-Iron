@@ -228,6 +228,33 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
     out.irregularity_amplitude = float(
         obj.value(IRREGULARITY_AMPLITUDE).toDouble(out.irregularity_amplitude));
   }
+  if (obj.contains(SNOW_COVERAGE)) {
+    out.snow_coverage =
+        float(obj.value(SNOW_COVERAGE).toDouble(out.snow_coverage));
+  }
+  if (obj.contains(MOISTURE_LEVEL)) {
+    out.moisture_level =
+        float(obj.value(MOISTURE_LEVEL).toDouble(out.moisture_level));
+  }
+  if (obj.contains(CRACK_INTENSITY)) {
+    out.crack_intensity =
+        float(obj.value(CRACK_INTENSITY).toDouble(out.crack_intensity));
+  }
+  if (obj.contains(ROCK_EXPOSURE)) {
+    out.rock_exposure =
+        float(obj.value(ROCK_EXPOSURE).toDouble(out.rock_exposure));
+  }
+  if (obj.contains(GRASS_SATURATION)) {
+    out.grass_saturation =
+        float(obj.value(GRASS_SATURATION).toDouble(out.grass_saturation));
+  }
+  if (obj.contains(SOIL_ROUGHNESS)) {
+    out.soil_roughness =
+        float(obj.value(SOIL_ROUGHNESS).toDouble(out.soil_roughness));
+  }
+  if (obj.contains(SNOW_COLOR)) {
+    out.snow_color = readVector3(obj.value(SNOW_COLOR), out.snow_color);
+  }
 }
 
 void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {

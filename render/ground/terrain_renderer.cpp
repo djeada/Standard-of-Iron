@@ -1,4 +1,5 @@
 #include "terrain_renderer.h"
+#include "../../game/map/terrain_service.h"
 #include "../../game/map/visibility_service.h"
 #include "../gl/mesh.h"
 #include "../gl/render_constants.h"
@@ -53,22 +54,6 @@ inline auto linstep(float a, float b, float x) -> float {
 inline auto smooth(float a, float b, float x) -> float {
   float const t = linstep(a, b, x);
   return t * t * (3.0F - 2.0F * t);
-}
-
-inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
-  int const x0 = int(std::floor(x));
-  int const z0 = int(std::floor(z));
-  int const x1 = x0 + 1;
-  int const z1 = z0 + 1;
-  float const tx = x - float(x0);
-  float const tz = z - float(z0);
-  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
-  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
-  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
-  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
-  float const nx0 = n00 * (1 - tx) + n10 * tx;
-  float const nx1 = n01 * (1 - tx) + n11 * tx;
-  return nx0 * (1 - tz) + nx1 * tz;
 }
 
 } // namespace
@@ -140,8 +125,14 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
       }
     }
 
-    renderer.terrain_chunk(chunk.mesh.get(), k_identity_matrix, chunk.params,
-                           0x0080U, true, 0.0F);
+    TerrainSurfaceCmd cmd;
+    cmd.mesh = chunk.mesh.get();
+    cmd.model = k_identity_matrix;
+    cmd.params = chunk.params;
+    cmd.sort_key = 0x0080U;
+    cmd.depth_write = true;
+    cmd.depth_bias = 0.0F;
+    renderer.terrain_surface(cmd);
   }
 }
 
@@ -170,6 +161,8 @@ void TerrainRenderer::build_meshes() {
   }
 
   std::vector<float> height_data = m_height_data;
+  const auto surface_profile =
+      Game::Map::make_surface_profile(m_biome_settings);
   std::vector<float> entry_weight;
   if (!m_hill_entrances.empty() &&
       m_hill_entrances.size() == height_data.size()) {
@@ -270,6 +263,43 @@ void TerrainRenderer::build_meshes() {
     float const e0 = e00 * (1.0F - tx) + e10 * tx;
     float const e1 = e01 * (1.0F - tx) + e11 * tx;
     return e0 * (1.0F - tz) + e1 * tz;
+  };
+
+  auto sample_curvature_magnitude_at = [&](int gx, int gz) {
+    gx = std::clamp(gx, 0, m_width - 1);
+    gz = std::clamp(gz, 0, m_height - 1);
+
+    auto &terrain_service = Game::Map::TerrainService::instance();
+    if (terrain_service.is_initialized()) {
+      auto const &field = terrain_service.terrain_field();
+      if (field.width == m_width && field.height == m_height &&
+          !field.curvature.empty()) {
+        return field.sample_curvature_at(gx, gz);
+      }
+    }
+
+    auto h = [&](int sample_x, int sample_z) {
+      sample_x = std::clamp(sample_x, 0, m_width - 1);
+      sample_z = std::clamp(sample_z, 0, m_height - 1);
+      return height_data[sample_z * m_width + sample_x];
+    };
+
+    float const h_c = h(gx, gz);
+    float const h_l = h(gx - 1, gz);
+    float const h_r = h(gx + 1, gz);
+    float const h_d = h(gx, gz - 1);
+    float const h_u = h(gx, gz + 1);
+    float const h_dl = h(gx - 1, gz - 1);
+    float const h_dr = h(gx + 1, gz - 1);
+    float const h_ul = h(gx - 1, gz + 1);
+    float const h_ur = h(gx + 1, gz + 1);
+
+    float const dxx = h_r - 2.0F * h_c + h_l;
+    float const dzz = h_u - 2.0F * h_c + h_d;
+    float const dxz = 0.25F * (h_ur - h_ul - h_dr + h_dl);
+    float const curvature_scale = std::max(m_tile_size * m_tile_size, 0.0001F);
+    return std::sqrt(dxx * dxx + dzz * dzz + 2.0F * dxz * dxz) /
+           curvature_scale;
   };
 
   auto normal_from_heights_at = [&](float gx, float gz) {
@@ -400,6 +430,8 @@ void TerrainRenderer::build_meshes() {
 
         float aoSum = 0.0F;
         int aoCount = 0;
+        float curvatureSum = 0.0F;
+        int curvatureCount = 0;
       };
 
       SectionData sections[3];
@@ -661,6 +693,14 @@ void TerrainRenderer::build_meshes() {
             ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
             section.aoSum += ao;
             section.aoCount += 1;
+
+            float const curvature =
+                0.25F * (sample_curvature_magnitude_at(x, z) +
+                         sample_curvature_magnitude_at(x + 1, z) +
+                         sample_curvature_magnitude_at(x, z + 1) +
+                         sample_curvature_magnitude_at(x + 1, z + 1));
+            section.curvatureSum += curvature;
+            section.curvatureCount += 1;
           }
         }
       }
@@ -699,6 +739,10 @@ void TerrainRenderer::build_meshes() {
             (section.statCount > 0)
                 ? (section.heightVarSum / float(section.statCount))
                 : 0.0F;
+        const float avg_curvature =
+            (section.curvatureCount > 0)
+                ? (section.curvatureSum / float(section.curvatureCount))
+                : 0.0F;
 
         const float center_gx = 0.5F * (chunk.min_x + chunk.max_x);
         const float center_gz = 0.5F * (chunk.min_z + chunk.max_z);
@@ -722,10 +766,14 @@ void TerrainRenderer::build_meshes() {
         const float plateau_flat = 1.0F - smooth(0.10F, 0.25F, avg_slope);
         const float plateau_height = smooth(0.60F, 0.80F, nh_chunk);
         const float plateau_factor = plateau_flat * plateau_height;
+        const CurvatureShadingResponse curvature_response =
+            compute_curvature_shading_response(chunk.type, avg_curvature,
+                                               avg_slope, edge_factor,
+                                               plateau_factor, entrance_factor);
 
         QVector3D const base_color =
             get_terrain_color(chunk.type, chunk.average_height);
-        QVector3D const rock_tint = m_biome_settings.rock_low;
+        QVector3D const rock_tint = surface_profile.rock_low;
 
         float slope_mix = std::clamp(
             avg_slope * ((chunk.type == Game::Map::TerrainType::Flat) ? 0.30F
@@ -787,18 +835,18 @@ void TerrainRenderer::build_meshes() {
         auto tint_color = [&](const QVector3D &base) {
           return clamp01(applyTint(base, chunk.tint));
         };
-        params.grass_primary = tint_color(m_biome_settings.grass_primary);
-        params.grass_secondary = tint_color(m_biome_settings.grass_secondary);
-        params.grass_dry = tint_color(m_biome_settings.grass_dry);
-        params.soil_color = tint_color(m_biome_settings.soil_color);
-        params.rock_low = tint_color(m_biome_settings.rock_low);
-        params.rock_high = tint_color(m_biome_settings.rock_high);
+        params.grass_primary = tint_color(surface_profile.grass_primary);
+        params.grass_secondary = tint_color(surface_profile.grass_secondary);
+        params.grass_dry = tint_color(surface_profile.grass_dry);
+        params.soil_color = tint_color(surface_profile.soil_color);
+        params.rock_low = tint_color(surface_profile.rock_low);
+        params.rock_high = tint_color(surface_profile.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        params.macro_noise_scale = m_biome_settings.terrain_macro_noise_scale;
-        params.detail_noise_scale = m_biome_settings.terrain_detail_noise_scale;
+        params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
+        params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
 
-        float slope_threshold = m_biome_settings.terrain_rock_threshold;
+        float slope_threshold = surface_profile.terrain_rock_threshold;
         float sharpness_mul = 1.0F;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           slope_threshold -= 0.06F;
@@ -809,25 +857,28 @@ void TerrainRenderer::build_meshes() {
         }
         slope_threshold -= 0.05F * edge_factor;
         slope_threshold += 0.04F * entrance_factor;
+        slope_threshold -= 0.04F * curvature_response.ridge_response;
         slope_threshold = std::clamp(
             slope_threshold - std::clamp(avg_slope * 0.20F, 0.0F, 0.12F), 0.05F,
             0.9F);
 
         params.slope_rock_threshold = slope_threshold;
         params.slope_rock_sharpness = std::max(
-            1.0F, m_biome_settings.terrain_rock_sharpness * sharpness_mul);
+            1.0F, surface_profile.terrain_rock_sharpness * sharpness_mul);
 
-        float soil_height = m_biome_settings.terrain_soil_height;
+        float soil_height = surface_profile.terrain_soil_height;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           soil_height -= 0.04F;
         } else if (chunk.type == Game::Map::TerrainType::Mountain) {
           soil_height -= 0.12F;
         }
         soil_height += 0.05F * entrance_factor - 0.03F * plateau_factor;
+        soil_height += 0.03F * curvature_response.gully_response -
+                       0.02F * curvature_response.ridge_response;
         params.soil_blend_height = soil_height;
 
         params.soil_blend_sharpness =
-            std::max(0.75F, m_biome_settings.terrain_soil_sharpness *
+            std::max(0.75F, surface_profile.terrain_soil_sharpness *
                                 (chunk.type == Game::Map::TerrainType::Mountain
                                      ? 0.80F
                                      : 0.95F));
@@ -842,7 +893,7 @@ void TerrainRenderer::build_meshes() {
                       hash_to_01(noise_key_b) * k_noise_offset_scale);
 
         float base_amp =
-            m_biome_settings.height_noise_amplitude *
+            surface_profile.height_noise_amplitude *
             (0.7F + 0.3F * std::clamp(roughness * 0.6F, 0.0F, 1.0F));
         if (chunk.type == Game::Map::TerrainType::Hill) {
           base_amp *= 1.12F;
@@ -852,21 +903,28 @@ void TerrainRenderer::build_meshes() {
         base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
                      0.06F * entrance_factor);
         params.height_noise_strength = base_amp;
-        params.height_noise_frequency = m_biome_settings.height_noise_frequency;
+        params.height_noise_frequency = surface_profile.height_noise_frequency;
 
         params.ambient_boost =
-            m_biome_settings.terrain_ambient_boost *
+            surface_profile.terrain_ambient_boost *
             ((chunk.type == Game::Map::TerrainType::Hill)       ? 0.97F
              : (chunk.type == Game::Map::TerrainType::Mountain) ? 0.90F
                                                                 : 0.95F);
+        params.ambient_boost *=
+            1.0F - 0.04F * curvature_response.curvature_emphasis;
         params.rock_detail_strength =
-            m_biome_settings.terrain_rock_detail_strength *
+            surface_profile.terrain_rock_detail_strength *
             (0.75F + 0.35F * std::clamp(avg_slope * 1.2F, 0.0F, 1.0F) +
              0.15F * edge_factor - 0.10F * plateau_factor -
              0.08F * entrance_factor);
+        params.rock_detail_strength *=
+            1.0F + 0.18F * curvature_response.curvature_emphasis;
 
         params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
         params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+        params.curvature_response = curvature_response.curvature_emphasis;
+        params.ridge_response = curvature_response.ridge_response;
+        params.gully_response = curvature_response.gully_response;
 
         chunk.params = params;
 
@@ -881,25 +939,27 @@ void TerrainRenderer::build_meshes() {
 
 auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
                                         float height) const -> QVector3D {
+  const auto surface_profile =
+      Game::Map::make_surface_profile(m_biome_settings);
   switch (type) {
   case Game::Map::TerrainType::Mountain:
     if (height > 4.0F) {
-      return m_biome_settings.rock_high;
+      return surface_profile.rock_high;
     }
-    return m_biome_settings.rock_low;
+    return surface_profile.rock_low;
   case Game::Map::TerrainType::Hill: {
     float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
     float const t_smooth = t * t * (3.0F - 2.0F * t);
 
-    QVector3D const grass_low = m_biome_settings.grass_primary * 0.3F +
-                                m_biome_settings.grass_secondary * 0.7F;
-    QVector3D const grass_high = m_biome_settings.grass_secondary * 0.6F +
-                                 m_biome_settings.grass_dry * 0.4F;
+    QVector3D const grass_low = surface_profile.grass_primary * 0.3F +
+                                surface_profile.grass_secondary * 0.7F;
+    QVector3D const grass_high = surface_profile.grass_secondary * 0.6F +
+                                 surface_profile.grass_dry * 0.4F;
     QVector3D const grass =
         grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
 
-    QVector3D const rock = m_biome_settings.rock_low * (1.0F - t_smooth) +
-                           m_biome_settings.rock_high * t_smooth;
+    QVector3D const rock = surface_profile.rock_low * (1.0F - t_smooth) +
+                           surface_profile.rock_high * t_smooth;
 
     float const rock_blend_base = 0.15F + 0.45F * t_smooth;
     float const height_factor = std::clamp((height - 0.5F) * 0.3F, 0.0F, 0.25F);
@@ -911,11 +971,11 @@ auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
   case Game::Map::TerrainType::Forest: {
 
     float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
-    QVector3D const base = m_biome_settings.grass_primary * (1.0F - moisture) +
-                           m_biome_settings.grass_secondary * moisture;
+    QVector3D const base = surface_profile.grass_primary * (1.0F - moisture) +
+                           surface_profile.grass_secondary * moisture;
     float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
     QVector3D const with_dry =
-        base * (1.0F - dry_blend) + m_biome_settings.grass_dry * dry_blend;
+        base * (1.0F - dry_blend) + surface_profile.grass_dry * dry_blend;
 
     return QVector3D(with_dry.x() * 0.7F, with_dry.y() * 0.9F,
                      with_dry.z() * 0.6F);
@@ -923,10 +983,10 @@ auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
   case Game::Map::TerrainType::Flat:
   default: {
     float const moisture = std::clamp((height - 0.5F) * 0.2F, 0.0F, 0.4F);
-    QVector3D const base = m_biome_settings.grass_primary * (1.0F - moisture) +
-                           m_biome_settings.grass_secondary * moisture;
+    QVector3D const base = surface_profile.grass_primary * (1.0F - moisture) +
+                           surface_profile.grass_secondary * moisture;
     float const dry_blend = std::clamp((height - 2.0F) * 0.12F, 0.0F, 0.3F);
-    return base * (1.0F - dry_blend) + m_biome_settings.grass_dry * dry_blend;
+    return base * (1.0F - dry_blend) + surface_profile.grass_dry * dry_blend;
   }
   }
 }

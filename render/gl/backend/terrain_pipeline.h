@@ -91,6 +91,9 @@ public:
     GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_saturation{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_roughness{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle curvature_response{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle ridge_response{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle gully_response{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
   };
 

@@ -1,12 +1,11 @@
 #include "firecamp_renderer.h"
-#include "../../game/map/visibility_service.h"
-#include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QDebug>
 #include <QVector2D>
@@ -24,7 +23,7 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
-inline auto value_noise(float x, float z, uint32_t seed) -> float {
+inline auto smooth_value_noise(float x, float z, uint32_t seed) -> float {
   int const ix = static_cast<int>(std::floor(x));
   int const iz = static_cast<int>(std::floor(z));
   float fx = x - static_cast<float>(ix);
@@ -67,9 +66,11 @@ void FireCampRenderer::configure(
   m_noiseSeed = biome_settings.seed;
 
   m_fireCampInstances.clear();
-  m_fireCampInstanceBuffer.reset();
+  m_visibleInstances.clear();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
+  m_cachedVisibilityVersion = 0;
+  m_visibilityDirty = true;
 
   m_fireCampParams.time = 0.0F;
   m_fireCampParams.flicker_speed = 5.0F;
@@ -82,69 +83,29 @@ void FireCampRenderer::configure(
 void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_fireCampInstanceCount = static_cast<uint32_t>(m_fireCampInstances.size());
-
-  if (m_fireCampInstanceCount == 0) {
-    m_fireCampInstanceBuffer.reset();
-    m_visibleInstances.clear();
-    return;
-  }
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  const std::uint64_t current_version =
-      use_visibility ? visibility.version() : 0;
-
-  const bool needs_visibility_update =
-      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
-
-  if (needs_visibility_update) {
-    Game::Map::VisibilityService::Snapshot visibility_snapshot;
-    if (use_visibility) {
-      visibility_snapshot = visibility.snapshot();
-    }
-
-    m_visibleInstances.clear();
-
-    if (use_visibility) {
-      m_visibleInstances.reserve(m_fireCampInstanceCount);
-      for (const auto &instance : m_fireCampInstances) {
-        float const world_x = instance.pos_intensity.x();
-        float const world_z = instance.pos_intensity.z();
-        if (visibility_snapshot.isVisibleWorld(world_x, world_z)) {
-          m_visibleInstances.push_back(instance);
-        }
-      }
-    } else {
-      m_visibleInstances = m_fireCampInstances;
-    }
-
-    m_cachedVisibilityVersion = current_version;
-    m_visibilityDirty = false;
-
-    if (!m_visibleInstances.empty()) {
-      if (!m_fireCampInstanceBuffer) {
-        m_fireCampInstanceBuffer =
-            std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      m_fireCampInstanceBuffer->set_data(m_visibleInstances,
-                                         Buffer::Usage::Static);
-    }
-  }
-
-  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  const auto visible_count = Scatter::sync_filtered_instances(
+      m_fireCampInstances, m_visibleInstances, m_fireCampInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibilityDirty,
+      [](const FireCampInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_intensity;
+      });
   if (visible_count == 0 || !m_fireCampInstanceBuffer) {
     return;
   }
 
+  m_fireCampInstanceCount = visible_count;
   FireCampBatchParams params = m_fireCampParams;
   params.time = renderer.get_animation_time();
   params.flicker_amount = m_fireCampParams.flicker_amount *
                           (0.9F + 0.25F * std::sin(params.time * 1.3F));
   params.glow_strength = m_fireCampParams.glow_strength *
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
-  renderer.firecamp_batch(m_fireCampInstanceBuffer.get(), visible_count,
-                          params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::FireCamp;
+  cmd.instance_buffer = m_fireCampInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.firecamp = params;
+  renderer.terrain_scatter(cmd);
 
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);
@@ -204,7 +165,6 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 void FireCampRenderer::clear() {
   m_fireCampInstances.clear();
   m_visibleInstances.clear();
-  m_fireCampInstanceBuffer.reset();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
   m_visibilityDirty = true;
@@ -264,6 +224,8 @@ void FireCampRenderer::generate_firecamp_instances() {
     return;
   }
 
+  const auto scatter_profile =
+      Game::Map::make_scatter_profile(m_biome_settings);
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   SpawnTerrainCache terrain_cache;
@@ -274,7 +236,7 @@ void FireCampRenderer::generate_firecamp_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
 
   SpawnValidator validator(terrain_cache, config);
 
@@ -330,8 +292,8 @@ void FireCampRenderer::generate_firecamp_instances() {
       validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
                               world_x, world_z);
 
-      float const cluster_noise = value_noise(world_x * 0.02F, world_z * 0.02F,
-                                              m_noiseSeed ^ 0xCA3F12E0U);
+      float const cluster_noise = smooth_value_noise(
+          world_x * 0.02F, world_z * 0.02F, m_noiseSeed ^ 0xCA3F12E0U);
 
       if (cluster_noise < 0.4F) {
         continue;

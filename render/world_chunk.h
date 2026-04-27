@@ -84,6 +84,9 @@ struct TerrainChunkParams {
   static constexpr float kDefaultRockExposure = 0.3F;
   static constexpr float kDefaultGrassSaturation = 1.0F;
   static constexpr float kDefaultSoilRoughness = 0.5F;
+  static constexpr float kDefaultCurvatureResponse = 0.0F;
+  static constexpr float kDefaultRidgeResponse = 0.0F;
+  static constexpr float kDefaultGullyResponse = 0.0F;
   static constexpr float kDefaultSnowColorR = 0.92F;
   static constexpr float kDefaultSnowColorG = 0.94F;
   static constexpr float kDefaultSnowColorB = 0.98F;
@@ -157,6 +160,9 @@ struct TerrainChunkParams {
   float rock_exposure = kDefaultRockExposure;
   float grass_saturation = kDefaultGrassSaturation;
   float soil_roughness = kDefaultSoilRoughness;
+  float curvature_response = kDefaultCurvatureResponse;
+  float ridge_response = kDefaultRidgeResponse;
+  float gully_response = kDefaultGullyResponse;
   QVector3D snow_color = default_snow_color();
 };
 

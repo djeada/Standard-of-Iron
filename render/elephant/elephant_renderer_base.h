@@ -33,22 +33,9 @@ public:
               const HowdahAttachmentFrame *shared_howdah,
               const ElephantMotionSample *shared_motion, ISubmitter &out) const;
 
-  void render_simplified(const DrawContext &ctx, const AnimationInputs &anim,
-                         ElephantProfile &profile,
-                         const HowdahAttachmentFrame *shared_howdah,
-                         const ElephantMotionSample *shared_motion,
-                         ISubmitter &out) const;
-
-  void render_minimal(const DrawContext &ctx, ElephantProfile &profile,
-                      const ElephantMotionSample *shared_motion,
-                      ISubmitter &out) const;
-
-private:
-  void render_full(const DrawContext &ctx, const AnimationInputs &anim,
-                   ElephantProfile &profile,
-                   const HowdahAttachmentFrame *shared_howdah,
-                   const ElephantMotionSample *shared_motion,
-                   ISubmitter &out) const;
+protected:
+  mutable Render::Creature::Pipeline::UnitVisualSpec m_visual_spec_cache{};
+  mutable bool m_visual_spec_baked{false};
 };
 
 } // namespace Render::GL

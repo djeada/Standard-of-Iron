@@ -41,4 +41,8 @@ void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
 void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
                                   const HumanoidBodyMetrics &metrics) noexcept;
 
+void rebuild_humanoid_frames(Render::GL::HumanoidPose &pose,
+                             const QVector3D &proportion_scaling,
+                             float torso_scale) noexcept;
+
 } // namespace Render::Humanoid

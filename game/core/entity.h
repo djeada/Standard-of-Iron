@@ -98,4 +98,19 @@ private:
   ComponentChangeCallback m_component_change_callback;
 };
 
+template <typename T, typename... Args>
+auto get_or_add_component(Entity &entity, Args &&...args) -> T * {
+  if (T *existing = entity.get_component<T>()) {
+    return existing;
+  }
+  return entity.add_component<T>(std::forward<Args>(args)...);
+}
+
+template <typename T, typename... Args>
+auto get_or_add_component(Entity *entity, Args &&...args) -> T * {
+  return entity == nullptr
+             ? nullptr
+             : get_or_add_component<T>(*entity, std::forward<Args>(args)...);
+}
+
 } // namespace Engine::Core

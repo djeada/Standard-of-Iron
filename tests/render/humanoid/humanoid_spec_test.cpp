@@ -15,11 +15,13 @@
 #include <array>
 #include <gtest/gtest.h>
 #include <span>
+#include <string_view>
 
 namespace {
 
 using Render::Creature::CreatureLOD;
 using Render::Creature::CreatureSpec;
+using Render::Creature::PrimitiveInstance;
 using Render::GL::ISubmitter;
 using Render::Humanoid::humanoid_creature_spec;
 using Render::Humanoid::HumanoidBone;
@@ -244,6 +246,16 @@ auto make_upright_pose() -> HumanoidPose {
   return p;
 }
 
+auto find_primitive(std::span<const PrimitiveInstance> primitives,
+                    std::string_view name) -> const PrimitiveInstance * {
+  for (auto const &primitive : primitives) {
+    if (!primitive.debug_name.empty() && primitive.debug_name == name) {
+      return &primitive;
+    }
+  }
+  return nullptr;
+}
+
 } // namespace
 
 TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
@@ -302,6 +314,114 @@ TEST(HumanoidSpecTest, ReducedLodEmitsSixPrimitives) {
   EXPECT_EQ(stats.submitted, 6U);
   EXPECT_EQ(stats.skipped_invalid, 0U);
   EXPECT_EQ(sub.parts.size(), 6U);
+}
+
+TEST(HumanoidSpecTest,
+     ReducedSpecKeepsTorsoSlimmerThanLimbsAndHeadFromTopDownView) {
+  auto const &spec = humanoid_creature_spec();
+
+  auto const *torso =
+      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_torso");
+  auto const *head =
+      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_head");
+  auto const *arm =
+      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_arm_l");
+  auto const *leg =
+      find_primitive(spec.lod_reduced.primitives, "humanoid_reduced_leg_l");
+
+  ASSERT_NE(torso, nullptr);
+  ASSERT_NE(head, nullptr);
+  ASSERT_NE(arm, nullptr);
+  ASSERT_NE(leg, nullptr);
+
+  EXPECT_LT(torso->params.depth_radius, torso->params.radius);
+  EXPECT_GT(torso->params.radius, head->params.half_extents.x());
+  EXPECT_GT(torso->params.radius, arm->params.radius * 1.8F);
+  EXPECT_GT(leg->params.radius, arm->params.radius);
+}
+
+TEST(HumanoidSpecTest, FullSpecPreservesShoulderWaistTaperAndHeadHierarchy) {
+  auto const &spec = humanoid_creature_spec();
+
+  auto const *chest =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_chest");
+  auto const *abdomen =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_abdomen");
+  auto const *pelvis =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_pelvis_block");
+  auto const *neck =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_neck");
+  auto const *cranium =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_cranium");
+  auto const *jaw =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_jaw");
+  auto const *nose =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_nose");
+
+  ASSERT_NE(chest, nullptr);
+  ASSERT_NE(abdomen, nullptr);
+  ASSERT_NE(pelvis, nullptr);
+  ASSERT_NE(neck, nullptr);
+  ASSERT_NE(cranium, nullptr);
+  ASSERT_NE(jaw, nullptr);
+  ASSERT_NE(nose, nullptr);
+
+  EXPECT_EQ(pelvis->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_GT(chest->params.radius, pelvis->params.half_extents.x());
+  EXPECT_GT(pelvis->params.half_extents.x(), abdomen->params.radius);
+  EXPECT_GT(chest->params.depth_radius, abdomen->params.depth_radius);
+  EXPECT_LT(neck->params.radius, jaw->params.half_extents.x());
+  EXPECT_LT(jaw->params.half_extents.x(), cranium->params.half_extents.x());
+  EXPECT_GT(nose->params.head_offset.z(), jaw->params.head_offset.z());
+}
+
+TEST(HumanoidSpecTest, FullSpecKeepsArmsAndLegsTaperedTowardExtremities) {
+  auto const &spec = humanoid_creature_spec();
+
+  auto const *upper_arm_top =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_upper_arm_l_top");
+  auto const *upper_arm_bot =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_upper_arm_l_bot");
+  auto const *forearm_top =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_forearm_l_top");
+  auto const *forearm_bot =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_forearm_l_bot");
+  auto const *thigh_top =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_thigh_l_top");
+  auto const *thigh_bot =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_thigh_l_bot");
+  auto const *calf_top =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_calf_l_top");
+  auto const *calf_bot =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_calf_l_bot");
+  auto const *knee =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_knee_l");
+  auto const *ankle =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_ankle_l");
+  auto const *foot =
+      find_primitive(spec.lod_full.primitives, "humanoid_full_foot_l");
+
+  ASSERT_NE(upper_arm_top, nullptr);
+  ASSERT_NE(upper_arm_bot, nullptr);
+  ASSERT_NE(forearm_top, nullptr);
+  ASSERT_NE(forearm_bot, nullptr);
+  ASSERT_NE(thigh_top, nullptr);
+  ASSERT_NE(thigh_bot, nullptr);
+  ASSERT_NE(calf_top, nullptr);
+  ASSERT_NE(calf_bot, nullptr);
+  ASSERT_NE(knee, nullptr);
+  ASSERT_NE(ankle, nullptr);
+  ASSERT_NE(foot, nullptr);
+
+  EXPECT_EQ(foot->shape, Render::Creature::PrimitiveShape::OrientedSphere);
+  EXPECT_GT(upper_arm_top->params.radius, upper_arm_bot->params.radius);
+  EXPECT_GT(forearm_top->params.radius, forearm_bot->params.radius);
+  EXPECT_GT(upper_arm_bot->params.radius, forearm_bot->params.radius);
+  EXPECT_GT(thigh_top->params.radius, thigh_bot->params.radius);
+  EXPECT_GT(calf_top->params.radius, calf_bot->params.radius);
+  EXPECT_GT(thigh_bot->params.radius, calf_bot->params.radius);
+  EXPECT_GT(knee->params.radius, ankle->params.radius);
+  EXPECT_GT(foot->params.half_extents.z(), foot->params.half_extents.x());
 }
 
 TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {

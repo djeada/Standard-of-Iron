@@ -42,6 +42,10 @@ public:
     return (m_fireCampInstanceBuffer != nullptr) && !m_visibilityDirty;
   }
 
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_fireCampInstances.size();
+  }
+
 private:
   void generate_firecamp_instances();
   void add_explicit_firecamps(const Render::Ground::SpawnValidator &validator);

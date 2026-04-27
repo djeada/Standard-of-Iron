@@ -4,8 +4,12 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -43,5 +47,23 @@ public:
 private:
   SwordRenderConfig m_base;
 };
+
+inline constexpr std::uint32_t kSwordRoleCount = 4U;
+inline constexpr std::uint32_t kScabbardRoleCount = 2U;
+
+auto sword_fill_role_colors(const HumanoidPalette &palette,
+                            const SwordRenderConfig &config, QVector3D *out,
+                            std::size_t max) -> std::uint32_t;
+
+auto sword_make_static_attachment(const SwordRenderConfig &config,
+                                  std::uint8_t base_role_byte)
+    -> Render::Creature::StaticAttachmentSpec;
+
+auto scabbard_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                               std::size_t max) -> std::uint32_t;
+
+auto scabbard_make_static_attachment(
+    float sheath_r, std::uint16_t socket_bone_index,
+    std::uint8_t base_role_byte) -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

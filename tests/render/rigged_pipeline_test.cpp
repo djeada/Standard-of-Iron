@@ -9,7 +9,7 @@
 //      enum index matches the variant index.
 //   2. DrawQueue::submit + sort_for_batching accept the variant without
 //      crashing and preserve a RiggedCreatureCmd through the sort path.
-//   3. The k_type_order table has been extended to 14 entries, so
+//   3. The k_type_order table has been extended to 15 entries, so
 //      compute_sort_key does not index out of bounds for a
 //      RiggedCreatureCmd.
 //
@@ -19,6 +19,7 @@
 // through the queue, and does not silently fall off the type-order table.
 
 #include "render/draw_queue.h"
+#include "render/submitter.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -35,7 +36,7 @@ TEST(RiggedPipeline, VariantIndexMatchesEnum) {
   EXPECT_EQ(v.index(), Render::GL::RiggedCreatureCmdIndex);
   EXPECT_EQ(static_cast<std::size_t>(Render::GL::DrawCmdType::RiggedCreature),
             Render::GL::RiggedCreatureCmdIndex);
-  EXPECT_EQ(std::variant_size_v<Render::GL::DrawCmd>, 14U);
+  EXPECT_EQ(std::variant_size_v<Render::GL::DrawCmd>, 15U);
 }
 
 TEST(RiggedPipeline, DefaultsAreSane) {
@@ -44,6 +45,7 @@ TEST(RiggedPipeline, DefaultsAreSane) {
   EXPECT_EQ(cmd.material, nullptr);
   EXPECT_EQ(cmd.bone_palette, nullptr);
   EXPECT_EQ(cmd.bone_count, 0U);
+  EXPECT_EQ(cmd.role_color_count, 0U);
   EXPECT_EQ(cmd.texture, nullptr);
   EXPECT_EQ(cmd.material_id, 0);
   EXPECT_FLOAT_EQ(cmd.alpha, 1.0F);
@@ -83,10 +85,30 @@ TEST(RiggedPipeline, DrawQueueSubmitAndSort) {
   EXPECT_EQ(round_trip.material_id, 42);
 
   // sort_for_batching must accept the new variant without tripping on
-  // the k_type_order table (which now has 14 entries).
+  // the k_type_order table (which now has 15 entries).
   queue.sort_for_batching();
   const DrawCmd &sorted = queue.get_sorted(0);
   EXPECT_EQ(sorted.index(), RiggedCreatureCmdIndex);
+}
+
+TEST(RiggedPipeline, SelectionRingSortsAfterRiggedCreatures) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+
+  SelectionRingCmd ring;
+  ring.priority = Render::CommandPriority::Critical;
+  queue.submit(ring);
+
+  RiggedCreatureCmd rigged;
+  rigged.priority = Render::CommandPriority::Low;
+  queue.submit(rigged);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 2U);
+  EXPECT_EQ(queue.get_sorted(0).index(), RiggedCreatureCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), SelectionRingCmdIndex);
 }
 
 TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
@@ -111,6 +133,36 @@ TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
   for (std::size_t i = 0; i < queue.size(); ++i) {
     EXPECT_NO_THROW((void)extract_cmd_priority(queue.get_sorted(i)));
   }
+}
+
+TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+  QueueSubmitter submitter(&queue);
+
+  auto *mesh = reinterpret_cast<RiggedMesh *>(0x1000);
+  auto *shader_a = reinterpret_cast<Shader *>(0x2000);
+  auto *shader_b = reinterpret_cast<Shader *>(0x3000);
+
+  RiggedCreatureCmd first;
+  first.mesh = mesh;
+  first.bone_count = 12;
+
+  RiggedCreatureCmd second = first;
+
+  submitter.set_shader(shader_a);
+  submitter.rigged(first);
+  submitter.set_shader(shader_b);
+  submitter.rigged(second);
+
+  ASSERT_EQ(queue.size(), 2U);
+
+  queue.sort_for_batching();
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches.front().kind, PreparedBatchKind::RiggedCreatureInstanced);
+  EXPECT_EQ(batches.front().count, 2U);
 }
 
 } // namespace

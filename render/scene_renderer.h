@@ -11,6 +11,7 @@
 #include "gl/texture.h"
 #include "i_render_backend.h"
 #include "rigged_mesh_cache.h"
+#include "snapshot_mesh_cache.h"
 #include "submitter.h"
 #include "unit_render_cache.h"
 #include <QImage>
@@ -170,10 +171,9 @@ public:
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
                       const QVector3D &color, float alpha = 1.0F) override;
   void rigged(const RiggedCreatureCmd &cmd) override;
-  void terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
-                     const TerrainChunkParams &params,
-                     std::uint16_t sort_key = 0x8000U, bool depth_write = true,
-                     float depth_bias = 0.0F);
+  void terrain_surface(const TerrainSurfaceCmd &cmd);
+  void terrain_feature(const TerrainFeatureCmd &cmd);
+  void terrain_scatter(const TerrainScatterCmd &cmd);
 
   struct TemplatePrewarmProgress {
     enum class Phase {
@@ -201,18 +201,6 @@ public:
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
   void fog_batch(const FogInstanceData *instances, std::size_t count);
-  void grass_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const GrassBatchParams &params);
-  void stone_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const StoneBatchParams &params);
-  void plant_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const PlantBatchParams &params);
-  void pine_batch(Buffer *instance_buffer, std::size_t instance_count,
-                  const PineBatchParams &params);
-  void olive_batch(Buffer *instance_buffer, std::size_t instance_count,
-                   const OliveBatchParams &params);
-  void firecamp_batch(Buffer *instance_buffer, std::size_t instance_count,
-                      const FireCampBatchParams &params);
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 
@@ -227,8 +215,9 @@ public:
   auto rigged_mesh_cache() noexcept -> RiggedMeshCache & {
     return m_rigged_mesh_cache;
   }
-  auto bone_palette_arena() noexcept -> BonePaletteArena & {
-    return m_bone_palette_arena;
+
+  auto snapshot_mesh_cache() noexcept -> SnapshotMeshCache & {
+    return m_snapshot_mesh_cache;
   }
 
 private:
@@ -317,7 +306,7 @@ private:
   UnitRenderCache m_unit_render_cache;
   ModelMatrixCache m_model_matrix_cache;
   RiggedMeshCache m_rigged_mesh_cache;
-  BonePaletteArena m_bone_palette_arena;
+  SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
 
   std::mutex m_async_prewarm_mutex;

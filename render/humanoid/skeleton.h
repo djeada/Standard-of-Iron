@@ -76,6 +76,8 @@ enum class HumanoidSocket : std::uint8_t {
   Head = 0,
   HandR,
   HandL,
+  GripR,
+  GripL,
   Back,
   HipL,
   HipR,
@@ -89,14 +91,12 @@ enum class HumanoidSocket : std::uint8_t {
 inline constexpr std::size_t kSocketCount =
     static_cast<std::size_t>(HumanoidSocket::Count);
 
-struct SocketDef {
-  HumanoidBone bone;
-
-  QVector3D local_offset;
-};
+using SocketDef = Render::Creature::SocketDef;
 
 [[nodiscard]] auto
 socket_def(HumanoidSocket socket) noexcept -> const SocketDef &;
+
+[[nodiscard]] auto socket_bone(HumanoidSocket socket) noexcept -> HumanoidBone;
 
 using BonePalette = std::array<QMatrix4x4, kBoneCount>;
 
@@ -108,11 +108,25 @@ void evaluate_skeleton(const Render::GL::HumanoidPose &pose,
 socket_transform(const BonePalette &palette,
                  HumanoidSocket socket) noexcept -> QMatrix4x4;
 
+[[nodiscard]] auto
+socket_transform(const Render::GL::AttachmentFrame &bone_frame,
+                 HumanoidSocket socket) noexcept -> QMatrix4x4;
+
 [[nodiscard]] auto socket_position(const BonePalette &palette,
                                    HumanoidSocket socket) noexcept -> QVector3D;
 
 [[nodiscard]] auto socket_attachment_frame(const BonePalette &palette,
                                            HumanoidSocket socket) noexcept
+    -> Render::GL::AttachmentFrame;
+
+[[nodiscard]] auto socket_attachment_frame(
+    const Render::GL::AttachmentFrame &bone_frame,
+    HumanoidSocket socket) noexcept -> Render::GL::AttachmentFrame;
+
+[[nodiscard]] auto
+bind_socket_transform(HumanoidSocket socket) noexcept -> QMatrix4x4;
+
+[[nodiscard]] auto bind_socket_attachment_frame(HumanoidSocket socket) noexcept
     -> Render::GL::AttachmentFrame;
 
 } // namespace Render::Humanoid

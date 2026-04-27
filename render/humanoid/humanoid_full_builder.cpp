@@ -26,6 +26,17 @@ auto frame_local(const Render::GL::AttachmentFrame &f,
          f.up * local.y() * f.radius + f.forward * local.z() * f.radius;
 }
 
+auto frame_from_matrix(const QMatrix4x4 &m,
+                       float radius) noexcept -> Render::GL::AttachmentFrame {
+  Render::GL::AttachmentFrame frame;
+  frame.origin = m.column(3).toVector3D();
+  frame.right = m.column(0).toVector3D();
+  frame.up = m.column(1).toVector3D();
+  frame.forward = m.column(2).toVector3D();
+  frame.radius = radius;
+  return frame;
+}
+
 } // namespace
 
 void compute_humanoid_body_metrics(const Render::GL::HumanoidPose &pose,
@@ -156,6 +167,16 @@ void compute_humanoid_body_frames(Render::GL::HumanoidPose &pose,
   pose.body_frames.hand_l = compute_hand(pose.elbow_l, pose.hand_l, -1.0F);
   pose.body_frames.hand_r = compute_hand(pose.elbow_r, pose.hand_r, 1.0F);
 
+  auto compute_hand_bone_frame = [&](const QVector3D &hand) -> AF {
+    return AF{hand, m.right_axis, m.up_axis, m.forward_axis, m.hand_r, 0.0F};
+  };
+  AF const hand_bone_l = compute_hand_bone_frame(pose.hand_l);
+  AF const hand_bone_r = compute_hand_bone_frame(pose.hand_r);
+  pose.body_frames.grip_l = Render::Humanoid::socket_attachment_frame(
+      hand_bone_l, Render::Humanoid::HumanoidSocket::GripL);
+  pose.body_frames.grip_r = Render::Humanoid::socket_attachment_frame(
+      hand_bone_r, Render::Humanoid::HumanoidSocket::GripR);
+
   auto compute_foot_fwd = [&](float lateral_sign) -> QVector3D {
     QVector3D f = m.forward_axis + m.right_axis * (0.12F * lateral_sign);
     if (f.lengthSquared() > 1e-8F) {
@@ -241,6 +262,15 @@ void compute_humanoid_head_frame(Render::GL::HumanoidPose &pose,
   pose.head_frame.up = head_up;
   pose.head_frame.forward = head_forward;
   pose.head_frame.radius = pose.head_r;
+}
+
+void rebuild_humanoid_frames(Render::GL::HumanoidPose &pose,
+                             const QVector3D &proportion_scaling,
+                             float torso_scale) noexcept {
+  HumanoidBodyMetrics metrics{};
+  compute_humanoid_body_metrics(pose, proportion_scaling, torso_scale, metrics);
+  compute_humanoid_head_frame(pose, metrics);
+  compute_humanoid_body_frames(pose, metrics);
 }
 
 } // namespace Render::Humanoid

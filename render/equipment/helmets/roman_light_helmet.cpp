@@ -1,16 +1,11 @@
 #include "roman_light_helmet.h"
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/humanoid_renderer_base.h"
+
+#include "../attachment_builder.h"
+#include "../generated_equipment.h"
+
 #include "../../humanoid/style_palette.h"
-#include "../../rig_dsl/defs/roman_light_helmet_rig.h"
-#include "../../rig_dsl/rig_interpreter.h"
-#include "../equipment_submit.h"
-#include <QMatrix4x4>
-#include <QVector3D>
+
 #include <array>
-#include <cmath>
 
 namespace Render::GL {
 
@@ -18,146 +13,88 @@ using Render::GL::Humanoid::saturate_color;
 
 namespace {
 
-namespace RLH = Render::RigDSL::RomanLightHelmet;
-
-class HelmetAnchors : public Render::RigDSL::AnchorResolver {
-public:
-  HelmetAnchors(const AttachmentFrame &head, const QVector3D &apex_pos,
-                const QVector3D &crest_base, const QVector3D &crest_mid,
-                const QVector3D &crest_top) {
-    auto head_point = [&](const QVector3D &n) {
-      return HumanoidRendererBase::frame_local_position(head, n);
-    };
-
-    QVector3D const helmet_top = head_point({0.0F, 1.28F, 0.0F});
-    QVector3D const helmet_bot = head_point({0.0F, 0.08F, 0.0F});
-    float const half_h = head.radius * 0.018F * 0.5F;
-
-    auto ring = [&](float y_offset) -> std::pair<QVector3D, QVector3D> {
-      QVector3D const centre = head_point({0.0F, y_offset, 0.0F});
-      return {centre + head.up * half_h, centre - head.up * half_h};
-    };
-    auto const low_ring = ring(0.35F);
-    auto const high_ring = ring(0.95F);
-
-    m_positions[RLH::Helmet_Top] = helmet_top;
-    m_positions[RLH::Helmet_Bot] = helmet_bot;
-    m_positions[RLH::Apex] = apex_pos;
-    m_positions[RLH::Ring_Low_Top] = low_ring.first;
-    m_positions[RLH::Ring_Low_Bot] = low_ring.second;
-    m_positions[RLH::Ring_High_Top] = high_ring.first;
-    m_positions[RLH::Ring_High_Bot] = high_ring.second;
-    m_positions[RLH::Neck_Guard_Top] = head_point({0.0F, 0.03F, -0.85F});
-    m_positions[RLH::Neck_Guard_Bot] = head_point({0.0F, -0.32F, -0.92F});
-    m_positions[RLH::Crest_Base] = crest_base;
-    m_positions[RLH::Crest_Mid] = crest_mid;
-    m_positions[RLH::Crest_Top] = crest_top;
-  }
-
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::AnchorId id) const -> QVector3D override {
-    return id < m_positions.size() ? m_positions[id] : QVector3D{};
-  }
-
-private:
-  std::array<QVector3D, 12> m_positions{};
+enum RomanLightPaletteSlot : std::uint8_t {
+  k_metal_slot = 0U,
+  k_metal_accent_slot = 1U,
+  k_crest_slot = 2U,
 };
 
-class HelmetPalette : public Render::RigDSL::PaletteResolver {
-public:
-  HelmetPalette(const QVector3D &base, const QVector3D &accent)
-      : m_base(base), m_accent(accent) {}
+auto roman_light_palette(const HumanoidPalette &palette)
+    -> std::array<QVector3D, 3> {
+  QVector3D const metal =
+      saturate_color(palette.metal * QVector3D(1.15F, 0.92F, 0.68F));
+  return {metal, saturate_color(metal * 1.14F), QVector3D(0.88F, 0.18F, 0.18F)};
+}
 
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::PaletteSlot slot) const -> QVector3D override {
-    switch (slot) {
-    case Render::RigDSL::PaletteSlot::Metal:
-      return m_base;
-    case Render::RigDSL::PaletteSlot::Metal_Accent:
-      return m_accent;
-    default:
-      return m_base;
-    }
-  }
-
-private:
-  QVector3D m_base;
-  QVector3D m_accent;
-};
-
-class HelmetScalars : public Render::RigDSL::ScalarResolver {
-public:
-  explicit HelmetScalars(float helmet_r) : m_helmet_r(helmet_r) {}
-  [[nodiscard]] auto
-  resolve(Render::RigDSL::ScalarId id) const -> float override {
-    switch (id) {
-    case RLH::S_Helmet_R:
-      return m_helmet_r;
-    case RLH::S_Helmet_R_Apex:
-      return m_helmet_r * 0.97F;
-    case RLH::S_Helmet_R_Ring_Low:
-      return m_helmet_r * 1.06F;
-    case RLH::S_Helmet_R_Ring_Hi:
-      return m_helmet_r * 1.02F;
-    case RLH::S_Helmet_R_Neck:
-      return m_helmet_r * 0.86F;
-    default:
-      return 1.0F;
-    }
-  }
-
-private:
-  float m_helmet_r;
-};
+constexpr QVector3D k_authored_local_offset(0.0F, 0.05F, 0.0F);
 
 } // namespace
 
-void RomanLightHelmetRenderer::render(const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      EquipmentBatch &batch) {
-  submit({}, ctx, frames, palette, anim, batch);
+auto roman_light_helmet_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 8> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.12F, 0.0F),
+                           QVector3D(0.0F, 1.58F, 0.0F), 1.42F, k_metal_slot,
+                           1.0F, 2),
+        generated_cone(QVector3D(0.0F, 1.58F, 0.0F),
+                       QVector3D(0.0F, 1.96F, 0.0F), 1.35F, k_metal_accent_slot,
+                       1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, 0.207F, 0.0F),
+                           QVector3D(0.0F, 0.233F, 0.0F), 1.48F,
+                           k_metal_accent_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, 1.087F, 0.0F),
+                           QVector3D(0.0F, 1.113F, 0.0F), 1.42F, k_metal_slot,
+                           1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, -0.40F, -1.00F),
+                           QVector3D(0.0F, -0.02F, -0.92F), 1.16F, k_metal_slot,
+                           1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, 1.96F, 0.0F),
+                           QVector3D(0.0F, 2.10F, 0.0F), 0.026F,
+                           k_metal_accent_slot, 1.0F, 2),
+        generated_cone(QVector3D(0.0F, 2.10F, 0.0F),
+                       QVector3D(0.0F, 2.30F, 0.0F), 0.060F, k_crest_slot, 1.0F,
+                       0),
+        generated_sphere(QVector3D(0.0F, 2.30F, 0.0F), 0.028F,
+                         k_metal_accent_slot, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("roman_light_helmet",
+                                               primitives);
+  }();
+  return archetype;
 }
 
-void RomanLightHelmetRenderer::submit(const RomanLightHelmetConfig &,
-                                      const DrawContext &ctx,
-                                      const BodyFrames &frames,
-                                      const HumanoidPalette &palette,
-                                      const HumanoidAnimationContext &anim,
-                                      EquipmentBatch &batch) {
-  (void)anim;
-
-  AttachmentFrame head = frames.head;
-  float const head_r = head.radius;
-  if (head_r <= 0.0F) {
-    return;
+auto roman_light_helmet_fill_role_colors(const HumanoidPalette &palette,
+                                         QVector3D *out,
+                                         std::size_t max) -> std::uint32_t {
+  if (max < kRomanLightHelmetRoleCount) {
+    return 0;
   }
+  auto const colors = roman_light_palette(palette);
+  out[0] = colors[0];
+  out[1] = colors[1];
+  out[2] = colors[2];
+  return kRomanLightHelmetRoleCount;
+}
 
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n);
-  };
-  QVector3D const apex_pos = head_point({0.0F, 1.48F, 0.0F});
-  QVector3D const crest_base = apex_pos;
-  QVector3D const crest_mid = crest_base + head.up * 0.09F;
-  QVector3D const crest_top = crest_mid + head.up * 0.12F;
+auto roman_light_helmet_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
 
-  QVector3D const helmet_color =
-      saturate_color(palette.metal * QVector3D(1.15F, 0.92F, 0.68F));
-  QVector3D const helmet_accent = helmet_color * 1.14F;
-  float const helmet_r = head_r * 1.08F;
-
-  HelmetAnchors const anchors(head, apex_pos, crest_base, crest_mid, crest_top);
-  HelmetPalette const pal(helmet_color, helmet_accent);
-  HelmetScalars const scalars(helmet_r);
-
-  Render::RigDSL::InterpretContext ictx;
-  ictx.model = ctx.model;
-  ictx.anchors = &anchors;
-  ictx.palette = &pal;
-  ictx.scalars = &scalars;
-  BatchSubmitterAdapter adapter(batch);
-  Render::RigDSL::render_rig(RLH::kRig, ictx, adapter);
+  constexpr float kHeadSocketRadius = 0.16F;
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &roman_light_helmet_archetype(),
+      .socket_bone_index = socket_bone_index,
+      .authored_local_offset = k_authored_local_offset,
+      .bind_radius = kHeadSocketRadius,
+      .bind_socket_transform = bind_palette_socket_bone,
+  });
+  spec.palette_role_remap[k_metal_slot] = base_role_byte;
+  spec.palette_role_remap[k_metal_accent_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_crest_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  return spec;
 }
 
 } // namespace Render::GL

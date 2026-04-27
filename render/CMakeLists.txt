@@ -28,6 +28,7 @@ add_library(render_gl STATIC
     gl/shader_cache.cpp
     gl/state_scopes.cpp
     draw_queue.cpp
+    render_archetype.cpp
     world_chunk.cpp
     primitive_batch.cpp
     template_cache.cpp
@@ -37,6 +38,8 @@ add_library(render_gl STATIC
     pass/primitive_flush_pass.cpp
     pass/construction_preview_pass.cpp
     ground/spawn_validator.cpp
+    ground/linear_feature_geometry.cpp
+    ground/terrain_surface_manager.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
     ground/terrain_renderer.cpp
@@ -46,11 +49,13 @@ add_library(render_gl STATIC
     ground/riverbank_renderer.cpp
     ground/riverbank_asset_renderer.cpp
     ground/bridge_renderer.cpp
+    ground/terrain_feature_manager.cpp
     ground/biome_renderer.cpp
     ground/stone_renderer.cpp
     ground/plant_renderer.cpp
     ground/pine_renderer.cpp
     ground/firecamp_renderer.cpp
+    ground/terrain_scatter_manager.cpp
     ground/rain_renderer.cpp
     entity/registry.cpp
     entity/nations/roman/archer_renderer.cpp
@@ -65,11 +70,13 @@ add_library(render_gl STATIC
     entity/nations/carthage/spearman_renderer.cpp
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
-    horse/rig.cpp
+    horse/horse_profile_data.cpp
+    horse/prepare.cpp
     horse/horse_spec.cpp
-    horse/horse_animation_controller.cpp
+    horse/horse_motion.cpp
     entity/horse_renderer.cpp
     entity/mounted_humanoid_renderer_base.cpp
+    entity/mounted_prepare.cpp
     entity/mounted_knight_renderer_base.cpp
     entity/horse_archer_renderer_base.cpp
     entity/horse_spearman_renderer_base.cpp
@@ -106,7 +113,9 @@ add_library(render_gl STATIC
     entity/ballista_renderer.cpp
     entity/nations/roman/ballista_renderer.cpp
     entity/nations/carthage/ballista_renderer.cpp
-    elephant/rig.cpp
+    elephant/elephant_profile_data.cpp
+    elephant/elephant_motion.cpp
+    elephant/prepare.cpp
     elephant/elephant_spec.cpp
     entity/elephant_renderer.cpp
     entity/nations/carthage/elephant_renderer.cpp
@@ -128,8 +137,9 @@ add_library(render_gl STATIC
     gl/humanoid/animation/gait.cpp
     palette.cpp
     humanoid/rig.cpp
+    humanoid/prepare.cpp
     humanoid/poser.cpp
-    humanoid/skin.cpp
+    humanoid/facial_hair_catalog.cpp
     humanoid/formation_calculator.cpp
     humanoid/style_palette.cpp
     humanoid/pose_controller.cpp
@@ -139,23 +149,34 @@ add_library(render_gl STATIC
     humanoid/humanoid_spec.cpp
     humanoid/humanoid_state_machine.cpp
     humanoid/humanoid_clip_registry.cpp
-    humanoid/clip_driver_cache.cpp
+    creature/bpat/bpat_writer.cpp
+    creature/bpat/bpat_reader.cpp
+    creature/bpat/bpat_registry.cpp
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
+    creature/anatomy_bake.cpp
+    creature/archetype_registry.cpp
+    creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
-    creature/pipeline/equipment_registry.cpp
+    creature/pipeline/creature_asset.cpp
+    creature/pipeline/prepared_submit.cpp
+    creature/pipeline/lod_decision.cpp
+    creature/pipeline/preparation_common.cpp
+    creature/pipeline/creature_render_graph.cpp
     rigged_mesh.cpp
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp
+    snapshot_mesh_cache.cpp
+    static_attachment_spec.cpp
     bone_palette_arena.cpp
     unit_render_cache.cpp
     pose_palette_cache.cpp
     mesh_geometry_pool.cpp
     equipment/equipment_registry.cpp
     equipment/equipment_submit.cpp
+    equipment/attachment_builder.cpp
     equipment/register_equipment.cpp
-    equipment/armor/tunic_renderer.cpp
     equipment/armor/roman_armor.cpp
     equipment/armor/armor_light_carthage.cpp
     equipment/armor/armor_heavy_carthage.cpp
@@ -181,20 +202,18 @@ add_library(render_gl STATIC
     equipment/helmets/roman_light_helmet.cpp
     equipment/helmets/carthage_heavy_helmet.cpp
     equipment/helmets/carthage_light_helmet.cpp
-    equipment/armor/chainmail_armor.cpp
     equipment/horse/saddles/roman_saddle_renderer.cpp
     equipment/horse/saddles/carthage_saddle_renderer.cpp
     equipment/horse/saddles/light_cavalry_saddle_renderer.cpp
+    equipment/horse/saddles/horse_mount_archetype.cpp
+    equipment/horse/horse_attachment_archetype.cpp
     equipment/horse/tack/bridle_renderer.cpp
-    equipment/horse/tack/stirrup_renderer.cpp
     equipment/horse/tack/blanket_renderer.cpp
     equipment/horse/tack/reins_renderer.cpp
     equipment/horse/armor/scale_barding_renderer.cpp
     equipment/horse/armor/leather_barding_renderer.cpp
     equipment/horse/armor/champion_renderer.cpp
     equipment/horse/armor/crupper_renderer.cpp
-    equipment/horse/decorations/plume_renderer.cpp
-    equipment/horse/decorations/tail_ribbon_renderer.cpp
     equipment/horse/decorations/saddle_bag_renderer.cpp
     software/software_rasterizer.cpp
     software_backend.cpp

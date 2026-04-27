@@ -22,7 +22,6 @@ struct HealerStyleConfig {
   bool force_beard = true;
 
   std::string attachment_profile;
-  std::string shader_id;
 };
 
 void register_carthage_healer_style();

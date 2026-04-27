@@ -103,8 +103,11 @@ void make_elephant_spec_pose_reduced(const Render::GL::ElephantDimensions &dims,
                                      const ElephantReducedMotion &motion,
                                      ElephantSpecPose &out_pose) noexcept;
 
-void fill_elephant_role_colors(const Render::GL::ElephantVariant &variant,
-                               std::array<QVector3D, 5> &out_roles) noexcept;
+inline constexpr std::size_t kElephantRoleCount = 10;
+
+void fill_elephant_role_colors(
+    const Render::GL::ElephantVariant &variant,
+    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept;
 
 [[nodiscard]] auto
 elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
@@ -114,28 +117,5 @@ auto compute_elephant_bone_palette(const ElephantSpecPose &pose,
     -> std::uint32_t;
 
 auto elephant_bind_palette() noexcept -> std::span<const QMatrix4x4>;
-
-void submit_elephant_reduced_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept;
-
-void submit_elephant_full_rigged(const ElephantSpecPose &pose,
-                                 const Render::GL::ElephantVariant &variant,
-                                 const QMatrix4x4 &world_from_unit,
-                                 Render::GL::ISubmitter &out) noexcept;
-
-void submit_elephant_minimal_rigged(const ElephantSpecPose &pose,
-                                    const Render::GL::ElephantVariant &variant,
-                                    const QMatrix4x4 &world_from_unit,
-                                    Render::GL::ISubmitter &out) noexcept;
-
-void submit_elephant_via_pipeline(const Render::GL::ElephantRendererBase &owner,
-                                  const ElephantSpecPose &pose,
-                                  const Render::GL::ElephantVariant &variant,
-                                  const QMatrix4x4 &world_from_unit,
-                                  std::uint32_t inst_seed,
-                                  Render::Creature::CreatureLOD lod,
-                                  Render::GL::ISubmitter &out) noexcept;
 
 } // namespace Render::Elephant

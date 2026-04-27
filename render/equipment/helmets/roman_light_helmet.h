@@ -2,26 +2,27 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
-#include "../i_equipment_renderer.h"
+#include "../../render_archetype.h"
+#include "../../static_attachment_spec.h"
+
+#include <QMatrix4x4>
+#include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
-struct RomanLightHelmetConfig {};
+auto roman_light_helmet_archetype() -> const RenderArchetype &;
 
-class RomanLightHelmetRenderer : public IEquipmentRenderer {
-public:
-  RomanLightHelmetRenderer() = default;
+inline constexpr std::uint32_t kRomanLightHelmetRoleCount = 3;
 
-  static void submit(const RomanLightHelmetConfig &config,
-                     const DrawContext &ctx, const BodyFrames &frames,
-                     const HumanoidPalette &palette,
-                     const HumanoidAnimationContext &anim,
-                     EquipmentBatch &batch);
+auto roman_light_helmet_fill_role_colors(const HumanoidPalette &palette,
+                                         QVector3D *out,
+                                         std::size_t max) -> std::uint32_t;
 
-  void render(const DrawContext &ctx, const BodyFrames &frames,
-              const HumanoidPalette &palette,
-              const HumanoidAnimationContext &anim,
-              EquipmentBatch &batch) override;
-};
+auto roman_light_helmet_make_static_attachment(
+    std::uint16_t socket_bone_index, std::uint8_t base_role_byte,
+    const QMatrix4x4 &bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec;
 
 } // namespace Render::GL

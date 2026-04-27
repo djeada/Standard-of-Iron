@@ -1,11 +1,10 @@
 #pragma once
 
 #include "../creature/pipeline/unit_visual_spec.h"
-#include "../equipment/horse/i_horse_equipment_renderer.h"
+#include "../creature/render_request.h"
 #include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
-#include <QString>
 #include <QVector3D>
 
 #include <memory>
@@ -26,12 +25,17 @@ struct HorseArcherRendererConfig {
   QVector3D cloak_trim_color{0.75F, 0.66F, 0.42F};
   int cloak_back_material_id = 5;
   int cloak_shoulder_material_id = 6;
-  float mount_scale = 0.75F;
+  float mount_scale = 0.95F;
   bool has_bow = true;
   bool has_quiver = true;
   bool has_cloak = false;
   float helmet_offset_moving = 0.0F;
-  std::vector<std::shared_ptr<IHorseEquipmentRenderer>> horse_attachments;
+
+  Render::Creature::ArchetypeId rider_archetype_id{
+      Render::Creature::kInvalidArchetype};
+
+  Render::Creature::ArchetypeId mount_archetype_id{
+      Render::Creature::kInvalidArchetype};
 };
 
 class HorseArcherRendererBase : public MountedHumanoidRendererBase {
@@ -55,30 +59,23 @@ public:
                         VariationParams &variation) const override;
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override;
-
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString;
+  void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t seed, Render::Creature::CreatureLOD lod,
+      Render::Creature::Pipeline::CreaturePreparationResult &out)
+      const override;
 
 protected:
   const HorseArcherRendererConfig &config() const { return m_config; }
 
-  void apply_riding_animation(MountedPoseController &controller,
-                              MountedAttachmentFrame &mount,
-                              const HumanoidAnimationContext &anim_ctx,
-                              HumanoidPose &pose, const HorseDimensions &dims,
-                              const ReinState &reins) const override;
-
 private:
-  void cache_equipment();
   void build_visual_spec();
 
   HorseArcherRendererConfig m_config;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_bow;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_quiver;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_cloak;
+  Render::Creature::ArchetypeId m_rider_archetype_with_bow{
+      Render::Creature::kInvalidArchetype};
 
-  std::vector<Render::Creature::Pipeline::EquipmentRecord> m_loadout;
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

@@ -8,9 +8,12 @@
 namespace Render::GL {
 
 struct FormationOffset {
-  float offset_x;
-  float offset_z;
+  float offset_x{0.0F};
+  float offset_z{0.0F};
+  float yaw_offset{0.0F};
 };
+
+[[nodiscard]] auto cavalry_formation_spacing(float mount_scale = 1.0F) -> float;
 
 class IFormationCalculator {
 public:
@@ -30,7 +33,7 @@ public:
                    uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
-    return "Roman Infantry (Perfect Grid)";
+    return "Roman Infantry (FormationSystem)";
   }
 };
 
@@ -41,7 +44,7 @@ public:
                    uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
-    return "Roman Cavalry (Wide Grid)";
+    return "Roman Cavalry (FormationSystem)";
   }
 };
 
@@ -52,7 +55,7 @@ public:
                    uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
-    return "Carthage Infantry (Irregular)";
+    return "Carthage Infantry (FormationSystem)";
   }
 };
 
@@ -63,7 +66,7 @@ public:
                    uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
-    return "Carthage Cavalry (Loose/Skirmish)";
+    return "Carthage Cavalry (FormationSystem)";
   }
 };
 
@@ -74,7 +77,7 @@ public:
                    uint32_t seed) const -> FormationOffset override;
 
   [[nodiscard]] auto get_description() const -> const char * override {
-    return "Builder Circle (Construction)";
+    return "Builder Circle (FormationSystem)";
   }
 };
 

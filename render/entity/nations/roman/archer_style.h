@@ -22,7 +22,6 @@ struct ArcherStyleConfig {
   bool show_cape = true;
 
   std::string attachment_profile;
-  std::string shader_id;
 };
 
 void register_roman_archer_style();

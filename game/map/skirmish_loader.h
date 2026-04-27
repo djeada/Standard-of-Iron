@@ -19,18 +19,10 @@ class Renderer;
 class Camera;
 class GroundRenderer;
 class TerrainRenderer;
-class BiomeRenderer;
+class TerrainFeatureManager;
 class FogRenderer;
-class StoneRenderer;
-class PlantRenderer;
-class PineRenderer;
-class OliveRenderer;
-class FireCampRenderer;
 class RainRenderer;
-class RiverRenderer;
-class RoadRenderer;
-class RiverbankRenderer;
-class BridgeRenderer;
+class TerrainScatterManager;
 } // namespace Render::GL
 
 namespace Game::Map {
@@ -69,23 +61,13 @@ public:
   void set_terrain_renderer(Render::GL::TerrainRenderer *terrain) {
     m_terrain = terrain;
   }
-  void set_biome_renderer(Render::GL::BiomeRenderer *biome) { m_biome = biome; }
-  void set_river_renderer(Render::GL::RiverRenderer *river) { m_river = river; }
-  void set_road_renderer(Render::GL::RoadRenderer *road) { m_road = road; }
-  void set_riverbank_renderer(Render::GL::RiverbankRenderer *riverbank) {
-    m_riverbank = riverbank;
+  void set_scatter_manager(Render::GL::TerrainScatterManager *scatter) {
+    m_scatter = scatter;
   }
-  void set_bridge_renderer(Render::GL::BridgeRenderer *bridge) {
-    m_bridge = bridge;
+  void set_feature_manager(Render::GL::TerrainFeatureManager *features) {
+    m_features = features;
   }
   void set_fog_renderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
-  void set_stone_renderer(Render::GL::StoneRenderer *stone) { m_stone = stone; }
-  void set_plant_renderer(Render::GL::PlantRenderer *plant) { m_plant = plant; }
-  void set_pine_renderer(Render::GL::PineRenderer *pine) { m_pine = pine; }
-  void set_olive_renderer(Render::GL::OliveRenderer *olive) { m_olive = olive; }
-  void set_fire_camp_renderer(Render::GL::FireCampRenderer *firecamp) {
-    m_firecamp = firecamp;
-  }
   void set_rain_renderer(Render::GL::RainRenderer *rain) { m_rain = rain; }
 
   void set_on_owners_updated(OwnersUpdatedCallback callback) {
@@ -107,17 +89,9 @@ private:
   Render::GL::Camera &m_camera;
   Render::GL::GroundRenderer *m_ground = nullptr;
   Render::GL::TerrainRenderer *m_terrain = nullptr;
-  Render::GL::BiomeRenderer *m_biome = nullptr;
-  Render::GL::RiverRenderer *m_river = nullptr;
-  Render::GL::RoadRenderer *m_road = nullptr;
-  Render::GL::RiverbankRenderer *m_riverbank = nullptr;
-  Render::GL::BridgeRenderer *m_bridge = nullptr;
+  Render::GL::TerrainFeatureManager *m_features = nullptr;
+  Render::GL::TerrainScatterManager *m_scatter = nullptr;
   Render::GL::FogRenderer *m_fog = nullptr;
-  Render::GL::StoneRenderer *m_stone = nullptr;
-  Render::GL::PlantRenderer *m_plant = nullptr;
-  Render::GL::PineRenderer *m_pine = nullptr;
-  Render::GL::OliveRenderer *m_olive = nullptr;
-  Render::GL::FireCampRenderer *m_firecamp = nullptr;
   Render::GL::RainRenderer *m_rain = nullptr;
   OwnersUpdatedCallback m_onOwnersUpdated;
   VisibilityMaskReadyCallback m_onVisibilityMaskReady;

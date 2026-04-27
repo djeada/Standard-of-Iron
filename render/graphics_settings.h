@@ -28,7 +28,6 @@ struct LODMultipliers {
 };
 
 struct GraphicsFeatures {
-  bool enable_facial_hair;
   bool enable_mane_detail;
   bool enable_tail_detail;
   bool enable_armor_detail;
@@ -174,8 +173,7 @@ private:
                            .horse_billboard = 0.8F,
                            .shadow_distance = 25.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = false,
-                    .enable_mane_detail = false,
+      m_features = {.enable_mane_detail = false,
                     .enable_tail_detail = false,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -202,8 +200,7 @@ private:
                            .horse_billboard = 1.0F,
                            .shadow_distance = 40.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -231,8 +228,7 @@ private:
                            .horse_billboard = 2.0F,
                            .shadow_distance = 80.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -260,8 +256,7 @@ private:
                            .horse_billboard = 3.0F,
                            .shadow_distance = 200.0F,
                            .enable_shadows = true};
-      m_features = {.enable_facial_hair = true,
-                    .enable_mane_detail = true,
+      m_features = {.enable_mane_detail = true,
                     .enable_tail_detail = true,
                     .enable_armor_detail = true,
                     .enable_equipment_detail = true,
@@ -280,13 +275,13 @@ private:
   }
 
   static constexpr float kBaseHumanoidFull = 10.0F;
-  static constexpr float kBaseHumanoidReduced = 22.0F;
-  static constexpr float kBaseHumanoidMinimal = 45.0F;
+  static constexpr float kBaseHumanoidReduced = 35.0F;
+  static constexpr float kBaseHumanoidMinimal = 70.0F;
   static constexpr float kBaseHumanoidBillboard = 80.0F;
 
   static constexpr float kBaseHorseFull = 20.0F;
-  static constexpr float kBaseHorseReduced = 40.0F;
-  static constexpr float kBaseHorseMinimal = 70.0F;
+  static constexpr float kBaseHorseReduced = 55.0F;
+  static constexpr float kBaseHorseMinimal = 110.0F;
   static constexpr float kBaseHorseBillboard = 100.0F;
 
   GraphicsQuality m_quality{GraphicsQuality::Ultra};

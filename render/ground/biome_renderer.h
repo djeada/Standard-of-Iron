@@ -30,6 +30,10 @@ public:
     return m_grassInstanceBuffer != nullptr || m_grassInstanceCount == 0;
   }
 
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_grassInstances.size();
+  }
+
 private:
   void generate_grass_instances();
 

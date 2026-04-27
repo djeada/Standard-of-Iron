@@ -1,6 +1,7 @@
 #pragma once
 
 #include "attachment_frames.h"
+#include "horse_gait.h"
 #include <QVector3D>
 #include <cstdint>
 
@@ -39,6 +40,15 @@ struct HorseDimensions {
   float move_bob_amplitude{};
 };
 
+enum class HorseCoatKind : std::uint8_t {
+  Bay = 0,
+  Chestnut,
+  Black,
+  DappleGrey,
+  Palomino,
+  Dun,
+};
+
 struct HorseVariant {
   QVector3D coat_color;
   QVector3D mane_color;
@@ -48,14 +58,12 @@ struct HorseVariant {
   QVector3D saddle_color;
   QVector3D blanket_color;
   QVector3D tack_color;
-};
 
-struct HorseGait {
-  float cycle_time{};
-  float front_leg_phase{};
-  float rear_leg_phase{};
-  float stride_swing{};
-  float stride_lift{};
+  HorseCoatKind coat_kind{HorseCoatKind::Bay};
+  float dapple_amount{0.0F};
+  std::uint8_t sock_mask{0U};
+  bool has_blaze{false};
+  bool has_star{false};
 };
 
 struct HorseProfile {
@@ -69,19 +77,6 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseVariant;
 auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseProfile;
-auto get_or_create_cached_horse_profile(
-    uint32_t seed, const QVector3D &leather_base,
-    const QVector3D &cloth_base) -> HorseProfile;
-void advance_horse_profile_cache_frame();
-auto compute_mount_frame(const HorseProfile &profile) -> MountedAttachmentFrame;
-auto compute_rein_state(uint32_t horse_seed,
-                        const HumanoidAnimationContext &rider_ctx) -> ReinState;
-auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
-                         float slack, float tension) -> QVector3D;
-auto evaluate_horse_motion(HorseProfile &profile, const AnimationInputs &anim,
-                           const HumanoidAnimationContext &rider_ctx)
-    -> HorseMotionSample;
-void apply_mount_vertical_offset(MountedAttachmentFrame &frame, float bob);
 
 inline void scale_horse_dimensions(HorseDimensions &dims, float scale) {
   dims.body_length *= scale;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "attachment_frames.h"
+#include "elephant_gait.h"
 #include <QVector3D>
 #include <cstdint>
 
@@ -58,14 +59,6 @@ struct ElephantVariant {
   QVector3D howdah_metal_color;
 };
 
-struct ElephantGait {
-  float cycle_time{};
-  float front_leg_phase{};
-  float rear_leg_phase{};
-  float stride_swing{};
-  float stride_lift{};
-};
-
 struct ElephantProfile {
   ElephantDimensions dims{};
   ElephantVariant variant;
@@ -77,29 +70,6 @@ auto make_elephant_variant(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantVariant;
 auto make_elephant_profile(uint32_t seed, const QVector3D &fabric_base,
                            const QVector3D &metal_base) -> ElephantProfile;
-auto get_or_create_cached_elephant_profile(
-    uint32_t seed, const QVector3D &fabric_base,
-    const QVector3D &metal_base) -> ElephantProfile;
-void advance_elephant_profile_cache_frame();
-auto compute_howdah_frame(const ElephantProfile &profile)
-    -> HowdahAttachmentFrame;
-auto evaluate_elephant_motion(ElephantProfile &profile,
-                              const AnimationInputs &anim)
-    -> ElephantMotionSample;
-void apply_howdah_vertical_offset(HowdahAttachmentFrame &frame, float bob);
-
-void update_elephant_gait(ElephantGaitState &state,
-                          const ElephantProfile &profile,
-                          const AnimationInputs &anim,
-                          const QVector3D &body_world_pos,
-                          float body_forward_z);
-
-auto solve_elephant_leg_ik(const QVector3D &hip, const QVector3D &foot_target,
-                           float upper_len, float lower_len,
-                           float lateral_sign) -> ElephantLegPose;
-
-auto evaluate_swing_position(const ElephantLegState &leg,
-                             float lift_height) -> QVector3D;
 
 inline void scale_elephant_dimensions(ElephantDimensions &dims, float scale) {
   dims.body_length *= scale;

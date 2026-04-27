@@ -36,7 +36,7 @@ auto fake_texture(std::uintptr_t tag) -> Render::GL::Texture * {
 TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
   Render::GL::DrawQueue queue;
 
-  Render::GL::WorldChunkCmd terrain{};
+  Render::GL::TerrainSurfaceCmd terrain{};
   terrain.mesh = fake_mesh(0x1000);
 
   Render::GL::Material mat{};
@@ -54,7 +54,7 @@ TEST(DrawPartCmdSortOrder, SitsBetweenTerrainAndSelectionRing) {
   queue.sort_for_batching();
 
   ASSERT_EQ(queue.size(), 3U);
-  EXPECT_EQ(queue.get_sorted(0).index(), Render::GL::WorldChunkCmdIndex);
+  EXPECT_EQ(queue.get_sorted(0).index(), Render::GL::TerrainSurfaceCmdIndex);
   EXPECT_EQ(queue.get_sorted(1).index(), Render::GL::DrawPartCmdIndex);
   EXPECT_EQ(queue.get_sorted(2).index(), Render::GL::SelectionRingCmdIndex);
 }

@@ -9,6 +9,7 @@
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
+#include "creature/bpat/bpat_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
@@ -42,11 +43,13 @@
 #include "primitive_batch.h"
 #include "profiling/frame_profile.h"
 #include "render_backend_factory.h"
+#include "selection_ring_layout.h"
 #include "software_backend.h"
 #include "submitter.h"
 #include "template_cache.h"
 #include "visibility_budget.h"
 #include "world_chunk.h"
+#include <QDebug>
 #include <algorithm>
 #include <atomic>
 #include <chrono>
@@ -140,6 +143,16 @@ auto Renderer::initialize() -> bool {
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
+
+  const std::size_t loaded_bpat =
+      Render::Creature::Bpat::BpatRegistry::instance().load_all(
+          "assets/creatures");
+  if (loaded_bpat != 3U) {
+    qWarning()
+        << "Renderer: loaded" << loaded_bpat << "of 3 BPAT creature assets:"
+        << QString::fromStdString(std::string(
+               Render::Creature::Bpat::BpatRegistry::instance().last_error()));
+  }
   return true;
 }
 
@@ -158,8 +171,6 @@ void Renderer::begin_frame() {
       &profile, Render::Profiling::Phase::Collection);
 
   advance_pose_cache_frame();
-  advance_horse_profile_cache_frame();
-  advance_elephant_profile_cache_frame();
 
   reset_humanoid_render_stats();
   reset_horse_render_stats();
@@ -172,8 +183,6 @@ void Renderer::begin_frame() {
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
-
-  m_bone_palette_arena.reset_frame();
 
   if (m_camera != nullptr) {
     m_view_proj =
@@ -206,7 +215,6 @@ void Renderer::end_frame() {
       Render::Profiling::PhaseScope const play_scope(
           &profile, Render::Profiling::Phase::Playback);
 
-      m_bone_palette_arena.flush_to_gpu();
       m_backend->execute(render_queue, *m_camera);
     }
     constexpr double k_frame_budget_ms = 16.67;
@@ -363,96 +371,6 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::grass_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const GrassBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Grass;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.grass = params;
-  cmd.grass.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::stone_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const StoneBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Stone;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.stone = params;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::plant_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const PlantBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Plant;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.plant = params;
-  cmd.plant.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::pine_batch(Buffer *instance_buffer, std::size_t instance_count,
-                          const PineBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Pine;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.pine = params;
-  cmd.pine.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::olive_batch(Buffer *instance_buffer, std::size_t instance_count,
-                           const OliveBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::Olive;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.olive = params;
-  cmd.olive.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
-void Renderer::firecamp_batch(Buffer *instance_buffer,
-                              std::size_t instance_count,
-                              const FireCampBatchParams &params) {
-  if ((instance_buffer == nullptr) || instance_count == 0 ||
-      (m_active_queue == nullptr)) {
-    return;
-  }
-  DecorationBatchCmd cmd;
-  cmd.kind = DecorationBatchCmd::Kind::FireCamp;
-  cmd.instance_buffer = instance_buffer;
-  cmd.instance_count = instance_count;
-  cmd.firecamp = params;
-  cmd.firecamp.time = m_accumulated_time;
-  m_active_queue->submit(std::move(cmd));
-}
-
 void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const RainBatchParams &params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
@@ -467,21 +385,48 @@ void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
   m_active_queue->submit(std::move(cmd));
 }
 
-void Renderer::terrain_chunk(Mesh *mesh, const QMatrix4x4 &model,
-                             const TerrainChunkParams &params,
-                             std::uint16_t sort_key, bool depth_write,
-                             float depth_bias) {
-  if ((mesh == nullptr) || (m_active_queue == nullptr)) {
+void Renderer::terrain_surface(const TerrainSurfaceCmd &cmd) {
+  if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
     return;
   }
-  WorldChunkCmd cmd;
-  cmd.mesh = mesh;
-  cmd.model = model;
-  cmd.params = params;
-  cmd.sort_key = sort_key;
-  cmd.depth_write = depth_write;
-  cmd.depth_bias = depth_bias;
-  m_active_queue->submit(std::move(cmd));
+  m_active_queue->submit(cmd);
+}
+
+void Renderer::terrain_feature(const TerrainFeatureCmd &cmd) {
+  if ((cmd.mesh == nullptr) || (m_active_queue == nullptr)) {
+    return;
+  }
+  TerrainFeatureCmd submitted = cmd;
+  submitted.alpha *= m_alpha_override;
+  m_active_queue->submit(std::move(submitted));
+}
+
+void Renderer::terrain_scatter(const TerrainScatterCmd &cmd) {
+  if ((cmd.instance_buffer == nullptr) || cmd.instance_count == 0 ||
+      (m_active_queue == nullptr)) {
+    return;
+  }
+  TerrainScatterCmd submitted = cmd;
+  switch (submitted.species) {
+  case TerrainScatterCmd::Species::Grass:
+    submitted.grass.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Plant:
+    submitted.plant.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Pine:
+    submitted.pine.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Olive:
+    submitted.olive.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::FireCamp:
+    submitted.firecamp.time = m_accumulated_time;
+    break;
+  case TerrainScatterCmd::Species::Stone:
+    break;
+  }
+  m_active_queue->submit(std::move(submitted));
 }
 
 void Renderer::cancel_async_template_prewarm() {
@@ -772,7 +717,7 @@ void Renderer::rigged(const RiggedCreatureCmd &cmd) {
 }
 
 void Renderer::enqueue_selection_ring(
-    Engine::Core::Entity *, Engine::Core::TransformComponent *transform,
+    Engine::Core::Entity *entity, Engine::Core::TransformComponent *transform,
     Engine::Core::UnitComponent *unit_comp, bool selected, bool hovered) {
   if ((!selected && !hovered) || (transform == nullptr)) {
     return;
@@ -782,10 +727,12 @@ void Renderer::enqueue_selection_ring(
   float ring_offset = 0.05F;
   float ground_offset = 0.0F;
   float scale_y = 1.0F;
+  std::vector<SelectionRingPlacement> placements;
 
   if (unit_comp != nullptr) {
     auto troop_type_opt =
         Game::Units::spawn_typeToTroopType(unit_comp->spawn_type);
+    auto &config = Game::Units::TroopConfig::instance();
 
     if (troop_type_opt) {
       const auto &nation_reg = Game::Systems::NationRegistry::instance();
@@ -797,15 +744,42 @@ void Renderer::enqueue_selection_ring(
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
+      int const individuals_per_unit =
+          config.getIndividualsPerUnit(unit_comp->spawn_type);
+      int const max_units_per_row =
+          config.getMaxUnitsPerRow(unit_comp->spawn_type);
+      std::uint32_t layout_seed =
+          static_cast<std::uint32_t>(unit_comp->owner_id) * 2654435761U;
+      if (entity != nullptr) {
+        layout_seed ^= static_cast<std::uint32_t>(
+            reinterpret_cast<std::uintptr_t>(entity) & 0xFFFFFFFFU);
+      }
 
-      ring_size = profile.visuals.selection_ring_size;
-      ring_offset += profile.visuals.selection_ring_y_offset;
+      ring_size = Detail::selection_ring_visual_size(
+          unit_comp->spawn_type, individuals_per_unit,
+          profile.visuals.selection_ring_size);
       ground_offset = profile.visuals.selection_ring_ground_offset;
+      placements = build_selection_ring_layout(
+          {.spawn_type = unit_comp->spawn_type,
+           .nation_id = unit_comp->nation_id,
+           .individuals_per_unit = individuals_per_unit,
+           .max_units_per_row = max_units_per_row,
+           .health_ratio = unit_comp->max_health > 0
+                               ? std::clamp(unit_comp->health /
+                                                float(unit_comp->max_health),
+                                            0.0F, 1.0F)
+                               : 1.0F,
+           .ring_size = ring_size,
+           .seed = layout_seed,
+           .position = QVector3D(transform->position.x, transform->position.y,
+                                 transform->position.z),
+           .rotation = QVector3D(transform->rotation.x, transform->rotation.y,
+                                 transform->rotation.z),
+           .scale = QVector3D(transform->scale.x, transform->scale.y,
+                              transform->scale.z)});
     } else {
 
-      auto &config = Game::Units::TroopConfig::instance();
       ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
-      ring_offset += config.getSelectionRingYOffset(unit_comp->spawn_type);
       ground_offset =
           config.getSelectionRingGroundOffset(unit_comp->spawn_type);
     }
@@ -814,25 +788,28 @@ void Renderer::enqueue_selection_ring(
     scale_y = transform->scale.y;
   }
 
-  QVector3D pos(transform->position.x, transform->position.y,
-                transform->position.z);
-  auto &terrain_service = Game::Map::TerrainService::instance();
-  float terrain_y = transform->position.y;
-  if (terrain_service.is_initialized()) {
-    terrain_y = terrain_service.get_terrain_height(pos.x(), pos.z());
-  } else {
-    terrain_y -= ground_offset * scale_y;
+  if (placements.empty()) {
+    placements.push_back(
+        {transform->position.x, transform->position.z, ring_size});
   }
-  pos.setY(terrain_y);
 
-  QMatrix4x4 ring_model;
-  ring_model.translate(pos.x(), pos.y() + ring_offset, pos.z());
-  ring_model.scale(ring_size, 1.0F, ring_size);
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  for (const SelectionRingPlacement &placement : placements) {
+    QVector3D const grounded_center =
+        terrain_service.resolve_surface_world_position(
+            placement.world_x, placement.world_z, 0.0F,
+            transform->position.y - ground_offset * scale_y);
 
-  if (selected) {
-    selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
-  } else if (hovered) {
-    selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
+    QMatrix4x4 ring_model;
+    ring_model.translate(grounded_center.x(), grounded_center.y() + ring_offset,
+                         grounded_center.z());
+    ring_model.scale(placement.ring_size, 1.0F, placement.ring_size);
+
+    if (selected) {
+      selection_ring(ring_model, 0.6F, 0.25F, QVector3D(0.2F, 0.4F, 1.0F));
+    } else if (hovered) {
+      selection_ring(ring_model, 0.35F, 0.15F, QVector3D(0.90F, 0.90F, 0.25F));
+    }
   }
 }
 
@@ -866,8 +843,6 @@ void Renderer::enqueue_mode_indicator(
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
 
-      indicator_height += profile.visuals.selection_ring_y_offset *
-                          Render::Geom::k_indicator_height_multiplier;
     }
   }
 
@@ -2094,11 +2069,12 @@ void Renderer::render_construction_previews(
     }
 
     auto &terrain_service = Game::Map::TerrainService::instance();
-    const float terrain_height =
-        terrain_service.get_terrain_height(preview_x, preview_z);
+    QVector3D const preview_pos =
+        terrain_service.resolve_surface_world_position(preview_x, preview_z,
+                                                       0.0F, 0.0F);
 
     QMatrix4x4 model_matrix;
-    model_matrix.translate(preview_x, terrain_height, preview_z);
+    model_matrix.translate(preview_pos);
 
     DrawContext ctx{resources(), builder, world, model_matrix};
     ctx.selected = false;

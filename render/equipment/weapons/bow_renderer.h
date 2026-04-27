@@ -2,8 +2,12 @@
 
 #include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+#include <QMatrix4x4>
 #include <QVector3D>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -23,6 +27,8 @@ struct BowRenderConfig {
   float bow_curve_factor = 1.0F;
   int material_id = 3;
   ArrowVisibility arrow_visibility = ArrowVisibility::AttackCycleOnly;
+  bool draw_body = true;
+  bool draw_string = true;
 };
 
 class BowRenderer : public IEquipmentRenderer {
@@ -46,5 +52,14 @@ public:
 private:
   BowRenderConfig m_base;
 };
+
+inline constexpr std::size_t kBowRoleCount = 2;
+
+auto bow_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                          std::size_t max) -> std::uint32_t;
+
+auto bow_make_static_attachments(const BowRenderConfig &config,
+                                 std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 2>;
 
 } // namespace Render::GL

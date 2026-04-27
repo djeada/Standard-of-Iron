@@ -1,6 +1,8 @@
 #include "elephant_renderer.h"
 #include "../../../../game/core/component.h"
+#include "../../../../game/core/entity.h"
 #include "../../../../game/visuals/team_colors.h"
+#include "../../../creature/anatomy_bake.h"
 #include "../../../elephant/elephant_renderer_base.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
@@ -46,11 +48,14 @@ public:
 
   auto visual_spec() const
       -> const Render::Creature::Pipeline::UnitVisualSpec & override {
-    static thread_local Render::Creature::Pipeline::UnitVisualSpec spec;
-    spec = Render::Creature::Pipeline::UnitVisualSpec{};
-    spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-    spec.debug_name = "troops/carthage/elephant";
-    return spec;
+    if (!m_visual_spec_baked) {
+      m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+      m_visual_spec_cache.kind =
+          Render::Creature::Pipeline::CreatureKind::Elephant;
+      m_visual_spec_cache.debug_name = "troops/carthage/elephant";
+      m_visual_spec_baked = true;
+    }
+    return m_visual_spec_cache;
   }
 
 protected:
@@ -80,8 +85,10 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
         QVector3D const fabric_base(0.45F, 0.18F, 0.55F);
         QVector3D const metal_base(0.70F, 0.50F, 0.28F);
 
-        ElephantProfile profile = get_or_create_cached_elephant_profile(
-            seed, fabric_base, metal_base);
+        ElephantProfile &profile =
+            Render::Creature::get_or_bake_elephant_anatomy(
+                p.entity, seed, fabric_base, metal_base)
+                .profile;
 
         AnimationInputs anim = sample_anim_state(p);
 

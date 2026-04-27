@@ -1,12 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <!-- Shader files -->
-        <file>assets/shaders/archer.frag</file>
-        <file>assets/shaders/archer.vert</file>
-        <file>assets/shaders/archer_roman_republic.frag</file>
-        <file>assets/shaders/archer_roman_republic.vert</file>
-        <file>assets/shaders/archer_carthage.frag</file>
-        <file>assets/shaders/archer_carthage.vert</file>
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
         <file>assets/shaders/character_skinned.vert</file>
@@ -28,38 +22,6 @@
         <file>assets/shaders/grid.frag</file>
         <file>assets/shaders/ground_plane.frag</file>
         <file>assets/shaders/ground_plane.vert</file>
-        <file>assets/shaders/swordsman.frag</file>
-        <file>assets/shaders/swordsman.vert</file>
-        <file>assets/shaders/swordsman_roman_republic.frag</file>
-        <file>assets/shaders/swordsman_roman_republic.vert</file>
-        <file>assets/shaders/swordsman_carthage.frag</file>
-        <file>assets/shaders/swordsman_carthage.vert</file>
-        <file>assets/shaders/horse_swordsman.frag</file>
-        <file>assets/shaders/horse_swordsman.vert</file>
-        <file>assets/shaders/horse_swordsman_roman_republic.frag</file>
-        <file>assets/shaders/horse_swordsman_roman_republic.vert</file>
-        <file>assets/shaders/horse_swordsman_carthage.frag</file>
-        <file>assets/shaders/horse_swordsman_carthage.vert</file>
-        <file>assets/shaders/horse_archer_roman_republic.frag</file>
-        <file>assets/shaders/horse_archer_roman_republic.vert</file>
-        <file>assets/shaders/horse_archer_carthage.frag</file>
-        <file>assets/shaders/horse_archer_carthage.vert</file>
-        <file>assets/shaders/horse_spearman_roman_republic.frag</file>
-        <file>assets/shaders/horse_spearman_roman_republic.vert</file>
-        <file>assets/shaders/horse_spearman_carthage.frag</file>
-        <file>assets/shaders/horse_spearman_carthage.vert</file>
-        <file>assets/shaders/healer.frag</file>
-        <file>assets/shaders/healer.vert</file>
-        <file>assets/shaders/healer_roman_republic.frag</file>
-        <file>assets/shaders/healer_roman_republic.vert</file>
-        <file>assets/shaders/healer_carthage.frag</file>
-        <file>assets/shaders/healer_carthage.vert</file>
-        <file>assets/shaders/builder.frag</file>
-        <file>assets/shaders/builder.vert</file>
-        <file>assets/shaders/builder_roman_republic.frag</file>
-        <file>assets/shaders/builder_roman_republic.vert</file>
-        <file>assets/shaders/builder_carthage.frag</file>
-        <file>assets/shaders/builder_carthage.vert</file>
         <file>assets/shaders/pine_instanced.frag</file>
         <file>assets/shaders/pine_instanced.vert</file>
         <file>assets/shaders/olive_instanced.frag</file>
@@ -70,12 +32,6 @@
         <file>assets/shaders/river.vert</file>
         <file>assets/shaders/riverbank.frag</file>
         <file>assets/shaders/riverbank.vert</file>
-        <file>assets/shaders/spearman.frag</file>
-        <file>assets/shaders/spearman.vert</file>
-        <file>assets/shaders/spearman_roman_republic.frag</file>
-        <file>assets/shaders/spearman_roman_republic.vert</file>
-        <file>assets/shaders/spearman_carthage.frag</file>
-        <file>assets/shaders/spearman_carthage.vert</file>
         <file>assets/shaders/stone_instanced.frag</file>
         <file>assets/shaders/stone_instanced.vert</file>
         <file>assets/shaders/terrain_chunk.frag</file>

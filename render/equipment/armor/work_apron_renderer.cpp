@@ -1,18 +1,215 @@
 #include "work_apron_renderer.h"
-#include "../../geom/math_utils.h"
-#include "../../geom/transforms.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_specs.h"
-#include "../equipment_submit.h"
-#include <QMatrix4x4>
-#include <QVector3D>
+
+#include "../../humanoid/humanoid_spec.h"
+#include "../attachment_builder.h"
+#include "../generated_equipment.h"
+#include "../humanoid_attachment_archetype.h"
+
+#include <array>
 #include <cmath>
+#include <deque>
 #include <numbers>
+#include <string>
 
 namespace Render::GL {
 
-using Render::Geom::cylinder_between;
-using Render::Geom::sphere_at;
+namespace {
+
+enum WorkApronBodyPaletteSlot : std::uint8_t {
+  k_ring_0_slot = 0U,
+  k_ring_1_slot = 1U,
+  k_ring_2_slot = 2U,
+  k_ring_3_slot = 3U,
+  k_ring_4_slot = 4U,
+  k_ring_5_slot = 5U,
+  k_edge_slot = 6U,
+};
+
+enum WorkApronSinglePaletteSlot : std::uint8_t {
+  k_single_slot = 0U,
+};
+
+constexpr int k_apron_rings = 6;
+constexpr int k_apron_ring_segments = 14;
+
+auto work_apron_body_palette(const WorkApronConfig &config)
+    -> std::array<QVector3D, 7> {
+  std::array<QVector3D, 7> palette{};
+  for (int ring = 0; ring < k_apron_rings; ++ring) {
+    float const t = static_cast<float>(ring) / 5.0F;
+    palette[ring] = config.leather_color * (1.0F - t * 0.12F);
+  }
+  palette[k_edge_slot] = config.leather_color * 0.80F;
+  return palette;
+}
+
+auto work_apron_body_archetype(const WorkApronConfig &config,
+                               const AttachmentFrame &waist)
+    -> const RenderArchetype & {
+  struct CachedArchetype {
+    int radius_key{0};
+    int depth_key{0};
+    int length_key{0};
+    int width_key{0};
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  float const waist_r = waist.radius * config.apron_width;
+  float const waist_d =
+      (waist.depth > 0.0F) ? waist.depth * 0.85F : waist.radius * 0.75F;
+  int const radius_key = std::lround(waist_r * 1000.0F);
+  int const depth_key = std::lround(waist_d * 1000.0F);
+  int const length_key = std::lround(config.apron_length * 1000.0F);
+  int const width_key = std::lround(config.apron_width * 1000.0F);
+  for (const auto &entry : cache) {
+    if (entry.radius_key == radius_key && entry.depth_key == depth_key &&
+        entry.length_key == length_key && entry.width_key == width_key) {
+      return entry.archetype;
+    }
+  }
+
+  constexpr float pi = std::numbers::pi_v<float>;
+  std::vector<GeneratedEquipmentPrimitive> primitives;
+  primitives.reserve(78);
+
+  float const y_top = 0.05F;
+  float const y_bottom = -config.apron_length;
+
+  for (int ring = 0; ring < k_apron_rings; ++ring) {
+    float const t = static_cast<float>(ring) / 5.0F;
+    float const y = y_top - t * (y_top - y_bottom);
+    float const flare = 1.0F + t * 0.15F;
+    float const w = waist_r * flare;
+    float const d = waist_d * flare;
+    float const thickness = 0.018F + t * 0.004F;
+
+    for (int i = 0; i < k_apron_ring_segments; ++i) {
+      float const angle_start =
+          (static_cast<float>(i) / k_apron_ring_segments - 0.25F) * pi;
+      float const angle_end =
+          (static_cast<float>(i + 1) / k_apron_ring_segments - 0.25F) * pi;
+
+      if (angle_start < -pi * 0.5F || angle_start > pi * 0.5F) {
+        continue;
+      }
+
+      QVector3D const p1(w * std::sin(angle_start), y,
+                         d * std::cos(angle_start));
+      QVector3D const p2(w * std::sin(angle_end), y, d * std::cos(angle_end));
+      primitives.push_back(generated_cylinder(
+          p1, p2, thickness, static_cast<std::uint8_t>(k_ring_0_slot + ring)));
+    }
+  }
+
+  for (int edge = 0; edge < 2; ++edge) {
+    float const side_angle = (edge == 0) ? -pi * 0.25F : pi * 0.25F;
+
+    for (int i = 0; i < k_apron_rings; ++i) {
+      float const t = static_cast<float>(i) / 5.0F;
+      float const y = y_top - t * (y_top - y_bottom);
+      float const flare = 1.0F + t * 0.15F;
+      float const w = waist_r * flare;
+      float const d = waist_d * flare;
+
+      primitives.push_back(generated_sphere(
+          QVector3D(w * std::sin(side_angle), y, d * std::cos(side_angle)),
+          0.020F, k_edge_slot));
+    }
+  }
+
+  cache.push_back(
+      {radius_key, depth_key, length_key, width_key,
+       build_generated_equipment_archetype(
+           "work_apron_body_" + std::to_string(radius_key) + "_" +
+               std::to_string(depth_key) + "_" + std::to_string(length_key) +
+               "_" + std::to_string(width_key),
+           std::span<const GeneratedEquipmentPrimitive>(primitives.data(),
+                                                        primitives.size()))});
+  return cache.back().archetype;
+}
+
+auto work_apron_straps_archetype(const AttachmentFrame &torso)
+    -> const RenderArchetype & {
+  struct CachedArchetype {
+    int radius_key{0};
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  int const radius_key = std::lround(torso.radius * 1000.0F);
+  for (const auto &entry : cache) {
+    if (entry.radius_key == radius_key) {
+      return entry.archetype;
+    }
+  }
+
+  QVector3D const chest_l(torso.radius * 0.30F, 0.08F, torso.radius * 0.80F);
+  QVector3D const chest_r(-torso.radius * 0.30F, 0.08F, torso.radius * 0.80F);
+  QVector3D const back_l(torso.radius * 0.20F, -0.02F, -torso.radius * 0.65F);
+  QVector3D const back_r(-torso.radius * 0.20F, -0.02F, -torso.radius * 0.65F);
+
+  std::array<GeneratedEquipmentPrimitive, 3> const primitives{{
+      generated_cylinder(chest_l, back_l, 0.020F, k_single_slot),
+      generated_cylinder(chest_r, back_r, 0.020F, k_single_slot),
+      generated_cylinder(back_l, back_r, 0.018F, k_single_slot),
+  }};
+
+  cache.push_back(
+      {radius_key,
+       build_generated_equipment_archetype(
+           "work_apron_straps_" + std::to_string(radius_key), primitives)});
+  return cache.back().archetype;
+}
+
+auto work_apron_pockets_archetype(const AttachmentFrame &waist)
+    -> const RenderArchetype & {
+  struct CachedArchetype {
+    int radius_key{0};
+    RenderArchetype archetype;
+  };
+
+  static std::deque<CachedArchetype> cache;
+  int const radius_key = std::lround(waist.radius * 1000.0F);
+  for (const auto &entry : cache) {
+    if (entry.radius_key == radius_key) {
+      return entry.archetype;
+    }
+  }
+
+  constexpr float pi = std::numbers::pi_v<float>;
+  std::vector<GeneratedEquipmentPrimitive> primitives;
+  primitives.reserve(18);
+
+  for (int side = -1; side <= 1; side += 2) {
+    float const pocket_angle = static_cast<float>(side) * 0.12F * pi;
+    float const pocket_x = waist.radius * 0.55F * std::sin(pocket_angle);
+    float const pocket_z = waist.radius * 0.45F * std::cos(pocket_angle);
+    QVector3D const pocket_center(pocket_x, -0.12F, pocket_z);
+
+    for (int i = 0; i < 3; ++i) {
+      for (int j = 0; j < 3; ++j) {
+        float const x_off = (static_cast<float>(i) - 1.0F) * 0.018F;
+        float const y_off = (static_cast<float>(j) - 1.0F) * 0.022F;
+        float const radius = 0.012F - static_cast<float>(i + j) * 0.0005F;
+
+        primitives.push_back(generated_sphere(
+            pocket_center +
+                QVector3D(x_off * static_cast<float>(side), y_off, 0.0F),
+            radius, k_single_slot));
+      }
+    }
+  }
+
+  cache.push_back(
+      {radius_key, build_generated_equipment_archetype(
+                       "work_apron_pockets_" + std::to_string(radius_key),
+                       std::span<const GeneratedEquipmentPrimitive>(
+                           primitives.data(), primitives.size()))});
+  return cache.back().archetype;
+}
+
+} // namespace
 
 WorkApronRenderer::WorkApronRenderer(const WorkApronConfig &config)
     : m_config(config) {}
@@ -35,9 +232,7 @@ void WorkApronRenderer::submit(const WorkApronConfig &config,
     renderStraps(config, ctx, frames.torso, frames, batch);
   }
 
-  if (config.include_pockets) {
-    renderPockets(config, ctx, frames.waist, batch);
-  }
+  renderPockets(config, ctx, frames.waist, batch);
 }
 
 void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
@@ -45,80 +240,14 @@ void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
                                         const AttachmentFrame &torso,
                                         const AttachmentFrame &waist,
                                         EquipmentBatch &batch) {
-  using HP = HumanProportions;
-
   if (torso.radius <= 0.0F || waist.radius <= 0.0F) {
     return;
   }
 
-  const QVector3D &origin = waist.origin;
-  const QVector3D &right = waist.right;
-  const QVector3D &up = waist.up;
-  const QVector3D &forward = waist.forward;
-
-  float const waist_r = waist.radius * config.apron_width;
-  float const waist_d =
-      (waist.depth > 0.0F) ? waist.depth * 0.85F : waist.radius * 0.75F;
-
-  float const y_top = origin.y() + 0.05F;
-  float const y_bottom = origin.y() - config.apron_length;
-
-  constexpr int segs = 14;
-  constexpr float pi = std::numbers::pi_v<float>;
-
-  QVector3D const apron_color = config.leather_color;
-  QVector3D const apron_dark = apron_color * 0.80F;
-
-  for (int ring = 0; ring < 6; ++ring) {
-    float const t = float(ring) / 5.0F;
-    float const y = y_top - t * (y_top - y_bottom);
-    float const flare = 1.0F + t * 0.15F;
-    float const w = waist_r * flare;
-    float const d = waist_d * flare;
-    float const thickness = 0.018F + t * 0.004F;
-
-    QVector3D const color = apron_color * (1.0F - t * 0.12F);
-
-    for (int i = 0; i < segs; ++i) {
-      float const angle_start = (float(i) / segs - 0.25F) * pi;
-      float const angle_end = (float(i + 1) / segs - 0.25F) * pi;
-
-      if (angle_start < -pi * 0.5F || angle_start > pi * 0.5F) {
-        continue;
-      }
-
-      QVector3D const p1 = origin + right * (w * std::sin(angle_start)) +
-                           forward * (d * std::cos(angle_start)) +
-                           up * (y - origin.y());
-      QVector3D const p2 = origin + right * (w * std::sin(angle_end)) +
-                           forward * (d * std::cos(angle_end)) +
-                           up * (y - origin.y());
-
-      batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                              cylinder_between(ctx.model, p1, p2, thickness),
-                              color, nullptr, 1.0F});
-    }
-  }
-
-  for (int edge = 0; edge < 2; ++edge) {
-    float const side_angle = (edge == 0) ? -pi * 0.25F : pi * 0.25F;
-
-    for (int i = 0; i < 6; ++i) {
-      float const t = float(i) / 5.0F;
-      float const y = y_top - t * (y_top - y_bottom);
-      float const flare = 1.0F + t * 0.15F;
-      float const w = waist_r * flare;
-      float const d = waist_d * flare;
-
-      QVector3D const pos = origin + right * (w * std::sin(side_angle)) +
-                            forward * (d * std::cos(side_angle)) +
-                            up * (y - origin.y());
-
-      batch.meshes.push_back({get_unit_sphere(), nullptr,
-                              sphere_at(ctx.model, pos, 0.020F), apron_dark,
-                              nullptr, 1.0F});
-    }
-  }
+  auto const palette = work_apron_body_palette(config);
+  append_humanoid_attachment_archetype_scaled(
+      batch, ctx, waist, work_apron_body_archetype(config, waist),
+      QVector3D(1.0F, 1.0F, 1.0F), palette);
 }
 
 void WorkApronRenderer::renderStraps(const WorkApronConfig &config,
@@ -130,36 +259,12 @@ void WorkApronRenderer::renderStraps(const WorkApronConfig &config,
     return;
   }
 
-  QVector3D const strap_color = config.strap_color;
+  (void)frames;
 
-  QVector3D const shoulder_l = frames.shoulder_l.origin;
-  QVector3D const shoulder_r = frames.shoulder_r.origin;
-
-  QVector3D const torso_front =
-      torso.origin + torso.forward * torso.radius * 0.80F;
-  QVector3D const torso_back =
-      torso.origin - torso.forward * torso.radius * 0.65F;
-
-  QVector3D const chest_l =
-      torso_front + torso.right * torso.radius * 0.30F + torso.up * 0.08F;
-  QVector3D const chest_r =
-      torso_front - torso.right * torso.radius * 0.30F + torso.up * 0.08F;
-
-  QVector3D const back_l =
-      torso_back + torso.right * torso.radius * 0.20F - torso.up * 0.02F;
-  QVector3D const back_r =
-      torso_back - torso.right * torso.radius * 0.20F - torso.up * 0.02F;
-
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, chest_l, back_l, 0.020F),
-                          strap_color, nullptr, 1.0F});
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, chest_r, back_r, 0.020F),
-                          strap_color, nullptr, 1.0F});
-
-  batch.meshes.push_back({get_unit_cylinder(), nullptr,
-                          cylinder_between(ctx.model, back_l, back_r, 0.018F),
-                          strap_color, nullptr, 1.0F});
+  std::array<QVector3D, 1> const palette{config.strap_color};
+  append_humanoid_attachment_archetype_scaled(
+      batch, ctx, torso, work_apron_straps_archetype(torso),
+      QVector3D(1.0F, 1.0F, 1.0F), palette);
 }
 
 void WorkApronRenderer::renderPockets(const WorkApronConfig &config,
@@ -170,34 +275,76 @@ void WorkApronRenderer::renderPockets(const WorkApronConfig &config,
     return;
   }
 
-  QVector3D const pocket_color = config.leather_color * 0.88F;
+  std::array<QVector3D, 1> const palette{config.leather_color * 0.88F};
+  append_humanoid_attachment_archetype_scaled(
+      batch, ctx, waist, work_apron_pockets_archetype(waist),
+      QVector3D(1.0F, 1.0F, 1.0F), palette);
+}
 
-  constexpr float pi = std::numbers::pi_v<float>;
-
-  for (int side = -1; side <= 1; side += 2) {
-    float const pocket_angle = float(side) * 0.12F * pi;
-    float const pocket_x = waist.radius * 0.55F * std::sin(pocket_angle);
-    float const pocket_z = waist.radius * 0.45F * std::cos(pocket_angle);
-
-    QVector3D const pocket_center = waist.origin + waist.right * pocket_x +
-                                    waist.forward * pocket_z - waist.up * 0.12F;
-
-    for (int i = 0; i < 3; ++i) {
-      for (int j = 0; j < 3; ++j) {
-        float const x_off = (float(i) - 1.0F) * 0.018F;
-        float const y_off = (float(j) - 1.0F) * 0.022F;
-
-        QVector3D const pos = pocket_center +
-                              waist.right * x_off * float(side) +
-                              waist.up * y_off;
-
-        float const r = 0.012F - float(i + j) * 0.0005F;
-        batch.meshes.push_back({get_unit_sphere(), nullptr,
-                                sphere_at(ctx.model, pos, r), pocket_color,
-                                nullptr, 1.0F});
-      }
-    }
+auto work_apron_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t {
+  (void)palette;
+  if (max < kWorkApronRoleCount) {
+    return 0U;
   }
+  constexpr WorkApronConfig cfg{};
+
+  for (int i = 0; i < 7; ++i) {
+    float const t = static_cast<float>(i) / 5.0F * 0.12F;
+    out[i] = cfg.leather_color * (1.0F - t);
+  }
+
+  out[7] = cfg.leather_color * 0.88F;
+
+  out[8] = cfg.strap_color;
+  return kWorkApronRoleCount;
+}
+
+auto work_apron_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                        std::uint16_t chest_socket_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 3> {
+  const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+  const AttachmentFrame &waist = bind_frames.waist;
+  const AttachmentFrame &torso = bind_frames.torso;
+
+  QMatrix4x4 const waist_bind_mat = make_humanoid_attachment_transform_scaled(
+      QMatrix4x4{}, waist, QVector3D(0.0F, 0.0F, 0.0F),
+      QVector3D(1.0F, 1.0F, 1.0F));
+
+  QMatrix4x4 const torso_bind_mat = make_humanoid_attachment_transform_scaled(
+      QMatrix4x4{}, torso, QVector3D(0.0F, 0.0F, 0.0F),
+      QVector3D(1.0F, 1.0F, 1.0F));
+
+  WorkApronConfig const default_cfg{};
+
+  auto body_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_body_archetype(default_cfg, waist),
+      .socket_bone_index = waist_socket_bone_index,
+      .unit_local_pose_at_bind = waist_bind_mat,
+  });
+  for (std::uint8_t i = 0; i < 7; ++i) {
+    body_spec.palette_role_remap[i] =
+        static_cast<std::uint8_t>(base_role_byte + i);
+  }
+
+  auto pockets_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_pockets_archetype(waist),
+      .socket_bone_index = waist_socket_bone_index,
+      .unit_local_pose_at_bind = waist_bind_mat,
+  });
+  pockets_spec.palette_role_remap[0] =
+      static_cast<std::uint8_t>(base_role_byte + 7U);
+
+  auto straps_spec = Render::Equipment::build_static_attachment({
+      .archetype = &work_apron_straps_archetype(torso),
+      .socket_bone_index = chest_socket_bone_index,
+      .unit_local_pose_at_bind = torso_bind_mat,
+  });
+  straps_spec.palette_role_remap[0] =
+      static_cast<std::uint8_t>(base_role_byte + 8U);
+
+  return {body_spec, pockets_spec, straps_spec};
 }
 
 } // namespace Render::GL

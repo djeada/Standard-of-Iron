@@ -63,7 +63,6 @@ void TroopCatalog::register_defaults() {
   archer.visuals.render_scale = 0.5F;
   archer.visuals.selection_ring_size = 1.2F;
   archer.visuals.selection_ring_ground_offset = 0.0F;
-  archer.visuals.selection_ring_y_offset = 0.0F;
   archer.visuals.renderer_id = "troops/roman/archer";
 
   archer.individuals_per_unit = 20;
@@ -95,7 +94,6 @@ void TroopCatalog::register_defaults() {
   swordsman.visuals.render_scale = 0.6F;
   swordsman.visuals.selection_ring_size = 1.1F;
   swordsman.visuals.selection_ring_ground_offset = 0.0F;
-  swordsman.visuals.selection_ring_y_offset = 0.0F;
   swordsman.visuals.renderer_id = "troops/roman/swordsman";
 
   swordsman.individuals_per_unit = 15;
@@ -127,7 +125,6 @@ void TroopCatalog::register_defaults() {
   spearman.visuals.render_scale = 0.55F;
   spearman.visuals.selection_ring_size = 1.4F;
   spearman.visuals.selection_ring_ground_offset = 0.0F;
-  spearman.visuals.selection_ring_y_offset = 0.0F;
   spearman.visuals.renderer_id = "troops/roman/spearman";
 
   spearman.individuals_per_unit = 24;
@@ -159,7 +156,6 @@ void TroopCatalog::register_defaults() {
   horse_swordsman.visuals.render_scale = 0.8F;
   horse_swordsman.visuals.selection_ring_size = 2.0F;
   horse_swordsman.visuals.selection_ring_ground_offset = 0.0F;
-  horse_swordsman.visuals.selection_ring_y_offset = 0.0F;
   horse_swordsman.visuals.renderer_id = "troops/roman/horse_swordsman";
 
   horse_swordsman.individuals_per_unit = 9;
@@ -189,7 +185,6 @@ void TroopCatalog::register_defaults() {
   horse_archer.visuals.render_scale = 0.8F;
   horse_archer.visuals.selection_ring_size = 2.0F;
   horse_archer.visuals.selection_ring_ground_offset = 0.0F;
-  horse_archer.visuals.selection_ring_y_offset = 0.0F;
   horse_archer.visuals.renderer_id = "troops/roman/horse_archer";
 
   horse_archer.individuals_per_unit = 8;
@@ -223,7 +218,6 @@ void TroopCatalog::register_defaults() {
   healer.visuals.render_scale = 0.55F;
   healer.visuals.selection_ring_size = 1.2F;
   healer.visuals.selection_ring_ground_offset = 0.0F;
-  healer.visuals.selection_ring_y_offset = 0.0F;
   healer.visuals.renderer_id = "troops/roman/healer";
 
   healer.individuals_per_unit = 1;
@@ -255,7 +249,6 @@ void TroopCatalog::register_defaults() {
   horse_spearman.visuals.render_scale = 0.8F;
   horse_spearman.visuals.selection_ring_size = 2.0F;
   horse_spearman.visuals.selection_ring_ground_offset = 0.0F;
-  horse_spearman.visuals.selection_ring_y_offset = 0.0F;
   horse_spearman.visuals.renderer_id = "troops/roman/horse_spearman";
 
   horse_spearman.individuals_per_unit = 8;
@@ -287,7 +280,6 @@ void TroopCatalog::register_defaults() {
   builder.visuals.render_scale = 0.50F;
   builder.visuals.selection_ring_size = 1.0F;
   builder.visuals.selection_ring_ground_offset = 0.0F;
-  builder.visuals.selection_ring_y_offset = 0.0F;
   builder.visuals.renderer_id = "troops/roman/builder";
 
   builder.individuals_per_unit = 12;

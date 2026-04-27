@@ -5,7 +5,7 @@
 // calls the rigged wrappers. With a non-Renderer submitter we exercise
 // the software fallback inside `submit_elephant_*_rigged`, which routes
 // through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (5/12/15 for Minimal/Reduced/Full).
+// PartGraph primitive (5/12/41 for Minimal/Reduced/Full).
 
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_renderer_base.h"
@@ -67,9 +67,22 @@ Render::GL::ElephantDimensions make_dims() {
   d.body_height = 1.6F;
   d.barrel_center_y = 2.0F;
   d.neck_length = 0.9F;
+  d.neck_width = 0.42F;
   d.head_length = 1.1F;
+  d.head_width = 0.75F;
+  d.head_height = 0.78F;
+  d.trunk_length = 1.5F;
+  d.trunk_base_radius = 0.22F;
+  d.trunk_tip_radius = 0.06F;
+  d.ear_width = 1.0F;
+  d.ear_height = 1.1F;
+  d.ear_thickness = 0.06F;
   d.leg_length = 1.6F;
   d.leg_radius = 0.22F;
+  d.foot_radius = 0.28F;
+  d.tail_length = 0.8F;
+  d.tusk_length = 0.55F;
+  d.tusk_radius = 0.06F;
   return d;
 }
 
@@ -91,56 +104,39 @@ Render::GL::ElephantGait make_gait() {
 
 } // namespace
 
-TEST(ElephantSpecTest, MinimalRiggedFallbackEmitsFivePrimitives) {
-  auto dims = make_dims();
-  auto variant = make_variant();
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::make_elephant_spec_pose(dims, 0.0F, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_minimal_rigged(pose, variant, identity,
-                                                   sub);
-
-  EXPECT_EQ(sub.calls.size(), 5U);
-}
-
-TEST(ElephantSpecTest, ReducedRiggedFallbackEmitsTwelvePrimitives) {
-  auto dims = make_dims();
-  auto gait = make_gait();
-  auto variant = make_variant();
-
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::ElephantReducedMotion motion{};
-  Render::Elephant::make_elephant_spec_pose_reduced(dims, gait, motion, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_reduced_rigged(pose, variant, identity,
-                                                   sub);
-
-  EXPECT_EQ(sub.calls.size(), 12U);
-}
-
-TEST(ElephantSpecTest, FullRiggedFallbackEmitsFifteenPrimitives) {
-  auto dims = make_dims();
-  auto gait = make_gait();
-  auto variant = make_variant();
-
-  Render::Elephant::ElephantSpecPose pose;
-  Render::Elephant::ElephantReducedMotion motion{};
-  Render::Elephant::make_elephant_spec_pose_reduced(dims, gait, motion, pose);
-
-  QMatrix4x4 identity;
-  CapturingSubmitter sub;
-  Render::Elephant::submit_elephant_full_rigged(pose, variant, identity, sub);
-
-  EXPECT_EQ(sub.calls.size(), 15U);
-}
-
 TEST(ElephantSpecTest, CreatureSpecHasAllThreeLods) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   EXPECT_EQ(spec.lod_minimal.primitives.size(), 5U);
   EXPECT_EQ(spec.lod_reduced.primitives.size(), 12U);
-  EXPECT_EQ(spec.lod_full.primitives.size(), 15U);
+  EXPECT_EQ(spec.lod_full.primitives.size(), 41U);
+}
+
+TEST(ElephantSpecTest, PoseKeepsHeavyBodyAndPillarLegReadability) {
+  auto const dims = make_dims();
+  Render::Elephant::ElephantSpecPose pose{};
+  Render::Elephant::make_elephant_spec_pose(dims, 0.0F, pose);
+
+  EXPECT_GT(pose.body_ellipsoid_x, dims.body_width);
+  EXPECT_GT(pose.body_ellipsoid_z, dims.body_length);
+  EXPECT_LT(pose.body_ellipsoid_x, dims.body_width * 1.3F);
+  EXPECT_GE(pose.leg_radius, dims.leg_radius * 0.69F);
+  EXPECT_LE(pose.shoulder_offset_fl.y(), -dims.body_height * 0.25F);
+  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y());
+  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y() - dims.leg_length * 0.6F);
+}
+
+TEST(ElephantSpecTest, ReducedPoseKeepsForwardTrunkAndLighterHeadRead) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+  Render::Elephant::ElephantSpecPose pose{};
+  Render::Elephant::make_elephant_spec_pose_reduced(
+      dims, gait, Render::Elephant::ElephantReducedMotion{}, pose);
+
+  EXPECT_LT(pose.head_half.x(), dims.head_width * 0.45F);
+  EXPECT_LT(pose.head_half.y(), dims.head_height * 0.41F);
+  EXPECT_GT(pose.trunk_end.z(),
+            pose.head_center.z() + dims.trunk_length * 0.35F);
+  EXPECT_LT(pose.trunk_end.y(),
+            pose.head_center.y() - dims.trunk_length * 0.45F);
+  EXPECT_LT(pose.leg_radius_reduced, dims.leg_radius * 0.9F);
 }

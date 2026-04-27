@@ -7,8 +7,10 @@
 #include "rain_gpu.h"
 #include "world_chunk.h"
 #include <QMatrix4x4>
+#include <QVector2D>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <limits>
@@ -66,9 +68,9 @@ struct FogBatchCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
-struct DecorationBatchCmd {
+struct TerrainScatterCmd {
 
-  enum class Kind : std::uint8_t {
+  enum class Species : std::uint8_t {
     Grass = 0,
     Stone,
     Plant,
@@ -77,7 +79,7 @@ struct DecorationBatchCmd {
     FireCamp
   };
 
-  Kind kind = Kind::Grass;
+  Species species = Species::Grass;
   const Material *material = nullptr;
   Buffer *instance_buffer = nullptr;
   std::size_t instance_count = 0;
@@ -99,7 +101,7 @@ struct RainBatchCmd {
   CommandPriority priority{CommandPriority::Low};
 };
 
-struct WorldChunkCmd {
+struct TerrainSurfaceCmd {
 
   Mesh *mesh = nullptr;
   const Material *material = nullptr;
@@ -109,6 +111,27 @@ struct WorldChunkCmd {
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
   float depth_bias = 0.0F;
+  CommandPriority priority{CommandPriority::High};
+};
+
+struct TerrainFeatureCmd {
+
+  struct VisibilityResources {
+    Texture *texture = nullptr;
+    QVector2D size{0.0F, 0.0F};
+    float tile_size = 1.0F;
+    float explored_alpha = 0.6F;
+    bool enabled = false;
+  };
+
+  enum class Kind : std::uint8_t { River = 0, Road, Riverbank, Bridge };
+
+  Mesh *mesh = nullptr;
+  QMatrix4x4 model;
+  QVector3D color{1.0F, 1.0F, 1.0F};
+  float alpha = 1.0F;
+  Kind kind = Kind::River;
+  VisibilityResources visibility{};
   CommandPriority priority{CommandPriority::High};
 };
 
@@ -176,6 +199,8 @@ struct ModeIndicatorCmd {
 };
 
 struct RiggedCreatureCmd {
+  static constexpr std::size_t kMaxRoleColors = 32;
+
   RiggedMesh *mesh = nullptr;
   const Material *material = nullptr;
   QMatrix4x4 world;
@@ -185,6 +210,8 @@ struct RiggedCreatureCmd {
   std::uint32_t palette_ubo = 0;
   std::uint32_t palette_offset = 0;
   std::uint32_t bone_count = 0;
+  std::array<QVector3D, kMaxRoleColors> role_colors{};
+  std::uint32_t role_color_count = 0;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
   Texture *texture = nullptr;
@@ -195,9 +222,10 @@ struct RiggedCreatureCmd {
 
 using DrawCmd =
     std::variant<GridCmd, SelectionRingCmd, SelectionSmokeCmd, CylinderCmd,
-                 MeshCmd, FogBatchCmd, DecorationBatchCmd, RainBatchCmd,
-                 WorldChunkCmd, PrimitiveBatchCmd, EffectBatchCmd,
-                 ModeIndicatorCmd, DrawPartCmd, RiggedCreatureCmd>;
+                 MeshCmd, FogBatchCmd, TerrainScatterCmd, RainBatchCmd,
+                 TerrainSurfaceCmd, TerrainFeatureCmd, PrimitiveBatchCmd,
+                 EffectBatchCmd, ModeIndicatorCmd, DrawPartCmd,
+                 RiggedCreatureCmd>;
 
 enum class DrawCmdType : std::uint8_t {
   Grid = 0,
@@ -206,14 +234,15 @@ enum class DrawCmdType : std::uint8_t {
   Cylinder = 3,
   Mesh = 4,
   FogBatch = 5,
-  DecorationBatch = 6,
+  TerrainScatter = 6,
   RainBatch = 7,
-  WorldChunk = 8,
-  PrimitiveBatch = 9,
-  EffectBatch = 10,
-  ModeIndicator = 11,
-  DrawPart = 12,
-  RiggedCreature = 13
+  TerrainSurface = 8,
+  TerrainFeature = 9,
+  PrimitiveBatch = 10,
+  EffectBatch = 11,
+  ModeIndicator = 12,
+  DrawPart = 13,
+  RiggedCreature = 14
 };
 
 constexpr std::size_t MeshCmdIndex =
@@ -228,12 +257,14 @@ constexpr std::size_t CylinderCmdIndex =
     static_cast<std::size_t>(DrawCmdType::Cylinder);
 constexpr std::size_t FogBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::FogBatch);
-constexpr std::size_t DecorationBatchCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::DecorationBatch);
+constexpr std::size_t TerrainScatterCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainScatter);
 constexpr std::size_t RainBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::RainBatch);
-constexpr std::size_t WorldChunkCmdIndex =
-    static_cast<std::size_t>(DrawCmdType::WorldChunk);
+constexpr std::size_t TerrainSurfaceCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainSurface);
+constexpr std::size_t TerrainFeatureCmdIndex =
+    static_cast<std::size_t>(DrawCmdType::TerrainFeature);
 constexpr std::size_t PrimitiveBatchCmdIndex =
     static_cast<std::size_t>(DrawCmdType::PrimitiveBatch);
 constexpr std::size_t EffectBatchCmdIndex =
@@ -380,22 +411,26 @@ private:
     RiggedCreature = 2,
     Cylinder = 3,
     Fog = 4,
-    DecorationGrass = 8,
-    DecorationStone = 9,
-    DecorationPlant = 10,
-    DecorationPine = 11,
-    DecorationOlive = 12,
-    DecorationFireCamp = 13,
-    Rain = 16,
-    WorldChunk = 17,
-    PrimitiveSphere = 18,
-    PrimitiveCylinder = 19,
-    PrimitiveCone = 20,
-    Effect = 24,
-    Grid = 25,
-    SelectionSmoke = 26,
-    SelectionRing = 27,
-    ModeIndicator = 28
+    TerrainScatterGrass = 8,
+    TerrainScatterStone = 9,
+    TerrainScatterPlant = 10,
+    TerrainScatterPine = 11,
+    TerrainScatterOlive = 12,
+    TerrainScatterFireCamp = 13,
+    Rain = 20,
+    TerrainSurface = 21,
+    TerrainFeatureRiver = 22,
+    TerrainFeatureRoad = 23,
+    TerrainFeatureRiverbank = 24,
+    TerrainFeatureBridge = 25,
+    PrimitiveSphere = 27,
+    PrimitiveCylinder = 28,
+    PrimitiveCone = 29,
+    Effect = 30,
+    Grid = 31,
+    SelectionSmoke = 32,
+    SelectionRing = 33,
+    ModeIndicator = 34
   };
 
   void sort_full_keys(std::size_t count) {
@@ -411,16 +446,17 @@ private:
   [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
 
     enum class RenderOrder : uint8_t {
-      WorldChunk = 0,
-      DecorationBatch = 1,
-      RainBatch = 2,
-      PrimitiveBatch = 3,
-      Mesh = 4,
-      Cylinder = 5,
-      FogBatch = 6,
-      SelectionSmoke = 7,
-      Grid = 8,
-      EffectBatch = 9,
+      TerrainSurface = 0,
+      TerrainFeature = 1,
+      TerrainScatter = 2,
+      RainBatch = 3,
+      PrimitiveBatch = 4,
+      Mesh = 5,
+      Cylinder = 6,
+      FogBatch = 7,
+      SelectionSmoke = 8,
+      Grid = 9,
+      EffectBatch = 10,
       SelectionRing = 16,
       ModeIndicator = 17
     };
@@ -432,9 +468,10 @@ private:
         static_cast<uint8_t>(RenderOrder::Cylinder),
         static_cast<uint8_t>(RenderOrder::Mesh),
         static_cast<uint8_t>(RenderOrder::FogBatch),
-        static_cast<uint8_t>(RenderOrder::DecorationBatch),
+        static_cast<uint8_t>(RenderOrder::TerrainScatter),
         static_cast<uint8_t>(RenderOrder::RainBatch),
-        static_cast<uint8_t>(RenderOrder::WorldChunk),
+        static_cast<uint8_t>(RenderOrder::TerrainSurface),
+        static_cast<uint8_t>(RenderOrder::TerrainFeature),
         static_cast<uint8_t>(RenderOrder::PrimitiveBatch),
         static_cast<uint8_t>(RenderOrder::EffectBatch),
         static_cast<uint8_t>(RenderOrder::ModeIndicator),
@@ -458,19 +495,28 @@ private:
       identity.material = pack_12(intern_material_id(mesh.shader));
       identity.mesh = pack_16(intern_mesh_id(mesh.mesh));
       identity.texture = pack_12(intern_texture_id(mesh.texture));
-    } else if (cmd.index() == DecorationBatchCmdIndex) {
-      const auto &deco = std::get<DecorationBatchCmdIndex>(cmd);
+    } else if (cmd.index() == TerrainScatterCmdIndex) {
+      const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
       identity.pipeline =
-          static_cast<std::uint8_t>(SortPipeline::DecorationGrass) +
-          static_cast<std::uint8_t>(deco.kind);
+          static_cast<std::uint8_t>(SortPipeline::TerrainScatterGrass) +
+          static_cast<std::uint8_t>(deco.species);
       identity.material = pack_12(intern_material_id(deco.material));
       identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
-    } else if (cmd.index() == WorldChunkCmdIndex) {
-      const auto &chunk = std::get<WorldChunkCmdIndex>(cmd);
-      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::WorldChunk);
+    } else if (cmd.index() == TerrainSurfaceCmdIndex) {
+      const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::TerrainSurface);
       identity.material = pack_12(chunk.sort_key);
       identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
       identity.texture = pack_12(intern_material_id(chunk.material));
+    } else if (cmd.index() == TerrainFeatureCmdIndex) {
+      const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      identity.pipeline =
+          static_cast<std::uint8_t>(SortPipeline::TerrainFeatureRiver) +
+          static_cast<std::uint8_t>(feature.kind);
+      identity.transparency_bucket = transparency_bucket(feature.alpha);
+      identity.mesh = pack_16(intern_mesh_id(feature.mesh));
+      identity.texture = pack_12(intern_texture_id(feature.visibility.texture));
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.pipeline =

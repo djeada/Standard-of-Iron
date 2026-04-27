@@ -1,12 +1,11 @@
 #include "olive_renderer.h"
-#include "../../game/map/visibility_service.h"
-#include "../gl/buffer.h"
 #include "../scene_renderer.h"
 #include "decoration_gpu.h"
 #include "gl/render_constants.h"
 #include "gl/resources.h"
 #include "ground_utils.h"
 #include "map/terrain.h"
+#include "scatter_runtime.h"
 #include "spawn_validator.h"
 #include <QVector2D>
 #include <algorithm>
@@ -20,22 +19,6 @@ namespace {
 
 using std::uint32_t;
 using namespace Render::Ground;
-
-inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
-  int const x0 = int(std::floor(x));
-  int const z0 = int(std::floor(z));
-  int const x1 = x0 + 1;
-  int const z1 = z0 + 1;
-  float const tx = x - float(x0);
-  float const tz = z - float(z0);
-  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
-  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
-  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
-  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
-  float const nx0 = n00 * (1 - tx) + n10 * tx;
-  float const nx1 = n01 * (1 - tx) + n11 * tx;
-  return nx0 * (1 - tz) + nx1 * tz;
-}
 
 } // namespace
 
@@ -55,14 +38,17 @@ void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_noiseSeed = biome_settings.seed;
 
   m_oliveInstances.clear();
-  m_oliveInstanceBuffer.reset();
+  m_visibleInstances.clear();
   m_oliveInstanceCount = 0;
   m_oliveInstancesDirty = false;
+  m_cachedVisibilityVersion = 0;
+  m_visibilityDirty = true;
 
+  const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
   m_oliveParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_oliveParams.time = 0.0F;
-  m_oliveParams.wind_strength = 0.3F;
-  m_oliveParams.wind_speed = 0.5F;
+  m_oliveParams.wind_strength = wind_profile.sway_strength;
+  m_oliveParams.wind_speed = wind_profile.sway_speed;
 
   generate_olive_instances();
 }
@@ -70,69 +56,30 @@ void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  m_oliveInstanceCount = static_cast<uint32_t>(m_oliveInstances.size());
-
-  if (m_oliveInstanceCount == 0) {
-    m_oliveInstanceBuffer.reset();
-    m_visibleInstances.clear();
-    return;
-  }
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  const std::uint64_t current_version =
-      use_visibility ? visibility.version() : 0;
-
-  const bool needs_visibility_update =
-      m_visibilityDirty || (current_version != m_cachedVisibilityVersion);
-
-  if (needs_visibility_update) {
-    Game::Map::VisibilityService::Snapshot visibility_snapshot;
-    if (use_visibility) {
-      visibility_snapshot = visibility.snapshot();
-    }
-
-    m_visibleInstances.clear();
-
-    if (use_visibility) {
-      m_visibleInstances.reserve(m_oliveInstanceCount);
-      for (const auto &instance : m_oliveInstances) {
-        float const world_x = instance.pos_scale.x();
-        float const world_z = instance.pos_scale.z();
-        if (visibility_snapshot.isVisibleWorld(world_x, world_z)) {
-          m_visibleInstances.push_back(instance);
-        }
-      }
-    } else {
-      m_visibleInstances = m_oliveInstances;
-    }
-
-    m_cachedVisibilityVersion = current_version;
-    m_visibilityDirty = false;
-
-    if (!m_visibleInstances.empty()) {
-      if (!m_oliveInstanceBuffer) {
-        m_oliveInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
-      }
-      m_oliveInstanceBuffer->set_data(m_visibleInstances,
-                                      Buffer::Usage::Static);
-    }
-  }
-
-  const auto visible_count = static_cast<uint32_t>(m_visibleInstances.size());
+  const auto visible_count = Scatter::sync_filtered_instances(
+      m_oliveInstances, m_visibleInstances, m_oliveInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibilityDirty,
+      [](const OliveInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_scale;
+      });
   if (visible_count == 0 || !m_oliveInstanceBuffer) {
     return;
   }
 
+  m_oliveInstanceCount = visible_count;
   OliveBatchParams params = m_oliveParams;
   params.time = renderer.get_animation_time();
-  renderer.olive_batch(m_oliveInstanceBuffer.get(), visible_count, params);
+  TerrainScatterCmd cmd;
+  cmd.species = TerrainScatterCmd::Species::Olive;
+  cmd.instance_buffer = m_oliveInstanceBuffer.get();
+  cmd.instance_count = visible_count;
+  cmd.olive = params;
+  renderer.terrain_scatter(cmd);
 }
 
 void OliveRenderer::clear() {
   m_oliveInstances.clear();
   m_visibleInstances.clear();
-  m_oliveInstanceBuffer.reset();
   m_oliveInstanceCount = 0;
   m_oliveInstancesDirty = false;
   m_visibilityDirty = true;
@@ -146,22 +93,21 @@ void OliveRenderer::generate_olive_instances() {
     return;
   }
 
-  if (m_biome_settings.ground_type != Game::Map::GroundType::GrassDry) {
+  const auto scatter_profile =
+      Game::Map::make_scatter_profile(m_biome_settings);
+  const auto scatter_rules =
+      Game::Map::make_scatter_rules(scatter_profile.ground_type);
+  if (!scatter_rules.allow_olives) {
     m_oliveInstancesDirty = false;
     return;
   }
 
   const float tile_safe = std::max(0.1F, m_tile_size);
 
-  float olive_density =
-      (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry) ? 0.12F
-                                                                        : 0.05F;
-  if (m_biome_settings.plant_density > 0.0F) {
-    float const density_mult =
-        (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry)
-            ? 0.15F
-            : 0.08F;
-    olive_density = m_biome_settings.plant_density * density_mult;
+  float olive_density = scatter_rules.olive_base_density;
+  if (scatter_profile.plant_density > 0.0F) {
+    olive_density =
+        scatter_profile.plant_density * scatter_rules.olive_density_scale;
   }
 
   SpawnTerrainCache terrain_cache;
@@ -172,7 +118,7 @@ void OliveRenderer::generate_olive_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = m_biome_settings.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding;
   config.max_slope = 0.65F;
 
   SpawnValidator validator(terrain_cache, config);
@@ -214,12 +160,10 @@ void OliveRenderer::generate_olive_instances() {
 
     OliveInstanceGpu instance;
 
-    float const base_scale = remap(rand_01(state), 2.8F, 5.5F) * tile_safe;
-    float const dry_scale = remap(rand_01(state), 3.2F, 6.5F) * tile_safe;
     float const chosen_scale =
-        (m_biome_settings.ground_type == Game::Map::GroundType::GrassDry)
-            ? dry_scale
-            : base_scale;
+        remap(rand_01(state), scatter_rules.olive_scale_min,
+              scatter_rules.olive_scale_max) *
+        tile_safe;
 
     instance.pos_scale = QVector4D(world_x, world_y, world_z, chosen_scale);
     instance.color_sway =
