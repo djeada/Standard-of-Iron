@@ -1,5 +1,5 @@
 #include "render/entity/registry.h"
-#include "render/humanoid/rig.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include <QVector3D>
 #include <cmath>
 #include <gtest/gtest.h>

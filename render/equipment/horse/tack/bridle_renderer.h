@@ -8,9 +8,15 @@ class BridleRenderer : public IHorseEquipmentRenderer {
 public:
   BridleRenderer() = default;
 
+  static void submit(const DrawContext &ctx, const HorseBodyFrames &frames,
+                     const HorseVariant &variant,
+                     const HorseAnimationContext &anim, EquipmentBatch &batch);
+
   void render(const DrawContext &ctx, const HorseBodyFrames &frames,
               const HorseVariant &variant, const HorseAnimationContext &anim,
-              ISubmitter &out) const override;
+              EquipmentBatch &batch) const override {
+    submit(ctx, frames, variant, anim, batch);
+  }
 };
 
 } // namespace Render::GL

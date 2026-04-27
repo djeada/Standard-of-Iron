@@ -112,10 +112,6 @@ auto TroopProfileService::build_profile(
     if (variant.selection_ring_size) {
       profile.visuals.selection_ring_size = *variant.selection_ring_size;
     }
-    if (variant.selection_ring_y_offset) {
-      profile.visuals.selection_ring_y_offset =
-          *variant.selection_ring_y_offset;
-    }
     if (variant.selection_ring_ground_offset) {
       profile.visuals.selection_ring_ground_offset =
           *variant.selection_ring_ground_offset;

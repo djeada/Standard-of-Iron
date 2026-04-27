@@ -1,6 +1,8 @@
 #pragma once
 
+#include "../../game/map/terrain.h"
 #include "../gl/render_constants.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 
@@ -69,6 +71,67 @@ inline auto noise_hash(float x, float y) -> float {
                            y * HashConstants::k_noise_frequency_y) *
                   HashConstants::k_noise_amplitude;
   return n - std::floor(n);
+}
+
+inline auto value_noise(float x, float z, uint32_t salt = 0U) -> float {
+  int const x0 = int(std::floor(x));
+  int const z0 = int(std::floor(z));
+  int const x1 = x0 + 1;
+  int const z1 = z0 + 1;
+  float const tx = x - float(x0);
+  float const tz = z - float(z0);
+  float const n00 = hash_to_01(hash_coords(x0, z0, salt));
+  float const n10 = hash_to_01(hash_coords(x1, z0, salt));
+  float const n01 = hash_to_01(hash_coords(x0, z1, salt));
+  float const n11 = hash_to_01(hash_coords(x1, z1, salt));
+  float const nx0 = n00 * (1.0F - tx) + n10 * tx;
+  float const nx1 = n01 * (1.0F - tx) + n11 * tx;
+  return nx0 * (1.0F - tz) + nx1 * tz;
+}
+
+struct CurvatureShadingResponse {
+  float curvature_emphasis = 0.0F;
+  float ridge_response = 0.0F;
+  float gully_response = 0.0F;
+};
+
+inline auto smoothstep(float edge0, float edge1, float x) -> float {
+  float const width = std::max(1e-6F, edge1 - edge0);
+  float const t = std::clamp((x - edge0) / width, 0.0F, 1.0F);
+  return t * t * (3.0F - 2.0F * t);
+}
+
+inline auto compute_curvature_shading_response(
+    Game::Map::TerrainType type, float avg_curvature, float avg_slope,
+    float edge_factor, float plateau_factor,
+    float entrance_factor) -> CurvatureShadingResponse {
+  if (type != Game::Map::TerrainType::Hill &&
+      type != Game::Map::TerrainType::Mountain) {
+    return {};
+  }
+
+  float const terrain_scale =
+      (type == Game::Map::TerrainType::Mountain) ? 1.0F : 0.78F;
+  float const curvature_signal = smoothstep(0.01F, 0.12F, avg_curvature);
+  float const slope_signal = smoothstep(0.12F, 0.45F, avg_slope);
+  float const exposed_signal = std::max(edge_factor, slope_signal);
+  float const sheltered_signal =
+      0.60F * plateau_factor + 0.40F * entrance_factor;
+
+  CurvatureShadingResponse response;
+  response.curvature_emphasis = std::clamp(
+      terrain_scale * curvature_signal * (0.55F + 0.45F * exposed_signal) *
+          (1.0F - 0.45F * sheltered_signal),
+      0.0F, 1.0F);
+  response.ridge_response =
+      std::clamp(response.curvature_emphasis * (0.45F + 0.55F * edge_factor) *
+                     (1.0F - 0.35F * entrance_factor),
+                 0.0F, 1.0F);
+  response.gully_response = std::clamp(
+      response.curvature_emphasis * (0.50F + 0.50F * (1.0F - plateau_factor)) *
+          (0.85F + 0.15F * (1.0F - entrance_factor)),
+      0.0F, 1.0F);
+  return response;
 }
 
 } // namespace Render::Ground

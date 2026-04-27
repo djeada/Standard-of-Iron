@@ -455,33 +455,14 @@ Each nation has derived classes that override these methods. Looking at the Cart
 
 The entity system stores a unit type string like "spearman_carthage" on each unit. The EntityRendererRegistry in [registry.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/entity/registry.cpp) maps these strings to renderer functions. When it's time to draw, we look up the right renderer and call it. If a unit type isn't registered, it just doesn't render—that's usually the first thing to check when soldiers are mysteriously invisible.
 
-Each nation also gets its own shader files. You can see the pattern in the shader lookup:
-
-```cpp
-auto lookup_spearman_shader_resources(const QString &shader_key)
-    -> std::optional<SpearmanShaderResourcePaths> {
-  if (shader_key == QStringLiteral("spearman_carthage")) {
-    return SpearmanShaderResourcePaths{
-        QStringLiteral(":/assets/shaders/spearman_carthage.vert"),
-        QStringLiteral(":/assets/shaders/spearman_carthage.frag")};
-  }
-  if (shader_key == QStringLiteral("spearman_roman_republic")) {
-    return SpearmanShaderResourcePaths{
-        QStringLiteral(":/assets/shaders/spearman_roman_republic.vert"),
-        QStringLiteral(":/assets/shaders/spearman_roman_republic.frag")};
-  }
-  return std::nullopt;
-}
-```
-
-The Carthage spearman shader knows how to render bronze with appropriate patina. The Roman shader knows how to render steel with rust patterns. This per-nation customization extends all the way down to the GPU.
+Troop bodies no longer get per-nation shader files. The rigged creature backend owns the shared `character_skinned` and `character_skinned_instanced` programs, while nation, role, and equipment variation is supplied as declarative render data: palette values, material IDs, visual specs, equipment records, and texture slots.
 
 
 ## Procedural shaders
 
 Here's a memory problem: if 5000 soldiers each need unique 4K textures for their rust, dirt, and wear patterns, that's around 80 gigabytes of VRAM. Obviously impossible. So instead we generate all that detail procedurally in the shader.
 
-The shaders in [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) use hash functions and noise to create variation. Looking at [spearman_carthage.frag](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/spearman_carthage.frag), you'll see the building blocks:
+The shaders in [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) use hash functions and noise for pipeline-owned effects such as terrain, water, vegetation, particles, banners, and shared rigged bodies. A typical procedural fragment block looks like this:
 
 ```glsl
 // Hash function - turns any position into a pseudo-random number
@@ -524,7 +505,7 @@ else if (u_materialId == 1) { // Cloth
 }
 ```
 
-The vertex shader sometimes does geometry modifications too. For example, in [spearman_carthage.vert](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders/spearman_carthage.vert), shields get a curved surface:
+Geometry variation now belongs in mesh/spec generation instead of per-troop GLSL. When a vertex shader needs procedural deformation, it should be owned by a backend pipeline rather than selected by a troop renderer:
 
 ```glsl
 if (u_materialId == 4) {  // Shield
@@ -538,7 +519,7 @@ if (u_materialId == 4) {  // Shield
 }
 ```
 
-We have about 90 shader files in the [assets/shaders](https://github.com/djeada/Standard-of-Iron/blob/main/assets/shaders) folder, covering everything from terrain and rivers to individual unit types and special effects. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) loads them on demand and keeps them around so we don't recompile every frame.
+The shader directory is intentionally small and pipeline-owned. The ShaderCache in [shader_cache.cpp](https://github.com/djeada/Standard-of-Iron/blob/main/render/gl/shader_cache.cpp) preloads shared backend programs and keeps them around so we don't recompile every frame.
 
 
 ## Common problems and how to fix them

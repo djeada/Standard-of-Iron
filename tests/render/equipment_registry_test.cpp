@@ -1,4 +1,5 @@
 #include "render/equipment/equipment_registry.h"
+#include "render/equipment/equipment_submit.h"
 #include "render/equipment/i_equipment_renderer.h"
 #include <gtest/gtest.h>
 #include <memory>
@@ -15,7 +16,7 @@ public:
   void render(const DrawContext & /*ctx*/, const BodyFrames & /*frames*/,
               const HumanoidPalette & /*palette*/,
               const HumanoidAnimationContext & /*anim*/,
-              ISubmitter & /*submitter*/) override {
+              EquipmentBatch & /*batch*/) override {
     // Mock implementation - does nothing
   }
 

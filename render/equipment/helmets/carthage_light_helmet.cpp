@@ -1,365 +1,269 @@
 #include "carthage_light_helmet.h"
-#include "../../geom/transforms.h"
-#include "../../gl/backend.h"
-#include "../../gl/primitives.h"
-#include "../../humanoid/humanoid_math.h"
-#include "../../humanoid/rig.h"
-#include "../../submitter.h"
-#include <QMatrix4x4>
-#include <QQuaternion>
-#include <QVector3D>
-#include <cmath>
-#include <numbers>
+
+#include "../attachment_builder.h"
+#include "../generated_equipment.h"
+#include "../humanoid_attachment_archetype.h"
+
+#include "../../humanoid/style_palette.h"
+
+#include <array>
 
 namespace Render::GL {
 
-using Render::Geom::cylinder_between;
-using Render::Geom::sphere_at;
+using Render::GL::Humanoid::saturate_color;
 
-static constexpr float k_helmet_vertical_lift = 0.14F;
+namespace {
 
-static inline auto
-helmet_lift_vector(const AttachmentFrame &head) -> QVector3D {
-  QVector3D up = head.up;
-  if (up.lengthSquared() < 1e-6F) {
-    up = QVector3D(0.0F, 1.0F, 0.0F);
-  } else {
-    up.normalize();
-  }
-  return up * (head.radius * k_helmet_vertical_lift);
+enum CarthageLightPaletteSlot : std::uint8_t {
+  k_metal_slot = 0U,
+  k_metal_dark_slot = 1U,
+  k_leather_slot = 2U,
+  k_crest_slot = 3U,
+};
+
+constexpr QVector3D k_authored_local_offset{0.0F, 0.05F, 0.0F};
+
+} // namespace
+
+auto carthage_light_helmet_shell_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
+        generated_sphere(QVector3D(0.0F, 0.58F, 0.0F), 1.55F, k_metal_slot,
+                         1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, -0.38F, 0.0F),
+                           QVector3D(0.0F, -0.05F, 0.0F), 1.64F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(0.0F, -0.20F, 0.0F),
+                           QVector3D(0.0F, -0.02F, 0.0F), 1.16F, k_leather_slot,
+                           1.0F, 2),
+        generated_cone(QVector3D(0.0F, 2.13F, 0.0F),
+                       QVector3D(0.0F, 3.76F, 0.47F), 0.465F, k_metal_slot,
+                       1.0F, 2),
+        generated_sphere(QVector3D(0.0F, 3.76F, 0.47F), 0.155F, k_metal_slot,
+                         1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_shell",
+                                               primitives);
+  }();
+  return archetype;
 }
 
-static inline void submit_disk(ISubmitter &submitter, const DrawContext &ctx,
-                               const QVector3D &center,
-                               const QVector3D &normal_dir, float radius,
-                               float thickness, const QVector3D &color,
-                               float roughness, int material_id = 2) {
-  QVector3D n = normal_dir;
-  if (n.lengthSquared() < 1e-5f) {
-    n = QVector3D(0, 1, 0);
-  }
-  n.normalize();
-  QVector3D a = center - 0.5f * thickness * n;
-  QVector3D b = center + 0.5f * thickness * n;
-
-  submitter.mesh(get_unit_cylinder(), cylinder_between(ctx.model, a, b, radius),
-                 color, nullptr, roughness, material_id);
+auto carthage_light_helmet_neck_guard_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.30F, -0.96F),
+                           QVector3D(0.0F, -0.12F, -1.00F), 1.36F,
+                           k_metal_dark_slot, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_neck_guard",
+                                               primitives);
+  }();
+  return archetype;
 }
 
-static inline void submit_spike(ISubmitter &submitter, const DrawContext &ctx,
-                                const QVector3D &base, const QVector3D &dir,
-                                float length, float base_radius,
-                                const QVector3D &color, float roughness,
-                                int material_id = 2) {
-  QVector3D d = dir;
-  if (d.lengthSquared() < 1e-5f) {
-    d = QVector3D(0, 1, 0);
-  }
-  d.normalize();
-  QVector3D tip = base + d * length;
+auto carthage_light_helmet_nasal_guard_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 1> const primitives{{
+        generated_cylinder(QVector3D(0.0F, -0.08F, 0.90F),
+                           QVector3D(0.0F, 0.56F, 0.72F), 0.09F, k_metal_slot,
+                           1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_nasal_guard",
+                                               primitives);
+  }();
+  return archetype;
+}
 
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, base, tip, base_radius), color,
-                 nullptr, roughness, material_id);
-  QMatrix4x4 m;
-  m = ctx.model;
-  m.translate(tip);
-  m.scale(base_radius * 1.1f);
-  submitter.mesh(get_unit_sphere(), m, color * 1.05f, nullptr, roughness,
-                 material_id);
+auto carthage_light_helmet_cheek_guards_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 4> const primitives{{
+        generated_cylinder(QVector3D(-1.44F, 0.06F, 0.20F),
+                           QVector3D(-1.48F, -0.18F, 0.28F), 0.19F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(-1.48F, -0.18F, 0.28F),
+                           QVector3D(-1.28F, -0.38F, 0.36F), 0.16F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(1.44F, 0.06F, 0.20F),
+                           QVector3D(1.48F, -0.18F, 0.28F), 0.19F,
+                           k_metal_dark_slot, 1.0F, 2),
+        generated_cylinder(QVector3D(1.48F, -0.18F, 0.28F),
+                           QVector3D(1.28F, -0.38F, 0.36F), 0.16F,
+                           k_metal_dark_slot, 1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_cheek_guards",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+auto carthage_light_helmet_crest_archetype(bool high_detail)
+    -> const RenderArchetype & {
+  static const RenderArchetype low_detail = [] {
+    std::array<GeneratedEquipmentPrimitive, 9> primitives{};
+    QVector3D const crest_front{0.0F, 2.22F, 0.08F};
+    QVector3D const crest_back{0.0F, 2.06F, -0.24F};
+    primitives[0] = generated_cylinder(crest_front, crest_back, 0.044F,
+                                       k_metal_slot, 1.0F, 2);
+
+    for (int i = 0; i < 8; ++i) {
+      float const t = (i == 0) ? 0.0F : static_cast<float>(i) / 7.0F;
+      QVector3D const base = crest_front * (1.0F - t) + crest_back * t +
+                             QVector3D(0.0F, 0.03F, 0.0F);
+      float const lateral = (static_cast<float>(i % 3) - 1.0F) * 0.022F;
+      float const lift = 0.44F - 0.12F * std::abs(t - 0.5F);
+      float const droop = 0.10F + 0.20F * t;
+      QVector3D const tip = base + QVector3D(lateral, lift, -droop);
+      primitives[1 + i] =
+          generated_cylinder(base, tip, 0.048F, k_crest_slot, 0.90F, 0);
+    }
+
+    return build_generated_equipment_archetype("carthage_light_crest_low",
+                                               primitives);
+  }();
+
+  static const RenderArchetype high_detail_archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 15> primitives{};
+    QVector3D const crest_front{0.0F, 2.22F, 0.08F};
+    QVector3D const crest_back{0.0F, 2.06F, -0.24F};
+    primitives[0] = generated_cylinder(crest_front, crest_back, 0.044F,
+                                       k_metal_slot, 1.0F, 2);
+
+    for (int i = 0; i < 14; ++i) {
+      float const t = (i == 0) ? 0.0F : static_cast<float>(i) / 13.0F;
+      QVector3D const base = crest_front * (1.0F - t) + crest_back * t +
+                             QVector3D(0.0F, 0.03F, 0.0F);
+      float const lateral = (static_cast<float>(i % 3) - 1.0F) * 0.022F;
+      float const lift = 0.44F - 0.12F * std::abs(t - 0.5F);
+      float const droop = 0.10F + 0.20F * t;
+      QVector3D const tip = base + QVector3D(lateral, lift, -droop);
+      primitives[1 + i] =
+          generated_cylinder(base, tip, 0.048F, k_crest_slot, 0.90F, 0);
+    }
+
+    return build_generated_equipment_archetype("carthage_light_crest_high",
+                                               primitives);
+  }();
+
+  return high_detail ? high_detail_archetype : low_detail;
+}
+
+auto carthage_light_helmet_rivets_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 5> const primitives{{
+        generated_sphere(QVector3D(-0.50F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(-0.25F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.0F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.25F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+        generated_sphere(QVector3D(0.50F, 0.46F, 0.64F), 0.05F, k_metal_slot,
+                         1.0F, 2),
+    }};
+    return build_generated_equipment_archetype("carthage_light_rivets",
+                                               primitives);
+  }();
+  return archetype;
+}
+
+namespace {
+
+auto carthage_light_palette(const HumanoidPalette &palette)
+    -> std::array<QVector3D, 4> {
+  QVector3D const metal =
+      saturate_color(palette.metal * QVector3D(1.32F, 1.08F, 0.62F));
+  QVector3D const metal_dark = metal * 0.78F;
+  QVector3D const leather =
+      saturate_color(palette.leather_dark * QVector3D(0.96F, 0.88F, 0.78F));
+  return {metal, metal_dark, leather, QVector3D(0.78F, 0.08F, 0.08F)};
+}
+
+} // namespace
+
+auto carthage_light_helmet_fill_role_colors(const HumanoidPalette &palette,
+                                            QVector3D *out,
+                                            std::size_t max) -> std::uint32_t {
+  if (max < kCarthageLightHelmetRoleCount) {
+    return 0;
+  }
+  auto const colors = carthage_light_palette(palette);
+  out[0] = colors[0];
+  out[1] = colors[1];
+  out[2] = colors[2];
+  out[3] = colors[3];
+  return kCarthageLightHelmetRoleCount;
+}
+
+auto carthage_light_helmet_make_static_attachment(
+    const RenderArchetype &sub_archetype, std::uint16_t socket_bone_index,
+    std::uint8_t base_role_byte, const QMatrix4x4 &bind_palette_socket_bone)
+    -> Render::Creature::StaticAttachmentSpec {
+
+  constexpr float kHeadSocketRadius = 0.16F;
+  auto spec = Render::Equipment::build_static_attachment({
+      .archetype = &sub_archetype,
+      .socket_bone_index = socket_bone_index,
+      .authored_local_offset = k_authored_local_offset,
+      .bind_radius = kHeadSocketRadius,
+      .bind_socket_transform = bind_palette_socket_bone,
+  });
+  spec.palette_role_remap[k_metal_slot] = base_role_byte;
+  spec.palette_role_remap[k_metal_dark_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 1U);
+  spec.palette_role_remap[k_leather_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 2U);
+  spec.palette_role_remap[k_crest_slot] =
+      static_cast<std::uint8_t>(base_role_byte + 3U);
+  return spec;
 }
 
 void CarthageLightHelmetRenderer::render(const DrawContext &ctx,
                                          const BodyFrames &frames,
                                          const HumanoidPalette &palette,
                                          const HumanoidAnimationContext &anim,
-                                         ISubmitter &submitter) {
-  (void)anim;
-  (void)palette;
+                                         EquipmentBatch &batch) {
+  submit(m_config, ctx, frames, palette, anim, batch);
+}
 
-  const AttachmentFrame &head = frames.head;
-  if (head.radius <= 0.0F) {
+void CarthageLightHelmetRenderer::submit(
+    const CarthageLightHelmetConfig &config, const DrawContext &ctx,
+    const BodyFrames &frames, const HumanoidPalette &palette,
+    const HumanoidAnimationContext &anim, EquipmentBatch &batch) {
+  (void)anim;
+
+  if (frames.head.radius <= 0.0F) {
     return;
   }
 
-  render_bowl(ctx, head, submitter);
-}
+  auto const equipment_palette = carthage_light_palette(palette);
+  QVector3D const head_offset{0.0F, 0.05F, 0.0F};
 
-void CarthageLightHelmetRenderer::render_bowl(const DrawContext &ctx,
-                                              const AttachmentFrame &head,
-                                              ISubmitter &submitter) {
-  const float base_r = head.radius;
-  const float helmet_scale = 1.26F;
-  const float R = base_r * helmet_scale;
+  append_humanoid_attachment_archetype(batch, ctx, frames.head,
+                                       carthage_light_helmet_shell_archetype(),
+                                       equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(
+      batch, ctx, frames.head, carthage_light_helmet_neck_guard_archetype(),
+      equipment_palette, head_offset);
+  append_humanoid_attachment_archetype(
+      batch, ctx, frames.head, carthage_light_helmet_cheek_guards_archetype(),
+      equipment_palette, head_offset);
 
-  QVector3D up = head.up;
-  if (up.lengthSquared() < 1e-6F) {
-    up = QVector3D(0.0F, 1.0F, 0.0F);
-  } else {
-    up.normalize();
+  if (config.has_nasal_guard) {
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head, carthage_light_helmet_nasal_guard_archetype(),
+        equipment_palette, head_offset);
   }
-  QVector3D right = head.right;
-  if (right.lengthSquared() < 1e-6F) {
-    right = QVector3D(1.0F, 0.0F, 0.0F);
-  } else {
-    right.normalize();
+  if (config.has_crest) {
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head,
+        carthage_light_helmet_crest_archetype(config.detail_level >= 2),
+        equipment_palette, head_offset);
   }
-  QVector3D forward = head.forward;
-  if (forward.lengthSquared() < 1e-6F) {
-    forward = QVector3D(0.0F, 0.0F, 1.0F);
-  } else {
-    forward.normalize();
-  }
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  QVector3D const helmet_origin = head.origin + helmet_offset;
-  auto head_point = [&](const QVector3D &n) {
-    QVector3D p = n * helmet_scale;
-    return HumanoidRendererBase::frame_local_position(head, p) + helmet_offset;
-  };
-
-  QVector3D cap_center = helmet_origin + up * (R * 0.62F);
-  QMatrix4x4 bowl = ctx.model;
-  bowl.translate(cap_center);
-  bowl.scale(R * 0.88F, R * 0.82F, R * 0.88F);
-  submitter.mesh(get_unit_sphere(), bowl, m_config.leather_color * 0.94F,
-                 nullptr, 0.9F, 2);
-
-  QVector3D taper_top = helmet_origin + up * (R * 0.48F);
-  QVector3D taper_bot = helmet_origin + up * (R * 0.26F);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, taper_top, taper_bot, R * 0.78F),
-                 m_config.leather_color * 0.86F, nullptr, 0.92F, 2);
-
-  QVector3D band_top = helmet_origin + up * (R * 0.24F);
-  QVector3D band_bot = helmet_origin + up * (R * 0.10F);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, band_top, band_bot, R * 0.92F),
-                 m_config.leather_color * 0.72F, nullptr, 0.95F, 2);
-
-  QVector3D crest_base = helmet_origin + up * (R * 0.82F);
-  QVector3D crest_tip = crest_base + up * (R * 0.55F);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, crest_base, crest_tip, R * 0.35F),
-                 m_config.bronze_color * 0.78F, nullptr, 0.92F, 2);
-  QMatrix4x4 crest_cap = ctx.model;
-  crest_cap.translate(crest_tip);
-  crest_cap.scale(R * 0.42F, R * 0.32F, R * 0.42F);
-  submitter.mesh(get_unit_sphere(), crest_cap, m_config.bronze_color * 0.88F,
-                 nullptr, 0.93F, 2);
-
-  QVector3D strap_front_top =
-      helmet_origin + up * (R * 0.44F) + forward * (R * 0.60F);
-  QVector3D strap_front_bot =
-      helmet_origin + up * (R * 0.20F) + forward * (R * 0.70F);
-  submitter.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, strap_front_top, strap_front_bot, R * 0.20F),
-      m_config.bronze_color * 0.85F, nullptr, 0.92F, 2);
-
-  QVector3D strap_left_top =
-      helmet_origin + up * (R * 0.38F) - right * (R * 0.66F);
-  QVector3D strap_left_bot =
-      helmet_origin + up * (R * 0.16F) - right * (R * 0.72F);
-  submitter.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, strap_left_top, strap_left_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
-
-  QVector3D strap_right_top =
-      helmet_origin + up * (R * 0.38F) + right * (R * 0.66F);
-  QVector3D strap_right_bot =
-      helmet_origin + up * (R * 0.16F) + right * (R * 0.72F);
-  submitter.mesh(
-      get_unit_cylinder(),
-      cylinder_between(ctx.model, strap_right_top, strap_right_bot, R * 0.16F),
-      m_config.bronze_color * 0.90F, nullptr, 0.95F, 2);
-}
-
-void CarthageLightHelmetRenderer::render_brim(const DrawContext &ctx,
-                                              const AttachmentFrame &head,
-                                              ISubmitter &submitter) {
-  const float base_r = head.radius;
-  const float helmet_scale = 1.26F;
-  const float R = base_r * helmet_scale;
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
-  };
-
-  auto blade = [&](float sx) {
-    QVector3D center = head_point(QVector3D(0.42f * sx, 0.58f, 0.83f));
-    QVector3D nrm =
-        (head.forward * 0.90f - head.right * sx * 0.25f - head.up * 0.15f)
-            .normalized();
-    submit_disk(submitter, ctx, center, nrm, R * 0.56f, R * 0.08f,
-                m_config.bronze_color * 1.02f, 0.92f);
-  };
-  blade(-1.0f);
-  blade(+1.0f);
-
-  auto connect_brow = [&](const QVector3D &a, const QVector3D &b,
-                          float radius_scale) {
-    submitter.mesh(get_unit_cylinder(),
-                   cylinder_between(ctx.model, a, b, R * radius_scale),
-                   m_config.bronze_color * 1.08f, nullptr, 0.95f, 2);
-  };
-
-  QVector3D brow_left = head_point(QVector3D(-0.54f, 0.86f, 0.64f));
-  QVector3D brow_mid = head_point(QVector3D(0.0f, 0.94f, 0.70f));
-  QVector3D brow_right = head_point(QVector3D(0.54f, 0.86f, 0.64f));
-  connect_brow(brow_left, brow_mid, 0.07f);
-  connect_brow(brow_mid, brow_right, 0.07f);
-}
-
-void CarthageLightHelmetRenderer::render_cheek_guards(
-    const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
-  const float base_r = head.radius;
-  const float helmet_scale = 1.26F;
-  const float R = base_r * helmet_scale;
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
-  };
-
-  auto side = [&](float sx) {
-    for (int j = 0; j < 4; ++j) {
-      float v = (float)j / 3.0f;
-      QVector3D center = head_point(
-          QVector3D(0.90f * sx, 0.54f - 0.24f * v, 0.22f + 0.18f * v));
-      QVector3D n =
-          (head.right * sx * 0.95f + head.forward * 0.25f - head.up * 0.08f)
-              .normalized();
-      float r_plate = R * (0.38f - 0.05f * v);
-      float thick = R * 0.055f;
-      submit_disk(submitter, ctx, center, n, r_plate, thick,
-                  m_config.bronze_color * 0.95f, 0.86f);
-
-      if (m_config.detail_level >= 1) {
-
-        QMatrix4x4 riv_m = ctx.model;
-        riv_m.translate(center + n * (thick * 0.55f));
-        riv_m.scale(R * 0.06f);
-        submitter.mesh(get_unit_sphere(), riv_m, m_config.bronze_color * 1.28f,
-                       nullptr, 1.0f, 2);
-      }
-    }
-
-    QVector3D fang_base = head_point(QVector3D(0.78f * sx, 0.20f, 0.36f));
-    submit_spike(submitter, ctx, fang_base,
-                 -head.up * 0.8f + head.forward * 0.2f, R * 0.22f, R * 0.05f,
-                 m_config.bronze_color * 1.1f, 0.95f);
-  };
-
-  side(-1.0f);
-  side(+1.0f);
-}
-
-void CarthageLightHelmetRenderer::render_nasal_guard(
-    const DrawContext &ctx, const AttachmentFrame &head,
-    ISubmitter &submitter) {
-  const float R = head.radius;
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
-  };
-
-  QVector3D top = head_point(QVector3D(0.0f, 0.70f, 0.80f));
-  QVector3D bot = head_point(QVector3D(0.0f, -0.04f, 0.95f));
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, bot, top, R * 0.14f),
-                 m_config.bronze_color * 0.98f, nullptr, 0.9f, 2);
-
-  QVector3D left = top + head.right * (R * 0.30f);
-  QVector3D right = top - head.right * (R * 0.30f);
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, left, right, R * 0.07f),
-                 m_config.bronze_color * 1.06f, nullptr, 0.93f, 2);
-
-  for (int i = 0; i < 3; ++i) {
-    float yy = -0.02f - 0.08f * i;
-    QVector3D gl = head_point(QVector3D(-0.32f, yy, 0.96f));
-    QVector3D gr = head_point(QVector3D(0.32f, yy, 0.96f));
-    submitter.mesh(get_unit_cylinder(),
-                   cylinder_between(ctx.model, gl, gr, R * 0.045f),
-                   m_config.bronze_color * 1.02f, nullptr, 0.9f, 2);
-  }
-}
-
-void CarthageLightHelmetRenderer::render_crest(const DrawContext &ctx,
-                                               const AttachmentFrame &head,
-                                               ISubmitter &submitter) {
-  const float R = head.radius;
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
-  };
-
-  QVector3D left = head_point(QVector3D(-0.95f, 1.02f, 0.02f));
-  QVector3D right = head_point(QVector3D(0.95f, 1.02f, 0.02f));
-  submitter.mesh(get_unit_cylinder(),
-                 cylinder_between(ctx.model, left, right, R * 0.12f),
-                 m_config.bronze_color * 1.12f, nullptr, 0.96f, 2);
-
-  QVector3D crest_color(0.85f, 0.15f, 0.18f);
-  int strands = (m_config.detail_level >= 2) ? 24 : 14;
-  for (int i = 0; i < strands; ++i) {
-    float t = (float)i / std::max(1, strands - 1);
-    QVector3D base = left * (1.0f - t) + right * t;
-    base += head.up * (R * 0.06f);
-    float bow = std::sin(t * std::numbers::pi_v<float>) * 0.35f;
-    QVector3D tip = base +
-                    head.up * (R * (0.55f - 0.15f * std::abs(0.5f - t))) +
-                    head.forward * (R * (0.30f + bow));
-    float spread = (float((i % 5) - 2)) * R * 0.06f;
-    tip += head.forward * 0.0f + head.right * 0.0f;
-    QVector3D col = crest_color * (0.9f + 0.18f * ((i % 2) ? 1.0f : 0.0f));
-    submitter.mesh(get_unit_cylinder(),
-                   cylinder_between(ctx.model, base, tip, R * 0.04f), col,
-                   nullptr, 0.62f, 2);
-  }
-}
-
-void CarthageLightHelmetRenderer::render_rivets(const DrawContext &ctx,
-                                                const AttachmentFrame &head,
-                                                ISubmitter &submitter) {
-  const float R = head.radius;
-  QVector3D const helmet_offset = helmet_lift_vector(head);
-  auto head_point = [&](const QVector3D &n) {
-    return HumanoidRendererBase::frame_local_position(head, n) + helmet_offset;
-  };
-  QVector3D col = m_config.bronze_color * 1.25f;
-
-  int n1 = 16;
-  for (int i = 0; i < n1; ++i) {
-    float a = (float)i / n1 * 2.0f * std::numbers::pi_v<float>;
-    float ca = std::cos(a), sa = std::sin(a);
-    QVector3D p1 = head_point(QVector3D(0.98f * ca, 0.48f, 0.98f * sa));
-    QMatrix4x4 m = ctx.model;
-    m.translate(p1);
-    m.scale(R * 0.058f);
-    submitter.mesh(get_unit_sphere(), m, col, nullptr, 1.0f, 2);
-  }
-  int n2 = 12;
-  for (int i = 0; i < n2; ++i) {
-    float a = (float)i / n2 * 2.0f * std::numbers::pi_v<float>;
-    float ca = std::cos(a), sa = std::sin(a);
-    QVector3D p2 = head_point(QVector3D(0.82f * ca, 0.86f, 0.82f * sa - 0.03f));
-    QMatrix4x4 m = ctx.model;
-    m.translate(p2);
-    m.scale(R * 0.05f);
-    submitter.mesh(get_unit_sphere(), m, col * 0.98f, nullptr, 1.0f, 2);
-  }
-
-  int sp = 7;
-  for (int i = 0; i < sp; ++i) {
-    float t = (float)i / (sp - 1);
-    QVector3D base = head_point(
-        QVector3D(0.0f, 0.95f + 0.1f * (t - 0.5f), 0.50f - 1.05f * t));
-    QVector3D dir = (head.up * 0.85f - head.forward * 0.15f);
-    submit_spike(submitter, ctx, base, dir,
-                 R * (0.22f + 0.06f * std::sin(t * std::numbers::pi_v<float>)),
-                 R * 0.045f, m_config.bronze_color * 1.12f, 0.96f);
+  if (config.detail_level > 0) {
+    append_humanoid_attachment_archetype(
+        batch, ctx, frames.head, carthage_light_helmet_rivets_archetype(),
+        equipment_palette, head_offset);
   }
 }
 

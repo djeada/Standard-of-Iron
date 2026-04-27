@@ -1,3 +1,4 @@
+.copilot-tmp
 perf*
 # C++ objects and libs
 *.slo
@@ -82,3 +83,4 @@ tools/assets/
 assets/campaing_map/
 tools/map_pipeline/assets/
 actionlint
+.codex

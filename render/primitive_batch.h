@@ -1,5 +1,6 @@
 #pragma once
 
+#include "frame_budget.h"
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <QVector4D>
@@ -49,6 +50,7 @@ struct PrimitiveBatchCmd {
   PrimitiveType type{PrimitiveType::Sphere};
   std::vector<PrimitiveInstanceGpu> instances;
   PrimitiveBatchParams params;
+  Render::CommandPriority priority{Render::CommandPriority::Normal};
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return instances.size();

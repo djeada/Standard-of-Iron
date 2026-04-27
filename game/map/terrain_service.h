@@ -11,6 +11,18 @@ namespace Game::Map {
 struct MapDefinition;
 struct FireCamp;
 
+enum class SurfaceHeightKind {
+  Fallback,
+  Terrain,
+  Road,
+  Bridge,
+};
+
+struct SurfaceHeightSample {
+  float world_y{0.0F};
+  SurfaceHeightKind kind{SurfaceHeightKind::Fallback};
+};
+
 class TerrainService {
 public:
   static auto instance() -> TerrainService &;
@@ -21,6 +33,20 @@ public:
 
   [[nodiscard]] auto get_terrain_height(float world_x,
                                         float world_z) const -> float;
+
+  [[nodiscard]] auto
+  sample_surface_height(float world_x, float world_z,
+                        float fallback_y = 0.0F) const -> SurfaceHeightSample;
+
+  [[nodiscard]] auto
+  resolve_surface_world_y(float world_x, float world_z,
+                          float world_y_offset = 0.0F,
+                          float fallback_y = 0.0F) const -> float;
+
+  [[nodiscard]] auto
+  resolve_surface_world_position(float world_x, float world_z,
+                                 float world_y_offset = 0.0F,
+                                 float fallback_y = 0.0F) const -> QVector3D;
 
   [[nodiscard]] auto get_terrain_height_grid(int grid_x,
                                              int grid_z) const -> float;
@@ -43,6 +69,10 @@ public:
 
   [[nodiscard]] auto biome_settings() const -> const BiomeSettings & {
     return m_biome_settings;
+  }
+
+  [[nodiscard]] auto terrain_field() const -> const TerrainField & {
+    return m_terrain_field;
   }
 
   [[nodiscard]] auto fire_camps() const -> const std::vector<FireCamp> & {
@@ -81,7 +111,10 @@ private:
   TerrainService(const TerrainService &) = delete;
   auto operator=(const TerrainService &) -> TerrainService & = delete;
 
+  void rebuild_terrain_field();
+
   std::unique_ptr<TerrainHeightMap> m_height_map;
+  TerrainField m_terrain_field;
   BiomeSettings m_biome_settings;
   std::vector<FireCamp> m_fire_camps;
   std::vector<RoadSegment> m_road_segments;

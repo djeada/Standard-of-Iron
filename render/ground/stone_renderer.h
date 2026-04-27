@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../../game/map/terrain.h"
+#include "../decoration_gpu.h"
 #include "../i_render_pass.h"
-#include "stone_gpu.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -26,6 +26,10 @@ public:
 
   [[nodiscard]] bool is_gpu_ready() const {
     return m_stoneInstanceBuffer != nullptr || m_stoneInstanceCount == 0;
+  }
+
+  [[nodiscard]] auto instance_count() const -> std::size_t {
+    return m_stoneInstances.size();
   }
 
 private:

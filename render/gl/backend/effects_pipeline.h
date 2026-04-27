@@ -32,10 +32,12 @@ public:
   struct BasicUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle useTexture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_basicShader = nullptr;

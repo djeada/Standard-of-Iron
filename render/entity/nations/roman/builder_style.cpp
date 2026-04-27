@@ -27,7 +27,6 @@ void register_roman_builder_style() {
   style.metal_color = k_roman_bronze;
   style.wood_color = k_roman_wood;
   style.apron_color = k_roman_apron;
-  style.shader_id = "builder_roman_republic";
 
   style.show_helmet = true;
   style.show_armor = false;

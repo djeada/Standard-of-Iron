@@ -1,10 +1,32 @@
+#include "render/creature/bpat/bpat_format.h"
+#include "render/creature/bpat/bpat_registry.h"
+
 #include <QCoreApplication>
 #include <QGuiApplication>
+#include <filesystem>
 #include <gtest/gtest.h>
 
 int main(int argc, char **argv) {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QGuiApplication app(argc, argv);
+
+  // Load baked BPAT assets so the creature pipeline has palettes available.
+  // Try a few roots because tests may run from build/ or repo root.
+  namespace fs = std::filesystem;
+  const std::array<fs::path, 4> roots{
+      fs::current_path() / "assets" / "creatures",
+      fs::current_path() / ".." / "assets" / "creatures",
+      fs::current_path() / ".." / ".." / "assets" / "creatures",
+      fs::path("assets") / "creatures",
+  };
+  auto &reg = Render::Creature::Bpat::BpatRegistry::instance();
+  for (const auto &root : roots) {
+    if (fs::exists(root / "humanoid.bpat")) {
+      reg.load_all(root.string());
+      break;
+    }
+  }
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
