@@ -8,7 +8,12 @@
 #include "../../../gl/backend/banner_pipeline.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
+#include "../../../render_archetype.h"
+#include "../../../rig_dsl/defs/barracks_rig.h"
+#include "../../../rig_dsl/rig_interpreter.h"
+#include "../../../rig_dsl/static_resolver.h"
 #include "../../../submitter.h"
+#include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -64,14 +69,66 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
+void draw_static_structure(const DrawContext &p, ISubmitter &out);
+void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const RomanPalette &c);
+void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                    Texture *white, const RomanPalette &c, BuildingState state);
+void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                  Texture *white, const RomanPalette &c, BuildingState state);
+
+auto build_archetype_from_recorded(
+    std::string name, const std::vector<Render::GL::RecordedMeshCmd> &commands)
+    -> RenderArchetype {
+  RenderArchetypeBuilder builder(std::move(name));
+  builder.set_max_distance(std::numeric_limits<float>::infinity());
+  for (const auto &cmd : commands) {
+    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture,
+                     cmd.alpha, cmd.material_id,
+                     const_cast<Material *>(cmd.material));
+  }
+  return std::move(builder).build();
+}
+
+auto build_barracks_archetype(BuildingState state, Mesh *unit,
+                              Texture *white) -> RenderArchetype {
+  TemplateRecorder recorder;
+  recorder.reset(96);
+
+  DrawContext local_ctx;
+  local_ctx.model = QMatrix4x4{};
+  RomanPalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+
+  draw_static_structure(local_ctx, recorder);
+  draw_platform(local_ctx, recorder, unit, white, palette);
+  draw_colonnade(local_ctx, recorder, unit, white, palette, state);
+  draw_terrace(local_ctx, recorder, unit, white, palette, state);
+  return build_archetype_from_recorded("roman_barracks",
+                                       recorder.take_commands());
+}
+
+auto barracks_archetype(BuildingState state, Mesh *unit,
+                        Texture *white) -> const RenderArchetype & {
+  static const RenderArchetype k_normal =
+      build_barracks_archetype(BuildingState::Normal, unit, white);
+  static const RenderArchetype k_damaged =
+      build_barracks_archetype(BuildingState::Damaged, unit, white);
+  static const RenderArchetype k_destroyed =
+      build_barracks_archetype(BuildingState::Destroyed, unit, white);
+
+  switch (state) {
+  case BuildingState::Normal:
+    return k_normal;
+  case BuildingState::Damaged:
+    return k_damaged;
+  case BuildingState::Destroyed:
+    return k_destroyed;
+  }
+  return k_normal;
+}
+
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const RomanPalette &c) {
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.08F, 0.0F),
-           QVector3D(2.0F, 0.08F, 1.8F), c.limestone_dark);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.18F, 0.0F),
-           QVector3D(1.8F, 0.02F, 1.6F), c.limestone);
 
   for (float x = -1.5F; x <= 1.5F; x += 0.35F) {
     for (float z = -1.3F; z <= 1.3F; z += 0.35F) {
@@ -81,6 +138,69 @@ void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
       }
     }
   }
+}
+
+void draw_static_structure(const DrawContext &p, ISubmitter &out) {
+  using namespace Render::RigDSL::Barracks;
+
+  constexpr std::size_t kAnchorCount =
+      static_cast<std::size_t>(Goods_Amp3Top) + 1U;
+  Render::RigDSL::StaticAnchorResolver<kAnchorCount> anchors;
+
+  auto set = [&](Render::RigDSL::AnchorId id, float x, float y, float z) {
+    anchors.set(id, QVector3D(x, y, z));
+  };
+
+  set(Platform_BaseLow, -2.0F, 0.00F, -1.8F);
+  set(Platform_BaseHigh, 2.0F, 0.16F, 1.8F);
+  set(Platform_TopLow, -1.8F, 0.16F, -1.6F);
+  set(Platform_TopHigh, 1.8F, 0.20F, 1.6F);
+
+  set(Court_StoneLow, -1.3F, 0.21F, -1.1F);
+  set(Court_StoneHigh, 1.3F, 0.23F, 1.1F);
+  set(Court_PoolLow, -0.7F, 0.22F, -0.5F);
+  set(Court_PoolHigh, 0.7F, 0.26F, 0.5F);
+  set(Court_PoolTrimSLow, -0.72F, 0.23F, -0.54F);
+  set(Court_PoolTrimSHigh, 0.72F, 0.27F, -0.50F);
+  set(Court_PoolTrimNLow, -0.72F, 0.23F, 0.50F);
+  set(Court_PoolTrimNHigh, 0.72F, 0.27F, 0.54F);
+  set(Court_PillarBot, 0.0F, 0.25F, 0.0F);
+  set(Court_PillarTop, 0.0F, 0.55F, 0.0F);
+  set(Court_PillarCapLow, -0.08F, 0.55F, -0.08F);
+  set(Court_PillarCapHigh, 0.08F, 0.61F, 0.08F);
+
+  set(Wall_BackLow, -1.4F, 0.20F, -1.3F);
+  set(Wall_BackHigh, 1.4F, 1.60F, -1.1F);
+  set(Wall_LeftLow, -1.6F, 0.20F, -1.1F);
+  set(Wall_LeftHigh, -1.4F, 1.60F, 0.1F);
+  set(Wall_RightLow, 1.4F, 0.20F, -1.1F);
+  set(Wall_RightHigh, 1.6F, 1.60F, 0.1F);
+
+  set(Door_LDoorLow, -0.85F, 0.30F, -1.18F);
+  set(Door_LDoorHigh, -0.35F, 1.00F, -1.12F);
+  set(Door_LLintelLow, -0.85F, 0.93F, -1.18F);
+  set(Door_LLintelHigh, -0.35F, 1.03F, -1.12F);
+  set(Door_RDoorLow, 0.35F, 0.30F, -1.18F);
+  set(Door_RDoorHigh, 0.85F, 1.00F, -1.12F);
+  set(Door_RLintelLow, 0.35F, 0.93F, -1.18F);
+  set(Door_RLintelHigh, 0.85F, 1.03F, -1.12F);
+
+  set(Goods_Amp1Bot, -1.2F, 0.20F, 1.10F);
+  set(Goods_Amp1Top, -1.2F, 0.50F, 1.10F);
+  set(Goods_Amp2Bot, -0.9F, 0.20F, 1.15F);
+  set(Goods_Amp2Top, -0.9F, 0.45F, 1.15F);
+  set(Goods_Amp3Bot, 1.1F, 0.20F, -0.90F);
+  set(Goods_Amp3Top, 1.1F, 0.42F, -0.90F);
+
+  Render::RigDSL::InterpretContext ictx;
+  ictx.model = p.model;
+  ictx.anchors = &anchors;
+  ictx.palette = nullptr;
+  ictx.scalars = nullptr;
+  ictx.material = nullptr;
+  ictx.lod = 0;
+  ictx.global_alpha = 1.0F;
+  Render::RigDSL::render_rig(kRig, ictx, out);
 }
 
 void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -157,52 +277,6 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void draw_central_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                            Texture *white, const RomanPalette &c) {
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.22F, 0.0F),
-           QVector3D(1.3F, 0.01F, 1.1F), c.limestone_shade);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.24F, 0.0F),
-           QVector3D(0.7F, 0.02F, 0.5F), c.blue_light);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.25F, -0.52F),
-           QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.25F, 0.52F),
-           QVector3D(0.72F, 0.02F, 0.02F), c.blue_accent);
-
-  draw_cyl(out, p.model, QVector3D(0.0F, 0.25F, 0.0F),
-           QVector3D(0.0F, 0.55F, 0.0F), 0.06F, c.marble, white);
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.58F, 0.0F),
-           QVector3D(0.08F, 0.03F, 0.08F), c.blue_accent);
-}
-
-void draw_chamber(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanPalette &c) {
-  float const wall_h = 1.4F;
-
-  draw_box(out, unit, white, p.model,
-           QVector3D(0.0F, wall_h * 0.5F + 0.2F, -1.2F),
-           QVector3D(1.4F, wall_h * 0.5F, 0.1F), c.limestone);
-
-  draw_box(out, unit, white, p.model,
-           QVector3D(-1.5F, wall_h * 0.5F + 0.2F, -0.5F),
-           QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
-  draw_box(out, unit, white, p.model,
-           QVector3D(1.5F, wall_h * 0.5F + 0.2F, -0.5F),
-           QVector3D(0.1F, wall_h * 0.5F, 0.6F), c.limestone);
-
-  draw_box(out, unit, white, p.model, QVector3D(-0.6F, 0.65F, -1.15F),
-           QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
-  draw_box(out, unit, white, p.model, QVector3D(-0.6F, 0.98F, -1.15F),
-           QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.6F, 0.65F, -1.15F),
-           QVector3D(0.25F, 0.35F, 0.03F), c.cedar_dark);
-  draw_box(out, unit, white, p.model, QVector3D(0.6F, 0.98F, -1.15F),
-           QVector3D(0.25F, 0.05F, 0.03F), c.blue_accent);
-}
-
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
                   Texture *white, const RomanPalette &c, BuildingState state) {
 
@@ -226,18 +300,6 @@ void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
     draw_box(out, unit, white, p.model, QVector3D(x, 2.35F, -0.65F),
              QVector3D(0.08F, 0.08F, 0.08F), c.gold);
   }
-}
-
-void draw_trading_goods(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const RomanPalette &c) {
-
-  draw_cyl(out, p.model, QVector3D(-1.2F, 0.2F, 1.1F),
-           QVector3D(-1.2F, 0.5F, 1.1F), 0.08F, c.terracotta_dark, white);
-  draw_cyl(out, p.model, QVector3D(-0.9F, 0.2F, 1.15F),
-           QVector3D(-0.9F, 0.45F, 1.15F), 0.07F, c.terracotta, white);
-
-  draw_cyl(out, p.model, QVector3D(1.1F, 0.2F, -0.9F),
-           QVector3D(1.1F, 0.42F, -0.9F), 0.06F, c.blue_accent, white);
 }
 
 void draw_phoenician_banner(
@@ -478,12 +540,14 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     cloth.bannerShader = p.backend->banner_shader();
   }
 
-  draw_platform(p, out, unit, white, c);
-  draw_colonnade(p, out, unit, white, c, state);
-  draw_central_courtyard(p, out, unit, white, c);
-  draw_chamber(p, out, unit, white, c);
-  draw_terrace(p, out, unit, white, c, state);
-  draw_trading_goods(p, out, unit, white, c);
+  const RenderArchetype &archetype = barracks_archetype(state, unit, white);
+  RenderInstance instance;
+  instance.archetype = &archetype;
+  instance.world = p.model;
+  instance.default_texture = white;
+  instance.lod = RenderArchetypeLod::Full;
+  submit_render_instance(out, instance);
+
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);

@@ -1,7 +1,9 @@
 #include "elephant_renderer.h"
 #include "../../../../game/core/component.h"
+#include "../../../../game/core/entity.h"
 #include "../../../../game/visuals/team_colors.h"
-#include "../../../elephant/rig.h"
+#include "../../../creature/anatomy_bake.h"
+#include "../../../elephant/elephant_renderer_base.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
 #include "../../../gl/humanoid/animation/animation_inputs.h"
@@ -21,7 +23,6 @@ namespace {
 
 using Render::Geom::clamp01;
 using Render::Geom::clamp_vec_01;
-using Render::Geom::cylinder_between;
 
 struct CarthageElephantPalette {
   QVector3D fabric_purple{0.45F, 0.18F, 0.55F};
@@ -41,25 +42,21 @@ inline auto make_palette(const QVector3D &team) -> CarthageElephantPalette {
   return p;
 }
 
-inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
-                     const QMatrix4x4 &model, const QVector3D &pos,
-                     const QVector3D &size, const QVector3D &color) {
-  QMatrix4x4 m = model;
-  m.translate(pos);
-  m.scale(size);
-  out.mesh(unit, m, color, white, 1.0F);
-}
-
-inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
-                     const QVector3D &a, const QVector3D &b, float r,
-                     const QVector3D &color, Texture *white) {
-  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
-           1.0F);
-}
-
 class CarthageElephantRenderer : public ElephantRendererBase {
 public:
   CarthageElephantRenderer() = default;
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    if (!m_visual_spec_baked) {
+      m_visual_spec_cache = Render::Creature::Pipeline::UnitVisualSpec{};
+      m_visual_spec_cache.kind =
+          Render::Creature::Pipeline::CreatureKind::Elephant;
+      m_visual_spec_cache.debug_name = "troops/carthage/elephant";
+      m_visual_spec_baked = true;
+    }
+    return m_visual_spec_cache;
+  }
 
 protected:
 };
@@ -88,8 +85,10 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
         QVector3D const fabric_base(0.45F, 0.18F, 0.55F);
         QVector3D const metal_base(0.70F, 0.50F, 0.28F);
 
-        ElephantProfile profile = get_or_create_cached_elephant_profile(
-            seed, fabric_base, metal_base);
+        ElephantProfile &profile =
+            Render::Creature::get_or_bake_elephant_anatomy(
+                p.entity, seed, fabric_base, metal_base)
+                .profile;
 
         AnimationInputs anim = sample_anim_state(p);
 

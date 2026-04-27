@@ -1,8 +1,14 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <QVector3D>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 
 namespace Render::GL {
 
@@ -15,31 +21,35 @@ struct ToolBeltConfig {
   bool include_pouches = true;
 };
 
+inline constexpr std::uint32_t kToolBeltRoleCount = 5;
+
+auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                std::size_t max) -> std::uint32_t;
+
+auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
+                                       std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 5>;
+
 class ToolBeltRenderer : public IEquipmentRenderer {
 public:
   explicit ToolBeltRenderer(const ToolBeltConfig &config = ToolBeltConfig{});
 
+  static void submit(const ToolBeltConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const ToolBeltConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
-
-  void set_config(const ToolBeltConfig &config) { m_config = config; }
+              EquipmentBatch &batch) override;
 
 private:
   ToolBeltConfig m_config;
-
-  void renderBelt(const DrawContext &ctx, const AttachmentFrame &waist,
-                  ISubmitter &submitter);
-
-  void renderHammerLoop(const DrawContext &ctx, const AttachmentFrame &waist,
-                        ISubmitter &submitter);
-
-  void renderChiselHolder(const DrawContext &ctx, const AttachmentFrame &waist,
-                          ISubmitter &submitter);
-
-  void renderPouches(const DrawContext &ctx, const AttachmentFrame &waist,
-                     ISubmitter &submitter);
 };
 
 } // namespace Render::GL

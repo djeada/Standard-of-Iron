@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../horse/rig.h"
+#include "../horse/horse_renderer_base.h"
 #include "../humanoid/humanoid_math.h"
-#include "../humanoid/rig.h"
+#include "../humanoid/humanoid_renderer_base.h"
 #include <algorithm>
 
 namespace Render::GL {
@@ -72,8 +72,7 @@ inline void applyMountedKnightLowerBody(
     float const side = is_left ? -1.0F : 1.0F;
     QVector3D pelvis = pose.pelvis_pos + mount.seat_up * -0.01F;
     QVector3D stirrup =
-        (is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right) +
-        mount.ground_offset;
+        (is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right);
 
     QVector3D pelvis_to_stirrup = stirrup - pelvis;
     QVector3D thigh_target =
@@ -87,7 +86,6 @@ inline void applyMountedKnightLowerBody(
 
     QVector3D base_foot =
         is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right;
-    base_foot += mount.ground_offset;
 
     QVector3D calf_surface =
         knee + mount.seat_right * (side * dims.body_width * cfg.calfOutOffset) +

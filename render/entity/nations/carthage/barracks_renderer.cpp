@@ -7,7 +7,9 @@
 #include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
+#include "../../../render_archetype.h"
 #include "../../../submitter.h"
+#include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
 #include "../../building_state.h"
 #include "../../registry.h"
@@ -61,6 +63,74 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &color, Texture *white) {
   out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
            1.0F);
+}
+
+void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const CarthagePalette &c);
+void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                       Texture *white, const CarthagePalette &c,
+                       BuildingState state);
+void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const CarthagePalette &c,
+                      BuildingState state);
+void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                   Texture *white, const CarthagePalette &c);
+void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                      Texture *white, const CarthagePalette &c,
+                      BuildingState state);
+void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
+              const CarthagePalette &c);
+
+auto build_archetype_from_recorded(
+    std::string name, const std::vector<Render::GL::RecordedMeshCmd> &commands)
+    -> RenderArchetype {
+  RenderArchetypeBuilder builder(std::move(name));
+  builder.set_max_distance(std::numeric_limits<float>::infinity());
+  for (const auto &cmd : commands) {
+    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture,
+                     cmd.alpha, cmd.material_id,
+                     const_cast<Material *>(cmd.material));
+  }
+  return std::move(builder).build();
+}
+
+auto build_barracks_archetype(BuildingState state, Mesh *unit,
+                              Texture *white) -> RenderArchetype {
+  TemplateRecorder recorder;
+  recorder.reset(96);
+
+  DrawContext local_ctx;
+  local_ctx.model = QMatrix4x4{};
+  CarthagePalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+
+  drawFortressBase(local_ctx, recorder, unit, white, palette);
+  drawFortressWalls(local_ctx, recorder, unit, white, palette, state);
+  drawCornerTowers(local_ctx, recorder, unit, white, palette, state);
+  drawCourtyard(local_ctx, recorder, unit, white, palette);
+  drawCarthageRoof(local_ctx, recorder, unit, white, palette, state);
+  drawGate(local_ctx, recorder, unit, white, palette);
+  return build_archetype_from_recorded("carthage_barracks",
+                                       recorder.take_commands());
+}
+
+auto barracks_archetype(BuildingState state, Mesh *unit,
+                        Texture *white) -> const RenderArchetype & {
+  static const RenderArchetype k_normal =
+      build_barracks_archetype(BuildingState::Normal, unit, white);
+  static const RenderArchetype k_damaged =
+      build_barracks_archetype(BuildingState::Damaged, unit, white);
+  static const RenderArchetype k_destroyed =
+      build_barracks_archetype(BuildingState::Destroyed, unit, white);
+
+  switch (state) {
+  case BuildingState::Normal:
+    return k_normal;
+  case BuildingState::Damaged:
+    return k_damaged;
+  case BuildingState::Destroyed:
+    return k_destroyed;
+  }
+  return k_normal;
 }
 
 void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -444,12 +514,14 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     cloth.bannerShader = p.backend->banner_shader();
   }
 
-  drawFortressBase(p, out, unit, white, c);
-  drawFortressWalls(p, out, unit, white, c, state);
-  drawCornerTowers(p, out, unit, white, c, state);
-  drawCourtyard(p, out, unit, white, c);
-  drawCarthageRoof(p, out, unit, white, c, state);
-  drawGate(p, out, unit, white, c);
+  const RenderArchetype &archetype = barracks_archetype(state, unit, white);
+  RenderInstance instance;
+  instance.archetype = &archetype;
+  instance.world = p.model;
+  instance.default_texture = white;
+  instance.lod = RenderArchetypeLod::Full;
+  submit_render_instance(out, instance);
+
   drawStandards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);

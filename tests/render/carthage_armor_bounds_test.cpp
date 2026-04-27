@@ -1,6 +1,6 @@
 #include "render/equipment/armor/armor_heavy_carthage.h"
 #include "render/equipment/armor/armor_light_carthage.h"
-#include "render/humanoid/rig.h"
+#include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/style_palette.h"
 
 #include <QMatrix4x4>

@@ -30,7 +30,6 @@ void register_carthage_builder_style() {
   style.metal_color = k_carthage_bronze;
   style.wood_color = k_carthage_wood;
   style.apron_color = k_carthage_apron;
-  style.shader_id = "builder_carthage";
 
   style.show_helmet = false;
   style.show_armor = false;

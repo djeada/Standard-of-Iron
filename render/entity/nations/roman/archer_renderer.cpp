@@ -2,8 +2,16 @@
 #include "../../../../game/core/component.h"
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/archetype_registry.h"
+#include "../../../creature/pipeline/creature_render_graph.h"
+#include "../../../creature/pipeline/preparation_common.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/cloak_renderer.h"
+#include "../../../equipment/armor/roman_armor.h"
+#include "../../../equipment/armor/roman_greaves.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/equipment_submit.h"
+#include "../../../equipment/helmets/roman_light_helmet.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
 #include "../../../geom/math_utils.h"
@@ -12,10 +20,13 @@
 #include "../../../gl/primitives.h"
 #include "../../../gl/render_constants.h"
 #include "../../../gl/shader.h"
+#include "../../../humanoid/humanoid_full_builder.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
+#include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
 #include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
+#include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
 #include "../../../scene_renderer.h"
@@ -64,6 +75,14 @@ void ensure_archer_styles_registered() {
 constexpr float k_team_mix_weight = 0.65F;
 constexpr float k_style_mix_weight = 0.35F;
 
+auto canonical_bow_config() -> BowRenderConfig {
+  BowRenderConfig cfg;
+  cfg.bow_top_y = HumanProportions::SHOULDER_Y + 0.55F;
+  cfg.bow_bot_y = HumanProportions::WAIST_Y - 0.25F;
+  cfg.bow_x = 0.0F;
+  return cfg;
+}
+
 } // namespace
 
 void register_archer_style(const std::string &nation_id,
@@ -82,8 +101,186 @@ using Render::GL::Humanoid::saturate_color;
 class ArcherRenderer : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
-
     return {0.78F, 1.01F, 0.96F};
+  }
+
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+
+    static const UnitVisualSpec spec = []() {
+      static const auto k_head_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
+      static const auto k_foot_l_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::FootL);
+      static const auto k_foot_r_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::FootR);
+      static const auto k_helmet_base_role_byte =
+          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_greaves_base_role_byte = static_cast<std::uint8_t>(
+          k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
+      static const auto k_quiver_base_role_byte = static_cast<std::uint8_t>(
+          k_greaves_base_role_byte + Render::GL::kRomanGreavesRoleCount);
+      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
+          k_quiver_base_role_byte + Render::GL::kQuiverRoleCount);
+      static const auto k_bow_base_role_byte = static_cast<std::uint8_t>(
+          k_armor_base_role_byte + Render::GL::kRomanLightArmorRoleCount);
+      static const auto k_pelvis_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Pelvis);
+      static const auto k_chest_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
+      static const auto k_head_bind_matrix =
+          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
+              Render::Humanoid::HumanoidBone::Head)];
+      static const auto k_shin_l_bind_matrix = []() -> QMatrix4x4 {
+        const auto &f = Render::Humanoid::humanoid_bind_body_frames().shin_l;
+        QMatrix4x4 m;
+        m.setColumn(0, QVector4D(f.right, 0.0F));
+        m.setColumn(1, QVector4D(f.up, 0.0F));
+        m.setColumn(2, QVector4D(f.forward, 0.0F));
+        m.setColumn(3, QVector4D(f.origin, 1.0F));
+        return m;
+      }();
+      static const auto k_shin_r_bind_matrix = []() -> QMatrix4x4 {
+        const auto &f = Render::Humanoid::humanoid_bind_body_frames().shin_r;
+        QMatrix4x4 m;
+        m.setColumn(0, QVector4D(f.right, 0.0F));
+        m.setColumn(1, QVector4D(f.up, 0.0F));
+        m.setColumn(2, QVector4D(f.forward, 0.0F));
+        m.setColumn(3, QVector4D(f.origin, 1.0F));
+        return m;
+      }();
+      static const Render::Creature::StaticAttachmentSpec k_helmet_spec =
+          Render::GL::roman_light_helmet_make_static_attachment(
+              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_greaves_l_spec =
+          Render::GL::roman_greaves_make_static_attachment(
+              k_foot_l_bone, k_greaves_base_role_byte, k_shin_l_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_greaves_r_spec =
+          Render::GL::roman_greaves_make_static_attachment(
+              k_foot_r_bone, k_greaves_base_role_byte, k_shin_r_bind_matrix);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 5>
+          k_quiver_specs = Render::GL::quiver_make_static_attachments(
+              QuiverRenderConfig{}, k_pelvis_bone, k_quiver_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 2>
+          k_bow_specs = Render::GL::bow_make_static_attachments(
+              canonical_bow_config(), k_bow_base_role_byte);
+      static const Render::Creature::StaticAttachmentSpec k_armor_spec =
+          Render::GL::roman_light_armor_make_static_attachment(
+              k_chest_bone, k_armor_base_role_byte);
+      static const auto k_cloak_base_role_byte = static_cast<std::uint8_t>(
+          k_bow_base_role_byte + Render::GL::kBowRoleCount);
+      static const auto k_torso_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
+      static const CloakConfig k_cloak_cfg = []() {
+        CloakConfig cfg;
+        cfg.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
+        return cfg;
+      }();
+      static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
+        auto &reg = Render::GL::EquipmentRegistry::instance();
+        auto cloak_inst =
+            reg.get(Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+        if (cloak_inst) {
+          if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
+            return cr->meshes();
+          }
+        }
+        return CloakMeshes{};
+      }();
+      static const Render::Creature::StaticAttachmentSpec k_cloak_spec =
+          Render::GL::cloak_make_static_attachment(k_cloak_cfg, k_cloak_meshes,
+                                                   k_torso_bone,
+                                                   k_cloak_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 12>
+          k_attachments{k_helmet_spec,     k_greaves_l_spec,  k_greaves_r_spec,
+                        k_quiver_specs[0], k_quiver_specs[1], k_quiver_specs[2],
+                        k_quiver_specs[3], k_quiver_specs[4], k_armor_spec,
+                        k_bow_specs[0],    k_bow_specs[1],    k_cloak_spec};
+      static const auto k_archer_archetype = []() {
+        using Render::Creature::AnimationStateId;
+        using Render::Creature::ArchetypeDescriptor;
+        using Render::Creature::ArchetypeRegistry;
+
+        auto &registry = ArchetypeRegistry::instance();
+        auto const *base_desc = registry.get(ArchetypeRegistry::kHumanoidBase);
+        if (base_desc == nullptr) {
+          return Render::Creature::kInvalidArchetype;
+        }
+
+        ArchetypeDescriptor desc = *base_desc;
+        desc.debug_name = "troops/roman/archer";
+        desc.bake_attachments = {};
+        for (std::size_t i = 0; i < k_attachments.size(); ++i) {
+          desc.bake_attachments[i] = k_attachments[i];
+        }
+        desc.bake_attachment_count =
+            static_cast<std::uint8_t>(k_attachments.size());
+        desc.extra_role_color_fns = {};
+        desc.extra_role_color_fn_count = 0;
+        desc.append_extra_role_colors_fn(
+            +[](const void *variant_void, QVector3D *out,
+                std::uint32_t base_count,
+                std::size_t max_count) -> std::uint32_t {
+              if (variant_void == nullptr) {
+                return base_count;
+              }
+              if (max_count <= base_count) {
+                return base_count;
+              }
+              const auto &v =
+                  *static_cast<const HumanoidVariant *>(variant_void);
+              auto count = base_count;
+              count += Render::GL::roman_light_helmet_fill_role_colors(
+                  v.palette, out + count, max_count - count);
+              if (max_count <= count) {
+                return count;
+              }
+              count += Render::GL::roman_greaves_fill_role_colors(
+                  v.palette, out + count, max_count - count);
+              if (max_count <= count) {
+                return count;
+              }
+              static const QuiverRenderConfig k_quiver_cfg{};
+              count += Render::GL::quiver_fill_role_colors(
+                  v.palette, k_quiver_cfg, out + count, max_count - count);
+              if (max_count <= count) {
+                return count;
+              }
+              count += Render::GL::roman_light_armor_fill_role_colors(
+                  v.palette, out + count, max_count - count);
+              if (max_count <= count) {
+                return count;
+              }
+              count += Render::GL::bow_fill_role_colors(v.palette, out + count,
+                                                        max_count - count);
+              if (max_count <= count) {
+                return count;
+              }
+              count += Render::GL::cloak_fill_role_colors_with_primary(
+                  QVector3D(0.70F, 0.15F, 0.18F), v.palette, out + count,
+                  max_count - count);
+              return count;
+            });
+
+        auto const attack_bow_clip = desc.bpat_clip[static_cast<std::size_t>(
+            AnimationStateId::AttackBow)];
+        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
+            attack_bow_clip;
+        desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
+            attack_bow_clip;
+        return registry.register_archetype(desc);
+      }();
+
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/archer";
+      s.scaling = ProportionScaling{0.78F, 1.01F, 0.96F};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+      s.archetype_id = k_archer_archetype;
+      return s;
+    }();
+    return spec;
   }
 
   void get_variant(const DrawContext &ctx, uint32_t seed,
@@ -94,190 +291,17 @@ public:
     apply_palette_overrides(style, team_tint, v);
   }
 
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    float const bow_x = 0.0F;
-
-    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const t =
-          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
-
-      controller.kneel(t * k_kneel_depth_multiplier);
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
-                      t * k_lean_amount_multiplier);
-
-      QVector3D const hold_hand_r(
-          bow_x + 0.03F, controller.get_shoulder_y(false) + 0.30F, 0.55F);
-      QVector3D const hold_hand_l(
-          bow_x - 0.02F, controller.get_shoulder_y(true) + 0.12F, 0.55F);
-      QVector3D const normal_hand_r(bow_x + 0.03F - arm_asymmetry,
-                                    HP::SHOULDER_Y + 0.05F + arm_height_jitter,
-                                    0.55F);
-      QVector3D const normal_hand_l(
-          bow_x - 0.02F + arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.12F + arm_height_jitter * 0.8F, 0.50F);
-
-      QVector3D const blended_hand_r =
-          normal_hand_r * (1.0F - t) + hold_hand_r * t;
-      QVector3D const blended_hand_l =
-          normal_hand_l * (1.0F - t) + hold_hand_l * t;
-
-      controller.place_hand_at(false, blended_hand_r);
-      controller.place_hand_at(true, blended_hand_l);
-    } else {
-      QVector3D const idle_hand_r(bow_x + 0.03F - arm_asymmetry,
-                                  HP::SHOULDER_Y + 0.05F + arm_height_jitter,
-                                  0.55F);
-      QVector3D const idle_hand_l(
-          bow_x - 0.05F + arm_asymmetry * 0.5F,
-          HP::SHOULDER_Y + 0.14F + arm_height_jitter * 0.8F, 0.48F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
-    }
-
-    if (anim.is_attacking && !anim.is_in_hold_mode) {
-      float const attack_phase =
-          std::fmod(anim_ctx.attack_phase * ARCHER_INV_ATTACK_CYCLE_TIME, 1.0F);
-
-      if (anim.is_melee) {
-        controller.melee_strike(attack_phase);
-      } else {
-        controller.aim_bow(attack_phase);
-      }
-    }
-  }
-
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    QVector3D team_tint = resolve_team_tint(ctx);
-
-    auto tint = [&](float k) {
-      return QVector3D(clamp01(team_tint.x() * k), clamp01(team_tint.y() * k),
-                       clamp01(team_tint.z() * k));
-    };
-    QVector3D const fletch = tint(0.9F);
-
-    auto &registry = EquipmentRegistry::instance();
-
-    if (style.show_cape) {
-      auto cloak = registry.get(EquipmentCategory::Armor, "cloak_carthage");
-      if (cloak) {
-        CloakConfig cloak_config;
-        if (style.cape_color) {
-          cloak_config.primary_color = *style.cape_color;
-        } else {
-          cloak_config.primary_color = QVector3D(0.70F, 0.15F, 0.18F);
-        }
-        cloak_config.trim_color = v.palette.metal;
-
-        if (auto *cloak_renderer = dynamic_cast<CloakRenderer *>(cloak.get())) {
-          cloak_renderer->set_config(cloak_config);
-        }
-
-        cloak->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-      }
-    }
-    auto quiver = registry.get(EquipmentCategory::Weapon, "quiver");
-    if (quiver) {
-
-      QuiverRenderConfig quiver_config;
-      quiver_config.fletching_color = fletch;
-      quiver_config.quiver_radius = HP::HEAD_RADIUS * 0.45F;
-
-      auto *quiver_renderer = dynamic_cast<QuiverRenderer *>(quiver.get());
-      if (quiver_renderer) {
-        quiver_renderer->set_config(quiver_config);
-      }
-
-      quiver->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-
-    auto bow = registry.get(EquipmentCategory::Weapon, "bow_roman");
-    if (bow) {
-
-      BowRenderConfig bow_config;
-      bow_config.string_color = QVector3D(0.30F, 0.30F, 0.32F);
-      bow_config.metal_color =
-          Render::Geom::clamp_vec_01(v.palette.metal * 1.15F);
-      bow_config.fletching_color = fletch;
-      bow_config.bow_top_y = HP::SHOULDER_Y + 0.55F;
-      bow_config.bow_bot_y = HP::WAIST_Y - 0.25F;
-      bow_config.bow_x = 0.0F;
-      bow_config.arrow_visibility = ArrowVisibility::IdleAndAttackCycle;
-
-      if (style.bow_string_color) {
-        bow_config.string_color = saturate_color(*style.bow_string_color);
-      }
-      if (style.fletching_color) {
-        bow_config.fletching_color = saturate_color(*style.fletching_color);
-      }
-
-      auto *bow_renderer = dynamic_cast<BowRenderer *>(bow.get());
-      if (bow_renderer) {
-        bow_renderer->set_config(bow_config);
-      }
-
-      bow->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-    using HP = HumanProportions;
-
-    auto const &style = resolve_style(ctx);
-    auto &registry = EquipmentRegistry::instance();
-    HumanoidAnimationContext anim_ctx{};
-
-    if (!style.show_helmet) {
-      if (style.attachment_profile == std::string(k_attachment_headwrap)) {
-
-        auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
-        if (headwrap) {
-          headwrap->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-        }
-      }
-      return;
-    }
-
-    auto helmet = registry.get(EquipmentCategory::Helmet, "roman_light");
-    if (helmet) {
-      helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    auto &registry = EquipmentRegistry::instance();
-
-    if (resolve_style(ctx).show_armor) {
-      auto armor = registry.get(EquipmentCategory::Armor, "roman_light_armor");
-      if (armor) {
-        armor->render(ctx, pose.body_frames, v.palette, anim, out);
-      }
-    }
-
-    auto greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-    if (greaves) {
-      greaves->render(ctx, pose.body_frames, v.palette, anim, out);
-    }
+  void append_companion_preparation(
+      const DrawContext &ctx, const HumanoidVariant &variant,
+      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t, Render::Creature::CreatureLOD,
+      Render::Creature::Pipeline::CreaturePreparationResult &out)
+      const override {
+    (void)ctx;
+    (void)variant;
+    (void)pose;
+    (void)anim_ctx;
+    (void)out;
   }
 
 private:
@@ -306,15 +330,6 @@ private:
     return default_style;
   }
 
-public:
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const ArcherStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return QStringLiteral("archer");
-  }
-
 private:
   void apply_palette_overrides(const ArcherStyleConfig &style,
                                const QVector3D &team_tint,
@@ -336,26 +351,11 @@ private:
 void register_archer_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_archer_styles_registered();
   static ArcherRenderer const renderer;
-  registry.register_renderer(
-      "troops/roman/archer", [](const DrawContext &ctx, ISubmitter &out) {
-        static ArcherRenderer const static_renderer;
-        Shader *archer_shader = nullptr;
-        if (ctx.backend != nullptr) {
-          QString shader_key = static_renderer.resolve_shader_key(ctx);
-          archer_shader = ctx.backend->shader(shader_key);
-          if (archer_shader == nullptr) {
-            archer_shader = ctx.backend->shader(QStringLiteral("archer"));
-          }
-        }
-        auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-        if ((scene_renderer != nullptr) && (archer_shader != nullptr)) {
-          scene_renderer->set_current_shader(archer_shader);
-        }
-        static_renderer.render(ctx, out);
-        if (scene_renderer != nullptr) {
-          scene_renderer->set_current_shader(nullptr);
-        }
-      });
+  registry.register_renderer("troops/roman/archer",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static ArcherRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman

@@ -2,6 +2,7 @@
 
 #include "draw_queue.h"
 #include "gl/primitives.h"
+#include "material.h"
 #include "primitive_batch.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -10,6 +11,7 @@
 namespace Render::GL {
 class Mesh;
 class Texture;
+struct Material;
 } // namespace Render::GL
 
 namespace Render::GL {
@@ -20,6 +22,15 @@ public:
   virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *tex = nullptr, float alpha = 1.0F,
                     int material_id = 0) = 0;
+
+  virtual void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+                    const QVector3D &color, Texture *tex = nullptr,
+                    float alpha = 1.0F, int material_id = 0) {
+    (void)material;
+    this->mesh(mesh, model, color, tex, alpha, material_id);
+  }
+
+  virtual void rigged(const RiggedCreatureCmd &cmd) { (void)cmd; }
   virtual void cylinder(const QVector3D &start, const QVector3D &end,
                         float radius, const QVector3D &color,
                         float alpha = 1.0F) = 0;
@@ -95,6 +106,35 @@ public:
     cmd.shader = m_shader;
     m_queue->submit(std::move(cmd));
   }
+
+  void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
+            const QVector3D &color, Texture *tex = nullptr, float alpha = 1.0F,
+            int material_id = 0) override {
+    if ((m_queue == nullptr) || (mesh == nullptr)) {
+      return;
+    }
+    if (material == nullptr) {
+
+      this->mesh(mesh, model, color, tex, alpha, material_id);
+      return;
+    }
+    DrawPartCmd cmd;
+    cmd.mesh = mesh;
+    cmd.material = material;
+    cmd.world = model;
+    cmd.color = color;
+    cmd.alpha = alpha;
+    cmd.texture = tex;
+    cmd.material_id = material_id;
+    m_queue->submit(std::move(cmd));
+  }
+
+  void rigged(const RiggedCreatureCmd &cmd) override {
+    if (m_queue == nullptr || cmd.mesh == nullptr) {
+      return;
+    }
+    m_queue->submit(cmd);
+  }
   void cylinder(const QVector3D &start, const QVector3D &end, float radius,
                 const QVector3D &color, float alpha = 1.0F) override {
     if (m_queue == nullptr) {
@@ -150,14 +190,16 @@ public:
     if (m_queue == nullptr) {
       return;
     }
-    HealingBeamCmd cmd;
-    cmd.start_pos = start;
+    EffectBatchCmd cmd;
+    cmd.kind = EffectBatchCmd::Kind::HealingBeam;
+    cmd.position = start;
     cmd.end_pos = end;
     cmd.color = color;
     cmd.progress = progress;
     cmd.beam_width = beam_width;
     cmd.intensity = intensity;
     cmd.time = time;
+    cmd.priority = CommandPriority::High;
     m_queue->submit(std::move(cmd));
   }
   void healer_aura(const QVector3D &position, const QVector3D &color,
@@ -165,7 +207,8 @@ public:
     if (m_queue == nullptr) {
       return;
     }
-    HealerAuraCmd cmd;
+    EffectBatchCmd cmd;
+    cmd.kind = EffectBatchCmd::Kind::HealerAura;
     cmd.position = position;
     cmd.color = color;
     cmd.radius = radius;
@@ -178,12 +221,14 @@ public:
     if (m_queue == nullptr) {
       return;
     }
-    CombatDustCmd cmd;
+    EffectBatchCmd cmd;
+    cmd.kind = EffectBatchCmd::Kind::CombatDust;
     cmd.position = position;
     cmd.color = color;
     cmd.radius = radius;
     cmd.intensity = intensity;
     cmd.time = time;
+    cmd.priority = CommandPriority::Low;
     m_queue->submit(std::move(cmd));
   }
   void stone_impact(const QVector3D &position, const QVector3D &color,
@@ -191,12 +236,14 @@ public:
     if (m_queue == nullptr) {
       return;
     }
-    StoneImpactCmd cmd;
+    EffectBatchCmd cmd;
+    cmd.kind = EffectBatchCmd::Kind::StoneImpact;
     cmd.position = position;
     cmd.color = color;
     cmd.radius = radius;
     cmd.intensity = intensity;
     cmd.time = time;
+    cmd.priority = CommandPriority::High;
     m_queue->submit(std::move(cmd));
   }
   void mode_indicator(const QMatrix4x4 &model, int mode_type,
@@ -319,6 +366,12 @@ public:
                       const QVector3D &color, float alpha = 1.0F) override {
     if (m_fallback != nullptr) {
       m_fallback->mode_indicator(model, mode_type, color, alpha);
+    }
+  }
+
+  void rigged(const RiggedCreatureCmd &cmd) override {
+    if (m_fallback != nullptr) {
+      m_fallback->rigged(cmd);
     }
   }
 

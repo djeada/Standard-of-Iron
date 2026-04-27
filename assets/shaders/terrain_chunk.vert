@@ -72,7 +72,6 @@ void main() {
   float heightAmp = clamp(u_heightNoiseStrength, 0.0, 0.20);
 
   float displacement = h * heightAmp * displacementFactor;
-  wp.y += displacement;
 
   v_worldPos = wp;
   v_normal = worldNormal;

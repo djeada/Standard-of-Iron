@@ -57,7 +57,7 @@ auto LevelOrchestrator::load_skirmish(
     QCoreApplication::processEvents();
   }
 
-  loader.set_biome_renderer(renderers.biome);
+  loader.set_scatter_manager(renderers.scatter);
 
   if (progress_tracker) {
     progress_tracker->set_stage(
@@ -65,9 +65,7 @@ auto LevelOrchestrator::load_skirmish(
     QCoreApplication::processEvents();
   }
 
-  loader.set_river_renderer(renderers.river);
-  loader.set_riverbank_renderer(renderers.riverbank);
-  loader.set_bridge_renderer(renderers.bridge);
+  loader.set_feature_manager(renderers.features);
 
   if (progress_tracker) {
     progress_tracker->set_stage(
@@ -75,19 +73,12 @@ auto LevelOrchestrator::load_skirmish(
     QCoreApplication::processEvents();
   }
 
-  loader.set_road_renderer(renderers.road);
-
   if (progress_tracker) {
     progress_tracker->set_stage(
         LoadingProgressTracker::LoadingStage::LOADING_ENVIRONMENT);
     QCoreApplication::processEvents();
   }
 
-  loader.set_stone_renderer(renderers.stone);
-  loader.set_plant_renderer(renderers.plant);
-  loader.set_pine_renderer(renderers.pine);
-  loader.set_olive_renderer(renderers.olive);
-  loader.set_fire_camp_renderer(renderers.firecamp);
   loader.set_rain_renderer(renderers.rain);
 
   if (progress_tracker) {

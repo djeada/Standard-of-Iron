@@ -26,7 +26,6 @@ void register_carthage_swordsman_style() {
   style.shield_aspect_ratio = 0.85F;
   style.has_scabbard = false;
   style.shield_cross_decal = false;
-  style.shader_id = "swordsman_carthage";
 
   register_swordsman_style("carthage", style);
 }

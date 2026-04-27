@@ -2,7 +2,6 @@
 #include "armor/armor_heavy_carthage.h"
 #include "armor/armor_light_carthage.h"
 #include "armor/carthage_shoulder_cover.h"
-#include "armor/chainmail_armor.h"
 #include "armor/cloak_renderer.h"
 #include "armor/roman_armor.h"
 #include "armor/roman_greaves.h"
@@ -13,8 +12,6 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
-#include "helmets/roman_heavy_helmet.h"
-#include "helmets/roman_light_helmet.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
@@ -68,14 +65,6 @@ void register_built_in_equipment() {
 
   auto headwrap = std::make_shared<HeadwrapRenderer>();
   registry.register_equipment(EquipmentCategory::Helmet, "headwrap", headwrap);
-
-  auto roman_heavy = std::make_shared<RomanHeavyHelmetRenderer>();
-  registry.register_equipment(EquipmentCategory::Helmet, "roman_heavy",
-                              roman_heavy);
-
-  auto roman_light = std::make_shared<RomanLightHelmetRenderer>();
-  registry.register_equipment(EquipmentCategory::Helmet, "roman_light",
-                              roman_light);
 
   auto roman_heavy_armor = std::make_shared<RomanHeavyArmorRenderer>();
   registry.register_equipment(EquipmentCategory::Armor, "roman_heavy_armor",

@@ -1,8 +1,14 @@
 #pragma once
 
-#include "../../humanoid/rig.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../palette.h"
+#include "../../static_attachment_spec.h"
 #include "../i_equipment_renderer.h"
+
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <span>
 
 namespace Render::GL {
 
@@ -13,22 +19,42 @@ struct ArmGuardsConfig {
   bool include_straps = true;
 };
 
+inline constexpr std::uint32_t kArmGuardsRoleCount = 2;
+
+auto arm_guards_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
+                                 std::size_t max) -> std::uint32_t;
+
+auto arm_guards_make_static_attachments(std::uint16_t shoulder_l_bone_index,
+                                        std::uint16_t shoulder_r_bone_index,
+                                        std::uint8_t base_role_byte)
+    -> std::array<Render::Creature::StaticAttachmentSpec, 2>;
+
 class ArmGuardsRenderer : public IEquipmentRenderer {
 public:
   explicit ArmGuardsRenderer(const ArmGuardsConfig &config = ArmGuardsConfig{});
 
+  static void submit(const ArmGuardsConfig &config, const DrawContext &ctx,
+                     const BodyFrames &frames, const HumanoidPalette &palette,
+                     const HumanoidAnimationContext &anim,
+                     EquipmentBatch &batch);
+
+  [[nodiscard]] auto base_config() const noexcept -> const ArmGuardsConfig & {
+    return m_config;
+  }
+
   void render(const DrawContext &ctx, const BodyFrames &frames,
               const HumanoidPalette &palette,
               const HumanoidAnimationContext &anim,
-              ISubmitter &submitter) override;
-
-  void set_config(const ArmGuardsConfig &config) { m_config = config; }
+              EquipmentBatch &batch) override;
 
 private:
   ArmGuardsConfig m_config;
 
-  void renderArmGuard(const DrawContext &ctx, const QVector3D &elbow,
-                      const QVector3D &wrist, ISubmitter &submitter);
+  static void renderArmGuard(const ArmGuardsConfig &config,
+                             const DrawContext &ctx, const QVector3D &elbow,
+                             const QVector3D &wrist,
+                             std::span<const QVector3D> palette,
+                             EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

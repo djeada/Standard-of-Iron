@@ -1,7 +1,7 @@
 #pragma once
 
+#include "humanoid_renderer_base.h"
 #include "humanoid_specs.h"
-#include "rig.h"
 #include <QVector3D>
 #include <cstdint>
 

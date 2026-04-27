@@ -19,18 +19,16 @@
 #include "minimap_manager.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
-#include "render/ground/bridge_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
-#include "render/ground/river_renderer.h"
-#include "render/ground/riverbank_renderer.h"
-#include "render/ground/road_renderer.h"
 #include "render/ground/stone_renderer.h"
+#include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
+#include "render/ground/terrain_scatter_manager.h"
 #include "render/scene_renderer.h"
 #include <QDebug>
 
@@ -207,45 +205,14 @@ void GameStateRestorer::restore_environment_from_metadata(
         renderers.terrain->configure(*height_map,
                                      terrain_service.biome_settings());
       }
-      if (renderers.river) {
-        renderers.river->configure(height_map->getRiverSegments(),
-                                   height_map->getTileSize());
+      if (renderers.features) {
+        renderers.features->configure(*height_map,
+                                      terrain_service.road_segments());
       }
-      if (renderers.road) {
-        renderers.road->configure(terrain_service.road_segments(),
-                                  height_map->getTileSize());
-      }
-      if (renderers.riverbank) {
-        renderers.riverbank->configure(height_map->getRiverSegments(),
-                                       *height_map);
-      }
-      if (renderers.bridge) {
-        renderers.bridge->configure(height_map->getBridges(),
-                                    height_map->getTileSize());
-      }
-      if (renderers.biome) {
-        renderers.biome->configure(*height_map,
-                                   terrain_service.biome_settings());
-      }
-      if (renderers.stone) {
-        renderers.stone->configure(*height_map,
-                                   terrain_service.biome_settings());
-      }
-      if (renderers.plant) {
-        renderers.plant->configure(*height_map,
-                                   terrain_service.biome_settings());
-      }
-      if (renderers.pine) {
-        renderers.pine->configure(*height_map,
-                                  terrain_service.biome_settings());
-      }
-      if (renderers.olive) {
-        renderers.olive->configure(*height_map,
-                                   terrain_service.biome_settings());
-      }
-      if (renderers.firecamp) {
-        renderers.firecamp->configure(*height_map,
-                                      terrain_service.biome_settings());
+      if (renderers.scatter) {
+        renderers.scatter->configure(*height_map,
+                                     terrain_service.biome_settings(),
+                                     terrain_service.fire_camps());
       }
     }
 

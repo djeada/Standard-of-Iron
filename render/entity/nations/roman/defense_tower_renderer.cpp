@@ -1,22 +1,23 @@
 #include "defense_tower_renderer.h"
 #include "../../../../game/core/component.h"
-#include "../../../../game/visuals/team_colors.h"
 #include "../../../geom/math_utils.h"
-#include "../../../geom/transforms.h"
 #include "../../../gl/primitives.h"
 #include "../../../gl/resources.h"
+#include "../../../render_archetype.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 
 namespace Render::GL::Roman {
 namespace {
 
 using Render::Geom::clamp_vec_01;
-using Render::Geom::cylinder_between;
+
+constexpr std::uint8_t kTowerTeamSlot = 0;
 
 struct TowerPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -37,128 +38,111 @@ struct TowerPalette {
   QVector3D team{0.8F, 0.9F, 1.0F};
 };
 
-inline auto make_palette(const QVector3D &team) -> TowerPalette {
+auto make_palette(const QVector3D &team) -> TowerPalette {
   TowerPalette p;
   p.team = clamp_vec_01(team);
   return p;
 }
 
-inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
-                     const QMatrix4x4 &model, const QVector3D &pos,
-                     const QVector3D &size, const QVector3D &color) {
+void submit_box(ISubmitter &out, Texture *white, const QMatrix4x4 &model,
+                const QVector3D &pos, const QVector3D &size,
+                const QVector3D &color) {
   QMatrix4x4 m = model;
   m.translate(pos);
   m.scale(size);
-  out.mesh(unit, m, color, white, 1.0F);
+  out.mesh(get_unit_cube(), m, color, white, 1.0F);
 }
 
-inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
-                     const QVector3D &a, const QVector3D &b, float r,
-                     const QVector3D &color, Texture *white) {
-  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
-           1.0F);
-}
+auto tower_archetype() -> const RenderArchetype & {
+  static const RenderArchetype k_tower = [] {
+    TowerPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
+    RenderArchetypeBuilder builder("roman_defense_tower");
+    builder.set_max_distance(std::numeric_limits<float>::infinity());
 
-void draw_tower_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const TowerPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.12F, 0.0F),
-           QVector3D(1.1F, 0.12F, 1.1F), c.limestone_dark);
+    builder.add_box(QVector3D(0.0F, 0.12F, 0.0F), QVector3D(1.1F, 0.12F, 1.1F),
+                    c.limestone_dark);
+    builder.add_box(QVector3D(0.0F, 0.26F, 0.0F), QVector3D(1.0F, 0.02F, 1.0F),
+                    c.limestone);
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.26F, 0.0F),
-           QVector3D(1.0F, 0.02F, 1.0F), c.limestone);
-
-  for (float x = -0.85F; x <= 0.85F; x += 0.425F) {
-    for (float z = -0.85F; z <= 0.85F; z += 0.425F) {
-      if (fabsf(x) > 0.3F || fabsf(z) > 0.3F) {
-        draw_box(out, unit, white, p.model, QVector3D(x, 0.29F, z),
-                 QVector3D(0.18F, 0.01F, 0.18F), c.terracotta);
+    for (float x = -0.85F; x <= 0.85F; x += 0.425F) {
+      for (float z = -0.85F; z <= 0.85F; z += 0.425F) {
+        if (fabsf(x) > 0.3F || fabsf(z) > 0.3F) {
+          builder.add_box(QVector3D(x, 0.29F, z),
+                          QVector3D(0.18F, 0.01F, 0.18F), c.terracotta);
+        }
       }
     }
-  }
 
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.42F, 0.0F),
-           QVector3D(0.9F, 0.12F, 0.9F), c.sandstone_light);
-}
+    builder.add_box(QVector3D(0.0F, 0.42F, 0.0F), QVector3D(0.9F, 0.12F, 0.9F),
+                    c.sandstone_light);
+    builder.add_cylinder(QVector3D(0.0F, 0.5F, 0.0F),
+                         QVector3D(0.0F, 2.2F, 0.0F), 0.55F, c.limestone);
 
-void draw_tower_body(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const TowerPalette &c) {
-  draw_cyl(out, p.model, QVector3D(0.0F, 0.5F, 0.0F),
-           QVector3D(0.0F, 2.2F, 0.0F), 0.55F, c.limestone, white);
+    for (int i = 0; i < 4; ++i) {
+      float const angle = static_cast<float>(i) * 1.57F + 0.785F;
+      float const ox = sinf(angle) * 0.48F;
+      float const oz = cosf(angle) * 0.48F;
 
-  for (int i = 0; i < 4; ++i) {
-    float const angle = static_cast<float>(i) * 1.57F + 0.785F;
-    float const ox = sinf(angle) * 0.48F;
-    float const oz = cosf(angle) * 0.48F;
-
-    draw_cyl(out, p.model, QVector3D(ox, 0.5F, oz), QVector3D(ox, 1.9F, oz),
-             0.08F, c.marble, white);
-
-    draw_box(out, unit, white, p.model, QVector3D(ox, 0.58F, oz),
-             QVector3D(0.12F, 0.08F, 0.12F), c.marble);
-
-    draw_box(out, unit, white, p.model, QVector3D(ox, 1.95F, oz),
-             QVector3D(0.13F, 0.08F, 0.13F), c.marble);
-
-    draw_box(out, unit, white, p.model, QVector3D(ox, 2.05F, oz),
-             QVector3D(0.10F, 0.04F, 0.10F), c.gold);
-  }
-
-  for (int i = 0; i < 8; ++i) {
-    float const angle = static_cast<float>(i) * 0.785F;
-    float const ox = sinf(angle) * 0.45F;
-    float const oz = cosf(angle) * 0.45F;
-    draw_box(out, unit, white, p.model, QVector3D(ox, 1.2F, oz),
-             QVector3D(0.06F, 0.25F, 0.06F), c.sandstone_dark);
-  }
-}
-
-void draw_tower_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                         Texture *white, const TowerPalette &c) {
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.28F, 0.0F),
-           QVector3D(0.8F, 0.05F, 0.8F), c.cedar);
-
-  for (int i = 0; i < 8; ++i) {
-    float const angle = static_cast<float>(i) * 0.785F;
-    float const ox = sinf(angle) * 0.7F;
-    float const oz = cosf(angle) * 0.7F;
-    draw_box(out, unit, white, p.model, QVector3D(ox, 2.45F, oz),
-             QVector3D(0.14F, 0.17F, 0.14F), c.terracotta);
-  }
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 2.58F, 0.0F),
-           QVector3D(0.85F, 0.04F, 0.85F), c.limestone);
-
-  for (float x : {-0.75F, 0.75F}) {
-    for (float z : {-0.75F, 0.75F}) {
-      draw_box(out, unit, white, p.model, QVector3D(x, 2.64F, z),
-               QVector3D(0.06F, 0.06F, 0.06F), c.blue_accent);
+      builder.add_cylinder(QVector3D(ox, 0.5F, oz), QVector3D(ox, 1.9F, oz),
+                           0.08F, c.marble);
+      builder.add_box(QVector3D(ox, 0.58F, oz), QVector3D(0.12F, 0.08F, 0.12F),
+                      c.marble);
+      builder.add_box(QVector3D(ox, 1.95F, oz), QVector3D(0.13F, 0.08F, 0.13F),
+                      c.marble);
+      builder.add_box(QVector3D(ox, 2.05F, oz), QVector3D(0.10F, 0.04F, 0.10F),
+                      c.gold);
     }
-  }
+
+    for (int i = 0; i < 8; ++i) {
+      float const angle = static_cast<float>(i) * 0.785F;
+      float const ox = sinf(angle) * 0.45F;
+      float const oz = cosf(angle) * 0.45F;
+      builder.add_box(QVector3D(ox, 1.2F, oz), QVector3D(0.06F, 0.25F, 0.06F),
+                      c.sandstone_dark);
+    }
+
+    builder.add_box(QVector3D(0.0F, 2.28F, 0.0F), QVector3D(0.8F, 0.05F, 0.8F),
+                    c.cedar);
+    for (int i = 0; i < 8; ++i) {
+      float const angle = static_cast<float>(i) * 0.785F;
+      float const ox = sinf(angle) * 0.7F;
+      float const oz = cosf(angle) * 0.7F;
+      builder.add_box(QVector3D(ox, 2.45F, oz), QVector3D(0.14F, 0.17F, 0.14F),
+                      c.terracotta);
+    }
+
+    builder.add_box(QVector3D(0.0F, 2.58F, 0.0F),
+                    QVector3D(0.85F, 0.04F, 0.85F), c.limestone);
+    for (float x : {-0.75F, 0.75F}) {
+      for (float z : {-0.75F, 0.75F}) {
+        builder.add_box(QVector3D(x, 2.64F, z), QVector3D(0.06F, 0.06F, 0.06F),
+                        c.blue_accent);
+      }
+    }
+
+    builder.add_cylinder(QVector3D(0.0F, 2.25F, 0.0F),
+                         QVector3D(0.0F, 3.1F, 0.0F), 0.07F, c.cedar_dark);
+    builder.add_palette_box(QVector3D(0.12F, 2.75F, 0.0F),
+                            QVector3D(0.22F, 0.15F, 0.025F), kTowerTeamSlot);
+    for (int i = 0; i < 2; ++i) {
+      float const ring_y = 2.65F + static_cast<float>(i) * 0.30F;
+      builder.add_cylinder(QVector3D(0.0F, ring_y, 0.0F),
+                           QVector3D(0.0F, ring_y + 0.025F, 0.0F), 0.11F,
+                           c.gold);
+    }
+    builder.add_box(QVector3D(0.0F, 3.15F, 0.0F),
+                    QVector3D(0.08F, 0.06F, 0.08F), c.bronze);
+    return std::move(builder).build();
+  }();
+  return k_tower;
 }
 
-void draw_tower_top(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                    Texture *white, const TowerPalette &c) {
-  draw_cyl(out, p.model, QVector3D(0.0F, 2.25F, 0.0F),
-           QVector3D(0.0F, 3.1F, 0.0F), 0.07F, c.cedar_dark, white);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.12F, 2.75F, 0.0F),
-           QVector3D(0.22F, 0.15F, 0.025F), c.team);
-
-  for (int i = 0; i < 2; ++i) {
-    float ring_y = 2.65F + static_cast<float>(i) * 0.30F;
-    out.mesh(get_unit_cylinder(),
-             p.model * Render::Geom::cylinder_between(
-                           QVector3D(0.0F, ring_y, 0.0F),
-                           QVector3D(0.0F, ring_y + 0.025F, 0.0F), 0.11F),
-             c.gold, white, 1.0F);
-  }
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 3.15F, 0.0F),
-           QVector3D(0.08F, 0.06F, 0.08F), c.bronze);
+auto tower_palette_slots(const TowerPalette &palette)
+    -> std::array<QVector3D, 1> {
+  return {palette.team};
 }
 
-void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white) {
+void draw_health_bar(const DrawContext &p, ISubmitter &out, Texture *white) {
   if (p.entity == nullptr) {
     return;
   }
@@ -174,14 +158,14 @@ void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 
   QVector3D const bg(0.06F, 0.06F, 0.06F);
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, 3.2F, 0.0F),
-           QVector3D(0.6F, 0.03F, 0.05F), bg);
+  submit_box(out, white, p.model, QVector3D(0.0F, 3.2F, 0.0F),
+             QVector3D(0.6F, 0.03F, 0.05F), bg);
 
   QVector3D const fg = QVector3D(0.22F, 0.78F, 0.22F) * ratio +
                        QVector3D(0.85F, 0.15F, 0.15F) * (1.0F - ratio);
-  draw_box(out, unit, white, p.model,
-           QVector3D(-0.3F * (1.0F - ratio), 3.21F, 0.0F),
-           QVector3D(0.3F * ratio, 0.025F, 0.045F), fg);
+  submit_box(out, white, p.model,
+             QVector3D(-0.3F * (1.0F - ratio), 3.21F, 0.0F),
+             QVector3D(0.3F * ratio, 0.025F, 0.045F), fg);
 }
 
 void draw_selection(const DrawContext &p, ISubmitter &out) {
@@ -197,26 +181,30 @@ void draw_selection(const DrawContext &p, ISubmitter &out) {
 }
 
 void draw_defense_tower(const DrawContext &p, ISubmitter &out) {
-  if (!p.resources || !p.entity) {
+  if (p.entity == nullptr) {
     return;
   }
 
-  auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  if (!t || !r) {
+  if (r == nullptr) {
     return;
   }
 
-  Mesh *unit = p.resources->unit();
-  Texture *white = p.resources->white();
-  QVector3D const team(r->color[0], r->color[1], r->color[2]);
-  TowerPalette const c = make_palette(team);
+  Texture *white = (p.resources != nullptr) ? p.resources->white() : nullptr;
+  TowerPalette const palette =
+      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
+  const auto palette_slots = tower_palette_slots(palette);
+  const RenderArchetype &archetype = tower_archetype();
 
-  draw_tower_base(p, out, unit, white, c);
-  draw_tower_body(p, out, unit, white, c);
-  draw_tower_platform(p, out, unit, white, c);
-  draw_tower_top(p, out, unit, white, c);
-  draw_health_bar(p, out, unit, white);
+  RenderInstance instance;
+  instance.archetype = &archetype;
+  instance.world = p.model;
+  instance.palette = palette_slots;
+  instance.default_texture = white;
+  instance.lod = RenderArchetypeLod::Full;
+  submit_render_instance(out, instance);
+
+  draw_health_bar(p, out, white);
   draw_selection(p, out);
 }
 

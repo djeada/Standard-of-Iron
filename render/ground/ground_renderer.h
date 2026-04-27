@@ -8,7 +8,7 @@
 #include "../../game/map/terrain.h"
 #include "../../game/map/terrain_service.h"
 #include "../i_render_pass.h"
-#include "terrain_gpu.h"
+#include "../world_chunk.h"
 
 namespace Render::GL {
 class Renderer;

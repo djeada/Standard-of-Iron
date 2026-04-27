@@ -25,6 +25,10 @@
 #include "loading_progress_tracker.h"
 #include "minimap_manager.h"
 #include "production_manager.h"
+#include "render/ground/terrain_feature_manager.h"
+#include "render/ground/terrain_scatter_manager.h"
+#include "render/ground/terrain_surface_manager.h"
+#include "render/terrain_scene_proxy.h"
 #include "renderer_bootstrap.h"
 #include "selection_query_service.h"
 #include <QBuffer>
@@ -130,7 +134,6 @@
 #include "render/gl/bootstrap.h"
 #include "render/gl/camera.h"
 #include "render/ground/biome_renderer.h"
-#include "render/ground/bridge_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
@@ -138,9 +141,6 @@
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
 #include "render/ground/rain_renderer.h"
-#include "render/ground/river_renderer.h"
-#include "render/ground/riverbank_renderer.h"
-#include "render/ground/road_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/scene_renderer.h"
@@ -325,21 +325,12 @@ GameEngine::GameEngine(QObject *parent)
   auto rendering = RendererBootstrap::initialize_rendering();
   m_renderer = std::move(rendering.renderer);
   m_camera = std::move(rendering.camera);
-  m_ground = std::move(rendering.ground);
-  m_terrain = std::move(rendering.terrain);
-  m_biome = std::move(rendering.biome);
-  m_river = std::move(rendering.river);
-  m_road = std::move(rendering.road);
-  m_riverbank = std::move(rendering.riverbank);
-  m_bridge = std::move(rendering.bridge);
+  m_terrain_scene = std::move(rendering.terrain_scene);
+  m_surface = std::move(rendering.surface);
+  m_features = std::move(rendering.features);
+  m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
-  m_stone = std::move(rendering.stone);
-  m_plant = std::move(rendering.plant);
-  m_pine = std::move(rendering.pine);
-  m_olive = std::move(rendering.olive);
-  m_firecamp = std::move(rendering.firecamp);
   m_rain = std::move(rendering.rain);
-  m_passes = std::move(rendering.passes);
 
   RendererBootstrap::initialize_world_systems(*m_world);
 
@@ -561,21 +552,12 @@ void GameEngine::cleanup_opengl_resources() {
     qInfo() << "Renderer shut down";
   }
 
-  m_passes.clear();
+  m_terrain_scene.reset();
 
-  m_ground.reset();
-  m_terrain.reset();
-  m_biome.reset();
-  m_river.reset();
-  m_road.reset();
-  m_riverbank.reset();
-  m_bridge.reset();
+  m_surface.reset();
+  m_features.reset();
+  m_scatter.reset();
   m_fog.reset();
-  m_stone.reset();
-  m_plant.reset();
-  m_pine.reset();
-  m_olive.reset();
-  m_firecamp.reset();
   m_rain.reset();
   m_rainManager.reset();
 
@@ -904,7 +886,8 @@ void GameEngine::select_unit_by_id(int unitId) {
 void GameEngine::ensure_initialized() {
   QString error;
   Game::Map::WorldBootstrap::ensure_initialized(
-      m_runtime.initialized, *m_renderer, *m_camera, m_ground.get(), &error);
+      m_runtime.initialized, *m_renderer, *m_camera,
+      m_surface ? m_surface->ground() : nullptr, &error);
   if (!error.isEmpty()) {
     set_error(error);
   }
@@ -1070,12 +1053,8 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
 
   m_renderer->begin_frame();
 
-  if (auto *res = m_renderer->resources()) {
-    for (auto *pass : m_passes) {
-      if (pass != nullptr) {
-        pass->submit(*m_renderer, res);
-      }
-    }
+  if (m_terrain_scene) {
+    m_terrain_scene->submit(*m_renderer, m_renderer->resources());
   }
 
   if (m_renderer && m_hoverTracker) {
@@ -1163,30 +1142,10 @@ void GameEngine::update_loading_overlay() {
                                  (elapsed_ms >= k_loading_overlay_max_wait_ms);
 
   QStringList pending_components;
-  const bool biome_ready = !m_biome || m_biome->is_gpu_ready();
-  const bool pine_ready = !m_pine || m_pine->is_gpu_ready();
-  const bool olive_ready = !m_olive || m_olive->is_gpu_ready();
-  const bool plant_ready = !m_plant || m_plant->is_gpu_ready();
-  const bool stone_ready = !m_stone || m_stone->is_gpu_ready();
-  const bool firecamp_ready = !m_firecamp || m_firecamp->is_gpu_ready();
+  const bool scatter_ready = !m_scatter || m_scatter->is_gpu_ready();
 
-  if (!biome_ready) {
-    pending_components << QStringLiteral("biome");
-  }
-  if (!pine_ready) {
-    pending_components << QStringLiteral("pine");
-  }
-  if (!olive_ready) {
-    pending_components << QStringLiteral("olive");
-  }
-  if (!plant_ready) {
-    pending_components << QStringLiteral("plant");
-  }
-  if (!stone_ready) {
-    pending_components << QStringLiteral("stone");
-  }
-  if (!firecamp_ready) {
-    pending_components << QStringLiteral("firecamp");
+  if (!scatter_ready) {
+    pending_components << QStringLiteral("terrain scatter");
   }
 
   const bool biome_gpu_ready = pending_components.isEmpty();
@@ -1789,10 +1748,14 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
 
   LevelOrchestrator orchestrator;
   LevelOrchestrator::RendererRefs renderers{
-      m_renderer.get(), m_camera.get(), m_ground.get(),   m_terrain.get(),
-      m_biome.get(),    m_river.get(),  m_road.get(),     m_riverbank.get(),
-      m_bridge.get(),   m_fog.get(),    m_stone.get(),    m_plant.get(),
-      m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
+      m_renderer.get(),
+      m_camera.get(),
+      m_surface ? m_surface->ground() : nullptr,
+      m_surface ? m_surface->terrain() : nullptr,
+      m_features.get(),
+      m_scatter.get(),
+      m_fog.get(),
+      m_rain.get()};
 
   auto visibility_ready = [this]() {
     m_runtime.visibility_version =
@@ -2580,10 +2543,14 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   apply_runtime_snapshot(runtime_snap);
 
   GameStateRestorer::RendererRefs renderers{
-      m_renderer.get(), m_camera.get(), m_ground.get(),   m_terrain.get(),
-      m_biome.get(),    m_river.get(),  m_road.get(),     m_riverbank.get(),
-      m_bridge.get(),   m_fog.get(),    m_stone.get(),    m_plant.get(),
-      m_pine.get(),     m_olive.get(),  m_firecamp.get(), m_rain.get()};
+      m_renderer.get(),
+      m_camera.get(),
+      m_surface ? m_surface->ground() : nullptr,
+      m_surface ? m_surface->terrain() : nullptr,
+      m_features.get(),
+      m_scatter.get(),
+      m_fog.get(),
+      m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
       m_viewport);

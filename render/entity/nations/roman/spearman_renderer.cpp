@@ -1,21 +1,26 @@
 #include "spearman_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../../game/systems/nation_id.h"
+#include "../../../creature/archetype_registry.h"
+#include "../../../creature/pipeline/unit_visual_spec.h"
+#include "../../../equipment/armor/roman_armor.h"
+#include "../../../equipment/armor/roman_greaves.h"
+#include "../../../equipment/armor/roman_shoulder_cover.h"
+#include "../../../equipment/armor/shoulder_cover_archetype.h"
 #include "../../../equipment/equipment_registry.h"
+#include "../../../equipment/helmets/roman_heavy_helmet.h"
 #include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
-#include "../../../gl/backend.h"
 #include "../../../gl/primitives.h"
-#include "../../../gl/shader.h"
 #include "../../../humanoid/humanoid_math.h"
+#include "../../../humanoid/humanoid_renderer_base.h"
+#include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/humanoid_specs.h"
-#include "../../../humanoid/pose_controller.h"
-#include "../../../humanoid/rig.h"
+#include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/spear_pose_utils.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../palette.h"
-#include "../../../scene_renderer.h"
 #include "../../../submitter.h"
 #include "../../registry.h"
 #include "../../renderer_constants.h"
@@ -34,6 +39,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "../../../equipment/equipment_submit.h"
 namespace Render::GL::Roman {
 
 namespace {
@@ -44,26 +50,6 @@ constexpr float k_spearman_style_mix_weight = 0.4F;
 
 constexpr float k_kneel_depth_multiplier = 0.875F;
 constexpr float k_lean_amount_multiplier = 0.67F;
-
-struct SpearmanShaderResourcePaths {
-  QString vertex;
-  QString fragment;
-};
-
-auto lookup_spearman_shader_resources(const QString &shader_key)
-    -> std::optional<SpearmanShaderResourcePaths> {
-  if (shader_key == QStringLiteral("spearman_carthage")) {
-    return SpearmanShaderResourcePaths{
-        QStringLiteral(":/assets/shaders/spearman_carthage.vert"),
-        QStringLiteral(":/assets/shaders/spearman_carthage.frag")};
-  }
-  if (shader_key == QStringLiteral("spearman_roman_republic")) {
-    return SpearmanShaderResourcePaths{
-        QStringLiteral(":/assets/shaders/spearman_roman_republic.vert"),
-        QStringLiteral(":/assets/shaders/spearman_roman_republic.frag")};
-  }
-  return std::nullopt;
-}
 
 auto spearman_style_registry()
     -> std::unordered_map<std::string, SpearmanStyleConfig> & {
@@ -106,7 +92,7 @@ struct SpearmanExtras {
 
 class SpearmanRenderer : public HumanoidRendererBase {
 public:
-  SpearmanRenderer() { cache_equipment(); }
+  SpearmanRenderer() = default;
 
   auto get_proportion_scaling() const -> QVector3D override {
 
@@ -115,10 +101,171 @@ public:
 
   auto get_torso_scale() const -> float override { return 0.64F; }
 
-private:
-  mutable std::unordered_map<uint32_t, SpearmanExtras> m_extrasCache;
-
 public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    using namespace Render::Creature::Pipeline;
+    static auto &reg = Render::GL::EquipmentRegistry::instance();
+    (void)reg;
+
+    ensure_spearman_styles_registered();
+    static const SpearmanStyleConfig captured_style = []() {
+      auto &styles = spearman_style_registry();
+      auto it = styles.find("roman_republic");
+      if (it != styles.end()) {
+        return it->second;
+      }
+      auto it_default = styles.find(std::string(k_spearman_default_style_key));
+      if (it_default != styles.end()) {
+        return it_default->second;
+      }
+      return SpearmanStyleConfig{};
+    }();
+
+    static const UnitVisualSpec spec = []() {
+      static const auto k_head_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
+      static const auto k_foot_l_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::FootL);
+      static const auto k_foot_r_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::FootR);
+      static const auto k_shoulder_l_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderL);
+      static const auto k_shoulder_r_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderR);
+      static const auto k_helmet_base_role_byte =
+          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_greaves_base_role_byte = static_cast<std::uint8_t>(
+          k_helmet_base_role_byte + Render::GL::kRomanHeavyHelmetRoleCount);
+      static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(
+          k_greaves_base_role_byte + Render::GL::kRomanGreavesRoleCount);
+      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
+          k_shoulder_base_role_byte + Render::GL::kRomanShoulderCoverRoleCount);
+      static const auto k_spear_base_role_byte = static_cast<std::uint8_t>(
+          k_armor_base_role_byte + Render::GL::kRomanLightArmorRoleCount);
+      static const auto k_chest_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
+      static const auto k_hand_r_bone =
+          static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::HandR);
+      static const auto k_head_bind_matrix =
+          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
+              Render::Humanoid::HumanoidBone::Head)];
+      auto frame_to_matrix =
+          [](const Render::GL::AttachmentFrame &f) -> QMatrix4x4 {
+        QMatrix4x4 m;
+        m.setColumn(0, QVector4D(f.right, 0.0F));
+        m.setColumn(1, QVector4D(f.up, 0.0F));
+        m.setColumn(2, QVector4D(f.forward, 0.0F));
+        m.setColumn(3, QVector4D(f.origin, 1.0F));
+        return m;
+      };
+      const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
+      static const auto k_hand_r_bind_matrix =
+          Render::Humanoid::humanoid_bind_palette()[static_cast<std::size_t>(
+              Render::Humanoid::HumanoidBone::HandR)];
+      static const QVector3D k_hand_r_bind_right = bind_frames.hand_r.right;
+      static const auto k_shin_l_bind_matrix =
+          frame_to_matrix(bind_frames.shin_l);
+      static const auto k_shin_r_bind_matrix =
+          frame_to_matrix(bind_frames.shin_r);
+      static const auto k_shoulder_l_bind_matrix =
+          Render::GL::make_shoulder_cover_transform(
+              QMatrix4x4{}, bind_frames.shoulder_l.origin,
+              -bind_frames.torso.right, bind_frames.torso.up);
+      static const auto k_shoulder_r_bind_matrix =
+          Render::GL::make_shoulder_cover_transform(
+              QMatrix4x4{}, bind_frames.shoulder_r.origin,
+              bind_frames.torso.right, bind_frames.torso.up);
+      static const Render::Creature::StaticAttachmentSpec k_helmet_spec =
+          Render::GL::roman_heavy_helmet_make_static_attachment(
+              k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_greaves_l_spec =
+          Render::GL::roman_greaves_make_static_attachment(
+              k_foot_l_bone, k_greaves_base_role_byte, k_shin_l_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_greaves_r_spec =
+          Render::GL::roman_greaves_make_static_attachment(
+              k_foot_r_bone, k_greaves_base_role_byte, k_shin_r_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_shoulder_l_spec =
+          Render::GL::roman_shoulder_cover_make_static_attachment(
+              k_shoulder_l_bone, k_shoulder_base_role_byte,
+              k_shoulder_l_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_shoulder_r_spec =
+          Render::GL::roman_shoulder_cover_make_static_attachment(
+              k_shoulder_r_bone, k_shoulder_base_role_byte,
+              k_shoulder_r_bind_matrix);
+      static const Render::Creature::StaticAttachmentSpec k_armor_spec =
+          Render::GL::roman_light_armor_make_static_attachment(
+              k_chest_bone, k_armor_base_role_byte);
+      static const SpearRenderConfig k_canonical_spear_cfg = []() {
+        SpearRenderConfig cfg;
+        cfg.shaft_color =
+            QVector3D(0.5F, 0.3F, 0.2F) * QVector3D(0.85F, 0.75F, 0.65F);
+        cfg.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
+        cfg.spear_length = 1.15F;
+        cfg.shaft_radius = 0.018F;
+        cfg.spearhead_length = 0.16F;
+        return cfg;
+      }();
+      static const std::array<Render::Creature::StaticAttachmentSpec, 4>
+          k_spear_specs = Render::GL::spear_make_static_attachments(
+              k_canonical_spear_cfg, k_spear_base_role_byte);
+      static const std::array<Render::Creature::StaticAttachmentSpec, 10>
+          k_attachments{k_helmet_spec,     k_greaves_l_spec,  k_greaves_r_spec,
+                        k_shoulder_l_spec, k_shoulder_r_spec, k_armor_spec,
+                        k_spear_specs[0],  k_spear_specs[1],  k_spear_specs[2],
+                        k_spear_specs[3]};
+      static const auto k_archetype =
+          Render::Creature::ArchetypeRegistry::instance()
+              .register_unit_archetype(
+                  "troops/roman/spearman", CreatureKind::Humanoid,
+                  std::span<const Render::Creature::StaticAttachmentSpec>(
+                      k_attachments.data(), k_attachments.size()),
+                  +[](const void *variant_void, QVector3D *out,
+                      std::uint32_t base_count,
+                      std::size_t max_count) -> std::uint32_t {
+                    if (variant_void == nullptr || max_count <= base_count) {
+                      return base_count;
+                    }
+                    const auto &v =
+                        *static_cast<const HumanoidVariant *>(variant_void);
+                    auto count = base_count;
+                    count += Render::GL::roman_heavy_helmet_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::roman_greaves_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::roman_shoulder_cover_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::roman_light_armor_fill_role_colors(
+                        v.palette, out + count, max_count - count);
+                    if (max_count <= count) {
+                      return count;
+                    }
+                    count += Render::GL::spear_fill_role_colors(
+                        v.palette, k_canonical_spear_cfg, out + count,
+                        max_count - count);
+                    return count;
+                  });
+
+      UnitVisualSpec s{};
+      s.kind = CreatureKind::Humanoid;
+      s.debug_name = "troops/roman/spearman";
+      s.scaling = ProportionScaling{0.90F, 0.80F, 0.76F};
+      s.owned_legacy_slots = LegacySlotMask::AllHumanoid;
+      s.archetype_id = k_archetype;
+      return s;
+    }();
+    return spec;
+  }
+
   void get_variant(const DrawContext &ctx, uint32_t seed,
                    HumanoidVariant &v) const override {
     QVector3D const team_tint = resolve_team_tint(ctx);
@@ -127,158 +274,7 @@ public:
     apply_palette_overrides(style, team_tint, v);
   }
 
-  void customize_pose(const DrawContext &,
-                      const HumanoidAnimationContext &anim_ctx, uint32_t seed,
-                      HumanoidPose &pose) const override {
-    using HP = HumanProportions;
-
-    const AnimationInputs &anim = anim_ctx.inputs;
-    HumanoidPoseController controller(pose, anim_ctx);
-
-    float const arm_height_jitter = (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.03F;
-    float const arm_asymmetry = (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
-
-    if (anim.is_in_hold_mode || anim.is_exiting_hold) {
-      float const hold_t =
-          anim.is_in_hold_mode ? 1.0F : (1.0F - anim.hold_exit_progress);
-
-      if (anim.is_exiting_hold) {
-        controller.kneel_transition(anim.hold_exit_progress, true);
-      } else {
-        controller.kneel(hold_t * k_kneel_depth_multiplier);
-      }
-      controller.lean(QVector3D(0.0F, 0.0F, 1.0F),
-                      hold_t * k_lean_amount_multiplier);
-
-      if (anim.is_attacking && anim.is_melee && anim.is_in_hold_mode) {
-        float const attack_phase = std::fmod(
-            anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-        controller.spear_thrust_from_hold(attack_phase,
-                                          hold_t * k_kneel_depth_multiplier);
-      } else {
-
-        float const lowered_shoulder_y = controller.get_shoulder_y(true);
-        float const pelvis_y = controller.get_pelvis_y();
-
-        QVector3D const hand_r_pos(0.18F * (1.0F - hold_t) + 0.22F * hold_t,
-                                   lowered_shoulder_y * (1.0F - hold_t) +
-                                       (pelvis_y + 0.05F) * hold_t,
-                                   0.15F * (1.0F - hold_t) + 0.20F * hold_t);
-
-        float const offhand_along = lerp(-0.06F, -0.02F, hold_t);
-        float const offhand_drop = 0.10F + 0.02F * hold_t;
-        QVector3D const hand_l_pos =
-            compute_offhand_spear_grip(pose, anim_ctx, hand_r_pos, false,
-                                       offhand_along, offhand_drop, -0.08F);
-
-        controller.place_hand_at(false, hand_r_pos);
-        controller.place_hand_at(true, hand_l_pos);
-      }
-
-    } else if (anim.is_attacking && anim.is_melee && !anim.is_in_hold_mode) {
-      float const attack_phase = std::fmod(
-          anim_ctx.attack_phase * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);
-      controller.spear_thrust_variant(attack_phase, anim.attack_variant);
-    } else {
-      QVector3D const idle_hand_r(0.28F + arm_asymmetry,
-                                  HP::SHOULDER_Y - 0.02F + arm_height_jitter,
-                                  0.30F);
-      QVector3D const idle_hand_l = compute_offhand_spear_grip(
-          pose, anim_ctx, idle_hand_r, false, -0.04F, 0.10F, -0.08F);
-
-      controller.place_hand_at(false, idle_hand_r);
-      controller.place_hand_at(true, idle_hand_l);
-    }
-  }
-
-  void add_attachments(const DrawContext &ctx, const HumanoidVariant &v,
-                       const HumanoidPose &pose,
-                       const HumanoidAnimationContext &anim_ctx,
-                       ISubmitter &out) const override {
-    const AnimationInputs &anim = anim_ctx.inputs;
-    uint32_t const seed = reinterpret_cast<uintptr_t>(ctx.entity) & 0xFFFFFFFFU;
-    auto const &style = resolve_style(ctx);
-    QVector3D const team_tint = resolve_team_tint(ctx);
-
-    SpearmanExtras extras;
-    auto it = m_extrasCache.find(seed);
-    if (it != m_extrasCache.end()) {
-      extras = it->second;
-    } else {
-      extras = computeSpearmanExtras(seed, v);
-      apply_extras_overrides(style, team_tint, v, extras);
-      m_extrasCache[seed] = extras;
-
-      if (m_extrasCache.size() > MAX_EXTRAS_CACHE_SIZE) {
-        m_extrasCache.clear();
-      }
-    }
-    apply_extras_overrides(style, team_tint, v, extras);
-
-    bool const is_attacking = anim.is_attacking && anim.is_melee;
-
-    if (m_cached_spear) {
-      SpearRenderConfig spear_config;
-      spear_config.shaft_color = extras.spearShaftColor;
-      spear_config.spearhead_color = extras.spearhead_color;
-      spear_config.spear_length = extras.spear_length;
-      spear_config.shaft_radius = extras.spear_shaft_radius;
-      spear_config.spearhead_length = extras.spearhead_length;
-
-      auto *spear_renderer =
-          dynamic_cast<SpearRenderer *>(m_cached_spear.get());
-      if (spear_renderer) {
-        spear_renderer->set_config(spear_config);
-      }
-      m_cached_spear->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_helmet(const DrawContext &ctx, const HumanoidVariant &v,
-                   const HumanoidPose &pose, ISubmitter &out) const override {
-
-    if (m_cached_helmet) {
-      HumanoidAnimationContext anim_ctx{};
-      m_cached_helmet->render(ctx, pose.body_frames, v.palette, anim_ctx, out);
-    }
-  }
-
-  void draw_armor(const DrawContext &ctx, const HumanoidVariant &v,
-                  const HumanoidPose &pose,
-                  const HumanoidAnimationContext &anim,
-                  ISubmitter &out) const override {
-    if (m_cached_armor) {
-      m_cached_armor->render(ctx, pose.body_frames, v.palette, anim, out);
-    }
-
-    if (m_cached_shoulder_cover) {
-      m_cached_shoulder_cover->render(ctx, pose.body_frames, v.palette, anim,
-                                      out);
-    }
-
-    if (m_cached_greaves) {
-      m_cached_greaves->render(ctx, pose.body_frames, v.palette, anim, out);
-    }
-  }
-
 private:
-  void cache_equipment() {
-    auto &registry = EquipmentRegistry::instance();
-    m_cached_spear = registry.get(EquipmentCategory::Weapon, "spear");
-    m_cached_helmet = registry.get(EquipmentCategory::Helmet, "roman_heavy");
-    m_cached_armor =
-        registry.get(EquipmentCategory::Armor, "roman_light_armor");
-    m_cached_shoulder_cover =
-        registry.get(EquipmentCategory::Armor, "roman_shoulder_cover");
-    m_cached_greaves = registry.get(EquipmentCategory::Armor, "roman_greaves");
-  }
-
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_spear;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_helmet;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_armor;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_shoulder_cover;
-  mutable std::shared_ptr<IEquipmentRenderer> m_cached_greaves;
-
   static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
       -> SpearmanExtras {
     SpearmanExtras e;
@@ -316,15 +312,6 @@ private:
     }
     static const SpearmanStyleConfig k_empty{};
     return k_empty;
-  }
-
-public:
-  auto resolve_shader_key(const DrawContext &ctx) const -> QString {
-    const SpearmanStyleConfig &style = resolve_style(ctx);
-    if (!style.shader_id.empty()) {
-      return QString::fromStdString(style.shader_id);
-    }
-    return QStringLiteral("spearman");
   }
 
 private:
@@ -371,40 +358,11 @@ private:
 void register_spearman_renderer(Render::GL::EntityRendererRegistry &registry) {
   ensure_spearman_styles_registered();
   static SpearmanRenderer const renderer;
-  registry.register_renderer("troops/roman/spearman", [](const DrawContext &ctx,
-                                                         ISubmitter &out) {
-    static SpearmanRenderer const static_renderer;
-    Shader *spearman_shader = nullptr;
-    auto acquireShader = [&](const QString &shader_key) -> Shader * {
-      if (ctx.backend == nullptr || shader_key.isEmpty()) {
-        return nullptr;
-      }
-      Shader *shader = ctx.backend->shader(shader_key);
-      if (shader != nullptr) {
-        return shader;
-      }
-      if (auto resources = lookup_spearman_shader_resources(shader_key)) {
-        shader = ctx.backend->get_or_load_shader(shader_key, resources->vertex,
-                                                 resources->fragment);
-      }
-      return shader;
-    };
-    if (ctx.backend != nullptr) {
-      QString shader_key = static_renderer.resolve_shader_key(ctx);
-      spearman_shader = acquireShader(shader_key);
-      if (spearman_shader == nullptr) {
-        spearman_shader = acquireShader(QStringLiteral("spearman"));
-      }
-    }
-    auto *scene_renderer = dynamic_cast<Renderer *>(&out);
-    if ((scene_renderer != nullptr) && (spearman_shader != nullptr)) {
-      scene_renderer->set_current_shader(spearman_shader);
-    }
-    static_renderer.render(ctx, out);
-    if (scene_renderer != nullptr) {
-      scene_renderer->set_current_shader(nullptr);
-    }
-  });
+  registry.register_renderer("troops/roman/spearman",
+                             [](const DrawContext &ctx, ISubmitter &out) {
+                               static SpearmanRenderer const static_renderer;
+                               static_renderer.render(ctx, out);
+                             });
 }
 
 } // namespace Render::GL::Roman
