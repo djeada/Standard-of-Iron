@@ -2,11 +2,16 @@
 
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
+#include "render/creature/snapshot_mesh_asset.h"
 
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_gait.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/mounted_knight_pose.h"
+#include "render/creature/part_graph.h"
+#include "render/creature/render_request.h"
+#include "render/rigged_mesh_bake.h"
+#include "render/snapshot_mesh_bake.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_gait.h"
@@ -34,6 +39,7 @@
 namespace {
 
 namespace bpat = Render::Creature::Bpat;
+namespace snapshot = Render::Creature::Snapshot;
 
 enum class BakerAttackType : std::uint8_t { None, Sword, Spear, Bow };
 enum class BakerRidingType : std::uint8_t {
@@ -396,6 +402,54 @@ bool bake_horse(const std::filesystem::path &out_dir) {
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << kHorseClips.size() << " clips, "
             << Render::Horse::kHorseBoneCount << " bones)\n";
+
+  Render::Creature::BakeInput mesh_input{};
+  mesh_input.graph = &Render::Creature::part_graph_for(
+      Render::Horse::horse_creature_spec(),
+      Render::Creature::CreatureLOD::Minimal);
+  mesh_input.bind_pose = Render::Horse::horse_bind_palette();
+  auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
+  snapshot::SnapshotMeshWriter snapshot_writer(
+      bpat::kSpeciesHorse, Render::Creature::CreatureLOD::Minimal,
+      static_cast<std::uint32_t>(source.vertices.size()), source.indices);
+  for (auto const &clip : kHorseClips) {
+    snapshot::ClipDescriptor desc{};
+    desc.name = clip.name;
+    desc.frame_count = clip.frames;
+    snapshot_writer.add_clip(std::move(desc));
+
+    std::vector<Render::GL::RiggedVertex> clip_vertices;
+    clip_vertices.reserve(static_cast<std::size_t>(clip.frames) *
+                          source.vertices.size());
+    for (std::uint32_t f = 0; f < clip.frames; ++f) {
+      std::vector<QMatrix4x4> frame_palette;
+      frame_palette.reserve(Render::Horse::kHorseBoneCount);
+      bake_horse_clip_frame(clip, f, dims, frame_palette);
+      auto baked =
+          Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
+      clip_vertices.insert(clip_vertices.end(), baked.begin(), baked.end());
+    }
+    snapshot_writer.append_clip_vertices(clip_vertices);
+  }
+
+  std::filesystem::path const snapshot_out_path = out_dir / "horse_minimal.bpsm";
+  std::ofstream snapshot_out(snapshot_out_path,
+                             std::ios::binary | std::ios::trunc);
+  if (!snapshot_out) {
+    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path
+              << " for writing\n";
+    return false;
+  }
+  if (!snapshot_writer.write(snapshot_out)) {
+    std::cerr << "[bpat_baker] write failed for " << snapshot_out_path << "\n";
+    return false;
+  }
+  snapshot_out.flush();
+  std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
+            << source.vertices.size() << " verts/frame, "
+            << source.indices.size() << " indices, "
+            << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
+            << " lod)\n";
   return true;
 }
 
@@ -483,6 +537,55 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << kElephantClips.size() << " clips, "
             << Render::Elephant::kElephantBoneCount << " bones)\n";
+
+  Render::Creature::BakeInput mesh_input{};
+  mesh_input.graph = &Render::Creature::part_graph_for(
+      Render::Elephant::elephant_creature_spec(),
+      Render::Creature::CreatureLOD::Minimal);
+  mesh_input.bind_pose = Render::Elephant::elephant_bind_palette();
+  auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
+  snapshot::SnapshotMeshWriter snapshot_writer(
+      bpat::kSpeciesElephant, Render::Creature::CreatureLOD::Minimal,
+      static_cast<std::uint32_t>(source.vertices.size()), source.indices);
+  for (auto const &clip : kElephantClips) {
+    snapshot::ClipDescriptor desc{};
+    desc.name = clip.name;
+    desc.frame_count = clip.frames;
+    snapshot_writer.add_clip(std::move(desc));
+
+    std::vector<Render::GL::RiggedVertex> clip_vertices;
+    clip_vertices.reserve(static_cast<std::size_t>(clip.frames) *
+                          source.vertices.size());
+    for (std::uint32_t f = 0; f < clip.frames; ++f) {
+      std::vector<QMatrix4x4> frame_palette;
+      frame_palette.reserve(Render::Elephant::kElephantBoneCount);
+      bake_elephant_clip_frame(clip, f, dims, frame_palette);
+      auto baked =
+          Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
+      clip_vertices.insert(clip_vertices.end(), baked.begin(), baked.end());
+    }
+    snapshot_writer.append_clip_vertices(clip_vertices);
+  }
+
+  std::filesystem::path const snapshot_out_path =
+      out_dir / "elephant_minimal.bpsm";
+  std::ofstream snapshot_out(snapshot_out_path,
+                             std::ios::binary | std::ios::trunc);
+  if (!snapshot_out) {
+    std::cerr << "[bpat_baker] cannot open " << snapshot_out_path
+              << " for writing\n";
+    return false;
+  }
+  if (!snapshot_writer.write(snapshot_out)) {
+    std::cerr << "[bpat_baker] write failed for " << snapshot_out_path << "\n";
+    return false;
+  }
+  snapshot_out.flush();
+  std::cout << "[bpat_baker] wrote " << snapshot_out_path << " ("
+            << source.vertices.size() << " verts/frame, "
+            << source.indices.size() << " indices, "
+            << static_cast<int>(Render::Creature::CreatureLOD::Minimal)
+            << " lod)\n";
   return true;
 }
 

@@ -74,6 +74,7 @@ add_executable(standard_of_iron_tests
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/selection_ring_mesh_test.cpp
+    render/creature/snapshot_mesh_asset_test.cpp
     render/creature/snapshot_mesh_cache_test.cpp
     render/creature/static_attachment_bake_test.cpp
     render/creature/per_unit_archetype_test.cpp

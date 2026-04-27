@@ -152,6 +152,8 @@ add_library(render_gl STATIC
     creature/bpat/bpat_writer.cpp
     creature/bpat/bpat_reader.cpp
     creature/bpat/bpat_registry.cpp
+    creature/snapshot_mesh_asset.cpp
+    creature/snapshot_mesh_registry.cpp
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
@@ -169,6 +171,7 @@ add_library(render_gl STATIC
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp
     snapshot_mesh_cache.cpp
+    snapshot_mesh_bake.cpp
     static_attachment_spec.cpp
     bone_palette_arena.cpp
     unit_render_cache.cpp
