@@ -32,7 +32,7 @@ public:
     if (try_consume_budget(budget.max_full_detail_units)) {
       return GL::HumanoidLOD::Full;
     }
-    return GL::HumanoidLOD::Reduced;
+    return GL::HumanoidLOD::Minimal;
   }
 
   [[nodiscard]] auto
@@ -49,7 +49,7 @@ public:
     if (try_consume_budget(budget.max_full_detail_units)) {
       return GL::HorseLOD::Full;
     }
-    return GL::HorseLOD::Reduced;
+    return GL::HorseLOD::Minimal;
   }
 
   [[nodiscard]] auto full_detail_count() const noexcept -> int {

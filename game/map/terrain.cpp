@@ -12,7 +12,7 @@ constexpr float k_deg_to_rad = std::numbers::pi_v<float> / 180.0F;
 
 constexpr int k_hill_ramp_extra_steps = 18;
 
-constexpr float k_hill_ramp_steepness_exponent = 0.90F;
+constexpr float k_hill_ramp_steepness_exponent = 1.05F;
 
 constexpr float k_entry_ramp_width = 3.0F;
 
@@ -34,6 +34,12 @@ constexpr float k_entry_mid_depth_strength = 0.34F;
 constexpr float k_entry_toe_height_fraction = 0.01F;
 
 constexpr float k_walkable_width_threshold = 0.38F;
+
+constexpr float k_entry_lower_ramp_delay = 0.08F;
+constexpr float k_entry_mouth_flare_strength = 0.22F;
+constexpr float k_entry_mouth_soften_strength = 0.06F;
+constexpr float k_entry_floor_flatten_strength = 0.04F;
+constexpr float k_entry_shoulder_raise_strength = 0.06F;
 
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
@@ -322,6 +328,9 @@ void TerrainHeightMap::buildFromFeatures(
           t = std::clamp(t, 0.0F, 1.0F);
           return t * t * (3.0F - 2.0F * t);
         };
+        auto smooth_range = [&](float a, float b, float x) {
+          return smoothstep((x - a) / std::max(1e-4F, b - a));
+        };
         auto smootherstep = [](float t) {
           t = std::clamp(t, 0.0F, 1.0F);
           return t * t * t * (t * (t * 6.0F - 15.0F) + 10.0F);
@@ -400,8 +409,14 @@ void TerrainHeightMap::buildFromFeatures(
                   ? (float(ramp_step) / float(total_ramp_steps - 1))
                   : 1.0F;
 
-          float const s = smootherstep(ramp_progress);
+          float const delayed_progress =
+              std::clamp((ramp_progress - k_entry_lower_ramp_delay) /
+                             std::max(1e-4F, 1.0F - k_entry_lower_ramp_delay),
+                         0.0F, 1.0F);
+          float const s = smootherstep(delayed_progress);
           float const mid = 4.0F * ramp_progress * (1.0F - ramp_progress);
+          float const lower_ramp = 1.0F - smooth_range(0.58F, 0.95F, s);
+          float const mouth = 1.0F - smooth_range(0.18F, 0.58F, s);
 
           float const height_base = std::pow(s, k_hill_ramp_steepness_exponent);
           float const height_frac =
@@ -417,7 +432,9 @@ void TerrainHeightMap::buildFromFeatures(
 
           float const width_scale = (1.0F - s) * k_entry_base_width_scale +
                                     s * k_entry_top_width_scale;
-          float tapered_width = std::max(1.0F, entry_width * width_scale);
+          float tapered_width =
+              std::max(1.0F, entry_width * width_scale *
+                                 (1.0F + k_entry_mouth_flare_strength * mouth));
 
           if (is_outward && outward_steps > 0) {
             float const outward_t =
@@ -460,11 +477,27 @@ void TerrainHeightMap::buildFromFeatures(
               float const existing_height = m_heights[ramp_idx];
 
               float const bowl = std::pow(edge_t, k_entry_bowl_exponent);
-              float const target_height =
+              float target_height =
                   (1.0F - bowl) * center_ramp_height + bowl * existing_height;
+              float const floor_core = smooth_range(0.22F, 0.82F, width_factor);
+              float const shoulder_band =
+                  smooth_range(0.16F, 0.46F, width_factor) *
+                  (1.0F - smooth_range(0.60F, 0.90F, width_factor));
+              float const mouth_soften = feature.height *
+                                         k_entry_mouth_soften_strength *
+                                         floor_core * mouth * (1.0F - s);
+              float const floor_flatten =
+                  feature.height * k_entry_floor_flatten_strength * floor_core *
+                  (0.35F + 0.65F * lower_ramp);
+              float const shoulder_raise =
+                  feature.height * k_entry_shoulder_raise_strength *
+                  shoulder_band * (0.25F + 0.75F * lower_ramp);
+              target_height =
+                  std::max(0.0F, target_height - mouth_soften - floor_flatten +
+                                     shoulder_raise);
 
               float const along =
-                  smootherstep(std::clamp((s - 0.20F) / 0.80F, 0.0F, 1.0F));
+                  smootherstep(std::clamp((s - 0.28F) / 0.72F, 0.0F, 1.0F));
               float const carved = std::min(existing_height, target_height);
               float const joined = std::max(existing_height, target_height);
               m_heights[ramp_idx] = (1.0F - along) * carved + along * joined;

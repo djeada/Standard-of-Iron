@@ -29,10 +29,6 @@ namespace Render::Creature::Pipeline {
 
 namespace {
 
-inline constexpr std::size_t kCreatureRolePaletteSize =
-    Render::Creature::CreatureRenderRequest::kRoleColorCapacity;
-using RoleColorArray = std::array<QVector3D, kCreatureRolePaletteSize>;
-
 auto resolve_renderer(Render::GL::ISubmitter &out) noexcept
     -> Render::GL::Renderer * {
   if (auto *renderer = dynamic_cast<Render::GL::Renderer *>(&out)) {
@@ -291,70 +287,7 @@ auto resolve_blob_palette(std::uint32_t species_id, BpatPlayback playback,
   return blob->frame_palette_view(out_global_frame);
 }
 
-auto row_variant_ptr(const PreparedCreatureRenderRow &row) noexcept -> const
-    void * {
-  switch (row.spec.kind) {
-  case CreatureKind::Humanoid:
-    return &row.humanoid_variant;
-  case CreatureKind::Horse:
-    return &row.horse_variant;
-  case CreatureKind::Elephant:
-    return &row.elephant_variant;
-  case CreatureKind::Mounted:
-    return nullptr;
-  }
-  return nullptr;
-}
-
 } // namespace
-
-void submit_row_body(const PreparedCreatureRenderRow &row,
-                     Render::GL::ISubmitter &out, SubmitStats &stats) noexcept {
-  if (row.pass == RenderPassIntent::Shadow) {
-    return;
-  }
-  ++stats.entities_submitted;
-  bump_lod_counters(row.lod, stats);
-  if (row.lod == CreatureLOD::Billboard) {
-    return;
-  }
-
-  const auto *asset =
-      (row.spec.creature_asset_id != kInvalidCreatureAsset)
-          ? CreatureAssetRegistry::instance().get(row.spec.creature_asset_id)
-          : CreatureAssetRegistry::instance().resolve(row.spec);
-  if (asset == nullptr) {
-    return;
-  }
-
-  RoleColorArray fallback_roles{};
-  std::span<const QVector3D> role_colors{};
-  if (asset->fill_role_colors != nullptr) {
-    const void *variant = row_variant_ptr(row);
-    if (variant != nullptr) {
-      const auto count = asset->fill_role_colors(variant, fallback_roles.data(),
-                                                 fallback_roles.size());
-      role_colors = std::span<const QVector3D>(fallback_roles.data(), count);
-    }
-  }
-
-  const auto species_id = asset->bpat_species_id;
-  if (species_id == 0xFFFFFFFFu) {
-    return;
-  }
-
-  const Render::Creature::Bpat::BpatBlob *blob = nullptr;
-  std::uint32_t global_frame = 0U;
-  auto palette =
-      resolve_blob_palette(species_id, row.bpat_playback, blob, global_frame);
-  if (blob == nullptr || palette.empty()) {
-    return;
-  }
-
-  submit_rigged_creature(*asset, row.lod, role_colors, 0,
-                         row.humanoid_variant.palette.cloth,
-                         row.world_from_unit, *blob, global_frame, out);
-}
 
 auto CreaturePipeline::submit_requests(
     std::span<const Render::Creature::CreatureRenderRequest> requests,

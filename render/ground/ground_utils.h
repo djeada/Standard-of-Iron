@@ -134,4 +134,15 @@ inline auto compute_curvature_shading_response(
   return response;
 }
 
+inline auto compute_entry_shading_factor(float avg_entry_weight,
+                                         float avg_slope, float plateau_factor,
+                                         float concavity_hint) -> float {
+  float const coverage = smoothstep(0.02F, 0.22F, avg_entry_weight);
+  float const sheltered = 1.0F - smoothstep(0.20F, 0.58F, avg_slope);
+  float const plateau_support =
+      0.35F + 0.65F * std::max(plateau_factor, sheltered);
+  float const carved_support = concavity_hint * (0.30F + 0.30F * sheltered);
+  return std::clamp(coverage * plateau_support + carved_support, 0.0F, 1.0F);
+}
+
 } // namespace Render::Ground

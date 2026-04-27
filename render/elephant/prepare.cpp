@@ -32,32 +32,19 @@ elephant_clip_for_motion(bool is_moving,
 
 } // namespace
 
-auto make_elephant_prepared_row(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod,
-    Render::Creature::Pipeline::RenderPassIntent pass) noexcept
-    -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
-  return Render::Creature::Pipeline::make_prepared_elephant_row(
-      owner.visual_spec(), pose, variant, world_from_unit, seed, lod, 0, pass);
-}
-
-void submit_prepared_elephant_body(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod, Render::GL::ISubmitter &out) noexcept {
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.reserve(1);
-  batch.add(make_elephant_prepared_row(owner, pose, variant, world_from_unit,
-                                       seed, lod));
-  (void)batch.submit(out);
-}
-
 } // namespace Render::Elephant
+
+namespace {
+
+[[nodiscard]] auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx)
+    -> Render::GL::DrawContext {
+  Render::GL::DrawContext runtime_ctx = ctx;
+  runtime_ctx.template_prewarm = false;
+  runtime_ctx.allow_template_cache = false;
+  return runtime_ctx;
+}
+
+} // namespace
 
 namespace Render::GL {
 
@@ -75,9 +62,12 @@ void ElephantRendererBase::render(const DrawContext &ctx,
                                   const HowdahAttachmentFrame *shared_howdah,
                                   const ElephantMotionSample *shared_motion,
                                   ISubmitter &out, HorseLOD lod) const {
+  DrawContext render_ctx =
+      ctx.template_prewarm ? make_runtime_prewarm_ctx(ctx) : ctx;
+
   HorseLOD effective_lod = lod;
-  if (ctx.force_horse_lod) {
-    effective_lod = ctx.forced_horse_lod;
+  if (render_ctx.force_horse_lod) {
+    effective_lod = render_ctx.forced_horse_lod;
   }
 
   ++s_elephantRenderStats.elephants_total;
@@ -104,7 +94,7 @@ void ElephantRendererBase::render(const DrawContext &ctx,
   }
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(*this, ctx, anim, profile,
+  Render::Elephant::prepare_elephant_render(*this, render_ctx, anim, profile,
                                             shared_howdah, shared_motion,
                                             effective_lod, prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);

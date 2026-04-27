@@ -53,32 +53,19 @@ void ground_horse_model(QMatrix4x4 &model,
 
 } // namespace
 
-auto make_horse_prepared_row(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::Horse::HorseSpecPose &pose,
-    const Render::GL::HorseVariant &variant, const QMatrix4x4 &world_from_unit,
-    std::uint32_t seed, Render::Creature::CreatureLOD lod,
-    Render::Creature::Pipeline::RenderPassIntent pass) noexcept
-    -> Render::Creature::Pipeline::PreparedCreatureRenderRow {
-  return Render::Creature::Pipeline::make_prepared_horse_row(
-      owner.visual_spec(), pose, variant, world_from_unit, seed, lod, 0, pass);
-}
-
-void submit_prepared_horse_body(const Render::GL::HorseRendererBase &owner,
-                                const Render::Horse::HorseSpecPose &pose,
-                                const Render::GL::HorseVariant &variant,
-                                const QMatrix4x4 &world_from_unit,
-                                std::uint32_t seed,
-                                Render::Creature::CreatureLOD lod,
-                                Render::GL::ISubmitter &out) noexcept {
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.reserve(1);
-  batch.add(make_horse_prepared_row(owner, pose, variant, world_from_unit, seed,
-                                    lod));
-  (void)batch.submit(out);
-}
-
 } // namespace Render::Horse
+
+namespace {
+
+[[nodiscard]] auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx)
+    -> Render::GL::DrawContext {
+  Render::GL::DrawContext runtime_ctx = ctx;
+  runtime_ctx.template_prewarm = false;
+  runtime_ctx.allow_template_cache = false;
+  return runtime_ctx;
+}
+
+} // namespace
 
 namespace Render::GL {
 
@@ -97,6 +84,8 @@ void HorseRendererBase::render(const DrawContext &ctx,
                                const MountedAttachmentFrame *shared_mount,
                                const HorseMotionSample *shared_motion,
                                ISubmitter &out, HorseLOD lod) const {
+  DrawContext render_ctx =
+      ctx.template_prewarm ? make_runtime_prewarm_ctx(ctx) : ctx;
 
   ++s_horseRenderStats.horses_total;
 
@@ -121,8 +110,9 @@ void HorseRendererBase::render(const DrawContext &ctx,
   }
 
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_render(*this, ctx, anim, rider_ctx, profile,
-                                      shared_mount, shared_motion, lod, prep);
+  Render::Horse::prepare_horse_render(*this, render_ctx, anim, rider_ctx,
+                                      profile, shared_mount, shared_motion, lod,
+                                      prep);
   Render::Creature::Pipeline::submit_preparation(prep, out);
 }
 

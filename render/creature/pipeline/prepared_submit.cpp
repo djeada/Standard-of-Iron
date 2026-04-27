@@ -7,8 +7,8 @@
 
 namespace Render::Creature::Pipeline {
 
-void submit_preparation(CreaturePreparationResult &prep,
-                        Render::GL::ISubmitter &out) noexcept {
+auto submit_preparation(CreaturePreparationResult &prep,
+                        Render::GL::ISubmitter &out) noexcept -> SubmitStats {
   thread_local CreaturePipeline pipeline;
   thread_local std::vector<Render::Creature::CreatureRenderRequest>
       visible_requests;
@@ -23,8 +23,9 @@ void submit_preparation(CreaturePreparationResult &prep,
     }
   }
 
+  SubmitStats stats{};
   if (!visible_requests.empty()) {
-    (void)pipeline.submit_requests(visible_requests, out);
+    stats = pipeline.submit_requests(visible_requests, out);
   }
 
   for (auto &request : prep.post_body_draws) {
@@ -33,6 +34,7 @@ void submit_preparation(CreaturePreparationResult &prep,
     }
     request.draw(out);
   }
+  return stats;
 }
 
 void PreparedCreatureSubmitBatch::clear() noexcept { rows_.clear(); }
@@ -56,15 +58,6 @@ auto PreparedCreatureSubmitBatch::size() const noexcept -> std::size_t {
 auto PreparedCreatureSubmitBatch::rows() const noexcept
     -> std::span<const PreparedCreatureRenderRow> {
   return {rows_.data(), rows_.size()};
-}
-
-auto PreparedCreatureSubmitBatch::submit(
-    Render::GL::ISubmitter &out) const noexcept -> SubmitStats {
-  SubmitStats stats{};
-  for (const auto &row : rows_) {
-    submit_row_body(row, out, stats);
-  }
-  return stats;
 }
 
 } // namespace Render::Creature::Pipeline

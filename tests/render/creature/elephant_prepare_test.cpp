@@ -1,7 +1,10 @@
 // Phase A regression — elephant prepare module.
 
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
+#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/elephant/dimensions.h"
@@ -11,6 +14,7 @@
 #include "render/elephant/prepare.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
+#include "render/template_cache.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -106,29 +110,31 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
 }
 
 TEST(ElephantPrepare, ShadowElephantRowProducesNoDraw) {
-  Render::Creature::Pipeline::PreparedCreatureRenderRow row{};
-  row.spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
-
   NullSubmitter sink;
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  (void)batch.submit(sink);
+  Render::Creature::Pipeline::CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kElephantBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  (void)Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(sink.rigged_calls, 0);
 }
 
 TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
-  Render::Creature::Pipeline::PreparedCreatureRenderRow row{};
-  row.spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
-
   NullSubmitter sink;
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  Render::Creature::Pipeline::CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kElephantBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
 }
@@ -323,6 +329,37 @@ TEST(ElephantPrepare, SimplifiedPreparationPopulatesVisibleElephantPose) {
   EXPECT_GT(pose.head_center.z(), 0.0F);
   EXPECT_GT(pose.trunk_end.z(), pose.head_center.z());
   EXPECT_LT(pose.foot_reduced_fl.y(), pose.barrel_center.y());
+}
+
+TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
+  Render::GL::ElephantRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.template_prewarm = true;
+
+  Render::GL::AnimationInputs anim{};
+  auto profile = make_test_elephant_profile();
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+
+  renderer.render(ctx, anim, profile, nullptr, nullptr, recorder);
+
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_TRUE(recorder.commands().empty());
 }
 
 } // namespace

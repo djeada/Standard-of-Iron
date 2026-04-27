@@ -127,6 +127,7 @@ public:
                     float) override {}
   void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
                       float) override {}
+  void rigged(const RiggedCreatureCmd &) override {}
 
 private:
   std::vector<RecordedMeshCmd> m_commands;

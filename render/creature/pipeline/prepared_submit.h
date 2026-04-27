@@ -15,8 +15,8 @@ class ISubmitter;
 
 namespace Render::Creature::Pipeline {
 
-void submit_preparation(CreaturePreparationResult &prep,
-                        Render::GL::ISubmitter &out) noexcept;
+auto submit_preparation(CreaturePreparationResult &prep,
+                        Render::GL::ISubmitter &out) noexcept -> SubmitStats;
 
 class PreparedCreatureSubmitBatch {
 public:
@@ -29,9 +29,6 @@ public:
   [[nodiscard]] auto size() const noexcept -> std::size_t;
   [[nodiscard]] auto
   rows() const noexcept -> std::span<const PreparedCreatureRenderRow>;
-
-  [[nodiscard]] auto
-  submit(Render::GL::ISubmitter &out) const noexcept -> SubmitStats;
 
 private:
   std::vector<PreparedCreatureRenderRow> rows_{};

@@ -3,9 +3,12 @@
 // Verifies make_horse_prepared_row stamps the correct kind/pass/lod and that
 // Shadow-tagged horse rows are filtered by submit().
 
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
+#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -16,6 +19,7 @@
 #include "render/horse/horse_spec.h"
 #include "render/horse/prepare.h"
 #include "render/submitter.h"
+#include "render/template_cache.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -98,31 +102,66 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
 }
 
 TEST(HorsePrepare, ShadowHorseRowProducesNoDraw) {
-  Render::Creature::Pipeline::PreparedCreatureRenderRow row{};
-  row.spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
-
   NullSubmitter sink;
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  (void)batch.submit(sink);
+  Render::Creature::Pipeline::CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHorseBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = Render::Creature::Pipeline::RenderPassIntent::Shadow;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  (void)Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(sink.rigged_calls, 0);
 }
 
 TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
-  Render::Creature::Pipeline::PreparedCreatureRenderRow row{};
-  row.spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
-
   NullSubmitter sink;
-  Render::Creature::Pipeline::PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  Render::Creature::Pipeline::CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHorseBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = Render::Creature::Pipeline::RenderPassIntent::Main;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
+  Render::GL::HorseRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.template_prewarm = true;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+
+  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder);
+
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_TRUE(recorder.commands().empty());
 }
 
 TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
