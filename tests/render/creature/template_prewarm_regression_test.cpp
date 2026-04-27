@@ -4,6 +4,7 @@
 // correctly handles template prewarming scenarios where creatures need to
 // be pre-rendered for caching but should not produce actual draw calls.
 
+#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -20,6 +21,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <gtest/gtest.h>
+#include <vector>
 
 namespace {
 
@@ -78,6 +80,30 @@ public:
   }
 };
 
+auto make_request(Render::Creature::ArchetypeId archetype, CreatureLOD lod,
+                  RenderPassIntent pass,
+                  std::uint32_t seed = 0U) -> CreatureRenderRequest {
+  CreatureRenderRequest req{};
+  req.archetype = archetype;
+  req.state = AnimationStateId::Idle;
+  req.lod = lod;
+  req.pass = pass;
+  req.seed = seed;
+  req.world_already_grounded = true;
+  req.world.translate(0.0F, static_cast<float>(seed) * 0.1F, 0.0F);
+  return req;
+}
+
+auto submit_requests_for_test(std::span<const CreatureRenderRequest> requests,
+                              PrewarmCountingSubmitter &sink) -> SubmitStats {
+  CreaturePreparationResult prep;
+  prep.bodies.reserve(requests.size());
+  for (const auto &request : requests) {
+    prep.bodies.add_request(request);
+  }
+  return submit_preparation(prep, sink);
+}
+
 // --- Pass Intent Tests ---
 
 TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
@@ -91,40 +117,31 @@ TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
 }
 
 TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
-  PreparedCreatureSubmitBatch batch;
-
-  // Add 3 Main pass rows and 2 Shadow pass rows
+  std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 5; ++i) {
-    PreparedCreatureRenderRow row{};
-    row.spec.kind = CreatureKind::Humanoid;
-    row.lod = CreatureLOD::Full;
-    row.pass = (i < 3) ? RenderPassIntent::Main : RenderPassIntent::Shadow;
-    row.seed = static_cast<std::uint32_t>(i);
-    batch.add(row);
+    requests.push_back(make_request(
+        ArchetypeRegistry::kHumanoidBase, CreatureLOD::Full,
+        (i < 3) ? RenderPassIntent::Main : RenderPassIntent::Shadow,
+        static_cast<std::uint32_t>(i)));
   }
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
-  // Only the 3 Main pass rows should be submitted
+  // Only the 3 Main pass requests should be submitted.
   EXPECT_EQ(stats.entities_submitted, 3u);
 }
 
 TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
-  PreparedCreatureSubmitBatch batch;
-
-  // Add 10 Shadow pass rows
+  std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
-    PreparedCreatureRenderRow row{};
-    row.spec.kind = CreatureKind::Humanoid;
-    row.lod = CreatureLOD::Full;
-    row.pass = RenderPassIntent::Shadow;
-    row.seed = static_cast<std::uint32_t>(i);
-    batch.add(row);
+    requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+                                    CreatureLOD::Full, RenderPassIntent::Shadow,
+                                    static_cast<std::uint32_t>(i)));
   }
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(sink.rigged_calls, 0);
@@ -174,16 +191,15 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
 
   batch.add_humanoid(output, pose, variant, anim);
 
-  // Convert to submission batch
-  PreparedCreatureSubmitBatch submit_batch;
-  for (const auto &row : batch.rows()) {
-    submit_batch.add(row);
+  CreaturePreparationResult prep;
+  for (const auto &request : batch.requests()) {
+    prep.bodies.add_request(request);
   }
 
   PrewarmCountingSubmitter sink;
-  const auto stats = submit_batch.submit(sink);
+  const auto stats = submit_preparation(prep, sink);
 
-  // Shadow-tagged row should produce zero submissions
+  // Shadow-tagged requests should produce zero submissions.
   EXPECT_EQ(stats.entities_submitted, 0u);
 }
 
@@ -197,20 +213,17 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
 
-  PreparedCreatureSubmitBatch batch;
-
-  // Add rows alternating between Normal and Prewarm contexts
+  std::vector<CreatureRenderRequest> requests;
   for (int i = 0; i < 10; ++i) {
-    PreparedCreatureRenderRow row{};
-    row.spec.kind = CreatureKind::Humanoid;
-    row.lod = CreatureLOD::Full;
-    row.pass = (i % 2 == 0) ? RenderPassIntent::Main : RenderPassIntent::Shadow;
-    row.seed = static_cast<std::uint32_t>(i);
-    batch.add(row);
+    requests.push_back(
+        make_request(ArchetypeRegistry::kHumanoidBase, CreatureLOD::Full,
+                     (i % 2 == 0) ? pass_intent_from_ctx(normal_ctx)
+                                  : pass_intent_from_ctx(prewarm_ctx),
+                     static_cast<std::uint32_t>(i)));
   }
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
   // Only even indices (0, 2, 4, 6, 8) = 5 Main rows should be submitted
   EXPECT_EQ(stats.entities_submitted, 5u);
@@ -222,17 +235,12 @@ TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
 
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Horse;
-  row.lod = CreatureLOD::Full;
-  row.pass = pass_intent_from_ctx(prewarm_ctx);
-  row.seed = 123U;
-
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  auto const request =
+      make_request(ArchetypeRegistry::kHorseBase, CreatureLOD::Full,
+                   pass_intent_from_ctx(prewarm_ctx), 123U);
+  const auto stats = submit_requests_for_test(
+      std::span<const CreatureRenderRequest>(&request, 1u), sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
 }
@@ -241,17 +249,12 @@ TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
 
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Elephant;
-  row.lod = CreatureLOD::Full;
-  row.pass = pass_intent_from_ctx(prewarm_ctx);
-  row.seed = 456U;
-
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  auto const request =
+      make_request(ArchetypeRegistry::kElephantBase, CreatureLOD::Full,
+                   pass_intent_from_ctx(prewarm_ctx), 456U);
+  const auto stats = submit_requests_for_test(
+      std::span<const CreatureRenderRequest>(&request, 1u), sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
 }
@@ -262,21 +265,16 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
 
-  PreparedCreatureSubmitBatch batch;
-
-  // Test all LOD levels
+  std::vector<CreatureRenderRequest> requests;
   for (auto lod :
        {CreatureLOD::Full, CreatureLOD::Reduced, CreatureLOD::Minimal}) {
-    PreparedCreatureRenderRow row{};
-    row.spec.kind = CreatureKind::Humanoid;
-    row.lod = lod;
-    row.pass = pass_intent_from_ctx(prewarm_ctx);
-    row.seed = static_cast<std::uint32_t>(lod);
-    batch.add(row);
+    requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase, lod,
+                                    pass_intent_from_ctx(prewarm_ctx),
+                                    static_cast<std::uint32_t>(lod)));
   }
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
   // All LOD levels should be filtered when prewarm
   EXPECT_EQ(stats.entities_submitted, 0u);
@@ -312,31 +310,20 @@ TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
 // --- Stats Tracking Tests ---
 
 TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
-  PreparedCreatureSubmitBatch batch;
-
-  // Add Shadow-tagged rows at different LOD levels
-  PreparedCreatureRenderRow full_row{};
-  full_row.spec.kind = CreatureKind::Humanoid;
-  full_row.lod = CreatureLOD::Full;
-  full_row.pass = RenderPassIntent::Shadow;
-  batch.add(full_row);
-
-  PreparedCreatureRenderRow reduced_row{};
-  reduced_row.spec.kind = CreatureKind::Horse;
-  reduced_row.lod = CreatureLOD::Reduced;
-  reduced_row.pass = RenderPassIntent::Shadow;
-  batch.add(reduced_row);
-
-  PreparedCreatureRenderRow minimal_row{};
-  minimal_row.spec.kind = CreatureKind::Elephant;
-  minimal_row.lod = CreatureLOD::Minimal;
-  minimal_row.pass = RenderPassIntent::Shadow;
-  batch.add(minimal_row);
+  std::vector<CreatureRenderRequest> requests;
+  requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+                                  CreatureLOD::Full, RenderPassIntent::Shadow));
+  requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
+                                  CreatureLOD::Reduced,
+                                  RenderPassIntent::Shadow));
+  requests.push_back(make_request(ArchetypeRegistry::kElephantBase,
+                                  CreatureLOD::Minimal,
+                                  RenderPassIntent::Shadow));
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
-  // Shadow rows should not count toward LOD stats
+  // Shadow requests should not count toward LOD stats.
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(stats.lod_full, 0u);
   EXPECT_EQ(stats.lod_reduced, 0u);
@@ -344,22 +331,15 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
 }
 
 TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
-  PreparedCreatureSubmitBatch batch;
-
-  PreparedCreatureRenderRow full_row{};
-  full_row.spec.kind = CreatureKind::Humanoid;
-  full_row.lod = CreatureLOD::Full;
-  full_row.pass = RenderPassIntent::Main;
-  batch.add(full_row);
-
-  PreparedCreatureRenderRow reduced_row{};
-  reduced_row.spec.kind = CreatureKind::Horse;
-  reduced_row.lod = CreatureLOD::Reduced;
-  reduced_row.pass = RenderPassIntent::Main;
-  batch.add(reduced_row);
+  std::vector<CreatureRenderRequest> requests;
+  requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
+                                  CreatureLOD::Full, RenderPassIntent::Main));
+  requests.push_back(make_request(ArchetypeRegistry::kHorseBase,
+                                  CreatureLOD::Reduced,
+                                  RenderPassIntent::Main));
 
   PrewarmCountingSubmitter sink;
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_requests_for_test(requests, sink);
 
   EXPECT_EQ(stats.entities_submitted, 2u);
   EXPECT_EQ(stats.lod_full, 1u);

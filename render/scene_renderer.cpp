@@ -1448,14 +1448,14 @@ void Renderer::prewarm_unit_templates(
     using Render::GraphicsQuality;
     switch (Render::GraphicsSettings::instance().quality()) {
     case GraphicsQuality::Low:
-      return 60'000;
+      return 256;
     case GraphicsQuality::Medium:
-      return 100'000;
+      return 512;
     case GraphicsQuality::High:
-      return 160'000;
+      return 1'024;
     case GraphicsQuality::Ultra:
     default:
-      return 240'000;
+      return 2'048;
     }
   };
 
@@ -1539,31 +1539,35 @@ void Renderer::prewarm_unit_templates(
     add_owner(0);
   }
 
-  const auto &troops = Game::Units::TroopCatalog::instance().get_all_classes();
-  const auto &nations =
-      Game::Systems::NationRegistry::instance().get_all_nations();
-  const bool restrict_to_active_nations = !active_nation_ids.empty();
+  if (profiles.empty()) {
+    const auto &troops =
+        Game::Units::TroopCatalog::instance().get_all_classes();
+    const auto &nations =
+        Game::Systems::NationRegistry::instance().get_all_nations();
+    const bool restrict_to_active_nations = !active_nation_ids.empty();
 
-  for (const auto &nation : nations) {
-    if (restrict_to_active_nations &&
-        (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
-      continue;
-    }
-    for (const auto &entry : troops) {
-      auto type = entry.first;
-      if (!is_prewarmable_troop(type)) {
+    for (const auto &nation : nations) {
+      if (restrict_to_active_nations &&
+          (active_nation_ids.find(nation.id) == active_nation_ids.end())) {
         continue;
       }
+      for (const auto &entry : troops) {
+        auto type = entry.first;
+        if (!is_prewarmable_troop(type)) {
+          continue;
+        }
 
-      auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-          nation.id, type);
-      if (profile.visuals.renderer_id.empty()) {
-        continue;
+        auto profile =
+            Game::Systems::TroopProfileService::instance().get_profile(
+                nation.id, type);
+        if (profile.visuals.renderer_id.empty()) {
+          continue;
+        }
+
+        add_profile(profile.visuals.renderer_id,
+                    Game::Units::spawn_typeFromTroopType(type), nation.id,
+                    profile.combat.max_health);
       }
-
-      add_profile(profile.visuals.renderer_id,
-                  Game::Units::spawn_typeFromTroopType(type), nation.id,
-                  profile.combat.max_health);
     }
   }
 
@@ -1637,14 +1641,26 @@ void Renderer::prewarm_unit_templates(
     }
   };
 
+  auto add_core_attack_frames = [&](AnimState state) {
+    constexpr CombatAnimPhase phases[] = {
+        CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
+        CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
+        CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
+        CombatAnimPhase::Reposition};
+    for (CombatAnimPhase phase : phases) {
+      push_anim_key(core_anim_keys, state, phase, 0, 0);
+    }
+  };
+
   push_anim_key(core_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
-  add_state_frames(core_anim_keys, AnimState::Move, 4);
-  add_state_frames(core_anim_keys, AnimState::Run, 4);
-  add_state_frames(core_anim_keys, AnimState::Construct, 4);
-  add_state_frames(core_anim_keys, AnimState::Heal, 4);
-  add_state_frames(core_anim_keys, AnimState::Hit, 4);
-  add_attack_frames(core_anim_keys, AnimState::AttackMelee, 4);
-  add_attack_frames(core_anim_keys, AnimState::AttackRanged, 4);
+  push_anim_key(core_anim_keys, AnimState::Move, CombatAnimPhase::Idle, 0, 0);
+  push_anim_key(core_anim_keys, AnimState::Run, CombatAnimPhase::Idle, 0, 0);
+  push_anim_key(core_anim_keys, AnimState::Construct, CombatAnimPhase::Idle, 0,
+                0);
+  push_anim_key(core_anim_keys, AnimState::Heal, CombatAnimPhase::Idle, 0, 0);
+  push_anim_key(core_anim_keys, AnimState::Hit, CombatAnimPhase::Idle, 0, 0);
+  add_core_attack_frames(AnimState::AttackMelee);
+  add_core_attack_frames(AnimState::AttackRanged);
 
   push_anim_key(full_anim_keys, AnimState::Idle, CombatAnimPhase::Idle, 0, 0);
   add_state_frames(full_anim_keys, AnimState::Move, 1);
@@ -1701,18 +1717,8 @@ void Renderer::prewarm_unit_templates(
       std::max<std::size_t>(1, domain_count * variant_count);
   anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
 
-  std::size_t anim_count = std::min(full_anim_count, anim_count_budget);
-  if (anim_count < core_anim_count && variant_count > 1) {
-    variant_count = std::max<std::size_t>(
-        1, target_template_count /
-               std::max<std::size_t>(1, domain_count * core_anim_count));
-    variant_count =
-        std::min<std::size_t>(variant_count, k_template_variant_count);
-    anim_count_budget = target_template_count /
-                        std::max<std::size_t>(1, domain_count * variant_count);
-    anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
-    anim_count = std::min(full_anim_count, anim_count_budget);
-  }
+  std::size_t anim_count = std::max(
+      core_anim_count, std::min(full_anim_count, anim_count_budget));
 
   std::vector<std::uint8_t> variant_values;
   variant_values.reserve(variant_count);
@@ -1749,8 +1755,8 @@ void Renderer::prewarm_unit_templates(
       selected_core_anim_keys.size() + selected_extra_anim_keys.size();
   const std::size_t expected_template_count =
       domain_count * variant_values.size() * selected_anim_total;
-  constexpr std::size_t k_cache_min_cap = 50'000;
-  constexpr std::size_t k_cache_hard_cap = 300'000;
+  constexpr std::size_t k_cache_min_cap = 512;
+  constexpr std::size_t k_cache_hard_cap = 4'096;
   const std::size_t cache_entry_cap = std::clamp<std::size_t>(
       expected_template_count +
           std::max<std::size_t>(4096, expected_template_count / 8),

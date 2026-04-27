@@ -16,7 +16,6 @@
 #include "../../../game/core/entity.h"
 
 #include <algorithm>
-#include <cmath>
 
 namespace Render::Creature::Pipeline {
 
@@ -185,43 +184,6 @@ void CreatureRenderBatch::reserve(std::size_t n) {
 
 namespace {
 
-auto resolve_playback(std::uint32_t species_id, std::uint16_t clip_id,
-                      float phase) noexcept -> BpatPlayback {
-  BpatPlayback pb{};
-  if (clip_id == kInvalidBpatClip) {
-    return pb;
-  }
-  const auto *blob =
-      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
-    return pb;
-  }
-  auto const c = blob->clip(clip_id);
-  if (c.frame_count == 0U) {
-    return pb;
-  }
-  float p = phase - std::floor(phase);
-  if (!c.loops && phase >= 1.0F) {
-    pb.clip_id = clip_id;
-    pb.frame_in_clip = static_cast<std::uint16_t>(c.frame_count - 1U);
-    return pb;
-  }
-  if (p < 0.0F) {
-    p += 1.0F;
-  }
-  auto const fc = static_cast<float>(c.frame_count);
-  auto frame_idx = static_cast<int>(p * fc);
-  if (frame_idx < 0) {
-    frame_idx = 0;
-  }
-  if (frame_idx >= static_cast<int>(c.frame_count)) {
-    frame_idx = static_cast<int>(c.frame_count) - 1;
-  }
-  pb.clip_id = clip_id;
-  pb.frame_in_clip = static_cast<std::uint16_t>(frame_idx);
-  return pb;
-}
-
 [[nodiscard]] auto horse_state_for_clip(std::uint16_t clip) noexcept
     -> Render::Creature::AnimationStateId {
   switch (clip) {
@@ -334,17 +296,9 @@ void CreatureRenderBatch::add_humanoid(
   }
 
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto const base_clip =
-        Render::Creature::ArchetypeRegistry::instance().bpat_clip(archetype_id,
-                                                                  state);
-    std::uint16_t const clip =
-        (base_clip != Render::Creature::ArchetypeDescriptor::kUnmappedClip)
-            ? static_cast<std::uint16_t>(base_clip + clip_var)
-            : kInvalidBpatClip;
     auto row = make_prepared_humanoid_row(
         output.spec, pose, variant, anim, output.world_matrix, output.seed,
         output.lod, output.entity_id, output.pass_intent);
-    row.bpat_playback = resolve_playback(asset->bpat_species_id, clip, phase);
     rows_.push_back(std::move(row));
   }
 
@@ -372,8 +326,6 @@ void CreatureRenderBatch::add_horse(const CreatureGraphOutput &output,
     auto row = make_prepared_horse_row(
         output.spec, pose, variant, output.world_matrix, output.seed,
         output.lod, output.entity_id, output.pass_intent);
-    row.bpat_playback =
-        resolve_playback(asset->bpat_species_id, bpat_clip_id, bpat_phase);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
@@ -404,8 +356,6 @@ void CreatureRenderBatch::add_elephant(
     auto row = make_prepared_elephant_row(
         output.spec, pose, variant, output.world_matrix, output.seed,
         output.lod, output.entity_id, output.pass_intent);
-    row.bpat_playback =
-        resolve_playback(asset->bpat_species_id, bpat_clip_id, bpat_phase);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =

@@ -4,6 +4,7 @@
 // prepares creature render state for submission, and that template/cache
 // prewarming works correctly with the new system.
 
+#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -431,17 +432,18 @@ TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
 }
 
 TEST(CreatureRenderGraph, ShadowPassRowsSubmitZeroDrawCalls) {
-  // Rows tagged with Shadow pass should not produce draw calls
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Humanoid;
-  row.lod = CreatureLOD::Full;
-  row.pass = RenderPassIntent::Shadow;
-  row.seed = 42U;
+  CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.state = AnimationStateId::Idle;
+  req.lod = CreatureLOD::Full;
+  req.pass = RenderPassIntent::Shadow;
+  req.seed = 42U;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
 
   CountingSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(sink.rigged_calls, 0);
@@ -449,17 +451,18 @@ TEST(CreatureRenderGraph, ShadowPassRowsSubmitZeroDrawCalls) {
 }
 
 TEST(CreatureRenderGraph, MainPassRowsSubmitDrawCalls) {
-  // Rows tagged with Main pass should produce draw calls
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Humanoid;
-  row.lod = CreatureLOD::Full;
-  row.pass = RenderPassIntent::Main;
-  row.seed = 7U;
+  CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.state = AnimationStateId::Idle;
+  req.lod = CreatureLOD::Full;
+  req.pass = RenderPassIntent::Main;
+  req.seed = 7U;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
 
   CountingSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
 }

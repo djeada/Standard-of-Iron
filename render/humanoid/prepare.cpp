@@ -116,12 +116,24 @@ auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
   return params;
 }
 
+namespace {
+
+[[nodiscard]] auto
+make_runtime_prewarm_ctx(const DrawContext &ctx) -> DrawContext {
+  DrawContext runtime_ctx = ctx;
+  runtime_ctx.template_prewarm = false;
+  runtime_ctx.allow_template_cache = false;
+  return runtime_ctx;
+}
+
+} // namespace
+
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   AnimationInputs anim = sample_anim_state(ctx);
 
   if (ctx.template_prewarm) {
-
+    render_procedural(make_runtime_prewarm_ctx(ctx), anim, out);
     return;
   }
 
