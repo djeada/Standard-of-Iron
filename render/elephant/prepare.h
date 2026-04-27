@@ -1,8 +1,6 @@
 #pragma once
 
 #include "../creature/pipeline/creature_render_graph.h"
-#include "../creature/pipeline/creature_render_state.h"
-#include "../creature/pipeline/prepared_submit.h"
 #include "elephant_spec.h"
 
 #include <QMatrix4x4>
@@ -28,23 +26,6 @@ namespace Render::Elephant {
 
 using ElephantPreparation =
     Render::Creature::Pipeline::CreaturePreparationResult;
-
-[[nodiscard]] auto make_elephant_prepared_row(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod,
-    Render::Creature::Pipeline::RenderPassIntent pass =
-        Render::Creature::Pipeline::RenderPassIntent::Main) noexcept
-    -> Render::Creature::Pipeline::PreparedCreatureRenderRow;
-
-void submit_prepared_elephant_body(
-    const Render::GL::ElephantRendererBase &owner,
-    const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod, Render::GL::ISubmitter &out) noexcept;
 
 void prepare_elephant_full(
     const Render::GL::ElephantRendererBase &owner,

@@ -185,6 +185,10 @@ void main() {
   float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
 
   slope *= (1.0 - 0.25 * entryMask);
+  float entryShelter = entryMask * (1.0 - smoothstep(0.18, 0.55, slope));
+  float entryToe =
+      entryMask *
+      (1.0 - smoothstep(0.24, 0.62, slope * (1.0 - 0.25 * entryMask)));
   float curvature = computeCurvature();
   float curvatureResponse = clamp(u_curvatureResponse, 0.0, 1.0);
   float ridgeResponse = clamp(u_ridgeResponse, 0.0, 1.0);
@@ -216,12 +220,16 @@ void main() {
   dryness = clamp(dryness + ridgeMask * 0.12 * ridgeResponse -
                       gullyMask * 0.10 * gullyResponse,
                   0.0, 1.0);
+  dryness =
+      clamp(dryness - entryShelter * (0.14 + 0.10 * u_moistureLevel), 0.0, 1.0);
   dryness += moistureVar * 0.15;
 
   float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
   float drynessByHeight = mix(dryness, dryness * 1.15, heightFade * 0.4);
   vec3 grassColor = mix(lushGrass, u_grassDry, drynessByHeight);
   grassColor *= (1.0 + microVariation * 0.08);
+  grassColor = mix(grassColor, mix(u_grassSecondary, u_soilColor, 0.20),
+                   entryShelter * (0.10 + 0.10 * u_moistureLevel));
 
   float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
 
@@ -255,12 +263,15 @@ void main() {
   float concavityLift =
       gullyMask * ((0.25 + 0.25 * gullyResponse) * u_soilFootHeight);
 
-  float soilHeight = u_soilBlendHeight + heightNoise + concavityLift;
-  float bandWidth = soilWidth + u_soilFootHeight * toeProximity;
+  float soilHeight = u_soilBlendHeight + heightNoise + concavityLift +
+                     entryToe * u_soilFootHeight * 0.45;
+  float bandWidth =
+      soilWidth + u_soilFootHeight * max(toeProximity, entryToe * 0.85);
 
   float soilMix = 1.0 - smoothstep(soilHeight - bandWidth,
                                    soilHeight + bandWidth, v_worldPos.y);
   soilMix = clamp(soilMix, 0.0, 1.0);
+  soilMix = max(soilMix, entryShelter * (0.10 + 0.18 * (1.0 - slope)));
 
   float mudPatch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
   mudPatch = smoothstep(0.65, 0.75, mudPatch);
@@ -275,7 +286,7 @@ void main() {
                          0.0, 1.0);
   rockMask *= 1.0 - soilMix * 0.75;
 
-  rockMask *= (1.0 - 0.3 * entryMask);
+  rockMask *= (1.0 - 0.50 * entryShelter);
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
@@ -325,6 +336,7 @@ void main() {
   rockMask = clamp(rockMask + (u_rockExposure - 0.3) * 0.4, 0.0, 1.0);
 
   vec3 terrainColor = mix(soilBlend, rockColor, rockMask);
+  terrainColor = mix(terrainColor, soilBlend, entryShelter * 0.12);
 
   if (u_crackIntensity > 0.01) {
     float crackNoise1 = noise21(world_coord * 8.0);

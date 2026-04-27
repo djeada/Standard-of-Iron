@@ -45,4 +45,22 @@ TEST(GroundUtilsTest, MountainsReceiveStrongerCurvatureResponseThanHills) {
   EXPECT_GT(mountain.gully_response, hill.gully_response);
 }
 
+TEST(GroundUtilsTest, EntryShadingFactorGrowsWithMeasuredEntryCoverage) {
+  float const subtle =
+      Render::Ground::compute_entry_shading_factor(0.04F, 0.28F, 0.20F, 0.02F);
+  float const pronounced =
+      Render::Ground::compute_entry_shading_factor(0.24F, 0.28F, 0.20F, 0.02F);
+
+  EXPECT_GT(pronounced, subtle);
+}
+
+TEST(GroundUtilsTest, EntryShadingFactorPrefersShelteredHillEntries) {
+  float const sheltered =
+      Render::Ground::compute_entry_shading_factor(0.18F, 0.22F, 0.30F, 0.08F);
+  float const exposed =
+      Render::Ground::compute_entry_shading_factor(0.18F, 0.62F, 0.05F, 0.01F);
+
+  EXPECT_GT(sheltered, exposed);
+}
+
 } // namespace

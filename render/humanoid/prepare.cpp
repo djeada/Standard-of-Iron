@@ -116,12 +116,24 @@ auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
   return params;
 }
 
+namespace {
+
+[[nodiscard]] auto
+make_runtime_prewarm_ctx(const DrawContext &ctx) -> DrawContext {
+  DrawContext runtime_ctx = ctx;
+  runtime_ctx.template_prewarm = false;
+  runtime_ctx.allow_template_cache = false;
+  return runtime_ctx;
+}
+
+} // namespace
+
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
   AnimationInputs anim = sample_anim_state(ctx);
 
   if (ctx.template_prewarm) {
-
+    render_procedural(make_runtime_prewarm_ctx(ctx), anim, out);
     return;
   }
 
@@ -711,8 +723,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     const auto &gfx_settings = Render::GraphicsSettings::instance();
     const bool should_render_shadow =
         ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
-        (soldier_lod == HumanoidLOD::Full ||
-         soldier_lod == HumanoidLOD::Reduced) &&
+        soldier_lod == HumanoidLOD::Full &&
         soldier_distance < gfx_settings.shadow_max_distance();
 
     if (should_render_shadow && inst_ctx.backend != nullptr &&

@@ -55,6 +55,34 @@ TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {
                   [](float curvature) { return std::abs(curvature) > 0.01F; }));
 }
 
+TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
+  Game::Map::TerrainHeightMap height_map(41, 41, 1.0F);
+  Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 14.0F,
+      .depth = 14.0F,
+      .height = 5.0F,
+  };
+  hill.entrances.push_back(QVector3D(0.0F, 0.0F, -7.0F));
+
+  height_map.buildFromFeatures({hill});
+
+  constexpr int kCenterX = 20;
+  EXPECT_TRUE(height_map.isHillEntrance(kCenterX, 15));
+  EXPECT_TRUE(height_map.is_walkable(kCenterX, 15));
+  EXPECT_TRUE(height_map.is_walkable(kCenterX, 16));
+  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 15),
+            height_map.getHeightAtGrid(kCenterX - 2, 15));
+  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 16),
+            height_map.getHeightAtGrid(kCenterX - 2, 16));
+  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 14),
+            height_map.getHeightAtGrid(kCenterX, 15));
+  EXPECT_LT(height_map.getHeightAtGrid(kCenterX, 15),
+            height_map.getHeightAtGrid(kCenterX, 16));
+}
+
 TEST_F(TerrainServiceTest, RestoringTerrainRebuildsDerivedField) {
   std::vector<float> heights = {0.0F, 0.0F, 0.0F, 0.0F, 1.0F,
                                 2.0F, 0.0F, 2.0F, 4.0F};

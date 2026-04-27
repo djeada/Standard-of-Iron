@@ -35,6 +35,7 @@
 #include "render/humanoid/skeleton.h"
 #include "render/rigged_mesh.h"
 #include "render/submitter.h"
+#include "render/template_cache.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -413,6 +414,21 @@ public:
   }
 };
 
+class SnapshotPrewarmRenderer : public Render::GL::HumanoidRendererBase {
+public:
+  auto visual_spec() const
+      -> const Render::Creature::Pipeline::UnitVisualSpec & override {
+    static const auto spec = [] {
+      Render::Creature::Pipeline::UnitVisualSpec s{};
+      s.kind = Render::Creature::Pipeline::CreatureKind::Humanoid;
+      s.debug_name = "tests/snapshot_prewarm_renderer";
+      s.archetype_id = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+      return s;
+    }();
+    return spec;
+  }
+};
+
 TEST(HumanoidPrepare, PassIntentFromCtxIsShadowOnPrewarm) {
   Render::GL::DrawContext ctx{};
   EXPECT_EQ(Render::Creature::Pipeline::pass_intent_from_ctx(ctx),
@@ -425,16 +441,17 @@ TEST(HumanoidPrepare, PassIntentFromCtxIsShadowOnPrewarm) {
 TEST(HumanoidPrepare, ShadowRowSubmitsZeroDrawCalls) {
   using namespace Render::Creature::Pipeline;
 
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Humanoid;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = RenderPassIntent::Shadow;
-  row.seed = 42U;
-
   CountingSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = RenderPassIntent::Shadow;
+  req.seed = 42U;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(sink.rigged_calls, 0);
@@ -444,19 +461,50 @@ TEST(HumanoidPrepare, ShadowRowSubmitsZeroDrawCalls) {
 TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
   using namespace Render::Creature::Pipeline;
 
-  PreparedCreatureRenderRow row{};
-  row.spec.kind = CreatureKind::Humanoid;
-  row.lod = Render::Creature::CreatureLOD::Full;
-  row.pass = RenderPassIntent::Main;
-  row.seed = 7U;
-
   CountingSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
-  batch.add(row);
-  const auto stats = batch.submit(sink);
+  CreaturePreparationResult prep;
+  Render::Creature::CreatureRenderRequest req{};
+  req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  req.state = Render::Creature::AnimationStateId::Idle;
+  req.lod = Render::Creature::CreatureLOD::Full;
+  req.pass = RenderPassIntent::Main;
+  req.seed = 7U;
+  req.world_already_grounded = true;
+  prep.bodies.add_request(req);
+  const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
   EXPECT_GT(sink.rigged_calls + sink.meshes, 0);
+}
+
+TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
+  SnapshotPrewarmRenderer renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->renderer_id = "tests/snapshot_prewarm_renderer";
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  ctx.template_prewarm = true;
+  ctx.force_single_soldier = true;
+
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  renderer.render(ctx, recorder);
+
+  EXPECT_GT(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_TRUE(recorder.commands().empty());
 }
 
 TEST(HumanoidPrepare, FacialHairUsesBakedArchetypeWithoutPostBodyDraw) {
@@ -907,19 +955,21 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
   using namespace Render::Creature::Pipeline;
 
   CountingSubmitter sink;
-  PreparedCreatureSubmitBatch batch;
+  CreaturePreparationResult prep;
   for (int i = 0; i < 5; ++i) {
-    PreparedCreatureRenderRow row{};
-    row.spec.kind = CreatureKind::Humanoid;
-    row.lod = Render::Creature::CreatureLOD::Full;
-    row.pass = (i % 2 == 0) ? RenderPassIntent::Main : RenderPassIntent::Shadow;
-    row.seed = static_cast<std::uint32_t>(i + 1);
-    batch.add(row);
+    Render::Creature::CreatureRenderRequest req{};
+    req.archetype = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+    req.state = Render::Creature::AnimationStateId::Idle;
+    req.lod = Render::Creature::CreatureLOD::Full;
+    req.pass = (i % 2 == 0) ? RenderPassIntent::Main : RenderPassIntent::Shadow;
+    req.seed = static_cast<std::uint32_t>(i + 1);
+    req.world_already_grounded = true;
+    prep.bodies.add_request(req);
   }
-  const auto stats = batch.submit(sink);
+  const auto stats = submit_preparation(prep, sink);
 
-  // 3 Main rows (idx 0, 2, 4) → exactly 3 entity submissions; Shadow
-  // rows are filtered before reaching the pipeline.
+  // 3 Main requests (idx 0, 2, 4) -> exactly 3 entity submissions; Shadow
+  // requests are filtered before reaching the pipeline.
   EXPECT_EQ(stats.entities_submitted, 3u);
 }
 
