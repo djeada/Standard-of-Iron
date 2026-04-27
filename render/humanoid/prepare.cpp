@@ -723,8 +723,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     const auto &gfx_settings = Render::GraphicsSettings::instance();
     const bool should_render_shadow =
         ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
-        (soldier_lod == HumanoidLOD::Full ||
-         soldier_lod == HumanoidLOD::Reduced) &&
+        soldier_lod == HumanoidLOD::Full &&
         soldier_distance < gfx_settings.shadow_max_distance();
 
     if (should_render_shadow && inst_ctx.backend != nullptr &&

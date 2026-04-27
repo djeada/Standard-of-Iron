@@ -32,8 +32,8 @@ auto make_inputs(float distance) -> CreatureLodDecisionInputs {
 TEST(CreatureLodDecision, SelectDistanceLodMatchesThresholds) {
   EXPECT_EQ(select_distance_lod(0.0F, kDefaults), CreatureLOD::Full);
   EXPECT_EQ(select_distance_lod(11.99F, kDefaults), CreatureLOD::Full);
-  EXPECT_EQ(select_distance_lod(12.0F, kDefaults), CreatureLOD::Reduced);
-  EXPECT_EQ(select_distance_lod(19.99F, kDefaults), CreatureLOD::Reduced);
+  EXPECT_EQ(select_distance_lod(12.0F, kDefaults), CreatureLOD::Minimal);
+  EXPECT_EQ(select_distance_lod(19.99F, kDefaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(20.0F, kDefaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(39.99F, kDefaults), CreatureLOD::Minimal);
   EXPECT_EQ(select_distance_lod(40.0F, kDefaults), CreatureLOD::Billboard);
@@ -65,13 +65,13 @@ TEST(CreatureLodDecision, BillboardDistanceCullsWithBillboardReason) {
   EXPECT_EQ(d.lod, CreatureLOD::Billboard);
 }
 
-TEST(CreatureLodDecision, BudgetDeniesFullDemotesToReduced) {
+TEST(CreatureLodDecision, BudgetDeniesFullDemotesToMinimal) {
   auto in = make_inputs(5.0F);
   in.apply_visibility_budget = true;
   in.budget_grant_full = false;
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
 }
 
 TEST(CreatureLodDecision, BudgetGrantedKeepsFull) {
@@ -90,56 +90,38 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
   EXPECT_EQ(d.lod, CreatureLOD::Full);
 }
 
-TEST(CreatureLodDecision, TemporalSkipReducedFiresWhenFarAndOffPhase) {
-  auto in = make_inputs(36.0F); // > 35 reduced threshold but < 40 minimal
-  // Distance 36 → Reduced (since 36 >= 20 and < 40 minimal? Actually
-  // 36 >= 20 and < 40 -> Minimal). Use lower distance.
-  in.distance = 19.0F; // Reduced is between 12 and 20
-  // Need to also exceed temporal_distance_reduced (35). Move thresholds.
-  in.thresholds = {12.0F, 50.0F, 80.0F}; // distance 19 → Full
-  in.distance = 36.0F;                   // distance 36 → Reduced
-  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
-  in.frame_index = 1U;
-  in.instance_seed = 0U; // (1+0)%2 == 1 ≠ 0 → temporal skip culls
-  const auto d = decide_creature_lod(in);
-  EXPECT_EQ(d.lod, CreatureLOD::Reduced);
-  EXPECT_TRUE(d.culled);
-  EXPECT_EQ(d.reason, CullReason::Temporal);
-}
-
-TEST(CreatureLodDecision, TemporalSkipReducedRendersOnPhase) {
-  auto in = make_inputs(36.0F);
-  in.thresholds = {12.0F, 50.0F, 80.0F};
-  in.distance = 36.0F;
-  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
-  in.frame_index = 0U;
-  in.instance_seed = 0U; // (0+0)%2 == 0 → render
-  const auto d = decide_creature_lod(in);
-  EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Reduced);
-}
-
 TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
   auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 20.0F, 80.0F}; // 46 → Minimal (>=20, <80)
+  in.thresholds = {12.0F, 20.0F, 80.0F}; // 46 -> Minimal
   in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
   in.frame_index = 1U;
-  in.instance_seed = 0U; // (1+0)%3 == 1 ≠ 0 → temporal skip
+  in.instance_seed = 0U; // (1+0)%3 == 1 != 0 -> temporal skip culls
   const auto d = decide_creature_lod(in);
   EXPECT_EQ(d.lod, CreatureLOD::Minimal);
   EXPECT_TRUE(d.culled);
   EXPECT_EQ(d.reason, CullReason::Temporal);
 }
 
+TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
+  auto in = make_inputs(46.0F);
+  in.thresholds = {12.0F, 20.0F, 80.0F};
+  in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
+  in.frame_index = 2U;
+  in.instance_seed = 1U; // (2+1)%3 == 0 -> render
+  const auto d = decide_creature_lod(in);
+  EXPECT_FALSE(d.culled);
+  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
+}
+
 TEST(CreatureLodDecision, TemporalSkipDoesNotApplyBelowThreshold) {
   auto in = make_inputs(20.0F);
-  in.thresholds = {12.0F, 50.0F, 80.0F}; // 20 → Reduced
+  in.thresholds = {12.0F, 20.0F, 80.0F}; // 20 -> Minimal
   in.temporal = TemporalSkipParams{35.0F, 45.0F, 2U, 3U};
   in.frame_index = 1U;
   in.instance_seed = 0U; // would skip if applied
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
-  EXPECT_EQ(d.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(d.lod, CreatureLOD::Minimal);
 }
 
 TEST(CreatureLodDecision, TemporalPeriodOneAlwaysRenders) {

@@ -141,7 +141,7 @@ TEST(CreatureRenderGraph, EvaluateLodReturnsFullAtCloseDistance) {
   EXPECT_FALSE(decision.culled);
 }
 
-TEST(CreatureRenderGraph, EvaluateLodReturnsReducedAtMidDistance) {
+TEST(CreatureRenderGraph, EvaluateLodReturnsMinimalAtMidDistance) {
   CreatureGraphInputs inputs;
   inputs.camera_distance = 15.0F;
   inputs.has_camera = true;
@@ -149,7 +149,7 @@ TEST(CreatureRenderGraph, EvaluateLodReturnsReducedAtMidDistance) {
   auto config = humanoid_lod_config();
   auto decision = evaluate_creature_lod(inputs, config);
 
-  EXPECT_EQ(decision.lod, CreatureLOD::Reduced);
+  EXPECT_EQ(decision.lod, CreatureLOD::Minimal);
   EXPECT_FALSE(decision.culled);
 }
 

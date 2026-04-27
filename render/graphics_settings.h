@@ -248,12 +248,12 @@ private:
 
       m_lod_multipliers = {.humanoid_full = 3.0F,
                            .humanoid_reduced = 3.0F,
-                           .humanoid_minimal = 3.0F,
-                           .humanoid_billboard = 3.0F,
+                           .humanoid_minimal = 1000.0F,
+                           .humanoid_billboard = 1000.0F,
                            .horse_full = 3.0F,
                            .horse_reduced = 3.0F,
-                           .horse_minimal = 3.0F,
-                           .horse_billboard = 3.0F,
+                           .horse_minimal = 1000.0F,
+                           .horse_billboard = 1000.0F,
                            .shadow_distance = 200.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,

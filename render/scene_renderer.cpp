@@ -1717,8 +1717,8 @@ void Renderer::prewarm_unit_templates(
       std::max<std::size_t>(1, domain_count * variant_count);
   anim_count_budget = std::max<std::size_t>(anim_count_budget, 1);
 
-  std::size_t anim_count = std::max(
-      core_anim_count, std::min(full_anim_count, anim_count_budget));
+  std::size_t anim_count =
+      std::max(core_anim_count, std::min(full_anim_count, anim_count_budget));
 
   std::vector<std::uint8_t> variant_values;
   variant_values.reserve(variant_count);
@@ -1771,8 +1771,7 @@ void Renderer::prewarm_unit_templates(
       -> std::vector<PrewarmWorkItem> {
     std::vector<PrewarmWorkItem> items;
     items.reserve(domain_count * variant_values.size() * anim_keys.size());
-    constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Reduced,
-                                    HumanoidLOD::Minimal};
+    constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
     for (std::size_t profile_idx = 0; profile_idx < profiles.size();
          ++profile_idx) {
       for (int owner_id : owner_ids) {
