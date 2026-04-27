@@ -13,12 +13,14 @@ public:
   explicit UnitPanel(QWidget *parent = nullptr);
 
   void setAnimationPaused(bool paused);
+  [[nodiscard]] auto selectedOwnerId() const -> int;
   [[nodiscard]] auto selectedNationId() const -> QString;
   [[nodiscard]] auto selectedUnitTypeId() const -> QString;
 
 signals:
   void spawnUnitRequested();
   void clearUnitsRequested();
+  void spawnOwnerSelected(int ownerId);
   void nationSelected(const QString &nationId);
   void unitTypeSelected(const QString &unitType);
   void animationSelected(const QString &animationName);
@@ -34,6 +36,7 @@ private:
                            const QString &preferredUnitType = QString());
 
   QCheckBox *m_pause_checkbox = nullptr;
+  QComboBox *m_owner_box = nullptr;
   QComboBox *m_nation_box = nullptr;
   QComboBox *m_unit_box = nullptr;
 };

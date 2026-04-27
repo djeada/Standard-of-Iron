@@ -12,6 +12,7 @@
 #include "ai_system/ai_types.h"
 #include "ai_system/ai_worker.h"
 
+#include <cstddef>
 #include <memory>
 #include <queue>
 
@@ -32,6 +33,9 @@ public:
 
   void set_update_interval(float interval) { m_update_interval = interval; }
   float get_update_interval() const { return m_update_interval; }
+  [[nodiscard]] auto ai_player_count() const -> std::size_t {
+    return m_ai_instances.size();
+  }
 
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
                        float aggression = 0.5F, float defense = 0.5F,
