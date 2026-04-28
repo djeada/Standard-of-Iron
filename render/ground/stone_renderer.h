@@ -39,7 +39,7 @@ private:
   int m_height = 0;
   float m_tile_size = 1.0F;
 
-  std::vector<float> m_heightData;
+  std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;

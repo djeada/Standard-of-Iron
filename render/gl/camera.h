@@ -19,7 +19,7 @@ inline constexpr float k_default_pitch_min = -85.0F;
 
 class Camera {
   friend void solve_constraints(Render::GL::Camera *self,
-                                bool allowTargetShift);
+                                bool allow_target_shift);
 
 public:
   Camera();
@@ -50,10 +50,10 @@ public:
   void orbit(float yaw_deg, float pitch_deg);
 
   void update(float dt);
-  auto screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
-                        QVector3D &outWorld) const -> bool;
-  auto world_to_screen(const QVector3D &world, qreal screenW, qreal screenH,
-                       QPointF &outScreen) const -> bool;
+  auto screen_to_ground(qreal sx, qreal sy, qreal screen_w, qreal screen_h,
+                        QVector3D &out_world) const -> bool;
+  auto world_to_screen(const QVector3D &world, qreal screen_w, qreal screen_h,
+                       QPointF &out_screen) const -> bool;
 
   void set_follow_enabled(bool enable) { m_followEnabled = enable; }
   [[nodiscard]] auto is_follow_enabled() const -> bool {
@@ -62,7 +62,7 @@ public:
   void set_follow_lerp(float alpha) { m_followLerp = alpha; }
   void set_follow_offset(const QVector3D &off) { m_followOffset = off; }
   void capture_follow_offset() { m_followOffset = m_position - m_target; }
-  void update_follow(const QVector3D &targetCenter);
+  void update_follow(const QVector3D &target_center);
 
   void set_rts_view(const QVector3D &center,
                     float distance = CameraDefaults::k_default_rts_distance,
@@ -71,7 +71,7 @@ public:
   void
   set_top_down_view(const QVector3D &center,
                     float distance = CameraDefaults::k_default_rts_distance);
-  void apply_soft_boundaries(bool isPanning = false);
+  void apply_soft_boundaries(bool is_panning = false);
 
   [[nodiscard]] auto get_view_matrix() const -> QMatrix4x4;
   [[nodiscard]] auto get_projection_matrix() const -> QMatrix4x4;

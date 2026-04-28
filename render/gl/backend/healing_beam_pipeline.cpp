@@ -104,10 +104,10 @@ void HealingBeamPipeline::cache_uniforms() {
   m_uniforms.mvp = m_beamShader->uniform_handle("u_mvp");
   m_uniforms.time = m_beamShader->uniform_handle("u_time");
   m_uniforms.progress = m_beamShader->uniform_handle("u_progress");
-  m_uniforms.startPos = m_beamShader->uniform_handle("u_startPos");
-  m_uniforms.endPos = m_beamShader->uniform_handle("u_endPos");
-  m_uniforms.beamWidth = m_beamShader->uniform_handle("u_beamWidth");
-  m_uniforms.healColor = m_beamShader->uniform_handle("u_healColor");
+  m_uniforms.start_pos = m_beamShader->uniform_handle("u_startPos");
+  m_uniforms.end_pos = m_beamShader->uniform_handle("u_endPos");
+  m_uniforms.beam_width = m_beamShader->uniform_handle("u_beamWidth");
+  m_uniforms.heal_color = m_beamShader->uniform_handle("u_healColor");
   m_uniforms.alpha = m_beamShader->uniform_handle("u_alpha");
 }
 
@@ -237,16 +237,16 @@ void HealingBeamPipeline::render(
 
   clear_gl_errors();
 
-  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
-  GLint prevBlendSrc = 0;
-  GLint prevBlendDst = 0;
-  glGetIntegerv(GL_BLEND_SRC_ALPHA, &prevBlendSrc);
-  glGetIntegerv(GL_BLEND_DST_ALPHA, &prevBlendDst);
+  GLint prev_blend_src = 0;
+  GLint prev_blend_dst = 0;
+  glGetIntegerv(GL_BLEND_SRC_ALPHA, &prev_blend_src);
+  glGetIntegerv(GL_BLEND_DST_ALPHA, &prev_blend_dst);
 
   glDisable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
@@ -266,17 +266,17 @@ void HealingBeamPipeline::render(
   glBindVertexArray(0);
 
   glDepthMask(depthMaskEnabled);
-  glBlendFunc(static_cast<GLenum>(prevBlendSrc),
-              static_cast<GLenum>(prevBlendDst));
-  if (!blendEnabled) {
+  glBlendFunc(static_cast<GLenum>(prev_blend_src),
+              static_cast<GLenum>(prev_blend_dst));
+  if (!blend_enabled) {
     glDisable(GL_BLEND);
   }
-  if (depthTestEnabled) {
+  if (depth_test_enabled) {
     glEnable(GL_DEPTH_TEST);
   } else {
     glDisable(GL_DEPTH_TEST);
   }
-  if (cullEnabled) {
+  if (cull_enabled) {
     glEnable(GL_CULL_FACE);
   }
 }
@@ -295,10 +295,10 @@ void HealingBeamPipeline::render_beam(const Game::Systems::HealingBeam &beam,
   m_beamShader->set_uniform(m_uniforms.mvp, mvp);
   m_beamShader->set_uniform(m_uniforms.time, animation_time);
   m_beamShader->set_uniform(m_uniforms.progress, progress);
-  m_beamShader->set_uniform(m_uniforms.startPos, beam.get_start());
-  m_beamShader->set_uniform(m_uniforms.endPos, beam.get_end());
-  m_beamShader->set_uniform(m_uniforms.beamWidth, beam.get_beam_width());
-  m_beamShader->set_uniform(m_uniforms.healColor, beam.get_color());
+  m_beamShader->set_uniform(m_uniforms.start_pos, beam.get_start());
+  m_beamShader->set_uniform(m_uniforms.end_pos, beam.get_end());
+  m_beamShader->set_uniform(m_uniforms.beam_width, beam.get_beam_width());
+  m_beamShader->set_uniform(m_uniforms.heal_color, beam.get_color());
   m_beamShader->set_uniform(m_uniforms.alpha, alpha);
 
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
@@ -317,7 +317,7 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
     return;
   }
 
-  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
@@ -334,10 +334,10 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
   m_beamShader->set_uniform(m_uniforms.time, time);
   m_beamShader->set_uniform(m_uniforms.progress,
                             std::clamp(progress, 0.0F, 1.0F));
-  m_beamShader->set_uniform(m_uniforms.startPos, start);
-  m_beamShader->set_uniform(m_uniforms.endPos, end);
-  m_beamShader->set_uniform(m_uniforms.beamWidth, beam_width);
-  m_beamShader->set_uniform(m_uniforms.healColor, color);
+  m_beamShader->set_uniform(m_uniforms.start_pos, start);
+  m_beamShader->set_uniform(m_uniforms.end_pos, end);
+  m_beamShader->set_uniform(m_uniforms.beam_width, beam_width);
+  m_beamShader->set_uniform(m_uniforms.heal_color, color);
   m_beamShader->set_uniform(m_uniforms.alpha,
                             std::clamp(intensity, 0.0F, 1.0F));
 
@@ -347,7 +347,7 @@ void HealingBeamPipeline::render_single_beam(const QVector3D &start,
 
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cullEnabled) {
+  if (cull_enabled) {
     glEnable(GL_CULL_FACE);
   }
 }

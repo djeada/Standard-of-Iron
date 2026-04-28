@@ -101,7 +101,7 @@ struct VariationParams {
   float posture_slump;
   float shoulder_tilt;
 
-  static auto fromSeed(uint32_t seed) -> VariationParams {
+  static auto from_seed(uint32_t seed) -> VariationParams {
     VariationParams v{};
 
     auto next_rand = [](uint32_t &s) -> float {

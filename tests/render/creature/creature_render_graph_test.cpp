@@ -13,6 +13,7 @@
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
+#include "render/graphics_settings.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/submitter.h"
@@ -61,20 +62,20 @@ public:
 TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
   auto config = humanoid_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-    EXPECT_GT(config.temporal.period_minimal, 0U);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseLodConfigHasReasonableDefaults) {
   auto config = horse_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, ElephantLodConfigHasReasonableDefaults) {
   auto config = elephant_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
@@ -92,20 +93,41 @@ TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
 TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
   auto config = humanoid_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-    EXPECT_GT(config.temporal.period_minimal, 0U);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.temporal.period_minimal, 0U);
 }
 
 TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
   auto config = horse_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
 }
 
 TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
   auto config = elephant_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
-    EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
+  auto const &settings = Render::GraphicsSettings::instance();
+  EXPECT_FLOAT_EQ(config.thresholds.full,
+                  settings.elephant_full_detail_distance());
+  EXPECT_FLOAT_EQ(config.thresholds.minimal,
+                  settings.elephant_minimal_detail_distance());
+  EXPECT_GT(config.thresholds.full, settings.horse_full_detail_distance());
+  EXPECT_GT(config.thresholds.minimal,
+            settings.horse_minimal_detail_distance());
+}
+
+TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
+  auto const &settings = Render::GraphicsSettings::instance();
+
+  EXPECT_EQ(
+      quadruped_lod_from_settings(CreatureKind::Elephant,
+                                  settings.horse_full_detail_distance() + 1.0F),
+      CreatureLOD::Full);
+  EXPECT_EQ(quadruped_lod_from_settings(
+                CreatureKind::Elephant,
+                settings.elephant_full_detail_distance() + 1.0F),
+            CreatureLOD::Minimal);
 }
 
 TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
@@ -114,7 +136,7 @@ TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
   auto elephant = elephant_lod_config_from_settings();
 
   // All species should have temporal skip parameters
-      }
+}
 
 // --- LOD Evaluation Tests ---
 
@@ -284,10 +306,10 @@ TEST(CreatureRenderBatch, AddHorseIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::Horse::HorseSpecPose pose{};
   Render::GL::HorseVariant variant{};
 
-  batch.add_horse(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -296,10 +318,10 @@ TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::Elephant::ElephantSpecPose pose{};
   Render::GL::ElephantVariant variant{};
 
-  batch.add_elephant(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -368,10 +390,10 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::Horse::HorseSpecPose pose{};
   Render::GL::HorseVariant variant{};
 
-  batch.add_horse(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
@@ -393,10 +415,10 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::Elephant::ElephantSpecPose pose{};
   Render::GL::ElephantVariant variant{};
 
-  batch.add_elephant(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);

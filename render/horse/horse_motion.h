@@ -16,28 +16,30 @@ struct HorseProfile;
 
 namespace MountFrameConstants {
 
-constexpr float kSaddleThicknessOffset = 0.35F;
-constexpr float kSaddleBodyLengthOffset = 0.05F;
-constexpr float kSaddleSeatForwardScale = 0.25F;
-constexpr float kSeatPositionHeightScale = 0.56F;
+constexpr float kSaddleThicknessOffset = 0.05F;
+constexpr float kSaddleBodyLengthOffset = -0.02F;
+constexpr float kSaddleSeatForwardScale = 0.15F;
+constexpr float kSeatPositionHeightScale = 0.95F;
+constexpr float kSaddleBodyHeightLiftScale = 0.18F;
+constexpr float kSeatBodyHeightLiftScale = 0.26F;
 
 constexpr float kStirrupWidthScale = 0.92F;
 constexpr float kStirrupThicknessOffset = 0.10F;
 constexpr float kStirrupForwardScale = 0.28F;
 
-constexpr float kNeckTopBodyHeightScale = 0.65F;
-constexpr float kNeckTopBodyLengthScale = 0.25F;
-constexpr float kHeadCenterHeightScale = 0.10F;
+constexpr float kNeckTopBodyHeightScale = 1.16F;
+constexpr float kNeckTopBodyLengthScale = 0.73F;
+constexpr float kHeadCenterHeightScale = 0.12F;
 constexpr float kHeadCenterLengthScale = 0.40F;
 
-constexpr float kMuzzleHeightOffset = 0.18F;
-constexpr float kMuzzleLengthOffset = 0.58F;
+constexpr float kMuzzleHeightOffset = 0.12F;
+constexpr float kMuzzleLengthOffset = 0.34F;
 constexpr float kBridleHeightOffset = 0.05F;
-constexpr float kBridleLengthOffset = 0.20F;
+constexpr float kBridleLengthOffset = 0.08F;
 
 constexpr float kBitWidthOffset = 0.55F;
 constexpr float kBitHeightOffset = 0.08F;
-constexpr float kBitLengthOffset = 0.10F;
+constexpr float kBitLengthOffset = 0.04F;
 
 } // namespace MountFrameConstants
 

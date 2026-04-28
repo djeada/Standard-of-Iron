@@ -115,14 +115,14 @@ void VegetationPipeline::cache_uniforms() {
     m_firecampUniforms.view_proj =
         m_firecampShader->uniform_handle("u_viewProj");
     m_firecampUniforms.time = m_firecampShader->uniform_handle("u_time");
-    m_firecampUniforms.flickerSpeed =
+    m_firecampUniforms.flicker_speed =
         m_firecampShader->uniform_handle("u_flickerSpeed");
-    m_firecampUniforms.flickerAmount =
+    m_firecampUniforms.flicker_amount =
         m_firecampShader->uniform_handle("u_flickerAmount");
-    m_firecampUniforms.glowStrength =
+    m_firecampUniforms.glow_strength =
         m_firecampShader->uniform_handle("u_glowStrength");
-    m_firecampUniforms.fireTexture =
-        m_firecampShader->uniform_handle("fireTexture");
+    m_firecampUniforms.fire_texture =
+        m_firecampShader->uniform_handle("fire_texture");
     m_firecampUniforms.camera_right =
         m_firecampShader->uniform_handle("u_cameraRight");
     m_firecampUniforms.camera_forward =
@@ -356,7 +356,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(k_segments * 6 * 4 + k_segments * 3);
 
-  auto add_ring = [&](float radius, float y, float normalUp, float v_coord,
+  auto add_ring = [&](float radius, float y, float normal_up, float v_coord,
                       const QVector2D &center_offset =
                           QVector2D(0.0F, 0.0F)) -> int {
     const int start = static_cast<int>(vertices.size());
@@ -365,7 +365,7 @@ void VegetationPipeline::initialize_pine_pipeline() {
       const float angle = t * k_two_pi;
       const float nx = std::cos(angle);
       const float nz = std::sin(angle);
-      QVector3D normal(nx, normalUp, nz);
+      QVector3D normal(nx, normal_up, nz);
       normal.normalize();
       QVector3D const position(radius * nx + center_offset.x(), y,
                                radius * nz + center_offset.y());
@@ -375,13 +375,13 @@ void VegetationPipeline::initialize_pine_pipeline() {
     return start;
   };
 
-  auto connect_rings = [&](int lowerStart, int upperStart) {
+  auto connect_rings = [&](int lower_start, int upper_start) {
     for (int i = 0; i < k_segments; ++i) {
       const int next = (i + 1) % k_segments;
-      const auto lower0 = static_cast<unsigned short>(lowerStart + i);
-      const auto lower1 = static_cast<unsigned short>(lowerStart + next);
-      const auto upper0 = static_cast<unsigned short>(upperStart + i);
-      const auto upper1 = static_cast<unsigned short>(upperStart + next);
+      const auto lower0 = static_cast<unsigned short>(lower_start + i);
+      const auto lower1 = static_cast<unsigned short>(lower_start + next);
+      const auto upper0 = static_cast<unsigned short>(upper_start + i);
+      const auto upper1 = static_cast<unsigned short>(upper_start + next);
 
       indices.push_back(lower0);
       indices.push_back(lower1);
@@ -516,7 +516,7 @@ void VegetationPipeline::initialize_olive_pipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(k_segments * 6 * 40);
 
-  auto add_ring = [&](float radius, float y, float normalUp, float v_coord,
+  auto add_ring = [&](float radius, float y, float normal_up, float v_coord,
                       const QVector2D &offset = QVector2D(0.0F, 0.0F)) -> int {
     const int start = static_cast<int>(vertices.size());
     for (int i = 0; i < k_segments; ++i) {
@@ -524,7 +524,7 @@ void VegetationPipeline::initialize_olive_pipeline() {
       const float angle = t * k_two_pi;
       const float nx = std::cos(angle);
       const float nz = std::sin(angle);
-      QVector3D normal(nx, normalUp, nz);
+      QVector3D normal(nx, normal_up, nz);
       normal.normalize();
       QVector3D const position(radius * nx + offset.x(), y,
                                radius * nz + offset.y());
@@ -546,14 +546,14 @@ void VegetationPipeline::initialize_olive_pipeline() {
   };
 
   auto add_cap = [&](int ring, float capY, const QVector2D &offset, float v) {
-    const int topIdx = static_cast<int>(vertices.size());
+    const int top_idx = static_cast<int>(vertices.size());
     vertices.push_back({QVector3D(offset.x(), capY, offset.y()),
                         QVector2D(0.5F, v), QVector3D(0.0F, 1.0F, 0.0F)});
     for (int i = 0; i < k_segments; ++i) {
       const int next = (i + 1) % k_segments;
       indices.push_back(static_cast<unsigned short>(ring + i));
       indices.push_back(static_cast<unsigned short>(ring + next));
-      indices.push_back(static_cast<unsigned short>(topIdx));
+      indices.push_back(static_cast<unsigned short>(top_idx));
     }
   };
 
@@ -699,16 +699,16 @@ void VegetationPipeline::initialize_fire_camp_pipeline() {
   std::vector<unsigned short> indices;
   indices.reserve(k_firecamp_index_reserve);
 
-  auto append_plane = [&](float planeIndex) {
+  auto append_plane = [&](float plane_index) {
     auto const base = static_cast<unsigned short>(vertices.size());
     vertices.push_back(
-        {QVector3D(-1.0F, 0.0F, planeIndex), QVector2D(0.0F, 0.0F)});
+        {QVector3D(-1.0F, 0.0F, plane_index), QVector2D(0.0F, 0.0F)});
     vertices.push_back(
-        {QVector3D(1.0F, 0.0F, planeIndex), QVector2D(1.0F, 0.0F)});
+        {QVector3D(1.0F, 0.0F, plane_index), QVector2D(1.0F, 0.0F)});
     vertices.push_back(
-        {QVector3D(1.0F, 2.0F, planeIndex), QVector2D(1.0F, 1.0F)});
+        {QVector3D(1.0F, 2.0F, plane_index), QVector2D(1.0F, 1.0F)});
     vertices.push_back(
-        {QVector3D(-1.0F, 2.0F, planeIndex), QVector2D(0.0F, 1.0F)});
+        {QVector3D(-1.0F, 2.0F, plane_index), QVector2D(0.0F, 1.0F)});
 
     indices.push_back(base + 0);
     indices.push_back(base + 1);

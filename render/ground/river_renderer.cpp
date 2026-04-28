@@ -26,7 +26,7 @@ RiverRenderer::~RiverRenderer() = default;
 void RiverRenderer::configure(
     const std::vector<Game::Map::RiverSegment> &river_segments,
     float tile_size) {
-  m_riverSegments = river_segments;
+  m_river_segments = river_segments;
   m_tile_size = tile_size;
   build_meshes();
 }
@@ -34,7 +34,7 @@ void RiverRenderer::configure(
 void RiverRenderer::build_meshes() {
   m_meshes.clear();
 
-  if (m_riverSegments.empty()) {
+  if (m_river_segments.empty()) {
     return;
   }
 
@@ -50,8 +50,8 @@ void RiverRenderer::build_meshes() {
   settings.y_offset = 0.0F;
 
   std::vector<Ground::LinearFeatureRibbonSegment> segments;
-  segments.reserve(m_riverSegments.size());
-  for (const auto &segment : m_riverSegments) {
+  segments.reserve(m_river_segments.size());
+  for (const auto &segment : m_river_segments) {
     segments.push_back({segment.start, segment.end, segment.width});
   }
 
@@ -60,7 +60,7 @@ void RiverRenderer::build_meshes() {
 }
 
 void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (m_meshes.empty() || m_riverSegments.empty()) {
+  if (m_meshes.empty() || m_river_segments.empty()) {
     return;
   }
 
@@ -77,7 +77,7 @@ void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   model.setToIdentity();
 
   size_t mesh_index = 0;
-  for (const auto &segment : m_riverSegments) {
+  for (const auto &segment : m_river_segments) {
     if (mesh_index >= m_meshes.size()) {
       break;
     }

@@ -22,11 +22,7 @@ namespace Render::GL {
 inline constexpr std::uint8_t kRenderArchetypeFixedColorSlot =
     std::numeric_limits<std::uint8_t>::max();
 
-enum class RenderArchetypeLod : std::uint8_t {
-  Full = 0,
-  Minimal = 1,
-  Count
-};
+enum class RenderArchetypeLod : std::uint8_t { Full = 0, Minimal = 1, Count };
 
 struct RenderArchetypeDraw {
   Mesh *mesh = nullptr;

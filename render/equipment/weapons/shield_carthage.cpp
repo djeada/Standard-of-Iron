@@ -206,6 +206,7 @@ auto carthage_shield_local_pose(float scale_multiplier) -> QMatrix4x4 {
       (k_base_shield_diameter * 0.5F) * scale_multiplier;
   QVector3D const shield_center = shield_center_local(shield_radius);
   QMatrix4x4 pose;
+  pose.translate(0.12F, 0.0F, 0.0F);
   pose.translate(shield_center);
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
   pose.translate(-shield_center);

@@ -37,6 +37,8 @@ struct Material;
 
 namespace Render::Creature::Pipeline {
 
+struct CreatureVisualDefinition;
+
 enum class CreatureKind : std::uint8_t {
   Humanoid = 0,
   Horse = 1,
@@ -117,6 +119,7 @@ struct UnitVisualSpec {
   PoseHookFn pose_hook{nullptr};
   VariantHookFn variant_hook{nullptr};
   ProportionScaling scaling{};
+  const CreatureVisualDefinition *creature_definition{nullptr};
 
   LegacySlotMask owned_legacy_slots{LegacySlotMask::None};
 

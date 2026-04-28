@@ -50,7 +50,7 @@ void EffectsPipeline::cache_basic_uniforms() {
   m_basicUniforms.model = m_basicShader->uniform_handle("u_model");
   m_basicUniforms.view_proj = m_basicShader->uniform_handle("u_viewProj");
   m_basicUniforms.texture = m_basicShader->uniform_handle("u_texture");
-  m_basicUniforms.useTexture = m_basicShader->uniform_handle("u_useTexture");
+  m_basicUniforms.use_texture = m_basicShader->uniform_handle("u_useTexture");
   m_basicUniforms.color = m_basicShader->uniform_handle("u_color");
   m_basicUniforms.alpha = m_basicShader->uniform_handle("u_alpha");
   m_basicUniforms.instanced =
@@ -64,9 +64,9 @@ void EffectsPipeline::cache_grid_uniforms() {
 
   m_gridUniforms.mvp = m_gridShader->optional_uniform_handle("u_mvp");
   m_gridUniforms.model = m_gridShader->uniform_handle("u_model");
-  m_gridUniforms.gridColor = m_gridShader->uniform_handle("u_gridColor");
-  m_gridUniforms.lineColor = m_gridShader->uniform_handle("u_lineColor");
-  m_gridUniforms.cellSize = m_gridShader->uniform_handle("u_cellSize");
+  m_gridUniforms.grid_color = m_gridShader->uniform_handle("u_gridColor");
+  m_gridUniforms.line_color = m_gridShader->uniform_handle("u_lineColor");
+  m_gridUniforms.cell_size = m_gridShader->uniform_handle("u_cellSize");
   m_gridUniforms.thickness = m_gridShader->uniform_handle("u_thickness");
 }
 

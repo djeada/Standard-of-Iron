@@ -229,6 +229,21 @@ TEST(PartGraphWalkerTest, ValidateAcceptsWellFormedGraph) {
   EXPECT_TRUE(validate_part_graph(beast_topology(), g));
 }
 
+TEST(PartGraphWalkerTest, CylinderUsesCustomMeshOverrideWhenProvided) {
+  auto palette = evaluate_beast();
+  PrimitiveInstance p = make_torso_cylinder();
+  p.custom_mesh = Render::GL::get_unit_cube();
+  std::array<PrimitiveInstance, 1> prims = {p};
+  PartGraph g{std::span<const PrimitiveInstance>(prims.data(), 1)};
+
+  RecordingSubmitter sub;
+  QMatrix4x4 identity;
+  submit_part_graph(beast_topology(), g, std::span<const QMatrix4x4>(palette),
+                    CreatureLOD::Full, identity, sub);
+  ASSERT_EQ(sub.calls.size(), 1U);
+  EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cube());
+}
+
 TEST(PartGraphWalkerTest, SubmitsOneDrawPerPrimitiveAtLodFull) {
   auto palette = evaluate_beast();
   std::array<PrimitiveInstance, 4> primitives = {

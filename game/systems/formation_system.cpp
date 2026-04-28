@@ -25,7 +25,7 @@ constexpr float kCavalryRearDepthBiasScale = 0.18F;
 auto get_unit_spacing(Game::Units::TroopType type,
                       float base_spacing) -> float {
   float const selection_size =
-      Game::Units::TroopConfig::instance().getSelectionRingSize(type);
+      Game::Units::TroopConfig::instance().get_selection_ring_size(type);
   return (selection_size * 2.0F + 0.5F) * base_spacing;
 }
 

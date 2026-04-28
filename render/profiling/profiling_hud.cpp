@@ -18,7 +18,7 @@ void ProfilingHud::set_enabled(bool on) {
   if (!on) {
     global_profile().reset();
   }
-  emit enabledChanged();
+  emit enabled_changed();
   refresh();
 }
 
@@ -27,7 +27,7 @@ void ProfilingHud::refresh() {
   bool const changed = next != m_overlay;
   m_overlay = next;
   if (changed) {
-    emit overlayChanged();
+    emit overlay_changed();
   }
 }
 

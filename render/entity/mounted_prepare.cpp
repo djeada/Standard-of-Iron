@@ -15,9 +15,11 @@ auto prepare_mounted_rows(
     Render::Creature::Pipeline::RenderPassIntent pass) noexcept
     -> MountedPreparedSet {
   MountedPreparedSet set{};
-  set.mount_row = Render::Creature::Pipeline::make_prepared_horse_row(
-      mounted_spec.mount, mount_pose, mount_variant, mount_world_from_unit,
-      seed, lod, 0, pass);
+  (void)mount_pose;
+  (void)mount_variant;
+  set.mount_row = Render::Creature::Pipeline::make_prepared_creature_row(
+      mounted_spec.mount, Render::Creature::Pipeline::CreatureKind::Horse,
+      mount_world_from_unit, seed, lod, 0, pass);
   set.rider_row = Render::Creature::Pipeline::make_prepared_humanoid_row(
       mounted_spec.rider, rider_pose, rider_variant, rider_anim,
       rider_world_from_unit, seed, lod, 0, pass);

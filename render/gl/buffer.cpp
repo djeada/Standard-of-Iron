@@ -67,9 +67,9 @@ void VertexArray::bind() {
     initializeOpenGLFunctions();
     glGenVertexArrays(1, &m_vao);
 #ifndef NDEBUG
-    GLenum genErr = glGetError();
-    if (genErr != GL_NO_ERROR) {
-      qWarning() << "VertexArray glGenVertexArrays error" << genErr;
+    GLenum gen_err = glGetError();
+    if (gen_err != GL_NO_ERROR) {
+      qWarning() << "VertexArray glGenVertexArrays error" << gen_err;
     }
 #endif
   }
@@ -81,9 +81,9 @@ void VertexArray::bind() {
 
   glBindVertexArray(m_vao);
 #ifndef NDEBUG
-  GLenum bindErr = glGetError();
-  if (bindErr != GL_NO_ERROR) {
-    qWarning() << "VertexArray glBindVertexArray error" << bindErr << "vao"
+  GLenum bind_err = glGetError();
+  if (bind_err != GL_NO_ERROR) {
+    qWarning() << "VertexArray glBindVertexArray error" << bind_err << "vao"
                << m_vao;
   }
 #endif

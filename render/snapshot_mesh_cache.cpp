@@ -1,7 +1,9 @@
 #include "snapshot_mesh_cache.h"
 
 #include "bone_palette_arena.h"
+#include "creature/snapshot_mesh_asset.h"
 #include "rigged_mesh_cache.h"
+#include "snapshot_mesh_bake.h"
 
 #include <QVector3D>
 #include <QVector4D>
@@ -27,6 +29,20 @@ auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4 * {
   static const auto kPalette = build_identity_palette();
   return kPalette.data();
 }
+
+namespace {
+
+auto build_entry(std::span<const RiggedVertex> vertices,
+                 std::span<const std::uint32_t> indices) -> SnapshotMeshEntry {
+  SnapshotMeshEntry entry{};
+  std::vector<RiggedVertex> baked(vertices.begin(), vertices.end());
+  std::vector<std::uint32_t> indices_copy(indices.begin(), indices.end());
+  entry.mesh =
+      std::make_unique<RiggedMesh>(std::move(baked), std::move(indices_copy));
+  return entry;
+}
+
+} // namespace
 
 auto SnapshotMeshCache::get_or_bake(
     const Key &key, const RiggedMeshEntry &source,
@@ -54,55 +70,29 @@ auto SnapshotMeshCache::get_or_bake(
       source.skinned_palettes.data() +
       static_cast<std::size_t>(global_frame) *
           static_cast<std::size_t>(source.skinned_bone_count);
-  const auto bone_count = source.skinned_bone_count;
+  auto const baked = bake_snapshot_vertices(
+      src_vertices,
+      {frame_palette, static_cast<std::size_t>(source.skinned_bone_count)});
 
-  std::vector<RiggedVertex> baked;
-  baked.resize(src_vertices.size());
+  SnapshotMeshEntry entry = build_entry(baked, src_indices);
+  auto [it, _ok] = m_entries.emplace(key, std::move(entry));
+  return &it->second;
+}
 
-  for (std::size_t vi = 0; vi < src_vertices.size(); ++vi) {
-    const auto &sv = src_vertices[vi];
-
-    QVector4D pos(sv.position_bone_local[0], sv.position_bone_local[1],
-                  sv.position_bone_local[2], 1.0F);
-    QVector4D nrm(sv.normal_bone_local[0], sv.normal_bone_local[1],
-                  sv.normal_bone_local[2], 0.0F);
-
-    QVector4D out_pos(0.0F, 0.0F, 0.0F, 0.0F);
-    QVector4D out_nrm(0.0F, 0.0F, 0.0F, 0.0F);
-
-    for (int k = 0; k < 4; ++k) {
-      const float w = sv.bone_weights[k];
-      if (w == 0.0F) {
-        continue;
-      }
-      const auto bi = static_cast<std::uint32_t>(sv.bone_indices[k]);
-      if (bi >= bone_count) {
-        continue;
-      }
-      const auto &m = frame_palette[bi];
-      out_pos += (m * pos) * w;
-      out_nrm += (m * nrm) * w;
-    }
-
-    QVector3D n(out_nrm.x(), out_nrm.y(), out_nrm.z());
-    n.normalize();
-
-    RiggedVertex bv{};
-    bv.position_bone_local = {out_pos.x(), out_pos.y(), out_pos.z()};
-    bv.normal_bone_local = {n.x(), n.y(), n.z()};
-    bv.tex_coord = sv.tex_coord;
-    bv.bone_indices = {0, 0, 0, 0};
-    bv.bone_weights = {1.0F, 0.0F, 0.0F, 0.0F};
-    bv.color_role = sv.color_role;
-    bv.padding = sv.padding;
-    baked[vi] = bv;
+auto SnapshotMeshCache::get_or_load(
+    const Key &key, const Render::Creature::Snapshot::SnapshotMeshBlob &source,
+    std::uint32_t global_frame) -> const SnapshotMeshEntry * {
+  if (auto it = m_entries.find(key); it != m_entries.end()) {
+    return &it->second;
   }
 
-  std::vector<std::uint32_t> indices_copy = src_indices;
+  const auto vertices = source.frame_vertices_view(global_frame);
+  const auto indices = source.indices_view();
+  if (vertices.empty() || indices.empty()) {
+    return nullptr;
+  }
 
-  SnapshotMeshEntry entry{};
-  entry.mesh =
-      std::make_unique<RiggedMesh>(std::move(baked), std::move(indices_copy));
+  SnapshotMeshEntry entry = build_entry(vertices, indices);
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
   return &it->second;
 }

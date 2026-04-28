@@ -3,6 +3,7 @@
 #include "buffer.h"
 #include <QOpenGLFunctions_3_3_Core>
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -13,6 +14,8 @@ struct Vertex {
   std::array<float, 3> position{};
   std::array<float, 3> normal{};
   std::array<float, 2> tex_coord{};
+  std::uint8_t color_role{0};
+  std::array<std::uint8_t, 3> padding{};
 };
 
 class Mesh : protected QOpenGLFunctions_3_3_Core {

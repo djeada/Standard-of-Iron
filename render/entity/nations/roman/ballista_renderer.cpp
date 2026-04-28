@@ -102,8 +102,8 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
-void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanBallistaPalette &c) {
+void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                     Texture *white, const RomanBallistaPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.40F, 0.18F, 0.0F),
            QVector3D(0.06F, 0.12F, 0.30F), c.wood_frame);
@@ -161,8 +161,8 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.38F, wheel_radius, 0.0F), 0.022F, c.metal_iron, white);
 }
 
-void drawTorsionBundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const RomanBallistaPalette &c) {
+void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                          Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -183,8 +183,8 @@ void drawTorsionBundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.25F, 0.20F, -0.28F), 0.09F, c.metal_bronze, white);
 }
 
-void drawArms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const RomanBallistaPalette &c) {
+void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit,
+               Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -206,8 +206,8 @@ void drawArms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
   out.mesh(get_unit_sphere(), right_socket, c.metal_bronze, white, 1.0F);
 }
 
-void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
-                   const RomanBallistaPalette &c) {
+void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
+                    const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -218,9 +218,9 @@ void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
            QVector3D(0.0F, 0.30F, 0.15F), 0.008F, c.rope, white);
 }
 
-void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
-               Texture *white, const RomanBallistaPalette &c,
-               const BallistaAnimContext &anim_ctx) {
+void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                Texture *white, const RomanBallistaPalette &c,
+                const BallistaAnimContext &anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -264,8 +264,8 @@ void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawTriggerMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const RomanBallistaPalette &c) {
+void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                            Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -282,8 +282,8 @@ void drawTriggerMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.20F, 0.12F, 0.25F), 0.012F, c.wood_frame, white);
 }
 
-void drawRomanOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const RomanBallistaPalette &c) {
+void draw_roman_ornaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
+                          Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 base = p.model;
   base.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -337,14 +337,14 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
     ctx.model = p.model;
     ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
-    drawBaseFrame(ctx, out, unit, white, c);
+    draw_base_frame(ctx, out, unit, white, c);
     draw_wheels(ctx, out, unit, white, c);
-    drawTorsionBundles(ctx, out, unit, white, c);
-    drawArms(ctx, out, unit, white, c);
-    drawBowstring(ctx, out, white, c);
-    drawSlide(ctx, out, unit, white, c, anim_ctx);
-    drawTriggerMechanism(ctx, out, unit, white, c);
-    drawRomanOrnaments(ctx, out, unit, white, c);
+    draw_torsion_bundles(ctx, out, unit, white, c);
+    draw_arms(ctx, out, unit, white, c);
+    draw_bowstring(ctx, out, white, c);
+    draw_slide(ctx, out, unit, white, c, anim_ctx);
+    draw_trigger_mechanism(ctx, out, unit, white, c);
+    draw_roman_ornaments(ctx, out, unit, white, c);
   });
 }
 

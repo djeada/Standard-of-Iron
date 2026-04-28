@@ -420,23 +420,23 @@ void TerrainRenderer::build_meshes() {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::unordered_map<int, unsigned int> remap;
-        float heightSum = 0.0F;
-        int heightCount = 0;
-        float rotationDeg = 0.0F;
-        bool flipU = false;
+        float height_sum = 0.0F;
+        int height_count = 0;
+        float rotation_deg = 0.0F;
+        bool flip_u = false;
         float tint = 1.0F;
-        QVector3D normalSum = QVector3D(0, 0, 0);
-        float slopeSum = 0.0F;
-        float heightVarSum = 0.0F;
-        int statCount = 0;
+        QVector3D normal_sum = QVector3D(0, 0, 0);
+        float slope_sum = 0.0F;
+        float height_var_sum = 0.0F;
+        int stat_count = 0;
 
-        float aoSum = 0.0F;
-        int aoCount = 0;
-        float curvatureSum = 0.0F;
-        int curvatureCount = 0;
-        float entrySum = 0.0F;
-        float entryPeak = 0.0F;
-        int entryCount = 0;
+        float ao_sum = 0.0F;
+        int ao_count = 0;
+        float curvature_sum = 0.0F;
+        int curvature_count = 0;
+        float entry_sum = 0.0F;
+        float entry_peak = 0.0F;
+        int entry_count = 0;
       };
 
       SectionData sections[3];
@@ -461,20 +461,20 @@ void TerrainRenderer::build_meshes() {
           tint_variants[(variant_seed >> k_tint_shift) % k_tint_variant_count];
 
       for (auto &section : sections) {
-        section.rotationDeg = rotation_step;
-        section.flipU = flip;
+        section.rotation_deg = rotation_step;
+        section.flip_u = flip;
         section.tint = tint;
       }
 
       auto ensure_vertex = [&](SectionData &section,
-                               int globalIndex) -> unsigned int {
-        auto it = section.remap.find(globalIndex);
+                               int global_index) -> unsigned int {
+        auto it = section.remap.find(global_index);
         if (it != section.remap.end()) {
           return it->second;
         }
         Vertex v{};
-        const QVector3D &pos = positions[globalIndex];
-        const QVector3D &normal = normals[globalIndex];
+        const QVector3D &pos = positions[global_index];
+        const QVector3D &normal = normals[global_index];
         v.position[0] = pos.x();
         v.position[1] = pos.y();
         v.position[2] = pos.z();
@@ -486,12 +486,12 @@ void TerrainRenderer::build_meshes() {
         float uu = pos.x() * tex_scale;
         float const vv = pos.z() * tex_scale;
 
-        if (section.flipU) {
+        if (section.flip_u) {
           uu = -uu;
         }
         float ru = uu;
         float rv = vv;
-        switch (static_cast<int>(section.rotationDeg)) {
+        switch (static_cast<int>(section.rotation_deg)) {
         case 90: {
           float const t = ru;
           ru = -rv;
@@ -511,13 +511,13 @@ void TerrainRenderer::build_meshes() {
         }
         v.tex_coord[0] = ru;
         v.tex_coord[1] =
-            entry_weight.empty() ? 0.0F : entry_weight[globalIndex];
+            entry_weight.empty() ? 0.0F : entry_weight[global_index];
 
         section.vertices.push_back(v);
         auto const local_index =
             static_cast<unsigned int>(section.vertices.size() - 1);
-        section.remap.emplace(globalIndex, local_index);
-        section.normalSum += normal;
+        section.remap.emplace(global_index, local_index);
+        section.normal_sum += normal;
         return local_index;
       };
 
@@ -535,12 +535,12 @@ void TerrainRenderer::build_meshes() {
         float const tex_scale = 0.2F / std::max(1.0F, m_tile_size);
         float uu = pos.x() * tex_scale;
         float const vv = pos.z() * tex_scale;
-        if (section.flipU) {
+        if (section.flip_u) {
           uu = -uu;
         }
         float ru = uu;
         float rv = vv;
-        switch (static_cast<int>(section.rotationDeg)) {
+        switch (static_cast<int>(section.rotation_deg)) {
         case 90: {
           float const t = ru;
           ru = -rv;
@@ -564,7 +564,7 @@ void TerrainRenderer::build_meshes() {
         section.vertices.push_back(v);
         auto const local_index =
             static_cast<unsigned int>(section.vertices.size() - 1);
-        section.normalSum += normal;
+        section.normal_sum += normal;
         return local_index;
       };
 
@@ -601,9 +601,9 @@ void TerrainRenderer::build_meshes() {
               entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
                                       entry_weight[idx2] + entry_weight[idx3]);
             }
-            section.entrySum += entry_factor;
-            section.entryPeak = std::max(section.entryPeak, entry_factor);
-            section.entryCount += 1;
+            section.entry_sum += entry_factor;
+            section.entry_peak = std::max(section.entry_peak, entry_factor);
+            section.entry_count += 1;
             bool const subdivide = entry_factor > 0.25F;
 
             if (subdivide) {
@@ -667,14 +667,14 @@ void TerrainRenderer::build_meshes() {
             float const quad_height = (height_data[idx0] + height_data[idx1] +
                                        height_data[idx2] + height_data[idx3]) *
                                       0.25F;
-            section.heightSum += quad_height;
-            section.heightCount += 1;
+            section.height_sum += quad_height;
+            section.height_count += 1;
 
             float const n_y = (normals[idx0].y() + normals[idx1].y() +
                                normals[idx2].y() + normals[idx3].y()) *
                               0.25F;
             float const slope = 1.0F - std::clamp(n_y, 0.0F, 1.0F);
-            section.slopeSum += slope;
+            section.slope_sum += slope;
 
             float const hmin =
                 std::min(std::min(height_data[idx0], height_data[idx1]),
@@ -682,8 +682,8 @@ void TerrainRenderer::build_meshes() {
             float const hmax =
                 std::max(std::max(height_data[idx0], height_data[idx1]),
                          std::max(height_data[idx2], height_data[idx3]));
-            section.heightVarSum += (hmax - hmin);
-            section.statCount += 1;
+            section.height_var_sum += (hmax - hmin);
+            section.stat_count += 1;
 
             auto h = [&](int gx, int gz) {
               gx = std::clamp(gx, 0, m_width - 1);
@@ -699,16 +699,16 @@ void TerrainRenderer::build_meshes() {
             ao += std::max(0.0F, h(cx, cz - 1) - h_c);
             ao += std::max(0.0F, h(cx, cz + 1) - h_c);
             ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
-            section.aoSum += ao;
-            section.aoCount += 1;
+            section.ao_sum += ao;
+            section.ao_count += 1;
 
             float const curvature =
                 0.25F * (sample_curvature_magnitude_at(x, z) +
                          sample_curvature_magnitude_at(x + 1, z) +
                          sample_curvature_magnitude_at(x, z + 1) +
                          sample_curvature_magnitude_at(x + 1, z + 1));
-            section.curvatureSum += curvature;
-            section.curvatureCount += 1;
+            section.curvature_sum += curvature;
+            section.curvature_count += 1;
           }
         }
       }
@@ -734,28 +734,28 @@ void TerrainRenderer::build_meshes() {
                      : (i == 1) ? Game::Map::TerrainType::Hill
                                 : Game::Map::TerrainType::Mountain;
         chunk.average_height =
-            (section.heightCount > 0)
-                ? section.heightSum / float(section.heightCount)
+            (section.height_count > 0)
+                ? section.height_sum / float(section.height_count)
                 : 0.0F;
 
         const float nh_chunk = (chunk.average_height - min_h) / height_range;
         const float avg_slope =
-            (section.statCount > 0)
-                ? (section.slopeSum / float(section.statCount))
+            (section.stat_count > 0)
+                ? (section.slope_sum / float(section.stat_count))
                 : 0.0F;
         const float roughness =
-            (section.statCount > 0)
-                ? (section.heightVarSum / float(section.statCount))
+            (section.stat_count > 0)
+                ? (section.height_var_sum / float(section.stat_count))
                 : 0.0F;
         const float avg_curvature =
-            (section.curvatureCount > 0)
-                ? (section.curvatureSum / float(section.curvatureCount))
+            (section.curvature_count > 0)
+                ? (section.curvature_sum / float(section.curvature_count))
                 : 0.0F;
         const float avg_entry =
-            (section.entryCount > 0)
-                ? (section.entrySum / float(section.entryCount))
+            (section.entry_count > 0)
+                ? (section.entry_sum / float(section.entry_count))
                 : 0.0F;
-        const float entry_peak = section.entryPeak;
+        const float entry_peak = section.entry_peak;
 
         const float center_gx = 0.5F * (chunk.min_x + chunk.max_x);
         const float center_gz = 0.5F * (chunk.min_z + chunk.max_z);
@@ -812,12 +812,12 @@ void TerrainRenderer::build_meshes() {
                                         m_noise_seed ^ 0x51C3U);
         float const macro_shade = 0.9F + 0.2F * macro;
 
-        float const ao_avg = (section.aoCount > 0)
-                                 ? (section.aoSum / float(section.aoCount))
+        float const ao_avg = (section.ao_count > 0)
+                                 ? (section.ao_sum / float(section.ao_count))
                                  : 0.0F;
         float const ao_shade = 1.0F - 0.35F * ao_avg;
 
-        QVector3D avg_n = section.normalSum;
+        QVector3D avg_n = section.normal_sum;
         if (avg_n.lengthSquared() > 0.0F) {
           avg_n.normalize();
         }

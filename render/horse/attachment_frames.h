@@ -74,6 +74,7 @@ struct HorseMotionSample {
   float phase = 0.0F;
   float bob = 0.0F;
   bool is_moving = false;
+  bool is_fighting = false;
   float rider_intensity = 0.0F;
   float turn_amount = 0.0F;
   float stop_intent = 0.0F;

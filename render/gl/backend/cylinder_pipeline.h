@@ -29,10 +29,10 @@ public:
   void upload_fog_instances(std::size_t count);
   void draw_fog(std::size_t count);
 
-  [[nodiscard]] auto cylinderShader() const -> GL::Shader * {
+  [[nodiscard]] auto cylinder_shader() const -> GL::Shader * {
     return m_cylinderShader;
   }
-  [[nodiscard]] auto fogShader() const -> GL::Shader * { return m_fogShader; }
+  [[nodiscard]] auto fog_shader() const -> GL::Shader * { return m_fogShader; }
 
   struct CylinderUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};

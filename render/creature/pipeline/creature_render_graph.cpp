@@ -1,10 +1,8 @@
 #include "creature_render_graph.h"
 
-#include "../../elephant/elephant_spec.h"
 #include "../../entity/registry.h"
 #include "../../gl/humanoid/humanoid_types.h"
 #include "../../graphics_settings.h"
-#include "../../horse/horse_spec.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../archetype_registry.h"
 #include "../bpat/bpat_format.h"
@@ -88,15 +86,31 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 }
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
-
   const auto &gs = Render::GraphicsSettings::instance();
   CreatureLodConfig config;
-  config.thresholds.full = gs.horse_full_detail_distance();
-  config.thresholds.minimal = gs.horse_minimal_detail_distance();
+  config.thresholds.full = gs.elephant_full_detail_distance();
+  config.thresholds.minimal = gs.elephant_minimal_detail_distance();
   config.temporal.distance_minimal = kTemporalMinimalDistance;
   config.temporal.period_minimal = kTemporalMinimalPeriod;
   config.apply_visibility_budget = gs.visibility_budget().enabled;
   return config;
+}
+
+auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept
+    -> Render::Creature::CreatureLOD {
+  switch (kind) {
+  case CreatureKind::Horse:
+    return select_distance_lod(distance,
+                               horse_lod_config_from_settings().thresholds);
+  case CreatureKind::Elephant:
+    return select_distance_lod(distance,
+                               elephant_lod_config_from_settings().thresholds);
+  case CreatureKind::Humanoid:
+  case CreatureKind::Mounted:
+    break;
+  }
+  return select_distance_lod(distance,
+                             humanoid_lod_config_from_settings().thresholds);
 }
 
 auto evaluate_creature_lod(const CreatureGraphInputs &inputs,
@@ -161,36 +175,6 @@ void CreatureRenderBatch::reserve(std::size_t n) {
 
 namespace {
 
-[[nodiscard]] auto horse_state_for_clip(std::uint16_t clip) noexcept
-    -> Render::Creature::AnimationStateId {
-  switch (clip) {
-  case 0U:
-    return Render::Creature::AnimationStateId::Idle;
-  case 1U:
-    return Render::Creature::AnimationStateId::Walk;
-  case 2U:
-  case 3U:
-  case 4U:
-    return Render::Creature::AnimationStateId::Run;
-  default:
-    return Render::Creature::AnimationStateId::Idle;
-  }
-}
-
-[[nodiscard]] auto elephant_state_for_clip(std::uint16_t clip) noexcept
-    -> Render::Creature::AnimationStateId {
-  switch (clip) {
-  case 0U:
-    return Render::Creature::AnimationStateId::Idle;
-  case 1U:
-    return Render::Creature::AnimationStateId::Walk;
-  case 2U:
-    return Render::Creature::AnimationStateId::Run;
-  default:
-    return Render::Creature::AnimationStateId::Idle;
-  }
-}
-
 [[nodiscard]] auto
 compose_world_key(std::uint32_t entity_id,
                   std::uint32_t seed) noexcept -> Render::Creature::WorldKey {
@@ -217,6 +201,21 @@ build_request(const CreatureGraphOutput &output,
   req.pass = output.pass_intent;
   req.world_already_grounded = output.world_already_grounded;
   return req;
+}
+
+[[nodiscard]] auto default_archetype_for(CreatureKind kind) noexcept
+    -> Render::Creature::ArchetypeId {
+  switch (kind) {
+  case CreatureKind::Horse:
+    return Render::Creature::ArchetypeRegistry::kHorseBase;
+  case CreatureKind::Elephant:
+    return Render::Creature::ArchetypeRegistry::kElephantBase;
+  case CreatureKind::Humanoid:
+    return Render::Creature::ArchetypeRegistry::kHumanoidBase;
+  case CreatureKind::Mounted:
+    return Render::Creature::kInvalidArchetype;
+  }
+  return Render::Creature::kInvalidArchetype;
 }
 
 template <typename Variant>
@@ -286,11 +285,10 @@ void CreatureRenderBatch::add_humanoid(
   requests_.push_back(req);
 }
 
-void CreatureRenderBatch::add_horse(const CreatureGraphOutput &output,
-                                    const Render::Horse::HorseSpecPose &pose,
-                                    const Render::GL::HorseVariant &variant,
-                                    std::uint16_t bpat_clip_id,
-                                    float bpat_phase) {
+void CreatureRenderBatch::add_quadruped(
+    const CreatureGraphOutput &output, const Render::GL::HorseVariant &variant,
+    Render::Creature::AnimationStateId state, float phase,
+    std::uint32_t clip_variant) {
   if (output.culled) {
     return;
   }
@@ -300,27 +298,27 @@ void CreatureRenderBatch::add_horse(const CreatureGraphOutput &output,
     return;
   }
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_horse_row(
-        output.spec, pose, variant, output.world_matrix, output.seed,
+    auto row = make_prepared_creature_row(
+        output.spec, CreatureKind::Horse, output.world_matrix, output.seed,
         output.lod, output.entity_id, output.pass_intent);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
       (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
           ? output.spec.archetype_id
-          : Render::Creature::ArchetypeRegistry::kHorseBase;
-  auto req = build_request(output, archetype_id,
-                           horse_state_for_clip(bpat_clip_id), bpat_phase);
+          : default_archetype_for(CreatureKind::Horse);
+  auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
+  req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
 }
 
-void CreatureRenderBatch::add_elephant(
+void CreatureRenderBatch::add_quadruped(
     const CreatureGraphOutput &output,
-    const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant, std::uint16_t bpat_clip_id,
-    float bpat_phase) {
+    const Render::GL::ElephantVariant &variant,
+    Render::Creature::AnimationStateId state, float phase,
+    std::uint32_t clip_variant) {
   if (output.culled) {
     return;
   }
@@ -330,18 +328,18 @@ void CreatureRenderBatch::add_elephant(
     return;
   }
   if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_elephant_row(
-        output.spec, pose, variant, output.world_matrix, output.seed,
+    auto row = make_prepared_creature_row(
+        output.spec, CreatureKind::Elephant, output.world_matrix, output.seed,
         output.lod, output.entity_id, output.pass_intent);
     rows_.push_back(std::move(row));
   }
   auto const archetype_id =
       (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
           ? output.spec.archetype_id
-          : Render::Creature::ArchetypeRegistry::kElephantBase;
-  auto req = build_request(output, archetype_id,
-                           elephant_state_for_clip(bpat_clip_id), bpat_phase);
+          : default_archetype_for(CreatureKind::Elephant);
+  auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
+  req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
 }

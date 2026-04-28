@@ -24,7 +24,7 @@ public:
 private:
   void build_meshes();
 
-  std::vector<Game::Map::RiverSegment> m_riverSegments;
+  std::vector<Game::Map::RiverSegment> m_river_segments;
   float m_tile_size = 1.0F;
   std::vector<std::unique_ptr<Mesh>> m_meshes;
 };

@@ -1,6 +1,5 @@
-
-
-#pragma once
+#ifndef RENDER_CREATURE_SKELETON_H
+#define RENDER_CREATURE_SKELETON_H
 
 #include "../gl/humanoid/humanoid_types.h"
 
@@ -98,3 +97,5 @@ basis_from_root_up(const QVector3D &origin,
 validate_topology(const SkeletonTopology &topo) noexcept -> bool;
 
 } // namespace Render::Creature
+
+#endif

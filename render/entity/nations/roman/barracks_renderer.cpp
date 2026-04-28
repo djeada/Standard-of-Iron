@@ -329,9 +329,9 @@ void draw_phoenician_banner(
       p, c.team, c.team_trim, max_lowering);
 
   float beam_y =
-      pole_height - banner_height * 0.2F - captureColors.loweringOffset;
+      pole_height - banner_height * 0.2F - captureColors.lowering_offset;
   float flag_y =
-      pole_height - banner_height / 2.0F - captureColors.loweringOffset;
+      pole_height - banner_height / 2.0F - captureColors.lowering_offset;
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
@@ -350,10 +350,10 @@ void draw_phoenician_banner(
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
   QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
-  BarracksFlagRenderer::drawBannerWithTassels(
+  BarracksFlagRenderer::draw_banner_with_tassels(
       p, out, unit, white, banner_center, banner_width * 0.5F,
       banner_height * 0.5F, 0.02F, captureColors.teamColor,
-      captureColors.teamTrimColor, cloth);
+      captureColors.team_trim_color, cloth);
 
   draw_box(out, unit, white, p.model,
            QVector3D(pole_x + 0.25F, pole_height + 0.15F, pole_z + 0.03F),
@@ -373,10 +373,10 @@ void draw_phoenician_banner(
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
                      const RomanPalette &c) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
-                                          .teamTrim = c.team_trim,
+                                          .team_trim = c.team_trim,
                                           .timber = c.cedar,
-                                          .timberLight = c.limestone,
-                                          .woodDark = c.cedar_dark};
+                                          .timber_light = c.limestone,
+                                          .wood_dark = c.cedar_dark};
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors);
 }
 
@@ -536,8 +536,8 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 
   BarracksFlagRenderer::ClothBannerResources cloth;
   if (p.backend != nullptr) {
-    cloth.clothMesh = p.backend->banner_mesh();
-    cloth.bannerShader = p.backend->banner_shader();
+    cloth.cloth_mesh = p.backend->banner_mesh();
+    cloth.banner_shader = p.backend->banner_shader();
   }
 
   const RenderArchetype &archetype = barracks_archetype(state, unit, white);

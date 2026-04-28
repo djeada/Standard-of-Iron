@@ -226,20 +226,20 @@ void WorkApronRenderer::submit(const WorkApronConfig &config,
                                const HumanoidPalette &,
                                const HumanoidAnimationContext &,
                                EquipmentBatch &batch) {
-  renderApronBody(config, ctx, frames.torso, frames.waist, batch);
+  render_apron_body(config, ctx, frames.torso, frames.waist, batch);
 
   if (config.include_straps) {
-    renderStraps(config, ctx, frames.torso, frames, batch);
+    render_straps(config, ctx, frames.torso, frames, batch);
   }
 
-  renderPockets(config, ctx, frames.waist, batch);
+  render_pockets(config, ctx, frames.waist, batch);
 }
 
-void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
-                                        const DrawContext &ctx,
-                                        const AttachmentFrame &torso,
-                                        const AttachmentFrame &waist,
-                                        EquipmentBatch &batch) {
+void WorkApronRenderer::render_apron_body(const WorkApronConfig &config,
+                                          const DrawContext &ctx,
+                                          const AttachmentFrame &torso,
+                                          const AttachmentFrame &waist,
+                                          EquipmentBatch &batch) {
   if (torso.radius <= 0.0F || waist.radius <= 0.0F) {
     return;
   }
@@ -250,11 +250,11 @@ void WorkApronRenderer::renderApronBody(const WorkApronConfig &config,
       QVector3D(1.0F, 1.0F, 1.0F), palette);
 }
 
-void WorkApronRenderer::renderStraps(const WorkApronConfig &config,
-                                     const DrawContext &ctx,
-                                     const AttachmentFrame &torso,
-                                     const BodyFrames &frames,
-                                     EquipmentBatch &batch) {
+void WorkApronRenderer::render_straps(const WorkApronConfig &config,
+                                      const DrawContext &ctx,
+                                      const AttachmentFrame &torso,
+                                      const BodyFrames &frames,
+                                      EquipmentBatch &batch) {
   if (torso.radius <= 0.0F) {
     return;
   }
@@ -267,10 +267,10 @@ void WorkApronRenderer::renderStraps(const WorkApronConfig &config,
       QVector3D(1.0F, 1.0F, 1.0F), palette);
 }
 
-void WorkApronRenderer::renderPockets(const WorkApronConfig &config,
-                                      const DrawContext &ctx,
-                                      const AttachmentFrame &waist,
-                                      EquipmentBatch &batch) {
+void WorkApronRenderer::render_pockets(const WorkApronConfig &config,
+                                       const DrawContext &ctx,
+                                       const AttachmentFrame &waist,
+                                       EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }
