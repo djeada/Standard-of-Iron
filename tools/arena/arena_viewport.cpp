@@ -19,6 +19,8 @@
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
 #include "render/gl/camera.h"
+#include "render/ground/fog_renderer.h"
+#include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
 #include "render/ground/terrain_surface_manager.h"
@@ -27,6 +29,8 @@
 
 #include <QEvent>
 #include <QDebug>
+#include <QFont>
+#include <QFontMetrics>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
@@ -287,6 +291,7 @@ void ArenaViewport::paintGL() {
     real_dt =
         std::clamp(static_cast<float>(m_frameClock.restart()) / 1000.0F, 0.0F, 0.1F);
   }
+  m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   float const simulation_dt = m_paused ? 0.0F : real_dt;
 
   sanitize_selection();
@@ -320,6 +325,12 @@ void ArenaViewport::paintGL() {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     draw_debug_overlay(painter);
+  }
+
+  {
+    QPainter stats_painter(this);
+    stats_painter.setRenderHint(QPainter::Antialiasing, false);
+    draw_stats_overlay(stats_painter);
   }
 }
 
@@ -565,7 +576,7 @@ void ArenaViewport::regenerateTerrain() {
   }
 
   Game::Map::BiomeSettings biome;
-  Game::Map::apply_ground_type_defaults(biome, Game::Map::GroundType::ForestMud);
+  Game::Map::apply_ground_type_defaults(biome, m_ground_type);
   biome.seed = static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed));
   biome.height_noise_frequency = m_terrain_settings.frequency;
   biome.height_noise_amplitude =
@@ -598,6 +609,15 @@ void ArenaViewport::configure_rendering_from_terrain() {
   m_features->configure(*height_map, terrain_service.road_segments());
   m_scatter->configure(*height_map, terrain_service.biome_settings(),
                        terrain_service.fire_camps());
+  if (m_rain != nullptr) {
+    float const world_width =
+        static_cast<float>(height_map->getWidth()) * height_map->getTileSize();
+    float const world_height =
+        static_cast<float>(height_map->getHeight()) * height_map->getTileSize();
+    m_rain->configure(world_width, world_height,
+                      static_cast<std::uint32_t>(
+                          std::max(0, m_terrain_settings.seed)));
+  }
   setWireframeEnabled(m_wireframe_enabled);
 }
 
@@ -627,6 +647,30 @@ void ArenaViewport::setWireframeEnabled(bool enabled) {
 
 void ArenaViewport::setNormalsOverlayEnabled(bool enabled) {
   m_normals_overlay_enabled = enabled;
+  update();
+}
+
+void ArenaViewport::setGroundType(const QString &groundType) {
+  Game::Map::GroundType parsed = Game::Map::GroundType::ForestMud;
+  Game::Map::try_parse_ground_type(groundType, parsed);
+  if (m_ground_type == parsed) {
+    return;
+  }
+  m_ground_type = parsed;
+  regenerateTerrain();
+}
+
+void ArenaViewport::setRainEnabled(bool enabled) {
+  if (m_rain != nullptr) {
+    m_rain->set_enabled(enabled);
+  }
+  update();
+}
+
+void ArenaViewport::setRainIntensity(float intensity) {
+  if (m_rain != nullptr) {
+    m_rain->set_intensity(intensity);
+  }
   update();
 }
 
@@ -1146,5 +1190,67 @@ void ArenaViewport::sync_spawn_selection_defaults() {
       });
   if (it == nation->available_troops.end()) {
     m_spawn_unit_type = nation->available_troops.front().unit_type;
+  }
+}
+
+void ArenaViewport::draw_stats_overlay(QPainter &painter) {
+  if (width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  int player_count = 0;
+  int enemy_count = 0;
+  if (m_world != nullptr) {
+    for (const auto &unit : m_units) {
+      if (unit == nullptr) {
+        continue;
+      }
+      auto *entity = m_world->get_entity(unit->id());
+      auto *uc = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+      if (uc == nullptr || uc->health <= 0) {
+        continue;
+      }
+      if (uc->owner_id == k_local_owner_id) {
+        ++player_count;
+      } else if (uc->owner_id == k_enemy_owner_id) {
+        ++enemy_count;
+      }
+    }
+  }
+
+  QFont font = painter.font();
+  font.setPixelSize(13);
+  font.setBold(true);
+  painter.setFont(font);
+
+  QFontMetrics const fm(font);
+  int const line_h = fm.height() + 2;
+  int const pad = 6;
+
+  QStringList lines;
+  lines << QStringLiteral("FPS: %1").arg(static_cast<int>(m_fps + 0.5F));
+  lines << QStringLiteral("Player: %1").arg(player_count);
+  lines << QStringLiteral("Enemy:  %1").arg(enemy_count);
+  if (m_paused) {
+    lines << QStringLiteral("PAUSED");
+  }
+
+  int const box_w = [&]() {
+    int max_w = 0;
+    for (const auto &line : lines) {
+      max_w = std::max(max_w, fm.horizontalAdvance(line));
+    }
+    return max_w + pad * 2;
+  }();
+  int const box_h = lines.size() * line_h + pad * 2;
+
+  QRect const box(pad, pad, box_w, box_h);
+  painter.fillRect(box, QColor(0, 0, 0, 140));
+
+  painter.setPen(QColor(220, 220, 220, 220));
+  for (int i = 0; i < lines.size(); ++i) {
+    painter.drawText(pad * 2, pad + (i + 1) * line_h - 2, lines[i]);
   }
 }

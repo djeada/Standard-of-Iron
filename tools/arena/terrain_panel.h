@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGroupBox>
+#include <QString>
 
 class TerrainPanel : public QGroupBox {
   Q_OBJECT
@@ -16,4 +17,7 @@ signals:
   void regenerateRequested();
   void wireframeToggled(bool enabled);
   void normalsToggled(bool enabled);
+  void groundTypeChanged(const QString &groundType);
+  void rainToggled(bool enabled);
+  void rainIntensityChanged(float intensity);
 };
