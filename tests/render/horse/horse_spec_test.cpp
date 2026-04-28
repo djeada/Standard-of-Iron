@@ -663,3 +663,32 @@ TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
   // The barrel center should be higher at bob peak than at zero
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
 }
+
+TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+
+  Render::Horse::HorseSpecPose fight_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, /*is_fighting=*/true},
+      fight_pose);
+
+  Render::Horse::HorseSpecPose idle_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
+      idle_pose);
+
+  // Combat neck arc must raise the neck top measurably above the idle position.
+  EXPECT_GT(fight_pose.neck_top.y(), idle_pose.neck_top.y());
+  EXPECT_GT(fight_pose.neck_top.y() - idle_pose.neck_top.y(),
+            dims.neck_rise * 0.10F);
+
+  // Head should sit lower relative to its neck_top in the fighting pose.
+  float const fight_head_drop =
+      fight_pose.neck_top.y() - fight_pose.head_center.y();
+  float const idle_head_drop =
+      idle_pose.neck_top.y() - idle_pose.head_center.y();
+  EXPECT_GT(fight_head_drop, idle_head_drop);
+}

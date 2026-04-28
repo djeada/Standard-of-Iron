@@ -606,3 +606,57 @@ TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
 
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
 }
+
+TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+
+  Render::Elephant::ElephantSpecPose fight_pose{};
+  Render::Elephant::ElephantPoseMotion fight_motion{};
+  fight_motion.anim_time = 0.5F;
+  fight_motion.is_fighting = true;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
+                                                     fight_pose);
+
+  Render::Elephant::ElephantSpecPose idle_pose{};
+  Render::Elephant::ElephantPoseMotion idle_motion{};
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
+                                                     idle_pose);
+
+  // Trunk tip must be raised well above its idle position during combat.
+  EXPECT_GT(fight_pose.trunk_end.y(),
+            idle_pose.trunk_end.y() + dims.trunk_length * 0.30F);
+}
+
+TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
+  auto const dims = make_dims();
+  Render::GL::ElephantGait gait{};
+  gait.cycle_time = 1.2F;
+  gait.front_leg_phase = 0.0F;
+  gait.rear_leg_phase = 0.5F;
+  gait.stride_swing = 0.30F;
+  gait.stride_lift = 0.12F;
+
+  // Idle reference (no motion)
+  Render::Elephant::ElephantSpecPose idle_pose{};
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait,
+                                                     Render::Elephant::ElephantPoseMotion{},
+                                                     idle_pose);
+
+  // At phase=0.25: FL has leg_phase=0.25 (peak swing), BR has leg_phase=0.25
+  // (peak swing); FR has leg_phase=0.75 (grounded), BL has leg_phase=0.75.
+  Render::Elephant::ElephantSpecPose swing_pose{};
+  Render::Elephant::ElephantPoseMotion motion{};
+  motion.phase = 0.25F;
+  motion.is_moving = true;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion,
+                                                     swing_pose);
+
+  float const front_lift = swing_pose.foot_pose_fl.y() - idle_pose.foot_pose_fl.y();
+  float const rear_lift = swing_pose.foot_pose_br.y() - idle_pose.foot_pose_br.y();
+
+  EXPECT_GT(front_lift, 0.0F);
+  EXPECT_GT(rear_lift, 0.0F);
+  // Front leg must lift measurably higher than rear leg.
+  EXPECT_GT(front_lift, rear_lift);
+}

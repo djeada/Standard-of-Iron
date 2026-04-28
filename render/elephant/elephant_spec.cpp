@@ -168,9 +168,13 @@ struct LegResult {
     }
   } else if (motion.is_moving) {
     float const angle = leg_phase * 2.0F * k_pi;
-    stride = std::sin(angle) * g.stride_swing * 0.6F;
+    // Front legs lift higher for clearance and use shorter strides for balance;
+    // rear legs push with longer strides to provide propulsion.
+    float const stride_scale = is_front ? 0.52F : 0.68F;
+    float const lift_scale = is_front ? 0.90F : 0.70F;
+    stride = std::sin(angle) * g.stride_swing * stride_scale;
     float const lift_raw = std::sin(angle);
-    lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * 0.8F : 0.0F;
+    lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * lift_scale : 0.0F;
   }
 
   QVector3D const shoulder(lateral_sign * d.body_width * 0.40F,
@@ -332,6 +336,19 @@ void make_elephant_spec_pose_animated(
       out_pose.head_center +
       QVector3D(0.0F, -dims.trunk_length * 0.50F, dims.trunk_length * 0.40F);
   out_pose.trunk_base_radius = dims.trunk_base_radius * 0.8F;
+
+  if (motion.is_fighting) {
+    // Raised trunk in threat/attack display; head angles down for a charge.
+    float const phase_wave =
+        std::sin(motion.anim_time * k_pi * 2.0F / 1.15F);
+    float const trunk_raise =
+        dims.trunk_length * (0.55F + 0.08F * phase_wave);
+    float const trunk_retract_z = dims.trunk_length * 0.35F;
+    out_pose.trunk_end +=
+        QVector3D(0.0F, trunk_raise, -trunk_retract_z);
+    float const head_lower = dims.head_height * 0.07F;
+    out_pose.head_center += QVector3D(0.0F, -head_lower, 0.0F);
+  }
 
   float const front_forward = dims.body_length * 0.35F;
   float const rear_forward = -dims.body_length * 0.35F;

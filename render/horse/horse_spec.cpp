@@ -434,6 +434,18 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
                 dims.head_height * profile.head_half_scale.y(),
                 dims.head_length * profile.head_half_scale.z());
 
+  if (motion.is_fighting) {
+    // Combat stance: neck arches taller and pulls back, head tucks for attack.
+    float const neck_arch_y = dims.neck_rise * 0.18F;
+    float const neck_pull_z = dims.neck_length * 0.04F;
+    float const head_drop_y = dims.head_height * 0.10F;
+    float const head_push_z = dims.head_length * 0.07F;
+    out_pose.neck_top += QVector3D(0.0F, neck_arch_y, -neck_pull_z);
+    // Head follows neck arc and additionally lowers forward for the attack.
+    out_pose.head_center +=
+        QVector3D(0.0F, neck_arch_y - head_drop_y, -neck_pull_z + head_push_z);
+  }
+
   QVector3D const front_anchor =
       QVector3D(dims.body_width * profile.front_anchor_scale.x(),
                 dims.body_height * profile.front_anchor_scale.y(),
