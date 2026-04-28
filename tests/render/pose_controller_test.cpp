@@ -369,3 +369,141 @@ TEST_F(HumanoidPoseControllerTest, GetShoulderYReflectsKneeling) {
   // After kneeling, shoulder should be lower
   EXPECT_LT(kneeling_shoulder_y, original_shoulder_y);
 }
+
+TEST_F(HumanoidPoseControllerTest, MeleeStrikeAppliesTorsoTwistAtWindUp) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+  float const original_shoulder_l_z = pose.shoulder_l.z();
+
+  // At phase 0.20-0.28 (chamber), torso_twist = -0.04F
+  controller.melee_strike(0.24F);
+
+  // Right shoulder should have moved backward (negative Z) due to twist
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+  // Left shoulder should have moved forward (positive Z) due to counter-twist
+  EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, MeleeStrikeAppliesTorsoTwistAtStrike) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // At phase 0.55 (follow-through), torso_twist should be positive (right
+  // shoulder forward)
+  controller.melee_strike(0.55F);
+
+  // Right shoulder should have moved forward due to twist + forward_lean
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtChamber) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // At phase 0.23 (chamber hold), torso_twist = -0.06F:
+  // right shoulder moves back, left shoulder is twisted forward relative to
+  // right
+  controller.spear_thrust(0.23F);
+
+  // Right shoulder should have moved backward (negative twist on right)
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+
+  // The differential twist: right shoulder should be further back than left
+  // shoulder (right moved back by torso_twist, left moved forward by
+  // -torso_twist * 0.4F, so left > right in Z)
+  EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtExtension) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // At phase 0.54 (extended), torso_twist = 0.08F (right shoulder forward)
+  controller.spear_thrust(0.54F);
+
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SwordSlashAppliesTorsoTwistAtChamber) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+  float const original_shoulder_l_z = pose.shoulder_l.z();
+
+  // At phase 0.20 (chamber hold), torso_twist = -0.05F
+  controller.sword_slash(0.20F);
+
+  // Right shoulder backward, left shoulder forward
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+  EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SwordSlashAppliesTorsoTwistAtFollowThrough) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // At phase 0.55 (follow-through), torso_twist positive (right shoulder
+  // forward)
+  controller.sword_slash(0.55F);
+
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SwordSlashVariantAppliesTorsoTwist) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+  float const original_shoulder_l_z = pose.shoulder_l.z();
+
+  // Default variant (0): same as sword_slash, torso_twist = -0.05F at chamber
+  controller.sword_slash_variant(0.20F, 0);
+
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+  EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       SwordSlashVariant1ReversesInitialTorsoTwist) {
+  HumanoidPoseController controller_v0(pose, anim_ctx);
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // Variant 1 uses strike_direction = k_strike_left_to_right = -1
+  // so torso_twist at chamber = -(-0.05) = +0.05F → right shoulder moves
+  // forward
+  controller_v0.sword_slash_variant(0.20F, 1);
+
+  EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+
+  // At phase 0.23 (chamber hold), torso_twist = -0.06F
+  // Right shoulder moves backward, differential twist visible between shoulders
+  controller.spear_thrust_variant(0.23F, 0);
+
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+  // Left shoulder should be forward relative to right shoulder (differential
+  // twist)
+  EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearThrustFromHoldAppliesTorsoTwist) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  float const original_shoulder_r_z = pose.shoulder_r.z();
+  float const original_shoulder_l_z = pose.shoulder_l.z();
+
+  // At phase 0.18 (chamber hold), torso_twist = -0.04F
+  controller.spear_thrust_from_hold(0.18F, 0.5F);
+
+  EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
+  EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
+}

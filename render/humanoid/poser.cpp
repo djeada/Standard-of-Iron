@@ -46,15 +46,15 @@ auto profile_for_gait(const HumanoidGaitDescriptor &gait,
     profile.stride_length =
         0.28F * variation.walk_speed_mult * (0.92F + 0.12F * speed_factor);
     profile.step_height = 0.072F * (0.85F + 0.20F * speed_factor);
-    profile.vertical_bob = 0.010F * speed_factor;
+    profile.vertical_bob = 0.012F * speed_factor;
     profile.hip_sway = 0.017F * variation.stance_width;
-    profile.shoulder_counter_sway = 0.015F;
-    profile.shoulder_twist = 0.014F;
+    profile.shoulder_counter_sway = 0.020F;
+    profile.shoulder_twist = 0.018F;
     profile.forward_lean = 0.060F + (speed_factor - 1.0F) * 0.015F;
     profile.lateral_foot_shift = 0.010F;
-    profile.arm_swing = 0.145F * variation.arm_swing_amp;
-    profile.max_arm_displacement = 0.145F;
-    profile.arm_lift_scale = 0.13F;
+    profile.arm_swing = 0.155F * variation.arm_swing_amp;
+    profile.max_arm_displacement = 0.155F;
+    profile.arm_lift_scale = 0.15F;
     profile.arm_counter_shift = 0.12F;
     return profile;
   }
@@ -64,9 +64,9 @@ auto profile_for_gait(const HumanoidGaitDescriptor &gait,
       0.20F * variation.walk_speed_mult * (0.92F + 0.10F * speed_factor);
   profile.step_height = 0.048F * (0.90F + 0.12F * speed_factor);
   profile.vertical_bob = 0.006F * speed_factor;
-  profile.hip_sway = 0.012F * variation.stance_width;
-  profile.shoulder_counter_sway = 0.014F;
-  profile.shoulder_twist = 0.009F;
+  profile.hip_sway = 0.014F * variation.stance_width;
+  profile.shoulder_counter_sway = 0.016F;
+  profile.shoulder_twist = 0.012F;
   profile.forward_lean = 0.020F + (speed_factor - 1.0F) * 0.010F;
   profile.lateral_foot_shift = 0.006F;
   profile.arm_swing = 0.125F * variation.arm_swing_amp;
