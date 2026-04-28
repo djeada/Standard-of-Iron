@@ -133,11 +133,11 @@ void ArmGuardsRenderer::submit(const ArmGuardsConfig &config,
 }
 
 void ArmGuardsRenderer::render_arm_guard(const ArmGuardsConfig &config,
-                                       const DrawContext &ctx,
-                                       const QVector3D &elbow,
-                                       const QVector3D &wrist,
-                                       std::span<const QVector3D> palette,
-                                       EquipmentBatch &batch) {
+                                         const DrawContext &ctx,
+                                         const QVector3D &elbow,
+                                         const QVector3D &wrist,
+                                         std::span<const QVector3D> palette,
+                                         EquipmentBatch &batch) {
   float const arm_length = (wrist - elbow).length();
 
   if (arm_length < 0.01F) {

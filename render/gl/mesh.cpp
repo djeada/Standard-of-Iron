@@ -6,8 +6,8 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <cstddef>
 #include <memory>
-#include <vector>
 #include <qopenglext.h>
+#include <vector>
 
 namespace Render::GL {
 

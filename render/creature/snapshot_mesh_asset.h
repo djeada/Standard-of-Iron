@@ -1,8 +1,8 @@
 #pragma once
 
-#include "render_request.h"
-#include "bpat/bpat_format.h"
 #include "../rigged_mesh.h"
+#include "bpat/bpat_format.h"
+#include "render_request.h"
 
 #include <array>
 #include <cstddef>
@@ -79,8 +79,7 @@ public:
 
   [[nodiscard]] auto clip(std::uint32_t index) const -> ClipView;
   [[nodiscard]] auto indices_view() const -> std::span<const std::uint32_t>;
-  [[nodiscard]] auto
-  frame_vertices_view(std::uint32_t global_frame_index) const
+  [[nodiscard]] auto frame_vertices_view(std::uint32_t global_frame_index) const
       -> std::span<const Render::GL::RiggedVertex>;
   [[nodiscard]] auto resolve_global_frame(std::uint32_t clip_index,
                                           std::uint32_t frame_in_clip,

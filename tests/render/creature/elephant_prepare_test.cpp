@@ -7,10 +7,10 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
-#include "render/creature/snapshot_mesh_asset.h"
-#include "render/creature/snapshot_mesh_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_registry.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_motion.h"
 #include "render/elephant/elephant_renderer_base.h"
@@ -115,8 +115,8 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world, /*seed*/ 23,
-      Render::Creature::CreatureLOD::Minimal,
+      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world,
+      /*seed*/ 23, Render::Creature::CreatureLOD::Minimal,
       /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
@@ -164,7 +164,8 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesElephant,
                                 root + "/elephant.bpat"));
 
-  auto &snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto &snapshot_reg =
+      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   auto const temp_dir =
@@ -192,10 +193,9 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   ASSERT_TRUE(out.good());
   ASSERT_TRUE(writer.write(out));
   out.close();
-  ASSERT_TRUE(
-      snapshot_reg.load_species(Render::Creature::Bpat::kSpeciesElephant,
-                                Render::Creature::CreatureLOD::Minimal,
-                                asset_path.string()))
+  ASSERT_TRUE(snapshot_reg.load_species(
+      Render::Creature::Bpat::kSpeciesElephant,
+      Render::Creature::CreatureLOD::Minimal, asset_path.string()))
       << snapshot_reg.last_error();
 
   Render::GL::ElephantRendererBase renderer;
@@ -393,7 +393,8 @@ TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
+  EXPECT_EQ(rows[0].spec.kind,
+            Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Walk);
@@ -420,7 +421,8 @@ TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
+  EXPECT_EQ(rows[0].spec.kind,
+            Render::Creature::Pipeline::CreatureKind::Elephant);
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
   EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Idle);

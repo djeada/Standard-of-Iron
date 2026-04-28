@@ -123,7 +123,7 @@ void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                Texture *white, const CarthageBallistaPalette &c) {
+                 Texture *white, const CarthageBallistaPalette &c) {
 
   float wheel_radius = 0.13F;
   float wheel_thickness = 0.032F;
@@ -167,7 +167,7 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const CarthageBallistaPalette &c) {
+                          Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -193,8 +193,8 @@ void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.23F, 0.28F, -0.26F), 0.078F, c.metal_gold, white);
 }
 
-void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const CarthageBallistaPalette &c) {
+void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit,
+               Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -217,7 +217,7 @@ void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white
 }
 
 void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
-                   const CarthageBallistaPalette &c) {
+                    const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -229,8 +229,8 @@ void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
 }
 
 void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
-               Texture *white, const CarthageBallistaPalette &c,
-               const BallistaAnimContext &anim_ctx) {
+                Texture *white, const CarthageBallistaPalette &c,
+                const BallistaAnimContext &anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -275,7 +275,7 @@ void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const CarthageBallistaPalette &c) {
+                            Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -293,7 +293,7 @@ void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_carthage_ornaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                           Texture *white, const CarthageBallistaPalette &c) {
+                             Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 base = p.model;
   base.rotate(30.0F, 1.0F, 0.0F, 0.0F);

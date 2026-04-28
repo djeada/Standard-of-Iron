@@ -110,10 +110,11 @@ auto find_primitive(std::span<const Render::Creature::PrimitiveInstance> prims,
   return it == prims.end() ? nullptr : &*it;
 }
 
-auto count_primitives(std::span<const Render::Creature::PrimitiveInstance> prims,
-                      std::string_view prefix) -> std::size_t {
-  return static_cast<std::size_t>(std::count_if(
-      prims.begin(), prims.end(), [&](auto const &prim) {
+auto count_primitives(
+    std::span<const Render::Creature::PrimitiveInstance> prims,
+    std::string_view prefix) -> std::size_t {
+  return static_cast<std::size_t>(
+      std::count_if(prims.begin(), prims.end(), [&](auto const &prim) {
         return prim.debug_name.rfind(prefix, 0) == 0;
       }));
 }
@@ -132,7 +133,8 @@ auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
   return max_v - min_v;
 }
 
-auto max_ring_radius_at_y(const Render::GL::Mesh &mesh, bool anchor_end) -> float {
+auto max_ring_radius_at_y(const Render::GL::Mesh &mesh,
+                          bool anchor_end) -> float {
   auto const &vertices = mesh.get_vertices();
   float max_radius = 0.0F;
   for (auto const &vertex : vertices) {
@@ -347,9 +349,10 @@ TEST(HorseSpecTest, ManifestUsesTwoPartHeadWithoutExtraMuzzleNode) {
 
   auto const find_node = [&](std::string_view name)
       -> const Render::Creature::Quadruped::MeshNode * {
-    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                           manifest.lod_full.mesh_nodes.end(),
-                           [&](auto const &node) { return node.debug_name == name; });
+    auto it =
+        std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                     manifest.lod_full.mesh_nodes.end(),
+                     [&](auto const &node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
@@ -364,8 +367,8 @@ TEST(HorseSpecTest, ManifestUsesTwoPartHeadWithoutExtraMuzzleNode) {
 
   auto const *neck =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&neck_node->data);
-  auto const *head_upper =
-      std::get_if<Render::Creature::Quadruped::TubeNode>(&head_upper_node->data);
+  auto const *head_upper = std::get_if<Render::Creature::Quadruped::TubeNode>(
+      &head_upper_node->data);
   auto const *head_nose =
       std::get_if<Render::Creature::Quadruped::TubeNode>(&head_nose_node->data);
 
@@ -387,9 +390,10 @@ TEST(HorseSpecTest, ManifestFrontTorsoTopRisesIntoNeck) {
 
   auto const find_node = [&](std::string_view name)
       -> const Render::Creature::Quadruped::MeshNode * {
-    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                           manifest.lod_full.mesh_nodes.end(),
-                           [&](auto const &node) { return node.debug_name == name; });
+    auto it =
+        std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                     manifest.lod_full.mesh_nodes.end(),
+                     [&](auto const &node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
@@ -423,9 +427,10 @@ TEST(HorseSpecTest, ManifestRearTorsoRoundsIntoCroupInsteadOfFlatTube) {
 
   auto const find_node = [&](std::string_view name)
       -> const Render::Creature::Quadruped::MeshNode * {
-    auto it = std::find_if(manifest.lod_full.mesh_nodes.begin(),
-                           manifest.lod_full.mesh_nodes.end(),
-                           [&](auto const &node) { return node.debug_name == name; });
+    auto it =
+        std::find_if(manifest.lod_full.mesh_nodes.begin(),
+                     manifest.lod_full.mesh_nodes.end(),
+                     [&](auto const &node) { return node.debug_name == name; });
     return it == manifest.lod_full.mesh_nodes.end() ? nullptr : &*it;
   };
 
@@ -472,7 +477,8 @@ TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
   ASSERT_NE(hoof, nullptr);
   EXPECT_EQ(hoof->shape, Render::Creature::PrimitiveShape::Box);
   EXPECT_GT(hoof->params.half_extents.z(), hoof->params.half_extents.x());
-  EXPECT_GT(hoof->params.head_offset.y(), hoof->params.half_extents.y() * 0.90F);
+  EXPECT_GT(hoof->params.head_offset.y(),
+            hoof->params.half_extents.y() * 0.90F);
   EXPECT_GT(hoof->params.half_extents.x(),
             Render::GL::make_horse_dimensions(0U).body_width * 0.055F);
   EXPECT_GT(hoof->params.half_extents.y(),
@@ -698,8 +704,7 @@ TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
 
   Render::Horse::HorseSpecPose idle_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait,
-      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
+      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
       idle_pose);
 
   // Combat neck arc must raise the neck top measurably above the idle position.

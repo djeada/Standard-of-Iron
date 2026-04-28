@@ -103,7 +103,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanBallistaPalette &c) {
+                     Texture *white, const RomanBallistaPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.40F, 0.18F, 0.0F),
            QVector3D(0.06F, 0.12F, 0.30F), c.wood_frame);
@@ -162,7 +162,7 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const RomanBallistaPalette &c) {
+                          Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -183,8 +183,8 @@ void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.25F, 0.20F, -0.28F), 0.09F, c.metal_bronze, white);
 }
 
-void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const RomanBallistaPalette &c) {
+void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit,
+               Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -207,7 +207,7 @@ void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white
 }
 
 void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
-                   const RomanBallistaPalette &c) {
+                    const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -219,8 +219,8 @@ void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
 }
 
 void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
-               Texture *white, const RomanBallistaPalette &c,
-               const BallistaAnimContext &anim_ctx) {
+                Texture *white, const RomanBallistaPalette &c,
+                const BallistaAnimContext &anim_ctx) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -265,7 +265,7 @@ void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const RomanBallistaPalette &c) {
+                            Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
   tilted.rotate(30.0F, 1.0F, 0.0F, 0.0F);
@@ -283,7 +283,7 @@ void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_roman_ornaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                        Texture *white, const RomanBallistaPalette &c) {
+                          Texture *white, const RomanBallistaPalette &c) {
 
   QMatrix4x4 base = p.model;
   base.rotate(30.0F, 1.0F, 0.0F, 0.0F);

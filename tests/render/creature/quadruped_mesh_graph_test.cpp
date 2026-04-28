@@ -88,8 +88,8 @@ TEST(QuadrupedMeshGraphTest, CompilesAllSupportedNodeKindsToValidPartGraph) {
   nodes.push_back({"body", topology_storage.body, 1U, kLodAll, 0, barrel});
   nodes.push_back({"head", topology_storage.head, 1U, kLodAll, 0, head});
   nodes.push_back({"leg", topology_storage.foot_fl, 2U, kLodAll, 0, leg});
-  nodes.push_back({"snout", topology_storage.appendage_tip, 3U, kLodAll, 0,
-                   snout});
+  nodes.push_back(
+      {"snout", topology_storage.appendage_tip, 3U, kLodAll, 0, snout});
   nodes.push_back({"ear", topology_storage.head, 4U, kLodFull, 0, ear});
   nodes.push_back({"tusk", topology_storage.head, 5U, kLodFull, 0, tusk});
   nodes.push_back({"tail", topology_storage.body, 6U, kLodAll, 0, tail});
@@ -98,8 +98,8 @@ TEST(QuadrupedMeshGraphTest, CompilesAllSupportedNodeKindsToValidPartGraph) {
 
   ASSERT_EQ(compiled.meshes.size(), nodes.size());
   ASSERT_EQ(compiled.primitives.size(), nodes.size());
-  EXPECT_TRUE(validate_part_graph(topology_storage.topology(),
-                                  compiled.part_graph()));
+  EXPECT_TRUE(
+      validate_part_graph(topology_storage.topology(), compiled.part_graph()));
   for (const auto &mesh : compiled.meshes) {
     ASSERT_NE(mesh, nullptr);
     EXPECT_FALSE(mesh->get_vertices().empty());

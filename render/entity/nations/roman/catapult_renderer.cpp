@@ -103,7 +103,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const RomanCatapultPalette &c) {
+                     Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.22F, -0.35F),
            QVector3D(0.52F, 0.06F, 0.06F), c.wood_dark);
@@ -173,8 +173,8 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const RomanCatapultPalette &c,
-                     const CatapultAnimContext &anim_ctx) {
+                       Texture *white, const RomanCatapultPalette &c,
+                       const CatapultAnimContext &anim_ctx) {
 
   draw_cyl(out, p.model, QVector3D(-0.25F, 0.2F, 0.0F),
            QVector3D(-0.25F, 0.65F, 0.0F), 0.05F, c.wood_frame, white);
@@ -225,7 +225,7 @@ void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const RomanCatapultPalette &c) {
+                            Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.18F, 0.35F, 0.0F),
            QVector3D(0.04F, 0.18F, 0.15F), c.wood_dark);
@@ -247,7 +247,7 @@ void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const RomanCatapultPalette &c) {
+                      Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.72F, -0.12F),
            QVector3D(0.04F, 0.06F, 0.02F), c.metal_bronze);
@@ -263,7 +263,7 @@ void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_windlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const RomanCatapultPalette &c) {
+                   Texture *white, const RomanCatapultPalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-0.20F, 0.22F, 0.30F),
            QVector3D(0.20F, 0.22F, 0.30F), 0.05F, c.wood_frame, white);

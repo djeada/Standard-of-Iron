@@ -7,8 +7,7 @@ namespace {
 auto push_bone(TopologyStorage &out, std::string_view name,
                BoneIndex parent) -> BoneIndex {
   out.owned_names.emplace_back(name);
-  out.bones.push_back(BoneDef{out.owned_names.back(),
-                              parent});
+  out.bones.push_back(BoneDef{out.owned_names.back(), parent});
   return static_cast<BoneIndex>(out.bones.size() - 1U);
 }
 

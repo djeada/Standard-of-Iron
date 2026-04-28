@@ -41,7 +41,8 @@ struct TopologyStorage {
   BoneIndex appendage_tip{kInvalidBone};
 
   [[nodiscard]] auto topology() const noexcept -> SkeletonTopology {
-    return {std::span<const BoneDef>(bones), std::span<const SocketDef>(sockets)};
+    return {std::span<const BoneDef>(bones),
+            std::span<const SocketDef>(sockets)};
   }
 };
 

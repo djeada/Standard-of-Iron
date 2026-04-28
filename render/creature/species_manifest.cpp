@@ -23,7 +23,8 @@ auto compile_whole_mesh_lod(const WholeMeshLodManifest &manifest)
   std::vector<Render::Creature::Quadruped::MeshNode> filtered_nodes;
   filtered_nodes.reserve(manifest.mesh_nodes.size());
   for (auto const &node : manifest.mesh_nodes) {
-    if (is_excluded_node(node.debug_name, manifest.excluded_node_name_prefixes)) {
+    if (is_excluded_node(node.debug_name,
+                         manifest.excluded_node_name_prefixes)) {
       continue;
     }
     filtered_nodes.push_back(node);

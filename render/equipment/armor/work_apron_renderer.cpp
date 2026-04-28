@@ -236,10 +236,10 @@ void WorkApronRenderer::submit(const WorkApronConfig &config,
 }
 
 void WorkApronRenderer::render_apron_body(const WorkApronConfig &config,
-                                        const DrawContext &ctx,
-                                        const AttachmentFrame &torso,
-                                        const AttachmentFrame &waist,
-                                        EquipmentBatch &batch) {
+                                          const DrawContext &ctx,
+                                          const AttachmentFrame &torso,
+                                          const AttachmentFrame &waist,
+                                          EquipmentBatch &batch) {
   if (torso.radius <= 0.0F || waist.radius <= 0.0F) {
     return;
   }
@@ -251,10 +251,10 @@ void WorkApronRenderer::render_apron_body(const WorkApronConfig &config,
 }
 
 void WorkApronRenderer::render_straps(const WorkApronConfig &config,
-                                     const DrawContext &ctx,
-                                     const AttachmentFrame &torso,
-                                     const BodyFrames &frames,
-                                     EquipmentBatch &batch) {
+                                      const DrawContext &ctx,
+                                      const AttachmentFrame &torso,
+                                      const BodyFrames &frames,
+                                      EquipmentBatch &batch) {
   if (torso.radius <= 0.0F) {
     return;
   }
@@ -268,9 +268,9 @@ void WorkApronRenderer::render_straps(const WorkApronConfig &config,
 }
 
 void WorkApronRenderer::render_pockets(const WorkApronConfig &config,
-                                      const DrawContext &ctx,
-                                      const AttachmentFrame &waist,
-                                      EquipmentBatch &batch) {
+                                       const DrawContext &ctx,
+                                       const AttachmentFrame &waist,
+                                       EquipmentBatch &batch) {
   if (waist.radius <= 0.0F) {
     return;
   }

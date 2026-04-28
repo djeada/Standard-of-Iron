@@ -3,8 +3,8 @@
 #include <QVector3D>
 #include <algorithm>
 #include <cmath>
-#include <mutex>
 #include <memory>
+#include <mutex>
 #include <numbers>
 #include <qvectornd.h>
 #include <unordered_map>
@@ -99,10 +99,9 @@ auto create_unit_cylinder_mesh(int radial_segments) -> std::unique_ptr<Mesh> {
   return std::make_unique<Mesh>(v, idx);
 }
 
-auto create_unit_tapered_cylinder_mesh(float anchor_radius_scale,
-                                       float tail_radius_scale,
-                                       int radial_segments)
-    -> std::unique_ptr<Mesh> {
+auto create_unit_tapered_cylinder_mesh(
+    float anchor_radius_scale, float tail_radius_scale,
+    int radial_segments) -> std::unique_ptr<Mesh> {
   const float half_h = k_half_scalar;
   const float anchor_radius = std::max(anchor_radius_scale, 0.001F);
   const float tail_radius = std::max(tail_radius_scale, 0.001F);
@@ -141,9 +140,8 @@ auto create_unit_tapered_cylinder_mesh(float anchor_radius_scale,
   }
 
   int const base_anchor = static_cast<int>(v.size());
-  v.push_back({{0.0F, -half_h, 0.0F},
-               {0.0F, -1.0F, 0.0F},
-               {k_uv_center, k_uv_center}});
+  v.push_back(
+      {{0.0F, -half_h, 0.0F}, {0.0F, -1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -161,9 +159,8 @@ auto create_unit_tapered_cylinder_mesh(float anchor_radius_scale,
   }
 
   int const base_tail = static_cast<int>(v.size());
-  v.push_back({{0.0F, half_h, 0.0F},
-               {0.0F, 1.0F, 0.0F},
-               {k_uv_center, k_uv_center}});
+  v.push_back(
+      {{0.0F, half_h, 0.0F}, {0.0F, 1.0F, 0.0F}, {k_uv_center, k_uv_center}});
   for (int i = 0; i <= radial_segments; ++i) {
     float const u = float(i) / float(radial_segments);
     float const ang = u * k_two_pi;
@@ -728,7 +725,8 @@ auto get_unit_cylinder(int radial_segments) -> Mesh * {
   auto it = cylinder_meshes.find(radial_segments);
   if (it == cylinder_meshes.end()) {
     it = cylinder_meshes
-             .emplace(radial_segments, create_unit_cylinder_mesh(radial_segments))
+             .emplace(radial_segments,
+                      create_unit_cylinder_mesh(radial_segments))
              .first;
   }
   return it->second.get();
@@ -744,10 +742,9 @@ auto get_unit_tapered_cylinder(float anchor_radius_scale,
   auto const quantize = [](float value) -> std::uint64_t {
     return static_cast<std::uint64_t>(std::lround(value * 1000.0F));
   };
-  std::uint64_t const key =
-      (quantize(anchor_radius_scale) << 32) |
-      (quantize(tail_radius_scale) << 16) |
-      static_cast<std::uint64_t>(radial_segments);
+  std::uint64_t const key = (quantize(anchor_radius_scale) << 32) |
+                            (quantize(tail_radius_scale) << 16) |
+                            static_cast<std::uint64_t>(radial_segments);
 
   static std::mutex cache_mutex;
   static std::unordered_map<std::uint64_t, std::unique_ptr<Mesh>>
@@ -758,8 +755,8 @@ auto get_unit_tapered_cylinder(float anchor_radius_scale,
   if (it == tapered_meshes.end()) {
     it = tapered_meshes
              .emplace(key, create_unit_tapered_cylinder_mesh(
-                                anchor_radius_scale, tail_radius_scale,
-                                radial_segments))
+                               anchor_radius_scale, tail_radius_scale,
+                               radial_segments))
              .first;
   }
   return it->second.get();

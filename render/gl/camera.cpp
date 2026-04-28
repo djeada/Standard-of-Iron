@@ -86,7 +86,7 @@ inline void orthonormalize(const QVector3D &frontIn, QVector3D &front_out,
 }
 
 inline void clamp_ortho_box(float &left, float &right, float &bottom,
-                          float &top) {
+                            float &top) {
   if (left == right) {
     left -= 0.5F;
     right += 0.5F;
@@ -102,7 +102,7 @@ inline void clamp_ortho_box(float &left, float &right, float &bottom,
 }
 
 inline auto calculate_dynamic_margin(float base_margin, float camera_height,
-                                   float pitch_deg) -> float {
+                                     float pitch_deg) -> float {
 
   float const height_factor =
       std::clamp(camera_height / k_reference_height, k_height_factor_min,
@@ -116,7 +116,7 @@ inline auto calculate_dynamic_margin(float base_margin, float camera_height,
 }
 
 inline auto smooth_approach(float current, float target,
-                           float smoothness) -> float {
+                            float smoothness) -> float {
   if (std::abs(current - target) < k_tiny) {
     return target;
   }
@@ -398,7 +398,8 @@ void Camera::update(float dt) {
   }
 }
 
-auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screen_w, qreal screen_h,
+auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screen_w,
+                              qreal screen_h,
                               QVector3D &out_world) const -> bool {
   if (screen_w <= 0 || screen_h <= 0) {
     return false;
@@ -448,7 +449,8 @@ auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screen_w, qreal screen_h
 }
 
 auto Camera::world_to_screen(const QVector3D &world, qreal screen_w,
-                             qreal screen_h, QPointF &out_screen) const -> bool {
+                             qreal screen_h,
+                             QPointF &out_screen) const -> bool {
   if (screen_w <= 0 || screen_h <= 0) {
     return false;
   }
@@ -693,7 +695,7 @@ void Camera::apply_soft_boundaries(bool is_panning) {
 
   if (!target_adjustment.isNull()) {
     m_target += target_adjustment * (is_panning ? k_boundary_panning_smoothness
-                                               : k_boundary_smoothness);
+                                                : k_boundary_smoothness);
 
     if (target_to_pos_dist > k_tiny) {
       QVector3D const dir = target_to_pos.normalized();

@@ -25,8 +25,8 @@ public:
                  const Game::Map::BiomeSettings &biome_settings);
 
   void set_explicit_fire_camps(const std::vector<QVector3D> &positions,
-                            const std::vector<float> &intensities = {},
-                            const std::vector<float> &radii = {});
+                               const std::vector<float> &intensities = {},
+                               const std::vector<float> &radii = {});
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
 

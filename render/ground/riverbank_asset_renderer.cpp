@@ -115,7 +115,7 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
     }
     if (!m_visible_instances.empty()) {
       m_asset_instance_buffer->set_data(m_visible_instances,
-                                      Buffer::Usage::Dynamic);
+                                        Buffer::Usage::Dynamic);
     }
 
     m_cachedVisibilityVersion = current_version;

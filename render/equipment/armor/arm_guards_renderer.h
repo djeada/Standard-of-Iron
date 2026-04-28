@@ -51,10 +51,10 @@ private:
   ArmGuardsConfig m_config;
 
   static void render_arm_guard(const ArmGuardsConfig &config,
-                             const DrawContext &ctx, const QVector3D &elbow,
-                             const QVector3D &wrist,
-                             std::span<const QVector3D> palette,
-                             EquipmentBatch &batch);
+                               const DrawContext &ctx, const QVector3D &elbow,
+                               const QVector3D &wrist,
+                               std::span<const QVector3D> palette,
+                               EquipmentBatch &batch);
 };
 
 } // namespace Render::GL

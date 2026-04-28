@@ -4,7 +4,7 @@
 
 namespace Render::Horse {
 
-[[nodiscard]] auto horse_manifest() noexcept
-    -> const Render::Creature::SpeciesManifest &;
+[[nodiscard]] auto
+horse_manifest() noexcept -> const Render::Creature::SpeciesManifest &;
 
-} // namespace Render::Horse
+}

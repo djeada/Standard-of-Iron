@@ -4,9 +4,9 @@
 
 namespace {
 
-using Render::Creature::Quadruped::ClipSet;
 using Render::Creature::Quadruped::clip_for_gait;
 using Render::Creature::Quadruped::clip_for_motion;
+using Render::Creature::Quadruped::ClipSet;
 using Render::GL::GaitType;
 
 TEST(QuadrupedClipSet, HorseGaitsMapDirectly) {
@@ -21,9 +21,12 @@ TEST(QuadrupedClipSet, HorseGaitsMapDirectly) {
 }
 
 TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
-  constexpr ClipSet kElephantClips{
-      0U, 1U, 2U, Render::Creature::Quadruped::kInvalidClip,
-      Render::Creature::Quadruped::kInvalidClip, 3U};
+  constexpr ClipSet kElephantClips{0U,
+                                   1U,
+                                   2U,
+                                   Render::Creature::Quadruped::kInvalidClip,
+                                   Render::Creature::Quadruped::kInvalidClip,
+                                   3U};
 
   EXPECT_EQ(clip_for_motion(kElephantClips, false, false, false), 0U);
   EXPECT_EQ(clip_for_motion(kElephantClips, true, false, false), 1U);
@@ -32,10 +35,12 @@ TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
 }
 
 TEST(QuadrupedClipSet, GaitFallbackWalksBackTowardAvailableLocomotion) {
-  constexpr ClipSet kSparseClips{
-      10U, Render::Creature::Quadruped::kInvalidClip, 12U,
-      Render::Creature::Quadruped::kInvalidClip,
-      Render::Creature::Quadruped::kInvalidClip, 19U};
+  constexpr ClipSet kSparseClips{10U,
+                                 Render::Creature::Quadruped::kInvalidClip,
+                                 12U,
+                                 Render::Creature::Quadruped::kInvalidClip,
+                                 Render::Creature::Quadruped::kInvalidClip,
+                                 19U};
 
   EXPECT_EQ(clip_for_gait(kSparseClips, GaitType::WALK), 12U);
   EXPECT_EQ(clip_for_gait(kSparseClips, GaitType::GALLOP), 12U);

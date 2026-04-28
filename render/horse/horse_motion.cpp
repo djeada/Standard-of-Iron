@@ -79,12 +79,12 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
   frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
 
-  frame.saddle_center = QVector3D(
-      0.0F,
-      d.saddle_height + d.body_height * kSaddleBodyHeightLiftScale -
-          d.saddle_thickness * kSaddleThicknessOffset,
-      -d.body_length * kSaddleBodyLengthOffset +
-          d.seat_forward_offset * kSaddleSeatForwardScale);
+  frame.saddle_center =
+      QVector3D(0.0F,
+                d.saddle_height + d.body_height * kSaddleBodyHeightLiftScale -
+                    d.saddle_thickness * kSaddleThicknessOffset,
+                -d.body_length * kSaddleBodyLengthOffset +
+                    d.seat_forward_offset * kSaddleSeatForwardScale);
 
   frame.seat_position =
       frame.saddle_center +
@@ -411,8 +411,8 @@ auto evaluate_horse_motion(const HorseProfile &profile,
                      state.target_gait != GaitType::IDLE;
   evaluate_phase_and_bob(state, profile, anim, rider_ctx, resolved,
                          sample.rider_intensity, sample.phase, sample.bob);
-  sample.is_fighting = anim.is_attacking ||
-                       (anim.combat_phase != CombatAnimPhase::Idle);
+  sample.is_fighting =
+      anim.is_attacking || (anim.combat_phase != CombatAnimPhase::Idle);
   sample.gait = resolved;
   sample.gait_type = state.current_gait;
   sample.turn_amount = resolve_turn_amount(rider_ctx, sample.rider_intensity);
@@ -471,9 +471,8 @@ auto evaluate_horse_motion(const HorseProfile &profile,
   sample.spine_flex += sample.turn_amount * (0.0015F + gait_lift * 0.001F);
 
   if (sample.is_fighting) {
-    // Combat stance: reduce lateral sway, add aggressive head nod, lean forward.
-    float const fight_nod =
-        std::sin(anim.time * k_pi * 2.0F / 1.1F) * 0.007F;
+
+    float const fight_nod = std::sin(anim.time * k_pi * 2.0F / 1.1F) * 0.007F;
     sample.body_sway *= 0.55F;
     sample.head_nod += fight_nod;
     sample.body_pitch += 0.002F;

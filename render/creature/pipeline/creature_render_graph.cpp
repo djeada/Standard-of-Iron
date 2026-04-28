@@ -96,12 +96,12 @@ auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   return config;
 }
 
-auto quadruped_lod_from_settings(CreatureKind kind,
-                                 float distance) noexcept
+auto quadruped_lod_from_settings(CreatureKind kind, float distance) noexcept
     -> Render::Creature::CreatureLOD {
   switch (kind) {
   case CreatureKind::Horse:
-    return select_distance_lod(distance, horse_lod_config_from_settings().thresholds);
+    return select_distance_lod(distance,
+                               horse_lod_config_from_settings().thresholds);
   case CreatureKind::Elephant:
     return select_distance_lod(distance,
                                elephant_lod_config_from_settings().thresholds);
@@ -109,7 +109,8 @@ auto quadruped_lod_from_settings(CreatureKind kind,
   case CreatureKind::Mounted:
     break;
   }
-  return select_distance_lod(distance, humanoid_lod_config_from_settings().thresholds);
+  return select_distance_lod(distance,
+                             humanoid_lod_config_from_settings().thresholds);
 }
 
 auto evaluate_creature_lod(const CreatureGraphInputs &inputs,
@@ -202,8 +203,7 @@ build_request(const CreatureGraphOutput &output,
   return req;
 }
 
-[[nodiscard]] auto
-default_archetype_for(CreatureKind kind) noexcept
+[[nodiscard]] auto default_archetype_for(CreatureKind kind) noexcept
     -> Render::Creature::ArchetypeId {
   switch (kind) {
   case CreatureKind::Horse:

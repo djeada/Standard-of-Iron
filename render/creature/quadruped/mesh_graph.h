@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../part_graph.h"
 #include "../../gl/mesh.h"
+#include "../part_graph.h"
 
 #include <QVector3D>
 
@@ -80,9 +80,8 @@ struct TubeNode {
   std::uint8_t ring_vertices{6U};
 };
 
-using MeshNodeData =
-    std::variant<BarrelNode, EllipsoidNode, ColumnLegNode, SnoutNode,
-                 FlatFanNode, ConeNode, TubeNode>;
+using MeshNodeData = std::variant<BarrelNode, EllipsoidNode, ColumnLegNode,
+                                  SnoutNode, FlatFanNode, ConeNode, TubeNode>;
 
 struct MeshNode {
   std::string_view debug_name{};
@@ -103,8 +102,8 @@ struct CompiledMeshGraph {
   }
 };
 
-[[nodiscard]] auto compile_mesh_graph(std::span<const MeshNode> nodes)
-    -> CompiledMeshGraph;
+[[nodiscard]] auto
+compile_mesh_graph(std::span<const MeshNode> nodes) -> CompiledMeshGraph;
 
 [[nodiscard]] auto compile_combined_mesh_graph(std::span<const MeshNode> nodes)
     -> std::unique_ptr<Render::GL::Mesh>;

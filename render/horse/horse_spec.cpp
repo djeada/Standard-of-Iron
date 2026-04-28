@@ -313,11 +313,7 @@ auto compute_pose_leg(
   float shoulder_compress = 0.0F;
   if (is_fighting) {
     if (!is_rear) {
-      // Front legs: alternating paw/strike cycle driven by leg_phase.
-      // 0.00-0.45: raise leg (ease in)
-      // 0.45-0.65: hold at peak
-      // 0.65-0.78: strike down with force
-      // 0.78-1.00: recover from impact
+
       float const paw_height = dims.leg_length * 0.42F;
       float const strike_reach = dims.body_length * 0.08F;
       float const impact_sink = dims.hoof_height * 0.12F;
@@ -339,7 +335,7 @@ auto compute_pose_leg(
         stride = forward_bias + strike_reach * 0.5F * (1.0F - u);
       }
     } else {
-      // Rear legs: braced and planted during fight, minimal sway for stability.
+
       float const brace_sway =
           std::sin(leg_phase * 2.0F * std::numbers::pi_v<float>) *
           dims.body_length * 0.015F;
@@ -435,13 +431,13 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
                 dims.head_length * profile.head_half_scale.z());
 
   if (motion.is_fighting) {
-    // Combat stance: neck arches taller and pulls back, head tucks for attack.
+
     float const neck_arch_y = dims.neck_rise * 0.18F;
     float const neck_pull_z = dims.neck_length * 0.04F;
     float const head_drop_y = dims.head_height * 0.10F;
     float const head_push_z = dims.head_length * 0.07F;
     out_pose.neck_top += QVector3D(0.0F, neck_arch_y, -neck_pull_z);
-    // Head follows neck arc and additionally lowers forward for the attack.
+
     out_pose.head_center +=
         QVector3D(0.0F, neck_arch_y - head_drop_y, -neck_pull_z + head_push_z);
   }

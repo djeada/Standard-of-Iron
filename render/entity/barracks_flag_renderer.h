@@ -122,13 +122,12 @@ inline void draw_banner_with_tassels(
   }
 }
 
-inline void
-draw_pole_with_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const QVector3D &pole_start,
-                   const QVector3D &pole_end, float pole_radius,
-                   const QVector3D &pole_color, const QVector3D &banner_center,
-                   const QVector3D &banner_half_size,
-                   const QVector3D &banner_color, bool enableCapture = false) {
+inline void draw_pole_with_banner(
+    const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
+    const QVector3D &pole_start, const QVector3D &pole_end, float pole_radius,
+    const QVector3D &pole_color, const QVector3D &banner_center,
+    const QVector3D &banner_half_size, const QVector3D &banner_color,
+    bool enableCapture = false) {
   QVector3D actual_banner_color = banner_color;
 
   if (enableCapture && p.entity != nullptr) {
@@ -146,8 +145,8 @@ draw_pole_with_banner(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 
   out.mesh(get_unit_cylinder(),
-           p.model *
-               Render::Geom::cylinder_between(pole_start, pole_end, pole_radius),
+           p.model * Render::Geom::cylinder_between(pole_start, pole_end,
+                                                    pole_radius),
            pole_color, white, 1.0F);
 
   QMatrix4x4 banner_transform = p.model;
@@ -176,11 +175,12 @@ inline CaptureColors get_capture_colors(const DrawContext &p,
 
       QVector3D const new_team_color =
           Game::Visuals::team_colorForOwner(capture->capturing_player_id);
-      result.teamColor = QVector3D(
-          base_team_color.x() * (1.0F - progress) + new_team_color.x() * progress,
-          base_team_color.y() * (1.0F - progress) + new_team_color.y() * progress,
-          base_team_color.z() * (1.0F - progress) +
-              new_team_color.z() * progress);
+      result.teamColor = QVector3D(base_team_color.x() * (1.0F - progress) +
+                                       new_team_color.x() * progress,
+                                   base_team_color.y() * (1.0F - progress) +
+                                       new_team_color.y() * progress,
+                                   base_team_color.z() * (1.0F - progress) +
+                                       new_team_color.z() * progress);
       result.team_trim_color =
           QVector3D(base_team_trim.x() * (1.0F - progress) +
                         new_team_color.x() * 0.6F * progress,

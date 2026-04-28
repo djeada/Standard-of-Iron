@@ -4,9 +4,8 @@ import re
 import sys
 from pathlib import Path
 
-# (camelCase, snake_case)
+
 RENAMES = [
-    # Local variables and function parameters
     ("nextRand", "next_rand"),
     ("globalIndex", "global_index"),
     ("rotationDeg", "rotation_deg"),
@@ -26,7 +25,6 @@ RENAMES = [
     ("normalSum", "normal_sum"),
     ("normalUp", "normal_up"),
     ("riverSegments", "river_segments"),
-    # Function/method names
     ("drawArms", "draw_arms"),
     ("drawBannerWithTassels", "draw_banner_with_tassels"),
     ("drawBaseFrame", "draw_base_frame"),
@@ -71,7 +69,6 @@ RENAMES = [
     ("getSelectionRingSize", "get_selection_ring_size"),
     ("hasPersistentMapping", "has_persistent_mapping"),
     ("setExplicitFireCamps", "set_explicit_fire_camps"),
-    # Member variables
     ("m_riverSegments", "m_river_segments"),
     ("m_heightData", "m_height_data"),
     ("m_terrainTypes", "m_terrain_types"),
@@ -87,7 +84,6 @@ RENAMES = [
     ("fogShader", "fog_shader"),
     ("cylinderShader", "cylinder_shader"),
     ("shaderScope", "shader_scope"),
-    # Other local variables
     ("auraColor", "aura_color"),
     ("auraRadius", "aura_radius"),
     ("bannerColor", "banner_color"),
@@ -176,7 +172,6 @@ RENAMES = [
     ("windStrength", "wind_strength"),
     ("woodDark", "wood_dark"),
     ("writeOffset", "write_offset"),
-    # Signal/slot/property names
     ("overlayChanged", "overlay_changed"),
     ("overlayText", "overlay_text"),
     ("enabledChanged", "enabled_changed"),
@@ -209,34 +204,36 @@ RENAMES = [
     ("storageFlags", "storage_flags"),
 ]
 
+
 def rename_in_file(path: Path, renames: list, dry_run: bool = False) -> int:
     """Apply renames to a file. Returns number of changes made."""
-    content = path.read_text(encoding='utf-8')
+    content = path.read_text(encoding="utf-8")
     original = content
-    
+
     for old, new in renames:
-        # Use word boundaries: \b works for word chars -> non-word chars transitions
-        pattern = r'\b' + re.escape(old) + r'\b'
+
+        pattern = r"\b" + re.escape(old) + r"\b"
         content = re.sub(pattern, new, content)
-    
+
     if content != original:
         if not dry_run:
-            path.write_text(content, encoding='utf-8')
-        # Count changes
+            path.write_text(content, encoding="utf-8")
+
         changes = 0
         for old, new in renames:
-            pattern = r'\b' + re.escape(old) + r'\b'
+            pattern = r"\b" + re.escape(old) + r"\b"
             changes += len(re.findall(pattern, original))
         return changes
     return 0
 
+
 def main():
     base = Path("/home/runner/work/Standard-of-Iron/Standard-of-Iron")
     dirs = [base / "render", base / "tests" / "render"]
-    
+
     total_files = 0
     total_changes = 0
-    
+
     for d in dirs:
         if not d.exists():
             print(f"Directory not found: {d}")
@@ -248,8 +245,9 @@ def main():
                     total_files += 1
                     total_changes += n
                     print(f"  {path.relative_to(base)}: {n} replacements")
-    
+
     print(f"\nTotal: {total_changes} replacements in {total_files} files")
+
 
 if __name__ == "__main__":
     main()

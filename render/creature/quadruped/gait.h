@@ -52,31 +52,30 @@ struct MotionSample {
 [[nodiscard]] auto swing_ease(float t) noexcept -> float;
 [[nodiscard]] auto swing_arc(float t) noexcept -> float;
 
-[[nodiscard]] auto locomotion_intensity(bool is_moving, bool is_running,
-                                        const Gait &gait,
-                                        const MotionConfig &config = {}) noexcept
-    -> float;
+[[nodiscard]] auto
+locomotion_intensity(bool is_moving, bool is_running, const Gait &gait,
+                     const MotionConfig &config = {}) noexcept -> float;
 
-[[nodiscard]] auto default_foot_position(
-    const Dimensions &dims, LegId leg, const QVector3D &barrel_center,
-    float lateral_scale = 0.52F, float vertical_scale = 0.42F,
-    float fore_aft_scale = 0.48F) noexcept -> QVector3D;
+[[nodiscard]] auto
+default_foot_position(const Dimensions &dims, LegId leg,
+                      const QVector3D &barrel_center,
+                      float lateral_scale = 0.52F, float vertical_scale = 0.42F,
+                      float fore_aft_scale = 0.48F) noexcept -> QVector3D;
 
-[[nodiscard]] auto swing_target(const Dimensions &dims, LegId leg,
-                                const QVector3D &barrel_center,
-                                float stride_length,
-                                float lateral_scale = 0.52F,
-                                float vertical_scale = 0.42F,
-                                float fore_aft_scale = 0.48F) noexcept
-    -> QVector3D;
+[[nodiscard]] auto
+swing_target(const Dimensions &dims, LegId leg, const QVector3D &barrel_center,
+             float stride_length, float lateral_scale = 0.52F,
+             float vertical_scale = 0.42F,
+             float fore_aft_scale = 0.48F) noexcept -> QVector3D;
 
 [[nodiscard]] auto body_sway(bool is_moving, float phase, float time,
                              float move_intensity, float stride_swing,
                              const SwayConfig &config = {}) noexcept -> float;
 
-[[nodiscard]] auto evaluate_cycle_motion(
-    const Dimensions &dims, const Gait &gait, float time, bool is_moving,
-    bool is_running, bool is_fighting, const MotionConfig &motion = {},
-    const SwayConfig &sway = {}) noexcept -> MotionSample;
+[[nodiscard]] auto
+evaluate_cycle_motion(const Dimensions &dims, const Gait &gait, float time,
+                      bool is_moving, bool is_running, bool is_fighting,
+                      const MotionConfig &motion = {},
+                      const SwayConfig &sway = {}) noexcept -> MotionSample;
 
 } // namespace Render::Creature::Quadruped

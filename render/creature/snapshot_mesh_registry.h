@@ -29,15 +29,14 @@ public:
 private:
   SnapshotMeshRegistry() = default;
 
-  [[nodiscard]] auto slot(std::uint32_t species_id,
-                          Render::Creature::CreatureLOD lod) noexcept
-      -> SnapshotMeshBlob *;
+  [[nodiscard]] auto
+  slot(std::uint32_t species_id,
+       Render::Creature::CreatureLOD lod) noexcept -> SnapshotMeshBlob *;
   [[nodiscard]] auto slot(std::uint32_t species_id,
                           Render::Creature::CreatureLOD lod) const noexcept
       -> const SnapshotMeshBlob *;
 
-  std::array<SnapshotMeshBlob,
-             Render::Creature::Bpat::kSpeciesCount * 2U>
+  std::array<SnapshotMeshBlob, Render::Creature::Bpat::kSpeciesCount * 2U>
       m_blobs{};
   std::string m_last_error{};
 };

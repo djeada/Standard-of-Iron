@@ -13,7 +13,8 @@ namespace {
 constexpr float kPi = std::numbers::pi_v<float>;
 constexpr float kTwoPi = 2.0F * kPi;
 
-auto make_vertex(const QVector3D &pos, const QVector3D &normal) -> Render::GL::Vertex {
+auto make_vertex(const QVector3D &pos,
+                 const QVector3D &normal) -> Render::GL::Vertex {
   QVector3D n = normal;
   if (n.lengthSquared() <= 1.0e-8F) {
     n = QVector3D(0.0F, 1.0F, 0.0F);
@@ -24,8 +25,9 @@ auto make_vertex(const QVector3D &pos, const QVector3D &normal) -> Render::GL::V
 }
 
 void append_flat_triangle(std::vector<Render::GL::Vertex> &vertices,
-                          std::vector<unsigned int> &indices, const QVector3D &a,
-                          const QVector3D &b, const QVector3D &c) {
+                          std::vector<unsigned int> &indices,
+                          const QVector3D &a, const QVector3D &b,
+                          const QVector3D &c) {
   QVector3D normal = QVector3D::crossProduct(b - a, c - a);
   if (normal.lengthSquared() <= 1.0e-8F) {
     normal = QVector3D(0.0F, 1.0F, 0.0F);
@@ -67,9 +69,11 @@ auto ring_basis(const QVector3D &tangent) -> std::pair<QVector3D, QVector3D> {
   } else {
     forward.normalize();
   }
-  QVector3D up_ref = std::abs(QVector3D::dotProduct(forward, QVector3D(0.0F, 1.0F, 0.0F))) > 0.95F
-                         ? QVector3D(1.0F, 0.0F, 0.0F)
-                         : QVector3D(0.0F, 1.0F, 0.0F);
+  QVector3D up_ref =
+      std::abs(QVector3D::dotProduct(forward, QVector3D(0.0F, 1.0F, 0.0F))) >
+              0.95F
+          ? QVector3D(1.0F, 0.0F, 0.0F)
+          : QVector3D(0.0F, 1.0F, 0.0F);
   QVector3D right = QVector3D::crossProduct(up_ref, forward);
   if (right.lengthSquared() <= 1.0e-8F) {
     right = QVector3D(1.0F, 0.0F, 0.0F);
@@ -198,18 +202,21 @@ void append_closed_prism(std::vector<Render::GL::Vertex> &vertices,
   back_center /= static_cast<float>(back.size());
   for (std::size_t i = 0; i < front.size(); ++i) {
     std::size_t const next = (i + 1U) % front.size();
-    append_flat_triangle(vertices, indices, front_center, front[i], front[next]);
+    append_flat_triangle(vertices, indices, front_center, front[i],
+                         front[next]);
     append_flat_triangle(vertices, indices, back_center, back[next], back[i]);
   }
 }
 
-auto build_barrel_mesh(const BarrelNode &node) -> std::unique_ptr<Render::GL::Mesh> {
+auto build_barrel_mesh(const BarrelNode &node)
+    -> std::unique_ptr<Render::GL::Mesh> {
   std::vector<std::vector<QVector3D>> rings;
   rings.reserve(node.rings.size());
   for (const BarrelRing &ring : node.rings) {
-    rings.push_back(make_oval_ring(
-        0.0F, ring.z * node.scale.z(), (ring.y + ring.top) * node.scale.y(),
-        (ring.y - ring.bottom) * node.scale.y(), ring.half_width * node.scale.x()));
+    rings.push_back(make_oval_ring(0.0F, ring.z * node.scale.z(),
+                                   (ring.y + ring.top) * node.scale.y(),
+                                   (ring.y - ring.bottom) * node.scale.y(),
+                                   ring.half_width * node.scale.x()));
   }
 
   std::vector<Render::GL::Vertex> vertices;
@@ -221,19 +228,18 @@ auto build_barrel_mesh(const BarrelNode &node) -> std::unique_ptr<Render::GL::Me
 auto build_ellipsoid_mesh(const EllipsoidNode &node)
     -> std::unique_ptr<Render::GL::Mesh> {
   std::size_t const ring_count = std::max<std::size_t>(node.ring_count, 3U);
-  std::size_t const ring_vertices = std::max<std::size_t>(node.ring_vertices, 6U);
+  std::size_t const ring_vertices =
+      std::max<std::size_t>(node.ring_vertices, 6U);
   std::vector<std::vector<QVector3D>> rings;
   rings.reserve(ring_count);
   for (std::size_t i = 0; i < ring_count; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(ring_count - 1U);
+    float const t = static_cast<float>(i) / static_cast<float>(ring_count - 1U);
     float const phi = -0.5F * kPi + t * kPi;
     float const cross = std::max(std::abs(std::cos(phi)), 0.04F);
     float const z = node.center.z() + std::sin(phi) * node.radii.z();
-    rings.push_back(
-        make_round_ring({node.center.x(), node.center.y(), z},
-                        node.radii.x() * cross, node.radii.y() * cross,
-                        ring_vertices));
+    rings.push_back(make_round_ring({node.center.x(), node.center.y(), z},
+                                    node.radii.x() * cross,
+                                    node.radii.y() * cross, ring_vertices));
   }
 
   std::vector<Render::GL::Vertex> vertices;
@@ -245,13 +251,14 @@ auto build_ellipsoid_mesh(const EllipsoidNode &node)
 auto build_column_leg_mesh(const ColumnLegNode &node)
     -> std::unique_ptr<Render::GL::Mesh> {
   std::size_t const ring_count = std::max<std::size_t>(node.ring_count, 3U);
-  std::size_t const ring_vertices = std::max<std::size_t>(node.ring_vertices, 6U);
+  std::size_t const ring_vertices =
+      std::max<std::size_t>(node.ring_vertices, 6U);
   std::vector<std::vector<QVector3D>> rings;
   rings.reserve(ring_count);
   for (std::size_t i = 0; i < ring_count; ++i) {
-    float const t =
-        static_cast<float>(i) / static_cast<float>(ring_count - 1U);
-    float const y = node.top_center.y() + (node.bottom_y - node.top_center.y()) * t;
+    float const t = static_cast<float>(i) / static_cast<float>(ring_count - 1U);
+    float const y =
+        node.top_center.y() + (node.bottom_y - node.top_center.y()) * t;
     float taper = 1.0F - (1.0F - node.shaft_taper) * std::min(t * 1.2F, 1.0F);
     if (i + 1U == ring_count) {
       taper *= node.foot_radius_scale;
@@ -259,8 +266,9 @@ auto build_column_leg_mesh(const ColumnLegNode &node)
       taper *= 1.0F + (node.foot_radius_scale - 1.0F) * 0.5F;
     }
     rings.push_back(make_oriented_ring(
-        {node.top_center.x(), y, node.top_center.z()}, QVector3D(0.0F, -1.0F, 0.0F),
-        node.top_radius_x * taper, node.top_radius_z * taper, ring_vertices));
+        {node.top_center.x(), y, node.top_center.z()},
+        QVector3D(0.0F, -1.0F, 0.0F), node.top_radius_x * taper,
+        node.top_radius_z * taper, ring_vertices));
   }
 
   std::vector<Render::GL::Vertex> vertices;
@@ -271,8 +279,7 @@ auto build_column_leg_mesh(const ColumnLegNode &node)
 
 auto build_path_tube_mesh(const QVector3D &start, const QVector3D &end,
                           float start_radius, float end_radius, float sag,
-                          std::size_t segment_count,
-                          std::size_t ring_vertices)
+                          std::size_t segment_count, std::size_t ring_vertices)
     -> std::unique_ptr<Render::GL::Mesh> {
   segment_count = std::max<std::size_t>(segment_count, 2U);
   ring_vertices = std::max<std::size_t>(ring_vertices, 6U);
@@ -283,9 +290,8 @@ auto build_path_tube_mesh(const QVector3D &start, const QVector3D &end,
         static_cast<float>(i) / static_cast<float>(segment_count - 1U);
     QVector3D center = start * (1.0F - t) + end * t;
     center += QVector3D(0.0F, std::sin(t * kPi) * sag, 0.0F);
-    QVector3D const tangent = (end - start) +
-                              QVector3D(0.0F, std::cos(t * kPi) * sag * 0.5F,
-                                        0.0F);
+    QVector3D const tangent =
+        (end - start) + QVector3D(0.0F, std::cos(t * kPi) * sag * 0.5F, 0.0F);
     float const radius = start_radius + (end_radius - start_radius) * t;
     rings.push_back(make_oriented_ring(center, tangent, radius, radius * 0.9F,
                                        ring_vertices));
@@ -297,7 +303,8 @@ auto build_path_tube_mesh(const QVector3D &start, const QVector3D &end,
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
-auto build_snout_mesh(const SnoutNode &node) -> std::unique_ptr<Render::GL::Mesh> {
+auto build_snout_mesh(const SnoutNode &node)
+    -> std::unique_ptr<Render::GL::Mesh> {
   return build_path_tube_mesh(node.start, node.end, node.base_radius,
                               node.tip_radius, node.sag, node.segment_count,
                               node.ring_vertices);
@@ -327,19 +334,22 @@ auto build_flat_fan_mesh(const FlatFanNode &node)
   return std::make_unique<Render::GL::Mesh>(vertices, indices);
 }
 
-auto build_cone_mesh(const ConeNode &node) -> std::unique_ptr<Render::GL::Mesh> {
+auto build_cone_mesh(const ConeNode &node)
+    -> std::unique_ptr<Render::GL::Mesh> {
   return build_path_tube_mesh(node.base_center, node.tip, node.base_radius,
                               std::max(node.base_radius * 0.05F, 0.002F), 0.0F,
                               2U, node.ring_vertices);
 }
 
-auto build_tube_mesh(const TubeNode &node) -> std::unique_ptr<Render::GL::Mesh> {
+auto build_tube_mesh(const TubeNode &node)
+    -> std::unique_ptr<Render::GL::Mesh> {
   return build_path_tube_mesh(node.start, node.end, node.start_radius,
                               node.end_radius, node.sag, node.segment_count,
                               node.ring_vertices);
 }
 
-auto compile_node_mesh(const MeshNodeData &data) -> std::unique_ptr<Render::GL::Mesh> {
+auto compile_node_mesh(const MeshNodeData &data)
+    -> std::unique_ptr<Render::GL::Mesh> {
   return std::visit(
       [](const auto &node) -> std::unique_ptr<Render::GL::Mesh> {
         using T = std::decay_t<decltype(node)>;

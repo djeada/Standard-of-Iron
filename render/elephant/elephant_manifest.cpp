@@ -137,11 +137,10 @@ auto build_elephant_whole_nodes()
   float const head_front_z = head.center.z() + head.radii.z();
   float const trunk_base_z = bl * 1.16F;
   float const eye_radius_z = hl * 0.035F;
-  float const head_eye_z = head_front_z - 3*eye_radius_z;
+  float const head_eye_z = head_front_z - 3 * eye_radius_z;
 
   EllipsoidNode trunk_bridge;
-  trunk_bridge.center =
-      QVector3D(0.0F, bh * 0.08F, head_front_z - hl * 0.075F);
+  trunk_bridge.center = QVector3D(0.0F, bh * 0.08F, head_front_z - hl * 0.075F);
   trunk_bridge.radii = QVector3D(hw * 0.16F, hh * 0.14F, hl * 0.095F);
   trunk_bridge.ring_count = 4U;
   trunk_bridge.ring_vertices = 6U;

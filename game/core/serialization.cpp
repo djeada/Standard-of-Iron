@@ -1300,8 +1300,9 @@ void Serialization::deserialize_world(World *world, const QJsonDocument &doc) {
     auto &terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restore_from_serialized(
         width, height, tile_size, temp_height_map->getHeightData(),
-        temp_height_map->getTerrainTypes(), temp_height_map->get_river_segments(),
-        roads, temp_height_map->get_bridges(), biome);
+        temp_height_map->getTerrainTypes(),
+        temp_height_map->get_river_segments(), roads,
+        temp_height_map->get_bridges(), biome);
   }
 }
 

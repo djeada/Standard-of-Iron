@@ -32,7 +32,8 @@ void pad_to_alignment(std::ostream &out, std::uint64_t current,
   }
 }
 
-auto lod_from_u32(std::uint32_t raw, Render::Creature::CreatureLOD &out) -> bool {
+auto lod_from_u32(std::uint32_t raw,
+                  Render::Creature::CreatureLOD &out) -> bool {
   switch (raw) {
   case static_cast<std::uint32_t>(Render::Creature::CreatureLOD::Full):
     out = Render::Creature::CreatureLOD::Full;
@@ -136,8 +137,8 @@ bool SnapshotMeshBlob::validate() {
       m_bytes.data() + header->clip_table_offset);
   m_string_table = reinterpret_cast<const char *>(m_bytes.data() +
                                                   header->string_table_offset);
-  m_indices = reinterpret_cast<const std::uint32_t *>(m_bytes.data() +
-                                                      header->index_data_offset);
+  m_indices = reinterpret_cast<const std::uint32_t *>(
+      m_bytes.data() + header->index_data_offset);
   m_vertices = reinterpret_cast<const Render::GL::RiggedVertex *>(
       m_bytes.data() + header->vertex_data_offset);
 
@@ -221,8 +222,8 @@ auto SnapshotMeshBlob::indices_view() const -> std::span<const std::uint32_t> {
   return {m_indices, m_header->index_count};
 }
 
-auto SnapshotMeshBlob::frame_vertices_view(std::uint32_t global_frame_index) const
-    -> std::span<const Render::GL::RiggedVertex> {
+auto SnapshotMeshBlob::frame_vertices_view(std::uint32_t global_frame_index)
+    const -> std::span<const Render::GL::RiggedVertex> {
   if (m_header == nullptr || m_vertices == nullptr ||
       global_frame_index >= m_header->frame_total) {
     return {};
@@ -270,7 +271,8 @@ void SnapshotMeshWriter::append_clip_vertices(
       static_cast<std::size_t>(m_vertex_count) * pending.desc.frame_count;
   assert(frame_vertices.size() == expected &&
          "frame_vertices.size() must equal vertex_count * frame_count");
-  m_vertices.insert(m_vertices.end(), frame_vertices.begin(), frame_vertices.end());
+  m_vertices.insert(m_vertices.end(), frame_vertices.begin(),
+                    frame_vertices.end());
   pending.vertices_appended = true;
 }
 

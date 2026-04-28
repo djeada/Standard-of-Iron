@@ -86,12 +86,11 @@ TEST(SnapshotMeshRegistry, LoadsMinimalHorseAssetFromFile) {
   auto &registry = SnapshotMeshRegistry::instance();
   registry.clear();
   ASSERT_TRUE(registry.load_species(Render::Creature::Bpat::kSpeciesHorse,
-                                    CreatureLOD::Minimal,
-                                    asset_path.string()))
+                                    CreatureLOD::Minimal, asset_path.string()))
       << registry.last_error();
 
-  auto const *blob =
-      registry.blob(Render::Creature::Bpat::kSpeciesHorse, CreatureLOD::Minimal);
+  auto const *blob = registry.blob(Render::Creature::Bpat::kSpeciesHorse,
+                                   CreatureLOD::Minimal);
   ASSERT_NE(blob, nullptr);
   EXPECT_EQ(blob->clip(0).name, "idle");
 }

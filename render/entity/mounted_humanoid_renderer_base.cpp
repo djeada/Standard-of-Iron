@@ -32,8 +32,8 @@ namespace Render::GL {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet kHorseClips{
-    0U, 1U, 2U, 3U, 4U, 5U};
+constexpr Render::Creature::Quadruped::ClipSet kHorseClips{0U, 1U, 2U,
+                                                           3U, 4U, 5U};
 
 auto grounded_horse_world_from_mount(
     const DrawContext &ctx, const HorseProfile &profile,

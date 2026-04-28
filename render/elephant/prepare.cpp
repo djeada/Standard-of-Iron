@@ -3,9 +3,9 @@
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
-#include "../creature/pipeline/unit_visual_spec.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "elephant_motion.h"
@@ -21,12 +21,15 @@ namespace Render::Elephant {
 namespace {
 
 constexpr Render::Creature::Quadruped::ClipSet kElephantClips{
-    0U, 1U, 2U, Render::Creature::Quadruped::kInvalidClip,
-    Render::Creature::Quadruped::kInvalidClip, 3U};
+    0U,
+    1U,
+    2U,
+    Render::Creature::Quadruped::kInvalidClip,
+    Render::Creature::Quadruped::kInvalidClip,
+    3U};
 
-auto elephant_state_for_motion(
-    const Render::GL::ElephantMotionSample &motion,
-    const Render::GL::AnimationInputs &anim) noexcept
+auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
+                               const Render::GL::AnimationInputs &anim) noexcept
     -> Render::Creature::AnimationStateId {
   if (motion.is_fighting) {
     return Render::Creature::AnimationStateId::AttackMelee;
@@ -49,9 +52,7 @@ auto elephant_clip_for_motion(const Render::GL::ElephantMotionSample &motion,
 
 } // namespace Render::Elephant
 
-namespace {
-
-} // namespace
+namespace {}
 
 namespace Render::GL {
 
@@ -163,9 +164,8 @@ void prepare_elephant_render(
   graph_output.spec = owner.visual_spec();
   graph_output.seed = 0U;
   std::uint16_t const elephant_clip = elephant_clip_for_motion(motion, anim);
-  out.bodies.add_quadruped(graph_output, v,
-                           elephant_state_for_motion(motion, anim),
-                           motion.phase);
+  out.bodies.add_quadruped(
+      graph_output, v, elephant_state_for_motion(motion, anim), motion.phase);
 }
 
 } // namespace Render::Elephant

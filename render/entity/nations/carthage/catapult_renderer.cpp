@@ -178,8 +178,8 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const CarthageCatapultPalette &c,
-                     const CatapultAnimContext &anim_ctx) {
+                       Texture *white, const CarthageCatapultPalette &c,
+                       const CatapultAnimContext &anim_ctx) {
 
   draw_cyl(out, p.model, QVector3D(-0.30F, 0.22F, -0.10F),
            QVector3D(-0.20F, 0.70F, 0.05F), 0.055F, c.wood_cedar, white);
@@ -234,7 +234,7 @@ void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                          Texture *white, const CarthageCatapultPalette &c) {
+                            Texture *white, const CarthageCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.22F, 0.40F, 0.0F),
            QVector3D(0.05F, 0.20F, 0.18F), c.wood_dark);
@@ -256,7 +256,7 @@ void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white, const CarthageCatapultPalette &c) {
+                      Texture *white, const CarthageCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.72F, -0.12F),
            QVector3D(0.04F, 0.08F, 0.02F), c.metal_bronze);
@@ -274,7 +274,7 @@ void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_windlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                  Texture *white, const CarthageCatapultPalette &c) {
+                   Texture *white, const CarthageCatapultPalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-0.22F, 0.25F, 0.35F),
            QVector3D(0.22F, 0.25F, 0.35F), 0.06F, c.wood_cedar, white);

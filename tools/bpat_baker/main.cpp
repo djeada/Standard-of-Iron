@@ -2,18 +2,16 @@
 
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
-#include "render/creature/species_manifest.h"
 #include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/species_manifest.h"
 
+#include "render/creature/part_graph.h"
+#include "render/creature/render_request.h"
 #include "render/elephant/dimensions.h"
 #include "render/elephant/elephant_gait.h"
 #include "render/elephant/elephant_manifest.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/mounted_knight_pose.h"
-#include "render/creature/part_graph.h"
-#include "render/creature/render_request.h"
-#include "render/rigged_mesh_bake.h"
-#include "render/snapshot_mesh_bake.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_gait.h"
@@ -24,6 +22,8 @@
 #include "render/humanoid/mounted_pose_controller.h"
 #include "render/humanoid/pose_controller.h"
 #include "render/humanoid/skeleton.h"
+#include "render/rigged_mesh_bake.h"
+#include "render/snapshot_mesh_bake.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -469,7 +469,7 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   motion.is_moving = clip.is_moving;
   motion.is_fighting = clip.is_fighting;
   if (clip.is_fighting) {
-    // Body rocks as the horse strikes: rises during wind-up, drops on impact.
+
     float const fight_bob =
         std::sin(phase * 2.0F * std::numbers::pi_v<float> + 0.5F) *
         dims.idle_bob_amplitude * 0.45F;
@@ -535,9 +535,9 @@ bool bake_horse(const std::filesystem::path &out_dir) {
             << Render::Horse::kHorseBoneCount << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
-  mesh_input.graph = &Render::Creature::part_graph_for(
-      Render::Horse::horse_creature_spec(),
-      Render::Creature::CreatureLOD::Minimal);
+  mesh_input.graph =
+      &Render::Creature::part_graph_for(Render::Horse::horse_creature_spec(),
+                                        Render::Creature::CreatureLOD::Minimal);
   mesh_input.bind_pose = Render::Horse::horse_bind_palette();
   auto source = Render::Creature::bake_rigged_mesh_cpu(mesh_input);
   snapshot::SnapshotMeshWriter snapshot_writer(
@@ -563,7 +563,8 @@ bool bake_horse(const std::filesystem::path &out_dir) {
     snapshot_writer.append_clip_vertices(clip_vertices);
   }
 
-  std::filesystem::path const snapshot_out_path = out_dir / "horse_minimal.bpsm";
+  std::filesystem::path const snapshot_out_path =
+      out_dir / "horse_minimal.bpsm";
   std::ofstream snapshot_out(snapshot_out_path,
                              std::ios::binary | std::ios::trunc);
   if (!snapshot_out) {
@@ -619,10 +620,9 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   motion.is_fighting = clip.is_fighting;
   motion.anim_time = phase * clip.gait.cycle_time;
   if (clip.is_fighting) {
-    // Body rocks with each stomp: half-cycle bob synchronized with stomps.
-    float const fight_bob =
-        std::sin(phase * 2.0F * std::numbers::pi_v<float>) *
-        dims.idle_bob_amplitude * 0.5F;
+
+    float const fight_bob = std::sin(phase * 2.0F * std::numbers::pi_v<float>) *
+                            dims.idle_bob_amplitude * 0.5F;
     motion.bob = fight_bob;
   } else {
     float const amp =

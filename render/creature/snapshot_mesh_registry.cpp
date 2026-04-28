@@ -70,8 +70,8 @@ auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
 }
 
 auto SnapshotMeshRegistry::slot(std::uint32_t species_id,
-                                Render::Creature::CreatureLOD lod) const noexcept
-    -> const SnapshotMeshBlob * {
+                                Render::Creature::CreatureLOD lod)
+    const noexcept -> const SnapshotMeshBlob * {
   auto const lod_slot = lod_slot_index(lod);
   if (species_id >= Render::Creature::Bpat::kSpeciesCount || lod_slot >= 2U) {
     return nullptr;
@@ -111,16 +111,17 @@ auto SnapshotMeshRegistry::load_all(const std::string &asset_root)
       path += '/';
     }
     path.append(file_name);
-    if (load_species(species_id, Render::Creature::CreatureLOD::Minimal, path)) {
+    if (load_species(species_id, Render::Creature::CreatureLOD::Minimal,
+                     path)) {
       ++loaded;
     }
   }
   return loaded;
 }
 
-auto SnapshotMeshRegistry::blob(
-    std::uint32_t species_id, Render::Creature::CreatureLOD lod) const noexcept
-    -> const SnapshotMeshBlob * {
+auto SnapshotMeshRegistry::blob(std::uint32_t species_id,
+                                Render::Creature::CreatureLOD lod)
+    const noexcept -> const SnapshotMeshBlob * {
   const auto *candidate = slot(species_id, lod);
   return (candidate != nullptr && candidate->loaded()) ? candidate : nullptr;
 }

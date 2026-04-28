@@ -8,14 +8,14 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/animation_state_components.h"
+#include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
-#include "render/creature/snapshot_mesh_asset.h"
-#include "render/creature/snapshot_mesh_registry.h"
-#include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
+#include "render/creature/snapshot_mesh_asset.h"
+#include "render/creature/snapshot_mesh_registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_motion.h"
@@ -157,10 +157,8 @@ TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
   EXPECT_GT(mount.saddle_center.z(), -d.body_length * 0.05F);
   EXPECT_LT(mount.saddle_center.z(), d.body_length * 0.10F);
   EXPECT_GT(mount.seat_position.z(), mount.saddle_center.z() - 0.001F);
-  EXPECT_GT(mount.saddle_center.y(),
-            d.saddle_height + d.body_height * 0.14F);
-  EXPECT_GT(mount.seat_position.y(),
-            d.saddle_height + d.body_height * 0.34F);
+  EXPECT_GT(mount.saddle_center.y(), d.saddle_height + d.body_height * 0.14F);
+  EXPECT_GT(mount.seat_position.y(), d.saddle_height + d.body_height * 0.34F);
   EXPECT_GT(mount.seat_position.y(),
             mount.saddle_center.y() + d.body_height * 0.16F);
 }
@@ -204,10 +202,11 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
   auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
-  ASSERT_TRUE(
-      bpat.load_species(Render::Creature::Bpat::kSpeciesHorse, root + "/horse.bpat"));
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHorse,
+                                root + "/horse.bpat"));
 
-  auto &snapshot_reg = Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  auto &snapshot_reg =
+      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
   snapshot_reg.clear();
 
   auto const temp_dir =

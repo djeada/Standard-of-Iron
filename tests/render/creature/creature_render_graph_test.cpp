@@ -120,10 +120,10 @@ TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
 TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
   auto const &settings = Render::GraphicsSettings::instance();
 
-  EXPECT_EQ(quadruped_lod_from_settings(
-                CreatureKind::Elephant,
-                settings.horse_full_detail_distance() + 1.0F),
-            CreatureLOD::Full);
+  EXPECT_EQ(
+      quadruped_lod_from_settings(CreatureKind::Elephant,
+                                  settings.horse_full_detail_distance() + 1.0F),
+      CreatureLOD::Full);
   EXPECT_EQ(quadruped_lod_from_settings(
                 CreatureKind::Elephant,
                 settings.elephant_full_detail_distance() + 1.0F),
@@ -320,8 +320,8 @@ TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   output.culled = false;
   Render::GL::ElephantVariant variant{};
 
-  batch.add_quadruped(output, variant,
-                      Render::Creature::AnimationStateId::Idle, 0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -417,8 +417,8 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   CreatureRenderBatch batch;
   Render::GL::ElephantVariant variant{};
 
-  batch.add_quadruped(output, variant,
-                      Render::Creature::AnimationStateId::Idle, 0.0F);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);

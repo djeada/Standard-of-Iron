@@ -322,7 +322,7 @@ public:
 
 private:
   static auto compute_knight_extras(uint32_t seed,
-                                  const HumanoidVariant &v) -> KnightExtras {
+                                    const HumanoidVariant &v) -> KnightExtras {
     KnightExtras e;
 
     e.metal_color = QVector3D(0.72F, 0.73F, 0.78F);

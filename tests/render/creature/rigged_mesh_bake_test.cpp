@@ -81,7 +81,8 @@ auto skinned_position_at_bind(const RiggedVertex &vertex,
                               std::span<const BoneWorldMatrix> bind_pose)
     -> QVector3D {
   QVector3D out(0.0F, 0.0F, 0.0F);
-  QVector4D const local(vertex.position_bone_local[0], vertex.position_bone_local[1],
+  QVector4D const local(vertex.position_bone_local[0],
+                        vertex.position_bone_local[1],
                         vertex.position_bone_local[2], 1.0F);
   for (std::size_t i = 0; i < vertex.bone_indices.size(); ++i) {
     float const weight = vertex.bone_weights[i];
@@ -182,9 +183,8 @@ TEST(RiggedMeshBake, TaperedCylinderNarrowsTowardTail) {
   float anchor_radius = 0.0F;
   float tail_radius = 0.0F;
   for (auto const &vertex : tapered->get_vertices()) {
-    float const radius =
-        std::sqrt(vertex.position[0] * vertex.position[0] +
-                  vertex.position[2] * vertex.position[2]);
+    float const radius = std::sqrt(vertex.position[0] * vertex.position[0] +
+                                   vertex.position[2] * vertex.position[2]);
     if (vertex.position[1] <= -0.49F) {
       anchor_radius = std::max(anchor_radius, radius);
     }
@@ -382,10 +382,8 @@ TEST(RiggedMeshBake, ElephantWholeMeshUsesKneeAndTrunkBones) {
 TEST(RiggedMeshBake, ElephantFullRiggedMeshPreservesOverallScale) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   auto const bind = Render::Elephant::elephant_bind_palette();
-  auto const full =
-      bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
-  auto const minimal =
-      bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
+  auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
+  auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
 
   ASSERT_FALSE(full.vertices.empty());
   ASSERT_FALSE(minimal.vertices.empty());

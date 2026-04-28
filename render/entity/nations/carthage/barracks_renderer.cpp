@@ -66,20 +66,20 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
 }
 
 void draw_fortress_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c);
+                        Texture *white, const CarthagePalette &c);
 void draw_fortress_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                       Texture *white, const CarthagePalette &c,
-                       BuildingState state);
+                         Texture *white, const CarthagePalette &c,
+                         BuildingState state);
 void draw_corner_towers(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c,
-                      BuildingState state);
+                        Texture *white, const CarthagePalette &c,
+                        BuildingState state);
 void draw_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c);
+                    Texture *white, const CarthagePalette &c);
 void draw_carthage_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c,
-                      BuildingState state);
-void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const CarthagePalette &c);
+                        Texture *white, const CarthagePalette &c,
+                        BuildingState state);
+void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit,
+               Texture *white, const CarthagePalette &c);
 
 auto build_archetype_from_recorded(
     std::string name, const std::vector<Render::GL::RecordedMeshCmd> &commands)
@@ -134,7 +134,7 @@ auto barracks_archetype(BuildingState state, Mesh *unit,
 }
 
 void draw_fortress_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c) {
+                        Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.15F, 0.0F),
            QVector3D(1.8F, 0.15F, 1.5F), c.stone_base);
@@ -154,8 +154,8 @@ void draw_fortress_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_fortress_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                       Texture *white, const CarthagePalette &c,
-                       BuildingState state) {
+                         Texture *white, const CarthagePalette &c,
+                         BuildingState state) {
   float const wall_height = 1.2F;
 
   float height_multiplier = 1.0F;
@@ -195,8 +195,8 @@ void draw_fortress_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_corner_towers(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c,
-                      BuildingState state) {
+                        Texture *white, const CarthagePalette &c,
+                        BuildingState state) {
   QVector3D corners[4] = {
       QVector3D(-1.5F, 0.0F, -1.2F), QVector3D(1.5F, 0.0F, -1.2F),
       QVector3D(-1.5F, 0.0F, 1.2F), QVector3D(1.5F, 0.0F, 1.2F)};
@@ -235,7 +235,7 @@ void draw_corner_towers(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c) {
+                    Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.32F, 0.0F),
            QVector3D(1.2F, 0.02F, 0.9F), c.stone_base);
@@ -248,8 +248,8 @@ void draw_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_carthage_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                      Texture *white, const CarthagePalette &c,
-                      BuildingState state) {
+                        Texture *white, const CarthagePalette &c,
+                        BuildingState state) {
 
   if (state == BuildingState::Destroyed) {
     return;
@@ -264,8 +264,8 @@ void draw_carthage_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
-              const CarthagePalette &c) {
+void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit,
+               Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.6F, 1.35F),
            QVector3D(0.5F, 0.6F, 0.08F), c.wood_dark);
@@ -278,8 +278,8 @@ void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white
 }
 
 void draw_standards(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                   Texture *white, const CarthagePalette &c,
-                   const BarracksFlagRenderer::ClothBannerResources *cloth) {
+                    Texture *white, const CarthagePalette &c,
+                    const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 2.0F;
   float const pole_z = -1.5F;
   float const pole_height = 2.6F;

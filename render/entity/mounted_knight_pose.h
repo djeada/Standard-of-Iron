@@ -88,7 +88,8 @@ inline void apply_mounted_knight_lower_body(
         is_left ? mount.stirrup_bottom_left : mount.stirrup_bottom_right;
 
     QVector3D calf_surface =
-        knee + mount.seat_right * (side * dims.body_width * cfg.calf_out_offset) +
+        knee +
+        mount.seat_right * (side * dims.body_width * cfg.calf_out_offset) +
         mount.seat_forward * (dims.body_length * cfg.calfBackOffset) -
         mount.seat_up * (dims.stirrup_drop * cfg.calf_down_extra);
     QVector3D calf_from_foot =

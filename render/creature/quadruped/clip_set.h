@@ -17,10 +17,9 @@ struct ClipSet {
   std::uint16_t fight{kInvalidClip};
 };
 
-[[nodiscard]] constexpr auto first_valid_clip(std::uint16_t a, std::uint16_t b,
-                                              std::uint16_t c, std::uint16_t d,
-                                              std::uint16_t e) noexcept
-    -> std::uint16_t {
+[[nodiscard]] constexpr auto
+first_valid_clip(std::uint16_t a, std::uint16_t b, std::uint16_t c,
+                 std::uint16_t d, std::uint16_t e) noexcept -> std::uint16_t {
   if (a != kInvalidClip) {
     return a;
   }
@@ -39,9 +38,9 @@ struct ClipSet {
   return kInvalidClip;
 }
 
-[[nodiscard]] constexpr auto clip_for_gait(const ClipSet &clips,
-                                           Render::GL::GaitType gait) noexcept
-    -> std::uint16_t {
+[[nodiscard]] constexpr auto
+clip_for_gait(const ClipSet &clips,
+              Render::GL::GaitType gait) noexcept -> std::uint16_t {
   using Render::GL::GaitType;
   switch (gait) {
   case GaitType::IDLE:
@@ -63,29 +62,26 @@ struct ClipSet {
   return clip_for_gait(clips, GaitType::IDLE);
 }
 
-[[nodiscard]] constexpr auto clip_for_motion(const ClipSet &clips,
-                                             Render::GL::GaitType gait,
-                                             bool is_fighting) noexcept
-    -> std::uint16_t {
+[[nodiscard]] constexpr auto
+clip_for_motion(const ClipSet &clips, Render::GL::GaitType gait,
+                bool is_fighting) noexcept -> std::uint16_t {
   if (is_fighting && clips.fight != kInvalidClip) {
     return clips.fight;
   }
   return clip_for_gait(clips, gait);
 }
 
-[[nodiscard]] constexpr auto clip_for_motion(const ClipSet &clips, bool is_moving,
-                                             bool is_running,
-                                             bool is_fighting) noexcept
-    -> std::uint16_t {
+[[nodiscard]] constexpr auto
+clip_for_motion(const ClipSet &clips, bool is_moving, bool is_running,
+                bool is_fighting) noexcept -> std::uint16_t {
   if (is_fighting && clips.fight != kInvalidClip) {
     return clips.fight;
   }
   if (!is_moving) {
     return clip_for_gait(clips, Render::GL::GaitType::IDLE);
   }
-  return clip_for_gait(
-      clips, is_running ? Render::GL::GaitType::GALLOP
-                        : Render::GL::GaitType::WALK);
+  return clip_for_gait(clips, is_running ? Render::GL::GaitType::GALLOP
+                                         : Render::GL::GaitType::WALK);
 }
 
 } // namespace Render::Creature::Quadruped

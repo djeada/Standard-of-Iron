@@ -3,9 +3,9 @@
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
+#include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
-#include "../creature/pipeline/unit_visual_spec.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "horse_motion.h"
@@ -21,8 +21,8 @@ namespace Render::Horse {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet kHorseClips{
-    0U, 1U, 2U, 3U, 4U, 5U};
+constexpr Render::Creature::Quadruped::ClipSet kHorseClips{0U, 1U, 2U,
+                                                           3U, 4U, 5U};
 
 auto default_full_horse_request_seed(
     const Render::GL::DrawContext &ctx) noexcept -> std::uint32_t {
@@ -64,8 +64,8 @@ void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,
   float const contact_y =
       Render::Creature::Pipeline::horse_clip_contact_y(clip_id, phase)
           .value_or(0.0F);
-  Render::Creature::Pipeline::ground_model_contact_to_surface(
-      model, contact_y, y_scale);
+  Render::Creature::Pipeline::ground_model_contact_to_surface(model, contact_y,
+                                                              y_scale);
 }
 
 } // namespace
@@ -135,14 +135,16 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
 namespace Render::Horse {
 
-void prepare_horse_impl(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    const Render::GL::HumanoidAnimationContext &rider_ctx,
-    Render::GL::HorseProfile &profile,
-    const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out,
-    Render::Creature::CreatureLOD lod, std::uint32_t request_seed) {
+void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
+                        const Render::GL::DrawContext &ctx,
+                        const Render::GL::AnimationInputs &anim,
+                        const Render::GL::HumanoidAnimationContext &rider_ctx,
+                        Render::GL::HorseProfile &profile,
+                        const Render::GL::MountedAttachmentFrame *shared_mount,
+                        const Render::GL::HorseMotionSample *shared_motion,
+                        HorsePreparation &out,
+                        Render::Creature::CreatureLOD lod,
+                        std::uint32_t request_seed) {
   using Render::GL::HorseMotionSample;
   using Render::GL::HorseVariant;
   const HorseVariant &v = profile.variant;
@@ -152,8 +154,8 @@ void prepare_horse_impl(
                     : evaluate_horse_motion(
                           profile, anim, rider_ctx,
                           Engine::Core::get_or_add_component<
-                               Render::Creature::HorseAnimationStateComponent>(
-                               ctx.entity));
+                              Render::Creature::HorseAnimationStateComponent>(
+                              ctx.entity));
   (void)shared_mount;
   std::uint16_t const horse_clip = horse_clip_for_motion(motion);
 
@@ -187,9 +189,9 @@ void prepare_horse_render(
   if (lod == Render::Creature::CreatureLOD::Billboard) {
     return;
   }
-  prepare_horse_impl(owner, ctx, anim, rider_ctx, profile, shared_mount,
-                     shared_motion, out, lod,
-                     request_seed.value_or(default_full_horse_request_seed(ctx)));
+  prepare_horse_impl(
+      owner, ctx, anim, rider_ctx, profile, shared_mount, shared_motion, out,
+      lod, request_seed.value_or(default_full_horse_request_seed(ctx)));
 }
 
 } // namespace Render::Horse

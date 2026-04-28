@@ -33,8 +33,7 @@ auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4 * {
 namespace {
 
 auto build_entry(std::span<const RiggedVertex> vertices,
-                 std::span<const std::uint32_t> indices)
-    -> SnapshotMeshEntry {
+                 std::span<const std::uint32_t> indices) -> SnapshotMeshEntry {
   SnapshotMeshEntry entry{};
   std::vector<RiggedVertex> baked(vertices.begin(), vertices.end());
   std::vector<std::uint32_t> indices_copy(indices.begin(), indices.end());

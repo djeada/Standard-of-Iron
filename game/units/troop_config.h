@@ -129,8 +129,8 @@ public:
     return 0.0F;
   }
 
-  auto
-  get_selection_ring_ground_offset(const std::string &unit_type) const -> float {
+  auto get_selection_ring_ground_offset(const std::string &unit_type) const
+      -> float {
     return get_selection_ring_ground_offset(troop_typeFromString(unit_type));
   }
 

@@ -164,9 +164,10 @@ void MeshInstancingPipeline::flush() {
     new_capacity = std::min(new_capacity, k_max_instances_per_batch);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffer);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
-                 nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        static_cast<GLsizeiptr>(new_capacity * sizeof(MeshInstanceGpu)),
+        nullptr, GL_DYNAMIC_DRAW);
     m_instanceCapacity = new_capacity;
   }
 

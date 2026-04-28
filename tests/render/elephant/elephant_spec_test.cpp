@@ -141,22 +141,21 @@ auto mesh_axis_span(const Render::GL::Mesh &mesh, std::size_t axis) -> float {
   return max_v - min_v;
 }
 
-auto mesh_vertex_count_for_role(const Render::GL::Mesh &mesh, std::uint8_t role)
-    -> std::size_t {
+auto mesh_vertex_count_for_role(const Render::GL::Mesh &mesh,
+                                std::uint8_t role) -> std::size_t {
   auto const &vertices = mesh.get_vertices();
-  return static_cast<std::size_t>(std::count_if(
-      vertices.begin(), vertices.end(), [&](auto const &vertex) {
+  return static_cast<std::size_t>(
+      std::count_if(vertices.begin(), vertices.end(), [&](auto const &vertex) {
         return vertex.color_role == role;
       }));
 }
 
 auto baked_vertex_count_for_role(
-    const Render::Creature::BakedRiggedMeshCpu &mesh, std::uint8_t role)
-    -> std::size_t {
+    const Render::Creature::BakedRiggedMeshCpu &mesh,
+    std::uint8_t role) -> std::size_t {
   return static_cast<std::size_t>(std::count_if(
-      mesh.vertices.begin(), mesh.vertices.end(), [&](auto const &vertex) {
-        return vertex.color_role == role;
-      }));
+      mesh.vertices.begin(), mesh.vertices.end(),
+      [&](auto const &vertex) { return vertex.color_role == role; }));
 }
 
 auto shader_role_color(
@@ -195,8 +194,8 @@ auto max_body_half_width(const Render::Creature::Quadruped::BarrelNode &body)
   return max_width;
 }
 
-auto max_body_vertical_extent(const Render::Creature::Quadruped::BarrelNode &body)
-    -> float {
+auto max_body_vertical_extent(
+    const Render::Creature::Quadruped::BarrelNode &body) -> float {
   float max_extent = 0.0F;
   for (auto const &ring : body.rings) {
     max_extent = std::max(max_extent, ring.y + ring.top);
@@ -458,7 +457,8 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
   ASSERT_NE(bridge_shape, nullptr);
   ASSERT_NE(trunk_snout, nullptr);
   float const head_front_z = head_shape->center.z() + head_shape->radii.z();
-  float const bridge_front_z = bridge_shape->center.z() + bridge_shape->radii.z();
+  float const bridge_front_z =
+      bridge_shape->center.z() + bridge_shape->radii.z();
   EXPECT_LT(bridge_shape->center.z(), head_front_z);
   EXPECT_GT(bridge_front_z, head_front_z);
   EXPECT_LT(bridge_front_z, head_front_z + head_shape->radii.z() * 0.03F);
@@ -660,9 +660,8 @@ TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
 
   // Idle reference (no motion)
   Render::Elephant::ElephantSpecPose idle_pose{};
-  Render::Elephant::make_elephant_spec_pose_animated(dims, gait,
-                                                     Render::Elephant::ElephantPoseMotion{},
-                                                     idle_pose);
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, Render::Elephant::ElephantPoseMotion{}, idle_pose);
 
   // At phase=0.25: FL has leg_phase=0.25 (peak swing), BR has leg_phase=0.25
   // (peak swing); FR has leg_phase=0.75 (grounded), BL has leg_phase=0.75.
@@ -673,8 +672,10 @@ TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion,
                                                      swing_pose);
 
-  float const front_lift = swing_pose.foot_pose_fl.y() - idle_pose.foot_pose_fl.y();
-  float const rear_lift = swing_pose.foot_pose_br.y() - idle_pose.foot_pose_br.y();
+  float const front_lift =
+      swing_pose.foot_pose_fl.y() - idle_pose.foot_pose_fl.y();
+  float const rear_lift =
+      swing_pose.foot_pose_br.y() - idle_pose.foot_pose_br.y();
 
   EXPECT_GT(front_lift, 0.0F);
   EXPECT_GT(rear_lift, 0.0F);

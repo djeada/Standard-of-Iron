@@ -24,9 +24,9 @@ struct BakeClipDescriptor {
 
 using BindPaletteProviderFn = std::span<const QMatrix4x4> (*)() noexcept;
 using CreatureSpecProviderFn = const CreatureSpec &(*)() noexcept;
-using BakeClipPaletteFn =
-    void (*)(std::size_t clip_index, std::uint32_t frame_index,
-             std::vector<QMatrix4x4> &out_palettes);
+using BakeClipPaletteFn = void (*)(std::size_t clip_index,
+                                   std::uint32_t frame_index,
+                                   std::vector<QMatrix4x4> &out_palettes);
 
 struct WholeMeshLodManifest {
   std::string_view primitive_name{};
