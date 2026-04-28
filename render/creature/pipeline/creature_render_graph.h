@@ -99,6 +99,10 @@ horse_lod_config_from_settings() noexcept -> CreatureLodConfig;
 [[nodiscard]] auto
 elephant_lod_config_from_settings() noexcept -> CreatureLodConfig;
 
+[[nodiscard]] auto quadruped_lod_from_settings(CreatureKind kind,
+                                               float distance) noexcept
+    -> Render::Creature::CreatureLOD;
+
 [[nodiscard]] auto evaluate_creature_lod(
     const CreatureGraphInputs &inputs,
     const CreatureLodConfig &config) noexcept -> CreatureLodDecision;
@@ -118,16 +122,15 @@ public:
                     const Render::GL::HumanoidVariant &variant,
                     const Render::GL::HumanoidAnimationContext &anim);
 
-  void add_horse(const CreatureGraphOutput &output,
-                 const Render::Horse::HorseSpecPose &pose,
-                 const Render::GL::HorseVariant &variant,
-                 std::uint16_t bpat_clip_id = 0xFFFFu, float bpat_phase = 0.0F);
+  void add_quadruped(const CreatureGraphOutput &output,
+                     const Render::GL::HorseVariant &variant,
+                     Render::Creature::AnimationStateId state, float phase,
+                     std::uint32_t clip_variant = 0U);
 
-  void add_elephant(const CreatureGraphOutput &output,
-                    const Render::Elephant::ElephantSpecPose &pose,
-                    const Render::GL::ElephantVariant &variant,
-                    std::uint16_t bpat_clip_id = 0xFFFFu,
-                    float bpat_phase = 0.0F);
+  void add_quadruped(const CreatureGraphOutput &output,
+                     const Render::GL::ElephantVariant &variant,
+                     Render::Creature::AnimationStateId state, float phase,
+                     std::uint32_t clip_variant = 0U);
 
   void add_request(const Render::Creature::CreatureRenderRequest &request);
 

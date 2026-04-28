@@ -76,7 +76,7 @@ void TerrainScatterManager::configure(
 
   const auto [positions, intensities, radii] =
       convert_fire_camps(fire_camps, height_map);
-  m_firecamp->setExplicitFireCamps(positions, intensities, radii);
+  m_firecamp->set_explicit_fire_camps(positions, intensities, radii);
 }
 
 void TerrainScatterManager::submit(Renderer &renderer,

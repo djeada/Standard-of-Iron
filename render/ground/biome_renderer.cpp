@@ -53,7 +53,7 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
@@ -106,7 +106,7 @@ void BiomeRenderer::generate_grass_instances() {
 
   m_grassInstances.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     m_grassInstanceCount = 0;
     m_grassInstancesDirty = false;
     return;
@@ -123,7 +123,7 @@ void BiomeRenderer::generate_grass_instances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
   SpawnValidationConfig config = make_grass_spawn_config();
@@ -297,10 +297,10 @@ void BiomeRenderer::generate_grass_instances() {
           int const idx2 = (z + 1) * m_width + x;
           int const idx3 = idx2 + 1;
 
-          float const quad_height = (m_heightData[static_cast<size_t>(idx0)] +
-                                     m_heightData[static_cast<size_t>(idx1)] +
-                                     m_heightData[static_cast<size_t>(idx2)] +
-                                     m_heightData[static_cast<size_t>(idx3)]) *
+          float const quad_height = (m_height_data[static_cast<size_t>(idx0)] +
+                                     m_height_data[static_cast<size_t>(idx1)] +
+                                     m_height_data[static_cast<size_t>(idx2)] +
+                                     m_height_data[static_cast<size_t>(idx3)]) *
                                     0.25F;
           chunk_height_sum += quad_height;
 

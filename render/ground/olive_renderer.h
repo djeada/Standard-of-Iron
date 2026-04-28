@@ -28,10 +28,10 @@ public:
     if (m_oliveInstances.empty()) {
       return true;
     }
-    if (!m_visibilityDirty && m_visibleInstances.empty()) {
+    if (!m_visibility_dirty && m_visible_instances.empty()) {
       return true;
     }
-    return (m_oliveInstanceBuffer != nullptr) && !m_visibilityDirty;
+    return (m_oliveInstanceBuffer != nullptr) && !m_visibility_dirty;
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
@@ -45,7 +45,7 @@ private:
   int m_height = 0;
   float m_tile_size = 1.0F;
 
-  std::vector<float> m_heightData;
+  std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
@@ -56,9 +56,9 @@ private:
   OliveBatchParams m_oliveParams;
   bool m_oliveInstancesDirty = false;
 
-  std::vector<OliveInstanceGpu> m_visibleInstances;
+  std::vector<OliveInstanceGpu> m_visible_instances;
   std::uint64_t m_cachedVisibilityVersion = 0;
-  bool m_visibilityDirty = true;
+  bool m_visibility_dirty = true;
 };
 
 } // namespace Render::GL

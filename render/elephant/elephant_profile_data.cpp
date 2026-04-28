@@ -1,12 +1,11 @@
 #include "elephant_renderer_base.h"
-#include "lod.h"
 #include "prepare.h"
-#include "render_stats.h"
 
 #include "elephant_profile_data.h"
 
 #include "../../game/core/component.h"
 #include "../creature/creature_math_utils.h"
+#include "../creature/pipeline/creature_visual_definition.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../entity/registry.h"
@@ -38,6 +37,8 @@ auto ElephantRendererBase::visual_spec() const
     m_visual_spec_cache.kind =
         Render::Creature::Pipeline::CreatureKind::Elephant;
     m_visual_spec_cache.debug_name = "elephant/default";
+    m_visual_spec_cache.creature_definition =
+        &Render::Creature::Pipeline::elephant_creature_visual_definition();
     const QVector3D ps = get_proportion_scaling();
     m_visual_spec_cache.scaling =
         Render::Creature::Pipeline::ProportionScaling{ps.x(), ps.y(), ps.z()};

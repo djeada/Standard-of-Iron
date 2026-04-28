@@ -59,7 +59,7 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
                                   *io_state = nullptr) -> ElephantMotionSample;
 
 auto build_elephant_pose_motion(const ElephantMotionSample &motion,
-                                   const AnimationInputs &anim)
+                                const AnimationInputs &anim)
     -> Render::Elephant::ElephantPoseMotion;
 
 void apply_howdah_vertical_offset(HowdahAttachmentFrame &frame, float bob);

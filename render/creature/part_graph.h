@@ -1,6 +1,5 @@
-
-
-#pragma once
+#ifndef RENDER_CREATURE_PART_GRAPH_H
+#define RENDER_CREATURE_PART_GRAPH_H
 
 #include "skeleton.h"
 
@@ -30,6 +29,12 @@ enum class PrimitiveShape : std::uint8_t {
   OrientedCylinder,
 
   OrientedSphere,
+};
+
+enum class MeshSkinning : std::uint8_t {
+  Rigid = 0,
+  HorseWhole,
+  ElephantWhole,
 };
 
 enum class CreatureLOD : std::uint8_t {
@@ -74,6 +79,7 @@ struct PrimitiveInstance {
   PrimitiveParams params{};
 
   Render::GL::Mesh *custom_mesh{nullptr};
+  MeshSkinning mesh_skinning{MeshSkinning::Rigid};
 
   QVector3D color{1.0F, 1.0F, 1.0F};
   std::uint8_t color_role{0};
@@ -105,3 +111,5 @@ auto submit_part_graph(
                                        const PartGraph &graph) noexcept -> bool;
 
 } // namespace Render::Creature
+
+#endif

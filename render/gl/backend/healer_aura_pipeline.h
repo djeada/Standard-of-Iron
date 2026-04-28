@@ -69,9 +69,9 @@ private:
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle auraRadius{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle aura_radius{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle intensity{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle auraColor{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle aura_color{GL::Shader::InvalidUniform};
   };
 
   AuraUniforms m_uniforms;

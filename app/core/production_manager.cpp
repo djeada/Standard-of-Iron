@@ -362,7 +362,7 @@ auto ProductionManager::get_unit_production_info(
 
   info["cost"] = config.getProductionCost(type_str);
   info["build_time"] = static_cast<double>(config.getBuildTime(type_str));
-  info["individuals_per_unit"] = config.getIndividualsPerUnit(type_str);
+  info["individuals_per_unit"] = config.get_individuals_per_unit(type_str);
 
   auto troop_type_opt = Game::Units::tryParseTroopType(type_str);
   if (troop_type_opt.has_value()) {

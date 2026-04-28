@@ -327,8 +327,8 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
         length_segments * k_vertices_per_bridge_segment);
     QVector3D const forward_normal = dir;
 
-    auto add_cap = [&](unsigned int topL, unsigned int topR,
-                       unsigned int bottomR, unsigned int bottomL,
+    auto add_cap = [&](unsigned int top_l, unsigned int top_r,
+                       unsigned int bottom_r, unsigned int bottom_l,
                        const QVector3D &normal) {
       auto const cap_start = static_cast<unsigned int>(vertices.size());
       auto copy_vertex = [&](unsigned int source, const QVector3D &norm) {
@@ -340,10 +340,10 @@ auto build_bridge_mesh(const Game::Map::Bridge &bridge,
         vtx.normal[2] = n.z();
         vertices.push_back(vtx);
       };
-      copy_vertex(topL, normal);
-      copy_vertex(topR, normal);
-      copy_vertex(bottomR, normal);
-      copy_vertex(bottomL, normal);
+      copy_vertex(top_l, normal);
+      copy_vertex(top_r, normal);
+      copy_vertex(bottom_r, normal);
+      copy_vertex(bottom_l, normal);
       push_quad(cap_start + 0, cap_start + 1, cap_start + 2, cap_start + 3);
     };
 

@@ -74,11 +74,11 @@ public:
   }
   void set_shader_quality(ShaderQuality q) noexcept { m_shader_quality = q; }
   auto get_or_load_shader(const QString &name, const QString &vert_path,
-                          const QString &fragPath) -> Shader * {
+                          const QString &frag_path) -> Shader * {
     if (!m_shaderCache) {
       return nullptr;
     }
-    return m_shaderCache->load(name, vert_path, fragPath);
+    return m_shaderCache->load(name, vert_path, frag_path);
   }
 
   [[nodiscard]] auto banner_mesh() const -> Mesh *;

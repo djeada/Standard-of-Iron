@@ -12,6 +12,7 @@
 #include "../bpat/bpat_reader.h"
 #include "../bpat/bpat_registry.h"
 #include "../skeleton.h"
+#include "../snapshot_mesh_registry.h"
 #include "../spec.h"
 #include "creature_asset.h"
 #include "preparation_common.h"
@@ -66,6 +67,10 @@ auto adjust_world_to_palette_contact(
   origin.setY(origin.y() - contact_y);
   adjusted.setColumn(3, QVector4D(origin, 1.0F));
   return adjusted;
+}
+
+auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
+  return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
 }
 
 void submit_rigged_creature(
@@ -153,6 +158,51 @@ auto submit_snapshot_creature(
     return false;
   }
 
+  Render::GL::SnapshotMeshCache::Key key{};
+  key.archetype = archetype;
+  key.variant = variant;
+  key.state = state;
+  key.clip_id = clip_id;
+  key.clip_variant = clip_variant;
+  key.frame_in_clip = frame_in_clip;
+
+  if (attachments.empty() && asset.snapshot_mesh_species_id != 0xFFFFFFFFu &&
+      (asset.snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
+    const auto *mesh_blob =
+        Render::Creature::Snapshot::SnapshotMeshRegistry::instance().blob(
+            asset.snapshot_mesh_species_id, lod);
+    if (mesh_blob != nullptr) {
+      std::uint32_t mesh_global_frame = 0U;
+      if (mesh_blob->resolve_global_frame(clip_id, frame_in_clip,
+                                          mesh_global_frame)) {
+        const auto *snap = renderer->snapshot_mesh_cache().get_or_load(
+            key, *mesh_blob, mesh_global_frame);
+        if (snap != nullptr && snap->mesh != nullptr &&
+            snap->mesh->index_count() != 0U) {
+          Render::GL::RiggedCreatureCmd cmd{};
+          cmd.mesh = snap->mesh.get();
+          cmd.world = world_from_unit;
+          cmd.bone_count = 1U;
+          cmd.bone_palette = Render::GL::SnapshotMeshCache::identity_palette();
+          cmd.palette_ubo = 0U;
+          cmd.palette_offset = 0U;
+          cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
+          for (std::size_t i = 0; i < role_colors.size(); ++i) {
+            cmd.role_colors[i] = role_colors[i];
+          }
+          cmd.color = base_color;
+          cmd.alpha = 1.0F;
+          cmd.texture = nullptr;
+          cmd.material_id = 0;
+          cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
+
+          out.rigged(cmd);
+          return true;
+        }
+      }
+    }
+  }
+
   auto &rigged_cache = renderer->rigged_mesh_cache();
   auto bind = asset.bind_palette();
   auto *source = rigged_cache.get_or_bake(
@@ -167,14 +217,6 @@ auto submit_snapshot_creature(
       global_frame >= source->skinned_frame_total) {
     return false;
   }
-
-  Render::GL::SnapshotMeshCache::Key key{};
-  key.archetype = archetype;
-  key.variant = variant;
-  key.state = state;
-  key.clip_id = clip_id;
-  key.clip_variant = clip_variant;
-  key.frame_in_clip = frame_in_clip;
 
   const auto *snap =
       renderer->snapshot_mesh_cache().get_or_bake(key, *source, global_frame);

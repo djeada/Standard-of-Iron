@@ -64,16 +64,22 @@ add_executable(standard_of_iron_tests
     render/stateless_weapon_renderers_test.cpp
     render/creature/skeleton_test.cpp
     render/creature/part_graph_test.cpp
+    render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
     render/creature/rigged_mesh_cache_test.cpp
+    render/creature/quadruped_topology_test.cpp
+    render/creature/quadruped_gait_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
+    render/creature/quadruped_clip_set_test.cpp
+    render/creature/quadruped_mesh_graph_test.cpp
     render/creature/mounted_prepare_test.cpp
     render/creature/creature_render_graph_test.cpp
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/selection_ring_mesh_test.cpp
+    render/creature/snapshot_mesh_asset_test.cpp
     render/creature/snapshot_mesh_cache_test.cpp
     render/creature/static_attachment_bake_test.cpp
     render/creature/per_unit_archetype_test.cpp

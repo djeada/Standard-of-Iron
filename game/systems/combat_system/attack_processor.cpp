@@ -324,7 +324,7 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
   int arrow_count = 1;
   if (att_u != nullptr) {
     int const troop_size =
-        Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+        Game::Units::TroopConfig::instance().get_individuals_per_unit(
             att_u->spawn_type);
 
     int const max_arrows = std::max(2, (troop_size * 2) / 3);

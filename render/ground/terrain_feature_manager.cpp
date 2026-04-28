@@ -20,8 +20,8 @@ TerrainFeatureManager::~TerrainFeatureManager() = default;
 void TerrainFeatureManager::configure(
     const Game::Map::TerrainHeightMap &height_map,
     const std::vector<Game::Map::RoadSegment> &road_segments) {
-  const auto &river_segments = height_map.getRiverSegments();
-  const auto &bridges = height_map.getBridges();
+  const auto &river_segments = height_map.get_river_segments();
+  const auto &bridges = height_map.get_bridges();
   const float tile_size = height_map.getTileSize();
 
   m_river->configure(river_segments, tile_size);

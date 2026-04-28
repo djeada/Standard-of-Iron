@@ -4,6 +4,7 @@
 #include "../../horse/horse_spec.h"
 #include "../../humanoid/humanoid_spec.h"
 #include "../bpat/bpat_format.h"
+#include "creature_visual_definition.h"
 
 namespace Render::Creature::Pipeline {
 
@@ -86,6 +87,10 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_horse.max_bones = static_cast<std::uint8_t>(Render::Horse::kHorseBoneCount);
   m_horse.bind_palette = &horse_bind;
   m_horse.fill_role_colors = &horse_fill_roles;
+  m_horse.snapshot_mesh_species_id = Render::Creature::Bpat::kSpeciesHorse;
+  m_horse.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
+      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
+  m_horse.visual_definition = &horse_creature_visual_definition();
 
   m_elephant.id = kElephantAsset;
   m_elephant.debug_name = "elephant.v1";
@@ -99,6 +104,11 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
       static_cast<std::uint8_t>(Render::Elephant::kElephantBoneCount);
   m_elephant.bind_palette = &elephant_bind;
   m_elephant.fill_role_colors = &elephant_fill_roles;
+  m_elephant.snapshot_mesh_species_id =
+      Render::Creature::Bpat::kSpeciesElephant;
+  m_elephant.snapshot_mesh_lod_mask = static_cast<std::uint8_t>(
+      1U << static_cast<std::uint8_t>(Render::Creature::CreatureLOD::Minimal));
+  m_elephant.visual_definition = &elephant_creature_visual_definition();
 
   m_humanoid_sword.id = kHumanoidSwordAsset;
   m_humanoid_sword.debug_name = "humanoid.sword_ready.v1";

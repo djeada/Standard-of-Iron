@@ -133,11 +133,9 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
         std::sin((cycle_progress + 0.19F) * 2.0F * k_two_pi);
     sample.bob = (primary * 0.70F + secondary * 0.30F) * d.move_bob_amplitude *
                  (0.88F + locomotion_intensity * 0.18F);
-    sample.bob = 0.0F;
   } else {
     sample.phase = std::fmod(anim.time * 0.3F, 1.0F);
     sample.bob = std::sin(anim.time * 0.45F) * d.idle_bob_amplitude;
-    sample.bob = 0.0F;
   }
 
   float const trunk_primary =
@@ -205,7 +203,7 @@ auto evaluate_elephant_motion(const ElephantProfile &profile,
 }
 
 auto build_elephant_pose_motion(const ElephantMotionSample &motion,
-                                   const AnimationInputs &anim)
+                                const AnimationInputs &anim)
     -> Render::Elephant::ElephantPoseMotion {
   return Render::Elephant::ElephantPoseMotion{
       .phase = motion.phase,

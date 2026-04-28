@@ -92,8 +92,8 @@ struct KnightExtras {
   QVector3D shield_color;
   QVector3D shield_trim_color;
   float sword_length = 0.80F;
-  float swordWidth = 0.065F;
-  float shieldRadius = 0.18F;
+  float sword_width = 0.065F;
+  float shield_radius = 0.18F;
   float shield_aspect = 1.0F;
 
   float guard_half_width = 0.12F;
@@ -101,7 +101,7 @@ struct KnightExtras {
   float pommel_radius = 0.045F;
   float blade_ricasso = 0.16F;
   float blade_taper_bias = 0.65F;
-  bool shieldCrossDecal = false;
+  bool shield_cross_decal = false;
   bool has_scabbard = true;
 };
 
@@ -321,8 +321,8 @@ public:
   }
 
 private:
-  static auto computeKnightExtras(uint32_t seed,
-                                  const HumanoidVariant &v) -> KnightExtras {
+  static auto compute_knight_extras(uint32_t seed,
+                                    const HumanoidVariant &v) -> KnightExtras {
     KnightExtras e;
 
     e.metal_color = QVector3D(0.72F, 0.73F, 0.78F);
@@ -338,8 +338,8 @@ private:
     }
 
     e.sword_length = 0.80F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.16F;
-    e.swordWidth = 0.060F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
-    e.shieldRadius = 0.16F + (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
+    e.sword_width = 0.060F + (hash_01(seed ^ 0x7777U) - 0.5F) * 0.010F;
+    e.shield_radius = 0.16F + (hash_01(seed ^ 0xDEF0U) - 0.5F) * 0.04F;
 
     e.guard_half_width = 0.120F + (hash_01(seed ^ 0x3456U) - 0.5F) * 0.020F;
     e.handle_radius = 0.016F + (hash_01(seed ^ 0x88AAU) - 0.5F) * 0.003F;
@@ -350,7 +350,7 @@ private:
     e.blade_taper_bias =
         clamp01(0.6F + (hash_01(seed ^ 0xFACEU) - 0.5F) * 0.2F);
 
-    e.shieldCrossDecal = (hash_01(seed ^ 0xA11CU) > 0.55F);
+    e.shield_cross_decal = (hash_01(seed ^ 0xA11CU) > 0.55F);
     e.has_scabbard = (hash_01(seed ^ 0x5CABU) > 0.15F);
     e.shield_trim_color = e.metal_color * 0.95F;
     e.shield_aspect = 1.0F;
@@ -418,8 +418,8 @@ private:
     apply_shield_color(style.shield_trim_color, extras.shield_trim_color);
 
     if (style.shield_radius_scale) {
-      extras.shieldRadius =
-          std::max(0.10F, extras.shieldRadius * *style.shield_radius_scale);
+      extras.shield_radius =
+          std::max(0.10F, extras.shield_radius * *style.shield_radius_scale);
     }
     if (style.shield_aspect_ratio) {
       extras.shield_aspect = std::max(0.40F, *style.shield_aspect_ratio);
@@ -428,7 +428,7 @@ private:
       extras.has_scabbard = *style.has_scabbard;
     }
     if (style.shield_cross_decal) {
-      extras.shieldCrossDecal = *style.shield_cross_decal;
+      extras.shield_cross_decal = *style.shield_cross_decal;
     }
   }
 };

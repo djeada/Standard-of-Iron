@@ -21,6 +21,10 @@ struct LODMultipliers {
   float horse_minimal;
   float horse_billboard;
 
+  float elephant_full;
+  float elephant_minimal;
+  float elephant_billboard;
+
   float shadow_distance;
   bool enable_shadows;
 };
@@ -140,6 +144,17 @@ public:
     return kBaseHorseBillboard * m_lod_multipliers.horse_billboard;
   }
 
+  [[nodiscard]] auto elephant_full_detail_distance() const noexcept -> float {
+    return kBaseElephantFull * m_lod_multipliers.elephant_full;
+  }
+  [[nodiscard]] auto
+  elephant_minimal_detail_distance() const noexcept -> float {
+    return kBaseElephantMinimal * m_lod_multipliers.elephant_minimal;
+  }
+  [[nodiscard]] auto elephant_billboard_distance() const noexcept -> float {
+    return kBaseElephantBillboard * m_lod_multipliers.elephant_billboard;
+  }
+
   [[nodiscard]] auto shadow_max_distance() const noexcept -> float {
     return m_lod_multipliers.shadow_distance;
   }
@@ -160,6 +175,9 @@ private:
                            .horse_full = 0.8F,
                            .horse_minimal = 0.8F,
                            .horse_billboard = 0.8F,
+                           .elephant_full = 0.8F,
+                           .elephant_minimal = 0.8F,
+                           .elephant_billboard = 0.8F,
                            .shadow_distance = 25.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = false,
@@ -185,6 +203,9 @@ private:
                            .horse_full = 1.0F,
                            .horse_minimal = 1.0F,
                            .horse_billboard = 1.0F,
+                           .elephant_full = 1.0F,
+                           .elephant_minimal = 1.0F,
+                           .elephant_billboard = 1.0F,
                            .shadow_distance = 40.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,
@@ -211,6 +232,9 @@ private:
                            .horse_full = 2.0F,
                            .horse_minimal = 2.0F,
                            .horse_billboard = 2.0F,
+                           .elephant_full = 2.0F,
+                           .elephant_minimal = 2.0F,
+                           .elephant_billboard = 2.0F,
                            .shadow_distance = 80.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,
@@ -237,6 +261,9 @@ private:
                            .horse_full = 3.0F,
                            .horse_minimal = 1000.0F,
                            .horse_billboard = 1000.0F,
+                           .elephant_full = 3.0F,
+                           .elephant_minimal = 1000.0F,
+                           .elephant_billboard = 1000.0F,
                            .shadow_distance = 200.0F,
                            .enable_shadows = true};
       m_features = {.enable_mane_detail = true,
@@ -264,6 +291,10 @@ private:
   static constexpr float kBaseHorseFull = 20.0F;
   static constexpr float kBaseHorseMinimal = 110.0F;
   static constexpr float kBaseHorseBillboard = 100.0F;
+
+  static constexpr float kBaseElephantFull = 35.0F;
+  static constexpr float kBaseElephantMinimal = 150.0F;
+  static constexpr float kBaseElephantBillboard = 140.0F;
 
   GraphicsQuality m_quality{GraphicsQuality::Ultra};
   LODMultipliers m_lod_multipliers{};

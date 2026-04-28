@@ -37,7 +37,7 @@ protected:
     anim_ctx.inputs.time = 0.0F;
     anim_ctx.inputs.is_moving = false;
     anim_ctx.inputs.is_attacking = false;
-    anim_ctx.variation = VariationParams::fromSeed(12345);
+    anim_ctx.variation = VariationParams::from_seed(12345);
     anim_ctx.gait.state = HumanoidMotionState::Idle;
   }
 

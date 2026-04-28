@@ -142,9 +142,9 @@ public:
     auto &terrain = Game::Map::TerrainService::instance();
     auto const *height_map = terrain.get_height_map();
     size_t const river_count =
-        (height_map != nullptr) ? height_map->getRiverSegments().size() : 0U;
+        (height_map != nullptr) ? height_map->get_river_segments().size() : 0U;
     size_t const bridge_count =
-        (height_map != nullptr) ? height_map->getBridges().size() : 0U;
+        (height_map != nullptr) ? height_map->get_bridges().size() : 0U;
     static const std::vector<IRenderPass *> k_empty_feature_passes;
     auto const &feature_passes =
         (m_features != nullptr) ? m_features->passes() : k_empty_feature_passes;

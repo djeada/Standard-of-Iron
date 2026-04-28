@@ -10,18 +10,18 @@ inline auto clamp01(float x) -> float {
   return std::max(0.0F, std::min(1.0F, x));
 }
 
-inline auto clamp_f(float x, float minVal, float maxVal) -> float {
-  return std::max(minVal, std::min(maxVal, x));
+inline auto clamp_f(float x, float min_val, float max_val) -> float {
+  return std::max(min_val, std::min(max_val, x));
 }
 
 inline auto clamp_vec_01(const QVector3D &c) -> QVector3D {
   return {clamp01(c.x()), clamp01(c.y()), clamp01(c.z())};
 }
 
-inline auto clamp_vec(const QVector3D &c, float minVal,
-                      float maxVal) -> QVector3D {
-  return {clamp_f(c.x(), minVal, maxVal), clamp_f(c.y(), minVal, maxVal),
-          clamp_f(c.z(), minVal, maxVal)};
+inline auto clamp_vec(const QVector3D &c, float min_val,
+                      float max_val) -> QVector3D {
+  return {clamp_f(c.x(), min_val, max_val), clamp_f(c.y(), min_val, max_val),
+          clamp_f(c.z(), min_val, max_val)};
 }
 
 constexpr auto lerp(float a, float b, float t) noexcept -> float {

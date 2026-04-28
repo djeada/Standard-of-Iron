@@ -13,6 +13,34 @@ namespace Render::Creature {
 
 namespace {
 
+auto resolved_mesh(Render::Creature::PrimitiveShape shape,
+                   Render::GL::Mesh *custom_mesh) noexcept
+    -> Render::GL::Mesh * {
+  if (custom_mesh != nullptr) {
+    return custom_mesh;
+  }
+
+  switch (shape) {
+  case Render::Creature::PrimitiveShape::Sphere:
+  case Render::Creature::PrimitiveShape::OrientedSphere:
+    return Render::GL::get_unit_sphere();
+  case Render::Creature::PrimitiveShape::Cylinder:
+  case Render::Creature::PrimitiveShape::OrientedCylinder:
+    return Render::GL::get_unit_cylinder();
+  case Render::Creature::PrimitiveShape::Capsule:
+    return Render::GL::get_unit_capsule();
+  case Render::Creature::PrimitiveShape::Cone:
+    return Render::GL::get_unit_cone();
+  case Render::Creature::PrimitiveShape::Box:
+    return Render::GL::get_unit_cube();
+  case Render::Creature::PrimitiveShape::Mesh:
+    return custom_mesh;
+  case Render::Creature::PrimitiveShape::None:
+  default:
+    return nullptr;
+  }
+}
+
 auto bone_world_offset(const QMatrix4x4 &bone,
                        const QVector3D &local_offset) noexcept -> QVector3D {
   if (local_offset.isNull()) {
@@ -98,12 +126,12 @@ auto submit_part_graph(
 
     switch (prim.shape) {
     case PrimitiveShape::Sphere:
-      mesh_ptr = Render::GL::get_unit_sphere();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       unit_model = Render::Geom::sphere_at(head_world, prim.params.radius);
       break;
 
     case PrimitiveShape::Cylinder: {
-      mesh_ptr = Render::GL::get_unit_cylinder();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       QMatrix4x4 const &tail_m = palette[tail];
       QVector3D const tail_world =
           bone_world_offset(tail_m, prim.params.tail_offset);
@@ -113,7 +141,7 @@ auto submit_part_graph(
     }
 
     case PrimitiveShape::Capsule: {
-      mesh_ptr = Render::GL::get_unit_capsule();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       QMatrix4x4 const &tail_m = palette[tail];
       QVector3D const tail_world =
           bone_world_offset(tail_m, prim.params.tail_offset);
@@ -123,7 +151,7 @@ auto submit_part_graph(
     }
 
     case PrimitiveShape::Cone: {
-      mesh_ptr = Render::GL::get_unit_cone();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       QMatrix4x4 const &tail_m = palette[tail];
       QVector3D const tail_world =
           bone_world_offset(tail_m, prim.params.tail_offset);
@@ -133,13 +161,13 @@ auto submit_part_graph(
     }
 
     case PrimitiveShape::Box:
-      mesh_ptr = Render::GL::get_unit_cube();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       unit_model = box_model(anchor_m, prim.params.head_offset,
                              prim.params.half_extents);
       break;
 
     case PrimitiveShape::OrientedCylinder: {
-      mesh_ptr = Render::GL::get_unit_cylinder();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       QMatrix4x4 const &tail_m = palette[tail];
       QVector3D const tail_world =
           bone_world_offset(tail_m, prim.params.tail_offset);
@@ -154,8 +182,7 @@ auto submit_part_graph(
     }
 
     case PrimitiveShape::OrientedSphere: {
-
-      mesh_ptr = Render::GL::get_unit_sphere();
+      mesh_ptr = resolved_mesh(prim.shape, prim.custom_mesh);
       QVector3D const x = anchor_m.column(0).toVector3D();
       QVector3D const y = anchor_m.column(1).toVector3D();
       QVector3D const z = anchor_m.column(2).toVector3D();

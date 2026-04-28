@@ -55,6 +55,9 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   EXPECT_EQ(horse_asset->kind, CreatureKind::Horse);
   EXPECT_EQ(horse_asset->spec, &Render::Horse::horse_creature_spec());
   EXPECT_EQ(horse_asset->role_count, 8u);
+  EXPECT_EQ(horse_asset->snapshot_mesh_species_id,
+            Render::Creature::Bpat::kSpeciesHorse);
+  EXPECT_NE(horse_asset->snapshot_mesh_lod_mask, 0U);
 
   UnitVisualSpec elephant{};
   elephant.kind = CreatureKind::Elephant;
@@ -64,6 +67,9 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   EXPECT_EQ(elephant_asset->kind, CreatureKind::Elephant);
   EXPECT_EQ(elephant_asset->spec, &Render::Elephant::elephant_creature_spec());
   EXPECT_EQ(elephant_asset->role_count, Render::Elephant::kElephantRoleCount);
+  EXPECT_EQ(elephant_asset->snapshot_mesh_species_id,
+            Render::Creature::Bpat::kSpeciesElephant);
+  EXPECT_NE(elephant_asset->snapshot_mesh_lod_mask, 0U);
 }
 
 TEST(CreatureAssetRegistry, MountedSpecsRequireExplicitSplitRows) {

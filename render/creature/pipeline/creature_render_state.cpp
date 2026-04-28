@@ -24,42 +24,19 @@ auto make_prepared_humanoid_row(
   return row;
 }
 
-auto make_prepared_horse_row(
-    UnitVisualSpec spec, const Render::Horse::HorseSpecPose &pose,
-    const Render::GL::HorseVariant &variant, const QMatrix4x4 &world_from_unit,
+auto make_prepared_creature_row(
+    UnitVisualSpec spec, CreatureKind kind, const QMatrix4x4 &world_from_unit,
     std::uint32_t seed, Render::Creature::CreatureLOD lod, EntityId entity_id,
     RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
-  (void)pose;
-  (void)variant;
   (void)world_from_unit;
   (void)entity_id;
-  spec.kind = CreatureKind::Horse;
+  spec.kind = kind;
 
   PreparedCreatureRenderRow row{};
   row.spec = spec;
   row.seed = seed;
   row.lod = lod;
   row.pass = pass;
-  return row;
-}
-
-auto make_prepared_elephant_row(
-    UnitVisualSpec spec, const Render::Elephant::ElephantSpecPose &pose,
-    const Render::GL::ElephantVariant &variant,
-    const QMatrix4x4 &world_from_unit, std::uint32_t seed,
-    Render::Creature::CreatureLOD lod, EntityId entity_id,
-    RenderPassIntent pass) noexcept -> PreparedCreatureRenderRow {
-  (void)variant;
-  (void)world_from_unit;
-  (void)entity_id;
-  spec.kind = CreatureKind::Elephant;
-
-  PreparedCreatureRenderRow row{};
-  row.spec = spec;
-  row.seed = seed;
-  row.lod = lod;
-  row.pass = pass;
-  row.elephant_pose = pose;
   return row;
 }
 

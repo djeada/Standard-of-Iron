@@ -32,17 +32,17 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
   m_pineInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_pineInstanceCount = 0;
   m_pineInstancesDirty = false;
   m_cachedVisibilityVersion = 0;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
   m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
@@ -57,8 +57,8 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_instances(
-      m_pineInstances, m_visibleInstances, m_pineInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibilityDirty,
+      m_pineInstances, m_visible_instances, m_pineInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibility_dirty,
       [](const PineInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_scale;
       });
@@ -79,17 +79,17 @@ void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void PineRenderer::clear() {
   m_pineInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_pineInstanceCount = 0;
   m_pineInstancesDirty = false;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
   m_cachedVisibilityVersion = 0;
 }
 
 void PineRenderer::generate_pine_instances() {
   m_pineInstances.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
   }
 
@@ -111,7 +111,7 @@ void PineRenderer::generate_pine_instances() {
   }
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
   SpawnValidationConfig config = make_tree_spawn_config();
@@ -137,7 +137,7 @@ void PineRenderer::generate_pine_instances() {
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = m_heightData[static_cast<size_t>(normal_idx)];
+    float const world_y = m_height_data[static_cast<size_t>(normal_idx)];
 
     float const scale = remap(rand_01(state), 3.0F, 6.0F) * tile_safe;
 

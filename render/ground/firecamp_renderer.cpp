@@ -60,17 +60,17 @@ void FireCampRenderer::configure(
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
   m_fireCampInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
   m_cachedVisibilityVersion = 0;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
 
   m_fireCampParams.time = 0.0F;
   m_fireCampParams.flicker_speed = 5.0F;
@@ -84,8 +84,8 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_instances(
-      m_fireCampInstances, m_visibleInstances, m_fireCampInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibilityDirty,
+      m_fireCampInstances, m_visible_instances, m_fireCampInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibility_dirty,
       [](const FireCampInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_intensity;
       });
@@ -110,7 +110,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);
 
-  for (const auto &instance : m_visibleInstances) {
+  for (const auto &instance : m_visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
@@ -164,24 +164,24 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void FireCampRenderer::clear() {
   m_fireCampInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_fireCampInstanceCount = 0;
   m_fireCampInstancesDirty = false;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
   m_cachedVisibilityVersion = 0;
   m_explicitPositions.clear();
   m_explicitIntensities.clear();
   m_explicitRadii.clear();
 }
 
-void FireCampRenderer::setExplicitFireCamps(
+void FireCampRenderer::set_explicit_fire_camps(
     const std::vector<QVector3D> &positions,
     const std::vector<float> &intensities, const std::vector<float> &radii) {
   m_explicitPositions = positions;
   m_explicitIntensities = intensities;
   m_explicitRadii = radii;
   m_fireCampInstancesDirty = true;
-  if (m_width > 0 && m_height > 0 && !m_heightData.empty()) {
+  if (m_width > 0 && m_height > 0 && !m_height_data.empty()) {
     generate_firecamp_instances();
   }
 }
@@ -220,7 +220,7 @@ void FireCampRenderer::add_explicit_firecamps(const SpawnValidator &validator) {
 void FireCampRenderer::generate_firecamp_instances() {
   m_fireCampInstances.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
   }
 
@@ -229,7 +229,7 @@ void FireCampRenderer::generate_firecamp_instances() {
   const float tile_safe = std::max(0.1F, m_tile_size);
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
   SpawnValidationConfig config = make_firecamp_spawn_config();
@@ -257,7 +257,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     float world_x = 0.0F;
     float world_z = 0.0F;
     validator.grid_to_world(gx, gz, world_x, world_z);
-    float const world_y = m_heightData[static_cast<size_t>(normal_idx)];
+    float const world_y = m_height_data[static_cast<size_t>(normal_idx)];
 
     float const intensity = remap(rand_01(state), 0.8F, 1.2F);
     float const radius = remap(rand_01(state), 2.0F, 4.0F) * tile_safe;

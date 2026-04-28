@@ -74,6 +74,7 @@ add_library(render_gl STATIC
     horse/prepare.cpp
     horse/horse_spec.cpp
     horse/horse_motion.cpp
+    horse/horse_manifest.cpp
     entity/horse_renderer.cpp
     entity/mounted_humanoid_renderer_base.cpp
     entity/mounted_prepare.cpp
@@ -117,6 +118,7 @@ add_library(render_gl STATIC
     elephant/elephant_motion.cpp
     elephant/prepare.cpp
     elephant/elephant_spec.cpp
+    elephant/elephant_manifest.cpp
     entity/elephant_renderer.cpp
     entity/nations/carthage/elephant_renderer.cpp
     # entity/arrow.cpp removed; arrow VFX renderer code moved to geom/arrow.cpp
@@ -152,13 +154,20 @@ add_library(render_gl STATIC
     creature/bpat/bpat_writer.cpp
     creature/bpat/bpat_reader.cpp
     creature/bpat/bpat_registry.cpp
+    creature/snapshot_mesh_asset.cpp
+    creature/snapshot_mesh_registry.cpp
     creature/skeleton.cpp
     creature/part_graph.cpp
     creature/spec.cpp
+    creature/species_manifest.cpp
+    creature/quadruped/skeleton_factory.cpp
+    creature/quadruped/gait.cpp
+    creature/quadruped/mesh_graph.cpp
     creature/anatomy_bake.cpp
     creature/archetype_registry.cpp
     creature/pipeline/creature_render_state.cpp
     creature/pipeline/creature_pipeline.cpp
+    creature/pipeline/creature_visual_definition.cpp
     creature/pipeline/creature_asset.cpp
     creature/pipeline/prepared_submit.cpp
     creature/pipeline/lod_decision.cpp
@@ -168,6 +177,7 @@ add_library(render_gl STATIC
     rigged_mesh_bake.cpp
     rigged_mesh_cache.cpp
     snapshot_mesh_cache.cpp
+    snapshot_mesh_bake.cpp
     static_attachment_spec.cpp
     bone_palette_arena.cpp
     unit_render_cache.cpp

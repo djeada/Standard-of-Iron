@@ -315,7 +315,7 @@ public:
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto nextRand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t &s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -324,9 +324,9 @@ public:
 
     v.facial_hair.style = FacialHairStyle::None;
 
-    v.muscularity = 0.95F + nextRand(beard_seed) * 0.25F;
-    v.scarring = nextRand(beard_seed) * 0.30F;
-    v.weathering = 0.40F + nextRand(beard_seed) * 0.40F;
+    v.muscularity = 0.95F + next_rand(beard_seed) * 0.25F;
+    v.scarring = next_rand(beard_seed) * 0.30F;
+    v.weathering = 0.40F + next_rand(beard_seed) * 0.40F;
   }
 
   void append_companion_preparation(

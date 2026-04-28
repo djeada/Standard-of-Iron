@@ -22,7 +22,7 @@ public:
 
   auto
   initialize(std::size_t capacity,
-             int buffersInFlight = BufferCapacity::BuffersInFlight) -> bool {
+             int buffers_in_flight = BufferCapacity::BuffersInFlight) -> bool {
     if (m_buffer != 0) {
       return false;
     }
@@ -34,8 +34,8 @@ public:
     }
 
     m_capacity = capacity;
-    m_buffersInFlight = buffersInFlight;
-    m_totalSize = capacity * sizeof(T) * buffersInFlight;
+    m_buffersInFlight = buffers_in_flight;
+    m_totalSize = capacity * sizeof(T) * buffers_in_flight;
     m_currentFrame = 0;
     m_frameOffset = 0;
 
@@ -126,10 +126,10 @@ public:
     if (m_bufferMode == Platform::BufferStorageHelper::Mode::Fallback) {
       glBindBuffer(GL_ARRAY_BUFFER, m_buffer);
 
-      std::size_t const writeOffset =
+      std::size_t const write_offset =
           m_frameOffset + m_currentCount * sizeof(T);
       void *ptr =
-          glMapBufferRange(GL_ARRAY_BUFFER, writeOffset, count * sizeof(T),
+          glMapBufferRange(GL_ARRAY_BUFFER, write_offset, count * sizeof(T),
                            GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT);
 
       if (ptr == nullptr) {
@@ -142,23 +142,23 @@ public:
       glUnmapBuffer(GL_ARRAY_BUFFER);
       glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-      std::size_t const elementOffset = m_currentCount;
+      std::size_t const element_offset = m_currentCount;
       m_currentCount += count;
-      return elementOffset;
+      return element_offset;
     }
 
     if (m_mappedPtr == nullptr) {
       return 0;
     }
 
-    std::size_t const writeOffset = m_frameOffset + m_currentCount * sizeof(T);
-    void *dest = static_cast<char *>(m_mappedPtr) + writeOffset;
+    std::size_t const write_offset = m_frameOffset + m_currentCount * sizeof(T);
+    void *dest = static_cast<char *>(m_mappedPtr) + write_offset;
     std::memcpy(dest, data, count * sizeof(T));
 
-    std::size_t const elementOffset = m_currentCount;
+    std::size_t const element_offset = m_currentCount;
     m_currentCount += count;
 
-    return elementOffset;
+    return element_offset;
   }
 
   [[nodiscard]] auto buffer() const -> GLuint { return m_buffer; }
