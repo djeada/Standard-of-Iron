@@ -12,13 +12,13 @@ namespace Render::Profiling {
 
 class ProfilingHud : public QObject {
   Q_OBJECT
-  Q_PROPERTY(QString overlayText READ overlay_text NOTIFY overlayChanged)
-  Q_PROPERTY(bool enabled READ enabled WRITE set_enabled NOTIFY enabledChanged)
+  Q_PROPERTY(QString overlay_text READ overlay_text NOTIFY overlay_changed)
+  Q_PROPERTY(bool enabled READ enabled WRITE set_enabled NOTIFY enabled_changed)
   Q_PROPERTY(
-      double budgetHeadroomMs READ budget_headroom_ms NOTIFY overlayChanged)
-  Q_PROPERTY(double totalMs READ total_ms NOTIFY overlayChanged)
-  Q_PROPERTY(quint64 drawCalls READ draw_calls NOTIFY overlayChanged)
-  Q_PROPERTY(quint64 frameIndex READ frame_index NOTIFY overlayChanged)
+      double budget_headroom_ms READ budget_headroom_ms NOTIFY overlay_changed)
+  Q_PROPERTY(double total_ms READ total_ms NOTIFY overlay_changed)
+  Q_PROPERTY(quint64 draw_calls READ draw_calls NOTIFY overlay_changed)
+  Q_PROPERTY(quint64 frame_index READ frame_index NOTIFY overlay_changed)
 
 public:
   explicit ProfilingHud(QObject *parent = nullptr);
@@ -43,8 +43,8 @@ public:
   void set_enabled(bool on);
 
 signals:
-  void overlayChanged();
-  void enabledChanged();
+  void overlay_changed();
+  void enabled_changed();
 
 private:
   void refresh();

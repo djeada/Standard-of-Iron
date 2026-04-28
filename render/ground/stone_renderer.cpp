@@ -37,7 +37,7 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
@@ -80,7 +80,7 @@ void StoneRenderer::generate_stone_instances() {
 
   m_stoneInstances.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     m_stoneInstanceCount = 0;
     m_stoneInstancesDirty = false;
     return;
@@ -93,7 +93,7 @@ void StoneRenderer::generate_stone_instances() {
       Game::Map::make_scatter_profile(m_biome_settings);
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
   SpawnValidationConfig config = make_stone_spawn_config();

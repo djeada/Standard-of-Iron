@@ -214,23 +214,23 @@ auto build_horse_whole_nodes() -> std::vector<Render::Creature::Quadruped::MeshN
   nodes.push_back({"horse.mane", static_cast<BoneIndex>(HorseBone::NeckTop),
                    kRoleCoat, kLodAll, 0, mane});
 
-  FlatFanNode earL;
-  earL.outline = {
+  FlatFanNode ear_l;
+  ear_l.outline = {
       {hw * 0.14F, bh * 1.36F, head_back_z + hl * 0.04F},
       {hw * 0.24F, bh * 1.74F, head_back_z - hl * 0.02F},
       {hw * 0.06F, bh * 1.42F, head_back_z - hl * 0.14F},
   };
-  earL.thickness_axis = QVector3D(0.0F, 0.0F, 1.0F);
-  earL.thickness = hw * 0.03F;
+  ear_l.thickness_axis = QVector3D(0.0F, 0.0F, 1.0F);
+  ear_l.thickness = hw * 0.03F;
   nodes.push_back({"horse.ear.l", static_cast<BoneIndex>(HorseBone::Head), kRoleCoat,
-                   kLodAll, 0, earL});
+                   kLodAll, 0, ear_l});
 
-  FlatFanNode earR = earL;
-  for (QVector3D &p : earR.outline) {
+  FlatFanNode ear_r = ear_l;
+  for (QVector3D &p : ear_r.outline) {
     p.setX(-p.x());
   }
   nodes.push_back({"horse.ear.r", static_cast<BoneIndex>(HorseBone::Head), kRoleCoat,
-                   kLodAll, 0, earR});
+                   kLodAll, 0, ear_r});
 
   TubeNode tail;
   tail.start = QVector3D(0.0F, bh * 0.24F, -bl * 0.84F);

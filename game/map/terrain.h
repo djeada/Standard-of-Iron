@@ -662,12 +662,12 @@ public:
     return m_hillEntrances;
   }
   [[nodiscard]] auto
-  getRiverSegments() const -> const std::vector<RiverSegment> & {
+  get_river_segments() const -> const std::vector<RiverSegment> & {
     return m_riverSegments;
   }
 
   void addBridges(const std::vector<Bridge> &bridges);
-  [[nodiscard]] auto getBridges() const -> const std::vector<Bridge> & {
+  [[nodiscard]] auto get_bridges() const -> const std::vector<Bridge> & {
     return m_bridges;
   }
 

@@ -65,8 +65,8 @@ inline auto safeNormalize(const QVector3D &v, const QVector3D &fallback,
   return v / std::sqrt(len2);
 }
 
-inline void orthonormalize(const QVector3D &frontIn, QVector3D &frontOut,
-                           QVector3D &rightOut, QVector3D &upOut) {
+inline void orthonormalize(const QVector3D &frontIn, QVector3D &front_out,
+                           QVector3D &right_out, QVector3D &up_out) {
   QVector3D const world_up(0.F, 1.F, 0.F);
   QVector3D const f = safeNormalize(frontIn, QVector3D(0, 0, -1));
 
@@ -80,12 +80,12 @@ inline void orthonormalize(const QVector3D &frontIn, QVector3D &frontOut,
   r = r.normalized();
   u = QVector3D::crossProduct(r, f).normalized();
 
-  frontOut = f;
-  rightOut = r;
-  upOut = u;
+  front_out = f;
+  right_out = r;
+  up_out = u;
 }
 
-inline void clampOrthoBox(float &left, float &right, float &bottom,
+inline void clamp_ortho_box(float &left, float &right, float &bottom,
                           float &top) {
   if (left == right) {
     left -= 0.5F;
@@ -101,7 +101,7 @@ inline void clampOrthoBox(float &left, float &right, float &bottom,
   }
 }
 
-inline auto calculateDynamicMargin(float baseMargin, float camera_height,
+inline auto calculate_dynamic_margin(float base_margin, float camera_height,
                                    float pitch_deg) -> float {
 
   float const height_factor =
@@ -112,10 +112,10 @@ inline auto calculateDynamicMargin(float baseMargin, float camera_height,
       std::clamp(1.0F - std::abs(pitch_deg) / k_max_pitch_angle,
                  k_pitch_factor_min, k_pitch_factor_max);
 
-  return baseMargin * height_factor * pitch_factor;
+  return base_margin * height_factor * pitch_factor;
 }
 
-inline auto smoothApproach(float current, float target,
+inline auto smooth_approach(float current, float target,
                            float smoothness) -> float {
   if (std::abs(current - target) < k_tiny) {
     return target;
@@ -207,7 +207,7 @@ void Camera::set_orthographic(float left, float right, float bottom, float top,
   }
 
   m_isPerspective = false;
-  clampOrthoBox(left, right, bottom, top);
+  clamp_ortho_box(left, right, bottom, top);
   m_orthoLeft = left;
   m_orthoRight = right;
   m_orthoBottom = bottom;
@@ -261,7 +261,7 @@ void Camera::zoom(float delta) {
     m_orthoRight *= scale;
     m_orthoBottom *= scale;
     m_orthoTop *= scale;
-    clampOrthoBox(m_orthoLeft, m_orthoRight, m_orthoBottom, m_orthoTop);
+    clamp_ortho_box(m_orthoLeft, m_orthoRight, m_orthoBottom, m_orthoTop);
   }
 }
 
@@ -398,17 +398,17 @@ void Camera::update(float dt) {
   }
 }
 
-auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
-                              QVector3D &outWorld) const -> bool {
-  if (screenW <= 0 || screenH <= 0) {
+auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screen_w, qreal screen_h,
+                              QVector3D &out_world) const -> bool {
+  if (screen_w <= 0 || screen_h <= 0) {
     return false;
   }
   if (!qIsFinite(sx) || !qIsFinite(sy)) {
     return false;
   }
 
-  double const x = (k_ndc_scale * sx / screenW) - k_ndc_offset;
-  double const y = k_ndc_offset - (k_ndc_scale * sy / screenH);
+  double const x = (k_ndc_scale * sx / screen_w) - k_ndc_offset;
+  double const y = k_ndc_offset - (k_ndc_scale * sy / screen_h);
 
   bool ok = false;
   QMatrix4x4 const inv_vp =
@@ -443,13 +443,13 @@ auto Camera::screen_to_ground(qreal sx, qreal sy, qreal screenW, qreal screenH,
     return false;
   }
 
-  outWorld = ray_origin + ray_dir * t;
-  return finite(outWorld);
+  out_world = ray_origin + ray_dir * t;
+  return finite(out_world);
 }
 
-auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
-                             qreal screenH, QPointF &outScreen) const -> bool {
-  if (screenW <= 0 || screenH <= 0) {
+auto Camera::world_to_screen(const QVector3D &world, qreal screen_w,
+                             qreal screen_h, QPointF &out_screen) const -> bool {
+  if (screen_w <= 0 || screen_h <= 0) {
     return false;
   }
   if (!finite(world)) {
@@ -470,25 +470,25 @@ auto Camera::world_to_screen(const QVector3D &world, qreal screenW,
     return false;
   }
 
-  qreal const sx = (ndc.x() * k_ndc_half + k_ndc_half) * screenW;
+  qreal const sx = (ndc.x() * k_ndc_half + k_ndc_half) * screen_w;
   qreal const sy =
-      (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * screenH;
-  outScreen = QPointF(sx, sy);
+      (k_ndc_offset - (ndc.y() * k_ndc_half + k_ndc_half)) * screen_h;
+  out_screen = QPointF(sx, sy);
   return qIsFinite(sx) && qIsFinite(sy);
 }
 
-void Camera::update_follow(const QVector3D &targetCenter) {
+void Camera::update_follow(const QVector3D &target_center) {
   if (!m_followEnabled) {
     return;
   }
-  if (!finite(targetCenter)) {
+  if (!finite(target_center)) {
     return;
   }
 
   if (m_followOffset.lengthSquared() < 1e-5F) {
     m_followOffset = m_position - m_target;
   }
-  QVector3D const desired_pos = targetCenter + m_followOffset;
+  QVector3D const desired_pos = target_center + m_followOffset;
   QVector3D const new_pos =
       (m_followLerp >= 0.999F)
           ? desired_pos
@@ -499,7 +499,7 @@ void Camera::update_follow(const QVector3D &targetCenter) {
     return;
   }
 
-  m_target = targetCenter;
+  m_target = target_center;
   m_position = new_pos;
 
   apply_soft_boundaries();
@@ -563,7 +563,7 @@ auto Camera::get_projection_matrix() const -> QMatrix4x4 {
     float right = m_orthoRight;
     float bottom = m_orthoBottom;
     float top = m_orthoTop;
-    clampOrthoBox(left, right, bottom, top);
+    clamp_ortho_box(left, right, bottom, top);
     projection.ortho(left, right, bottom, top, m_near_plane, m_far_plane);
   }
   return projection;
@@ -593,7 +593,7 @@ void Camera::update_vectors() {
   orthonormalize(f, m_front, m_right, m_up);
 }
 
-void Camera::apply_soft_boundaries(bool isPanning) {
+void Camera::apply_soft_boundaries(bool is_panning) {
   if (!qIsFinite(m_position.y())) {
     return;
   }
@@ -633,9 +633,9 @@ void Camera::apply_soft_boundaries(bool isPanning) {
                             std::min(camera_height / k_reference_height, 1.0F));
 
   float const margin_x =
-      calculateDynamicMargin(base_margin_x, camera_height, pitch_deg);
+      calculate_dynamic_margin(base_margin_x, camera_height, pitch_deg);
   float const margin_z =
-      calculateDynamicMargin(base_margin_z, camera_height, pitch_deg);
+      calculate_dynamic_margin(base_margin_z, camera_height, pitch_deg);
 
   float const ext_min_x = map_min_x - margin_x;
   float const ext_max_x = map_max_x + margin_x;
@@ -672,7 +672,7 @@ void Camera::apply_soft_boundaries(bool isPanning) {
     target_adjustment.setZ(map_max_z - m_target.z());
   }
 
-  if (isPanning) {
+  if (is_panning) {
 
     if ((position_adjustment.x() > 0 && m_lastPosition.x() < m_position.x()) ||
         (position_adjustment.x() < 0 && m_lastPosition.x() > m_position.x())) {
@@ -688,11 +688,11 @@ void Camera::apply_soft_boundaries(bool isPanning) {
   if (!position_adjustment.isNull()) {
     m_position +=
         position_adjustment *
-        (isPanning ? k_boundary_panning_smoothness : k_boundary_smoothness);
+        (is_panning ? k_boundary_panning_smoothness : k_boundary_smoothness);
   }
 
   if (!target_adjustment.isNull()) {
-    m_target += target_adjustment * (isPanning ? k_boundary_panning_smoothness
+    m_target += target_adjustment * (is_panning ? k_boundary_panning_smoothness
                                                : k_boundary_smoothness);
 
     if (target_to_pos_dist > k_tiny) {

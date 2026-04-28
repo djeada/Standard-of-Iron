@@ -122,7 +122,7 @@ void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.48F, 0.01F, 0.02F), c.metal_bronze);
 }
 
-void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
                 Texture *white, const CarthageBallistaPalette &c) {
 
   float wheel_radius = 0.13F;
@@ -166,7 +166,7 @@ void drawWheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.36F, wheel_radius, 0.0F), 0.020F, c.metal_bronze, white);
 }
 
-void drawTorsionBundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_torsion_bundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
                         Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
@@ -193,7 +193,7 @@ void drawTorsionBundles(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.23F, 0.28F, -0.26F), 0.078F, c.metal_gold, white);
 }
 
-void drawArms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
+void draw_arms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
               const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
@@ -216,7 +216,7 @@ void drawArms(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
   out.mesh(get_unit_sphere(), right_socket, c.metal_bronze, white, 1.0F);
 }
 
-void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
+void draw_bowstring(const DrawContext &p, ISubmitter &out, Texture *white,
                    const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
@@ -228,7 +228,7 @@ void drawBowstring(const DrawContext &p, ISubmitter &out, Texture *white,
            QVector3D(0.0F, 0.29F, 0.14F), 0.007F, c.rope, white);
 }
 
-void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_slide(const DrawContext &p, ISubmitter &out, Mesh *unit,
                Texture *white, const CarthageBallistaPalette &c,
                const BallistaAnimContext &anim_ctx) {
 
@@ -274,7 +274,7 @@ void drawSlide(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawTriggerMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_trigger_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
                           Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 tilted = p.model;
@@ -292,7 +292,7 @@ void drawTriggerMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.18F, 0.11F, 0.23F), 0.011F, c.wood_frame, white);
 }
 
-void drawCarthageOrnaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_carthage_ornaments(const DrawContext &p, ISubmitter &out, Mesh *unit,
                            Texture *white, const CarthageBallistaPalette &c) {
 
   QMatrix4x4 base = p.model;
@@ -357,13 +357,13 @@ void register_ballista_renderer(EntityRendererRegistry &registry) {
         ctx.model.rotate(180.0F, 0.0F, 1.0F, 0.0F);
 
         draw_base_frame(ctx, out, unit, white, c);
-        drawWheels(ctx, out, unit, white, c);
-        drawTorsionBundles(ctx, out, unit, white, c);
-        drawArms(ctx, out, unit, white, c);
-        drawBowstring(ctx, out, white, c);
-        drawSlide(ctx, out, unit, white, c, anim_ctx);
-        drawTriggerMechanism(ctx, out, unit, white, c);
-        drawCarthageOrnaments(ctx, out, unit, white, c);
+        draw_wheels(ctx, out, unit, white, c);
+        draw_torsion_bundles(ctx, out, unit, white, c);
+        draw_arms(ctx, out, unit, white, c);
+        draw_bowstring(ctx, out, white, c);
+        draw_slide(ctx, out, unit, white, c, anim_ctx);
+        draw_trigger_mechanism(ctx, out, unit, white, c);
+        draw_carthage_ornaments(ctx, out, unit, white, c);
       });
 }
 

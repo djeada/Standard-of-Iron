@@ -138,7 +138,7 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
   QVector3D right_front(0.45F, wheel_radius, -0.28F);
   QVector3D right_back(0.45F, wheel_radius, 0.28F);
 
-  auto drawWheel = [&](const QVector3D &pos, float side_offset) {
+  auto draw_wheel = [&](const QVector3D &pos, float side_offset) {
     QVector3D inner = pos + QVector3D(side_offset * wheel_thickness, 0, 0);
     QVector3D outer =
         pos + QVector3D(side_offset * (wheel_thickness + 0.07F), 0, 0);
@@ -166,10 +166,10 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
     }
   };
 
-  drawWheel(left_front, -1.0F);
-  drawWheel(left_back, -1.0F);
-  drawWheel(right_front, 1.0F);
-  drawWheel(right_back, 1.0F);
+  draw_wheel(left_front, -1.0F);
+  draw_wheel(left_back, -1.0F);
+  draw_wheel(right_front, 1.0F);
+  draw_wheel(right_back, 1.0F);
 
   draw_cyl(out, p.model, QVector3D(-0.44F, wheel_radius, -0.28F),
            QVector3D(0.44F, wheel_radius, -0.28F), 0.028F, c.metal_iron, white);
@@ -177,7 +177,7 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.44F, wheel_radius, 0.28F), 0.028F, c.metal_iron, white);
 }
 
-void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const CarthageCatapultPalette &c,
                      const CatapultAnimContext &anim_ctx) {
 
@@ -210,21 +210,21 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
     break;
   }
 
-  QMatrix4x4 armMatrix = p.model;
-  armMatrix.translate(0.0F, 0.60F, 0.03F);
-  armMatrix.rotate(arm_angle * 57.3F, 1.0F, 0.0F, 0.0F);
+  QMatrix4x4 arm_matrix = p.model;
+  arm_matrix.translate(0.0F, 0.60F, 0.03F);
+  arm_matrix.rotate(arm_angle * 57.3F, 1.0F, 0.0F, 0.0F);
 
-  draw_cyl(out, armMatrix, QVector3D(0.0F, 0.0F, -0.65F),
+  draw_cyl(out, arm_matrix, QVector3D(0.0F, 0.0F, -0.65F),
            QVector3D(0.0F, 0.0F, 0.35F), 0.05F, c.wood_cedar, white);
 
-  draw_box(out, unit, white, armMatrix, QVector3D(0.0F, -0.06F, -0.60F),
+  draw_box(out, unit, white, arm_matrix, QVector3D(0.0F, -0.06F, -0.60F),
            QVector3D(0.10F, 0.08F, 0.12F), c.leather);
 
-  draw_box(out, unit, white, armMatrix, QVector3D(0.0F, 0.0F, 0.30F),
+  draw_box(out, unit, white, arm_matrix, QVector3D(0.0F, 0.0F, 0.30F),
            QVector3D(0.08F, 0.08F, 0.08F), c.metal_bronze);
 
   if (anim_ctx.show_stone) {
-    QMatrix4x4 stone_matrix = armMatrix;
+    QMatrix4x4 stone_matrix = arm_matrix;
     stone_matrix.translate(0.0F, 0.10F, -0.58F);
     float const stone_scale = 0.09F;
     stone_matrix.scale(stone_scale, stone_scale, stone_scale);
@@ -233,7 +233,7 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawTorsionMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
                           Texture *white, const CarthageCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.22F, 0.40F, 0.0F),
@@ -255,7 +255,7 @@ void drawTorsionMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.24F, 0.32F, 0.0F), 0.14F, c.metal_bronze, white);
 }
 
-void drawDecorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const CarthageCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.72F, -0.12F),
@@ -273,7 +273,7 @@ void drawDecorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.05F, 0.05F, 0.05F), c.metal_bronze);
 }
 
-void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_windlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
                   Texture *white, const CarthageCatapultPalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-0.22F, 0.25F, 0.35F),
@@ -321,10 +321,10 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
 
         draw_base_frame(p, out, unit_cube, white_tex, palette);
         draw_wheels(p, out, unit_cube, white_tex, palette);
-        drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-        drawThrowingArm(p, out, unit_cube, white_tex, palette, anim_ctx);
-        drawWindlass(p, out, unit_cube, white_tex, palette);
-        drawDecorations(p, out, unit_cube, white_tex, palette);
+        draw_torsion_mechanism(p, out, unit_cube, white_tex, palette);
+        draw_throwing_arm(p, out, unit_cube, white_tex, palette, anim_ctx);
+        draw_windlass(p, out, unit_cube, white_tex, palette);
+        draw_decorations(p, out, unit_cube, white_tex, palette);
       });
 }
 

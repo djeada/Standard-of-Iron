@@ -52,17 +52,17 @@ public:
 private:
   WorkApronConfig m_config;
 
-  static void renderApronBody(const WorkApronConfig &config,
+  static void render_apron_body(const WorkApronConfig &config,
                               const DrawContext &ctx,
                               const AttachmentFrame &torso,
                               const AttachmentFrame &waist,
                               EquipmentBatch &batch);
 
-  static void renderStraps(const WorkApronConfig &config,
+  static void render_straps(const WorkApronConfig &config,
                            const DrawContext &ctx, const AttachmentFrame &torso,
                            const BodyFrames &frames, EquipmentBatch &batch);
 
-  static void renderPockets(const WorkApronConfig &config,
+  static void render_pockets(const WorkApronConfig &config,
                             const DrawContext &ctx,
                             const AttachmentFrame &waist,
                             EquipmentBatch &batch);

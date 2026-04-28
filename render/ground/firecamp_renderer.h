@@ -24,7 +24,7 @@ public:
   void configure(const Game::Map::TerrainHeightMap &height_map,
                  const Game::Map::BiomeSettings &biome_settings);
 
-  void setExplicitFireCamps(const std::vector<QVector3D> &positions,
+  void set_explicit_fire_camps(const std::vector<QVector3D> &positions,
                             const std::vector<float> &intensities = {},
                             const std::vector<float> &radii = {});
 
@@ -36,10 +36,10 @@ public:
     if (m_fireCampInstances.empty()) {
       return true;
     }
-    if (!m_visibilityDirty && m_visibleInstances.empty()) {
+    if (!m_visibility_dirty && m_visible_instances.empty()) {
       return true;
     }
-    return (m_fireCampInstanceBuffer != nullptr) && !m_visibilityDirty;
+    return (m_fireCampInstanceBuffer != nullptr) && !m_visibility_dirty;
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
@@ -54,7 +54,7 @@ private:
   int m_height = 0;
   float m_tile_size = 1.0F;
 
-  std::vector<float> m_heightData;
+  std::vector<float> m_height_data;
   std::vector<Game::Map::TerrainType> m_terrain_types;
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
@@ -65,9 +65,9 @@ private:
   FireCampBatchParams m_fireCampParams;
   bool m_fireCampInstancesDirty = false;
 
-  std::vector<FireCampInstanceGpu> m_visibleInstances;
+  std::vector<FireCampInstanceGpu> m_visible_instances;
   std::uint64_t m_cachedVisibilityVersion = 0;
-  bool m_visibilityDirty = true;
+  bool m_visibility_dirty = true;
 
   std::vector<QVector3D> m_explicitPositions;
   std::vector<float> m_explicitIntensities;

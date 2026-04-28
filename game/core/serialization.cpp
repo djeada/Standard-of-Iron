@@ -909,7 +909,7 @@ auto Serialization::serialize_terrain(
   terrain_obj["terrain_types"] = terrain_types_array;
 
   QJsonArray rivers_array;
-  const auto &rivers = height_map->getRiverSegments();
+  const auto &rivers = height_map->get_river_segments();
   for (const auto &river : rivers) {
     QJsonObject river_obj;
     river_obj["startX"] = river.start.x();
@@ -924,7 +924,7 @@ auto Serialization::serialize_terrain(
   terrain_obj["rivers"] = rivers_array;
 
   QJsonArray bridges_array;
-  const auto &bridges = height_map->getBridges();
+  const auto &bridges = height_map->get_bridges();
   for (const auto &bridge : bridges) {
     QJsonObject bridge_obj;
     bridge_obj["startX"] = bridge.start.x();
@@ -1300,8 +1300,8 @@ void Serialization::deserialize_world(World *world, const QJsonDocument &doc) {
     auto &terrain_service = Game::Map::TerrainService::instance();
     terrain_service.restore_from_serialized(
         width, height, tile_size, temp_height_map->getHeightData(),
-        temp_height_map->getTerrainTypes(), temp_height_map->getRiverSegments(),
-        roads, temp_height_map->getBridges(), biome);
+        temp_height_map->getTerrainTypes(), temp_height_map->get_river_segments(),
+        roads, temp_height_map->get_bridges(), biome);
   }
 }
 
