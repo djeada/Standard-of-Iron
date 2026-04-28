@@ -115,6 +115,11 @@ make run
 make editor
 ```
 
+### Run the Arena Playground
+```bash
+make arena
+```
+
 ### Run in Headless Mode (for CI)
 ```bash
 make run-headless

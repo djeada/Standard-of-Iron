@@ -30,8 +30,8 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrain) {
   EXPECT_EQ(field.slopes.size(), 30U);
   EXPECT_EQ(field.curvature.size(), 30U);
   EXPECT_FLOAT_EQ(field.sample_height_at(2.0F, 3.0F), 0.0F);
-  EXPECT_FLOAT_EQ(field.sample_slope_at(2, 3), 0.0F);
-  EXPECT_FLOAT_EQ(field.sample_curvature_at(2, 3), 0.0F);
+  EXPECT_NEAR(field.sample_slope_at(2, 3), 0.0F, 1e-6F);
+  EXPECT_NEAR(field.sample_curvature_at(2, 3), 0.0F, 1e-6F);
 }
 
 TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {

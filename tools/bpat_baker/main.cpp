@@ -619,6 +619,7 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   motion.is_moving = clip.is_moving;
   motion.is_fighting = clip.is_fighting;
   motion.anim_time = phase * clip.gait.cycle_time;
+  motion.combat_phase = Render::GL::CombatAnimPhase::Idle;
   if (clip.is_fighting) {
 
     float const fight_bob = std::sin(phase * 2.0F * std::numbers::pi_v<float>) *
