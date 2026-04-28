@@ -652,7 +652,10 @@ void ArenaViewport::setNormalsOverlayEnabled(bool enabled) {
 
 void ArenaViewport::setGroundType(const QString &groundType) {
   Game::Map::GroundType parsed = Game::Map::GroundType::ForestMud;
-  Game::Map::try_parse_ground_type(groundType, parsed);
+  if (!Game::Map::try_parse_ground_type(groundType, parsed)) {
+    qWarning() << "ArenaViewport: unknown ground type" << groundType
+               << "- defaulting to ForestMud";
+  }
   if (m_ground_type == parsed) {
     return;
   }
