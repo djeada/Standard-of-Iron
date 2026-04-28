@@ -20,6 +20,7 @@
 #include <cmath>
 #include <cstdint>
 #include <gtest/gtest.h>
+#include <limits>
 #include <span>
 
 namespace {
@@ -76,6 +77,52 @@ auto has_bone_influence(const BakedRiggedMeshCpu &baked,
   return false;
 }
 
+auto skinned_position_at_bind(const RiggedVertex &vertex,
+                              std::span<const BoneWorldMatrix> bind_pose)
+    -> QVector3D {
+  QVector3D out(0.0F, 0.0F, 0.0F);
+  QVector4D const local(vertex.position_bone_local[0], vertex.position_bone_local[1],
+                        vertex.position_bone_local[2], 1.0F);
+  for (std::size_t i = 0; i < vertex.bone_indices.size(); ++i) {
+    float const weight = vertex.bone_weights[i];
+    std::size_t const bone = vertex.bone_indices[i];
+    if (weight <= 0.0F || bone >= bind_pose.size()) {
+      continue;
+    }
+    out += (bind_pose[bone] * local).toVector3D() * weight;
+  }
+  return out;
+}
+
+auto baked_axis_spans(const BakedRiggedMeshCpu &baked,
+                      std::span<const BoneWorldMatrix> bind_pose) -> QVector3D {
+  QVector3D min_v(std::numeric_limits<float>::max(),
+                  std::numeric_limits<float>::max(),
+                  std::numeric_limits<float>::max());
+  QVector3D max_v(std::numeric_limits<float>::lowest(),
+                  std::numeric_limits<float>::lowest(),
+                  std::numeric_limits<float>::lowest());
+  for (auto const &vertex : baked.vertices) {
+    QVector3D const p = skinned_position_at_bind(vertex, bind_pose);
+    min_v.setX(std::min(min_v.x(), p.x()));
+    min_v.setY(std::min(min_v.y(), p.y()));
+    min_v.setZ(std::min(min_v.z(), p.z()));
+    max_v.setX(std::max(max_v.x(), p.x()));
+    max_v.setY(std::max(max_v.y(), p.y()));
+    max_v.setZ(std::max(max_v.z(), p.z()));
+  }
+  return max_v - min_v;
+}
+
+auto baked_min_y(const BakedRiggedMeshCpu &baked,
+                 std::span<const BoneWorldMatrix> bind_pose) -> float {
+  float min_y = std::numeric_limits<float>::max();
+  for (auto const &vertex : baked.vertices) {
+    min_y = std::min(min_y, skinned_position_at_bind(vertex, bind_pose).y());
+  }
+  return min_y;
+}
+
 TEST(RiggedMeshBake, EmptyGraphProducesEmptyOutput) {
   BakeInput input{};
   auto baked = bake_rigged_mesh_cpu(input);
@@ -114,6 +161,38 @@ TEST(RiggedMeshBake, CylinderUsesCustomMeshOverrideWhenProvided) {
             sphere->get_vertices().size() + cube->get_vertices().size());
   EXPECT_EQ(baked.indices.size(),
             sphere->get_indices().size() + cube->get_indices().size());
+}
+
+TEST(RiggedMeshBake, LowPolyCylinderMeshHasFewerVerticesThanDefault) {
+  auto *default_cylinder = Render::GL::get_unit_cylinder();
+  auto *low_poly_cylinder = Render::GL::get_unit_cylinder(6);
+
+  ASSERT_NE(default_cylinder, nullptr);
+  ASSERT_NE(low_poly_cylinder, nullptr);
+  EXPECT_LT(low_poly_cylinder->get_vertices().size(),
+            default_cylinder->get_vertices().size());
+  EXPECT_LT(low_poly_cylinder->get_indices().size(),
+            default_cylinder->get_indices().size());
+}
+
+TEST(RiggedMeshBake, TaperedCylinderNarrowsTowardTail) {
+  auto *tapered = Render::GL::get_unit_tapered_cylinder(1.0F, 0.55F, 6);
+
+  ASSERT_NE(tapered, nullptr);
+  float anchor_radius = 0.0F;
+  float tail_radius = 0.0F;
+  for (auto const &vertex : tapered->get_vertices()) {
+    float const radius =
+        std::sqrt(vertex.position[0] * vertex.position[0] +
+                  vertex.position[2] * vertex.position[2]);
+    if (vertex.position[1] <= -0.49F) {
+      anchor_radius = std::max(anchor_radius, radius);
+    }
+    if (vertex.position[1] >= 0.49F) {
+      tail_radius = std::max(tail_radius, radius);
+    }
+  }
+  EXPECT_GT(anchor_radius, tail_radius * 1.7F);
 }
 
 TEST(RiggedMeshBake, SphereVerticesAreSingleBoneAnchor) {
@@ -236,7 +315,7 @@ TEST(RiggedMeshBake, GlWrapperExposesCpuSizes) {
 
 TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
   auto const &spec = Render::Horse::horse_creature_spec();
-  BakeInput input{&spec.lod_full, Render::Horse::horse_bind_palette()};
+  BakeInput input{&spec.lod_minimal, Render::Horse::horse_bind_palette()};
   auto baked = bake_rigged_mesh_cpu(input);
 
   ASSERT_FALSE(baked.vertices.empty());
@@ -248,9 +327,44 @@ TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
       baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::Head)));
 }
 
+TEST(RiggedMeshBake, HorseFullRiggedMeshPreservesOverallScale) {
+  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const bind = Render::Horse::horse_bind_palette();
+  auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
+  auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
+
+  ASSERT_FALSE(full.vertices.empty());
+  ASSERT_FALSE(minimal.vertices.empty());
+
+  QVector3D const full_span = baked_axis_spans(full, bind);
+  QVector3D const minimal_span = baked_axis_spans(minimal, bind);
+
+  EXPECT_GT(full_span.x(), minimal_span.x() * 0.55F);
+  EXPECT_GT(full_span.y(), minimal_span.y() * 0.55F);
+  EXPECT_GT(full_span.z(), minimal_span.z() * 0.70F);
+  EXPECT_LT(full_span.x(), minimal_span.x() * 1.35F);
+  EXPECT_LT(full_span.y(), minimal_span.y() * 1.35F);
+  EXPECT_LT(full_span.z(), minimal_span.z() * 1.35F);
+}
+
+TEST(RiggedMeshBake, HorseFullRiggedMeshStaysNearMinimalGroundContact) {
+  auto const &spec = Render::Horse::horse_creature_spec();
+  auto const bind = Render::Horse::horse_bind_palette();
+  auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
+  auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
+
+  ASSERT_FALSE(full.vertices.empty());
+  ASSERT_FALSE(minimal.vertices.empty());
+
+  float const full_min_y = baked_min_y(full, bind);
+  float const minimal_min_y = baked_min_y(minimal, bind);
+
+  EXPECT_GT(full_min_y, minimal_min_y - 0.45F);
+}
+
 TEST(RiggedMeshBake, ElephantWholeMeshUsesKneeAndTrunkBones) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
-  BakeInput input{&spec.lod_full, Render::Elephant::elephant_bind_palette()};
+  BakeInput input{&spec.lod_minimal, Render::Elephant::elephant_bind_palette()};
   auto baked = bake_rigged_mesh_cpu(input);
 
   ASSERT_FALSE(baked.vertices.empty());
@@ -263,6 +377,43 @@ TEST(RiggedMeshBake, ElephantWholeMeshUsesKneeAndTrunkBones) {
   EXPECT_TRUE(has_bone_influence(
       baked,
       static_cast<std::uint8_t>(Render::Elephant::ElephantBone::TrunkTip)));
+}
+
+TEST(RiggedMeshBake, ElephantFullRiggedMeshPreservesOverallScale) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const bind = Render::Elephant::elephant_bind_palette();
+  auto const full =
+      bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
+  auto const minimal =
+      bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
+
+  ASSERT_FALSE(full.vertices.empty());
+  ASSERT_FALSE(minimal.vertices.empty());
+
+  QVector3D const full_span = baked_axis_spans(full, bind);
+  QVector3D const minimal_span = baked_axis_spans(minimal, bind);
+
+  EXPECT_GT(full_span.x(), minimal_span.x() * 0.70F);
+  EXPECT_GT(full_span.y(), minimal_span.y() * 0.50F);
+  EXPECT_GT(full_span.z(), minimal_span.z() * 0.70F);
+  EXPECT_LT(full_span.x(), minimal_span.x() * 1.35F);
+  EXPECT_LT(full_span.y(), minimal_span.y() * 1.35F);
+  EXPECT_LT(full_span.z(), minimal_span.z() * 1.35F);
+}
+
+TEST(RiggedMeshBake, ElephantFullRiggedMeshStaysNearMinimalGroundContact) {
+  auto const &spec = Render::Elephant::elephant_creature_spec();
+  auto const bind = Render::Elephant::elephant_bind_palette();
+  auto const full = bake_rigged_mesh_cpu(BakeInput{&spec.lod_full, bind});
+  auto const minimal = bake_rigged_mesh_cpu(BakeInput{&spec.lod_minimal, bind});
+
+  ASSERT_FALSE(full.vertices.empty());
+  ASSERT_FALSE(minimal.vertices.empty());
+
+  float const full_min_y = baked_min_y(full, bind);
+  float const minimal_min_y = baked_min_y(minimal, bind);
+
+  EXPECT_GT(full_min_y, minimal_min_y - 0.25F);
 }
 
 } // namespace

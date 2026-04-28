@@ -1,7 +1,5 @@
 #include "horse_renderer_base.h"
-#include "lod.h"
 #include "prepare.h"
-#include "render_stats.h"
 
 #include "horse_profile_data.h"
 

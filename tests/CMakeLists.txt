@@ -66,9 +66,13 @@ add_executable(standard_of_iron_tests
     render/creature/creature_visual_definition_test.cpp
     render/creature/rigged_mesh_bake_test.cpp
     render/creature/rigged_mesh_cache_test.cpp
+    render/creature/quadruped_topology_test.cpp
+    render/creature/quadruped_gait_test.cpp
     render/creature/humanoid_prepare_test.cpp
     render/creature/horse_prepare_test.cpp
     render/creature/elephant_prepare_test.cpp
+    render/creature/quadruped_clip_set_test.cpp
+    render/creature/quadruped_mesh_graph_test.cpp
     render/creature/mounted_prepare_test.cpp
     render/creature/creature_render_graph_test.cpp
     render/creature/render_request_test.cpp

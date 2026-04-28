@@ -80,13 +80,18 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
 
   frame.saddle_center = QVector3D(
-      0.0F, d.saddle_height - d.saddle_thickness * kSaddleThicknessOffset,
+      0.0F,
+      d.saddle_height + d.body_height * kSaddleBodyHeightLiftScale -
+          d.saddle_thickness * kSaddleThicknessOffset,
       -d.body_length * kSaddleBodyLengthOffset +
           d.seat_forward_offset * kSaddleSeatForwardScale);
 
   frame.seat_position =
       frame.saddle_center +
-      QVector3D(0.0F, d.saddle_thickness * kSeatPositionHeightScale, 0.0F);
+      QVector3D(0.0F,
+                d.saddle_thickness * kSeatPositionHeightScale +
+                    d.body_height * kSeatBodyHeightLiftScale,
+                0.0F);
 
   frame.stirrup_attach_left =
       frame.saddle_center +

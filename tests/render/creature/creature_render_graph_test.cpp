@@ -11,7 +11,6 @@
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/elephant/elephant_spec.h"
-#include "render/elephant/lod.h"
 #include "render/entity/registry.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/graphics_settings.h"
@@ -118,15 +117,17 @@ TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
             settings.horse_minimal_detail_distance());
 }
 
-TEST(CreatureRenderGraph, ElephantLegacyLodUsesElephantDistances) {
+TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
   auto const &settings = Render::GraphicsSettings::instance();
 
-  EXPECT_EQ(Render::GL::calculate_elephant_lod(
+  EXPECT_EQ(quadruped_lod_from_settings(
+                CreatureKind::Elephant,
                 settings.horse_full_detail_distance() + 1.0F),
-            Render::GL::HorseLOD::Full);
-  EXPECT_EQ(Render::GL::calculate_elephant_lod(
+            CreatureLOD::Full);
+  EXPECT_EQ(quadruped_lod_from_settings(
+                CreatureKind::Elephant,
                 settings.elephant_full_detail_distance() + 1.0F),
-            Render::GL::HorseLOD::Minimal);
+            CreatureLOD::Minimal);
 }
 
 TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
@@ -305,10 +306,10 @@ TEST(CreatureRenderBatch, AddHorseIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::Horse::HorseSpecPose pose{};
   Render::GL::HorseVariant variant{};
 
-  batch.add_horse(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -317,10 +318,10 @@ TEST(CreatureRenderBatch, AddElephantIncreasesSize) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
   output.culled = false;
-  Render::Elephant::ElephantSpecPose pose{};
   Render::GL::ElephantVariant variant{};
 
-  batch.add_elephant(output, pose, variant);
+  batch.add_quadruped(output, variant,
+                      Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
 }
@@ -389,10 +390,10 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::Horse::HorseSpecPose pose{};
   Render::GL::HorseVariant variant{};
 
-  batch.add_horse(output, pose, variant);
+  batch.add_quadruped(output, variant, Render::Creature::AnimationStateId::Idle,
+                      0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
@@ -414,10 +415,10 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
 
   CreatureRenderBatch batch;
-  Render::Elephant::ElephantSpecPose pose{};
   Render::GL::ElephantVariant variant{};
 
-  batch.add_elephant(output, pose, variant);
+  batch.add_quadruped(output, variant,
+                      Render::Creature::AnimationStateId::Idle, 0.0F);
 
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);

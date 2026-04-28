@@ -3,23 +3,26 @@
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
+#include "../creature/quadruped/clip_set.h"
+#include "../creature/quadruped/render_stats.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "horse_motion.h"
 #include "horse_renderer_base.h"
-#include "horse_spec.h"
-#include "lod.h"
-#include "render_stats.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 
 #include <cstdint>
+#include <optional>
 
 namespace Render::Horse {
 
 namespace {
+
+constexpr Render::Creature::Quadruped::ClipSet kHorseClips{
+    0U, 1U, 2U, 3U, 4U, 5U};
 
 auto default_full_horse_request_seed(
     const Render::GL::DrawContext &ctx) noexcept -> std::uint32_t {
@@ -30,42 +33,44 @@ auto default_full_horse_request_seed(
       reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
 }
 
-auto make_grounding_pose(const Render::GL::HorseProfile &profile, float phase,
-                         float bob, bool is_moving, bool is_fighting) noexcept
-    -> Render::Horse::HorseSpecPose {
-  Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_animated(
-      profile.dims, profile.gait,
-      Render::Horse::HorsePoseMotion{phase, bob, is_moving, is_fighting}, pose);
-  return pose;
+auto horse_state_for_motion(
+    const Render::GL::HorseMotionSample &motion) noexcept
+    -> Render::Creature::AnimationStateId {
+  if (motion.is_fighting) {
+    return Render::Creature::AnimationStateId::AttackMelee;
+  }
+  switch (motion.gait_type) {
+  case Render::GL::GaitType::IDLE:
+    return Render::Creature::AnimationStateId::Idle;
+  case Render::GL::GaitType::WALK:
+    return Render::Creature::AnimationStateId::Walk;
+  case Render::GL::GaitType::TROT:
+  case Render::GL::GaitType::CANTER:
+  case Render::GL::GaitType::GALLOP:
+    return Render::Creature::AnimationStateId::Run;
+  }
+  return Render::Creature::AnimationStateId::Idle;
 }
 
-void ground_horse_model(QMatrix4x4 &model,
-                        const Render::Horse::HorseSpecPose &pose,
-                        std::uint16_t clip_id, float phase) noexcept {
+auto horse_clip_for_motion(const Render::GL::HorseMotionSample &motion) noexcept
+    -> std::uint16_t {
+  return Render::Creature::Quadruped::clip_for_motion(
+      kHorseClips, motion.gait_type, motion.is_fighting);
+}
+
+void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,
+                        float phase) noexcept {
   float const y_scale = model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
+  float const contact_y =
+      Render::Creature::Pipeline::horse_clip_contact_y(clip_id, phase)
+          .value_or(0.0F);
   Render::Creature::Pipeline::ground_model_contact_to_surface(
-      model,
-      Render::Creature::Pipeline::grounded_horse_contact_y(pose, clip_id,
-                                                           phase),
-      y_scale);
+      model, contact_y, y_scale);
 }
 
 } // namespace
 
 } // namespace Render::Horse
-
-namespace {
-
-[[nodiscard]] auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx)
-    -> Render::GL::DrawContext {
-  Render::GL::DrawContext runtime_ctx = ctx;
-  runtime_ctx.template_prewarm = false;
-  runtime_ctx.allow_template_cache = false;
-  return runtime_ctx;
-}
-
-} // namespace
 
 namespace Render::GL {
 
@@ -85,16 +90,18 @@ void HorseRendererBase::render(const DrawContext &ctx,
                                const HorseMotionSample *shared_motion,
                                ISubmitter &out, HorseLOD lod) const {
   DrawContext render_ctx =
-      ctx.template_prewarm ? make_runtime_prewarm_ctx(ctx) : ctx;
+      ctx.template_prewarm
+          ? Render::Creature::Pipeline::make_runtime_prewarm_ctx(ctx)
+          : ctx;
 
-  ++s_horseRenderStats.horses_total;
+  ++s_horseRenderStats.total;
 
   if (lod == HorseLOD::Billboard) {
-    ++s_horseRenderStats.horses_skipped_lod;
+    ++s_horseRenderStats.skipped_lod;
     return;
   }
 
-  ++s_horseRenderStats.horses_rendered;
+  ++s_horseRenderStats.rendered;
   switch (lod) {
   case HorseLOD::Full:
     ++s_horseRenderStats.lod_full;
@@ -128,72 +135,14 @@ void HorseRendererBase::render(const DrawContext &ctx,
 
 namespace Render::Horse {
 
-namespace {
-[[nodiscard]] inline auto
-horse_clip_for_gait(Render::GL::GaitType gait) noexcept -> std::uint16_t {
-  using Render::GL::GaitType;
-  switch (gait) {
-  case GaitType::IDLE:
-    return 0U;
-  case GaitType::WALK:
-    return 1U;
-  case GaitType::TROT:
-    return 2U;
-  case GaitType::CANTER:
-    return 3U;
-  case GaitType::GALLOP:
-    return 4U;
-  }
-  return 0U;
-}
-
-[[nodiscard]] inline auto
-horse_clip_for_motion(Render::GL::GaitType gait, bool is_fighting) noexcept
-    -> std::uint16_t {
-  if (is_fighting) {
-    return 5U;
-  }
-  return horse_clip_for_gait(gait);
-}
-
-} // namespace
-
-void prepare_horse_full_impl(
+void prepare_horse_impl(
     const Render::GL::HorseRendererBase &owner,
     const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
     const Render::GL::HumanoidAnimationContext &rider_ctx,
     Render::GL::HorseProfile &profile,
     const Render::GL::MountedAttachmentFrame *shared_mount,
     const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out,
-    std::uint32_t request_seed);
-
-void prepare_horse_minimal_impl(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, Render::GL::HorseProfile &profile,
-    const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out,
-    std::uint32_t request_seed);
-
-void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
-                        const Render::GL::DrawContext &ctx,
-                        const Render::GL::AnimationInputs &anim,
-                        const Render::GL::HumanoidAnimationContext &rider_ctx,
-                        Render::GL::HorseProfile &profile,
-                        const Render::GL::MountedAttachmentFrame *shared_mount,
-                        const Render::GL::HorseMotionSample *shared_motion,
-                        HorsePreparation &out) {
-  prepare_horse_full_impl(owner, ctx, anim, rider_ctx, profile, shared_mount,
-                          shared_motion, out,
-                          default_full_horse_request_seed(ctx));
-}
-
-void prepare_horse_full_impl(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    const Render::GL::HumanoidAnimationContext &rider_ctx,
-    Render::GL::HorseProfile &profile,
-    const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out,
-    std::uint32_t request_seed) {
+    Render::Creature::CreatureLOD lod, std::uint32_t request_seed) {
   using Render::GL::HorseMotionSample;
   using Render::GL::HorseVariant;
   const HorseVariant &v = profile.variant;
@@ -203,19 +152,14 @@ void prepare_horse_full_impl(
                     : evaluate_horse_motion(
                           profile, anim, rider_ctx,
                           Engine::Core::get_or_add_component<
-                              Render::Creature::HorseAnimationStateComponent>(
-                              ctx.entity));
-  float const phase = motion.phase;
+                               Render::Creature::HorseAnimationStateComponent>(
+                               ctx.entity));
   (void)shared_mount;
-  Render::Horse::HorseSpecPose const pose =
-      make_grounding_pose(profile, motion.phase, motion.bob, motion.is_moving,
-                          motion.is_fighting);
-  std::uint16_t const horse_clip =
-      horse_clip_for_motion(motion.gait_type, motion.is_fighting);
+  std::uint16_t const horse_clip = horse_clip_for_motion(motion);
 
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = ctx.model;
-  ground_horse_model(horse_ctx.model, pose, horse_clip, motion.phase);
+  ground_horse_model(horse_ctx.model, horse_clip, motion.phase);
 
   namespace RCP = Render::Creature::Pipeline;
   RCP::CreatureGraphInputs graph_inputs{};
@@ -223,72 +167,12 @@ void prepare_horse_full_impl(
   graph_inputs.anim = &anim;
   graph_inputs.entity = ctx.entity;
   RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = Render::Creature::CreatureLOD::Full;
+  lod_decision.lod = lod;
   auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
   graph_output.spec = owner.visual_spec();
   graph_output.seed = request_seed;
-  out.bodies.add_horse(graph_output, pose, v, horse_clip, phase);
-}
-
-void prepare_horse_minimal(const Render::GL::HorseRendererBase &owner,
-                           const Render::GL::DrawContext &ctx,
-                           Render::GL::HorseProfile &profile,
-                           const Render::GL::HorseMotionSample *shared_motion,
-                           HorsePreparation &out) {
-  prepare_horse_minimal_impl(owner, ctx, profile, shared_motion, out, 0U);
-}
-
-void prepare_horse_minimal_impl(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, Render::GL::HorseProfile &profile,
-    const Render::GL::HorseMotionSample *shared_motion, HorsePreparation &out,
-    std::uint32_t request_seed) {
-  using Render::GL::HorseVariant;
-
-  const HorseVariant &v = profile.variant;
-  (void)shared_motion;
-
-  Render::Horse::HorseSpecPose const pose =
-      make_grounding_pose(profile, 0.0F, 0.0F, false, false);
-
-  QMatrix4x4 world_from_unit = ctx.model;
-  ground_horse_model(world_from_unit, pose, 0U, 0.0F);
-
-  namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  Render::GL::DrawContext horse_ctx = ctx;
-  horse_ctx.model = world_from_unit;
-  graph_inputs.ctx = &horse_ctx;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = Render::Creature::CreatureLOD::Minimal;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = request_seed;
-
-  out.bodies.add_horse(graph_output, pose, v, 0U, 0.0F);
-}
-
-void prepare_horse_render(
-    const Render::GL::HorseRendererBase &owner,
-    const Render::GL::DrawContext &ctx, const Render::GL::AnimationInputs &anim,
-    const Render::GL::HumanoidAnimationContext &rider_ctx,
-    Render::GL::HorseProfile &profile,
-    const Render::GL::MountedAttachmentFrame *shared_mount,
-    const Render::GL::HorseMotionSample *shared_motion,
-    Render::Creature::CreatureLOD lod, HorsePreparation &out) {
-  switch (lod) {
-  case Render::Creature::CreatureLOD::Full:
-    prepare_horse_full_impl(owner, ctx, anim, rider_ctx, profile, shared_mount,
-                            shared_motion, out,
-                            default_full_horse_request_seed(ctx));
-    break;
-  case Render::Creature::CreatureLOD::Minimal:
-    prepare_horse_minimal_impl(owner, ctx, profile, shared_motion, out, 0U);
-    break;
-  case Render::Creature::CreatureLOD::Billboard:
-    break;
-  }
+  out.bodies.add_quadruped(graph_output, v, horse_state_for_motion(motion),
+                           motion.phase);
 }
 
 void prepare_horse_render(
@@ -299,19 +183,13 @@ void prepare_horse_render(
     const Render::GL::MountedAttachmentFrame *shared_mount,
     const Render::GL::HorseMotionSample *shared_motion,
     Render::Creature::CreatureLOD lod, HorsePreparation &out,
-    std::uint32_t request_seed) {
-  switch (lod) {
-  case Render::Creature::CreatureLOD::Full:
-    prepare_horse_full_impl(owner, ctx, anim, rider_ctx, profile, shared_mount,
-                            shared_motion, out, request_seed);
-    break;
-  case Render::Creature::CreatureLOD::Minimal:
-    prepare_horse_minimal_impl(owner, ctx, profile, shared_motion, out,
-                               request_seed);
-    break;
-  case Render::Creature::CreatureLOD::Billboard:
-    break;
+    std::optional<std::uint32_t> request_seed) {
+  if (lod == Render::Creature::CreatureLOD::Billboard) {
+    return;
   }
+  prepare_horse_impl(owner, ctx, anim, rider_ctx, profile, shared_mount,
+                     shared_motion, out, lod,
+                     request_seed.value_or(default_full_horse_request_seed(ctx)));
 }
 
 } // namespace Render::Horse

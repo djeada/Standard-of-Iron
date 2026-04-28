@@ -8,10 +8,10 @@
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
+#include "../creature/quadruped/clip_set.h"
 #include "../gl/camera.h"
 #include "../graphics_settings.h"
 #include "../horse/horse_motion.h"
-#include "../horse/lod.h"
 #include "../horse/prepare.h"
 #include "../humanoid/cache_control.h"
 #include "../humanoid/humanoid_full_builder.h"
@@ -32,38 +32,21 @@ namespace Render::GL {
 
 namespace {
 
-auto horse_clip_for_gait(Render::GL::GaitType gait) noexcept -> std::uint16_t {
-  using Render::GL::GaitType;
-  switch (gait) {
-  case GaitType::IDLE:
-    return 0U;
-  case GaitType::WALK:
-    return 1U;
-  case GaitType::TROT:
-    return 2U;
-  case GaitType::CANTER:
-    return 3U;
-  case GaitType::GALLOP:
-    return 4U;
-  }
-  return 0U;
-}
+constexpr Render::Creature::Quadruped::ClipSet kHorseClips{
+    0U, 1U, 2U, 3U, 4U, 5U};
 
 auto grounded_horse_world_from_mount(
     const DrawContext &ctx, const HorseProfile &profile,
     const HorseMotionSample &motion) noexcept -> QMatrix4x4 {
   QMatrix4x4 world = ctx.model;
-  Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_animated(
-      profile.dims, profile.gait,
-      Render::Horse::HorsePoseMotion{motion.phase, motion.bob,
-                                     motion.is_moving},
-      pose);
+  (void)profile;
   float const y_scale = world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
+  auto const clip_id =
+      Render::Creature::Quadruped::clip_for_gait(kHorseClips, motion.gait_type);
   Render::Creature::Pipeline::ground_model_contact_to_surface(
       world,
-      Render::Creature::Pipeline::grounded_horse_contact_y(
-          pose, horse_clip_for_gait(motion.gait_type), motion.phase),
+      Render::Creature::Pipeline::horse_clip_contact_y(clip_id, motion.phase)
+          .value_or(0.0F),
       y_scale);
   return world;
 }

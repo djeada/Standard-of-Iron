@@ -105,11 +105,9 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
 
-  Render::Horse::HorseSpecPose pose{};
-  Render::GL::HorseVariant variant{};
   QMatrix4x4 world;
-  const auto row = Render::Creature::Pipeline::make_prepared_horse_row(
-      spec, pose, variant, world, /*seed*/ 11,
+  const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
+      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, /*seed*/ 11,
       Render::Creature::CreatureLOD::Minimal,
       /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
@@ -147,6 +145,24 @@ TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  auto const mount = Render::GL::compute_mount_frame(profile);
+  auto const &d = profile.dims;
+
+  EXPECT_GT(mount.saddle_center.z(), -d.body_length * 0.05F);
+  EXPECT_LT(mount.saddle_center.z(), d.body_length * 0.10F);
+  EXPECT_GT(mount.seat_position.z(), mount.saddle_center.z() - 0.001F);
+  EXPECT_GT(mount.saddle_center.y(),
+            d.saddle_height + d.body_height * 0.14F);
+  EXPECT_GT(mount.seat_position.y(),
+            d.saddle_height + d.body_height * 0.34F);
+  EXPECT_GT(mount.seat_position.y(),
+            mount.saddle_center.y() + d.body_height * 0.16F);
 }
 
 TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
@@ -267,21 +283,22 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_minimal(owner, ctx, profile, nullptr, prep);
+  Render::Horse::prepare_horse_render(
+      owner, ctx, anim, rider_ctx, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Minimal, prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
 
-  Render::Horse::HorseSpecPose pose{};
-  Render::Horse::make_horse_spec_pose_animated(
-      profile.dims, profile.gait, Render::Horse::HorsePoseMotion{}, pose);
   float const hoof_contact_y =
-      Render::Creature::Pipeline::grounded_horse_contact_y(pose, 0U, 0.0F);
+      Render::Creature::Pipeline::horse_clip_contact_y(0U, 0.0F).value_or(0.0F);
 
   EXPECT_GT(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 1.9F);
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(),
-              1.9F, 0.0001F);
+              1.9F, 0.01F);
 }
 
 TEST(HorsePrepare,

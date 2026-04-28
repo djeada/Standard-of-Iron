@@ -113,11 +113,9 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
   Render::Creature::Pipeline::UnitVisualSpec spec{};
   spec.kind = Render::Creature::Pipeline::CreatureKind::Elephant;
 
-  Render::Elephant::ElephantSpecPose pose{};
-  Render::GL::ElephantVariant variant{};
   QMatrix4x4 world;
-  const auto row = Render::Creature::Pipeline::make_prepared_elephant_row(
-      spec, pose, variant, world, /*seed*/ 23,
+  const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
+      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world, /*seed*/ 23,
       Render::Creature::CreatureLOD::Minimal,
       /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
@@ -363,9 +361,11 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
   Render::GL::ElephantProfile profile = Render::GL::make_elephant_profile(
       29U, QVector3D(0.5F, 0.2F, 0.1F), QVector3D(0.7F, 0.7F, 0.2F));
 
+  Render::GL::AnimationInputs anim{};
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_minimal(owner, ctx, profile, nullptr,
-                                             prep);
+  Render::Elephant::prepare_elephant_render(
+      owner, ctx, anim, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Minimal, prep);
 
   auto const requests = prep.bodies.requests();
   ASSERT_EQ(requests.size(), 1u);
@@ -373,7 +373,7 @@ TEST(ElephantPrepare, MinimalPreparationSnapsElephantBodyToTerrainHeight) {
               0.0001F);
 }
 
-TEST(ElephantPrepare, FullPreparationPopulatesVisibleElephantPose) {
+TEST(ElephantPrepare, FullPreparationEmitsWalkingShadowRequest) {
   ScopedFlatTerrain terrain(0.0F);
 
   Render::GL::ElephantRendererBase owner;
@@ -387,18 +387,20 @@ TEST(ElephantPrepare, FullPreparationPopulatesVisibleElephantPose) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_full(owner, ctx, anim, profile, nullptr,
-                                          nullptr, prep);
+  Render::Elephant::prepare_elephant_render(
+      owner, ctx, anim, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Full, prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  auto const &pose = rows[0].elephant_pose;
-  EXPECT_GT(pose.head_center.z(), 0.0F);
-  EXPECT_GT(pose.trunk_end.z(), pose.head_center.z());
-  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y());
+  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
+  auto const requests = prep.bodies.requests();
+  ASSERT_EQ(requests.size(), 1u);
+  EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Walk);
+  EXPECT_GT(requests[0].phase, 0.0F);
 }
 
-TEST(ElephantPrepare, FullStationaryPreparationPopulatesVisibleElephantPose) {
+TEST(ElephantPrepare, FullStationaryPreparationEmitsIdleShadowRequest) {
   ScopedFlatTerrain terrain(0.0F);
 
   Render::GL::ElephantRendererBase owner;
@@ -412,15 +414,17 @@ TEST(ElephantPrepare, FullStationaryPreparationPopulatesVisibleElephantPose) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_full(owner, ctx, anim, profile, nullptr,
-                                          nullptr, prep);
+  Render::Elephant::prepare_elephant_render(
+      owner, ctx, anim, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Full, prep);
 
   auto const rows = prep.bodies.rows();
   ASSERT_EQ(rows.size(), 1u);
-  auto const &pose = rows[0].elephant_pose;
-  EXPECT_GT(pose.head_center.z(), 0.0F);
-  EXPECT_GT(pose.trunk_end.z(), pose.head_center.z());
-  EXPECT_LT(pose.foot_pose_fl.y(), pose.barrel_center.y());
+  EXPECT_EQ(rows[0].spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
+  auto const requests = prep.bodies.requests();
+  ASSERT_EQ(requests.size(), 1u);
+  EXPECT_EQ(requests[0].state, Render::Creature::AnimationStateId::Idle);
+  EXPECT_GE(requests[0].phase, 0.0F);
 }
 
 TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {

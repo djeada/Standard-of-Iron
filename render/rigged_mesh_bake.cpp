@@ -451,6 +451,9 @@ void append_primitive_vertices(const PrimitiveInstance &prim,
     rv.normal_bone_local = {world_norm.x(), world_norm.y(), world_norm.z()};
     rv.tex_coord = v.tex_coord;
     rv.color_role = prim.color_role;
+    if (prim.shape == PrimitiveShape::Mesh && v.color_role != 0U) {
+      rv.color_role = v.color_role;
+    }
 
     if (two_bone) {
       float t = v.position[1] + 0.5F;

@@ -1,7 +1,5 @@
 #include "elephant_renderer_base.h"
-#include "lod.h"
 #include "prepare.h"
-#include "render_stats.h"
 
 #include "elephant_profile_data.h"
 
