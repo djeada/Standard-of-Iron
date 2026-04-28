@@ -171,7 +171,7 @@ struct LegResult {
     // Front legs lift higher for clearance and use shorter strides for balance;
     // rear legs push with longer strides to provide propulsion.
     float const stride_scale = is_front ? 0.52F : 0.68F;
-    float const lift_scale = is_front ? 0.90F : 0.70F;
+    float const lift_scale = is_front ? 1.05F : 0.85F;
     stride = std::sin(angle) * g.stride_swing * stride_scale;
     float const lift_raw = std::sin(angle);
     lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * lift_scale : 0.0F;
@@ -180,7 +180,7 @@ struct LegResult {
   QVector3D const shoulder(lateral_sign * d.body_width * 0.40F,
                            -d.body_height * 0.30F, forward_bias + stride);
   QVector3D const foot =
-      shoulder + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.3F);
+      shoulder + QVector3D(0.0F, -d.leg_length * 0.85F + lift, stride * 0.45F);
 
   return {shoulder, foot};
 }

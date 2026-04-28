@@ -552,6 +552,27 @@ TEST(ElephantSpecTest, MovingPoseBendsKneesDuringStride) {
   EXPECT_LT(pose.knee_bl.z(), rear_mid_z);
 }
 
+TEST(ElephantSpecTest, WalkFootLandsAheadOfShoulderDuringSwing) {
+  // The foot should land noticeably in front of the shoulder's z position
+  // during the swing phase of a walk, giving the elephant a reaching gait
+  // rather than vertical piston-like steps.
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+  Render::Elephant::ElephantSpecPose pose{};
+  Render::Elephant::ElephantPoseMotion motion{};
+  motion.phase = 0.25F;
+  motion.is_moving = true;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, motion, pose);
+
+  QVector3D const shoulder_fl =
+      pose.barrel_center + pose.shoulder_offset_pose_fl;
+
+  // Foot must be in front of (larger z than) the shoulder during forward swing.
+  EXPECT_GT(pose.foot_fl.z(), shoulder_fl.z());
+  // And the forward reach must be at least 10% of the stride swing extent.
+  EXPECT_GT(pose.foot_fl.z() - shoulder_fl.z(), dims.body_length * 0.02F);
+}
+
 TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   auto const dims = make_dims();
   auto const gait = make_gait();

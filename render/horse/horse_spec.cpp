@@ -114,8 +114,8 @@ struct horse_pose_profile {
   float rear_vertical_bias_scale{-0.44F};
   float front_longitudinal_bias_scale{0.12F};
   float rear_longitudinal_bias_scale{-0.15F};
-  float front_leg_length_scale{1.14F};
-  float rear_leg_length_scale{1.12F};
+  float front_leg_length_scale{0.96F};
+  float rear_leg_length_scale{0.96F};
   float leg_radius_scale{0.22F};
   float front_upper_radius_scale{1.70F};
   float rear_upper_radius_scale{1.85F};
@@ -364,7 +364,7 @@ auto compute_pose_leg(
           swing_sin * gait.stride_lift * (is_rear ? 0.14F : 0.06F);
       stride = forward_bias - stride_extent * (is_rear ? 0.56F : 0.60F) +
                stride_extent * (is_rear ? 0.94F : 0.98F) * t - swing_tuck;
-      lift = swing_sin * gait.stride_lift * (is_rear ? 1.44F : 1.12F);
+      lift = swing_sin * gait.stride_lift * (is_rear ? 1.65F : 1.35F);
     }
   }
 
@@ -501,7 +501,7 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   float const rear_upper_len = dims.leg_length * 0.62F;
   float const rear_lower_len = dims.leg_length * 0.55F;
   float const gait_bend =
-      motion.is_moving ? 1.0F + std::min(gait.stride_lift * 2.6F, 0.40F) : 1.0F;
+      motion.is_moving ? 1.0F + std::min(gait.stride_lift * 3.0F, 0.40F) : 1.0F;
   QVector3D const front_bend_hint(0.0F, dims.leg_length * 0.12F,
                                   dims.body_length * 0.26F * gait_bend);
   QVector3D const rear_bend_hint(0.0F, dims.leg_length * 0.18F,
