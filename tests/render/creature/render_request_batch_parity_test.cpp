@@ -161,16 +161,15 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidRangedAttack) {
   EXPECT_EQ(req.clip_variant, 0U);
 }
 
-TEST(CreatureRenderBatch, RequestMirrorsHorseAddByClip) {
+TEST(CreatureRenderBatch, RequestMirrorsHorseQuadrupedState) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Horse, 11U, 0.0F);
 
-  Render::Horse::HorseSpecPose pose{};
   Render::GL::HorseVariant variant{};
 
-  batch.add_horse(output, pose, variant, /*clip=*/4U, /*phase=*/0.25F);
-  batch.add_horse(output, pose, variant, /*clip=*/1U, /*phase=*/0.0F);
-  batch.add_horse(output, pose, variant, /*clip=*/0U, /*phase=*/0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Run, /*phase=*/0.25F);
+  batch.add_quadruped(output, variant, AnimationStateId::Walk, /*phase=*/0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Idle, /*phase=*/0.0F);
 
   ASSERT_EQ(batch.requests().size(), 3u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kHorseBase);
@@ -180,15 +179,14 @@ TEST(CreatureRenderBatch, RequestMirrorsHorseAddByClip) {
   EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.25F);
 }
 
-TEST(CreatureRenderBatch, RequestMirrorsElephantAddByClip) {
+TEST(CreatureRenderBatch, RequestMirrorsElephantQuadrupedState) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Elephant, 3U, 0.0F);
 
-  Render::Elephant::ElephantSpecPose pose{};
   Render::GL::ElephantVariant variant{};
 
-  batch.add_elephant(output, pose, variant, /*clip=*/2U, /*phase=*/0.7F);
-  batch.add_elephant(output, pose, variant, /*clip=*/0U, /*phase=*/0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Run, /*phase=*/0.7F);
+  batch.add_quadruped(output, variant, AnimationStateId::Idle, /*phase=*/0.0F);
 
   ASSERT_EQ(batch.requests().size(), 2u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kElephantBase);

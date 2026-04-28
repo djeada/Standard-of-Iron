@@ -11,6 +11,9 @@
 namespace Render::Creature::Bpat {
 class BpatBlob;
 }
+namespace Render::Creature::Snapshot {
+class SnapshotMeshBlob;
+}
 namespace Render::Creature::Pipeline {
 struct CreatureAsset;
 }
@@ -63,6 +66,9 @@ public:
   auto operator=(const SnapshotMeshCache &) -> SnapshotMeshCache & = delete;
 
   auto get_or_bake(const Key &key, const RiggedMeshEntry &source,
+                   std::uint32_t global_frame) -> const SnapshotMeshEntry *;
+  auto get_or_load(const Key &key,
+                   const Render::Creature::Snapshot::SnapshotMeshBlob &source,
                    std::uint32_t global_frame) -> const SnapshotMeshEntry *;
 
   void clear() { m_entries.clear(); }

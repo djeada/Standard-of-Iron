@@ -114,16 +114,16 @@ struct KnightExtras {
   QVector3D shield_color;
   QVector3D shield_trim_color;
   float sword_length = 0.80F;
-  float swordWidth = 0.065F;
-  float shieldRadius = 0.18F;
+  float sword_width = 0.065F;
+  float shield_radius = 0.18F;
   float shield_aspect = 1.0F;
 
   float guard_half_width = 0.12F;
-  float handleRadius = 0.016F;
+  float handle_radius = 0.016F;
   float pommel_radius = 0.045F;
   float blade_ricasso = 0.16F;
   float blade_taper_bias = 0.65F;
-  bool shieldCrossDecal = false;
+  bool shield_cross_decal = false;
   bool has_scabbard = true;
 };
 

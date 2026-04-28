@@ -27,11 +27,11 @@ public:
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle windStrength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle wind_strength{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle trimColor{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle trim_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle useTexture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
   };
 

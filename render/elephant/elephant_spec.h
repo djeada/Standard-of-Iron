@@ -20,9 +20,17 @@ namespace Render::Elephant {
 enum class ElephantBone : std::uint8_t {
   Root = 0,
   Body,
+  ShoulderFL,
+  KneeFL,
   FootFL,
+  ShoulderFR,
+  KneeFR,
   FootFR,
+  ShoulderBL,
+  KneeBL,
   FootBL,
+  ShoulderBR,
+  KneeBR,
   FootBR,
   Head,
   TrunkTip,
@@ -68,6 +76,11 @@ struct ElephantSpecPose {
   QVector3D shoulder_offset_pose_bl{};
   QVector3D shoulder_offset_pose_br{};
 
+  QVector3D knee_fl{};
+  QVector3D knee_fr{};
+  QVector3D knee_bl{};
+  QVector3D knee_br{};
+
   QVector3D foot_pose_fl{};
   QVector3D foot_pose_fr{};
   QVector3D foot_pose_bl{};
@@ -98,10 +111,10 @@ struct ElephantPoseMotion {
   Render::GL::CombatAnimPhase combat_phase{Render::GL::CombatAnimPhase::Idle};
 };
 
-void make_elephant_spec_pose_animated(const Render::GL::ElephantDimensions &dims,
-                                     const Render::GL::ElephantGait &gait,
-                                     const ElephantPoseMotion &motion,
-                                     ElephantSpecPose &out_pose) noexcept;
+void make_elephant_spec_pose_animated(
+    const Render::GL::ElephantDimensions &dims,
+    const Render::GL::ElephantGait &gait, const ElephantPoseMotion &motion,
+    ElephantSpecPose &out_pose) noexcept;
 
 inline constexpr std::size_t kElephantRoleCount = 10;
 

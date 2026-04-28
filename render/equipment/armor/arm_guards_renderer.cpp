@@ -128,16 +128,16 @@ void ArmGuardsRenderer::submit(const ArmGuardsConfig &config,
   QVector3D elbow_r = frames.shoulder_r.origin +
                       (frames.hand_r.origin - frames.shoulder_r.origin) * 0.55F;
 
-  renderArmGuard(config, ctx, elbow_l, frames.hand_l.origin, palette, batch);
-  renderArmGuard(config, ctx, elbow_r, frames.hand_r.origin, palette, batch);
+  render_arm_guard(config, ctx, elbow_l, frames.hand_l.origin, palette, batch);
+  render_arm_guard(config, ctx, elbow_r, frames.hand_r.origin, palette, batch);
 }
 
-void ArmGuardsRenderer::renderArmGuard(const ArmGuardsConfig &config,
-                                       const DrawContext &ctx,
-                                       const QVector3D &elbow,
-                                       const QVector3D &wrist,
-                                       std::span<const QVector3D> palette,
-                                       EquipmentBatch &batch) {
+void ArmGuardsRenderer::render_arm_guard(const ArmGuardsConfig &config,
+                                         const DrawContext &ctx,
+                                         const QVector3D &elbow,
+                                         const QVector3D &wrist,
+                                         std::span<const QVector3D> palette,
+                                         EquipmentBatch &batch) {
   float const arm_length = (wrist - elbow).length();
 
   if (arm_length < 0.01F) {

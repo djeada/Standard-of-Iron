@@ -336,13 +336,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const std::size_t instance_count =
           m_cylinderPipeline->m_cylinderScratch.size();
       if (instance_count > 0 &&
-          (m_cylinderPipeline->cylinderShader() != nullptr)) {
+          (m_cylinderPipeline->cylinder_shader() != nullptr)) {
         glDepthMask(GL_TRUE);
         if (polygon_offset_enabled) {
           glDisable(GL_POLYGON_OFFSET_FILL);
           polygon_offset_enabled = false;
         }
-        Shader *cylinder_shader = m_cylinderPipeline->cylinderShader();
+        Shader *cylinder_shader = m_cylinderPipeline->cylinder_shader();
         if (m_lastBoundShader != cylinder_shader) {
           cylinder_shader->use();
           m_lastBoundShader = cylinder_shader;
@@ -366,7 +366,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const FogInstanceData *instances = batch.instances;
       const std::size_t instance_count = batch.count;
       if ((instances != nullptr) && instance_count > 0 &&
-          (m_cylinderPipeline->fogShader() != nullptr)) {
+          (m_cylinderPipeline->fog_shader() != nullptr)) {
         m_cylinderPipeline->m_fogScratch.resize(instance_count);
         for (std::size_t idx = 0; idx < instance_count; ++idx) {
           BackendPipelines::CylinderPipeline::FogInstanceGpu gpu{};
@@ -381,7 +381,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           glDisable(GL_POLYGON_OFFSET_FILL);
           polygon_offset_enabled = false;
         }
-        Shader *fog_shader = m_cylinderPipeline->fogShader();
+        Shader *fog_shader = m_cylinderPipeline->fog_shader();
         if (m_lastBoundShader != fog_shader) {
           fog_shader->use();
           m_lastBoundShader = fog_shader;
@@ -881,22 +881,22 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               m_vegetationPipeline->m_firecampUniforms.time,
               firecamp.params.time);
         }
-        if (m_vegetationPipeline->m_firecampUniforms.flickerSpeed !=
+        if (m_vegetationPipeline->m_firecampUniforms.flicker_speed !=
             Shader::InvalidUniform) {
           firecamp_shader->set_uniform(
-              m_vegetationPipeline->m_firecampUniforms.flickerSpeed,
+              m_vegetationPipeline->m_firecampUniforms.flicker_speed,
               firecamp.params.flicker_speed);
         }
-        if (m_vegetationPipeline->m_firecampUniforms.flickerAmount !=
+        if (m_vegetationPipeline->m_firecampUniforms.flicker_amount !=
             Shader::InvalidUniform) {
           firecamp_shader->set_uniform(
-              m_vegetationPipeline->m_firecampUniforms.flickerAmount,
+              m_vegetationPipeline->m_firecampUniforms.flicker_amount,
               firecamp.params.flicker_amount);
         }
-        if (m_vegetationPipeline->m_firecampUniforms.glowStrength !=
+        if (m_vegetationPipeline->m_firecampUniforms.glow_strength !=
             Shader::InvalidUniform) {
           firecamp_shader->set_uniform(
-              m_vegetationPipeline->m_firecampUniforms.glowStrength,
+              m_vegetationPipeline->m_firecampUniforms.glow_strength,
               firecamp.params.glow_strength);
         }
         if (m_vegetationPipeline->m_firecampUniforms.camera_right !=
@@ -924,12 +924,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
               camera_forward);
         }
 
-        if (m_vegetationPipeline->m_firecampUniforms.fireTexture !=
+        if (m_vegetationPipeline->m_firecampUniforms.fire_texture !=
             Shader::InvalidUniform) {
           if (m_resources && (m_resources->white() != nullptr)) {
             m_resources->white()->bind(0);
             firecamp_shader->set_uniform(
-                m_vegetationPipeline->m_firecampUniforms.fireTexture, 0);
+                m_vegetationPipeline->m_firecampUniforms.fire_texture, 0);
           }
         }
 
@@ -1546,20 +1546,20 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         polygon_offset_enabled = false;
       }
 
-      bool const isShadowShader = (active_shader == m_shadowShader);
+      bool const is_shadow_shader = (active_shader == m_shadowShader);
       std::optional<DepthMaskScope> shadow_depth_scope;
       std::optional<BlendScope> shadow_blend_scope;
-      if (isShadowShader) {
+      if (is_shadow_shader) {
         shadow_depth_scope.emplace(false);
         shadow_blend_scope.emplace(true);
       } else {
         glDepthMask(GL_TRUE);
       }
 
-      bool const isTransparent = (!isShadowShader) && (it.alpha < 0.999F);
+      bool const is_transparent = (!is_shadow_shader) && (it.alpha < 0.999F);
       std::optional<DepthMaskScope> transparent_depth_scope;
       std::optional<BlendScope> transparent_blend_scope;
-      if (isTransparent) {
+      if (is_transparent) {
         transparent_depth_scope.emplace(false);
         transparent_blend_scope.emplace(true);
         glDepthFunc(GL_LEQUAL);
@@ -1572,7 +1572,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.time,
                                      m_animationTime);
           active_shader->set_uniform(
-              m_bannerPipeline->m_bannerUniforms.windStrength,
+              m_bannerPipeline->m_bannerUniforms.wind_strength,
               banner_wind_strength);
           m_lastBoundShader = active_shader;
         }
@@ -1587,13 +1587,13 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
                                      single.color);
 
-          QVector3D trimColor = single.color * 0.7F;
+          QVector3D trim_color = single.color * 0.7F;
           active_shader->set_uniform(
-              m_bannerPipeline->m_bannerUniforms.trimColor, trimColor);
+              m_bannerPipeline->m_bannerUniforms.trim_color, trim_color);
           active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.alpha,
                                      single.alpha);
           active_shader->set_uniform(
-              m_bannerPipeline->m_bannerUniforms.useTexture,
+              m_bannerPipeline->m_bannerUniforms.use_texture,
               single.texture != nullptr);
 
           Texture *tex_to_use =
@@ -1630,8 +1630,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const bool can_execute_prepared_batch =
           prepared.kind == PreparedBatchKind::MeshInstanced &&
           m_meshInstancingPipeline &&
-          m_meshInstancingPipeline->is_initialized() && !isTransparent &&
-          !isShadowShader && uniforms->instanced != Shader::InvalidUniform;
+          m_meshInstancingPipeline->is_initialized() && !is_transparent &&
+          !is_shadow_shader && uniforms->instanced != Shader::InvalidUniform;
 
       if (can_execute_prepared_batch) {
 
@@ -1693,7 +1693,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           single.mesh->draw();
         }
       }
-      if (isTransparent) {
+      if (is_transparent) {
         glDepthFunc(GL_LESS);
       }
       break;
@@ -1843,11 +1843,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       m_effectsPipeline->m_gridShader->set_uniform(
           m_effectsPipeline->m_gridUniforms.model, gc.model);
       m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.gridColor, gc.color);
+          m_effectsPipeline->m_gridUniforms.grid_color, gc.color);
       m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.lineColor, k_grid_line_color);
+          m_effectsPipeline->m_gridUniforms.line_color, k_grid_line_color);
       m_effectsPipeline->m_gridShader->set_uniform(
-          m_effectsPipeline->m_gridUniforms.cellSize, gc.cell_size);
+          m_effectsPipeline->m_gridUniforms.cell_size, gc.cell_size);
       m_effectsPipeline->m_gridShader->set_uniform(
           m_effectsPipeline->m_gridUniforms.thickness, gc.thickness);
 
@@ -1870,7 +1870,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_lastBoundShader = m_effectsPipeline->m_basicShader;
       }
       m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.useTexture, false);
+          m_effectsPipeline->m_basicUniforms.use_texture, false);
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.instanced, false);
       m_effectsPipeline->m_basicShader->set_uniform(
@@ -1921,7 +1921,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_lastBoundShader = m_effectsPipeline->m_basicShader;
       }
       m_effectsPipeline->m_basicShader->set_uniform(
-          m_effectsPipeline->m_basicUniforms.useTexture, false);
+          m_effectsPipeline->m_basicUniforms.use_texture, false);
       m_effectsPipeline->m_basicShader->set_uniform(
           m_effectsPipeline->m_basicUniforms.instanced, false);
       m_effectsPipeline->m_basicShader->set_uniform(

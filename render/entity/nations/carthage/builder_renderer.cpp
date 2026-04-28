@@ -596,28 +596,28 @@ public:
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto nextRand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t &s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
 
     uint32_t beard_seed = seed ^ 0x0EA101U;
-    if (style.force_beard || nextRand(beard_seed) < 0.75F) {
-      float const style_roll = nextRand(beard_seed);
+    if (style.force_beard || next_rand(beard_seed) < 0.75F) {
+      float const style_roll = next_rand(beard_seed);
       if (style_roll < 0.5F) {
         v.facial_hair.style = FacialHairStyle::ShortBeard;
-        v.facial_hair.length = 0.7F + nextRand(beard_seed) * 0.3F;
+        v.facial_hair.length = 0.7F + next_rand(beard_seed) * 0.3F;
       } else if (style_roll < 0.8F) {
         v.facial_hair.style = FacialHairStyle::FullBeard;
-        v.facial_hair.length = 0.8F + nextRand(beard_seed) * 0.4F;
+        v.facial_hair.length = 0.8F + next_rand(beard_seed) * 0.4F;
       } else {
         v.facial_hair.style = FacialHairStyle::Goatee;
-        v.facial_hair.length = 0.6F + nextRand(beard_seed) * 0.3F;
+        v.facial_hair.length = 0.6F + next_rand(beard_seed) * 0.3F;
       }
-      v.facial_hair.color = QVector3D(0.15F + nextRand(beard_seed) * 0.1F,
-                                      0.12F + nextRand(beard_seed) * 0.08F,
-                                      0.10F + nextRand(beard_seed) * 0.06F);
-      v.facial_hair.thickness = 0.8F + nextRand(beard_seed) * 0.2F;
+      v.facial_hair.color = QVector3D(0.15F + next_rand(beard_seed) * 0.1F,
+                                      0.12F + next_rand(beard_seed) * 0.08F,
+                                      0.10F + next_rand(beard_seed) * 0.06F);
+      v.facial_hair.thickness = 0.8F + next_rand(beard_seed) * 0.2F;
     }
   }
 

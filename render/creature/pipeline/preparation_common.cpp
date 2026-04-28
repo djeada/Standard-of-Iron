@@ -208,17 +208,6 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
                            palette[foot_br_idx].column(3).y()));
 }
 
-auto grounded_horse_contact_y(const Render::Horse::HorseSpecPose &pose,
-                              std::uint16_t clip_id,
-                              float phase) noexcept -> float {
-  if (auto const clip_contact = horse_clip_contact_y(clip_id, phase);
-      clip_contact.has_value()) {
-    return *clip_contact;
-  }
-  return std::min(std::min(pose.foot_fl.y(), pose.foot_fr.y()),
-                  std::min(pose.foot_bl.y(), pose.foot_br.y()));
-}
-
 auto palette_contact_y(CreatureKind kind,
                        std::span<const QMatrix4x4> palette) noexcept -> float {
   auto const bind_adjusted_y =
@@ -288,6 +277,14 @@ auto sample_terrain_height_or_fallback(float world_x, float world_z,
 
 auto model_world_origin(const QMatrix4x4 &model) noexcept -> QVector3D {
   return model.column(3).toVector3D();
+}
+
+auto make_runtime_prewarm_ctx(const Render::GL::DrawContext &ctx) noexcept
+    -> Render::GL::DrawContext {
+  Render::GL::DrawContext runtime_ctx = ctx;
+  runtime_ctx.template_prewarm = false;
+  runtime_ctx.allow_template_cache = false;
+  return runtime_ctx;
 }
 
 void ground_model_contact_to_surface(QMatrix4x4 &model, float local_contact_y,

@@ -68,10 +68,10 @@ public:
   struct FireCampUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle flickerSpeed{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle flickerAmount{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle glowStrength{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle fireTexture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle flicker_speed{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle flicker_amount{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle glow_strength{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fire_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_right{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle camera_forward{GL::Shader::InvalidUniform};
   } m_firecampUniforms;

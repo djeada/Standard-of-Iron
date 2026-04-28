@@ -94,7 +94,7 @@ struct PoseResult {
 template <typename Renderer> class PoseBuilder : public Renderer {
 public:
   auto build(uint32_t seed) -> PoseResult {
-    VariationParams variation = VariationParams::fromSeed(seed);
+    VariationParams variation = VariationParams::from_seed(seed);
     this->adjust_variation(DrawContext{}, seed, variation);
 
     const QVector3D prop_scale = this->get_proportion_scaling();

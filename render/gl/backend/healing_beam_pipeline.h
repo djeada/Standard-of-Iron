@@ -58,10 +58,10 @@ private:
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle progress{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle startPos{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle endPos{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle beamWidth{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle healColor{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle start_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle end_pos{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle beam_width{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle heal_color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
   };
 

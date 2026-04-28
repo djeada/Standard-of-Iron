@@ -15,7 +15,7 @@ public:
     return inst;
   }
 
-  auto getIndividualsPerUnit(TroopType unit_type) const -> int {
+  auto get_individuals_per_unit(TroopType unit_type) const -> int {
     auto it = m_individuals_per_unit.find(unit_type);
     if (it != m_individuals_per_unit.end()) {
       return it->second;
@@ -39,7 +39,7 @@ public:
     return 5.0F;
   }
 
-  auto getMaxUnitsPerRow(TroopType unit_type) const -> int {
+  auto get_max_units_per_row(TroopType unit_type) const -> int {
     auto it = m_maxUnitsPerRow.find(unit_type);
     if (it != m_maxUnitsPerRow.end()) {
       return it->second;
@@ -47,7 +47,7 @@ public:
     return 10;
   }
 
-  auto getSelectionRingSize(TroopType unit_type) const -> float {
+  auto get_selection_ring_size(TroopType unit_type) const -> float {
     auto it = m_selectionRingSize.find(unit_type);
     if (it != m_selectionRingSize.end()) {
       return it->second;
@@ -55,14 +55,14 @@ public:
     return 0.5F;
   }
 
-  auto getIndividualsPerUnit(const std::string &unit_type) const -> int {
-    return getIndividualsPerUnit(troop_typeFromString(unit_type));
+  auto get_individuals_per_unit(const std::string &unit_type) const -> int {
+    return get_individuals_per_unit(troop_typeFromString(unit_type));
   }
 
-  auto getIndividualsPerUnit(SpawnType spawn_type) const -> int {
+  auto get_individuals_per_unit(SpawnType spawn_type) const -> int {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getIndividualsPerUnit(*troop_type_opt);
+      return get_individuals_per_unit(*troop_type_opt);
     }
     return 1;
   }
@@ -91,31 +91,31 @@ public:
     return 5.0F;
   }
 
-  auto getMaxUnitsPerRow(const std::string &unit_type) const -> int {
-    return getMaxUnitsPerRow(troop_typeFromString(unit_type));
+  auto get_max_units_per_row(const std::string &unit_type) const -> int {
+    return get_max_units_per_row(troop_typeFromString(unit_type));
   }
 
-  auto getMaxUnitsPerRow(SpawnType spawn_type) const -> int {
+  auto get_max_units_per_row(SpawnType spawn_type) const -> int {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getMaxUnitsPerRow(*troop_type_opt);
+      return get_max_units_per_row(*troop_type_opt);
     }
     return 10;
   }
 
-  auto getSelectionRingSize(const std::string &unit_type) const -> float {
-    return getSelectionRingSize(troop_typeFromString(unit_type));
+  auto get_selection_ring_size(const std::string &unit_type) const -> float {
+    return get_selection_ring_size(troop_typeFromString(unit_type));
   }
 
-  auto getSelectionRingSize(SpawnType spawn_type) const -> float {
+  auto get_selection_ring_size(SpawnType spawn_type) const -> float {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getSelectionRingSize(*troop_type_opt);
+      return get_selection_ring_size(*troop_type_opt);
     }
     return 0.5F;
   }
 
-  auto getSelectionRingGroundOffset(TroopType unit_type) const -> float {
+  auto get_selection_ring_ground_offset(TroopType unit_type) const -> float {
     auto it = m_selectionRingGroundOffset.find(unit_type);
     if (it != m_selectionRingGroundOffset.end()) {
       return it->second;
@@ -129,15 +129,15 @@ public:
     return 0.0F;
   }
 
-  auto
-  getSelectionRingGroundOffset(const std::string &unit_type) const -> float {
-    return getSelectionRingGroundOffset(troop_typeFromString(unit_type));
+  auto get_selection_ring_ground_offset(const std::string &unit_type) const
+      -> float {
+    return get_selection_ring_ground_offset(troop_typeFromString(unit_type));
   }
 
-  auto getSelectionRingGroundOffset(SpawnType spawn_type) const -> float {
+  auto get_selection_ring_ground_offset(SpawnType spawn_type) const -> float {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getSelectionRingGroundOffset(*troop_type_opt);
+      return get_selection_ring_ground_offset(*troop_type_opt);
     }
     return 0.0F;
   }

@@ -34,7 +34,7 @@ protected:
     pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
 
     anim_ctx = HumanoidAnimationContext{};
-    anim_ctx.variation = VariationParams::fromSeed(12345);
+    anim_ctx.variation = VariationParams::from_seed(12345);
   }
 
   HumanoidPose pose;

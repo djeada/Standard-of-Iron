@@ -12,6 +12,8 @@
 
 namespace Render::Creature::Pipeline {
 
+struct CreatureVisualDefinition;
+
 inline constexpr std::size_t kMaxCreatureBones = 24;
 
 using BindPaletteFn = std::span<const QMatrix4x4> (*)() noexcept;
@@ -34,6 +36,9 @@ struct CreatureAsset {
   std::uint8_t max_bones{0};
   BindPaletteFn bind_palette{nullptr};
   FillRoleColorsFn fill_role_colors{nullptr};
+  std::uint32_t snapshot_mesh_species_id{0xFFFFFFFFu};
+  std::uint8_t snapshot_mesh_lod_mask{0};
+  const CreatureVisualDefinition *visual_definition{nullptr};
 };
 
 class CreatureAssetRegistry {

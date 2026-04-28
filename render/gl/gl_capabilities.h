@@ -60,13 +60,13 @@ public:
     qInfo() << "GL_ARB_uniform_buffer_object:"
             << extensions.contains("GL_ARB_uniform_buffer_object");
 
-    const bool hasPersistentMapping =
+    const bool has_persistent_mapping =
         (format.majorVersion() > 4 ||
          (format.majorVersion() == 4 && format.minorVersion() >= 4)) ||
         extensions.contains("GL_ARB_buffer_storage");
 
     qInfo() << "Persistent Buffer Mapping:"
-            << (hasPersistentMapping ? "Supported" : "Not Supported");
+            << (has_persistent_mapping ? "Supported" : "Not Supported");
 
     qInfo() << "==================================";
   }
