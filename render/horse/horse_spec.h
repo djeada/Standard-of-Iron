@@ -98,6 +98,7 @@ struct HorsePoseMotion {
   float phase{0.0F};
   float bob{0.0F};
   bool is_moving{false};
+  bool is_fighting{false};
 };
 void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
                                    const Render::GL::HorseGait &gait,

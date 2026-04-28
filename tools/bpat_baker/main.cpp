@@ -26,12 +26,14 @@
 #include <QVector3D>
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <numbers>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -327,14 +329,19 @@ struct HorseClipSpec {
   float fps;
   bool loops;
   bool is_moving;
+  bool is_fighting{false};
+  float bob_scale{0.0F};
 };
 
-constexpr std::array<HorseClipSpec, 5> kHorseClips{{
-    {"idle", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false},
-    {"walk", Render::GL::GaitType::WALK, 24U, 24.0F, true, true},
-    {"trot", Render::GL::GaitType::TROT, 16U, 24.0F, true, true},
-    {"canter", Render::GL::GaitType::CANTER, 16U, 24.0F, true, true},
-    {"gallop", Render::GL::GaitType::GALLOP, 12U, 24.0F, true, true},
+constexpr std::array<HorseClipSpec, 6> kHorseClips{{
+    {"idle", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false, false, 0.0F},
+    {"walk", Render::GL::GaitType::WALK, 24U, 24.0F, true, true, false, 0.50F},
+    {"trot", Render::GL::GaitType::TROT, 16U, 24.0F, true, true, false, 0.85F},
+    {"canter", Render::GL::GaitType::CANTER, 16U, 24.0F, true, true, false,
+     1.00F},
+    {"gallop", Render::GL::GaitType::GALLOP, 12U, 24.0F, true, true, false,
+     1.12F},
+    {"fight", Render::GL::GaitType::IDLE, 24U, 24.0F, true, false, true, 0.0F},
 }};
 
 void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
@@ -348,8 +355,15 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
 
   Render::Horse::HorsePoseMotion motion{};
   motion.phase = phase;
-  motion.bob = 0.0F;
   motion.is_moving = clip.is_moving;
+  motion.is_fighting = clip.is_fighting;
+  if (!clip.is_fighting) {
+    float const amp =
+        clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
+    float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
+    motion.bob =
+        std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
+  }
 
   Render::Horse::HorseSpecPose pose{};
   Render::Horse::make_horse_spec_pose_animated(dims, gait, motion, pose);
@@ -460,15 +474,19 @@ struct ElephantClipSpec {
   bool loops;
   bool is_moving;
   Render::GL::ElephantGait gait;
+  bool is_fighting{false};
+  float bob_scale{0.0F};
 };
 
-const std::array<ElephantClipSpec, 3> kElephantClips{{
+const std::array<ElephantClipSpec, 4> kElephantClips{{
     {"idle", 24U, 24.0F, true, false,
-     Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F}},
+     Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F}, false, 0.0F},
     {"walk", 24U, 24.0F, true, true,
-     Render::GL::ElephantGait{1.2F, 0.25F, 0.0F, 0.30F, 0.10F}},
+     Render::GL::ElephantGait{1.2F, 0.25F, 0.0F, 0.30F, 0.10F}, false, 0.62F},
     {"run", 16U, 24.0F, true, true,
-     Render::GL::ElephantGait{0.6F, 0.5F, 0.5F, 0.70F, 0.25F}},
+     Render::GL::ElephantGait{0.6F, 0.5F, 0.5F, 0.70F, 0.25F}, false, 0.75F},
+    {"fight", 24U, 24.0F, true, false,
+     Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F}, true, 0.0F},
 }};
 
 void bake_elephant_clip_frame(const ElephantClipSpec &clip,
@@ -480,10 +498,16 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
 
   Render::Elephant::ElephantPoseMotion motion{};
   motion.phase = phase;
-  motion.bob = 0.0F;
   motion.is_moving = clip.is_moving;
-  motion.is_fighting = false;
+  motion.is_fighting = clip.is_fighting;
   motion.anim_time = phase * clip.gait.cycle_time;
+  if (!clip.is_fighting) {
+    float const amp =
+        clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
+    float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
+    motion.bob =
+        std::sin(phase * 2.0F * std::numbers::pi_v<float>) * amp * scale;
+  }
 
   Render::Elephant::ElephantSpecPose pose{};
   Render::Elephant::make_elephant_spec_pose_animated(dims, clip.gait, motion,

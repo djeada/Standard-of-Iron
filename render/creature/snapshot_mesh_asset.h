@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../render_request.h"
-#include "../bpat/bpat_format.h"
-#include "../../rigged_mesh.h"
+#include "render_request.h"
+#include "bpat/bpat_format.h"
+#include "../rigged_mesh.h"
 
 #include <array>
 #include <cstddef>

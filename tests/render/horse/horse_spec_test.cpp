@@ -349,3 +349,74 @@ TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {
 
   EXPECT_GT(trot_bend, walk_bend * 1.15F);
 }
+
+TEST(HorseSpecTest, FightPoseRaisesFrontFeetHigherThanIdlePose) {
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+
+  // Phase 0.55 is in the "hold high" window (0.45-0.65) of the fight cycle.
+  // FL phase = motion.phase + front_leg_phase = 0.55 + 0.0 = 0.55 → hold high
+  Render::Horse::HorseSpecPose fight_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, /*is_fighting=*/true},
+      fight_pose);
+
+  Render::Horse::HorseSpecPose idle_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, false},
+      idle_pose);
+
+  // Front-left foot must be significantly higher during fight peak
+  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
+            dims.leg_length * 0.25F);
+
+  // Rear feet stay grounded during fight
+  EXPECT_NEAR(fight_pose.foot_bl.y(), idle_pose.foot_bl.y(),
+              dims.leg_length * 0.05F);
+  EXPECT_NEAR(fight_pose.foot_br.y(), idle_pose.foot_br.y(),
+              dims.leg_length * 0.05F);
+}
+
+TEST(HorseSpecTest, FightPoseStrikePhaseLowersFrontFeetBelowPeak) {
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+
+  // Phase 0.55 = peak (hold high), phase 0.72 = mid-strike (dropping)
+  Render::Horse::HorseSpecPose peak_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, /*is_fighting=*/true},
+      peak_pose);
+
+  Render::Horse::HorseSpecPose strike_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.72F, 0.0F, false, /*is_fighting=*/true},
+      strike_pose);
+
+  // During strike phase the foot drops below the peak
+  EXPECT_LT(strike_pose.foot_fl.y(), peak_pose.foot_fl.y());
+}
+
+TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
+  auto dims = make_horse_dims();
+  dims.move_bob_amplitude = 0.030F;
+  auto gait =
+      Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
+
+  // At phase=0.0 (sin=0) the bob is zero; at phase=0.25 (sin=1.0) it is max.
+  Render::Horse::HorseSpecPose pose_zero;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true, false},
+      pose_zero);
+
+  float const max_bob = dims.move_bob_amplitude * 0.85F;
+  Render::Horse::HorseSpecPose pose_peak;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.25F, max_bob, true, false},
+      pose_peak);
+
+  // The barrel center should be higher at bob peak than at zero
+  EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
+}

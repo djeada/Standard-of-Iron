@@ -259,3 +259,58 @@ TEST(ElephantSpecTest, MovingPoseBendsKneesDuringStride) {
   EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
   EXPECT_LT(pose.knee_bl.z(), rear_mid_z);
 }
+
+TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+
+  // Phase 0.55 is in the "hold high" window (0.45-0.65) of the fight cycle
+  Render::Elephant::ElephantSpecPose fight_pose{};
+  Render::Elephant::ElephantPoseMotion fight_motion{};
+  fight_motion.phase = 0.55F;
+  fight_motion.anim_time = 0.55F * 1.15F;
+  fight_motion.is_fighting = true;
+  fight_motion.combat_phase = Render::GL::CombatAnimPhase::Idle;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
+                                                     fight_pose);
+
+  Render::Elephant::ElephantSpecPose idle_pose{};
+  Render::Elephant::ElephantPoseMotion idle_motion{};
+  idle_motion.phase = 0.55F;
+  idle_motion.is_fighting = false;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
+                                                     idle_pose);
+
+  // Feet must be raised during fight peak
+  EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
+            dims.leg_length * 0.10F);
+}
+
+TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
+  auto dims = make_dims();
+  dims.move_bob_amplitude = 0.06F;
+  Render::GL::ElephantGait walk{1.2F, 0.25F, 0.0F, 0.30F, 0.10F};
+
+  // Phase 0.0 → sin = 0, so bob = 0
+  Render::Elephant::ElephantSpecPose pose_zero{};
+  Render::Elephant::ElephantPoseMotion motion_zero{};
+  motion_zero.phase = 0.0F;
+  motion_zero.anim_time = 0.0F;
+  motion_zero.is_moving = true;
+  motion_zero.bob = 0.0F;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, walk, motion_zero,
+                                                     pose_zero);
+
+  // Phase 0.25 → sin(π/2)=1, peak bob
+  float const peak_bob = dims.move_bob_amplitude * 0.62F;
+  Render::Elephant::ElephantSpecPose pose_peak{};
+  Render::Elephant::ElephantPoseMotion motion_peak{};
+  motion_peak.phase = 0.25F;
+  motion_peak.anim_time = 0.25F * 1.2F;
+  motion_peak.is_moving = true;
+  motion_peak.bob = peak_bob;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, walk, motion_peak,
+                                                     pose_peak);
+
+  EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
+}

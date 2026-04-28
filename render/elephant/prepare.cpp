@@ -22,8 +22,11 @@ namespace Render::Elephant {
 namespace {
 
 [[nodiscard]] inline auto
-elephant_clip_for_motion(bool is_moving,
-                         bool is_running) noexcept -> std::uint16_t {
+elephant_clip_for_motion(bool is_moving, bool is_running,
+                         bool is_fighting) noexcept -> std::uint16_t {
+  if (is_fighting) {
+    return 3U;
+  }
   if (!is_moving) {
     return 0U;
   }
@@ -158,7 +161,7 @@ void prepare_elephant_full(
   graph_output.spec = owner.visual_spec();
   graph_output.seed = 0U;
   std::uint16_t const eleph_clip_full =
-      elephant_clip_for_motion(rm.is_moving, anim.is_running);
+      elephant_clip_for_motion(rm.is_moving, anim.is_running, rm.is_fighting);
   out.bodies.add_elephant(graph_output, pose, v, eleph_clip_full, rm.phase);
 }
 
