@@ -70,6 +70,12 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &ArenaViewport::setWireframeEnabled);
   connect(m_terrain_panel, &TerrainPanel::normalsToggled, m_viewport,
           &ArenaViewport::setNormalsOverlayEnabled);
+  connect(m_terrain_panel, &TerrainPanel::groundTypeChanged, m_viewport,
+          &ArenaViewport::setGroundType);
+  connect(m_terrain_panel, &TerrainPanel::rainToggled, m_viewport,
+          &ArenaViewport::setRainEnabled);
+  connect(m_terrain_panel, &TerrainPanel::rainIntensityChanged, m_viewport,
+          &ArenaViewport::setRainIntensity);
 
   connect(m_unit_panel, &UnitPanel::spawnUnitRequested, m_viewport,
           &ArenaViewport::spawnUnit);
