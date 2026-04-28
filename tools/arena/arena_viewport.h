@@ -1,5 +1,6 @@
 #pragma once
 
+#include "game/map/terrain.h"
 #include "game/systems/nation_id.h"
 #include "game/units/troop_type.h"
 
@@ -58,6 +59,9 @@ public slots:
   void setTerrainFrequency(float value);
   void setWireframeEnabled(bool enabled);
   void setNormalsOverlayEnabled(bool enabled);
+  void setGroundType(const QString &groundType);
+  void setRainEnabled(bool enabled);
+  void setRainIntensity(float intensity);
 
   void setSpawnOwner(int ownerId);
   void setSpawnNation(const QString &nationId);
@@ -117,10 +121,12 @@ private:
   void draw_selection_marquee(QPainter &painter);
   void draw_terrain_normals(QPainter &painter);
   void draw_pose_overlay(QPainter &painter);
+  void draw_stats_overlay(QPainter &painter);
 
   QTimer m_frameTimer;
   QElapsedTimer m_frameClock;
   TerrainSettings m_terrain_settings;
+  Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
   QString m_animation_name = QStringLiteral("Idle");
 
   std::unique_ptr<Engine::Core::World> m_world;
@@ -150,4 +156,5 @@ private:
   bool m_pose_overlay_enabled = false;
   bool m_gl_initialized = false;
   float m_default_unit_speed = 2.2F;
+  float m_fps = 0.0F;
 };
