@@ -52,10 +52,6 @@ horse_clip_contact_y(std::uint16_t clip_id,
                      float phase) noexcept -> std::optional<float>;
 
 [[nodiscard]] auto
-grounded_horse_contact_y(const Render::Horse::HorseSpecPose &pose,
-                         std::uint16_t clip_id, float phase) noexcept -> float;
-
-[[nodiscard]] auto
 palette_contact_y(CreatureKind kind,
                   std::span<const QMatrix4x4> palette) noexcept -> float;
 
@@ -65,6 +61,9 @@ sample_terrain_height_or_fallback(float world_x, float world_z,
 
 [[nodiscard]] auto
 model_world_origin(const QMatrix4x4 &model) noexcept -> QVector3D;
+
+[[nodiscard]] auto make_runtime_prewarm_ctx(
+    const Render::GL::DrawContext &ctx) noexcept -> Render::GL::DrawContext;
 
 void ground_model_contact_to_surface(
     QMatrix4x4 &model, float local_contact_y, float y_scale = 1.0F,

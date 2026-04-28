@@ -110,9 +110,9 @@ constexpr float kEarInnerR = 0.55F;
 constexpr float kEarInnerG = 0.45F;
 constexpr float kEarInnerB = 0.42F;
 
-constexpr float kTuskR = 0.95F;
-constexpr float kTuskG = 0.92F;
-constexpr float kTuskB = 0.85F;
+constexpr float kTuskR = 1.0F;
+constexpr float kTuskG = 1.0F;
+constexpr float kTuskB = 1.0F;
 
 constexpr float kToenailR = 0.35F;
 constexpr float kToenailG = 0.32F;

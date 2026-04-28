@@ -23,9 +23,9 @@ public:
   struct GridUniforms {
     GL::Shader::UniformHandle mvp{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle gridColor{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle lineColor{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle cellSize{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle grid_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle line_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle cell_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle thickness{GL::Shader::InvalidUniform};
   };
 
@@ -34,7 +34,7 @@ public:
     GL::Shader::UniformHandle model{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle texture{GL::Shader::InvalidUniform};
-    GL::Shader::UniformHandle useTexture{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle use_texture{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle color{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle alpha{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};

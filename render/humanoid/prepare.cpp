@@ -94,10 +94,10 @@ auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
     auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr) {
       params.individuals_per_unit =
-          Game::Units::TroopConfig::instance().getIndividualsPerUnit(
+          Game::Units::TroopConfig::instance().get_individuals_per_unit(
               unit->spawn_type);
       params.max_per_row =
-          Game::Units::TroopConfig::instance().getMaxUnitsPerRow(
+          Game::Units::TroopConfig::instance().get_max_units_per_row(
               unit->spawn_type);
       switch (unit->spawn_type) {
       case Game::Units::SpawnType::MountedKnight:
@@ -523,7 +523,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     DrawContext inst_ctx = ctx;
     inst_ctx.model = inst_model;
 
-    VariationParams variation = VariationParams::fromSeed(inst_seed);
+    VariationParams variation = VariationParams::from_seed(inst_seed);
     owner.adjust_variation(inst_ctx, inst_seed, variation);
     if (anim.is_running) {
       variation.walk_speed_mult *= 1.25F;

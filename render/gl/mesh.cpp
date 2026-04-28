@@ -4,7 +4,9 @@
 #include <GL/gl.h>
 #include <QDebug>
 #include <QOpenGLFunctions_3_3_Core>
+#include <cstddef>
 #include <memory>
+#include <qopenglext.h>
 #include <vector>
 
 namespace Render::GL {
@@ -34,8 +36,24 @@ void Mesh::setup_buffers() {
 
   m_ebo->set_data(m_indices);
 
-  std::vector<int> const layout = {Vec3, Vec3, Vec2};
-  m_vao->add_vertexBuffer(*m_vbo, layout);
+  constexpr GLsizei k_stride = sizeof(Vertex);
+  constexpr auto offset_of = [](auto member_ptr) -> std::size_t {
+    return reinterpret_cast<std::size_t>(
+        &(reinterpret_cast<Vertex const *>(0)->*member_ptr));
+  };
+  auto const pos_off = offset_of(&Vertex::position);
+  auto const norm_off = offset_of(&Vertex::normal);
+  auto const tex_off = offset_of(&Vertex::tex_coord);
+
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, k_stride,
+                        reinterpret_cast<void *>(pos_off));
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, k_stride,
+                        reinterpret_cast<void *>(norm_off));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, k_stride,
+                        reinterpret_cast<void *>(tex_off));
   m_vao->set_index_buffer(*m_ebo);
 
   m_vao->unbind();
@@ -62,9 +80,9 @@ auto Mesh::prepare_draw(const char *caller_name) -> bool {
 
 #ifndef NDEBUG
   initializeOpenGLFunctions();
-  GLenum preErr = glGetError();
-  if (preErr != GL_NO_ERROR) {
-    qWarning() << caller_name << "pre-draw GL error" << preErr << "vao"
+  GLenum pre_err = glGetError();
+  if (pre_err != GL_NO_ERROR) {
+    qWarning() << caller_name << "pre-draw GL error" << pre_err << "vao"
                << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
   }
 #endif

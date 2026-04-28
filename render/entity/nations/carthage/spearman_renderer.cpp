@@ -110,7 +110,7 @@ struct SpearmanExtras {
   QVector3D spearhead_color;
   float spear_length = 1.20F;
   float spear_shaft_radius = 0.020F;
-  float spearheadLength = 0.18F;
+  float spearhead_length = 0.18F;
 };
 
 class SpearmanRenderer : public HumanoidRendererBase {
@@ -274,7 +274,7 @@ public:
     auto const &style = resolve_style(ctx);
     apply_palette_overrides(style, team_tint, v);
 
-    auto nextRand = [](uint32_t &s) -> float {
+    auto next_rand = [](uint32_t &s) -> float {
       s = s * 1664525U + 1013904223U;
       return float(s & 0x7FFFFFU) / float(0x7FFFFFU);
     };
@@ -282,44 +282,44 @@ public:
     uint32_t beard_seed = seed ^ 0xBEEFFAU;
     bool wants_beard = style.force_beard;
     if (!wants_beard) {
-      float const beard_roll = nextRand(beard_seed);
+      float const beard_roll = next_rand(beard_seed);
       wants_beard = (beard_roll < 0.90F);
     }
 
     if (wants_beard) {
-      float const style_roll = nextRand(beard_seed);
+      float const style_roll = next_rand(beard_seed);
 
       if (style_roll < 0.55F) {
         v.facial_hair.style = FacialHairStyle::FullBeard;
-        v.facial_hair.length = 1.0F + nextRand(beard_seed) * 0.7F;
+        v.facial_hair.length = 1.0F + next_rand(beard_seed) * 0.7F;
       } else if (style_roll < 0.80F) {
         v.facial_hair.style = FacialHairStyle::LongBeard;
-        v.facial_hair.length = 1.3F + nextRand(beard_seed) * 0.9F;
+        v.facial_hair.length = 1.3F + next_rand(beard_seed) * 0.9F;
       } else {
         v.facial_hair.style = FacialHairStyle::ShortBeard;
-        v.facial_hair.length = 0.9F + nextRand(beard_seed) * 0.5F;
+        v.facial_hair.length = 0.9F + next_rand(beard_seed) * 0.5F;
       }
 
-      float const color_roll = nextRand(beard_seed);
+      float const color_roll = next_rand(beard_seed);
       if (color_roll < 0.60F) {
-        v.facial_hair.color = QVector3D(0.18F + nextRand(beard_seed) * 0.10F,
-                                        0.14F + nextRand(beard_seed) * 0.08F,
-                                        0.10F + nextRand(beard_seed) * 0.06F);
+        v.facial_hair.color = QVector3D(0.18F + next_rand(beard_seed) * 0.10F,
+                                        0.14F + next_rand(beard_seed) * 0.08F,
+                                        0.10F + next_rand(beard_seed) * 0.06F);
       } else if (color_roll < 0.85F) {
-        v.facial_hair.color = QVector3D(0.30F + nextRand(beard_seed) * 0.12F,
-                                        0.24F + nextRand(beard_seed) * 0.10F,
-                                        0.16F + nextRand(beard_seed) * 0.08F);
+        v.facial_hair.color = QVector3D(0.30F + next_rand(beard_seed) * 0.12F,
+                                        0.24F + next_rand(beard_seed) * 0.10F,
+                                        0.16F + next_rand(beard_seed) * 0.08F);
       } else {
-        v.facial_hair.color = QVector3D(0.35F + nextRand(beard_seed) * 0.10F,
-                                        0.20F + nextRand(beard_seed) * 0.08F,
-                                        0.12F + nextRand(beard_seed) * 0.06F);
+        v.facial_hair.color = QVector3D(0.35F + next_rand(beard_seed) * 0.10F,
+                                        0.20F + next_rand(beard_seed) * 0.08F,
+                                        0.12F + next_rand(beard_seed) * 0.06F);
       }
 
-      v.facial_hair.thickness = 0.95F + nextRand(beard_seed) * 0.30F;
-      v.facial_hair.coverage = 0.80F + nextRand(beard_seed) * 0.20F;
+      v.facial_hair.thickness = 0.95F + next_rand(beard_seed) * 0.30F;
+      v.facial_hair.coverage = 0.80F + next_rand(beard_seed) * 0.20F;
 
-      if (nextRand(beard_seed) < 0.12F) {
-        v.facial_hair.greyness = 0.12F + nextRand(beard_seed) * 0.30F;
+      if (next_rand(beard_seed) < 0.12F) {
+        v.facial_hair.greyness = 0.12F + next_rand(beard_seed) * 0.30F;
       } else {
         v.facial_hair.greyness = 0.0F;
       }

@@ -10,12 +10,12 @@
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
 #include "creature/bpat/bpat_registry.h"
+#include "creature/quadruped/render_stats.h"
+#include "creature/snapshot_mesh_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
-#include "elephant/lod.h"
-#include "elephant/render_stats.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "game/core/component.h"
@@ -30,7 +30,6 @@
 #include "graphics_settings.h"
 #include "horse/dimensions.h"
 #include "horse/horse_renderer_base.h"
-#include "horse/render_stats.h"
 #include "humanoid/cache_control.h"
 #include "humanoid/humanoid_renderer_base.h"
 #include "humanoid/render_stats.h"
@@ -153,6 +152,8 @@ auto Renderer::initialize() -> bool {
         << QString::fromStdString(std::string(
                Render::Creature::Bpat::BpatRegistry::instance().last_error()));
   }
+  (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
+      "assets/creatures");
   return true;
 }
 
@@ -745,9 +746,9 @@ void Renderer::enqueue_selection_ring(
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
       int const individuals_per_unit =
-          config.getIndividualsPerUnit(unit_comp->spawn_type);
+          config.get_individuals_per_unit(unit_comp->spawn_type);
       int const max_units_per_row =
-          config.getMaxUnitsPerRow(unit_comp->spawn_type);
+          config.get_max_units_per_row(unit_comp->spawn_type);
       std::uint32_t layout_seed =
           static_cast<std::uint32_t>(unit_comp->owner_id) * 2654435761U;
       if (entity != nullptr) {
@@ -779,9 +780,9 @@ void Renderer::enqueue_selection_ring(
                               transform->scale.z)});
     } else {
 
-      ring_size = config.getSelectionRingSize(unit_comp->spawn_type);
+      ring_size = config.get_selection_ring_size(unit_comp->spawn_type);
       ground_offset =
-          config.getSelectionRingGroundOffset(unit_comp->spawn_type);
+          config.get_selection_ring_ground_offset(unit_comp->spawn_type);
     }
   }
   if (transform != nullptr) {
@@ -923,17 +924,17 @@ void Renderer::render_world(Engine::Core::World *world) {
   auto renderable_entities =
       world->get_entities_with<Engine::Core::RenderableComponent>();
 
-  const auto &gfxSettings = Render::GraphicsSettings::instance();
-  const auto &batch_config = gfxSettings.batching_config();
+  const auto &gfx_settings = Render::GraphicsSettings::instance();
+  const auto &batch_config = gfx_settings.batching_config();
 
-  float cameraHeight = 0.0F;
+  float camera_height = 0.0F;
   if (m_camera != nullptr) {
-    cameraHeight = m_camera->get_position().y();
+    camera_height = m_camera->get_position().y();
   }
 
   ++m_frame_counter;
 
-  int visibleUnitCount = 0;
+  int visible_unit_count = 0;
   std::vector<UnitRenderEntry> unit_entries;
   std::vector<RenderEntry> building_entries;
   std::vector<RenderEntry> other_entries;
@@ -989,7 +990,7 @@ void Renderer::render_world(Engine::Core::World *world) {
                                  cached.transform->position.y,
                                  cached.transform->position.z);
         if (m_camera->is_in_frustum(unit_pos, 4.0F)) {
-          ++visibleUnitCount;
+          ++visible_unit_count;
         }
 
         float const cull_radius = get_unit_cull_radius(unit_comp->spawn_type);
@@ -1061,14 +1062,14 @@ void Renderer::render_world(Engine::Core::World *world) {
   m_unit_render_cache.prune(m_frame_counter);
   m_model_matrix_cache.prune(m_frame_counter);
 
-  auto &battleOptimizer = Render::BattleRenderOptimizer::instance();
-  battleOptimizer.set_visible_unit_count(visibleUnitCount);
-  uint32_t optimizer_frame = battleOptimizer.frame_counter();
+  auto &battle_optimizer = Render::BattleRenderOptimizer::instance();
+  battle_optimizer.set_visible_unit_count(visible_unit_count);
+  uint32_t optimizer_frame = battle_optimizer.frame_counter();
 
   float batching_ratio =
-      gfxSettings.calculate_batching_ratio(visibleUnitCount, cameraHeight);
+      gfx_settings.calculate_batching_ratio(visible_unit_count, camera_height);
 
-  float batching_boost = battleOptimizer.get_batching_boost();
+  float batching_boost = battle_optimizer.get_batching_boost();
   batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
   PrimitiveBatcher batcher;
@@ -1076,11 +1077,11 @@ void Renderer::render_world(Engine::Core::World *world) {
     batcher.reserve(2000, 4000, 500);
   }
 
-  float fullShaderMaxDistanceSq =
+  float full_shader_max_distance_sq =
       Render::Pipeline::compute_full_detail_max_distance_sq(
           batching_ratio, batch_config.force_batching);
 
-  BatchingSubmitter batchSubmitter(this, &batcher);
+  BatchingSubmitter batch_submitter(this, &batcher);
 
   ResourceManager *res = resources();
 
@@ -1151,9 +1152,9 @@ void Renderer::render_world(Engine::Core::World *world) {
     float const outer_alpha = 0.07F * eased;
 
     int shadow_layers = 3;
-    if ((visibleUnitCount > 420) || (distance_sq > 1200.0F)) {
+    if ((visible_unit_count > 420) || (distance_sq > 1200.0F)) {
       shadow_layers = 1;
-    } else if ((visibleUnitCount > 260) || (distance_sq > 600.0F)) {
+    } else if ((visible_unit_count > 260) || (distance_sq > 600.0F)) {
       shadow_layers = 2;
     }
 
@@ -1179,7 +1180,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       continue;
     }
 
-    bool should_update_temporal = battleOptimizer.should_render_unit(
+    bool should_update_temporal = battle_optimizer.should_render_unit(
         entry.entity_id, entry.moving, entry.selected, entry.hovered);
 
     const QMatrix4x4 &model_matrix = entry.model_matrix;
@@ -1195,7 +1196,7 @@ void Renderer::render_world(Engine::Core::World *world) {
         ctx.hovered = entry.hovered;
         bool should_update_animation = true;
         if (should_update_temporal) {
-          should_update_animation = battleOptimizer.should_update_animation(
+          should_update_animation = battle_optimizer.should_update_animation(
               entry.entity_id, entry.distance_sq, entry.selected);
         } else {
           should_update_animation = false;
@@ -1213,8 +1214,8 @@ void Renderer::render_world(Engine::Core::World *world) {
 
         Render::Pipeline::LodInputs lod_in;
         lod_in.distance_sq = entry.distance_sq;
-        lod_in.visible_unit_count = visibleUnitCount;
-        lod_in.full_detail_max_distance_sq = fullShaderMaxDistanceSq;
+        lod_in.visible_unit_count = visible_unit_count;
+        lod_in.full_detail_max_distance_sq = full_shader_max_distance_sq;
         lod_in.selected = entry.selected;
         lod_in.hovered = entry.hovered;
         lod_in.in_frustum = entry.in_frustum;
@@ -1225,14 +1226,14 @@ void Renderer::render_world(Engine::Core::World *world) {
         const bool batching_available = batching_ratio > 0.0F;
         const auto tier = Render::Pipeline::select_lod(lod_in);
 
-        const bool useBatching =
+        const bool use_batching =
             batching_available &&
             (tier == Render::Pipeline::LodTier::Simplified ||
              tier == Render::Pipeline::LodTier::Minimal);
         tier_is_minimal = tier == Render::Pipeline::LodTier::Minimal;
 
-        if (useBatching) {
-          fn(ctx, batchSubmitter);
+        if (use_batching) {
+          fn(ctx, batch_submitter);
         } else {
           fn(ctx, *this);
         }

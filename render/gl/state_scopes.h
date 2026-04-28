@@ -13,16 +13,16 @@ struct DepthMaskScope {
 };
 
 struct PolygonOffsetScope {
-  GLboolean prevEnable;
+  GLboolean prev_enable;
   float factor, units;
   PolygonOffsetScope(float f, float u)
-      : prevEnable(glIsEnabled(GL_POLYGON_OFFSET_FILL)), factor(f), units(u) {
+      : prev_enable(glIsEnabled(GL_POLYGON_OFFSET_FILL)), factor(f), units(u) {
 
     glEnable(GL_POLYGON_OFFSET_FILL);
     glPolygonOffset(factor, units);
   }
   ~PolygonOffsetScope() {
-    if (prevEnable == 0U) {
+    if (prev_enable == 0U) {
       glDisable(GL_POLYGON_OFFSET_FILL);
     }
     glPolygonOffset(0.0F, 0.0F);
@@ -30,8 +30,8 @@ struct PolygonOffsetScope {
 };
 
 struct BlendScope {
-  GLboolean prevEnable;
-  BlendScope(bool enable = true) : prevEnable(glIsEnabled(GL_BLEND)) {
+  GLboolean prev_enable;
+  BlendScope(bool enable = true) : prev_enable(glIsEnabled(GL_BLEND)) {
 
     if (enable) {
       glEnable(GL_BLEND);
@@ -40,7 +40,7 @@ struct BlendScope {
     }
   }
   ~BlendScope() {
-    if (prevEnable != 0U) {
+    if (prev_enable != 0U) {
       glEnable(GL_BLEND);
     } else {
       glDisable(GL_BLEND);
@@ -49,8 +49,8 @@ struct BlendScope {
 };
 
 struct CullFaceScope {
-  GLboolean prevEnable;
-  explicit CullFaceScope(bool enable) : prevEnable(glIsEnabled(GL_CULL_FACE)) {
+  GLboolean prev_enable;
+  explicit CullFaceScope(bool enable) : prev_enable(glIsEnabled(GL_CULL_FACE)) {
     if (enable) {
       glEnable(GL_CULL_FACE);
     } else {
@@ -58,7 +58,7 @@ struct CullFaceScope {
     }
   }
   ~CullFaceScope() {
-    if (prevEnable != 0U) {
+    if (prev_enable != 0U) {
       glEnable(GL_CULL_FACE);
     } else {
       glDisable(GL_CULL_FACE);
@@ -67,9 +67,9 @@ struct CullFaceScope {
 };
 
 struct DepthTestScope {
-  GLboolean prevEnable;
+  GLboolean prev_enable;
   explicit DepthTestScope(bool enable)
-      : prevEnable(glIsEnabled(GL_DEPTH_TEST)) {
+      : prev_enable(glIsEnabled(GL_DEPTH_TEST)) {
 
     if (enable) {
       glEnable(GL_DEPTH_TEST);
@@ -78,7 +78,7 @@ struct DepthTestScope {
     }
   }
   ~DepthTestScope() {
-    if (prevEnable != 0U) {
+    if (prev_enable != 0U) {
       glEnable(GL_DEPTH_TEST);
     } else {
       glDisable(GL_DEPTH_TEST);

@@ -14,39 +14,11 @@ namespace Render::GL {
 struct AnimationInputs;
 struct HumanoidAnimationContext;
 class ISubmitter;
-class HorseRendererBase;
 } // namespace Render::GL
-
-namespace Render::Horse {
-using HorsePreparation = Render::Creature::Pipeline::CreaturePreparationResult;
-void prepare_horse_full(const Render::GL::HorseRendererBase &owner,
-                        const Render::GL::DrawContext &ctx,
-                        const Render::GL::AnimationInputs &anim,
-                        const Render::GL::HumanoidAnimationContext &rider_ctx,
-                        Render::GL::HorseProfile &profile,
-                        const Render::GL::MountedAttachmentFrame *shared_mount,
-                        const Render::GL::HorseMotionSample *shared_motion,
-                        HorsePreparation &out);
-void prepare_horse_minimal(const Render::GL::HorseRendererBase &owner,
-                           const Render::GL::DrawContext &ctx,
-                           Render::GL::HorseProfile &profile,
-                           const Render::GL::HorseMotionSample *shared_motion,
-                           HorsePreparation &out);
-} // namespace Render::Horse
 
 namespace Render::GL {
 
 class HorseRendererBase {
-  friend void ::Render::Horse::prepare_horse_full(
-      const ::Render::GL::HorseRendererBase &owner,
-      const ::Render::GL::DrawContext &ctx,
-      const ::Render::GL::AnimationInputs &anim,
-      const ::Render::GL::HumanoidAnimationContext &rider_ctx,
-      ::Render::GL::HorseProfile &profile,
-      const ::Render::GL::MountedAttachmentFrame *shared_mount,
-      const ::Render::GL::HorseMotionSample *shared_motion,
-      ::Render::Horse::HorsePreparation &out);
-
 public:
   virtual ~HorseRendererBase() = default;
 

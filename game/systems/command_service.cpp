@@ -123,7 +123,7 @@ auto CommandService::get_unit_radius(
   }
 
   float const selection_ring_size =
-      Game::Units::TroopConfig::instance().getSelectionRingSize(
+      Game::Units::TroopConfig::instance().get_selection_ring_size(
           unit_comp->spawn_type);
 
   return selection_ring_size * 0.5F;

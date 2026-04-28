@@ -12,6 +12,9 @@ inline constexpr int k_default_torso_height_segments = 8;
 
 auto get_unit_cylinder(int radial_segments = k_default_radial_segments)
     -> Mesh *;
+auto get_unit_tapered_cylinder(
+    float anchor_radius_scale, float tail_radius_scale,
+    int radial_segments = k_default_radial_segments) -> Mesh *;
 auto get_unit_cube() -> Mesh *;
 
 auto get_unit_sphere(int lat_segments = k_default_latitude_segments,
