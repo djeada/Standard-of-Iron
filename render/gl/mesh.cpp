@@ -80,9 +80,9 @@ auto Mesh::prepare_draw(const char *caller_name) -> bool {
 
 #ifndef NDEBUG
   initializeOpenGLFunctions();
-  GLenum preErr = glGetError();
-  if (preErr != GL_NO_ERROR) {
-    qWarning() << caller_name << "pre-draw GL error" << preErr << "vao"
+  GLenum pre_err = glGetError();
+  if (pre_err != GL_NO_ERROR) {
+    qWarning() << caller_name << "pre-draw GL error" << pre_err << "vao"
                << (m_vao ? m_vao->id() : 0) << "indices" << m_indices.size();
   }
 #endif

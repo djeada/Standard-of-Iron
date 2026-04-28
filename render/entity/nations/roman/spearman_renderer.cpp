@@ -83,7 +83,7 @@ using Render::GL::Humanoid::mix_palette_color;
 using Render::GL::Humanoid::saturate_color;
 
 struct SpearmanExtras {
-  QVector3D spearShaftColor;
+  QVector3D spear_shaft_color;
   QVector3D spearhead_color;
   float spear_length = 1.20F;
   float spear_shaft_radius = 0.020F;
@@ -275,11 +275,11 @@ public:
   }
 
 private:
-  static auto computeSpearmanExtras(uint32_t seed, const HumanoidVariant &v)
+  static auto compute_spearman_extras(uint32_t seed, const HumanoidVariant &v)
       -> SpearmanExtras {
     SpearmanExtras e;
 
-    e.spearShaftColor = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
+    e.spear_shaft_color = v.palette.leather * QVector3D(0.85F, 0.75F, 0.65F);
     e.spearhead_color = QVector3D(0.75F, 0.76F, 0.80F);
 
     e.spear_length = 1.15F + (hash_01(seed ^ 0xABCDU) - 0.5F) * 0.10F;
@@ -335,7 +335,7 @@ private:
                               const QVector3D &team_tint,
                               [[maybe_unused]] const HumanoidVariant &variant,
                               SpearmanExtras &extras) const {
-    extras.spearShaftColor = saturate_color(extras.spearShaftColor);
+    extras.spear_shaft_color = saturate_color(extras.spear_shaft_color);
     extras.spearhead_color = saturate_color(extras.spearhead_color);
 
     auto apply_color = [&](const std::optional<QVector3D> &override_color,
@@ -345,7 +345,7 @@ private:
                                  k_spearman_style_mix_weight);
     };
 
-    apply_color(style.spear_shaft_color, extras.spearShaftColor);
+    apply_color(style.spear_shaft_color, extras.spear_shaft_color);
     apply_color(style.spearhead_color, extras.spearhead_color);
 
     if (style.spear_length_scale) {

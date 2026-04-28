@@ -104,9 +104,9 @@ void HealerAuraPipeline::cache_uniforms() {
   m_uniforms.mvp = m_auraShader->uniform_handle("u_mvp");
   m_uniforms.model = m_auraShader->uniform_handle("u_model");
   m_uniforms.time = m_auraShader->uniform_handle("u_time");
-  m_uniforms.auraRadius = m_auraShader->uniform_handle("u_auraRadius");
+  m_uniforms.aura_radius = m_auraShader->uniform_handle("u_auraRadius");
   m_uniforms.intensity = m_auraShader->uniform_handle("u_intensity");
-  m_uniforms.auraColor = m_auraShader->uniform_handle("u_auraColor");
+  m_uniforms.aura_color = m_auraShader->uniform_handle("u_auraColor");
 }
 
 auto HealerAuraPipeline::is_initialized() const -> bool {
@@ -287,9 +287,9 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
 
   clear_gl_errors();
 
-  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
-  GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
-  GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean depth_test_enabled = glIsEnabled(GL_DEPTH_TEST);
+  GLboolean blend_enabled = glIsEnabled(GL_BLEND);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
@@ -310,15 +310,15 @@ void HealerAuraPipeline::render(const Camera &cam, float animation_time) {
 
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (!blendEnabled) {
+  if (!blend_enabled) {
     glDisable(GL_BLEND);
   }
-  if (depthTestEnabled) {
+  if (depth_test_enabled) {
     glEnable(GL_DEPTH_TEST);
   } else {
     glDisable(GL_DEPTH_TEST);
   }
-  if (cullEnabled) {
+  if (cull_enabled) {
     glEnable(GL_CULL_FACE);
   }
 }
@@ -339,9 +339,9 @@ void HealerAuraPipeline::render_aura(const HealerAuraData &data,
   m_auraShader->set_uniform(m_uniforms.model, model);
   m_auraShader->set_uniform(m_uniforms.time, animation_time);
 
-  m_auraShader->set_uniform(m_uniforms.auraRadius, 1.0F);
+  m_auraShader->set_uniform(m_uniforms.aura_radius, 1.0F);
   m_auraShader->set_uniform(m_uniforms.intensity, data.intensity);
-  m_auraShader->set_uniform(m_uniforms.auraColor, data.color);
+  m_auraShader->set_uniform(m_uniforms.aura_color, data.color);
 
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 }
@@ -358,7 +358,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
     return;
   }
 
-  GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+  GLboolean cull_enabled = glIsEnabled(GL_CULL_FACE);
   GLboolean depthMaskEnabled = GL_TRUE;
   glGetBooleanv(GL_DEPTH_WRITEMASK, &depthMaskEnabled);
 
@@ -381,9 +381,9 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
   m_auraShader->set_uniform(m_uniforms.mvp, mvp);
   m_auraShader->set_uniform(m_uniforms.model, model);
   m_auraShader->set_uniform(m_uniforms.time, time);
-  m_auraShader->set_uniform(m_uniforms.auraRadius, 1.0F);
+  m_auraShader->set_uniform(m_uniforms.aura_radius, 1.0F);
   m_auraShader->set_uniform(m_uniforms.intensity, intensity);
-  m_auraShader->set_uniform(m_uniforms.auraColor, color);
+  m_auraShader->set_uniform(m_uniforms.aura_color, color);
 
   glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, nullptr);
 
@@ -391,7 +391,7 @@ void HealerAuraPipeline::render_single_aura(const QVector3D &position,
 
   glDepthMask(depthMaskEnabled);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  if (cullEnabled) {
+  if (cull_enabled) {
     glEnable(GL_CULL_FACE);
   }
 }

@@ -102,7 +102,7 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
-void drawBaseFrame(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_base_frame(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.22F, -0.35F),
@@ -172,7 +172,7 @@ void draw_wheels(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.40F, wheel_radius, 0.25F), 0.025F, c.metal_iron, white);
 }
 
-void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_throwing_arm(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const RomanCatapultPalette &c,
                      const CatapultAnimContext &anim_ctx) {
 
@@ -204,18 +204,18 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
     break;
   }
 
-  QMatrix4x4 armMatrix = p.model;
-  armMatrix.translate(0.0F, 0.55F, 0.0F);
-  armMatrix.rotate(arm_angle * 57.3F, 1.0F, 0.0F, 0.0F);
+  QMatrix4x4 arm_matrix = p.model;
+  arm_matrix.translate(0.0F, 0.55F, 0.0F);
+  arm_matrix.rotate(arm_angle * 57.3F, 1.0F, 0.0F, 0.0F);
 
-  draw_cyl(out, armMatrix, QVector3D(0.0F, 0.0F, -0.6F),
+  draw_cyl(out, arm_matrix, QVector3D(0.0F, 0.0F, -0.6F),
            QVector3D(0.0F, 0.0F, 0.4F), 0.045F, c.wood_frame, white);
 
-  draw_box(out, unit, white, armMatrix, QVector3D(0.0F, -0.05F, -0.55F),
+  draw_box(out, unit, white, arm_matrix, QVector3D(0.0F, -0.05F, -0.55F),
            QVector3D(0.08F, 0.06F, 0.10F), c.leather);
 
   if (anim_ctx.show_stone) {
-    QMatrix4x4 stone_matrix = armMatrix;
+    QMatrix4x4 stone_matrix = arm_matrix;
     stone_matrix.translate(0.0F, 0.08F, -0.55F);
     float const stone_scale = 0.08F;
     stone_matrix.scale(stone_scale, stone_scale, stone_scale);
@@ -224,7 +224,7 @@ void drawThrowingArm(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawTorsionMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_torsion_mechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
                           Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(-0.18F, 0.35F, 0.0F),
@@ -246,7 +246,7 @@ void drawTorsionMechanism(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.20F, 0.30F, 0.0F), 0.12F, c.metal_iron, white);
 }
 
-void drawDecorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_decorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
                      Texture *white, const RomanCatapultPalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.72F, -0.12F),
@@ -262,7 +262,7 @@ void drawDecorations(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.04F, 0.04F, 0.04F), c.metal_iron);
 }
 
-void drawWindlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_windlass(const DrawContext &p, ISubmitter &out, Mesh *unit,
                   Texture *white, const RomanCatapultPalette &c) {
 
   draw_cyl(out, p.model, QVector3D(-0.20F, 0.22F, 0.30F),
@@ -305,12 +305,12 @@ void register_catapult_renderer(EntityRendererRegistry &registry) {
     auto palette = make_palette(team_color);
     auto anim_ctx = get_anim_context(p.entity);
 
-    drawBaseFrame(p, out, unit_cube, white_tex, palette);
+    draw_base_frame(p, out, unit_cube, white_tex, palette);
     draw_wheels(p, out, unit_cube, white_tex, palette);
-    drawTorsionMechanism(p, out, unit_cube, white_tex, palette);
-    drawThrowingArm(p, out, unit_cube, white_tex, palette, anim_ctx);
-    drawWindlass(p, out, unit_cube, white_tex, palette);
-    drawDecorations(p, out, unit_cube, white_tex, palette);
+    draw_torsion_mechanism(p, out, unit_cube, white_tex, palette);
+    draw_throwing_arm(p, out, unit_cube, white_tex, palette, anim_ctx);
+    draw_windlass(p, out, unit_cube, white_tex, palette);
+    draw_decorations(p, out, unit_cube, white_tex, palette);
   });
 }
 

@@ -45,22 +45,22 @@ RiverbankAssetRenderer::RiverbankAssetRenderer() = default;
 RiverbankAssetRenderer::~RiverbankAssetRenderer() = default;
 
 void RiverbankAssetRenderer::configure(
-    const std::vector<Game::Map::RiverSegment> &riverSegments,
+    const std::vector<Game::Map::RiverSegment> &river_segments,
     const Game::Map::TerrainHeightMap &height_map,
     const Game::Map::BiomeSettings &biome_settings) {
-  m_riverSegments = riverSegments;
+  m_river_segments = river_segments;
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_assetInstances.clear();
-  m_assetInstanceBuffer.reset();
-  m_assetInstanceCount = 0;
-  m_assetInstancesDirty = false;
+  m_asset_instances.clear();
+  m_asset_instance_buffer.reset();
+  m_asset_instance_count = 0;
+  m_asset_instances_dirty = false;
 
   m_assetParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
   m_assetParams.time = 0.0F;
@@ -71,7 +71,7 @@ void RiverbankAssetRenderer::configure(
 void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
   Q_UNUSED(resources);
 
-  if (m_assetInstanceCount == 0) {
+  if (m_asset_instance_count == 0) {
     return;
   }
 
@@ -81,7 +81,7 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       use_visibility ? visibility.version() : 0;
 
   const bool needs_visibility_update =
-      m_visibilityDirty || m_assetInstancesDirty ||
+      m_visibility_dirty || m_asset_instances_dirty ||
       (use_visibility && current_version != m_cachedVisibilityVersion);
 
   if (needs_visibility_update) {
@@ -90,10 +90,10 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       visibility_snapshot = visibility.snapshot();
     }
 
-    m_visibleInstances.clear();
-    m_visibleInstances.reserve(m_assetInstances.size());
+    m_visible_instances.clear();
+    m_visible_instances.reserve(m_asset_instances.size());
 
-    for (const auto &instance : m_assetInstances) {
+    for (const auto &instance : m_asset_instances) {
       bool should_render = true;
 
       if (use_visibility) {
@@ -106,46 +106,46 @@ void RiverbankAssetRenderer::submit(Renderer &, ResourceManager *resources) {
       }
 
       if (should_render) {
-        m_visibleInstances.push_back(instance);
+        m_visible_instances.push_back(instance);
       }
     }
 
-    if (!m_assetInstanceBuffer) {
-      m_assetInstanceBuffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
+    if (!m_asset_instance_buffer) {
+      m_asset_instance_buffer = std::make_unique<Buffer>(Buffer::Type::Vertex);
     }
-    if (!m_visibleInstances.empty()) {
-      m_assetInstanceBuffer->set_data(m_visibleInstances,
+    if (!m_visible_instances.empty()) {
+      m_asset_instance_buffer->set_data(m_visible_instances,
                                       Buffer::Usage::Dynamic);
     }
 
     m_cachedVisibilityVersion = current_version;
-    m_visibilityDirty = false;
-    m_assetInstancesDirty = false;
+    m_visibility_dirty = false;
+    m_asset_instances_dirty = false;
   }
 
-  if (!m_visibleInstances.empty()) {
+  if (!m_visible_instances.empty()) {
     qDebug() << "RiverbankAssetRenderer: Would render"
-             << m_visibleInstances.size() << "of" << m_assetInstanceCount
+             << m_visible_instances.size() << "of" << m_asset_instance_count
              << "riverbank assets (fog of war applied)";
   }
 }
 
 void RiverbankAssetRenderer::clear() {
-  m_assetInstances.clear();
-  m_assetInstanceBuffer.reset();
-  m_assetInstanceCount = 0;
-  m_assetInstancesDirty = false;
-  m_visibleInstances.clear();
+  m_asset_instances.clear();
+  m_asset_instance_buffer.reset();
+  m_asset_instance_count = 0;
+  m_asset_instances_dirty = false;
+  m_visible_instances.clear();
   m_cachedVisibilityVersion = 0;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
 }
 
 void RiverbankAssetRenderer::generate_asset_instances() {
-  m_assetInstances.clear();
+  m_asset_instances.clear();
 
-  if (m_riverSegments.empty() || m_width < 2 || m_height < 2) {
-    m_assetInstanceCount = 0;
-    m_assetInstancesDirty = false;
+  if (m_river_segments.empty() || m_width < 2 || m_height < 2) {
+    m_asset_instance_count = 0;
+    m_asset_instances_dirty = false;
     return;
   }
 
@@ -161,17 +161,17 @@ void RiverbankAssetRenderer::generate_asset_instances() {
     int const z1 = std::min(z0 + 1, m_height - 1);
     float const tx = gx - float(x0);
     float const tz = gz - float(z0);
-    float const h00 = m_heightData[z0 * m_width + x0];
-    float const h10 = m_heightData[z0 * m_width + x1];
-    float const h01 = m_heightData[z1 * m_width + x0];
-    float const h11 = m_heightData[z1 * m_width + x1];
+    float const h00 = m_height_data[z0 * m_width + x0];
+    float const h10 = m_height_data[z0 * m_width + x1];
+    float const h01 = m_height_data[z1 * m_width + x0];
+    float const h11 = m_height_data[z1 * m_width + x1];
     float const h0 = h00 * (1.0F - tx) + h10 * tx;
     float const h1 = h01 * (1.0F - tx) + h11 * tx;
     return h0 * (1.0F - tz) + h1 * tz;
   };
 
-  for (size_t seg_idx = 0; seg_idx < m_riverSegments.size(); ++seg_idx) {
-    const auto &segment = m_riverSegments[seg_idx];
+  for (size_t seg_idx = 0; seg_idx < m_river_segments.size(); ++seg_idx) {
+    const auto &segment = m_river_segments[seg_idx];
 
     QVector3D dir = segment.end - segment.start;
     float const length = dir.length();
@@ -280,15 +280,15 @@ void RiverbankAssetRenderer::generate_asset_instances() {
         instance.rotation[2] = 0.0F;
         instance.rotation[3] = std::cos(angle * 0.5F);
 
-        m_assetInstances.push_back(instance);
+        m_asset_instances.push_back(instance);
       }
     }
   }
 
-  m_assetInstanceCount = m_assetInstances.size();
-  m_assetInstancesDirty = true;
+  m_asset_instance_count = m_asset_instances.size();
+  m_asset_instances_dirty = true;
 
-  qDebug() << "Generated" << m_assetInstanceCount << "riverbank assets";
+  qDebug() << "Generated" << m_asset_instance_count << "riverbank assets";
 }
 
 } // namespace Render::GL

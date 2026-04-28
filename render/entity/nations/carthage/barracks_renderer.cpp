@@ -65,20 +65,20 @@ inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
            1.0F);
 }
 
-void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_fortress_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c);
-void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_fortress_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
                        Texture *white, const CarthagePalette &c,
                        BuildingState state);
-void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_corner_towers(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c,
                       BuildingState state);
-void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const CarthagePalette &c);
-void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_carthage_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c,
                       BuildingState state);
-void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
+void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
               const CarthagePalette &c);
 
 auto build_archetype_from_recorded(
@@ -103,12 +103,12 @@ auto build_barracks_archetype(BuildingState state, Mesh *unit,
   local_ctx.model = QMatrix4x4{};
   CarthagePalette const palette = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
 
-  drawFortressBase(local_ctx, recorder, unit, white, palette);
-  drawFortressWalls(local_ctx, recorder, unit, white, palette, state);
-  drawCornerTowers(local_ctx, recorder, unit, white, palette, state);
-  drawCourtyard(local_ctx, recorder, unit, white, palette);
-  drawCarthageRoof(local_ctx, recorder, unit, white, palette, state);
-  drawGate(local_ctx, recorder, unit, white, palette);
+  draw_fortress_base(local_ctx, recorder, unit, white, palette);
+  draw_fortress_walls(local_ctx, recorder, unit, white, palette, state);
+  draw_corner_towers(local_ctx, recorder, unit, white, palette, state);
+  draw_courtyard(local_ctx, recorder, unit, white, palette);
+  draw_carthage_roof(local_ctx, recorder, unit, white, palette, state);
+  draw_gate(local_ctx, recorder, unit, white, palette);
   return build_archetype_from_recorded("carthage_barracks",
                                        recorder.take_commands());
 }
@@ -133,7 +133,7 @@ auto barracks_archetype(BuildingState state, Mesh *unit,
   return k_normal;
 }
 
-void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_fortress_base(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.15F, 0.0F),
@@ -153,7 +153,7 @@ void drawFortressBase(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_fortress_walls(const DrawContext &p, ISubmitter &out, Mesh *unit,
                        Texture *white, const CarthagePalette &c,
                        BuildingState state) {
   float const wall_height = 1.2F;
@@ -194,7 +194,7 @@ void drawFortressWalls(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_corner_towers(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c,
                       BuildingState state) {
   QVector3D corners[4] = {
@@ -234,7 +234,7 @@ void drawCornerTowers(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_courtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.32F, 0.0F),
@@ -247,7 +247,7 @@ void drawCourtyard(const DrawContext &p, ISubmitter &out, Mesh *unit,
            QVector3D(0.35F, 0.35F, 0.08F), c.brick);
 }
 
-void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_carthage_roof(const DrawContext &p, ISubmitter &out, Mesh *unit,
                       Texture *white, const CarthagePalette &c,
                       BuildingState state) {
 
@@ -264,7 +264,7 @@ void drawCarthageRoof(const DrawContext &p, ISubmitter &out, Mesh *unit,
   }
 }
 
-void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
+void draw_gate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
               const CarthagePalette &c) {
 
   draw_box(out, unit, white, p.model, QVector3D(0.0F, 0.6F, 1.35F),
@@ -277,7 +277,7 @@ void drawGate(const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
   }
 }
 
-void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
+void draw_standards(const DrawContext &p, ISubmitter &out, Mesh *unit,
                    Texture *white, const CarthagePalette &c,
                    const BarracksFlagRenderer::ClothBannerResources *cloth) {
   float const pole_x = 2.0F;
@@ -303,9 +303,9 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
       p, c.team, c.team_trim, max_lowering);
 
   float beam_y =
-      pole_height - banner_height * 0.2F - captureColors.loweringOffset;
+      pole_height - banner_height * 0.2F - captureColors.lowering_offset;
   float flag_y =
-      pole_height - banner_height / 2.0F - captureColors.loweringOffset;
+      pole_height - banner_height / 2.0F - captureColors.lowering_offset;
 
   QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
   QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
@@ -324,10 +324,10 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
   float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
 
   QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
-  BarracksFlagRenderer::drawBannerWithTassels(
+  BarracksFlagRenderer::draw_banner_with_tassels(
       p, out, unit, white, banner_center, banner_width * 0.5F,
       banner_height * 0.5F, 0.02F, captureColors.teamColor,
-      captureColors.teamTrimColor, cloth);
+      captureColors.team_trim_color, cloth);
 
   draw_box(out, unit, white, p.model,
            QVector3D(pole_x, pole_height + 0.2F, pole_z),
@@ -347,10 +347,10 @@ void drawStandards(const DrawContext &p, ISubmitter &out, Mesh *unit,
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
                      const CarthagePalette &c) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
-                                          .teamTrim = c.team_trim,
+                                          .team_trim = c.team_trim,
                                           .timber = c.wood,
-                                          .timberLight = c.stone_light,
-                                          .woodDark = c.wood_dark};
+                                          .timber_light = c.stone_light,
+                                          .wood_dark = c.wood_dark};
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors);
 }
 
@@ -510,8 +510,8 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 
   BarracksFlagRenderer::ClothBannerResources cloth;
   if (p.backend != nullptr) {
-    cloth.clothMesh = p.backend->banner_mesh();
-    cloth.bannerShader = p.backend->banner_shader();
+    cloth.cloth_mesh = p.backend->banner_mesh();
+    cloth.banner_shader = p.backend->banner_shader();
   }
 
   const RenderArchetype &archetype = barracks_archetype(state, unit, white);
@@ -522,7 +522,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   instance.lod = RenderArchetypeLod::Full;
   submit_render_instance(out, instance);
 
-  drawStandards(p, out, unit, white, c, &cloth);
+  draw_standards(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
   draw_health_bar(p, out, unit, white);
   draw_selection(p, out);

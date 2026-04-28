@@ -72,12 +72,12 @@ struct alignas(16) Mat3x4 {
 
   static auto TRS(const Vec3 &translation,
                   const std::array<std::array<float, 3>, 3> &rotation,
-                  float scale_x, float scaleY,
+                  float scale_x, float scale_y,
                   float scale_z) noexcept -> Mat3x4 {
     Mat3x4 result;
     for (int row = 0; row < 3; ++row) {
       result.m[row][0] = rotation[row][0] * scale_x;
-      result.m[row][1] = rotation[row][1] * scaleY;
+      result.m[row][1] = rotation[row][1] * scale_y;
       result.m[row][2] = rotation[row][2] * scale_z;
       result.m[row][3] = (&translation.x)[row];
     }

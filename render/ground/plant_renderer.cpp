@@ -32,17 +32,17 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_width = height_map.getWidth();
   m_height = height_map.getHeight();
   m_tile_size = height_map.getTileSize();
-  m_heightData = height_map.getHeightData();
+  m_height_data = height_map.getHeightData();
   m_terrain_types = height_map.getTerrainTypes();
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
   m_plantInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
   m_cachedVisibilityVersion = 0;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto &wind_profile = profiles.wind;
@@ -58,8 +58,8 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
   const auto visible_count = Scatter::sync_filtered_instances(
-      m_plantInstances, m_visibleInstances, m_visibleInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibilityDirty,
+      m_plantInstances, m_visible_instances, m_visibleInstanceBuffer,
+      m_cachedVisibilityVersion, m_visibility_dirty,
       [](const PlantInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_scale;
       });
@@ -80,17 +80,17 @@ void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
 void PlantRenderer::clear() {
   m_plantInstances.clear();
-  m_visibleInstances.clear();
+  m_visible_instances.clear();
   m_plantInstanceCount = 0;
   m_plantInstancesDirty = false;
-  m_visibilityDirty = true;
+  m_visibility_dirty = true;
   m_cachedVisibilityVersion = 0;
 }
 
 void PlantRenderer::generate_plant_instances() {
   m_plantInstances.clear();
 
-  if (m_width < 2 || m_height < 2 || m_heightData.empty()) {
+  if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     m_plantInstanceCount = 0;
     m_plantInstancesDirty = false;
     return;
@@ -110,7 +110,7 @@ void PlantRenderer::generate_plant_instances() {
   const float tile_safe = std::max(0.001F, m_tile_size);
 
   SpawnTerrainCache terrain_cache;
-  terrain_cache.build_from_height_map(m_heightData, m_terrain_types, m_width,
+  terrain_cache.build_from_height_map(m_height_data, m_terrain_types, m_width,
                                       m_height, m_tile_size);
 
   SpawnValidationConfig config = make_plant_spawn_config();
