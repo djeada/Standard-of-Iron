@@ -468,7 +468,13 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   motion.phase = phase;
   motion.is_moving = clip.is_moving;
   motion.is_fighting = clip.is_fighting;
-  if (!clip.is_fighting) {
+  if (clip.is_fighting) {
+    // Body rocks as the horse strikes: rises during wind-up, drops on impact.
+    float const fight_bob =
+        std::sin(phase * 2.0F * std::numbers::pi_v<float> + 0.5F) *
+        dims.idle_bob_amplitude * 0.45F;
+    motion.bob = fight_bob;
+  } else {
     float const amp =
         clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
     float const scale = clip.is_moving ? clip.bob_scale : 0.8F;
@@ -612,7 +618,13 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   motion.is_moving = clip.is_moving;
   motion.is_fighting = clip.is_fighting;
   motion.anim_time = phase * clip.gait.cycle_time;
-  if (!clip.is_fighting) {
+  if (clip.is_fighting) {
+    // Body rocks with each stomp: half-cycle bob synchronized with stomps.
+    float const fight_bob =
+        std::sin(phase * 2.0F * std::numbers::pi_v<float>) *
+        dims.idle_bob_amplitude * 0.5F;
+    motion.bob = fight_bob;
+  } else {
     float const amp =
         clip.is_moving ? dims.move_bob_amplitude : dims.idle_bob_amplitude;
     float const scale = clip.is_moving ? clip.bob_scale : 0.8F;

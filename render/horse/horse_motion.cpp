@@ -469,6 +469,16 @@ auto evaluate_horse_motion(const HorseProfile &profile,
                                 sample.rider_intensity
                           : 0.0F;
   sample.spine_flex += sample.turn_amount * (0.0015F + gait_lift * 0.001F);
+
+  if (sample.is_fighting) {
+    // Combat stance: reduce lateral sway, add aggressive head nod, lean forward.
+    float const fight_nod =
+        std::sin(anim.time * k_pi * 2.0F / 1.1F) * 0.007F;
+    sample.body_sway *= 0.55F;
+    sample.head_nod += fight_nod;
+    sample.body_pitch += 0.002F;
+  }
+
   return sample;
 }
 

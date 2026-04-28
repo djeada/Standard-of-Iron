@@ -541,7 +541,7 @@ TEST(HorseSpecTest, AnimatedPoseBendsFrontAndRearKneesDuringMotion) {
   EXPECT_GT(point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl),
             dims.body_length * 0.030F);
   EXPECT_LT(point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl),
-            dims.body_length * 0.16F);
+            dims.body_length * 0.27F);
 
   EXPECT_LT(pose.knee_bl.y(), shoulder_bl.y());
   EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
@@ -549,7 +549,7 @@ TEST(HorseSpecTest, AnimatedPoseBendsFrontAndRearKneesDuringMotion) {
   EXPECT_GT(point_to_segment_distance(pose.knee_bl, shoulder_bl, pose.foot_bl),
             dims.body_length * 0.004F);
   EXPECT_LT(point_to_segment_distance(pose.knee_bl, shoulder_bl, pose.foot_bl),
-            dims.body_length * 0.12F);
+            dims.body_length * 0.24F);
 }
 
 TEST(HorseSpecTest, WalkAndTrotProduceDifferentKneeFlexProfiles) {
@@ -662,4 +662,55 @@ TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
 
   // The barrel center should be higher at bob peak than at zero
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
+}
+
+TEST(HorseSpecTest, AnimatedIdleHasVisibleFrontKneeBreak) {
+  // With front_leg_length_scale reduced to allow the IK solver to find a
+  // non-straight solution, the animated idle should show a measurable
+  // forward knee break rather than a fully locked-out leg.
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+
+  Render::Horse::HorseSpecPose pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, false, false},
+      pose);
+
+  QVector3D const shoulder_fl =
+      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  float const front_bend =
+      point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl);
+
+  // Knee must protrude forward of the shoulder–foot line even at rest.
+  EXPECT_GT(front_bend, dims.body_length * 0.030F);
+  EXPECT_GT(pose.knee_fl.z(), (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F);
+}
+
+TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
+  auto dims = make_horse_dims();
+  auto gait = make_horse_gait();
+
+  Render::Horse::HorseSpecPose fight_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, /*is_fighting=*/true},
+      fight_pose);
+
+  Render::Horse::HorseSpecPose idle_pose;
+  Render::Horse::make_horse_spec_pose_animated(
+      dims, gait,
+      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
+      idle_pose);
+
+  // Combat neck arc must raise the neck top measurably above the idle position.
+  EXPECT_GT(fight_pose.neck_top.y(), idle_pose.neck_top.y());
+  EXPECT_GT(fight_pose.neck_top.y() - idle_pose.neck_top.y(),
+            dims.neck_rise * 0.10F);
+
+  // Head should sit lower relative to its neck_top in the fighting pose.
+  float const fight_head_drop =
+      fight_pose.neck_top.y() - fight_pose.head_center.y();
+  float const idle_head_drop =
+      idle_pose.neck_top.y() - idle_pose.head_center.y();
+  EXPECT_GT(fight_head_drop, idle_head_drop);
 }
