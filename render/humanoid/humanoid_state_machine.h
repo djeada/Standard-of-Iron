@@ -24,7 +24,7 @@ enum class HumanoidState : std::uint8_t {
   Count
 };
 
-inline constexpr std::size_t kStateCount =
+inline constexpr std::size_t k_state_count =
     static_cast<std::size_t>(HumanoidState::Count);
 
 [[nodiscard]] auto state_name(HumanoidState s) noexcept -> std::string_view;

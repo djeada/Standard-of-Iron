@@ -10,7 +10,7 @@
 
 namespace Render::GL {
 
-inline constexpr std::uint32_t kCarthageShieldRoleCount = 4;
+inline constexpr std::uint32_t k_carthage_shield_role_count = 4;
 
 struct CarthageShieldConfig {
   float scale_multiplier = 1.0F;

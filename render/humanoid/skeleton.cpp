@@ -14,14 +14,14 @@ namespace {
 
 namespace Creature = Render::Creature;
 
-constexpr std::array<std::string_view, kBoneCount> k_bone_names = {
+constexpr std::array<std::string_view, k_bone_count> k_bone_names = {
     "Root",      "Pelvis",    "Spine",     "Chest",    "Neck",
     "Head",      "ShoulderL", "UpperArmL", "ForearmL", "HandL",
     "ShoulderR", "UpperArmR", "ForearmR",  "HandR",    "HipL",
     "KneeL",     "FootL",     "HipR",      "KneeR",    "FootR",
 };
 
-const std::array<SocketDef, kSocketCount> k_socket_defs = {{
+const std::array<SocketDef, k_socket_count> k_socket_defs = {{
     {"Head", static_cast<Creature::BoneIndex>(HumanoidBone::Head),
      QVector3D(0.0F, 0.00F, 0.0F)},
     {"HandR", static_cast<Creature::BoneIndex>(HumanoidBone::HandR),
@@ -53,13 +53,13 @@ const std::array<SocketDef, kSocketCount> k_socket_defs = {{
 } // namespace
 
 auto humanoid_topology() noexcept -> const Creature::SkeletonTopology & {
-  static const std::array<Creature::BoneDef, kBoneCount> bones = [] {
-    std::array<Creature::BoneDef, kBoneCount> out{};
-    for (std::size_t i = 0; i < kBoneCount; ++i) {
+  static const std::array<Creature::BoneDef, k_bone_count> bones = [] {
+    std::array<Creature::BoneDef, k_bone_count> out{};
+    for (std::size_t i = 0; i < k_bone_count; ++i) {
       out[i].name = k_bone_names[i];
-      out[i].parent = (kBoneParents[i] == kInvalidBone)
+      out[i].parent = (k_bone_parents[i] == k_invalid_bone)
                           ? Creature::kInvalidBone
-                          : static_cast<Creature::BoneIndex>(kBoneParents[i]);
+                          : static_cast<Creature::BoneIndex>(k_bone_parents[i]);
     }
     return out;
   }();
@@ -198,12 +198,12 @@ auto humanoid_provider(void *user, Creature::BoneIndex bone) noexcept
 
 auto bone_name(HumanoidBone bone) noexcept -> std::string_view {
   auto const i = static_cast<std::size_t>(bone);
-  return i < kBoneCount ? k_bone_names[i] : std::string_view{"<invalid>"};
+  return i < k_bone_count ? k_bone_names[i] : std::string_view{"<invalid>"};
 }
 
 auto parent_of(HumanoidBone bone) noexcept -> std::uint8_t {
   auto const i = static_cast<std::size_t>(bone);
-  return i < kBoneCount ? kBoneParents[i] : kInvalidBone;
+  return i < k_bone_count ? k_bone_parents[i] : k_invalid_bone;
 }
 
 auto socket_def(HumanoidSocket socket) noexcept -> const SocketDef & {
@@ -211,7 +211,7 @@ auto socket_def(HumanoidSocket socket) noexcept -> const SocketDef & {
   static const SocketDef k_default{
       "<invalid>", static_cast<Creature::BoneIndex>(HumanoidBone::Root),
       QVector3D()};
-  if (i >= kSocketCount) {
+  if (i >= k_socket_count) {
     return k_default;
   }
   return k_socket_defs[i];

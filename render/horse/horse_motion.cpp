@@ -19,7 +19,7 @@ using Render::Creature::hash01;
 namespace {
 
 constexpr float k_pi = std::numbers::pi_v<float>;
-constexpr float kEpsilon = 1.0e-4F;
+constexpr float k_epsilon = 1.0e-4F;
 
 auto wrap_phase(float phase) -> float {
   phase = std::fmod(phase, 1.0F);
@@ -30,7 +30,7 @@ auto wrap_phase(float phase) -> float {
 }
 
 auto normalized_or(const QVector3D &v, const QVector3D &fallback) -> QVector3D {
-  if (v.lengthSquared() <= kEpsilon) {
+  if (v.lengthSquared() <= k_epsilon) {
     return fallback;
   }
   return v.normalized();
@@ -79,58 +79,59 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
   frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
 
-  frame.saddle_center =
-      QVector3D(0.0F,
-                d.saddle_height + d.body_height * kSaddleBodyHeightLiftScale -
-                    d.saddle_thickness * kSaddleThicknessOffset,
-                -d.body_length * kSaddleBodyLengthOffset +
-                    d.seat_forward_offset * kSaddleSeatForwardScale);
+  frame.saddle_center = QVector3D(
+      0.0F,
+      d.saddle_height + d.body_height * k_saddle_body_height_lift_scale -
+          d.saddle_thickness * k_saddle_thickness_offset,
+      -d.body_length * k_saddle_body_length_offset +
+          d.seat_forward_offset * k_saddle_seat_forward_scale);
 
   frame.seat_position =
       frame.saddle_center +
       QVector3D(0.0F,
-                d.saddle_thickness * kSeatPositionHeightScale +
-                    d.body_height * kSeatBodyHeightLiftScale,
+                d.saddle_thickness * k_seat_position_height_scale +
+                    d.body_height * k_seat_body_height_lift_scale,
                 0.0F);
 
   frame.stirrup_attach_left =
       frame.saddle_center +
-      QVector3D(-d.body_width * kStirrupWidthScale,
-                -d.saddle_thickness * kStirrupThicknessOffset,
-                d.seat_forward_offset * kStirrupForwardScale);
+      QVector3D(-d.body_width * k_stirrup_width_scale,
+                -d.saddle_thickness * k_stirrup_thickness_offset,
+                d.seat_forward_offset * k_stirrup_forward_scale);
   frame.stirrup_attach_right =
       frame.saddle_center +
-      QVector3D(d.body_width * kStirrupWidthScale,
-                -d.saddle_thickness * kStirrupThicknessOffset,
-                d.seat_forward_offset * kStirrupForwardScale);
+      QVector3D(d.body_width * k_stirrup_width_scale,
+                -d.saddle_thickness * k_stirrup_thickness_offset,
+                d.seat_forward_offset * k_stirrup_forward_scale);
 
   frame.stirrup_bottom_left =
       frame.stirrup_attach_left + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
   frame.stirrup_bottom_right =
       frame.stirrup_attach_right + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
 
-  QVector3D const neck_top(
-      0.0F,
-      d.barrel_center_y + d.body_height * kNeckTopBodyHeightScale + d.neck_rise,
-      d.body_length * kNeckTopBodyLengthScale);
+  QVector3D const neck_top(0.0F,
+                           d.barrel_center_y +
+                               d.body_height * k_neck_top_body_height_scale +
+                               d.neck_rise,
+                           d.body_length * k_neck_top_body_length_scale);
   QVector3D const head_center =
-      neck_top + QVector3D(0.0F, d.head_height * kHeadCenterHeightScale,
-                           d.head_length * kHeadCenterLengthScale);
+      neck_top + QVector3D(0.0F, d.head_height * k_head_center_height_scale,
+                           d.head_length * k_head_center_length_scale);
 
   QVector3D const muzzle_center =
-      head_center + QVector3D(0.0F, -d.head_height * kMuzzleHeightOffset,
-                              d.head_length * kMuzzleLengthOffset);
+      head_center + QVector3D(0.0F, -d.head_height * k_muzzle_height_offset,
+                              d.head_length * k_muzzle_length_offset);
   frame.bridle_base =
-      muzzle_center + QVector3D(0.0F, -d.head_height * kBridleHeightOffset,
-                                d.muzzle_length * kBridleLengthOffset);
+      muzzle_center + QVector3D(0.0F, -d.head_height * k_bridle_height_offset,
+                                d.muzzle_length * k_bridle_length_offset);
   frame.rein_bit_left =
-      muzzle_center + QVector3D(d.head_width * kBitWidthOffset,
-                                -d.head_height * kBitHeightOffset,
-                                d.muzzle_length * kBitLengthOffset);
+      muzzle_center + QVector3D(d.head_width * k_bit_width_offset,
+                                -d.head_height * k_bit_height_offset,
+                                d.muzzle_length * k_bit_length_offset);
   frame.rein_bit_right =
-      muzzle_center + QVector3D(-d.head_width * kBitWidthOffset,
-                                -d.head_height * kBitHeightOffset,
-                                d.muzzle_length * kBitLengthOffset);
+      muzzle_center + QVector3D(-d.head_width * k_bit_width_offset,
+                                -d.head_height * k_bit_height_offset,
+                                d.muzzle_length * k_bit_length_offset);
 
   return frame;
 }
@@ -140,17 +141,18 @@ auto compute_rein_state(uint32_t horse_seed,
     -> ReinState {
   using namespace ReinConstants;
   float const base_slack =
-      hash01(horse_seed ^ kSlackSeedSalt) * kBaseSlackScale + kBaseSlackOffset;
+      hash01(horse_seed ^ k_slack_seed_salt) * k_base_slack_scale +
+      k_base_slack_offset;
   float rein_tension = rider_ctx.locomotion_normalized_speed();
   if (rider_ctx.gait.has_target) {
-    rein_tension += kTargetTensionBonus;
+    rein_tension += k_target_tension_bonus;
   }
   if (rider_ctx.is_attacking()) {
-    rein_tension += kAttackTensionBonus;
+    rein_tension += k_attack_tension_bonus;
   }
   rein_tension = std::clamp(rein_tension, 0.0F, 1.0F);
   float const rein_slack =
-      std::max(kMinSlack, base_slack * (1.0F - rein_tension));
+      std::max(k_min_slack, base_slack * (1.0F - rein_tension));
   return ReinState{rein_slack, rein_tension};
 }
 
@@ -164,21 +166,22 @@ auto compute_rein_handle(const MountedAttachmentFrame &mount, bool is_left,
 
   QVector3D desired = mount.seat_position;
   desired +=
-      (is_left ? -mount.seat_right : mount.seat_right) * kHandleRightOffset;
+      (is_left ? -mount.seat_right : mount.seat_right) * k_handle_right_offset;
   desired +=
-      -mount.seat_forward *
-      (kHandleForwardBase + clamped_tension * kHandleForwardTensionScale);
-  desired +=
-      mount.seat_up * (kHandleUpBase + clamped_slack * kHandleUpSlackScale +
-                       clamped_tension * kHandleUpTensionScale);
+      -mount.seat_forward * (k_handle_forward_base +
+                             clamped_tension * k_handle_forward_tension_scale);
+  desired += mount.seat_up *
+             (k_handle_up_base + clamped_slack * k_handle_up_slack_scale +
+              clamped_tension * k_handle_up_tension_scale);
 
   QVector3D dir = desired - bit;
-  if (dir.lengthSquared() < kDirLengthThreshold) {
+  if (dir.lengthSquared() < k_dir_length_threshold) {
     dir = -mount.seat_forward;
   }
   dir.normalize();
 
-  float const rein_length = kReinBaseLength + clamped_slack * kSlackLengthScale;
+  float const rein_length =
+      k_rein_base_length + clamped_slack * k_slack_length_scale;
   return bit + dir * rein_length;
 }
 
@@ -323,11 +326,11 @@ auto evaluate_horse_motion(const HorseProfile &profile,
       rider_ctx.is_walking() || rider_ctx.is_running();
   bool const has_locomotion_input = rider_has_motion || anim.is_moving;
 
-  constexpr float kIdleSpeedMax = 0.5F;
-  constexpr float kWalkSpeedMax = 3.0F;
-  constexpr float kTrotSpeedMax = 5.5F;
-  constexpr float kCanterSpeedMax = 8.0F;
-  constexpr float kGaitHysteresis = 0.35F;
+  constexpr float k_idle_speed_max = 0.5F;
+  constexpr float k_walk_speed_max = 3.0F;
+  constexpr float k_trot_speed_max = 5.5F;
+  constexpr float k_canter_speed_max = 8.0F;
+  constexpr float k_gait_hysteresis = 0.35F;
 
   float speed = rider_ctx.locomotion_speed();
   if (speed < 0.01F) {
@@ -337,27 +340,27 @@ auto evaluate_horse_motion(const HorseProfile &profile,
   }
   sample.rider_intensity =
       std::max(rider_ctx.locomotion_normalized_speed(),
-               std::clamp(speed / kCanterSpeedMax, 0.0F, 1.0F));
+               std::clamp(speed / k_canter_speed_max, 0.0F, 1.0F));
 
   auto const select_gait = [&]() -> GaitType {
     if (!has_locomotion_input) {
       return GaitType::IDLE;
     }
     GaitType const anchor = state.target_gait;
-    float const idle_up = kIdleSpeedMax + kGaitHysteresis;
-    float const idle_dn = kIdleSpeedMax - kGaitHysteresis;
-    float const walk_up = kWalkSpeedMax + kGaitHysteresis;
-    float const walk_dn = kWalkSpeedMax - kGaitHysteresis;
-    float const trot_up = kTrotSpeedMax + kGaitHysteresis;
-    float const trot_dn = kTrotSpeedMax - kGaitHysteresis;
-    float const canter_up = kCanterSpeedMax + kGaitHysteresis;
-    float const canter_dn = kCanterSpeedMax - kGaitHysteresis;
+    float const idle_up = k_idle_speed_max + k_gait_hysteresis;
+    float const idle_dn = k_idle_speed_max - k_gait_hysteresis;
+    float const walk_up = k_walk_speed_max + k_gait_hysteresis;
+    float const walk_dn = k_walk_speed_max - k_gait_hysteresis;
+    float const trot_up = k_trot_speed_max + k_gait_hysteresis;
+    float const trot_dn = k_trot_speed_max - k_gait_hysteresis;
+    float const canter_up = k_canter_speed_max + k_gait_hysteresis;
+    float const canter_dn = k_canter_speed_max - k_gait_hysteresis;
     auto const upshift = [&](float threshold) { return speed >= threshold; };
     auto const downshift = [&](float threshold) { return speed < threshold; };
 
     switch (anchor) {
     case GaitType::IDLE:
-      if (!anim.is_moving && speed < kIdleSpeedMax) {
+      if (!anim.is_moving && speed < k_idle_speed_max) {
         return GaitType::IDLE;
       }
       if (upshift(idle_up)) {

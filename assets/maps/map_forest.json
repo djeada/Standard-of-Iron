@@ -1,66 +1,66 @@
 {
   "name": "Forest Battlefield",
   "description": "A diverse forest battlefield with varied unit types and strategic terrain features",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2000,
+  "coord_system": "grid",
+  "max_troops_per_player": 2000,
   "grid": {
     "width": 250,
     "height": 250,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "forest_mud",
+    "ground_type": "forest_mud",
     "seed": 12345,
-    "patchDensity": 3.2,
-    "patchJitter": 0.85,
-    "bladeHeight": [
+    "patch_density": 3.2,
+    "patch_jitter": 0.85,
+    "blade_height": [
       0.6,
       1.45
     ],
-    "bladeWidth": [
+    "blade_width": [
       0.028,
       0.058
     ],
-    "swayStrength": 0.28,
-    "swaySpeed": 1.35,
-    "heightNoise": [
+    "sway_strength": 0.28,
+    "sway_speed": 1.35,
+    "height_noise": [
       0.22,
       0.07
     ],
-    "grassPrimary": [
+    "grass_primary": [
       0.28,
       0.6,
       0.32
     ],
-    "grassSecondary": [
+    "grass_secondary": [
       0.42,
       0.72,
       0.34
     ],
-    "grassDry": [
+    "grass_dry": [
       0.58,
       0.5,
       0.36
     ],
-    "soilColor": [
+    "soil_color": [
       0.28,
       0.24,
       0.18
     ],
-    "rockLow": [
+    "rock_low": [
       0.5,
       0.48,
       0.46
     ],
-    "rockHigh": [
+    "rock_high": [
       0.68,
       0.69,
       0.73
     ],
-    "plantDensity": 0.65,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.12,
-    "irregularityAmplitude": 0.06
+    "plant_density": 0.65,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.12,
+    "irregularity_amplitude": 0.06
   },
   "camera": {
     "center": [
@@ -69,9 +69,9 @@
       125
     ],
     "distance": 35.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 500.0
   },
@@ -80,148 +80,148 @@
       "type": "barracks",
       "x": 60,
       "z": 60,
-      "playerId": 1,
-      "maxPopulation": 200,
+      "player_id": 1,
+      "max_population": 200,
       "nation": "roman_republic"
     },
     {
       "type": "archer",
       "x": 58,
       "z": 62,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 62,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 55,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 60,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 58,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 62,
       "z": 62,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 190,
       "z": 190,
-      "playerId": 2,
-      "maxPopulation": 200,
+      "player_id": 2,
+      "max_population": 200,
       "nation": "roman_republic"
     },
     {
       "type": "archer",
       "x": 188,
       "z": 192,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 192,
       "z": 188,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 185,
       "z": 190,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 190,
       "z": 185,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 188,
       "z": 188,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 192,
       "z": 192,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 125,
       "z": 125,
-      "maxPopulation": 150,
+      "max_population": 150,
       "nation": "roman_republic"
     },
     {
       "type": "barracks",
       "x": 60,
       "z": 190,
-      "playerId": 3,
-      "maxPopulation": 150,
+      "player_id": 3,
+      "max_population": 150,
       "nation": "roman_republic"
     },
     {
       "type": "swordsman",
       "x": 58,
       "z": 192,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "swordsman",
       "x": 62,
       "z": 188,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "archer",
       "x": 55,
       "z": 190,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "barracks",
       "x": 190,
       "z": 60,
-      "playerId": 4,
-      "maxPopulation": 150,
+      "player_id": 4,
+      "max_population": 150,
       "nation": "roman_republic"
     },
     {
       "type": "horse_swordsman",
       "x": 188,
       "z": 62,
-      "playerId": 4
+      "player_id": 4
     },
     {
       "type": "horse_swordsman",
       "x": 192,
       "z": 58,
-      "playerId": 4
+      "player_id": 4
     },
     {
       "type": "spearman",
       "x": 190,
       "z": 55,
-      "playerId": 4
+      "player_id": 4
     }
   ],
   "firecamps": [
@@ -418,9 +418,9 @@
   },
   "rain": {
     "enabled": true,
-    "cycleDuration": 300.0,
-    "activeDuration": 60.0,
+    "cycle_duration": 300.0,
+    "active_duration": 60.0,
     "intensity": 0.5,
-    "fadeDuration": 5.0
+    "fade_duration": 5.0
   }
 }

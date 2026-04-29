@@ -241,7 +241,7 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
   float base_speed = std::max(0.1F, unit->speed);
   auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
   if (stamina != nullptr && stamina->is_running) {
-    base_speed *= Engine::Core::StaminaComponent::kRunSpeedMultiplier;
+    base_speed *= Engine::Core::StaminaComponent::k_run_speed_multiplier;
   }
   const float max_speed = base_speed;
   const float accel = max_speed * 4.0F;

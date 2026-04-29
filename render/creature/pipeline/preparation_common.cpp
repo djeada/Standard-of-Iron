@@ -138,7 +138,7 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
 
   auto const palette = blob->frame_palette_view(
       clip.frame_offset + static_cast<std::uint32_t>(frame_idx));
-  if (palette.size() < Render::Humanoid::kBoneCount) {
+  if (palette.size() < Render::Humanoid::k_bone_count) {
     return std::nullopt;
   }
   auto const foot_l_idx =
@@ -190,7 +190,7 @@ auto horse_clip_contact_y(std::uint16_t clip_id,
 
   auto const palette = blob->frame_palette_view(
       clip.frame_offset + static_cast<std::uint32_t>(frame_idx));
-  if (palette.size() < Render::Horse::kHorseBoneCount) {
+  if (palette.size() < Render::Horse::k_horse_bone_count) {
     return std::nullopt;
   }
 

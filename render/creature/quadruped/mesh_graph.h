@@ -27,6 +27,9 @@ struct BarrelRing {
 struct BarrelNode {
   std::vector<BarrelRing> rings{};
   QVector3D scale{1.0F, 1.0F, 1.0F};
+  bool horse_rump_profile{false};
+  bool horse_head_profile{false};
+  bool horse_muzzle_profile{false};
 };
 
 struct EllipsoidNode {

@@ -38,13 +38,13 @@ enum class HumanoidBone : std::uint8_t {
   Count
 };
 
-inline constexpr std::size_t kBoneCount =
+inline constexpr std::size_t k_bone_count =
     static_cast<std::size_t>(HumanoidBone::Count);
 
-inline constexpr std::uint8_t kInvalidBone = 0xFF;
+inline constexpr std::uint8_t k_invalid_bone = 0xFF;
 
-inline constexpr std::array<std::uint8_t, kBoneCount> kBoneParents = {
-    kInvalidBone,
+inline constexpr std::array<std::uint8_t, k_bone_count> k_bone_parents = {
+    k_invalid_bone,
     static_cast<std::uint8_t>(HumanoidBone::Root),
     static_cast<std::uint8_t>(HumanoidBone::Pelvis),
     static_cast<std::uint8_t>(HumanoidBone::Spine),
@@ -88,7 +88,7 @@ enum class HumanoidSocket : std::uint8_t {
   Count
 };
 
-inline constexpr std::size_t kSocketCount =
+inline constexpr std::size_t k_socket_count =
     static_cast<std::size_t>(HumanoidSocket::Count);
 
 using SocketDef = Render::Creature::SocketDef;
@@ -98,7 +98,7 @@ socket_def(HumanoidSocket socket) noexcept -> const SocketDef &;
 
 [[nodiscard]] auto socket_bone(HumanoidSocket socket) noexcept -> HumanoidBone;
 
-using BonePalette = std::array<QMatrix4x4, kBoneCount>;
+using BonePalette = std::array<QMatrix4x4, k_bone_count>;
 
 void evaluate_skeleton(const Render::GL::HumanoidPose &pose,
                        const QVector3D &right_axis,

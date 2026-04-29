@@ -194,7 +194,7 @@ auto render_bow_mesh_count(const char *renderer_id,
   if (visible_bow_count == 0 && !counts.role_color_counts.empty()) {
     auto const max_roles = *std::max_element(counts.role_color_counts.begin(),
                                              counts.role_color_counts.end());
-    if (max_roles > Render::Humanoid::kHumanoidRoleCount) {
+    if (max_roles > Render::Humanoid::k_humanoid_role_count) {
       visible_bow_count = 1;
     }
   }
@@ -658,7 +658,7 @@ TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
             Render::GL::kRomanHeavyHelmetRoleCount +
                 Render::GL::kRomanGreavesRoleCount +
                 Render::GL::kRomanShoulderCoverRoleCount +
-                Render::GL::kRomanScutumRoleCount +
+                Render::GL::k_roman_scutum_role_count +
                 Render::GL::kRomanHeavyArmorRoleCount +
                 Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
 }
@@ -689,7 +689,7 @@ TEST(HumanoidPrepare, CarthageSwordsmanUsesCarthageShieldRoleLayout) {
   ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
             Render::GL::kCarthageHeavyHelmetRoleCount +
-                Render::GL::kCarthageShieldRoleCount +
+                Render::GL::k_carthage_shield_role_count +
                 Render::GL::kCarthageShoulderCoverRoleCount +
                 Render::GL::kArmorHeavyCarthageRoleCount +
                 Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
@@ -723,7 +723,7 @@ TEST(HumanoidPrepare, RomanMountedSwordsmanUsesRomanScutumRoleLayout) {
   EXPECT_EQ(extra_role_color_count(archetype_id),
             Render::GL::kRomanHeavyHelmetRoleCount +
                 Render::GL::kRomanShoulderCoverRoleCount +
-                Render::GL::kRomanScutumRoleCount +
+                Render::GL::k_roman_scutum_role_count +
                 Render::GL::kRomanHeavyArmorRoleCount +
                 Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);
 }
@@ -755,7 +755,7 @@ TEST(HumanoidPrepare, CarthageMountedSwordsmanUsesCarthageShieldRoleLayout) {
   ASSERT_NE(archetype_id, Render::Creature::kInvalidArchetype);
   EXPECT_EQ(extra_role_color_count(archetype_id),
             Render::GL::kCarthageHeavyHelmetRoleCount +
-                Render::GL::kCarthageShieldRoleCount +
+                Render::GL::k_carthage_shield_role_count +
                 Render::GL::kCarthageShoulderCoverRoleCount +
                 Render::GL::kArmorHeavyCarthageRoleCount +
                 Render::GL::kSwordRoleCount + Render::GL::kScabbardRoleCount);

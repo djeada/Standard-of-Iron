@@ -41,7 +41,7 @@ const CreatureMeshRecipe kHorseMeshRecipe{
 
 const CreatureRigDefinition kHorseRigDefinition{
     "horse.runtime_rig",
-    static_cast<std::uint8_t>(Render::Horse::kHorseBoneCount),
+    static_cast<std::uint8_t>(Render::Horse::k_horse_bone_count),
     &Render::Horse::horse_bind_palette,
     &Render::Horse::horse_topology(),
     {static_cast<std::uint8_t>(Render::Horse::HorseBone::FootFL),
@@ -95,7 +95,7 @@ const CreatureMeshRecipe kElephantMeshRecipe{
 
 const CreatureRigDefinition kElephantRigDefinition{
     "elephant.runtime_rig",
-    static_cast<std::uint8_t>(Render::Elephant::kElephantBoneCount),
+    static_cast<std::uint8_t>(Render::Elephant::k_elephant_bone_count),
     &Render::Elephant::elephant_bind_palette,
     &Render::Elephant::elephant_topology(),
     {static_cast<std::uint8_t>(Render::Elephant::ElephantBone::FootFL),
@@ -135,7 +135,7 @@ const CreatureVisualDefinition kElephantVisualDefinition{
     &kElephantGroundingModel,
     &kElephantAttachmentFrameExtractor,
     &kElephantLodStrategy,
-    static_cast<std::uint8_t>(Render::Elephant::kElephantRoleCount),
+    static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count),
     LegacySlotMask::ElephantHowdah,
 };
 

@@ -18,19 +18,19 @@ namespace Render::Elephant {
 
 namespace {
 
-constexpr std::uint8_t kRoleSkin = 1;
-constexpr std::uint8_t kRoleSkinTrunk = 5;
-constexpr std::uint8_t kRoleTusk = 6;
-constexpr std::uint8_t kRoleEye = 7;
-constexpr int kElephantMaterialId = 6;
-constexpr float kElephantVisualScale = 1.85F;
-constexpr float kElephantBodyLengthScale = 0.56F;
-constexpr float kElephantBodyWidthScale = 0.66F;
-constexpr float kElephantBodyHeightScale = 1.02F;
-constexpr float kElephantHeadScale = 1.55F;
-constexpr float kElephantTorsoWidthScale = 1.20F;
-constexpr float kElephantTorsoHeightScale = 1.10F;
-constexpr int kElephantLegRadialSegments = 6;
+constexpr std::uint8_t k_role_skin = 1;
+constexpr std::uint8_t k_role_skin_trunk = 5;
+constexpr std::uint8_t k_role_tusk = 6;
+constexpr std::uint8_t k_role_eye = 7;
+constexpr int k_elephant_material_id = 6;
+constexpr float k_elephant_visual_scale = 1.85F;
+constexpr float k_elephant_body_length_scale = 0.56F;
+constexpr float k_elephant_body_width_scale = 0.66F;
+constexpr float k_elephant_body_height_scale = 1.02F;
+constexpr float k_elephant_head_scale = 1.55F;
+constexpr float k_elephant_torso_width_scale = 1.20F;
+constexpr float k_elephant_torso_height_scale = 1.10F;
+constexpr int k_elephant_leg_radial_segments = 6;
 
 struct ElephantClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -40,7 +40,7 @@ struct ElephantClipSpec {
   float bob_scale{0.0F};
 };
 
-const std::array<ElephantClipSpec, 4> kElephantClips{{
+const std::array<ElephantClipSpec, 4> k_elephant_clips{{
     {{"idle", 24U, 24.0F, true},
      false,
      Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F},
@@ -63,12 +63,12 @@ const std::array<ElephantClipSpec, 4> kElephantClips{{
      0.0F},
 }};
 
-const std::array<Render::Creature::BakeClipDescriptor, kElephantClips.size()>
-    kElephantClipDescs{{
-        kElephantClips[0].desc,
-        kElephantClips[1].desc,
-        kElephantClips[2].desc,
-        kElephantClips[3].desc,
+const std::array<Render::Creature::BakeClipDescriptor, k_elephant_clips.size()>
+    k_elephant_clip_descs{{
+        k_elephant_clips[0].desc,
+        k_elephant_clips[1].desc,
+        k_elephant_clips[2].desc,
+        k_elephant_clips[3].desc,
     }};
 
 auto build_elephant_whole_nodes()
@@ -79,65 +79,65 @@ auto build_elephant_whole_nodes()
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
   float const bw =
-      dims.body_width * kElephantBodyWidthScale * kElephantVisualScale;
+      dims.body_width * k_elephant_body_width_scale * k_elephant_visual_scale;
   float const bh =
-      dims.body_height * kElephantBodyHeightScale * kElephantVisualScale;
+      dims.body_height * k_elephant_body_height_scale * k_elephant_visual_scale;
   float const bl =
-      dims.body_length * kElephantBodyLengthScale * kElephantVisualScale;
-  float const hw = dims.head_width * kElephantVisualScale;
-  float const hh = dims.head_height * kElephantVisualScale;
-  float const hl = dims.head_length * kElephantVisualScale;
+      dims.body_length * k_elephant_body_length_scale * k_elephant_visual_scale;
+  float const hw = dims.head_width * k_elephant_visual_scale;
+  float const hh = dims.head_height * k_elephant_visual_scale;
+  float const hl = dims.head_length * k_elephant_visual_scale;
 
   std::vector<MeshNode> nodes;
   nodes.reserve(24);
 
   BarrelNode body;
   body.rings = {
-      {-bl * 0.70F, bh * 0.00F, bw * 0.34F * kElephantTorsoWidthScale,
-       bh * 0.12F * kElephantTorsoHeightScale,
-       bh * 0.12F * kElephantTorsoHeightScale},
-      {-bl * 0.56F, bh * 0.04F, bw * 0.70F * kElephantTorsoWidthScale,
-       bh * 0.32F * kElephantTorsoHeightScale,
-       bh * 0.28F * kElephantTorsoHeightScale},
-      {-bl * 0.36F, bh * 0.04F, bw * 0.88F * kElephantTorsoWidthScale,
-       bh * 0.38F * kElephantTorsoHeightScale,
-       bh * 0.40F * kElephantTorsoHeightScale},
-      {-bl * 0.14F, bh * 0.02F, bw * 0.96F * kElephantTorsoWidthScale,
-       bh * 0.42F * kElephantTorsoHeightScale,
-       bh * 0.46F * kElephantTorsoHeightScale},
-      {bl * 0.10F, bh * 0.02F, bw * 0.96F * kElephantTorsoWidthScale,
-       bh * 0.42F * kElephantTorsoHeightScale,
-       bh * 0.46F * kElephantTorsoHeightScale},
-      {bl * 0.32F, bh * 0.06F, bw * 0.86F * kElephantTorsoWidthScale,
-       bh * 0.40F * kElephantTorsoHeightScale,
-       bh * 0.36F * kElephantTorsoHeightScale},
-      {bl * 0.50F, bh * 0.10F, bw * 0.74F * kElephantTorsoWidthScale,
-       bh * 0.38F * kElephantTorsoHeightScale,
-       bh * 0.28F * kElephantTorsoHeightScale},
-      {bl * 0.62F, bh * 0.14F, bw * 0.50F * kElephantTorsoWidthScale,
-       bh * 0.24F * kElephantTorsoHeightScale,
-       bh * 0.14F * kElephantTorsoHeightScale},
-      {bl * 0.70F, bh * 0.13F, bw * 0.28F * kElephantTorsoWidthScale,
-       bh * 0.10F * kElephantTorsoHeightScale,
-       bh * 0.04F * kElephantTorsoHeightScale},
+      {-bl * 0.70F, bh * 0.00F, bw * 0.34F * k_elephant_torso_width_scale,
+       bh * 0.12F * k_elephant_torso_height_scale,
+       bh * 0.12F * k_elephant_torso_height_scale},
+      {-bl * 0.56F, bh * 0.04F, bw * 0.70F * k_elephant_torso_width_scale,
+       bh * 0.32F * k_elephant_torso_height_scale,
+       bh * 0.28F * k_elephant_torso_height_scale},
+      {-bl * 0.36F, bh * 0.04F, bw * 0.88F * k_elephant_torso_width_scale,
+       bh * 0.38F * k_elephant_torso_height_scale,
+       bh * 0.40F * k_elephant_torso_height_scale},
+      {-bl * 0.14F, bh * 0.02F, bw * 0.96F * k_elephant_torso_width_scale,
+       bh * 0.42F * k_elephant_torso_height_scale,
+       bh * 0.46F * k_elephant_torso_height_scale},
+      {bl * 0.10F, bh * 0.02F, bw * 0.96F * k_elephant_torso_width_scale,
+       bh * 0.42F * k_elephant_torso_height_scale,
+       bh * 0.46F * k_elephant_torso_height_scale},
+      {bl * 0.32F, bh * 0.06F, bw * 0.86F * k_elephant_torso_width_scale,
+       bh * 0.40F * k_elephant_torso_height_scale,
+       bh * 0.36F * k_elephant_torso_height_scale},
+      {bl * 0.50F, bh * 0.10F, bw * 0.74F * k_elephant_torso_width_scale,
+       bh * 0.38F * k_elephant_torso_height_scale,
+       bh * 0.28F * k_elephant_torso_height_scale},
+      {bl * 0.62F, bh * 0.14F, bw * 0.50F * k_elephant_torso_width_scale,
+       bh * 0.24F * k_elephant_torso_height_scale,
+       bh * 0.14F * k_elephant_torso_height_scale},
+      {bl * 0.70F, bh * 0.13F, bw * 0.28F * k_elephant_torso_width_scale,
+       bh * 0.10F * k_elephant_torso_height_scale,
+       bh * 0.04F * k_elephant_torso_height_scale},
   };
   nodes.push_back({"elephant.body", static_cast<BoneIndex>(ElephantBone::Body),
-                   kRoleSkin, kLodAll, 0, body});
+                   k_role_skin, kLodAll, 0, body});
 
   EllipsoidNode head;
   head.center = QVector3D(0.0F, bh * 0.28F, bl * 0.72F);
-  head.radii = QVector3D(hw * 0.41F * kElephantHeadScale,
-                         hh * 0.51F * kElephantHeadScale,
-                         hl * 0.48F * kElephantHeadScale);
+  head.radii = QVector3D(hw * 0.41F * k_elephant_head_scale,
+                         hh * 0.51F * k_elephant_head_scale,
+                         hl * 0.48F * k_elephant_head_scale);
   head.ring_count = 5U;
   head.ring_vertices = 8U;
   nodes.push_back({"elephant.head", static_cast<BoneIndex>(ElephantBone::Head),
-                   kRoleSkin, kLodAll, 0, head});
+                   k_role_skin, kLodAll, 0, head});
 
   float const head_front_z = head.center.z() + head.radii.z();
   float const trunk_base_z = bl * 1.16F;
   float const eye_radius_z = hl * 0.035F;
-  float const head_eye_z = head_front_z - 3 * eye_radius_z;
+  float const head_eye_z = head_front_z - 3.5F * eye_radius_z;
 
   EllipsoidNode trunk_bridge;
   trunk_bridge.center = QVector3D(0.0F, bh * 0.08F, head_front_z - hl * 0.075F);
@@ -145,7 +145,7 @@ auto build_elephant_whole_nodes()
   trunk_bridge.ring_count = 4U;
   trunk_bridge.ring_vertices = 6U;
   nodes.push_back({"elephant.trunk.bridge",
-                   static_cast<BoneIndex>(ElephantBone::Head), kRoleSkin,
+                   static_cast<BoneIndex>(ElephantBone::Head), k_role_skin,
                    kLodAll, 0, trunk_bridge});
 
   auto add_eye = [&](float side) {
@@ -155,7 +155,7 @@ auto build_elephant_whole_nodes()
     eye.ring_count = 4U;
     eye.ring_vertices = 6U;
     nodes.push_back({"elephant.eye", static_cast<BoneIndex>(ElephantBone::Head),
-                     kRoleEye, kLodAll, 0, eye});
+                     k_role_eye, kLodAll, 0, eye});
   };
   add_eye(1.0F);
   add_eye(-1.0F);
@@ -165,20 +165,21 @@ auto build_elephant_whole_nodes()
                      BoneIndex shoulder_bone, BoneIndex knee_bone,
                      BoneIndex foot_bone, bool front) {
     float const top_y = -bh * 0.30F;
-    float const sole_y = -dims.leg_length * kElephantVisualScale * 2.04F;
+    float const sole_y = -dims.leg_length * k_elephant_visual_scale * 2.04F;
     float const leg_drop = sole_y - top_y;
     float const knee_y = top_y + leg_drop * (front ? 0.36F : 0.34F);
-    float const hoof_height = dims.foot_radius * kElephantVisualScale * 0.86F;
+    float const hoof_height =
+        dims.foot_radius * k_elephant_visual_scale * 0.86F;
     float const hoof_top_y = sole_y + hoof_height;
     float const calf_end_y =
-        hoof_top_y + dims.leg_radius * kElephantVisualScale * 0.08F;
+        hoof_top_y + dims.leg_radius * k_elephant_visual_scale * 0.08F;
     float const bend_z = (front ? 1.0F : -1.0F) * dims.body_length *
-                         kElephantVisualScale * 0.16F;
+                         k_elephant_visual_scale * 0.16F;
     float const ankle_z = z + (front ? 1.0F : -1.0F) * dims.body_length *
-                                  kElephantVisualScale * 0.06F;
-    float const foot_scale = dims.foot_radius * kElephantVisualScale;
+                                  k_elephant_visual_scale * 0.06F;
+    float const foot_scale = dims.foot_radius * k_elephant_visual_scale;
     float const leg_scale =
-        dims.leg_radius * kElephantVisualScale * (front ? 2.15F : 2.02F);
+        dims.leg_radius * k_elephant_visual_scale * (front ? 2.15F : 2.02F);
     float const hoof_radius_y = hoof_height * 0.5F;
     float const knee_x = x;
     float const ankle_x = x;
@@ -205,7 +206,8 @@ auto build_elephant_whole_nodes()
     thigh.end_radius = leg_scale * 0.20F;
     thigh.segment_count = 4U;
     thigh.ring_vertices = 6U;
-    nodes.push_back({thigh_name, shoulder_bone, kRoleSkin, kLodAll, 0, thigh});
+    nodes.push_back(
+        {thigh_name, shoulder_bone, k_role_skin, kLodAll, 0, thigh});
 
     TubeNode calf;
     calf.start = knee_local + calf_axis * knee_gap;
@@ -214,7 +216,7 @@ auto build_elephant_whole_nodes()
     calf.end_radius = leg_scale * 0.10F;
     calf.segment_count = 4U;
     calf.ring_vertices = 6U;
-    nodes.push_back({calf_name, knee_bone, kRoleSkin, kLodAll, 0, calf});
+    nodes.push_back({calf_name, knee_bone, k_role_skin, kLodAll, 0, calf});
 
     EllipsoidNode hoof;
     hoof.center = QVector3D(ankle_x, hoof_top_y - hoof_radius_y, ankle_z);
@@ -222,7 +224,7 @@ auto build_elephant_whole_nodes()
                            foot_scale * (front ? 1.42F : 1.28F));
     hoof.ring_count = 4U;
     hoof.ring_vertices = 6U;
-    nodes.push_back({hoof_name, foot_bone, kRoleSkin, kLodAll, 0, hoof});
+    nodes.push_back({hoof_name, foot_bone, k_role_skin, kLodAll, 0, hoof});
   };
   add_leg("elephant.leg.fl.thigh", "elephant.leg.fl.calf",
           "elephant.leg.fl.hoof", bw * 0.40F, bl * 0.42F,
@@ -248,38 +250,38 @@ auto build_elephant_whole_nodes()
   SnoutNode trunk;
   trunk.start = QVector3D(0.0F, bh * 0.06F, trunk_base_z);
   trunk.end = QVector3D(0.0F, -bh * 1.02F, bl * 1.04F);
-  trunk.base_radius = dims.trunk_base_radius * kElephantVisualScale * 0.304F;
-  trunk.tip_radius = dims.trunk_tip_radius * kElephantVisualScale * 0.25F;
+  trunk.base_radius = dims.trunk_base_radius * k_elephant_visual_scale * 0.304F;
+  trunk.tip_radius = dims.trunk_tip_radius * k_elephant_visual_scale * 0.25F;
   trunk.sag = -bh * 0.16F;
   trunk.segment_count = 9U;
   trunk.ring_vertices = 6U;
   nodes.push_back({"elephant.trunk",
                    static_cast<BoneIndex>(ElephantBone::TrunkTip),
-                   kRoleSkinTrunk, kLodAll, 0, trunk});
+                   k_role_skin_trunk, kLodAll, 0, trunk});
 
   auto add_tusk = [&](float side) {
     ConeNode tusk;
     tusk.base_center = QVector3D(side * hw * 0.32F, bh * 0.02F, bl * 0.96F);
-    tusk.tip =
-        QVector3D(side * hw * 0.42F, -bh * 0.34F,
-                  bl * 1.10F + dims.tusk_length * kElephantVisualScale * 0.24F);
-    tusk.base_radius = dims.tusk_radius * kElephantVisualScale * 1.0F;
+    tusk.tip = QVector3D(side * hw * 0.42F, -bh * 0.34F,
+                         bl * 1.10F + dims.tusk_length *
+                                          k_elephant_visual_scale * 0.24F);
+    tusk.base_radius = dims.tusk_radius * k_elephant_visual_scale * 1.0F;
     tusk.ring_vertices = 6U;
     nodes.push_back({"elephant.tusk",
-                     static_cast<BoneIndex>(ElephantBone::Head), kRoleTusk,
+                     static_cast<BoneIndex>(ElephantBone::Head), k_role_tusk,
                      kLodAll, 0, tusk});
   };
   add_tusk(1.0F);
   add_tusk(-1.0F);
 
   auto make_ear = [&](float side) {
-    constexpr float kElephantEarScale = 1.0F / 1.5F;
+    constexpr float k_elephant_ear_scale = 1.0F / 1.5F;
     FlatFanNode ear;
     QVector3D const ear_root(side * (hw * ((0.48F + 0.34F + 0.40F) / 3.0F)),
                              bh * ((0.82F + 0.08F + 0.58F) / 3.0F),
                              bl * ((0.56F + 0.62F + 0.58F) / 3.0F));
     auto scale_from_root = [&](const QVector3D &point) {
-      return ear_root + (point - ear_root) * kElephantEarScale;
+      return ear_root + (point - ear_root) * k_elephant_ear_scale;
     };
     ear.outline = {
         scale_from_root({side * (hw * 0.48F), bh * 0.82F, bl * 0.56F}),
@@ -292,10 +294,10 @@ auto build_elephant_whole_nodes()
         scale_from_root({side * (hw * 0.40F), bh * 0.58F, bl * 0.58F}),
     };
     ear.thickness_axis = QVector3D(0.0F, 0.0F, 1.0F);
-    ear.thickness =
-        dims.ear_thickness * kElephantVisualScale * 1.15F * kElephantEarScale;
+    ear.thickness = dims.ear_thickness * k_elephant_visual_scale * 1.15F *
+                    k_elephant_ear_scale;
     nodes.push_back({"elephant.ear", static_cast<BoneIndex>(ElephantBone::Head),
-                     kRoleSkin, kLodAll, 0, ear});
+                     k_role_skin, kLodAll, 0, ear});
   };
   make_ear(1.0F);
   make_ear(-1.0F);
@@ -303,24 +305,24 @@ auto build_elephant_whole_nodes()
   TubeNode tail;
   tail.start = QVector3D(0.0F, bh * 0.11F, -bl * 0.50F);
   tail.end = QVector3D(0.0F, -bh * 0.48F, -bl * 1.00F);
-  tail.start_radius = dims.tail_length * kElephantVisualScale * 0.03F;
-  tail.end_radius = dims.tail_length * kElephantVisualScale * 0.04F;
+  tail.start_radius = dims.tail_length * k_elephant_visual_scale * 0.03F;
+  tail.end_radius = dims.tail_length * k_elephant_visual_scale * 0.04F;
   tail.segment_count = 4U;
   tail.ring_vertices = 6U;
   tail.sag = -bh * 0.05F;
   nodes.push_back({"elephant.tail", static_cast<BoneIndex>(ElephantBone::Body),
-                   kRoleSkin, kLodAll, 0, tail});
+                   k_role_skin, kLodAll, 0, tail});
 
   return nodes;
 }
 
-const auto kElephantWholeNodes = build_elephant_whole_nodes();
-const std::array<std::string_view, 1> kElephantFullExcludedPrefixes{
+const auto k_elephant_whole_nodes = build_elephant_whole_nodes();
+const std::array<std::string_view, 1> k_elephant_full_excluded_prefixes{
     "elephant.leg."};
 
 auto elephant_leg_segment_mesh() noexcept -> Render::GL::Mesh * {
   static Render::GL::Mesh *const mesh =
-      Render::GL::get_unit_cylinder(kElephantLegRadialSegments);
+      Render::GL::get_unit_cylinder(k_elephant_leg_radial_segments);
   return mesh;
 }
 
@@ -346,8 +348,8 @@ auto build_elephant_full_leg_overlays()
     thigh.params.tail_offset = QVector3D(0.0F, -dims.leg_length * 0.06F, 0.0F);
     thigh.params.radius = dims.leg_radius * (front ? 1.60F : 1.50F);
     thigh.custom_mesh = elephant_leg_segment_mesh();
-    thigh.color_role = kRoleSkin;
-    thigh.material_id = kElephantMaterialId;
+    thigh.color_role = k_role_skin;
+    thigh.material_id = k_elephant_material_id;
     thigh.lod_mask = Render::Creature::kLodFull;
 
     PrimitiveInstance &calf = out[idx++];
@@ -360,8 +362,8 @@ auto build_elephant_full_leg_overlays()
         QVector3D(0.0F, dims.foot_radius * (front ? 0.06F : 0.04F), 0.0F);
     calf.params.radius = dims.leg_radius * (front ? 0.90F : 0.85F);
     calf.custom_mesh = elephant_leg_segment_mesh();
-    calf.color_role = kRoleSkin;
-    calf.material_id = kElephantMaterialId;
+    calf.color_role = k_role_skin;
+    calf.material_id = k_elephant_material_id;
     calf.lod_mask = Render::Creature::kLodFull;
 
     PrimitiveInstance &hoof = out[idx++];
@@ -375,8 +377,8 @@ auto build_elephant_full_leg_overlays()
         QVector3D(dims.foot_radius * (front ? 0.88F / 3.0F : 0.82F / 3.0F),
                   dims.foot_radius * (0.56F / 3.0F),
                   dims.foot_radius * (front ? 1.18F / 3.0F : 1.02F / 3.0F));
-    hoof.color_role = kRoleSkin;
-    hoof.material_id = kElephantMaterialId;
+    hoof.color_role = k_role_skin;
+    hoof.material_id = k_elephant_material_id;
     hoof.lod_mask = Render::Creature::kLodFull;
   };
 
@@ -403,7 +405,7 @@ auto build_elephant_full_leg_overlays()
   return out;
 }
 
-const auto kElephantFullLegOverlays = build_elephant_full_leg_overlays();
+const auto k_elephant_full_leg_overlays = build_elephant_full_leg_overlays();
 
 auto elephant_topology_storage() noexcept
     -> const Render::Creature::Quadruped::TopologyStorage & {
@@ -426,7 +428,7 @@ auto elephant_topology_ref() noexcept
 void bake_elephant_manifest_clip_palettes(
     std::size_t clip_index, std::uint32_t frame_index,
     std::vector<QMatrix4x4> &out_palettes) {
-  auto const &clip = kElephantClips[clip_index];
+  auto const &clip = k_elephant_clips[clip_index];
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
   float const phase =
@@ -469,26 +471,26 @@ auto elephant_manifest() noexcept -> const Render::Creature::SpeciesManifest & {
     m.lod_full.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(ElephantBone::Root);
     m.lod_full.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
-    m.lod_full.color_role = kRoleSkin;
-    m.lod_full.material_id = kElephantMaterialId;
+    m.lod_full.color_role = k_role_skin;
+    m.lod_full.material_id = k_elephant_material_id;
     m.lod_full.lod_mask = Render::Creature::kLodFull;
     m.lod_full.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
-            kElephantWholeNodes);
-    m.lod_full.excluded_node_name_prefixes = kElephantFullExcludedPrefixes;
-    m.lod_full.overlay_primitives = kElephantFullLegOverlays;
+            k_elephant_whole_nodes);
+    m.lod_full.excluded_node_name_prefixes = k_elephant_full_excluded_prefixes;
+    m.lod_full.overlay_primitives = k_elephant_full_leg_overlays;
     m.lod_minimal.primitive_name = "elephant.minimal.whole";
     m.lod_minimal.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(ElephantBone::Root);
     m.lod_minimal.mesh_skinning = Render::Creature::MeshSkinning::ElephantWhole;
-    m.lod_minimal.color_role = kRoleSkin;
-    m.lod_minimal.material_id = kElephantMaterialId;
+    m.lod_minimal.color_role = k_role_skin;
+    m.lod_minimal.material_id = k_elephant_material_id;
     m.lod_minimal.lod_mask = Render::Creature::kLodMinimal;
     m.lod_minimal.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
-            kElephantWholeNodes);
+            k_elephant_whole_nodes);
     m.clips = std::span<const Render::Creature::BakeClipDescriptor>(
-        kElephantClipDescs);
+        k_elephant_clip_descs);
     m.bind_palette = &elephant_bind_palette;
     m.creature_spec = &elephant_creature_spec;
     m.bake_clip_palette = &bake_elephant_manifest_clip_palettes;

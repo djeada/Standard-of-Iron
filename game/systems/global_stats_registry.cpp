@@ -90,7 +90,7 @@ void GlobalStatsRegistry::on_unit_spawned(
              event.spawn_type != Game::Units::SpawnType::Home) {
 
     int const production_cost =
-        Game::Units::TroopConfig::instance().getProductionCost(
+        Game::Units::TroopConfig::instance().get_production_cost(
             event.spawn_type);
     stats.troops_recruited += production_cost;
   }
@@ -105,7 +105,7 @@ void GlobalStatsRegistry::on_unit_died(
     auto it = m_player_stats.find(event.owner_id);
     if (it != m_player_stats.end()) {
       int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
+          Game::Units::TroopConfig::instance().get_production_cost(
               event.spawn_type);
       it->second.losses += production_cost;
     }
@@ -132,7 +132,7 @@ void GlobalStatsRegistry::on_unit_died(
           event.spawn_type != Game::Units::SpawnType::DefenseTower &&
           event.spawn_type != Game::Units::SpawnType::Home) {
         int const production_cost =
-            Game::Units::TroopConfig::instance().getProductionCost(
+            Game::Units::TroopConfig::instance().get_production_cost(
                 event.spawn_type);
         stats.enemies_killed += production_cost;
       }

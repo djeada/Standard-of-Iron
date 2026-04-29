@@ -60,7 +60,6 @@ auto are_all_surrounding_cells_invalid(const Point &position,
 
   return true;
 }
-
 } // namespace
 
 std::unique_ptr<Pathfinding> CommandService::s_pathfinder = nullptr;
@@ -156,6 +155,232 @@ void CommandService::clear_pending_request(Engine::Core::EntityID entity_id) {
   }
 }
 
+void CommandService::move_unit(Engine::Core::World &world,
+                               Engine::Core::EntityID unit_id,
+                               const QVector3D &target) {
+  move_unit(world, unit_id, target, MoveOptions{});
+}
+
+void CommandService::move_unit(Engine::Core::World &world,
+                               Engine::Core::EntityID unit_id,
+                               const QVector3D &target,
+                               const MoveOptions &options) {
+  auto *e = world.get_entity(unit_id);
+  if (e == nullptr) {
+    return;
+  }
+
+  auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
+  if ((hold_mode != nullptr) && hold_mode->active) {
+    hold_mode->active = false;
+    hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+  }
+
+  auto *guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
+  if ((guard_mode != nullptr) && guard_mode->active &&
+      !guard_mode->returning_to_guard_position) {
+    guard_mode->active = false;
+  }
+
+  auto *formation_mode =
+      e->get_component<Engine::Core::FormationModeComponent>();
+  if ((formation_mode != nullptr) && formation_mode->active) {
+    formation_mode->active = false;
+  }
+
+  auto *atk = e->get_component<Engine::Core::AttackComponent>();
+  if ((atk != nullptr) && atk->in_melee_lock) {
+    return;
+  }
+
+  auto *transform = e->get_component<Engine::Core::TransformComponent>();
+  if (transform == nullptr) {
+    return;
+  }
+
+  auto *mv = e->get_component<Engine::Core::MovementComponent>();
+  if (mv == nullptr) {
+    mv = e->add_component<Engine::Core::MovementComponent>();
+  }
+  if (mv == nullptr) {
+    return;
+  }
+
+  if (options.clear_attack_intent) {
+    e->remove_component<Engine::Core::AttackTargetComponent>();
+  }
+
+  float const target_x = target.x();
+  float const target_z = target.z();
+
+  bool matched_pending = false;
+  if (mv->path_pending) {
+    std::lock_guard<std::mutex> const lock(s_pending_mutex);
+    auto request_it = s_entity_to_request.find(unit_id);
+    if (request_it != s_entity_to_request.end()) {
+      auto pending_it = s_pending_requests.find(request_it->second);
+      if (pending_it != s_pending_requests.end()) {
+        float const pdx = pending_it->second.target.x() - target_x;
+        float const pdz = pending_it->second.target.z() - target_z;
+        if (pdx * pdx + pdz * pdz <= same_target_threshold_sq) {
+          pending_it->second.options = options;
+          matched_pending = true;
+        }
+      } else {
+        s_entity_to_request.erase(request_it);
+      }
+    }
+  }
+
+  mv->goal_x = target_x;
+  mv->goal_y = target_z;
+
+  if (matched_pending) {
+    return;
+  }
+
+  bool should_suppress_path_request = false;
+  if (mv->time_since_last_path_request < pathfinding_request_cooldown) {
+    float const last_goal_dx = mv->last_goal_x - target_x;
+    float const last_goal_dz = mv->last_goal_y - target_z;
+    float const goal_movement_sq =
+        last_goal_dx * last_goal_dx + last_goal_dz * last_goal_dz;
+
+    if (goal_movement_sq < target_movement_threshold_sq) {
+      should_suppress_path_request = true;
+
+      if (mv->has_target || mv->path_pending) {
+        return;
+      }
+    }
+  }
+
+  if (!mv->path_pending) {
+    bool const current_target_matches = mv->has_target && !mv->has_waypoints();
+    if (current_target_matches) {
+      float const dx = mv->target_x - target_x;
+      float const dz = mv->target_y - target_z;
+      if (dx * dx + dz * dz <= same_target_threshold_sq) {
+        return;
+      }
+    }
+
+    if (!mv->path.empty()) {
+      const auto &last_waypoint = mv->path.back();
+      float const dx = last_waypoint.first - target_x;
+      float const dz = last_waypoint.second - target_z;
+      if (dx * dx + dz * dz <= same_target_threshold_sq) {
+        return;
+      }
+    }
+  }
+
+  if (s_pathfinder) {
+    Point const start =
+        world_to_grid(transform->position.x, transform->position.z);
+    Point const end = world_to_grid(target.x(), target.z());
+
+    if (start == end) {
+      mv->target_x = target_x;
+      mv->target_y = target_z;
+      mv->has_target = true;
+      mv->clear_path();
+      mv->path_pending = false;
+      mv->pending_request_id = 0;
+      mv->vx = 0.0F;
+      mv->vz = 0.0F;
+      clear_pending_request(unit_id);
+      return;
+    }
+
+    int const dx = std::abs(end.x - start.x);
+    int const dz = std::abs(end.y - start.y);
+    bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
+    use_direct_path = false;
+
+    if (use_direct_path) {
+      mv->target_x = target_x;
+      mv->target_y = target_z;
+      mv->has_target = true;
+      mv->clear_path();
+      mv->path_pending = false;
+      mv->pending_request_id = 0;
+      mv->vx = 0.0F;
+      mv->vz = 0.0F;
+      clear_pending_request(unit_id);
+
+      mv->time_since_last_path_request = 0.0F;
+      mv->last_goal_x = target_x;
+      mv->last_goal_y = target_z;
+    } else {
+      bool skip_new_request = false;
+      {
+        std::lock_guard<std::mutex> const lock(s_pending_mutex);
+        auto existing_it = s_entity_to_request.find(unit_id);
+        if (existing_it != s_entity_to_request.end()) {
+          auto pending_it = s_pending_requests.find(existing_it->second);
+          if (pending_it != s_pending_requests.end()) {
+            float const dx = pending_it->second.target.x() - target_x;
+            float const dz = pending_it->second.target.z() - target_z;
+            if (dx * dx + dz * dz <= same_target_threshold_sq) {
+              pending_it->second.options = options;
+              skip_new_request = true;
+            } else {
+              s_pending_requests.erase(pending_it);
+              s_entity_to_request.erase(existing_it);
+            }
+          } else {
+            s_entity_to_request.erase(existing_it);
+          }
+        }
+      }
+
+      if (skip_new_request) {
+        return;
+      }
+
+      mv->clear_path();
+      mv->has_target = false;
+      mv->vx = 0.0F;
+      mv->vz = 0.0F;
+      mv->path_pending = true;
+
+      std::uint64_t const request_id =
+          s_next_request_id.fetch_add(1, std::memory_order_relaxed);
+      mv->pending_request_id = request_id;
+
+      float const unit_radius = 1.0F;
+
+      {
+        std::lock_guard<std::mutex> const lock(s_pending_mutex);
+        PendingPathRequest pending;
+        pending.entity_id = unit_id;
+        pending.target = target;
+        pending.options = options;
+        pending.unit_radius = unit_radius;
+        s_pending_requests[request_id] = std::move(pending);
+        s_entity_to_request[unit_id] = request_id;
+      }
+
+      s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
+
+      mv->time_since_last_path_request = 0.0F;
+      mv->last_goal_x = target_x;
+      mv->last_goal_y = target_z;
+    }
+  } else {
+    mv->target_x = target_x;
+    mv->target_y = target_z;
+    mv->has_target = true;
+    mv->clear_path();
+    mv->path_pending = false;
+    mv->pending_request_id = 0;
+    mv->vx = 0.0F;
+    mv->vz = 0.0F;
+    clear_pending_request(unit_id);
+  }
+}
+
 void CommandService::move_units(
     Engine::Core::World &world,
     const std::vector<Engine::Core::EntityID> &units,
@@ -176,227 +401,36 @@ void CommandService::move_units(
     return;
   }
 
-  for (size_t i = 0; i < units.size(); ++i) {
-    auto *e = world.get_entity(units[i]);
-    if (e == nullptr) {
-      continue;
+  for (std::size_t i = 0; i < units.size(); ++i) {
+    move_unit(world, units[i], targets[i], options);
+  }
+}
+
+void CommandService::move_units(Engine::Core::World &world,
+                                const std::vector<MoveIntent> &intents) {
+  move_units(world, intents, MoveOptions{});
+}
+
+void CommandService::move_units(Engine::Core::World &world,
+                                const std::vector<MoveIntent> &intents,
+                                const MoveOptions &options) {
+  if (options.group_move && intents.size() > 1) {
+    std::vector<Engine::Core::EntityID> unit_ids;
+    std::vector<QVector3D> move_targets;
+    unit_ids.reserve(intents.size());
+    move_targets.reserve(intents.size());
+
+    for (const auto &intent : intents) {
+      unit_ids.push_back(intent.unit_id);
+      move_targets.push_back(intent.target);
     }
 
-    auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
-    if ((hold_mode != nullptr) && hold_mode->active) {
+    move_units(world, unit_ids, move_targets, options);
+    return;
+  }
 
-      hold_mode->active = false;
-      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
-    }
-
-    auto *guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
-    if ((guard_mode != nullptr) && guard_mode->active &&
-        !guard_mode->returning_to_guard_position) {
-      guard_mode->active = false;
-    }
-
-    auto *formation_mode =
-        e->get_component<Engine::Core::FormationModeComponent>();
-    if ((formation_mode != nullptr) && formation_mode->active) {
-      formation_mode->active = false;
-    }
-
-    auto *atk = e->get_component<Engine::Core::AttackComponent>();
-    if ((atk != nullptr) && atk->in_melee_lock) {
-
-      continue;
-    }
-
-    auto *transform = e->get_component<Engine::Core::TransformComponent>();
-    if (transform == nullptr) {
-      continue;
-    }
-
-    auto *mv = e->get_component<Engine::Core::MovementComponent>();
-    if (mv == nullptr) {
-      mv = e->add_component<Engine::Core::MovementComponent>();
-    }
-    if (mv == nullptr) {
-      continue;
-    }
-
-    if (options.clear_attack_intent) {
-      e->remove_component<Engine::Core::AttackTargetComponent>();
-    }
-
-    const float target_x = targets[i].x();
-    const float target_z = targets[i].z();
-
-    bool matched_pending = false;
-    if (mv->path_pending) {
-      std::lock_guard<std::mutex> const lock(s_pending_mutex);
-      auto request_it = s_entity_to_request.find(units[i]);
-      if (request_it != s_entity_to_request.end()) {
-        auto pending_it = s_pending_requests.find(request_it->second);
-        if (pending_it != s_pending_requests.end()) {
-          float const pdx = pending_it->second.target.x() - target_x;
-          float const pdz = pending_it->second.target.z() - target_z;
-          if (pdx * pdx + pdz * pdz <= same_target_threshold_sq) {
-            pending_it->second.options = options;
-            matched_pending = true;
-          }
-        } else {
-          s_entity_to_request.erase(request_it);
-        }
-      }
-    }
-
-    mv->goal_x = target_x;
-    mv->goal_y = target_z;
-
-    if (matched_pending) {
-      continue;
-    }
-
-    bool should_suppress_path_request = false;
-    if (mv->time_since_last_path_request < pathfinding_request_cooldown) {
-
-      float const last_goal_dx = mv->last_goal_x - target_x;
-      float const last_goal_dz = mv->last_goal_y - target_z;
-      float const goal_movement_sq =
-          last_goal_dx * last_goal_dx + last_goal_dz * last_goal_dz;
-
-      if (goal_movement_sq < target_movement_threshold_sq) {
-        should_suppress_path_request = true;
-
-        if (mv->has_target || mv->path_pending) {
-          continue;
-        }
-      }
-    }
-
-    if (!mv->path_pending) {
-      bool const current_target_matches =
-          mv->has_target && !mv->has_waypoints();
-      if (current_target_matches) {
-        float const dx = mv->target_x - target_x;
-        float const dz = mv->target_y - target_z;
-        if (dx * dx + dz * dz <= same_target_threshold_sq) {
-          continue;
-        }
-      }
-
-      if (!mv->path.empty()) {
-        const auto &last_waypoint = mv->path.back();
-        float const dx = last_waypoint.first - target_x;
-        float const dz = last_waypoint.second - target_z;
-        if (dx * dx + dz * dz <= same_target_threshold_sq) {
-          continue;
-        }
-      }
-    }
-
-    if (s_pathfinder) {
-      Point const start =
-          world_to_grid(transform->position.x, transform->position.z);
-      Point const end = world_to_grid(targets[i].x(), targets[i].z());
-
-      if (start == end) {
-        mv->target_x = target_x;
-        mv->target_y = target_z;
-        mv->has_target = true;
-        mv->clear_path();
-        mv->path_pending = false;
-        mv->pending_request_id = 0;
-        mv->vx = 0.0F;
-        mv->vz = 0.0F;
-        clear_pending_request(units[i]);
-        continue;
-      }
-
-      int const dx = std::abs(end.x - start.x);
-      int const dz = std::abs(end.y - start.y);
-      bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-      use_direct_path = false;
-
-      if (use_direct_path) {
-        mv->target_x = target_x;
-        mv->target_y = target_z;
-        mv->has_target = true;
-        mv->clear_path();
-        mv->path_pending = false;
-        mv->pending_request_id = 0;
-        mv->vx = 0.0F;
-        mv->vz = 0.0F;
-        clear_pending_request(units[i]);
-
-        mv->time_since_last_path_request = 0.0F;
-        mv->last_goal_x = target_x;
-        mv->last_goal_y = target_z;
-      } else {
-
-        bool skip_new_request = false;
-        {
-          std::lock_guard<std::mutex> const lock(s_pending_mutex);
-          auto existing_it = s_entity_to_request.find(units[i]);
-          if (existing_it != s_entity_to_request.end()) {
-            auto pending_it = s_pending_requests.find(existing_it->second);
-            if (pending_it != s_pending_requests.end()) {
-              float const dx = pending_it->second.target.x() - target_x;
-              float const dz = pending_it->second.target.z() - target_z;
-              if (dx * dx + dz * dz <= same_target_threshold_sq) {
-                pending_it->second.options = options;
-                skip_new_request = true;
-              } else {
-                s_pending_requests.erase(pending_it);
-                s_entity_to_request.erase(existing_it);
-              }
-            } else {
-              s_entity_to_request.erase(existing_it);
-            }
-          }
-        }
-
-        if (skip_new_request) {
-          continue;
-        }
-
-        mv->clear_path();
-        mv->has_target = false;
-        mv->vx = 0.0F;
-        mv->vz = 0.0F;
-        mv->path_pending = true;
-
-        std::uint64_t const request_id =
-            s_next_request_id.fetch_add(1, std::memory_order_relaxed);
-        mv->pending_request_id = request_id;
-
-        float const unit_radius = 1.0F;
-
-        {
-          std::lock_guard<std::mutex> const lock(s_pending_mutex);
-          PendingPathRequest pending;
-          pending.entity_id = units[i];
-          pending.target = targets[i];
-          pending.options = options;
-          pending.unit_radius = unit_radius;
-          s_pending_requests[request_id] = std::move(pending);
-          s_entity_to_request[units[i]] = request_id;
-        }
-
-        s_pathfinder->submit_path_request(request_id, start, end, unit_radius);
-
-        mv->time_since_last_path_request = 0.0F;
-        mv->last_goal_x = target_x;
-        mv->last_goal_y = target_z;
-      }
-    } else {
-
-      mv->target_x = target_x;
-      mv->target_y = target_z;
-      mv->has_target = true;
-      mv->clear_path();
-      mv->path_pending = false;
-      mv->pending_request_id = 0;
-      mv->vx = 0.0F;
-      mv->vz = 0.0F;
-      clear_pending_request(units[i]);
-    }
+  for (const auto &intent : intents) {
+    move_unit(world, intent.unit_id, intent.target, options);
   }
 }
 
@@ -1101,9 +1135,7 @@ void CommandService::attack_target(
     CommandService::MoveOptions opts;
     opts.clear_attack_intent = false;
     opts.allow_direct_fallback = true;
-    std::vector<Engine::Core::EntityID> const unit_ids = {unit_id};
-    std::vector<QVector3D> const move_targets = {desired_pos};
-    CommandService::move_units(world, unit_ids, move_targets, opts);
+    CommandService::move_unit(world, unit_id, desired_pos, opts);
 
     auto *mv = e->get_component<Engine::Core::MovementComponent>();
     if (mv == nullptr) {

@@ -20,7 +20,7 @@ namespace Render::Elephant {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet kElephantClips{
+constexpr Render::Creature::Quadruped::ClipSet k_elephant_clips{
     0U,
     1U,
     2U,
@@ -45,7 +45,7 @@ auto elephant_clip_for_motion(const Render::GL::ElephantMotionSample &motion,
                               const Render::GL::AnimationInputs &anim) noexcept
     -> std::uint16_t {
   return Render::Creature::Quadruped::clip_for_motion(
-      kElephantClips, motion.is_moving, anim.is_running, motion.is_fighting);
+      k_elephant_clips, motion.is_moving, anim.is_running, motion.is_fighting);
 }
 
 } // namespace

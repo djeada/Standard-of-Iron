@@ -9,7 +9,7 @@
 
 namespace Render::Humanoid {
 
-inline constexpr std::uint32_t kFacialHairRoleCount = 3;
+inline constexpr std::uint32_t k_facial_hair_role_count = 3;
 
 auto facial_hair_role_colors(const Render::GL::HumanoidVariant &variant,
                              QVector3D *out, std::uint32_t base_count,

@@ -1,66 +1,66 @@
 {
   "name": "River Crossroads",
   "description": "Strategic river crossings with bridges and neutral barracks to capture",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2000,
+  "coord_system": "grid",
+  "max_troops_per_player": 2000,
   "grid": {
     "width": 120,
     "height": 120,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "soil_fertile",
+    "ground_type": "soil_fertile",
     "seed": 42,
-    "patchDensity": 3.5,
-    "patchJitter": 0.9,
-    "bladeHeight": [
+    "patch_density": 3.5,
+    "patch_jitter": 0.9,
+    "blade_height": [
       0.6,
       1.4
     ],
-    "bladeWidth": [
+    "blade_width": [
       0.03,
       0.06
     ],
-    "swayStrength": 0.3,
-    "swaySpeed": 1.4,
-    "heightNoise": [
+    "sway_strength": 0.3,
+    "sway_speed": 1.4,
+    "height_noise": [
       0.2,
       0.06
     ],
-    "grassPrimary": [
+    "grass_primary": [
       0.3,
       0.6,
       0.28
     ],
-    "grassSecondary": [
+    "grass_secondary": [
       0.44,
       0.7,
       0.32
     ],
-    "grassDry": [
+    "grass_dry": [
       0.6,
       0.52,
       0.38
     ],
-    "soilColor": [
+    "soil_color": [
       0.28,
       0.24,
       0.18
     ],
-    "rockLow": [
+    "rock_low": [
       0.5,
       0.48,
       0.46
     ],
-    "rockHigh": [
+    "rock_high": [
       0.68,
       0.69,
       0.73
     ],
-    "plantDensity": 0.5,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.15,
-    "irregularityAmplitude": 0.07
+    "plant_density": 0.5,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.15,
+    "irregularity_amplitude": 0.07
   },
   "camera": {
     "center": [
@@ -69,9 +69,9 @@
       60
     ],
     "distance": 25.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 300.0
   },
@@ -80,151 +80,151 @@
       "type": "barracks",
       "x": 30,
       "z": 30,
-      "playerId": 1,
-      "maxPopulation": 150,
+      "player_id": 1,
+      "max_population": 150,
       "nation": "carthage"
     },
     {
       "type": "archer",
       "x": 28,
       "z": 32,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 32,
       "z": 28,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 30,
       "z": 35,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 30,
       "z": 35,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_spearman",
       "x": 30,
       "z": 35,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 35,
       "z": 30,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "healer",
       "x": 33,
       "z": 27,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "catapult",
       "x": 30,
       "z": 42,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 44,
       "z": 29,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 44,
       "z": 31,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 44,
       "z": 32,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 46,
       "z": 30,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 46,
       "z": 31,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 90,
       "z": 90,
-      "playerId": 2,
-      "maxPopulation": 150,
+      "player_id": 2,
+      "max_population": 150,
       "nation": "carthage"
     },
     {
       "type": "archer",
       "x": 88,
       "z": 92,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 92,
       "z": 88,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 90,
       "z": 85,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 85,
       "z": 90,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "healer",
       "x": 87,
       "z": 93,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "catapult",
       "x": 93,
       "z": 86,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 60,
       "z": 60,
-      "maxPopulation": 180,
+      "max_population": 180,
       "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 30,
       "z": 90,
-      "maxPopulation": 150,
+      "max_population": 150,
       "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 90,
       "z": 30,
-      "maxPopulation": 150,
+      "max_population": 150,
       "nation": "carthage"
     }
   ],

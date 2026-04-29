@@ -11,6 +11,21 @@
 
 namespace Game::Systems {
 
+namespace {
+
+auto value_for_key(const QJsonObject &object, const char *key,
+                   const char *legacy_key = nullptr) -> QJsonValue {
+  if (object.contains(key)) {
+    return object.value(key);
+  }
+  if ((legacy_key != nullptr) && object.contains(legacy_key)) {
+    return object.value(legacy_key);
+  }
+  return {};
+}
+
+} // namespace
+
 auto GameStateSerializer::build_metadata(
     const Engine::Core::World &, const Render::GL::Camera *camera,
     const LevelSnapshot &level, const RuntimeSnapshot &runtime) -> QJsonObject {
@@ -22,7 +37,7 @@ auto GameStateSerializer::build_metadata(
   metadata["local_owner_id"] = runtime.local_owner_id;
   metadata["player_unit_id"] = static_cast<qint64>(level.player_unit_id);
 
-  metadata["gameMaxTroopsPerPlayer"] =
+  metadata["game_max_troops_per_player"] =
       Game::GameConfig::instance().get_max_troops_per_player();
 
   const auto &terrain_service = Game::Map::TerrainService::instance();
@@ -49,10 +64,10 @@ auto GameStateSerializer::build_metadata(
   QJsonObject runtime_obj;
   runtime_obj["paused"] = runtime.paused;
   runtime_obj["time_scale"] = runtime.time_scale;
-  runtime_obj["victoryState"] = runtime.victory_state;
-  runtime_obj["cursorMode"] = runtime.cursor_mode;
-  runtime_obj["selectedPlayerId"] = runtime.selected_player_id;
-  runtime_obj["followSelection"] = runtime.follow_selection;
+  runtime_obj["victory_state"] = runtime.victory_state;
+  runtime_obj["cursor_mode"] = runtime.cursor_mode;
+  runtime_obj["selected_player_id"] = runtime.selected_player_id;
+  runtime_obj["follow_selection"] = runtime.follow_selection;
   metadata["runtime"] = runtime_obj;
 
   return metadata;
@@ -103,11 +118,15 @@ void GameStateSerializer::restore_runtime_from_metadata(
         runtime_obj.value("time_scale").toDouble(runtime.time_scale));
   }
 
-  runtime.victory_state =
-      runtime_obj.value("victoryState").toString(runtime.victory_state);
+  if (const auto victory_state =
+          value_for_key(runtime_obj, "victory_state", "victoryState");
+      !victory_state.isUndefined()) {
+    runtime.victory_state = victory_state.toString(runtime.victory_state);
+  }
 
-  if (runtime_obj.contains("cursorMode")) {
-    const auto cursor_value = runtime_obj.value("cursorMode");
+  if (const auto cursor_value =
+          value_for_key(runtime_obj, "cursor_mode", "cursorMode");
+      !cursor_value.isUndefined()) {
     if (cursor_value.isDouble()) {
       runtime.cursor_mode = cursor_value.toInt(0);
     }
@@ -118,11 +137,19 @@ void GameStateSerializer::restore_runtime_from_metadata(
         metadata.value("local_owner_id").toInt(runtime.local_owner_id);
   }
 
-  runtime.selected_player_id =
-      runtime_obj.value("selectedPlayerId").toInt(runtime.selected_player_id);
+  if (const auto selected_player_id =
+          value_for_key(runtime_obj, "selected_player_id", "selectedPlayerId");
+      !selected_player_id.isUndefined()) {
+    runtime.selected_player_id =
+        selected_player_id.toInt(runtime.selected_player_id);
+  }
 
-  runtime.follow_selection =
-      runtime_obj.value("followSelection").toBool(runtime.follow_selection);
+  if (const auto follow_selection =
+          value_for_key(runtime_obj, "follow_selection", "followSelection");
+      !follow_selection.isUndefined()) {
+    runtime.follow_selection =
+        follow_selection.toBool(runtime.follow_selection);
+  }
 }
 
 void GameStateSerializer::restore_level_from_metadata(
@@ -141,8 +168,14 @@ void GameStateSerializer::restore_level_from_metadata(
         metadata.value("player_unit_id").toVariant().toULongLong());
   }
 
-  int max_troops = metadata.value("max_troops_per_player")
-                       .toInt(level.max_troops_per_player);
+  auto max_troops_value = value_for_key(metadata, "max_troops_per_player");
+  if (max_troops_value.isUndefined()) {
+    max_troops_value = value_for_key(metadata, "game_max_troops_per_player",
+                                     "gameMaxTroopsPerPlayer");
+  }
+  int max_troops = max_troops_value.isUndefined()
+                       ? level.max_troops_per_player
+                       : max_troops_value.toInt(level.max_troops_per_player);
   if (max_troops <= 0) {
     max_troops = Game::GameConfig::instance().get_max_troops_per_player();
   }

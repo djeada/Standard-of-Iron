@@ -1,66 +1,66 @@
 {
   "name": "Spanish Olive Grove",
   "description": "A Mediterranean battlefield featuring rolling hills covered with ancient olive trees",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2000,
+  "coord_system": "grid",
+  "max_troops_per_player": 2000,
   "grid": {
     "width": 280,
     "height": 280,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "grass_dry",
+    "ground_type": "grass_dry",
     "seed": 34567,
-    "patchDensity": 2.8,
-    "patchJitter": 0.75,
-    "bladeHeight": [
+    "patch_density": 2.8,
+    "patch_jitter": 0.75,
+    "blade_height": [
       0.35,
       0.85
     ],
-    "bladeWidth": [
+    "blade_width": [
       0.022,
       0.048
     ],
-    "swayStrength": 0.22,
-    "swaySpeed": 1.2,
-    "heightNoise": [
+    "sway_strength": 0.22,
+    "sway_speed": 1.2,
+    "height_noise": [
       0.18,
       0.06
     ],
-    "grassPrimary": [
+    "grass_primary": [
       0.58,
       0.54,
       0.32
     ],
-    "grassSecondary": [
+    "grass_secondary": [
       0.64,
       0.60,
       0.38
     ],
-    "grassDry": [
+    "grass_dry": [
       0.72,
       0.65,
       0.42
     ],
-    "soilColor": [
+    "soil_color": [
       0.52,
       0.42,
       0.30
     ],
-    "rockLow": [
+    "rock_low": [
       0.62,
       0.58,
       0.52
     ],
-    "rockHigh": [
+    "rock_high": [
       0.75,
       0.72,
       0.68
     ],
-    "plantDensity": 1.2,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.14,
-    "irregularityAmplitude": 0.07,
+    "plant_density": 1.2,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.14,
+    "irregularity_amplitude": 0.07,
     "spawnEdgePadding": 0.08
   },
   "camera": {
@@ -70,9 +70,9 @@
       140
     ],
     "distance": 38.0,
-    "tiltDeg": 48.0,
+    "tilt_deg": 48.0,
     "yaw": 220.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 500.0
   },
@@ -81,172 +81,172 @@
       "type": "barracks",
       "x": 70,
       "z": 70,
-      "playerId": 1,
-      "maxPopulation": 220,
+      "player_id": 1,
+      "max_population": 220,
       "nation": "carthage"
     },
     {
       "type": "archer",
       "x": 68,
       "z": 72,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 72,
       "z": 68,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 65,
       "z": 70,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 70,
       "z": 65,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 68,
       "z": 68,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 72,
       "z": 72,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 75,
       "z": 70,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 210,
       "z": 210,
-      "playerId": 2,
-      "maxPopulation": 220,
+      "player_id": 2,
+      "max_population": 220,
       "nation": "roman_republic"
     },
     {
       "type": "archer",
       "x": 208,
       "z": 212,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 212,
       "z": 208,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 205,
       "z": 210,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 210,
       "z": 205,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 208,
       "z": 208,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 212,
       "z": 212,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 215,
       "z": 210,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 140,
       "z": 140,
-      "maxPopulation": 200,
+      "max_population": 200,
       "nation": "carthage"
     },
     {
       "type": "barracks",
       "x": 70,
       "z": 210,
-      "playerId": 3,
-      "maxPopulation": 180,
+      "player_id": 3,
+      "max_population": 180,
       "nation": "kingdom_of_iron"
     },
     {
       "type": "swordsman",
       "x": 68,
       "z": 212,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "swordsman",
       "x": 72,
       "z": 208,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "archer",
       "x": 65,
       "z": 210,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "spearman",
       "x": 70,
       "z": 205,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "barracks",
       "x": 210,
       "z": 70,
-      "playerId": 4,
-      "maxPopulation": 180,
+      "player_id": 4,
+      "max_population": 180,
       "nation": "kingdom_of_iron"
     },
     {
       "type": "horse_swordsman",
       "x": 208,
       "z": 72,
-      "playerId": 4
+      "player_id": 4
     },
     {
       "type": "horse_swordsman",
       "x": 212,
       "z": 68,
-      "playerId": 4
+      "player_id": 4
     },
     {
       "type": "spearman",
       "x": 210,
       "z": 65,
-      "playerId": 4
+      "player_id": 4
     },
     {
       "type": "archer",
       "x": 215,
       "z": 70,
-      "playerId": 4
+      "player_id": 4
     }
   ],
   "firecamps": [

@@ -22,7 +22,7 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   ASSERT_NE(horse_definition->attachment_frame_extractor, nullptr);
   ASSERT_NE(horse_definition->lod_strategy, nullptr);
   EXPECT_EQ(horse_definition->rig_definition->bone_count,
-            Render::Horse::kHorseBoneCount);
+            Render::Horse::k_horse_bone_count);
   EXPECT_EQ(horse_definition->mesh_recipe->resolve_spec,
             &Render::Horse::horse_creature_spec);
   ASSERT_NE(horse_definition->mesh_recipe->resolve_part_graph, nullptr);
@@ -44,7 +44,7 @@ TEST(CreatureVisualDefinition, ResolvesHorseAndElephantThroughSharedShape) {
   ASSERT_NE(elephant_definition->attachment_frame_extractor, nullptr);
   ASSERT_NE(elephant_definition->lod_strategy, nullptr);
   EXPECT_EQ(elephant_definition->rig_definition->bone_count,
-            Render::Elephant::kElephantBoneCount);
+            Render::Elephant::k_elephant_bone_count);
   EXPECT_EQ(elephant_definition->mesh_recipe->resolve_spec,
             &Render::Elephant::elephant_creature_spec);
   ASSERT_NE(elephant_definition->mesh_recipe->resolve_part_graph, nullptr);

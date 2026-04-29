@@ -496,8 +496,8 @@ public:
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmL);
       static const auto k_elbow_r_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ForearmR);
-      static const auto k_tool_belt_base_role_byte =
-          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_tool_belt_base_role_byte = static_cast<std::uint8_t>(
+          Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_work_apron_base_role_byte = static_cast<std::uint8_t>(
           k_tool_belt_base_role_byte + Render::GL::kToolBeltRoleCount);
       static const auto k_arm_guards_base_role_byte = static_cast<std::uint8_t>(

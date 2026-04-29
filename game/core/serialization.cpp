@@ -486,12 +486,12 @@ void Serialization::deserialize_entity(Entity *entity,
   if (json.contains("unit")) {
     const auto unit_obj = json["unit"].toObject();
     auto *unit = entity->add_component<UnitComponent>();
-    unit->health = unit_obj["health"].toInt(Defaults::kUnitDefaultHealth);
+    unit->health = unit_obj["health"].toInt(Defaults::k_unit_default_health);
     unit->max_health =
-        unit_obj["max_health"].toInt(Defaults::kUnitDefaultHealth);
+        unit_obj["max_health"].toInt(Defaults::k_unit_default_health);
     unit->speed = static_cast<float>(unit_obj["speed"].toDouble());
     unit->vision_range = static_cast<float>(unit_obj["vision_range"].toDouble(
-        static_cast<double>(Defaults::kUnitDefaultVisionRange)));
+        static_cast<double>(Defaults::k_unit_default_vision_range)));
 
     QString const unit_type_str = unit_obj["unit_type"].toString();
     Game::Units::SpawnType spawn_type;
@@ -568,7 +568,7 @@ void Serialization::deserialize_entity(Entity *entity,
     attack->time_since_last =
         static_cast<float>(attack_obj["time_since_last"].toDouble());
     attack->melee_range = static_cast<float>(attack_obj["melee_range"].toDouble(
-        static_cast<double>(Defaults::kAttackMeleeRange)));
+        static_cast<double>(Defaults::k_attack_melee_range)));
     attack->melee_damage = attack_obj["melee_damage"].toInt(0);
     attack->melee_cooldown =
         static_cast<float>(attack_obj["melee_cooldown"].toDouble());
@@ -580,7 +580,7 @@ void Serialization::deserialize_entity(Entity *entity,
     attack->can_ranged = attack_obj["can_ranged"].toBool(false);
     attack->max_height_difference =
         static_cast<float>(attack_obj["max_height_difference"].toDouble(
-            static_cast<double>(Defaults::kAttackHeightTolerance)));
+            static_cast<double>(Defaults::k_attack_height_tolerance)));
     attack->in_melee_lock = attack_obj["in_melee_lock"].toBool(false);
     attack->melee_lock_target_id = static_cast<EntityID>(
         attack_obj["melee_lock_target_id"].toVariant().toULongLong());
@@ -657,7 +657,7 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(capture_obj["capture_progress"].toDouble(0.0));
     capture->required_time =
         static_cast<float>(capture_obj["required_time"].toDouble(
-            static_cast<double>(Defaults::kCaptureRequiredTime)));
+            static_cast<double>(Defaults::k_capture_required_time)));
     capture->is_being_captured = capture_obj["is_being_captured"].toBool(false);
   }
 
@@ -669,7 +669,7 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(hold_mode_obj["exit_cooldown"].toDouble(0.0));
     hold_mode->stand_up_duration =
         static_cast<float>(hold_mode_obj["stand_up_duration"].toDouble(
-            static_cast<double>(Defaults::kHoldStandUpDuration)));
+            static_cast<double>(Defaults::k_hold_stand_up_duration)));
   }
 
   if (json.contains("guard_mode")) {
@@ -684,7 +684,7 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(guard_mode_obj["guard_position_z"].toDouble(0.0));
     guard_mode->guard_radius =
         static_cast<float>(guard_mode_obj["guard_radius"].toDouble(
-            static_cast<double>(Defaults::kGuardDefaultRadius)));
+            static_cast<double>(Defaults::k_guard_default_radius)));
     guard_mode->returning_to_guard_position =
         guard_mode_obj["returning_to_guard_position"].toBool(false);
     guard_mode->has_guard_target =
@@ -844,15 +844,15 @@ void Serialization::deserialize_entity(Entity *entity,
     const auto stamina_obj = json["stamina"].toObject();
     auto *stamina = entity->add_component<StaminaComponent>();
     stamina->stamina = static_cast<float>(stamina_obj["stamina"].toDouble(
-        static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
+        static_cast<double>(StaminaComponent::k_default_max_stamina)));
     stamina->max_stamina =
         static_cast<float>(stamina_obj["max_stamina"].toDouble(
-            static_cast<double>(StaminaComponent::kDefaultMaxStamina)));
+            static_cast<double>(StaminaComponent::k_default_max_stamina)));
     stamina->regen_rate = static_cast<float>(stamina_obj["regen_rate"].toDouble(
-        static_cast<double>(StaminaComponent::kDefaultRegenRate)));
+        static_cast<double>(StaminaComponent::k_default_regen_rate)));
     stamina->depletion_rate =
         static_cast<float>(stamina_obj["depletion_rate"].toDouble(
-            static_cast<double>(StaminaComponent::kDefaultDepletionRate)));
+            static_cast<double>(StaminaComponent::k_default_depletion_rate)));
     stamina->is_running = stamina_obj["is_running"].toBool(false);
     stamina->run_requested = stamina_obj["run_requested"].toBool(false);
   }
