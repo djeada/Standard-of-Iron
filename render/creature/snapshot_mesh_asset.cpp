@@ -376,7 +376,8 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
     }
     written += string_table.size();
   }
-  if (!pad_to_alignment(out, written, Render::Creature::Bpat::kSectionAlignment)) {
+  if (!pad_to_alignment(out, written,
+                        Render::Creature::Bpat::kSectionAlignment)) {
     return false;
   }
 
