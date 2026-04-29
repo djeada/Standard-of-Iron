@@ -297,8 +297,8 @@ auto OwnerRegistry::get_owner_color(int owner_id) const
 
 auto OwnerRegistry::to_json() const -> QJsonObject {
   QJsonObject root;
-  root["nextOwnerId"] = m_next_owner_id;
-  root["localPlayerId"] = m_local_player_id;
+  root["next_owner_id"] = m_next_owner_id;
+  root["local_player_id"] = m_local_player_id;
 
   QJsonArray owners_array;
   for (const auto &owner : m_owners) {
@@ -318,8 +318,17 @@ auto OwnerRegistry::to_json() const -> QJsonObject {
 void OwnerRegistry::from_json(const QJsonObject &json) {
   clear();
 
-  m_next_owner_id = json["nextOwnerId"].toInt(1);
-  m_local_player_id = json["localPlayerId"].toInt(1);
+  if (json.contains("next_owner_id")) {
+    m_next_owner_id = json["next_owner_id"].toInt(1);
+  } else {
+    m_next_owner_id = json["nextOwnerId"].toInt(1);
+  }
+
+  if (json.contains("local_player_id")) {
+    m_local_player_id = json["local_player_id"].toInt(1);
+  } else {
+    m_local_player_id = json["localPlayerId"].toInt(1);
+  }
 
   const auto owners_array = json["owners"].toArray();
   m_owners.reserve(owners_array.size());

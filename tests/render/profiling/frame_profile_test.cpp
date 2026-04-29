@@ -83,6 +83,7 @@ TEST(FrameProfileTest, FormatOverlayHandlesZeroTotal) {
   std::string s = format_overlay(p);
   EXPECT_NE(s.find("frame #0"), std::string::npos);
   EXPECT_NE(s.find("total"), std::string::npos);
+  EXPECT_NE(s.find("draws="), std::string::npos);
 }
 
 TEST(FrameProfileTest, GlobalProfileIsSingleton) {

@@ -21,6 +21,20 @@
 
 namespace Game::Systems {
 
+namespace {
+
+auto initial_ai_update_timer(std::size_t index, std::size_t count,
+                             float update_interval) -> float {
+  if ((count <= 1U) || (update_interval <= 0.0F)) {
+    return 0.0F;
+  }
+
+  return update_interval * static_cast<float>(index) /
+         static_cast<float>(count);
+}
+
+} // namespace
+
 AISystem::AISystem() {
 
   m_behavior_registry.register_behavior(
@@ -63,13 +77,16 @@ void AISystem::initialize_ai_players() {
     return;
   }
 
-  for (uint32_t const player_id : ai_owner_ids) {
+  for (std::size_t index = 0; index < ai_owner_ids.size(); ++index) {
+    uint32_t const player_id = ai_owner_ids[index];
     int const team_id = registry.get_owner_team(player_id);
     AIInstance instance;
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
     instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
                                                      m_behavior_registry);
+    instance.update_timer =
+        initial_ai_update_timer(index, ai_owner_ids.size(), m_update_interval);
 
     m_ai_instances.push_back(std::move(instance));
   }

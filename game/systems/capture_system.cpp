@@ -49,7 +49,7 @@ auto CaptureSystem::count_nearby_troops(Engine::Core::World *world,
 
     if (dist_sq <= radius * radius) {
       int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
+          Game::Units::TroopConfig::instance().get_production_cost(
               unit->spawn_type);
       total_troops += production_cost;
     }

@@ -6,172 +6,172 @@ namespace Render::GL {
 
 namespace HorseDimensionRange {
 
-constexpr float kBodyLengthMin = 0.92F;
-constexpr float kBodyLengthMax = 1.08F;
-constexpr float kBodyWidthMin = 0.22F;
-constexpr float kBodyWidthMax = 0.30F;
-constexpr float kBodyHeightMin = 0.44F;
-constexpr float kBodyHeightMax = 0.54F;
+constexpr float k_body_length_min = 0.92F;
+constexpr float k_body_length_max = 1.08F;
+constexpr float k_body_width_min = 0.22F;
+constexpr float k_body_width_max = 0.30F;
+constexpr float k_body_height_min = 0.44F;
+constexpr float k_body_height_max = 0.54F;
 
-constexpr float kNeckLengthMin = 0.48F;
-constexpr float kNeckLengthMax = 0.58F;
-constexpr float kNeckRiseMin = 0.30F;
-constexpr float kNeckRiseMax = 0.38F;
+constexpr float k_neck_length_min = 0.48F;
+constexpr float k_neck_length_max = 0.58F;
+constexpr float k_neck_rise_min = 0.30F;
+constexpr float k_neck_rise_max = 0.38F;
 
-constexpr float kHeadLengthMin = 0.36F;
-constexpr float kHeadLengthMax = 0.46F;
-constexpr float kHeadWidthMin = 0.16F;
-constexpr float kHeadWidthMax = 0.20F;
-constexpr float kHeadHeightMin = 0.22F;
-constexpr float kHeadHeightMax = 0.28F;
-constexpr float kMuzzleLengthMin = 0.16F;
-constexpr float kMuzzleLengthMax = 0.20F;
+constexpr float k_head_length_min = 0.36F;
+constexpr float k_head_length_max = 0.46F;
+constexpr float k_head_width_min = 0.16F;
+constexpr float k_head_width_max = 0.20F;
+constexpr float k_head_height_min = 0.22F;
+constexpr float k_head_height_max = 0.28F;
+constexpr float k_muzzle_length_min = 0.16F;
+constexpr float k_muzzle_length_max = 0.20F;
 
-constexpr float kLegLengthMin = 1.05F;
-constexpr float kLegLengthMax = 1.18F;
-constexpr float kHoofHeightMin = 0.095F;
-constexpr float kHoofHeightMax = 0.115F;
+constexpr float k_leg_length_min = 1.05F;
+constexpr float k_leg_length_max = 1.18F;
+constexpr float k_hoof_height_min = 0.095F;
+constexpr float k_hoof_height_max = 0.115F;
 
-constexpr float kTailLengthMin = 0.55F;
-constexpr float kTailLengthMax = 0.72F;
+constexpr float k_tail_length_min = 0.55F;
+constexpr float k_tail_length_max = 0.72F;
 
-constexpr float kSaddleThicknessMin = 0.035F;
-constexpr float kSaddleThicknessMax = 0.045F;
-constexpr float kSeatForwardOffsetMin = 0.010F;
-constexpr float kSeatForwardOffsetMax = 0.035F;
-constexpr float kStirrupOutScaleMin = 0.75F;
-constexpr float kStirrupOutScaleMax = 0.88F;
-constexpr float kStirrupDropMin = 0.28F;
-constexpr float kStirrupDropMax = 0.32F;
+constexpr float k_saddle_thickness_min = 0.035F;
+constexpr float k_saddle_thickness_max = 0.045F;
+constexpr float k_seat_forward_offset_min = 0.010F;
+constexpr float k_seat_forward_offset_max = 0.035F;
+constexpr float k_stirrup_out_scale_min = 0.75F;
+constexpr float k_stirrup_out_scale_max = 0.88F;
+constexpr float k_stirrup_drop_min = 0.28F;
+constexpr float k_stirrup_drop_max = 0.32F;
 
-constexpr float kIdleBobAmplitudeMin = 0.004F;
-constexpr float kIdleBobAmplitudeMax = 0.007F;
-constexpr float kMoveBobAmplitudeMin = 0.024F;
-constexpr float kMoveBobAmplitudeMax = 0.032F;
+constexpr float k_idle_bob_amplitude_min = 0.004F;
+constexpr float k_idle_bob_amplitude_max = 0.007F;
+constexpr float k_move_bob_amplitude_min = 0.024F;
+constexpr float k_move_bob_amplitude_max = 0.032F;
 
-constexpr float kLegSegmentRatioUpper = 0.59F;
-constexpr float kLegSegmentRatioMiddle = 0.30F;
-constexpr float kLegSegmentRatioLower = 0.12F;
-constexpr float kShoulderBarrelOffsetScale = 0.05F;
-constexpr float kShoulderBarrelOffsetBase = 0.05F;
-constexpr float kSaddleHeightBodyScale = 0.55F;
+constexpr float k_leg_segment_ratio_upper = 0.59F;
+constexpr float k_leg_segment_ratio_middle = 0.30F;
+constexpr float k_leg_segment_ratio_lower = 0.12F;
+constexpr float k_shoulder_barrel_offset_scale = 0.05F;
+constexpr float k_shoulder_barrel_offset_base = 0.05F;
+constexpr float k_saddle_height_body_scale = 0.55F;
 
-constexpr uint32_t kSaltBodyLength = 0x12U;
-constexpr uint32_t kSaltBodyWidth = 0x34U;
-constexpr uint32_t kSaltBodyHeight = 0x56U;
-constexpr uint32_t kSaltNeckLength = 0x9AU;
-constexpr uint32_t kSaltNeckRise = 0xBCU;
-constexpr uint32_t kSaltHeadLength = 0xDEU;
-constexpr uint32_t kSaltHeadWidth = 0xF1U;
-constexpr uint32_t kSaltHeadHeight = 0x1357U;
-constexpr uint32_t kSaltMuzzleLength = 0x2468U;
-constexpr uint32_t kSaltLegLength = 0x369CU;
-constexpr uint32_t kSaltHoofHeight = 0x48AEU;
-constexpr uint32_t kSaltTailLength = 0x5ABCU;
-constexpr uint32_t kSaltSaddleThickness = 0x6CDEU;
-constexpr uint32_t kSaltSeatForwardOffset = 0x7531U;
-constexpr uint32_t kSaltStirrupOut = 0x8642U;
-constexpr uint32_t kSaltStirrupDrop = 0x9753U;
-constexpr uint32_t kSaltIdleBob = 0xA864U;
-constexpr uint32_t kSaltMoveBob = 0xB975U;
+constexpr uint32_t k_salt_body_length = 0x12U;
+constexpr uint32_t k_salt_body_width = 0x34U;
+constexpr uint32_t k_salt_body_height = 0x56U;
+constexpr uint32_t k_salt_neck_length = 0x9AU;
+constexpr uint32_t k_salt_neck_rise = 0xBCU;
+constexpr uint32_t k_salt_head_length = 0xDEU;
+constexpr uint32_t k_salt_head_width = 0xF1U;
+constexpr uint32_t k_salt_head_height = 0x1357U;
+constexpr uint32_t k_salt_muzzle_length = 0x2468U;
+constexpr uint32_t k_salt_leg_length = 0x369CU;
+constexpr uint32_t k_salt_hoof_height = 0x48AEU;
+constexpr uint32_t k_salt_tail_length = 0x5ABCU;
+constexpr uint32_t k_salt_saddle_thickness = 0x6CDEU;
+constexpr uint32_t k_salt_seat_forward_offset = 0x7531U;
+constexpr uint32_t k_salt_stirrup_out = 0x8642U;
+constexpr uint32_t k_salt_stirrup_drop = 0x9753U;
+constexpr uint32_t k_salt_idle_bob = 0xA864U;
+constexpr uint32_t k_salt_move_bob = 0xB975U;
 
 } // namespace HorseDimensionRange
 
 namespace HorseVariantConstants {
 
-constexpr float kGrayCoatThreshold = 0.18F;
-constexpr float kBayCoatThreshold = 0.38F;
-constexpr float kChestnutCoatThreshold = 0.65F;
-constexpr float kBlackCoatThreshold = 0.85F;
+constexpr float k_gray_coat_threshold = 0.18F;
+constexpr float k_bay_coat_threshold = 0.38F;
+constexpr float k_chestnut_coat_threshold = 0.65F;
+constexpr float k_black_coat_threshold = 0.85F;
 
-constexpr float kGrayCoatR = 0.70F;
-constexpr float kGrayCoatG = 0.68F;
-constexpr float kGrayCoatB = 0.63F;
-constexpr float kBayCoatR = 0.40F;
-constexpr float kBayCoatG = 0.30F;
-constexpr float kBayCoatB = 0.22F;
-constexpr float kChestnutCoatR = 0.28F;
-constexpr float kChestnutCoatG = 0.22F;
-constexpr float kChestnutCoatB = 0.19F;
-constexpr float kBlackCoatR = 0.18F;
-constexpr float kBlackCoatG = 0.15F;
-constexpr float kBlackCoatB = 0.13F;
-constexpr float kDunCoatR = 0.48F;
-constexpr float kDunCoatG = 0.42F;
-constexpr float kDunCoatB = 0.39F;
+constexpr float k_gray_coat_r = 0.70F;
+constexpr float k_gray_coat_g = 0.68F;
+constexpr float k_gray_coat_b = 0.63F;
+constexpr float k_bay_coat_r = 0.40F;
+constexpr float k_bay_coat_g = 0.30F;
+constexpr float k_bay_coat_b = 0.22F;
+constexpr float k_chestnut_coat_r = 0.28F;
+constexpr float k_chestnut_coat_g = 0.22F;
+constexpr float k_chestnut_coat_b = 0.19F;
+constexpr float k_black_coat_r = 0.18F;
+constexpr float k_black_coat_g = 0.15F;
+constexpr float k_black_coat_b = 0.13F;
+constexpr float k_dun_coat_r = 0.48F;
+constexpr float k_dun_coat_g = 0.42F;
+constexpr float k_dun_coat_b = 0.39F;
 
-constexpr float kBlazeChanceThreshold = 0.82F;
-constexpr float kBlazeColorR = 0.92F;
-constexpr float kBlazeColorG = 0.92F;
-constexpr float kBlazeColorB = 0.90F;
-constexpr float kBlazeBlendFactor = 0.25F;
+constexpr float k_blaze_chance_threshold = 0.82F;
+constexpr float k_blaze_color_r = 0.92F;
+constexpr float k_blaze_color_g = 0.92F;
+constexpr float k_blaze_color_b = 0.90F;
+constexpr float k_blaze_blend_factor = 0.25F;
 
-constexpr float kManeBlendMin = 0.55F;
-constexpr float kManeBlendMax = 0.85F;
-constexpr float kManeBaseR = 0.10F;
-constexpr float kManeBaseG = 0.09F;
-constexpr float kManeBaseB = 0.08F;
-constexpr float kTailBlendFactor = 0.35F;
+constexpr float k_mane_blend_min = 0.55F;
+constexpr float k_mane_blend_max = 0.85F;
+constexpr float k_mane_base_r = 0.10F;
+constexpr float k_mane_base_g = 0.09F;
+constexpr float k_mane_base_b = 0.08F;
+constexpr float k_tail_blend_factor = 0.35F;
 
-constexpr float kMuzzleBlendFactor = 0.65F;
-constexpr float kMuzzleBaseR = 0.18F;
-constexpr float kMuzzleBaseG = 0.14F;
-constexpr float kMuzzleBaseB = 0.12F;
-constexpr float kHoofDarkR = 0.16F;
-constexpr float kHoofDarkG = 0.14F;
-constexpr float kHoofDarkB = 0.12F;
-constexpr float kHoofLightR = 0.40F;
-constexpr float kHoofLightG = 0.35F;
-constexpr float kHoofLightB = 0.32F;
-constexpr float kHoofBlendMin = 0.15F;
-constexpr float kHoofBlendMax = 0.65F;
+constexpr float k_muzzle_blend_factor = 0.65F;
+constexpr float k_muzzle_base_r = 0.18F;
+constexpr float k_muzzle_base_g = 0.14F;
+constexpr float k_muzzle_base_b = 0.12F;
+constexpr float k_hoof_dark_r = 0.16F;
+constexpr float k_hoof_dark_g = 0.14F;
+constexpr float k_hoof_dark_b = 0.12F;
+constexpr float k_hoof_light_r = 0.40F;
+constexpr float k_hoof_light_g = 0.35F;
+constexpr float k_hoof_light_b = 0.32F;
+constexpr float k_hoof_blend_min = 0.15F;
+constexpr float k_hoof_blend_max = 0.65F;
 
-constexpr float kLeatherToneMin = 0.78F;
-constexpr float kLeatherToneMax = 0.96F;
-constexpr float kTackToneMin = 0.58F;
-constexpr float kTackToneMax = 0.78F;
-constexpr float kSpecialTackThreshold = 0.90F;
-constexpr float kSpecialTackR = 0.18F;
-constexpr float kSpecialTackG = 0.19F;
-constexpr float kSpecialTackB = 0.22F;
-constexpr float kSpecialTackBlend = 0.25F;
+constexpr float k_leather_tone_min = 0.78F;
+constexpr float k_leather_tone_max = 0.96F;
+constexpr float k_tack_tone_min = 0.58F;
+constexpr float k_tack_tone_max = 0.78F;
+constexpr float k_special_tack_threshold = 0.90F;
+constexpr float k_special_tack_r = 0.18F;
+constexpr float k_special_tack_g = 0.19F;
+constexpr float k_special_tack_b = 0.22F;
+constexpr float k_special_tack_blend = 0.25F;
 
-constexpr float kBlanketTintMin = 0.92F;
-constexpr float kBlanketTintMax = 1.05F;
+constexpr float k_blanket_tint_min = 0.92F;
+constexpr float k_blanket_tint_max = 1.05F;
 
-constexpr float kEarInnerBaseR = 0.45F;
-constexpr float kEarInnerBaseG = 0.35F;
-constexpr float kEarInnerBaseB = 0.32F;
-constexpr float kEarInnerBlendFactor = 0.30F;
+constexpr float k_ear_inner_base_r = 0.45F;
+constexpr float k_ear_inner_base_g = 0.35F;
+constexpr float k_ear_inner_base_b = 0.32F;
+constexpr float k_ear_inner_blend_factor = 0.30F;
 
-constexpr uint32_t kSaltCoatHue = 0x23456U;
-constexpr uint32_t kSaltBlazeChance = 0x1122U;
-constexpr uint32_t kSaltManeBlend = 0x3344U;
-constexpr uint32_t kSaltHoofBlend = 0x5566U;
-constexpr uint32_t kSaltLeatherTone = 0x7788U;
-constexpr uint32_t kSaltTackTone = 0x88AAU;
-constexpr uint32_t kSaltBlanketTint = 0x99B0U;
+constexpr uint32_t k_salt_coat_hue = 0x23456U;
+constexpr uint32_t k_salt_blaze_chance = 0x1122U;
+constexpr uint32_t k_salt_mane_blend = 0x3344U;
+constexpr uint32_t k_salt_hoof_blend = 0x5566U;
+constexpr uint32_t k_salt_leather_tone = 0x7788U;
+constexpr uint32_t k_salt_tack_tone = 0x88AAU;
+constexpr uint32_t k_salt_blanket_tint = 0x99B0U;
 
 } // namespace HorseVariantConstants
 
 namespace HorseGaitConstants {
 
-constexpr float kCycleTimeMin = 0.60F;
-constexpr float kCycleTimeMax = 0.72F;
-constexpr float kFrontLegPhaseMin = 0.08F;
-constexpr float kFrontLegPhaseMax = 0.16F;
-constexpr float kDiagonalLeadMin = 0.44F;
-constexpr float kDiagonalLeadMax = 0.54F;
-constexpr float kStrideSwingMin = 0.26F;
-constexpr float kStrideSwingMax = 0.32F;
-constexpr float kStrideLiftMin = 0.10F;
-constexpr float kStrideLiftMax = 0.14F;
+constexpr float k_cycle_time_min = 0.60F;
+constexpr float k_cycle_time_max = 0.72F;
+constexpr float k_front_leg_phase_min = 0.08F;
+constexpr float k_front_leg_phase_max = 0.16F;
+constexpr float k_diagonal_lead_min = 0.44F;
+constexpr float k_diagonal_lead_max = 0.54F;
+constexpr float k_stride_swing_min = 0.26F;
+constexpr float k_stride_swing_max = 0.32F;
+constexpr float k_stride_lift_min = 0.10F;
+constexpr float k_stride_lift_max = 0.14F;
 
-constexpr uint32_t kSaltCycleTime = 0xAA12U;
-constexpr uint32_t kSaltFrontLegPhase = 0xBB34U;
-constexpr uint32_t kSaltDiagonalLead = 0xCC56U;
-constexpr uint32_t kSaltStrideSwing = 0xDD78U;
-constexpr uint32_t kSaltStrideLift = 0xEE9AU;
+constexpr uint32_t k_salt_cycle_time = 0xAA12U;
+constexpr uint32_t k_salt_front_leg_phase = 0xBB34U;
+constexpr uint32_t k_salt_diagonal_lead = 0xCC56U;
+constexpr uint32_t k_salt_stride_swing = 0xDD78U;
+constexpr uint32_t k_salt_stride_lift = 0xEE9AU;
 
 } // namespace HorseGaitConstants
 

@@ -147,7 +147,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererUsesArchetypePath) {
   submit_equipment_batch(batch, adapter);
 
   EXPECT_EQ(cylinder_count_of(submitter), 0);
-  EXPECT_EQ(mesh_count_of(submitter), 6);
+  EXPECT_EQ(mesh_count_of(submitter), 1);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
@@ -169,7 +169,7 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererRespectsModelTransform) {
   EXPECT_NEAR(actual.z(), expected_world.z(), 1e-4F);
 }
 
-TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
+TEST_F(HorseEquipmentRenderersTest, ReinsRendererKeepsGeometryNearMuzzle) {
   EquipmentBatch batch;
   ReinsRenderer renderer;
 
@@ -180,15 +180,9 @@ TEST_F(HorseEquipmentRenderersTest, ReinsRendererAddsCrossConnections) {
       batch.archetypes.front()
           .archetype->lods[static_cast<std::size_t>(RenderArchetypeLod::Full)]
           .draws;
-  ASSERT_GE(static_cast<int>(draws.size()), 6);
-
-  auto const connectors =
-      std::count_if(draws.begin(), draws.end(), [](const auto &draw) {
-        return std::abs(draw.local_model.column(3).x()) < 1e-4F;
-      });
-  EXPECT_GE(connectors, 2);
-
-  EXPECT_GT(axis_scale_of(draws.front().local_model, 1), 0.5F);
+  ASSERT_EQ(static_cast<int>(draws.size()), 1);
+  EXPECT_GT(draws.front().local_model.column(3).z(), 1.0F);
+  EXPECT_LT(axis_scale_of(draws.front().local_model, 1), 0.30F);
 }
 
 TEST_F(HorseEquipmentRenderersTest, ScaleBardingRendererProducesMeshes) {

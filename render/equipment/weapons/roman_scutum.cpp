@@ -33,7 +33,7 @@ constexpr std::uint8_t k_bronze_rivet = 6;
 constexpr QVector3D k_shield_center{0.0F, 0.0F, 0.15F};
 
 auto roman_scutum_archetype() -> const RenderArchetype & {
-  static const RenderArchetype kArchetype = []() {
+  static const RenderArchetype k_archetype = []() {
     constexpr float shield_height = 1.2F;
     constexpr float shield_width = 0.65F;
     constexpr float shield_curve = 0.19F;
@@ -106,7 +106,7 @@ auto roman_scutum_archetype() -> const RenderArchetype & {
 
     return std::move(builder).build();
   }();
-  return kArchetype;
+  return k_archetype;
 }
 
 auto hand_l_basis_transform(const QMatrix4x4 &parent,
@@ -161,7 +161,7 @@ void RomanScutumRenderer::submit(const RomanScutumConfig &,
   QVector3D const bronze_color =
       saturate_color(palette.metal * QVector3D(1.3F, 1.0F, 0.5F));
 
-  std::array<QVector3D, kRomanScutumRoleCount> const palette_slots{
+  std::array<QVector3D, k_roman_scutum_role_count> const palette_slots{
       shield_red * 0.975F,  shield_red * 1.025F, bronze_color * 0.9F,
       bronze_color,         bronze_color * 1.1F, bronze_color * 0.95F,
       bronze_color * 1.15F,
@@ -176,7 +176,7 @@ void RomanScutumRenderer::submit(const RomanScutumConfig &,
 auto roman_scutum_fill_role_colors(const HumanoidPalette &palette,
                                    QVector3D *out,
                                    std::size_t max) -> std::uint32_t {
-  if (max < kRomanScutumRoleCount) {
+  if (max < k_roman_scutum_role_count) {
     return 0;
   }
   QVector3D const shield_red =
@@ -190,7 +190,7 @@ auto roman_scutum_fill_role_colors(const HumanoidPalette &palette,
   out[k_bronze_boss] = bronze_color * 1.1F;
   out[k_bronze_rim] = bronze_color * 0.95F;
   out[k_bronze_rivet] = bronze_color * 1.15F;
-  return kRomanScutumRoleCount;
+  return k_roman_scutum_role_count;
 }
 
 auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)

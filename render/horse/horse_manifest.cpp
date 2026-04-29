@@ -18,20 +18,20 @@ namespace Render::Horse {
 
 namespace {
 
-constexpr std::uint8_t kRoleCoat = 1;
-constexpr std::uint8_t kRoleHoof = 4;
-constexpr int kHorseMaterialId = 6;
-constexpr float kHorseVisualScale = 1.32F;
-constexpr float kHorseBodyVisualWidthScale = 1.55F;
-constexpr float kHorseBodyVisualHeightScale = 1.06F;
-constexpr float kHorseTorsoWidthScale = 1.55F;
-constexpr float kHorseTorsoHeightScale = 1.36F;
-constexpr float kHorseNeckWidthScale = 0.95F;
-constexpr float kHorseNeckHeightScale = 0.87F;
-constexpr float kHorseHeadLengthScale = 1.00F;
-constexpr float kHorseLegLengthScale = 1.12F;
-constexpr float kHorseLegThicknessScale = 1.95F;
-constexpr int kHorseLegRadialSegments = 6;
+constexpr std::uint8_t k_role_coat = 1;
+constexpr std::uint8_t k_role_hoof = 4;
+constexpr int k_horse_material_id = 6;
+constexpr float k_horse_visual_scale = 1.32F;
+constexpr float k_horse_body_visual_width_scale = 1.55F;
+constexpr float k_horse_body_visual_height_scale = 1.06F;
+constexpr float k_horse_torso_width_scale = 1.55F;
+constexpr float k_horse_torso_height_scale = 1.36F;
+constexpr float k_horse_neck_width_scale = 0.95F;
+constexpr float k_horse_neck_height_scale = 0.87F;
+constexpr float k_horse_head_length_scale = 1.00F;
+constexpr float k_horse_leg_length_scale = 1.12F;
+constexpr float k_horse_leg_thickness_scale = 1.95F;
+constexpr int k_horse_leg_radial_segments = 6;
 
 struct HorseClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -41,7 +41,7 @@ struct HorseClipSpec {
   float bob_scale{0.0F};
 };
 
-const std::array<HorseClipSpec, 6> kHorseClips{{
+const std::array<HorseClipSpec, 6> k_horse_clips{{
     {{"idle", 24U, 24.0F, true},
      Render::GL::GaitType::IDLE,
      false,
@@ -74,14 +74,14 @@ const std::array<HorseClipSpec, 6> kHorseClips{{
      0.0F},
 }};
 
-const std::array<Render::Creature::BakeClipDescriptor, kHorseClips.size()>
-    kHorseClipDescs{{
-        kHorseClips[0].desc,
-        kHorseClips[1].desc,
-        kHorseClips[2].desc,
-        kHorseClips[3].desc,
-        kHorseClips[4].desc,
-        kHorseClips[5].desc,
+const std::array<Render::Creature::BakeClipDescriptor, k_horse_clips.size()>
+    k_horse_clip_descs{{
+        k_horse_clips[0].desc,
+        k_horse_clips[1].desc,
+        k_horse_clips[2].desc,
+        k_horse_clips[3].desc,
+        k_horse_clips[4].desc,
+        k_horse_clips[5].desc,
     }};
 
 auto build_horse_whole_nodes()
@@ -92,116 +92,142 @@ auto build_horse_whole_nodes()
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
   float const bw =
-      dims.body_width * kHorseBodyVisualWidthScale * kHorseVisualScale;
-  float const bh =
-      dims.body_height * kHorseBodyVisualHeightScale * kHorseVisualScale;
-  float const bl = dims.body_length * kHorseVisualScale;
-  float const hw = dims.head_width * kHorseVisualScale;
-  float const hh = dims.head_height * kHorseVisualScale;
-  float const hl = dims.head_length * kHorseVisualScale;
+      dims.body_width * k_horse_body_visual_width_scale * k_horse_visual_scale;
+  float const bh = dims.body_height * k_horse_body_visual_height_scale *
+                   k_horse_visual_scale;
+  float const bl = dims.body_length * k_horse_visual_scale;
+  float const hw = dims.head_width * k_horse_visual_scale;
+  float const hh = dims.head_height * k_horse_visual_scale;
+  float const hl = dims.head_length * k_horse_visual_scale;
   float const torso_lift = bh * 0.14F;
 
   std::vector<MeshNode> nodes;
-  nodes.reserve(14);
+  nodes.reserve(20);
 
   BarrelNode rear;
+  rear.horse_rump_profile = true;
   rear.rings = {
-      {-bl * 0.98F, bh * 0.20F + torso_lift, bw * 0.16F * kHorseTorsoWidthScale,
-       bh * 0.2142F * kHorseTorsoHeightScale,
-       bh * 0.1008F * kHorseTorsoHeightScale},
-      {-bl * 0.78F, bh * 0.33F + torso_lift, bw * 0.31F * kHorseTorsoWidthScale,
-       bh * 0.4032F * kHorseTorsoHeightScale,
-       bh * 0.1890F * kHorseTorsoHeightScale},
-      {-bl * 0.54F, bh * 0.46F + torso_lift, bw * 0.48F * kHorseTorsoWidthScale,
-       bh * 0.5922F * kHorseTorsoHeightScale,
-       bh * 0.3150F * kHorseTorsoHeightScale},
-      {-bl * 0.24F, bh * 0.34F + torso_lift, bw * 0.40F * kHorseTorsoWidthScale,
-       bh * 0.3906F * kHorseTorsoHeightScale,
-       bh * 0.1638F * kHorseTorsoHeightScale},
-      {-bl * 0.02F, bh * 0.24F + torso_lift, bw * 0.34F * kHorseTorsoWidthScale,
-       bh * 0.3150F * kHorseTorsoHeightScale,
-       bh * 0.1008F * kHorseTorsoHeightScale},
+      {-bl * 0.78F, bh * 0.34F + torso_lift,
+       bw * 0.30F * k_horse_torso_width_scale,
+       bh * 0.2970F * k_horse_torso_height_scale,
+       bh * 0.1760F * k_horse_torso_height_scale},
+      {-bl * 0.66F, bh * 0.43F + torso_lift,
+       bw * 0.46F * k_horse_torso_width_scale,
+       bh * 0.4400F * k_horse_torso_height_scale,
+       bh * 0.3190F * k_horse_torso_height_scale},
+      {-bl * 0.48F, bh * 0.45F + torso_lift,
+       bw * 0.50F * k_horse_torso_width_scale,
+       bh * 0.5005F * k_horse_torso_height_scale,
+       bh * 0.3795F * k_horse_torso_height_scale},
+      {-bl * 0.26F, bh * 0.40F + torso_lift,
+       bw * 0.46F * k_horse_torso_width_scale,
+       bh * 0.4620F * k_horse_torso_height_scale,
+       bh * 0.3025F * k_horse_torso_height_scale},
+      {-bl * 0.06F, bh * 0.34F + torso_lift,
+       bw * 0.38F * k_horse_torso_width_scale,
+       bh * 0.3905F * k_horse_torso_height_scale,
+       bh * 0.1925F * k_horse_torso_height_scale},
   };
   nodes.push_back({"horse.body.rear", static_cast<BoneIndex>(HorseBone::Body),
-                   kRoleCoat, kLodAll, 0, rear});
+                   k_role_coat, kLodAll, 0, rear});
 
   BarrelNode mid;
   mid.rings = {
-      {-bl * 0.36F, bh * 0.28F + torso_lift, bw * 0.42F * kHorseTorsoWidthScale,
-       bh * 0.4284F * kHorseTorsoHeightScale,
-       bh * 0.3780F * kHorseTorsoHeightScale},
-      {0.0F, bh * 0.28F + torso_lift, bw * 0.435F * kHorseTorsoWidthScale,
-       bh * 0.4284F * kHorseTorsoHeightScale,
-       bh * 0.3780F * kHorseTorsoHeightScale},
-      {bl * 0.36F, bh * 0.30F + torso_lift, bw * 0.42F * kHorseTorsoWidthScale,
-       bh * 0.4032F * kHorseTorsoHeightScale,
-       bh * 0.3528F * kHorseTorsoHeightScale},
+      {-bl * 0.36F, bh * 0.28F + torso_lift,
+       bw * 0.42F * k_horse_torso_width_scale,
+       bh * 0.4284F * k_horse_torso_height_scale,
+       bh * 0.3780F * k_horse_torso_height_scale},
+      {0.0F, bh * 0.28F + torso_lift, bw * 0.435F * k_horse_torso_width_scale,
+       bh * 0.4284F * k_horse_torso_height_scale,
+       bh * 0.3780F * k_horse_torso_height_scale},
+      {bl * 0.36F, bh * 0.30F + torso_lift,
+       bw * 0.42F * k_horse_torso_width_scale,
+       bh * 0.4032F * k_horse_torso_height_scale,
+       bh * 0.3528F * k_horse_torso_height_scale},
   };
   nodes.push_back({"horse.body.mid", static_cast<BoneIndex>(HorseBone::Body),
-                   kRoleCoat, kLodAll, 0, mid});
+                   k_role_coat, kLodAll, 0, mid});
 
   BarrelNode front;
   front.rings = {
-      {bl * 0.04F, bh * 0.34F + torso_lift, bw * 0.39F * kHorseTorsoWidthScale,
-       bh * 0.4536F * kHorseTorsoHeightScale,
-       bh * 0.3528F * kHorseTorsoHeightScale},
-      {bl * 0.40F, bh * 0.42F + torso_lift, bw * 0.355F * kHorseTorsoWidthScale,
-       bh * 0.5544F * kHorseTorsoHeightScale,
-       bh * 0.3906F * kHorseTorsoHeightScale},
-      {bl * 0.76F, bh * 0.50F + torso_lift, bw * 0.30F * kHorseTorsoWidthScale,
-       bh * 0.5544F * kHorseTorsoHeightScale,
-       bh * 0.2772F * kHorseTorsoHeightScale},
+      {bl * 0.04F, bh * 0.34F + torso_lift,
+       bw * 0.39F * k_horse_torso_width_scale,
+       bh * 0.4536F * k_horse_torso_height_scale,
+       bh * 0.3528F * k_horse_torso_height_scale},
+      {bl * 0.40F, bh * 0.42F + torso_lift,
+       bw * 0.355F * k_horse_torso_width_scale,
+       bh * 0.5544F * k_horse_torso_height_scale,
+       bh * 0.3906F * k_horse_torso_height_scale},
+      {bl * 0.76F, bh * 0.50F + torso_lift,
+       bw * 0.30F * k_horse_torso_width_scale,
+       bh * 0.5544F * k_horse_torso_height_scale,
+       bh * 0.2772F * k_horse_torso_height_scale},
   };
   nodes.push_back({"horse.body.front", static_cast<BoneIndex>(HorseBone::Body),
-                   kRoleCoat, kLodAll, 0, front});
+                   k_role_coat, kLodAll, 0, front});
 
   TubeNode neck;
   neck.start = QVector3D(0.0F, bh * 0.62F, bl * 0.44F);
-  neck.end = QVector3D(0.0F, bh * 1.70F, bl * 1.07F);
-  neck.start_radius = 0.5F * (bw * 0.34F * kHorseNeckWidthScale +
-                              bh * 0.34F * kHorseNeckHeightScale);
-  neck.end_radius = 0.5F * (bw * 0.26F * kHorseNeckWidthScale +
-                            bh * 0.24F * kHorseNeckHeightScale);
+  neck.end = QVector3D(0.0F, bh * 1.56F, bl * 0.98F);
+  neck.start_radius = 0.5F * (bw * 0.34F * k_horse_neck_width_scale +
+                              bh * 0.34F * k_horse_neck_height_scale);
+  neck.end_radius = 0.5F * (bw * 0.20F * k_horse_neck_width_scale +
+                            bh * 0.19F * k_horse_neck_height_scale);
   neck.segment_count = 5U;
   neck.ring_vertices = 8U;
   nodes.push_back({"horse.neck", static_cast<BoneIndex>(HorseBone::NeckTop),
-                   kRoleCoat, kLodAll, 0, neck});
+                   k_role_coat, kLodAll, 0, neck});
 
   float const head_back_z = neck.end.z();
-  float const head_mid_z = head_back_z + hl * 0.76F * kHorseHeadLengthScale;
-  float const head_front_z = head_mid_z + hl * 0.40F * kHorseHeadLengthScale;
+  float const head_mid_z = head_back_z + hl * 0.44F * k_horse_head_length_scale;
+  float const head_front_z =
+      head_back_z + hl * 0.88F * k_horse_head_length_scale;
 
-  TubeNode head_upper;
-  head_upper.start = neck.end;
-  head_upper.end = QVector3D(0.0F, bh * 1.24F, head_mid_z);
-  head_upper.start_radius = neck.end_radius * 1.04F;
-  head_upper.end_radius = 0.5F * (hw * 1.20F + hh * 0.86F);
-  head_upper.segment_count = 4U;
-  head_upper.ring_vertices = 8U;
+  EllipsoidNode head;
+  head.center = QVector3D(0.0F, bh * 1.62F, head_back_z + hl * 0.34F);
+  head.radii = QVector3D(hw * 1.05F, hh * 0.78F, hl * 0.62F);
+  head.ring_count = 5U;
+  head.ring_vertices = 8U;
   nodes.push_back({"horse.head.upper", static_cast<BoneIndex>(HorseBone::Head),
-                   kRoleCoat, kLodAll, 0, head_upper});
+                   k_role_coat, kLodAll, 0, head});
 
-  TubeNode nose;
-  nose.start = head_upper.end;
-  nose.end = QVector3D(0.0F, bh * 1.10F, head_front_z);
-  nose.start_radius = head_upper.end_radius;
-  nose.end_radius = 0.5F * (hw * 0.56F + hh * 0.44F);
-  nose.segment_count = 3U;
-  nose.ring_vertices = 8U;
+  BarrelNode muzzle;
+  muzzle.horse_muzzle_profile = true;
+  muzzle.rings = {
+      {head_back_z + hl * 0.22F, bh * 1.54F, hw * 0.42F, hh * 0.20F,
+       hh * 0.16F},
+      {head_back_z + hl * 0.46F, bh * 1.46F, hw * 0.39F, hh * 0.19F,
+       hh * 0.15F},
+      {head_mid_z + hl * 0.16F, bh * 1.34F, hw * 0.31F, hh * 0.15F, hh * 0.12F},
+      {head_front_z - hl * 0.04F, bh * 1.22F, hw * 0.24F, hh * 0.11F,
+       hh * 0.10F},
+  };
   nodes.push_back({"horse.head.nose", static_cast<BoneIndex>(HorseBone::Head),
-                   kRoleCoat, kLodAll, 0, nose});
+                   k_role_coat, kLodAll, 0, muzzle});
+
+  EllipsoidNode eye_l;
+  eye_l.center = QVector3D(hw * 0.60F, bh * 1.44F, head_back_z + hl * 0.42F);
+  eye_l.radii = QVector3D(hw * 0.060F, hh * 0.050F, hl * 0.040F);
+  eye_l.ring_count = 4U;
+  eye_l.ring_vertices = 6U;
+  nodes.push_back({"horse.eye.l", static_cast<BoneIndex>(HorseBone::Head),
+                   k_role_hoof, kLodAll, 0, eye_l});
+  EllipsoidNode eye_r = eye_l;
+  eye_r.center.setX(-eye_l.center.x());
+  nodes.push_back({"horse.eye.r", static_cast<BoneIndex>(HorseBone::Head),
+                   k_role_hoof, kLodAll, 0, eye_r});
 
   auto add_leg = [&](float x, float z, BoneIndex foot_bone) {
     ColumnLegNode leg;
     leg.top_center = QVector3D(x, -bh * (z < 0.0F ? 0.18F : 0.12F), z);
-    leg.bottom_y =
-        -dims.leg_length * kHorseVisualScale * 0.86F * kHorseLegLengthScale;
-    leg.top_radius_x = dims.body_width * kHorseVisualScale *
-                       (z < 0.0F ? 0.18F : 0.17F) * kHorseLegThicknessScale;
+    leg.bottom_y = -dims.leg_length * k_horse_visual_scale * 0.86F *
+                   k_horse_leg_length_scale;
+    leg.top_radius_x = dims.body_width * k_horse_visual_scale *
+                       (z < 0.0F ? 0.18F : 0.17F) * k_horse_leg_thickness_scale;
     leg.top_radius_z = leg.top_radius_x * 0.86F;
     leg.shaft_taper = 0.50F;
     leg.foot_radius_scale = 1.45F;
-    nodes.push_back({"horse.leg", foot_bone, kRoleCoat, kLodAll, 0, leg});
+    nodes.push_back({"horse.leg", foot_bone, k_role_coat, kLodAll, 0, leg});
   };
   add_leg(bw * 0.34F, bl * 0.55F, static_cast<BoneIndex>(HorseBone::FootFL));
   add_leg(-bw * 0.34F, bl * 0.55F, static_cast<BoneIndex>(HorseBone::FootFR));
@@ -217,60 +243,61 @@ auto build_horse_whole_nodes()
   mane.thickness_axis = QVector3D(1.0F, 0.0F, 0.0F);
   mane.thickness = bw * 0.09F;
   nodes.push_back({"horse.mane", static_cast<BoneIndex>(HorseBone::NeckTop),
-                   kRoleCoat, kLodAll, 0, mane});
+                   k_role_coat, kLodAll, 0, mane});
 
   FlatFanNode ear_l;
   ear_l.outline = {
-      {hw * 0.14F, bh * 1.36F, head_back_z + hl * 0.04F},
-      {hw * 0.24F, bh * 1.74F, head_back_z - hl * 0.02F},
-      {hw * 0.06F, bh * 1.42F, head_back_z - hl * 0.14F},
+      {hw * 0.22F, bh * 1.74F, head_back_z + hl * 0.08F},
+      {hw * 0.44F, bh * 2.16F, head_back_z - hl * 0.02F},
+      {hw * 0.08F, bh * 1.86F, head_back_z - hl * 0.24F},
   };
   ear_l.thickness_axis = QVector3D(0.0F, 0.0F, 1.0F);
-  ear_l.thickness = hw * 0.03F;
+  ear_l.thickness = hw * 0.065F;
   nodes.push_back({"horse.ear.l", static_cast<BoneIndex>(HorseBone::Head),
-                   kRoleCoat, kLodAll, 0, ear_l});
+                   k_role_coat, kLodAll, 0, ear_l});
 
   FlatFanNode ear_r = ear_l;
   for (QVector3D &p : ear_r.outline) {
     p.setX(-p.x());
   }
   nodes.push_back({"horse.ear.r", static_cast<BoneIndex>(HorseBone::Head),
-                   kRoleCoat, kLodAll, 0, ear_r});
+                   k_role_coat, kLodAll, 0, ear_r});
 
   TubeNode tail;
-  tail.start = QVector3D(0.0F, bh * 0.24F, -bl * 0.84F);
-  tail.end = QVector3D(0.0F, -bh * 0.44F, -bl * 1.02F);
+  tail.start = QVector3D(0.0F, bh * 0.34F, -bl * 0.82F);
+  tail.end = QVector3D(0.0F, -bh * 0.40F, -bl * 1.18F);
   tail.start_radius = bw * 0.09F;
   tail.end_radius = bw * 0.035F;
   tail.segment_count = 4U;
   tail.ring_vertices = 6U;
   tail.sag = -bh * 0.08F;
   nodes.push_back({"horse.tail", static_cast<BoneIndex>(HorseBone::Body),
-                   kRoleCoat, kLodAll, 0, tail});
+                   k_role_coat, kLodAll, 0, tail});
 
   return nodes;
 }
 
-const auto kHorseWholeNodes = build_horse_whole_nodes();
-const std::array<std::string_view, 1> kHorseFullExcludedPrefixes{"horse.leg"};
+const auto k_horse_whole_nodes = build_horse_whole_nodes();
+const std::array<std::string_view, 1> k_horse_full_excluded_prefixes{
+    "horse.leg"};
 
 auto horse_thigh_segment_mesh(bool front) noexcept -> Render::GL::Mesh * {
   static Render::GL::Mesh *const front_mesh =
       Render::GL::get_unit_tapered_cylinder(1.28F, 0.56F,
-                                            kHorseLegRadialSegments);
+                                            k_horse_leg_radial_segments);
   static Render::GL::Mesh *const rear_mesh =
       Render::GL::get_unit_tapered_cylinder(1.34F, 0.60F,
-                                            kHorseLegRadialSegments);
+                                            k_horse_leg_radial_segments);
   return front ? front_mesh : rear_mesh;
 }
 
 auto horse_calf_segment_mesh(bool front) noexcept -> Render::GL::Mesh * {
   static Render::GL::Mesh *const front_mesh =
       Render::GL::get_unit_tapered_cylinder(1.10F, 0.78F,
-                                            kHorseLegRadialSegments);
+                                            k_horse_leg_radial_segments);
   static Render::GL::Mesh *const rear_mesh =
       Render::GL::get_unit_tapered_cylinder(1.14F, 0.82F,
-                                            kHorseLegRadialSegments);
+                                            k_horse_leg_radial_segments);
   return front ? front_mesh : rear_mesh;
 }
 
@@ -305,13 +332,15 @@ auto build_horse_full_leg_overlays()
     thigh.params.anchor_bone = shoulder_bone;
     thigh.params.tail_bone = knee_bone;
     thigh.params.head_offset =
-        QVector3D(0.0F, dims.body_height * (front ? 0.72F : 0.78F), 0.0F);
+        QVector3D(0.0F, dims.body_height * (front ? 0.88F : 1.04F),
+                  dims.body_length * (front ? 0.055F : -0.075F));
     thigh.params.tail_offset =
-        QVector3D(0.0F, dims.leg_length * (front ? 0.020F : 0.018F), 0.0F);
+        QVector3D(0.0F, dims.leg_length * (front ? 0.085F : 0.090F),
+                  dims.body_length * (front ? 0.040F : 0.040F));
     thigh.params.radius = dims.body_width * (front ? 0.430F : 0.455F);
     thigh.custom_mesh = horse_thigh_segment_mesh(front);
-    thigh.color_role = kRoleCoat;
-    thigh.material_id = kHorseMaterialId;
+    thigh.color_role = k_role_coat;
+    thigh.material_id = k_horse_material_id;
     thigh.lod_mask = Render::Creature::kLodFull;
 
     PrimitiveInstance &calf = out[idx++];
@@ -320,12 +349,15 @@ auto build_horse_full_leg_overlays()
     calf.params.anchor_bone = knee_bone;
     calf.params.tail_bone = foot_bone;
     calf.params.head_offset =
-        QVector3D(0.0F, -dims.leg_length * (front ? 0.004F : 0.003F), 0.0F);
-    calf.params.tail_offset = QVector3D(0.0F, dims.hoof_height * 0.10F, 0.0F);
+        QVector3D(0.0F, dims.leg_length * (front ? 0.030F : 0.008F),
+                  dims.body_length * (front ? 0.012F : -0.010F));
+    calf.params.tail_offset =
+        QVector3D(0.0F, dims.hoof_height * (front ? 0.02F : 0.08F),
+                  dims.body_length * (front ? 0.008F : -0.010F));
     calf.params.radius = dims.body_width * (front ? 0.225F : 0.240F);
     calf.custom_mesh = horse_calf_segment_mesh(front);
-    calf.color_role = kRoleCoat;
-    calf.material_id = kHorseMaterialId;
+    calf.color_role = k_role_coat;
+    calf.material_id = k_horse_material_id;
     calf.lod_mask = Render::Creature::kLodFull;
 
     PrimitiveInstance &hoof = out[idx++];
@@ -336,8 +368,8 @@ auto build_horse_full_leg_overlays()
         QVector3D(0.0F, horse_hoof_center_y(front, dims),
                   (front ? 1.0F : -1.0F) * dims.body_width * 0.010F);
     hoof.params.half_extents = horse_hoof_half_extents(front, dims);
-    hoof.color_role = kRoleHoof;
-    hoof.material_id = kHorseMaterialId;
+    hoof.color_role = k_role_hoof;
+    hoof.material_id = k_horse_material_id;
     hoof.lod_mask = Render::Creature::kLodFull;
   };
 
@@ -360,7 +392,7 @@ auto build_horse_full_leg_overlays()
   return out;
 }
 
-const auto kHorseFullLegOverlays = build_horse_full_leg_overlays();
+const auto k_horse_full_leg_overlays = build_horse_full_leg_overlays();
 
 auto horse_topology_storage() noexcept
     -> const Render::Creature::Quadruped::TopologyStorage & {
@@ -377,7 +409,7 @@ auto horse_topology_ref() noexcept
 void bake_horse_manifest_clip_palettes(std::size_t clip_index,
                                        std::uint32_t frame_index,
                                        std::vector<QMatrix4x4> &out_palettes) {
-  auto const &clip = kHorseClips[clip_index];
+  auto const &clip = k_horse_clips[clip_index];
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
   float const phase =
@@ -421,26 +453,26 @@ auto horse_manifest() noexcept -> const Render::Creature::SpeciesManifest & {
     m.lod_full.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(HorseBone::Root);
     m.lod_full.mesh_skinning = Render::Creature::MeshSkinning::HorseWhole;
-    m.lod_full.color_role = kRoleCoat;
-    m.lod_full.material_id = kHorseMaterialId;
+    m.lod_full.color_role = k_role_coat;
+    m.lod_full.material_id = k_horse_material_id;
     m.lod_full.lod_mask = Render::Creature::kLodFull;
     m.lod_full.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
-            kHorseWholeNodes);
-    m.lod_full.excluded_node_name_prefixes = kHorseFullExcludedPrefixes;
-    m.lod_full.overlay_primitives = kHorseFullLegOverlays;
+            k_horse_whole_nodes);
+    m.lod_full.excluded_node_name_prefixes = k_horse_full_excluded_prefixes;
+    m.lod_full.overlay_primitives = k_horse_full_leg_overlays;
     m.lod_minimal.primitive_name = "horse.minimal.whole";
     m.lod_minimal.anchor_bone =
         static_cast<Render::Creature::BoneIndex>(HorseBone::Root);
     m.lod_minimal.mesh_skinning = Render::Creature::MeshSkinning::HorseWhole;
-    m.lod_minimal.color_role = kRoleCoat;
-    m.lod_minimal.material_id = kHorseMaterialId;
+    m.lod_minimal.color_role = k_role_coat;
+    m.lod_minimal.material_id = k_horse_material_id;
     m.lod_minimal.lod_mask = Render::Creature::kLodMinimal;
     m.lod_minimal.mesh_nodes =
         std::span<const Render::Creature::Quadruped::MeshNode>(
-            kHorseWholeNodes);
-    m.clips =
-        std::span<const Render::Creature::BakeClipDescriptor>(kHorseClipDescs);
+            k_horse_whole_nodes);
+    m.clips = std::span<const Render::Creature::BakeClipDescriptor>(
+        k_horse_clip_descs);
     m.bind_palette = &horse_bind_palette;
     m.creature_spec = &horse_creature_spec;
     m.bake_clip_palette = &bake_horse_manifest_clip_palettes;

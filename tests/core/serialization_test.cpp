@@ -292,7 +292,7 @@ TEST_F(SerializationTest, DeserializationWithMissingFields) {
   auto *unit = entity->get_component<UnitComponent>();
   ASSERT_NE(unit, nullptr);
   EXPECT_EQ(unit->health, 50);
-  EXPECT_EQ(unit->max_health, Defaults::kUnitDefaultHealth);
+  EXPECT_EQ(unit->max_health, Defaults::k_unit_default_health);
 }
 
 TEST_F(SerializationTest, DeserializationWithMalformedJSON) {

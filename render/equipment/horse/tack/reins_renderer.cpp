@@ -10,13 +10,10 @@ namespace Render::GL {
 namespace {
 
 constexpr std::uint8_t k_rein_slot = 0U;
-constexpr float k_rein_radius = 0.004F;
-constexpr float k_bit_side_offset = 0.10F;
-constexpr float k_bit_forward_offset = 0.10F;
-constexpr float k_handle_side_offset = 0.12F;
-constexpr float k_handle_up_offset = 0.22F;
-constexpr float k_handle_forward_offset = 0.05F;
-constexpr float k_mid_drop = 0.12F;
+constexpr float k_rein_radius = 0.0025F;
+constexpr float k_bit_side_offset = 0.11F;
+constexpr float k_bit_forward_offset = 0.02F;
+constexpr float k_bit_up_offset = -0.03F;
 
 auto local_from_frame(const HorseAttachmentFrame &base,
                       const QVector3D &world_point) -> QVector3D {
@@ -29,41 +26,20 @@ auto local_from_frame(const HorseAttachmentFrame &base,
 void add_rein_segments(RenderArchetypeBuilder &builder,
                        const HorseAttachmentFrame &muzzle,
                        const HorseAttachmentFrame &back) {
-  struct ReinEndpoints {
-    QVector3D bit;
-    QVector3D handle;
-  };
-  std::array<ReinEndpoints, 2> endpoints{};
+  (void)back;
+  std::array<QVector3D, 2> bits{};
 
   for (int i = 0; i < 2; ++i) {
     const float side = (i == 0) ? 1.0F : -1.0F;
 
-    const QVector3D bit_pos_world = muzzle.origin +
-                                    muzzle.right * side * k_bit_side_offset +
-                                    muzzle.forward * k_bit_forward_offset;
-
-    const QVector3D handle_world =
-        back.origin + back.right * side * k_handle_side_offset +
-        back.up * k_handle_up_offset + back.forward * k_handle_forward_offset;
-
-    const QVector3D mid_world =
-        (bit_pos_world + handle_world) * 0.5F - back.up * k_mid_drop;
-
-    endpoints[i].bit = local_from_frame(back, bit_pos_world);
-    endpoints[i].handle = local_from_frame(back, handle_world);
-
-    builder.add_palette_cylinder(endpoints[i].bit,
-                                 local_from_frame(back, mid_world),
-                                 k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
-    builder.add_palette_cylinder(local_from_frame(back, mid_world),
-                                 endpoints[i].handle, k_rein_radius,
-                                 k_rein_slot, nullptr, 1.0F, 4);
+    const QVector3D bit_pos_world =
+        muzzle.origin + muzzle.right * side * k_bit_side_offset +
+        muzzle.forward * k_bit_forward_offset + muzzle.up * k_bit_up_offset;
+    bits[i] = local_from_frame(back, bit_pos_world);
   }
 
-  builder.add_palette_cylinder(endpoints[0].bit, endpoints[1].bit,
-                               k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
-  builder.add_palette_cylinder(endpoints[0].handle, endpoints[1].handle,
-                               k_rein_radius, k_rein_slot, nullptr, 1.0F, 4);
+  builder.add_palette_cylinder(bits[0], bits[1], k_rein_radius, k_rein_slot,
+                               nullptr, 1.0F, 4);
 }
 
 } // namespace

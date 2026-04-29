@@ -77,7 +77,8 @@ auto SaveLoadService::save_game_to_slot(Engine::Core::World &world,
     const QByteArray world_bytes = world_doc.toJson(QJsonDocument::Compact);
 
     QJsonObject combined_metadata = metadata;
-    combined_metadata["slotName"] = slot_name;
+    combined_metadata.remove("slotName");
+    combined_metadata["slot_name"] = slot_name;
     combined_metadata["title"] = title;
     combined_metadata["timestamp"] =
         QDateTime::currentDateTimeUtc().toString(Qt::ISODateWithMs);

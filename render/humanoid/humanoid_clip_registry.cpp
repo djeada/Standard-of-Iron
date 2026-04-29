@@ -11,7 +11,7 @@ using Clip = Render::Animation::Clip<float>;
 using KF = Render::Animation::Keyframe<float>;
 
 auto build_sway_clips() -> std::vector<Clip> {
-  std::vector<Clip> clips(kStateCount);
+  std::vector<Clip> clips(k_state_count);
   clips[static_cast<std::size_t>(HumanoidState::Idle)] =
       Clip("humanoid_idle_sway",
            {KF{0.00F, 0.00F}, KF{0.60F, 0.018F}, KF{1.20F, 0.00F},
@@ -44,7 +44,7 @@ auto build_sway_clips() -> std::vector<Clip> {
 }
 
 auto build_breathing_clips() -> std::vector<Clip> {
-  std::vector<Clip> clips(kStateCount);
+  std::vector<Clip> clips(k_state_count);
   clips[static_cast<std::size_t>(HumanoidState::Idle)] =
       Clip("humanoid_idle_breathe",
            {KF{0.00F, 0.000F}, KF{1.50F, 0.010F}, KF{3.00F, 0.000F}});
@@ -64,7 +64,7 @@ auto build_breathing_clips() -> std::vector<Clip> {
 }
 
 auto build_jitter_clips() -> std::vector<Clip> {
-  std::vector<Clip> clips(kStateCount);
+  std::vector<Clip> clips(k_state_count);
 
   clips[static_cast<std::size_t>(HumanoidState::Idle)] =
       Clip("humanoid_idle_jitter",

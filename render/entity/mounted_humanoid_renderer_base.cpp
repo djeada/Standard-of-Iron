@@ -32,8 +32,8 @@ namespace Render::GL {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet kHorseClips{0U, 1U, 2U,
-                                                           3U, 4U, 5U};
+constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U,
+                                                             3U, 4U, 5U};
 
 auto grounded_horse_world_from_mount(
     const DrawContext &ctx, const HorseProfile &profile,
@@ -41,8 +41,8 @@ auto grounded_horse_world_from_mount(
   QMatrix4x4 world = ctx.model;
   (void)profile;
   float const y_scale = world.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
-  auto const clip_id =
-      Render::Creature::Quadruped::clip_for_gait(kHorseClips, motion.gait_type);
+  auto const clip_id = Render::Creature::Quadruped::clip_for_gait(
+      k_horse_clips, motion.gait_type);
   Render::Creature::Pipeline::ground_model_contact_to_surface(
       world,
       Render::Creature::Pipeline::horse_clip_contact_y(clip_id, motion.phase)

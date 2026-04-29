@@ -1,29 +1,29 @@
 {
   "name": "Battle of Cannae",
   "description": "The legendary battlefield where the greatest double envelopment in history took place - encircle and destroy Rome's greatest army",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 3000,
+  "coord_system": "grid",
+  "max_troops_per_player": 3000,
   "grid": {
     "width": 180,
     "height": 120,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "grass_dry",
+    "ground_type": "grass_dry",
     "seed": 10005,
-    "patchDensity": 2.5,
-    "patchJitter": 0.8,
-    "plantDensity": 0.35,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.11,
-    "irregularityAmplitude": 0.05
+    "patch_density": 2.5,
+    "patch_jitter": 0.8,
+    "plant_density": 0.35,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.11,
+    "irregularity_amplitude": 0.05
   },
   "camera": {
     "center": [90, 0, 60],
     "distance": 40.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 500.0
   },
@@ -32,252 +32,252 @@
       "type": "spearman",
       "x": 55,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 58,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 52,
       "z": 52,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 55,
       "z": 65,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 58,
       "z": 68,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 60,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 63,
       "z": 57,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 57,
       "z": 63,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 35,
       "z": 60,
-      "playerId": 1,
+      "player_id": 1,
       "description": "Left flank cavalry"
     },
     {
       "type": "horse_swordsman",
       "x": 38,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 32,
       "z": 62,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 85,
       "z": 60,
-      "playerId": 1,
+      "player_id": 1,
       "description": "Right flank cavalry"
     },
     {
       "type": "horse_swordsman",
       "x": 88,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 82,
       "z": 62,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 30,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 90,
       "z": 65,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 50,
       "z": 70,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 70,
       "z": 70,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 60,
       "z": 75,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 50,
       "z": 90,
-      "playerId": 1,
-      "maxPopulation": 200,
+      "player_id": 1,
+      "max_population": 200,
       "nation": "carthage"
     },
     {
       "type": "spearman",
       "x": 120,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 123,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 117,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 126,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 114,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 120,
       "z": 65,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 123,
       "z": 68,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 117,
       "z": 62,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 130,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 133,
       "z": 57,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 127,
       "z": 63,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 130,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 130,
       "z": 68,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 105,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 108,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 145,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 148,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 125,
       "z": 70,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 128,
       "z": 72,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 122,
       "z": 74,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 155,
       "z": 60,
-      "playerId": 2,
-      "maxPopulation": 250,
+      "player_id": 2,
+      "max_population": 250,
       "nation": "roman_republic"
     }
   ],

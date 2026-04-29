@@ -206,7 +206,6 @@ auto carthage_shield_local_pose(float scale_multiplier) -> QMatrix4x4 {
       (k_base_shield_diameter * 0.5F) * scale_multiplier;
   QVector3D const shield_center = shield_center_local(shield_radius);
   QMatrix4x4 pose;
-  pose.translate(0.12F, 0.0F, 0.0F);
   pose.translate(shield_center);
   pose.rotate(90.0F, 0.0F, 1.0F, 0.0F);
   pose.translate(-shield_center);
@@ -260,14 +259,14 @@ void CarthageShieldRenderer::submit(const CarthageShieldConfig &config,
 auto carthage_shield_fill_role_colors(const HumanoidPalette &palette,
                                       QVector3D *out,
                                       std::size_t max) -> std::uint32_t {
-  if (max < kCarthageShieldRoleCount) {
+  if (max < k_carthage_shield_role_count) {
     return 0;
   }
   out[k_shield_slot] = QVector3D(0.20F, 0.46F, 0.62F);
   out[k_trim_slot] = QVector3D(0.76F, 0.68F, 0.42F);
   out[k_metal_slot] = QVector3D(0.70F, 0.68F, 0.52F);
   out[k_grip_slot] = palette.leather;
-  return kCarthageShieldRoleCount;
+  return k_carthage_shield_role_count;
 }
 
 auto carthage_shield_make_static_attachment(const CarthageShieldConfig &config,

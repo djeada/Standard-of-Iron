@@ -55,7 +55,7 @@ void GameStateRestorer::rebuild_entity_cache(Engine::Core::World *world,
         entity_cache.player_barracks_alive = true;
       } else {
         int const production_cost =
-            Game::Units::TroopConfig::instance().getProductionCost(
+            Game::Units::TroopConfig::instance().get_production_cost(
                 unit->spawn_type);
         entity_cache.player_troop_count += production_cost;
       }

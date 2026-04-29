@@ -36,23 +36,23 @@ void process_combat_state(Engine::Core::World *world, float delta_time) {
       switch (combat_state->animation_state) {
       case CS::Advance:
         combat_state->animation_state = CS::WindUp;
-        combat_state->state_duration = CSC::kWindUpDuration;
+        combat_state->state_duration = CSC::k_wind_up_duration;
         break;
       case CS::WindUp:
         combat_state->animation_state = CS::Strike;
-        combat_state->state_duration = CSC::kStrikeDuration;
+        combat_state->state_duration = CSC::k_strike_duration;
         break;
       case CS::Strike:
         combat_state->animation_state = CS::Impact;
-        combat_state->state_duration = CSC::kImpactDuration;
+        combat_state->state_duration = CSC::k_impact_duration;
         break;
       case CS::Impact:
         combat_state->animation_state = CS::Recover;
-        combat_state->state_duration = CSC::kRecoverDuration;
+        combat_state->state_duration = CSC::k_recover_duration;
         break;
       case CS::Recover:
         combat_state->animation_state = CS::Reposition;
-        combat_state->state_duration = CSC::kRepositionDuration;
+        combat_state->state_duration = CSC::k_reposition_duration;
         break;
       case CS::Reposition:
       case CS::Idle:

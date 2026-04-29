@@ -1,29 +1,29 @@
 {
   "name": "Battle of Zama",
   "description": "The final confrontation in Africa - Hannibal faces Scipio Africanus on the open plains of Zama. Rome's greatest general has learned your tactics.",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2800,
+  "coord_system": "grid",
+  "max_troops_per_player": 2800,
   "grid": {
     "width": 220,
     "height": 120,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "grass_dry",
+    "ground_type": "grass_dry",
     "seed": 10008,
-    "patchDensity": 2.3,
-    "patchJitter": 0.75,
-    "plantDensity": 0.28,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.1,
-    "irregularityAmplitude": 0.04
+    "patch_density": 2.3,
+    "patch_jitter": 0.75,
+    "plant_density": 0.28,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.1,
+    "irregularity_amplitude": 0.04
   },
   "camera": {
     "center": [110, 0, 60],
     "distance": 42.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 600.0
   },
@@ -32,270 +32,270 @@
       "type": "spearman",
       "x": 50,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 53,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 47,
       "z": 52,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 56,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 44,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 50,
       "z": 65,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 53,
       "z": 68,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 55,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 58,
       "z": 57,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 52,
       "z": 63,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 35,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 38,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 70,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 73,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 45,
       "z": 72,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 55,
       "z": 72,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 50,
       "z": 75,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 40,
       "z": 50,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 45,
       "z": 48,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 55,
       "z": 48,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 60,
       "z": 50,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 30,
       "z": 60,
-      "playerId": 1,
-      "maxPopulation": 180,
+      "player_id": 1,
+      "max_population": 180,
       "nation": "carthage"
     },
     {
       "type": "spearman",
       "x": 165,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 168,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 162,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 171,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 159,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 165,
       "z": 65,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 168,
       "z": 68,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 162,
       "z": 62,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 170,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 173,
       "z": 57,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 167,
       "z": 63,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 176,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 145,
       "z": 55,
-      "playerId": 2,
+      "player_id": 2,
       "description": "Roman cavalry - former Numidian allies"
     },
     {
       "type": "horse_swordsman",
       "x": 148,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 142,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 190,
       "z": 55,
-      "playerId": 2,
+      "player_id": 2,
       "description": "Roman cavalry flanking force"
     },
     {
       "type": "horse_swordsman",
       "x": 193,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 187,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 160,
       "z": 70,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 165,
       "z": 72,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 170,
       "z": 70,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 200,
       "z": 60,
-      "playerId": 2,
-      "maxPopulation": 220,
+      "player_id": 2,
+      "max_population": 220,
       "nation": "roman_republic"
     }
   ],

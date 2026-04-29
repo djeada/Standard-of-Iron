@@ -25,7 +25,7 @@ void process_hit_feedback(Engine::Core::World *world, float delta_time) {
     feedback->reaction_time += delta_time;
     float const progress =
         feedback->reaction_time /
-        Engine::Core::HitFeedbackComponent::kReactionDuration;
+        Engine::Core::HitFeedbackComponent::k_reaction_duration;
 
     if (progress >= 1.0F) {
       feedback->is_reacting = false;

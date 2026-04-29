@@ -37,10 +37,10 @@ enum class ElephantBone : std::uint8_t {
   Count,
 };
 
-inline constexpr std::size_t kElephantBoneCount =
+inline constexpr std::size_t k_elephant_bone_count =
     static_cast<std::size_t>(ElephantBone::Count);
 
-using BonePalette = std::array<QMatrix4x4, kElephantBoneCount>;
+using BonePalette = std::array<QMatrix4x4, k_elephant_bone_count>;
 
 struct ElephantSpecPose {
   QVector3D barrel_center{};
@@ -116,11 +116,11 @@ void make_elephant_spec_pose_animated(
     const Render::GL::ElephantGait &gait, const ElephantPoseMotion &motion,
     ElephantSpecPose &out_pose) noexcept;
 
-inline constexpr std::size_t kElephantRoleCount = 10;
+inline constexpr std::size_t k_elephant_role_count = 10;
 
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant &variant,
-    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept;
+    std::array<QVector3D, k_elephant_role_count> &out_roles) noexcept;
 
 [[nodiscard]] auto
 elephant_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
