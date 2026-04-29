@@ -18,6 +18,7 @@ In the second phase, we play it back. We sort all those commands by material, sh
 Here's how a single frame flows through the system:
 
 ```
+#
                            ┌─────────────────────────────────────┐
                            │           Qt Render Thread          │
                            │  (creates OpenGL 3.3 Core context)  │
@@ -27,10 +28,10 @@ Here's how a single frame flows through the system:
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                              PHASE 1: RECORDING                              │
 │                                                                              │
-│   ┌─────────────┐      ┌──────────────────┐      ┌───────────────────────┐  │
-│   │ GameEngine  │─────▶│  SceneRenderer   │─────▶│  Entity Renderers     │  │
-│   │  ::render() │      │  ::begin_frame() │      │  (spearman, archer,   │  │
-│   └─────────────┘      └──────────────────┘      │   terrain, trees...)  │  │
+│   ┌─────────────┐      ┌──────────────────┐      ┌───────────────────────┐   │
+│   │ GameEngine  │─────▶│  SceneRenderer   │─────▶│  Entity Renderers     │   │
+│   │  ::render() │      │  ::begin_frame() │      │  (spearman, archer,   │   │
+│   └─────────────┘      └──────────────────┘      │   terrain, trees...)  │   │
 │                                                   └───────────┬───────────┘  │
 │                                                               │              │
 │                                                               ▼              │
