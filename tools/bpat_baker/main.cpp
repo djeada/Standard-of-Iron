@@ -411,6 +411,15 @@ bool bake_species_manifest(const std::filesystem::path &out_dir,
     snapshot_writer.append_clip_vertices(clip_vertices);
   }
 
+  if (source.vertices.empty() || source.indices.empty()) {
+    std::cerr << "[bpat_baker] warning: no geometry baked for "
+              << manifest.species_name
+              << " minimal snapshot; skipping write of "
+              << (out_dir / std::string(manifest.minimal_snapshot_file_name))
+              << " (pre-baked asset on disk is preserved)\n";
+    return true;
+  }
+
   std::filesystem::path const snapshot_out_path =
       out_dir / std::string(manifest.minimal_snapshot_file_name);
   std::ofstream snapshot_out(snapshot_out_path,
