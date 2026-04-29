@@ -36,6 +36,10 @@ public:
   [[nodiscard]] auto ai_player_count() const -> std::size_t {
     return m_ai_instances.size();
   }
+  [[nodiscard]] auto ai_update_timer(std::size_t index) const -> float {
+    return (index < m_ai_instances.size()) ? m_ai_instances[index].update_timer
+                                           : 0.0F;
+  }
 
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
                        float aggression = 0.5F, float defense = 0.5F,

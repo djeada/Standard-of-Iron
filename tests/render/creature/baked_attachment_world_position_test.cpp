@@ -333,7 +333,7 @@ TEST(BakedAttachmentWorldPosition, GenericShieldUsesGripSocketPose) {
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::shield_make_static_attachment(shield_cfg, k_base_role),
   };
-  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::kBoneCount>
+  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count>
       bind{};
   std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
   Render::Creature::BakeInput input{};
@@ -356,7 +356,7 @@ TEST(BakedAttachmentWorldPosition, RomanScutumUsesGripSocketPose) {
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::roman_scutum_make_static_attachment(k_base_role),
   };
-  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::kBoneCount>
+  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count>
       bind{};
   std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
   Render::Creature::BakeInput input{};
@@ -380,7 +380,7 @@ TEST(BakedAttachmentWorldPosition, CarthageShieldUsesGripSocketPose) {
       Render::GL::carthage_shield_make_static_attachment(
           Render::GL::CarthageShieldConfig{}, k_base_role),
   };
-  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::kBoneCount>
+  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count>
       bind{};
   std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
   Render::Creature::BakeInput input{};
@@ -411,7 +411,7 @@ TEST(BakedAttachmentWorldPosition, GenericSwordUsesGripSocketPose) {
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
       Render::GL::sword_make_static_attachment(sword_cfg, k_base_role),
   };
-  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::kBoneCount>
+  std::array<Render::Creature::BoneWorldMatrix, Render::Humanoid::k_bone_count>
       bind{};
   std::copy(bind_palette.begin(), bind_palette.end(), bind.begin());
   Render::Creature::BakeInput input{};

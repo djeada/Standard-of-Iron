@@ -6,7 +6,7 @@ namespace Render::Humanoid {
 
 namespace {
 
-constexpr std::array<std::string_view, kStateCount> k_state_names = {
+constexpr std::array<std::string_view, k_state_count> k_state_names = {
     "Idle",         "Walk",        "Run",     "Hold",      "AttackMelee",
     "AttackRanged", "HitReaction", "Healing", "Construct", "Death",
 };
@@ -15,7 +15,7 @@ constexpr std::array<std::string_view, kStateCount> k_state_names = {
 
 auto state_name(HumanoidState s) noexcept -> std::string_view {
   auto const i = static_cast<std::size_t>(s);
-  return i < kStateCount ? k_state_names[i] : std::string_view{"<invalid>"};
+  return i < k_state_count ? k_state_names[i] : std::string_view{"<invalid>"};
 }
 
 auto select_state(const Render::GL::AnimationInputs &inputs,

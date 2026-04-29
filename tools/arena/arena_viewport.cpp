@@ -6,13 +6,13 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/map/world_bootstrap.h"
+#include "game/systems/ai_system.h"
+#include "game/systems/command_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
-#include "game/systems/command_service.h"
-#include "game/systems/ai_system.h"
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
@@ -27,16 +27,16 @@
 #include "render/scene_renderer.h"
 #include "render/terrain_scene_proxy.h"
 
-#include <QEvent>
 #include <QDebug>
+#include <QEvent>
 #include <QFont>
 #include <QFontMetrics>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
+#include <QVector3D>
 #include <QWheelEvent>
 #include <QtMath>
-#include <QVector3D>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -105,7 +105,8 @@ auto fbm_noise(float x, float z, std::uint32_t seed, int octaves) -> float {
   float normalization = 0.0F;
 
   for (int i = 0; i < clamp_octaves(octaves); ++i) {
-    sum += value_noise(x * frequency, z * frequency, seed + i * 97U) * amplitude;
+    sum +=
+        value_noise(x * frequency, z * frequency, seed + i * 97U) * amplitude;
     normalization += amplitude;
     amplitude *= 0.5F;
     frequency *= 2.0F;
@@ -123,8 +124,8 @@ auto sample_grid(const Game::Map::TerrainField &field, int x, int z) -> float {
   return field.heights[static_cast<size_t>(z * field.width + x)];
 }
 
-auto terrain_world_position(const Game::Map::TerrainField &field, int x, int z)
-    -> QVector3D {
+auto terrain_world_position(const Game::Map::TerrainField &field, int x,
+                            int z) -> QVector3D {
   float const half_width = static_cast<float>(field.width) * 0.5F - 0.5F;
   float const half_height = static_cast<float>(field.height) * 0.5F - 0.5F;
   float const world_x = (static_cast<float>(x) - half_width) * field.tile_size;
@@ -143,9 +144,10 @@ auto classify_terrain(float normalized_height) -> Game::Map::TerrainType {
   return Game::Map::TerrainType::Flat;
 }
 
-auto spawn_count_for_owner(Engine::Core::World &world,
-                           const std::vector<std::unique_ptr<Game::Units::Unit>> &units,
-                           int owner_id) -> int {
+auto spawn_count_for_owner(
+    Engine::Core::World &world,
+    const std::vector<std::unique_ptr<Game::Units::Unit>> &units,
+    int owner_id) -> int {
   int count = 0;
   for (const auto &unit : units) {
     if (unit == nullptr) {
@@ -232,8 +234,8 @@ void ArenaViewport::configure_runtime() {
 void ArenaViewport::setup_default_players() {
   auto &owners = Game::Systems::OwnerRegistry::instance();
   owners.clear();
-  owners.register_owner_with_id(k_local_owner_id, Game::Systems::OwnerType::Player,
-                                "Arena Player");
+  owners.register_owner_with_id(
+      k_local_owner_id, Game::Systems::OwnerType::Player, "Arena Player");
   owners.register_owner_with_id(k_enemy_owner_id, Game::Systems::OwnerType::AI,
                                 "Arena Opponent");
   owners.set_owner_team(k_local_owner_id, 1);
@@ -288,8 +290,8 @@ void ArenaViewport::paintGL() {
 
   float real_dt = 1.0F / 60.0F;
   if (m_frameClock.isValid()) {
-    real_dt =
-        std::clamp(static_cast<float>(m_frameClock.restart()) / 1000.0F, 0.0F, 0.1F);
+    real_dt = std::clamp(static_cast<float>(m_frameClock.restart()) / 1000.0F,
+                         0.0F, 0.1F);
   }
   m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   float const simulation_dt = m_paused ? 0.0F : real_dt;
@@ -301,9 +303,10 @@ void ArenaViewport::paintGL() {
     m_world->update(simulation_dt);
   }
 
-  std::erase_if(m_units, [this](const std::unique_ptr<Game::Units::Unit> &unit) {
-    return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
-  });
+  std::erase_if(
+      m_units, [this](const std::unique_ptr<Game::Units::Unit> &unit) {
+        return unit == nullptr || m_world->get_entity(unit->id()) == nullptr;
+      });
 
   if (width() > 0 && height() > 0) {
     m_renderer->set_viewport(width(), height());
@@ -362,7 +365,8 @@ void ArenaViewport::mouseMoveEvent(QMouseEvent *event) {
     m_camera->pan(-static_cast<float>(delta.x()) * 0.05F,
                   static_cast<float>(delta.y()) * 0.05F);
     update();
-  } else if ((event->buttons() & Qt::LeftButton) != 0 && m_selection_drag_active) {
+  } else if ((event->buttons() & Qt::LeftButton) != 0 &&
+             m_selection_drag_active) {
     m_selection_current = event->pos();
     update();
   } else {
@@ -385,9 +389,9 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
       QPointF const click_pos = event->position();
       Engine::Core::EntityID const picked =
           Game::Systems::PickingService::pick_unit_first(
-               static_cast<float>(click_pos.x()),
-               static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
-               height(), k_all_owners_filter);
+              static_cast<float>(click_pos.x()),
+              static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
+              height(), k_all_owners_filter);
       select_entity(picked, additive);
     }
     m_selection_drag_active = false;
@@ -402,7 +406,8 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
 
 void ArenaViewport::wheelEvent(QWheelEvent *event) {
   if (m_camera != nullptr) {
-    m_camera->zoom_distance(static_cast<float>(event->angleDelta().y()) / 1200.0F);
+    m_camera->zoom_distance(static_cast<float>(event->angleDelta().y()) /
+                            1200.0F);
     update();
   }
   QOpenGLWidget::wheelEvent(event);
@@ -415,8 +420,8 @@ void ArenaViewport::leaveEvent(QEvent *event) {
 }
 
 void ArenaViewport::update_hover(const QPoint &pos) {
-  if (m_picking_service == nullptr || m_world == nullptr || m_camera == nullptr ||
-      width() <= 0 || height() <= 0) {
+  if (m_picking_service == nullptr || m_world == nullptr ||
+      m_camera == nullptr || width() <= 0 || height() <= 0) {
     m_hovered_entity_id = 0;
     return;
   }
@@ -426,12 +431,15 @@ void ArenaViewport::update_hover(const QPoint &pos) {
       *m_camera, width(), height());
 }
 
-auto ArenaViewport::selection_system() const -> Game::Systems::SelectionSystem * {
-  return m_world != nullptr ? m_world->get_system<Game::Systems::SelectionSystem>()
-                            : nullptr;
+auto ArenaViewport::selection_system() const
+    -> Game::Systems::SelectionSystem * {
+  return m_world != nullptr
+             ? m_world->get_system<Game::Systems::SelectionSystem>()
+             : nullptr;
 }
 
-void ArenaViewport::select_entity(Engine::Core::EntityID entity_id, bool additive) {
+void ArenaViewport::select_entity(Engine::Core::EntityID entity_id,
+                                  bool additive) {
   auto *selection = selection_system();
   if (selection == nullptr) {
     return;
@@ -460,7 +468,8 @@ void ArenaViewport::select_entities_in_rect(const QRect &selection_rect,
 
   QRect const normalized = selection_rect.normalized();
   auto picked = Game::Systems::PickingService::pick_in_rect(
-      static_cast<float>(normalized.left()), static_cast<float>(normalized.top()),
+      static_cast<float>(normalized.left()),
+      static_cast<float>(normalized.top()),
       static_cast<float>(normalized.right()),
       static_cast<float>(normalized.bottom()), *m_world, *m_camera, width(),
       height(), k_all_owners_filter);
@@ -490,7 +499,8 @@ void ArenaViewport::issue_move_order(const QPointF &screen_pos) {
   target.setY(Game::Map::TerrainService::instance().resolve_surface_world_y(
       target.x(), target.z(), 0.0F, target.y()));
 
-  std::vector<Engine::Core::EntityID> const ids = selection->get_selected_units();
+  std::vector<Engine::Core::EntityID> const ids =
+      selection->get_selected_units();
   std::vector<QVector3D> targets(ids.size(), target);
   clear_forced_animation_state(ids);
 
@@ -509,8 +519,9 @@ void ArenaViewport::sanitize_selection() {
   auto ids = selection->get_selected_units();
   for (auto entity_id : ids) {
     auto *entity = m_world->get_entity(entity_id);
-    auto *unit = entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                                   : nullptr;
+    auto *unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
     if (entity == nullptr || unit == nullptr || unit->health <= 0 ||
         entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       selection->deselect_unit(entity_id);
@@ -529,10 +540,10 @@ void ArenaViewport::update_selected_entities() {
 }
 
 void ArenaViewport::regenerateTerrain() {
-  std::vector<float> heights(static_cast<size_t>(k_terrain_width * k_terrain_height),
-                             0.0F);
-  std::vector<Game::Map::TerrainType> terrain_types(heights.size(),
-                                                    Game::Map::TerrainType::Flat);
+  std::vector<float> heights(
+      static_cast<size_t>(k_terrain_width * k_terrain_height), 0.0F);
+  std::vector<Game::Map::TerrainType> terrain_types(
+      heights.size(), Game::Map::TerrainType::Flat);
 
   float const half_width = static_cast<float>(k_terrain_width) * 0.5F - 0.5F;
   float const half_height = static_cast<float>(k_terrain_height) * 0.5F - 0.5F;
@@ -545,21 +556,20 @@ void ArenaViewport::regenerateTerrain() {
           (static_cast<float>(x) - half_width) * k_terrain_tile_size;
       float const world_z =
           (static_cast<float>(z) - half_height) * k_terrain_tile_size;
-      float const primary = fbm_noise(world_x * m_terrain_settings.frequency,
-                                      world_z * m_terrain_settings.frequency,
-                                      static_cast<std::uint32_t>(
-                                          std::max(0, m_terrain_settings.seed)),
-                                      m_terrain_settings.octaves);
-      float const detail = fbm_noise(world_x * m_terrain_settings.frequency * 2.4F,
-                                     world_z * m_terrain_settings.frequency * 2.4F,
-                                     static_cast<std::uint32_t>(
-                                         std::max(0, m_terrain_settings.seed + 31)),
-                                     std::max(1, m_terrain_settings.octaves - 1));
+      float const primary = fbm_noise(
+          world_x * m_terrain_settings.frequency,
+          world_z * m_terrain_settings.frequency,
+          static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)),
+          m_terrain_settings.octaves);
+      float const detail = fbm_noise(
+          world_x * m_terrain_settings.frequency * 2.4F,
+          world_z * m_terrain_settings.frequency * 2.4F,
+          static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed + 31)),
+          std::max(1, m_terrain_settings.octaves - 1));
       float const ridge = 1.0F - std::abs(primary * 2.0F - 1.0F);
       float const radial =
-          std::clamp(1.0F -
-                         QVector3D(world_x, 0.0F, world_z).length() /
-                             (static_cast<float>(k_terrain_width) * 0.72F),
+          std::clamp(1.0F - QVector3D(world_x, 0.0F, world_z).length() /
+                                (static_cast<float>(k_terrain_width) * 0.72F),
                      0.35F, 1.0F);
       float const blended = std::clamp(
           (primary * 0.62F) + (detail * 0.23F) + (ridge * 0.15F), 0.0F, 1.0F);
@@ -602,10 +612,12 @@ void ArenaViewport::configure_rendering_from_terrain() {
     return;
   }
 
-  m_surface->ground()->configure(height_map->getTileSize(), height_map->getWidth(),
+  m_surface->ground()->configure(height_map->getTileSize(),
+                                 height_map->getWidth(),
                                  height_map->getHeight());
   m_surface->ground()->set_biome(terrain_service.biome_settings());
-  m_surface->terrain()->configure(*height_map, terrain_service.biome_settings());
+  m_surface->terrain()->configure(*height_map,
+                                  terrain_service.biome_settings());
   m_features->configure(*height_map, terrain_service.road_segments());
   m_scatter->configure(*height_map, terrain_service.biome_settings(),
                        terrain_service.fire_camps());
@@ -614,9 +626,9 @@ void ArenaViewport::configure_rendering_from_terrain() {
         static_cast<float>(height_map->getWidth()) * height_map->getTileSize();
     float const world_height =
         static_cast<float>(height_map->getHeight()) * height_map->getTileSize();
-    m_rain->configure(world_width, world_height,
-                      static_cast<std::uint32_t>(
-                          std::max(0, m_terrain_settings.seed)));
+    m_rain->configure(
+        world_width, world_height,
+        static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));
   }
   setWireframeEnabled(m_wireframe_enabled);
 }
@@ -712,11 +724,12 @@ void ArenaViewport::spawnUnit() {
   float const column = static_cast<float>(owner_spawn_count % 4);
   float const row = static_cast<float>(owner_spawn_count / 4);
   float const world_x = (column - 1.5F) * 3.5F;
-  float const world_z =
-      m_spawn_owner_id == k_enemy_owner_id ? (6.0F + row * 4.0F)
-                                           : (-6.0F - row * 4.0F);
-  float const world_y = Game::Map::TerrainService::instance().resolve_surface_world_y(
-      world_x, world_z, 0.0F, 0.0F);
+  float const world_z = m_spawn_owner_id == k_enemy_owner_id
+                            ? (6.0F + row * 4.0F)
+                            : (-6.0F - row * 4.0F);
+  float const world_y =
+      Game::Map::TerrainService::instance().resolve_surface_world_y(
+          world_x, world_z, 0.0F, 0.0F);
 
   Game::Units::SpawnParams params;
   params.position = {world_x, world_y, world_z};
@@ -732,10 +745,12 @@ void ArenaViewport::spawnUnit() {
 
   auto *entity = m_world->get_entity(unit->id());
   auto *transform =
-      entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                        : nullptr;
+      entity != nullptr
+          ? entity->get_component<Engine::Core::TransformComponent>()
+          : nullptr;
   auto *unit_component =
-      entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>() : nullptr;
+      entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                        : nullptr;
   if (transform != nullptr && m_spawn_owner_id == k_enemy_owner_id) {
     transform->rotation.y = 180.0F;
     transform->desired_yaw = 180.0F;
@@ -778,15 +793,18 @@ void ArenaViewport::setAnimationName(const QString &animationName) {
 }
 
 void ArenaViewport::playSelectedAnimation() {
-  if (m_animation_name.compare(QStringLiteral("Walk"), Qt::CaseInsensitive) == 0) {
+  if (m_animation_name.compare(QStringLiteral("Walk"), Qt::CaseInsensitive) ==
+      0) {
     playWalkAnimation();
     return;
   }
-  if (m_animation_name.compare(QStringLiteral("Attack"), Qt::CaseInsensitive) == 0) {
+  if (m_animation_name.compare(QStringLiteral("Attack"), Qt::CaseInsensitive) ==
+      0) {
     playAttackAnimation();
     return;
   }
-  if (m_animation_name.compare(QStringLiteral("Death"), Qt::CaseInsensitive) == 0) {
+  if (m_animation_name.compare(QStringLiteral("Death"), Qt::CaseInsensitive) ==
+      0) {
     playDeathAnimation();
     return;
   }
@@ -806,7 +824,8 @@ auto ArenaViewport::selected_unit_ids_or_fallback()
   }
 
   while (!m_units.empty() &&
-         (m_units.back() == nullptr || m_world->get_entity(m_units.back()->id()) == nullptr)) {
+         (m_units.back() == nullptr ||
+          m_world->get_entity(m_units.back()->id()) == nullptr)) {
     m_units.pop_back();
   }
 
@@ -830,7 +849,8 @@ void ArenaViewport::clear_forced_animation_state(
     if (entity == nullptr) {
       continue;
     }
-    if (auto *movement = entity->get_component<Engine::Core::MovementComponent>()) {
+    if (auto *movement =
+            entity->get_component<Engine::Core::MovementComponent>()) {
       movement->has_target = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
@@ -860,11 +880,13 @@ void ArenaViewport::playWalkAnimation() {
   for (auto entity_id : ids) {
     auto *entity = m_world->get_entity(entity_id);
     auto *transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
     auto *movement =
-        entity != nullptr ? entity->get_component<Engine::Core::MovementComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::MovementComponent>()
+            : nullptr;
     if (transform == nullptr || movement == nullptr) {
       continue;
     }
@@ -905,7 +927,8 @@ void ArenaViewport::playAttackAnimation() {
     auto *combat_state =
         entity->get_component<Engine::Core::CombatStateComponent>();
     if (combat_state == nullptr) {
-      combat_state = entity->add_component<Engine::Core::CombatStateComponent>();
+      combat_state =
+          entity->add_component<Engine::Core::CombatStateComponent>();
     }
     if (combat_state == nullptr) {
       continue;
@@ -914,7 +937,7 @@ void ArenaViewport::playAttackAnimation() {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
-        Engine::Core::CombatStateComponent::kAdvanceDuration;
+        Engine::Core::CombatStateComponent::k_advance_duration;
     combat_state->attack_variant = 0;
   }
 
@@ -933,14 +956,16 @@ void ArenaViewport::playDeathAnimation() {
       continue;
     }
 
-    if (auto *movement = entity->get_component<Engine::Core::MovementComponent>()) {
+    if (auto *movement =
+            entity->get_component<Engine::Core::MovementComponent>()) {
       movement->has_target = false;
       movement->vx = 0.0F;
       movement->vz = 0.0F;
       movement->clear_path();
       movement->path_pending = false;
     }
-    if (auto *renderable = entity->get_component<Engine::Core::RenderableComponent>()) {
+    if (auto *renderable =
+            entity->get_component<Engine::Core::RenderableComponent>()) {
       renderable->visible = false;
     }
     if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
@@ -970,11 +995,13 @@ void ArenaViewport::moveSelectedUnitForward() {
   for (auto entity_id : ids) {
     auto *entity = m_world->get_entity(entity_id);
     auto *transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
     auto *movement =
-        entity != nullptr ? entity->get_component<Engine::Core::MovementComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::MovementComponent>()
+            : nullptr;
     if (transform == nullptr || movement == nullptr) {
       continue;
     }
@@ -1048,13 +1075,16 @@ void ArenaViewport::align_units_to_terrain() {
     }
     auto *entity = m_world->get_entity(unit->id());
     auto *transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
     if (transform == nullptr) {
       continue;
     }
-    transform->position.y = Game::Map::TerrainService::instance().resolve_surface_world_y(
-        transform->position.x, transform->position.z, 0.0F, transform->position.y);
+    transform->position.y =
+        Game::Map::TerrainService::instance().resolve_surface_world_y(
+            transform->position.x, transform->position.z, 0.0F,
+            transform->position.y);
   }
 }
 
@@ -1073,7 +1103,8 @@ void ArenaViewport::draw_selection_marquee(QPainter &painter) {
     return;
   }
 
-  QRect const rect = QRect(m_selection_anchor, m_selection_current).normalized();
+  QRect const rect =
+      QRect(m_selection_anchor, m_selection_current).normalized();
   if (rect.width() < k_selection_drag_threshold &&
       rect.height() < k_selection_drag_threshold) {
     return;
@@ -1127,7 +1158,8 @@ void ArenaViewport::draw_terrain_normals(QPainter &painter) {
 }
 
 void ArenaViewport::draw_pose_overlay(QPainter &painter) {
-  if (m_camera == nullptr || m_world == nullptr || width() <= 0 || height() <= 0) {
+  if (m_camera == nullptr || m_world == nullptr || width() <= 0 ||
+      height() <= 0) {
     return;
   }
 
@@ -1139,8 +1171,9 @@ void ArenaViewport::draw_pose_overlay(QPainter &painter) {
   for (auto entity_id : ids) {
     auto *entity = m_world->get_entity(entity_id);
     auto *transform =
-        entity != nullptr ? entity->get_component<Engine::Core::TransformComponent>()
-                          : nullptr;
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
     if (transform == nullptr) {
       continue;
     }
@@ -1186,11 +1219,11 @@ void ArenaViewport::sync_spawn_selection_defaults() {
     return;
   }
 
-  auto it = std::find_if(
-      nation->available_troops.begin(), nation->available_troops.end(),
-      [this](const Game::Systems::TroopType &troop) {
-        return troop.unit_type == m_spawn_unit_type;
-      });
+  auto it = std::find_if(nation->available_troops.begin(),
+                         nation->available_troops.end(),
+                         [this](const Game::Systems::TroopType &troop) {
+                           return troop.unit_type == m_spawn_unit_type;
+                         });
   if (it == nation->available_troops.end()) {
     m_spawn_unit_type = nation->available_troops.front().unit_type;
   }

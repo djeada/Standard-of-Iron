@@ -16,51 +16,51 @@ struct HorseProfile;
 
 namespace MountFrameConstants {
 
-constexpr float kSaddleThicknessOffset = 0.05F;
-constexpr float kSaddleBodyLengthOffset = -0.02F;
-constexpr float kSaddleSeatForwardScale = 0.15F;
-constexpr float kSeatPositionHeightScale = 0.95F;
-constexpr float kSaddleBodyHeightLiftScale = 0.18F;
-constexpr float kSeatBodyHeightLiftScale = 0.26F;
+constexpr float k_saddle_thickness_offset = 0.05F;
+constexpr float k_saddle_body_length_offset = -0.02F;
+constexpr float k_saddle_seat_forward_scale = 0.15F;
+constexpr float k_seat_position_height_scale = 0.95F;
+constexpr float k_saddle_body_height_lift_scale = 0.18F;
+constexpr float k_seat_body_height_lift_scale = 0.26F;
 
-constexpr float kStirrupWidthScale = 0.92F;
-constexpr float kStirrupThicknessOffset = 0.10F;
-constexpr float kStirrupForwardScale = 0.28F;
+constexpr float k_stirrup_width_scale = 0.92F;
+constexpr float k_stirrup_thickness_offset = 0.10F;
+constexpr float k_stirrup_forward_scale = 0.28F;
 
-constexpr float kNeckTopBodyHeightScale = 1.16F;
-constexpr float kNeckTopBodyLengthScale = 0.73F;
-constexpr float kHeadCenterHeightScale = 0.12F;
-constexpr float kHeadCenterLengthScale = 0.40F;
+constexpr float k_neck_top_body_height_scale = 1.16F;
+constexpr float k_neck_top_body_length_scale = 0.73F;
+constexpr float k_head_center_height_scale = 0.12F;
+constexpr float k_head_center_length_scale = 0.40F;
 
-constexpr float kMuzzleHeightOffset = 0.12F;
-constexpr float kMuzzleLengthOffset = 0.34F;
-constexpr float kBridleHeightOffset = 0.05F;
-constexpr float kBridleLengthOffset = 0.08F;
+constexpr float k_muzzle_height_offset = 0.12F;
+constexpr float k_muzzle_length_offset = 0.34F;
+constexpr float k_bridle_height_offset = 0.05F;
+constexpr float k_bridle_length_offset = 0.08F;
 
-constexpr float kBitWidthOffset = 0.55F;
-constexpr float kBitHeightOffset = 0.08F;
-constexpr float kBitLengthOffset = 0.04F;
+constexpr float k_bit_width_offset = 0.55F;
+constexpr float k_bit_height_offset = 0.08F;
+constexpr float k_bit_length_offset = 0.04F;
 
 } // namespace MountFrameConstants
 
 namespace ReinConstants {
 
-constexpr uint32_t kSlackSeedSalt = 0x707U;
-constexpr float kBaseSlackScale = 0.08F;
-constexpr float kBaseSlackOffset = 0.02F;
-constexpr float kTargetTensionBonus = 0.25F;
-constexpr float kAttackTensionBonus = 0.35F;
-constexpr float kMinSlack = 0.01F;
+constexpr uint32_t k_slack_seed_salt = 0x707U;
+constexpr float k_base_slack_scale = 0.08F;
+constexpr float k_base_slack_offset = 0.02F;
+constexpr float k_target_tension_bonus = 0.25F;
+constexpr float k_attack_tension_bonus = 0.35F;
+constexpr float k_min_slack = 0.01F;
 
-constexpr float kHandleRightOffset = 0.08F;
-constexpr float kHandleForwardBase = 0.18F;
-constexpr float kHandleForwardTensionScale = 0.18F;
-constexpr float kHandleUpBase = -0.10F;
-constexpr float kHandleUpSlackScale = -0.30F;
-constexpr float kHandleUpTensionScale = 0.04F;
-constexpr float kDirLengthThreshold = 1e-4F;
-constexpr float kReinBaseLength = 0.85F;
-constexpr float kSlackLengthScale = 0.12F;
+constexpr float k_handle_right_offset = 0.08F;
+constexpr float k_handle_forward_base = 0.18F;
+constexpr float k_handle_forward_tension_scale = 0.18F;
+constexpr float k_handle_up_base = -0.10F;
+constexpr float k_handle_up_slack_scale = -0.30F;
+constexpr float k_handle_up_tension_scale = 0.04F;
+constexpr float k_dir_length_threshold = 1e-4F;
+constexpr float k_rein_base_length = 0.85F;
+constexpr float k_slack_length_scale = 0.12F;
 
 } // namespace ReinConstants
 

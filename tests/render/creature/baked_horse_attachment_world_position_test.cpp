@@ -180,7 +180,7 @@ TEST(BakedHorseAttachmentWorldPosition, RomanSaddleRootBoneBakeIsValid) {
   using Render::Horse::HorseBone;
 
   auto bind = Render::Horse::horse_bind_palette();
-  ASSERT_GE(bind.size(), Render::Horse::kHorseBoneCount);
+  ASSERT_GE(bind.size(), Render::Horse::k_horse_bone_count);
 
   // The Class A back_center frame at baseline horse dimensions sits
   // above the Root bone (which is just T(barrel_center)). Authoring

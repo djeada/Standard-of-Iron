@@ -25,7 +25,7 @@ auto elephant_bind() noexcept -> std::span<const QMatrix4x4> {
 auto humanoid_fill_roles(const void *variant, QVector3D *out,
                          std::size_t max_roles) -> std::uint32_t {
   const auto &v = *static_cast<const Render::GL::HumanoidVariant *>(variant);
-  std::array<QVector3D, Render::Humanoid::kHumanoidRoleCount> filled{};
+  std::array<QVector3D, Render::Humanoid::k_humanoid_role_count> filled{};
   Render::Humanoid::fill_humanoid_role_colors(v, filled);
   const auto n = std::min(filled.size(), max_roles);
   for (std::size_t i = 0; i < n; ++i)
@@ -47,7 +47,7 @@ auto horse_fill_roles(const void *variant, QVector3D *out,
 auto elephant_fill_roles(const void *variant, QVector3D *out,
                          std::size_t max_roles) -> std::uint32_t {
   const auto &v = *static_cast<const Render::GL::ElephantVariant *>(variant);
-  std::array<QVector3D, Render::Elephant::kElephantRoleCount> filled{};
+  std::array<QVector3D, Render::Elephant::k_elephant_role_count> filled{};
   Render::Elephant::fill_elephant_role_colors(v, filled);
   const auto n = std::min(filled.size(), max_roles);
   for (std::size_t i = 0; i < n; ++i)
@@ -71,9 +71,9 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid.topology = &m_humanoid.spec->topology;
   m_humanoid.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount);
+      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_humanoid.max_bones =
-      static_cast<std::uint8_t>(Render::Humanoid::kBoneCount);
+      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
   m_humanoid.bind_palette = &humanoid_bind;
   m_humanoid.fill_role_colors = &humanoid_fill_roles;
 
@@ -84,7 +84,8 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_horse.spec = &Render::Horse::horse_creature_spec();
   m_horse.topology = &m_horse.spec->topology;
   m_horse.role_count = 8;
-  m_horse.max_bones = static_cast<std::uint8_t>(Render::Horse::kHorseBoneCount);
+  m_horse.max_bones =
+      static_cast<std::uint8_t>(Render::Horse::k_horse_bone_count);
   m_horse.bind_palette = &horse_bind;
   m_horse.fill_role_colors = &horse_fill_roles;
   m_horse.snapshot_mesh_species_id = Render::Creature::Bpat::kSpeciesHorse;
@@ -99,9 +100,9 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_elephant.spec = &Render::Elephant::elephant_creature_spec();
   m_elephant.topology = &m_elephant.spec->topology;
   m_elephant.role_count =
-      static_cast<std::uint8_t>(Render::Elephant::kElephantRoleCount);
+      static_cast<std::uint8_t>(Render::Elephant::k_elephant_role_count);
   m_elephant.max_bones =
-      static_cast<std::uint8_t>(Render::Elephant::kElephantBoneCount);
+      static_cast<std::uint8_t>(Render::Elephant::k_elephant_bone_count);
   m_elephant.bind_palette = &elephant_bind;
   m_elephant.fill_role_colors = &elephant_fill_roles;
   m_elephant.snapshot_mesh_species_id =
@@ -118,9 +119,9 @@ CreatureAssetRegistry::CreatureAssetRegistry() {
   m_humanoid_sword.spec = &Render::Humanoid::humanoid_creature_spec();
   m_humanoid_sword.topology = &m_humanoid_sword.spec->topology;
   m_humanoid_sword.role_count =
-      static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount);
+      static_cast<std::uint8_t>(Render::Humanoid::k_humanoid_role_count);
   m_humanoid_sword.max_bones =
-      static_cast<std::uint8_t>(Render::Humanoid::kBoneCount);
+      static_cast<std::uint8_t>(Render::Humanoid::k_bone_count);
   m_humanoid_sword.bind_palette = &humanoid_bind;
   m_humanoid_sword.fill_role_colors = &humanoid_fill_roles;
 }

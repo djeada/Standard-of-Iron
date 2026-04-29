@@ -24,7 +24,7 @@ struct CreatureSpec;
 
 namespace Render::Humanoid {
 
-inline constexpr std::size_t kHumanoidRoleCount = 7;
+inline constexpr std::size_t k_humanoid_role_count = 7;
 
 [[nodiscard]] auto
 humanoid_creature_spec() noexcept -> const Render::Creature::CreatureSpec &;
@@ -36,6 +36,6 @@ humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames &;
 
 void fill_humanoid_role_colors(
     const Render::GL::HumanoidVariant &variant,
-    std::array<QVector3D, kHumanoidRoleCount> &out_roles) noexcept;
+    std::array<QVector3D, k_humanoid_role_count> &out_roles) noexcept;
 
 } // namespace Render::Humanoid

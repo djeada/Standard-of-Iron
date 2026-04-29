@@ -1,29 +1,29 @@
 {
   "name": "Crossing the Alps",
   "description": "The legendary Alpine crossing - survive treacherous mountain passes, avalanche zones, and hostile mountain tribes on the journey to Italy",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2000,
+  "coord_system": "grid",
+  "max_troops_per_player": 2000,
   "grid": {
     "width": 180,
     "height": 180,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "alpine_mix",
+    "ground_type": "alpine_mix",
     "seed": 10007,
-    "patchDensity": 2.2,
-    "patchJitter": 0.75,
-    "plantDensity": 0.3,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.18,
-    "irregularityAmplitude": 0.12
+    "patch_density": 2.2,
+    "patch_jitter": 0.75,
+    "plant_density": 0.3,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.18,
+    "irregularity_amplitude": 0.12
   },
   "camera": {
     "center": [90, 0, 90],
     "distance": 42.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 550.0
   },
@@ -32,92 +32,92 @@
       "type": "spearman",
       "x": 25,
       "z": 25,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 28,
       "z": 28,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 22,
       "z": 22,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 30,
       "z": 25,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 25,
       "z": 30,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 32,
       "z": 28,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 28,
       "z": 32,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 35,
       "z": 30,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 20,
       "z": 30,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 30,
       "z": 20,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 25,
       "z": 35,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 35,
       "z": 25,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 28,
       "z": 22,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "elephant",
       "x": 22,
       "z": 28,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 15,
       "z": 15,
-      "playerId": 1,
-      "maxPopulation": 150,
+      "player_id": 1,
+      "max_population": 150,
       "nation": "carthage",
       "description": "Starting camp"
     },
@@ -125,106 +125,106 @@
       "type": "spearman",
       "x": 75,
       "z": 55,
-      "playerId": 2,
+      "player_id": 2,
       "description": "First mountain tribe ambush"
     },
     {
       "type": "spearman",
       "x": 78,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 72,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 80,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 105,
       "z": 85,
-      "playerId": 2,
+      "player_id": 2,
       "description": "Second mountain tribe ambush"
     },
     {
       "type": "spearman",
       "x": 108,
       "z": 88,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 102,
       "z": 82,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 110,
       "z": 85,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 100,
       "z": 88,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 105,
       "z": 90,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 125,
       "z": 115,
-      "playerId": 2,
+      "player_id": 2,
       "description": "Third mountain tribe - final pass defense"
     },
     {
       "type": "spearman",
       "x": 128,
       "z": 118,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 122,
       "z": 112,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 130,
       "z": 115,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 120,
       "z": 115,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 125,
       "z": 120,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 125,
       "z": 110,
-      "playerId": 2
+      "player_id": 2
     }
   ],
   "firecamps": [

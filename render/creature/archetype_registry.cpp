@@ -8,22 +8,22 @@ namespace Render::Creature {
 
 namespace {
 
-constexpr std::size_t kStateCount = animation_state_count();
+constexpr std::size_t k_state_count = animation_state_count();
 
 constexpr auto
-make_unmapped_clip_table() -> std::array<std::uint16_t, kStateCount> {
-  std::array<std::uint16_t, kStateCount> t{};
-  for (std::size_t i = 0; i < kStateCount; ++i) {
+make_unmapped_clip_table() -> std::array<std::uint16_t, k_state_count> {
+  std::array<std::uint16_t, k_state_count> t{};
+  for (std::size_t i = 0; i < k_state_count; ++i) {
     t[i] = ArchetypeDescriptor::kUnmappedClip;
   }
   return t;
 }
 
 constexpr auto make_snapshot_table_for_clips(
-    const std::array<std::uint16_t, kStateCount> &clips)
-    -> std::array<bool, kStateCount> {
-  std::array<bool, kStateCount> t{};
-  for (std::size_t i = 0; i < kStateCount; ++i) {
+    const std::array<std::uint16_t, k_state_count> &clips)
+    -> std::array<bool, k_state_count> {
+  std::array<bool, k_state_count> t{};
+  for (std::size_t i = 0; i < k_state_count; ++i) {
     t[i] = (clips[i] != ArchetypeDescriptor::kUnmappedClip);
   }
   t[static_cast<std::size_t>(AnimationStateId::Die)] = false;
@@ -31,7 +31,7 @@ constexpr auto make_snapshot_table_for_clips(
 }
 
 constexpr auto
-make_humanoid_clip_table() -> std::array<std::uint16_t, kStateCount> {
+make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
@@ -48,7 +48,7 @@ make_humanoid_clip_table() -> std::array<std::uint16_t, kStateCount> {
 }
 
 constexpr auto
-make_horse_clip_table() -> std::array<std::uint16_t, kStateCount> {
+make_horse_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
@@ -65,7 +65,7 @@ make_horse_clip_table() -> std::array<std::uint16_t, kStateCount> {
 }
 
 constexpr auto
-make_elephant_clip_table() -> std::array<std::uint16_t, kStateCount> {
+make_elephant_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
@@ -82,7 +82,7 @@ make_elephant_clip_table() -> std::array<std::uint16_t, kStateCount> {
 }
 
 constexpr auto
-make_rider_clip_table() -> std::array<std::uint16_t, kStateCount> {
+make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
   t[static_cast<std::size_t>(AnimationStateId::Idle)] = 11U;
   t[static_cast<std::size_t>(AnimationStateId::Walk)] = 11U;
@@ -225,7 +225,7 @@ auto ArchetypeRegistry::bpat_clip(
     return ArchetypeDescriptor::kUnmappedClip;
   }
   auto const idx = static_cast<std::size_t>(state);
-  if (idx >= kStateCount) {
+  if (idx >= k_state_count) {
     return ArchetypeDescriptor::kUnmappedClip;
   }
   return d->bpat_clip[idx];
@@ -238,7 +238,7 @@ auto ArchetypeRegistry::is_snapshot(
     return false;
   }
   auto const idx = static_cast<std::size_t>(state);
-  if (idx >= kStateCount) {
+  if (idx >= k_state_count) {
     return false;
   }
   return d->snapshot[idx];

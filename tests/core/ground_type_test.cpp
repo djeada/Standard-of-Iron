@@ -145,13 +145,13 @@ TEST_F(GroundTypeTest, MapLoaderWithGroundType) {
   ASSERT_TRUE(temp_file.open());
 
   QJsonObject biome;
-  biome["groundType"] = "grass_dry";
+  biome["ground_type"] = "grass_dry";
   biome["seed"] = 12345;
 
   QJsonObject grid;
   grid["width"] = 50;
   grid["height"] = 50;
-  grid["tileSize"] = 1.0;
+  grid["tile_size"] = 1.0;
 
   QJsonObject root;
   root["name"] = "Test Map";
@@ -182,7 +182,7 @@ TEST_F(GroundTypeTest, MapLoaderWithoutGroundTypeUsesDefault) {
   QJsonObject grid;
   grid["width"] = 50;
   grid["height"] = 50;
-  grid["tileSize"] = 1.0;
+  grid["tile_size"] = 1.0;
 
   QJsonObject root;
   root["name"] = "Test Map Without Ground Type";
@@ -208,19 +208,19 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
   ASSERT_TRUE(temp_file.open());
 
   QJsonObject biome;
-  biome["groundType"] = "alpine_mix";
+  biome["ground_type"] = "alpine_mix";
   biome["seed"] = 99999;
   // Override the grass primary color that would be set by alpine_mix defaults
   QJsonArray grass_primary;
   grass_primary.append(0.10);
   grass_primary.append(0.20);
   grass_primary.append(0.30);
-  biome["grassPrimary"] = grass_primary;
+  biome["grass_primary"] = grass_primary;
 
   QJsonObject grid;
   grid["width"] = 50;
   grid["height"] = 50;
-  grid["tileSize"] = 1.0;
+  grid["tile_size"] = 1.0;
 
   QJsonObject root;
   root["name"] = "Test Map With Override";

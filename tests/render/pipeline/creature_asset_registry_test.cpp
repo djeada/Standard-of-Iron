@@ -20,7 +20,7 @@ TEST(CreatureAssetRegistry, ResolvesHumanoidByKindFallback) {
   ASSERT_NE(asset, nullptr);
   EXPECT_EQ(asset->kind, CreatureKind::Humanoid);
   EXPECT_EQ(asset->spec, &Render::Humanoid::humanoid_creature_spec());
-  EXPECT_EQ(asset->role_count, Render::Humanoid::kHumanoidRoleCount);
+  EXPECT_EQ(asset->role_count, Render::Humanoid::k_humanoid_role_count);
 }
 
 TEST(CreatureAssetRegistry, ExplicitAssetIdWinsWhenProvided) {
@@ -66,7 +66,8 @@ TEST(CreatureAssetRegistry, ResolvesHorseAndElephantByKindFallback) {
   ASSERT_NE(elephant_asset, nullptr);
   EXPECT_EQ(elephant_asset->kind, CreatureKind::Elephant);
   EXPECT_EQ(elephant_asset->spec, &Render::Elephant::elephant_creature_spec());
-  EXPECT_EQ(elephant_asset->role_count, Render::Elephant::kElephantRoleCount);
+  EXPECT_EQ(elephant_asset->role_count,
+            Render::Elephant::k_elephant_role_count);
   EXPECT_EQ(elephant_asset->snapshot_mesh_species_id,
             Render::Creature::Bpat::kSpeciesElephant);
   EXPECT_NE(elephant_asset->snapshot_mesh_lod_mask, 0U);
@@ -87,21 +88,21 @@ TEST(CreatureAssetRegistry, AllAssetsHaveBindPaletteCallbacks) {
   const auto *h = reg.resolve(humanoid);
   ASSERT_NE(h, nullptr);
   EXPECT_NE(h->bind_palette, nullptr);
-  EXPECT_EQ(h->max_bones, Render::Humanoid::kBoneCount);
+  EXPECT_EQ(h->max_bones, Render::Humanoid::k_bone_count);
 
   UnitVisualSpec horse{};
   horse.kind = CreatureKind::Horse;
   const auto *hr = reg.resolve(horse);
   ASSERT_NE(hr, nullptr);
   EXPECT_NE(hr->bind_palette, nullptr);
-  EXPECT_EQ(hr->max_bones, Render::Horse::kHorseBoneCount);
+  EXPECT_EQ(hr->max_bones, Render::Horse::k_horse_bone_count);
 
   UnitVisualSpec elephant{};
   elephant.kind = CreatureKind::Elephant;
   const auto *el = reg.resolve(elephant);
   ASSERT_NE(el, nullptr);
   EXPECT_NE(el->bind_palette, nullptr);
-  EXPECT_EQ(el->max_bones, Render::Elephant::kElephantBoneCount);
+  EXPECT_EQ(el->max_bones, Render::Elephant::k_elephant_bone_count);
 }
 
 TEST(CreatureAssetRegistry, BindPaletteCallbacksProduceValidOutput) {
@@ -130,9 +131,9 @@ TEST(CreatureAssetRegistry, BindPaletteCallbacksProduceValidOutput) {
 }
 
 TEST(CreatureAssetRegistry, MaxCreatureBonesCoversAllSpecies) {
-  EXPECT_GE(kMaxCreatureBones, Render::Humanoid::kBoneCount);
-  EXPECT_GE(kMaxCreatureBones, Render::Horse::kHorseBoneCount);
-  EXPECT_GE(kMaxCreatureBones, Render::Elephant::kElephantBoneCount);
+  EXPECT_GE(kMaxCreatureBones, Render::Humanoid::k_bone_count);
+  EXPECT_GE(kMaxCreatureBones, Render::Horse::k_horse_bone_count);
+  EXPECT_GE(kMaxCreatureBones, Render::Elephant::k_elephant_bone_count);
 }
 
 TEST(CreatureAssetRegistry, AllAssetsHaveFillRoleColorsCallback) {

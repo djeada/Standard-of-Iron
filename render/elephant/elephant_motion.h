@@ -20,33 +20,33 @@ struct ElephantDimensions;
 
 namespace HowdahFrameConstants {
 
-constexpr float kHowdahBodyHeightOffset = 0.55F;
-constexpr float kHowdahBodyLengthOffset = -0.10F;
-constexpr float kSeatHeightOffset = 0.15F;
-constexpr float kLegRevealLiftScale = 0.75F;
+constexpr float k_howdah_body_height_offset = 0.55F;
+constexpr float k_howdah_body_length_offset = -0.10F;
+constexpr float k_seat_height_offset = 0.15F;
+constexpr float k_leg_reveal_lift_scale = 0.75F;
 
 } // namespace HowdahFrameConstants
 
 namespace GaitSystemConstants {
 
-constexpr float kLegPhaseFL = 0.00F;
-constexpr float kLegPhaseFR = 0.50F;
-constexpr float kLegPhaseRL = 0.75F;
-constexpr float kLegPhaseRR = 0.25F;
+constexpr float k_leg_phase_fl = 0.00F;
+constexpr float k_leg_phase_fr = 0.50F;
+constexpr float k_leg_phase_rl = 0.75F;
+constexpr float k_leg_phase_rr = 0.25F;
 
-constexpr float kSwingDuration = 0.25F;
+constexpr float k_swing_duration = 0.25F;
 
-constexpr float kSwingLiftPeak = 0.22F;
-constexpr float kSwingForwardReach = 0.60F;
+constexpr float k_swing_lift_peak = 0.22F;
+constexpr float k_swing_forward_reach = 0.60F;
 
-constexpr float kWeightShiftLateral = 0.025F;
-constexpr float kWeightShiftForeAft = 0.015F;
+constexpr float k_weight_shift_lateral = 0.025F;
+constexpr float k_weight_shift_fore_aft = 0.015F;
 
-constexpr float kShoulderLagFactor = 0.08F;
-constexpr float kHipLagFactor = 0.06F;
+constexpr float k_shoulder_lag_factor = 0.08F;
+constexpr float k_hip_lag_factor = 0.06F;
 
-constexpr float kFootSettleDepth = 0.015F;
-constexpr float kFootSettleDuration = 0.10F;
+constexpr float k_foot_settle_depth = 0.015F;
+constexpr float k_foot_settle_duration = 0.10F;
 
 } // namespace GaitSystemConstants
 

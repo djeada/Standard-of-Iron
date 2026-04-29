@@ -37,10 +37,10 @@ enum class HorseBone : std::uint8_t {
   Count,
 };
 
-inline constexpr std::size_t kHorseBoneCount =
+inline constexpr std::size_t k_horse_bone_count =
     static_cast<std::size_t>(HorseBone::Count);
 
-using BonePalette = std::array<QMatrix4x4, kHorseBoneCount>;
+using BonePalette = std::array<QMatrix4x4, k_horse_bone_count>;
 
 struct HorseSpecPose {
   QVector3D barrel_center{};

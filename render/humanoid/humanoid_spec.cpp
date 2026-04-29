@@ -37,7 +37,7 @@ enum HumanoidColorRole : std::uint8_t {
 
 void fill_humanoid_role_colors_impl(
     const Render::GL::HumanoidVariant &v,
-    std::array<QVector3D, kHumanoidRoleCount> &out) noexcept {
+    std::array<QVector3D, k_humanoid_role_count> &out) noexcept {
   out[Cloth - 1] = v.palette.cloth;
   out[Skin - 1] = v.palette.skin;
   out[Leather - 1] = v.palette.leather;
@@ -175,8 +175,8 @@ make_full_deltoid(bool left) noexcept -> Creature::PrimitiveInstance {
   return p;
 }
 
-constexpr float kUpperArmHalf = HP::UPPER_ARM_LEN * 0.5F;
-constexpr float kForeArmHalf = HP::FORE_ARM_LEN * 0.5F;
+constexpr float k_upper_arm_half = HP::UPPER_ARM_LEN * 0.5F;
+constexpr float k_fore_arm_half = HP::FORE_ARM_LEN * 0.5F;
 
 constexpr auto make_full_upper_arm_proximal(bool left) noexcept
     -> Creature::PrimitiveInstance {
@@ -187,7 +187,7 @@ constexpr auto make_full_upper_arm_proximal(bool left) noexcept
   auto const b = bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, kUpperArmHalf, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
   p.params.radius = HP::UPPER_ARM_R * 1.28F;
   p.color_role = Cloth;
   p.lod_mask = Creature::kLodFull;
@@ -202,7 +202,7 @@ make_full_upper_arm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone =
       bone(left ? HumanoidBone::UpperArmL : HumanoidBone::UpperArmR);
-  p.params.head_offset = QVector3D(0.0F, kUpperArmHalf, 0.0F);
+  p.params.head_offset = QVector3D(0.0F, k_upper_arm_half, 0.0F);
   p.params.tail_bone =
       bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
   p.params.radius = HP::UPPER_ARM_R * 0.98F;
@@ -234,7 +234,7 @@ make_full_forearm_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   auto const b = bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, kForeArmHalf, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, k_fore_arm_half, 0.0F);
   p.params.radius = HP::FORE_ARM_R * 1.28F;
   p.color_role = Skin;
   p.lod_mask = Creature::kLodFull;
@@ -249,7 +249,7 @@ make_full_forearm_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone =
       bone(left ? HumanoidBone::ForearmL : HumanoidBone::ForearmR);
-  p.params.head_offset = QVector3D(0.0F, kForeArmHalf, 0.0F);
+  p.params.head_offset = QVector3D(0.0F, k_fore_arm_half, 0.0F);
   p.params.tail_bone = bone(left ? HumanoidBone::HandL : HumanoidBone::HandR);
   p.params.radius = HP::FORE_ARM_R * 0.86F;
   p.color_role = Skin;
@@ -345,8 +345,8 @@ constexpr auto make_full_nose() noexcept -> Creature::PrimitiveInstance {
   return p;
 }
 
-constexpr float kUpperLegHalf = HP::UPPER_LEG_LEN * 0.5F;
-constexpr float kLowerLegHalf = HP::LOWER_LEG_LEN * 0.5F;
+constexpr float k_upper_leg_half = HP::UPPER_LEG_LEN * 0.5F;
+constexpr float k_lower_leg_half = HP::LOWER_LEG_LEN * 0.5F;
 
 constexpr auto
 make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
@@ -358,7 +358,7 @@ make_full_thigh_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   auto const b = bone(left ? HumanoidBone::HipL : HumanoidBone::HipR);
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, kUpperLegHalf, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
   p.params.radius = HP::UPPER_LEG_R * 1.50F;
   p.color_role = ClothDark;
   p.lod_mask = Creature::kLodFull;
@@ -372,7 +372,7 @@ make_full_thigh_distal(bool left) noexcept -> Creature::PrimitiveInstance {
       left ? "humanoid_full_thigh_l_bot" : "humanoid_full_thigh_r_bot";
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone = bone(left ? HumanoidBone::HipL : HumanoidBone::HipR);
-  p.params.head_offset = QVector3D(0.0F, kUpperLegHalf, 0.0F);
+  p.params.head_offset = QVector3D(0.0F, k_upper_leg_half, 0.0F);
   p.params.tail_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
   p.params.radius = HP::UPPER_LEG_R * 1.02F;
   p.color_role = ClothDark;
@@ -401,7 +401,7 @@ make_full_calf_proximal(bool left) noexcept -> Creature::PrimitiveInstance {
   auto const b = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
   p.params.anchor_bone = b;
   p.params.tail_bone = b;
-  p.params.tail_offset = QVector3D(0.0F, kLowerLegHalf, 0.0F);
+  p.params.tail_offset = QVector3D(0.0F, k_lower_leg_half, 0.0F);
   p.params.radius = HP::LOWER_LEG_R * 1.48F;
   p.color_role = Skin;
   p.lod_mask = Creature::kLodFull;
@@ -415,7 +415,7 @@ make_full_calf_distal(bool left) noexcept -> Creature::PrimitiveInstance {
   p.debug_name = left ? "humanoid_full_calf_l_bot" : "humanoid_full_calf_r_bot";
   p.shape = Creature::PrimitiveShape::Cylinder;
   p.params.anchor_bone = bone(left ? HumanoidBone::KneeL : HumanoidBone::KneeR);
-  p.params.head_offset = QVector3D(0.0F, kLowerLegHalf, 0.0F);
+  p.params.head_offset = QVector3D(0.0F, k_lower_leg_half, 0.0F);
   p.params.tail_bone = bone(left ? HumanoidBone::FootL : HumanoidBone::FootR);
   p.params.radius = HP::LOWER_LEG_R * 0.88F;
   p.color_role = Skin;
@@ -528,7 +528,7 @@ namespace Render::Humanoid {
 
 namespace {
 
-auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
+auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, k_bone_count> {
   Render::GL::VariationParams variation{};
   variation.height_scale = 1.0F;
   variation.bulk_scale = 1.0F;
@@ -542,10 +542,10 @@ auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
   Render::GL::HumanoidRendererBase::compute_locomotion_pose(0, 0.0F, false,
                                                             variation, pose);
 
-  std::array<QMatrix4x4, kBoneCount> palette{};
+  std::array<QMatrix4x4, k_bone_count> palette{};
   BonePalette tmp{};
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), tmp);
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_bone_count; ++i) {
     palette[i] = tmp[i];
   }
   return palette;
@@ -554,7 +554,7 @@ auto build_humanoid_bind_palette() -> std::array<QMatrix4x4, kBoneCount> {
 } // namespace
 
 auto humanoid_bind_palette() noexcept -> std::span<const QMatrix4x4> {
-  static const std::array<QMatrix4x4, kBoneCount> palette =
+  static const std::array<QMatrix4x4, k_bone_count> palette =
       build_humanoid_bind_palette();
   return std::span<const QMatrix4x4>(palette.data(), palette.size());
 }
@@ -586,7 +586,7 @@ auto humanoid_bind_body_frames() noexcept -> const Render::GL::BodyFrames & {
 
 void fill_humanoid_role_colors(
     const Render::GL::HumanoidVariant &variant,
-    std::array<QVector3D, kHumanoidRoleCount> &out_roles) noexcept {
+    std::array<QVector3D, k_humanoid_role_count> &out_roles) noexcept {
   fill_humanoid_role_colors_impl(variant, out_roles);
 }
 

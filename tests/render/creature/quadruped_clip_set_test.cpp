@@ -10,28 +10,28 @@ using Render::Creature::Quadruped::ClipSet;
 using Render::GL::GaitType;
 
 TEST(QuadrupedClipSet, HorseGaitsMapDirectly) {
-  constexpr ClipSet kHorseClips{0U, 1U, 2U, 3U, 4U, 5U};
+  constexpr ClipSet k_horse_clips{0U, 1U, 2U, 3U, 4U, 5U};
 
-  EXPECT_EQ(clip_for_gait(kHorseClips, GaitType::IDLE), 0U);
-  EXPECT_EQ(clip_for_gait(kHorseClips, GaitType::WALK), 1U);
-  EXPECT_EQ(clip_for_gait(kHorseClips, GaitType::TROT), 2U);
-  EXPECT_EQ(clip_for_gait(kHorseClips, GaitType::CANTER), 3U);
-  EXPECT_EQ(clip_for_gait(kHorseClips, GaitType::GALLOP), 4U);
-  EXPECT_EQ(clip_for_motion(kHorseClips, GaitType::TROT, true), 5U);
+  EXPECT_EQ(clip_for_gait(k_horse_clips, GaitType::IDLE), 0U);
+  EXPECT_EQ(clip_for_gait(k_horse_clips, GaitType::WALK), 1U);
+  EXPECT_EQ(clip_for_gait(k_horse_clips, GaitType::TROT), 2U);
+  EXPECT_EQ(clip_for_gait(k_horse_clips, GaitType::CANTER), 3U);
+  EXPECT_EQ(clip_for_gait(k_horse_clips, GaitType::GALLOP), 4U);
+  EXPECT_EQ(clip_for_motion(k_horse_clips, GaitType::TROT, true), 5U);
 }
 
 TEST(QuadrupedClipSet, RunningFallsBackWhenFasterClipsAreMissing) {
-  constexpr ClipSet kElephantClips{0U,
-                                   1U,
-                                   2U,
-                                   Render::Creature::Quadruped::kInvalidClip,
-                                   Render::Creature::Quadruped::kInvalidClip,
-                                   3U};
+  constexpr ClipSet k_elephant_clips{0U,
+                                     1U,
+                                     2U,
+                                     Render::Creature::Quadruped::kInvalidClip,
+                                     Render::Creature::Quadruped::kInvalidClip,
+                                     3U};
 
-  EXPECT_EQ(clip_for_motion(kElephantClips, false, false, false), 0U);
-  EXPECT_EQ(clip_for_motion(kElephantClips, true, false, false), 1U);
-  EXPECT_EQ(clip_for_motion(kElephantClips, true, true, false), 2U);
-  EXPECT_EQ(clip_for_motion(kElephantClips, true, true, true), 3U);
+  EXPECT_EQ(clip_for_motion(k_elephant_clips, false, false, false), 0U);
+  EXPECT_EQ(clip_for_motion(k_elephant_clips, true, false, false), 1U);
+  EXPECT_EQ(clip_for_motion(k_elephant_clips, true, true, false), 2U);
+  EXPECT_EQ(clip_for_motion(k_elephant_clips, true, true, true), 3U);
 }
 
 TEST(QuadrupedClipSet, GaitFallbackWalksBackTowardAvailableLocomotion) {

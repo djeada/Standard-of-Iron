@@ -133,8 +133,8 @@ public:
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderL);
       static const auto k_shoulder_r_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::ShoulderR);
-      static const auto k_helmet_base_role_byte =
-          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
+          Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_greaves_base_role_byte = static_cast<std::uint8_t>(
           k_helmet_base_role_byte + Render::GL::kRomanHeavyHelmetRoleCount);
       static const auto k_shoulder_base_role_byte = static_cast<std::uint8_t>(

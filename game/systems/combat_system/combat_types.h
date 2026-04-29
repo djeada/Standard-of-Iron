@@ -4,6 +4,9 @@ namespace Game::Systems::Combat {
 
 namespace Constants {
 inline constexpr float k_engagement_cooldown = 0.5F;
+inline constexpr float k_chase_request_cooldown = 0.5F;
+inline constexpr float k_chase_goal_movement_threshold = 1.0F;
+inline constexpr float k_chase_near_range_buffer = 0.25F;
 inline constexpr float k_ideal_melee_distance = 0.6F;
 inline constexpr float k_max_melee_separation = 0.9F;
 inline constexpr float k_melee_pull_factor = 0.3F;
@@ -35,6 +38,7 @@ inline constexpr float k_arrow_start_height = 0.6F;
 inline constexpr float k_arrow_start_offset = 0.35F;
 inline constexpr float k_arrow_target_offset = 0.5F;
 inline constexpr float k_arrow_speed = 14.0F;
+inline constexpr int k_max_visual_arrows_per_volley = 12;
 } // namespace Constants
 
 } // namespace Game::Systems::Combat

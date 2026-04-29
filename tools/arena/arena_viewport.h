@@ -8,8 +8,8 @@
 #include <QOpenGLWidget>
 #include <QPoint>
 #include <QRect>
-#include <QTimer>
 #include <QString>
+#include <QTimer>
 #include <memory>
 #include <vector>
 
@@ -116,7 +116,8 @@ private:
   auto selection_system() const -> Game::Systems::SelectionSystem *;
   auto selected_unit_ids_or_fallback() -> std::vector<Engine::Core::EntityID>;
   void sync_spawn_selection_defaults();
-  void clear_forced_animation_state(const std::vector<Engine::Core::EntityID> &ids);
+  void
+  clear_forced_animation_state(const std::vector<Engine::Core::EntityID> &ids);
   void draw_debug_overlay(QPainter &painter);
   void draw_selection_marquee(QPainter &painter);
   void draw_terrain_normals(QPainter &painter);

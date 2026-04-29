@@ -6,6 +6,9 @@ class World;
 
 namespace Game::Systems::Combat {
 
-void process_attacks(Engine::Core::World *world, float delta_time);
+struct CombatQueryContext;
 
-}
+void process_attacks(Engine::Core::World *world,
+                     const CombatQueryContext &query_context, float delta_time);
+
+} // namespace Game::Systems::Combat

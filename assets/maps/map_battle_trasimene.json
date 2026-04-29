@@ -1,29 +1,29 @@
 {
   "name": "Battle of Lake Trasimene",
   "description": "The perfect ambush - trap the Roman legion along the narrow lakeside road between water and hills in the morning mist",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2500,
+  "coord_system": "grid",
+  "max_troops_per_player": 2500,
   "grid": {
     "width": 150,
     "height": 100,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "grass_dry",
+    "ground_type": "grass_dry",
     "seed": 10004,
-    "patchDensity": 2.8,
-    "patchJitter": 0.82,
-    "plantDensity": 0.4,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.13,
-    "irregularityAmplitude": 0.06
+    "patch_density": 2.8,
+    "patch_jitter": 0.82,
+    "plant_density": 0.4,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.13,
+    "irregularity_amplitude": 0.06
   },
   "camera": {
     "center": [75, 0, 50],
     "distance": 35.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 450.0
   },
@@ -32,164 +32,164 @@
       "type": "spearman",
       "x": 65,
       "z": 38,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "spearman",
       "x": 70,
       "z": 40,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "swordsman",
       "x": 90,
       "z": 55,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "swordsman",
       "x": 95,
       "z": 58,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "swordsman",
       "x": 88,
       "z": 52,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "horse_swordsman",
       "x": 115,
       "z": 75,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "horse_swordsman",
       "x": 120,
       "z": 78,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "archer",
       "x": 80,
       "z": 35,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "archer",
       "x": 85,
       "z": 38,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "spearman",
       "x": 100,
       "z": 80,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "spearman",
       "x": 105,
       "z": 82,
-      "playerId": 1,
+      "player_id": 1,
       "hidden": true
     },
     {
       "type": "barracks",
       "x": 130,
       "z": 85,
-      "playerId": 1,
-      "maxPopulation": 120,
+      "player_id": 1,
+      "max_population": 120,
       "nation": "carthage"
     },
     {
       "type": "spearman",
       "x": 20,
       "z": 50,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 25,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 22,
       "z": 48,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 28,
       "z": 50,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 18,
       "z": 50,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 30,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 32,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 35,
       "z": 48,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 38,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 15,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 18,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 12,
       "z": 45,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 10,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     }
   ],
   "firecamps": [

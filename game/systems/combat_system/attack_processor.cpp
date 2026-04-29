@@ -26,6 +26,56 @@ namespace Game::Systems::Combat {
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
 
+auto should_queue_chase_command(
+    Engine::Core::Entity *attacker, Engine::Core::Entity *target,
+    Engine::Core::TransformComponent *attacker_transform,
+    Engine::Core::MovementComponent *movement, const QVector3D &desired_pos,
+    float range) -> bool {
+  if ((attacker == nullptr) || (target == nullptr) ||
+      (attacker_transform == nullptr) || (movement == nullptr)) {
+    return false;
+  }
+
+  if (is_in_range(attacker, target,
+                  range + Constants::k_chase_near_range_buffer)) {
+    return false;
+  }
+
+  if (movement->path_pending) {
+    return false;
+  }
+
+  QVector3D planned_target(movement->goal_x, 0.0F, movement->goal_y);
+  if (movement->has_target) {
+    planned_target = QVector3D(movement->target_x, 0.0F, movement->target_y);
+  }
+  if (!movement->path.empty()) {
+    auto const &final_node = movement->path.back();
+    planned_target = QVector3D(final_node.first, 0.0F, final_node.second);
+  }
+
+  float const threshold_sq =
+      Constants::k_new_command_threshold * Constants::k_new_command_threshold;
+  if ((movement->has_target || !movement->path.empty()) &&
+      (planned_target - desired_pos).lengthSquared() <= threshold_sq) {
+    return false;
+  }
+
+  if (movement->time_since_last_path_request <
+      Constants::k_chase_request_cooldown) {
+    QVector3D const last_goal(movement->last_goal_x, 0.0F,
+                              movement->last_goal_y);
+    float const chase_goal_threshold_sq =
+        Constants::k_chase_goal_movement_threshold *
+        Constants::k_chase_goal_movement_threshold;
+    if ((last_goal - desired_pos).lengthSquared() <= chase_goal_threshold_sq) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 void stop_unit_movement(Engine::Core::Entity *unit,
                         Engine::Core::TransformComponent *transform) {
   auto *movement = unit->get_component<Engine::Core::MovementComponent>();
@@ -333,6 +383,8 @@ void spawn_arrows(Engine::Core::Entity *attacker, Engine::Core::Entity *target,
     std::uniform_int_distribution<> dist(max_arrows / 2, max_arrows);
     arrow_count = dist(arrow_gen);
   }
+  arrow_count =
+      std::min(arrow_count, Constants::k_max_visual_arrows_per_volley);
 
   for (int i = 0; i < arrow_count; ++i) {
     static thread_local std::mt19937 spread_gen(std::random_device{}());
@@ -370,6 +422,16 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
                            Engine::Core::Entity *target,
                            Engine::Core::AttackComponent *attack_comp,
                            Engine::Core::World *world) {
+  auto *target_atk = target->get_component<Engine::Core::AttackComponent>();
+  if (attack_comp->in_melee_lock &&
+      attack_comp->melee_lock_target_id == target->get_id()) {
+    if (target_atk != nullptr) {
+      target_atk->in_melee_lock = true;
+      target_atk->melee_lock_target_id = attacker->get_id();
+    }
+    return;
+  }
+
   attack_comp->in_melee_lock = true;
   attack_comp->melee_lock_target_id = target->get_id();
 
@@ -384,15 +446,14 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
-        Engine::Core::CombatStateComponent::kAdvanceDuration;
+        Engine::Core::CombatStateComponent::k_advance_duration;
     std::uniform_real_distribution<float> offset_dist(0.0F, 0.15F);
     combat_state->attack_offset = offset_dist(gen);
     std::uniform_int_distribution<int> variant_dist(
-        0, Engine::Core::CombatStateComponent::kMaxAttackVariants - 1);
+        0, Engine::Core::CombatStateComponent::k_max_attack_variants - 1);
     combat_state->attack_variant = static_cast<std::uint8_t>(variant_dist(gen));
   }
 
-  auto *target_atk = target->get_component<Engine::Core::AttackComponent>();
   if (target_atk != nullptr) {
     target_atk->in_melee_lock = true;
     target_atk->melee_lock_target_id = attacker->get_id();
@@ -431,9 +492,13 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
 
 } // namespace
 
-void process_attacks(Engine::Core::World *world, float delta_time) {
-  auto units = world->get_entities_with<Engine::Core::UnitComponent>();
+void process_attacks(Engine::Core::World *world,
+                     const CombatQueryContext &query_context,
+                     float delta_time) {
+  auto const &units = query_context.units;
   auto *arrow_sys = world->get_system<ArrowSystem>();
+  std::vector<CommandService::MoveIntent> chase_move_intents;
+  chase_move_intents.reserve(units.size());
 
   for (auto *attacker : units) {
     if (attacker->has_component<Engine::Core::PendingRemovalComponent>()) {
@@ -487,224 +552,166 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
     auto *attack_target =
         attacker->get_component<Engine::Core::AttackTargetComponent>();
     Engine::Core::Entity *best_target = nullptr;
+    Engine::Core::UnitComponent *best_target_unit = nullptr;
+    Engine::Core::TransformComponent *best_target_transform = nullptr;
 
     if ((attack_target != nullptr) && attack_target->target_id != 0) {
       auto *target = world->get_entity(attack_target->target_id);
-      if ((target != nullptr) &&
-          !target->has_component<Engine::Core::PendingRemovalComponent>()) {
-        auto *target_unit =
-            target->get_component<Engine::Core::UnitComponent>();
+      auto *target_unit =
+          is_valid_enemy_unit(attacker_unit, target, true)
+              ? target->get_component<Engine::Core::UnitComponent>()
+              : nullptr;
+      auto *target_transform =
+          (target_unit != nullptr)
+              ? target->get_component<Engine::Core::TransformComponent>()
+              : nullptr;
+      bool const target_is_building =
+          (target != nullptr) && is_building(target);
 
-        auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-        bool const is_ally = owner_registry.are_allies(attacker_unit->owner_id,
-                                                       target_unit->owner_id);
+      if ((target_unit != nullptr) && (target_transform != nullptr)) {
+        bool const ranged_unit = is_ranged_mode(attacker_atk);
 
-        if ((target_unit != nullptr) && target_unit->health > 0 &&
-            target_unit->owner_id != attacker_unit->owner_id && !is_ally) {
-          bool const ranged_unit = is_ranged_mode(attacker_atk);
+        if (is_in_range(attacker, target, range)) {
+          best_target = target;
+          best_target_unit = target_unit;
+          best_target_transform = target_transform;
+          if (ranged_unit) {
+            stop_unit_movement(attacker, attacker_transform);
+          }
+          face_target(attacker_transform, target_transform);
+        } else {
+          if (!attack_target->should_chase) {
+            attacker->remove_component<Engine::Core::AttackTargetComponent>();
+            continue;
+          }
 
-          if (is_in_range(attacker, target, range)) {
-            best_target = target;
-            if (ranged_unit) {
-              stop_unit_movement(attacker, attacker_transform);
+          auto *hold_mode =
+              attacker->get_component<Engine::Core::HoldModeComponent>();
+          if ((hold_mode != nullptr) && hold_mode->active) {
+            attacker->remove_component<Engine::Core::AttackTargetComponent>();
+            continue;
+          }
+
+          auto *guard_mode =
+              attacker->get_component<Engine::Core::GuardModeComponent>();
+          if ((guard_mode != nullptr) && guard_mode->active) {
+            float guard_x = guard_mode->guard_position_x;
+            float guard_z = guard_mode->guard_position_z;
+            if (guard_mode->guarded_entity_id != 0) {
+              auto *guarded_entity =
+                  world->get_entity(guard_mode->guarded_entity_id);
+              if (guarded_entity != nullptr) {
+                auto *guarded_transform =
+                    guarded_entity
+                        ->get_component<Engine::Core::TransformComponent>();
+                if (guarded_transform != nullptr) {
+                  guard_x = guarded_transform->position.x;
+                  guard_z = guarded_transform->position.z;
+                }
+              }
             }
-            face_target(
-                attacker_transform,
-                target->get_component<Engine::Core::TransformComponent>());
-          } else if (attack_target->should_chase) {
-            auto *hold_mode =
-                attacker->get_component<Engine::Core::HoldModeComponent>();
-            if ((hold_mode != nullptr) && hold_mode->active) {
+
+            float const dx = target_transform->position.x - guard_x;
+            float const dz = target_transform->position.z - guard_z;
+            float const dist_sq = dx * dx + dz * dz;
+            float const guard_radius_sq =
+                guard_mode->guard_radius * guard_mode->guard_radius;
+            if (dist_sq > guard_radius_sq) {
               attacker->remove_component<Engine::Core::AttackTargetComponent>();
               continue;
             }
-
-            auto *guard_mode =
-                attacker->get_component<Engine::Core::GuardModeComponent>();
-            if ((guard_mode != nullptr) && guard_mode->active) {
-              float guard_x = guard_mode->guard_position_x;
-              float guard_z = guard_mode->guard_position_z;
-              if (guard_mode->guarded_entity_id != 0) {
-                auto *guarded_entity =
-                    world->get_entity(guard_mode->guarded_entity_id);
-                if (guarded_entity != nullptr) {
-                  auto *guarded_transform =
-                      guarded_entity
-                          ->get_component<Engine::Core::TransformComponent>();
-                  if (guarded_transform != nullptr) {
-                    guard_x = guarded_transform->position.x;
-                    guard_z = guarded_transform->position.z;
-                  }
-                }
-              }
-              auto *target_transform =
-                  target->get_component<Engine::Core::TransformComponent>();
-              if (target_transform != nullptr) {
-                float const dx = target_transform->position.x - guard_x;
-                float const dz = target_transform->position.z - guard_z;
-                float const dist_sq = dx * dx + dz * dz;
-                float const guard_radius_sq =
-                    guard_mode->guard_radius * guard_mode->guard_radius;
-                if (dist_sq > guard_radius_sq) {
-                  attacker
-                      ->remove_component<Engine::Core::AttackTargetComponent>();
-                  continue;
-                }
-              }
-            }
-
-            if (ranged_unit && is_in_range(attacker, target, range)) {
-              stop_unit_movement(attacker, attacker_transform);
-              best_target = target;
-            } else {
-              auto *target_transform =
-                  target->get_component<Engine::Core::TransformComponent>();
-              if ((target_transform != nullptr) &&
-                  (attacker_transform != nullptr)) {
-                QVector3D const attacker_pos(attacker_transform->position.x,
-                                             0.0F,
-                                             attacker_transform->position.z);
-                QVector3D const target_pos(target_transform->position.x, 0.0F,
-                                           target_transform->position.z);
-                QVector3D desired_pos = target_pos;
-                bool hold_position = false;
-
-                bool const target_is_building =
-                    target->has_component<Engine::Core::BuildingComponent>();
-                if (target_is_building) {
-                  float const scale_x = target_transform->scale.x;
-                  float const scale_z = target_transform->scale.z;
-                  float const target_radius = std::max(scale_x, scale_z) * 0.5F;
-                  QVector3D direction = target_pos - attacker_pos;
-                  float const distance_sq = direction.lengthSquared();
-                  if (distance_sq > 0.000001F) {
-                    float const distance = std::sqrt(distance_sq);
-                    direction /= distance;
-                    float const desired_distance =
-                        target_radius + std::max(range - 0.2F, 0.2F);
-                    if (distance > desired_distance + 0.15F) {
-                      desired_pos = target_pos - direction * desired_distance;
-                    } else {
-                      hold_position = true;
-                    }
-                  }
-                } else if (ranged_unit) {
-                  QVector3D direction = target_pos - attacker_pos;
-                  float const distance_sq = direction.lengthSquared();
-                  if (distance_sq > 0.000001F) {
-                    float const distance = std::sqrt(distance_sq);
-                    direction /= distance;
-                    float const optimal_range =
-                        range * Constants::k_optimal_range_factor;
-                    if (distance >
-                        optimal_range + Constants::k_optimal_range_buffer) {
-                      desired_pos = target_pos - direction * optimal_range;
-                    } else {
-                      hold_position = true;
-                    }
-                  }
-                }
-
-                auto *movement =
-                    attacker->get_component<Engine::Core::MovementComponent>();
-                if (movement == nullptr) {
-                  movement =
-                      attacker
-                          ->add_component<Engine::Core::MovementComponent>();
-                }
-
-                if (movement != nullptr) {
-                  if (hold_position) {
-                    movement->has_target = false;
-                    movement->vx = 0.0F;
-                    movement->vz = 0.0F;
-                    movement->clear_path();
-                    movement->target_x = attacker_transform->position.x;
-                    movement->target_y = attacker_transform->position.z;
-                    movement->goal_x = attacker_transform->position.x;
-                    movement->goal_y = attacker_transform->position.z;
-                  } else {
-                    QVector3D planned_target(movement->target_x, 0.0F,
-                                             movement->target_y);
-                    if (!movement->path.empty()) {
-                      const auto &final_node = movement->path.back();
-                      planned_target =
-                          QVector3D(final_node.first, 0.0F, final_node.second);
-                    }
-
-                    float const diff_sq =
-                        (planned_target - desired_pos).lengthSquared();
-                    bool need_new_command = !movement->path_pending;
-                    float const threshold = Constants::k_new_command_threshold *
-                                            Constants::k_new_command_threshold;
-                    if (movement->has_target && diff_sq <= threshold) {
-                      need_new_command = false;
-                    }
-
-                    if (need_new_command) {
-                      CommandService::MoveOptions options;
-                      options.clear_attack_intent = false;
-                      options.allow_direct_fallback = true;
-                      std::vector<Engine::Core::EntityID> const unit_ids = {
-                          attacker->get_id()};
-                      std::vector<QVector3D> const move_targets = {desired_pos};
-                      CommandService::move_units(*world, unit_ids, move_targets,
-                                                 options);
-                    }
-                  }
-                }
-
-                if (is_in_range(attacker, target, range)) {
-                  best_target = target;
-                }
-              }
-            }
-          } else {
-            attacker->remove_component<Engine::Core::AttackTargetComponent>();
           }
-        } else {
-          attacker->remove_component<Engine::Core::AttackTargetComponent>();
+
+          QVector3D const attacker_pos(attacker_transform->position.x, 0.0F,
+                                       attacker_transform->position.z);
+          QVector3D const target_pos(target_transform->position.x, 0.0F,
+                                     target_transform->position.z);
+          QVector3D desired_pos = target_pos;
+          bool hold_position = false;
+
+          if (target_is_building) {
+            float const scale_x = target_transform->scale.x;
+            float const scale_z = target_transform->scale.z;
+            float const target_radius = std::max(scale_x, scale_z) * 0.5F;
+            QVector3D direction = target_pos - attacker_pos;
+            float const distance_sq = direction.lengthSquared();
+            if (distance_sq > 0.000001F) {
+              float const distance = std::sqrt(distance_sq);
+              direction /= distance;
+              float const desired_distance =
+                  target_radius + std::max(range - 0.2F, 0.2F);
+              if (distance > desired_distance + 0.15F) {
+                desired_pos = target_pos - direction * desired_distance;
+              } else {
+                hold_position = true;
+              }
+            }
+          } else if (ranged_unit) {
+            QVector3D direction = target_pos - attacker_pos;
+            float const distance_sq = direction.lengthSquared();
+            if (distance_sq > 0.000001F) {
+              float const distance = std::sqrt(distance_sq);
+              direction /= distance;
+              float const optimal_range =
+                  range * Constants::k_optimal_range_factor;
+              if (distance >
+                  optimal_range + Constants::k_optimal_range_buffer) {
+                desired_pos = target_pos - direction * optimal_range;
+              } else {
+                hold_position = true;
+              }
+            }
+          }
+
+          auto *movement =
+              attacker->get_component<Engine::Core::MovementComponent>();
+          if (movement == nullptr) {
+            movement =
+                attacker->add_component<Engine::Core::MovementComponent>();
+          }
+
+          if (movement != nullptr) {
+            if (hold_position) {
+              movement->has_target = false;
+              movement->vx = 0.0F;
+              movement->vz = 0.0F;
+              movement->clear_path();
+              movement->target_x = attacker_transform->position.x;
+              movement->target_y = attacker_transform->position.z;
+              movement->goal_x = attacker_transform->position.x;
+              movement->goal_y = attacker_transform->position.z;
+            } else if (should_queue_chase_command(attacker, target,
+                                                  attacker_transform, movement,
+                                                  desired_pos, range)) {
+              chase_move_intents.push_back({attacker->get_id(), desired_pos});
+            }
+          }
+
+          if (is_in_range(attacker, target, range)) {
+            best_target = target;
+            best_target_unit = target_unit;
+            best_target_transform = target_transform;
+          }
         }
       } else {
         attacker->remove_component<Engine::Core::AttackTargetComponent>();
       }
     }
 
-    if ((best_target == nullptr) && (attack_target == nullptr)) {
-      auto &owner_registry = Game::Systems::OwnerRegistry::instance();
-
-      for (auto *target : units) {
-        if (target == attacker) {
-          continue;
-        }
-
-        auto *target_unit =
-            target->get_component<Engine::Core::UnitComponent>();
-        if ((target_unit == nullptr) || target_unit->health <= 0) {
-          continue;
-        }
-
-        if (target_unit->owner_id == attacker_unit->owner_id) {
-          continue;
-        }
-
-        if (owner_registry.are_allies(attacker_unit->owner_id,
-                                      target_unit->owner_id)) {
-          continue;
-        }
-
-        if (target->has_component<Engine::Core::BuildingComponent>()) {
-          continue;
-        }
-
-        if (is_in_range(attacker, target, range)) {
-          best_target = target;
-          break;
-        }
+    bool const has_attack_target =
+        attacker->has_component<Engine::Core::AttackTargetComponent>();
+    if ((best_target == nullptr) && !has_attack_target) {
+      best_target = find_nearest_enemy(attacker, query_context, range);
+      if (best_target != nullptr) {
+        best_target_unit =
+            best_target->get_component<Engine::Core::UnitComponent>();
+        best_target_transform =
+            best_target->get_component<Engine::Core::TransformComponent>();
       }
     }
 
-    if (best_target != nullptr) {
+    if ((best_target != nullptr) && (best_target_unit != nullptr) &&
+        (best_target_transform != nullptr)) {
       if (!attacker->has_component<Engine::Core::AttackTargetComponent>()) {
         auto *new_target =
             attacker->add_component<Engine::Core::AttackTargetComponent>();
@@ -725,15 +732,11 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         stop_unit_movement(attacker, attacker_transform);
       }
 
-      face_target(
-          attacker_transform,
-          best_target->get_component<Engine::Core::TransformComponent>());
+      face_target(attacker_transform, best_target_transform);
 
-      auto *att_u = attacker->get_component<Engine::Core::UnitComponent>();
       bool const should_show_arrow_vfx =
-          (att_u != nullptr &&
-           att_u->spawn_type != Game::Units::SpawnType::Catapult &&
-           att_u->spawn_type != Game::Units::SpawnType::Ballista);
+          attacker_unit->spawn_type != Game::Units::SpawnType::Catapult &&
+          attacker_unit->spawn_type != Game::Units::SpawnType::Ballista;
 
       if (should_show_arrow_vfx &&
           ((attacker_atk == nullptr) ||
@@ -755,16 +758,12 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         initiate_melee_combat(attacker, best_target, attacker_atk, world);
       }
 
-      auto *target_unit =
-          best_target->get_component<Engine::Core::UnitComponent>();
-      if (target_unit != nullptr) {
-        float const tactical_multiplier = calculate_tactical_damage_multiplier(
-            attacker, best_target, attacker_unit, target_unit);
-        damage =
-            static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
-        apply_high_ground_defense_bonuses(attacker, best_target, target_unit,
-                                          damage);
-      }
+      float const tactical_multiplier = calculate_tactical_damage_multiplier(
+          attacker, best_target, attacker_unit, best_target_unit);
+      damage =
+          static_cast<int>(static_cast<float>(damage) * tactical_multiplier);
+      apply_high_ground_defense_bonuses(attacker, best_target, best_target_unit,
+                                        damage);
 
       deal_damage(world, best_target, damage, attacker->get_id());
       *t_accum = 0.0F;
@@ -806,21 +805,25 @@ void process_attacks(Engine::Core::World *world, float delta_time) {
         float const dist_sq = dx * dx + dz * dz;
 
         float const k_return_threshold_sq =
-            Engine::Core::Defaults::kGuardReturnThreshold *
-            Engine::Core::Defaults::kGuardReturnThreshold;
+            Engine::Core::Defaults::k_guard_return_threshold *
+            Engine::Core::Defaults::k_guard_return_threshold;
         if (dist_sq > k_return_threshold_sq) {
           guard_mode->returning_to_guard_position = true;
           CommandService::MoveOptions options;
           options.clear_attack_intent = true;
           options.allow_direct_fallback = true;
-          std::vector<Engine::Core::EntityID> const unit_ids = {
-              attacker->get_id()};
-          std::vector<QVector3D> const move_targets = {
-              QVector3D(guard_x, 0.0F, guard_z)};
-          CommandService::move_units(*world, unit_ids, move_targets, options);
+          CommandService::move_unit(*world, attacker->get_id(),
+                                    QVector3D(guard_x, 0.0F, guard_z), options);
         }
       }
     }
+  }
+
+  if (!chase_move_intents.empty()) {
+    CommandService::MoveOptions options;
+    options.clear_attack_intent = false;
+    options.allow_direct_fallback = true;
+    CommandService::move_units(*world, chase_move_intents, options);
   }
 }
 
