@@ -260,7 +260,7 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
 
-  for (std::size_t b = 0; b < Render::Humanoid::kBoneCount; ++b) {
+  for (std::size_t b = 0; b < Render::Humanoid::k_bone_count; ++b) {
     out_palettes.push_back(palette[b]);
   }
 
@@ -274,7 +274,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
                    std::uint32_t species_id, std::string_view file_name,
                    HumanoidBakeProfile profile) {
   bpat::BpatWriter writer(
-      species_id, static_cast<std::uint32_t>(Render::Humanoid::kBoneCount));
+      species_id, static_cast<std::uint32_t>(Render::Humanoid::k_bone_count));
   for (auto const &spec : kHumanoidSockets) {
     Render::Humanoid::SocketDef const &def =
         Render::Humanoid::socket_def(spec.socket);
@@ -295,7 +295,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
 
     std::vector<QMatrix4x4> palettes;
     palettes.reserve(static_cast<std::size_t>(clip.frames) *
-                     Render::Humanoid::kBoneCount);
+                     Render::Humanoid::k_bone_count);
     std::vector<QMatrix4x4> sockets;
     sockets.reserve(static_cast<std::size_t>(clip.frames) *
                     kHumanoidSockets.size());
@@ -320,7 +320,7 @@ bool bake_humanoid(const std::filesystem::path &out_dir,
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << kHumanoidClips.size() << " clips, "
-            << Render::Humanoid::kBoneCount << " bones, "
+            << Render::Humanoid::k_bone_count << " bones, "
             << kHumanoidSockets.size() << " sockets)\n";
   return true;
 }
@@ -488,7 +488,7 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
   Render::Horse::BonePalette palette{};
   Render::Horse::evaluate_horse_skeleton(pose, palette);
 
-  for (std::size_t b = 0; b < Render::Horse::kHorseBoneCount; ++b) {
+  for (std::size_t b = 0; b < Render::Horse::k_horse_bone_count; ++b) {
     out_palettes.push_back(palette[b]);
   }
 }
@@ -496,7 +496,7 @@ void bake_horse_clip_frame(const HorseClipSpec &clip, std::uint32_t frame_index,
 bool bake_horse(const std::filesystem::path &out_dir) {
   bpat::BpatWriter writer(
       bpat::kSpeciesHorse,
-      static_cast<std::uint32_t>(Render::Horse::kHorseBoneCount));
+      static_cast<std::uint32_t>(Render::Horse::k_horse_bone_count));
 
   Render::GL::HorseDimensions const dims =
       Render::GL::make_horse_dimensions(0U);
@@ -511,7 +511,7 @@ bool bake_horse(const std::filesystem::path &out_dir) {
 
     std::vector<QMatrix4x4> palettes;
     palettes.reserve(static_cast<std::size_t>(clip.frames) *
-                     Render::Horse::kHorseBoneCount);
+                     Render::Horse::k_horse_bone_count);
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       bake_horse_clip_frame(clip, f, dims, palettes);
     }
@@ -532,7 +532,7 @@ bool bake_horse(const std::filesystem::path &out_dir) {
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << kHorseClips.size() << " clips, "
-            << Render::Horse::kHorseBoneCount << " bones)\n";
+            << Render::Horse::k_horse_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
   mesh_input.graph =
@@ -554,7 +554,7 @@ bool bake_horse(const std::filesystem::path &out_dir) {
                           source.vertices.size());
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       std::vector<QMatrix4x4> frame_palette;
-      frame_palette.reserve(Render::Horse::kHorseBoneCount);
+      frame_palette.reserve(Render::Horse::k_horse_bone_count);
       bake_horse_clip_frame(clip, f, dims, frame_palette);
       auto baked =
           Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);
@@ -640,7 +640,7 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
   Render::Elephant::BonePalette palette{};
   Render::Elephant::evaluate_elephant_skeleton(pose, palette);
 
-  for (std::size_t b = 0; b < Render::Elephant::kElephantBoneCount; ++b) {
+  for (std::size_t b = 0; b < Render::Elephant::k_elephant_bone_count; ++b) {
     out_palettes.push_back(palette[b]);
   }
 }
@@ -648,7 +648,7 @@ void bake_elephant_clip_frame(const ElephantClipSpec &clip,
 bool bake_elephant(const std::filesystem::path &out_dir) {
   bpat::BpatWriter writer(
       bpat::kSpeciesElephant,
-      static_cast<std::uint32_t>(Render::Elephant::kElephantBoneCount));
+      static_cast<std::uint32_t>(Render::Elephant::k_elephant_bone_count));
 
   Render::GL::ElephantDimensions const dims =
       Render::GL::make_elephant_dimensions(0U);
@@ -663,7 +663,7 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
 
     std::vector<QMatrix4x4> palettes;
     palettes.reserve(static_cast<std::size_t>(clip.frames) *
-                     Render::Elephant::kElephantBoneCount);
+                     Render::Elephant::k_elephant_bone_count);
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       bake_elephant_clip_frame(clip, f, dims, palettes);
     }
@@ -684,7 +684,7 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
   out.flush();
   std::cout << "[bpat_baker] wrote " << out_path << " (" << writer.frame_total()
             << " frames, " << kElephantClips.size() << " clips, "
-            << Render::Elephant::kElephantBoneCount << " bones)\n";
+            << Render::Elephant::k_elephant_bone_count << " bones)\n";
 
   Render::Creature::BakeInput mesh_input{};
   mesh_input.graph = &Render::Creature::part_graph_for(
@@ -706,7 +706,7 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
                           source.vertices.size());
     for (std::uint32_t f = 0; f < clip.frames; ++f) {
       std::vector<QMatrix4x4> frame_palette;
-      frame_palette.reserve(Render::Elephant::kElephantBoneCount);
+      frame_palette.reserve(Render::Elephant::k_elephant_bone_count);
       bake_elephant_clip_frame(clip, f, dims, frame_palette);
       auto baked =
           Render::GL::bake_snapshot_vertices(source.vertices, frame_palette);

@@ -41,7 +41,6 @@ enum class Phase : std::uint8_t {
 }
 
 struct FrameProfile {
-
   std::array<std::uint64_t, static_cast<std::size_t>(Phase::_Count)> phase_us{};
 
   std::uint64_t draw_calls{0};

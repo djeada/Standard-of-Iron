@@ -1,12 +1,12 @@
 {
     "biome": {
-        "groundIrregularityEnabled": true,
-        "groundType": "grass_dry",
-        "irregularityAmplitude": 0.08,
-        "irregularityScale": 0.12,
-        "patchDensity": 2.8,
-        "patchJitter": 0.75,
-        "plantDensity": 0.45,
+        "ground_irregularity_enabled": true,
+        "ground_type": "grass_dry",
+        "irregularity_amplitude": 0.08,
+        "irregularity_scale": 0.12,
+        "patch_density": 2.8,
+        "patch_jitter": 0.75,
+        "plant_density": 0.45,
         "seed": 10001
     },
     "bridges": [
@@ -55,12 +55,12 @@
         ],
         "distance": 85,
         "far": 500,
-        "fovY": 45,
+        "fov_y": 45,
         "near": 1,
-        "tiltDeg": 55,
+        "tilt_deg": 55,
         "yaw": 210
     },
-    "coordSystem": "grid",
+    "coord_system": "grid",
     "description": "A wide Rhone river cuts the full valley; two crossings lead toward fortified Roman barracks in the far north corners.",
     "firecamps": [
         {
@@ -102,10 +102,10 @@
     ],
     "grid": {
         "height": 150,
-        "tileSize": 1,
+        "tile_size": 1,
         "width": 150
     },
-    "maxTroopsPerPlayer": 1200,
+    "max_troops_per_player": 1200,
     "name": "Crossing the Rhone",
     "rivers": [
         {
@@ -382,297 +382,297 @@
     ],
     "spawns": [
         {
-            "maxPopulation": 120,
-            "playerId": 2,
+            "max_population": 120,
+            "player_id": 2,
             "type": "barracks",
             "x": 130.60426330566406,
             "z": 20.623756408691406
         },
         {
-            "maxPopulation": 120,
-            "playerId": 2,
+            "max_population": 120,
+            "player_id": 2,
             "type": "barracks",
             "x": 140,
             "z": 134
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "spearman",
             "x": 10,
             "z": 38
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "spearman",
             "x": 10,
             "z": 42
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "swordsman",
             "x": 6,
             "z": 40
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "swordsman",
             "x": 6,
             "z": 36
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "elephant",
             "x": 12,
             "z": 34
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "horse_swordsman",
             "x": 12,
             "z": 46
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "archer",
             "x": 4,
             "z": 38
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "archer",
             "x": 4,
             "z": 42
         },
         {
-            "playerId": 1,
+            "player_id": 1,
             "type": "healer",
             "x": 5,
             "z": 40
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "spearman",
             "x": 107,
             "z": 132
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "spearman",
             "x": 113,
             "z": 132
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "swordsman",
             "x": 107,
             "z": 136
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "swordsman",
             "x": 113,
             "z": 136
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "archer",
             "x": 110,
             "z": 138
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "archer",
             "x": 114,
             "z": 135
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "spearman",
             "x": 137,
             "z": 132
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "spearman",
             "x": 143,
             "z": 132
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "spearman",
             "x": 140,
             "z": 130
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "archer",
             "x": 140,
             "z": 138
         },
         {
-            "playerId": 2,
+            "player_id": 2,
             "type": "archer",
             "x": 144,
             "z": 135
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 28,
             "z": 25
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 30,
             "z": 27
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 35,
             "z": 55
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 33,
             "z": 53
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 48,
             "z": 58
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "swordsman",
             "x": 50,
             "z": 56
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 58,
             "z": 20
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 56,
             "z": 22
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 58,
             "z": 60
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 60,
             "z": 85
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 62,
             "z": 87
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "swordsman",
             "x": 58,
             "z": 88
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 70,
             "z": 95
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 72,
             "z": 97
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "swordsman",
             "x": 68,
             "z": 98
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 92,
             "z": 118
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 90,
             "z": 120
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 98,
             "z": 118
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 100,
             "z": 120
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "horse_swordsman",
             "x": 40,
             "z": 110
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "horse_swordsman",
             "x": 110,
             "z": 112
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 30,
             "z": 125
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 32,
             "z": 127
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "swordsman",
             "x": 28,
             "z": 127
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "spearman",
             "x": 120,
             "z": 122
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "archer",
             "x": 122,
             "z": 124
         },
         {
-            "playerId": 3,
+            "player_id": 3,
             "type": "swordsman",
             "x": 118,
             "z": 124

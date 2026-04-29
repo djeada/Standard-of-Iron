@@ -8,10 +8,9 @@
 
 namespace Game::Systems::Combat {
 
-void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
-
-  auto all_units = world->get_entities_with<Engine::Core::UnitComponent>();
-
+void AutoEngagement::process(Engine::Core::World *,
+                             const CombatQueryContext &query_context,
+                             float delta_time) {
   for (auto it = m_engagement_cooldowns.begin();
        it != m_engagement_cooldowns.end();) {
     it->second -= delta_time;
@@ -22,7 +21,7 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
     }
   }
 
-  for (auto *unit : all_units) {
+  for (auto *unit : query_context.units) {
     if (unit->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
@@ -69,7 +68,7 @@ void AutoEngagement::process(Engine::Core::World *world, float delta_time) {
     }
 
     auto *nearest_enemy =
-        find_nearest_enemy_from_list(unit, all_units, world, detection_range);
+        find_nearest_enemy(unit, query_context, detection_range);
 
     if (nearest_enemy != nullptr) {
       auto *attack_target =

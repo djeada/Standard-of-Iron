@@ -51,8 +51,8 @@ namespace {
 
 using namespace Render::Creature;
 
-constexpr float kTorsoWidthScale = 1.5F;
-constexpr float kTorsoHeightScale = 1.2F;
+constexpr float k_torso_width_scale = 1.5F;
+constexpr float k_torso_height_scale = 1.2F;
 
 inline auto rand_between(uint32_t seed, uint32_t salt, float min_val,
                          float max_val) -> float {
@@ -98,60 +98,67 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
   using namespace HorseDimensionRange;
   HorseDimensions d{};
 
-  d.body_length =
-      rand_between(seed, kSaltBodyLength, kBodyLengthMin, kBodyLengthMax);
-  d.body_width =
-      rand_between(seed, kSaltBodyWidth, kBodyWidthMin, kBodyWidthMax) *
-      kTorsoWidthScale;
-  d.body_height =
-      rand_between(seed, kSaltBodyHeight, kBodyHeightMin, kBodyHeightMax) *
-      kTorsoHeightScale;
+  d.body_length = rand_between(seed, k_salt_body_length, k_body_length_min,
+                               k_body_length_max);
+  d.body_width = rand_between(seed, k_salt_body_width, k_body_width_min,
+                              k_body_width_max) *
+                 k_torso_width_scale;
+  d.body_height = rand_between(seed, k_salt_body_height, k_body_height_min,
+                               k_body_height_max) *
+                  k_torso_height_scale;
 
-  d.neck_length =
-      rand_between(seed, kSaltNeckLength, kNeckLengthMin, kNeckLengthMax);
-  d.neck_rise = rand_between(seed, kSaltNeckRise, kNeckRiseMin, kNeckRiseMax);
-  d.head_length =
-      rand_between(seed, kSaltHeadLength, kHeadLengthMin, kHeadLengthMax);
+  d.neck_length = rand_between(seed, k_salt_neck_length, k_neck_length_min,
+                               k_neck_length_max);
+  d.neck_rise =
+      rand_between(seed, k_salt_neck_rise, k_neck_rise_min, k_neck_rise_max);
+  d.head_length = rand_between(seed, k_salt_head_length, k_head_length_min,
+                               k_head_length_max);
   d.head_width =
-      rand_between(seed, kSaltHeadWidth, kHeadWidthMin, kHeadWidthMax);
-  d.head_height =
-      rand_between(seed, kSaltHeadHeight, kHeadHeightMin, kHeadHeightMax);
-  d.muzzle_length =
-      rand_between(seed, kSaltMuzzleLength, kMuzzleLengthMin, kMuzzleLengthMax);
+      rand_between(seed, k_salt_head_width, k_head_width_min, k_head_width_max);
+  d.head_height = rand_between(seed, k_salt_head_height, k_head_height_min,
+                               k_head_height_max);
+  d.muzzle_length = rand_between(seed, k_salt_muzzle_length,
+                                 k_muzzle_length_min, k_muzzle_length_max);
 
   d.leg_length =
-      rand_between(seed, kSaltLegLength, kLegLengthMin, kLegLengthMax);
-  d.hoof_height =
-      rand_between(seed, kSaltHoofHeight, kHoofHeightMin, kHoofHeightMax);
+      rand_between(seed, k_salt_leg_length, k_leg_length_min, k_leg_length_max);
+  d.hoof_height = rand_between(seed, k_salt_hoof_height, k_hoof_height_min,
+                               k_hoof_height_max);
 
-  d.tail_length =
-      rand_between(seed, kSaltTailLength, kTailLengthMin, kTailLengthMax);
+  d.tail_length = rand_between(seed, k_salt_tail_length, k_tail_length_min,
+                               k_tail_length_max);
 
-  d.saddle_thickness = rand_between(seed, kSaltSaddleThickness,
-                                    kSaddleThicknessMin, kSaddleThicknessMax);
+  d.saddle_thickness =
+      rand_between(seed, k_salt_saddle_thickness, k_saddle_thickness_min,
+                   k_saddle_thickness_max);
   d.seat_forward_offset =
-      rand_between(seed, kSaltSeatForwardOffset, kSeatForwardOffsetMin,
-                   kSeatForwardOffsetMax);
-  d.stirrup_out =
-      d.body_width * rand_between(seed, kSaltStirrupOut, kStirrupOutScaleMin,
-                                  kStirrupOutScaleMax);
-  d.stirrup_drop =
-      rand_between(seed, kSaltStirrupDrop, kStirrupDropMin, kStirrupDropMax);
+      rand_between(seed, k_salt_seat_forward_offset, k_seat_forward_offset_min,
+                   k_seat_forward_offset_max);
+  d.stirrup_out = d.body_width * rand_between(seed, k_salt_stirrup_out,
+                                              k_stirrup_out_scale_min,
+                                              k_stirrup_out_scale_max);
+  d.stirrup_drop = rand_between(seed, k_salt_stirrup_drop, k_stirrup_drop_min,
+                                k_stirrup_drop_max);
 
-  d.idle_bob_amplitude = rand_between(seed, kSaltIdleBob, kIdleBobAmplitudeMin,
-                                      kIdleBobAmplitudeMax);
-  d.move_bob_amplitude = rand_between(seed, kSaltMoveBob, kMoveBobAmplitudeMin,
-                                      kMoveBobAmplitudeMax);
+  d.idle_bob_amplitude =
+      rand_between(seed, k_salt_idle_bob, k_idle_bob_amplitude_min,
+                   k_idle_bob_amplitude_max);
+  d.move_bob_amplitude =
+      rand_between(seed, k_salt_move_bob, k_move_bob_amplitude_min,
+                   k_move_bob_amplitude_max);
 
-  float const avg_leg_segment_ratio =
-      kLegSegmentRatioUpper + kLegSegmentRatioMiddle + kLegSegmentRatioLower;
+  float const avg_leg_segment_ratio = k_leg_segment_ratio_upper +
+                                      k_leg_segment_ratio_middle +
+                                      k_leg_segment_ratio_lower;
   float const leg_down_distance =
       d.leg_length * avg_leg_segment_ratio + d.hoof_height;
   float const shoulder_to_barrel_offset =
-      d.body_height * kShoulderBarrelOffsetScale + kShoulderBarrelOffsetBase;
+      d.body_height * k_shoulder_barrel_offset_scale +
+      k_shoulder_barrel_offset_base;
   d.barrel_center_y = leg_down_distance - shoulder_to_barrel_offset;
 
-  d.saddle_height = d.barrel_center_y + d.body_height * kSaddleHeightBodyScale +
+  d.saddle_height = d.barrel_center_y +
+                    d.body_height * k_saddle_height_body_scale +
                     d.saddle_thickness;
 
   return d;
@@ -162,7 +169,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   using namespace HorseVariantConstants;
   HorseVariant v;
 
-  float const coat_hue = hash01(seed ^ kSaltCoatHue);
+  float const coat_hue = hash01(seed ^ k_salt_coat_hue);
   if (coat_hue < 0.34F) {
     v.coat_kind = HorseCoatKind::Bay;
     v.coat_color = QVector3D(0.46F, 0.29F, 0.17F);
@@ -218,7 +225,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
     break;
   }
 
-  float const marking_roll = hash01(seed ^ kSaltBlazeChance);
+  float const marking_roll = hash01(seed ^ k_salt_blaze_chance);
   v.has_blaze = marking_roll > 0.78F;
   v.has_star = !v.has_blaze && marking_roll > 0.55F;
 
@@ -230,8 +237,9 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   }
 
   v.muzzle_color =
-      lerp(v.coat_color, QVector3D(kMuzzleBaseR, kMuzzleBaseG, kMuzzleBaseB),
-           kMuzzleBlendFactor);
+      lerp(v.coat_color,
+           QVector3D(k_muzzle_base_r, k_muzzle_base_g, k_muzzle_base_b),
+           k_muzzle_blend_factor);
   if (v.has_blaze) {
     v.muzzle_color =
         lerp(v.muzzle_color, QVector3D(0.92F, 0.90F, 0.86F), 0.35F);
@@ -243,28 +251,30 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   QVector3D const dark_hoof(0.14F, 0.12F, 0.10F);
   QVector3D const pale_hoof(0.78F, 0.74F, 0.66F);
   bool const any_sock = v.sock_mask != 0U;
-  v.hoof_color = any_sock
-                     ? lerp(dark_hoof, pale_hoof,
-                            rand_between(seed, kSaltHoofBlend, 0.30F, 0.55F))
-                     : lerp(dark_hoof, QVector3D(0.32F, 0.28F, 0.24F),
-                            rand_between(seed, kSaltHoofBlend, 0.10F, 0.45F));
+  v.hoof_color =
+      any_sock ? lerp(dark_hoof, pale_hoof,
+                      rand_between(seed, k_salt_hoof_blend, 0.30F, 0.55F))
+               : lerp(dark_hoof, QVector3D(0.32F, 0.28F, 0.24F),
+                      rand_between(seed, k_salt_hoof_blend, 0.10F, 0.45F));
 
-  float const leather_tone =
-      rand_between(seed, kSaltLeatherTone, kLeatherToneMin, kLeatherToneMax);
+  float const leather_tone = rand_between(
+      seed, k_salt_leather_tone, k_leather_tone_min, k_leather_tone_max);
   float const tack_tone =
-      rand_between(seed, kSaltTackTone, kTackToneMin, kTackToneMax);
+      rand_between(seed, k_salt_tack_tone, k_tack_tone_min, k_tack_tone_max);
   QVector3D const leather_tint = leather_base * leather_tone;
   QVector3D tack_tint = leather_base * tack_tone;
-  if (marking_roll > kSpecialTackThreshold) {
+  if (marking_roll > k_special_tack_threshold) {
     tack_tint =
-        lerp(tack_tint, QVector3D(kSpecialTackR, kSpecialTackG, kSpecialTackB),
-             kSpecialTackBlend);
+        lerp(tack_tint,
+             QVector3D(k_special_tack_r, k_special_tack_g, k_special_tack_b),
+             k_special_tack_blend);
   }
   v.saddle_color = leather_tint;
   v.tack_color = tack_tint;
 
-  v.blanket_color = cloth_base * rand_between(seed, kSaltBlanketTint,
-                                              kBlanketTintMin, kBlanketTintMax);
+  v.blanket_color =
+      cloth_base * rand_between(seed, k_salt_blanket_tint, k_blanket_tint_min,
+                                k_blanket_tint_max);
 
   return v;
 }
@@ -277,17 +287,18 @@ auto make_horse_profile(uint32_t seed, const QVector3D &leather_base,
   profile.variant = make_horse_variant(seed, leather_base, cloth_base);
 
   profile.gait.cycle_time =
-      rand_between(seed, kSaltCycleTime, kCycleTimeMin, kCycleTimeMax);
-  profile.gait.front_leg_phase = rand_between(
-      seed, kSaltFrontLegPhase, kFrontLegPhaseMin, kFrontLegPhaseMax);
-  float const diagonal_lead =
-      rand_between(seed, kSaltDiagonalLead, kDiagonalLeadMin, kDiagonalLeadMax);
+      rand_between(seed, k_salt_cycle_time, k_cycle_time_min, k_cycle_time_max);
+  profile.gait.front_leg_phase =
+      rand_between(seed, k_salt_front_leg_phase, k_front_leg_phase_min,
+                   k_front_leg_phase_max);
+  float const diagonal_lead = rand_between(
+      seed, k_salt_diagonal_lead, k_diagonal_lead_min, k_diagonal_lead_max);
   profile.gait.rear_leg_phase =
       std::fmod(profile.gait.front_leg_phase + diagonal_lead, 1.0F);
-  profile.gait.stride_swing =
-      rand_between(seed, kSaltStrideSwing, kStrideSwingMin, kStrideSwingMax);
-  profile.gait.stride_lift =
-      rand_between(seed, kSaltStrideLift, kStrideLiftMin, kStrideLiftMax);
+  profile.gait.stride_swing = rand_between(
+      seed, k_salt_stride_swing, k_stride_swing_min, k_stride_swing_max);
+  profile.gait.stride_lift = rand_between(seed, k_salt_stride_lift,
+                                          k_stride_lift_min, k_stride_lift_max);
 
   profile.gait.phase_offset = hash01(seed ^ 0xF105E7U);
   profile.gait.stride_jitter = (hash01(seed ^ 0xA17B2U) - 0.5F) * 0.10F;

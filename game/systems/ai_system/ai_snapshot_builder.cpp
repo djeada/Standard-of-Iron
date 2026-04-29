@@ -14,25 +14,17 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
   auto friendlies = world.get_units_owned_by(ai_owner_id);
   snapshot.friendly_units.reserve(friendlies.size());
 
-  int skipped_no_ai = 0;
-  int skipped_no_unit = 0;
-  int skipped_dead = 0;
-  int added = 0;
-
   for (auto *entity : friendlies) {
     if (!entity->has_component<Engine::Core::AIControlledComponent>()) {
-      skipped_no_ai++;
       continue;
     }
 
     auto *unit = entity->get_component<Engine::Core::UnitComponent>();
     if (unit == nullptr) {
-      skipped_no_unit++;
       continue;
     }
 
     if (unit->health <= 0) {
-      skipped_dead++;
       continue;
     }
 
@@ -84,7 +76,6 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
     }
 
     snapshot.friendly_units.push_back(std::move(data));
-    added++;
   }
 
   auto enemies = world.get_enemy_units(ai_owner_id);

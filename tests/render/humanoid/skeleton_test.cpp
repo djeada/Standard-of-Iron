@@ -27,7 +27,7 @@ using Render::GL::HumanoidPose;
 
 namespace {
 
-constexpr float kEps = 1e-4F;
+constexpr float k_eps = 1e-4F;
 
 // Minimal well-formed pose: standing upright, arms at sides.
 auto make_upright_pose() -> HumanoidPose {
@@ -55,17 +55,17 @@ auto basis_is_orthonormal(const QMatrix4x4 &m) -> bool {
   QVector3D const x = m.column(0).toVector3D();
   QVector3D const y = m.column(1).toVector3D();
   QVector3D const z = m.column(2).toVector3D();
-  if (std::abs(x.length() - 1.0F) > kEps)
+  if (std::abs(x.length() - 1.0F) > k_eps)
     return false;
-  if (std::abs(y.length() - 1.0F) > kEps)
+  if (std::abs(y.length() - 1.0F) > k_eps)
     return false;
-  if (std::abs(z.length() - 1.0F) > kEps)
+  if (std::abs(z.length() - 1.0F) > k_eps)
     return false;
-  if (std::abs(QVector3D::dotProduct(x, y)) > kEps)
+  if (std::abs(QVector3D::dotProduct(x, y)) > k_eps)
     return false;
-  if (std::abs(QVector3D::dotProduct(x, z)) > kEps)
+  if (std::abs(QVector3D::dotProduct(x, z)) > k_eps)
     return false;
-  if (std::abs(QVector3D::dotProduct(y, z)) > kEps)
+  if (std::abs(QVector3D::dotProduct(y, z)) > k_eps)
     return false;
   return true;
 }
@@ -73,10 +73,10 @@ auto basis_is_orthonormal(const QMatrix4x4 &m) -> bool {
 } // namespace
 
 TEST(HumanoidSkeletonTest, ParentIndicesAreTopologicallySorted) {
-  EXPECT_EQ(parent_of(HumanoidBone::Root), kInvalidBone);
-  for (std::size_t i = 1; i < kBoneCount; ++i) {
-    std::uint8_t const parent = kBoneParents[i];
-    ASSERT_NE(parent, kInvalidBone)
+  EXPECT_EQ(parent_of(HumanoidBone::Root), k_invalid_bone);
+  for (std::size_t i = 1; i < k_bone_count; ++i) {
+    std::uint8_t const parent = k_bone_parents[i];
+    ASSERT_NE(parent, k_invalid_bone)
         << "bone " << bone_name(static_cast<HumanoidBone>(i))
         << " has no parent";
     EXPECT_LT(parent, i) << "bone " << bone_name(static_cast<HumanoidBone>(i))
@@ -85,7 +85,7 @@ TEST(HumanoidSkeletonTest, ParentIndicesAreTopologicallySorted) {
 }
 
 TEST(HumanoidSkeletonTest, EveryBoneHasAName) {
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_bone_count; ++i) {
     EXPECT_FALSE(bone_name(static_cast<HumanoidBone>(i)).empty());
   }
 }
@@ -95,7 +95,7 @@ TEST(HumanoidSkeletonTest, EvaluatorFillsEveryBoneWithOrthonormalBasis) {
   BonePalette palette;
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
 
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_bone_count; ++i) {
     EXPECT_TRUE(basis_is_orthonormal(palette[i]))
         << "bone " << bone_name(static_cast<HumanoidBone>(i))
         << " has non-orthonormal basis";
@@ -111,12 +111,13 @@ TEST(HumanoidSkeletonTest, TorsoChainOriginsMatchPose) {
     return palette[static_cast<std::size_t>(b)].column(3).toVector3D();
   };
 
-  EXPECT_LT((origin_of(HumanoidBone::Pelvis) - pose.pelvis_pos).length(), kEps);
-  EXPECT_LT((origin_of(HumanoidBone::Head) - pose.head_pos).length(), kEps);
-  EXPECT_LT((origin_of(HumanoidBone::HandL) - pose.hand_l).length(), kEps);
-  EXPECT_LT((origin_of(HumanoidBone::HandR) - pose.hand_r).length(), kEps);
-  EXPECT_LT((origin_of(HumanoidBone::FootL) - pose.foot_l).length(), kEps);
-  EXPECT_LT((origin_of(HumanoidBone::FootR) - pose.foot_r).length(), kEps);
+  EXPECT_LT((origin_of(HumanoidBone::Pelvis) - pose.pelvis_pos).length(),
+            k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::Head) - pose.head_pos).length(), k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::HandL) - pose.hand_l).length(), k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::HandR) - pose.hand_r).length(), k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::FootL) - pose.foot_l).length(), k_eps);
+  EXPECT_LT((origin_of(HumanoidBone::FootR) - pose.foot_r).length(), k_eps);
 }
 
 TEST(HumanoidSkeletonTest, SpineLongAxisPointsUpForUprightPose) {
@@ -140,7 +141,7 @@ TEST(HumanoidSkeletonTest, ForearmLongAxisPointsFromElbowToHand) {
       palette[static_cast<std::size_t>(HumanoidBone::ForearmR)]
           .column(1)
           .toVector3D();
-  EXPECT_LT((got - expected).length(), kEps);
+  EXPECT_LT((got - expected).length(), k_eps);
 }
 
 TEST(HumanoidSkeletonTest, DegenerateBoneFallsBackToWorldUp) {
@@ -154,7 +155,7 @@ TEST(HumanoidSkeletonTest, DegenerateBoneFallsBackToWorldUp) {
 
   BonePalette palette;
   evaluate_skeleton(p, QVector3D(1.0F, 0.0F, 0.0F), palette);
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_bone_count; ++i) {
     EXPECT_TRUE(basis_is_orthonormal(palette[i]));
   }
 }
@@ -163,7 +164,7 @@ TEST(HumanoidSkeletonTest, ZeroLengthRightAxisFallsBackToWorldRight) {
   auto const pose = make_upright_pose();
   BonePalette palette;
   evaluate_skeleton(pose, QVector3D(0.0F, 0.0F, 0.0F), palette);
-  for (std::size_t i = 0; i < kBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_bone_count; ++i) {
     EXPECT_TRUE(basis_is_orthonormal(palette[i]));
   }
 }
@@ -174,12 +175,12 @@ TEST(HumanoidSocketTest, HeadSocketTracksHeadPosition) {
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
 
   QVector3D const head_origin = socket_position(palette, HumanoidSocket::Head);
-  EXPECT_LT((head_origin - pose.head_pos).length(), kEps);
+  EXPECT_LT((head_origin - pose.head_pos).length(), k_eps);
 
   pose.head_pos += QVector3D(0.0F, 0.2F, 0.15F);
   evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F), palette);
   QVector3D const moved = socket_position(palette, HumanoidSocket::Head);
-  EXPECT_LT((moved - pose.head_pos).length(), kEps);
+  EXPECT_LT((moved - pose.head_pos).length(), k_eps);
 }
 
 TEST(HumanoidSocketTest, HandSocketsMatchHandPositions) {
@@ -189,10 +190,10 @@ TEST(HumanoidSocketTest, HandSocketsMatchHandPositions) {
 
   EXPECT_LT(
       (socket_position(palette, HumanoidSocket::HandR) - pose.hand_r).length(),
-      kEps);
+      k_eps);
   EXPECT_LT(
       (socket_position(palette, HumanoidSocket::HandL) - pose.hand_l).length(),
-      kEps);
+      k_eps);
 }
 
 TEST(HumanoidSocketTest, BackSocketIsBehindChest) {

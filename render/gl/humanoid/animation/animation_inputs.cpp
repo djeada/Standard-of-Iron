@@ -122,7 +122,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     anim.is_hit_reacting = true;
     float const progress =
         hit_feedback->reaction_time /
-        Engine::Core::HitFeedbackComponent::kReactionDuration;
+        Engine::Core::HitFeedbackComponent::k_reaction_duration;
     anim.hit_reaction_intensity =
         hit_feedback->reaction_intensity * std::max(0.0F, 1.0F - progress);
   }

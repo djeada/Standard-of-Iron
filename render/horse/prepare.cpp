@@ -21,8 +21,8 @@ namespace Render::Horse {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet kHorseClips{0U, 1U, 2U,
-                                                           3U, 4U, 5U};
+constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U,
+                                                             3U, 4U, 5U};
 
 auto default_full_horse_request_seed(
     const Render::GL::DrawContext &ctx) noexcept -> std::uint32_t {
@@ -55,7 +55,7 @@ auto horse_state_for_motion(
 auto horse_clip_for_motion(const Render::GL::HorseMotionSample &motion) noexcept
     -> std::uint16_t {
   return Render::Creature::Quadruped::clip_for_motion(
-      kHorseClips, motion.gait_type, motion.is_fighting);
+      k_horse_clips, motion.gait_type, motion.is_fighting);
 }
 
 void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,

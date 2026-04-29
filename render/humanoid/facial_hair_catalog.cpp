@@ -465,7 +465,8 @@ auto facial_hair_role_colors(const Render::GL::HumanoidVariant &variant,
                              std::size_t max_count) -> std::uint32_t {
   if (variant.facial_hair.style == Render::GL::FacialHairStyle::None ||
       variant.facial_hair.coverage < 0.01F || out == nullptr ||
-      max_count < static_cast<std::size_t>(base_count + kFacialHairRoleCount)) {
+      max_count <
+          static_cast<std::size_t>(base_count + k_facial_hair_role_count)) {
     return base_count;
   }
 
@@ -474,7 +475,7 @@ auto facial_hair_role_colors(const Render::GL::HumanoidVariant &variant,
   out[base_count + 1U] = saturate_color(hair);
   out[base_count + 2U] =
       saturate_color(hair * 1.08F + QVector3D(0.03F, 0.03F, 0.03F));
-  return base_count + kFacialHairRoleCount;
+  return base_count + k_facial_hair_role_count;
 }
 
 auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
@@ -512,7 +513,7 @@ auto resolve_facial_hair_archetype(Render::Creature::ArchetypeId base_archetype,
       facial_hair_make_static_attachment(variant.facial_hair.style,
                                          desc.role_count);
   desc.role_count =
-      static_cast<std::uint8_t>(desc.role_count + kFacialHairRoleCount);
+      static_cast<std::uint8_t>(desc.role_count + k_facial_hair_role_count);
   desc.append_extra_role_colors_fn(+[](const void *variant_void, QVector3D *out,
                                        std::uint32_t base_count,
                                        std::size_t max_count) -> std::uint32_t {

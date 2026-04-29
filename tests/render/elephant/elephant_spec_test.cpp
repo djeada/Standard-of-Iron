@@ -159,7 +159,7 @@ auto baked_vertex_count_for_role(
 }
 
 auto shader_role_color(
-    const std::array<QVector3D, Render::Elephant::kElephantRoleCount> &roles,
+    const std::array<QVector3D, Render::Elephant::k_elephant_role_count> &roles,
     std::uint8_t role) -> QVector3D {
   if (role == 0U) {
     return QVector3D();
@@ -267,7 +267,7 @@ TEST(ElephantSpecTest, AnimatedPoseKeepsForwardTrunkAndLighterHeadRead) {
 TEST(ElephantSpecTest, RoleColorsUseWhiteTusksAndBlackEyes) {
   auto const variant = Render::GL::make_elephant_variant(
       0U, QVector3D(0.2F, 0.3F, 0.4F), QVector3D(0.5F, 0.6F, 0.7F));
-  std::array<QVector3D, Render::Elephant::kElephantRoleCount> roles{};
+  std::array<QVector3D, Render::Elephant::k_elephant_role_count> roles{};
   Render::Elephant::fill_elephant_role_colors(variant, roles);
 
   EXPECT_EQ(shader_role_color(roles, 6U), QVector3D(1.0F, 1.0F, 1.0F));
@@ -477,10 +477,9 @@ TEST(ElephantSpecTest, ManifestBridgesTrunkAndAddsEyes) {
     EXPECT_EQ(node.color_role, 7U);
     EXPECT_GT(std::abs(eye->center.x()), head_shape->radii.x() * 0.50F);
     EXPECT_LT(std::abs(eye->center.x()), head_shape->radii.x() * 0.58F);
-    EXPECT_GT(eye->center.z() + eye->radii.z(),
-              head_front_z - head_shape->radii.z() * 0.03F);
-    EXPECT_LT(eye->center.z() + eye->radii.z(),
-              head_front_z + head_shape->radii.z() * 0.005F);
+    float const eye_front_z = eye->center.z() + eye->radii.z();
+    EXPECT_GT(eye_front_z, head_front_z - head_shape->radii.z() * 0.14F);
+    EXPECT_LT(eye_front_z, head_front_z - head_shape->radii.z() * 0.08F);
     EXPECT_GT(eye->radii.x(), 0.025F);
     ++eye_count;
   }

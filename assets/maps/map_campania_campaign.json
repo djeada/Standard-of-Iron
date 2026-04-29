@@ -1,29 +1,29 @@
 {
   "name": "Campania Campaign",
   "description": "Defend the rich Campanian territories against Roman counteroffensives - hold strategic villages while repelling attacks from multiple directions",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 2500,
+  "coord_system": "grid",
+  "max_troops_per_player": 2500,
   "grid": {
     "width": 140,
     "height": 160,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "soil_fertile",
+    "ground_type": "soil_fertile",
     "seed": 10006,
-    "patchDensity": 3.0,
-    "patchJitter": 0.86,
-    "plantDensity": 0.55,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.13,
-    "irregularityAmplitude": 0.07
+    "patch_density": 3.0,
+    "patch_jitter": 0.86,
+    "plant_density": 0.55,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.13,
+    "irregularity_amplitude": 0.07
   },
   "camera": {
     "center": [70, 0, 80],
     "distance": 38.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 480.0
   },
@@ -32,173 +32,173 @@
       "type": "spearman",
       "x": 65,
       "z": 75,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 68,
       "z": 78,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 62,
       "z": 72,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 70,
       "z": 80,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "swordsman",
       "x": 73,
       "z": 77,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 55,
       "z": 80,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 85,
       "z": 80,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 65,
       "z": 85,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 75,
       "z": 85,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 70,
       "z": 80,
-      "playerId": 1,
-      "maxPopulation": 200,
+      "player_id": 1,
+      "max_population": 200,
       "nation": "carthage"
     },
     {
       "type": "village",
       "x": 40,
       "z": 95,
-      "playerId": 1,
+      "player_id": 1,
       "description": "Western Campanian village"
     },
     {
       "type": "village",
       "x": 100,
       "z": 95,
-      "playerId": 1,
+      "player_id": 1,
       "description": "Eastern Campanian village"
     },
     {
       "type": "village",
       "x": 70,
       "z": 50,
-      "playerId": 1,
+      "player_id": 1,
       "description": "Forward observation village"
     },
     {
       "type": "spearman",
       "x": 70,
       "z": 145,
-      "playerId": 2,
+      "player_id": 2,
       "description": "Northern Roman force"
     },
     {
       "type": "spearman",
       "x": 73,
       "z": 148,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 67,
       "z": 142,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 75,
       "z": 145,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 65,
       "z": 145,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 70,
       "z": 150,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 70,
       "z": 155,
-      "playerId": 2,
-      "maxPopulation": 180,
+      "player_id": 2,
+      "max_population": 180,
       "nation": "roman_republic"
     },
     {
       "type": "spearman",
       "x": 70,
       "z": 15,
-      "playerId": 3,
+      "player_id": 3,
       "description": "Southern Roman force"
     },
     {
       "type": "spearman",
       "x": 73,
       "z": 12,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "spearman",
       "x": 67,
       "z": 18,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "swordsman",
       "x": 75,
       "z": 15,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "swordsman",
       "x": 65,
       "z": 15,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "archer",
       "x": 70,
       "z": 10,
-      "playerId": 3
+      "player_id": 3
     },
     {
       "type": "barracks",
       "x": 70,
       "z": 5,
-      "playerId": 3,
-      "maxPopulation": 180,
+      "player_id": 3,
+      "max_population": 180,
       "nation": "roman_republic"
     }
   ],

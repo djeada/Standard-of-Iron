@@ -89,8 +89,8 @@ void GuardSystem::update(Engine::Core::World *world, float) {
         float const dist_sq = dx * dx + dz * dz;
 
         float const k_return_threshold_sq =
-            Engine::Core::Defaults::kGuardReturnThreshold *
-            Engine::Core::Defaults::kGuardReturnThreshold;
+            Engine::Core::Defaults::k_guard_return_threshold *
+            Engine::Core::Defaults::k_guard_return_threshold;
 
         if (dist_sq > k_return_threshold_sq) {
           guard_mode->returning_to_guard_position = true;

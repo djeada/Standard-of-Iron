@@ -25,7 +25,7 @@ using Render::Creature::PrimitiveInstance;
 using Render::GL::ISubmitter;
 using Render::Humanoid::humanoid_creature_spec;
 using Render::Humanoid::HumanoidBone;
-using Render::Humanoid::kBoneCount;
+using Render::Humanoid::k_bone_count;
 
 // Minimal no-op ISubmitter for spec-level tests.
 class NullSubmitter : public ISubmitter {
@@ -69,7 +69,7 @@ TEST(HumanoidSpecTest, SpeciesNameIsPopulated) {
 
 TEST(HumanoidSpecTest, TopologyBoneCountMatchesEnum) {
   CreatureSpec const &s = humanoid_creature_spec();
-  EXPECT_EQ(s.topology.bones.size(), kBoneCount);
+  EXPECT_EQ(s.topology.bones.size(), k_bone_count);
   EXPECT_EQ(s.topology.bones.size(),
             static_cast<std::size_t>(HumanoidBone::Count));
 }
@@ -132,7 +132,7 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
 
   // Billboard LOD is still unpopulated — Full is populated as of
   // Stage 15.5d so it no longer belongs in this "empty LOD" guard.
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
@@ -262,7 +262,7 @@ TEST(HumanoidSpecTest, MinimalLodEmitsExactlyOneCapsule) {
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);
@@ -284,7 +284,7 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);
@@ -386,7 +386,7 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);
@@ -431,7 +431,7 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);
@@ -473,7 +473,7 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
-  std::array<QMatrix4x4, kBoneCount> palette;
+  std::array<QMatrix4x4, k_bone_count> palette;
   Render::Humanoid::evaluate_skeleton(pose, QVector3D(1.0F, 0.0F, 0.0F),
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);

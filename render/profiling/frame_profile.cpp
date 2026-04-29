@@ -14,7 +14,7 @@ auto format_overlay(const FrameProfile &profile) -> std::string {
   std::string out;
   out.reserve(256);
 
-  char line[128];
+  char line[192];
 
   std::uint64_t const total = profile.total_us();
   double const total_ms = static_cast<double>(total) / 1000.0;

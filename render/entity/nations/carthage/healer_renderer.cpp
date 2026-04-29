@@ -93,8 +93,8 @@ public:
     static const UnitVisualSpec spec = []() {
       static const auto k_chest_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const auto k_armor_base_role_byte =
-          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
+          Render::Humanoid::k_humanoid_role_count + 1U);
       static const Render::Creature::StaticAttachmentSpec k_armor_spec =
           Render::GL::armor_light_carthage_make_static_attachment(
               k_chest_bone, k_armor_base_role_byte);

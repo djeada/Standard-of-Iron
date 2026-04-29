@@ -49,9 +49,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   m_owner_box->addItem(QStringLiteral("Local Player"), kArenaLocalOwnerId);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"), kArenaOpponentOwnerId);
   auto *animation_box = new QComboBox(this);
-  animation_box->addItems(
-      {QStringLiteral("Idle"), QStringLiteral("Walk"),
-       QStringLiteral("Attack"), QStringLiteral("Death")});
+  animation_box->addItems({QStringLiteral("Idle"), QStringLiteral("Walk"),
+                           QStringLiteral("Attack"), QStringLiteral("Death")});
   form->addRow("Side", m_owner_box);
   form->addRow("Nation", m_nation_box);
   form->addRow("Unit", m_unit_box);
@@ -94,17 +93,15 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
           [this](int) { emit spawnOwnerSelected(selectedOwnerId()); });
   connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
           [this](int) {
-    if (m_nation_box == nullptr) {
-      return;
-    }
-    const QString nation_id = selectedNationId();
-    populateUnitOptions(nation_id);
-    emit nationSelected(nation_id);
-  });
+            if (m_nation_box == nullptr) {
+              return;
+            }
+            const QString nation_id = selectedNationId();
+            populateUnitOptions(nation_id);
+            emit nationSelected(nation_id);
+          });
   connect(m_unit_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) {
-    emit unitTypeSelected(selectedUnitTypeId());
-  });
+          [this](int) { emit unitTypeSelected(selectedUnitTypeId()); });
   connect(animation_box, &QComboBox::currentTextChanged, this,
           &UnitPanel::animationSelected);
   connect(play_button, &QPushButton::clicked, this,
@@ -116,12 +113,13 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   connect(skeleton_debug_box, &QCheckBox::toggled, this,
           &UnitPanel::skeletonDebugToggled);
 
-  connect(speed_slider, &QSlider::valueChanged, speed_spin, [speed_spin](int value) {
-    const QSignalBlocker blocker(speed_spin);
-    speed_spin->setValue(static_cast<double>(value) / 10.0);
-  });
-  connect(speed_spin, qOverload<double>(&QDoubleSpinBox::valueChanged), speed_slider,
-          [speed_slider](double value) {
+  connect(speed_slider, &QSlider::valueChanged, speed_spin,
+          [speed_spin](int value) {
+            const QSignalBlocker blocker(speed_spin);
+            speed_spin->setValue(static_cast<double>(value) / 10.0);
+          });
+  connect(speed_spin, qOverload<double>(&QDoubleSpinBox::valueChanged),
+          speed_slider, [speed_slider](double value) {
             const QSignalBlocker blocker(speed_slider);
             speed_slider->setValue(static_cast<int>(value * 10.0));
           });
@@ -153,7 +151,8 @@ auto UnitPanel::selectedNationId() const -> QString {
 }
 
 auto UnitPanel::selectedUnitTypeId() const -> QString {
-  return m_unit_box != nullptr ? m_unit_box->currentData().toString() : QString();
+  return m_unit_box != nullptr ? m_unit_box->currentData().toString()
+                               : QString();
 }
 
 void UnitPanel::populateNationOptions() {
@@ -206,8 +205,8 @@ void UnitPanel::populateUnitOptions(const QString &nationId,
     return;
   }
 
-  QString preferred = preferredUnitType.isEmpty() ? selectedUnitTypeId()
-                                                  : preferredUnitType;
+  QString preferred =
+      preferredUnitType.isEmpty() ? selectedUnitTypeId() : preferredUnitType;
 
   m_unit_box->clear();
   for (const auto &troop : nation->available_troops) {

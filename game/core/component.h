@@ -15,23 +15,23 @@
 namespace Engine::Core {
 
 namespace Defaults {
-inline constexpr int kUnitDefaultHealth = 100;
-inline constexpr float kUnitDefaultVisionRange = 12.0F;
+inline constexpr int k_unit_default_health = 100;
+inline constexpr float k_unit_default_vision_range = 12.0F;
 
-inline constexpr float kAttackDefaultRange = 2.0F;
-inline constexpr int kAttackDefaultDamage = 10;
-inline constexpr float kAttackMeleeRange = 1.5F;
-inline constexpr float kAttackHeightTolerance = 2.0F;
+inline constexpr float k_attack_default_range = 2.0F;
+inline constexpr int k_attack_default_damage = 10;
+inline constexpr float k_attack_melee_range = 1.5F;
+inline constexpr float k_attack_height_tolerance = 2.0F;
 
-inline constexpr float kProductionDefaultBuildTime = 4.0F;
-inline constexpr int kProductionMaxUnits = 10000;
+inline constexpr float k_production_default_build_time = 4.0F;
+inline constexpr int k_production_max_units = 10000;
 
-inline constexpr float kCaptureRequiredTime = 15.0F;
+inline constexpr float k_capture_required_time = 15.0F;
 
-inline constexpr float kHoldStandUpDuration = 2.0F;
+inline constexpr float k_hold_stand_up_duration = 2.0F;
 
-inline constexpr float kGuardDefaultRadius = 10.0F;
-inline constexpr float kGuardReturnThreshold = 1.0F;
+inline constexpr float k_guard_default_radius = 10.0F;
+inline constexpr float k_guard_return_threshold = 1.0F;
 } // namespace Defaults
 
 class TransformComponent : public Component {
@@ -73,10 +73,10 @@ public:
 
 class UnitComponent : public Component {
 public:
-  UnitComponent(int health = Defaults::kUnitDefaultHealth,
-                int max_health = Defaults::kUnitDefaultHealth,
+  UnitComponent(int health = Defaults::k_unit_default_health,
+                int max_health = Defaults::k_unit_default_health,
                 float speed = 1.0F,
-                float vision = Defaults::kUnitDefaultVisionRange)
+                float vision = Defaults::k_unit_default_vision_range)
       : health(health), max_health(max_health), speed(speed),
         vision_range(vision) {}
 
@@ -146,13 +146,13 @@ class AttackComponent : public Component {
 public:
   enum class CombatMode { Ranged, Melee, Auto };
 
-  AttackComponent(float range = Defaults::kAttackDefaultRange,
-                  int damage = Defaults::kAttackDefaultDamage,
+  AttackComponent(float range = Defaults::k_attack_default_range,
+                  int damage = Defaults::k_attack_default_damage,
                   float cooldown = 1.0F)
       : range(range), damage(damage), cooldown(cooldown),
-        melee_range(Defaults::kAttackMeleeRange), melee_damage(damage),
+        melee_range(Defaults::k_attack_melee_range), melee_damage(damage),
         melee_cooldown(cooldown),
-        max_height_difference(Defaults::kAttackHeightTolerance) {}
+        max_height_difference(Defaults::k_attack_height_tolerance) {}
 
   float range;
   int damage;
@@ -226,14 +226,14 @@ public:
   bool is_hit_paused{false};
   float hit_pause_remaining{0.0F};
 
-  static constexpr float kHitPauseDuration = 0.05F;
-  static constexpr float kAdvanceDuration = 0.12F;
-  static constexpr float kWindUpDuration = 0.15F;
-  static constexpr float kStrikeDuration = 0.20F;
-  static constexpr float kImpactDuration = 0.08F;
-  static constexpr float kRecoverDuration = 0.25F;
-  static constexpr float kRepositionDuration = 0.15F;
-  static constexpr std::uint8_t kMaxAttackVariants = 3;
+  static constexpr float k_combat_animation_hit_pause_duration = 0.05F;
+  static constexpr float k_advance_duration = 0.12F;
+  static constexpr float k_wind_up_duration = 0.15F;
+  static constexpr float k_strike_duration = 0.20F;
+  static constexpr float k_impact_duration = 0.08F;
+  static constexpr float k_recover_duration = 0.25F;
+  static constexpr float k_reposition_duration = 0.15F;
+  static constexpr std::uint8_t k_max_attack_variants = 3;
 };
 
 class HitFeedbackComponent : public Component {
@@ -246,8 +246,8 @@ public:
   float knockback_x{0.0F};
   float knockback_z{0.0F};
 
-  static constexpr float kReactionDuration = 0.25F;
-  static constexpr float kMaxKnockback = 0.15F;
+  static constexpr float k_reaction_duration = 0.25F;
+  static constexpr float k_max_knockback = 0.15F;
 };
 
 class PatrolComponent : public Component {
@@ -274,9 +274,9 @@ public:
 class ProductionComponent : public Component {
 public:
   ProductionComponent()
-      : build_time(Defaults::kProductionDefaultBuildTime),
+      : build_time(Defaults::k_production_default_build_time),
 
-        max_units(Defaults::kProductionMaxUnits) {}
+        max_units(Defaults::k_production_max_units) {}
 
   bool in_progress{false};
   float build_time;
@@ -297,7 +297,7 @@ public:
 
 class CaptureComponent : public Component {
 public:
-  CaptureComponent() : required_time(Defaults::kCaptureRequiredTime) {}
+  CaptureComponent() : required_time(Defaults::k_capture_required_time) {}
 
   int capturing_player_id{-1};
   float capture_progress{0.0F};
@@ -332,7 +332,7 @@ public:
 
 class HoldModeComponent : public Component {
 public:
-  HoldModeComponent() : stand_up_duration(Defaults::kHoldStandUpDuration) {}
+  HoldModeComponent() : stand_up_duration(Defaults::k_hold_stand_up_duration) {}
 
   bool active{true};
   float exit_cooldown{0.0F};
@@ -341,7 +341,7 @@ public:
 
 class GuardModeComponent : public Component {
 public:
-  GuardModeComponent() : guard_radius(Defaults::kGuardDefaultRadius) {}
+  GuardModeComponent() : guard_radius(Defaults::k_guard_default_radius) {}
 
   bool active{true};
   EntityID guarded_entity_id{0};
@@ -421,18 +421,18 @@ public:
 
 class StaminaComponent : public Component {
 public:
-  static constexpr float kRunSpeedMultiplier = 1.5F;
-  static constexpr float kMinStaminaToStartRun = 10.0F;
-  static constexpr float kDefaultMaxStamina = 100.0F;
-  static constexpr float kDefaultRegenRate = 10.0F;
-  static constexpr float kDefaultDepletionRate = 20.0F;
+  static constexpr float k_run_speed_multiplier = 1.5F;
+  static constexpr float k_min_stamina_to_start_run = 10.0F;
+  static constexpr float k_default_max_stamina = 100.0F;
+  static constexpr float k_default_regen_rate = 10.0F;
+  static constexpr float k_default_depletion_rate = 20.0F;
 
   StaminaComponent() noexcept = default;
 
-  float stamina{kDefaultMaxStamina};
-  float max_stamina{kDefaultMaxStamina};
-  float regen_rate{kDefaultRegenRate};
-  float depletion_rate{kDefaultDepletionRate};
+  float stamina{k_default_max_stamina};
+  float max_stamina{k_default_max_stamina};
+  float regen_rate{k_default_regen_rate};
+  float depletion_rate{k_default_depletion_rate};
   bool is_running{false};
   bool run_requested{false};
 
@@ -441,7 +441,7 @@ public:
   }
 
   [[nodiscard]] auto can_start_running() const noexcept -> bool {
-    return stamina >= kMinStaminaToStartRun;
+    return stamina >= k_min_stamina_to_start_run;
   }
 
   [[nodiscard]] auto has_stamina() const noexcept -> bool {
@@ -473,7 +473,7 @@ public:
   bool is_at_hill_entrance{false};
   float audio_cooldown{0.0F};
 
-  static constexpr float kAudioCooldownTime = 5.0F;
+  static constexpr float k_audio_cooldown_time = 5.0F;
 };
 
 class ElephantComponent : public Component {

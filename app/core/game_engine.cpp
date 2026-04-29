@@ -108,6 +108,7 @@
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
 #include "game/systems/owner_registry.h"
+#include "game/systems/pathfinding.h"
 #include "game/systems/patrol_system.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/production_service.h"
@@ -143,6 +144,7 @@
 #include "render/ground/rain_renderer.h"
 #include "render/ground/stone_renderer.h"
 #include "render/ground/terrain_renderer.h"
+#include "render/profiling/frame_profile.h"
 #include "render/scene_renderer.h"
 #include "utils/resource_utils.h"
 #include <QDir>
@@ -514,7 +516,7 @@ GameEngine::GameEngine(QObject *parent)
                 e.killer_owner_id == m_runtime.local_owner_id) {
 
               int const production_cost =
-                  Game::Units::TroopConfig::instance().getProductionCost(
+                  Game::Units::TroopConfig::instance().get_production_cost(
                       e.spawn_type);
               m_enemyTroopsDefeated += production_cost;
               emit enemy_troops_defeated_changed();
@@ -2818,7 +2820,7 @@ void GameEngine::on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event) {
       m_entity_cache.player_barracks_alive = true;
     } else {
       int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
+          Game::Units::TroopConfig::instance().get_production_cost(
               event.spawn_type);
       m_entity_cache.player_troop_count += production_cost;
     }
@@ -2846,7 +2848,7 @@ void GameEngine::on_unit_died(const Engine::Core::UnitDiedEvent &event) {
       m_entity_cache.player_barracks_alive = false;
     } else {
       int const production_cost =
-          Game::Units::TroopConfig::instance().getProductionCost(
+          Game::Units::TroopConfig::instance().get_production_cost(
               event.spawn_type);
       m_entity_cache.player_troop_count -= production_cost;
       m_entity_cache.player_troop_count =

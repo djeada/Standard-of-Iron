@@ -27,6 +27,11 @@ public:
     bool group_move = false;
   };
 
+  struct MoveIntent {
+    Engine::Core::EntityID unit_id{};
+    QVector3D target;
+  };
+
   static constexpr int DIRECT_PATH_THRESHOLD = 8;
 
   static constexpr float WAYPOINT_SKIP_THRESHOLD_SQ = 0.16F;
@@ -39,6 +44,14 @@ public:
   static auto get_unit_radius(Engine::Core::World &world,
                               Engine::Core::EntityID entity_id) -> float;
 
+  static void move_unit(Engine::Core::World &world,
+                        Engine::Core::EntityID unit_id,
+                        const QVector3D &target);
+
+  static void move_unit(Engine::Core::World &world,
+                        Engine::Core::EntityID unit_id, const QVector3D &target,
+                        const MoveOptions &options);
+
   static void move_units(Engine::Core::World &world,
                          const std::vector<Engine::Core::EntityID> &units,
                          const std::vector<QVector3D> &targets);
@@ -46,6 +59,13 @@ public:
   static void move_units(Engine::Core::World &world,
                          const std::vector<Engine::Core::EntityID> &units,
                          const std::vector<QVector3D> &targets,
+                         const MoveOptions &options);
+
+  static void move_units(Engine::Core::World &world,
+                         const std::vector<MoveIntent> &intents);
+
+  static void move_units(Engine::Core::World &world,
+                         const std::vector<MoveIntent> &intents,
                          const MoveOptions &options);
 
   static void process_path_results(Engine::Core::World &world);

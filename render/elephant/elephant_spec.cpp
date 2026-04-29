@@ -23,7 +23,7 @@ using Render::Creature::PartGraph;
 using Render::Creature::PrimitiveInstance;
 using Render::Creature::SkeletonTopology;
 
-constexpr std::array<BoneDef, kElephantBoneCount> kElephantBones = {{
+constexpr std::array<BoneDef, k_elephant_bone_count> k_elephant_bones = {{
     {"Root", Render::Creature::kInvalidBone},
     {"Body", static_cast<BoneIndex>(ElephantBone::Root)},
     {"ShoulderFL", static_cast<BoneIndex>(ElephantBone::Root)},
@@ -42,13 +42,13 @@ constexpr std::array<BoneDef, kElephantBoneCount> kElephantBones = {{
     {"TrunkTip", static_cast<BoneIndex>(ElephantBone::Head)},
 }};
 
-constexpr std::array<Render::Creature::SocketDef, 0> kElephantSockets{};
-constexpr std::uint8_t kRoleSkin = 1;
-constexpr int kElephantMaterialId = 6;
+constexpr std::array<Render::Creature::SocketDef, 0> k_elephant_sockets{};
+constexpr std::uint8_t k_role_skin = 1;
+constexpr int k_elephant_material_id = 6;
 
-constexpr SkeletonTopology kElephantTopology{
-    std::span<const BoneDef>(kElephantBones),
-    std::span<const Render::Creature::SocketDef>(kElephantSockets),
+constexpr SkeletonTopology k_elephant_topology{
+    std::span<const BoneDef>(k_elephant_bones),
+    std::span<const Render::Creature::SocketDef>(k_elephant_sockets),
 };
 
 constexpr float k_pi = 3.14159265358979323846F;
@@ -237,7 +237,7 @@ void evaluate_elephant_skeleton(const ElephantSpecPose &pose,
 
 void fill_elephant_role_colors(
     const Render::GL::ElephantVariant &variant,
-    std::array<QVector3D, kElephantRoleCount> &out_roles) noexcept {
+    std::array<QVector3D, k_elephant_role_count> &out_roles) noexcept {
   out_roles.fill(QVector3D(0.0F, 0.0F, 0.0F));
   out_roles[0] = variant.skin_color;
   out_roles[1] = variant.skin_color;
@@ -424,11 +424,11 @@ auto baseline_pose() noexcept -> const ElephantSpecPose & {
 }
 
 auto build_elephant_bind_palette() noexcept
-    -> std::array<QMatrix4x4, kElephantBoneCount> {
-  std::array<QMatrix4x4, kElephantBoneCount> out{};
+    -> std::array<QMatrix4x4, k_elephant_bone_count> {
+  std::array<QMatrix4x4, k_elephant_bone_count> out{};
   BonePalette tmp{};
   evaluate_elephant_skeleton(baseline_pose(), tmp);
-  for (std::size_t i = 0; i < kElephantBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_elephant_bone_count; ++i) {
     out[i] = tmp[i];
   }
   return out;
@@ -466,19 +466,19 @@ auto elephant_creature_spec() noexcept
 auto compute_elephant_bone_palette(const ElephantSpecPose &pose,
                                    std::span<QMatrix4x4> out_bones) noexcept
     -> std::uint32_t {
-  if (out_bones.size() < kElephantBoneCount) {
+  if (out_bones.size() < k_elephant_bone_count) {
     return 0U;
   }
   BonePalette tmp{};
   evaluate_elephant_skeleton(pose, tmp);
-  for (std::size_t i = 0; i < kElephantBoneCount; ++i) {
+  for (std::size_t i = 0; i < k_elephant_bone_count; ++i) {
     out_bones[i] = tmp[i];
   }
-  return static_cast<std::uint32_t>(kElephantBoneCount);
+  return static_cast<std::uint32_t>(k_elephant_bone_count);
 }
 
 auto elephant_bind_palette() noexcept -> std::span<const QMatrix4x4> {
-  static const std::array<QMatrix4x4, kElephantBoneCount> palette =
+  static const std::array<QMatrix4x4, k_elephant_bone_count> palette =
       build_elephant_bind_palette();
   return std::span<const QMatrix4x4>(palette.data(), palette.size());
 }

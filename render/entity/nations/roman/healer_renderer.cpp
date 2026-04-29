@@ -294,8 +294,8 @@ public:
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Head);
       static const auto k_chest_bone =
           static_cast<std::uint16_t>(Render::Humanoid::HumanoidBone::Chest);
-      static const auto k_helmet_base_role_byte =
-          static_cast<std::uint8_t>(Render::Humanoid::kHumanoidRoleCount + 1U);
+      static const auto k_helmet_base_role_byte = static_cast<std::uint8_t>(
+          Render::Humanoid::k_humanoid_role_count + 1U);
       static const auto k_armor_base_role_byte = static_cast<std::uint8_t>(
           k_helmet_base_role_byte + Render::GL::kRomanLightHelmetRoleCount);
       static const auto k_tunic_base_role_byte = static_cast<std::uint8_t>(

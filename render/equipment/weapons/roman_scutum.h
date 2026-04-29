@@ -10,7 +10,7 @@
 
 namespace Render::GL {
 
-inline constexpr std::uint32_t kRomanScutumRoleCount = 7;
+inline constexpr std::uint32_t k_roman_scutum_role_count = 7;
 
 struct RomanScutumConfig {};
 

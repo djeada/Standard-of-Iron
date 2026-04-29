@@ -16,11 +16,11 @@ constexpr float ROMAN_LINE_SPACING = 3.5F;
 constexpr float ROMAN_UNIT_SPACING = 2.5F;
 constexpr float CARTHAGE_LINE_SPACING = 3.0F;
 constexpr float CARTHAGE_UNIT_SPACING = 2.8F;
-constexpr float kRomanInfantryLateralSpacingScale = 1.10F;
-constexpr float kRomanInfantryDepthSpacingScale = 1.12F;
-constexpr float kCavalryLateralSpacingScale = 0.72F;
-constexpr float kCavalryRankStaggerScale = 0.50F;
-constexpr float kCavalryRearDepthBiasScale = 0.18F;
+constexpr float k_roman_infantry_lateral_spacing_scale = 1.10F;
+constexpr float k_roman_infantry_depth_spacing_scale = 1.12F;
+constexpr float k_cavalry_lateral_spacing_scale = 0.72F;
+constexpr float k_cavalry_rank_stagger_scale = 0.50F;
+constexpr float k_cavalry_rear_depth_bias_scale = 0.18F;
 
 auto get_unit_spacing(Game::Units::TroopType type,
                       float base_spacing) -> float {
@@ -83,7 +83,7 @@ auto calculate_balanced_rows(int total_units, int max_per_row,
 }
 
 auto cavalry_lateral_spacing(float forward_spacing) -> float {
-  return forward_spacing * kCavalryLateralSpacingScale;
+  return forward_spacing * k_cavalry_lateral_spacing_scale;
 }
 
 auto cavalry_front_rank_index(int row, int rows) -> int {
@@ -104,8 +104,9 @@ auto cavalry_row_yaw(int row, int rows) -> float {
 auto roman_infantry_local_offset(int row, int col, int rows, int cols,
                                  float spacing) -> FormationOffset {
   return {(col - (cols - 1) * 0.5F) * spacing *
-              kRomanInfantryLateralSpacingScale,
-          (row - (rows - 1) * 0.5F) * spacing * kRomanInfantryDepthSpacingScale,
+              k_roman_infantry_lateral_spacing_scale,
+          (row - (rows - 1) * 0.5F) * spacing *
+              k_roman_infantry_depth_spacing_scale,
           0.0F};
 }
 
@@ -115,9 +116,9 @@ auto cavalry_local_offset(int row, int col, int rows, int cols,
   float const centered_col = float(col) - float(cols - 1) * 0.5F;
   float const centered_row = float(row) - float(rows - 1) * 0.5F;
   float const stagger =
-      (row % 2 == 1) ? side_spacing * kCavalryRankStaggerScale : 0.0F;
+      (row % 2 == 1) ? side_spacing * k_cavalry_rank_stagger_scale : 0.0F;
   float const rear_depth_bias = float(cavalry_front_rank_index(row, rows)) *
-                                spacing * kCavalryRearDepthBiasScale;
+                                spacing * k_cavalry_rear_depth_bias_scale;
   return {(centered_col * side_spacing) + stagger,
           (centered_row * spacing) - rear_depth_bias,
           cavalry_row_yaw(row, rows)};

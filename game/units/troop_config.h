@@ -23,33 +23,33 @@ public:
     return 1;
   }
 
-  auto getProductionCost(TroopType unit_type) const -> int {
-    auto it = m_productionCost.find(unit_type);
-    if (it != m_productionCost.end()) {
+  auto get_production_cost(TroopType unit_type) const -> int {
+    auto it = m_production_cost.find(unit_type);
+    if (it != m_production_cost.end()) {
       return it->second;
     }
     return 50;
   }
 
-  auto getBuildTime(TroopType unit_type) const -> float {
-    auto it = m_buildTime.find(unit_type);
-    if (it != m_buildTime.end()) {
+  auto get_build_time(TroopType unit_type) const -> float {
+    auto it = m_build_time.find(unit_type);
+    if (it != m_build_time.end()) {
       return it->second;
     }
     return 5.0F;
   }
 
   auto get_max_units_per_row(TroopType unit_type) const -> int {
-    auto it = m_maxUnitsPerRow.find(unit_type);
-    if (it != m_maxUnitsPerRow.end()) {
+    auto it = m_max_units_per_row.find(unit_type);
+    if (it != m_max_units_per_row.end()) {
       return it->second;
     }
     return 10;
   }
 
   auto get_selection_ring_size(TroopType unit_type) const -> float {
-    auto it = m_selectionRingSize.find(unit_type);
-    if (it != m_selectionRingSize.end()) {
+    auto it = m_selection_ring_size.find(unit_type);
+    if (it != m_selection_ring_size.end()) {
       return it->second;
     }
     return 0.5F;
@@ -67,26 +67,26 @@ public:
     return 1;
   }
 
-  auto getProductionCost(const std::string &unit_type) const -> int {
-    return getProductionCost(troop_typeFromString(unit_type));
+  auto get_production_cost(const std::string &unit_type) const -> int {
+    return get_production_cost(troop_typeFromString(unit_type));
   }
 
-  auto getProductionCost(SpawnType spawn_type) const -> int {
+  auto get_production_cost(SpawnType spawn_type) const -> int {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getProductionCost(*troop_type_opt);
+      return get_production_cost(*troop_type_opt);
     }
     return 50;
   }
 
-  auto getBuildTime(const std::string &unit_type) const -> float {
-    return getBuildTime(troop_typeFromString(unit_type));
+  auto get_build_time(const std::string &unit_type) const -> float {
+    return get_build_time(troop_typeFromString(unit_type));
   }
 
-  auto getBuildTime(SpawnType spawn_type) const -> float {
+  auto get_build_time(SpawnType spawn_type) const -> float {
     auto troop_type_opt = spawn_typeToTroopType(spawn_type);
     if (troop_type_opt) {
-      return getBuildTime(*troop_type_opt);
+      return get_build_time(*troop_type_opt);
     }
     return 5.0F;
   }
@@ -116,8 +116,8 @@ public:
   }
 
   auto get_selection_ring_ground_offset(TroopType unit_type) const -> float {
-    auto it = m_selectionRingGroundOffset.find(unit_type);
-    if (it != m_selectionRingGroundOffset.end()) {
+    auto it = m_selection_ring_ground_offset.find(unit_type);
+    if (it != m_selection_ring_ground_offset.end()) {
       return it->second;
     }
 
@@ -142,20 +142,22 @@ public:
     return 0.0F;
   }
 
-  void registerTroopType(TroopType unit_type, int individuals_per_unit) {
+  void register_troop_type(TroopType unit_type, int individuals_per_unit) {
     m_individuals_per_unit[unit_type] = individuals_per_unit;
   }
 
-  void registerMaxUnitsPerRow(TroopType unit_type, int maxUnitsPerRow) {
-    m_maxUnitsPerRow[unit_type] = maxUnitsPerRow;
+  void register_max_units_per_row(TroopType unit_type, int max_units_per_row) {
+    m_max_units_per_row[unit_type] = max_units_per_row;
   }
 
-  void registerSelectionRingSize(TroopType unit_type, float selectionRingSize) {
-    m_selectionRingSize[unit_type] = selectionRingSize;
+  void register_selection_ring_size(TroopType unit_type,
+                                    float selection_ring_size) {
+    m_selection_ring_size[unit_type] = selection_ring_size;
   }
 
-  void registerSelectionRingGroundOffset(TroopType unit_type, float offset) {
-    m_selectionRingGroundOffset[unit_type] = offset;
+  void register_selection_ring_ground_offset(TroopType unit_type,
+                                             float offset) {
+    m_selection_ring_ground_offset[unit_type] = offset;
   }
 
   void refresh_from_catalog() { reload_from_catalog(); }
@@ -165,32 +167,32 @@ private:
 
   void reload_from_catalog() {
     m_individuals_per_unit.clear();
-    m_productionCost.clear();
-    m_buildTime.clear();
-    m_maxUnitsPerRow.clear();
-    m_selectionRingSize.clear();
-    m_selectionRingGroundOffset.clear();
+    m_production_cost.clear();
+    m_build_time.clear();
+    m_max_units_per_row.clear();
+    m_selection_ring_size.clear();
+    m_selection_ring_ground_offset.clear();
 
     const auto &classes = TroopCatalog::instance().get_all_classes();
     for (const auto &entry : classes) {
       const auto &troop_class = entry.second;
       auto type = troop_class.unit_type;
       m_individuals_per_unit[type] = troop_class.individuals_per_unit;
-      m_productionCost[type] = troop_class.production.cost;
-      m_buildTime[type] = troop_class.production.build_time;
-      m_maxUnitsPerRow[type] = troop_class.max_units_per_row;
-      m_selectionRingSize[type] = troop_class.visuals.selection_ring_size;
-      m_selectionRingGroundOffset[type] =
+      m_production_cost[type] = troop_class.production.cost;
+      m_build_time[type] = troop_class.production.build_time;
+      m_max_units_per_row[type] = troop_class.max_units_per_row;
+      m_selection_ring_size[type] = troop_class.visuals.selection_ring_size;
+      m_selection_ring_ground_offset[type] =
           troop_class.visuals.selection_ring_ground_offset;
     }
   }
 
   std::unordered_map<TroopType, int> m_individuals_per_unit;
-  std::unordered_map<TroopType, int> m_productionCost;
-  std::unordered_map<TroopType, float> m_buildTime;
-  std::unordered_map<TroopType, int> m_maxUnitsPerRow;
-  std::unordered_map<TroopType, float> m_selectionRingSize;
-  std::unordered_map<TroopType, float> m_selectionRingGroundOffset;
+  std::unordered_map<TroopType, int> m_production_cost;
+  std::unordered_map<TroopType, float> m_build_time;
+  std::unordered_map<TroopType, int> m_max_units_per_row;
+  std::unordered_map<TroopType, float> m_selection_ring_size;
+  std::unordered_map<TroopType, float> m_selection_ring_ground_offset;
 };
 
 } // namespace Game::Units

@@ -15,7 +15,8 @@
 
 namespace {
 
-void bind_slider_to_double(QSlider *slider, QDoubleSpinBox *spin_box, double scale,
+void bind_slider_to_double(QSlider *slider, QDoubleSpinBox *spin_box,
+                           double scale,
                            const std::function<void(double)> &emit_value) {
   QObject::connect(slider, &QSlider::valueChanged, spin_box,
                    [spin_box, scale](int value) {
@@ -82,11 +83,16 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QGroupBox("Terrain", parent) {
   form->addRow("Frequency", frequency_container);
 
   auto *ground_type_box = new QComboBox(this);
-  ground_type_box->addItem(QStringLiteral("Forest Mud"), QStringLiteral("forest_mud"));
-  ground_type_box->addItem(QStringLiteral("Grass Dry"), QStringLiteral("grass_dry"));
-  ground_type_box->addItem(QStringLiteral("Soil Rocky"), QStringLiteral("soil_rocky"));
-  ground_type_box->addItem(QStringLiteral("Alpine Mix"), QStringLiteral("alpine_mix"));
-  ground_type_box->addItem(QStringLiteral("Soil Fertile"), QStringLiteral("soil_fertile"));
+  ground_type_box->addItem(QStringLiteral("Forest Mud"),
+                           QStringLiteral("forest_mud"));
+  ground_type_box->addItem(QStringLiteral("Grass Dry"),
+                           QStringLiteral("grass_dry"));
+  ground_type_box->addItem(QStringLiteral("Soil Rocky"),
+                           QStringLiteral("soil_rocky"));
+  ground_type_box->addItem(QStringLiteral("Alpine Mix"),
+                           QStringLiteral("alpine_mix"));
+  ground_type_box->addItem(QStringLiteral("Soil Fertile"),
+                           QStringLiteral("soil_fertile"));
   form->addRow("Ground Type", ground_type_box);
 
   layout->addLayout(form);
@@ -106,7 +112,8 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QGroupBox("Terrain", parent) {
   auto *rain_intensity_container = new QWidget(rain_section);
   auto *rain_intensity_layout = new QHBoxLayout(rain_intensity_container);
   rain_intensity_layout->setContentsMargins(0, 0, 0, 0);
-  auto *rain_intensity_slider = new QSlider(Qt::Horizontal, rain_intensity_container);
+  auto *rain_intensity_slider =
+      new QSlider(Qt::Horizontal, rain_intensity_container);
   auto *rain_intensity_spin = new QDoubleSpinBox(rain_intensity_container);
   rain_intensity_slider->setRange(0, 100);
   rain_intensity_slider->setValue(50);
@@ -139,10 +146,9 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QGroupBox("Terrain", parent) {
           });
   connect(rain_box, &QCheckBox::toggled, this, &TerrainPanel::rainToggled);
 
-  bind_slider_to_double(height_slider, height_spin, 20.0,
-                        [this](double value) {
-                          emit heightScaleChanged(static_cast<float>(value));
-                        });
+  bind_slider_to_double(height_slider, height_spin, 20.0, [this](double value) {
+    emit heightScaleChanged(static_cast<float>(value));
+  });
   bind_slider_to_double(frequency_slider, frequency_spin, 100.0,
                         [this](double value) {
                           emit frequencyChanged(static_cast<float>(value));

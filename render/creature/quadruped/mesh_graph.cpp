@@ -130,6 +130,76 @@ auto make_oval_ring(float cx, float cz, float top_y, float bot_y,
   };
 }
 
+auto make_horse_rump_ring(float cx, float cz, float top_y, float bot_y,
+                          float half_w) -> std::vector<QVector3D> {
+  float const h = top_y - bot_y;
+  float const y0 = top_y;
+  float const y1 = top_y - h * 0.16F;
+  float const y2 = top_y - h * 0.34F;
+  float const y3 = top_y - h * 0.62F;
+  float const y4 = bot_y + h * 0.18F;
+  float const y5 = bot_y;
+
+  return {
+      {cx, y0, cz},
+      {cx + half_w * 0.34F, y1, cz},
+      {cx + half_w * 0.82F, y2, cz},
+      {cx + half_w, y3, cz},
+      {cx + half_w * 0.58F, y4, cz},
+      {cx, y5, cz},
+      {cx - half_w * 0.58F, y4, cz},
+      {cx - half_w, y3, cz},
+      {cx - half_w * 0.82F, y2, cz},
+      {cx - half_w * 0.34F, y1, cz},
+  };
+}
+
+auto make_horse_head_ring(float cx, float cz, float top_y, float bot_y,
+                          float half_w) -> std::vector<QVector3D> {
+  float const h = top_y - bot_y;
+  float const y0 = top_y;
+  float const y1 = top_y - h * 0.18F;
+  float const y2 = top_y - h * 0.40F;
+  float const y3 = bot_y + h * 0.28F;
+  float const y4 = bot_y + h * 0.08F;
+
+  return {
+      {cx, y0, cz},
+      {cx + half_w * 0.42F, y1, cz},
+      {cx + half_w, y2, cz},
+      {cx + half_w * 0.82F, y3, cz},
+      {cx + half_w * 0.30F, y4, cz},
+      {cx, bot_y + h * 0.04F, cz},
+      {cx - half_w * 0.30F, y4, cz},
+      {cx - half_w * 0.82F, y3, cz},
+      {cx - half_w, y2, cz},
+      {cx - half_w * 0.42F, y1, cz},
+  };
+}
+
+auto make_horse_muzzle_ring(float cx, float cz, float top_y, float bot_y,
+                            float half_w) -> std::vector<QVector3D> {
+  float const h = top_y - bot_y;
+  float const y0 = top_y;
+  float const y1 = top_y - h * 0.16F;
+  float const y2 = top_y - h * 0.34F;
+  float const y3 = bot_y + h * 0.32F;
+  float const y4 = bot_y + h * 0.14F;
+
+  return {
+      {cx, y0, cz},
+      {cx + half_w * 0.40F, y1, cz},
+      {cx + half_w, y2, cz},
+      {cx + half_w * 0.88F, y3, cz},
+      {cx + half_w * 0.46F, y4, cz},
+      {cx, bot_y + h * 0.10F, cz},
+      {cx - half_w * 0.46F, y4, cz},
+      {cx - half_w * 0.88F, y3, cz},
+      {cx - half_w, y2, cz},
+      {cx - half_w * 0.40F, y1, cz},
+  };
+}
+
 auto make_round_ring(QVector3D center, float rx, float ry,
                      std::size_t vertex_count) -> std::vector<QVector3D> {
   return make_oriented_ring(center, QVector3D(0.0F, 0.0F, 1.0F), rx, ry,
@@ -213,10 +283,27 @@ auto build_barrel_mesh(const BarrelNode &node)
   std::vector<std::vector<QVector3D>> rings;
   rings.reserve(node.rings.size());
   for (const BarrelRing &ring : node.rings) {
-    rings.push_back(make_oval_ring(0.0F, ring.z * node.scale.z(),
-                                   (ring.y + ring.top) * node.scale.y(),
-                                   (ring.y - ring.bottom) * node.scale.y(),
-                                   ring.half_width * node.scale.x()));
+    if (node.horse_muzzle_profile) {
+      rings.push_back(make_horse_muzzle_ring(
+          0.0F, ring.z * node.scale.z(), (ring.y + ring.top) * node.scale.y(),
+          (ring.y - ring.bottom) * node.scale.y(),
+          ring.half_width * node.scale.x()));
+    } else if (node.horse_head_profile) {
+      rings.push_back(make_horse_head_ring(
+          0.0F, ring.z * node.scale.z(), (ring.y + ring.top) * node.scale.y(),
+          (ring.y - ring.bottom) * node.scale.y(),
+          ring.half_width * node.scale.x()));
+    } else if (node.horse_rump_profile) {
+      rings.push_back(make_horse_rump_ring(
+          0.0F, ring.z * node.scale.z(), (ring.y + ring.top) * node.scale.y(),
+          (ring.y - ring.bottom) * node.scale.y(),
+          ring.half_width * node.scale.x()));
+    } else {
+      rings.push_back(make_oval_ring(0.0F, ring.z * node.scale.z(),
+                                     (ring.y + ring.top) * node.scale.y(),
+                                     (ring.y - ring.bottom) * node.scale.y(),
+                                     ring.half_width * node.scale.x()));
+    }
   }
 
   std::vector<Render::GL::Vertex> vertices;

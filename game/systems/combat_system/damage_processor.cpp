@@ -138,7 +138,7 @@ void apply_hit_feedback(Engine::Core::Entity *target,
         float const dist = std::sqrt(dx * dx + dz * dz);
         if (dist > 0.001F) {
           float const knockback =
-              Engine::Core::HitFeedbackComponent::kMaxKnockback;
+              Engine::Core::HitFeedbackComponent::k_max_knockback;
           feedback->knockback_x = (dx / dist) * knockback;
           feedback->knockback_z = (dz / dist) * knockback;
         }
@@ -150,8 +150,8 @@ void apply_hit_feedback(Engine::Core::Entity *target,
       target->get_component<Engine::Core::CombatStateComponent>();
   if (combat_state != nullptr) {
     combat_state->is_hit_paused = true;
-    combat_state->hit_pause_remaining =
-        Engine::Core::CombatStateComponent::kHitPauseDuration;
+    combat_state->hit_pause_remaining = Engine::Core::CombatStateComponent::
+        k_combat_animation_hit_pause_duration;
   }
 }
 

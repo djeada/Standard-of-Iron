@@ -1,29 +1,29 @@
 {
   "name": "Battle of Ticino",
   "description": "First clash on Italian soil - cavalry battle on fertile Po Valley farmland near the Ticino River",
-  "coordSystem": "grid",
-  "maxTroopsPerPlayer": 1800,
+  "coord_system": "grid",
+  "max_troops_per_player": 1800,
   "grid": {
     "width": 200,
     "height": 120,
-    "tileSize": 1.0
+    "tile_size": 1.0
   },
   "biome": {
-    "groundType": "soil_fertile",
+    "ground_type": "soil_fertile",
     "seed": 10002,
-    "patchDensity": 3.5,
-    "patchJitter": 0.9,
-    "plantDensity": 0.6,
-    "groundIrregularityEnabled": true,
-    "irregularityScale": 0.12,
-    "irregularityAmplitude": 0.06
+    "patch_density": 3.5,
+    "patch_jitter": 0.9,
+    "plant_density": 0.6,
+    "ground_irregularity_enabled": true,
+    "irregularity_scale": 0.12,
+    "irregularity_amplitude": 0.06
   },
   "camera": {
     "center": [100, 0, 60],
     "distance": 35.0,
-    "tiltDeg": 45.0,
+    "tilt_deg": 45.0,
     "yaw": 225.0,
-    "fovY": 45.0,
+    "fov_y": 45.0,
     "near": 1.0,
     "far": 500.0
   },
@@ -32,118 +32,118 @@
       "type": "horse_swordsman",
       "x": 45,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 48,
       "z": 58,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_swordsman",
       "x": 42,
       "z": 52,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 40,
       "z": 60,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "horse_archer",
       "x": 38,
       "z": 55,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 50,
       "z": 65,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "spearman",
       "x": 52,
       "z": 68,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "archer",
       "x": 46,
       "z": 70,
-      "playerId": 1
+      "player_id": 1
     },
     {
       "type": "barracks",
       "x": 30,
       "z": 60,
-      "playerId": 1,
-      "maxPopulation": 150,
+      "player_id": 1,
+      "max_population": 150,
       "nation": "carthage"
     },
     {
       "type": "horse_swordsman",
       "x": 155,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 158,
       "z": 58,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "horse_swordsman",
       "x": 152,
       "z": 52,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 160,
       "z": 60,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 162,
       "z": 63,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "spearman",
       "x": 165,
       "z": 55,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 150,
       "z": 65,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "swordsman",
       "x": 153,
       "z": 68,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "archer",
       "x": 158,
       "z": 70,
-      "playerId": 2
+      "player_id": 2
     },
     {
       "type": "barracks",
       "x": 175,
       "z": 60,
-      "playerId": 2,
-      "maxPopulation": 180,
+      "player_id": 2,
+      "max_population": 180,
       "nation": "roman_republic"
     }
   ],
