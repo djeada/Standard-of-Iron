@@ -6,6 +6,7 @@
 #include <cstring>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <ostream>
 #include <unordered_map>
 
@@ -13,13 +14,28 @@ namespace Render::Creature::Snapshot {
 
 namespace {
 
-void write_pod(std::ostream &out, const void *src, std::size_t bytes) {
-  out.write(static_cast<const char *>(src),
-            static_cast<std::streamsize>(bytes));
+constexpr std::size_t k_write_chunk_bytes = 1U << 20;
+
+auto write_pod(std::ostream &out, const void *src, std::size_t bytes) -> bool {
+  auto const *cursor = static_cast<const char *>(src);
+  while (bytes != 0U) {
+    std::size_t const chunk_size = std::min<std::size_t>(
+        bytes, std::min<std::size_t>(
+                   k_write_chunk_bytes,
+                   static_cast<std::size_t>(
+                       std::numeric_limits<std::streamsize>::max())));
+    out.write(cursor, static_cast<std::streamsize>(chunk_size));
+    if (!out.good()) {
+      return false;
+    }
+    cursor += chunk_size;
+    bytes -= chunk_size;
+  }
+  return true;
 }
 
-void pad_to_alignment(std::ostream &out, std::uint64_t current,
-                      std::uint64_t alignment) {
+auto pad_to_alignment(std::ostream &out, std::uint64_t current,
+                      std::uint64_t alignment) -> bool {
   std::uint64_t const padded =
       Render::Creature::Bpat::align_up(current, alignment);
   std::uint64_t const pad = padded - current;
@@ -28,8 +44,12 @@ void pad_to_alignment(std::ostream &out, std::uint64_t current,
     auto const chunk = static_cast<std::streamsize>(
         std::min<std::uint64_t>(remaining, zeros.size()));
     out.write(zeros.data(), chunk);
+    if (!out.good()) {
+      return false;
+    }
     remaining -= static_cast<std::uint64_t>(chunk);
   }
+  return true;
 }
 
 auto lod_from_u32(std::uint32_t raw,
@@ -338,26 +358,39 @@ auto SnapshotMeshWriter::write(std::ostream &out) const -> bool {
   header.vertex_data_offset = vertex_data_offset;
 
   std::uint64_t written = 0U;
-  write_pod(out, &header, sizeof(header));
+  if (!write_pod(out, &header, sizeof(header))) {
+    return false;
+  }
   written += sizeof(header);
 
   if (!clip_entries.empty()) {
-    write_pod(out, clip_entries.data(),
-              clip_entries.size() * sizeof(SnapshotMeshClipEntry));
+    if (!write_pod(out, clip_entries.data(),
+                   clip_entries.size() * sizeof(SnapshotMeshClipEntry))) {
+      return false;
+    }
     written += clip_entries.size() * sizeof(SnapshotMeshClipEntry);
   }
   if (!string_table.empty()) {
-    write_pod(out, string_table.data(), string_table.size());
+    if (!write_pod(out, string_table.data(), string_table.size())) {
+      return false;
+    }
     written += string_table.size();
   }
-  pad_to_alignment(out, written, Render::Creature::Bpat::kSectionAlignment);
+  if (!pad_to_alignment(out, written, Render::Creature::Bpat::kSectionAlignment)) {
+    return false;
+  }
 
   if (!m_indices.empty()) {
-    write_pod(out, m_indices.data(), m_indices.size() * sizeof(std::uint32_t));
+    if (!write_pod(out, m_indices.data(),
+                   m_indices.size() * sizeof(std::uint32_t))) {
+      return false;
+    }
   }
   if (!m_vertices.empty()) {
-    write_pod(out, m_vertices.data(),
-              m_vertices.size() * sizeof(Render::GL::RiggedVertex));
+    if (!write_pod(out, m_vertices.data(),
+                   m_vertices.size() * sizeof(Render::GL::RiggedVertex))) {
+      return false;
+    }
   }
   return out.good();
 }
