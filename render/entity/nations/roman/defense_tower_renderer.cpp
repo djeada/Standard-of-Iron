@@ -47,7 +47,6 @@ auto tower_archetype() -> const RenderArchetype & {
     TowerPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
     BuildingArchetypeDesc desc("roman_defense_tower");
 
-    // Outer stepped foundation for visual weight
     desc.add_box(QVector3D(0.0F, 0.05F, 0.0F), QVector3D(1.25F, 0.05F, 1.25F),
                  c.limestone_dark);
     desc.add_box(QVector3D(0.0F, 0.12F, 0.0F), QVector3D(1.1F, 0.12F, 1.1F),
@@ -70,17 +69,16 @@ auto tower_archetype() -> const RenderArchetype & {
     desc.add_cylinder(QVector3D(0.0F, 0.5F, 0.0F), QVector3D(0.0F, 2.2F, 0.0F),
                       0.55F, c.limestone);
 
-    // Marble belt course visible on cylinder exterior at mid-height
-    desc.add_cylinder(QVector3D(0.0F, 1.34F, 0.0F), QVector3D(0.0F, 1.40F, 0.0F),
-                      0.60F, c.marble);
+    desc.add_cylinder(QVector3D(0.0F, 1.34F, 0.0F),
+                      QVector3D(0.0F, 1.40F, 0.0F), 0.60F, c.marble);
 
     for (int i = 0; i < 4; ++i) {
       float const angle = static_cast<float>(i) * 1.57F + 0.785F;
       float const ox = sinf(angle) * 0.48F;
       float const oz = cosf(angle) * 0.48F;
 
-      desc.add_cylinder(QVector3D(ox, 0.5F, oz), QVector3D(ox, 2.05F, oz), 0.09F,
-                        c.marble);
+      desc.add_cylinder(QVector3D(ox, 0.5F, oz), QVector3D(ox, 2.05F, oz),
+                        0.09F, c.marble);
       desc.add_box(QVector3D(ox, 0.60F, oz), QVector3D(0.13F, 0.09F, 0.13F),
                    c.marble, BuildingStateMask::All, BuildingLODMask::Full);
       desc.add_box(QVector3D(ox, 2.10F, oz), QVector3D(0.14F, 0.09F, 0.14F),
@@ -89,7 +87,6 @@ auto tower_archetype() -> const RenderArchetype & {
                    c.gold, BuildingStateMask::All, BuildingLODMask::Full);
     }
 
-    // Arrow-slit markers on the cylinder exterior at cardinal directions
     for (int i = 0; i < 4; ++i) {
       float const angle = static_cast<float>(i) * 1.57F;
       float const ox = sinf(angle) * 0.57F;
@@ -99,13 +96,11 @@ auto tower_archetype() -> const RenderArchetype & {
                    BuildingLODMask::Full);
     }
 
-    // Projecting cornice ledge capping the tower shaft
-    desc.add_cylinder(QVector3D(0.0F, 2.20F, 0.0F), QVector3D(0.0F, 2.26F, 0.0F),
-                      0.64F, c.limestone);
+    desc.add_cylinder(QVector3D(0.0F, 2.20F, 0.0F),
+                      QVector3D(0.0F, 2.26F, 0.0F), 0.64F, c.limestone);
     desc.add_box(QVector3D(0.0F, 2.32F, 0.0F), QVector3D(0.8F, 0.05F, 0.8F),
                  c.cedar);
 
-    // Taller, more imposing merlons
     for (int i = 0; i < 8; ++i) {
       float const angle = static_cast<float>(i) * 0.785F;
       float const ox = sinf(angle) * 0.7F;
@@ -124,8 +119,8 @@ auto tower_archetype() -> const RenderArchetype & {
       }
     }
 
-    desc.add_cylinder(QVector3D(0.0F, 2.28F, 0.0F), QVector3D(0.0F, 3.20F, 0.0F),
-                      0.07F, c.cedar_dark);
+    desc.add_cylinder(QVector3D(0.0F, 2.28F, 0.0F),
+                      QVector3D(0.0F, 3.20F, 0.0F), 0.07F, c.cedar_dark);
     desc.add_palette_box(QVector3D(0.12F, 2.84F, 0.0F),
                          QVector3D(0.24F, 0.16F, 0.025F), kTowerTeamSlot);
     for (int i = 0; i < 2; ++i) {

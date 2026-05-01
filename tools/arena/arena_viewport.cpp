@@ -1407,10 +1407,9 @@ void ArenaViewport::spawn_buildings(int count) {
   update();
 }
 
-auto ArenaViewport::spawn_single_building(int owner_id,
-                                          Game::Systems::NationID nation_id,
-                                          Game::Units::SpawnType building_type)
-    -> Engine::Core::EntityID {
+auto ArenaViewport::spawn_single_building(
+    int owner_id, Game::Systems::NationID nation_id,
+    Game::Units::SpawnType building_type) -> Engine::Core::EntityID {
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
@@ -1422,18 +1421,15 @@ auto ArenaViewport::spawn_single_building(int owner_id,
     }
     auto *entity = m_world->get_entity(unit->id());
     auto *unit_component =
-        entity != nullptr
-            ? entity->get_component<Engine::Core::UnitComponent>()
-            : nullptr;
-    if (unit_component != nullptr &&
-        unit_component->owner_id == owner_id &&
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if (unit_component != nullptr && unit_component->owner_id == owner_id &&
         Game::Units::is_building_spawn(unit_component->spawn_type)) {
       ++building_count;
     }
   }
 
-  float const column =
-      static_cast<float>(building_count % k_buildings_per_row);
+  float const column = static_cast<float>(building_count % k_buildings_per_row);
   float const row = static_cast<float>(building_count / k_buildings_per_row);
   float const world_x =
       (column - static_cast<float>(k_buildings_per_row - 1) * 0.5F) *
@@ -1478,9 +1474,8 @@ void ArenaViewport::clear_buildings() {
     }
     auto *entity = m_world->get_entity((*it)->id());
     auto *unit_component =
-        entity != nullptr
-            ? entity->get_component<Engine::Core::UnitComponent>()
-            : nullptr;
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
     if (unit_component != nullptr &&
         Game::Units::is_building_spawn(unit_component->spawn_type)) {
       if (selection != nullptr) {

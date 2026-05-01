@@ -163,8 +163,8 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
     renderer->mesh(arrow_tip_mesh, model, metal_color, nullptr, 1.0F);
 
     QMatrix4x4 fletch_model = model;
-    fletch_model.translate(0.0F, 0.0F,
-                           -arrow_z_scale * Geom::Arrow::k_fletch_z_offset_factor);
+    fletch_model.translate(
+        0.0F, 0.0F, -arrow_z_scale * Geom::Arrow::k_fletch_z_offset_factor);
     fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_xy_scale,
                        Geom::Arrow::k_fletch_z_scale);

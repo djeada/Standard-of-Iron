@@ -151,12 +151,9 @@ void BuildingArchetypeDesc::add_cylinder(const QVector3D &start,
   m_parts.push_back(std::move(part));
 }
 
-void BuildingArchetypeDesc::add_palette_cylinder(const QVector3D &start,
-                                                 const QVector3D &end,
-                                                 float radius,
-                                                 std::uint8_t palette_slot,
-                                                 BuildingStateMask states,
-                                                 BuildingLODMask lod) {
+void BuildingArchetypeDesc::add_palette_cylinder(
+    const QVector3D &start, const QVector3D &end, float radius,
+    std::uint8_t palette_slot, BuildingStateMask states, BuildingLODMask lod) {
   BuildingPartDesc part;
   part.kind = BuildingPartKind::PaletteCylinder;
   part.point_a = start;

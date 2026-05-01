@@ -97,9 +97,10 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &QAction::setChecked);
   connect(m_viewport, &ArenaViewport::paused_changed, m_unit_panel,
           &UnitPanel::set_animation_paused);
-  connect(m_viewport, &ArenaViewport::paused_changed, this, [this](bool paused) {
-    m_status_label->setText(paused ? "Paused" : "Running");
-  });
+  connect(m_viewport, &ArenaViewport::paused_changed, this,
+          [this](bool paused) {
+            m_status_label->setText(paused ? "Paused" : "Running");
+          });
 
   connect(m_terrain_panel, &TerrainPanel::seed_changed, m_viewport,
           &ArenaViewport::set_terrain_seed);
@@ -132,12 +133,12 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &ArenaViewport::set_spawn_nation);
   connect(m_unit_panel, &UnitPanel::unit_type_selected, m_viewport,
           &ArenaViewport::set_spawn_unit_type);
-  connect(m_unit_panel, &UnitPanel::spawn_individuals_per_unit_changed, m_viewport,
-          &ArenaViewport::set_spawn_individuals_per_unit);
+  connect(m_unit_panel, &UnitPanel::spawn_individuals_per_unit_changed,
+          m_viewport, &ArenaViewport::set_spawn_individuals_per_unit);
   connect(m_unit_panel, &UnitPanel::spawn_rider_visibility_changed, m_viewport,
           &ArenaViewport::set_spawn_rider_visible);
-  connect(m_unit_panel, &UnitPanel::apply_visual_overrides_requested, m_viewport,
-          &ArenaViewport::apply_visual_overrides_to_selection);
+  connect(m_unit_panel, &UnitPanel::apply_visual_overrides_requested,
+          m_viewport, &ArenaViewport::apply_visual_overrides_to_selection);
   connect(m_unit_panel, &UnitPanel::spawn_opposing_batch_requested, m_viewport,
           &ArenaViewport::spawn_opposing_batch);
   connect(m_unit_panel, &UnitPanel::spawn_mirror_match_requested, m_viewport,
@@ -165,8 +166,8 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           m_viewport, &ArenaViewport::clear_buildings);
   connect(m_building_panel, &BuildingPanel::building_owner_selected, m_viewport,
           &ArenaViewport::set_spawn_building_owner);
-  connect(m_building_panel, &BuildingPanel::building_nation_selected, m_viewport,
-          &ArenaViewport::set_spawn_building_nation);
+  connect(m_building_panel, &BuildingPanel::building_nation_selected,
+          m_viewport, &ArenaViewport::set_spawn_building_nation);
   connect(m_building_panel, &BuildingPanel::building_type_selected, m_viewport,
           &ArenaViewport::set_spawn_building_type);
   connect(m_viewport, &ArenaViewport::selection_summary_changed,
@@ -178,5 +179,6 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
 
   m_viewport->set_spawn_building_owner(m_building_panel->selected_owner_id());
   m_viewport->set_spawn_building_nation(m_building_panel->selected_nation_id());
-  m_viewport->set_spawn_building_type(m_building_panel->selected_building_type_id());
+  m_viewport->set_spawn_building_type(
+      m_building_panel->selected_building_type_id());
 }

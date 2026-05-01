@@ -17,10 +17,9 @@ namespace {
 
 thread_local std::mt19937 gen(std::random_device{}());
 
-auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
-                                 Engine::Core::World *world, float range,
-                                 float max_height_diff)
-    -> Engine::Core::Entity * {
+auto find_nearest_enemy_in_range(
+    Engine::Core::Entity *tower, Engine::Core::World *world, float range,
+    float max_height_diff) -> Engine::Core::Entity * {
   auto *tower_unit = tower->get_component<Engine::Core::UnitComponent>();
   auto *tower_transform =
       tower->get_component<Engine::Core::TransformComponent>();
@@ -121,9 +120,8 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
 
     QVector3D const start =
         tower_pos + dir * 0.5F + perpendicular * lateral_offset;
-    QVector3D const end =
-        target_pos + QVector3D(0.0F, 0.8F, 0.0F) +
-        perpendicular * lateral_offset;
+    QVector3D const end = target_pos + QVector3D(0.0F, 0.8F, 0.0F) +
+                          perpendicular * lateral_offset;
 
     arrow_sys->spawn_arrow(start, end, color, k_arrow_speed);
   }
@@ -164,9 +162,8 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *target =
-        find_nearest_enemy_in_range(tower, world, attack_comp->range,
-                                    attack_comp->max_height_difference);
+    auto *target = find_nearest_enemy_in_range(
+        tower, world, attack_comp->range, attack_comp->max_height_difference);
     if (target == nullptr) {
       continue;
     }

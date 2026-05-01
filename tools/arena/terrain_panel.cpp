@@ -170,8 +170,8 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QWidget(parent) {
                         [this](double value) {
                           emit frequency_changed(static_cast<float>(value));
                         });
-  bind_slider_to_double(rain_intensity_slider, rain_intensity_spin, 100.0,
-                        [this](double value) {
-                          emit rain_intensity_changed(static_cast<float>(value));
-                        });
+  bind_slider_to_double(
+      rain_intensity_slider, rain_intensity_spin, 100.0, [this](double value) {
+        emit rain_intensity_changed(static_cast<float>(value));
+      });
 }
