@@ -2,6 +2,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
+#include "../terrain_scene_types.h"
 #include <memory>
 #include <vector>
 
@@ -26,6 +27,9 @@ public:
   [[nodiscard]] auto road() const -> RoadRenderer *;
   [[nodiscard]] auto riverbank() const -> RiverbankRenderer *;
   [[nodiscard]] auto bridge() const -> BridgeRenderer *;
+  [[nodiscard]] auto
+  chunks(std::size_t river_count, std::size_t road_count,
+         std::size_t bridge_count) const -> std::vector<LinearFeatureChunk>;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass *> &;
 
 private:

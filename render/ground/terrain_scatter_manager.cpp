@@ -137,6 +137,30 @@ auto TerrainScatterManager::firecamp() const -> FireCampRenderer * {
   return m_firecamp.get();
 }
 
+auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::None, m_biome.get(),
+           m_biome != nullptr ? m_biome->instance_count() : 0U,
+           m_biome == nullptr || m_biome->is_gpu_ready()},
+          {ScatterSpeciesId::Stone, ScatterVisibilityMode::None, m_stone.get(),
+           m_stone != nullptr ? m_stone->instance_count() : 0U,
+           m_stone == nullptr || m_stone->is_gpu_ready()},
+          {ScatterSpeciesId::Plant, ScatterVisibilityMode::InstanceFiltered,
+           m_plant.get(), m_plant != nullptr ? m_plant->instance_count() : 0U,
+           m_plant == nullptr || m_plant->is_gpu_ready()},
+          {ScatterSpeciesId::Pine, ScatterVisibilityMode::InstanceFiltered,
+           m_pine.get(), m_pine != nullptr ? m_pine->instance_count() : 0U,
+           m_pine == nullptr || m_pine->is_gpu_ready()},
+          {ScatterSpeciesId::Olive, ScatterVisibilityMode::InstanceFiltered,
+           m_olive.get(), m_olive != nullptr ? m_olive->instance_count() : 0U,
+           m_olive == nullptr || m_olive->is_gpu_ready()},
+          {ScatterSpeciesId::FireCamp, ScatterVisibilityMode::InstanceFiltered,
+           m_firecamp.get(),
+           m_firecamp != nullptr ? m_firecamp->instance_count() : 0U,
+           m_firecamp == nullptr || m_firecamp->is_gpu_ready()}};
+}
+
 auto TerrainScatterManager::passes() const
     -> const std::vector<IRenderPass *> & {
   return m_passes;

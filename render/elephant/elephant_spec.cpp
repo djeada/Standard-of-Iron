@@ -187,7 +187,7 @@ struct LegResult {
 } // namespace
 
 auto elephant_topology() noexcept -> const SkeletonTopology & {
-  return *elephant_manifest().topology;
+  return k_elephant_topology;
 }
 
 void evaluate_elephant_skeleton(const ElephantSpecPose &pose,

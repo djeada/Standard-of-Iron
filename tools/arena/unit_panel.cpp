@@ -42,7 +42,6 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
 
-  // --- Spawn group ---
   auto *spawn_group = new QGroupBox("Spawn", this);
   auto *spawn_group_layout = new QVBoxLayout(spawn_group);
   spawn_group_layout->setSpacing(6);
@@ -54,7 +53,8 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   m_unit_box = new QComboBox(spawn_group);
   m_spawn_count_box = new QSpinBox(spawn_group);
   m_individuals_per_unit_box = new QSpinBox(spawn_group);
-  m_render_rider_checkbox = new QCheckBox("Render Rider On Mounted Units", spawn_group);
+  m_render_rider_checkbox =
+      new QCheckBox("Render Rider On Mounted Units", spawn_group);
 
   m_owner_box->addItem(QStringLiteral("Local Player"), kArenaLocalOwnerId);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"), kArenaOpponentOwnerId);
@@ -91,7 +91,6 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
 
   layout->addWidget(spawn_group);
 
-  // --- Animation group ---
   auto *anim_group = new QGroupBox("Animation", this);
   auto *anim_group_layout = new QVBoxLayout(anim_group);
   anim_group_layout->setSpacing(6);
@@ -131,25 +130,26 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   anim_group_layout->addWidget(anim_buttons);
 
   m_pause_checkbox = new QCheckBox("Pause Simulation", anim_group);
-  auto *skeleton_debug_box = new QCheckBox("Skeleton / Pose Overlay", anim_group);
+  auto *skeleton_debug_box =
+      new QCheckBox("Skeleton / Pose Overlay", anim_group);
   anim_group_layout->addWidget(m_pause_checkbox);
   anim_group_layout->addWidget(skeleton_debug_box);
 
   layout->addWidget(anim_group);
 
-  // --- Quick Setup group ---
   auto *quick_setup_group = new QGroupBox("Quick Setup", this);
   auto *quick_setup_layout = new QVBoxLayout(quick_setup_group);
   quick_setup_layout->setSpacing(4);
-  auto *spawn_opposing_button = new QPushButton("Spawn Opposing Batch", quick_setup_group);
-  auto *spawn_mirror_button = new QPushButton("Spawn Mirror Match", quick_setup_group);
+  auto *spawn_opposing_button =
+      new QPushButton("Spawn Opposing Batch", quick_setup_group);
+  auto *spawn_mirror_button =
+      new QPushButton("Spawn Mirror Match", quick_setup_group);
   auto *reset_arena_button = new QPushButton("Reset Arena", quick_setup_group);
   quick_setup_layout->addWidget(spawn_opposing_button);
   quick_setup_layout->addWidget(spawn_mirror_button);
   quick_setup_layout->addWidget(reset_arena_button);
   layout->addWidget(quick_setup_group);
 
-  // --- Selection group ---
   auto *selection_group = new QGroupBox("Selection", this);
   auto *selection_layout = new QVBoxLayout(selection_group);
   m_selection_summary_label =
@@ -162,7 +162,6 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
 
   layout->addStretch(1);
 
-  // --- Connections ---
   connect(spawn_button, &QPushButton::clicked, this, [this]() {
     emit spawnIndividualsPerUnitChanged(
         m_individuals_per_unit_box != nullptr

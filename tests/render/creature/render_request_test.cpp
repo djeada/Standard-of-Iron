@@ -12,13 +12,13 @@
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <gtest/gtest.h>
 #include <vector>
 
@@ -31,17 +31,6 @@ using Render::Creature::CreatureRenderRequest;
 using Render::Creature::Pipeline::CreatureKind;
 using Render::Creature::Pipeline::CreaturePipeline;
 using namespace Render::Creature::Bpat;
-
-auto find_assets_dir() -> std::string {
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "humanoid.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
 
 auto palette_contact_y(CreatureKind kind,
                        std::span<const QMatrix4x4> palette) -> float {
@@ -199,7 +188,7 @@ TEST(SubmitRequests, EmptySpanProducesZeroStats) {
 }
 
 TEST(SubmitPreparation, RequestOnlyPreparationStillDrawsBodies) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -222,7 +211,7 @@ TEST(SubmitPreparation, RequestOnlyPreparationStillDrawsBodies) {
 }
 
 TEST(SubmitPreparation, ShadowRequestsAreSkipped) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -246,7 +235,7 @@ TEST(SubmitPreparation, ShadowRequestsAreSkipped) {
 }
 
 TEST(SubmitPreparation, ExplicitMainRequestDoesNotDependOnShadowRows) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -394,7 +383,7 @@ TEST(SubmitRequests, AbsoluteWorldKeepsMountedPairsSeparatedInsideOneUnit) {
 }
 
 TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -444,7 +433,7 @@ TEST(SubmitRequests, RootCreaturesUseClipFootContactForWorldHeight) {
 }
 
 TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -472,7 +461,7 @@ TEST(SubmitRequests, GroundedRootCreaturesPreserveProvidedWorldHeight) {
 }
 
 TEST(SubmitRequests, ExplicitSwordAssetUsesSwordReadyHumanoidPalette) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }

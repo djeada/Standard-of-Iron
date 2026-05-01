@@ -43,7 +43,6 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QWidget(parent) {
   layout->setContentsMargins(8, 8, 8, 8);
   layout->setSpacing(8);
 
-  // --- Noise group ---
   auto *noise_group = new QGroupBox("Noise", this);
   auto *noise_layout = new QVBoxLayout(noise_group);
   noise_layout->setSpacing(6);
@@ -121,7 +120,6 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QWidget(parent) {
 
   layout->addWidget(noise_group);
 
-  // --- Weather group ---
   auto *rain_section = new QGroupBox("Weather", this);
   auto *rain_vlayout = new QVBoxLayout(rain_section);
   rain_vlayout->setSpacing(6);
