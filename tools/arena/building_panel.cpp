@@ -19,7 +19,7 @@ namespace {
 constexpr int kArenaBuildingLocalOwnerId = 1;
 constexpr int kArenaBuildingOpponentOwnerId = 2;
 
-auto prettifyBuildingIdentifier(const QString &value) -> QString {
+auto prettify_building_identifier(const QString &value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
   QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
@@ -96,22 +96,22 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
   layout->addStretch(1);
 
   connect(spawn_button, &QPushButton::clicked, this, [this]() {
-    emit spawnBuildingsRequested(
+    emit spawn_buildings_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
   connect(clear_button, &QPushButton::clicked, this,
-          &BuildingPanel::clearBuildingsRequested);
+          &BuildingPanel::clear_buildings_requested);
   connect(m_owner_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit buildingOwnerSelected(selectedOwnerId()); });
+          [this](int) { emit building_owner_selected(selected_owner_id()); });
   connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit buildingNationSelected(selectedNationId()); });
+          [this](int) { emit building_nation_selected(selected_nation_id()); });
   connect(m_building_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit buildingTypeSelected(selectedBuildingTypeId()); });
+          [this](int) { emit building_type_selected(selected_building_type_id()); });
 
-  populateNationOptions();
+  populate_nation_options();
 }
 
-void BuildingPanel::setSelectionSummary(const QString &summary) {
+void BuildingPanel::set_selection_summary(const QString &summary) {
   if (m_selection_summary_label == nullptr) {
     return;
   }
@@ -121,22 +121,22 @@ void BuildingPanel::setSelectionSummary(const QString &summary) {
           : summary);
 }
 
-auto BuildingPanel::selectedOwnerId() const -> int {
+auto BuildingPanel::selected_owner_id() const -> int {
   return m_owner_box != nullptr ? m_owner_box->currentData().toInt()
                                 : kArenaBuildingLocalOwnerId;
 }
 
-auto BuildingPanel::selectedNationId() const -> QString {
+auto BuildingPanel::selected_nation_id() const -> QString {
   return m_nation_box != nullptr ? m_nation_box->currentData().toString()
                                  : QString();
 }
 
-auto BuildingPanel::selectedBuildingTypeId() const -> QString {
+auto BuildingPanel::selected_building_type_id() const -> QString {
   return m_building_box != nullptr ? m_building_box->currentData().toString()
                                    : QStringLiteral("barracks");
 }
 
-void BuildingPanel::populateNationOptions() {
+void BuildingPanel::populate_nation_options() {
   if (m_nation_box == nullptr) {
     return;
   }
@@ -149,7 +149,7 @@ void BuildingPanel::populateNationOptions() {
     QString const nation_id = Game::Systems::nation_id_to_qstring(nation.id);
     QString label = QString::fromStdString(nation.display_name);
     if (label.trimmed().isEmpty()) {
-      label = prettifyBuildingIdentifier(nation_id);
+      label = prettify_building_identifier(nation_id);
     }
     m_nation_box->addItem(label, nation_id);
   }

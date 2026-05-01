@@ -13,20 +13,20 @@ class BuildingPanel : public QWidget {
 public:
   explicit BuildingPanel(QWidget *parent = nullptr);
 
-  void setSelectionSummary(const QString &summary);
-  [[nodiscard]] auto selectedOwnerId() const -> int;
-  [[nodiscard]] auto selectedNationId() const -> QString;
-  [[nodiscard]] auto selectedBuildingTypeId() const -> QString;
+  void set_selection_summary(const QString &summary);
+  [[nodiscard]] auto selected_owner_id() const -> int;
+  [[nodiscard]] auto selected_nation_id() const -> QString;
+  [[nodiscard]] auto selected_building_type_id() const -> QString;
 
 signals:
-  void spawnBuildingsRequested(int count);
-  void clearBuildingsRequested();
-  void buildingOwnerSelected(int ownerId);
-  void buildingNationSelected(const QString &nationId);
-  void buildingTypeSelected(const QString &buildingType);
+  void spawn_buildings_requested(int count);
+  void clear_buildings_requested();
+  void building_owner_selected(int ownerId);
+  void building_nation_selected(const QString &nationId);
+  void building_type_selected(const QString &buildingType);
 
 private:
-  void populateNationOptions();
+  void populate_nation_options();
 
   QComboBox *m_owner_box = nullptr;
   QComboBox *m_nation_box = nullptr;
