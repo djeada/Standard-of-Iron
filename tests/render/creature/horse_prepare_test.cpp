@@ -1,7 +1,4 @@
-// Phase A regression — horse prepare module.
-//
-// Verifies make_horse_prepared_row stamps the correct kind/pass/lod and that
-// Shadow-tagged horse rows are filtered by submit().
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -24,6 +21,7 @@
 #include "render/horse/prepare.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -31,7 +29,6 @@
 
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <fstream>
 #include <vector>
 
@@ -77,17 +74,6 @@ struct ScopedFlatTerrain {
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
 
-auto find_assets_dir() -> std::string {
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "horse.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
-
 auto wrap_phase(float phase) -> float {
   phase = std::fmod(phase, 1.0F);
   if (phase < 0.0F) {
@@ -107,9 +93,9 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, /*seed*/ 11,
-      Render::Creature::CreatureLOD::Minimal,
-      /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
+      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, 11,
+      Render::Creature::CreatureLOD::Minimal, 0,
+      Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
@@ -197,7 +183,7 @@ TEST(HorsePrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
 }
 
 TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }

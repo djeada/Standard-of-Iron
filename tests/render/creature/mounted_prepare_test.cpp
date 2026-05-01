@@ -1,8 +1,4 @@
-// Phase A regression — mounted prepare module.
-//
-// Exercises render/entity/mounted_prepare.{h,cpp}: prepare_mounted_rows
-// must produce a horse mount row + humanoid rider row carrying the supplied
-// pass intent.
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -24,13 +20,13 @@
 #include "render/humanoid/skeleton.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <gtest/gtest.h>
 #include <optional>
 #include <unordered_map>
@@ -73,17 +69,6 @@ public:
   using Render::GL::MountedHumanoidRendererBase::resolve_mount_render_state;
   using Render::GL::MountedKnightRendererBase::MountedKnightRendererBase;
 };
-
-auto find_assets_dir() -> std::string {
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "humanoid.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
 
 auto rider_root_matrix(Render::Creature::ArchetypeId archetype_id,
                        Render::Creature::AnimationStateId state, float phase,
@@ -152,8 +137,8 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
 
   auto set = Render::GL::prepare_mounted_rows(
       mounted, mount_world, rider_world, mount_pose, mount_variant, rider_pose,
-      rider_variant, rider_anim, /*seed*/ 99,
-      Render::Creature::CreatureLOD::Full, RenderPassIntent::Shadow);
+      rider_variant, rider_anim, 99, Render::Creature::CreatureLOD::Full,
+      RenderPassIntent::Shadow);
 
   EXPECT_EQ(set.mount_row.spec.kind, CreatureKind::Horse);
   EXPECT_EQ(set.rider_row.spec.kind, CreatureKind::Humanoid);
@@ -391,7 +376,7 @@ TEST(MountedPrepare, MountedUnitGroupsRiderAndHorseBySharedWorldKey) {
 }
 
 TEST(MountedPrepare, MountedRiderRootAttachesToHorseSeatFrame) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }

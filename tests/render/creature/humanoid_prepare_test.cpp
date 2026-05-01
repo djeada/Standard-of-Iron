@@ -1,8 +1,4 @@
-// Phase A/D regression — humanoid prepare module + Shadow pass intent.
-//
-// Verifies that prepared rows constructed by render/humanoid/prepare.{h,cpp}
-// retain the visual_spec/pose/seed they were given, and that submit() of a
-// Shadow-tagged row produces zero rigged calls (declarative skip).
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -829,6 +825,39 @@ TEST(HumanoidPrepare, BowReadySubmittedSurfaceGroundingTouchesTerrain) {
   EXPECT_NEAR(sink.rigged_world_y.front(), 2.4F, 0.1F);
 }
 
+TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
+  ScopedFlatTerrain terrain(0.0F);
+
+  Render::GL::HumanoidRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->render_individuals_per_unit_override = 3;
+
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 0.0F;
+  transform->position.y = 0.0F;
+  transform->position.z = 0.0F;
+  transform->scale.x = 1.0F;
+  transform->scale.y = 1.0F;
+  transform->scale.z = 1.0F;
+
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  EXPECT_EQ(prep.bodies.requests().size(), 3u);
+}
+
 TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {
   BowReadyRegressionRenderer renderer;
   ScopedFlatTerrain terrain(2.4F);
@@ -968,8 +997,6 @@ TEST(HumanoidPrepare, MixedBatchOnlySubmitsMainRows) {
   }
   const auto stats = submit_preparation(prep, sink);
 
-  // 3 Main requests (idx 0, 2, 4) -> exactly 3 entity submissions; Shadow
-  // requests are filtered before reaching the pipeline.
   EXPECT_EQ(stats.entities_submitted, 3u);
 }
 
@@ -983,7 +1010,7 @@ TEST(HumanoidPrepare, DeriveUnitSeedHonorsOverride) {
 
 TEST(HumanoidPrepare, DeriveUnitSeedDeterministicWithoutOverride) {
   Render::GL::DrawContext ctx{};
-  // No entity, no unit, no override → should return 0 deterministically.
+
   EXPECT_EQ(Render::Creature::Pipeline::derive_unit_seed(ctx, nullptr), 0u);
 }
 

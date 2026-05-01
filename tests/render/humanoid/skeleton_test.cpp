@@ -1,15 +1,4 @@
-// Stage 15 — tests for humanoid skeleton, state machine,
-// and bone-socket API.
-//
-// Covers:
-//   * Skeleton topology invariants (parent indices are strictly less
-//     than child, every non-root has a parent).
-//   * Skeleton evaluator produces sane bone transforms from a known
-//     HumanoidPose and keeps orthonormal bases.
-//   * Socket transforms place equipment at the expected bone origin
-//     plus local offset, and track when the underlying pose moves.
-//   * Humanoid state machine maps AnimationInputs to the correct
-//     discrete state under every documented priority rule.
+
 
 #include "render/humanoid/humanoid_clip_registry.h"
 #include "render/humanoid/humanoid_state_machine.h"
@@ -29,7 +18,6 @@ namespace {
 
 constexpr float k_eps = 1e-4F;
 
-// Minimal well-formed pose: standing upright, arms at sides.
 auto make_upright_pose() -> HumanoidPose {
   HumanoidPose p{};
   p.pelvis_pos = QVector3D(0.0F, 1.00F, 0.0F);
@@ -205,8 +193,7 @@ TEST(HumanoidSocketTest, BackSocketIsBehindChest) {
       palette[static_cast<std::size_t>(HumanoidBone::Chest)]
           .column(3)
           .toVector3D();
-  // Back socket offsets along -Z in bone-local space. With +X as right
-  // and +Y up the spine, Z = X×Y = +Z world; so -Z local => -Z world.
+
   EXPECT_LT(back.z(), chest_origin.z());
 }
 
@@ -223,7 +210,6 @@ TEST(HumanoidSocketTest, AttachmentFrameMatchesSocketTransform) {
   EXPECT_LT((frame.up - m.column(1).toVector3D()).length(), 1e-5F);
   EXPECT_LT((frame.forward - m.column(2).toVector3D()).length(), 1e-5F);
 
-  // Orthonormal basis — the grip directions equipment renderers rely on.
   EXPECT_NEAR(frame.right.lengthSquared(), 1.0F, 1e-4F);
   EXPECT_NEAR(frame.up.lengthSquared(), 1.0F, 1e-4F);
   EXPECT_NEAR(frame.forward.lengthSquared(), 1.0F, 1e-4F);
@@ -264,7 +250,7 @@ TEST(HumanoidStateMachineTest, DeadOverridesEverything) {
   inputs.is_attacking = true;
   inputs.is_hit_reacting = true;
   inputs.is_moving = true;
-  EXPECT_EQ(select_state(inputs, /*dead_flag=*/true), HumanoidState::Death);
+  EXPECT_EQ(select_state(inputs, true), HumanoidState::Death);
 }
 
 TEST(HumanoidStateMachineTest, RunningBeatsWalking) {
@@ -314,7 +300,7 @@ TEST(HumanoidStateMachineTest, TickTransitionsAndBlends) {
 TEST(HumanoidStateMachineTest, DeathSnapsWithoutBlend) {
   HumanoidStateMachine sm;
   AnimationInputs inputs{};
-  sm.tick(0.0F, inputs, /*dead_flag=*/true);
+  sm.tick(0.0F, inputs, true);
   EXPECT_EQ(sm.current(), HumanoidState::Death);
   EXPECT_FALSE(sm.is_blending());
 }

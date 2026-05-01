@@ -1,15 +1,4 @@
-// Stage 8a — Rig DSL interpreter tests.
-//
-// These tests lock in the DSL's core contract:
-//   1. A RigDef with N parts emits exactly N draw commands (one per part
-//      that passes its LOD mask).
-//   2. Anchor IDs are resolved through the pluggable AnchorResolver.
-//   3. Palette slots are resolved through the pluggable PaletteResolver,
-//      and Literal slots use the packed colour directly.
-//   4. LOD masks skip parts cheaply without touching the anchor resolver.
-//   5. With a Material in the context, emission routes through
-//      ISubmitter::part() -> DrawPartCmd (v2 path). Without one, it falls
-//      back to MeshCmd.
+
 
 #include "render/draw_queue.h"
 #include "render/material.h"
@@ -25,8 +14,6 @@
 
 namespace {
 
-// Minimal AnchorResolver backed by a flat map. Real rigs plug in their
-// species-specific bone lookup here.
 class FlatAnchors : public Render::RigDSL::AnchorResolver {
 public:
   void set(Render::RigDSL::AnchorId id, const QVector3D &pos) {
@@ -48,13 +35,11 @@ private:
 class ConstantPalette : public Render::RigDSL::PaletteResolver {
 public:
   [[nodiscard]] auto
-  resolve(Render::RigDSL::PaletteSlot /*slot*/) const -> QVector3D override {
+  resolve(Render::RigDSL::PaletteSlot) const -> QVector3D override {
     return {0.1F, 0.2F, 0.3F};
   }
 };
 
-// Scalar resolver backed by a flat array. Lets tests verify that the
-// per-part scale_id is honoured by the interpreter.
 class FlatScalars : public Render::RigDSL::ScalarResolver {
 public:
   void set(Render::RigDSL::ScalarId id, float v) { m_map[id] = v; }
@@ -130,7 +115,6 @@ TEST(RigDSL, LodMaskSkipsPartsWithoutResolvingAnchors) {
   FlatAnchors anchors;
   ConstantPalette palette;
 
-  // Only bit 0 set → part visible at LOD 0, skipped at LOD 1/2/....
   constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Cylinder,
                                       0,
                                       0x01U,
@@ -151,13 +135,13 @@ TEST(RigDSL, LodMaskSkipsPartsWithoutResolvingAnchors) {
   ctx.anchors = &anchors;
   ctx.palette = &palette;
 
-  ctx.lod = 1; // Not in mask.
+  ctx.lod = 1;
   Render::RigDSL::render_rig(rig, ctx, submitter);
   EXPECT_EQ(queue.size(), 0U);
   EXPECT_EQ(anchors.resolve_count(), 0)
       << "LOD-skipped parts must not touch the resolver";
 
-  ctx.lod = 0; // In mask.
+  ctx.lod = 0;
   Render::RigDSL::render_rig(rig, ctx, submitter);
   EXPECT_EQ(queue.size(), 1U);
 }
@@ -225,26 +209,23 @@ TEST(RigDSL, NoMaterialContextFallsBackToMeshCmd) {
   Render::RigDSL::InterpretContext ctx;
   ctx.anchors = &anchors;
   ctx.palette = &palette;
-  // ctx.material intentionally left null.
+
   Render::RigDSL::render_rig(rig, ctx, submitter);
 
   ASSERT_EQ(queue.size(), 1U);
   auto const idx = queue.items().front().index();
-  // Unit-cylinder emissions get auto-decomposed to CylinderCmd by the
-  // submitter's fast-path, so either index is acceptable here.
+
   EXPECT_TRUE(idx == Render::GL::MeshCmdIndex ||
               idx == Render::GL::CylinderCmdIndex);
 }
 
 TEST(RigDSL, LiteralPaletteBypassesResolver) {
-  // Even when a PaletteResolver is present, a Literal slot uses the packed
-  // colour. Use a Sphere so we hit the straight MeshCmd path (no fast-path
-  // decomposition) and can inspect the colour directly.
+
   Render::GL::DrawQueue queue;
   Render::GL::QueueSubmitter submitter(&queue);
   FlatAnchors anchors;
   anchors.set(0, QVector3D());
-  ConstantPalette palette; // resolve() always returns (0.1, 0.2, 0.3)
+  ConstantPalette palette;
 
   constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Sphere,
                                       0,
@@ -269,21 +250,19 @@ TEST(RigDSL, LiteralPaletteBypassesResolver) {
 
   ASSERT_EQ(queue.size(), 1U);
   auto const &cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
-  // Literal 200/100/50 -> ~0.784 / 0.392 / 0.196.
+
   EXPECT_NEAR(cmd.color.x(), 200.0F / 255.0F, 1e-4F);
   EXPECT_NEAR(cmd.color.y(), 100.0F / 255.0F, 1e-4F);
   EXPECT_NEAR(cmd.color.z(), 50.0F / 255.0F, 1e-4F);
 }
 
-// Stage 8b — ScalarResolver multiplies the per-part size by the scale_id's
-// current value. kInvalidScalar means "use size_x/y/z as-is".
 TEST(RigDSL, ScalarResolverScalesSphereRadius) {
   Render::GL::DrawQueue queue;
   Render::GL::QueueSubmitter submitter(&queue);
   FlatAnchors anchors;
   anchors.set(0, QVector3D());
   FlatScalars scalars;
-  scalars.set(7, 2.5F); // scale_id=7 -> radius multiplied by 2.5
+  scalars.set(7, 2.5F);
 
   constexpr Render::RigDSL::PartDef p{Render::RigDSL::PartKind::Sphere,
                                       0,
@@ -292,7 +271,7 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
                                       {255, 255, 255, 255},
                                       0,
                                       Render::RigDSL::kInvalidAnchor,
-                                      /*scale_id=*/7,
+                                      7,
                                       0.2F,
                                       1.0F,
                                       1.0F,
@@ -308,7 +287,7 @@ TEST(RigDSL, ScalarResolverScalesSphereRadius) {
 
   ASSERT_EQ(queue.size(), 1U);
   auto const &cmd = std::get<Render::GL::MeshCmdIndex>(queue.items().front());
-  // Effective radius = 0.2 * 2.5 = 0.5, so model column 0's length is 0.5.
+
   const QVector3D col0(cmd.model(0, 0), cmd.model(1, 0), cmd.model(2, 0));
   EXPECT_NEAR(col0.length(), 0.5F, 1e-4F);
 }

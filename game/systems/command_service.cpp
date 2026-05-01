@@ -340,7 +340,11 @@ void CommandService::move_unit(Engine::Core::World &world,
       }
 
       mv->clear_path();
-      mv->has_target = false;
+      mv->has_target = options.allow_direct_fallback;
+      if (options.allow_direct_fallback) {
+        mv->target_x = target_x;
+        mv->target_y = target_z;
+      }
       mv->vx = 0.0F;
       mv->vz = 0.0F;
       mv->path_pending = true;

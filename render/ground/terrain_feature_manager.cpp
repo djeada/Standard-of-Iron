@@ -55,6 +55,20 @@ auto TerrainFeatureManager::bridge() const -> BridgeRenderer * {
   return m_bridge.get();
 }
 
+auto TerrainFeatureManager::chunks(
+    std::size_t river_count, std::size_t road_count,
+    std::size_t bridge_count) const -> std::vector<LinearFeatureChunk> {
+  return {
+      {LinearFeatureKind::River, LinearFeatureVisibilityMode::SegmentSampled,
+       m_river.get(), river_count},
+      {LinearFeatureKind::Road, LinearFeatureVisibilityMode::SegmentSampled,
+       m_road.get(), road_count},
+      {LinearFeatureKind::Riverbank, LinearFeatureVisibilityMode::TextureDriven,
+       m_riverbank.get(), river_count},
+      {LinearFeatureKind::Bridge, LinearFeatureVisibilityMode::SegmentSampled,
+       m_bridge.get(), bridge_count}};
+}
+
 auto TerrainFeatureManager::passes() const
     -> const std::vector<IRenderPass *> & {
   return m_passes;

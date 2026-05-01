@@ -1,5 +1,6 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/nations/carthage/defense_tower_renderer.h"
 #include "render/entity/nations/roman/defense_tower_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/entity/registry.h"
@@ -141,6 +142,31 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
   EXPECT_FLOAT_EQ(submitter.meshes[0].alpha, 0.5F);
 }
 
+TEST(RenderArchetype, StoredRenderInstanceOwnsPaletteData) {
+  using namespace Render::GL;
+
+  RenderArchetypeBuilder builder("stored_instance_test");
+  builder.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F),
+                          QVector3D(1.0F, 1.0F, 1.0F), 0);
+  RenderArchetype archetype = std::move(builder).build();
+
+  StoredRenderInstance<2> stored;
+  stored.archetype = &archetype;
+  stored.default_texture = fake_texture(11);
+
+  std::array<QVector3D, 1> palette{QVector3D(0.7F, 0.2F, 0.1F)};
+  stored.set_palette(palette);
+  palette[0] = QVector3D(0.1F, 0.8F, 0.3F);
+
+  RecordingSubmitter submitter;
+  submit_render_instance(submitter, stored.render_instance());
+
+  ASSERT_EQ(submitter.meshes.size(), 1u);
+  EXPECT_TRUE(
+      near_vec3(submitter.meshes[0].color, QVector3D(0.7F, 0.2F, 0.1F)));
+  EXPECT_EQ(submitter.meshes[0].texture, fake_texture(11));
+}
+
 TEST(RenderArchetypeEquipment, ReplaysArchetypeInstancesThroughEquipmentBatch) {
   using namespace Render::GL;
 
@@ -237,7 +263,45 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   RecordingSubmitter submitter;
   renderer(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 22u);
+  EXPECT_EQ(submitter.meshes.size(), 47u);
+}
+
+TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Roman::register_home_renderer(registry);
+  const auto renderer = registry.get("troops/roman/home");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(3);
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  renderable->color = {0.8F, 0.1F, 0.2F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = QMatrix4x4{};
+
+  RecordingSubmitter submitter;
+  renderer(ctx, submitter);
+
+  ASSERT_FALSE(submitter.meshes.empty());
+  bool found_team_tint = false;
+  QVector3D const expected_team(0.8F, 0.1F, 0.2F);
+  for (const RecordedMesh &mesh : submitter.meshes) {
+    if (near_vec3(mesh.color, expected_team)) {
+      found_team_tint = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_team_tint);
 }
 
 TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
@@ -269,6 +333,44 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
   ASSERT_FALSE(submitter.meshes.empty());
   bool found_team_tint = false;
   QVector3D const expected_team(1.0F, 0.0F, 0.35F);
+  for (const RecordedMesh &mesh : submitter.meshes) {
+    if (near_vec3(mesh.color, expected_team)) {
+      found_team_tint = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_team_tint);
+}
+
+TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(3);
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  renderable->color = {0.8F, 0.2F, 0.6F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = QMatrix4x4{};
+
+  RecordingSubmitter submitter;
+  renderer(ctx, submitter);
+
+  ASSERT_FALSE(submitter.meshes.empty());
+  bool found_team_tint = false;
+  QVector3D const expected_team(0.8F, 0.2F, 0.6F);
   for (const RecordedMesh &mesh : submitter.meshes) {
     if (near_vec3(mesh.color, expected_team)) {
       found_team_tint = true;

@@ -1,4 +1,4 @@
-// Tests for the Stage-14 FrameProfile + overlay formatter.
+
 
 #include "render/profiling/frame_profile.h"
 

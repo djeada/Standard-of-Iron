@@ -1,11 +1,4 @@
-// Stage 16.5 — elephant rigged-path body submit smoke tests.
-//
-// The legacy walker entry point (`submit_elephant_lod`) was removed
-// when the imperative LOD path was retired; the rig now exclusively
-// calls the rigged wrappers. With a non-Renderer submitter we exercise
-// the software fallback inside `submit_elephant_*_rigged`, which routes
-// through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (1/13 for Minimal/Full).
+
 
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_manifest.h"
@@ -552,9 +545,7 @@ TEST(ElephantSpecTest, MovingPoseBendsKneesDuringStride) {
 }
 
 TEST(ElephantSpecTest, WalkFootLandsAheadOfShoulderDuringSwing) {
-  // The foot should land noticeably in front of the shoulder's z position
-  // during the swing phase of a walk, giving the elephant a reaching gait
-  // rather than vertical piston-like steps.
+
   auto const dims = make_dims();
   auto const gait = make_gait();
   Render::Elephant::ElephantSpecPose pose{};
@@ -566,9 +557,8 @@ TEST(ElephantSpecTest, WalkFootLandsAheadOfShoulderDuringSwing) {
   QVector3D const shoulder_fl =
       pose.barrel_center + pose.shoulder_offset_pose_fl;
 
-  // Foot must be in front of (larger z than) the shoulder during forward swing.
   EXPECT_GT(pose.foot_fl.z(), shoulder_fl.z());
-  // And the forward reach must be at least 10% of the stride swing extent.
+
   EXPECT_GT(pose.foot_fl.z() - shoulder_fl.z(), dims.body_length * 0.02F);
 }
 
@@ -576,7 +566,6 @@ TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   auto const dims = make_dims();
   auto const gait = make_gait();
 
-  // Phase 0.55 is in the "hold high" window (0.45-0.65) of the fight cycle
   Render::Elephant::ElephantSpecPose fight_pose{};
   Render::Elephant::ElephantPoseMotion fight_motion{};
   fight_motion.phase = 0.55F;
@@ -593,7 +582,6 @@ TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
                                                      idle_pose);
 
-  // Feet must be raised during fight peak
   EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
             dims.leg_length * 0.10F);
 }
@@ -603,7 +591,6 @@ TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
   dims.move_bob_amplitude = 0.06F;
   Render::GL::ElephantGait walk{1.2F, 0.25F, 0.0F, 0.30F, 0.10F};
 
-  // Phase 0.0 → sin = 0, so bob = 0
   Render::Elephant::ElephantSpecPose pose_zero{};
   Render::Elephant::ElephantPoseMotion motion_zero{};
   motion_zero.phase = 0.0F;
@@ -613,7 +600,6 @@ TEST(ElephantSpecTest, MovementBobVariesAcrossWalkFrames) {
   Render::Elephant::make_elephant_spec_pose_animated(dims, walk, motion_zero,
                                                      pose_zero);
 
-  // Phase 0.25 → sin(π/2)=1, peak bob
   float const peak_bob = dims.move_bob_amplitude * 0.62F;
   Render::Elephant::ElephantSpecPose pose_peak{};
   Render::Elephant::ElephantPoseMotion motion_peak{};
@@ -643,7 +629,6 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, idle_motion,
                                                      idle_pose);
 
-  // Trunk tip must be raised well above its idle position during combat.
   EXPECT_GT(fight_pose.trunk_end.y(),
             idle_pose.trunk_end.y() + dims.trunk_length * 0.30F);
 }
@@ -657,13 +642,10 @@ TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
   gait.stride_swing = 0.30F;
   gait.stride_lift = 0.12F;
 
-  // Idle reference (no motion)
   Render::Elephant::ElephantSpecPose idle_pose{};
   Render::Elephant::make_elephant_spec_pose_animated(
       dims, gait, Render::Elephant::ElephantPoseMotion{}, idle_pose);
 
-  // At phase=0.25: FL has leg_phase=0.25 (peak swing), BR has leg_phase=0.25
-  // (peak swing); FR has leg_phase=0.75 (grounded), BL has leg_phase=0.75.
   Render::Elephant::ElephantSpecPose swing_pose{};
   Render::Elephant::ElephantPoseMotion motion{};
   motion.phase = 0.25F;
@@ -678,6 +660,6 @@ TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {
 
   EXPECT_GT(front_lift, 0.0F);
   EXPECT_GT(rear_lift, 0.0F);
-  // Front leg must lift measurably higher than rear leg.
+
   EXPECT_GT(front_lift, rear_lift);
 }

@@ -1038,12 +1038,8 @@ TEST_F(SerializationTest, CatapultLoadingComponentRoundTrip) {
   EXPECT_FALSE(deserialized->target_position_locked);
 }
 
-// ============================================================================
-// Integration Tests: Multi-Unit Battlefield State Preservation
-// ============================================================================
-
 TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
-  // Create a battlefield with multiple units at different positions
+
   struct UnitData {
     float x, y, z;
     int health;
@@ -1077,12 +1073,10 @@ TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
     unit->spawn_type = unit_data.spawn_type;
   }
 
-  // Serialize and deserialize the world
   QJsonDocument doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify all units are restored with exact positions and health
   const auto &entities = restored_world->get_entities();
   EXPECT_EQ(entities.size(), original_units.size());
 
@@ -1113,11 +1107,10 @@ TEST_F(SerializationTest, MultipleUnitsPositionsAndHealthPreserved) {
 }
 
 TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
-  // Setup owner registry with teams and custom colors
+
   auto &registry = Game::Systems::OwnerRegistry::instance();
   registry.clear();
 
-  // Register players with specific teams and colors
   int player1 =
       registry.register_owner(Game::Systems::OwnerType::Player, "Blue Kingdom");
   int player2 =
@@ -1125,19 +1118,16 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
   int player3 = registry.register_owner(Game::Systems::OwnerType::Player,
                                         "Green Alliance");
 
-  // Set teams (player1 and player3 are allies)
   registry.set_owner_team(player1, 1);
   registry.set_owner_team(player2, 2);
   registry.set_owner_team(player3, 1);
 
-  // Set custom colors
   registry.set_owner_color(player1, 0.1F, 0.2F, 0.9F);
   registry.set_owner_color(player2, 0.9F, 0.1F, 0.1F);
   registry.set_owner_color(player3, 0.1F, 0.9F, 0.2F);
 
   registry.set_local_player_id(player1);
 
-  // Create some entities owned by these players
   for (int i = 0; i < 3; ++i) {
     auto *entity = world->create_entity();
     auto *unit = entity->add_component<UnitComponent>();
@@ -1149,28 +1139,22 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
     unit->owner_id = player2;
   }
 
-  // Serialize world (includes owner_registry)
   QJsonDocument doc = Serialization::serialize_world(world.get());
 
-  // Clear registry and restore
   registry.clear();
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify owner registry state is preserved
   EXPECT_EQ(registry.get_local_player_id(), player1);
 
-  // Verify teams are preserved
   EXPECT_EQ(registry.get_owner_team(player1), 1);
   EXPECT_EQ(registry.get_owner_team(player2), 2);
   EXPECT_EQ(registry.get_owner_team(player3), 1);
 
-  // Verify alliances are preserved
   EXPECT_TRUE(registry.are_allies(player1, player3));
   EXPECT_TRUE(registry.are_enemies(player1, player2));
   EXPECT_TRUE(registry.are_enemies(player2, player3));
 
-  // Verify colors are preserved
   auto color1 = registry.get_owner_color(player1);
   EXPECT_FLOAT_EQ(color1[0], 0.1F);
   EXPECT_FLOAT_EQ(color1[1], 0.2F);
@@ -1186,23 +1170,19 @@ TEST_F(SerializationTest, OwnerRegistryTeamsAndColorsPreserved) {
   EXPECT_FLOAT_EQ(color3[1], 0.9F);
   EXPECT_FLOAT_EQ(color3[2], 0.2F);
 
-  // Verify owner names are preserved
   EXPECT_EQ(registry.get_owner_name(player1), "Blue Kingdom");
   EXPECT_EQ(registry.get_owner_name(player2), "Red Empire");
   EXPECT_EQ(registry.get_owner_name(player3), "Green Alliance");
 
-  // Verify owner types are preserved
   EXPECT_TRUE(registry.is_player(player1));
   EXPECT_TRUE(registry.is_ai(player2));
   EXPECT_TRUE(registry.is_player(player3));
 
-  // Clean up
   registry.clear();
 }
 
 TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
-  // Create buildings (barracks/villages) with different ownership and capture
-  // states
+
   struct BuildingData {
     float x, z;
     int owner_id;
@@ -1212,13 +1192,10 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
   };
 
   std::vector<BuildingData> buildings = {
-      {100.0F, 100.0F, 1, -1, 0.0F,
-       false}, // Owned by player 1, not being captured
-      {200.0F, 200.0F, 2, 1, 7.5F,
-       true}, // Owned by player 2, being captured by player 1
-      {300.0F, 300.0F, 1, 2, 15.0F,
-       true}, // Owned by player 1, being captured by player 2
-      {400.0F, 400.0F, -1, -1, 0.0F, false}, // Neutral building
+      {100.0F, 100.0F, 1, -1, 0.0F, false},
+      {200.0F, 200.0F, 2, 1, 7.5F, true},
+      {300.0F, 300.0F, 1, 2, 15.0F, true},
+      {400.0F, 400.0F, -1, -1, 0.0F, false},
   };
 
   std::vector<EntityID> building_ids;
@@ -1241,12 +1218,10 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
     capture->is_being_captured = bldg.is_being_captured;
   }
 
-  // Serialize and restore
   QJsonDocument doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify all buildings are restored with correct ownership and capture state
   for (size_t i = 0; i < building_ids.size(); ++i) {
     auto *entity = restored_world->get_entity(building_ids[i]);
     ASSERT_NE(entity, nullptr) << "Building " << i << " not found";
@@ -1277,7 +1252,7 @@ TEST_F(SerializationTest, BuildingOwnershipAndCaptureStatePreserved) {
 }
 
 TEST_F(SerializationTest, UnitMovementStatePreserved) {
-  // Create units with active movement paths
+
   auto *entity = world->create_entity();
   auto entity_id = entity->get_id();
 
@@ -1298,18 +1273,16 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   movement->goal_y = 65.0F;
   movement->vx = 2.5F;
   movement->vz = 3.0F;
-  // Add path waypoints
+
   movement->path.emplace_back(20.0F, 30.0F);
   movement->path.emplace_back(35.0F, 45.0F);
   movement->path.emplace_back(50.0F, 60.0F);
   const size_t expected_path_size = movement->path.size();
 
-  // Serialize and restore
   QJsonDocument doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify movement state is preserved
   auto *restored_entity = restored_world->get_entity(entity_id);
   ASSERT_NE(restored_entity, nullptr);
 
@@ -1324,7 +1297,6 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
   EXPECT_FLOAT_EQ(restored_movement->vx, 2.5F);
   EXPECT_FLOAT_EQ(restored_movement->vz, 3.0F);
 
-  // Verify path is preserved
   ASSERT_EQ(restored_movement->path.size(), expected_path_size);
   EXPECT_FLOAT_EQ(restored_movement->path[0].first, 20.0F);
   EXPECT_FLOAT_EQ(restored_movement->path[0].second, 30.0F);
@@ -1335,13 +1307,12 @@ TEST_F(SerializationTest, UnitMovementStatePreserved) {
 }
 
 TEST_F(SerializationTest, CombatStatePreserved) {
-  // Create units engaged in combat
+
   auto *attacker = world->create_entity();
   auto *defender = world->create_entity();
   auto attacker_id = attacker->get_id();
   auto defender_id = defender->get_id();
 
-  // Setup attacker
   auto *attacker_transform = attacker->add_component<TransformComponent>();
   attacker_transform->position.x = 10.0F;
   attacker_transform->position.z = 10.0F;
@@ -1361,7 +1332,6 @@ TEST_F(SerializationTest, CombatStatePreserved) {
   attacker_target->target_id = defender_id;
   attacker_target->should_chase = true;
 
-  // Setup defender
   auto *defender_transform = defender->add_component<TransformComponent>();
   defender_transform->position.x = 12.0F;
   defender_transform->position.z = 12.0F;
@@ -1375,12 +1345,10 @@ TEST_F(SerializationTest, CombatStatePreserved) {
   defender_attack->in_melee_lock = true;
   defender_attack->melee_lock_target_id = attacker_id;
 
-  // Serialize and restore
   QJsonDocument doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify combat state is preserved
   auto *restored_attacker = restored_world->get_entity(attacker_id);
   auto *restored_defender = restored_world->get_entity(defender_id);
   ASSERT_NE(restored_attacker, nullptr);
@@ -1406,7 +1374,6 @@ TEST_F(SerializationTest, CombatStatePreserved) {
   EXPECT_TRUE(restored_defender_attack->in_melee_lock);
   EXPECT_EQ(restored_defender_attack->melee_lock_target_id, attacker_id);
 
-  // Verify health is preserved
   auto *restored_attacker_unit =
       restored_attacker->get_component<UnitComponent>();
   auto *restored_defender_unit =
@@ -1416,7 +1383,7 @@ TEST_F(SerializationTest, CombatStatePreserved) {
 }
 
 TEST_F(SerializationTest, NationIdentityPreserved) {
-  // Create units from different nations
+
   auto *roman_unit = world->create_entity();
   auto *carthage_unit = world->create_entity();
   auto roman_id = roman_unit->get_id();
@@ -1430,12 +1397,10 @@ TEST_F(SerializationTest, NationIdentityPreserved) {
   carthage_unit_comp->nation_id = Game::Systems::NationID::Carthage;
   carthage_unit_comp->spawn_type = Game::Units::SpawnType::Archer;
 
-  // Serialize and restore
   QJsonDocument doc = Serialization::serialize_world(world.get());
   auto restored_world = std::make_unique<World>();
   Serialization::deserialize_world(restored_world.get(), doc);
 
-  // Verify nation IDs are preserved
   auto *restored_roman = restored_world->get_entity(roman_id);
   auto *restored_carthage = restored_world->get_entity(carthage_id);
 

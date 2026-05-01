@@ -108,7 +108,7 @@ build_selection_ring_layout(const SelectionRingLayoutInput &input)
     return placements;
   }
 
-  int const cols = std::max(1, input.max_units_per_row);
+  int const cols = std::max(1, std::min(input.max_units_per_row, total_units));
   int const rows = std::max(1, (total_units + cols - 1) / cols);
   float const spacing = Detail::selection_ring_spacing(category);
 

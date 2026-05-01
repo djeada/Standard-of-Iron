@@ -1,8 +1,4 @@
-// Regression tests for the creature render graph system.
-//
-// These tests verify that the declarative creature render graph correctly
-// prepares creature render state for submission, and that template/cache
-// prewarming works correctly with the new system.
+
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -57,8 +53,6 @@ public:
                       float) override {}
 };
 
-// --- LOD Config Tests ---
-
 TEST(CreatureRenderGraph, HumanoidLodConfigHasReasonableDefaults) {
   auto config = humanoid_lod_config();
   EXPECT_GT(config.thresholds.full, 0.0F);
@@ -83,12 +77,9 @@ TEST(CreatureRenderGraph, HorseAndElephantHaveLargerLodDistances) {
   auto horse = horse_lod_config();
   auto elephant = elephant_lod_config();
 
-  // Horses and elephants are larger, so they should have larger LOD distances
   EXPECT_GE(horse.thresholds.full, humanoid.thresholds.full);
   EXPECT_GE(elephant.thresholds.full, humanoid.thresholds.full);
 }
-
-// --- Settings-based Config Tests ---
 
 TEST(CreatureRenderGraph, HumanoidConfigFromSettingsReturnsValidConfig) {
   auto config = humanoid_lod_config_from_settings();
@@ -168,11 +159,7 @@ TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {
   auto humanoid = humanoid_lod_config_from_settings();
   auto horse = horse_lod_config_from_settings();
   auto elephant = elephant_lod_config_from_settings();
-
-  // All species should have temporal skip parameters
 }
-
-// --- LOD Evaluation Tests ---
 
 TEST(CreatureRenderGraph, EvaluateLodReturnsFullAtCloseDistance) {
   CreatureGraphInputs inputs;
@@ -224,9 +211,9 @@ TEST(CreatureRenderGraph, EvaluateLodReturnsBillboardBeyondMinimal) {
 
 TEST(CreatureRenderGraph, ForcedLodOverridesDistanceCalculation) {
   CreatureGraphInputs inputs;
-  inputs.camera_distance = 100.0F; // Would normally be Billboard
+  inputs.camera_distance = 100.0F;
   inputs.has_camera = true;
-  inputs.forced_lod = CreatureLOD::Full; // Force Full LOD
+  inputs.forced_lod = CreatureLOD::Full;
 
   auto config = humanoid_lod_config();
   auto decision = evaluate_creature_lod(inputs, config);
@@ -246,8 +233,6 @@ TEST(CreatureRenderGraph, NoCameraMeansFullLod) {
   EXPECT_EQ(decision.lod, CreatureLOD::Full);
   EXPECT_FALSE(decision.culled);
 }
-
-// --- Graph Output Tests ---
 
 TEST(CreatureRenderGraph, BuildBaseOutputSetsLodFromDecision) {
   CreatureGraphInputs inputs;
@@ -300,8 +285,6 @@ TEST(CreatureRenderGraph, BuildBaseOutputCopiesWorldMatrix) {
   EXPECT_EQ(output.world_matrix, ctx.model);
 }
 
-// --- Creature Render Batch Tests ---
-
 TEST(CreatureRenderBatch, StartsEmpty) {
   CreatureRenderBatch batch;
   EXPECT_TRUE(batch.empty());
@@ -325,7 +308,7 @@ TEST(CreatureRenderBatch, AddHumanoidIncreasesSize) {
 TEST(CreatureRenderBatch, CulledCreatureNotAdded) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
-  output.culled = true; // This creature is culled
+  output.culled = true;
   Render::GL::HumanoidPose pose{};
   Render::GL::HumanoidVariant variant{};
   Render::GL::HumanoidAnimationContext anim{};
@@ -381,10 +364,8 @@ TEST(CreatureRenderBatch, ReserveDoesNotChangeSize) {
   EXPECT_TRUE(batch.empty());
 }
 
-// --- Integration Tests ---
-
 TEST(CreatureRenderGraph, EndToEndHumanoidPrepare) {
-  // Simulate the full graph pipeline for a humanoid
+
   CreatureGraphInputs inputs;
   inputs.camera_distance = 5.0F;
   inputs.has_camera = true;
@@ -411,7 +392,7 @@ TEST(CreatureRenderGraph, EndToEndHumanoidPrepare) {
 }
 
 TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
-  // Simulate the full graph pipeline for a horse
+
   CreatureGraphInputs inputs;
   inputs.camera_distance = 10.0F;
   inputs.has_camera = true;
@@ -436,7 +417,7 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
 }
 
 TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
-  // Simulate the full graph pipeline for an elephant
+
   CreatureGraphInputs inputs;
   inputs.camera_distance = 10.0F;
   inputs.has_camera = true;
@@ -460,8 +441,6 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   EXPECT_TRUE(batch.rows().empty());
 }
 
-// --- Template/Cache Prewarming Tests ---
-
 TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
   Render::GL::DrawContext ctx{};
   ctx.template_prewarm = true;
@@ -472,7 +451,6 @@ TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {
   CreatureLodDecision decision;
   auto output = build_base_graph_output(inputs, decision);
 
-  // Prewarm contexts should be tagged as Shadow pass
   EXPECT_EQ(output.pass_intent, RenderPassIntent::Shadow);
 }
 
@@ -511,8 +489,6 @@ TEST(CreatureRenderGraph, MainPassRowsSubmitDrawCalls) {
 
   EXPECT_EQ(stats.entities_submitted, 1u);
 }
-
-// --- CreaturePreparationResult Tests ---
 
 TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
   CreaturePreparationResult result;

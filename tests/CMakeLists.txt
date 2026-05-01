@@ -5,6 +5,7 @@
 add_executable(standard_of_iron_tests
     core/serialization_test.cpp
     core/ground_type_test.cpp
+    core/building_spawn_setup_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp
@@ -24,6 +25,7 @@ add_executable(standard_of_iron_tests
     systems/combat_mode_test.cpp
     systems/archer_bonus_test.cpp
     systems/ai_system_test.cpp
+    systems/defense_tower_system_test.cpp
     render/pose_controller_test.cpp
     render/pose_controller_compatibility_test.cpp
     render/mounted_pose_controller_test.cpp
@@ -35,6 +37,10 @@ add_executable(standard_of_iron_tests
     render/horse_equipment_renderers_test.cpp
     render/spawn_validator_test.cpp
     render/battle_render_optimizer_test.cpp
+    render/barracks_flag_renderer_test.cpp
+    render/building_archetype_desc_test.cpp
+    render/building_render_common_test.cpp
+    render/unit_render_cache_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/linear_feature_geometry_test.cpp

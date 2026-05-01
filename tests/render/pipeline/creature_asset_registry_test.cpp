@@ -161,7 +161,6 @@ TEST(CreatureAssetRegistry, AllAssetsHaveFillRoleColorsCallback) {
 TEST(CreatureAssetRegistry, FillRoleColorsProducesValidOutput) {
   const auto &reg = CreatureAssetRegistry::instance();
 
-  // Humanoid
   UnitVisualSpec hspec{};
   hspec.kind = CreatureKind::Humanoid;
   const auto *h = reg.resolve(hspec);
@@ -174,7 +173,6 @@ TEST(CreatureAssetRegistry, FillRoleColorsProducesValidOutput) {
   EXPECT_GT(hcount, 0U);
   EXPECT_LE(hcount, h->role_count);
 
-  // Horse
   UnitVisualSpec hrspec{};
   hrspec.kind = CreatureKind::Horse;
   const auto *hr = reg.resolve(hrspec);
@@ -186,7 +184,6 @@ TEST(CreatureAssetRegistry, FillRoleColorsProducesValidOutput) {
   EXPECT_GT(hrcount, 0U);
   EXPECT_LE(hrcount, hr->role_count);
 
-  // Elephant
   UnitVisualSpec elspec{};
   elspec.kind = CreatureKind::Elephant;
   const auto *el = reg.resolve(elspec);

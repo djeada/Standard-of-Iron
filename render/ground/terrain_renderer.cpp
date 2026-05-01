@@ -1037,20 +1037,22 @@ auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
     float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
     float const t_smooth = t * t * (3.0F - 2.0F * t);
 
-    QVector3D const grass_low = surface_profile.grass_primary * 0.3F +
-                                surface_profile.grass_secondary * 0.7F;
-    QVector3D const grass_high = surface_profile.grass_secondary * 0.6F +
-                                 surface_profile.grass_dry * 0.4F;
+    // Lower slopes keep more primary (lush) grass; upper slopes dry out.
+    QVector3D const grass_low = surface_profile.grass_primary * 0.55F +
+                                surface_profile.grass_secondary * 0.45F;
+    QVector3D const grass_high = surface_profile.grass_secondary * 0.55F +
+                                 surface_profile.grass_dry * 0.45F;
     QVector3D const grass =
         grass_low * (1.0F - t_smooth) + grass_high * t_smooth;
 
     QVector3D const rock = surface_profile.rock_low * (1.0F - t_smooth) +
                            surface_profile.rock_high * t_smooth;
 
-    float const rock_blend_base = 0.15F + 0.45F * t_smooth;
-    float const height_factor = std::clamp((height - 0.5F) * 0.3F, 0.0F, 0.25F);
+    float const rock_blend_base = 0.12F + 0.48F * t_smooth;
+    float const height_factor =
+        std::clamp((height - 0.5F) * 0.28F, 0.0F, 0.22F);
     float const rock_blend =
-        std::clamp(rock_blend_base + height_factor, 0.0F, 0.70F);
+        std::clamp(rock_blend_base + height_factor, 0.0F, 0.65F);
 
     return grass * (1.0F - rock_blend) + rock * rock_blend;
   }

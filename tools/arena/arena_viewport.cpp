@@ -1,12 +1,15 @@
 #include "arena_viewport.h"
 
 #include "app/core/renderer_bootstrap.h"
+#include "app/utils/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
+#include "game/game_config.h"
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
+#include "game/systems/camera_service.h"
 #include "game/systems/command_service.h"
 #include "game/systems/nation_id.h"
 #include "game/systems/nation_registry.h"
@@ -16,6 +19,7 @@
 #include "game/systems/troop_count_registry.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
+#include "game/units/troop_config.h"
 #include "game/units/troop_type.h"
 #include "game/units/unit.h"
 #include "render/gl/camera.h"
@@ -29,8 +33,12 @@
 
 #include <QDebug>
 #include <QEvent>
+#include <QFocusEvent>
 #include <QFont>
 #include <QFontMetrics>
+#include <QGuiApplication>
+#include <QKeyEvent>
+#include <QMap>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPen>
@@ -52,6 +60,37 @@ constexpr int k_terrain_width = 96;
 constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr int k_selection_drag_threshold = 6;
+
+constexpr int k_buildings_per_row = 4;
+constexpr float k_building_spacing = 5.0F;
+constexpr float k_building_base_z = 25.0F;
+
+auto local_controllable_selection(
+    Engine::Core::World *world,
+    const std::vector<Engine::Core::EntityID> &selected_ids)
+    -> std::vector<Engine::Core::EntityID> {
+  std::vector<Engine::Core::EntityID> controllable_ids;
+  if (world == nullptr) {
+    return controllable_ids;
+  }
+
+  controllable_ids.reserve(selected_ids.size());
+  for (auto entity_id : selected_ids) {
+    auto *entity = world->get_entity(entity_id);
+    auto *unit_component =
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if ((unit_component == nullptr) ||
+        (unit_component->owner_id != k_local_owner_id) ||
+        (unit_component->health <= 0) ||
+        (entity != nullptr &&
+         entity->has_component<Engine::Core::PendingRemovalComponent>())) {
+      continue;
+    }
+    controllable_ids.push_back(entity_id);
+  }
+  return controllable_ids;
+}
 
 inline auto clamp_octaves(int octaves) -> int {
   return std::clamp(octaves, 1, 8);
@@ -164,6 +203,34 @@ auto spawn_count_for_owner(
   return count;
 }
 
+auto prettify_identifier(const QString &value) -> QString {
+  QString label = value;
+  label.replace(QLatin1Char('_'), QLatin1Char(' '));
+  QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
+  for (QString &part : parts) {
+    if (!part.isEmpty()) {
+      part[0] = part[0].toUpper();
+    }
+  }
+  return parts.join(QLatin1Char(' '));
+}
+
+auto is_mounted_spawn_type(Game::Units::SpawnType spawn_type) -> bool {
+  using Game::Units::SpawnType;
+  return spawn_type == SpawnType::MountedKnight ||
+         spawn_type == SpawnType::HorseArcher ||
+         spawn_type == SpawnType::HorseSpearman;
+}
+
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
+    -> int {
+  if (unit.render_individuals_per_unit_override > 0) {
+    return unit.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit.spawn_type);
+}
+
 } // namespace
 
 ArenaViewport::ArenaViewport(QWidget *parent)
@@ -184,22 +251,26 @@ ArenaViewport::ArenaViewport(QWidget *parent)
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
   m_rain = std::move(rendering.rain);
+  m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
+  if (m_renderer != nullptr) {
+    m_renderer->set_force_full_creature_lod(true);
+  }
 
   RendererBootstrap::initialize_world_systems(*m_world);
   configure_runtime();
-  regenerateTerrain();
-  resetCamera();
+  regenerate_terrain();
+  reset_camera();
 
-  m_frameClock.start();
-  m_frameTimer.setInterval(16);
-  connect(&m_frameTimer, &QTimer::timeout, this,
+  m_frame_clock.start();
+  m_frame_timer.setInterval(16);
+  connect(&m_frame_timer, &QTimer::timeout, this,
           qOverload<>(&ArenaViewport::update));
-  m_frameTimer.start();
+  m_frame_timer.start();
 }
 
 ArenaViewport::~ArenaViewport() {
-  m_frameTimer.stop();
+  m_frame_timer.stop();
   m_units.clear();
   Game::Map::TerrainService::instance().clear();
 
@@ -272,8 +343,8 @@ void ArenaViewport::initializeGL() {
   }
 
   configure_rendering_from_terrain();
-  setWireframeEnabled(m_wireframe_enabled);
-  m_frameClock.restart();
+  set_wireframe_enabled(m_wireframe_enabled);
+  m_frame_clock.restart();
 }
 
 void ArenaViewport::resizeGL(int width, int height) {
@@ -289,14 +360,15 @@ void ArenaViewport::paintGL() {
   }
 
   float real_dt = 1.0F / 60.0F;
-  if (m_frameClock.isValid()) {
-    real_dt = std::clamp(static_cast<float>(m_frameClock.restart()) / 1000.0F,
+  if (m_frame_clock.isValid()) {
+    real_dt = std::clamp(static_cast<float>(m_frame_clock.restart()) / 1000.0F,
                          0.0F, 0.1F);
   }
   m_fps = real_dt > 0.0F ? (m_fps * 0.9F + (1.0F / real_dt) * 0.1F) : m_fps;
   float const simulation_dt = m_paused ? 0.0F : real_dt;
 
   sanitize_selection();
+  apply_keyboard_camera_controls(real_dt);
   m_camera->update(real_dt);
 
   if (!m_paused) {
@@ -313,6 +385,7 @@ void ArenaViewport::paintGL() {
   }
 
   update_selected_entities();
+  sync_selection_summary();
   m_renderer->set_hovered_entity_id(m_hovered_entity_id);
   m_renderer->set_local_owner_id(k_local_owner_id);
   m_renderer->update_animation_time(simulation_dt);
@@ -334,15 +407,139 @@ void ArenaViewport::paintGL() {
     QPainter stats_painter(this);
     stats_painter.setRenderHint(QPainter::Antialiasing, false);
     draw_stats_overlay(stats_painter);
+    if (m_controls_overlay_visible) {
+      draw_controls_overlay(stats_painter);
+    }
   }
 }
 
+void ArenaViewport::keyPressEvent(QKeyEvent *event) {
+  if (event == nullptr) {
+    return;
+  }
+
+  switch (event->key()) {
+  case Qt::Key_Up:
+    m_pan_up_pressed = true;
+    event->accept();
+    return;
+  case Qt::Key_Down:
+    m_pan_down_pressed = true;
+    event->accept();
+    return;
+  case Qt::Key_Left:
+    m_pan_left_pressed = true;
+    event->accept();
+    return;
+  case Qt::Key_Right:
+    m_pan_right_pressed = true;
+    event->accept();
+    return;
+  case Qt::Key_Q:
+    if (m_camera_service != nullptr && m_camera != nullptr) {
+      float const yaw_step =
+          (event->modifiers() & Qt::ShiftModifier) != 0 ? 8.0F : 4.0F;
+      m_camera_service->yaw(*m_camera, -yaw_step);
+      update();
+    }
+    event->accept();
+    return;
+  case Qt::Key_E:
+    if (m_camera_service != nullptr && m_camera != nullptr) {
+      float const yaw_step =
+          (event->modifiers() & Qt::ShiftModifier) != 0 ? 8.0F : 4.0F;
+      m_camera_service->yaw(*m_camera, yaw_step);
+      update();
+    }
+    event->accept();
+    return;
+  case Qt::Key_R:
+    if (m_camera_service != nullptr && m_camera != nullptr) {
+      m_camera_service->orbit_direction(
+          *m_camera, 1, (event->modifiers() & Qt::ShiftModifier) != 0);
+      update();
+    }
+    event->accept();
+    return;
+  case Qt::Key_F:
+    if (m_camera_service != nullptr && m_camera != nullptr) {
+      m_camera_service->orbit_direction(
+          *m_camera, -1, (event->modifiers() & Qt::ShiftModifier) != 0);
+      update();
+    }
+    event->accept();
+    return;
+  case Qt::Key_X:
+    if (!event->isAutoRepeat()) {
+      select_all_local_units();
+    }
+    event->accept();
+    return;
+  case Qt::Key_Space:
+    if (!event->isAutoRepeat()) {
+      pause_simulation(!m_paused);
+    }
+    event->accept();
+    return;
+  case Qt::Key_F1:
+  case Qt::Key_Question:
+    if (!event->isAutoRepeat()) {
+      m_controls_overlay_visible = !m_controls_overlay_visible;
+      update();
+    }
+    event->accept();
+    return;
+  default:
+    break;
+  }
+
+  QOpenGLWidget::keyPressEvent(event);
+}
+
+void ArenaViewport::keyReleaseEvent(QKeyEvent *event) {
+  if (event == nullptr) {
+    return;
+  }
+
+  switch (event->key()) {
+  case Qt::Key_Up:
+    m_pan_up_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_Down:
+    m_pan_down_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_Left:
+    m_pan_left_pressed = false;
+    event->accept();
+    return;
+  case Qt::Key_Right:
+    m_pan_right_pressed = false;
+    event->accept();
+    return;
+  default:
+    break;
+  }
+
+  QOpenGLWidget::keyReleaseEvent(event);
+}
+
+void ArenaViewport::focusOutEvent(QFocusEvent *event) {
+  clear_camera_key_state();
+  QOpenGLWidget::focusOutEvent(event);
+}
+
 void ArenaViewport::mousePressEvent(QMouseEvent *event) {
+  setFocus(Qt::MouseFocusReason);
   m_last_mouse_pos = event->pos();
   if (event->button() == Qt::LeftButton) {
     m_selection_anchor = event->pos();
     m_selection_current = event->pos();
     m_selection_drag_active = true;
+  } else if (event->button() == Qt::RightButton &&
+             (event->modifiers() & Qt::AltModifier) == 0) {
+    issue_move_order(event->position());
   }
   QOpenGLWidget::mousePressEvent(event);
 }
@@ -388,17 +585,14 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
     } else {
       QPointF const click_pos = event->position();
       Engine::Core::EntityID const picked =
-          Game::Systems::PickingService::pick_unit_first(
+          Game::Systems::PickingService::pick_single(
               static_cast<float>(click_pos.x()),
               static_cast<float>(click_pos.y()), *m_world, *m_camera, width(),
-              height(), k_all_owners_filter);
+              height(), k_local_owner_id, true);
       select_entity(picked, additive);
     }
     m_selection_drag_active = false;
     update();
-  } else if (event->button() == Qt::RightButton &&
-             (event->modifiers() & Qt::AltModifier) == 0) {
-    issue_move_order(event->position());
   }
 
   QOpenGLWidget::mouseReleaseEvent(event);
@@ -472,10 +666,39 @@ void ArenaViewport::select_entities_in_rect(const QRect &selection_rect,
       static_cast<float>(normalized.top()),
       static_cast<float>(normalized.right()),
       static_cast<float>(normalized.bottom()), *m_world, *m_camera, width(),
-      height(), k_all_owners_filter);
+      height(), k_local_owner_id);
   for (auto entity_id : picked) {
     selection->select_unit(entity_id);
   }
+}
+
+void ArenaViewport::select_all_local_units() {
+  auto *selection = selection_system();
+  if (selection == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  selection->clear_selection();
+  for (const auto &unit : m_units) {
+    if (unit == nullptr) {
+      continue;
+    }
+
+    auto *entity = m_world->get_entity(unit->id());
+    auto *unit_component =
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if ((unit_component == nullptr) ||
+        (unit_component->owner_id != k_local_owner_id) ||
+        (unit_component->health <= 0) ||
+        (entity != nullptr &&
+         entity->has_component<Engine::Core::PendingRemovalComponent>())) {
+      continue;
+    }
+
+    selection->select_unit(entity->get_id());
+  }
+  update();
 }
 
 void ArenaViewport::issue_move_order(const QPointF &screen_pos) {
@@ -490,24 +713,102 @@ void ArenaViewport::issue_move_order(const QPointF &screen_pos) {
     return;
   }
 
-  QVector3D target{};
-  if (!Game::Systems::PickingService::screen_to_ground(
-          *m_camera, width(), height(), screen_pos, target)) {
+  std::vector<Engine::Core::EntityID> const ids = local_controllable_selection(
+      m_world.get(), selection->get_selected_units());
+  if (ids.empty()) {
+    return;
+  }
+  clear_forced_animation_state(ids);
+  App::Utils::issue_move_or_attack_command(
+      m_world.get(), ids, m_picking_service.get(), m_camera.get(),
+      screen_pos.x(), screen_pos.y(), width(), height(), k_local_owner_id);
+  update();
+}
+
+void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
+  if (m_camera_service == nullptr || m_camera == nullptr) {
     return;
   }
 
-  target.setY(Game::Map::TerrainService::instance().resolve_surface_world_y(
-      target.x(), target.z(), 0.0F, target.y()));
+  int dx = 0;
+  int dz = 0;
+  if (m_pan_up_pressed) {
+    dz += 1;
+  }
+  if (m_pan_down_pressed) {
+    dz -= 1;
+  }
+  if (m_pan_left_pressed) {
+    dx -= 1;
+  }
+  if (m_pan_right_pressed) {
+    dx += 1;
+  }
+  if (dx == 0 && dz == 0) {
+    return;
+  }
 
-  std::vector<Engine::Core::EntityID> const ids =
-      selection->get_selected_units();
-  std::vector<QVector3D> targets(ids.size(), target);
-  clear_forced_animation_state(ids);
+  float const step =
+      ((QGuiApplication::keyboardModifiers() & Qt::ShiftModifier) != 0) ? 2.0F
+                                                                        : 1.0F;
+  float const frame_scale = std::clamp(real_dt * 60.0F, 0.5F, 2.0F);
+  m_camera_service->move(*m_camera, static_cast<float>(dx) * step * frame_scale,
+                         static_cast<float>(dz) * step * frame_scale);
+}
 
-  Game::Systems::CommandService::MoveOptions options;
-  options.group_move = ids.size() > 1;
-  Game::Systems::CommandService::move_units(*m_world, ids, targets, options);
-  update();
+void ArenaViewport::clear_camera_key_state() {
+  m_pan_up_pressed = false;
+  m_pan_down_pressed = false;
+  m_pan_left_pressed = false;
+  m_pan_right_pressed = false;
+}
+
+auto ArenaViewport::owner_display_name(int owner_id) const -> QString {
+  std::string const owner_name =
+      Game::Systems::OwnerRegistry::instance().get_owner_name(owner_id);
+  return owner_name.empty() ? QStringLiteral("Owner %1").arg(owner_id)
+                            : QString::fromStdString(owner_name);
+}
+
+auto ArenaViewport::nation_display_name(Game::Systems::NationID nation_id) const
+    -> QString {
+  const auto *nation =
+      Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  if (nation == nullptr) {
+    return prettify_identifier(Game::Systems::nation_id_to_qstring(nation_id));
+  }
+
+  QString const label = QString::fromStdString(nation->display_name).trimmed();
+  return label.isEmpty() ? prettify_identifier(
+                               Game::Systems::nation_id_to_qstring(nation_id))
+                         : label;
+}
+
+auto ArenaViewport::troop_display_name(Game::Systems::NationID nation_id,
+                                       Game::Units::SpawnType spawnType) const
+    -> QString {
+  auto troop_type = Game::Units::spawn_typeToTroopType(spawnType);
+  if (!troop_type.has_value()) {
+    return QStringLiteral("Unknown");
+  }
+
+  const auto *nation =
+      Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  if (nation != nullptr) {
+    auto it = std::find_if(
+        nation->available_troops.begin(), nation->available_troops.end(),
+        [&troop_type](const Game::Systems::TroopType &entry) {
+          return entry.unit_type == troop_type.value();
+        });
+    if (it != nation->available_troops.end()) {
+      QString const label = QString::fromStdString(it->display_name).trimmed();
+      if (!label.isEmpty()) {
+        return label;
+      }
+    }
+  }
+
+  return prettify_identifier(Game::Units::troop_typeToQString(*troop_type));
 }
 
 void ArenaViewport::sanitize_selection() {
@@ -539,7 +840,109 @@ void ArenaViewport::update_selected_entities() {
   m_renderer->set_selected_entities(ids);
 }
 
-void ArenaViewport::regenerateTerrain() {
+void ArenaViewport::sync_selection_summary() {
+  QString const summary = build_selection_summary();
+  if (summary == m_last_selection_summary) {
+    return;
+  }
+  m_last_selection_summary = summary;
+  emit selection_summary_changed(summary);
+}
+
+auto ArenaViewport::build_selection_summary() const -> QString {
+  auto *selection = selection_system();
+  if (selection == nullptr || m_world == nullptr) {
+    return QStringLiteral("No units selected.");
+  }
+
+  const auto &selected = selection->get_selected_units();
+  if (selected.empty()) {
+    return QStringLiteral("No units selected.");
+  }
+
+  int living_count = 0;
+  int total_individuals = 0;
+  int health_sum = 0;
+  int max_health_sum = 0;
+  int riderless_mounts = 0;
+  float center_x = 0.0F;
+  float center_z = 0.0F;
+  QMap<QString, int> owner_counts;
+  QMap<QString, int> composition_counts;
+
+  for (auto entity_id : selected) {
+    auto *entity = m_world->get_entity(entity_id);
+    auto *unit = entity != nullptr
+                     ? entity->get_component<Engine::Core::UnitComponent>()
+                     : nullptr;
+    auto *transform =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
+    if (entity == nullptr || unit == nullptr || transform == nullptr ||
+        unit->health <= 0 ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    ++living_count;
+    total_individuals += resolved_individuals_per_unit(*unit);
+    health_sum += std::max(0, unit->health);
+    max_health_sum += std::max(1, unit->max_health);
+    center_x += transform->position.x;
+    center_z += transform->position.z;
+    if (is_mounted_spawn_type(unit->spawn_type) && !unit->render_rider) {
+      ++riderless_mounts;
+    }
+    owner_counts[owner_display_name(unit->owner_id)] += 1;
+    composition_counts[QStringLiteral("%1 %2").arg(
+        nation_display_name(unit->nation_id),
+        troop_display_name(unit->nation_id, unit->spawn_type))] += 1;
+  }
+
+  if (living_count == 0) {
+    return QStringLiteral("No units selected.");
+  }
+
+  QStringList owner_parts;
+  for (auto it = owner_counts.cbegin(); it != owner_counts.cend(); ++it) {
+    owner_parts << QStringLiteral("%1 x%2").arg(it.key()).arg(it.value());
+  }
+
+  QStringList composition_parts;
+  for (auto it = composition_counts.cbegin(); it != composition_counts.cend();
+       ++it) {
+    composition_parts << QStringLiteral("%1 x%2").arg(it.key()).arg(it.value());
+  }
+  if (composition_parts.size() > 4) {
+    int const hidden_count = composition_parts.size() - 4;
+    composition_parts = composition_parts.mid(0, 4);
+    composition_parts << QStringLiteral("+%1 more").arg(hidden_count);
+  }
+
+  center_x /= static_cast<float>(living_count);
+  center_z /= static_cast<float>(living_count);
+  int const health_percent =
+      max_health_sum > 0 ? (health_sum * 100) / max_health_sum : 0;
+
+  QStringList lines;
+  lines << QStringLiteral("Selected: %1").arg(living_count);
+  lines << QStringLiteral("Sides: %1")
+               .arg(owner_parts.join(QStringLiteral(", ")));
+  lines << QStringLiteral("Health: %1%").arg(health_percent);
+  lines << QStringLiteral("Members: %1 total").arg(total_individuals);
+  lines << QStringLiteral("Center: (%1, %2)")
+               .arg(center_x, 0, 'f', 1)
+               .arg(center_z, 0, 'f', 1);
+  if (riderless_mounts > 0) {
+    lines << QStringLiteral("Riderless mounts: %1").arg(riderless_mounts);
+  }
+  lines << QStringLiteral("Units: %1")
+               .arg(composition_parts.join(QStringLiteral(", ")));
+  return lines.join(QLatin1Char('\n'));
+}
+
+void ArenaViewport::regenerate_terrain() {
   std::vector<float> heights(
       static_cast<size_t>(k_terrain_width * k_terrain_height), 0.0F);
   std::vector<Game::Map::TerrainType> terrain_types(
@@ -583,6 +986,27 @@ void ArenaViewport::regenerateTerrain() {
   float const normalization = std::max(0.001F, max_height);
   for (size_t i = 0; i < heights.size(); ++i) {
     terrain_types[i] = classify_terrain(heights[i] / normalization);
+  }
+
+  float const arena_floor_height =
+      std::min(safe_scale * 0.18F, std::max(0.0F, max_height * 0.25F));
+  constexpr float k_arena_half_width = 18.0F;
+  constexpr float k_arena_half_depth = 18.0F;
+  for (int z = 0; z < k_terrain_height; ++z) {
+    for (int x = 0; x < k_terrain_width; ++x) {
+      float const world_x =
+          (static_cast<float>(x) - half_width) * k_terrain_tile_size;
+      float const world_z =
+          (static_cast<float>(z) - half_height) * k_terrain_tile_size;
+      if (std::abs(world_x) > k_arena_half_width ||
+          std::abs(world_z) > k_arena_half_depth) {
+        continue;
+      }
+
+      size_t const index = static_cast<size_t>(z * k_terrain_width + x);
+      heights[index] = arena_floor_height;
+      terrain_types[index] = Game::Map::TerrainType::Flat;
+    }
   }
 
   Game::Map::BiomeSettings biome;
@@ -630,26 +1054,26 @@ void ArenaViewport::configure_rendering_from_terrain() {
         world_width, world_height,
         static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));
   }
-  setWireframeEnabled(m_wireframe_enabled);
+  set_wireframe_enabled(m_wireframe_enabled);
 }
 
-void ArenaViewport::setTerrainSeed(int seed) {
+void ArenaViewport::set_terrain_seed(int seed) {
   m_terrain_settings.seed = std::max(0, seed);
 }
 
-void ArenaViewport::setTerrainHeightScale(float value) {
+void ArenaViewport::set_terrain_height_scale(float value) {
   m_terrain_settings.height_scale = std::max(0.0F, value);
 }
 
-void ArenaViewport::setTerrainOctaves(int value) {
+void ArenaViewport::set_terrain_octaves(int value) {
   m_terrain_settings.octaves = clamp_octaves(value);
 }
 
-void ArenaViewport::setTerrainFrequency(float value) {
+void ArenaViewport::set_terrain_frequency(float value) {
   m_terrain_settings.frequency = std::clamp(value, 0.01F, 2.0F);
 }
 
-void ArenaViewport::setWireframeEnabled(bool enabled) {
+void ArenaViewport::set_wireframe_enabled(bool enabled) {
   m_wireframe_enabled = enabled;
   if (m_terrain_scene != nullptr && m_terrain_scene->terrain() != nullptr) {
     m_terrain_scene->terrain()->set_wireframe(enabled);
@@ -657,90 +1081,242 @@ void ArenaViewport::setWireframeEnabled(bool enabled) {
   update();
 }
 
-void ArenaViewport::setNormalsOverlayEnabled(bool enabled) {
+void ArenaViewport::set_normals_overlay_enabled(bool enabled) {
   m_normals_overlay_enabled = enabled;
   update();
 }
 
-void ArenaViewport::setGroundType(const QString &groundType) {
+void ArenaViewport::set_ground_type(const QString &ground_type) {
   Game::Map::GroundType parsed = Game::Map::GroundType::ForestMud;
-  if (!Game::Map::try_parse_ground_type(groundType, parsed)) {
-    qWarning() << "ArenaViewport: unknown ground type" << groundType
+  if (!Game::Map::try_parse_ground_type(ground_type, parsed)) {
+    qWarning() << "ArenaViewport: unknown ground type" << ground_type
                << "- defaulting to ForestMud";
   }
   if (m_ground_type == parsed) {
     return;
   }
   m_ground_type = parsed;
-  regenerateTerrain();
+  regenerate_terrain();
 }
 
-void ArenaViewport::setRainEnabled(bool enabled) {
+void ArenaViewport::set_rain_enabled(bool enabled) {
   if (m_rain != nullptr) {
     m_rain->set_enabled(enabled);
   }
   update();
 }
 
-void ArenaViewport::setRainIntensity(float intensity) {
+void ArenaViewport::set_rain_intensity(float intensity) {
   if (m_rain != nullptr) {
     m_rain->set_intensity(intensity);
   }
   update();
 }
 
-void ArenaViewport::setSpawnOwner(int ownerId) {
-  if (ownerId == k_enemy_owner_id) {
+void ArenaViewport::set_spawn_owner(int owner_id) {
+  if (owner_id == k_enemy_owner_id) {
     m_spawn_owner_id = k_enemy_owner_id;
     return;
   }
   m_spawn_owner_id = k_local_owner_id;
 }
 
-void ArenaViewport::setSpawnNation(const QString &nationId) {
+void ArenaViewport::set_spawn_nation(const QString &nation_id) {
   Game::Systems::NationID parsed{};
-  if (!Game::Systems::try_parse_nation_id(nationId, parsed)) {
+  if (!Game::Systems::try_parse_nation_id(nation_id, parsed)) {
     return;
   }
   m_spawn_nation_id = parsed;
   sync_spawn_selection_defaults();
 }
 
-void ArenaViewport::setSpawnUnitType(const QString &unitType) {
+void ArenaViewport::set_spawn_unit_type(const QString &unit_type) {
   Game::Units::TroopType parsed{};
-  if (!Game::Units::tryParseTroopType(unitType, parsed)) {
+  if (!Game::Units::tryParseTroopType(unit_type, parsed)) {
     return;
   }
   m_spawn_unit_type = parsed;
 }
 
-void ArenaViewport::spawnUnit() {
-  if (m_unit_factory == nullptr || m_world == nullptr) {
+void ArenaViewport::set_spawn_individuals_per_unit(int count) {
+  m_spawn_individuals_per_unit_override = std::max(0, count);
+  auto *selection = selection_system();
+  if (selection != nullptr && !selection->get_selected_units().empty()) {
+    apply_visual_overrides_to_selection();
+  }
+}
+
+void ArenaViewport::set_spawn_rider_visible(bool visible) {
+  m_spawn_rider_visible = visible;
+  auto *selection = selection_system();
+  if (selection != nullptr && !selection->get_selected_units().empty()) {
+    apply_visual_overrides_to_selection();
+  }
+}
+
+void ArenaViewport::spawn_unit() { spawn_units(1); }
+
+void ArenaViewport::spawn_units(int count) {
+  int const clamped_count = std::clamp(count, 1, 128);
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  spawned_ids.reserve(static_cast<size_t>(clamped_count));
+
+  for (int i = 0; i < clamped_count; ++i) {
+    Engine::Core::EntityID const entity_id = spawn_single_unit(
+        m_spawn_owner_id, m_spawn_nation_id, m_spawn_unit_type);
+    if (entity_id != 0U) {
+      spawned_ids.push_back(entity_id);
+    }
+  }
+
+  if (spawned_ids.empty()) {
     return;
   }
 
+  select_spawned_entities(spawned_ids);
+  update();
+}
+
+void ArenaViewport::spawn_opposing_batch(int count) {
+  int const clamped_count = std::clamp(count, 1, 128);
+  int const owner_id = m_spawn_owner_id == k_enemy_owner_id ? k_local_owner_id
+                                                            : k_enemy_owner_id;
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  spawned_ids.reserve(static_cast<size_t>(clamped_count));
+
+  for (int i = 0; i < clamped_count; ++i) {
+    Engine::Core::EntityID const entity_id =
+        spawn_single_unit(owner_id, m_spawn_nation_id, m_spawn_unit_type);
+    if (entity_id != 0U) {
+      spawned_ids.push_back(entity_id);
+    }
+  }
+
+  if (spawned_ids.empty()) {
+    return;
+  }
+
+  select_spawned_entities(spawned_ids);
+  update();
+}
+
+void ArenaViewport::spawn_mirror_match(int count) {
+  int const clamped_count = std::clamp(count, 1, 128);
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  spawned_ids.reserve(static_cast<size_t>(clamped_count * 2));
+
+  for (int owner_id : {k_local_owner_id, k_enemy_owner_id}) {
+    for (int i = 0; i < clamped_count; ++i) {
+      Engine::Core::EntityID const entity_id =
+          spawn_single_unit(owner_id, m_spawn_nation_id, m_spawn_unit_type);
+      if (entity_id != 0U) {
+        spawned_ids.push_back(entity_id);
+      }
+    }
+  }
+
+  if (spawned_ids.empty()) {
+    return;
+  }
+
+  select_spawned_entities(spawned_ids);
+  update();
+}
+
+void ArenaViewport::apply_visual_overrides_to_selection() {
+  sanitize_selection();
+  auto *selection = selection_system();
+  if (selection == nullptr || m_world == nullptr) {
+    return;
+  }
+
+  for (auto entity_id : selection->get_selected_units()) {
+    auto *entity = m_world->get_entity(entity_id);
+    auto *unit_component =
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if (unit_component == nullptr || unit_component->health <= 0 ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+    unit_component->render_individuals_per_unit_override =
+        m_spawn_individuals_per_unit_override;
+    unit_component->render_rider = m_spawn_rider_visible;
+  }
+
+  update();
+}
+
+void ArenaViewport::select_spawned_entities(
+    const std::vector<Engine::Core::EntityID> &ids) {
+  auto *selection = selection_system();
+  if (selection == nullptr) {
+    return;
+  }
+
+  selection->clear_selection();
+  for (auto entity_id : ids) {
+    selection->select_unit(entity_id);
+  }
+}
+
+auto ArenaViewport::spawn_single_unit() -> Engine::Core::EntityID {
+  return spawn_single_unit(m_spawn_owner_id, m_spawn_nation_id,
+                           m_spawn_unit_type);
+}
+
+auto ArenaViewport::resolve_spawn_unit_type(
+    Game::Systems::NationID nation_id,
+    Game::Units::TroopType preferred) const -> Game::Units::TroopType {
+  const auto *nation =
+      Game::Systems::NationRegistry::instance().get_nation(nation_id);
+  if (nation == nullptr || nation->available_troops.empty()) {
+    return preferred;
+  }
+
+  auto it = std::find_if(nation->available_troops.begin(),
+                         nation->available_troops.end(),
+                         [preferred](const Game::Systems::TroopType &troop) {
+                           return troop.unit_type == preferred;
+                         });
+  return it != nation->available_troops.end()
+             ? preferred
+             : nation->available_troops.front().unit_type;
+}
+
+auto ArenaViewport::spawn_single_unit(
+    int owner_id, Game::Systems::NationID nation_id,
+    Game::Units::TroopType unit_type) -> Engine::Core::EntityID {
+  if (m_unit_factory == nullptr || m_world == nullptr) {
+    return 0U;
+  }
+
+  Game::Units::TroopType const resolved_unit_type =
+      resolve_spawn_unit_type(nation_id, unit_type);
+
   int const owner_spawn_count =
-      spawn_count_for_owner(*m_world, m_units, m_spawn_owner_id);
+      spawn_count_for_owner(*m_world, m_units, owner_id);
   float const column = static_cast<float>(owner_spawn_count % 4);
   float const row = static_cast<float>(owner_spawn_count / 4);
   float const world_x = (column - 1.5F) * 3.5F;
-  float const world_z = m_spawn_owner_id == k_enemy_owner_id
-                            ? (6.0F + row * 4.0F)
-                            : (-6.0F - row * 4.0F);
+  float const world_z =
+      owner_id == k_enemy_owner_id ? (6.0F + row * 4.0F) : (-6.0F - row * 4.0F);
   float const world_y =
       Game::Map::TerrainService::instance().resolve_surface_world_y(
           world_x, world_z, 0.0F, 0.0F);
+  QVector3D const spawn_position =
+      App::Utils::snap_to_walkable_ground({world_x, world_y, world_z});
 
   Game::Units::SpawnParams params;
-  params.position = {world_x, world_y, world_z};
-  params.player_id = m_spawn_owner_id;
-  params.spawn_type = Game::Units::spawn_typeFromTroopType(m_spawn_unit_type);
-  params.ai_controlled = (m_spawn_owner_id == k_enemy_owner_id);
-  params.nation_id = m_spawn_nation_id;
+  params.position = spawn_position;
+  params.player_id = owner_id;
+  params.spawn_type = Game::Units::spawn_typeFromTroopType(resolved_unit_type);
+  params.ai_controlled = (owner_id == k_enemy_owner_id);
+  params.nation_id = nation_id;
 
-  auto unit = m_unit_factory->create(m_spawn_unit_type, *m_world, params);
+  auto unit = m_unit_factory->create(resolved_unit_type, *m_world, params);
   if (unit == nullptr) {
-    return;
+    return 0U;
   }
 
   auto *entity = m_world->get_entity(unit->id());
@@ -751,22 +1327,24 @@ void ArenaViewport::spawnUnit() {
   auto *unit_component =
       entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
                         : nullptr;
-  if (transform != nullptr && m_spawn_owner_id == k_enemy_owner_id) {
+  if (transform != nullptr && owner_id == k_enemy_owner_id) {
     transform->rotation.y = 180.0F;
     transform->desired_yaw = 180.0F;
     transform->has_desired_yaw = true;
   }
   if (unit_component != nullptr) {
     unit_component->speed = m_default_unit_speed;
+    unit_component->render_individuals_per_unit_override =
+        m_spawn_individuals_per_unit_override;
+    unit_component->render_rider = m_spawn_rider_visible;
   }
 
   Engine::Core::EntityID const entity_id = unit->id();
   m_units.push_back(std::move(unit));
-  select_entity(entity_id);
-  update();
+  return entity_id;
 }
 
-void ArenaViewport::clearUnits() {
+void ArenaViewport::clear_units() {
   if (m_world == nullptr) {
     return;
   }
@@ -785,30 +1363,170 @@ void ArenaViewport::clearUnits() {
   update();
 }
 
-void ArenaViewport::setAnimationName(const QString &animationName) {
-  m_animation_name = animationName.trimmed();
+void ArenaViewport::set_spawn_building_owner(int owner_id) {
+  m_spawn_building_owner_id =
+      (owner_id == k_enemy_owner_id) ? k_enemy_owner_id : k_local_owner_id;
+}
+
+void ArenaViewport::set_spawn_building_nation(const QString &nation_id) {
+  Game::Systems::NationID parsed{};
+  if (!Game::Systems::try_parse_nation_id(nation_id, parsed)) {
+    return;
+  }
+  m_spawn_building_nation_id = parsed;
+}
+
+void ArenaViewport::set_spawn_building_type(const QString &building_type) {
+  Game::Units::SpawnType parsed{};
+  if (!Game::Units::tryParseSpawnType(building_type, parsed) ||
+      !Game::Units::is_building_spawn(parsed)) {
+    return;
+  }
+  m_spawn_building_type = parsed;
+}
+
+void ArenaViewport::spawn_buildings(int count) {
+  int const clamped_count = std::clamp(count, 1, 16);
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  spawned_ids.reserve(static_cast<size_t>(clamped_count));
+
+  for (int i = 0; i < clamped_count; ++i) {
+    Engine::Core::EntityID const entity_id = spawn_single_building(
+        m_spawn_building_owner_id, m_spawn_building_nation_id,
+        m_spawn_building_type);
+    if (entity_id != 0U) {
+      spawned_ids.push_back(entity_id);
+    }
+  }
+
+  if (spawned_ids.empty()) {
+    return;
+  }
+
+  select_spawned_entities(spawned_ids);
+  update();
+}
+
+auto ArenaViewport::spawn_single_building(int owner_id,
+                                          Game::Systems::NationID nation_id,
+                                          Game::Units::SpawnType building_type)
+    -> Engine::Core::EntityID {
+  if (m_unit_factory == nullptr || m_world == nullptr) {
+    return 0U;
+  }
+
+  int building_count = 0;
+  for (const auto &unit : m_units) {
+    if (unit == nullptr) {
+      continue;
+    }
+    auto *entity = m_world->get_entity(unit->id());
+    auto *unit_component =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    if (unit_component != nullptr &&
+        unit_component->owner_id == owner_id &&
+        Game::Units::is_building_spawn(unit_component->spawn_type)) {
+      ++building_count;
+    }
+  }
+
+  float const column =
+      static_cast<float>(building_count % k_buildings_per_row);
+  float const row = static_cast<float>(building_count / k_buildings_per_row);
+  float const world_x =
+      (column - static_cast<float>(k_buildings_per_row - 1) * 0.5F) *
+      k_building_spacing;
+  float const world_z = owner_id == k_enemy_owner_id
+                            ? (k_building_base_z + row * k_building_spacing)
+                            : (-k_building_base_z - row * k_building_spacing);
+  float const world_y =
+      Game::Map::TerrainService::instance().resolve_surface_world_y(
+          world_x, world_z, 0.0F, 0.0F);
+  QVector3D const spawn_position = {world_x, world_y, world_z};
+
+  Game::Units::SpawnParams params;
+  params.position = spawn_position;
+  params.player_id = owner_id;
+  params.spawn_type = building_type;
+  params.ai_controlled = false;
+  params.nation_id = nation_id;
+
+  auto unit = m_unit_factory->create(building_type, *m_world, params);
+  if (unit == nullptr) {
+    return 0U;
+  }
+
+  Engine::Core::EntityID const entity_id = unit->id();
+  m_units.push_back(std::move(unit));
+  return entity_id;
+}
+
+void ArenaViewport::clear_buildings() {
+  if (m_world == nullptr) {
+    return;
+  }
+
+  auto *selection = selection_system();
+
+  auto it = m_units.begin();
+  while (it != m_units.end()) {
+    if (*it == nullptr) {
+      it = m_units.erase(it);
+      continue;
+    }
+    auto *entity = m_world->get_entity((*it)->id());
+    auto *unit_component =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    if (unit_component != nullptr &&
+        Game::Units::is_building_spawn(unit_component->spawn_type)) {
+      if (selection != nullptr) {
+        selection->deselect_unit((*it)->id());
+      }
+      m_world->destroy_entity((*it)->id());
+      it = m_units.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  m_hovered_entity_id = 0;
+  update();
+}
+
+void ArenaViewport::reset_arena() {
+  clear_units();
+  pause_simulation(false);
+  reset_camera();
+}
+
+void ArenaViewport::set_animation_name(const QString &animation_name) {
+  m_animation_name = animation_name.trimmed();
   if (m_animation_name.isEmpty()) {
     m_animation_name = QStringLiteral("Idle");
   }
 }
 
-void ArenaViewport::playSelectedAnimation() {
+void ArenaViewport::play_selected_animation() {
   if (m_animation_name.compare(QStringLiteral("Walk"), Qt::CaseInsensitive) ==
       0) {
-    playWalkAnimation();
+    play_walk_animation();
     return;
   }
   if (m_animation_name.compare(QStringLiteral("Attack"), Qt::CaseInsensitive) ==
       0) {
-    playAttackAnimation();
+    play_attack_animation();
     return;
   }
   if (m_animation_name.compare(QStringLiteral("Death"), Qt::CaseInsensitive) ==
       0) {
-    playDeathAnimation();
+    play_death_animation();
     return;
   }
-  playIdleAnimation();
+  play_idle_animation();
 }
 
 auto ArenaViewport::selected_unit_ids_or_fallback()
@@ -863,13 +1581,13 @@ void ArenaViewport::clear_forced_animation_state(
   }
 }
 
-void ArenaViewport::playIdleAnimation() {
+void ArenaViewport::play_idle_animation() {
   auto ids = selected_unit_ids_or_fallback();
   clear_forced_animation_state(ids);
   update();
 }
 
-void ArenaViewport::playWalkAnimation() {
+void ArenaViewport::play_walk_animation() {
   auto ids = selected_unit_ids_or_fallback();
   if (ids.empty() || m_world == nullptr) {
     return;
@@ -910,7 +1628,7 @@ void ArenaViewport::playWalkAnimation() {
   update();
 }
 
-void ArenaViewport::playAttackAnimation() {
+void ArenaViewport::play_attack_animation() {
   auto ids = selected_unit_ids_or_fallback();
   if (ids.empty() || m_world == nullptr) {
     return;
@@ -944,7 +1662,7 @@ void ArenaViewport::playAttackAnimation() {
   update();
 }
 
-void ArenaViewport::playDeathAnimation() {
+void ArenaViewport::play_death_animation() {
   auto ids = selected_unit_ids_or_fallback();
   if (ids.empty() || m_world == nullptr) {
     return;
@@ -984,7 +1702,7 @@ void ArenaViewport::playDeathAnimation() {
   update();
 }
 
-void ArenaViewport::moveSelectedUnitForward() {
+void ArenaViewport::move_selected_unit_forward() {
   auto ids = selected_unit_ids_or_fallback();
   if (ids.empty() || m_world == nullptr) {
     return;
@@ -1022,7 +1740,7 @@ void ArenaViewport::moveSelectedUnitForward() {
   update();
 }
 
-void ArenaViewport::setMovementSpeed(float speed) {
+void ArenaViewport::set_movement_speed(float speed) {
   m_default_unit_speed = std::max(0.1F, speed);
   if (m_world == nullptr) {
     return;
@@ -1042,21 +1760,21 @@ void ArenaViewport::setMovementSpeed(float speed) {
   }
 }
 
-void ArenaViewport::setSkeletonDebugEnabled(bool enabled) {
+void ArenaViewport::set_skeleton_debug_enabled(bool enabled) {
   m_pose_overlay_enabled = enabled;
   update();
 }
 
-void ArenaViewport::pauseSimulation(bool paused) {
+void ArenaViewport::pause_simulation(bool paused) {
   if (m_paused == paused) {
     return;
   }
   m_paused = paused;
-  emit pausedChanged(m_paused);
+  emit paused_changed(m_paused);
   update();
 }
 
-void ArenaViewport::resetCamera() {
+void ArenaViewport::reset_camera() {
   if (m_camera == nullptr) {
     return;
   }
@@ -1081,10 +1799,11 @@ void ArenaViewport::align_units_to_terrain() {
     if (transform == nullptr) {
       continue;
     }
-    transform->position.y =
-        Game::Map::TerrainService::instance().resolve_surface_world_y(
-            transform->position.x, transform->position.z, 0.0F,
-            transform->position.y);
+    QVector3D const snapped = App::Utils::snap_to_walkable_ground(
+        {transform->position.x, transform->position.y, transform->position.z});
+    transform->position.x = snapped.x();
+    transform->position.y = snapped.y();
+    transform->position.z = snapped.z();
   }
 }
 
@@ -1288,5 +2007,63 @@ void ArenaViewport::draw_stats_overlay(QPainter &painter) {
   painter.setPen(QColor(220, 220, 220, 220));
   for (int i = 0; i < lines.size(); ++i) {
     painter.drawText(pad * 2, pad + (i + 1) * line_h - 2, lines[i]);
+  }
+}
+
+void ArenaViewport::draw_controls_overlay(QPainter &painter) {
+  if (width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  QFont title_font = painter.font();
+  title_font.setPixelSize(13);
+  title_font.setBold(true);
+  QFont body_font = title_font;
+  body_font.setBold(false);
+
+  QString const title = QStringLiteral("Arena Controls");
+  QStringList const lines{
+      QStringLiteral("LMB: select / drag select"),
+      QStringLiteral("Shift+LMB: add to selection"),
+      QStringLiteral("RMB: move / attack like the main game"),
+      QStringLiteral("Wheel: zoom"),
+      QStringLiteral("Middle drag: orbit"),
+      QStringLiteral("Shift+Middle drag: pan"),
+      QStringLiteral("Arrow keys: pan camera"),
+      QStringLiteral("Shift+Arrows: faster pan"),
+      QStringLiteral("Q / E: yaw"),
+      QStringLiteral("R / F: orbit pitch"),
+      QStringLiteral("X: select local army"),
+      QStringLiteral("Space: pause"),
+      QStringLiteral("F1 or ?: toggle this help"),
+  };
+
+  QFontMetrics const title_metrics(title_font);
+  QFontMetrics const body_metrics(body_font);
+  int const pad = 8;
+  int const title_gap = 4;
+  int const line_h = body_metrics.height() + 2;
+
+  int box_w = title_metrics.horizontalAdvance(title);
+  for (const auto &line : lines) {
+    box_w = std::max(box_w, body_metrics.horizontalAdvance(line));
+  }
+  box_w += pad * 2;
+
+  int const box_h = pad * 2 + title_metrics.height() + title_gap +
+                    static_cast<int>(lines.size()) * line_h;
+  QRect const box(width() - box_w - pad, pad, box_w, box_h);
+  painter.fillRect(box, QColor(0, 0, 0, 150));
+  painter.setPen(QColor(235, 235, 235, 230));
+
+  int y = box.top() + pad + title_metrics.ascent();
+  painter.setFont(title_font);
+  painter.drawText(box.left() + pad, y, title);
+
+  painter.setFont(body_font);
+  y += title_gap + (title_metrics.descent() + line_h);
+  for (const auto &line : lines) {
+    painter.drawText(box.left() + pad, y, line);
+    y += line_h;
   }
 }

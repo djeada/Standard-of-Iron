@@ -16,6 +16,7 @@
 #include "draw_queue.h"
 #include "elephant/dimensions.h"
 #include "elephant/elephant_renderer_base.h"
+#include "entity/building_render_common.h"
 #include "entity/registry.h"
 #include "equipment/equipment_registry.h"
 #include "game/core/component.h"
@@ -84,6 +85,15 @@ float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
   default:
     return 3.0F;
   }
+}
+
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit_comp)
+    -> int {
+  if (unit_comp.render_individuals_per_unit_override > 0) {
+    return unit_comp.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit_comp.spawn_type);
 }
 
 auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
@@ -776,7 +786,7 @@ void Renderer::enqueue_selection_ring(
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
       int const individuals_per_unit =
-          config.get_individuals_per_unit(unit_comp->spawn_type);
+          resolved_individuals_per_unit(*unit_comp);
       int const max_units_per_row =
           config.get_max_units_per_row(unit_comp->spawn_type);
       std::uint32_t layout_seed =
@@ -1085,7 +1095,8 @@ void Renderer::render_world(Engine::Core::World *world) {
     entry.selected = (m_selected_ids.find(entity_id) != m_selected_ids.end());
     entry.hovered = (entity_id == m_hovered_entity_id);
     if (!renderable->renderer_id.empty()) {
-      entry.renderer_key = renderable->renderer_id;
+      entry.renderer_key = std::string(
+          canonicalize_building_renderer_key(renderable->renderer_id));
     }
 
     auto *building_comp =
@@ -1247,6 +1258,7 @@ void Renderer::render_world(Engine::Core::World *world) {
                                    m_accumulated_time, optimizer_frame);
 
         ctx.animation_time = animation_time;
+        ctx.distance_sq = entry.distance_sq;
         ctx.renderer_id = entry.renderer_key;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
@@ -1263,8 +1275,18 @@ void Renderer::render_world(Engine::Core::World *world) {
         lod_in.force_batching = batch_config.force_batching;
         lod_in.never_batch = batch_config.never_batch;
 
-        const bool batching_available = batching_ratio > 0.0F;
-        const auto tier = Render::Pipeline::select_lod(lod_in);
+        if (m_force_full_creature_lod) {
+          ctx.force_humanoid_lod = true;
+          ctx.forced_humanoid_lod = HumanoidLOD::Full;
+          ctx.force_horse_lod = true;
+          ctx.forced_horse_lod = HorseLOD::Full;
+        }
+
+        const bool batching_available =
+            !m_force_full_creature_lod && batching_ratio > 0.0F;
+        const auto tier = m_force_full_creature_lod
+                              ? Render::Pipeline::LodTier::Full
+                              : Render::Pipeline::select_lod(lod_in);
 
         const bool use_batching =
             batching_available &&
@@ -1516,21 +1538,33 @@ void Renderer::prewarm_unit_templates(
 
   auto add_profile = [&](const std::string &renderer_id,
                          Game::Units::SpawnType spawn_type,
-                         Game::Systems::NationID nation_id, int max_health) {
-    if (!is_prewarmable_spawn(spawn_type) || renderer_id.empty()) {
+                         Game::Systems::NationID nation_id, int max_health,
+                         bool is_building = false) {
+    std::string canonical_renderer_id(renderer_id);
+    if (renderer_id.empty() && is_building) {
+      canonical_renderer_id = building_renderer_key(
+          nation_id, Game::Units::spawn_typeToString(spawn_type));
+    } else if (is_building) {
+      canonical_renderer_id = resolve_building_renderer_key(
+          renderer_id, Game::Units::spawn_typeToString(spawn_type), nation_id);
+    } else {
+      canonical_renderer_id =
+          std::string(canonicalize_building_renderer_key(renderer_id));
+    }
+    if (!is_prewarmable_spawn(spawn_type) || canonical_renderer_id.empty()) {
       return;
     }
-    PrewarmProfileKey key{renderer_id, spawn_type, nation_id};
+    PrewarmProfileKey key{canonical_renderer_id, spawn_type, nation_id};
     if (!profile_seen.insert(key).second) {
       return;
     }
-    auto fn = m_entity_registry->get(renderer_id);
+    auto fn = m_entity_registry->get(canonical_renderer_id);
     if (!fn) {
       return;
     }
 
     PrewarmProfile p;
-    p.renderer_id = renderer_id;
+    p.renderer_id = canonical_renderer_id;
     p.spawn_type = spawn_type;
     p.nation_id = nation_id;
     p.max_health = std::max(1, max_health);
@@ -1553,8 +1587,7 @@ void Renderer::prewarm_unit_templates(
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       auto *renderable =
           entity->get_component<Engine::Core::RenderableComponent>();
-      if (unit == nullptr || renderable == nullptr || unit->health <= 0 ||
-          renderable->renderer_id.empty()) {
+      if (unit == nullptr || renderable == nullptr || unit->health <= 0) {
         continue;
       }
 
@@ -1565,7 +1598,9 @@ void Renderer::prewarm_unit_templates(
       add_owner(unit->owner_id);
       active_nation_ids.insert(unit->nation_id);
       add_profile(renderable->renderer_id, unit->spawn_type, unit->nation_id,
-                  unit->max_health);
+                  unit->max_health,
+                  entity->get_component<Engine::Core::BuildingComponent>() !=
+                      nullptr);
     }
   }
 
@@ -2098,15 +2133,14 @@ void Renderer::render_construction_previews(
       }
     }
 
-    std::string nation_prefix = "roman";
+    Game::Systems::NationID preview_nation =
+        Game::Systems::NationID::RomanRepublic;
     if (unit_comp != nullptr) {
-      if (unit_comp->nation_id == Game::Systems::NationID::Carthage) {
-        nation_prefix = "carthage";
-      }
+      preview_nation = unit_comp->nation_id;
     }
 
     std::string renderer_key =
-        "troops/" + nation_prefix + "/" + builder_prod->product_type;
+        building_renderer_key(preview_nation, builder_prod->product_type);
 
     auto fn = m_entity_registry->get(renderer_key);
     if (!fn) {

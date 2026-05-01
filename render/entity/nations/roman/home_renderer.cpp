@@ -1,21 +1,22 @@
 #include "home_renderer.h"
 #include "../../../../game/core/component.h"
 #include "../../../geom/math_utils.h"
-#include "../../../gl/primitives.h"
-#include "../../../gl/resources.h"
-#include "../../../render_archetype.h"
 #include "../../../submitter.h"
+#include "../../building_archetype_desc.h"
+#include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
 
-#include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 
 namespace Render::GL::Roman {
 namespace {
 
 using Render::Geom::clamp_vec_01;
+
+constexpr std::uint8_t kHomeTeamSlot = 0;
 
 struct RomanPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -40,13 +41,9 @@ inline auto make_palette(const QVector3D &team) -> RomanPalette {
   return p;
 }
 
-void submit_box(ISubmitter &out, Texture *white, const QMatrix4x4 &model,
-                const QVector3D &pos, const QVector3D &size,
-                const QVector3D &color) {
-  QMatrix4x4 m = model;
-  m.translate(pos);
-  m.scale(size);
-  out.mesh(get_unit_cube(), m, color, white, 1.0F);
+auto home_palette_slots(const RomanPalette &palette)
+    -> std::array<QVector3D, 1> {
+  return {palette.team};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -59,213 +56,140 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
     height_multiplier = 0.4F;
   }
 
-  RenderArchetypeBuilder builder("roman_home");
-  builder.set_max_distance(std::numeric_limits<float>::infinity());
+  BuildingArchetypeDesc desc("roman_home");
 
-  builder.add_box(QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.1F, 0.06F, 1.1F),
-                  c.limestone_dark);
-  builder.add_box(QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.0F, 0.02F, 1.0F),
-                  c.limestone);
+  // Foundation / podium (two-tier base)
+  desc.add_box(QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.12F, 0.06F, 1.12F),
+               c.limestone_dark);
+  desc.add_box(QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.0F, 0.02F, 1.0F),
+               c.limestone);
 
-  builder.add_box(
-      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, -0.85F),
-      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-      c.limestone);
-  builder.add_box(
-      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, 0.85F),
-      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-      c.limestone);
-  builder.add_box(
-      QVector3D(-0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-      c.limestone);
-  builder.add_box(
-      QVector3D(0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-      c.limestone);
+  // Walls (four sides)
+  float const wall_cy = wall_height * 0.5F * height_multiplier + 0.16F;
+  float const wall_hy = wall_height * 0.5F * height_multiplier;
+  desc.add_box(QVector3D(0.0F, wall_cy, -0.86F),
+               QVector3D(0.80F, wall_hy, 0.08F), c.limestone);
+  desc.add_box(QVector3D(0.0F, wall_cy, 0.86F),
+               QVector3D(0.80F, wall_hy, 0.08F), c.limestone);
+  desc.add_box(QVector3D(-0.86F, wall_cy, 0.0F),
+               QVector3D(0.08F, wall_hy, 0.74F), c.limestone);
+  desc.add_box(QVector3D(0.86F, wall_cy, 0.0F),
+               QVector3D(0.08F, wall_hy, 0.74F), c.limestone);
 
+  // Cornice band at the top of each wall (intact only)
+  float const cornice_y = wall_height * height_multiplier + 0.18F;
+  desc.add_box(QVector3D(0.0F, cornice_y, -0.86F),
+               QVector3D(0.88F, 0.04F, 0.10F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(0.0F, cornice_y, 0.86F),
+               QVector3D(0.88F, 0.04F, 0.10F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(-0.86F, cornice_y, 0.0F),
+               QVector3D(0.10F, 0.04F, 0.80F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(0.86F, cornice_y, 0.0F),
+               QVector3D(0.10F, 0.04F, 0.80F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+
+  // Window openings on side walls with sills (Full LOD, intact only)
+  for (float xw : {-0.90F, 0.90F}) {
+    desc.add_box(QVector3D(xw, 0.56F, -0.28F),
+                 QVector3D(0.015F, 0.18F, 0.14F), c.cedar_dark,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    desc.add_box(QVector3D(xw, 0.56F, 0.28F),
+                 QVector3D(0.015F, 0.18F, 0.14F), c.cedar_dark,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    // Window sills
+    desc.add_box(QVector3D(xw, 0.46F, -0.28F),
+                 QVector3D(0.015F, 0.03F, 0.17F), c.limestone_shade,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    desc.add_box(QVector3D(xw, 0.46F, 0.28F),
+                 QVector3D(0.015F, 0.03F, 0.17F), c.limestone_shade,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+  }
+
+  // Front portico — four columns in a row across the facade (tetrastyle)
   float const col_height = 0.8F;
   float const col_radius = 0.06F;
+  QVector3D const front_cols[4] = {
+      QVector3D(-0.62F, 0.0F, 0.90F), QVector3D(-0.21F, 0.0F, 0.90F),
+      QVector3D(0.21F, 0.0F, 0.90F), QVector3D(0.62F, 0.0F, 0.90F)};
 
-  height_multiplier = 1.0F;
-  if (state == BuildingState::Damaged) {
-    height_multiplier = 0.7F;
-  } else if (state == BuildingState::Destroyed) {
-    height_multiplier = 0.4F;
+  for (const QVector3D &col : front_cols) {
+    desc.add_box(QVector3D(col.x(), 0.18F, col.z()),
+                 QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F),
+                 c.marble, BuildingStateMask::All, BuildingLODMask::Full);
+    desc.add_cylinder(
+        QVector3D(col.x(), 0.16F, col.z()),
+        QVector3D(col.x(), 0.16F + col_height * height_multiplier, col.z()),
+        col_radius, c.limestone_shade);
+    desc.add_box(
+        QVector3D(col.x(), 0.16F + col_height * height_multiplier + 0.04F,
+                  col.z()),
+        QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F), c.marble,
+        kBuildingStateMaskIntact, BuildingLODMask::Full);
   }
 
-  QVector3D columns[4] = {
-      QVector3D(-0.7F, 0.0F, 0.88F), QVector3D(0.7F, 0.0F, 0.88F),
-      QVector3D(-0.7F, 0.0F, -0.88F), QVector3D(0.7F, 0.0F, -0.88F)};
+  // Portico entablature — horizontal beam linking the column tops
+  float const entab_y = 0.16F + col_height * height_multiplier + 0.12F;
+  desc.add_box(QVector3D(0.0F, entab_y, 0.90F),
+               QVector3D(0.72F, 0.05F, 0.06F), c.limestone,
+               kBuildingStateMaskIntact);
 
-  for (const QVector3D &column : columns) {
-    builder.add_box(QVector3D(column.x(), 0.18F, column.z()),
-                    QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F),
-                    c.marble);
-    builder.add_cylinder(QVector3D(column.x(), 0.16F, column.z()),
-                         QVector3D(column.x(),
-                                   0.16F + col_height * height_multiplier,
-                                   column.z()),
-                         col_radius, c.limestone_shade);
-
-    if (state != BuildingState::Destroyed) {
-      builder.add_box(
-          QVector3D(column.x(), 0.16F + col_height * height_multiplier + 0.04F,
-                    column.z()),
-          QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F), c.marble);
-    }
+  // Terracotta roof (intact only)
+  desc.add_box(QVector3D(0.0F, 1.25F, 0.0F), QVector3D(1.06F, 0.06F, 1.06F),
+               c.terracotta, kBuildingStateMaskIntact);
+  // Tile strips running across the roof (Full LOD)
+  for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
+    desc.add_box(QVector3D(0.0F, 1.32F, z), QVector3D(1.02F, 0.03F, 0.06F),
+                 c.terracotta_dark, kBuildingStateMaskIntact,
+                 BuildingLODMask::Full);
   }
 
-  if (state != BuildingState::Destroyed) {
-    builder.add_box(QVector3D(0.0F, 1.25F, 0.0F),
-                    QVector3D(1.05F, 0.06F, 1.05F), c.terracotta);
-    builder.add_box(QVector3D(0.0F, 1.3F, 0.0F), QVector3D(1.0F, 0.04F, 1.0F),
-                    c.terracotta_dark);
-  }
+  // Door
+  desc.add_box(QVector3D(0.0F, 0.45F, 0.90F), QVector3D(0.30F, 0.40F, 0.05F),
+               c.cedar_dark);
+  // Door lintel accent
+  desc.add_box(QVector3D(0.0F, 0.66F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
+               c.blue_accent, BuildingStateMask::All, BuildingLODMask::Full);
 
-  builder.add_box(QVector3D(0.0F, 0.45F, 0.9F), QVector3D(0.3F, 0.4F, 0.05F),
-                  c.cedar_dark);
-  builder.add_box(QVector3D(0.0F, 0.62F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
-                  c.blue_accent);
-  return std::move(builder).build();
+  // Entrance step in front of the door
+  desc.add_box(QVector3D(0.0F, 0.10F, 1.04F), QVector3D(0.38F, 0.04F, 0.14F),
+               c.limestone_shade);
+
+  // Interior atrium / marble floor (visible when intact and close)
+  desc.add_box(QVector3D(0.0F, 0.155F, 0.0F), QVector3D(0.50F, 0.005F, 0.50F),
+               c.marble, kBuildingStateMaskIntact, BuildingLODMask::Full);
+
+  // Impluvium (pool) — raised stone rim and water surface
+  desc.add_box(QVector3D(0.0F, 0.168F, 0.32F),
+               QVector3D(0.44F, 0.02F, 0.03F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, 0.168F, -0.32F),
+               QVector3D(0.44F, 0.02F, 0.03F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.32F, 0.168F, 0.0F),
+               QVector3D(0.03F, 0.02F, 0.38F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(-0.32F, 0.168F, 0.0F),
+               QVector3D(0.03F, 0.02F, 0.38F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  // Water surface of the impluvium
+  desc.add_box(QVector3D(0.0F, 0.158F, 0.0F), QVector3D(0.30F, 0.005F, 0.30F),
+               c.blue_light, kBuildingStateMaskIntact, BuildingLODMask::Full);
+
+  // Team-colored door banner above the entrance
+  desc.add_palette_box(QVector3D(0.0F, 0.74F, 0.95F),
+                       QVector3D(0.26F, 0.10F, 0.02F), kHomeTeamSlot,
+                       BuildingStateMask::All, BuildingLODMask::Full);
+
+  return build_building_archetype(desc, state);
 }
 
 auto home_archetype(BuildingState state) -> const RenderArchetype & {
-  static const RenderArchetype k_normal =
-      build_home_archetype(BuildingState::Normal);
-  static const RenderArchetype k_damaged =
-      build_home_archetype(BuildingState::Damaged);
-  static const RenderArchetype k_destroyed =
-      build_home_archetype(BuildingState::Destroyed);
-
-  switch (state) {
-  case BuildingState::Normal:
-    return k_normal;
-  case BuildingState::Damaged:
-    return k_damaged;
-  case BuildingState::Destroyed:
-    return k_destroyed;
-  }
-  return k_normal;
-}
-
-void draw_health_bar(const DrawContext &p, ISubmitter &out, Texture *white) {
-  if (p.entity == nullptr) {
-    return;
-  }
-  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
-  if (u == nullptr) {
-    return;
-  }
-
-  float const ratio =
-      std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
-  if (ratio <= 0.0F) {
-    return;
-  }
-
-  auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
-  bool under_attack = (capture != nullptr && capture->is_being_captured);
-
-  if (!under_attack && u->health >= u->max_health) {
-    return;
-  }
-
-  float const bar_width = 1.0F;
-  float const bar_height = 0.08F;
-  float const bar_y = 1.6F;
-  float const border_thickness = 0.012F;
-
-  if (under_attack) {
-    float pulse = HEALTHBAR_PULSE_MIN +
-                  HEALTHBAR_PULSE_AMPLITUDE *
-                      sinf(p.animation_time * HEALTHBAR_PULSE_SPEED);
-    submit_box(out, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-               QVector3D(bar_width * 0.5F + border_thickness * 3.0F,
-                         bar_height * 0.5F + border_thickness * 3.0F, 0.095F),
-               HealthBarColors::GLOW_ATTACK * pulse * 0.6F);
-  }
-
-  submit_box(out, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-             QVector3D(bar_width * 0.5F + border_thickness,
-                       bar_height * 0.5F + border_thickness, 0.09F),
-             HealthBarColors::BORDER);
-
-  submit_box(out, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-             QVector3D(bar_width * 0.5F + border_thickness * 0.5F,
-                       bar_height * 0.5F + border_thickness * 0.5F, 0.088F),
-             HealthBarColors::INNER_BORDER);
-
-  submit_box(out, white, p.model, QVector3D(0.0F, bar_y + 0.003F, 0.0F),
-             QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F),
-             HealthBarColors::BACKGROUND);
-
-  QVector3D fg_color;
-  QVector3D fg_dark;
-
-  if (ratio >= HEALTH_THRESHOLD_NORMAL) {
-    fg_color = HealthBarColors::NORMAL_BRIGHT;
-    fg_dark = HealthBarColors::NORMAL_DARK;
-  } else if (ratio >= HEALTH_THRESHOLD_DAMAGED) {
-    float t = (ratio - HEALTH_THRESHOLD_DAMAGED) /
-              (HEALTH_THRESHOLD_NORMAL - HEALTH_THRESHOLD_DAMAGED);
-    fg_color = HealthBarColors::NORMAL_BRIGHT * t +
-               HealthBarColors::DAMAGED_BRIGHT * (1.0F - t);
-    fg_dark = HealthBarColors::NORMAL_DARK * t +
-              HealthBarColors::DAMAGED_DARK * (1.0F - t);
-  } else {
-    float t = ratio / HEALTH_THRESHOLD_DAMAGED;
-    fg_color = HealthBarColors::DAMAGED_BRIGHT * t +
-               HealthBarColors::CRITICAL_BRIGHT * (1.0F - t);
-    fg_dark = HealthBarColors::DAMAGED_DARK * t +
-              HealthBarColors::CRITICAL_DARK * (1.0F - t);
-  }
-
-  submit_box(
-      out, white, p.model,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F), fg_dark);
-
-  submit_box(
-      out, white, p.model,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F),
-      fg_color);
-
-  QVector3D const highlight = fg_color * 1.6F;
-  submit_box(out, white, p.model,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                       bar_y + bar_height * 0.35F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
-             clamp_vec_01(highlight));
-
-  submit_box(out, white, p.model,
-             QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                       bar_y + bar_height * 0.48F, 0.0F),
-             QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
-             HealthBarColors::SHINE * 0.8F);
-
-  float marker_70_x = bar_width * 0.5F * (HEALTH_THRESHOLD_NORMAL - 0.5F);
-  submit_box(out, white, p.model, QVector3D(marker_70_x, bar_y, 0.0F),
-             QVector3D(0.015F, bar_height * 0.55F, 0.09F),
-             HealthBarColors::SEGMENT);
-
-  float marker_30_x = bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
-  submit_box(out, white, p.model, QVector3D(marker_30_x, bar_y, 0.0F),
-             QVector3D(0.015F, bar_height * 0.55F, 0.09F),
-             HealthBarColors::SEGMENT);
-}
-
-void draw_selection(const DrawContext &p, ISubmitter &out) {
-  QMatrix4x4 m;
-  QVector3D const pos = p.model.column(3).toVector3D();
-  m.translate(pos.x(), 0.0F, pos.z());
-  m.scale(1.5F, 1.0F, 1.5F);
-  if (p.selected) {
-    out.selection_smoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
-  } else if (p.hovered) {
-    out.selection_smoke(m, QVector3D(0.95F, 0.92F, 0.25F), 0.22F);
-  }
+  static const BuildingArchetypeSet k_set =
+      build_stateful_building_archetype_set(build_home_archetype);
+  return k_set.for_state(state);
 }
 
 void draw_home(const DrawContext &p, ISubmitter &out) {
@@ -274,36 +198,23 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
   }
 
   auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
   if (r == nullptr) {
     return;
   }
 
-  BuildingState state = BuildingState::Normal;
-  if (u != nullptr) {
-    float const health_ratio =
-        std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
-    state = get_building_state(health_ratio);
-  }
-
-  Texture *white = (p.resources != nullptr) ? p.resources->white() : nullptr;
-
-  const RenderArchetype &archetype = home_archetype(state);
-  RenderInstance instance;
-  instance.archetype = &archetype;
-  instance.world = p.model;
-  instance.default_texture = white;
-  instance.lod = RenderArchetypeLod::Full;
-  submit_render_instance(out, instance);
-
-  draw_health_bar(p, out, white);
-  draw_selection(p, out);
+  RomanPalette const palette =
+      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
+  const auto palette_slots = home_palette_slots(palette);
+  submit_building_instance(out, p, home_archetype(resolve_building_state(p)),
+                           palette_slots);
+  draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.6F});
+  draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.5F, 1.5F});
 }
 
 } // namespace
 
 void register_home_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("troops/roman/home", draw_home);
+  register_building_renderer(registry, "roman", "home", draw_home);
 }
 
 } // namespace Render::GL::Roman

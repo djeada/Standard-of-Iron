@@ -284,6 +284,14 @@ void MountedHumanoidRendererBase::append_companion_preparation(
                                       anim_ctx, profile, &mount, &motion,
                                       resolve_mount_lod(ctx), out, seed);
 
+  auto *unit_comp =
+      ctx.entity != nullptr
+          ? ctx.entity->get_component<Engine::Core::UnitComponent>()
+          : nullptr;
+  if (unit_comp != nullptr && !unit_comp->render_rider) {
+    return;
+  }
+
   DrawContext rider_ctx = ctx;
   rider_ctx.model = grounded_horse_world_from_mount(ctx, profile, motion);
 

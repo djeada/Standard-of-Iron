@@ -3,6 +3,7 @@
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
+#include "scatter_renderer_state.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -25,11 +26,11 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return m_stoneInstanceBuffer != nullptr || m_stoneInstanceCount == 0;
+    return m_stone_state.is_gpu_ready();
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_stoneInstances.size();
+    return m_stone_state.instances.size();
   }
 
 private:
@@ -44,11 +45,9 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<StoneInstanceGpu> m_stoneInstances;
-  std::unique_ptr<Buffer> m_stoneInstanceBuffer;
-  std::size_t m_stoneInstanceCount = 0;
-  StoneBatchParams m_stoneParams;
-  bool m_stoneInstancesDirty = false;
+  Render::Ground::Scatter::DirectRendererState<StoneInstanceGpu,
+                                               StoneBatchParams>
+      m_stone_state;
 };
 
 } // namespace Render::GL

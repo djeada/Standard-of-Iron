@@ -65,17 +65,13 @@ void FireCampRenderer::configure(
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_fireCampInstances.clear();
-  m_visible_instances.clear();
-  m_fireCampInstanceCount = 0;
-  m_fireCampInstancesDirty = false;
-  m_cachedVisibilityVersion = 0;
-  m_visibility_dirty = true;
+  m_firecamp_state.reset_instances();
+  auto &firecamp_params = m_firecamp_state.params;
 
-  m_fireCampParams.time = 0.0F;
-  m_fireCampParams.flicker_speed = 5.0F;
-  m_fireCampParams.flicker_amount = 0.02F;
-  m_fireCampParams.glow_strength = 1.1F;
+  firecamp_params.time = 0.0F;
+  firecamp_params.flicker_speed = 5.0F;
+  firecamp_params.flicker_amount = 0.02F;
+  firecamp_params.glow_strength = 1.1F;
 
   generate_firecamp_instances();
 }
@@ -83,26 +79,24 @@ void FireCampRenderer::configure(
 void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  const auto visible_count = Scatter::sync_filtered_instances(
-      m_fireCampInstances, m_visible_instances, m_fireCampInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibility_dirty,
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_firecamp_state,
       [](const FireCampInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_intensity;
       });
-  if (visible_count == 0 || !m_fireCampInstanceBuffer) {
+  if (visible_count == 0 || !m_firecamp_state.instance_buffer) {
     return;
   }
 
-  m_fireCampInstanceCount = visible_count;
-  FireCampBatchParams params = m_fireCampParams;
+  FireCampBatchParams params = m_firecamp_state.params;
   params.time = renderer.get_animation_time();
-  params.flicker_amount = m_fireCampParams.flicker_amount *
+  params.flicker_amount = m_firecamp_state.params.flicker_amount *
                           (0.9F + 0.25F * std::sin(params.time * 1.3F));
-  params.glow_strength = m_fireCampParams.glow_strength *
+  params.glow_strength = m_firecamp_state.params.glow_strength *
                          (0.85F + 0.2F * std::sin(params.time * 1.7F + 1.2F));
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::FireCamp;
-  cmd.instance_buffer = m_fireCampInstanceBuffer.get();
+  cmd.instance_buffer = m_firecamp_state.instance_buffer.get();
   cmd.instance_count = visible_count;
   cmd.firecamp = params;
   renderer.terrain_scatter(cmd);
@@ -110,7 +104,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   const QVector3D log_color(0.26F, 0.15F, 0.08F);
   const QVector3D char_color(0.08F, 0.05F, 0.03F);
 
-  for (const auto &instance : m_visible_instances) {
+  for (const auto &instance : m_firecamp_state.visible_instances) {
     const QVector4D pos_intensity = instance.pos_intensity;
     const QVector4D radius_phase = instance.radius_phase;
 
@@ -163,12 +157,7 @@ void FireCampRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 }
 
 void FireCampRenderer::clear() {
-  m_fireCampInstances.clear();
-  m_visible_instances.clear();
-  m_fireCampInstanceCount = 0;
-  m_fireCampInstancesDirty = false;
-  m_visibility_dirty = true;
-  m_cachedVisibilityVersion = 0;
+  m_firecamp_state.reset_instances();
   m_explicitPositions.clear();
   m_explicitIntensities.clear();
   m_explicitRadii.clear();
@@ -180,7 +169,7 @@ void FireCampRenderer::set_explicit_fire_camps(
   m_explicitPositions = positions;
   m_explicitIntensities = intensities;
   m_explicitRadii = radii;
-  m_fireCampInstancesDirty = true;
+  m_firecamp_state.instances_dirty = true;
   if (m_width > 0 && m_height > 0 && !m_height_data.empty()) {
     generate_firecamp_instances();
   }
@@ -213,12 +202,16 @@ void FireCampRenderer::add_explicit_firecamps(const SpawnValidator &validator) {
     FireCampInstanceGpu instance;
     instance.pos_intensity = QVector4D(pos.x(), pos.y(), pos.z(), intensity);
     instance.radius_phase = QVector4D(radius, phase, 1.0F, 0.0F);
-    m_fireCampInstances.push_back(instance);
+    m_firecamp_state.instances.push_back(instance);
   }
 }
 
 void FireCampRenderer::generate_firecamp_instances() {
-  m_fireCampInstances.clear();
+  auto &firecamp_instances = m_firecamp_state.instances;
+  auto &firecamp_instance_count = m_firecamp_state.instance_count;
+  auto &firecamp_instances_dirty = m_firecamp_state.instances_dirty;
+
+  firecamp_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
@@ -269,7 +262,7 @@ void FireCampRenderer::generate_firecamp_instances() {
     FireCampInstanceGpu instance;
     instance.pos_intensity = QVector4D(world_x, world_y, world_z, intensity);
     instance.radius_phase = QVector4D(radius, phase, duration, 0.0F);
-    m_fireCampInstances.push_back(instance);
+    firecamp_instances.push_back(instance);
     return true;
   };
 
@@ -319,10 +312,10 @@ void FireCampRenderer::generate_firecamp_instances() {
 
   add_explicit_firecamps(validator);
 
-  m_fireCampInstanceCount = m_fireCampInstances.size();
-  m_fireCampInstancesDirty = m_fireCampInstanceCount > 0;
+  firecamp_instance_count = firecamp_instances.size();
+  firecamp_instances_dirty = firecamp_instance_count > 0;
 
-  qDebug() << "FireCampRenderer: Generated" << m_fireCampInstanceCount
+  qDebug() << "FireCampRenderer: Generated" << firecamp_instance_count
            << "total instances";
 }
 

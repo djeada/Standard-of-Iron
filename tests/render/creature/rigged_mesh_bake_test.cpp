@@ -1,10 +1,4 @@
-// Stage 15.5a — rigged mesh bake tests.
-//
-// Exercises the CPU-only bake pipeline (`bake_rigged_mesh_cpu`) on a
-// minimal two-bone skeleton with one sphere (single-bone) and one
-// cylinder (two-bone blend). No GL context is required; the shared
-// unit meshes expose their CPU vertex/index arrays, so the bake runs
-// entirely in host memory.
+
 
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
@@ -236,26 +230,23 @@ TEST(RiggedMeshBake, CylinderVerticesBlendAlongAxis) {
     RiggedVertex const &v = baked.vertices[sphere_n + i];
     float const src_y = cyl_verts[i].position[1];
 
-    // Weight sum must equal 1.
     float const sum = v.bone_weights[0] + v.bone_weights[1] +
                       v.bone_weights[2] + v.bone_weights[3];
     EXPECT_NEAR(sum, 1.0F, kEps) << "cyl vertex " << i;
 
-    // Secondary slots (2,3) unused.
     EXPECT_FLOAT_EQ(v.bone_weights[2], 0.0F);
     EXPECT_FLOAT_EQ(v.bone_weights[3], 0.0F);
 
-    // Primary bone is the anchor (A), secondary is the tail (B).
     EXPECT_EQ(v.bone_indices[0], ToyGraph::kBoneA);
     EXPECT_EQ(v.bone_indices[1], ToyGraph::kBoneB);
 
     if (std::abs(src_y + 0.5F) < 1e-4F) {
-      // y == -0.5 → fully anchor.
+
       EXPECT_NEAR(v.bone_weights[0], 1.0F, kEps);
       EXPECT_NEAR(v.bone_weights[1], 0.0F, kEps);
       saw_anchor_end = true;
     } else if (std::abs(src_y - 0.5F) < 1e-4F) {
-      // y == +0.5 → fully tail.
+
       EXPECT_NEAR(v.bone_weights[0], 0.0F, kEps);
       EXPECT_NEAR(v.bone_weights[1], 1.0F, kEps);
       saw_tail_end = true;

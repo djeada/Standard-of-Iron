@@ -1,31 +1,16 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
 #include <array>
-#include <filesystem>
 #include <gtest/gtest.h>
 #include <string>
 
 using namespace Render::Creature::Bpat;
 
-namespace {
-
-auto find_assets_dir() -> std::string {
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "humanoid.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
-
-} // namespace
-
 TEST(RidingClip, HumanoidBpatHasAtLeast15Clips) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -38,7 +23,7 @@ TEST(RidingClip, HumanoidBpatHasAtLeast15Clips) {
 }
 
 TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }
@@ -72,7 +57,7 @@ TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
 }
 
 TEST(RidingClip, RidingChargeClipIsNonLooping) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }

@@ -1,9 +1,4 @@
-// Stage 0 guard test — locks in the draw-order invariant that regressed earlier
-// and caused selection rings to render underneath terrain. The sort order must
-// be driven by DrawCmd type alone (terrain -> meshes -> selection rings ->
-// UI overlays); CommandPriority is scheduling metadata and MUST NOT influence
-// the sort key, otherwise Critical-priority selection rings sort before the
-// terrain that should render beneath them.
+
 
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
@@ -15,6 +10,7 @@ namespace {
 
 using Render::CommandPriority;
 using Render::GL::DrawQueue;
+using Render::GL::Mesh;
 using Render::GL::MeshCmd;
 using Render::GL::MeshCmdIndex;
 using Render::GL::SelectionRingCmd;
@@ -28,8 +24,6 @@ using Render::GL::Texture;
 TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
   DrawQueue queue;
 
-  // Submit in reverse-desired order with INVERTED priorities to catch any
-  // regression that re-introduces priority into the sort key.
   SelectionRingCmd ring;
   ring.priority = CommandPriority::Critical;
   queue.submit(ring);
@@ -61,7 +55,7 @@ TEST(DrawQueueSortOrder, ExplicitTerrainCommandsStayBeforeGameplayMeshes) {
   queue.submit(mesh);
 
   TerrainFeatureCmd feature;
-  feature.kind = TerrainFeatureCmd::Kind::Road;
+  feature.kind = Render::GL::LinearFeatureKind::Road;
   queue.submit(feature);
 
   TerrainSurfaceCmd surface;
@@ -76,9 +70,7 @@ TEST(DrawQueueSortOrder, ExplicitTerrainCommandsStayBeforeGameplayMeshes) {
 }
 
 TEST(DrawQueueSortOrder, PriorityDoesNotInvertTypeOrder) {
-  // Explicit regression guard: a Critical SelectionRing submitted before a
-  // Low-priority Mesh must still sort after the mesh. This is the exact
-  // bug that produced "no selection ring visible" in-game.
+
   DrawQueue queue;
 
   SelectionRingCmd ring;
@@ -100,13 +92,13 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
   DrawQueue queue;
 
   TerrainFeatureCmd first;
-  first.kind = TerrainFeatureCmd::Kind::Riverbank;
+  first.kind = Render::GL::LinearFeatureKind::Riverbank;
   first.visibility.texture =
       reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x1));
   queue.submit(first);
 
   TerrainFeatureCmd second;
-  second.kind = TerrainFeatureCmd::Kind::Riverbank;
+  second.kind = Render::GL::LinearFeatureKind::Riverbank;
   second.visibility.texture =
       reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x2));
   queue.submit(second);
@@ -117,11 +109,102 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
   EXPECT_NE(queue.sort_key_for_sorted(0), queue.sort_key_for_sorted(1));
 }
 
+TEST(DrawQueuePreparedBatches, TerrainSurfaceCommandsSharePreparedBatch) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd first;
+  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.params.is_ground_plane = false;
+  queue.submit(first);
+
+  TerrainSurfaceCmd second;
+  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.params.is_ground_plane = false;
+  queue.submit(second);
+
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::TerrainSurface);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
+  EXPECT_EQ(batches[0].count, 2U);
+}
+
+TEST(DrawQueuePreparedBatches,
+     TerrainSurfaceCommandsSplitWhenGroundPlaneStateDiffers) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd first;
+  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.params.is_ground_plane = false;
+  queue.submit(first);
+
+  TerrainSurfaceCmd second;
+  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.params.is_ground_plane = true;
+  queue.submit(second);
+
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].count, 1U);
+  EXPECT_EQ(batches[1].count, 1U);
+}
+
+TEST(DrawQueuePreparedBatches, TerrainFeatureCommandsSharePreparedBatch) {
+  DrawQueue queue;
+
+  TerrainFeatureCmd first;
+  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.kind = Render::GL::LinearFeatureKind::Road;
+  queue.submit(first);
+
+  TerrainFeatureCmd second;
+  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.kind = Render::GL::LinearFeatureKind::Road;
+  queue.submit(second);
+
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches[0].type, Render::GL::DrawCmdType::TerrainFeature);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
+  EXPECT_EQ(batches[0].count, 2U);
+}
+
+TEST(DrawQueuePreparedBatches,
+     TerrainFeatureCommandsSplitWhenVisibilityResourcesDiffer) {
+  DrawQueue queue;
+
+  TerrainFeatureCmd first;
+  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  first.kind = Render::GL::LinearFeatureKind::Riverbank;
+  first.visibility.enabled = true;
+  first.visibility.texture =
+      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x1));
+  queue.submit(first);
+
+  TerrainFeatureCmd second;
+  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  second.kind = Render::GL::LinearFeatureKind::Riverbank;
+  second.visibility.enabled = true;
+  second.visibility.texture =
+      reinterpret_cast<Texture *>(static_cast<std::uintptr_t>(0x2));
+  queue.submit(second);
+
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].count, 1U);
+  EXPECT_EQ(batches[1].count, 1U);
+}
+
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
-  // Stage 0 flipped this default so gameplay-critical commands are never
-  // skipped mid-queue. Leaving partial rendering opt-in avoids the flicker
-  // regression that came from dropping Normal-priority units past the
-  // hard deadline.
+
   Render::FrameBudgetConfig cfg;
   EXPECT_FALSE(cfg.allow_partial_render);
 }

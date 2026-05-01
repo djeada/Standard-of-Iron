@@ -42,47 +42,45 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_stoneInstances.clear();
-  m_stoneInstanceCount = 0;
-  m_stoneInstancesDirty = false;
+  m_stone_state.reset_instances();
+  auto &stone_params = m_stone_state.params;
 
-  m_stoneParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_stoneParams.time = 0.0F;
+  stone_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  stone_params.time = 0.0F;
 
   generate_stone_instances();
 }
 
 void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  m_stoneInstanceCount = Scatter::sync_direct_instances(
-      m_stoneInstances, m_stoneInstanceBuffer, m_stoneInstancesDirty);
-  if (m_stoneInstanceCount == 0 || !m_stoneInstanceBuffer) {
+  Scatter::sync_direct_state(m_stone_state);
+  if (m_stone_state.instance_count == 0 || !m_stone_state.instance_buffer) {
     return;
   }
 
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Stone;
-  cmd.instance_buffer = m_stoneInstanceBuffer.get();
-  cmd.instance_count = m_stoneInstanceCount;
-  cmd.stone = m_stoneParams;
+  cmd.instance_buffer = m_stone_state.instance_buffer.get();
+  cmd.instance_count = m_stone_state.instance_count;
+  cmd.stone = m_stone_state.params;
   renderer.terrain_scatter(cmd);
 }
 
-void StoneRenderer::clear() {
-  m_stoneInstances.clear();
-  m_stoneInstanceCount = 0;
-  m_stoneInstancesDirty = false;
-}
+void StoneRenderer::clear() { m_stone_state.reset_instances(); }
 
 void StoneRenderer::generate_stone_instances() {
   QElapsedTimer timer;
   timer.start();
 
-  m_stoneInstances.clear();
+  auto &stone_instances = m_stone_state.instances;
+  auto &stone_instance_count = m_stone_state.instance_count;
+  auto &stone_instances_dirty = m_stone_state.instances_dirty;
+
+  stone_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    m_stoneInstanceCount = 0;
-    m_stoneInstancesDirty = false;
+    stone_instance_count = 0;
+    stone_instances_dirty = false;
     return;
   }
 
@@ -133,7 +131,7 @@ void StoneRenderer::generate_stone_instances() {
     StoneInstanceGpu instance;
     instance.pos_scale = QVector4D(world_x, world_y + 0.01F, world_z, scale);
     instance.color_rot = QVector4D(color.x(), color.y(), color.z(), rotation);
-    m_stoneInstances.push_back(instance);
+    stone_instances.push_back(instance);
     return true;
   };
 
@@ -182,8 +180,8 @@ void StoneRenderer::generate_stone_instances() {
     }
   }
 
-  m_stoneInstanceCount = m_stoneInstances.size();
-  m_stoneInstancesDirty = m_stoneInstanceCount > 0;
+  stone_instance_count = stone_instances.size();
+  stone_instances_dirty = stone_instance_count > 0;
 }
 
 } // namespace Render::GL

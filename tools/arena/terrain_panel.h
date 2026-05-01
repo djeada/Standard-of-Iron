@@ -1,23 +1,23 @@
 #pragma once
 
-#include <QGroupBox>
 #include <QString>
+#include <QWidget>
 
-class TerrainPanel : public QGroupBox {
+class TerrainPanel : public QWidget {
   Q_OBJECT
 
 public:
   explicit TerrainPanel(QWidget *parent = nullptr);
 
 signals:
-  void seedChanged(int seed);
-  void heightScaleChanged(float value);
-  void octavesChanged(int value);
-  void frequencyChanged(float value);
-  void regenerateRequested();
-  void wireframeToggled(bool enabled);
-  void normalsToggled(bool enabled);
-  void groundTypeChanged(const QString &groundType);
-  void rainToggled(bool enabled);
-  void rainIntensityChanged(float intensity);
+  void seed_changed(int seed);
+  void height_scale_changed(float value);
+  void octaves_changed(int value);
+  void frequency_changed(float value);
+  void regenerate_requested();
+  void wireframe_toggled(bool enabled);
+  void normals_toggled(bool enabled);
+  void ground_type_changed(const QString &groundType);
+  void rain_toggled(bool enabled);
+  void rain_intensity_changed(float intensity);
 };

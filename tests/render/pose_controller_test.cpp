@@ -12,7 +12,6 @@ protected:
   void SetUp() override {
     using HP = HumanProportions;
 
-    // Initialize a default pose with basic standing configuration
     pose = HumanoidPose{};
     float const head_center_y = HP::HEAD_CENTER_Y;
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
@@ -32,7 +31,6 @@ protected:
     pose.foot_r = QVector3D(0.14F, HP::FOOT_Y_OFFSET_DEFAULT, -0.06F);
     pose.foot_y_offset = HP::FOOT_Y_OFFSET_DEFAULT;
 
-    // Initialize animation context with default idle state
     anim_ctx = HumanoidAnimationContext{};
     anim_ctx.inputs.time = 0.0F;
     anim_ctx.inputs.is_moving = false;
@@ -44,7 +42,6 @@ protected:
   HumanoidPose pose;
   HumanoidAnimationContext anim_ctx;
 
-  // Helper to check if a position is approximately equal
   bool approxEqual(const QVector3D &a, const QVector3D &b,
                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
@@ -55,7 +52,7 @@ protected:
 
 TEST_F(HumanoidPoseControllerTest, ConstructorInitializesCorrectly) {
   HumanoidPoseController controller(pose, anim_ctx);
-  // Constructor should not modify the pose
+
   EXPECT_FLOAT_EQ(pose.head_pos.y(), HumanProportions::HEAD_CENTER_Y);
   EXPECT_FLOAT_EQ(pose.pelvis_pos.y(), HumanProportions::WAIST_Y);
 }
@@ -68,7 +65,6 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
 
   controller.stand_idle();
 
-  // stand_idle should be a no-op, keeping pose unchanged
   EXPECT_TRUE(approxEqual(pose.pelvis_pos, original_pelvis));
   EXPECT_TRUE(approxEqual(pose.shoulder_l, original_shoulder_l));
 }
@@ -80,10 +76,8 @@ TEST_F(HumanoidPoseControllerTest, KneelLowersPelvis) {
 
   controller.kneel(0.5F);
 
-  // Kneeling should lower the pelvis
   EXPECT_LT(pose.pelvis_pos.y(), original_pelvis_y);
 
-  // Pelvis should be lowered by approximately depth * 0.40F
   float const expected_offset = 0.5F * 0.40F;
   EXPECT_NEAR(pose.pelvis_pos.y(), HumanProportions::WAIST_Y - expected_offset,
               0.05F);
@@ -94,10 +88,8 @@ TEST_F(HumanoidPoseControllerTest, KneelFullDepthTouchesGroundWithKnee) {
 
   controller.kneel(1.0F);
 
-  // At full kneel, left knee should be very close to ground
   EXPECT_NEAR(pose.knee_l.y(), HumanProportions::GROUND_Y + 0.07F, 0.02F);
 
-  // Pelvis should be lowered significantly
   EXPECT_LT(pose.pelvis_pos.y(), HumanProportions::WAIST_Y - 0.35F);
 }
 
@@ -108,7 +100,6 @@ TEST_F(HumanoidPoseControllerTest, KneelZeroDepthKeepsStanding) {
 
   controller.kneel(0.0F);
 
-  // Zero depth should keep pelvis at original height
   EXPECT_NEAR(pose.pelvis_pos.y(), original_pelvis_y, 0.01F);
 }
 
@@ -117,11 +108,10 @@ TEST_F(HumanoidPoseControllerTest, LeanMovesUpperBody) {
 
   QVector3D const original_shoulder_l = pose.shoulder_l;
   QVector3D const original_shoulder_r = pose.shoulder_r;
-  QVector3D const lean_direction(0.0F, 0.0F, 1.0F); // Forward
+  QVector3D const lean_direction(0.0F, 0.0F, 1.0F);
 
   controller.lean(lean_direction, 0.5F);
 
-  // Shoulders should move forward when leaning forward
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l.z());
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r.z());
 }
@@ -130,11 +120,10 @@ TEST_F(HumanoidPoseControllerTest, LeanZeroAmountNoChange) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   QVector3D const original_shoulder_l = pose.shoulder_l;
-  QVector3D const lean_direction(1.0F, 0.0F, 0.0F); // Right
+  QVector3D const lean_direction(1.0F, 0.0F, 0.0F);
 
   controller.lean(lean_direction, 0.0F);
 
-  // Zero amount should keep shoulders unchanged
   EXPECT_TRUE(approxEqual(pose.shoulder_l, original_shoulder_l));
 }
 
@@ -143,9 +132,8 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
 
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
 
-  controller.place_hand_at(false, target_position); // Right hand
+  controller.place_hand_at(false, target_position);
 
-  // Hand should be at target position
   EXPECT_TRUE(approxEqual(pose.hand_r, target_position));
 }
 
@@ -155,12 +143,10 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
   QVector3D const target_position(0.30F, 1.20F, 0.80F);
   QVector3D const original_elbow = pose.elbow_r;
 
-  controller.place_hand_at(false, target_position); // Right hand
+  controller.place_hand_at(false, target_position);
 
-  // Elbow should be recomputed (different from original)
   EXPECT_FALSE(approxEqual(pose.elbow_r, original_elbow));
 
-  // Elbow should be between shoulder and hand
   float const shoulder_to_elbow_dist =
       (pose.elbow_r - pose.shoulder_r).length();
   float const elbow_to_hand_dist = (target_position - pose.elbow_r).length();
@@ -178,10 +164,8 @@ TEST_F(HumanoidPoseControllerTest, SolveElbowIKReturnsValidPosition) {
   QVector3D const elbow = controller.solve_elbow_ik(
       false, shoulder, hand, outward_dir, 0.45F, 0.15F, 0.0F, 1.0F);
 
-  // Elbow should be somewhere between shoulder and hand
   EXPECT_GT(elbow.length(), 0.0F);
 
-  // Distance from shoulder to elbow should be reasonable
   float const shoulder_elbow_dist = (elbow - shoulder).length();
   EXPECT_GT(shoulder_elbow_dist, 0.05F);
   EXPECT_LT(shoulder_elbow_dist, 0.50F);
@@ -197,29 +181,25 @@ TEST_F(HumanoidPoseControllerTest, SolveKneeIKReturnsValidPosition) {
   QVector3D const knee =
       controller.solve_knee_ik(false, hip, foot, height_scale);
 
-  // Knee should be between hip and foot (in Y)
   EXPECT_LT(knee.y(), hip.y());
   EXPECT_GT(knee.y(), foot.y());
 
-  // Knee should not be below ground
   EXPECT_GE(knee.y(), HumanProportions::GROUND_Y);
 }
 
 TEST_F(HumanoidPoseControllerTest, SolveKneeIKPreventsGroundPenetration) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  // Set up a scenario where IK would put knee below ground
-  QVector3D const hip(0.0F, 0.30F, 0.0F);   // Very low hip
-  QVector3D const foot(0.50F, 0.0F, 0.50F); // Far foot
+  QVector3D const hip(0.0F, 0.30F, 0.0F);
+  QVector3D const foot(0.50F, 0.0F, 0.50F);
   float const height_scale = 1.0F;
 
   QVector3D const knee =
       controller.solve_knee_ik(true, hip, foot, height_scale);
 
-  // Knee should be at or above the floor threshold
   float const min_knee_y =
       HumanProportions::GROUND_Y + pose.foot_y_offset * 0.5F;
-  EXPECT_GE(knee.y(), min_knee_y - 0.001F); // Small epsilon for floating point
+  EXPECT_GE(knee.y(), min_knee_y - 0.001F);
 }
 
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
@@ -227,30 +207,24 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
 
   QVector3D const target_position(-0.40F, 1.30F, 0.60F);
 
-  controller.place_hand_at(true, target_position); // Left hand
+  controller.place_hand_at(true, target_position);
 
-  // Left hand should be at target position
   EXPECT_TRUE(approxEqual(pose.hand_l, target_position));
 
-  // Left elbow should be computed
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelClampsBounds) {
   HumanoidPoseController controller(pose, anim_ctx);
 
-  // Test clamping of depth > 1.0
   controller.kneel(1.5F);
   float const max_kneel_pelvis_y = pose.pelvis_pos.y();
 
-  // Reset pose
   SetUp();
   HumanoidPoseController controller2(pose, anim_ctx);
 
-  // Test depth = 1.0
   controller2.kneel(1.0F);
 
-  // Should be same as clamped 1.5F
   EXPECT_NEAR(pose.pelvis_pos.y(), max_kneel_pelvis_y, 0.001F);
 }
 
@@ -259,18 +233,14 @@ TEST_F(HumanoidPoseControllerTest, LeanClampsBounds) {
 
   QVector3D const lean_direction(0.0F, 0.0F, 1.0F);
 
-  // Test clamping of amount > 1.0
   controller.lean(lean_direction, 1.5F);
   float const max_lean_z = pose.shoulder_l.z();
 
-  // Reset pose
   SetUp();
   HumanoidPoseController controller2(pose, anim_ctx);
 
-  // Test amount = 1.0
   controller2.lean(lean_direction, 1.0F);
 
-  // Should be same as clamped 1.5F
   EXPECT_NEAR(pose.shoulder_l.z(), max_lean_z, 0.001F);
 }
 
@@ -279,17 +249,14 @@ TEST_F(HumanoidPoseControllerTest, HoldSwordAndShieldPositionsHandsCorrectly) {
 
   controller.hold_sword_and_shield();
 
-  // Right hand (sword hand) should be positioned for sword holding
   EXPECT_GT(pose.hand_r.x(), 0.28F);
   EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
   EXPECT_GT(pose.hand_r.z(), 0.36F);
 
-  // Left hand (shield hand) should be positioned for shield holding
   EXPECT_LT(pose.hand_l.x(), -0.26F);
   EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y + 0.01F);
   EXPECT_GT(pose.hand_l.z(), 0.20F);
 
-  // Both elbows should be computed
   EXPECT_GT((pose.elbow_r - pose.shoulder_r).length(), 0.0F);
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
 }
@@ -318,12 +285,10 @@ TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
   HumanoidPoseController controller(pose, anim_ctx);
 
   QVector3D const original_head_pos = pose.head_pos;
-  QVector3D const target(0.5F, pose.head_pos.y(),
-                         2.0F); // Target in front and to the right
+  QVector3D const target(0.5F, pose.head_pos.y(), 2.0F);
 
   controller.look_at(target);
 
-  // Head should move toward target (right and forward)
   EXPECT_GT(pose.head_pos.x(), original_head_pos.x());
   EXPECT_GT(pose.head_pos.z(), original_head_pos.z());
 }
@@ -333,9 +298,8 @@ TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
 
   QVector3D const original_head_pos = pose.head_pos;
 
-  controller.look_at(pose.head_pos); // Look at current position
+  controller.look_at(pose.head_pos);
 
-  // Head should remain unchanged
   EXPECT_TRUE(approxEqual(pose.head_pos, original_head_pos));
 }
 
@@ -366,7 +330,6 @@ TEST_F(HumanoidPoseControllerTest, GetShoulderYReflectsKneeling) {
 
   float const kneeling_shoulder_y = controller.get_shoulder_y(true);
 
-  // After kneeling, shoulder should be lower
   EXPECT_LT(kneeling_shoulder_y, original_shoulder_y);
 }
 
@@ -376,12 +339,10 @@ TEST_F(HumanoidPoseControllerTest, MeleeStrikeAppliesTorsoTwistAtWindUp) {
   float const original_shoulder_r_z = pose.shoulder_r.z();
   float const original_shoulder_l_z = pose.shoulder_l.z();
 
-  // At phase 0.20-0.28 (chamber), torso_twist = -0.04F
   controller.melee_strike(0.24F);
 
-  // Right shoulder should have moved backward (negative Z) due to twist
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
-  // Left shoulder should have moved forward (positive Z) due to counter-twist
+
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
 }
 
@@ -390,11 +351,8 @@ TEST_F(HumanoidPoseControllerTest, MeleeStrikeAppliesTorsoTwistAtStrike) {
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // At phase 0.55 (follow-through), torso_twist should be positive (right
-  // shoulder forward)
   controller.melee_strike(0.55F);
 
-  // Right shoulder should have moved forward due to twist + forward_lean
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
 }
 
@@ -403,17 +361,10 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtChamber) {
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // At phase 0.23 (chamber hold), torso_twist = -0.06F:
-  // right shoulder moves back, left shoulder is twisted forward relative to
-  // right
   controller.spear_thrust(0.23F);
 
-  // Right shoulder should have moved backward (negative twist on right)
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
 
-  // The differential twist: right shoulder should be further back than left
-  // shoulder (right moved back by torso_twist, left moved forward by
-  // -torso_twist * 0.4F, so left > right in Z)
   EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
 }
 
@@ -422,7 +373,6 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustAppliesTorsoTwistAtExtension) {
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // At phase 0.54 (extended), torso_twist = 0.08F (right shoulder forward)
   controller.spear_thrust(0.54F);
 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
@@ -434,10 +384,8 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashAppliesTorsoTwistAtChamber) {
   float const original_shoulder_r_z = pose.shoulder_r.z();
   float const original_shoulder_l_z = pose.shoulder_l.z();
 
-  // At phase 0.20 (chamber hold), torso_twist = -0.05F
   controller.sword_slash(0.20F);
 
-  // Right shoulder backward, left shoulder forward
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
 }
@@ -447,8 +395,6 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashAppliesTorsoTwistAtFollowThrough) {
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // At phase 0.55 (follow-through), torso_twist positive (right shoulder
-  // forward)
   controller.sword_slash(0.55F);
 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
@@ -460,7 +406,6 @@ TEST_F(HumanoidPoseControllerTest, SwordSlashVariantAppliesTorsoTwist) {
   float const original_shoulder_r_z = pose.shoulder_r.z();
   float const original_shoulder_l_z = pose.shoulder_l.z();
 
-  // Default variant (0): same as sword_slash, torso_twist = -0.05F at chamber
   controller.sword_slash_variant(0.20F, 0);
 
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
@@ -472,9 +417,6 @@ TEST_F(HumanoidPoseControllerTest,
   HumanoidPoseController controller_v0(pose, anim_ctx);
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // Variant 1 uses strike_direction = k_strike_left_to_right = -1
-  // so torso_twist at chamber = -(-0.05) = +0.05F → right shoulder moves
-  // forward
   controller_v0.sword_slash_variant(0.20F, 1);
 
   EXPECT_GT(pose.shoulder_r.z(), original_shoulder_r_z);
@@ -485,13 +427,10 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustVariantAppliesTorsoTwist) {
 
   float const original_shoulder_r_z = pose.shoulder_r.z();
 
-  // At phase 0.23 (chamber hold), torso_twist = -0.06F
-  // Right shoulder moves backward, differential twist visible between shoulders
   controller.spear_thrust_variant(0.23F, 0);
 
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
-  // Left shoulder should be forward relative to right shoulder (differential
-  // twist)
+
   EXPECT_GT(pose.shoulder_l.z(), pose.shoulder_r.z());
 }
 
@@ -501,7 +440,6 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustFromHoldAppliesTorsoTwist) {
   float const original_shoulder_r_z = pose.shoulder_r.z();
   float const original_shoulder_l_z = pose.shoulder_l.z();
 
-  // At phase 0.18 (chamber hold), torso_twist = -0.04F
   controller.spear_thrust_from_hold(0.18F, 0.5F);
 
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
