@@ -263,7 +263,7 @@ TEST(RenderArchetypeBuildings, RomanHomeRendersExpectedStaticMeshCount) {
   RecordingSubmitter submitter;
   renderer(ctx, submitter);
 
-  EXPECT_EQ(submitter.meshes.size(), 25u);
+  EXPECT_EQ(submitter.meshes.size(), 47u);
 }
 
 TEST(RenderArchetypeBuildings, RomanHomeAppliesTeamPaletteSlot) {

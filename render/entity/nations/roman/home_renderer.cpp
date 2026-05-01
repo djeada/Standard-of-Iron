@@ -58,80 +58,129 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
 
   BuildingArchetypeDesc desc("roman_home");
 
-  desc.add_box(QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.1F, 0.06F, 1.1F),
+  // Foundation / podium (two-tier base)
+  desc.add_box(QVector3D(0.0F, 0.06F, 0.0F), QVector3D(1.12F, 0.06F, 1.12F),
                c.limestone_dark);
   desc.add_box(QVector3D(0.0F, 0.14F, 0.0F), QVector3D(1.0F, 0.02F, 1.0F),
                c.limestone);
 
-  desc.add_box(
-      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, -0.85F),
-      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-      c.limestone);
-  desc.add_box(
-      QVector3D(0.0F, wall_height * 0.5F * height_multiplier + 0.16F, 0.85F),
-      QVector3D(0.8F, wall_height * 0.5F * height_multiplier, 0.08F),
-      c.limestone);
-  desc.add_box(
-      QVector3D(-0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-      c.limestone);
-  desc.add_box(
-      QVector3D(0.85F, wall_height * 0.5F * height_multiplier + 0.16F, 0.0F),
-      QVector3D(0.08F, wall_height * 0.5F * height_multiplier, 0.75F),
-      c.limestone);
+  // Walls (four sides)
+  float const wall_cy = wall_height * 0.5F * height_multiplier + 0.16F;
+  float const wall_hy = wall_height * 0.5F * height_multiplier;
+  desc.add_box(QVector3D(0.0F, wall_cy, -0.86F),
+               QVector3D(0.80F, wall_hy, 0.08F), c.limestone);
+  desc.add_box(QVector3D(0.0F, wall_cy, 0.86F),
+               QVector3D(0.80F, wall_hy, 0.08F), c.limestone);
+  desc.add_box(QVector3D(-0.86F, wall_cy, 0.0F),
+               QVector3D(0.08F, wall_hy, 0.74F), c.limestone);
+  desc.add_box(QVector3D(0.86F, wall_cy, 0.0F),
+               QVector3D(0.08F, wall_hy, 0.74F), c.limestone);
 
+  // Cornice band at the top of each wall (intact only)
+  float const cornice_y = wall_height * height_multiplier + 0.18F;
+  desc.add_box(QVector3D(0.0F, cornice_y, -0.86F),
+               QVector3D(0.88F, 0.04F, 0.10F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(0.0F, cornice_y, 0.86F),
+               QVector3D(0.88F, 0.04F, 0.10F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(-0.86F, cornice_y, 0.0F),
+               QVector3D(0.10F, 0.04F, 0.80F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+  desc.add_box(QVector3D(0.86F, cornice_y, 0.0F),
+               QVector3D(0.10F, 0.04F, 0.80F), c.limestone_shade,
+               kBuildingStateMaskIntact);
+
+  // Window openings on side walls with sills (Full LOD, intact only)
+  for (float xw : {-0.90F, 0.90F}) {
+    desc.add_box(QVector3D(xw, 0.56F, -0.28F),
+                 QVector3D(0.015F, 0.18F, 0.14F), c.cedar_dark,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    desc.add_box(QVector3D(xw, 0.56F, 0.28F),
+                 QVector3D(0.015F, 0.18F, 0.14F), c.cedar_dark,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    // Window sills
+    desc.add_box(QVector3D(xw, 0.46F, -0.28F),
+                 QVector3D(0.015F, 0.03F, 0.17F), c.limestone_shade,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+    desc.add_box(QVector3D(xw, 0.46F, 0.28F),
+                 QVector3D(0.015F, 0.03F, 0.17F), c.limestone_shade,
+                 kBuildingStateMaskIntact, BuildingLODMask::Full);
+  }
+
+  // Front portico — four columns in a row across the facade (tetrastyle)
   float const col_height = 0.8F;
   float const col_radius = 0.06F;
+  QVector3D const front_cols[4] = {
+      QVector3D(-0.62F, 0.0F, 0.90F), QVector3D(-0.21F, 0.0F, 0.90F),
+      QVector3D(0.21F, 0.0F, 0.90F), QVector3D(0.62F, 0.0F, 0.90F)};
 
-  height_multiplier = 1.0F;
-  if (state == BuildingState::Damaged) {
-    height_multiplier = 0.7F;
-  } else if (state == BuildingState::Destroyed) {
-    height_multiplier = 0.4F;
-  }
-
-  QVector3D columns[4] = {
-      QVector3D(-0.7F, 0.0F, 0.88F), QVector3D(0.7F, 0.0F, 0.88F),
-      QVector3D(-0.7F, 0.0F, -0.88F), QVector3D(0.7F, 0.0F, -0.88F)};
-
-  for (const QVector3D &column : columns) {
-    desc.add_box(QVector3D(column.x(), 0.18F, column.z()),
+  for (const QVector3D &col : front_cols) {
+    desc.add_box(QVector3D(col.x(), 0.18F, col.z()),
                  QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F),
                  c.marble, BuildingStateMask::All, BuildingLODMask::Full);
-    desc.add_cylinder(QVector3D(column.x(), 0.16F, column.z()),
-                      QVector3D(column.x(),
-                                0.16F + col_height * height_multiplier,
-                                column.z()),
-                      col_radius, c.limestone_shade);
-    desc.add_box(QVector3D(column.x(),
-                           0.16F + col_height * height_multiplier + 0.04F,
-                           column.z()),
-                 QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F),
-                 c.marble, kBuildingStateMaskIntact, BuildingLODMask::Full);
+    desc.add_cylinder(
+        QVector3D(col.x(), 0.16F, col.z()),
+        QVector3D(col.x(), 0.16F + col_height * height_multiplier, col.z()),
+        col_radius, c.limestone_shade);
+    desc.add_box(
+        QVector3D(col.x(), 0.16F + col_height * height_multiplier + 0.04F,
+                  col.z()),
+        QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F), c.marble,
+        kBuildingStateMaskIntact, BuildingLODMask::Full);
   }
 
-  desc.add_box(QVector3D(0.0F, 1.25F, 0.0F), QVector3D(1.05F, 0.06F, 1.05F),
-               c.terracotta, kBuildingStateMaskIntact);
-  desc.add_box(QVector3D(0.0F, 1.3F, 0.0F), QVector3D(1.0F, 0.04F, 1.0F),
-               c.terracotta_dark, kBuildingStateMaskIntact,
-               BuildingLODMask::Full);
+  // Portico entablature — horizontal beam linking the column tops
+  float const entab_y = 0.16F + col_height * height_multiplier + 0.12F;
+  desc.add_box(QVector3D(0.0F, entab_y, 0.90F),
+               QVector3D(0.72F, 0.05F, 0.06F), c.limestone,
+               kBuildingStateMaskIntact);
 
-  desc.add_box(QVector3D(0.0F, 0.45F, 0.9F), QVector3D(0.3F, 0.4F, 0.05F),
+  // Terracotta roof (intact only)
+  desc.add_box(QVector3D(0.0F, 1.25F, 0.0F), QVector3D(1.06F, 0.06F, 1.06F),
+               c.terracotta, kBuildingStateMaskIntact);
+  // Tile strips running across the roof (Full LOD)
+  for (float z = -0.84F; z <= 0.84F; z += 0.42F) {
+    desc.add_box(QVector3D(0.0F, 1.32F, z), QVector3D(1.02F, 0.03F, 0.06F),
+                 c.terracotta_dark, kBuildingStateMaskIntact,
+                 BuildingLODMask::Full);
+  }
+
+  // Door
+  desc.add_box(QVector3D(0.0F, 0.45F, 0.90F), QVector3D(0.30F, 0.40F, 0.05F),
                c.cedar_dark);
-  desc.add_box(QVector3D(0.0F, 0.62F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
+  // Door lintel accent
+  desc.add_box(QVector3D(0.0F, 0.66F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
                c.blue_accent, BuildingStateMask::All, BuildingLODMask::Full);
 
   // Entrance step in front of the door
-  desc.add_box(QVector3D(0.0F, 0.10F, 1.04F), QVector3D(0.36F, 0.04F, 0.12F),
+  desc.add_box(QVector3D(0.0F, 0.10F, 1.04F), QVector3D(0.38F, 0.04F, 0.14F),
                c.limestone_shade);
 
-  // Interior atrium floor (courtyard hint, visible only when intact and close)
-  desc.add_box(QVector3D(0.0F, 0.155F, 0.0F), QVector3D(0.45F, 0.005F, 0.45F),
+  // Interior atrium / marble floor (visible when intact and close)
+  desc.add_box(QVector3D(0.0F, 0.155F, 0.0F), QVector3D(0.50F, 0.005F, 0.50F),
                c.marble, kBuildingStateMaskIntact, BuildingLODMask::Full);
 
+  // Impluvium (pool) — raised stone rim and water surface
+  desc.add_box(QVector3D(0.0F, 0.168F, 0.32F),
+               QVector3D(0.44F, 0.02F, 0.03F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.0F, 0.168F, -0.32F),
+               QVector3D(0.44F, 0.02F, 0.03F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(0.32F, 0.168F, 0.0F),
+               QVector3D(0.03F, 0.02F, 0.38F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  desc.add_box(QVector3D(-0.32F, 0.168F, 0.0F),
+               QVector3D(0.03F, 0.02F, 0.38F), c.limestone_dark,
+               kBuildingStateMaskIntact, BuildingLODMask::Full);
+  // Water surface of the impluvium
+  desc.add_box(QVector3D(0.0F, 0.158F, 0.0F), QVector3D(0.30F, 0.005F, 0.30F),
+               c.blue_light, kBuildingStateMaskIntact, BuildingLODMask::Full);
+
   // Team-colored door banner above the entrance
-  desc.add_palette_box(QVector3D(0.0F, 0.72F, 0.95F),
-                       QVector3D(0.24F, 0.10F, 0.02F), kHomeTeamSlot,
+  desc.add_palette_box(QVector3D(0.0F, 0.74F, 0.95F),
+                       QVector3D(0.26F, 0.10F, 0.02F), kHomeTeamSlot,
                        BuildingStateMask::All, BuildingLODMask::Full);
 
   return build_building_archetype(desc, state);
