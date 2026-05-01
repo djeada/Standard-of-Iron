@@ -14,8 +14,8 @@ public:
 
   // Scale factors shared by both the legacy ArrowSystem renderer and the
   // ProjectileSystem renderer so that regular arrows look identical in both.
-  static constexpr float k_arrow_z_scale = 0.40F;
-  static constexpr float k_arrow_xy_scale = 0.26F;
+  static constexpr float k_arrow_z_scale = 0.55F;
+  static constexpr float k_arrow_xy_scale = 0.36F;
   static constexpr float k_arrow_z_translate_factor = 0.5F;
   static constexpr float k_fletch_z_offset_factor = 0.2F;
   static constexpr float k_fletch_xy_scale = 0.75F;

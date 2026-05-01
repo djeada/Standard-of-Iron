@@ -11,9 +11,9 @@ struct CameraConfig {
 };
 
 struct ArrowConfig {
-  float arc_height_multiplier = 0.15F;
-  float arc_height_min = 0.2F;
-  float arc_height_max = 1.2F;
+  float arc_height_multiplier = 0.22F;
+  float arc_height_min = 0.3F;
+  float arc_height_max = 2.5F;
   float speed_default = 8.0F;
   float speed_attack = 6.0F;
 };
