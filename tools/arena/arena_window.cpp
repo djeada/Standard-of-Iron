@@ -1,6 +1,7 @@
 #include "arena_window.h"
 
 #include "arena_viewport.h"
+#include "building_panel.h"
 #include "terrain_panel.h"
 #include "unit_panel.h"
 
@@ -64,6 +65,13 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   unit_scroll->setWidgetResizable(true);
   unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(unit_scroll, "Units");
+
+  m_building_panel = new BuildingPanel();
+  auto *building_scroll = new QScrollArea();
+  building_scroll->setWidget(m_building_panel);
+  building_scroll->setWidgetResizable(true);
+  building_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  tab_widget->addTab(building_scroll, "Buildings");
 
   splitter->addWidget(tab_widget);
   splitter->setStretchFactor(0, 1);
@@ -151,7 +159,24 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_viewport, &ArenaViewport::selectionSummaryChanged, m_unit_panel,
           &UnitPanel::setSelectionSummary);
 
+  connect(m_building_panel, &BuildingPanel::spawnBuildingsRequested,
+          m_viewport, &ArenaViewport::spawnBuildings);
+  connect(m_building_panel, &BuildingPanel::clearBuildingsRequested,
+          m_viewport, &ArenaViewport::clearUnits);
+  connect(m_building_panel, &BuildingPanel::buildingOwnerSelected, m_viewport,
+          &ArenaViewport::setSpawnBuildingOwner);
+  connect(m_building_panel, &BuildingPanel::buildingNationSelected, m_viewport,
+          &ArenaViewport::setSpawnBuildingNation);
+  connect(m_building_panel, &BuildingPanel::buildingTypeSelected, m_viewport,
+          &ArenaViewport::setSpawnBuildingType);
+  connect(m_viewport, &ArenaViewport::selectionSummaryChanged,
+          m_building_panel, &BuildingPanel::setSelectionSummary);
+
   m_viewport->setSpawnOwner(m_unit_panel->selectedOwnerId());
   m_viewport->setSpawnNation(m_unit_panel->selectedNationId());
   m_viewport->setSpawnUnitType(m_unit_panel->selectedUnitTypeId());
+
+  m_viewport->setSpawnBuildingOwner(m_building_panel->selectedOwnerId());
+  m_viewport->setSpawnBuildingNation(m_building_panel->selectedNationId());
+  m_viewport->setSpawnBuildingType(m_building_panel->selectedBuildingTypeId());
 }

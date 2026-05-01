@@ -78,6 +78,11 @@ public slots:
   void spawnOpposingBatch(int count);
   void spawnMirrorMatch(int count);
   void clearUnits();
+
+  void setSpawnBuildingOwner(int ownerId);
+  void setSpawnBuildingNation(const QString &nationId);
+  void setSpawnBuildingType(const QString &buildingType);
+  void spawnBuildings(int count);
   void resetArena();
   void applyVisualOverridesToSelection();
   void setAnimationName(const QString &animationName);
@@ -142,6 +147,9 @@ private:
   auto resolve_spawn_unit_type(Game::Systems::NationID nationId,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
+  auto spawn_single_building(int ownerId, Game::Systems::NationID nationId,
+                              Game::Units::SpawnType buildingType)
+      -> Engine::Core::EntityID;
   auto owner_display_name(int ownerId) const -> QString;
   auto nation_display_name(Game::Systems::NationID nationId) const -> QString;
   auto troop_display_name(Game::Systems::NationID nationId,
@@ -182,6 +190,10 @@ private:
   Game::Units::TroopType m_spawn_unit_type;
   int m_spawn_individuals_per_unit_override = 0;
   bool m_spawn_rider_visible = true;
+
+  int m_spawn_building_owner_id = 1;
+  Game::Systems::NationID m_spawn_building_nation_id;
+  Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
 
   QPoint m_last_mouse_pos;
   QPoint m_selection_anchor;

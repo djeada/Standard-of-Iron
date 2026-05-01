@@ -1359,6 +1359,110 @@ void ArenaViewport::clearUnits() {
   update();
 }
 
+void ArenaViewport::setSpawnBuildingOwner(int ownerId) {
+  m_spawn_building_owner_id =
+      (ownerId == k_enemy_owner_id) ? k_enemy_owner_id : k_local_owner_id;
+}
+
+void ArenaViewport::setSpawnBuildingNation(const QString &nationId) {
+  Game::Systems::NationID parsed{};
+  if (!Game::Systems::try_parse_nation_id(nationId, parsed)) {
+    return;
+  }
+  m_spawn_building_nation_id = parsed;
+}
+
+void ArenaViewport::setSpawnBuildingType(const QString &buildingType) {
+  Game::Units::SpawnType parsed{};
+  if (!Game::Units::tryParseSpawnType(buildingType, parsed) ||
+      !Game::Units::is_building_spawn(parsed)) {
+    return;
+  }
+  m_spawn_building_type = parsed;
+}
+
+void ArenaViewport::spawnBuildings(int count) {
+  int const clamped_count = std::clamp(count, 1, 16);
+  std::vector<Engine::Core::EntityID> spawned_ids;
+  spawned_ids.reserve(static_cast<size_t>(clamped_count));
+
+  for (int i = 0; i < clamped_count; ++i) {
+    Engine::Core::EntityID const entity_id = spawn_single_building(
+        m_spawn_building_owner_id, m_spawn_building_nation_id,
+        m_spawn_building_type);
+    if (entity_id != 0U) {
+      spawned_ids.push_back(entity_id);
+    }
+  }
+
+  if (spawned_ids.empty()) {
+    return;
+  }
+
+  select_spawned_entities(spawned_ids);
+  update();
+}
+
+auto ArenaViewport::spawn_single_building(int ownerId,
+                                          Game::Systems::NationID nationId,
+                                          Game::Units::SpawnType buildingType)
+    -> Engine::Core::EntityID {
+  if (m_unit_factory == nullptr || m_world == nullptr) {
+    return 0U;
+  }
+
+  int building_count = 0;
+  for (const auto &unit : m_units) {
+    if (unit == nullptr) {
+      continue;
+    }
+    auto *entity = m_world->get_entity(unit->id());
+    auto *unit_component =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    if (unit_component != nullptr &&
+        unit_component->owner_id == ownerId &&
+        Game::Units::is_building_spawn(unit_component->spawn_type)) {
+      ++building_count;
+    }
+  }
+
+  constexpr int k_buildings_per_row = 4;
+  constexpr float k_building_spacing = 5.0F;
+  constexpr float k_building_base_z = 25.0F;
+
+  float const column =
+      static_cast<float>(building_count % k_buildings_per_row);
+  float const row = static_cast<float>(building_count / k_buildings_per_row);
+  float const world_x =
+      (column - static_cast<float>(k_buildings_per_row - 1) * 0.5F) *
+      k_building_spacing;
+  float const world_z = ownerId == k_enemy_owner_id
+                            ? (k_building_base_z + row * k_building_spacing)
+                            : (-k_building_base_z - row * k_building_spacing);
+  float const world_y =
+      Game::Map::TerrainService::instance().resolve_surface_world_y(
+          world_x, world_z, 0.0F, 0.0F);
+  QVector3D const spawn_position = {world_x, world_y, world_z};
+
+  Game::Units::SpawnParams params;
+  params.position = spawn_position;
+  params.player_id = ownerId;
+  params.spawn_type = buildingType;
+  params.ai_controlled = false;
+  params.nation_id = nationId;
+
+  auto unit = m_unit_factory->create(buildingType, *m_world, params);
+  if (unit == nullptr) {
+    return 0U;
+  }
+
+  Engine::Core::EntityID const entity_id = unit->id();
+  m_units.push_back(std::move(unit));
+  return entity_id;
+}
+
 void ArenaViewport::resetArena() {
   clearUnits();
   pauseSimulation(false);
