@@ -1,6 +1,6 @@
 #pragma once
 
-#include <QGroupBox>
+#include <QWidget>
 #include <QString>
 
 class QCheckBox;
@@ -8,7 +8,7 @@ class QComboBox;
 class QLabel;
 class QSpinBox;
 
-class UnitPanel : public QGroupBox {
+class UnitPanel : public QWidget {
   Q_OBJECT
 
 public:

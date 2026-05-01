@@ -6,6 +6,10 @@
 
 #include <QAction>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QScrollArea>
+#include <QStatusBar>
+#include <QTabWidget>
 #include <QToolBar>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -16,8 +20,10 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   auto *toolbar = addToolBar("Arena");
   toolbar->setMovable(false);
   auto *regenerate_action = toolbar->addAction("Regenerate");
+  toolbar->addSeparator();
   auto *pause_action = toolbar->addAction("Pause");
   pause_action->setCheckable(true);
+  toolbar->addSeparator();
   auto *reset_camera_action = toolbar->addAction("Reset Camera");
 
   auto *central = new QWidget(this);
@@ -29,21 +35,29 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   m_viewport->setMinimumSize(960, 720);
   main_layout->addWidget(m_viewport, 1);
 
-  auto *side_panel = new QWidget(central);
-  side_panel->setMinimumWidth(320);
-  side_panel->setMaximumWidth(380);
-  auto *side_layout = new QVBoxLayout(side_panel);
-  side_layout->setContentsMargins(0, 0, 0, 0);
-  side_layout->setSpacing(8);
+  auto *tab_widget = new QTabWidget(central);
+  tab_widget->setMinimumWidth(320);
+  tab_widget->setMaximumWidth(400);
 
-  m_terrain_panel = new TerrainPanel(side_panel);
-  m_unit_panel = new UnitPanel(side_panel);
-  side_layout->addWidget(m_terrain_panel);
-  side_layout->addWidget(m_unit_panel);
-  side_layout->addStretch(1);
+  m_terrain_panel = new TerrainPanel();
+  auto *terrain_scroll = new QScrollArea();
+  terrain_scroll->setWidget(m_terrain_panel);
+  terrain_scroll->setWidgetResizable(true);
+  terrain_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  tab_widget->addTab(terrain_scroll, "Terrain");
 
-  main_layout->addWidget(side_panel);
+  m_unit_panel = new UnitPanel();
+  auto *unit_scroll = new QScrollArea();
+  unit_scroll->setWidget(m_unit_panel);
+  unit_scroll->setWidgetResizable(true);
+  unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  tab_widget->addTab(unit_scroll, "Units");
+
+  main_layout->addWidget(tab_widget);
   setCentralWidget(central);
+
+  m_status_label = new QLabel("Ready", this);
+  statusBar()->addWidget(m_status_label);
 
   connect(regenerate_action, &QAction::triggered, m_viewport,
           &ArenaViewport::regenerateTerrain);
@@ -55,6 +69,10 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &QAction::setChecked);
   connect(m_viewport, &ArenaViewport::pausedChanged, m_unit_panel,
           &UnitPanel::setAnimationPaused);
+  connect(m_viewport, &ArenaViewport::pausedChanged, this,
+          [this](bool paused) {
+            m_status_label->setText(paused ? "Paused" : "Running");
+          });
 
   connect(m_terrain_panel, &TerrainPanel::seedChanged, m_viewport,
           &ArenaViewport::setTerrainSeed);
