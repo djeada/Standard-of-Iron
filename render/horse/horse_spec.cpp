@@ -161,7 +161,7 @@ struct horse_pose_profile {
 } // namespace
 
 auto horse_topology() noexcept -> const SkeletonTopology & {
-  return *horse_manifest().topology;
+  return k_horse_topology;
 }
 
 void evaluate_horse_skeleton(const HorseSpecPose &pose,

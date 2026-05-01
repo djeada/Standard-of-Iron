@@ -5,6 +5,7 @@
 #include "frame_budget.h"
 #include "primitive_batch.h"
 #include "rain_gpu.h"
+#include "terrain_scene_types.h"
 #include "world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector2D>
@@ -124,13 +125,11 @@ struct TerrainFeatureCmd {
     bool enabled = false;
   };
 
-  enum class Kind : std::uint8_t { River = 0, Road, Riverbank, Bridge };
-
   Mesh *mesh = nullptr;
   QMatrix4x4 model;
   QVector3D color{1.0F, 1.0F, 1.0F};
   float alpha = 1.0F;
-  Kind kind = Kind::River;
+  LinearFeatureKind kind = LinearFeatureKind::River;
   VisibilityResources visibility{};
   CommandPriority priority{CommandPriority::High};
 };
@@ -614,6 +613,14 @@ private:
         if (end - i > 1U) {
           kind = PreparedBatchKind::RiggedCreatureInstanced;
         }
+      } else if (head.index() == TerrainSurfaceCmdIndex) {
+        while (end < count && can_batch_terrain_surface(i, end)) {
+          ++end;
+        }
+      } else if (head.index() == TerrainFeatureCmdIndex) {
+        while (end < count && can_batch_terrain_feature(i, end)) {
+          ++end;
+        }
       }
 
       m_prepared_batches.push_back(
@@ -666,6 +673,53 @@ private:
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
            rig_a.material == rig_b.material;
+  }
+
+  [[nodiscard]] auto
+  can_batch_terrain_surface(std::size_t sorted_idx_a,
+                            std::size_t sorted_idx_b) const -> bool {
+    if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
+      return false;
+    }
+    const auto &a = m_items[m_sort_indices[sorted_idx_a]];
+    const auto &b = m_items[m_sort_indices[sorted_idx_b]];
+    if (a.index() != TerrainSurfaceCmdIndex ||
+        b.index() != TerrainSurfaceCmdIndex) {
+      return false;
+    }
+    const auto &surface_a = std::get<TerrainSurfaceCmdIndex>(a);
+    const auto &surface_b = std::get<TerrainSurfaceCmdIndex>(b);
+    return surface_a.mesh != nullptr && surface_b.mesh != nullptr &&
+           surface_a.params.is_ground_plane ==
+               surface_b.params.is_ground_plane &&
+           surface_a.depth_write == surface_b.depth_write &&
+           surface_a.depth_bias == surface_b.depth_bias;
+  }
+
+  [[nodiscard]] auto
+  can_batch_terrain_feature(std::size_t sorted_idx_a,
+                            std::size_t sorted_idx_b) const -> bool {
+    if (sorted_idx_a >= m_items.size() || sorted_idx_b >= m_items.size()) {
+      return false;
+    }
+    const auto &a = m_items[m_sort_indices[sorted_idx_a]];
+    const auto &b = m_items[m_sort_indices[sorted_idx_b]];
+    if (a.index() != TerrainFeatureCmdIndex ||
+        b.index() != TerrainFeatureCmdIndex) {
+      return false;
+    }
+    const auto &feature_a = std::get<TerrainFeatureCmdIndex>(a);
+    const auto &feature_b = std::get<TerrainFeatureCmdIndex>(b);
+    return feature_a.mesh != nullptr && feature_b.mesh != nullptr &&
+           feature_a.kind == feature_b.kind &&
+           transparency_bucket(feature_a.alpha) ==
+               transparency_bucket(feature_b.alpha) &&
+           feature_a.visibility.texture == feature_b.visibility.texture &&
+           feature_a.visibility.size == feature_b.visibility.size &&
+           feature_a.visibility.tile_size == feature_b.visibility.tile_size &&
+           feature_a.visibility.explored_alpha ==
+               feature_b.visibility.explored_alpha &&
+           feature_a.visibility.enabled == feature_b.visibility.enabled;
   }
 
   void clear_sort_id_maps() {

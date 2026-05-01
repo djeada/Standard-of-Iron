@@ -179,7 +179,7 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
 
     TerrainFeatureCmd cmd;
     cmd.mesh = mesh;
-    cmd.kind = TerrainFeatureCmd::Kind::Riverbank;
+    cmd.kind = LinearFeatureKind::Riverbank;
     cmd.model = model;
     cmd.color = QVector3D(1.0F, 1.0F, 1.0F);
     cmd.alpha = segment_visibility;

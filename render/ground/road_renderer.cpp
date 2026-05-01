@@ -6,6 +6,7 @@
 #include "../scene_renderer.h"
 #include "ground_utils.h"
 #include "linear_feature_geometry.h"
+#include "linear_feature_submission.h"
 #include "linear_feature_visibility.h"
 #include <QVector2D>
 #include <QVector3D>
@@ -59,62 +60,10 @@ void RoadRenderer::build_meshes() {
 }
 
 void RoadRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (m_meshes.empty() || m_road_segments.empty()) {
-    return;
-  }
-
   Q_UNUSED(resources);
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (use_visibility) {
-    visibility_snapshot = visibility.snapshot();
-  }
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-
-  QVector3D const road_base_color(0.45F, 0.42F, 0.38F);
-
-  size_t mesh_index = 0;
-  for (const auto &segment : m_road_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto *mesh = m_meshes[mesh_index].get();
-    ++mesh_index;
-
-    if (mesh == nullptr) {
-      continue;
-    }
-
-    float alpha = 1.0F;
-    QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
-
-    if (use_visibility) {
-      const auto visibility_result = Ground::evaluate_linear_feature_visibility(
-          &visibility_snapshot, segment.start, segment.end);
-      if (!visibility_result.visible) {
-        continue;
-      }
-      alpha = visibility_result.alpha;
-      color_multiplier = visibility_result.color_multiplier;
-    }
-
-    QVector3D const final_color(road_base_color.x() * color_multiplier.x(),
-                                road_base_color.y() * color_multiplier.y(),
-                                road_base_color.z() * color_multiplier.z());
-
-    TerrainFeatureCmd cmd;
-    cmd.mesh = mesh;
-    cmd.kind = TerrainFeatureCmd::Kind::Road;
-    cmd.model = model;
-    cmd.color = final_color;
-    cmd.alpha = alpha;
-    renderer.terrain_feature(cmd);
-  }
+  Ground::submit_linear_feature_segments(renderer, m_road_segments, m_meshes,
+                                         LinearFeatureKind::Road,
+                                         QVector3D(0.45F, 0.42F, 0.38F));
 }
 
 } // namespace Render::GL

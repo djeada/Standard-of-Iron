@@ -58,45 +58,39 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_grassInstances.clear();
-  m_grassInstanceCount = 0;
-  m_grassInstancesDirty = false;
+  m_grass_state.reset_instances();
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto &scatter_profile = profiles.scatter;
   const auto &wind_profile = profiles.wind;
+  auto &grass_params = m_grass_state.params;
 
-  m_grassParams.soil_color = scatter_profile.soil_color;
-  m_grassParams.wind_strength = wind_profile.sway_strength;
-  m_grassParams.wind_speed = wind_profile.sway_speed;
-  m_grassParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_grassParams.time = 0.0F;
+  grass_params.soil_color = scatter_profile.soil_color;
+  grass_params.wind_strength = wind_profile.sway_strength;
+  grass_params.wind_speed = wind_profile.sway_speed;
+  grass_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  grass_params.time = 0.0F;
 
   generate_grass_instances();
 }
 
 void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  m_grassInstanceCount = Scatter::sync_direct_instances(
-      m_grassInstances, m_grassInstanceBuffer, m_grassInstancesDirty);
-  if (m_grassInstanceCount == 0 || !m_grassInstanceBuffer) {
+  Scatter::sync_direct_state(m_grass_state);
+  if (m_grass_state.instance_count == 0 || !m_grass_state.instance_buffer) {
     return;
   }
 
-  GrassBatchParams params = m_grassParams;
+  GrassBatchParams params = m_grass_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Grass;
-  cmd.instance_buffer = m_grassInstanceBuffer.get();
-  cmd.instance_count = m_grassInstanceCount;
+  cmd.instance_buffer = m_grass_state.instance_buffer.get();
+  cmd.instance_count = m_grass_state.instance_count;
   cmd.grass = params;
   renderer.terrain_scatter(cmd);
 }
 
-void BiomeRenderer::clear() {
-  m_grassInstances.clear();
-  m_grassInstanceCount = 0;
-  m_grassInstancesDirty = false;
-}
+void BiomeRenderer::clear() { m_grass_state.reset_instances(); }
 
 void BiomeRenderer::refresh_grass() { generate_grass_instances(); }
 
@@ -104,19 +98,23 @@ void BiomeRenderer::generate_grass_instances() {
   QElapsedTimer timer;
   timer.start();
 
-  m_grassInstances.clear();
+  auto &grass_instances = m_grass_state.instances;
+  auto &grass_instance_count = m_grass_state.instance_count;
+  auto &grass_instances_dirty = m_grass_state.instances_dirty;
+
+  grass_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    m_grassInstanceCount = 0;
-    m_grassInstancesDirty = false;
+    grass_instance_count = 0;
+    grass_instances_dirty = false;
     return;
   }
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto &scatter_profile = profiles.scatter;
   if (scatter_profile.patch_density < 0.01F) {
-    m_grassInstanceCount = 0;
-    m_grassInstancesDirty = false;
+    grass_instance_count = 0;
+    grass_instances_dirty = false;
     return;
   }
 
@@ -152,7 +150,7 @@ void BiomeRenderer::generate_grass_instances() {
   const std::size_t reserve_hint =
       cell_count * background_blades_per_cell +
       chunk_count * cluster_count_per_chunk * k_max_blades_per_cluster;
-  m_grassInstances.reserve(reserve_hint);
+  grass_instances.reserve(reserve_hint);
 
   auto check_riverbank = [&](int ix, int iz, uint32_t &state) -> bool {
     constexpr int k_river_margin = 1;
@@ -234,7 +232,7 @@ void BiomeRenderer::generate_grass_instances() {
     instance.color_width = QVector4D(color.x(), color.y(), color.z(), width);
     instance.sway_params =
         QVector4D(sway_strength, sway_speed, sway_phase, orientation);
-    m_grassInstances.push_back(std::move(instance));
+    grass_instances.push_back(std::move(instance));
     return true;
   };
 
@@ -442,8 +440,8 @@ void BiomeRenderer::generate_grass_instances() {
     }
   }
 
-  m_grassInstanceCount = m_grassInstances.size();
-  m_grassInstancesDirty = m_grassInstanceCount > 0;
+  grass_instance_count = grass_instances.size();
+  grass_instances_dirty = grass_instance_count > 0;
 }
 
 } // namespace Render::GL

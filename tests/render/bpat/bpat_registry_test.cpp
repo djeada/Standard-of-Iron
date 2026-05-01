@@ -1,34 +1,19 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "tests/render/test_asset_paths.h"
 
+#include <QCoreApplication>
 #include <gtest/gtest.h>
 
 #include <QMatrix4x4>
 
 #include <array>
-#include <filesystem>
 #include <string>
 
 using namespace Render::Creature::Bpat;
 
-namespace {
-
-auto find_assets_dir() -> std::string {
-
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "humanoid.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
-
-} // namespace
-
 TEST(BpatRegistry, LoadsAllSpecies) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
@@ -50,14 +35,15 @@ TEST(BpatRegistry, LoadsAllSpecies) {
 }
 
 TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
 
   namespace fs = std::filesystem;
-  fs::path const project_root = fs::path(root).parent_path().parent_path();
-  fs::path const build_dir = project_root / "build";
+  fs::path const build_dir =
+      fs::path(QCoreApplication::applicationDirPath().toStdString())
+          .parent_path();
   if (!fs::exists(build_dir)) {
     GTEST_SKIP() << "build directory not present";
   }
@@ -78,7 +64,7 @@ TEST(BpatRegistry, LoadAllFindsAssetsWhenLaunchedFromBuildDir) {
 }
 
 TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
@@ -116,7 +102,7 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
 }
 
 TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
@@ -158,7 +144,7 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
 }
 
 TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found in CWD";
   }
