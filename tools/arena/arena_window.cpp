@@ -6,8 +6,10 @@
 
 #include <QAction>
 #include <QHBoxLayout>
+#include <QKeySequence>
 #include <QLabel>
 #include <QScrollArea>
+#include <QSplitter>
 #include <QStatusBar>
 #include <QTabWidget>
 #include <QToolBar>
@@ -19,25 +21,35 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
 
   auto *toolbar = addToolBar("Arena");
   toolbar->setMovable(false);
-  auto *regenerate_action = toolbar->addAction("Regenerate");
+  toolbar->setToolButtonStyle(Qt::ToolButtonTextOnly);
+  auto *regenerate_action = toolbar->addAction("⟳  Regenerate");
+  regenerate_action->setShortcut(QKeySequence(QStringLiteral("Ctrl+R")));
+  regenerate_action->setToolTip("Regenerate terrain (Ctrl+R)");
   toolbar->addSeparator();
-  auto *pause_action = toolbar->addAction("Pause");
+  auto *pause_action = toolbar->addAction("⏸  Pause");
   pause_action->setCheckable(true);
+  pause_action->setShortcut(QKeySequence(QStringLiteral("Space")));
+  pause_action->setToolTip("Pause / resume simulation (Space)");
   toolbar->addSeparator();
-  auto *reset_camera_action = toolbar->addAction("Reset Camera");
+  auto *reset_camera_action = toolbar->addAction("⌖  Reset Camera");
+  reset_camera_action->setShortcut(QKeySequence(QStringLiteral("F")));
+  reset_camera_action->setToolTip("Reset camera to default position (F)");
 
   auto *central = new QWidget(this);
   auto *main_layout = new QHBoxLayout(central);
-  main_layout->setContentsMargins(8, 8, 8, 8);
-  main_layout->setSpacing(8);
+  main_layout->setContentsMargins(0, 0, 0, 0);
+  main_layout->setSpacing(0);
 
-  m_viewport = new ArenaViewport(central);
-  m_viewport->setMinimumSize(960, 720);
-  main_layout->addWidget(m_viewport, 1);
+  auto *splitter = new QSplitter(Qt::Horizontal, central);
+  splitter->setChildrenCollapsible(false);
 
-  auto *tab_widget = new QTabWidget(central);
-  tab_widget->setMinimumWidth(320);
-  tab_widget->setMaximumWidth(400);
+  m_viewport = new ArenaViewport(splitter);
+  m_viewport->setMinimumSize(480, 400);
+  splitter->addWidget(m_viewport);
+
+  auto *tab_widget = new QTabWidget(splitter);
+  tab_widget->setMinimumWidth(280);
+  tab_widget->setMaximumWidth(480);
 
   m_terrain_panel = new TerrainPanel();
   auto *terrain_scroll = new QScrollArea();
@@ -53,11 +65,19 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   unit_scroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
   tab_widget->addTab(unit_scroll, "Units");
 
-  main_layout->addWidget(tab_widget);
+  splitter->addWidget(tab_widget);
+  splitter->setStretchFactor(0, 1);
+  splitter->setStretchFactor(1, 0);
+  splitter->setSizes({1200, 360});
+
+  main_layout->addWidget(splitter);
   setCentralWidget(central);
 
   m_status_label = new QLabel("Ready", this);
   statusBar()->addWidget(m_status_label);
+  auto *version_label = new QLabel("Standard of Iron Arena v1.0", this);
+  version_label->setStyleSheet("color: #4f6a75;");
+  statusBar()->addPermanentWidget(version_label);
 
   connect(regenerate_action, &QAction::triggered, m_viewport,
           &ArenaViewport::regenerateTerrain);
