@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QFormLayout>
+#include <QGroupBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
@@ -36,22 +37,25 @@ auto prettifyIdentifier(const QString &value) -> QString {
 
 } // namespace
 
-UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
+UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   auto *layout = new QVBoxLayout(this);
+  layout->setContentsMargins(8, 8, 8, 8);
+  layout->setSpacing(8);
 
-  auto *spawn_button = new QPushButton("Spawn Units", this);
-  auto *clear_button = new QPushButton("Clear Units", this);
-  layout->addWidget(spawn_button);
-  layout->addWidget(clear_button);
+  // --- Spawn group ---
+  auto *spawn_group = new QGroupBox("Spawn", this);
+  auto *spawn_group_layout = new QVBoxLayout(spawn_group);
+  spawn_group_layout->setSpacing(6);
 
-  auto *form = new QFormLayout();
-  m_owner_box = new QComboBox(this);
-  m_nation_box = new QComboBox(this);
-  m_unit_box = new QComboBox(this);
-  m_spawn_count_box = new QSpinBox(this);
-  m_individuals_per_unit_box = new QSpinBox(this);
-  m_render_rider_checkbox =
-      new QCheckBox("Render Rider On Mounted Units", this);
+  auto *spawn_form = new QFormLayout();
+  spawn_form->setSpacing(4);
+  m_owner_box = new QComboBox(spawn_group);
+  m_nation_box = new QComboBox(spawn_group);
+  m_unit_box = new QComboBox(spawn_group);
+  m_spawn_count_box = new QSpinBox(spawn_group);
+  m_individuals_per_unit_box = new QSpinBox(spawn_group);
+  m_render_rider_checkbox = new QCheckBox("Render Rider On Mounted Units", spawn_group);
+
   m_owner_box->addItem(QStringLiteral("Local Player"), kArenaLocalOwnerId);
   m_owner_box->addItem(QStringLiteral("Arena Opponent"), kArenaOpponentOwnerId);
   m_spawn_count_box->setRange(1, 64);
@@ -60,30 +64,41 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   m_individuals_per_unit_box->setSpecialValueText(QStringLiteral("Default"));
   m_individuals_per_unit_box->setValue(0);
   m_render_rider_checkbox->setChecked(true);
-  auto *animation_box = new QComboBox(this);
+
+  spawn_form->addRow("Side", m_owner_box);
+  spawn_form->addRow("Nation", m_nation_box);
+  spawn_form->addRow("Unit", m_unit_box);
+  spawn_form->addRow("Spawn Count", m_spawn_count_box);
+  spawn_form->addRow("Members / Unit", m_individuals_per_unit_box);
+  spawn_form->addRow("", m_render_rider_checkbox);
+  spawn_group_layout->addLayout(spawn_form);
+
+  auto *spawn_buttons = new QWidget(spawn_group);
+  auto *spawn_buttons_layout = new QHBoxLayout(spawn_buttons);
+  spawn_buttons_layout->setContentsMargins(0, 0, 0, 0);
+  spawn_buttons_layout->setSpacing(6);
+  auto *spawn_button = new QPushButton("Spawn", spawn_group);
+  auto *clear_button = new QPushButton("Clear", spawn_group);
+  auto *apply_visuals_button = new QPushButton("Apply Overrides", spawn_group);
+  spawn_buttons_layout->addWidget(spawn_button, 1);
+  spawn_buttons_layout->addWidget(clear_button, 1);
+  spawn_buttons_layout->addWidget(apply_visuals_button, 1);
+  spawn_group_layout->addWidget(spawn_buttons);
+
+  layout->addWidget(spawn_group);
+
+  // --- Animation group ---
+  auto *anim_group = new QGroupBox("Animation", this);
+  auto *anim_group_layout = new QVBoxLayout(anim_group);
+  anim_group_layout->setSpacing(6);
+
+  auto *anim_form = new QFormLayout();
+  anim_form->setSpacing(4);
+  auto *animation_box = new QComboBox(anim_group);
   animation_box->addItems({QStringLiteral("Idle"), QStringLiteral("Walk"),
                            QStringLiteral("Attack"), QStringLiteral("Death")});
-  form->addRow("Side", m_owner_box);
-  form->addRow("Nation", m_nation_box);
-  form->addRow("Unit", m_unit_box);
-  form->addRow("Spawn Count", m_spawn_count_box);
-  form->addRow("Members / Unit", m_individuals_per_unit_box);
-  form->addRow("", m_render_rider_checkbox);
-  form->addRow("Animation", animation_box);
 
-  auto *play_button = new QPushButton("Play Animation", this);
-  form->addRow("", play_button);
-
-  auto *apply_visuals_button = new QPushButton("Apply Visual Overrides", this);
-  form->addRow("", apply_visuals_button);
-
-  m_pause_checkbox = new QCheckBox("Pause Simulation", this);
-  form->addRow("", m_pause_checkbox);
-
-  auto *move_button = new QPushButton("Move Selected Unit", this);
-  form->addRow("", move_button);
-
-  auto *speed_container = new QWidget(this);
+  auto *speed_container = new QWidget(anim_group);
   auto *speed_layout = new QHBoxLayout(speed_container);
   speed_layout->setContentsMargins(0, 0, 0, 0);
   auto *speed_slider = new QSlider(Qt::Horizontal, speed_container);
@@ -96,25 +111,41 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   speed_spin->setValue(2.2);
   speed_layout->addWidget(speed_slider, 1);
   speed_layout->addWidget(speed_spin);
-  form->addRow("Speed", speed_container);
 
-  auto *skeleton_debug_box = new QCheckBox("Skeleton/Pose Overlay", this);
-  form->addRow("", skeleton_debug_box);
-  layout->addLayout(form);
+  anim_form->addRow("Animation", animation_box);
+  anim_form->addRow("Speed", speed_container);
+  anim_group_layout->addLayout(anim_form);
 
+  auto *anim_buttons = new QWidget(anim_group);
+  auto *anim_buttons_layout = new QHBoxLayout(anim_buttons);
+  anim_buttons_layout->setContentsMargins(0, 0, 0, 0);
+  anim_buttons_layout->setSpacing(6);
+  auto *play_button = new QPushButton("Play", anim_group);
+  auto *move_button = new QPushButton("Move", anim_group);
+  anim_buttons_layout->addWidget(play_button, 1);
+  anim_buttons_layout->addWidget(move_button, 1);
+  anim_group_layout->addWidget(anim_buttons);
+
+  m_pause_checkbox = new QCheckBox("Pause Simulation", anim_group);
+  auto *skeleton_debug_box = new QCheckBox("Skeleton / Pose Overlay", anim_group);
+  anim_group_layout->addWidget(m_pause_checkbox);
+  anim_group_layout->addWidget(skeleton_debug_box);
+
+  layout->addWidget(anim_group);
+
+  // --- Quick Setup group ---
   auto *quick_setup_group = new QGroupBox("Quick Setup", this);
   auto *quick_setup_layout = new QVBoxLayout(quick_setup_group);
-  quick_setup_layout->setContentsMargins(0, 0, 0, 0);
-  auto *spawn_opposing_button =
-      new QPushButton("Spawn Opposing Batch", quick_setup_group);
-  auto *spawn_mirror_button =
-      new QPushButton("Spawn Mirror Match", quick_setup_group);
+  quick_setup_layout->setSpacing(4);
+  auto *spawn_opposing_button = new QPushButton("Spawn Opposing Batch", quick_setup_group);
+  auto *spawn_mirror_button = new QPushButton("Spawn Mirror Match", quick_setup_group);
   auto *reset_arena_button = new QPushButton("Reset Arena", quick_setup_group);
   quick_setup_layout->addWidget(spawn_opposing_button);
   quick_setup_layout->addWidget(spawn_mirror_button);
   quick_setup_layout->addWidget(reset_arena_button);
   layout->addWidget(quick_setup_group);
 
+  // --- Selection group ---
   auto *selection_group = new QGroupBox("Selection", this);
   auto *selection_layout = new QVBoxLayout(selection_group);
   m_selection_summary_label =
@@ -124,8 +155,10 @@ UnitPanel::UnitPanel(QWidget *parent) : QGroupBox("Units", parent) {
   m_selection_summary_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
   selection_layout->addWidget(m_selection_summary_label);
   layout->addWidget(selection_group);
+
   layout->addStretch(1);
 
+  // --- Connections ---
   connect(spawn_button, &QPushButton::clicked, this, [this]() {
     emit spawnIndividualsPerUnitChanged(
         m_individuals_per_unit_box != nullptr
