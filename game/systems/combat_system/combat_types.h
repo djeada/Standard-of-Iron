@@ -30,15 +30,15 @@ inline constexpr float k_high_ground_height_threshold = 0.5F;
 inline constexpr float k_optimal_range_factor = 0.85F;
 inline constexpr float k_optimal_range_buffer = 0.5F;
 inline constexpr float k_new_command_threshold = 0.25F;
-inline constexpr float k_arrow_spread_min = -0.8F;
-inline constexpr float k_arrow_spread_max = 0.8F;
+inline constexpr float k_arrow_spread_min = -1.2F;
+inline constexpr float k_arrow_spread_max = 1.2F;
 inline constexpr float k_arrow_vertical_spread_factor = 3.5F;
 inline constexpr float k_arrow_depth_spread_factor = 3.0F;
 inline constexpr float k_arrow_start_height = 0.6F;
 inline constexpr float k_arrow_start_offset = 0.35F;
 inline constexpr float k_arrow_target_offset = 0.5F;
 inline constexpr float k_arrow_speed = 14.0F;
-inline constexpr int k_max_visual_arrows_per_volley = 12;
+inline constexpr int k_max_visual_arrows_per_volley = 20;
 } // namespace Constants
 
 } // namespace Game::Systems::Combat
