@@ -8,17 +8,13 @@ using namespace Game::Map::Minimap;
 
 class MinimapGeneratorTest : public ::testing::Test {
 protected:
-  // No additional setup needed; the global test environment handles
-  // QGuiApplication.
-
   void SetUp() override {
-    // Create a simple test map
+
     test_map.name = "Test Map";
     test_map.grid.width = 50;
     test_map.grid.height = 50;
     test_map.grid.tile_size = 1.0F;
 
-    // Set up biome with default colors
     test_map.biome.grass_primary = QVector3D(0.3F, 0.6F, 0.28F);
     test_map.biome.grass_secondary = QVector3D(0.44F, 0.7F, 0.32F);
     test_map.biome.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
@@ -31,7 +27,6 @@ TEST_F(MinimapGeneratorTest, GeneratesValidImage) {
   MinimapGenerator generator;
   QImage result = generator.generate(test_map);
 
-  // Check that image was created
   EXPECT_FALSE(result.isNull());
   EXPECT_GT(result.width(), 0);
   EXPECT_GT(result.height(), 0);
@@ -52,7 +47,7 @@ TEST_F(MinimapGeneratorTest, ImageDimensionsMatchGrid) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersRivers) {
-  // Add a river to the map
+
   RiverSegment river;
   river.start = QVector3D(10.0F, 0.0F, 10.0F);
   river.end = QVector3D(40.0F, 0.0F, 40.0F);
@@ -63,12 +58,10 @@ TEST_F(MinimapGeneratorTest, RendersRivers) {
   QImage result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
-  // River should have been rendered (we can't easily verify pixels, but check
-  // image is valid)
 }
 
 TEST_F(MinimapGeneratorTest, RendersTerrainFeatures) {
-  // Add a hill
+
   TerrainFeature hill;
   hill.type = TerrainType::Hill;
   hill.center_x = 25.0F;
@@ -85,7 +78,7 @@ TEST_F(MinimapGeneratorTest, RendersTerrainFeatures) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersForestFeatures) {
-  // Add a forest
+
   TerrainFeature forest;
   forest.type = TerrainType::Forest;
   forest.center_x = 30.0F;
@@ -102,7 +95,7 @@ TEST_F(MinimapGeneratorTest, RendersForestFeatures) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersRoads) {
-  // Add a road
+
   RoadSegment road;
   road.start = QVector3D(5.0F, 0.0F, 5.0F);
   road.end = QVector3D(45.0F, 0.0F, 45.0F);
@@ -117,7 +110,7 @@ TEST_F(MinimapGeneratorTest, RendersRoads) {
 }
 
 TEST_F(MinimapGeneratorTest, RendersStructures) {
-  // Add a barracks spawn
+
   UnitSpawn barracks;
   barracks.type = Game::Units::SpawnType::Barracks;
   barracks.x = 25.0F;
@@ -132,7 +125,7 @@ TEST_F(MinimapGeneratorTest, RendersStructures) {
 }
 
 TEST_F(MinimapGeneratorTest, HandlesEmptyMap) {
-  // Empty map with no features
+
   MapDefinition empty_map;
   empty_map.grid.width = 10;
   empty_map.grid.height = 10;

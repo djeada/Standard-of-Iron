@@ -1,22 +1,4 @@
-// Stage 15.5b — rigged pipeline / RiggedCreatureCmd queue-dispatch tests.
-//
-// No headless GL context is available in this test harness, so we can't
-// drive RiggedCharacterPipeline::draw() against a real shader program.
-// What we *can* verify is that:
-//
-//   1. The new RiggedCreatureCmd variant slot is wired into the DrawCmd
-//      std::variant, carries the expected defaults, and its DrawCmdType
-//      enum index matches the variant index.
-//   2. DrawQueue::submit + sort_for_batching accept the variant without
-//      crashing and preserve a RiggedCreatureCmd through the sort path.
-//   3. The k_type_order table has been extended to 15 entries, so
-//      compute_sort_key does not index out of bounds for a
-//      RiggedCreatureCmd.
-//
-// When a headless-GL fixture lands (Stage 16 / test infrastructure work),
-// a second test pass can exercise initialize()/draw() against a live
-// context. For now this test guarantees the variant compiles, dispatches
-// through the queue, and does not silently fall off the type-order table.
+
 
 #include "render/draw_queue.h"
 #include "render/submitter.h"
@@ -84,8 +66,6 @@ TEST(RiggedPipeline, DrawQueueSubmitAndSort) {
   EXPECT_FLOAT_EQ(round_trip.alpha, 0.75F);
   EXPECT_EQ(round_trip.material_id, 42);
 
-  // sort_for_batching must accept the new variant without tripping on
-  // the k_type_order table (which now has 15 entries).
   queue.sort_for_batching();
   const DrawCmd &sorted = queue.get_sorted(0);
   EXPECT_EQ(sorted.index(), RiggedCreatureCmdIndex);
@@ -129,7 +109,7 @@ TEST(RiggedPipeline, PrioritySortKeyPathMultipleCmds) {
 
   queue.sort_for_batching();
   ASSERT_EQ(queue.size(), 3U);
-  // extract_cmd_priority must compile for the new variant.
+
   for (std::size_t i = 0; i < queue.size(); ++i) {
     EXPECT_NO_THROW((void)extract_cmd_priority(queue.get_sorted(i)));
   }

@@ -1,8 +1,4 @@
-// Phase A regression — mounted prepare module.
-//
-// Exercises render/entity/mounted_prepare.{h,cpp}: prepare_mounted_rows
-// must produce a horse mount row + humanoid rider row carrying the supplied
-// pass intent.
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -152,8 +148,8 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
 
   auto set = Render::GL::prepare_mounted_rows(
       mounted, mount_world, rider_world, mount_pose, mount_variant, rider_pose,
-      rider_variant, rider_anim, /*seed*/ 99,
-      Render::Creature::CreatureLOD::Full, RenderPassIntent::Shadow);
+      rider_variant, rider_anim, 99, Render::Creature::CreatureLOD::Full,
+      RenderPassIntent::Shadow);
 
   EXPECT_EQ(set.mount_row.spec.kind, CreatureKind::Horse);
   EXPECT_EQ(set.rider_row.spec.kind, CreatureKind::Humanoid);

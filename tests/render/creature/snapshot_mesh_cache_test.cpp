@@ -1,10 +1,4 @@
-// Tests for SnapshotMeshCache: pre-skinned body geometry for snapshot-backed
-// animation states. The cache lives on the Renderer and is
-// consulted by CreaturePipeline::submit_requests when the target
-// archetype + state is flagged as a snapshot state. These tests work
-// directly against the cache (no GL context needed) by feeding a hand-
-// rolled RiggedMeshEntry — the exact same shape that
-// rigged_entry_ensure_skin_atlas_from_blob produces in production.
+
 
 #include "render/bone_palette_arena.h"
 #include "render/creature/render_request.h"
@@ -58,13 +52,11 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
           entry->skinned_bone_count,
       QMatrix4x4{});
 
-  // Frame 0: bone 0 = +Y translate(2), bone 1 = identity.
   QMatrix4x4 f0_b0;
   f0_b0.translate(0.0F, 2.0F, 0.0F);
   entry->skinned_palettes[0] = f0_b0;
   entry->skinned_palettes[1].setToIdentity();
 
-  // Frame 1: bone 0 = identity, bone 1 = scale 3x.
   entry->skinned_palettes[2].setToIdentity();
   QMatrix4x4 f1_b1;
   f1_b1.scale(3.0F);
@@ -92,14 +84,13 @@ TEST(SnapshotMeshCache, BakesAndCachesEntry) {
   key.state = AnimationStateId::Idle;
   key.frame_in_clip = 0U;
 
-  const auto *snap = cache.get_or_bake(key, *source, /*global_frame=*/0U);
+  const auto *snap = cache.get_or_bake(key, *source, 0U);
   ASSERT_NE(snap, nullptr);
   ASSERT_NE(snap->mesh, nullptr);
   EXPECT_EQ(snap->mesh->vertex_count(), 4U);
   EXPECT_EQ(snap->mesh->index_count(), 6U);
   EXPECT_EQ(cache.size(), 1U);
 
-  // Cache hit returns the same pointer.
   const auto *snap2 = cache.get_or_bake(key, *source, 0U);
   EXPECT_EQ(snap, snap2);
   EXPECT_EQ(cache.size(), 1U);
@@ -117,25 +108,21 @@ TEST(SnapshotMeshCache, AppliesSkinningAtFrameZero) {
   const auto &v = snap->mesh->get_vertices();
   ASSERT_EQ(v.size(), 4U);
 
-  // Vertices 0..2 use bone 0 (translate +Y by 2).
   EXPECT_FLOAT_EQ(v[0].position_bone_local[0], -1.0F);
   EXPECT_FLOAT_EQ(v[0].position_bone_local[1], 2.0F);
   EXPECT_FLOAT_EQ(v[1].position_bone_local[0], 1.0F);
   EXPECT_FLOAT_EQ(v[1].position_bone_local[1], 2.0F);
   EXPECT_FLOAT_EQ(v[2].position_bone_local[1], 3.0F);
 
-  // Vertex 3 uses bone 1 (identity at frame 0).
   EXPECT_FLOAT_EQ(v[3].position_bone_local[0], 0.0F);
   EXPECT_FLOAT_EQ(v[3].position_bone_local[1], 0.0F);
 
-  // All baked vertices collapse to bone 0 with weight 1.
   for (const auto &bv : v) {
     EXPECT_EQ(bv.bone_indices[0], 0);
     EXPECT_FLOAT_EQ(bv.bone_weights[0], 1.0F);
     EXPECT_FLOAT_EQ(bv.bone_weights[1], 0.0F);
   }
 
-  // Color role survives the bake.
   EXPECT_EQ(v[0].color_role, 1U);
   EXPECT_EQ(v[3].color_role, 2U);
 }
@@ -156,9 +143,6 @@ TEST(SnapshotMeshCache, DifferentFramesProduceDifferentMeshes) {
   EXPECT_NE(s0, s1);
   EXPECT_EQ(cache.size(), 2U);
 
-  // Vertex 3 uses bone 1: at frame 1 bone 1 scales by 3 (origin maps to
-  // origin), at frame 0 bone 1 is identity (also origin -> origin).
-  // Vertex 0 uses bone 0: frame 0 = translate +Y2, frame 1 = identity.
   EXPECT_FLOAT_EQ(s0->mesh->get_vertices()[0].position_bone_local[1], 2.0F);
   EXPECT_FLOAT_EQ(s1->mesh->get_vertices()[0].position_bone_local[1], 0.0F);
 }
@@ -168,7 +152,7 @@ TEST(SnapshotMeshCache, OutOfRangeFrameReturnsNull) {
   SnapshotMeshCache cache;
 
   SnapshotMeshCache::Key key{};
-  EXPECT_EQ(cache.get_or_bake(key, *source, /*global_frame=*/99U), nullptr);
+  EXPECT_EQ(cache.get_or_bake(key, *source, 99U), nullptr);
   EXPECT_EQ(cache.size(), 0U);
 }
 

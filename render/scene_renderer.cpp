@@ -86,6 +86,15 @@ float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
   }
 }
 
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit_comp)
+    -> int {
+  if (unit_comp.render_individuals_per_unit_override > 0) {
+    return unit_comp.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit_comp.spawn_type);
+}
+
 auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
   if (move_comp == nullptr) {
     return false;
@@ -746,7 +755,7 @@ void Renderer::enqueue_selection_ring(
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
       int const individuals_per_unit =
-          config.get_individuals_per_unit(unit_comp->spawn_type);
+          resolved_individuals_per_unit(*unit_comp);
       int const max_units_per_row =
           config.get_max_units_per_row(unit_comp->spawn_type);
       std::uint32_t layout_seed =
@@ -1223,8 +1232,18 @@ void Renderer::render_world(Engine::Core::World *world) {
         lod_in.force_batching = batch_config.force_batching;
         lod_in.never_batch = batch_config.never_batch;
 
-        const bool batching_available = batching_ratio > 0.0F;
-        const auto tier = Render::Pipeline::select_lod(lod_in);
+        if (m_force_full_creature_lod) {
+          ctx.force_humanoid_lod = true;
+          ctx.forced_humanoid_lod = HumanoidLOD::Full;
+          ctx.force_horse_lod = true;
+          ctx.forced_horse_lod = HorseLOD::Full;
+        }
+
+        const bool batching_available =
+            !m_force_full_creature_lod && batching_ratio > 0.0F;
+        const auto tier = m_force_full_creature_lod
+                              ? Render::Pipeline::LodTier::Full
+                              : Render::Pipeline::select_lod(lod_in);
 
         const bool use_batching =
             batching_available &&

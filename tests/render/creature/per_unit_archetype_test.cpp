@@ -1,16 +1,4 @@
-// Tests for the per-unit `ArchetypeId` plumbing introduced by
-// `p5-merged-archetype-mesh` Step 1.
-//
-// Verifies:
-//   * `ArchetypeRegistry::register_unit_archetype` clones a baseline
-//     descriptor's clip / snapshot / role state and overlays a span of
-//     `StaticAttachmentSpec`s, returning a fresh, dense id distinct
-//     from the species baseline.
-//   * The new descriptor exposes its attachments via `attachments_view()`
-//     so the bake/cache pipeline picks them up.
-//   * Excess attachments past `kMaxBakeAttachments` are dropped (clamped).
-//   * `Mounted` species is rejected.
-//   * `UnitVisualSpec::archetype_id` defaults to `kInvalidArchetype`.
+
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
@@ -36,7 +24,7 @@ auto make_test_archetype() -> const RenderArchetype & {
     RenderArchetypeBuilder b("per_unit_archetype_test_helmet");
     b.use_lod(RenderArchetypeLod::Full);
     b.add_palette_box(QVector3D{0.0F, 0.0F, 0.0F}, QVector3D{1.0F, 1.0F, 1.0F},
-                      /*palette_slot=*/1);
+                      1);
     return std::move(b).build();
   }();
   return arch;
@@ -73,7 +61,6 @@ TEST(PerUnitArchetype, RegisterUnitArchetypeReturnsDistinctIdFromBaseline) {
   EXPECT_EQ(desc->attachments_view()[0].archetype, &make_test_archetype());
   EXPECT_EQ(desc->attachments_view()[0].palette_role_remap[1], 5U);
 
-  // Clip table inherits from the humanoid baseline.
   auto const *base = reg.get(ArchetypeRegistry::kHumanoidBase);
   ASSERT_NE(base, nullptr);
   for (std::size_t i = 0; i < animation_state_count(); ++i) {

@@ -87,6 +87,17 @@ TEST(SelectionRingLayout, MultiSoldierRingsUseCompactVisualSize) {
   EXPECT_FLOAT_EQ(size, 0.3F);
 }
 
+TEST(SelectionRingLayout, LimitsColumnsToVisibleMembers) {
+  Render::GL::SelectionRingLayoutInput input;
+  input.individuals_per_unit = 3;
+  input.max_units_per_row = 5;
+
+  auto const placements = Render::GL::build_selection_ring_layout(input);
+
+  ASSERT_EQ(placements.size(), 3u);
+  EXPECT_LT(std::abs(placements[2].world_x - placements[0].world_x), 2.0F);
+}
+
 TEST(SelectionRingLayout, SingleSoldierRingKeepsConfiguredSize) {
   float const size = Render::GL::Detail::selection_ring_visual_size(
       Game::Units::SpawnType::Healer, 1, 1.2F);

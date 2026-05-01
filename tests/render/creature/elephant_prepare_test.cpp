@@ -1,4 +1,4 @@
-// Phase A regression — elephant prepare module.
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -115,9 +115,9 @@ TEST(ElephantPrepare, MakePreparedElephantRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world,
-      /*seed*/ 23, Render::Creature::CreatureLOD::Minimal,
-      /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
+      spec, Render::Creature::Pipeline::CreatureKind::Elephant, world, 23,
+      Render::Creature::CreatureLOD::Minimal, 0,
+      Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Elephant);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);
