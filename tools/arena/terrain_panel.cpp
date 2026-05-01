@@ -148,30 +148,30 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QWidget(parent) {
   layout->addStretch(1);
 
   connect(seed_box, qOverload<int>(&QSpinBox::valueChanged), this,
-          &TerrainPanel::seedChanged);
+          &TerrainPanel::seed_changed);
   connect(octaves_box, qOverload<int>(&QSpinBox::valueChanged), this,
-          &TerrainPanel::octavesChanged);
+          &TerrainPanel::octaves_changed);
   connect(regenerate_button, &QPushButton::clicked, this,
-          &TerrainPanel::regenerateRequested);
+          &TerrainPanel::regenerate_requested);
   connect(wireframe_box, &QCheckBox::toggled, this,
-          &TerrainPanel::wireframeToggled);
+          &TerrainPanel::wireframe_toggled);
   connect(normals_box, &QCheckBox::toggled, this,
-          &TerrainPanel::normalsToggled);
+          &TerrainPanel::normals_toggled);
   connect(ground_type_box, &QComboBox::currentIndexChanged, this,
           [this, ground_type_box](int) {
-            emit groundTypeChanged(ground_type_box->currentData().toString());
+            emit ground_type_changed(ground_type_box->currentData().toString());
           });
-  connect(rain_box, &QCheckBox::toggled, this, &TerrainPanel::rainToggled);
+  connect(rain_box, &QCheckBox::toggled, this, &TerrainPanel::rain_toggled);
 
   bind_slider_to_double(height_slider, height_spin, 20.0, [this](double value) {
-    emit heightScaleChanged(static_cast<float>(value));
+    emit height_scale_changed(static_cast<float>(value));
   });
   bind_slider_to_double(frequency_slider, frequency_spin, 100.0,
                         [this](double value) {
-                          emit frequencyChanged(static_cast<float>(value));
+                          emit frequency_changed(static_cast<float>(value));
                         });
   bind_slider_to_double(rain_intensity_slider, rain_intensity_spin, 100.0,
                         [this](double value) {
-                          emit rainIntensityChanged(static_cast<float>(value));
+                          emit rain_intensity_changed(static_cast<float>(value));
                         });
 }

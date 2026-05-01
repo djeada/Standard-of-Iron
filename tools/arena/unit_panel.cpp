@@ -23,7 +23,7 @@ namespace {
 constexpr int kArenaLocalOwnerId = 1;
 constexpr int kArenaOpponentOwnerId = 2;
 
-auto prettifyIdentifier(const QString &value) -> QString {
+auto prettify_identifier(const QString &value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
   QStringList parts = label.split(QLatin1Char(' '), Qt::SkipEmptyParts);
@@ -163,63 +163,63 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   layout->addStretch(1);
 
   connect(spawn_button, &QPushButton::clicked, this, [this]() {
-    emit spawnIndividualsPerUnitChanged(
+    emit spawn_individuals_per_unit_changed(
         m_individuals_per_unit_box != nullptr
             ? m_individuals_per_unit_box->value()
             : 0);
-    emit spawnRiderVisibilityChanged(m_render_rider_checkbox == nullptr ||
+    emit spawn_rider_visibility_changed(m_render_rider_checkbox == nullptr ||
                                      m_render_rider_checkbox->isChecked());
-    emit spawnUnitsRequested(
+    emit spawn_units_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
   connect(clear_button, &QPushButton::clicked, this,
-          &UnitPanel::clearUnitsRequested);
+          &UnitPanel::clear_units_requested);
   connect(m_owner_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit spawnOwnerSelected(selectedOwnerId()); });
+          [this](int) { emit spawn_owner_selected(selected_owner_id()); });
   connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
           [this](int) {
             if (m_nation_box == nullptr) {
               return;
             }
-            const QString nation_id = selectedNationId();
-            populateUnitOptions(nation_id);
-            emit nationSelected(nation_id);
+            const QString nation_id = selected_nation_id();
+            populate_unit_options(nation_id);
+            emit nation_selected(nation_id);
           });
   connect(m_unit_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit unitTypeSelected(selectedUnitTypeId()); });
+          [this](int) { emit unit_type_selected(selected_unit_type_id()); });
   connect(m_individuals_per_unit_box, qOverload<int>(&QSpinBox::valueChanged),
-          this, &UnitPanel::spawnIndividualsPerUnitChanged);
+          this, &UnitPanel::spawn_individuals_per_unit_changed);
   connect(m_render_rider_checkbox, &QCheckBox::toggled, this,
-          &UnitPanel::spawnRiderVisibilityChanged);
+          &UnitPanel::spawn_rider_visibility_changed);
   connect(animation_box, &QComboBox::currentTextChanged, this,
-          &UnitPanel::animationSelected);
+          &UnitPanel::animation_selected);
   connect(play_button, &QPushButton::clicked, this,
-          &UnitPanel::playAnimationRequested);
+          &UnitPanel::play_animation_requested);
   connect(apply_visuals_button, &QPushButton::clicked, this, [this]() {
-    emit spawnIndividualsPerUnitChanged(
+    emit spawn_individuals_per_unit_changed(
         m_individuals_per_unit_box != nullptr
             ? m_individuals_per_unit_box->value()
             : 0);
-    emit spawnRiderVisibilityChanged(m_render_rider_checkbox == nullptr ||
+    emit spawn_rider_visibility_changed(m_render_rider_checkbox == nullptr ||
                                      m_render_rider_checkbox->isChecked());
-    emit applyVisualOverridesRequested();
+    emit apply_visual_overrides_requested();
   });
   connect(spawn_opposing_button, &QPushButton::clicked, this, [this]() {
-    emit spawnOpposingBatchRequested(
+    emit spawn_opposing_batch_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
   connect(spawn_mirror_button, &QPushButton::clicked, this, [this]() {
-    emit spawnMirrorMatchRequested(
+    emit spawn_mirror_match_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
   connect(reset_arena_button, &QPushButton::clicked, this,
-          &UnitPanel::resetArenaRequested);
+          &UnitPanel::reset_arena_requested);
   connect(m_pause_checkbox, &QCheckBox::toggled, this,
-          &UnitPanel::animationPausedToggled);
+          &UnitPanel::animation_paused_toggled);
   connect(move_button, &QPushButton::clicked, this,
-          &UnitPanel::moveSelectedUnitRequested);
+          &UnitPanel::move_selected_unit_requested);
   connect(skeleton_debug_box, &QCheckBox::toggled, this,
-          &UnitPanel::skeletonDebugToggled);
+          &UnitPanel::skeleton_debug_toggled);
 
   connect(speed_slider, &QSlider::valueChanged, speed_spin,
           [speed_spin](int value) {
@@ -233,14 +233,14 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
           });
   connect(speed_spin, qOverload<double>(&QDoubleSpinBox::valueChanged), this,
           [this](double value) {
-            emit movementSpeedChanged(static_cast<float>(value));
+            emit movement_speed_changed(static_cast<float>(value));
           });
 
-  populateNationOptions();
-  populateUnitOptions(selectedNationId());
+  populate_nation_options();
+  populate_unit_options(selected_nation_id());
 }
 
-void UnitPanel::setAnimationPaused(bool paused) {
+void UnitPanel::set_animation_paused(bool paused) {
   if (m_pause_checkbox == nullptr || m_pause_checkbox->isChecked() == paused) {
     return;
   }
@@ -248,7 +248,7 @@ void UnitPanel::setAnimationPaused(bool paused) {
   m_pause_checkbox->setChecked(paused);
 }
 
-void UnitPanel::setSelectionSummary(const QString &summary) {
+void UnitPanel::set_selection_summary(const QString &summary) {
   if (m_selection_summary_label == nullptr) {
     return;
   }
@@ -257,27 +257,27 @@ void UnitPanel::setSelectionSummary(const QString &summary) {
                                          : summary);
 }
 
-auto UnitPanel::selectedOwnerId() const -> int {
+auto UnitPanel::selected_owner_id() const -> int {
   return m_owner_box != nullptr ? m_owner_box->currentData().toInt()
                                 : kArenaLocalOwnerId;
 }
 
-auto UnitPanel::selectedNationId() const -> QString {
+auto UnitPanel::selected_nation_id() const -> QString {
   return m_nation_box != nullptr ? m_nation_box->currentData().toString()
                                  : QString();
 }
 
-auto UnitPanel::selectedUnitTypeId() const -> QString {
+auto UnitPanel::selected_unit_type_id() const -> QString {
   return m_unit_box != nullptr ? m_unit_box->currentData().toString()
                                : QString();
 }
 
-void UnitPanel::populateNationOptions() {
+void UnitPanel::populate_nation_options() {
   if (m_nation_box == nullptr) {
     return;
   }
 
-  QString const preferred = selectedNationId();
+  QString const preferred = selected_nation_id();
   const auto &registry = Game::Systems::NationRegistry::instance();
   const auto &nations = registry.get_all_nations();
 
@@ -286,7 +286,7 @@ void UnitPanel::populateNationOptions() {
     QString const nation_id = Game::Systems::nation_id_to_qstring(nation.id);
     QString label = QString::fromStdString(nation.display_name);
     if (label.trimmed().isEmpty()) {
-      label = prettifyIdentifier(nation_id);
+      label = prettify_identifier(nation_id);
     }
     m_nation_box->addItem(label, nation_id);
   }
@@ -303,14 +303,14 @@ void UnitPanel::populateNationOptions() {
   m_nation_box->setCurrentIndex(index >= 0 ? index : 0);
 }
 
-void UnitPanel::populateUnitOptions(const QString &nationId,
-                                    const QString &preferredUnitType) {
+void UnitPanel::populate_unit_options(const QString &nation_id,
+                                    const QString &preferred_unit_type) {
   if (m_unit_box == nullptr) {
     return;
   }
 
   Game::Systems::NationID parsed_nation_id{};
-  if (!Game::Systems::try_parse_nation_id(nationId, parsed_nation_id)) {
+  if (!Game::Systems::try_parse_nation_id(nation_id, parsed_nation_id)) {
     m_unit_box->clear();
     return;
   }
@@ -323,14 +323,14 @@ void UnitPanel::populateUnitOptions(const QString &nationId,
   }
 
   QString preferred =
-      preferredUnitType.isEmpty() ? selectedUnitTypeId() : preferredUnitType;
+      preferred_unit_type.isEmpty() ? selected_unit_type_id() : preferred_unit_type;
 
   m_unit_box->clear();
   for (const auto &troop : nation->available_troops) {
     QString const troop_id = Game::Units::troop_typeToQString(troop.unit_type);
     QString label = QString::fromStdString(troop.display_name);
     if (label.trimmed().isEmpty()) {
-      label = prettifyIdentifier(troop_id);
+      label = prettify_identifier(troop_id);
     }
     m_unit_box->addItem(label, troop_id);
   }
