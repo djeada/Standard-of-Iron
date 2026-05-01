@@ -18,8 +18,9 @@ namespace {
 thread_local std::mt19937 gen(std::random_device{}());
 
 auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
-                                 Engine::Core::World *world,
-                                 float range) -> Engine::Core::Entity * {
+                                 Engine::Core::World *world, float range,
+                                 float max_height_diff)
+    -> Engine::Core::Entity * {
   auto *tower_unit = tower->get_component<Engine::Core::UnitComponent>();
   auto *tower_transform =
       tower->get_component<Engine::Core::TransformComponent>();
@@ -68,7 +69,13 @@ auto find_nearest_enemy_in_range(Engine::Core::Entity *tower,
     }
 
     float const dx = target_transform->position.x - tower_transform->position.x;
+    float const dy = target_transform->position.y - tower_transform->position.y;
     float const dz = target_transform->position.z - tower_transform->position.z;
+
+    if (std::fabs(dy) > max_height_diff) {
+      continue;
+    }
+
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq < best_dist_sq) {
@@ -104,17 +111,22 @@ void spawn_tower_arrows(Engine::Core::Entity *tower,
           ? Game::Visuals::team_colorForOwner(tower_u->owner_id)
           : QVector3D(0.8F, 0.9F, 1.0F);
 
+  constexpr int k_arrows_per_volley = 2;
+  constexpr float k_arrow_speed = 12.0F;
   std::uniform_real_distribution<float> spread_dist(-0.3F, 0.3F);
   QVector3D const perpendicular(-dir.z(), 0.0F, dir.x());
-  float const lateral_offset = spread_dist(gen);
 
-  QVector3D const start =
-      tower_pos + dir * 0.5F + perpendicular * lateral_offset;
-  QVector3D const end =
-      target_pos + QVector3D(0.0F, 0.8F, 0.0F) + perpendicular * lateral_offset;
+  for (int i = 0; i < k_arrows_per_volley; ++i) {
+    float const lateral_offset = spread_dist(gen);
 
-  constexpr float k_arrow_speed = 12.0F;
-  arrow_sys->spawn_arrow(start, end, color, k_arrow_speed);
+    QVector3D const start =
+        tower_pos + dir * 0.5F + perpendicular * lateral_offset;
+    QVector3D const end =
+        target_pos + QVector3D(0.0F, 0.8F, 0.0F) +
+        perpendicular * lateral_offset;
+
+    arrow_sys->spawn_arrow(start, end, color, k_arrow_speed);
+  }
 }
 
 } // namespace
@@ -153,7 +165,8 @@ void DefenseTowerSystem::update(Engine::Core::World *world, float delta_time) {
     }
 
     auto *target =
-        find_nearest_enemy_in_range(tower, world, attack_comp->range);
+        find_nearest_enemy_in_range(tower, world, attack_comp->range,
+                                    attack_comp->max_height_difference);
     if (target == nullptr) {
       continue;
     }
