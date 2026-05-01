@@ -6,17 +6,17 @@ namespace Render::GL {
 
 namespace HorseDimensionRange {
 
-constexpr float k_body_length_min = 0.92F;
-constexpr float k_body_length_max = 1.08F;
-constexpr float k_body_width_min = 0.22F;
-constexpr float k_body_width_max = 0.30F;
-constexpr float k_body_height_min = 0.44F;
-constexpr float k_body_height_max = 0.54F;
+constexpr float k_body_length_min = 1.12F;
+constexpr float k_body_length_max = 1.28F;
+constexpr float k_body_width_min = 0.23F;
+constexpr float k_body_width_max = 0.29F;
+constexpr float k_body_height_min = 0.50F;
+constexpr float k_body_height_max = 0.60F;
 
-constexpr float k_neck_length_min = 0.48F;
-constexpr float k_neck_length_max = 0.58F;
-constexpr float k_neck_rise_min = 0.30F;
-constexpr float k_neck_rise_max = 0.38F;
+constexpr float k_neck_length_min = 0.54F;
+constexpr float k_neck_length_max = 0.66F;
+constexpr float k_neck_rise_min = 0.42F;
+constexpr float k_neck_rise_max = 0.50F;
 
 constexpr float k_head_length_min = 0.36F;
 constexpr float k_head_length_max = 0.46F;
@@ -27,8 +27,8 @@ constexpr float k_head_height_max = 0.28F;
 constexpr float k_muzzle_length_min = 0.16F;
 constexpr float k_muzzle_length_max = 0.20F;
 
-constexpr float k_leg_length_min = 1.05F;
-constexpr float k_leg_length_max = 1.18F;
+constexpr float k_leg_length_min = 1.14F;
+constexpr float k_leg_length_max = 1.28F;
 constexpr float k_hoof_height_min = 0.095F;
 constexpr float k_hoof_height_max = 0.115F;
 

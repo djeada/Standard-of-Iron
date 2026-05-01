@@ -104,6 +104,35 @@ auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
          (std::abs(move_comp->vz) > 0.01F);
 }
 
+auto is_unit_combat_active(
+    const Engine::Core::AttackComponent *attack_comp,
+    const Engine::Core::AttackTargetComponent *attack_target,
+    const Engine::Core::CombatStateComponent *combat_state,
+    const Engine::Core::HitFeedbackComponent *hit_feedback) -> bool {
+  if ((hit_feedback != nullptr) && hit_feedback->is_reacting) {
+    return true;
+  }
+
+  if ((combat_state != nullptr) && (combat_state->animation_state !=
+                                    Engine::Core::CombatAnimationState::Idle)) {
+    return true;
+  }
+
+  if (attack_comp == nullptr) {
+    return false;
+  }
+
+  if (attack_comp->in_melee_lock) {
+    return true;
+  }
+
+  if ((attack_target == nullptr) || (attack_target->target_id == 0)) {
+    return false;
+  }
+
+  return attack_comp->time_since_last < attack_comp->get_current_cooldown();
+}
+
 struct UnitRenderEntry {
   Engine::Core::Entity *entity{nullptr};
   Engine::Core::RenderableComponent *renderable{nullptr};
@@ -116,6 +145,7 @@ struct UnitRenderEntry {
   bool selected{false};
   bool hovered{false};
   bool moving{false};
+  bool combat_active{false};
   bool in_frustum{true};
   bool fog_visible{true};
   bool has_attack{false};
@@ -1019,6 +1049,14 @@ void Renderer::render_world(Engine::Core::World *world) {
 
       auto *attack_comp =
           entity->get_component<Engine::Core::AttackComponent>();
+      auto *attack_target =
+          entity->get_component<Engine::Core::AttackTargetComponent>();
+      auto *combat_state =
+          entity->get_component<Engine::Core::CombatStateComponent>();
+      auto *hit_feedback =
+          entity->get_component<Engine::Core::HitFeedbackComponent>();
+      entry.combat_active = is_unit_combat_active(attack_comp, attack_target,
+                                                  combat_state, hit_feedback);
       entry.has_attack = (attack_comp != nullptr) && attack_comp->in_melee_lock;
 
       auto *guard_mode =
@@ -1192,7 +1230,8 @@ void Renderer::render_world(Engine::Core::World *world) {
     }
 
     bool should_update_temporal = battle_optimizer.should_render_unit(
-        entry.entity_id, entry.moving, entry.selected, entry.hovered);
+        entry.entity_id, entry.moving, entry.selected, entry.hovered,
+        entry.combat_active);
 
     const QMatrix4x4 &model_matrix = entry.model_matrix;
 
@@ -1208,7 +1247,8 @@ void Renderer::render_world(Engine::Core::World *world) {
         bool should_update_animation = true;
         if (should_update_temporal) {
           should_update_animation = battle_optimizer.should_update_animation(
-              entry.entity_id, entry.distance_sq, entry.selected);
+              entry.entity_id, entry.distance_sq, entry.selected,
+              entry.combat_active);
         } else {
           should_update_animation = false;
         }

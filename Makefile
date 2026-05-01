@@ -11,6 +11,10 @@ BINARY_NAME := standard_of_iron
 MAP_EDITOR_BINARY := map_editor
 ARENA_BINARY := arena_app
 DEFAULT_LANG ?= en
+MESH_OUTPUT_DIR ?= dist/mesh
+SUPPORTED_MESH_SPECIES := horse elephant
+MESH_SPECIES ?= $(word 2,$(MAKECMDGOALS))
+MESH_PART ?= full
 
 # Clang-tidy auto-fixer (git-only by default; --all scans whole project)
 CLANG_TIDY_FIXER := scripts/run-clang-tidy-fixes.sh
@@ -48,6 +52,7 @@ help:
 	@echo "  $(GREEN)install$(RESET)       - Install all dependencies"
 	@echo "  $(GREEN)configure$(RESET)     - Configure build with CMake"
 	@echo "  $(GREEN)build$(RESET)         - Build the project"
+	@echo "  $(GREEN)mesh$(RESET)          - Render creature mesh comparison sheet (use: make mesh horse)"
 	@echo "  $(GREEN)build-tidy$(RESET)    - Build with clang-tidy static analysis enabled"
 	@echo "  $(GREEN)debug$(RESET)         - Build with debug symbols and GDB support (no optimizations)"
 	@echo "  $(GREEN)release$(RESET)       - Build optimized release version"
@@ -73,6 +78,7 @@ help:
 	@echo "  make dev        # Complete development setup"
 	@echo "  make debug      # Build for debugging with GDB"
 	@echo "  make run        # Build and run the game"
+	@echo "  make mesh horse # Render a four-view horse mesh comparison sheet"
 	@echo "  DEFAULT_LANG=de make build  # Build with German as default language"
 
 # Install dependencies
@@ -136,6 +142,22 @@ build-tidy:
 # Build everything (alias for build)
 .PHONY: all
 all: build
+
+.PHONY: horse elephant
+horse elephant:
+	@:
+
+.PHONY: mesh
+mesh: configure
+	@case "$(MESH_SPECIES)" in \
+		horse|elephant) ;; \
+		*) echo "$(RED)Usage: make mesh [horse|elephant] MESH_PART=<full|torso|legs|neck_head>$(RESET)"; exit 2 ;; \
+	esac
+	@echo "$(BOLD)$(BLUE)Rendering $(MESH_SPECIES) mesh comparison views ($(MESH_PART))...$(RESET)"
+	@mkdir -p "$(MESH_OUTPUT_DIR)"
+	@cmake --build $(BUILD_DIR) -j$$(nproc) --target mesh_preview
+	@QT_QPA_PLATFORM=offscreen "$(BUILD_DIR)/bin/mesh_preview" "$(MESH_SPECIES)" "$(MESH_OUTPUT_DIR)" "$(MESH_PART)"
+	@echo "$(GREEN)✓ Mesh sheet written under $(MESH_OUTPUT_DIR)$(RESET)"
 
 # Run map pipeline preprocessing
 .PHONY: run-map-pipeline

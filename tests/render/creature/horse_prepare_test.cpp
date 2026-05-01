@@ -281,7 +281,8 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
   float const hoof_contact_y =
       Render::Creature::Pipeline::horse_clip_contact_y(0U, 0.0F).value_or(0.0F);
 
-  EXPECT_GT(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(), 1.9F);
+  EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, 0.0F, 0.0F)).y(),
+              1.9F - hoof_contact_y, 0.01F);
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(),
               1.9F, 0.01F);
 }

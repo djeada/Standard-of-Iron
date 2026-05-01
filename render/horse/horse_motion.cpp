@@ -4,6 +4,7 @@
 #include "../creature/creature_math_utils.h"
 #include "../gl/humanoid/humanoid_types.h"
 #include "dimensions.h"
+#include "horse_layout.h"
 
 #include <QVector3D>
 
@@ -79,18 +80,25 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.seat_up = QVector3D(0.0F, 1.0F, 0.0F);
   frame.ground_offset = QVector3D(0.0F, -d.barrel_center_y, 0.0F);
 
-  frame.saddle_center = QVector3D(
-      0.0F,
-      d.saddle_height + d.body_height * k_saddle_body_height_lift_scale -
-          d.saddle_thickness * k_saddle_thickness_offset,
-      -d.body_length * k_saddle_body_length_offset +
-          d.seat_forward_offset * k_saddle_seat_forward_scale);
+  float const body_height_vis = Render::Horse::horse_body_visual_height(d);
+  float const body_length_vis = Render::Horse::horse_body_visual_length(d);
+  float const torso_lift = Render::Horse::horse_torso_lift(d);
+  QVector3D const back_center(
+      0.0F, d.barrel_center_y + torso_lift + body_height_vis * 0.56F,
+      body_length_vis * 0.02F);
+  float const back_top_y =
+      d.barrel_center_y + torso_lift + body_height_vis * 1.06F;
+
+  frame.saddle_center =
+      QVector3D(0.0F, back_top_y + d.saddle_thickness * 0.25F,
+                back_center.z() + d.seat_forward_offset *
+                                      (k_saddle_seat_forward_scale * 0.35F));
 
   frame.seat_position =
       frame.saddle_center +
       QVector3D(0.0F,
                 d.saddle_thickness * k_seat_position_height_scale +
-                    d.body_height * k_seat_body_height_lift_scale,
+                    body_height_vis * 0.17F,
                 0.0F);
 
   frame.stirrup_attach_left =
