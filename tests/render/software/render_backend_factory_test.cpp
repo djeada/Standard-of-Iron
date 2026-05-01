@@ -1,6 +1,4 @@
-// Stage 17 — smoke test proving Renderer(ShaderQuality::None) dispatches to
-// the SoftwareBackend via RenderBackendFactory without requiring a GL
-// context, and that render_software_preview returns a non-empty image.
+
 
 #include "render/gl/camera.h"
 #include "render/render_backend_factory.h"

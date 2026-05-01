@@ -1,18 +1,4 @@
-// Horse-side counterpart of `baked_attachment_world_position_test.cpp`.
-//
-// Verifies that the bake path produces world-space attachment vertex
-// positions equivalent (within ε) to the legacy
-// `IHorseEquipmentRenderer::submit` path. This is the geometric
-// ground-truth check that p5-merged-archetype-mesh's per-mounted-unit
-// horse migration relies on:
-//
-//   bone_world * inverse_bind * baked_vertex   ==   T(origin) * Basis(R,U,F) *
-//   draw.local_model * v
-//
-// At the bind pose, `bone_world * inverse_bind = identity`, so the
-// baked vertex IS the legacy world position. The conversion rule lives
-// in `make_static_attachment_spec_from_horse_renderer` in
-// render/equipment/horse/horse_attachment_archetype.h.
+
 
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/horse/armor/champion_renderer.h"
@@ -93,8 +79,6 @@ void expect_aabb_close(const AABB &a, const AABB &b, float eps) {
   EXPECT_NEAR(a.mx.z(), b.mx.z(), eps);
 }
 
-// Build a bone matrix from a HorseAttachmentFrame for use as the bind
-// socket matrix in a single-bone bake test.
 auto bone_from_frame(const Render::GL::HorseAttachmentFrame &f) -> QMatrix4x4 {
   QMatrix4x4 m;
   m.setColumn(0, QVector4D(f.right, 0.0F));
@@ -104,7 +88,6 @@ auto bone_from_frame(const Render::GL::HorseAttachmentFrame &f) -> QMatrix4x4 {
   return m;
 }
 
-// Helper: run legacy submit, bake, compare AABBs for a single-spec renderer.
 auto bake_and_compare_single(const Render::GL::EquipmentBatch &legacy_batch,
                              const Render::Creature::StaticAttachmentSpec &spec,
                              const QMatrix4x4 &bone_world) -> void {
@@ -129,13 +112,6 @@ auto bake_and_compare_single(const Render::GL::EquipmentBatch &legacy_batch,
   expect_aabb_close(legacy, bake, 1e-3F);
 }
 
-// A non-trivial back_center frame: identity basis (matches what
-// `prepare.cpp` builds for every Class A horse socket) and a
-// representative world origin a saddle would sit at on the horse's
-// back. We use the same frame for both legacy and bake — the bake
-// folds it into `spec.local_offset` against the supplied bind matrix,
-// and at runtime the live socket bone (== bind matrix here) restores
-// it. The test is therefore an algebraic identity check at bind pose.
 auto make_test_back_center_frame() -> Render::GL::HorseAttachmentFrame {
   Render::GL::HorseAttachmentFrame f;
   f.origin = QVector3D(0.0F, 1.05F, -0.04F);
@@ -172,20 +148,12 @@ auto make_test_rump_frame() -> Render::GL::HorseAttachmentFrame {
   return f;
 }
 
-// Sanity check: with the real horse bind palette + the saddle's
-// authored back_center bind frame, the bake spec doesn't introduce any
-// NaNs and produces non-empty geometry. This catches mismatched bone
-// indices / inverted-zero-determinant matrices.
 TEST(BakedHorseAttachmentWorldPosition, RomanSaddleRootBoneBakeIsValid) {
   using Render::Horse::HorseBone;
 
   auto bind = Render::Horse::horse_bind_palette();
   ASSERT_GE(bind.size(), Render::Horse::k_horse_bone_count);
 
-  // The Class A back_center frame at baseline horse dimensions sits
-  // above the Root bone (which is just T(barrel_center)). Authoring
-  // the bind frame with a representative offset is enough — the test
-  // only verifies the bake doesn't blow up.
   Render::GL::HorseAttachmentFrame frame;
   frame.origin = QVector3D(0.0F, 1.05F, -0.04F);
   frame.right = QVector3D(1.0F, 0.0F, 0.0F);
@@ -194,8 +162,7 @@ TEST(BakedHorseAttachmentWorldPosition, RomanSaddleRootBoneBakeIsValid) {
 
   const auto root_bind = bind[static_cast<std::size_t>(HorseBone::Root)];
   const auto spec = Render::GL::roman_saddle_make_static_attachment(
-      static_cast<std::uint16_t>(HorseBone::Root),
-      /*base_role_byte=*/9U, frame, root_bind);
+      static_cast<std::uint16_t>(HorseBone::Root), 9U, frame, root_bind);
 
   std::vector<Render::Creature::BoneWorldMatrix> bind_vec(bind.begin(),
                                                           bind.end());
@@ -230,8 +197,8 @@ TEST(BakedHorseAttachmentWorldPosition, BlanketMatchesLegacySubmit) {
   Render::GL::BlanketRenderer::submit(ctx, frames, variant, anim, legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
-  const auto spec = Render::GL::blanket_make_static_attachment(
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, frame, bone_world);
+  const auto spec =
+      Render::GL::blanket_make_static_attachment(0, 9U, frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -252,10 +219,8 @@ TEST(BakedHorseAttachmentWorldPosition, CrupperMatchesLegacySubmit) {
   Render::GL::CrupperRenderer::submit(ctx, frames, variant, anim, legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
-  // Crupper bakes all its draws into one spec. The AABB includes all
-  // sub-draws via bake_and_compare_single which bakes the whole archetype.
-  const auto spec = Render::GL::crupper_make_static_attachment(
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, frame, bone_world);
+  const auto spec =
+      Render::GL::crupper_make_static_attachment(0, 9U, frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -277,8 +242,8 @@ TEST(BakedHorseAttachmentWorldPosition, ChampionMatchesLegacySubmit) {
                                        legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
-  const auto spec = Render::GL::champion_make_static_attachment(
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, frame, bone_world);
+  const auto spec =
+      Render::GL::champion_make_static_attachment(0, 9U, frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -301,29 +266,25 @@ TEST(BakedHorseAttachmentWorldPosition, SaddleBagMatchesLegacySubmit) {
                                         legacy_batch);
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
-  const auto spec = Render::GL::saddle_bag_make_static_attachment(
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, frame, bone_world);
+  const auto spec =
+      Render::GL::saddle_bag_make_static_attachment(0, 9U, frame, bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
-// ScaleBarding has 3 sub-archetypes (chest, barrel, neck_base). Test
-// all three individually against their respective legacy archetype prim.
 TEST(BakedHorseAttachmentWorldPosition, ScaleBardingChestMatchesLegacySubmit) {
   const auto chest_frame = make_test_chest_frame();
   const QMatrix4x4 bone_world = bone_from_frame(chest_frame);
 
   Render::GL::DrawContext ctx;
   ctx.model = QMatrix4x4{};
-  // Submit only chest by filling just the chest frame; other frames are
-  // left at zero so their AABB won't overlap.
+
   Render::GL::HorseBodyFrames frames{};
   frames.chest = chest_frame;
-  // Zero-origin barrel+neck frames won't overlap with chest at (0,1.10,0.30).
+
   Render::GL::HorseVariant variant{};
   variant.tack_color = QVector3D(0.55F, 0.45F, 0.25F);
   Render::GL::HorseAnimationContext anim{};
 
-  // Submit only the chest archetype directly.
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.reserve(0, 0, 8);
   Render::GL::append_horse_attachment_archetype(
@@ -333,8 +294,8 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingChestMatchesLegacySubmit) {
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::scale_barding_make_static_attachment(
-      Render::GL::scale_barding_chest_archetype(),
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, chest_frame, bone_world);
+      Render::GL::scale_barding_chest_archetype(), 0, 9U, chest_frame,
+      bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -357,8 +318,8 @@ TEST(BakedHorseAttachmentWorldPosition, ScaleBardingBarrelMatchesLegacySubmit) {
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::scale_barding_make_static_attachment(
-      Render::GL::scale_barding_barrel_archetype(),
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, barrel_frame, bone_world);
+      Render::GL::scale_barding_barrel_archetype(), 0, 9U, barrel_frame,
+      bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 
@@ -382,8 +343,8 @@ TEST(BakedHorseAttachmentWorldPosition,
   ASSERT_FALSE(legacy_batch.archetypes.empty());
 
   const auto spec = Render::GL::leather_barding_make_static_attachment(
-      Render::GL::leather_barding_chest_archetype(),
-      /*socket_bone_index=*/0, /*base_role_byte=*/9U, chest_frame, bone_world);
+      Render::GL::leather_barding_chest_archetype(), 0, 9U, chest_frame,
+      bone_world);
   bake_and_compare_single(legacy_batch, spec, bone_world);
 }
 

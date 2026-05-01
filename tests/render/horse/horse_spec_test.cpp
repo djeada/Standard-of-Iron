@@ -1,11 +1,4 @@
-// Stage 16.5 — horse rigged-path body submit smoke tests.
-//
-// The legacy walker entry point (`submit_horse_lod`) was removed when
-// the imperative LOD path was retired; the rig now exclusively calls
-// the rigged wrappers. With a non-Renderer submitter we exercise the
-// software fallback inside `submit_horse_*_rigged`, which routes
-// through `submit_creature(spec, lod)` and emits one draw per static
-// PartGraph primitive (1/13 for Minimal/Full).
+
 
 #include "render/creature/spec.h"
 #include "render/gl/mesh.h"
@@ -173,7 +166,7 @@ TEST(HorseSpecTest, BasePoseKeepsForehandBroaderAndHindFeetTuckedUnderCroup) {
   auto dims = make_horse_dims();
 
   Render::Horse::HorseSpecPose pose;
-  Render::Horse::make_horse_spec_pose(dims, /*bob=*/0.0F, pose);
+  Render::Horse::make_horse_spec_pose(dims, 0.0F, pose);
 
   EXPECT_GT(pose.shoulder_offset_fl.x(), pose.shoulder_offset_bl.x() * 1.35F);
   EXPECT_GT(pose.shoulder_offset_bl.x(), dims.body_width * 0.66F);
@@ -233,7 +226,7 @@ TEST(HorseSpecTest, BasePoseBodyKeepsDepthCloserToWidthThanFlatBlob) {
   auto dims = make_horse_dims();
 
   Render::Horse::HorseSpecPose pose;
-  Render::Horse::make_horse_spec_pose(dims, /*bob=*/0.0F, pose);
+  Render::Horse::make_horse_spec_pose(dims, 0.0F, pose);
 
   float const depth_ratio = pose.body_ellipsoid_y / pose.body_ellipsoid_x;
   EXPECT_GT(depth_ratio, 1.60F);
@@ -654,12 +647,9 @@ TEST(HorseSpecTest, FightPoseRaisesFrontFeetHigherThanIdlePose) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
 
-  // Phase 0.55 is in the "hold high" window (0.45-0.65) of the fight cycle.
-  // FL phase = motion.phase + front_leg_phase = 0.55 + 0.0 = 0.55 → hold high
   Render::Horse::HorseSpecPose fight_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait,
-      Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, /*is_fighting=*/true},
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true},
       fight_pose);
 
   Render::Horse::HorseSpecPose idle_pose;
@@ -667,11 +657,9 @@ TEST(HorseSpecTest, FightPoseRaisesFrontFeetHigherThanIdlePose) {
       dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, false},
       idle_pose);
 
-  // Front-left foot must be significantly higher during fight peak
   EXPECT_GT(fight_pose.foot_fl.y() - idle_pose.foot_fl.y(),
             dims.leg_length * 0.25F);
 
-  // Rear feet stay grounded during fight
   EXPECT_NEAR(fight_pose.foot_bl.y(), idle_pose.foot_bl.y(),
               dims.leg_length * 0.05F);
   EXPECT_NEAR(fight_pose.foot_br.y(), idle_pose.foot_br.y(),
@@ -682,20 +670,16 @@ TEST(HorseSpecTest, FightPoseStrikePhaseLowersFrontFeetBelowPeak) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
 
-  // Phase 0.55 = peak (hold high), phase 0.72 = mid-strike (dropping)
   Render::Horse::HorseSpecPose peak_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait,
-      Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, /*is_fighting=*/true},
+      dims, gait, Render::Horse::HorsePoseMotion{0.55F, 0.0F, false, true},
       peak_pose);
 
   Render::Horse::HorseSpecPose strike_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait,
-      Render::Horse::HorsePoseMotion{0.72F, 0.0F, false, /*is_fighting=*/true},
+      dims, gait, Render::Horse::HorsePoseMotion{0.72F, 0.0F, false, true},
       strike_pose);
 
-  // During strike phase the foot drops below the peak
   EXPECT_LT(strike_pose.foot_fl.y(), peak_pose.foot_fl.y());
 }
 
@@ -705,7 +689,6 @@ TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
   auto gait =
       Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
 
-  // At phase=0.0 (sin=0) the bob is zero; at phase=0.25 (sin=1.0) it is max.
   Render::Horse::HorseSpecPose pose_zero;
   Render::Horse::make_horse_spec_pose_animated(
       dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, true, false},
@@ -717,14 +700,11 @@ TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
       dims, gait, Render::Horse::HorsePoseMotion{0.25F, max_bob, true, false},
       pose_peak);
 
-  // The barrel center should be higher at bob peak than at zero
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
 }
 
 TEST(HorseSpecTest, AnimatedIdleHasVisibleFrontKneeBreak) {
-  // With front_leg_length_scale reduced to allow the IK solver to find a
-  // non-straight solution, the animated idle should show a measurable
-  // forward knee break rather than a fully locked-out leg.
+
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
 
@@ -738,7 +718,6 @@ TEST(HorseSpecTest, AnimatedIdleHasVisibleFrontKneeBreak) {
   float const front_bend =
       point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl);
 
-  // Knee must protrude forward of the shoulder–foot line even at rest.
   EXPECT_GT(front_bend, dims.body_length * 0.030F);
   EXPECT_GT(pose.knee_fl.z(), (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F);
 }
@@ -749,8 +728,7 @@ TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
 
   Render::Horse::HorseSpecPose fight_pose;
   Render::Horse::make_horse_spec_pose_animated(
-      dims, gait,
-      Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, /*is_fighting=*/true},
+      dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, true},
       fight_pose);
 
   Render::Horse::HorseSpecPose idle_pose;
@@ -758,12 +736,10 @@ TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {
       dims, gait, Render::Horse::HorsePoseMotion{0.5F, 0.0F, false, false},
       idle_pose);
 
-  // Combat neck arc must raise the neck top measurably above the idle position.
   EXPECT_GT(fight_pose.neck_top.y(), idle_pose.neck_top.y());
   EXPECT_GT(fight_pose.neck_top.y() - idle_pose.neck_top.y(),
             dims.neck_rise * 0.10F);
 
-  // Head should sit lower relative to its neck_top in the fighting pose.
   float const fight_head_drop =
       fight_pose.neck_top.y() - fight_pose.head_center.y();
   float const idle_head_drop =

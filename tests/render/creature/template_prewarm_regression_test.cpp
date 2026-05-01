@@ -1,8 +1,4 @@
-// Regression tests for template/cache prewarming with creature rendering.
-//
-// These tests verify that the declarative creature rendering pipeline
-// correctly handles template prewarming scenarios where creatures need to
-// be pre-rendered for caching but should not produce actual draw calls.
+
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -104,8 +100,6 @@ auto submit_requests_for_test(std::span<const CreatureRenderRequest> requests,
   return submit_preparation(prep, sink);
 }
 
-// --- Pass Intent Tests ---
-
 TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
   Render::GL::DrawContext normal_ctx{};
   normal_ctx.template_prewarm = false;
@@ -128,7 +122,6 @@ TEST(TemplatePrewarmRegression, ShadowPassFiltersPreparedBatch) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  // Only the 3 Main pass requests should be submitted.
   EXPECT_EQ(stats.entities_submitted, 3u);
 }
 
@@ -148,8 +141,6 @@ TEST(TemplatePrewarmRegression, AllShadowPassRowsProduceZeroDraws) {
   EXPECT_EQ(sink.mesh_calls, 0);
 }
 
-// --- Graph Integration Tests ---
-
 TEST(TemplatePrewarmRegression, GraphOutputReflectsPrewarmContext) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
@@ -164,7 +155,6 @@ TEST(TemplatePrewarmRegression, GraphOutputReflectsPrewarmContext) {
   auto decision = evaluate_creature_lod(inputs, config);
   auto output = build_base_graph_output(inputs, decision);
 
-  // Even though LOD is Full, the pass intent should be Shadow
   EXPECT_EQ(output.lod, CreatureLOD::Full);
   EXPECT_EQ(output.pass_intent, RenderPassIntent::Shadow);
 }
@@ -183,7 +173,6 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   auto output = build_base_graph_output(inputs, decision);
   output.spec.kind = CreatureKind::Humanoid;
 
-  // Build a batch from prewarm context
   CreatureRenderBatch batch;
   Render::GL::HumanoidPose pose{};
   Render::GL::HumanoidVariant variant{};
@@ -199,14 +188,11 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_preparation(prep, sink);
 
-  // Shadow-tagged requests should produce zero submissions.
   EXPECT_EQ(stats.entities_submitted, 0u);
 }
 
-// --- Mixed Batch Tests ---
-
 TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
-  // Simulate a scenario where normal and prewarm contexts are mixed
+
   Render::GL::DrawContext normal_ctx{};
   normal_ctx.template_prewarm = false;
 
@@ -225,11 +211,8 @@ TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  // Only even indices (0, 2, 4, 6, 8) = 5 Main rows should be submitted
   EXPECT_EQ(stats.entities_submitted, 5u);
 }
-
-// --- Species-Specific Prewarm Tests ---
 
 TEST(TemplatePrewarmRegression, HorsePrewarmProducesZeroDraws) {
   Render::GL::DrawContext prewarm_ctx{};
@@ -259,8 +242,6 @@ TEST(TemplatePrewarmRegression, ElephantPrewarmProducesZeroDraws) {
   EXPECT_EQ(stats.entities_submitted, 0u);
 }
 
-// --- LOD-Independent Prewarm Tests ---
-
 TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   Render::GL::DrawContext prewarm_ctx{};
   prewarm_ctx.template_prewarm = true;
@@ -275,19 +256,15 @@ TEST(TemplatePrewarmRegression, AllLodLevelsRespectPrewarmFiltering) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  // All LOD levels should be filtered when prewarm
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(stats.lod_full, 0u);
   EXPECT_EQ(stats.lod_minimal, 0u);
 }
 
-// --- Cache Warming Determinism Tests ---
-
 TEST(TemplatePrewarmRegression, SeedDerivationIsDeterministic) {
   Render::GL::DrawContext ctx{};
   ctx.has_seed_override = false;
 
-  // Call derive_unit_seed multiple times with same inputs
   auto seed1 = derive_unit_seed(ctx, nullptr);
   auto seed2 = derive_unit_seed(ctx, nullptr);
   auto seed3 = derive_unit_seed(ctx, nullptr);
@@ -305,8 +282,6 @@ TEST(TemplatePrewarmRegression, SeedOverrideRespected) {
   EXPECT_EQ(seed, 0xCAFEBABEU);
 }
 
-// --- Stats Tracking Tests ---
-
 TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   std::vector<CreatureRenderRequest> requests;
   requests.push_back(make_request(ArchetypeRegistry::kHumanoidBase,
@@ -318,7 +293,6 @@ TEST(TemplatePrewarmRegression, LodStatsNotIncrementedForShadowRows) {
   PrewarmCountingSubmitter sink;
   const auto stats = submit_requests_for_test(requests, sink);
 
-  // Shadow requests should not count toward LOD stats.
   EXPECT_EQ(stats.entities_submitted, 0u);
   EXPECT_EQ(stats.lod_full, 0u);
   EXPECT_EQ(stats.lod_minimal, 0u);

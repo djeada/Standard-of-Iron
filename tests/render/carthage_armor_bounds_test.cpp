@@ -24,9 +24,8 @@ class BoundsSubmitter : public ISubmitter {
 public:
   std::vector<MeshBounds> meshes;
 
-  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D & /*color*/,
-            Texture * /*tex*/ = nullptr, float /*alpha*/ = 1.0F,
-            int materialId = 0) override {
+  void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &,
+            Texture * = nullptr, float = 1.0F, int materialId = 0) override {
     if (mesh == nullptr) {
       return;
     }
@@ -63,8 +62,6 @@ public:
   void selection_smoke(const QMatrix4x4 &, const QVector3D &, float) override {}
 };
 
-// Minimal renderer that reproduces the Carthage spearman proportions and
-// variation tweaks to build BodyFrames.
 class TestCarthageSpearmanBase : public HumanoidRendererBase {
 public:
   auto get_proportion_scaling() const -> QVector3D override {
@@ -141,7 +138,7 @@ auto extractMinY(const std::vector<MeshBounds> &meshes) -> float {
 
 TEST(CarthageArmorBoundsTest, LightArmorStaysNearWaist) {
   PoseBuilder<TestCarthageSpearmanBase> renderer;
-  auto pose_result = renderer.build(/*seed=*/1337U);
+  auto pose_result = renderer.build(1337U);
 
   ArmorLightCarthageRenderer armor;
   HumanoidAnimationContext anim_ctx{};
@@ -162,14 +159,13 @@ TEST(CarthageArmorBoundsTest, LightArmorStaysNearWaist) {
   float const waist_y =
       pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
 
-  // Armor should not extend noticeably below the waist/hip line.
   EXPECT_GT(armor_min_y, waist_y - 0.05F)
       << "min_y=" << armor_min_y << " waist_y=" << waist_y;
 }
 
 TEST(CarthageArmorBoundsTest, HeavyArmorStaysNearWaist) {
   PoseBuilder<TestCarthageSwordsmanBase> renderer;
-  auto pose_result = renderer.build(/*seed=*/4242U);
+  auto pose_result = renderer.build(4242U);
 
   ArmorHeavyCarthageRenderer armor;
   HumanoidAnimationContext anim_ctx{};

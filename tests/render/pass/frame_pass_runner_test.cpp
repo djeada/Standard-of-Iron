@@ -1,8 +1,4 @@
-// Stage 10 — FramePassRunner tests.
-//
-// Verifies ordering, non-owning add, short-circuit guards. We don't need
-// a GL context for this because the runner is pure logic over an
-// IFramePass interface.
+
 
 #include "render/pass/frame_context.h"
 #include "render/pass/frame_pass_runner.h"
@@ -85,7 +81,7 @@ TEST(FramePassRunnerTest, NullOwnedPassIsIgnored) {
   EXPECT_EQ(runner.size(), 0U);
 
   Render::Pass::FrameContext ctx;
-  runner.execute(ctx); // no crash
+  runner.execute(ctx);
 }
 
 TEST(FramePassRunnerTest, ClearResetsSize) {

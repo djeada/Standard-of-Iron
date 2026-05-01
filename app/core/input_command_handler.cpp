@@ -8,9 +8,6 @@
 #include "../utils/movement_utils.h"
 #include "game/core/component.h"
 #include "game/core/world.h"
-#include "game/game_config.h"
-#include "game/systems/command_service.h"
-#include "game/systems/formation_planner.h"
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
 #include "render/gl/camera.h"
@@ -37,76 +34,6 @@ void InputCommandHandler::on_map_clicked(qreal sx, qreal sy, int local_owner_id,
                                             local_owner_id);
   }
 }
-
-namespace {
-
-void handle_move_command(Engine::Core::World *world,
-                         const std::vector<Engine::Core::EntityID> &selected,
-                         Game::Systems::PickingService *picking_service,
-                         Render::GL::Camera *camera, qreal sx, qreal sy,
-                         int local_owner_id, const ViewportState &viewport) {
-  if (!picking_service || !camera || !world) {
-    return;
-  }
-
-  Engine::Core::EntityID const target_id =
-      picking_service->pick_unit_first(float(sx), float(sy), *world, *camera,
-                                       viewport.width, viewport.height, 0);
-
-  if (target_id != 0U) {
-    auto *target_entity = world->get_entity(target_id);
-    if (target_entity != nullptr) {
-      auto *target_unit =
-          target_entity->get_component<Engine::Core::UnitComponent>();
-      if (target_unit != nullptr) {
-        bool const is_enemy = (target_unit->owner_id != local_owner_id);
-
-        bool const is_building =
-            target_entity->has_component<Engine::Core::BuildingComponent>();
-        if (is_enemy && !is_building) {
-          Game::Systems::CommandService::attack_target(*world, selected,
-                                                       target_id, true);
-          return;
-        }
-      }
-    }
-  }
-
-  QVector3D hit;
-  if (picking_service->screen_to_ground(QPointF(sx, sy), *camera,
-                                        viewport.width, viewport.height, hit)) {
-    auto formation_result =
-        Game::Systems::FormationPlanner::get_formation_with_facing(
-            *world, selected, hit,
-            Game::GameConfig::instance().gameplay().formation_spacing_default);
-
-    for (size_t i = 0; i < selected.size(); ++i) {
-      auto *entity = world->get_entity(selected[i]);
-      if (entity == nullptr) {
-        continue;
-      }
-
-      auto *formation_mode =
-          entity->get_component<Engine::Core::FormationModeComponent>();
-      if ((formation_mode == nullptr) || !formation_mode->active) {
-        continue;
-      }
-
-      auto *transform =
-          entity->get_component<Engine::Core::TransformComponent>();
-      if (transform != nullptr && i < formation_result.facing_angles.size()) {
-        transform->desired_yaw = formation_result.facing_angles[i];
-        transform->has_desired_yaw = true;
-      }
-    }
-
-    Game::Systems::CommandService::MoveOptions opts;
-    opts.group_move = selected.size() > 1;
-    Game::Systems::CommandService::move_units(*world, selected,
-                                              formation_result.positions, opts);
-  }
-}
-} // namespace
 
 void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {
@@ -139,8 +66,9 @@ void InputCommandHandler::on_right_click(qreal sx, qreal sy, int local_owner_id,
     m_command_controller->disable_run_mode_for_selected();
   }
 
-  handle_move_command(m_world, sel, m_picking_service, m_camera, sx, sy,
-                      local_owner_id, viewport);
+  App::Utils::issue_move_or_attack_command(m_world, sel, m_picking_service,
+                                           m_camera, sx, sy, viewport.width,
+                                           viewport.height, local_owner_id);
 }
 
 void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
@@ -175,8 +103,9 @@ void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
     m_command_controller->enable_run_mode_for_selected();
   }
 
-  handle_move_command(m_world, sel, m_picking_service, m_camera, sx, sy,
-                      local_owner_id, viewport);
+  App::Utils::issue_move_or_attack_command(m_world, sel, m_picking_service,
+                                           m_camera, sx, sy, viewport.width,
+                                           viewport.height, local_owner_id);
 }
 
 void InputCommandHandler::on_attack_click(qreal sx, qreal sy,

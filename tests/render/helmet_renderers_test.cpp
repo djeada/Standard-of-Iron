@@ -61,7 +61,6 @@ inline int draw_count_of(const EquipmentBatch &b) {
 
 namespace {
 
-// Helper to create a basic DrawContext
 DrawContext createTestContext() {
   DrawContext ctx;
   ctx.model.setToIdentity();
@@ -70,7 +69,6 @@ DrawContext createTestContext() {
   return ctx;
 }
 
-// Helper to create basic body frames
 BodyFrames createTestFrames() {
   using HP = HumanProportions;
   BodyFrames frames;
@@ -83,7 +81,6 @@ BodyFrames createTestFrames() {
   return frames;
 }
 
-// Helper to create basic palette
 HumanoidPalette createTestPalette() {
   HumanoidPalette palette;
   palette.skin = QVector3D(0.8F, 0.6F, 0.5F);
@@ -100,7 +97,7 @@ HumanoidPalette createTestPalette() {
 class HelmetRenderersTest : public ::testing::Test {
 protected:
   void SetUp() override {
-    // Ensure built-in equipment is registered
+
     register_built_in_equipment();
 
     ctx = createTestContext();
@@ -134,7 +131,6 @@ TEST_F(HelmetRenderersTest, CarthageHeavyHelmetHandlesZeroHeadRadius) {
 
   helmet.render(ctx, frames, palette, anim, submitter);
 
-  // Should not render anything when head radius is zero
   EXPECT_EQ(draw_count_of(submitter), 0);
 }
 
@@ -171,14 +167,12 @@ TEST_F(HelmetRenderersTest, HeadwrapHandlesZeroHeadRadius) {
 
   headwrap.render(ctx, frames, palette, anim, submitter);
 
-  // Should not render anything when head radius is zero
   EXPECT_EQ(draw_count_of(submitter), 0);
 }
 
 TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
   auto &registry = EquipmentRegistry::instance();
 
-  // Verify Carthage heavy helmet is registered
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "carthage_heavy"));
   auto carthage_heavy =
       registry.get(EquipmentCategory::Helmet, "carthage_heavy");
@@ -189,7 +183,6 @@ TEST_F(HelmetRenderersTest, HelmetsRegisteredInEquipmentRegistry) {
       registry.get(EquipmentCategory::Helmet, "carthage_light");
   ASSERT_NE(carthage_light, nullptr);
 
-  // Verify headwrap is registered
   EXPECT_TRUE(registry.has(EquipmentCategory::Helmet, "headwrap"));
   auto headwrap = registry.get(EquipmentCategory::Helmet, "headwrap");
   ASSERT_NE(headwrap, nullptr);
@@ -227,9 +220,9 @@ TEST_F(HelmetRenderersTest, HeadwrapFromRegistryRenders) {
 }
 
 TEST_F(HelmetRenderersTest, HelmetsUseHeadFrameCoordinates) {
-  // Test that helmets use head frame's coordinate system
+
   frames.head.origin = QVector3D(1.0F, 2.0F, 3.0F);
-  frames.head.right = QVector3D(0.0F, 1.0F, 0.0F); // Rotated frame
+  frames.head.right = QVector3D(0.0F, 1.0F, 0.0F);
   frames.head.up = QVector3D(-1.0F, 0.0F, 0.0F);
   frames.head.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frames.head.radius = 0.12F;

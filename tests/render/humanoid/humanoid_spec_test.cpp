@@ -1,9 +1,4 @@
-// Stage 16.3a — humanoid CreatureSpec invariants.
-//
-// Verifies that the humanoid topology exposed through the new
-// CreatureSpec machinery agrees bit-for-bit with the hand-maintained
-// HumanoidBone enum, and that the four (still-empty) LOD PartGraphs
-// validate and round-trip through the walker.
+
 
 #include "render/creature/spec.h"
 #include "render/humanoid/humanoid_spec.h"
@@ -27,7 +22,6 @@ using Render::Humanoid::humanoid_creature_spec;
 using Render::Humanoid::HumanoidBone;
 using Render::Humanoid::k_bone_count;
 
-// Minimal no-op ISubmitter for spec-level tests.
 class NullSubmitter : public ISubmitter {
 public:
   std::size_t mesh_calls{0};
@@ -130,8 +124,6 @@ TEST(HumanoidSpecTest, ValidateSpecAcceptsEmptyLodGraphs) {
 TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
   CreatureSpec const &s = humanoid_creature_spec();
 
-  // Billboard LOD is still unpopulated — Full is populated as of
-  // Stage 15.5d so it no longer belongs in this "empty LOD" guard.
   std::array<QMatrix4x4, k_bone_count> palette;
   std::span<const QMatrix4x4> palette_view(palette);
 
@@ -147,22 +139,11 @@ TEST(HumanoidSpecTest, BillboardLodProducesNoDraws) {
 }
 
 TEST(HumanoidSpecTest, SpecReferenceIsStable) {
-  // Two calls must return the same object — consumers may cache the
-  // reference for the lifetime of the process.
+
   auto const &a = humanoid_creature_spec();
   auto const &b = humanoid_creature_spec();
   EXPECT_EQ(&a, &b);
 }
-
-// -------------------------------------------------------------------
-// Stage 16.3b — Minimal LOD parity against the legacy capsule math.
-//
-// The v2 walker must produce the same single capsule (mesh + model +
-// colour) that the legacy `draw_minimal_body` produced for a canonical
-// upright pose. We bypass HumanoidRendererBase (drags in the whole
-// animation stack) and compare against a hand-computed expected model
-// matrix via `Render::Geom::capsule_between`.
-// -------------------------------------------------------------------
 
 #include "render/creature/part_graph.h"
 #include "render/geom/transforms.h"
@@ -179,7 +160,6 @@ using Render::Creature::PrimitiveInstance;
 using Render::GL::HumanoidPose;
 using HP = Render::GL::HumanProportions;
 
-// Records every part() call so we can inspect (mesh, model, color).
 class RecordingSubmitter : public Render::GL::ISubmitter {
 public:
   struct PartCall {
@@ -222,9 +202,6 @@ public:
                       float) override {}
 };
 
-// Upright T-pose where every bone basis used by Minimal LOD has an
-// exactly axis-aligned orientation — lets us reason about bone-local
-// offsets as world offsets.
 auto make_upright_pose() -> HumanoidPose {
   HumanoidPose p{};
   p.pelvis_pos = QVector3D(0.0F, 1.0F, 0.0F);
@@ -290,7 +267,7 @@ TEST(HumanoidSpecTest, MinimalLodOtherLodsEmitNothing) {
   std::span<const QMatrix4x4> palette_view(palette);
 
   QMatrix4x4 identity;
-  // Full LOD is now populated (Stage 15.5d); only Billboard remains empty.
+
   RecordingSubmitter sub;
   auto stats = Render::Creature::submit_creature(
       s, palette_view, CreatureLOD::Billboard, identity, sub);
@@ -398,22 +375,12 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
   ASSERT_EQ(sub.parts.size(), 1U);
   QMatrix4x4 const &v2_model = sub.parts[0].model;
 
-  // Expected: legacy minimal body endpoints for a baseline variant.
-  // The Minimal spec uses HP::HEAD_RADIUS (baseline) instead of
-  // pose.head_r, and anchors to FootL instead of (FootL+FootR)*0.5.
-  // For the upright pose used here these inputs coincide (pose.head_r
-  // is baseline; FootL/FootR are symmetric), so endpoints should
-  // match within floating-point tolerance.
   QVector3D const expected_top =
       pose.head_pos + QVector3D(0.0F, HP::HEAD_RADIUS, 0.0F);
   QVector3D const expected_bot = pose.foot_l;
   QMatrix4x4 const expected_model = Render::Geom::capsule_between(
       identity, expected_top, expected_bot, HP::TORSO_TOP_R);
 
-  // Compare the model matrices element-wise. The v2 walker composes
-  // world_from_unit * capsule_between(head_world, foot_world, r) and
-  // the reference also uses capsule_between — identical inputs must
-  // produce identical matrices (modulo fp noise).
   const float *a = v2_model.constData();
   const float *b = expected_model.constData();
   for (int i = 0; i < 16; ++i) {
@@ -422,12 +389,7 @@ TEST(HumanoidSpecTest, MinimalLodMatchesLegacyCapsuleEndpointsInUprightPose) {
 }
 
 TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
-  // Independent parity check: map both unit-capsule endpoints through
-  // the submitted model matrix and verify they hit head-crown and
-  // FootL (in world space). The Y-axis polarity convention of
-  // `capsule_between` is such that model*(0,-0.5,0) lands on the
-  // first endpoint ("head" argument), but that is an implementation
-  // detail — we only check that {mapped endpoints} == {head, foot}.
+
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
@@ -466,10 +428,7 @@ TEST(HumanoidSpecTest, MinimalLodTopEndpointIsHeadCrownInUprightPose) {
 }
 
 TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
-  // With a non-trivial world_from_unit (translation), the walker must
-  // post-multiply by it. We translate the unit by (10,0,0) and expect
-  // both endpoints to shift by the same vector — regardless of which
-  // of (0,±0.5,0) maps to which semantic endpoint.
+
   CreatureSpec const &s = humanoid_creature_spec();
   HumanoidPose const pose = make_upright_pose();
 
@@ -478,14 +437,12 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
                                       palette);
   std::span<const QMatrix4x4> palette_view(palette);
 
-  // Baseline model (no world transform).
   RecordingSubmitter base_sub;
   QMatrix4x4 identity;
   Render::Creature::submit_creature(s, palette_view, CreatureLOD::Minimal,
                                     identity, base_sub);
   ASSERT_EQ(base_sub.parts.size(), 1U);
 
-  // Translated model.
   QMatrix4x4 world;
   world.translate(10.0F, 0.0F, 0.0F);
   RecordingSubmitter moved_sub;
@@ -493,7 +450,6 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
                                     world, moved_sub);
   ASSERT_EQ(moved_sub.parts.size(), 1U);
 
-  // Both endpoint samples must have shifted by (+10, 0, 0).
   for (float y : {0.5F, -0.5F}) {
     QVector3D const base =
         base_sub.parts[0].model.map(QVector3D(0.0F, y, 0.0F));
@@ -504,18 +460,3 @@ TEST(HumanoidSpecTest, MinimalLodRespectsWorldFromUnit) {
     EXPECT_NEAR(moved.z() - base.z(), 0.0F, 1.0e-4F);
   }
 }
-
-// -------------------------------------------------------------------
-// (The SOI_CREATURE_V2 feature flag was removed in S16.3b-fix —
-//  the CreatureSpec path is now the only Minimal LOD path.)
-// -------------------------------------------------------------------
-
-// -------------------------------------------------------------------
-// Stage 15.5d — the HumanoidFullLodTest suite that exercised the
-// legacy `submit_humanoid_full_lod` dynamic-PartGraph helper was
-// removed in 15.5d along with the helper itself. Full LOD body
-// geometry now routes through `submit_humanoid_full_rigged`, which
-// uses the static `k_full_parts` graph baked into a RiggedMesh. See
-// tests/render/creature/humanoid_full_switchover_test.cpp for the
-// replacement integration test.
-// -------------------------------------------------------------------

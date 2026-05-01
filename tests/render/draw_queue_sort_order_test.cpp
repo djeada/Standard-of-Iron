@@ -1,9 +1,4 @@
-// Stage 0 guard test — locks in the draw-order invariant that regressed earlier
-// and caused selection rings to render underneath terrain. The sort order must
-// be driven by DrawCmd type alone (terrain -> meshes -> selection rings ->
-// UI overlays); CommandPriority is scheduling metadata and MUST NOT influence
-// the sort key, otherwise Critical-priority selection rings sort before the
-// terrain that should render beneath them.
+
 
 #include "render/draw_queue.h"
 #include "render/frame_budget.h"
@@ -28,8 +23,6 @@ using Render::GL::Texture;
 TEST(DrawQueueSortOrder, TerrainBeforeMeshBeforeSelectionRing) {
   DrawQueue queue;
 
-  // Submit in reverse-desired order with INVERTED priorities to catch any
-  // regression that re-introduces priority into the sort key.
   SelectionRingCmd ring;
   ring.priority = CommandPriority::Critical;
   queue.submit(ring);
@@ -76,9 +69,7 @@ TEST(DrawQueueSortOrder, ExplicitTerrainCommandsStayBeforeGameplayMeshes) {
 }
 
 TEST(DrawQueueSortOrder, PriorityDoesNotInvertTypeOrder) {
-  // Explicit regression guard: a Critical SelectionRing submitted before a
-  // Low-priority Mesh must still sort after the mesh. This is the exact
-  // bug that produced "no selection ring visible" in-game.
+
   DrawQueue queue;
 
   SelectionRingCmd ring;
@@ -118,10 +109,7 @@ TEST(DrawQueueSortOrder, RiverbankVisibilityTextureAffectsSortKey) {
 }
 
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
-  // Stage 0 flipped this default so gameplay-critical commands are never
-  // skipped mid-queue. Leaving partial rendering opt-in avoids the flicker
-  // regression that came from dropping Normal-priority units past the
-  // hard deadline.
+
   Render::FrameBudgetConfig cfg;
   EXPECT_FALSE(cfg.allow_partial_render);
 }

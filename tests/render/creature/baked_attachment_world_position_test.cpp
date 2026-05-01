@@ -1,15 +1,4 @@
-// Verifies that the bake path produces world-space attachment vertex
-// positions equivalent (within ε) to the legacy IEquipmentRenderer
-// submit path. This is the geometric ground-truth check that
-// p5-merged-archetype-mesh's per-renderer migration relies on:
-//
-//   bone_world * inverse_bind * baked_vertex   ==   T(origin + R*lo*r) *
-//   basis(R*r,U*r,F*r) * draw.local_model * v
-//
-// At bind pose, bone_world * inverse_bind = identity, so the baked
-// vertex IS the legacy world position. The conversion rule lives in
-// `make_static_attachment_spec_from_humanoid_renderer` in
-// render/equipment/humanoid_attachment_archetype.h.
+
 
 #include "render/equipment/armor/roman_greaves.h"
 #include "render/equipment/armor/roman_shoulder_cover.h"
@@ -65,10 +54,7 @@ struct AABB {
 
 auto bone_matrix_from_frame(const Render::GL::AttachmentFrame &f)
     -> QMatrix4x4 {
-  // The legacy frame's basis (right/up/forward) is the bone's local
-  // basis in model space, with origin at the joint head. This matches
-  // BoneBasisKind::FromParent for the head bone (bind pose: same
-  // basis as Neck, origin at head_pos).
+
   QMatrix4x4 m;
   m.setColumn(0, QVector4D(f.right, 0.0F));
   m.setColumn(1, QVector4D(f.up, 0.0F));
@@ -77,9 +63,6 @@ auto bone_matrix_from_frame(const Render::GL::AttachmentFrame &f)
   return m;
 }
 
-// Walk a legacy EquipmentBatch's archetype prims and accumulate
-// world-space vertex positions into an AABB. Each prim represents one
-// archetype instance: world = prim.world * draw.local_model * v.position.
 auto legacy_archetype_aabb(const Render::GL::EquipmentBatch &batch) -> AABB {
   AABB box;
   for (const auto &prim : batch.archetypes) {
@@ -148,9 +131,6 @@ void expect_aabb_extent_close(const AABB &a, const AABB &b, float eps) {
   EXPECT_NEAR(ae.z(), be.z(), eps);
 }
 
-// Constructs an AttachmentFrame and matching bone matrix that the
-// renderer would see at runtime. We use a non-trivial origin so any
-// translation drift shows up.
 auto make_test_head_frame() -> Render::GL::AttachmentFrame {
   Render::GL::AttachmentFrame f;
   f.origin = QVector3D(0.0F, 1.7F, 0.0F);
@@ -165,9 +145,8 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
   const auto frame = make_test_head_frame();
   const QMatrix4x4 bone_world = bone_matrix_from_frame(frame);
 
-  // ---- Legacy path ----
   Render::GL::DrawContext ctx;
-  ctx.model = QMatrix4x4{}; // identity — we want raw world output
+  ctx.model = QMatrix4x4{};
   Render::GL::BodyFrames frames{};
   frames.head = frame;
   Render::GL::HumanoidPalette palette{};
@@ -183,9 +162,6 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
 
   const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
-  // ---- Bake path ----
-  // Bake all 6 sub-archetypes (default config: crest=true, nasal=true)
-  // together, then compare the combined AABB to the legacy AABB.
   constexpr std::uint16_t k_head_bone = 0;
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 6> k_attachments{
@@ -202,9 +178,8 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
           Render::GL::carthage_light_helmet_nasal_guard_archetype(),
           k_head_bone, k_base_role, bone_world),
       Render::GL::carthage_light_helmet_make_static_attachment(
-          Render::GL::carthage_light_helmet_crest_archetype(
-              /*high_detail=*/true),
-          k_head_bone, k_base_role, bone_world),
+          Render::GL::carthage_light_helmet_crest_archetype(true), k_head_bone,
+          k_base_role, bone_world),
       Render::GL::carthage_light_helmet_make_static_attachment(
           Render::GL::carthage_light_helmet_rivets_archetype(), k_head_bone,
           k_base_role, bone_world),
@@ -220,7 +195,6 @@ TEST(BakedAttachmentWorldPosition, CarthageLightHelmetMatchesLegacySubmit) {
 
   const AABB bake = baked_aabb(baked);
 
-  // 1mm precision is plenty for a unit ~30cm helmet.
   expect_aabb_close(legacy, bake, 1e-3F);
 }
 
@@ -229,7 +203,6 @@ TEST(BakedAttachmentWorldPosition, RomanGreavesMatchesLegacySubmit) {
   const auto shin_frame = bind_frames.shin_l;
   const QMatrix4x4 bone_world = bone_matrix_from_frame(shin_frame);
 
-  // ---- Legacy path (only render shin_l; zero out shin_r) ----
   Render::GL::DrawContext ctx;
   ctx.model = QMatrix4x4{};
   Render::GL::BodyFrames frames{};
@@ -249,7 +222,6 @@ TEST(BakedAttachmentWorldPosition, RomanGreavesMatchesLegacySubmit) {
       << "renderer must emit at least one archetype prim";
   const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
-  // ---- Bake path ----
   constexpr std::uint16_t k_bone = 0;
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{
@@ -274,14 +246,6 @@ TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
       QMatrix4x4{}, bind_frames.shoulder_l.origin, -bind_frames.torso.right,
       bind_frames.torso.up);
 
-  // ---- Legacy path (zero shoulder_r so only shoulder_l renders) ----
-  // We can't easily skip the right shoulder since the renderer always
-  // submits both. Instead we render only the left side by computing the
-  // legacy AABB using a frames struct where shoulder_r = shoulder_l (both
-  // produce the same archetype but with different transforms). To compare
-  // bake (single attachment) to a single legacy emission, we drive the
-  // renderer with a custom batch that we filter to only the shoulder_l
-  // archetype. The shoulder_l archetype is the first emitted.
   Render::GL::DrawContext ctx;
   ctx.model = QMatrix4x4{};
   Render::GL::BodyFrames frames{};
@@ -298,12 +262,10 @@ TEST(BakedAttachmentWorldPosition, RomanShoulderCoverMatchesLegacySubmit) {
       full_batch);
   ASSERT_GE(full_batch.archetypes.size(), 1U);
 
-  // Take only the first archetype prim (shoulder_l) for comparison.
   Render::GL::EquipmentBatch legacy_batch;
   legacy_batch.archetypes.push_back(full_batch.archetypes[0]);
   const AABB legacy = legacy_archetype_aabb(legacy_batch);
 
-  // ---- Bake path ----
   constexpr std::uint16_t k_bone = 0;
   constexpr std::uint8_t k_base_role = 0;
   const std::array<Render::Creature::StaticAttachmentSpec, 1> k_attachments{

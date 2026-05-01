@@ -11,7 +11,7 @@ class BodyFramesTest : public ::testing::Test {
 protected:
   void SetUp() override {
     using HP = HumanProportions;
-    // Initialize a basic pose
+
     float const head_center_y = HP::HEAD_CENTER_Y;
     float const half_shoulder = 0.5F * HP::SHOULDER_WIDTH;
     pose.head_pos = QVector3D(0.0F, head_center_y, 0.0F);
@@ -52,7 +52,7 @@ TEST_F(BodyFramesTest, AttachmentFrameStructHasCorrectFields) {
 }
 
 TEST_F(BodyFramesTest, HeadFrameIsAliasForAttachmentFrame) {
-  // Verify that HeadFrame is an alias and can be used interchangeably
+
   HeadFrame headFrame;
   AttachmentFrame attachFrame;
 
@@ -67,7 +67,6 @@ TEST_F(BodyFramesTest, HeadFrameIsAliasForAttachmentFrame) {
 TEST_F(BodyFramesTest, BodyFramesHasAllRequiredFrames) {
   BodyFrames frames;
 
-  // Verify all frames exist and are initialized to default
   EXPECT_EQ(frames.head.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frames.torso.origin, QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_EQ(frames.back.origin, QVector3D(0.0F, 0.0F, 0.0F));
@@ -88,11 +87,9 @@ TEST_F(BodyFramesTest, FrameLocalPositionComputesCorrectly) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 0.5F;
 
-  // Test frame-local position computation
-  QVector3D local(1.0F, 0.0F, 0.0F); // Right
+  QVector3D local(1.0F, 0.0F, 0.0F);
   QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
-  // Expected: origin + right * (1.0 * radius)
   QVector3D expected = QVector3D(1.5F, 2.0F, 3.0F);
   EXPECT_TRUE(approxEqual(world, expected));
 }
@@ -105,11 +102,9 @@ TEST_F(BodyFramesTest, FrameLocalPositionWithMultipleAxes) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 1.0F;
 
-  // Test diagonal position
   QVector3D local(1.0F, 1.0F, 1.0F);
   QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
-  // Expected: origin + right*1 + up*1 + forward*1
   QVector3D expected = QVector3D(1.0F, 1.0F, 1.0F);
   EXPECT_TRUE(approxEqual(world, expected));
 }
@@ -122,14 +117,13 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
   frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   frame.radius = 0.5F;
 
-  QMatrix4x4 parent; // Identity matrix
+  QMatrix4x4 parent;
   QVector3D localOffset(0.0F, 0.0F, 0.0F);
   float uniformScale = 1.0F;
 
   QMatrix4x4 result = HumanoidRendererBase::make_frame_local_transform(
       parent, frame, localOffset, uniformScale);
 
-  // Verify the translation component
   QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
   EXPECT_TRUE(approxEqual(translation, frame.origin));
 }
@@ -144,13 +138,11 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   headFrame.forward = QVector3D(0.0F, 0.0F, 1.0F);
   headFrame.radius = HP::HEAD_RADIUS;
 
-  // Test legacy head_local_position function
   QVector3D local(1.0F, 0.0F, 0.0F);
   QVector3D world = HumanoidRendererBase::head_local_position(headFrame, local);
   QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
   EXPECT_TRUE(approxEqual(world, expected));
 
-  // Test legacy make_head_local_transform function
   QMatrix4x4 parent;
   QVector3D localOffset(0.0F, 0.0F, 0.0F);
   float uniformScale = 1.0F;
@@ -164,19 +156,16 @@ TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
 
 TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {
   using HP = HumanProportions;
-  // Verify that the pose has both the legacy headFrame and new bodyFrames
-  EXPECT_TRUE(true); // Just verify it compiles
 
-  // Set headFrame
+  EXPECT_TRUE(true);
+
   float const head_center_y = HP::HEAD_CENTER_Y;
   pose.head_frame.origin = QVector3D(0.0F, head_center_y, 0.0F);
   pose.head_frame.radius = HP::HEAD_RADIUS;
 
-  // Set bodyFrames.head
   pose.body_frames.head.origin = QVector3D(0.0F, head_center_y, 0.0F);
   pose.body_frames.head.radius = HP::HEAD_RADIUS;
 
-  // Verify both can be accessed
   EXPECT_EQ(pose.head_frame.origin, QVector3D(0.0F, head_center_y, 0.0F));
   EXPECT_EQ(pose.body_frames.head.origin, QVector3D(0.0F, head_center_y, 0.0F));
 }

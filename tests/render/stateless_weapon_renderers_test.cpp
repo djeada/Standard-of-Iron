@@ -1,12 +1,4 @@
-// Phase D — stateless weapon renderer guarantees.
-//
-// Verifies that the refactored weapon renderers behave as pure draw-batch
-// providers: a single shared instance, invoked through the static
-// `submit(config, ...)` API, must produce different draw batches for
-// different configs in the same frame, must not be perturbed by
-// prior `submit()` calls, and must produce results identical to the
-// equivalent legacy `render()` virtual when the legacy entry point is
-// fed the same base config.
+
 
 #include "render/equipment/weapons/bow_renderer.h"
 #include "render/equipment/weapons/quiver_renderer.h"
@@ -148,9 +140,6 @@ inline int draw_count_of(const EquipmentBatch &batch) {
   return submitter.draw_count;
 }
 
-// Concatenate every batch primitive into a deterministic byte
-// signature. Two batches with the same colours / transforms / radii /
-// material ids hash to the same signature.
 auto hash_batch(const EquipmentBatch &b) -> std::size_t {
   std::size_t h = 0;
   auto mix = [&h](std::size_t v) {
@@ -265,7 +254,6 @@ void run_stateless_battery(Renderer &renderer, const Cfg &cfg_a,
   const auto palette = make_palette();
   const auto ctx = make_ctx();
 
-  // 1. Same instance, two different configs ⇒ two different batches.
   EquipmentBatch a;
   EquipmentBatch b;
   Renderer::submit(cfg_a, ctx, frames, palette, anim, a);
@@ -275,14 +263,11 @@ void run_stateless_battery(Renderer &renderer, const Cfg &cfg_a,
   EXPECT_NE(hash_batch(a), hash_batch(b))
       << "two configs should yield distinct draw batches";
 
-  // 2. Re-submitting cfg_a after cfg_b reproduces the original a hash
-  //    bit-for-bit ⇒ no leftover instance state from the cfg_b call.
   EquipmentBatch a2;
   Renderer::submit(cfg_a, ctx, frames, palette, anim, a2);
   EXPECT_EQ(hash_batch(a), hash_batch(a2))
       << "submit() must not retain any per-call state";
 
-  // 3. Legacy render() fed the same config (via base) matches submit().
   Renderer legacy{cfg_a};
   EquipmentBatch legacy_batch;
   legacy.render(ctx, frames, palette, anim, legacy_batch);
@@ -678,9 +663,6 @@ TEST(StatelessWeaponRenderers, RomanScutumKeepsModerateStandOffFromGrip) {
   EXPECT_LT(nearest_edge_offset, 0.34F);
 }
 
-// Visual-parity regression: a ShieldRenderer instance carrying a
-// non-default base_config must produce the exact same batch when
-// invoked via either submit(base_config, ...) or render(...).
 TEST(StatelessWeaponRenderers, BaseConfigPreservedAcrossSubmitPaths) {
   ShieldRenderConfig base;
   base.shield_color = {0.4F, 0.5F, 0.7F};
@@ -703,11 +685,6 @@ TEST(StatelessWeaponRenderers, BaseConfigPreservedAcrossSubmitPaths) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
-// Visual-parity regression: BowRenderer's default-bow-vs-Roman-bow
-// difference must survive the stateless API. When two distinct
-// instances carry distinct defaults, their static submit() calls
-// using each instance's base_config() must produce the historical
-// legacy outputs.
 TEST(StatelessWeaponRenderers, BowDefaultsHonouredViaBaseConfig) {
   BowRenderConfig roman_defaults;
   roman_defaults.bow_depth = 0.22F;
