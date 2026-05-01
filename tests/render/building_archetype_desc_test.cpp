@@ -106,4 +106,35 @@ TEST(BuildingArchetypeDesc, ArchetypeSetSelectsStateVariant) {
             QVector3D(0.0F, 0.0F, 1.0F));
 }
 
+TEST(BuildingArchetypeDesc, FiltersBuildingLODMask) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc desc("lod_filter_test");
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+               QVector3D(1.0F, 0.0F, 0.0F));
+  desc.add_box(QVector3D(1.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+               QVector3D(0.0F, 1.0F, 0.0F), BuildingStateMask::All,
+               BuildingLODMask::Full);
+
+  const RenderArchetype archetype =
+      build_building_archetype(desc, BuildingState::Normal);
+
+  EXPECT_EQ(archetype.lods[0].draws.size(), 2u);
+  EXPECT_EQ(archetype.lods[1].draws.size(), 1u);
+}
+
+TEST(BuildingArchetypeDesc, SetFullLodMaxDistanceConfiguresSlice) {
+  using namespace Render::GL;
+
+  BuildingArchetypeDesc desc("distance_test");
+  desc.set_full_lod_max_distance(45.0F);
+  desc.add_box(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(1.0F, 1.0F, 1.0F),
+               QVector3D(1.0F, 1.0F, 1.0F));
+
+  const RenderArchetype archetype =
+      build_building_archetype(desc, BuildingState::Normal);
+
+  EXPECT_FLOAT_EQ(archetype.lods[0].max_distance, 45.0F);
+}
+
 } // namespace

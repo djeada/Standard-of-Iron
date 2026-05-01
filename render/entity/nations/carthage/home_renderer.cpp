@@ -69,7 +69,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.tile_red, kBuildingStateMaskIntact);
   for (float z = -0.8F; z <= 0.8F; z += 0.3F) {
     desc.add_box(QVector3D(0.0F, 1.18F, z), QVector3D(0.95F, 0.02F, 0.06F),
-                 c.tile_dark, kBuildingStateMaskIntact);
+                 c.tile_dark, kBuildingStateMaskIntact, BuildingLODMask::Full);
   }
 
   desc.add_box(QVector3D(0.0F, 0.4F, 0.95F), QVector3D(0.3F, 0.4F, 0.05F),

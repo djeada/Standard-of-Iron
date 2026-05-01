@@ -1218,6 +1218,7 @@ void Renderer::render_world(Engine::Core::World *world) {
                                    m_accumulated_time, optimizer_frame);
 
         ctx.animation_time = animation_time;
+        ctx.distance_sq = entry.distance_sq;
         ctx.renderer_id = entry.renderer_key;
         ctx.backend = m_gl_backend;
         ctx.camera = m_camera;
