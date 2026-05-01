@@ -1,9 +1,9 @@
 #pragma once
 
-#include <QGroupBox>
+#include <QWidget>
 #include <QString>
 
-class TerrainPanel : public QGroupBox {
+class TerrainPanel : public QWidget {
   Q_OBJECT
 
 public:
