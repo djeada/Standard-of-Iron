@@ -1,5 +1,4 @@
-// Stage 13/14 — integration tests proving the software backend and
-// frame profiler are wired into the real draw queue.
+
 
 #include "render/draw_queue.h"
 #include "render/gl/camera.h"
@@ -60,7 +59,7 @@ TEST(SoftwareBackendIntegration, MeshCmdBecomesVisibleTriangles) {
   MeshCmd cmd;
   cmd.color = QVector3D(1.0F, 0.1F, 0.1F);
   cmd.alpha = 1.0F;
-  // No mesh pointer needed — SoftwareBackend proxies every mesh as a cube.
+
   queue.submit(cmd);
 
   Camera cam = make_camera();
@@ -114,8 +113,7 @@ TEST(FrameProfileIntegration, PhasesRecordElapsedInRenderer) {
   { PhaseScope s(&p, Phase::Collection); }
   { PhaseScope s(&p, Phase::Sort); }
   { PhaseScope s(&p, Phase::Playback); }
-  // Scopes may be sub-microsecond on fast CPUs; total must at least be
-  // measurable and the overlay formatter must not crash.
+
   EXPECT_GE(p.total_us(), 0U);
   std::string out = Render::Profiling::format_overlay(p);
   EXPECT_NE(out.find("collect"), std::string::npos);

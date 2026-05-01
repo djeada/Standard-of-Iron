@@ -1,11 +1,7 @@
-// Stage 9 — instance_coalescer tests.
-//
-// These tests lock the rules for fusing adjacent DrawPartCmds into a single
-// InstancedPartBatch. The rules matter for correctness (transparent
-// ordering, bone-palette exclusivity) and for perf (min-run threshold).
+
 
 #include "render/draw_part.h"
-#include "render/draw_queue.h" // k_opaque_threshold
+#include "render/draw_queue.h"
 #include "render/material.h"
 #include "render/pipeline/instance_coalescer.h"
 
@@ -21,9 +17,6 @@ using Render::GL::Texture;
 
 namespace {
 
-// Fake pointers — the coalescer only compares pointer identity, it never
-// dereferences the mesh / material / texture. This lets the tests run
-// without GL context.
 auto fake_mesh(std::uintptr_t tag) -> Mesh * {
   return reinterpret_cast<Mesh *>(tag);
 }
@@ -142,8 +135,7 @@ TEST(InstanceCoalescer, SkinnedPartsAreNeverFused) {
   parts[0].palette = Render::GL::BonePaletteRef{bone, 4};
   parts[1].palette = Render::GL::BonePaletteRef{bone, 4};
   const auto batches = Render::Pipeline::coalesce_instances(parts, 2);
-  // Parts 0-1 are skinned and disqualified. Parts 2-3 are a run of 2,
-  // which matches min_run=2 exactly.
+
   ASSERT_EQ(batches.size(), 1U);
   EXPECT_EQ(batches[0].start, 2U);
   EXPECT_EQ(batches[0].count, 2U);

@@ -11,8 +11,6 @@ int main(int argc, char **argv) {
   qputenv("QT_QPA_PLATFORM", "offscreen");
   QGuiApplication app(argc, argv);
 
-  // Load baked BPAT assets so the creature pipeline has palettes available.
-  // Try a few roots because tests may run from build/ or repo root.
   namespace fs = std::filesystem;
   const std::array<fs::path, 4> roots{
       fs::current_path() / "assets" / "creatures",

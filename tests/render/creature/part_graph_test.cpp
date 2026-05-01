@@ -1,11 +1,4 @@
-// Stage 16.2 — PartGraph walker tests.
-//
-// Exercises `submit_part_graph()` through a small but realistic creature
-// spec: a 3-bone "toy beast" (spine + two legs) with five primitives
-// covering every supported shape — sphere, cylinder, capsule, cone, box
-// — plus LOD filtering, invalid-reference handling, and custom-mesh
-// submission. A recording ISubmitter captures every call so assertions
-// are exact (shape, transform columns, material pass-through).
+
 
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
@@ -43,8 +36,8 @@ class RecordingSubmitter : public ISubmitter {
 public:
   std::vector<RecordedCall> calls;
 
-  void mesh(Mesh *m, const QMatrix4x4 &model, const QVector3D &color,
-            Texture * /*tex*/, float alpha, int mat_id) override {
+  void mesh(Mesh *m, const QMatrix4x4 &model, const QVector3D &color, Texture *,
+            float alpha, int mat_id) override {
     calls.push_back(
         {RecordedCall::Kind::Mesh, m, nullptr, model, color, alpha, mat_id});
   }
@@ -77,15 +70,6 @@ public:
                       float) override {}
 };
 
-// Five-bone toy beast laid out along the world +Y axis so every bone's
-// basis is axis-aligned (X=right, Y=up, Z=forward). This makes the
-// transform expectations in each test trivial to hand-verify:
-//
-//   0 root       FromRootUp at (0, 0,   0)
-//   1 spine_base FromParent  at (0, 0.9, 0)   — real "hip" joint
-//   2 neck       FromParent  at (0, 1.5, 0)
-//   3 head       FromParent  at (0, 1.7, 0)
-//   4 leg_foot   FromParent  at (0.3, 0, 0)   — offset to the right
 constexpr std::array<BoneDef, 5> kBeastBones = {
     BoneDef{"root", kInvalidBone},
     BoneDef{"spine_base", 0},
@@ -103,7 +87,7 @@ auto beast_topology() noexcept -> SkeletonTopology {
 
 struct BeastSample {};
 
-BoneResolution beast_provider(void * /*user*/, BoneIndex bone) noexcept {
+BoneResolution beast_provider(void *, BoneIndex bone) noexcept {
   BoneResolution r;
   switch (bone) {
   case 0:
@@ -141,12 +125,11 @@ std::array<QMatrix4x4, 5> evaluate_beast() {
   return palette;
 }
 
-// Five-primitive spec exercising every supported shape.
 PrimitiveInstance make_head_sphere() {
   PrimitiveInstance p;
   p.debug_name = "head";
   p.shape = PrimitiveShape::Sphere;
-  p.params.anchor_bone = 3; // head
+  p.params.anchor_bone = 3;
   p.params.radius = 0.15F;
   p.color = {1.0F, 0.8F, 0.6F};
   return p;
@@ -156,8 +139,8 @@ PrimitiveInstance make_torso_cylinder() {
   PrimitiveInstance p;
   p.debug_name = "torso";
   p.shape = PrimitiveShape::Cylinder;
-  p.params.anchor_bone = 0; // root
-  p.params.tail_bone = 1;   // spine_base at (0, 0.9, 0)
+  p.params.anchor_bone = 0;
+  p.params.tail_bone = 1;
   p.params.radius = 0.25F;
   p.color = {0.2F, 0.4F, 0.6F};
   return p;
@@ -167,8 +150,8 @@ PrimitiveInstance make_leg_capsule() {
   PrimitiveInstance p;
   p.debug_name = "leg";
   p.shape = PrimitiveShape::Capsule;
-  p.params.anchor_bone = 0; // root
-  p.params.tail_bone = 4;   // leg_foot
+  p.params.anchor_bone = 0;
+  p.params.tail_bone = 4;
   p.params.radius = 0.08F;
   p.color = {0.3F, 0.2F, 0.1F};
   return p;
@@ -178,8 +161,8 @@ PrimitiveInstance make_horn_cone() {
   PrimitiveInstance p;
   p.debug_name = "horn";
   p.shape = PrimitiveShape::Cone;
-  p.params.anchor_bone = 2; // neck
-  p.params.tail_bone = 3;   // head
+  p.params.anchor_bone = 2;
+  p.params.tail_bone = 3;
   p.params.radius = 0.05F;
   p.color = {1.0F, 1.0F, 1.0F};
   return p;
@@ -189,7 +172,7 @@ PrimitiveInstance make_chest_box() {
   PrimitiveInstance p;
   p.debug_name = "chestplate";
   p.shape = PrimitiveShape::Box;
-  p.params.anchor_bone = 1; // spine_base at (0, 0.9, 0)
+  p.params.anchor_bone = 1;
   p.params.head_offset = {0.0F, -0.2F, 0.1F};
   p.params.half_extents = {0.3F, 0.2F, 0.05F};
   p.color = {0.5F, 0.5F, 0.5F};
@@ -282,7 +265,6 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
   std::array<PrimitiveInstance, 3> primitives = {only_full, all, minimal_only};
   PartGraph g{std::span<const PrimitiveInstance>(primitives.data(), 3)};
 
-  // At Full LOD: only_full + all = 2 submitted; minimal_only skipped.
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
@@ -292,7 +274,7 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
     EXPECT_EQ(stats.submitted, 2U);
     EXPECT_EQ(stats.skipped_lod, 1U);
   }
-  // At Minimal LOD: `all` + `minimal_only` submitted; only_full skipped.
+
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
@@ -302,7 +284,7 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
     EXPECT_EQ(stats.submitted, 2U);
     EXPECT_EQ(stats.skipped_lod, 1U);
   }
-  // At Billboard LOD: only `all` qualifies.
+
   {
     RecordingSubmitter sub;
     QMatrix4x4 identity;
@@ -317,7 +299,7 @@ TEST(PartGraphWalkerTest, LodMaskFiltersPrimitives) {
 TEST(PartGraphWalkerTest, SphereModelOriginMatchesBoneWithOffset) {
   auto palette = evaluate_beast();
   auto p = make_head_sphere();
-  p.params.head_offset = {0.0F, 0.3F, 0.0F}; // bone-local Y (= world +Y)
+  p.params.head_offset = {0.0F, 0.3F, 0.0F};
   std::array<PrimitiveInstance, 1> prims = {p};
   PartGraph g{std::span<const PrimitiveInstance>(prims.data(), 1)};
 
@@ -328,7 +310,7 @@ TEST(PartGraphWalkerTest, SphereModelOriginMatchesBoneWithOffset) {
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();
-  // Head bone origin is (0, 1.7, 0); +0.3 local Y → (0, 2.0, 0).
+
   EXPECT_LT((origin - QVector3D(0.0F, 2.0F, 0.0F)).length(), 1e-4F);
 }
 
@@ -344,9 +326,6 @@ TEST(PartGraphWalkerTest, CylinderSpansBetweenBoneOrigins) {
                     CreatureLOD::Full, identity, sub);
   ASSERT_EQ(sub.calls.size(), 1U);
 
-  // Unit cylinder goes from (0, -0.5, 0) to (0, +0.5, 0). Map them
-  // through the submitted model; they should land on the root/spine_base
-  // bone origins (0,0,0) and (0,0.9,0).
   QMatrix4x4 const m = sub.calls[0].model;
   QVector3D const bottom = m.map(QVector3D(0.0F, -0.5F, 0.0F));
   QVector3D const top = m.map(QVector3D(0.0F, 0.5F, 0.0F));
@@ -369,7 +348,7 @@ TEST(PartGraphWalkerTest, WorldFromUnitMatrixIsAppliedOnTheLeft) {
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();
-  // Head bone origin (0,1.7,0) + world translation (10,20,30).
+
   EXPECT_LT((origin - QVector3D(10.0F, 21.7F, 30.0F)).length(), 1e-3F);
 }
 
@@ -473,16 +452,12 @@ TEST(PartGraphWalkerTest, BoxModelRespectsBoneLocalOffsetAndScale) {
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QMatrix4x4 const m = sub.calls[0].model;
-  // Box anchored to spine_base bone (origin (0, 0.9, 0)), offset by
-  // (0, -0.2, 0.1) in bone-local axes (which equal world axes here).
+
   QVector3D const origin = m.column(3).toVector3D();
   EXPECT_LT((origin - QVector3D(0.0F, 0.7F, 0.1F)).length(), 1e-3F);
 
-  // Unit cube spans [-0.5,+0.5]. Corner at (+0.5, +0.5, +0.5) should map
-  // to origin + half_extents in bone-local axes.
   QVector3D const corner = m.map(QVector3D(0.5F, 0.5F, 0.5F));
-  QVector3D const expected =
-      origin + QVector3D(0.3F, 0.2F, 0.05F); // bone axes == world for upright
+  QVector3D const expected = origin + QVector3D(0.3F, 0.2F, 0.05F);
   EXPECT_LT((corner - expected).length(), 1e-3F);
 }
 
@@ -518,8 +493,6 @@ TEST(PartGraphWalkerTest, CapsuleUsesUnitCapsuleMesh) {
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_capsule());
 }
 
-// ---- Stage 16.Fa / 16.Fb ------------------------------------------------
-
 TEST(PartGraphWalkerTest, OrientedCylinderRequiresTailAndRejectsWhenMissing) {
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedCylinder;
@@ -537,10 +510,10 @@ TEST(PartGraphWalkerTest,
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedCylinder;
-  p.params.anchor_bone = 0;     // root at (0,0,0), X=(1,0,0)
-  p.params.tail_bone = 1;       // spine_base at (0,0.9,0)
-  p.params.radius = 0.4F;       // right
-  p.params.depth_radius = 0.1F; // forward
+  p.params.anchor_bone = 0;
+  p.params.tail_bone = 1;
+  p.params.radius = 0.4F;
+  p.params.depth_radius = 0.1F;
   std::array<PrimitiveInstance, 1> prims = {p};
   PartGraph g{std::span<const PrimitiveInstance>(prims.data(), 1)};
 
@@ -553,9 +526,6 @@ TEST(PartGraphWalkerTest,
   ASSERT_EQ(sub.calls.size(), 1U);
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_cylinder());
 
-  // Endpoints of the unit cylinder ([0,-0.5,0] ↔ [0,0.5,0]) land on the
-  // bone origins (in either order — oriented_cylinder does not guarantee
-  // which endpoint maps to which).
   QMatrix4x4 const m = sub.calls[0].model;
   QVector3D const bottom = m.map(QVector3D(0.0F, -0.5F, 0.0F));
   QVector3D const top = m.map(QVector3D(0.0F, 0.5F, 0.0F));
@@ -567,8 +537,6 @@ TEST(PartGraphWalkerTest,
               (near(bottom, QVector3D(0.0F, 0.9F, 0.0F)) &&
                near(top, QVector3D(0.0F, 0.0F, 0.0F))));
 
-  // Cross-section is elliptical: X column length = radius_right (0.4),
-  // Z column length = radius_forward (0.1).
   float const rx = m.column(0).toVector3D().length();
   float const rz = m.column(2).toVector3D().length();
   EXPECT_NEAR(rx, 0.4F, 1e-4F);
@@ -583,7 +551,7 @@ TEST(PartGraphWalkerTest,
   p.params.anchor_bone = 0;
   p.params.tail_bone = 1;
   p.params.radius = 0.25F;
-  p.params.depth_radius = 0.0F; // fall back to radius
+  p.params.depth_radius = 0.0F;
   std::array<PrimitiveInstance, 1> prims = {p};
   PartGraph g{std::span<const PrimitiveInstance>(prims.data(), 1)};
 
@@ -603,7 +571,7 @@ TEST(PartGraphWalkerTest, OrientedSphereBuildsEllipsoidInBoneBasis) {
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = 3; // head at (0,1.7,0), basis aligned to world
+  p.params.anchor_bone = 3;
   p.params.half_extents = {0.2F, 0.3F, 0.15F};
   std::array<PrimitiveInstance, 1> prims = {p};
   PartGraph g{std::span<const PrimitiveInstance>(prims.data(), 1)};
@@ -616,12 +584,11 @@ TEST(PartGraphWalkerTest, OrientedSphereBuildsEllipsoidInBoneBasis) {
   EXPECT_EQ(sub.calls[0].mesh, Render::GL::get_unit_sphere());
 
   QMatrix4x4 const m = sub.calls[0].model;
-  // Column lengths = 2 * semi-axis (unit sphere has radius 1).
+
   EXPECT_NEAR(m.column(0).toVector3D().length(), 0.4F, 1e-4F);
   EXPECT_NEAR(m.column(1).toVector3D().length(), 0.6F, 1e-4F);
   EXPECT_NEAR(m.column(2).toVector3D().length(), 0.3F, 1e-4F);
 
-  // Origin at head bone origin + head_offset (zero).
   EXPECT_LT((m.column(3).toVector3D() - QVector3D(0.0F, 1.7F, 0.0F)).length(),
             1e-4F);
 }
@@ -631,7 +598,7 @@ TEST(PartGraphWalkerTest,
   auto palette = evaluate_beast();
   PrimitiveInstance p;
   p.shape = PrimitiveShape::OrientedSphere;
-  p.params.anchor_bone = 3; // head at (0,1.7,0)
+  p.params.anchor_bone = 3;
   p.params.head_offset = {0.1F, 0.2F, 0.3F};
   p.params.half_extents = {0.1F, 0.1F, 0.1F};
   std::array<PrimitiveInstance, 1> prims = {p};
@@ -645,6 +612,6 @@ TEST(PartGraphWalkerTest,
   ASSERT_EQ(sub.calls.size(), 1U);
 
   QVector3D const origin = sub.calls[0].model.column(3).toVector3D();
-  // Head (0,1.7,0) + offset (0.1,0.2,0.3) + world (+100,0,0).
+
   EXPECT_LT((origin - QVector3D(100.1F, 1.9F, 0.3F)).length(), 1e-3F);
 }

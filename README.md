@@ -1,4 +1,4 @@
-# Standard of Iron
+#Standard of Iron
 
 **A historical real-time strategy engine set during the Punic Wars**
 
@@ -14,11 +14,23 @@ Standard of Iron delivers a complete game engine stack—rendering, audio, AI, a
 
 The game logic layer follows an *Entity-Component-System* architecture, separating data storage from processing logic so that new gameplay features can be added without modifying existing systems.
 
-- When units receive movement orders, the *pathfinding* module computes grid-based routes that avoid obstacles and respect formation spacing; without this, units would overlap or clip through structures.
-- Damage resolution flows through a dedicated *combat system* that calculates hit detection, applies damage values, and triggers death handling—skipping any step would leave units immortal or cause silent failures.
-- A centralized *AI director* evaluates threats, issues build orders, and coordinates attacks; disabling it results in passive opponents that never produce troops or respond to incursions.
-- Buildings with production capability maintain a *spawn queue* that respects population caps and timers, ensuring that rapid-clicking the recruit button does not bypass limits.
-- Units assigned to patrol follow a *waypoint loop* and automatically engage enemies within aggro range; omitting the aggro check would make patrols purely decorative.
+- When units receive movement orders, the *pathfinding* module computes grid-based routes that avoid obstacles and respect formation spacing;
+without this,
+    units would overlap or
+        clip through structures.-
+            Damage resolution flows through a dedicated *combat system *that
+                calculates hit detection,
+    applies damage values,
+    and triggers death handling—skipping any step would leave units immortal or
+        cause silent failures.- A centralized *AI director *evaluates threats,
+    issues build orders, and coordinates attacks;
+disabling it results in passive opponents that never produce troops or
+    respond to incursions.-
+        Buildings with production capability maintain a *spawn queue *that
+            respects population caps and timers,
+    ensuring that rapid - clicking the recruit button does not bypass limits.-
+        Units assigned to patrol follow a * waypoint loop *
+            and automatically engage enemies within aggro range; omitting the aggro check would make patrols purely decorative.
 - Territory changes hands through a *capture system* requiring sustained troop presence—a 3× advantage held for five seconds—so that momentary skirmishes do not flip ownership.
 - The *serialization layer* writes complete world state to disk, enabling mid-campaign saves; without it, progress would reset on every launch.
 
@@ -126,16 +138,16 @@ The full Punic Wars setting pits the *Roman Republic* against the *Carthaginian 
 git clone https://github.com/djeada/Standard-of-Iron.git
 cd Standard-of-Iron
 
-# Install system dependencies (runs apt or pacman as appropriate)
+#Install system dependencies(runs apt or pacman as appropriate)
 make install
 
-# Compile the engine and game binary
+#Compile the engine and game binary
 make build
 
-# Launch the game
+#Launch the game
 make run
 
-# Launch the arena playground tool
+#Launch the arena playground tool
 make arena
 ```
 
@@ -143,6 +155,8 @@ make arena
 
 - `make run` invokes the campaign map pipeline when any required outputs are missing (base textures, mesh, rivers/coastlines, provinces, and Hannibal path).
 - `make arena` uses the same map-pipeline/bootstrap flow, then builds just `arena_app` before launching the standalone Qt/OpenGL playground.
+- In the arena tool, controls now mirror the main game more closely: left click/drag selects, right click issues move or attack orders, arrow keys pan, `Q`/`E` yaw, `R`/`F` orbit pitch, wheel zooms, and `F1` or `?` toggles the on-screen help overlay.
+- The arena unit panel also supports batch spawning, opposing or mirrored quick-setup spawns, per-unit member-count overrides for single-soldier previews, riderless mounted previews, forced full-detail creature previews, and a live summary of the current selection (side, health, members, center, and composition).
 - The pipeline downloads Natural Earth data and installs Python dependencies, so it needs network access the first time it runs.
 - Generated outputs live in `assets/campaign_map/` and are gitignored; tracked defaults include `campaign_state.json` and `hannibal_path.json`.
 - Generated creature animation outputs live in `assets/creatures/`; `make build` regenerates them with `bpat_baker`, and `make run` picks them up through its build dependency.
@@ -151,13 +165,13 @@ make arena
 ### Running Tests
 
 ```bash
-# Execute the full test suite
+#Execute the full test suite
 make test
 
-# Build test binary only (useful for IDE integration)
+#Build test binary only(useful for IDE integration)
 cd build && make standard_of_iron_tests
 
-# Filter to specific test suites
+#Filter to specific test suites
 ./build/bin/standard_of_iron_tests --gtest_filter=SerializationTest.*
 ./build/bin/standard_of_iron_tests --gtest_filter=SaveStorageTest.*
 ```
@@ -308,17 +322,31 @@ Each map is a JSON document that defines terrain dimensions, spawn points, and v
 
 ```json
 {
-  "name": "Siege of Carthage",
-  "terrain": { "width": 100, "height": 100 },
-  "victory": {
-    "type": "elimination",
-    "key_structures": ["barracks", "HQ"],
-    "defeat_conditions": ["no_key_structures"]
-  },
-  "spawns": [
-    { "type": "barracks", "x": 30, "z": 50, "player_id": 1, "nation": "rome", "maxPopulation": 100 },
-    { "type": "barracks", "x": 70, "z": 50, "player_id": 2, "nation": "carthage", "maxPopulation": 100 }
-  ]
+  "name" : "Siege of Carthage",
+           "terrain" : {"width" : 100, "height" : 100},
+                       "victory" : {
+                         "type" : "elimination",
+                         "key_structures" : [ "barracks", "HQ" ],
+                         "defeat_conditions" : ["no_key_structures"]
+                       },
+                                   "spawns" : [
+                                     {
+                                       "type" : "barracks",
+                                       "x" : 30,
+                                       "z" : 50,
+                                       "player_id" : 1,
+                                       "nation" : "rome",
+                                       "maxPopulation" : 100
+                                     },
+                                     {
+                                       "type" : "barracks",
+                                       "x" : 70,
+                                       "z" : 50,
+                                       "player_id" : 2,
+                                       "nation" : "carthage",
+                                       "maxPopulation" : 100
+                                     }
+                                   ]
 }
 ```
 
@@ -331,7 +359,8 @@ Each map is a JSON document that defines terrain dimensions, spawn points, and v
 Omitting the `player_id` field creates a *neutral barracks* that starts inactive and can be captured by any player.
 
 ```json
-{ "type": "barracks", "x": 50, "z": 50, "maxPopulation": 150 }
+{
+  "type" : "barracks", "x" : 50, "z" : 50, "maxPopulation" : 150 }
 ```
 
 - A neutral structure does not produce troops until captured; this encourages map control and prevents early-game turtling.
@@ -343,13 +372,11 @@ Each faction is defined in a JSON file under `assets/data/nations/`.
 
 ```json
 {
-  "id": "rome",
-  "display_name": "Roman Republic",
-  "troop_variants": {
-    "archer": {
-      "stat_modifiers": { "health": 110, "damage": 12 },
-      "formation": "testudo",
-      "renderer": "roman_archer"
+  "id" : "rome", "display_name" : "Roman Republic", "troop_variants" : {
+    "archer" : {
+      "stat_modifiers" : {"health" : 110, "damage" : 12},
+                         "formation" : "testudo",
+                                       "renderer" : "roman_archer"
     }
   }
 }
@@ -393,11 +420,12 @@ Q_INVOKABLE void onCustomCommand(qreal sx, qreal sy);
 
 // game_engine.cpp
 void GameEngine::onCustomCommand(qreal sx, qreal sy) {
-    QVector3D world_pos;
-    if (!screen_to_ground(QPointF(sx, sy), world_pos)) return;
-    for (auto id : m_selection_system->get_selected_units()) {
-        // Issue command to entity
-    }
+  QVector3D world_pos;
+  if (!screen_to_ground(QPointF(sx, sy), world_pos))
+    return;
+  for (auto id : m_selection_system->get_selected_units()) {
+    // Issue command to entity
+  }
 }
 ```
 

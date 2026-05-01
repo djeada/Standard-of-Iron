@@ -14,7 +14,7 @@ using namespace Render::Creature::Bpat;
 namespace {
 
 auto find_assets_dir() -> std::string {
-  // Tests run with CWD == project root or build dir; look for asset relative.
+
   for (auto const *candidate :
        {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
     std::filesystem::path p{candidate};
@@ -102,8 +102,7 @@ TEST(BpatRegistry, SamplePaletteRoundTripsForEachSpecies) {
     auto const n =
         reg.sample_palette(species, 0U, 0U, std::span<QMatrix4x4>(palette));
     EXPECT_EQ(n, blob->bone_count());
-    // Default-constructed QMatrix4x4 is identity; baked frame 0 should not
-    // leave the entire palette as identity.
+
     bool any_non_identity = false;
     for (std::uint32_t i = 0U; i < n; ++i) {
       if (palette[i] != QMatrix4x4{}) {
@@ -127,7 +126,6 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   auto const *blob = reg.blob(kSpeciesHumanoid);
   ASSERT_NE(blob, nullptr);
 
-  // Clip 4 is attack_sword_a.
   constexpr std::uint16_t kAttackSwordAClip = 4U;
   ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(kAttackSwordAClip))
       << "humanoid.bpat must contain at least 11 clips (re-run bpat_baker)";
@@ -137,7 +135,6 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   EXPECT_FALSE(attack_clip.loops)
       << "attack_sword_a must be a non-looping clip";
 
-  // Sample mid-attack frame.
   std::uint32_t const mid_frame = attack_clip.frame_count / 2U;
   std::array<QMatrix4x4, 64> attack_palette{};
   auto const n =
@@ -145,12 +142,10 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
                          std::span<QMatrix4x4>(attack_palette));
   ASSERT_GT(n, 0U);
 
-  // Sample idle clip frame 0 for comparison.
   std::array<QMatrix4x4, 64> idle_palette{};
   reg.sample_palette(kSpeciesHumanoid, 0U, 0U,
                      std::span<QMatrix4x4>(idle_palette));
 
-  // At least one bone must differ — the attack pose moves the right arm.
   bool any_different = false;
   for (std::uint32_t i = 0U; i < n; ++i) {
     if (attack_palette[i] != idle_palette[i]) {

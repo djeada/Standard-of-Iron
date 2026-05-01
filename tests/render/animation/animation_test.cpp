@@ -1,5 +1,4 @@
-// Tests for the Stage 12 animation system — clip evaluation, state
-// machine blending, and channel evaluator end-to-end.
+
 
 #include "render/animation/channel_evaluator.h"
 #include "render/animation/clip.h"
@@ -58,14 +57,14 @@ TEST(AnimationClipTest, ClampWrapModeHoldsEndpoints) {
 
 TEST(AnimationClipTest, LoopWrapModeRepeatsInTime) {
   auto c = make_float_clip({{0.0F, 0.0F}, {1.0F, 10.0F}, {2.0F, 0.0F}});
-  // t=2.5 with duration=2 → t'=0.5 → interpolate 0→10 at half → 5.
+
   EXPECT_NEAR(evaluate(c, 2.5F, WrapMode::Loop), 5.0F, kEps);
-  // t=-0.5 → t'=1.5 → halfway between (1,10) and (2,0) → 5.
+
   EXPECT_NEAR(evaluate(c, -0.5F, WrapMode::Loop), 5.0F, kEps);
 }
 
 TEST(AnimationClipTest, SortsUnorderedKeyframes) {
-  // Construct deliberately out of order; Clip ctor must sort.
+
   Clip<float> c("unordered", {{1.0F, 10.0F}, {0.0F, 0.0F}, {0.5F, 5.0F}});
   EXPECT_NEAR(evaluate(c, 0.0F), 0.0F, kEps);
   EXPECT_NEAR(evaluate(c, 0.5F), 5.0F, kEps);
@@ -132,16 +131,16 @@ TEST(AnimationChannelEvaluatorTest, SamplesCurrentStateClip) {
 TEST(AnimationChannelEvaluatorTest, BlendsBetweenTwoClipsDuringTransition) {
   StateMachine sm(0);
   std::vector<Clip<float>> clips;
-  clips.push_back(make_float_clip({{0.0F, 0.0F}}));   // state 0 → always 0
-  clips.push_back(make_float_clip({{0.0F, 100.0F}})); // state 1 → always 100
+  clips.push_back(make_float_clip({{0.0F, 0.0F}}));
+  clips.push_back(make_float_clip({{0.0F, 100.0F}}));
   ChannelEvaluator<float> ch(std::move(clips), &sm);
 
   sm.request(1, 1.0F);
-  sm.tick(0.25F); // 25% through blend
-  // weight=0.25, prev=0 → blend = 0*(1-0.25) + 100*0.25 = 25
+  sm.tick(0.25F);
+
   EXPECT_NEAR(ch.sample(0.0F), 25.0F, kEps);
 
-  sm.tick(0.5F); // 75% through
+  sm.tick(0.5F);
   EXPECT_NEAR(ch.sample(0.0F), 75.0F, kEps);
 
   sm.tick(0.25F);
@@ -149,7 +148,7 @@ TEST(AnimationChannelEvaluatorTest, BlendsBetweenTwoClipsDuringTransition) {
 }
 
 TEST(AnimationChannelEvaluatorTest, MissingClipSlotReturnsZero) {
-  StateMachine sm(5); // out of range for 2-clip vector
+  StateMachine sm(5);
   std::vector<Clip<float>> clips;
   clips.push_back(make_float_clip({{0.0F, 7.0F}}));
   clips.push_back(make_float_clip({{0.0F, 9.0F}}));
@@ -161,12 +160,12 @@ TEST(AnimationAuthoredClipsTest, ArcherIdleSwayIsLoopable) {
   auto c = Clips::make_archer_idle_sway_x();
   EXPECT_NEAR(c.duration(), 2.0F, kEps);
   EXPECT_GT(c.key_count(), 2U);
-  // First == last frame so the loop is continuous.
+
   auto start = evaluate(c, 0.0F, WrapMode::Loop);
   auto end = evaluate(c, 2.0F - 1e-4F, WrapMode::Loop);
   EXPECT_NEAR(start, 0.0F, 0.01F);
   EXPECT_NEAR(end, 0.0F, 0.01F);
-  // Peak somewhere in first half.
+
   float peak = 0.0F;
   for (float t = 0.0F; t < 2.0F; t += 0.05F) {
     peak = std::max(peak, std::abs(evaluate(c, t, WrapMode::Loop)));
