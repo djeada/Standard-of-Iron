@@ -51,8 +51,8 @@ namespace {
 
 using namespace Render::Creature;
 
-constexpr float k_torso_width_scale = 1.5F;
-constexpr float k_torso_height_scale = 1.2F;
+constexpr float k_torso_width_scale = 1.18F;
+constexpr float k_torso_height_scale = 1.15F;
 
 inline auto rand_between(uint32_t seed, uint32_t salt, float min_val,
                          float max_val) -> float {
@@ -167,6 +167,7 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
 auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
                         const QVector3D &cloth_base) -> HorseVariant {
   using namespace HorseVariantConstants;
+  seed = 0U;
   HorseVariant v;
 
   float const coat_hue = hash01(seed ^ k_salt_coat_hue);
@@ -275,6 +276,16 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   v.blanket_color =
       cloth_base * rand_between(seed, k_salt_blanket_tint, k_blanket_tint_min,
                                 k_blanket_tint_max);
+
+  v.coat_kind = HorseCoatKind::Bay;
+  v.coat_color = QVector3D(0.20F, 0.095F, 0.035F);
+  v.mane_color = QVector3D(0.045F, 0.030F, 0.020F);
+  v.tail_color = v.mane_color;
+  v.muzzle_color = QVector3D(0.12F, 0.075F, 0.045F);
+  v.hoof_color = QVector3D(0.055F, 0.040F, 0.030F);
+  v.has_blaze = false;
+  v.has_star = false;
+  v.sock_mask = 0U;
 
   return v;
 }
