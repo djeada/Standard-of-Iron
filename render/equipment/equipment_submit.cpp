@@ -15,8 +15,7 @@ void append_equipment_archetype(
   EquipmentArchetypePrim prim;
   prim.archetype = &archetype;
   prim.world = world;
-  prim.palette_count = static_cast<std::uint8_t>(palette.size());
-  std::copy(palette.begin(), palette.end(), prim.palette.begin());
+  prim.set_palette(palette);
   prim.default_texture = default_texture;
   prim.alpha_multiplier = alpha_multiplier;
   prim.lod = lod;
@@ -40,15 +39,7 @@ void submit_equipment_batch(const EquipmentBatch &batch,
     if (a.archetype == nullptr) {
       continue;
     }
-    RenderInstance instance;
-    instance.archetype = a.archetype;
-    instance.world = a.world;
-    instance.palette =
-        std::span<const QVector3D>(a.palette.data(), a.palette_count);
-    instance.default_texture = a.default_texture;
-    instance.alpha_multiplier = a.alpha_multiplier;
-    instance.lod = a.lod;
-    submit_render_instance(out, instance);
+    submit_render_instance(out, a.render_instance());
   }
   for (const auto &c : batch.cylinders) {
     out.cylinder(c.start, c.end, c.radius, c.color, c.alpha);

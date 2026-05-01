@@ -44,15 +44,8 @@ struct EquipmentCylinderPrim {
 
 inline constexpr std::size_t kEquipmentArchetypePaletteCapacity = 8;
 
-struct EquipmentArchetypePrim {
-  const RenderArchetype *archetype{nullptr};
-  QMatrix4x4 world{};
-  std::array<QVector3D, kEquipmentArchetypePaletteCapacity> palette{};
-  std::uint8_t palette_count{0U};
-  Texture *default_texture{nullptr};
-  float alpha_multiplier{1.0F};
-  RenderArchetypeLod lod{RenderArchetypeLod::Full};
-};
+using EquipmentArchetypePrim =
+    StoredRenderInstance<kEquipmentArchetypePaletteCapacity>;
 
 struct EquipmentBatch {
   std::vector<EquipmentMeshPrim> meshes;

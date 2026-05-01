@@ -3,7 +3,9 @@
 #include "world_chunk.h"
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <algorithm>
 #include <array>
+#include <cassert>
 #include <cstdint>
 #include <limits>
 #include <span>
@@ -55,6 +57,34 @@ struct RenderInstance {
   Texture *default_texture = nullptr;
   float alpha_multiplier = 1.0F;
   RenderArchetypeLod lod = RenderArchetypeLod::Full;
+};
+
+template <std::size_t PaletteCapacity> struct StoredRenderInstance {
+  const RenderArchetype *archetype = nullptr;
+  QMatrix4x4 world;
+  std::array<QVector3D, PaletteCapacity> palette_storage{};
+  std::uint8_t palette_count = 0U;
+  Texture *default_texture = nullptr;
+  float alpha_multiplier = 1.0F;
+  RenderArchetypeLod lod = RenderArchetypeLod::Full;
+
+  void set_palette(std::span<const QVector3D> palette) {
+    assert(palette.size() <= PaletteCapacity);
+    palette_count = static_cast<std::uint8_t>(palette.size());
+    std::copy(palette.begin(), palette.end(), palette_storage.begin());
+  }
+
+  [[nodiscard]] auto render_instance() const -> RenderInstance {
+    return RenderInstance{
+        .archetype = archetype,
+        .world = world,
+        .palette =
+            std::span<const QVector3D>(palette_storage.data(), palette_count),
+        .default_texture = default_texture,
+        .alpha_multiplier = alpha_multiplier,
+        .lod = lod,
+    };
+  }
 };
 
 auto empty_bounding_box() -> BoundingBox;
