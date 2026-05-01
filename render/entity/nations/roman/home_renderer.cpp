@@ -9,11 +9,14 @@
 
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 
 namespace Render::GL::Roman {
 namespace {
 
 using Render::Geom::clamp_vec_01;
+
+constexpr std::uint8_t kHomeTeamSlot = 0;
 
 struct RomanPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -36,6 +39,11 @@ inline auto make_palette(const QVector3D &team) -> RomanPalette {
   p.team_trim = clamp_vec_01(
       QVector3D(team.x() * 0.6F, team.y() * 0.6F, team.z() * 0.6F));
   return p;
+}
+
+auto home_palette_slots(const RomanPalette &palette)
+    -> std::array<QVector3D, 1> {
+  return {palette.team};
 }
 
 auto build_home_archetype(BuildingState state) -> RenderArchetype {
@@ -112,6 +120,20 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                c.cedar_dark);
   desc.add_box(QVector3D(0.0F, 0.62F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
                c.blue_accent, BuildingStateMask::All, BuildingLODMask::Full);
+
+  // Entrance step in front of the door
+  desc.add_box(QVector3D(0.0F, 0.10F, 1.04F), QVector3D(0.36F, 0.04F, 0.12F),
+               c.limestone_shade);
+
+  // Interior atrium floor (courtyard hint, visible only when intact and close)
+  desc.add_box(QVector3D(0.0F, 0.155F, 0.0F), QVector3D(0.45F, 0.005F, 0.45F),
+               c.marble, kBuildingStateMaskIntact, BuildingLODMask::Full);
+
+  // Team-colored door banner above the entrance
+  desc.add_palette_box(QVector3D(0.0F, 0.72F, 0.95F),
+                       QVector3D(0.24F, 0.10F, 0.02F), kHomeTeamSlot,
+                       BuildingStateMask::All, BuildingLODMask::Full);
+
   return build_building_archetype(desc, state);
 }
 
@@ -131,7 +153,11 @@ void draw_home(const DrawContext &p, ISubmitter &out) {
     return;
   }
 
-  submit_building_instance(out, p, home_archetype(resolve_building_state(p)));
+  RomanPalette const palette =
+      make_palette(QVector3D(r->color[0], r->color[1], r->color[2]));
+  const auto palette_slots = home_palette_slots(palette);
+  submit_building_instance(out, p, home_archetype(resolve_building_state(p)),
+                           palette_slots);
   draw_building_health_bar(out, p, BuildingHealthBarStyle{1.0F, 0.08F, 1.6F});
   draw_building_selection_overlay(out, p, BuildingSelectionStyle{1.5F, 1.5F});
 }
