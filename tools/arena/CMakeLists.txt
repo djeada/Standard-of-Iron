@@ -5,6 +5,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
         arena_viewport.cpp
         terrain_panel.cpp
         unit_panel.cpp
+        building_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
     )
 else()
@@ -14,6 +15,7 @@ else()
         arena_viewport.cpp
         terrain_panel.cpp
         unit_panel.cpp
+        building_panel.cpp
         ../../app/core/renderer_bootstrap.cpp
     )
 endif()

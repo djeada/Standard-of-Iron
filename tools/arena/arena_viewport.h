@@ -57,45 +57,51 @@ public:
   ~ArenaViewport() override;
 
 public slots:
-  void regenerateTerrain();
-  void setTerrainSeed(int seed);
-  void setTerrainHeightScale(float value);
-  void setTerrainOctaves(int value);
-  void setTerrainFrequency(float value);
-  void setWireframeEnabled(bool enabled);
-  void setNormalsOverlayEnabled(bool enabled);
-  void setGroundType(const QString &groundType);
-  void setRainEnabled(bool enabled);
-  void setRainIntensity(float intensity);
+  void regenerate_terrain();
+  void set_terrain_seed(int seed);
+  void set_terrain_height_scale(float value);
+  void set_terrain_octaves(int value);
+  void set_terrain_frequency(float value);
+  void set_wireframe_enabled(bool enabled);
+  void set_normals_overlay_enabled(bool enabled);
+  void set_ground_type(const QString &ground_type);
+  void set_rain_enabled(bool enabled);
+  void set_rain_intensity(float intensity);
 
-  void setSpawnOwner(int ownerId);
-  void setSpawnNation(const QString &nationId);
-  void setSpawnUnitType(const QString &unitType);
-  void setSpawnIndividualsPerUnit(int count);
-  void setSpawnRiderVisible(bool visible);
-  void spawnUnit();
-  void spawnUnits(int count);
-  void spawnOpposingBatch(int count);
-  void spawnMirrorMatch(int count);
-  void clearUnits();
-  void resetArena();
-  void applyVisualOverridesToSelection();
-  void setAnimationName(const QString &animationName);
-  void playSelectedAnimation();
-  void playIdleAnimation();
-  void playWalkAnimation();
-  void playAttackAnimation();
-  void playDeathAnimation();
-  void moveSelectedUnitForward();
-  void setMovementSpeed(float speed);
-  void setSkeletonDebugEnabled(bool enabled);
+  void set_spawn_owner(int ownerId);
+  void set_spawn_nation(const QString &nationId);
+  void set_spawn_unit_type(const QString &unitType);
+  void set_spawn_individuals_per_unit(int count);
+  void set_spawn_rider_visible(bool visible);
+  void spawn_unit();
+  void spawn_units(int count);
+  void spawn_opposing_batch(int count);
+  void spawn_mirror_match(int count);
+  void clear_units();
 
-  void pauseSimulation(bool paused);
-  void resetCamera();
+  void set_spawn_building_owner(int ownerId);
+  void set_spawn_building_nation(const QString &nationId);
+  void set_spawn_building_type(const QString &building_type);
+  void spawn_buildings(int count);
+  void clear_buildings();
+  void reset_arena();
+  void apply_visual_overrides_to_selection();
+  void set_animation_name(const QString &animation_name);
+  void play_selected_animation();
+  void play_idle_animation();
+  void play_walk_animation();
+  void play_attack_animation();
+  void play_death_animation();
+  void move_selected_unit_forward();
+  void set_movement_speed(float speed);
+  void set_skeleton_debug_enabled(bool enabled);
+
+  void pause_simulation(bool paused);
+  void reset_camera();
 
 signals:
-  void pausedChanged(bool paused);
-  void selectionSummaryChanged(const QString &summary);
+  void paused_changed(bool paused);
+  void selection_summary_changed(const QString &summary);
 
 protected:
   void initializeGL() override;
@@ -142,6 +148,9 @@ private:
   auto resolve_spawn_unit_type(Game::Systems::NationID nationId,
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
+  auto spawn_single_building(int ownerId, Game::Systems::NationID nationId,
+                              Game::Units::SpawnType building_type)
+      -> Engine::Core::EntityID;
   auto owner_display_name(int ownerId) const -> QString;
   auto nation_display_name(Game::Systems::NationID nationId) const -> QString;
   auto troop_display_name(Game::Systems::NationID nationId,
@@ -158,8 +167,8 @@ private:
   void draw_stats_overlay(QPainter &painter);
   void draw_controls_overlay(QPainter &painter);
 
-  QTimer m_frameTimer;
-  QElapsedTimer m_frameClock;
+  QTimer m_frame_timer;
+  QElapsedTimer m_frame_clock;
   TerrainSettings m_terrain_settings;
   Game::Map::GroundType m_ground_type = Game::Map::GroundType::ForestMud;
   QString m_animation_name = QStringLiteral("Idle");
@@ -182,6 +191,10 @@ private:
   Game::Units::TroopType m_spawn_unit_type;
   int m_spawn_individuals_per_unit_override = 0;
   bool m_spawn_rider_visible = true;
+
+  int m_spawn_building_owner_id = 1;
+  Game::Systems::NationID m_spawn_building_nation_id;
+  Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
 
   QPoint m_last_mouse_pos;
   QPoint m_selection_anchor;
