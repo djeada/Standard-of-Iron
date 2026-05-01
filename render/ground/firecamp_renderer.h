@@ -3,6 +3,7 @@
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
+#include "scatter_renderer_state.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -33,17 +34,11 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    if (m_fireCampInstances.empty()) {
-      return true;
-    }
-    if (!m_visibility_dirty && m_visible_instances.empty()) {
-      return true;
-    }
-    return (m_fireCampInstanceBuffer != nullptr) && !m_visibility_dirty;
+    return m_firecamp_state.is_gpu_ready();
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_fireCampInstances.size();
+    return m_firecamp_state.instances.size();
   }
 
 private:
@@ -59,15 +54,9 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<FireCampInstanceGpu> m_fireCampInstances;
-  std::unique_ptr<Buffer> m_fireCampInstanceBuffer;
-  std::size_t m_fireCampInstanceCount = 0;
-  FireCampBatchParams m_fireCampParams;
-  bool m_fireCampInstancesDirty = false;
-
-  std::vector<FireCampInstanceGpu> m_visible_instances;
-  std::uint64_t m_cachedVisibilityVersion = 0;
-  bool m_visibility_dirty = true;
+  Render::Ground::Scatter::FilteredRendererState<FireCampInstanceGpu,
+                                                 FireCampBatchParams>
+      m_firecamp_state;
 
   std::vector<QVector3D> m_explicitPositions;
   std::vector<float> m_explicitIntensities;

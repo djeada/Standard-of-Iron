@@ -5,6 +5,7 @@
 #include "../scene_renderer.h"
 #include "ground_utils.h"
 #include "linear_feature_geometry.h"
+#include "linear_feature_submission.h"
 #include "linear_feature_visibility.h"
 #include "map/terrain.h"
 #include <QVector2D>
@@ -60,61 +61,12 @@ void RiverRenderer::build_meshes() {
 }
 
 void RiverRenderer::submit(Renderer &renderer, ResourceManager *resources) {
-  if (m_meshes.empty() || m_river_segments.empty()) {
-    return;
-  }
-
   Q_UNUSED(resources);
-
-  auto &visibility = Game::Map::VisibilityService::instance();
-  const bool use_visibility = visibility.is_initialized();
-  Game::Map::VisibilityService::Snapshot visibility_snapshot;
-  if (use_visibility) {
-    visibility_snapshot = visibility.snapshot();
-  }
-
-  QMatrix4x4 model;
-  model.setToIdentity();
-
-  size_t mesh_index = 0;
-  for (const auto &segment : m_river_segments) {
-    if (mesh_index >= m_meshes.size()) {
-      break;
-    }
-
-    auto *mesh = m_meshes[mesh_index].get();
-    ++mesh_index;
-
-    if (mesh == nullptr) {
-      continue;
-    }
-
-    float alpha = 1.0F;
-    QVector3D color_multiplier(1.0F, 1.0F, 1.0F);
-
-    if (use_visibility) {
-      Ground::LinearFeatureVisibilityOptions visibility_options;
-      visibility_options.treat_out_of_bounds_as_visible = true;
-      const auto visibility_result = Ground::evaluate_linear_feature_visibility(
-          &visibility_snapshot, segment.start, segment.end, visibility_options);
-      if (!visibility_result.visible) {
-        continue;
-      }
-      alpha = visibility_result.alpha;
-      color_multiplier = visibility_result.color_multiplier;
-    }
-
-    QVector3D const final_color(color_multiplier.x(), color_multiplier.y(),
-                                color_multiplier.z());
-
-    TerrainFeatureCmd cmd;
-    cmd.mesh = mesh;
-    cmd.kind = TerrainFeatureCmd::Kind::River;
-    cmd.model = model;
-    cmd.color = final_color;
-    cmd.alpha = alpha;
-    renderer.terrain_feature(cmd);
-  }
+  Ground::LinearFeatureVisibilityOptions visibility_options;
+  visibility_options.treat_out_of_bounds_as_visible = true;
+  Ground::submit_linear_feature_segments(
+      renderer, m_river_segments, m_meshes, LinearFeatureKind::River,
+      QVector3D(1.0F, 1.0F, 1.0F), visibility_options);
 }
 
 } // namespace Render::GL

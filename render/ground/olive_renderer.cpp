@@ -37,18 +37,14 @@ void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_oliveInstances.clear();
-  m_visible_instances.clear();
-  m_oliveInstanceCount = 0;
-  m_oliveInstancesDirty = false;
-  m_cachedVisibilityVersion = 0;
-  m_visibility_dirty = true;
+  m_olive_state.reset_instances();
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
-  m_oliveParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_oliveParams.time = 0.0F;
-  m_oliveParams.wind_strength = wind_profile.sway_strength;
-  m_oliveParams.wind_speed = wind_profile.sway_speed;
+  auto &olive_params = m_olive_state.params;
+  olive_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  olive_params.time = 0.0F;
+  olive_params.wind_strength = wind_profile.sway_strength;
+  olive_params.wind_speed = wind_profile.sway_speed;
 
   generate_olive_instances();
 }
@@ -56,38 +52,32 @@ void OliveRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 void OliveRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  const auto visible_count = Scatter::sync_filtered_instances(
-      m_oliveInstances, m_visible_instances, m_oliveInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibility_dirty,
-      [](const OliveInstanceGpu &instance) -> const QVector4D & {
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_olive_state, [](const OliveInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_scale;
       });
-  if (visible_count == 0 || !m_oliveInstanceBuffer) {
+  if (visible_count == 0 || !m_olive_state.instance_buffer) {
     return;
   }
 
-  m_oliveInstanceCount = visible_count;
-  OliveBatchParams params = m_oliveParams;
+  OliveBatchParams params = m_olive_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Olive;
-  cmd.instance_buffer = m_oliveInstanceBuffer.get();
+  cmd.instance_buffer = m_olive_state.instance_buffer.get();
   cmd.instance_count = visible_count;
   cmd.olive = params;
   renderer.terrain_scatter(cmd);
 }
 
-void OliveRenderer::clear() {
-  m_oliveInstances.clear();
-  m_visible_instances.clear();
-  m_oliveInstanceCount = 0;
-  m_oliveInstancesDirty = false;
-  m_visibility_dirty = true;
-  m_cachedVisibilityVersion = 0;
-}
+void OliveRenderer::clear() { m_olive_state.reset_instances(); }
 
 void OliveRenderer::generate_olive_instances() {
-  m_oliveInstances.clear();
+  auto &olive_instances = m_olive_state.instances;
+  auto &olive_instance_count = m_olive_state.instance_count;
+  auto &olive_instances_dirty = m_olive_state.instances_dirty;
+
+  olive_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
@@ -98,7 +88,7 @@ void OliveRenderer::generate_olive_instances() {
   const auto scatter_rules =
       Game::Map::make_scatter_rules(scatter_profile.ground_type);
   if (!scatter_rules.allow_olives) {
-    m_oliveInstancesDirty = false;
+    olive_instances_dirty = false;
     return;
   }
 
@@ -170,7 +160,7 @@ void OliveRenderer::generate_olive_instances() {
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation =
         QVector4D(rotation, silhouette_seed, leaf_seed, bark_seed);
-    m_oliveInstances.push_back(instance);
+    olive_instances.push_back(instance);
     return true;
   };
 
@@ -206,8 +196,8 @@ void OliveRenderer::generate_olive_instances() {
     }
   }
 
-  m_oliveInstanceCount = m_oliveInstances.size();
-  m_oliveInstancesDirty = m_oliveInstanceCount > 0;
+  olive_instance_count = olive_instances.size();
+  olive_instances_dirty = olive_instance_count > 0;
 }
 
 } // namespace Render::GL

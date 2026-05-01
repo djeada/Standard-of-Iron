@@ -2,6 +2,7 @@
 #include "game/map/visibility_service.h"
 #include "render/decoration_gpu.h"
 #include "render/ground/biome_renderer.h"
+#include "render/ground/scatter_renderer_state.h"
 #include "render/ground/scatter_runtime.h"
 #include <gtest/gtest.h>
 
@@ -61,6 +62,47 @@ TEST(ScatterRuntimeTest, DirectGpuReadyAllowsEmptyScatterBuffers) {
   instances.push_back(
       {QVector4D(0.0F, 0.0F, 0.0F, 1.0F), QVector4D(1.0F, 1.0F, 1.0F, 0.0F)});
   EXPECT_FALSE(Render::Ground::Scatter::is_direct_gpu_ready(instances, buffer));
+}
+
+TEST(ScatterRuntimeTest, DirectRendererStateResetClearsCpuTrackingState) {
+  Render::Ground::Scatter::DirectRendererState<Render::GL::StoneInstanceGpu,
+                                               Render::GL::StoneBatchParams>
+      state;
+  state.instances.push_back(
+      {QVector4D(0.0F, 0.0F, 0.0F, 1.0F), QVector4D(1.0F, 1.0F, 1.0F, 0.0F)});
+  state.instance_count = 1;
+  state.instances_dirty = true;
+
+  state.reset_instances();
+
+  EXPECT_TRUE(state.instances.empty());
+  EXPECT_EQ(state.instance_count, 0U);
+  EXPECT_FALSE(state.instances_dirty);
+  EXPECT_TRUE(state.is_gpu_ready());
+}
+
+TEST(ScatterRuntimeTest, FilteredRendererStateResetClearsVisibilityState) {
+  Render::Ground::Scatter::FilteredRendererState<Render::GL::PlantInstanceGpu,
+                                                 Render::GL::PlantBatchParams>
+      state;
+  state.instances.push_back({QVector4D(0.0F, 0.0F, 0.0F, 1.0F),
+                             QVector4D(1.0F, 1.0F, 1.0F, 0.0F),
+                             QVector4D(0.0F, 0.0F, 0.0F, 0.0F)});
+  state.visible_instances = state.instances;
+  state.instance_count = 1;
+  state.instances_dirty = true;
+  state.cached_visibility_version = 7;
+  state.visibility_dirty = false;
+
+  state.reset_instances();
+
+  EXPECT_TRUE(state.instances.empty());
+  EXPECT_TRUE(state.visible_instances.empty());
+  EXPECT_EQ(state.instance_count, 0U);
+  EXPECT_FALSE(state.instances_dirty);
+  EXPECT_EQ(state.cached_visibility_version, 0U);
+  EXPECT_TRUE(state.visibility_dirty);
+  EXPECT_TRUE(state.is_gpu_ready());
 }
 
 TEST(ScatterRuntimeTest,

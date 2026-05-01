@@ -37,18 +37,14 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_pineInstances.clear();
-  m_visible_instances.clear();
-  m_pineInstanceCount = 0;
-  m_pineInstancesDirty = false;
-  m_cachedVisibilityVersion = 0;
-  m_visibility_dirty = true;
+  m_pine_state.reset_instances();
 
   const auto wind_profile = Game::Map::make_wind_profile(m_biome_settings);
-  m_pineParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_pineParams.time = 0.0F;
-  m_pineParams.wind_strength = wind_profile.sway_strength;
-  m_pineParams.wind_speed = wind_profile.sway_speed;
+  auto &pine_params = m_pine_state.params;
+  pine_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  pine_params.time = 0.0F;
+  pine_params.wind_strength = wind_profile.sway_strength;
+  pine_params.wind_speed = wind_profile.sway_speed;
 
   generate_pine_instances();
 }
@@ -56,38 +52,32 @@ void PineRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 void PineRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  const auto visible_count = Scatter::sync_filtered_instances(
-      m_pineInstances, m_visible_instances, m_pineInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibility_dirty,
-      [](const PineInstanceGpu &instance) -> const QVector4D & {
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_pine_state, [](const PineInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_scale;
       });
-  if (visible_count == 0 || !m_pineInstanceBuffer) {
+  if (visible_count == 0 || !m_pine_state.instance_buffer) {
     return;
   }
 
-  m_pineInstanceCount = visible_count;
-  PineBatchParams params = m_pineParams;
+  PineBatchParams params = m_pine_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Pine;
-  cmd.instance_buffer = m_pineInstanceBuffer.get();
+  cmd.instance_buffer = m_pine_state.instance_buffer.get();
   cmd.instance_count = visible_count;
   cmd.pine = params;
   renderer.terrain_scatter(cmd);
 }
 
-void PineRenderer::clear() {
-  m_pineInstances.clear();
-  m_visible_instances.clear();
-  m_pineInstanceCount = 0;
-  m_pineInstancesDirty = false;
-  m_visibility_dirty = true;
-  m_cachedVisibilityVersion = 0;
-}
+void PineRenderer::clear() { m_pine_state.reset_instances(); }
 
 void PineRenderer::generate_pine_instances() {
-  m_pineInstances.clear();
+  auto &pine_instances = m_pine_state.instances;
+  auto &pine_instance_count = m_pine_state.instance_count;
+  auto &pine_instances_dirty = m_pine_state.instances_dirty;
+
+  pine_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
     return;
@@ -98,7 +88,7 @@ void PineRenderer::generate_pine_instances() {
   const auto scatter_rules =
       Game::Map::make_scatter_rules(scatter_profile.ground_type);
   if (!scatter_rules.allow_pines) {
-    m_pineInstancesDirty = false;
+    pine_instances_dirty = false;
     return;
   }
 
@@ -166,7 +156,7 @@ void PineRenderer::generate_pine_instances() {
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.rotation =
         QVector4D(rotation, silhouette_seed, needle_seed, bark_seed);
-    m_pineInstances.push_back(instance);
+    pine_instances.push_back(instance);
     return true;
   };
 
@@ -218,8 +208,8 @@ void PineRenderer::generate_pine_instances() {
     }
   }
 
-  m_pineInstanceCount = m_pineInstances.size();
-  m_pineInstancesDirty = m_pineInstanceCount > 0;
+  pine_instance_count = pine_instances.size();
+  pine_instances_dirty = pine_instance_count > 0;
 }
 
 } // namespace Render::GL
