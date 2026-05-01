@@ -18,7 +18,9 @@
 #include <qmatrix4x4.h>
 #include <qopenglext.h>
 #include <qstringview.h>
-#include <qvectornd.h>
+#include <qvector2d.h>
+#include <qvector3d.h>
+#include <qvector4d.h>
 
 namespace Render::GL {
 

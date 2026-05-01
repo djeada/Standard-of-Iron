@@ -1,5 +1,6 @@
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "render/entity/nations/carthage/defense_tower_renderer.h"
 #include "render/entity/nations/roman/defense_tower_renderer.h"
 #include "render/entity/nations/roman/home_renderer.h"
 #include "render/entity/registry.h"
@@ -332,6 +333,44 @@ TEST(RenderArchetypeBuildings, RomanTowerAppliesTeamPaletteSlot) {
   ASSERT_FALSE(submitter.meshes.empty());
   bool found_team_tint = false;
   QVector3D const expected_team(1.0F, 0.0F, 0.35F);
+  for (const RecordedMesh &mesh : submitter.meshes) {
+    if (near_vec3(mesh.color, expected_team)) {
+      found_team_tint = true;
+      break;
+    }
+  }
+  EXPECT_TRUE(found_team_tint);
+}
+
+TEST(RenderArchetypeBuildings, CarthageTowerAppliesTeamPaletteSlot) {
+  using namespace Render::GL;
+
+  EntityRendererRegistry registry;
+  Carthage::register_defense_tower_renderer(registry);
+  const auto renderer = registry.get("troops/carthage/defense_tower");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Engine::Core::Entity entity(3);
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  renderable->color = {0.8F, 0.2F, 0.6F};
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+
+  DrawContext ctx;
+  ResourceManager resources;
+  ctx.entity = &entity;
+  ctx.resources = &resources;
+  ctx.model = QMatrix4x4{};
+
+  RecordingSubmitter submitter;
+  renderer(ctx, submitter);
+
+  ASSERT_FALSE(submitter.meshes.empty());
+  bool found_team_tint = false;
+  QVector3D const expected_team(0.8F, 0.2F, 0.6F);
   for (const RecordedMesh &mesh : submitter.meshes) {
     if (near_vec3(mesh.color, expected_team)) {
       found_team_tint = true;
