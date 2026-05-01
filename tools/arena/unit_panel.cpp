@@ -78,8 +78,12 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
   spawn_buttons_layout->setContentsMargins(0, 0, 0, 0);
   spawn_buttons_layout->setSpacing(6);
   auto *spawn_button = new QPushButton("Spawn", spawn_group);
+  spawn_button->setProperty("primary", true);
   auto *clear_button = new QPushButton("Clear", spawn_group);
   auto *apply_visuals_button = new QPushButton("Apply Overrides", spawn_group);
+  spawn_button->setToolTip("Spawn units with selected settings");
+  clear_button->setToolTip("Remove all units from the arena");
+  apply_visuals_button->setToolTip("Apply visual overrides to selected units");
   spawn_buttons_layout->addWidget(spawn_button, 1);
   spawn_buttons_layout->addWidget(clear_button, 1);
   spawn_buttons_layout->addWidget(apply_visuals_button, 1);
