@@ -162,4 +162,63 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
               0.0001F);
 }
 
+TEST_F(TerrainServiceTest, HillSlopeFormsSmoothGradientBeyondPlateau) {
+  // 61x61 grid, tile_size=1.0 → grid centre at (30,30).
+  // width=20 → plateau radius ≈9 tiles, outer slope radius=20 tiles.
+  // Cells at distances 11, 15 and 18 all fall in the slope zone.
+  Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
+  Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 20.0F,
+      .depth = 20.0F,
+      .height = 4.0F,
+  };
+  height_map.buildFromFeatures({hill});
+
+  float const h_near = height_map.getHeightAtGrid(30, 19); // d=11
+  float const h_mid = height_map.getHeightAtGrid(30, 15);  // d=15
+  float const h_far = height_map.getHeightAtGrid(30, 12);  // d=18
+
+  EXPECT_GT(h_near, 0.0F);
+  EXPECT_GT(h_mid, 0.0F);
+  EXPECT_GT(h_far, 0.0F);
+  EXPECT_GT(h_near, h_mid);
+  EXPECT_GT(h_mid, h_far);
+}
+
+TEST_F(TerrainServiceTest, HillSlopeHeightsHaveOrganicVariation) {
+  // Four cells equidistant (d=11) from the hill centre but in different
+  // cardinal directions should receive different heights due to slope noise.
+  Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
+  Game::Map::TerrainFeature hill{
+      .type = Game::Map::TerrainType::Hill,
+      .center_x = 0.0F,
+      .center_z = 0.0F,
+      .width = 20.0F,
+      .depth = 20.0F,
+      .height = 4.0F,
+  };
+  height_map.buildFromFeatures({hill});
+
+  float const h_n = height_map.getHeightAtGrid(30, 19); // north
+  float const h_e = height_map.getHeightAtGrid(41, 30); // east
+  float const h_s = height_map.getHeightAtGrid(30, 41); // south
+  float const h_w = height_map.getHeightAtGrid(19, 30); // west
+
+  EXPECT_GT(h_n, 0.0F);
+  EXPECT_GT(h_e, 0.0F);
+  EXPECT_GT(h_s, 0.0F);
+  EXPECT_GT(h_w, 0.0F);
+  // Each cardinal direction samples a different noise position so all four
+  // heights must be pairwise distinct.
+  EXPECT_NE(h_n, h_e);
+  EXPECT_NE(h_n, h_s);
+  EXPECT_NE(h_n, h_w);
+  EXPECT_NE(h_e, h_s);
+  EXPECT_NE(h_e, h_w);
+  EXPECT_NE(h_s, h_w);
+}
+
 } // namespace
