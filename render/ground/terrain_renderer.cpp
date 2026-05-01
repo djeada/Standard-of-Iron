@@ -1037,7 +1037,6 @@ auto TerrainRenderer::get_terrain_color(Game::Map::TerrainType type,
     float const t = std::clamp(height / 3.0F, 0.0F, 1.0F);
     float const t_smooth = t * t * (3.0F - 2.0F * t);
 
-    // Lower slopes keep more primary (lush) grass; upper slopes dry out.
     QVector3D const grass_low = surface_profile.grass_primary * 0.55F +
                                 surface_profile.grass_secondary * 0.45F;
     QVector3D const grass_high = surface_profile.grass_secondary * 0.55F +

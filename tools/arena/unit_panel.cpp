@@ -168,7 +168,7 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
             ? m_individuals_per_unit_box->value()
             : 0);
     emit spawn_rider_visibility_changed(m_render_rider_checkbox == nullptr ||
-                                     m_render_rider_checkbox->isChecked());
+                                        m_render_rider_checkbox->isChecked());
     emit spawn_units_requested(
         m_spawn_count_box != nullptr ? m_spawn_count_box->value() : 1);
   });
@@ -201,7 +201,7 @@ UnitPanel::UnitPanel(QWidget *parent) : QWidget(parent) {
             ? m_individuals_per_unit_box->value()
             : 0);
     emit spawn_rider_visibility_changed(m_render_rider_checkbox == nullptr ||
-                                     m_render_rider_checkbox->isChecked());
+                                        m_render_rider_checkbox->isChecked());
     emit apply_visual_overrides_requested();
   });
   connect(spawn_opposing_button, &QPushButton::clicked, this, [this]() {
@@ -304,7 +304,7 @@ void UnitPanel::populate_nation_options() {
 }
 
 void UnitPanel::populate_unit_options(const QString &nation_id,
-                                    const QString &preferred_unit_type) {
+                                      const QString &preferred_unit_type) {
   if (m_unit_box == nullptr) {
     return;
   }
@@ -322,8 +322,8 @@ void UnitPanel::populate_unit_options(const QString &nation_id,
     return;
   }
 
-  QString preferred =
-      preferred_unit_type.isEmpty() ? selected_unit_type_id() : preferred_unit_type;
+  QString preferred = preferred_unit_type.isEmpty() ? selected_unit_type_id()
+                                                    : preferred_unit_type;
 
   m_unit_box->clear();
   for (const auto &troop : nation->available_troops) {

@@ -106,7 +106,9 @@ BuildingPanel::BuildingPanel(QWidget *parent) : QWidget(parent) {
   connect(m_nation_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
           [this](int) { emit building_nation_selected(selected_nation_id()); });
   connect(m_building_box, qOverload<int>(&QComboBox::currentIndexChanged), this,
-          [this](int) { emit building_type_selected(selected_building_type_id()); });
+          [this](int) {
+            emit building_type_selected(selected_building_type_id());
+          });
 
   populate_nation_options();
 }
@@ -116,9 +118,8 @@ void BuildingPanel::set_selection_summary(const QString &summary) {
     return;
   }
   m_selection_summary_label->setText(
-      summary.trimmed().isEmpty()
-          ? QStringLiteral("No buildings selected.")
-          : summary);
+      summary.trimmed().isEmpty() ? QStringLiteral("No buildings selected.")
+                                  : summary);
 }
 
 auto BuildingPanel::selected_owner_id() const -> int {
