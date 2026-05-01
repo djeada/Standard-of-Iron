@@ -3,30 +3,20 @@
 #include "equipment_submit.h"
 
 #include "../gl/humanoid/humanoid_types.h"
+#include "../instance_transform.h"
 #include "../static_attachment_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
-#include <QVector4D>
 
 namespace Render::GL {
 
 inline auto make_humanoid_attachment_transform_scaled(
     const QMatrix4x4 &parent, const AttachmentFrame &frame,
     const QVector3D &local_offset, const QVector3D &axis_scale) -> QMatrix4x4 {
-  QMatrix4x4 m = parent;
-  QVector3D const world_pos =
-      frame.origin + frame.right * (local_offset.x() * axis_scale.x()) +
-      frame.up * (local_offset.y() * axis_scale.y()) +
-      frame.forward * (local_offset.z() * axis_scale.z());
-  m.translate(world_pos);
-
-  QMatrix4x4 basis;
-  basis.setColumn(0, QVector4D(frame.right * axis_scale.x(), 0.0F));
-  basis.setColumn(1, QVector4D(frame.up * axis_scale.y(), 0.0F));
-  basis.setColumn(2, QVector4D(frame.forward * axis_scale.z(), 0.0F));
-  basis.setColumn(3, QVector4D(0.0F, 0.0F, 0.0F, 1.0F));
-  return m * basis;
+  return make_basis_attachment_transform_scaled(
+      parent, frame.origin, frame.right, frame.up, frame.forward, local_offset,
+      axis_scale);
 }
 
 inline auto make_humanoid_attachment_transform(

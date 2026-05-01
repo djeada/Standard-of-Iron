@@ -182,7 +182,7 @@ auto hash_batch(const EquipmentBatch &b) -> std::size_t {
     mix_m(a.world);
     mix(static_cast<std::size_t>(a.palette_count));
     for (std::size_t i = 0; i < a.palette_count; ++i) {
-      mix_v(a.palette[i]);
+      mix_v(a.palette_storage[i]);
     }
     mix_f(a.alpha_multiplier);
     mix(static_cast<std::size_t>(a.lod));

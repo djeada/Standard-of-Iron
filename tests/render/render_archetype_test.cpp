@@ -141,6 +141,31 @@ TEST(RenderArchetype, AppliesPaletteAndTracksBounds) {
   EXPECT_FLOAT_EQ(submitter.meshes[0].alpha, 0.5F);
 }
 
+TEST(RenderArchetype, StoredRenderInstanceOwnsPaletteData) {
+  using namespace Render::GL;
+
+  RenderArchetypeBuilder builder("stored_instance_test");
+  builder.add_palette_box(QVector3D(0.0F, 0.0F, 0.0F),
+                          QVector3D(1.0F, 1.0F, 1.0F), 0);
+  RenderArchetype archetype = std::move(builder).build();
+
+  StoredRenderInstance<2> stored;
+  stored.archetype = &archetype;
+  stored.default_texture = fake_texture(11);
+
+  std::array<QVector3D, 1> palette{QVector3D(0.7F, 0.2F, 0.1F)};
+  stored.set_palette(palette);
+  palette[0] = QVector3D(0.1F, 0.8F, 0.3F);
+
+  RecordingSubmitter submitter;
+  submit_render_instance(submitter, stored.render_instance());
+
+  ASSERT_EQ(submitter.meshes.size(), 1u);
+  EXPECT_TRUE(
+      near_vec3(submitter.meshes[0].color, QVector3D(0.7F, 0.2F, 0.1F)));
+  EXPECT_EQ(submitter.meshes[0].texture, fake_texture(11));
+}
+
 TEST(RenderArchetypeEquipment, ReplaysArchetypeInstancesThroughEquipmentBatch) {
   using namespace Render::GL;
 
