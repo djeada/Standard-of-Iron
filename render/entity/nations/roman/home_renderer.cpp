@@ -89,7 +89,7 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
   for (const QVector3D &column : columns) {
     desc.add_box(QVector3D(column.x(), 0.18F, column.z()),
                  QVector3D(col_radius * 1.2F, 0.04F, col_radius * 1.2F),
-                 c.marble);
+                 c.marble, BuildingStateMask::All, BuildingLODMask::Full);
     desc.add_cylinder(QVector3D(column.x(), 0.16F, column.z()),
                       QVector3D(column.x(),
                                 0.16F + col_height * height_multiplier,
@@ -99,18 +99,19 @@ auto build_home_archetype(BuildingState state) -> RenderArchetype {
                            0.16F + col_height * height_multiplier + 0.04F,
                            column.z()),
                  QVector3D(col_radius * 1.4F, 0.06F, col_radius * 1.4F),
-                 c.marble, kBuildingStateMaskIntact);
+                 c.marble, kBuildingStateMaskIntact, BuildingLODMask::Full);
   }
 
   desc.add_box(QVector3D(0.0F, 1.25F, 0.0F), QVector3D(1.05F, 0.06F, 1.05F),
                c.terracotta, kBuildingStateMaskIntact);
   desc.add_box(QVector3D(0.0F, 1.3F, 0.0F), QVector3D(1.0F, 0.04F, 1.0F),
-               c.terracotta_dark, kBuildingStateMaskIntact);
+               c.terracotta_dark, kBuildingStateMaskIntact,
+               BuildingLODMask::Full);
 
   desc.add_box(QVector3D(0.0F, 0.45F, 0.9F), QVector3D(0.3F, 0.4F, 0.05F),
                c.cedar_dark);
   desc.add_box(QVector3D(0.0F, 0.62F, 0.92F), QVector3D(0.32F, 0.04F, 0.02F),
-               c.blue_accent);
+               c.blue_accent, BuildingStateMask::All, BuildingLODMask::Full);
   return build_building_archetype(desc, state);
 }
 

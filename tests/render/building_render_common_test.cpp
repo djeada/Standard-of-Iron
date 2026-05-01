@@ -140,21 +140,42 @@ TEST(BuildingRenderCommon, RegisteredVariantDispatcherRoutesByNation) {
   EXPECT_EQ(carthage_calls, 1);
 }
 
-TEST(BuildingRenderCommon, BuildingInstanceAlwaysUsesFullLod) {
+TEST(BuildingRenderCommon, BuildingInstanceSelectsFullLodWhenNearby) {
   using namespace Render::GL;
 
   RenderArchetypeBuilder builder("building_lod_test");
+  builder.set_max_distance(60.0F);
   builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
   builder.use_lod(RenderArchetypeLod::Minimal);
   builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
   RenderArchetype archetype = std::move(builder).build();
 
   DrawContext ctx;
+  ctx.distance_sq = 10.0F * 10.0F;
   RecordingSubmitter submitter;
   submit_building_instance(submitter, ctx, archetype);
 
   ASSERT_EQ(submitter.meshes.size(), 1u);
   EXPECT_EQ(submitter.meshes.front().mesh, fake_mesh(1));
+}
+
+TEST(BuildingRenderCommon, BuildingInstanceSelectsMinimalLodWhenFar) {
+  using namespace Render::GL;
+
+  RenderArchetypeBuilder builder("building_lod_test_far");
+  builder.set_max_distance(60.0F);
+  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
+  builder.use_lod(RenderArchetypeLod::Minimal);
+  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
+  RenderArchetype archetype = std::move(builder).build();
+
+  DrawContext ctx;
+  ctx.distance_sq = 80.0F * 80.0F;
+  RecordingSubmitter submitter;
+  submit_building_instance(submitter, ctx, archetype);
+
+  ASSERT_EQ(submitter.meshes.size(), 1u);
+  EXPECT_EQ(submitter.meshes.front().mesh, fake_mesh(2));
 }
 
 TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {
