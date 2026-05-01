@@ -72,6 +72,10 @@ assets/campaign_map/*
 !assets/campaign_map/hannibal_path.json
 !assets/campaign_map/campaign_state.json
 
+# Generated creature animation and snapshot assets
+assets/creatures/*.bpat
+assets/creatures/*.bpsm
+
 # Local virtualenvs
 venv/
 
