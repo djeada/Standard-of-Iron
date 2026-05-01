@@ -105,6 +105,7 @@ TerrainPanel::TerrainPanel(QWidget *parent) : QWidget(parent) {
   noise_layout->addLayout(form);
 
   auto *regenerate_button = new QPushButton("Regenerate", noise_group);
+  regenerate_button->setProperty("primary", true);
   noise_layout->addWidget(regenerate_button);
 
   auto *debug_container = new QWidget(noise_group);
