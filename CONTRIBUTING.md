@@ -154,7 +154,7 @@ make test
 ## Commit Guidelines
 
 1. **Format your code**: Always run `make format` before committing
-2. **Build successfully**: Ensure `make build` completes without errors
+2. **Build successfully**: Ensure `make build` completes without errors; it also regenerates ignored creature assets in `assets/creatures/`
 3. **Test your changes**: Run relevant tests
 4. **Write clear commit messages**: Describe what and why, not just how
 

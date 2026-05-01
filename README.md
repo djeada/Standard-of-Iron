@@ -145,6 +145,7 @@ make arena
 - `make arena` uses the same map-pipeline/bootstrap flow, then builds just `arena_app` before launching the standalone Qt/OpenGL playground.
 - The pipeline downloads Natural Earth data and installs Python dependencies, so it needs network access the first time it runs.
 - Generated outputs live in `assets/campaign_map/` and are gitignored; tracked defaults include `campaign_state.json` and `hannibal_path.json`.
+- Generated creature animation outputs live in `assets/creatures/`; `make build` regenerates them with `bpat_baker`, and `make run` picks them up through its build dependency.
 - To force a rebuild: `make run-map-pipeline map_pipeline_rebuild=1`
 
 ### Running Tests
