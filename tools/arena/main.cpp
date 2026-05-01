@@ -270,7 +270,7 @@ QStatusBar::item {
 }
 )";
 
-} // namespace
+}
 
 auto main(int argc, char **argv) -> int {
   QSurfaceFormat fmt;

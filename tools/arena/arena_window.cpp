@@ -89,10 +89,9 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &QAction::setChecked);
   connect(m_viewport, &ArenaViewport::pausedChanged, m_unit_panel,
           &UnitPanel::setAnimationPaused);
-  connect(m_viewport, &ArenaViewport::pausedChanged, this,
-          [this](bool paused) {
-            m_status_label->setText(paused ? "Paused" : "Running");
-          });
+  connect(m_viewport, &ArenaViewport::pausedChanged, this, [this](bool paused) {
+    m_status_label->setText(paused ? "Paused" : "Running");
+  });
 
   connect(m_terrain_panel, &TerrainPanel::seedChanged, m_viewport,
           &ArenaViewport::setTerrainSeed);

@@ -3,6 +3,7 @@
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
+#include "scatter_renderer_state.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -27,11 +28,11 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    return m_grassInstanceBuffer != nullptr || m_grassInstanceCount == 0;
+    return m_grass_state.is_gpu_ready();
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_grassInstances.size();
+    return m_grass_state.instances.size();
   }
 
 private:
@@ -46,11 +47,9 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<GrassInstanceGpu> m_grassInstances;
-  std::unique_ptr<Buffer> m_grassInstanceBuffer;
-  std::size_t m_grassInstanceCount = 0;
-  GrassBatchParams m_grassParams;
-  bool m_grassInstancesDirty = false;
+  Render::Ground::Scatter::DirectRendererState<GrassInstanceGpu,
+                                               GrassBatchParams>
+      m_grass_state;
 };
 
 } // namespace Render::GL

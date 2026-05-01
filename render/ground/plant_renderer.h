@@ -3,6 +3,7 @@
 #include "../../game/map/terrain.h"
 #include "../decoration_gpu.h"
 #include "../i_render_pass.h"
+#include "scatter_renderer_state.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -25,17 +26,11 @@ public:
   void clear();
 
   [[nodiscard]] bool is_gpu_ready() const {
-    if (m_plantInstances.empty()) {
-      return true;
-    }
-    if (!m_visibility_dirty && m_visible_instances.empty()) {
-      return true;
-    }
-    return (m_visibleInstanceBuffer != nullptr) && !m_visibility_dirty;
+    return m_plant_state.is_gpu_ready();
   }
 
   [[nodiscard]] auto instance_count() const -> std::size_t {
-    return m_plantInstances.size();
+    return m_plant_state.instances.size();
   }
 
 private:
@@ -50,15 +45,9 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<PlantInstanceGpu> m_plantInstances;
-  std::unique_ptr<Buffer> m_visibleInstanceBuffer;
-  std::size_t m_plantInstanceCount = 0;
-  PlantBatchParams m_plantParams;
-  bool m_plantInstancesDirty = false;
-
-  std::vector<PlantInstanceGpu> m_visible_instances;
-  std::uint64_t m_cachedVisibilityVersion = 0;
-  bool m_visibility_dirty = true;
+  Render::Ground::Scatter::FilteredRendererState<PlantInstanceGpu,
+                                                 PlantBatchParams>
+      m_plant_state;
 };
 
 } // namespace Render::GL

@@ -19,12 +19,12 @@
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/submitter.h"
 #include "render/template_cache.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <array>
 #include <cmath>
-#include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <vector>
@@ -70,17 +70,6 @@ struct ScopedFlatTerrain {
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
-
-auto find_assets_dir() -> std::string {
-  for (auto const *candidate :
-       {"assets/creatures", "../assets/creatures", "../../assets/creatures"}) {
-    std::filesystem::path p{candidate};
-    if (std::filesystem::exists(p / "elephant.bpat")) {
-      return std::filesystem::absolute(p).string();
-    }
-  }
-  return {};
-}
 
 auto make_test_elephant_profile() -> Render::GL::ElephantProfile {
   Render::GL::ElephantProfile profile{};
@@ -156,7 +145,7 @@ TEST(ElephantPrepare, MainElephantRowProducesEntitySubmission) {
 }
 
 TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
-  auto const root = find_assets_dir();
+  auto const root = TestAssets::find_creature_assets_dir("elephant.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
   }

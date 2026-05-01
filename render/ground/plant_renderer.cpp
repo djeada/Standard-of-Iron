@@ -37,19 +37,15 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
   m_biome_settings = biome_settings;
   m_noiseSeed = biome_settings.seed;
 
-  m_plantInstances.clear();
-  m_visible_instances.clear();
-  m_plantInstanceCount = 0;
-  m_plantInstancesDirty = false;
-  m_cachedVisibilityVersion = 0;
-  m_visibility_dirty = true;
+  m_plant_state.reset_instances();
 
   const auto profiles = Game::Map::make_biome_profiles(m_biome_settings);
   const auto &wind_profile = profiles.wind;
-  m_plantParams.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
-  m_plantParams.time = 0.0F;
-  m_plantParams.wind_strength = wind_profile.sway_strength;
-  m_plantParams.wind_speed = wind_profile.sway_speed;
+  auto &plant_params = m_plant_state.params;
+  plant_params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
+  plant_params.time = 0.0F;
+  plant_params.wind_strength = wind_profile.sway_strength;
+  plant_params.wind_speed = wind_profile.sway_speed;
 
   generate_plant_instances();
 }
@@ -57,42 +53,36 @@ void PlantRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 void PlantRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   (void)resources;
 
-  const auto visible_count = Scatter::sync_filtered_instances(
-      m_plantInstances, m_visible_instances, m_visibleInstanceBuffer,
-      m_cachedVisibilityVersion, m_visibility_dirty,
-      [](const PlantInstanceGpu &instance) -> const QVector4D & {
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_plant_state, [](const PlantInstanceGpu &instance) -> const QVector4D & {
         return instance.pos_scale;
       });
-  if (visible_count == 0 || !m_visibleInstanceBuffer) {
+  if (visible_count == 0 || !m_plant_state.instance_buffer) {
     return;
   }
 
-  m_plantInstanceCount = visible_count;
-  PlantBatchParams params = m_plantParams;
+  PlantBatchParams params = m_plant_state.params;
   params.time = renderer.get_animation_time();
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Plant;
-  cmd.instance_buffer = m_visibleInstanceBuffer.get();
+  cmd.instance_buffer = m_plant_state.instance_buffer.get();
   cmd.instance_count = visible_count;
   cmd.plant = params;
   renderer.terrain_scatter(cmd);
 }
 
-void PlantRenderer::clear() {
-  m_plantInstances.clear();
-  m_visible_instances.clear();
-  m_plantInstanceCount = 0;
-  m_plantInstancesDirty = false;
-  m_visibility_dirty = true;
-  m_cachedVisibilityVersion = 0;
-}
+void PlantRenderer::clear() { m_plant_state.reset_instances(); }
 
 void PlantRenderer::generate_plant_instances() {
-  m_plantInstances.clear();
+  auto &plant_instances = m_plant_state.instances;
+  auto &plant_instance_count = m_plant_state.instance_count;
+  auto &plant_instances_dirty = m_plant_state.instances_dirty;
+
+  plant_instances.clear();
 
   if (m_width < 2 || m_height < 2 || m_height_data.empty()) {
-    m_plantInstanceCount = 0;
-    m_plantInstancesDirty = false;
+    plant_instance_count = 0;
+    plant_instances_dirty = false;
     return;
   }
 
@@ -102,8 +92,8 @@ void PlantRenderer::generate_plant_instances() {
       std::clamp(scatter_profile.plant_density, 0.0F, 2.0F);
 
   if (plant_density < 0.01F) {
-    m_plantInstanceCount = 0;
-    m_plantInstancesDirty = false;
+    plant_instance_count = 0;
+    plant_instances_dirty = false;
     return;
   }
 
@@ -161,7 +151,7 @@ void PlantRenderer::generate_plant_instances() {
         QVector4D(tint_color.x(), tint_color.y(), tint_color.z(), sway_phase);
     instance.type_params =
         QVector4D(plant_type, rotation, sway_strength, sway_speed);
-    m_plantInstances.push_back(instance);
+    plant_instances.push_back(instance);
     return true;
   };
 
@@ -216,8 +206,8 @@ void PlantRenderer::generate_plant_instances() {
     }
   }
 
-  m_plantInstanceCount = m_plantInstances.size();
-  m_plantInstancesDirty = m_plantInstanceCount > 0;
+  plant_instance_count = plant_instances.size();
+  plant_instances_dirty = plant_instance_count > 0;
 }
 
 } // namespace Render::GL

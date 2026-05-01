@@ -3,6 +3,7 @@
 #include "../../game/map/terrain.h"
 #include "../i_render_pass.h"
 #include "riverbank_asset_gpu.h"
+#include "scatter_renderer_state.h"
 #include <QVector3D>
 #include <cstdint>
 #include <memory>
@@ -38,15 +39,9 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  std::vector<RiverbankAssetInstanceGpu> m_asset_instances;
-  std::unique_ptr<Buffer> m_asset_instance_buffer;
-  std::size_t m_asset_instance_count = 0;
-  RiverbankAssetBatchParams m_assetParams;
-  bool m_asset_instances_dirty = false;
-
-  std::vector<RiverbankAssetInstanceGpu> m_visible_instances;
-  std::uint64_t m_cachedVisibilityVersion = 0;
-  bool m_visibility_dirty = true;
+  Render::Ground::Scatter::FilteredRendererState<RiverbankAssetInstanceGpu,
+                                                 RiverbankAssetBatchParams>
+      m_asset_state;
 };
 
 } // namespace Render::GL

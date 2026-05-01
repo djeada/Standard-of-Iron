@@ -2,6 +2,7 @@
 
 #include "../../game/map/map_definition.h"
 #include "../i_render_pass.h"
+#include "../terrain_scene_types.h"
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -37,6 +38,7 @@ public:
   [[nodiscard]] auto pine() const -> PineRenderer *;
   [[nodiscard]] auto olive() const -> OliveRenderer *;
   [[nodiscard]] auto firecamp() const -> FireCampRenderer *;
+  [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass *> &;
 
 private:

@@ -23,6 +23,7 @@ namespace {
 
 constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U,
                                                              3U, 4U, 5U};
+constexpr float k_ground_clearance_epsilon = 1.0e-5F;
 
 auto default_full_horse_request_seed(
     const Render::GL::DrawContext &ctx) noexcept -> std::uint32_t {
@@ -66,6 +67,10 @@ void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,
           .value_or(0.0F);
   Render::Creature::Pipeline::ground_model_contact_to_surface(model, contact_y,
                                                               y_scale);
+  auto const grounded_origin =
+      Render::Creature::Pipeline::model_world_origin(model);
+  Render::Creature::Pipeline::set_model_world_y(
+      model, grounded_origin.y() + k_ground_clearance_epsilon);
 }
 
 } // namespace

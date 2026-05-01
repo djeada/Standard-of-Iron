@@ -12,10 +12,15 @@ int main(int argc, char **argv) {
   QGuiApplication app(argc, argv);
 
   namespace fs = std::filesystem;
-  const std::array<fs::path, 4> roots{
+  const fs::path app_dir = fs::path(app.applicationDirPath().toStdString());
+  const std::array<fs::path, 8> roots{
       fs::current_path() / "assets" / "creatures",
       fs::current_path() / ".." / "assets" / "creatures",
       fs::current_path() / ".." / ".." / "assets" / "creatures",
+      app_dir / "assets" / "creatures",
+      app_dir / ".." / "assets" / "creatures",
+      app_dir / ".." / ".." / "assets" / "creatures",
+      fs::path("build") / "bin" / "assets" / "creatures",
       fs::path("assets") / "creatures",
   };
   auto &reg = Render::Creature::Bpat::BpatRegistry::instance();
