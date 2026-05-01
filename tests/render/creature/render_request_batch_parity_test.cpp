@@ -1,11 +1,4 @@
-// Phase 5 — request mirror parity.
-//
-// CreatureRenderBatch::add_humanoid/add_horse/add_elephant must emit
-// one CreatureRenderRequest per typed add, with archetype, world,
-// entity_id, seed and lod copied from the CreatureGraphOutput. This
-// invariant is what unblocks deleting the typed shim API later: callers
-// will switch to add_request() and we know the request carries every
-// piece of data the row carries today.
+
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -167,9 +160,9 @@ TEST(CreatureRenderBatch, RequestMirrorsHorseQuadrupedState) {
 
   Render::GL::HorseVariant variant{};
 
-  batch.add_quadruped(output, variant, AnimationStateId::Run, /*phase=*/0.25F);
-  batch.add_quadruped(output, variant, AnimationStateId::Walk, /*phase=*/0.0F);
-  batch.add_quadruped(output, variant, AnimationStateId::Idle, /*phase=*/0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Run, 0.25F);
+  batch.add_quadruped(output, variant, AnimationStateId::Walk, 0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 3u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kHorseBase);
@@ -185,8 +178,8 @@ TEST(CreatureRenderBatch, RequestMirrorsElephantQuadrupedState) {
 
   Render::GL::ElephantVariant variant{};
 
-  batch.add_quadruped(output, variant, AnimationStateId::Run, /*phase=*/0.7F);
-  batch.add_quadruped(output, variant, AnimationStateId::Idle, /*phase=*/0.0F);
+  batch.add_quadruped(output, variant, AnimationStateId::Run, 0.7F);
+  batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
   ASSERT_EQ(batch.requests().size(), 2u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kElephantBase);

@@ -89,7 +89,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsGrassDry) {
   EXPECT_FLOAT_EQ(settings.grass_primary.y(), 0.54F);
   EXPECT_FLOAT_EQ(settings.grass_primary.z(), 0.32F);
   EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.18F);
-  // Check ground-type-specific parameters
+
   EXPECT_FLOAT_EQ(settings.crack_intensity, 0.65F);
   EXPECT_FLOAT_EQ(settings.moisture_level, 0.15F);
   EXPECT_FLOAT_EQ(settings.grass_saturation, 0.75F);
@@ -104,7 +104,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilRocky) {
   EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.48F);
   EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.38F);
   EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.65F);
-  // Check ground-type-specific parameters
+
   EXPECT_FLOAT_EQ(settings.rock_exposure, 0.75F);
   EXPECT_FLOAT_EQ(settings.soil_roughness, 0.85F);
 }
@@ -118,7 +118,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsAlpineMix) {
   EXPECT_FLOAT_EQ(settings.rock_high.y(), 0.90F);
   EXPECT_FLOAT_EQ(settings.rock_high.z(), 0.94F);
   EXPECT_FLOAT_EQ(settings.terrain_ambient_boost, 1.25F);
-  // Check ground-type-specific parameters
+
   EXPECT_FLOAT_EQ(settings.snow_coverage, 0.55F);
   EXPECT_FLOAT_EQ(settings.snow_color.x(), 0.94F);
   EXPECT_FLOAT_EQ(settings.snow_color.y(), 0.96F);
@@ -134,7 +134,7 @@ TEST_F(GroundTypeTest, ApplyGroundTypeDefaultsSoilFertile) {
   EXPECT_FLOAT_EQ(settings.soil_color.y(), 0.16F);
   EXPECT_FLOAT_EQ(settings.soil_color.z(), 0.12F);
   EXPECT_FLOAT_EQ(settings.terrain_rock_detail_strength, 0.22F);
-  // Check ground-type-specific parameters
+
   EXPECT_FLOAT_EQ(settings.moisture_level, 0.80F);
   EXPECT_FLOAT_EQ(settings.grass_saturation, 1.15F);
   EXPECT_FLOAT_EQ(settings.rock_exposure, 0.12F);
@@ -210,7 +210,7 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
   QJsonObject biome;
   biome["ground_type"] = "alpine_mix";
   biome["seed"] = 99999;
-  // Override the grass primary color that would be set by alpine_mix defaults
+
   QJsonArray grass_primary;
   grass_primary.append(0.10);
   grass_primary.append(0.20);
@@ -239,7 +239,7 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::AlpineMix);
   EXPECT_EQ(map_def.biome.seed, 99999U);
-  // Grass primary should be the overridden values, not the alpine_mix defaults
+
   EXPECT_NEAR(map_def.biome.grass_primary.x(), 0.10F, 0.001F);
   EXPECT_NEAR(map_def.biome.grass_primary.y(), 0.20F, 0.001F);
   EXPECT_NEAR(map_def.biome.grass_primary.z(), 0.30F, 0.001F);

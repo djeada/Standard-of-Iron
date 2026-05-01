@@ -1,7 +1,4 @@
-// Phase A regression — horse prepare module.
-//
-// Verifies make_horse_prepared_row stamps the correct kind/pass/lod and that
-// Shadow-tagged horse rows are filtered by submit().
+
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
@@ -107,9 +104,9 @@ TEST(HorsePrepare, MakePreparedHorseRowStampsKindAndPass) {
 
   QMatrix4x4 world;
   const auto row = Render::Creature::Pipeline::make_prepared_creature_row(
-      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, /*seed*/ 11,
-      Render::Creature::CreatureLOD::Minimal,
-      /*entity_id*/ 0, Render::Creature::Pipeline::RenderPassIntent::Shadow);
+      spec, Render::Creature::Pipeline::CreatureKind::Horse, world, 11,
+      Render::Creature::CreatureLOD::Minimal, 0,
+      Render::Creature::Pipeline::RenderPassIntent::Shadow);
 
   EXPECT_EQ(row.spec.kind, Render::Creature::Pipeline::CreatureKind::Horse);
   EXPECT_EQ(row.lod, Render::Creature::CreatureLOD::Minimal);

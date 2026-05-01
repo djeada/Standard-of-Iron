@@ -82,6 +82,15 @@ auto HumanoidRendererBase::resolve_team_tint(const DrawContext &ctx)
   return tunic;
 }
 
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
+    -> int {
+  if (unit.render_individuals_per_unit_override > 0) {
+    return unit.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit.spawn_type);
+}
+
 auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
                                              const DrawContext &ctx)
     -> FormationParams {
@@ -93,9 +102,7 @@ auto HumanoidRendererBase::resolve_formation(const HumanoidRendererBase &owner,
   if (ctx.entity != nullptr) {
     auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
     if (unit != nullptr) {
-      params.individuals_per_unit =
-          Game::Units::TroopConfig::instance().get_individuals_per_unit(
-              unit->spawn_type);
+      params.individuals_per_unit = resolved_individuals_per_unit(*unit);
       params.max_per_row =
           Game::Units::TroopConfig::instance().get_max_units_per_row(
               unit->spawn_type);
@@ -362,10 +369,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     }
   }
 
+  int cols = std::max(
+      1, std::min(formation.max_per_row, formation.individuals_per_unit));
   const int rows =
-      (formation.individuals_per_unit + formation.max_per_row - 1) /
-      formation.max_per_row;
-  int cols = formation.max_per_row;
+      std::max(1, (formation.individuals_per_unit + cols - 1) / cols);
   int effective_rows = rows;
   if (ctx.force_single_soldier) {
     cols = 1;
@@ -381,11 +388,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                        st == SpawnType::HorseSpearman;
   }
 
-  int visible_count = effective_rows * cols;
+  int visible_count =
+      std::min(formation.individuals_per_unit, effective_rows * cols);
   if (!ctx.force_single_soldier && unit_comp != nullptr) {
     int const mh = std::max(1, unit_comp->max_health);
     float const ratio = std::clamp(unit_comp->health / float(mh), 0.0F, 1.0F);
-    visible_count = std::max(1, (int)std::ceil(ratio * float(rows * cols)));
+    visible_count = std::max(
+        1, std::min(
+               formation.individuals_per_unit,
+               (int)std::ceil(ratio * float(formation.individuals_per_unit))));
   }
 
   HumanoidVariant variant;

@@ -291,13 +291,18 @@ EXCLUDE_DIRS := ./$(BUILD_DIR) ./$(BUILD_TIDY_DIR) ./third_party
 EXCLUDE_PATHS := */venv/* */.venv/*
 EXCLUDE_FIND := $(foreach d,$(EXCLUDE_DIRS),-not -path "$(d)/*") \
 	$(foreach p,$(EXCLUDE_PATHS),-not -path "$(p)")
+COMMENT_STRIP_PATHS := app/ apps/ game/ render/ scripts/ tests/ tools/ ui/ assets/shaders/
+CXX_FORMAT_PATHS := main.cpp app apps game render tests tools
+QML_FORMAT_PATHS := app apps tools ui
+SHADER_FORMAT_PATHS := assets/shaders
+PY_FORMAT_PATHS := scripts tests tools
 
 format:
-	@echo "$(BOLD)$(BLUE)Stripping comments in app/... game/... render/... scripts/... tools/... ui/... assets/shaders/...$(RESET)"
+	@echo "$(BOLD)$(BLUE)Stripping comments in app/... apps/... game/... render/... scripts/... tests/... tools/... tools/arena/... ui/... assets/shaders/...$(RESET)"
 	@if [ -x scripts/remove-comments.sh ]; then \
-		./scripts/remove-comments.sh app/ game/ render/ scripts/ tools/ ui/ assets/shaders/; \
+		./scripts/remove-comments.sh $(COMMENT_STRIP_PATHS); \
 	elif [ -f scripts/remove-comments.sh ]; then \
-		bash scripts/remove-comments.sh app/ game/ render/ scripts/ tools/ ui/ assets/shaders/; \
+		bash scripts/remove-comments.sh $(COMMENT_STRIP_PATHS); \
 	else \
 		echo "$(RED)scripts/remove-comments.sh not found$(RESET)"; exit 1; \
 	fi
@@ -307,7 +312,7 @@ format:
 
 	@echo "$(BOLD)$(BLUE)Formatting C/C++ files with clang-format...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
-		find . -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
+		find $(CXX_FORMAT_PATHS) -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ C/C++ formatting complete$(RESET)"; \
 	else \
@@ -316,7 +321,7 @@ format:
 
 	@echo "$(BOLD)$(BLUE)Formatting QML files...$(RESET)"
 	@if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
-		find . -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND) -print0 \
+		find $(QML_FORMAT_PATHS) -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(QMLFORMAT) -i; \
 		echo "$(GREEN)✓ QML formatting complete$(RESET)"; \
 	else \
@@ -325,7 +330,7 @@ format:
 
 	@echo "$(BOLD)$(BLUE)Formatting shader files (.frag, .vert)...$(RESET)"
 	@if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
-		find . -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
+		find $(SHADER_FORMAT_PATHS) -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) -i --style=file; \
 		echo "$(GREEN)✓ Shader formatting complete$(RESET)"; \
 	else \
@@ -334,7 +339,7 @@ format:
 
 	@echo "$(BOLD)$(BLUE)Formatting Python files with black...$(RESET)"
 	@if command -v black >/dev/null 2>&1; then \
-		find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
+		find $(PY_FORMAT_PATHS) -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r black --quiet || true; \
 		echo "$(GREEN)✓ Python formatting complete$(RESET)"; \
 	else \
@@ -348,15 +353,15 @@ format-check:
 	@FAILED=0; \
 	if command -v $(CLANG_FORMAT) >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking C/C++ files...$(RESET)"; \
-		find . -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
+		find $(CXX_FORMAT_PATHS) -type f \( $(FMT_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 		echo "$(BLUE)Checking shader files...$(RESET)"; \
-		find . -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
+		find $(SHADER_FORMAT_PATHS) -type f \( $(SHADER_GLOBS) \) $(EXCLUDE_FIND) -print0 \
 		| xargs -0 -r $(CLANG_FORMAT) --dry-run -Werror --style=file || FAILED=1; \
 	fi; \
 	if command -v $(QMLFORMAT) >/dev/null 2>&1 || [ -x "$(QMLFORMAT)" ]; then \
 		echo "$(BLUE)Checking QML files...$(RESET)"; \
-		for file in $$(find . -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND)); do \
+		for file in $$(find $(QML_FORMAT_PATHS) -type f \( $(QML_GLOBS) \) $(EXCLUDE_FIND)); do \
 			$(QMLFORMAT) "$$file" > /tmp/qmlformat_check.tmp 2>/dev/null; \
 			if ! diff -q "$$file" /tmp/qmlformat_check.tmp >/dev/null 2>&1; then \
 				echo "$(RED)QML file needs formatting: $$file$(RESET)"; \
@@ -367,7 +372,7 @@ format-check:
 	fi; \
 	if command -v black >/dev/null 2>&1; then \
 		echo "$(BLUE)Checking Python files...$(RESET)"; \
-		if ! find . -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
+		if ! find $(PY_FORMAT_PATHS) -type f -name "*.py" $(EXCLUDE_FIND) -print0 \
 			| xargs -0 -r black --check --quiet; then \
 			echo "$(RED)Python files need formatting$(RESET)"; \
 			FAILED=1; \

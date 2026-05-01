@@ -1,11 +1,4 @@
-// Verifies the high-level CreatureRenderRequest interface — the new
-// game→render contract that carries no anatomy, sockets, or pose data.
-//
-// These tests exercise:
-//   - ArchetypeRegistry's baseline (humanoid/horse/elephant) bindings.
-//   - CreaturePipeline::submit_requests() routing logic: every request
-//     bumps entities_submitted, billboard LODs and unknown archetypes
-//     never produce rigged draw calls.
+
 
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
@@ -191,7 +184,7 @@ TEST(ArchetypeRegistryBaseline, GameplayStatesUseSnapshotCoverage) {
 
 TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {
   const auto &reg = ArchetypeRegistry::instance();
-  EXPECT_EQ(reg.bpat_clip(/*invalid id*/ 9999, AnimationStateId::Idle),
+  EXPECT_EQ(reg.bpat_clip(9999, AnimationStateId::Idle),
             ArchetypeDescriptor::kUnmappedClip);
   EXPECT_EQ(reg.get(9999), nullptr);
 }

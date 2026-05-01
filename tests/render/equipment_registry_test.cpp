@@ -8,17 +8,12 @@ using namespace Render::GL;
 
 namespace {
 
-// Mock equipment renderer for testing
 class MockEquipmentRenderer : public IEquipmentRenderer {
 public:
   explicit MockEquipmentRenderer(std::string name) : m_name(std::move(name)) {}
 
-  void render(const DrawContext & /*ctx*/, const BodyFrames & /*frames*/,
-              const HumanoidPalette & /*palette*/,
-              const HumanoidAnimationContext & /*anim*/,
-              EquipmentBatch & /*batch*/) override {
-    // Mock implementation - does nothing
-  }
+  void render(const DrawContext &, const BodyFrames &, const HumanoidPalette &,
+              const HumanoidAnimationContext &, EquipmentBatch &) override {}
 
   auto getName() const -> const std::string & { return m_name; }
 
@@ -30,10 +25,7 @@ private:
 
 class EquipmentRegistryTest : public ::testing::Test {
 protected:
-  void SetUp() override {
-    // Get fresh registry instance for each test
-    registry = &EquipmentRegistry::instance();
-  }
+  void SetUp() override { registry = &EquipmentRegistry::instance(); }
 
   EquipmentRegistry *registry = nullptr;
 };
@@ -42,7 +34,6 @@ TEST_F(EquipmentRegistryTest, SingletonInstance) {
   auto &instance1 = EquipmentRegistry::instance();
   auto &instance2 = EquipmentRegistry::instance();
 
-  // Verify same instance is returned
   EXPECT_EQ(&instance1, &instance2);
 }
 
@@ -146,7 +137,7 @@ TEST_F(EquipmentRegistryTest, OverwriteExistingEquipment) {
   auto retrieved = registry->get(EquipmentCategory::Helmet, "helmet");
 
   ASSERT_NE(retrieved, nullptr);
-  EXPECT_EQ(retrieved, helmet2); // Should get the second one
+  EXPECT_EQ(retrieved, helmet2);
 }
 
 TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {

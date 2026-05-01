@@ -321,7 +321,7 @@ inline auto get_river_passes(float base_width) -> std::vector<StrokePass> {
       {{0.55F, 0.68F, 0.78F, 0.50F}, 0.4F, 0.002F}};
 }
 
-} // namespace CartographicStyles
+} 
 
 inline auto compute_normal_from_heights(float h_left, float h_right,
                                         float h_down, float h_up,
@@ -440,7 +440,7 @@ inline constexpr RegionFocus k_focus_alps = {0.52F, 0.28F, 0.85F, 55.0F,
 inline constexpr RegionFocus k_focus_sicily = {0.58F, 0.48F, 0.75F, 52.0F,
                                                185.0F};
 
-} // namespace CinematicCameraDefaults
+} 
 
 enum class BadgeStyle { Standard, Seal, Banner, Shield, Medallion };
 
@@ -870,7 +870,7 @@ inline auto sea_label() -> LabelStyle {
           .line_height = 1.2F};
 }
 
-} // namespace LabelStyles
+} 
 
 inline auto
 generate_label_quads(const QVector2D &position, const std::string &text,
@@ -935,4 +935,4 @@ inline auto compute_label_scale(float viewport_height, float camera_distance,
   return base_size * px_to_uv;
 }
 
-} // namespace CampaignMapRender
+} 

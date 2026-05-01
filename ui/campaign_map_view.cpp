@@ -2232,7 +2232,7 @@ void main() {
   }
 };
 
-} // namespace
+} 
 
 CampaignMapView::CampaignMapView() { setMirrorVertically(true); }
 

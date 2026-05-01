@@ -1,6 +1,4 @@
-// Regression tests for the unified declarative creature LOD decision module.
-// Locks the policy so future preparation-stage refactors can't silently
-// flip humanoid / horse / elephant LOD behavior.
+
 
 #include "render/creature/pipeline/lod_decision.h"
 
@@ -90,10 +88,10 @@ TEST(CreatureLodDecision, BudgetIgnoredWhenNotEnabled) {
 
 TEST(CreatureLodDecision, TemporalSkipMinimalFiresWhenFarAndOffPhase) {
   auto in = make_inputs(46.0F);
-  in.thresholds = {12.0F, 80.0F}; // 46 -> Minimal
+  in.thresholds = {12.0F, 80.0F};
   in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 1U;
-  in.instance_seed = 0U; // (1+0)%3 == 1 != 0 -> temporal skip culls
+  in.instance_seed = 0U;
   const auto d = decide_creature_lod(in);
   EXPECT_EQ(d.lod, CreatureLOD::Minimal);
   EXPECT_TRUE(d.culled);
@@ -105,7 +103,7 @@ TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
   in.thresholds = {12.0F, 80.0F};
   in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 2U;
-  in.instance_seed = 1U; // (2+1)%3 == 0 -> render
+  in.instance_seed = 1U;
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
   EXPECT_EQ(d.lod, CreatureLOD::Minimal);
@@ -113,10 +111,10 @@ TEST(CreatureLodDecision, TemporalSkipMinimalRendersOnPhase) {
 
 TEST(CreatureLodDecision, TemporalSkipDoesNotApplyBelowThreshold) {
   auto in = make_inputs(20.0F);
-  in.thresholds = {12.0F, 80.0F}; // 20 -> Minimal
+  in.thresholds = {12.0F, 80.0F};
   in.temporal = TemporalSkipParams{45.0F, 3U};
   in.frame_index = 1U;
-  in.instance_seed = 0U; // would skip if applied
+  in.instance_seed = 0U;
   const auto d = decide_creature_lod(in);
   EXPECT_FALSE(d.culled);
   EXPECT_EQ(d.lod, CreatureLOD::Minimal);
@@ -129,8 +127,7 @@ TEST(CreatureLodDecision, TemporalPeriodOneAlwaysRenders) {
 }
 
 TEST(CreatureLodDecision, ForcedLodWithBillboardIsNotCulled) {
-  // Forced overrides take precedence; if game wants billboard explicitly
-  // it gets billboard without culling — culling is the rig path.
+
   auto in = make_inputs(0.0F);
   in.forced_lod = CreatureLOD::Billboard;
   const auto d = decide_creature_lod(in);

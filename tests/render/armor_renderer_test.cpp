@@ -142,7 +142,6 @@ TEST_F(ArmorRendererTest, RomanGreavesRegistered) {
   ASSERT_NE(armor, nullptr);
 }
 
-// Test new separate Carthaginian archer armor files
 TEST_F(ArmorRendererTest, ArmorLightCarthageRegistered) {
   auto armor = registry->get(EquipmentCategory::Armor, "armor_light_carthage");
   ASSERT_NE(armor, nullptr);
@@ -153,7 +152,6 @@ TEST_F(ArmorRendererTest, ArmorHeavyCarthageRegistered) {
   ASSERT_NE(armor, nullptr);
 }
 
-// Verify both new armor variants share the same helmet
 TEST_F(ArmorRendererTest, CarthageArcherArmorSharesHelmet) {
   auto light_armor =
       registry->get(EquipmentCategory::Armor, "armor_light_carthage");

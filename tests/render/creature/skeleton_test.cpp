@@ -1,14 +1,4 @@
-// Stage 16.1 — generic creature skeleton tests.
-//
-// These tests exercise `render/creature/skeleton.*` independently of any
-// species-specific module. They use a small hand-authored 4-bone "toy
-// biped" topology so that every assertion is about the generic machinery:
-// topology validation, orthonormal basis construction, parent-chain
-// evaluation, socket offset composition, name-based lookup, and
-// degenerate-bone fallback.
-//
-// If one of these fails the break is in the framework, not in any
-// creature spec.
+
 
 #include "render/creature/skeleton.h"
 
@@ -22,15 +12,6 @@ namespace {
 
 using namespace Render::Creature;
 
-// A deliberately minimal topology: root → torso → head (tip), plus an
-// arm side-branch root → shoulder → hand.
-//
-//   0 Root      (no parent, world-up, origin = pelvis)
-//   1 Torso     (from_head_tail: pelvis → chest)
-//   2 Head      (from_parent: origin = head_pos)
-//   3 Shoulder  (from_parent: origin = shoulder_pos)
-//   4 Arm       (from_head_tail: shoulder → hand)
-//   5 Hand      (from_parent: origin = hand_pos, zero-length tip)
 constexpr std::array<BoneDef, 6> kToyBones = {
     BoneDef{"root", kInvalidBone}, BoneDef{"torso", 0}, BoneDef{"head", 1},
     BoneDef{"shoulder", 1},        BoneDef{"arm", 3},   BoneDef{"hand", 4},
@@ -49,7 +30,6 @@ auto toy_topology() noexcept -> SkeletonTopology {
   };
 }
 
-// Joint positions representing a T-pose toy biped standing at origin.
 struct ToySample {
   QVector3D pelvis{0.0F, 1.0F, 0.0F};
   QVector3D chest{0.0F, 1.5F, 0.0F};
@@ -121,7 +101,7 @@ TEST(CreatureTopologyTest, ToyTopologyValidates) {
 
 TEST(CreatureTopologyTest, RejectsNonTopologicalParentOrder) {
   std::array<BoneDef, 2> bad = {
-      BoneDef{"a", 1}, // parent index >= own index
+      BoneDef{"a", 1},
       BoneDef{"b", kInvalidBone},
   };
   SkeletonTopology t{std::span<const BoneDef>(bad.data(), bad.size()), {}};
@@ -217,7 +197,7 @@ TEST(CreatureEvaluatorTest, ArmLongAxisPointsAlongShoulderToHand) {
 }
 
 TEST(CreatureEvaluatorTest, DegenerateBoneInheritsParentBasis) {
-  // Collapse the torso to a zero-length bone by making chest == pelvis.
+
   ToySample sample;
   sample.chest = sample.pelvis;
   std::array<QMatrix4x4, 6> palette;
@@ -225,7 +205,6 @@ TEST(CreatureEvaluatorTest, DegenerateBoneInheritsParentBasis) {
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
 
-  // Torso should inherit the root's basis (world-up), not produce NaN.
   QVector3D const y = palette[1].column(1).toVector3D();
   EXPECT_NEAR(y.y(), 1.0F, 1e-4F);
   EXPECT_TRUE(is_orthonormal(palette[1]));
@@ -237,7 +216,7 @@ TEST(CreatureEvaluatorTest, ZeroRightAxisFallsBackToWorldX) {
   evaluate_skeleton(toy_topology(), toy_provider, &sample,
                     QVector3D(0.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
-  // Root X axis must collapse to world-+X since right hint was zero.
+
   QVector3D const x = palette[0].column(0).toVector3D();
   EXPECT_NEAR(x.x(), 1.0F, 1e-4F);
 }
@@ -249,11 +228,10 @@ TEST(CreatureEvaluatorTest, ParentTransformPropagatesThroughChain) {
                     QVector3D(1.0F, 0.0F, 0.0F),
                     std::span<QMatrix4x4>(palette));
 
-  // Hand basis (FromParent) must match arm basis (its parent) in orientation.
   QVector3D const arm_y = palette[4].column(1).toVector3D();
   QVector3D const hand_y = palette[5].column(1).toVector3D();
   EXPECT_LT((arm_y - hand_y).length(), 1e-5F);
-  // but hand origin differs (it's at sample.hand).
+
   EXPECT_LT((palette[5].column(3).toVector3D() - sample.hand).length(), 1e-5F);
 }
 
@@ -265,9 +243,8 @@ TEST(CreatureSocketTest, HeadSocketAppliesLocalOffsetInBoneAxes) {
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
-  QVector3D const crown = socket_position(t, p, 0); // head_crown socket
-  // Y offset = 0.1m along head bone's Y axis (inherited from torso, so +Y
-  // world).
+  QVector3D const crown = socket_position(t, p, 0);
+
   EXPECT_LT((crown - (sample.head + QVector3D(0.0F, 0.1F, 0.0F))).length(),
             1e-5F);
 }
@@ -280,7 +257,7 @@ TEST(CreatureSocketTest, HandGripMatchesHandPosition) {
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
-  QVector3D const grip = socket_position(t, p, 1); // hand_grip socket
+  QVector3D const grip = socket_position(t, p, 1);
   EXPECT_LT((grip - sample.hand).length(), 1e-5F);
 }
 
@@ -292,7 +269,7 @@ TEST(CreatureSocketTest, AttachmentFrameIsOrthonormal) {
                     std::span<QMatrix4x4>(palette));
   auto const t = toy_topology();
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
-  auto const frame = socket_attachment_frame(t, p, 2); // chest_front
+  auto const frame = socket_attachment_frame(t, p, 2);
   EXPECT_NEAR(frame.right.lengthSquared(), 1.0F, 1e-4F);
   EXPECT_NEAR(frame.up.lengthSquared(), 1.0F, 1e-4F);
   EXPECT_NEAR(frame.forward.lengthSquared(), 1.0F, 1e-4F);
@@ -305,8 +282,7 @@ TEST(CreatureSocketTest, OutOfRangeSocketReturnsIdentity) {
   std::span<const QMatrix4x4> p(palette.data(), palette.size());
   QMatrix4x4 const m = socket_transform(t, p, 99);
   QMatrix4x4 identity;
-  // All zero matrix from default-constructed result — not identity, but
-  // safely constant. The contract: no crash, no NaN.
+
   EXPECT_FALSE(std::isnan(m(0, 0)));
 }
 
@@ -318,7 +294,7 @@ TEST(CreaturePrimitiveTest, MakeBoneBasisIsOrthonormal) {
 }
 
 TEST(CreaturePrimitiveTest, MakeBoneBasisHandlesColinearRightHint) {
-  // right_hint parallel to bone axis — must not produce a zero X axis.
+
   QMatrix4x4 const m =
       make_bone_basis(QVector3D(0.0F, 0.0F, 0.0F), QVector3D(0.0F, 1.0F, 0.0F),
                       QVector3D(0.0F, 1.0F, 0.0F));

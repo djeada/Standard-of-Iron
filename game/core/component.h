@@ -87,6 +87,8 @@ public:
   int owner_id{0};
   float vision_range;
   Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
+  int render_individuals_per_unit_override{0};
+  bool render_rider{true};
 };
 
 class MovementComponent : public Component {

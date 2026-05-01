@@ -50,7 +50,6 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
   constexpr std::uint32_t bone_count = 20U;
   BpatWriter w(kSpeciesHumanoid, bone_count);
 
-  // Two clips of different lengths.
   ClipDescriptor idle{"idle", 4U, 30.0F, true};
   ClipDescriptor walk{"walk", 6U, 30.0F, true};
 
@@ -89,7 +88,6 @@ TEST(BpatWriter, WriteAndReadbackRoundTripsClipsAndPalettes) {
   EXPECT_EQ(walk_view.name, "walk");
   EXPECT_EQ(walk_view.frame_offset, idle.frame_count);
 
-  // Spot check palette values, including row-major ordering.
   for (std::uint32_t f = 0; f < idle.frame_count; ++f) {
     for (std::uint32_t b = 0; b < bone_count; ++b) {
       auto span = blob.palette_matrix(f, b);
@@ -175,7 +173,7 @@ TEST(BpatReader, RejectsBadVersion) {
     m.setToIdentity();
   w.append_clip_palettes(palettes);
   auto bytes = serialize(w);
-  // Bump version field at byte offset 4.
+
   bytes[4] = 99U;
   auto blob = BpatBlob::from_bytes(std::move(bytes));
   EXPECT_FALSE(blob.loaded());

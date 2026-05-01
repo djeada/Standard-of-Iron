@@ -1,9 +1,4 @@
-// Stage 11 — StaticAnchorResolver + StaticPaletteResolver +
-// interpretation of the barracks structural rig.
-//
-// We can't exercise the GL submitter here without a context, so the
-// tests intercept parts via a recording ISubmitter and assert on the
-// *emitted* matrices/colours.
+
 
 #include "render/rig_dsl/defs/barracks_rig.h"
 #include "render/rig_dsl/rig_interpreter.h"
@@ -36,9 +31,6 @@ public:
     m_records.push_back({model, color, alpha});
   }
 
-  // Remaining ISubmitter methods: no-ops for this test. We don't care
-  // about the emission channel — only that the rig interpreter reaches
-  // mesh/part for each part it iterates.
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -120,20 +112,9 @@ TEST(BarracksRigTest, PlatformBaseBoxHasExpectedCenterAndScale) {
   EXPECT_NEAR(corner.z(), 1.8F, 1e-4F);
 }
 
-// Regression guard against Stage 11 barracks migration drift.
-//
-// For every structural part the rig emits, assert that the model matrix
-// it produces sends the unit-cube corners (-1,-1,-1) and (+1,+1,+1) to
-// the same world positions the legacy imperative `draw_box(center,
-// halfExt)` would have produced. This directly exercises the rig
-// interpreter's Box anchor-pair semantics end-to-end.
 TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
   using namespace Render::RigDSL::Barracks;
 
-  // Legacy-equivalent (center, halfExt) for each anchor-pair the rig
-  // uses. These are lifted verbatim from the pre-Stage-11 barracks
-  // renderer — if a migration error drifts any part, the test will say
-  // which one.
   struct LegacyBox {
     Render::RigDSL::AnchorId low;
     Render::RigDSL::AnchorId high;
@@ -255,7 +236,7 @@ TEST(BarracksRigTest, AllBoxPartsMatchLegacyDrawBoxTransforms) {
 TEST(BarracksRigTest, RigIteratesAllParts) {
   using namespace Render::RigDSL::Barracks;
   Render::RigDSL::StaticAnchorResolver<Goods_Amp3Top + 1U> anchors;
-  // Any non-degenerate values work: we only check part count.
+
   for (std::size_t i = 0; i <= static_cast<std::size_t>(Goods_Amp3Top); ++i) {
     anchors.set(static_cast<Render::RigDSL::AnchorId>(i),
                 QVector3D(static_cast<float>(i), static_cast<float>(i) + 0.5F,

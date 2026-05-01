@@ -76,6 +76,9 @@ public:
   }
   void set_hovered_entity_id(unsigned int id) { m_hovered_entity_id = id; }
   void set_local_owner_id(int owner_id) { m_local_owner_id = owner_id; }
+  void set_force_full_creature_lod(bool enabled) {
+    m_force_full_creature_lod = enabled;
+  }
 
   void set_frame_budget(const FrameBudgetConfig &config) {
     if (m_backend) {
@@ -298,6 +301,7 @@ private:
 
   std::mutex m_world_mutex;
   int m_local_owner_id = 1;
+  bool m_force_full_creature_lod = false;
 
   QMatrix4x4 m_view_proj;
   Shader *m_current_shader = nullptr;

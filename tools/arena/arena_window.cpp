@@ -77,8 +77,8 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_terrain_panel, &TerrainPanel::rainIntensityChanged, m_viewport,
           &ArenaViewport::setRainIntensity);
 
-  connect(m_unit_panel, &UnitPanel::spawnUnitRequested, m_viewport,
-          &ArenaViewport::spawnUnit);
+  connect(m_unit_panel, &UnitPanel::spawnUnitsRequested, m_viewport,
+          &ArenaViewport::spawnUnits);
   connect(m_unit_panel, &UnitPanel::clearUnitsRequested, m_viewport,
           &ArenaViewport::clearUnits);
   connect(m_unit_panel, &UnitPanel::spawnOwnerSelected, m_viewport,
@@ -87,6 +87,18 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &ArenaViewport::setSpawnNation);
   connect(m_unit_panel, &UnitPanel::unitTypeSelected, m_viewport,
           &ArenaViewport::setSpawnUnitType);
+  connect(m_unit_panel, &UnitPanel::spawnIndividualsPerUnitChanged, m_viewport,
+          &ArenaViewport::setSpawnIndividualsPerUnit);
+  connect(m_unit_panel, &UnitPanel::spawnRiderVisibilityChanged, m_viewport,
+          &ArenaViewport::setSpawnRiderVisible);
+  connect(m_unit_panel, &UnitPanel::applyVisualOverridesRequested, m_viewport,
+          &ArenaViewport::applyVisualOverridesToSelection);
+  connect(m_unit_panel, &UnitPanel::spawnOpposingBatchRequested, m_viewport,
+          &ArenaViewport::spawnOpposingBatch);
+  connect(m_unit_panel, &UnitPanel::spawnMirrorMatchRequested, m_viewport,
+          &ArenaViewport::spawnMirrorMatch);
+  connect(m_unit_panel, &UnitPanel::resetArenaRequested, m_viewport,
+          &ArenaViewport::resetArena);
   connect(m_unit_panel, &UnitPanel::animationSelected, m_viewport,
           &ArenaViewport::setAnimationName);
   connect(m_unit_panel, &UnitPanel::playAnimationRequested, m_viewport,
@@ -99,6 +111,8 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
           &ArenaViewport::setMovementSpeed);
   connect(m_unit_panel, &UnitPanel::skeletonDebugToggled, m_viewport,
           &ArenaViewport::setSkeletonDebugEnabled);
+  connect(m_viewport, &ArenaViewport::selectionSummaryChanged, m_unit_panel,
+          &UnitPanel::setSelectionSummary);
 
   m_viewport->setSpawnOwner(m_unit_panel->selectedOwnerId());
   m_viewport->setSpawnNation(m_unit_panel->selectedNationId());

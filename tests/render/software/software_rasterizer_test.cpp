@@ -1,4 +1,4 @@
-// Tests for the Stage-13 SoftwareRasterizer. No OpenGL context required.
+
 
 #include "render/software/software_rasterizer.h"
 
@@ -69,8 +69,7 @@ TEST(SoftwareRasterizerTest, TriangleBehindCameraCulled) {
   s.height = 64;
   SoftwareRasterizer r(s);
   r.set_view_projection(make_view_proj());
-  // Camera is at z=5 looking toward origin. Put a tri at z=+20 (behind
-  // camera).
+
   ColoredTriangle tri{{-1, -1, 20}, {1, -1, 20}, {0, 1, 20}, {1, 1, 1}, 1.0F};
   r.submit(tri);
   QImage img = r.render();
@@ -84,10 +83,10 @@ TEST(SoftwareRasterizerTest, PainterAlgorithmNearerOverwritesFarther) {
   s.clear_color = QColor(0, 0, 0, 255);
   SoftwareRasterizer r(s);
   r.set_view_projection(make_view_proj());
-  // Far red triangle, big.
+
   r.submit(ColoredTriangle{
       {-2, -2, -2}, {2, -2, -2}, {0, 2, -2}, {1.0F, 0.0F, 0.0F}, 1.0F});
-  // Near green triangle, small, in the center.
+
   r.submit(ColoredTriangle{{-0.3F, -0.3F, 1},
                            {0.3F, -0.3F, 1},
                            {0.0F, 0.3F, 1},
@@ -121,7 +120,7 @@ TEST(SoftwareRasterizerTest, OutsideNdcIsCulled) {
   s.height = 64;
   SoftwareRasterizer r(s);
   r.set_view_projection(make_view_proj());
-  // Far off-screen to the right — all three verts NDC.x > 1.2.
+
   r.submit(
       ColoredTriangle{{50, -1, 0}, {52, -1, 0}, {51, 1, 0}, {1, 1, 1}, 1.0F});
   QImage img = r.render();
