@@ -15,6 +15,8 @@
 #include "../../../submitter.h"
 #include "../../../template_cache.h"
 #include "../../barracks_flag_renderer.h"
+#include "../../building_archetype_desc.h"
+#include "../../building_render_common.h"
 #include "../../building_state.h"
 #include "../../registry.h"
 
@@ -25,9 +27,7 @@
 namespace Render::GL::Roman {
 namespace {
 
-using Render::Geom::clamp01;
 using Render::Geom::clamp_vec_01;
-using Render::Geom::cylinder_between;
 
 struct RomanPalette {
   QVector3D limestone{0.96F, 0.94F, 0.88F};
@@ -56,17 +56,13 @@ inline auto make_palette(const QVector3D &team) -> RomanPalette {
 inline void draw_box(ISubmitter &out, Mesh *unit, Texture *white,
                      const QMatrix4x4 &model, const QVector3D &pos,
                      const QVector3D &size, const QVector3D &color) {
-  QMatrix4x4 m = model;
-  m.translate(pos);
-  m.scale(size);
-  out.mesh(unit, m, color, white, 1.0F);
+  submit_building_box(out, unit, white, model, pos, size, color);
 }
 
 inline void draw_cyl(ISubmitter &out, const QMatrix4x4 &model,
                      const QVector3D &a, const QVector3D &b, float r,
                      const QVector3D &color, Texture *white) {
-  out.mesh(get_unit_cylinder(), model * cylinder_between(a, b, r), color, white,
-           1.0F);
+  submit_building_cylinder(out, model, a, b, r, color, white);
 }
 
 void draw_static_structure(const DrawContext &p, ISubmitter &out);
@@ -76,19 +72,6 @@ void draw_colonnade(const DrawContext &p, ISubmitter &out, Mesh *unit,
                     Texture *white, const RomanPalette &c, BuildingState state);
 void draw_terrace(const DrawContext &p, ISubmitter &out, Mesh *unit,
                   Texture *white, const RomanPalette &c, BuildingState state);
-
-auto build_archetype_from_recorded(
-    std::string name, const std::vector<Render::GL::RecordedMeshCmd> &commands)
-    -> RenderArchetype {
-  RenderArchetypeBuilder builder(std::move(name));
-  builder.set_max_distance(std::numeric_limits<float>::infinity());
-  for (const auto &cmd : commands) {
-    builder.add_mesh(cmd.mesh, cmd.local_model, cmd.color, cmd.texture,
-                     cmd.alpha, cmd.material_id,
-                     const_cast<Material *>(cmd.material));
-  }
-  return std::move(builder).build();
-}
 
 auto build_barracks_archetype(BuildingState state, Mesh *unit,
                               Texture *white) -> RenderArchetype {
@@ -103,28 +86,18 @@ auto build_barracks_archetype(BuildingState state, Mesh *unit,
   draw_platform(local_ctx, recorder, unit, white, palette);
   draw_colonnade(local_ctx, recorder, unit, white, palette, state);
   draw_terrace(local_ctx, recorder, unit, white, palette, state);
-  return build_archetype_from_recorded("roman_barracks",
-                                       recorder.take_commands());
+  return build_building_archetype_from_recorded("roman_barracks",
+                                                recorder.take_commands());
 }
 
 auto barracks_archetype(BuildingState state, Mesh *unit,
                         Texture *white) -> const RenderArchetype & {
-  static const RenderArchetype k_normal =
-      build_barracks_archetype(BuildingState::Normal, unit, white);
-  static const RenderArchetype k_damaged =
-      build_barracks_archetype(BuildingState::Damaged, unit, white);
-  static const RenderArchetype k_destroyed =
-      build_barracks_archetype(BuildingState::Destroyed, unit, white);
-
-  switch (state) {
-  case BuildingState::Normal:
-    return k_normal;
-  case BuildingState::Damaged:
-    return k_damaged;
-  case BuildingState::Destroyed:
-    return k_destroyed;
-  }
-  return k_normal;
+  static const BuildingArchetypeSet k_set =
+      build_stateful_building_archetype_set(
+          [unit, white](BuildingState current_state) {
+            return build_barracks_archetype(current_state, unit, white);
+          });
+  return k_set.for_state(state);
 }
 
 void draw_platform(const DrawContext &p, ISubmitter &out, Mesh *unit,
@@ -306,68 +279,26 @@ void draw_phoenician_banner(
     const DrawContext &p, ISubmitter &out, Mesh *unit, Texture *white,
     const RomanPalette &c,
     const BarracksFlagRenderer::ClothBannerResources *cloth) {
-  float const pole_x = 0.0F;
-  float const pole_z = -2.0F;
-  float const pole_height = 3.0F;
-  float const pole_radius = 0.045F;
-  float const banner_width = 0.9F;
-  float const banner_height = 0.6F;
-
-  QVector3D const pole_center(pole_x, pole_height / 2.0F, pole_z);
-  QVector3D const pole_size(pole_radius * 1.8F, pole_height / 2.0F,
-                            pole_radius * 1.8F);
-
-  QMatrix4x4 pole_transform = p.model;
-  pole_transform.translate(pole_center);
-  pole_transform.scale(pole_size);
-  out.mesh(unit, pole_transform, c.cedar, white, 1.0F);
-
-  float const beam_length = banner_width * 0.5F;
-  float const max_lowering = pole_height * 0.85F;
-
-  auto captureColors = BarracksFlagRenderer::get_capture_colors(
-      p, c.team, c.team_trim, max_lowering);
-
-  float beam_y =
-      pole_height - banner_height * 0.2F - captureColors.lowering_offset;
-  float flag_y =
-      pole_height - banner_height / 2.0F - captureColors.lowering_offset;
-
-  QVector3D const beam_start(pole_x + 0.02F, beam_y, pole_z);
-  QVector3D const beam_end(pole_x + beam_length + 0.02F, beam_y, pole_z);
-  out.mesh(get_unit_cylinder(),
-           p.model * Render::Geom::cylinder_between(beam_start, beam_end,
-                                                    pole_radius * 0.35F),
-           c.cedar, white, 1.0F);
-
-  QVector3D const connector_top(
-      beam_end.x(), beam_end.y() - banner_height * 0.35F, beam_end.z());
-  out.mesh(get_unit_cylinder(),
-           p.model * Render::Geom::cylinder_between(beam_end, connector_top,
-                                                    pole_radius * 0.18F),
-           c.limestone, white, 1.0F);
-
-  float const panel_x = beam_end.x() + (banner_width * 0.5F - beam_length);
-
-  QVector3D banner_center(panel_x, flag_y, pole_z + 0.02F);
-  BarracksFlagRenderer::draw_banner_with_tassels(
-      p, out, unit, white, banner_center, banner_width * 0.5F,
-      banner_height * 0.5F, 0.02F, captureColors.teamColor,
-      captureColors.team_trim_color, cloth);
-
-  draw_box(out, unit, white, p.model,
-           QVector3D(pole_x + 0.25F, pole_height + 0.15F, pole_z + 0.03F),
-           QVector3D(0.35F, 0.03F, 0.015F), c.gold);
-
-  for (int i = 0; i < 4; ++i) {
-    float ring_y = 0.4F + static_cast<float>(i) * 0.5F;
-    out.mesh(get_unit_cylinder(),
-             p.model * Render::Geom::cylinder_between(
-                           QVector3D(pole_x, ring_y, pole_z),
-                           QVector3D(pole_x, ring_y + 0.025F, pole_z),
-                           pole_radius * 2.0F),
-             c.gold, white, 1.0F);
-  }
+  BarracksFlagRenderer::draw_hanging_banner(
+      p, out, unit, white, c.team, c.team_trim,
+      {.pole_base = QVector3D(0.0F, 0.0F, -2.0F),
+       .pole_height = 3.0F,
+       .pole_radius = 0.045F,
+       .banner_width = 0.9F,
+       .banner_height = 0.6F,
+       .pole_color = c.cedar,
+       .beam_color = c.cedar,
+       .connector_color = c.limestone,
+       .ornament_offset = QVector3D(0.25F, 3.15F, 0.03F),
+       .ornament_size = QVector3D(0.35F, 0.03F, 0.015F),
+       .ornament_color = c.gold,
+       .ring_count = 4,
+       .ring_y_start = 0.4F,
+       .ring_spacing = 0.5F,
+       .ring_height = 0.025F,
+       .ring_radius_scale = 2.0F,
+       .ring_color = c.gold},
+      cloth);
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
@@ -380,136 +311,6 @@ void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
   BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors);
 }
 
-void draw_health_bar(const DrawContext &p, ISubmitter &out, Mesh *unit,
-                     Texture *white) {
-  if (p.entity == nullptr) {
-    return;
-  }
-  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
-  if (u == nullptr) {
-    return;
-  }
-
-  float const ratio =
-      std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
-  if (ratio <= 0.0F) {
-    return;
-  }
-
-  auto *capture = p.entity->get_component<Engine::Core::CaptureComponent>();
-  bool under_attack = (capture != nullptr && capture->is_being_captured);
-
-  if (!under_attack && u->health >= u->max_health) {
-    return;
-  }
-
-  float const bar_width = 1.4F;
-  float const bar_height = 0.10F;
-  float const bar_y = 2.75F;
-  float const border_thickness = 0.012F;
-
-  if (under_attack) {
-    float pulse = HEALTHBAR_PULSE_MIN +
-                  HEALTHBAR_PULSE_AMPLITUDE *
-                      sinf(p.animation_time * HEALTHBAR_PULSE_SPEED);
-    draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-             QVector3D(bar_width * 0.5F + border_thickness * 3.0F,
-                       bar_height * 0.5F + border_thickness * 3.0F, 0.095F),
-             HealthBarColors::GLOW_ATTACK * pulse * 0.6F);
-  }
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-           QVector3D(bar_width * 0.5F + border_thickness,
-                     bar_height * 0.5F + border_thickness, 0.09F),
-           HealthBarColors::BORDER);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y, 0.0F),
-           QVector3D(bar_width * 0.5F + border_thickness * 0.5F,
-                     bar_height * 0.5F + border_thickness * 0.5F, 0.088F),
-           HealthBarColors::INNER_BORDER);
-
-  draw_box(out, unit, white, p.model, QVector3D(0.0F, bar_y + 0.003F, 0.0F),
-           QVector3D(bar_width * 0.5F, bar_height * 0.5F, 0.085F),
-           HealthBarColors::BACKGROUND);
-
-  QVector3D fg_color;
-  QVector3D fg_dark;
-
-  if (ratio >= HEALTH_THRESHOLD_NORMAL) {
-    fg_color = HealthBarColors::NORMAL_BRIGHT;
-    fg_dark = HealthBarColors::NORMAL_DARK;
-  } else if (ratio >= HEALTH_THRESHOLD_DAMAGED) {
-
-    float t = (ratio - HEALTH_THRESHOLD_DAMAGED) /
-              (HEALTH_THRESHOLD_NORMAL - HEALTH_THRESHOLD_DAMAGED);
-    fg_color = HealthBarColors::NORMAL_BRIGHT * t +
-               HealthBarColors::DAMAGED_BRIGHT * (1.0F - t);
-    fg_dark = HealthBarColors::NORMAL_DARK * t +
-              HealthBarColors::DAMAGED_DARK * (1.0F - t);
-  } else {
-
-    float t = ratio / HEALTH_THRESHOLD_DAMAGED;
-    fg_color = HealthBarColors::DAMAGED_BRIGHT * t +
-               HealthBarColors::CRITICAL_BRIGHT * (1.0F - t);
-    fg_dark = HealthBarColors::DAMAGED_DARK * t +
-              HealthBarColors::CRITICAL_DARK * (1.0F - t);
-  }
-
-  draw_box(
-      out, unit, white, p.model,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.005F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.48F, 0.08F), fg_dark);
-
-  draw_box(
-      out, unit, white, p.model,
-      QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F, bar_y + 0.008F, 0.0F),
-      QVector3D(bar_width * ratio * 0.5F, bar_height * 0.40F, 0.078F),
-      fg_color);
-
-  QVector3D const highlight = fg_color * 1.6F;
-  draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                     bar_y + bar_height * 0.35F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.20F, 0.075F),
-           clamp_vec_01(highlight));
-
-  draw_box(out, unit, white, p.model,
-           QVector3D(-(bar_width * (1.0F - ratio)) * 0.5F,
-                     bar_y + bar_height * 0.48F, 0.0F),
-           QVector3D(bar_width * ratio * 0.5F, bar_height * 0.08F, 0.073F),
-           HealthBarColors::SHINE * 0.8F);
-
-  float marker_70_x = bar_width * 0.5F * (HEALTH_THRESHOLD_NORMAL - 0.5F);
-  draw_box(out, unit, white, p.model, QVector3D(marker_70_x, bar_y, 0.0F),
-           QVector3D(0.015F, bar_height * 0.55F, 0.09F),
-           HealthBarColors::SEGMENT);
-  draw_box(out, unit, white, p.model,
-           QVector3D(marker_70_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-           QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-           HealthBarColors::SEGMENT_HIGHLIGHT);
-
-  float marker_30_x = bar_width * 0.5F * (HEALTH_THRESHOLD_DAMAGED - 0.5F);
-  draw_box(out, unit, white, p.model, QVector3D(marker_30_x, bar_y, 0.0F),
-           QVector3D(0.015F, bar_height * 0.55F, 0.09F),
-           HealthBarColors::SEGMENT);
-  draw_box(out, unit, white, p.model,
-           QVector3D(marker_30_x - 0.003F, bar_y + bar_height * 0.40F, 0.0F),
-           QVector3D(0.008F, bar_height * 0.15F, 0.091F),
-           HealthBarColors::SEGMENT_HIGHLIGHT);
-}
-
-void draw_selection(const DrawContext &p, ISubmitter &out) {
-  QMatrix4x4 m;
-  QVector3D const pos = p.model.column(3).toVector3D();
-  m.translate(pos.x(), 0.0F, pos.z());
-  m.scale(2.6F, 1.0F, 2.2F);
-  if (p.selected) {
-    out.selection_smoke(m, QVector3D(0.2F, 0.85F, 0.2F), 0.35F);
-  } else if (p.hovered) {
-    out.selection_smoke(m, QVector3D(0.95F, 0.92F, 0.25F), 0.22F);
-  }
-}
-
 void draw_barracks(const DrawContext &p, ISubmitter &out) {
   if (!p.resources || !p.entity) {
     return;
@@ -517,16 +318,8 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
 
   auto *t = p.entity->get_component<Engine::Core::TransformComponent>();
   auto *r = p.entity->get_component<Engine::Core::RenderableComponent>();
-  auto *u = p.entity->get_component<Engine::Core::UnitComponent>();
   if (!t || !r) {
     return;
-  }
-
-  BuildingState state = BuildingState::Normal;
-  if (u != nullptr) {
-    float const health_ratio =
-        std::clamp(u->health / float(std::max(1, u->max_health)), 0.0F, 1.0F);
-    state = get_building_state(health_ratio);
   }
 
   Mesh *unit = p.resources->unit();
@@ -540,24 +333,19 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
     cloth.banner_shader = p.backend->banner_shader();
   }
 
-  const RenderArchetype &archetype = barracks_archetype(state, unit, white);
-  RenderInstance instance;
-  instance.archetype = &archetype;
-  instance.world = p.model;
-  instance.default_texture = white;
-  instance.lod = RenderArchetypeLod::Full;
-  submit_render_instance(out, instance);
-
+  submit_building_instance(
+      out, p, barracks_archetype(resolve_building_state(p), unit, white));
   draw_phoenician_banner(p, out, unit, white, c, &cloth);
   draw_rally_flag(p, out, white, c);
-  draw_health_bar(p, out, unit, white);
-  draw_selection(p, out);
+  draw_building_health_bar(out, p,
+                           BuildingHealthBarStyle{1.4F, 0.10F, 2.75F, true});
+  draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.6F, 2.2F});
 }
 
 } // namespace
 
 void register_barracks_renderer(Render::GL::EntityRendererRegistry &registry) {
-  registry.register_renderer("barracks_roman", draw_barracks);
+  register_building_renderer(registry, "roman", "barracks", draw_barracks);
 }
 
 } // namespace Render::GL::Roman

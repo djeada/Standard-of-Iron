@@ -99,6 +99,8 @@ add_library(render_gl STATIC
     entity/healing_waves_renderer.cpp
     entity/healer_aura_renderer.cpp
     entity/combat_dust_renderer.cpp
+    entity/building_archetype_desc.cpp
+    entity/building_render_common.cpp
     entity/barracks_renderer.cpp
     entity/nations/roman/barracks_renderer.cpp
     entity/nations/carthage/barracks_renderer.cpp

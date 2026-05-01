@@ -5,7 +5,7 @@
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
 #include "../systems/troop_profile_service.h"
-#include "../visuals/team_colors.h"
+#include "building_spawn_setup.h"
 #include "troop_config.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
@@ -33,10 +33,6 @@ void Barracks::init(const SpawnParams &params) {
                    params.position.z()};
   m_t->scale = {1.8F, 1.2F, 1.8F};
 
-  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
-  m_r->visible = true;
-  m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = params.spawn_type;
   m_u->health = 2000;
@@ -51,15 +47,7 @@ void Barracks::init(const SpawnParams &params) {
   } else {
   }
 
-  QVector3D const tc = Game::Visuals::team_colorForOwner(m_u->owner_id);
-  m_r->color[0] = tc.x();
-  m_r->color[1] = tc.y();
-  m_r->color[2] = tc.z();
-
-  auto *building = e->add_component<Engine::Core::BuildingComponent>();
-  if (building != nullptr) {
-    building->original_nation_id = nation_id;
-  }
+  m_r = add_building_renderable(*e, m_u->owner_id, nation_id, m_type_string);
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
