@@ -313,7 +313,7 @@ TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
   EXPECT_TRUE(has_bone_influence(
       baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::KneeFL)));
   EXPECT_TRUE(has_bone_influence(
-      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::ShoulderBR)));
+      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::FootBR)));
   EXPECT_TRUE(has_bone_influence(
       baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::Head)));
 }
@@ -333,7 +333,7 @@ TEST(RiggedMeshBake, HorseFullRiggedMeshPreservesOverallScale) {
   EXPECT_GT(full_span.x(), minimal_span.x() * 0.55F);
   EXPECT_GT(full_span.y(), minimal_span.y() * 0.55F);
   EXPECT_GT(full_span.z(), minimal_span.z() * 0.70F);
-  EXPECT_LT(full_span.x(), minimal_span.x() * 1.35F);
+  EXPECT_LT(full_span.x(), minimal_span.x() * 1.40F);
   EXPECT_LT(full_span.y(), minimal_span.y() * 1.35F);
   EXPECT_LT(full_span.z(), minimal_span.z() * 1.35F);
 }

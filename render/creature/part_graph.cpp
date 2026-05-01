@@ -206,6 +206,25 @@ auto submit_part_graph(
                               prim.params.half_extents);
       break;
 
+    case PrimitiveShape::BoneSpanMesh: {
+      mesh_ptr = prim.custom_mesh;
+      if (mesh_ptr == nullptr) {
+        ++stats.skipped_invalid;
+        continue;
+      }
+      QMatrix4x4 const &tail_m = palette[tail];
+      QVector3D const tail_world =
+          bone_world_offset(tail_m, prim.params.tail_offset);
+      QVector3D const right_ref = anchor_m.column(0).toVector3D();
+      float const r_right = prim.params.radius;
+      float const r_forward = (prim.params.depth_radius > 0.0F)
+                                  ? prim.params.depth_radius
+                                  : prim.params.radius;
+      unit_model = Render::Geom::oriented_cylinder(
+          head_world, tail_world, right_ref, r_right, r_forward);
+      break;
+    }
+
     case PrimitiveShape::None:
     default:
       ++stats.skipped_invalid;

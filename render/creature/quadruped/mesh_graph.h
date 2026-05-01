@@ -83,8 +83,14 @@ struct TubeNode {
   std::uint8_t ring_vertices{6U};
 };
 
-using MeshNodeData = std::variant<BarrelNode, EllipsoidNode, ColumnLegNode,
-                                  SnoutNode, FlatFanNode, ConeNode, TubeNode>;
+struct CustomMeshNode {
+  std::vector<Render::GL::Vertex> vertices{};
+  std::vector<unsigned int> indices{};
+};
+
+using MeshNodeData =
+    std::variant<BarrelNode, EllipsoidNode, ColumnLegNode, SnoutNode,
+                 FlatFanNode, ConeNode, TubeNode, CustomMeshNode>;
 
 struct MeshNode {
   std::string_view debug_name{};

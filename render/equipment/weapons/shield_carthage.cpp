@@ -86,9 +86,10 @@ auto get_unit_hemisphere_mesh() -> Mesh * {
 }
 
 constexpr float k_base_shield_diameter = 1.08F;
+constexpr float k_shield_grip_standoff = 0.25F;
 
 auto shield_center_local(float shield_radius) -> QVector3D {
-  return {-shield_radius * 0.45F, -0.02F, 0.05F};
+  return {shield_radius * k_shield_grip_standoff, -0.02F, 0.05F};
 }
 
 auto carthage_shield_archetype(float scale_multiplier)

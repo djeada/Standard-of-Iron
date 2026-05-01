@@ -92,6 +92,17 @@ TEST_F(BattleRenderOptimizerTest, TemporalCullingAlternatesBetweenFrames) {
   EXPECT_NE(frame1_result, frame2_result);
 }
 
+TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {
+  auto &optimizer = BattleRenderOptimizer::instance();
+  optimizer.set_visible_unit_count(100);
+
+  optimizer.begin_frame();
+  EXPECT_TRUE(optimizer.should_render_unit(1, false, false, false, true));
+
+  optimizer.begin_frame();
+  EXPECT_TRUE(optimizer.should_render_unit(1, false, false, false, true));
+}
+
 TEST_F(BattleRenderOptimizerTest,
        AnimationThrottlingBelowThresholdAlwaysUpdates) {
   auto &optimizer = BattleRenderOptimizer::instance();
@@ -139,6 +150,17 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
   EXPECT_GT(updated, 0);
 }
 
+TEST_F(BattleRenderOptimizerTest, CombatAnimationsAreNeverThrottled) {
+  auto &optimizer = BattleRenderOptimizer::instance();
+  optimizer.set_visible_unit_count(100);
+
+  for (int frame = 0; frame < 6; ++frame) {
+    optimizer.begin_frame();
+    EXPECT_TRUE(
+        optimizer.should_update_animation(1, 100.0F * 100.0F, false, true));
+  }
+}
+
 TEST_F(BattleRenderOptimizerTest, BatchingBoostIncreasesWithUnitCount) {
   auto &optimizer = BattleRenderOptimizer::instance();
 
@@ -177,8 +199,8 @@ TEST_F(BattleRenderOptimizerTest, StatsResetOnBeginFrame) {
   optimizer.set_visible_unit_count(100);
 
   optimizer.begin_frame();
-  optimizer.should_render_unit(1, false, false, false);
-  optimizer.should_render_unit(2, false, false, false);
+  (void)optimizer.should_render_unit(1, false, false, false);
+  (void)optimizer.should_render_unit(2, false, false, false);
 
   optimizer.begin_frame();
   EXPECT_EQ(optimizer.units_rendered_this_frame(), 0);

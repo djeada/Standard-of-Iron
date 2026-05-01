@@ -1,6 +1,7 @@
 #include "preparation_common.h"
 
 #include "../../../game/core/component.h"
+#include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
 #include "../../elephant/elephant_spec.h"
 #include "../../entity/registry.h"
@@ -35,8 +36,7 @@ auto derive_unit_seed(const Render::GL::DrawContext &ctx,
     seed ^= static_cast<std::uint32_t>(unit->owner_id * 2654435761U);
   }
   if (ctx.entity != nullptr) {
-    seed ^= static_cast<std::uint32_t>(
-        reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
+    seed ^= ctx.entity->get_id() * 2246822519U;
   }
   return seed;
 }

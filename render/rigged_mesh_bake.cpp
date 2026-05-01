@@ -81,6 +81,7 @@ auto is_two_bone_blend(PrimitiveShape shape) -> bool {
   case PrimitiveShape::Cylinder:
   case PrimitiveShape::Capsule:
   case PrimitiveShape::OrientedCylinder:
+  case PrimitiveShape::BoneSpanMesh:
     return true;
   default:
     return false;
@@ -122,6 +123,14 @@ auto projection_factor(const QVector3D &point, const QVector3D &start,
                     1.0F);
 }
 
+auto point_to_segment_distance_sq(const QVector3D &point,
+                                  const QVector3D &start,
+                                  const QVector3D &end) -> float {
+  float const t = projection_factor(point, start, end);
+  QVector3D const closest = start + (end - start) * t;
+  return (point - closest).lengthSquared();
+}
+
 auto select_leg_chain(const QVector3D &pos,
                       std::span<const LegChain> legs) -> const LegChain * {
   const LegChain *best = nullptr;
@@ -141,6 +150,47 @@ auto select_leg_chain(const QVector3D &pos,
       continue;
     }
     float const score = dx * dx + dz * dz + dy * dy * 0.15F;
+    if (score < best_score) {
+      best_score = score;
+      best = &leg;
+    }
+  }
+  return best;
+}
+
+auto select_horse_leg_chain(
+    const QVector3D &pos, std::span<const LegChain> legs) -> const LegChain * {
+  const LegChain *best = nullptr;
+  float best_score = 1.0e9F;
+  for (auto const &leg : legs) {
+    if (pos.y() > leg.shoulder_pos.y() - 0.03F) {
+      continue;
+    }
+
+    float const lateral_gate = std::abs(leg.shoulder_pos.x()) * 0.55F;
+    if (std::abs(pos.x()) < lateral_gate) {
+      continue;
+    }
+
+    float const dz = pos.z() - leg.shoulder_pos.z();
+    float const z_limit =
+        std::abs(leg.shoulder_pos.z() - leg.foot_pos.z()) * 0.60F + 0.10F;
+    if (std::abs(dz) > z_limit) {
+      continue;
+    }
+
+    float const upper_dist_sq =
+        point_to_segment_distance_sq(pos, leg.shoulder_pos, leg.knee_pos);
+    float const lower_dist_sq =
+        point_to_segment_distance_sq(pos, leg.knee_pos, leg.foot_pos);
+    float const leg_len = (leg.foot_pos - leg.shoulder_pos).length();
+    float const dist_limit = leg_len * 0.14F + 0.03F;
+    float const dist_limit_sq = dist_limit * dist_limit;
+    float const score = std::min(upper_dist_sq, lower_dist_sq);
+    if (score > dist_limit_sq) {
+      continue;
+    }
+
     if (score < best_score) {
       best_score = score;
       best = &leg;
@@ -197,7 +247,7 @@ auto horse_whole_mesh_blend(const QVector3D &pos,
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::KneeBR)),
        bone_origin(bind_pose, static_cast<BoneIndex>(Bone::FootBR))},
   }};
-  if (auto const *leg = select_leg_chain(pos, legs); leg != nullptr) {
+  if (auto const *leg = select_horse_leg_chain(pos, legs); leg != nullptr) {
     return blend_leg_chain(pos, *leg);
   }
 
@@ -307,6 +357,8 @@ auto resolve_unit_mesh(const PrimitiveInstance &prim) -> Mesh * {
     return Render::GL::get_unit_cube();
   case PrimitiveShape::Mesh:
     return prim.custom_mesh;
+  case PrimitiveShape::BoneSpanMesh:
+    return prim.custom_mesh;
   case PrimitiveShape::None:
   default:
     return nullptr;
@@ -403,6 +455,22 @@ auto compute_unit_model(const PrimitiveInstance &prim,
     out_model =
         mesh_model(anchor_m, prim.params.head_offset, prim.params.half_extents);
     return true;
+
+  case PrimitiveShape::BoneSpanMesh: {
+    if (prim.custom_mesh == nullptr) {
+      return false;
+    }
+    QVector3D const tail_world =
+        bone_world_offset(bind_pose[tail], prim.params.tail_offset);
+    QVector3D const right_ref = anchor_m.column(0).toVector3D();
+    float const r_right = prim.params.radius;
+    float const r_forward = (prim.params.depth_radius > 0.0F)
+                                ? prim.params.depth_radius
+                                : prim.params.radius;
+    out_model = Render::Geom::oriented_cylinder(head_world, tail_world,
+                                                right_ref, r_right, r_forward);
+    return true;
+  }
 
   case PrimitiveShape::None:
   default:
