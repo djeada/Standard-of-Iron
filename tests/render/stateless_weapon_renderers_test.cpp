@@ -605,7 +605,8 @@ TEST(StatelessWeaponRenderers, CarthageShieldUsesArchetypePath) {
 }
 
 TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
-  const auto frames = make_frames();
+  auto frames = make_frames();
+  frames.hand_l.right = {1.0F, 0.0F, 0.0F};
   const auto anim = make_anim();
   const auto palette = make_palette();
   const auto ctx = make_ctx();
@@ -623,6 +624,9 @@ TEST(StatelessWeaponRenderers, CarthageShieldOffsetsFromHandOrigin) {
   const float side_offset = QVector3D::dotProduct(world_center - grip.origin,
                                                   grip.right.normalized());
   EXPECT_GT(std::abs(side_offset), 0.08F);
+  const auto [min_side, max_side] =
+      project_aabb_on_axis(world_box, grip.origin, grip.right.normalized());
+  EXPECT_GT(min_side, 0.04F);
   EXPECT_GT(std::abs(world_center.z() - frames.hand_l.origin.z()), 0.02F);
 
   const AABB box = archetype_local_aabb(*batch.archetypes.front().archetype);

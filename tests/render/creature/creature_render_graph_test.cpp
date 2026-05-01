@@ -104,10 +104,12 @@ TEST(CreatureRenderGraph, HorseConfigFromSettingsReturnsValidConfig) {
 }
 
 TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
+  auto &settings = Render::GraphicsSettings::instance();
+  settings.set_quality(Render::GraphicsQuality::High);
+
   auto config = elephant_lod_config_from_settings();
   EXPECT_GT(config.thresholds.full, 0.0F);
   EXPECT_GT(config.thresholds.minimal, config.thresholds.full);
-  auto const &settings = Render::GraphicsSettings::instance();
   EXPECT_FLOAT_EQ(config.thresholds.full,
                   settings.elephant_full_detail_distance());
   EXPECT_FLOAT_EQ(config.thresholds.minimal,
@@ -115,10 +117,13 @@ TEST(CreatureRenderGraph, ElephantConfigFromSettingsReturnsValidConfig) {
   EXPECT_GT(config.thresholds.full, settings.horse_full_detail_distance());
   EXPECT_GT(config.thresholds.minimal,
             settings.horse_minimal_detail_distance());
+
+  settings.set_quality(Render::GraphicsQuality::Ultra);
 }
 
 TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
-  auto const &settings = Render::GraphicsSettings::instance();
+  auto &settings = Render::GraphicsSettings::instance();
+  settings.set_quality(Render::GraphicsQuality::High);
 
   EXPECT_EQ(
       quadruped_lod_from_settings(CreatureKind::Elephant,
@@ -128,6 +133,35 @@ TEST(CreatureRenderGraph, QuadrupedLodUsesElephantDistances) {
                 CreatureKind::Elephant,
                 settings.elephant_full_detail_distance() + 1.0F),
             CreatureLOD::Minimal);
+
+  settings.set_quality(Render::GraphicsQuality::Ultra);
+}
+
+TEST(CreatureRenderGraph, UltraSettingsKeepTroopLodFullAtLongDistance) {
+  auto &settings = Render::GraphicsSettings::instance();
+  settings.set_quality(Render::GraphicsQuality::Ultra);
+
+  CreatureGraphInputs inputs;
+  inputs.camera_distance = 100000.0F;
+  inputs.has_camera = true;
+  inputs.budget_grant_full = false;
+
+  auto humanoid =
+      evaluate_creature_lod(inputs, humanoid_lod_config_from_settings());
+  auto horse = evaluate_creature_lod(inputs, horse_lod_config_from_settings());
+  auto elephant =
+      evaluate_creature_lod(inputs, elephant_lod_config_from_settings());
+
+  EXPECT_EQ(humanoid.lod, CreatureLOD::Full);
+  EXPECT_FALSE(humanoid.culled);
+  EXPECT_EQ(horse.lod, CreatureLOD::Full);
+  EXPECT_FALSE(horse.culled);
+  EXPECT_EQ(elephant.lod, CreatureLOD::Full);
+  EXPECT_FALSE(elephant.culled);
+  EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Horse, 100000.0F),
+            CreatureLOD::Full);
+  EXPECT_EQ(quadruped_lod_from_settings(CreatureKind::Elephant, 100000.0F),
+            CreatureLOD::Full);
 }
 
 TEST(CreatureRenderGraph, SettingsConfigIncludesTemporalParams) {

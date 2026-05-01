@@ -25,6 +25,7 @@ enum class PrimitiveShape : std::uint8_t {
   Cone,
   Box,
   Mesh,
+  BoneSpanMesh,
 
   OrientedCylinder,
 

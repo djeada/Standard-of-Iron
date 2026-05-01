@@ -51,12 +51,13 @@ public:
 
   [[nodiscard]] auto
   should_render_unit(uint32_t entity_id, bool is_moving, bool is_selected,
-                     bool is_hovered) const noexcept -> bool {
+                     bool is_hovered,
+                     bool is_combat_active = false) const noexcept -> bool {
     if (!is_battle_mode()) {
       return true;
     }
 
-    if (is_selected || is_hovered || is_moving) {
+    if (is_selected || is_hovered || is_moving || is_combat_active) {
       return true;
     }
 
@@ -74,14 +75,15 @@ public:
 
   [[nodiscard]] auto
   should_update_animation(uint32_t entity_id, float distance_sq,
-                          bool is_selected) const noexcept -> bool {
+                          bool is_selected,
+                          bool is_combat_active = false) const noexcept -> bool {
     BattleRenderConfig cfg;
     {
       std::lock_guard<std::mutex> lock(m_config_mutex);
       cfg = m_config;
     }
 
-    if (!cfg.enabled) {
+    if (!cfg.enabled || is_combat_active) {
       return true;
     }
 

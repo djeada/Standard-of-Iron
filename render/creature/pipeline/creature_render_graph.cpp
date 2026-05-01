@@ -14,6 +14,7 @@
 #include "../../../game/core/entity.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace Render::Creature::Pipeline {
 
@@ -30,6 +31,21 @@ constexpr float kElephantMinimalDistance = 60.0F;
 
 constexpr float kTemporalMinimalDistance = 45.0F;
 constexpr std::uint32_t kTemporalMinimalPeriod = 3;
+
+constexpr float kUltraTroopFullDistance =
+    std::numeric_limits<float>::max() / 4.0F;
+constexpr float kUltraTroopMinimalDistance =
+    std::numeric_limits<float>::max() / 2.0F;
+
+[[nodiscard]] auto ultra_troop_lod_config() noexcept -> CreatureLodConfig {
+  CreatureLodConfig config;
+  config.thresholds.full = kUltraTroopFullDistance;
+  config.thresholds.minimal = kUltraTroopMinimalDistance;
+  config.temporal.distance_minimal = kUltraTroopMinimalDistance;
+  config.temporal.period_minimal = 1U;
+  config.apply_visibility_budget = false;
+  return config;
+}
 
 } // namespace
 
@@ -65,6 +81,10 @@ auto elephant_lod_config() noexcept -> CreatureLodConfig {
 
 auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
+  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+    return ultra_troop_lod_config();
+  }
+
   CreatureLodConfig config;
   config.thresholds.full = gs.humanoid_full_detail_distance();
   config.thresholds.minimal = gs.humanoid_minimal_detail_distance();
@@ -76,6 +96,10 @@ auto humanoid_lod_config_from_settings() noexcept -> CreatureLodConfig {
 
 auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
+  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+    return ultra_troop_lod_config();
+  }
+
   CreatureLodConfig config;
   config.thresholds.full = gs.horse_full_detail_distance();
   config.thresholds.minimal = gs.horse_minimal_detail_distance();
@@ -87,6 +111,10 @@ auto horse_lod_config_from_settings() noexcept -> CreatureLodConfig {
 
 auto elephant_lod_config_from_settings() noexcept -> CreatureLodConfig {
   const auto &gs = Render::GraphicsSettings::instance();
+  if (gs.quality() == Render::GraphicsQuality::Ultra) {
+    return ultra_troop_lod_config();
+  }
+
   CreatureLodConfig config;
   config.thresholds.full = gs.elephant_full_detail_distance();
   config.thresholds.minimal = gs.elephant_minimal_detail_distance();
@@ -156,8 +184,7 @@ auto build_base_graph_output(const CreatureGraphInputs &inputs,
   }
 
   if (inputs.entity != nullptr) {
-    output.entity_id = static_cast<EntityId>(
-        reinterpret_cast<std::uintptr_t>(inputs.entity) & 0xFFFFFFFFU);
+    output.entity_id = static_cast<EntityId>(inputs.entity->get_id());
   }
 
   return output;

@@ -183,8 +183,9 @@ auto make_horse_muzzle_ring(float cx, float cz, float top_y, float bot_y,
   float const y0 = top_y;
   float const y1 = top_y - h * 0.16F;
   float const y2 = top_y - h * 0.34F;
-  float const y3 = bot_y + h * 0.32F;
-  float const y4 = bot_y + h * 0.14F;
+  float const y3 = bot_y + h * 0.36F;
+  float const y4 = bot_y + h * 0.22F;
+  float const y5 = bot_y + h * 0.16F;
 
   return {
       {cx, y0, cz},
@@ -192,7 +193,8 @@ auto make_horse_muzzle_ring(float cx, float cz, float top_y, float bot_y,
       {cx + half_w, y2, cz},
       {cx + half_w * 0.88F, y3, cz},
       {cx + half_w * 0.46F, y4, cz},
-      {cx, bot_y + h * 0.10F, cz},
+      {cx + half_w * 0.14F, y5, cz},
+      {cx - half_w * 0.14F, y5, cz},
       {cx - half_w * 0.46F, y4, cz},
       {cx - half_w * 0.88F, y3, cz},
       {cx - half_w, y2, cz},
@@ -435,6 +437,11 @@ auto build_tube_mesh(const TubeNode &node)
                               node.ring_vertices);
 }
 
+auto build_custom_mesh(const CustomMeshNode &node)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  return std::make_unique<Render::GL::Mesh>(node.vertices, node.indices);
+}
+
 auto compile_node_mesh(const MeshNodeData &data)
     -> std::unique_ptr<Render::GL::Mesh> {
   return std::visit(
@@ -452,8 +459,10 @@ auto compile_node_mesh(const MeshNodeData &data)
           return build_flat_fan_mesh(node);
         } else if constexpr (std::is_same_v<T, ConeNode>) {
           return build_cone_mesh(node);
-        } else {
+        } else if constexpr (std::is_same_v<T, TubeNode>) {
           return build_tube_mesh(node);
+        } else {
+          return build_custom_mesh(node);
         }
       },
       data);
