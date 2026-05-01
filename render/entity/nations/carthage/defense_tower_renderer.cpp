@@ -41,7 +41,6 @@ auto tower_archetype() -> const RenderArchetype & {
     TowerPalette const c = make_palette(QVector3D(1.0F, 1.0F, 1.0F));
     BuildingArchetypeDesc desc("carthage_defense_tower");
 
-    // Outer stepped foundation for visual weight
     desc.add_box(QVector3D(0.0F, 0.05F, 0.0F), QVector3D(1.15F, 0.05F, 1.15F),
                  c.stone_base);
     desc.add_box(QVector3D(0.0F, 0.15F, 0.0F), QVector3D(1.0F, 0.15F, 1.0F),
@@ -64,19 +63,18 @@ auto tower_archetype() -> const RenderArchetype & {
     desc.add_box(QVector3D(0.0F, 1.2F, 0.0F), QVector3D(0.75F, 0.7F, 0.75F),
                  c.stone_light);
 
-    // Mid-body decorative band visible on tower faces
     desc.add_box(QVector3D(0.0F, 1.18F, 0.0F), QVector3D(0.78F, 0.04F, 0.78F),
                  c.stone_dark, BuildingStateMask::All, BuildingLODMask::Full);
 
-    // Taller corner columns with decorative stone caps
     for (int i = 0; i < 4; ++i) {
       float const angle = static_cast<float>(i) * 1.57F;
       float const ox = sinf(angle) * 0.65F;
       float const oz = cosf(angle) * 0.65F;
-      desc.add_cylinder(QVector3D(ox, 0.4F, oz), QVector3D(ox, 2.05F, oz), 0.15F,
-                        c.stone_dark);
+      desc.add_cylinder(QVector3D(ox, 0.4F, oz), QVector3D(ox, 2.05F, oz),
+                        0.15F, c.stone_dark);
       desc.add_box(QVector3D(ox, 2.12F, oz), QVector3D(0.20F, 0.07F, 0.20F),
-                   c.stone_light, BuildingStateMask::All, BuildingLODMask::Full);
+                   c.stone_light, BuildingStateMask::All,
+                   BuildingLODMask::Full);
     }
 
     for (int i = 0; i < 4; ++i) {
@@ -89,13 +87,11 @@ auto tower_archetype() -> const RenderArchetype & {
     desc.add_box(QVector3D(0.0F, 1.65F, 0.0F), QVector3D(0.82F, 0.08F, 0.82F),
                  c.brick_dark);
 
-    // Corbelled gallery projection below the battlements
     desc.add_box(QVector3D(0.0F, 1.94F, 0.0F), QVector3D(1.00F, 0.04F, 1.00F),
                  c.stone_dark);
     desc.add_box(QVector3D(0.0F, 2.00F, 0.0F), QVector3D(0.95F, 0.05F, 0.95F),
                  c.wood);
 
-    // Taller, more prominent merlons
     for (int i = 0; i < 8; ++i) {
       float const angle = static_cast<float>(i) * 0.785F;
       float const ox = sinf(angle) * 0.82F;
@@ -106,8 +102,8 @@ auto tower_archetype() -> const RenderArchetype & {
     desc.add_box(QVector3D(0.0F, 2.40F, 0.0F), QVector3D(1.0F, 0.03F, 1.0F),
                  c.tile_red);
 
-    desc.add_cylinder(QVector3D(0.0F, 2.10F, 0.0F), QVector3D(0.0F, 3.00F, 0.0F),
-                      0.08F, c.wood_dark);
+    desc.add_cylinder(QVector3D(0.0F, 2.10F, 0.0F),
+                      QVector3D(0.0F, 3.00F, 0.0F), 0.08F, c.wood_dark);
     desc.add_palette_box(QVector3D(0.16F, 2.70F, 0.0F),
                          QVector3D(0.26F, 0.19F, 0.025F), kTowerTeamSlot);
     for (int i = 0; i < 3; ++i) {

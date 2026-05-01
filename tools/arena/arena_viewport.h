@@ -149,7 +149,7 @@ private:
                                Game::Units::TroopType preferred) const
       -> Game::Units::TroopType;
   auto spawn_single_building(int ownerId, Game::Systems::NationID nationId,
-                              Game::Units::SpawnType building_type)
+                             Game::Units::SpawnType building_type)
       -> Engine::Core::EntityID;
   auto owner_display_name(int ownerId) const -> QString;
   auto nation_display_name(Game::Systems::NationID nationId) const -> QString;
@@ -194,7 +194,8 @@ private:
 
   int m_spawn_building_owner_id = 1;
   Game::Systems::NationID m_spawn_building_nation_id;
-  Game::Units::SpawnType m_spawn_building_type = Game::Units::SpawnType::Barracks;
+  Game::Units::SpawnType m_spawn_building_type =
+      Game::Units::SpawnType::Barracks;
 
   QPoint m_last_mouse_pos;
   QPoint m_selection_anchor;

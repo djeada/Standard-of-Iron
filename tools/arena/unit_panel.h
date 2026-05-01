@@ -42,7 +42,7 @@ signals:
 private:
   void populate_nation_options();
   void populate_unit_options(const QString &nationId,
-                           const QString &preferred_unit_type = QString());
+                             const QString &preferred_unit_type = QString());
 
   QCheckBox *m_pause_checkbox = nullptr;
   QComboBox *m_owner_box = nullptr;
