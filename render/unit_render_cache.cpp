@@ -3,6 +3,7 @@
 #include "../game/core/component.h"
 #include "../game/core/entity.h"
 #include "../game/units/spawn_type.h"
+#include "entity/building_render_common.h"
 #include <QMatrix4x4>
 
 namespace Render {
@@ -47,9 +48,26 @@ auto UnitRenderCache::get_or_create(std::uint32_t entity_id,
   data.movement = new_movement;
 
   if (data.renderable != nullptr && !data.renderable->renderer_id.empty()) {
-    data.renderer_key = data.renderable->renderer_id;
+    if (entity->get_component<Engine::Core::BuildingComponent>() != nullptr &&
+        data.unit != nullptr) {
+      data.renderer_key = Render::GL::resolve_building_renderer_key(
+          data.renderable->renderer_id,
+          Game::Units::spawn_typeToString(data.unit->spawn_type),
+          data.unit->nation_id);
+    } else {
+      data.renderer_key =
+          std::string(Render::GL::canonicalize_building_renderer_key(
+              data.renderable->renderer_id));
+    }
   } else if (data.unit != nullptr) {
-    data.renderer_key = Game::Units::spawn_typeToString(data.unit->spawn_type);
+    if (entity->get_component<Engine::Core::BuildingComponent>() != nullptr) {
+      data.renderer_key = Render::GL::building_renderer_key(
+          data.unit->nation_id,
+          Game::Units::spawn_typeToString(data.unit->spawn_type));
+    } else {
+      data.renderer_key =
+          Game::Units::spawn_typeToString(data.unit->spawn_type);
+    }
   } else {
     data.renderer_key.clear();
   }

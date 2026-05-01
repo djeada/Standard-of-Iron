@@ -4,7 +4,7 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
-#include "../visuals/team_colors.h"
+#include "building_spawn_setup.h"
 #include "units/unit.h"
 #include <memory>
 
@@ -31,10 +31,6 @@ void DefenseTower::init(const SpawnParams &params) {
                    params.position.z()};
   m_t->scale = {1.0F, 2.0F, 1.0F};
 
-  m_r = e->add_component<Engine::Core::RenderableComponent>("", "");
-  m_r->visible = true;
-  m_r->mesh = Engine::Core::RenderableComponent::MeshKind::Cube;
-
   m_u = e->add_component<Engine::Core::UnitComponent>();
   m_u->spawn_type = SpawnType::DefenseTower;
   m_u->health = 1500;
@@ -48,12 +44,7 @@ void DefenseTower::init(const SpawnParams &params) {
     e->add_component<Engine::Core::AIControlledComponent>();
   }
 
-  QVector3D const tc = Game::Visuals::team_colorForOwner(m_u->owner_id);
-  m_r->color[0] = tc.x();
-  m_r->color[1] = tc.y();
-  m_r->color[2] = tc.z();
-
-  e->add_component<Engine::Core::BuildingComponent>();
+  m_r = add_building_renderable(*e, m_u->owner_id, nation_id, m_type_string);
 
   m_atk = e->add_component<Engine::Core::AttackComponent>();
   m_atk->range = 16.0F;

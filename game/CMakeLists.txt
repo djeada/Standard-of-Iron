@@ -111,6 +111,7 @@ add_library(game_systems STATIC
     units/elephant.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
+    units/building_spawn_setup.cpp
     units/factory.cpp
     units/barracks.cpp
     units/defense_tower.cpp
