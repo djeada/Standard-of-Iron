@@ -61,6 +61,10 @@ constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr int k_selection_drag_threshold = 6;
 
+constexpr int k_buildings_per_row = 4;
+constexpr float k_building_spacing = 5.0F;
+constexpr float k_building_base_z = 25.0F;
+
 auto local_controllable_selection(
     Engine::Core::World *world,
     const std::vector<Engine::Core::EntityID> &selected_ids)
@@ -1428,10 +1432,6 @@ auto ArenaViewport::spawn_single_building(int ownerId,
     }
   }
 
-  constexpr int k_buildings_per_row = 4;
-  constexpr float k_building_spacing = 5.0F;
-  constexpr float k_building_base_z = 25.0F;
-
   float const column =
       static_cast<float>(building_count % k_buildings_per_row);
   float const row = static_cast<float>(building_count / k_buildings_per_row);
@@ -1461,6 +1461,40 @@ auto ArenaViewport::spawn_single_building(int ownerId,
   Engine::Core::EntityID const entity_id = unit->id();
   m_units.push_back(std::move(unit));
   return entity_id;
+}
+
+void ArenaViewport::clearBuildings() {
+  if (m_world == nullptr) {
+    return;
+  }
+
+  auto *selection = selection_system();
+
+  auto it = m_units.begin();
+  while (it != m_units.end()) {
+    if (*it == nullptr) {
+      it = m_units.erase(it);
+      continue;
+    }
+    auto *entity = m_world->get_entity((*it)->id());
+    auto *unit_component =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
+    if (unit_component != nullptr &&
+        Game::Units::is_building_spawn(unit_component->spawn_type)) {
+      if (selection != nullptr) {
+        selection->deselect_unit((*it)->id());
+      }
+      m_world->destroy_entity((*it)->id());
+      it = m_units.erase(it);
+    } else {
+      ++it;
+    }
+  }
+
+  m_hovered_entity_id = 0;
+  update();
 }
 
 void ArenaViewport::resetArena() {

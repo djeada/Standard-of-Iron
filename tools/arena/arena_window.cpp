@@ -162,7 +162,7 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   connect(m_building_panel, &BuildingPanel::spawnBuildingsRequested,
           m_viewport, &ArenaViewport::spawnBuildings);
   connect(m_building_panel, &BuildingPanel::clearBuildingsRequested,
-          m_viewport, &ArenaViewport::clearUnits);
+          m_viewport, &ArenaViewport::clearBuildings);
   connect(m_building_panel, &BuildingPanel::buildingOwnerSelected, m_viewport,
           &ArenaViewport::setSpawnBuildingOwner);
   connect(m_building_panel, &BuildingPanel::buildingNationSelected, m_viewport,

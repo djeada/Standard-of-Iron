@@ -83,6 +83,7 @@ public slots:
   void setSpawnBuildingNation(const QString &nationId);
   void setSpawnBuildingType(const QString &buildingType);
   void spawnBuildings(int count);
+  void clearBuildings();
   void resetArena();
   void applyVisualOverridesToSelection();
   void setAnimationName(const QString &animationName);
