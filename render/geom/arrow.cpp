@@ -149,17 +149,27 @@ void render_arrows(Renderer *renderer, ResourceManager *resources,
         k_rad_to_deg;
     model.rotate(pitch_deg, QVector3D(1, 0, 0));
 
-    constexpr float arrow_z_scale = 0.40F;
-    constexpr float arrow_xy_scale = 0.26F;
-    constexpr float arrow_z_translate_factor = 0.5F;
+    constexpr float arrow_z_scale = Geom::Arrow::k_arrow_z_scale;
+    constexpr float arrow_xy_scale = Geom::Arrow::k_arrow_xy_scale;
+    constexpr float arrow_z_translate_factor =
+        Geom::Arrow::k_arrow_z_translate_factor;
     model.translate(0.0F, 0.0F, -arrow_z_scale * arrow_z_translate_factor);
     model.scale(arrow_xy_scale, arrow_xy_scale, arrow_z_scale);
 
-    QVector3D wood_color(0.35F, 0.25F, 0.15F);
-    renderer->mesh(arrow_shaft_mesh, model, wood_color, nullptr, 1.0F);
+    renderer->mesh(arrow_shaft_mesh, model,
+                   Geom::Arrow::shaft_color(arrow.color), nullptr, 1.0F);
 
     QVector3D metal_color(0.70F, 0.72F, 0.75F);
     renderer->mesh(arrow_tip_mesh, model, metal_color, nullptr, 1.0F);
+
+    QMatrix4x4 fletch_model = model;
+    fletch_model.translate(0.0F, 0.0F,
+                           -arrow_z_scale * Geom::Arrow::k_fletch_z_offset_factor);
+    fletch_model.scale(Geom::Arrow::k_fletch_xy_scale,
+                       Geom::Arrow::k_fletch_xy_scale,
+                       Geom::Arrow::k_fletch_z_scale);
+    renderer->mesh(arrow_shaft_mesh, fletch_model,
+                   Geom::Arrow::fletch_color(arrow.color), nullptr, 0.7F);
   }
 }
 
