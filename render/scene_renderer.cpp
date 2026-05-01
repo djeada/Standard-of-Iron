@@ -103,9 +103,8 @@ auto is_unit_combat_active(
     return true;
   }
 
-  if ((combat_state != nullptr) &&
-      (combat_state->animation_state !=
-       Engine::Core::CombatAnimationState::Idle)) {
+  if ((combat_state != nullptr) && (combat_state->animation_state !=
+                                    Engine::Core::CombatAnimationState::Idle)) {
     return true;
   }
 

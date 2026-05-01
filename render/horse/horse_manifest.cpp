@@ -106,7 +106,8 @@ template <std::size_t N>
 void scale_torso_section_length(std::array<TorsoSectionRing, N> &rings) {
   float const center_z = (rings.front().z + rings.back().z) * 0.5F;
   for (TorsoSectionRing &ring : rings) {
-    ring.z = center_z + (ring.z - center_z) * k_horse_torso_section_length_scale;
+    ring.z =
+        center_z + (ring.z - center_z) * k_horse_torso_section_length_scale;
   }
 }
 
@@ -336,7 +337,7 @@ auto build_horse_whole_nodes()
   scale_torso_section_length(rear_rings);
   nodes.push_back({"horse.body.rear", static_cast<BoneIndex>(HorseBone::Body),
                    k_role_coat, kLodAll, 0,
-                    build_horse_torso_section_mesh(rear_rings, true, false)});
+                   build_horse_torso_section_mesh(rear_rings, true, false)});
 
   std::array<TorsoSectionRing, 3> mid_rings{{
       {-bl * 0.22F, bh * 0.40F + torso_lift,

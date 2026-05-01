@@ -73,10 +73,9 @@ public:
     return render;
   }
 
-  [[nodiscard]] auto
-  should_update_animation(uint32_t entity_id, float distance_sq,
-                          bool is_selected,
-                          bool is_combat_active = false) const noexcept -> bool {
+  [[nodiscard]] auto should_update_animation(
+      uint32_t entity_id, float distance_sq, bool is_selected,
+      bool is_combat_active = false) const noexcept -> bool {
     BattleRenderConfig cfg;
     {
       std::lock_guard<std::mutex> lock(m_config_mutex);

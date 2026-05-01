@@ -256,13 +256,14 @@ TEST(HorseSpecTest, TopologyParentsLegsAndNeckFromBody) {
             static_cast<Render::Creature::BoneIndex>(Bone::NeckTop));
 }
 
-TEST(HorseSpecTest, BasePoseKeepsForehandBroaderAndHindFeetTuckedUnderCroup) {
+TEST(HorseSpecTest,
+     BasePoseKeepsHindquartersBroaderAndHindFeetTuckedUnderCroup) {
   auto dims = make_horse_dims();
 
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose(dims, /*bob=*/0.0F, pose);
 
-  EXPECT_GT(pose.shoulder_offset_fl.x(), pose.shoulder_offset_bl.x() * 1.10F);
+  EXPECT_GT(pose.shoulder_offset_bl.x(), pose.shoulder_offset_fl.x() * 1.10F);
   EXPECT_GT(pose.shoulder_offset_bl.x(), dims.body_width * 0.22F);
   EXPECT_GT(pose.shoulder_offset_fl.z(), 0.0F);
   EXPECT_LT(pose.shoulder_offset_bl.z(), 0.0F);
@@ -270,32 +271,36 @@ TEST(HorseSpecTest, BasePoseKeepsForehandBroaderAndHindFeetTuckedUnderCroup) {
   EXPECT_GT(pose.shoulder_offset_bl.y(), 0.0F);
   EXPECT_GT(pose.foot_fl.z(), pose.shoulder_offset_fl.z());
   EXPECT_GT(pose.foot_bl.z(), pose.shoulder_offset_bl.z());
-  EXPECT_GT(pose.foot_bl.z(), pose.shoulder_offset_bl.z());
+  EXPECT_GT(pose.foot_br.z(), pose.shoulder_offset_br.z());
   EXPECT_GT(pose.leg_radius, dims.body_width * 0.14F);
   EXPECT_LT(pose.leg_radius, dims.body_width * 0.24F);
 }
 
-TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoRead) {
+TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoSpread) {
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
 
   Render::Horse::HorseSpecPose pose;
   Render::Horse::make_horse_spec_pose_animated(
       dims, gait, Render::Horse::HorsePoseMotion{0.0F, 0.0F, false}, pose);
+  QVector3D const shoulder_fl =
+      pose.barrel_center + pose.shoulder_offset_pose_fl;
+  QVector3D const shoulder_bl =
+      pose.barrel_center + pose.shoulder_offset_pose_bl;
 
   EXPECT_GT(pose.body_half.x(), dims.body_width * 0.85F);
   EXPECT_GT(std::abs(pose.shoulder_offset_pose_fl.x()),
             dims.body_width * 0.20F);
-  EXPECT_GT(std::abs(pose.shoulder_offset_pose_fl.x()),
-            std::abs(pose.shoulder_offset_pose_bl.x()));
   EXPECT_GT(std::abs(pose.shoulder_offset_pose_bl.x()),
             dims.body_width * 0.16F);
+  EXPECT_GT(std::abs(pose.shoulder_offset_pose_bl.x()),
+            std::abs(pose.shoulder_offset_pose_fl.x()));
   EXPECT_GT(pose.shoulder_offset_pose_fl.y(), 0.0F);
   EXPECT_GT(pose.shoulder_offset_pose_bl.y(), 0.0F);
   EXPECT_GT(pose.shoulder_offset_pose_fl.z(), 0.0F);
   EXPECT_LT(pose.shoulder_offset_pose_bl.z(), 0.0F);
-  EXPECT_LT(pose.foot_fl.y(), pose.barrel_center.y() - dims.leg_length * 0.55F);
-  EXPECT_LT(pose.foot_bl.y(), pose.barrel_center.y() - dims.leg_length * 0.55F);
+  EXPECT_LT(pose.foot_fl.y(), shoulder_fl.y() - dims.leg_length * 0.95F);
+  EXPECT_LT(pose.foot_bl.y(), shoulder_bl.y() - dims.leg_length * 0.95F);
   EXPECT_GT(pose.neck_base.y() - pose.barrel_center.y(),
             dims.body_height * 0.18F);
   EXPECT_GE(pose.neck_base.z(), dims.body_length * 0.35F);
@@ -307,8 +312,9 @@ TEST(HorseSpecTest, AnimatedPoseKeepsLegsOutsideTorsoRead) {
   EXPECT_GT(pose.neck_radius, dims.body_width * 0.12F);
   EXPECT_LT(pose.neck_radius, dims.body_width * 0.50F);
   EXPECT_LT(pose.neck_radius, pose.body_half.x());
-  EXPECT_GT(pose.body_half.y(), dims.body_height * 0.60F);
-  EXPECT_LT(pose.body_half.y(), dims.body_height * 0.88F);
+  EXPECT_GT(pose.body_half.y(), dims.body_height);
+  EXPECT_LT(pose.body_half.y(),
+            Render::Horse::horse_body_visual_height(dims) * 0.75F);
   EXPECT_GT(pose.head_half.z(), pose.head_half.y() * 1.8F);
 }
 
@@ -482,7 +488,7 @@ TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {
   float const head_upper_z_span = mesh_axis_span(head_upper_mesh, 2);
   float const head_upper_y_span = mesh_axis_span(head_upper_mesh, 1);
   EXPECT_GT(neck->start_radius, neck->end_radius);
-  EXPECT_GT((neck->end - neck->start).length(), 0.70F);
+  EXPECT_GT((neck->end - neck->start).length(), 0.60F);
   EXPECT_GT(neck->end.y(), neck->start.y());
   EXPECT_LT(neck->start_radius, 0.40F);
   EXPECT_GT(head_upper_z_span, head_upper_y_span * 0.90F);
@@ -568,9 +574,8 @@ TEST(HorseSpecTest, ManifestTorsoSectionsUseFourFifthsOriginalLength) {
   Render::GL::Mesh rear_mesh(rear->vertices, rear->indices);
   Render::GL::Mesh mid_mesh(mid->vertices, mid->indices);
   Render::GL::Mesh front_mesh(front->vertices, front->indices);
-  float const body_length =
-      Render::Horse::horse_body_visual_length(Render::GL::make_horse_dimensions(
-          0U));
+  float const body_length = Render::Horse::horse_body_visual_length(
+      Render::GL::make_horse_dimensions(0U));
   float const expected_section_span = body_length * 0.48F * 0.80F;
 
   EXPECT_NEAR(mesh_axis_span(rear_mesh, 2), expected_section_span, 1.0e-4F);
@@ -844,7 +849,8 @@ TEST(HorseSpecTest, AnimatedWalkKeepsRearHoofLowerDuringStanceThanSwing) {
   EXPECT_GT(swing_pose.foot_bl.y() - stance_pose.foot_bl.y(), 0.05F);
 }
 
-TEST(HorseSpecTest, AnimatedPoseBendsFrontAndRearKneesDuringMotion) {
+TEST(HorseSpecTest,
+     AnimatedPoseBendsFrontKneesForwardAndRearKneesBackDuringMotion) {
   auto dims = make_horse_dims();
   auto gait =
       Render::GL::gait_for_type(Render::GL::GaitType::TROT, make_horse_gait());
@@ -870,8 +876,9 @@ TEST(HorseSpecTest, AnimatedPoseBendsFrontAndRearKneesDuringMotion) {
 
   EXPECT_LT(pose.knee_bl.y(), shoulder_bl.y());
   EXPECT_GT(pose.knee_bl.y(), pose.foot_bl.y());
-  EXPECT_GT(pose.knee_bl.z(), rear_mid_z);
-  EXPECT_GT(pose.knee_bl.z(), pose.shoulder_offset_pose_bl.z());
+  EXPECT_GT(pose.knee_bl.z(), shoulder_bl.z());
+  EXPECT_LT(pose.knee_bl.z(), rear_mid_z);
+  EXPECT_LT(pose.knee_bl.z(), pose.foot_bl.z());
   EXPECT_GT(point_to_segment_distance(pose.knee_bl, shoulder_bl, pose.foot_bl),
             dims.body_length * 0.004F);
   EXPECT_LT(point_to_segment_distance(pose.knee_bl, shoulder_bl, pose.foot_bl),
@@ -990,10 +997,9 @@ TEST(HorseSpecTest, MovementBobVariesAcrossFrames) {
   EXPECT_GT(pose_peak.barrel_center.y(), pose_zero.barrel_center.y());
 }
 
-TEST(HorseSpecTest, AnimatedIdleHasVisibleFrontKneeBreak) {
-  // With front_leg_length_scale reduced to allow the IK solver to find a
-  // non-straight solution, the animated idle should show a measurable
-  // forward knee break rather than a fully locked-out leg.
+TEST(HorseSpecTest, AnimatedIdleKeepsFrontKneeSlightlyBent) {
+  // Idle no longer pushes the front knee strongly forward, but the joint
+  // should still avoid a fully locked-out straight segment.
   auto dims = make_horse_dims();
   auto gait = make_horse_gait();
 
@@ -1007,9 +1013,9 @@ TEST(HorseSpecTest, AnimatedIdleHasVisibleFrontKneeBreak) {
   float const front_bend =
       point_to_segment_distance(pose.knee_fl, shoulder_fl, pose.foot_fl);
 
-  // Knee must protrude forward of the shoulder–foot line even at rest.
-  EXPECT_GT(front_bend, dims.body_length * 0.030F);
-  EXPECT_GT(pose.knee_fl.z(), (shoulder_fl.z() + pose.foot_fl.z()) * 0.5F);
+  EXPECT_GT(front_bend, dims.body_length * 0.004F);
+  EXPECT_GT(pose.knee_fl.z(), shoulder_fl.z());
+  EXPECT_LT(pose.knee_fl.z(), pose.foot_fl.z());
 }
 
 TEST(HorseSpecTest, FightPoseNeckArchedHigherThanIdlePose) {

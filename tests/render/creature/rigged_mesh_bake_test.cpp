@@ -322,7 +322,7 @@ TEST(RiggedMeshBake, HorseWholeMeshUsesArticulatedLegAndHeadBones) {
   EXPECT_TRUE(has_bone_influence(
       baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::KneeFL)));
   EXPECT_TRUE(has_bone_influence(
-      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::ShoulderBR)));
+      baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::FootBR)));
   EXPECT_TRUE(has_bone_influence(
       baked, static_cast<std::uint8_t>(Render::Horse::HorseBone::Head)));
 }
