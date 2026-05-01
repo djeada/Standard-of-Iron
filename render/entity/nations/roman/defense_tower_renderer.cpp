@@ -56,7 +56,8 @@ auto tower_archetype() -> const RenderArchetype & {
       for (float z = -0.85F; z <= 0.85F; z += 0.425F) {
         if (fabsf(x) > 0.3F || fabsf(z) > 0.3F) {
           desc.add_box(QVector3D(x, 0.29F, z), QVector3D(0.18F, 0.01F, 0.18F),
-                       c.terracotta);
+                       c.terracotta, BuildingStateMask::All,
+                       BuildingLODMask::Full);
         }
       }
     }
@@ -74,11 +75,11 @@ auto tower_archetype() -> const RenderArchetype & {
       desc.add_cylinder(QVector3D(ox, 0.5F, oz), QVector3D(ox, 1.9F, oz), 0.08F,
                         c.marble);
       desc.add_box(QVector3D(ox, 0.58F, oz), QVector3D(0.12F, 0.08F, 0.12F),
-                   c.marble);
+                   c.marble, BuildingStateMask::All, BuildingLODMask::Full);
       desc.add_box(QVector3D(ox, 1.95F, oz), QVector3D(0.13F, 0.08F, 0.13F),
-                   c.marble);
+                   c.marble, BuildingStateMask::All, BuildingLODMask::Full);
       desc.add_box(QVector3D(ox, 2.05F, oz), QVector3D(0.10F, 0.04F, 0.10F),
-                   c.gold);
+                   c.gold, BuildingStateMask::All, BuildingLODMask::Full);
     }
 
     for (int i = 0; i < 8; ++i) {
@@ -86,7 +87,8 @@ auto tower_archetype() -> const RenderArchetype & {
       float const ox = sinf(angle) * 0.45F;
       float const oz = cosf(angle) * 0.45F;
       desc.add_box(QVector3D(ox, 1.2F, oz), QVector3D(0.06F, 0.25F, 0.06F),
-                   c.sandstone_dark);
+                   c.sandstone_dark, BuildingStateMask::All,
+                   BuildingLODMask::Full);
     }
 
     desc.add_box(QVector3D(0.0F, 2.28F, 0.0F), QVector3D(0.8F, 0.05F, 0.8F),
@@ -96,7 +98,7 @@ auto tower_archetype() -> const RenderArchetype & {
       float const ox = sinf(angle) * 0.7F;
       float const oz = cosf(angle) * 0.7F;
       desc.add_box(QVector3D(ox, 2.45F, oz), QVector3D(0.14F, 0.17F, 0.14F),
-                   c.terracotta);
+                   c.terracotta, BuildingStateMask::All, BuildingLODMask::Full);
     }
 
     desc.add_box(QVector3D(0.0F, 2.58F, 0.0F), QVector3D(0.85F, 0.04F, 0.85F),
@@ -104,7 +106,8 @@ auto tower_archetype() -> const RenderArchetype & {
     for (float x : {-0.75F, 0.75F}) {
       for (float z : {-0.75F, 0.75F}) {
         desc.add_box(QVector3D(x, 2.64F, z), QVector3D(0.06F, 0.06F, 0.06F),
-                     c.blue_accent);
+                     c.blue_accent, BuildingStateMask::All,
+                     BuildingLODMask::Full);
       }
     }
 
@@ -115,10 +118,11 @@ auto tower_archetype() -> const RenderArchetype & {
     for (int i = 0; i < 2; ++i) {
       float const ring_y = 2.65F + static_cast<float>(i) * 0.30F;
       desc.add_cylinder(QVector3D(0.0F, ring_y, 0.0F),
-                        QVector3D(0.0F, ring_y + 0.025F, 0.0F), 0.11F, c.gold);
+                        QVector3D(0.0F, ring_y + 0.025F, 0.0F), 0.11F, c.gold,
+                        BuildingStateMask::All, BuildingLODMask::Full);
     }
     desc.add_box(QVector3D(0.0F, 3.15F, 0.0F), QVector3D(0.08F, 0.06F, 0.08F),
-                 c.bronze);
+                 c.bronze, BuildingStateMask::All, BuildingLODMask::Full);
     return build_building_archetype(desc, BuildingState::Normal);
   }();
   return k_tower;

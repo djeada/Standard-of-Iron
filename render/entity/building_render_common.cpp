@@ -137,7 +137,7 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   instance.world = ctx.model;
   instance.palette = palette;
   instance.default_texture = building_white_texture(ctx);
-  instance.lod = RenderArchetypeLod::Full;
+  instance.lod = select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
   submit_render_instance(out, instance);
 }
 
