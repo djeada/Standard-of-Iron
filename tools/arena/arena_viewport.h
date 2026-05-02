@@ -138,6 +138,13 @@ private:
   void select_entities_in_rect(const QRect &selection_rect, bool additive);
   void select_all_local_units();
   void issue_move_order(const QPointF &screen_pos);
+  void update_spawn_anchor_from_click(const QPointF &screen_pos);
+  [[nodiscard]] auto resolve_spawn_anchor_world() const -> QVector3D;
+  [[nodiscard]] auto
+  find_available_spawn_position(const QVector3D &anchor,
+                                float clearance) const -> QVector3D;
+  [[nodiscard]] auto is_spawn_position_available(const QVector3D &position,
+                                                 float clearance) const -> bool;
   void apply_keyboard_camera_controls(float real_dt);
   void clear_camera_key_state();
   void select_spawned_entities(const std::vector<Engine::Core::EntityID> &ids);
@@ -161,6 +168,7 @@ private:
   void
   clear_forced_animation_state(const std::vector<Engine::Core::EntityID> &ids);
   void draw_debug_overlay(QPainter &painter);
+  void draw_spawn_anchor_marker(QPainter &painter);
   void draw_selection_marquee(QPainter &painter);
   void draw_terrain_normals(QPainter &painter);
   void draw_pose_overlay(QPainter &painter);
@@ -198,6 +206,9 @@ private:
       Game::Units::SpawnType::Barracks;
 
   QPoint m_last_mouse_pos;
+  bool m_last_mouse_pos_valid = false;
+  QVector3D m_spawn_anchor_world;
+  bool m_spawn_anchor_world_valid = false;
   QPoint m_selection_anchor;
   QPoint m_selection_current;
   Engine::Core::EntityID m_hovered_entity_id = 0;

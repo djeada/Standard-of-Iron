@@ -33,8 +33,8 @@ ArenaWindow::ArenaWindow(QWidget *parent) : QMainWindow(parent) {
   pause_action->setToolTip("Pause / resume simulation (Space)");
   toolbar->addSeparator();
   auto *reset_camera_action = toolbar->addAction("⌖  Reset Camera");
-  reset_camera_action->setShortcut(QKeySequence(QStringLiteral("F")));
-  reset_camera_action->setToolTip("Reset camera to default position (F)");
+  reset_camera_action->setShortcut(QKeySequence(QStringLiteral("Home")));
+  reset_camera_action->setToolTip("Reset camera to default position (Home)");
 
   auto *central = new QWidget(this);
   auto *main_layout = new QHBoxLayout(central);
