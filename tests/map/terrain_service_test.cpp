@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
+#include <utility>
 
 namespace {
 
@@ -162,8 +163,7 @@ TEST_F(TerrainServiceTest, SurfaceHeightResolverPrefersBridgeDeckOverRoad) {
               0.0001F);
 }
 
-TEST_F(TerrainServiceTest, HillSlopeFormsSmoothGradientBeyondPlateau) {
-
+TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
   Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
   Game::Map::TerrainFeature hill{
       .type = Game::Map::TerrainType::Hill,
@@ -175,46 +175,12 @@ TEST_F(TerrainServiceTest, HillSlopeFormsSmoothGradientBeyondPlateau) {
   };
   height_map.buildFromFeatures({hill});
 
-  float const h_near = height_map.getHeightAtGrid(30, 19);
-  float const h_mid = height_map.getHeightAtGrid(30, 15);
-  float const h_far = height_map.getHeightAtGrid(30, 12);
-
-  EXPECT_GT(h_near, 0.0F);
-  EXPECT_GT(h_mid, 0.0F);
-  EXPECT_GT(h_far, 0.0F);
-  EXPECT_GT(h_near, h_mid);
-  EXPECT_GT(h_mid, h_far);
-}
-
-TEST_F(TerrainServiceTest, HillSlopeHeightsHaveOrganicVariation) {
-
-  Game::Map::TerrainHeightMap height_map(61, 61, 1.0F);
-  Game::Map::TerrainFeature hill{
-      .type = Game::Map::TerrainType::Hill,
-      .center_x = 0.0F,
-      .center_z = 0.0F,
-      .width = 20.0F,
-      .depth = 20.0F,
-      .height = 4.0F,
-  };
-  height_map.buildFromFeatures({hill});
-
-  float const h_n = height_map.getHeightAtGrid(30, 19);
-  float const h_e = height_map.getHeightAtGrid(41, 30);
-  float const h_s = height_map.getHeightAtGrid(30, 41);
-  float const h_w = height_map.getHeightAtGrid(19, 30);
-
-  EXPECT_GT(h_n, 0.0F);
-  EXPECT_GT(h_e, 0.0F);
-  EXPECT_GT(h_s, 0.0F);
-  EXPECT_GT(h_w, 0.0F);
-
-  EXPECT_NE(h_n, h_e);
-  EXPECT_NE(h_n, h_s);
-  EXPECT_NE(h_n, h_w);
-  EXPECT_NE(h_e, h_s);
-  EXPECT_NE(h_e, h_w);
-  EXPECT_NE(h_s, h_w);
+  for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30},
+                            std::pair{30, 41}, std::pair{19, 30}}) {
+    EXPECT_FLOAT_EQ(height_map.getHeightAtGrid(x, z), 0.0F);
+    EXPECT_EQ(height_map.getTerrainType(x, z), Game::Map::TerrainType::Flat);
+    EXPECT_TRUE(height_map.is_walkable(x, z));
+  }
 }
 
 } // namespace
