@@ -29,6 +29,22 @@ struct PolygonOffsetScope {
   }
 };
 
+struct PolygonModeScope {
+  GLint prev_mode[2]{GL_FILL, GL_FILL};
+  explicit PolygonModeScope(GLenum mode) {
+    glGetIntegerv(GL_POLYGON_MODE, prev_mode);
+    glPolygonMode(GL_FRONT_AND_BACK, mode);
+  }
+  ~PolygonModeScope() {
+    if (prev_mode[0] == prev_mode[1]) {
+      glPolygonMode(GL_FRONT_AND_BACK, static_cast<GLenum>(prev_mode[0]));
+      return;
+    }
+    glPolygonMode(GL_FRONT, static_cast<GLenum>(prev_mode[0]));
+    glPolygonMode(GL_BACK, static_cast<GLenum>(prev_mode[1]));
+  }
+};
+
 struct BlendScope {
   GLboolean prev_enable;
   BlendScope(bool enable = true) : prev_enable(glIsEnabled(GL_BLEND)) {

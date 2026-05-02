@@ -111,6 +111,7 @@ struct TerrainSurfaceCmd {
   TerrainChunkParams params;
   std::uint16_t sort_key = 0x8000U;
   bool depth_write = true;
+  bool wireframe = false;
   float depth_bias = 0.0F;
   CommandPriority priority{CommandPriority::High};
 };
@@ -693,6 +694,7 @@ private:
            surface_a.params.is_ground_plane ==
                surface_b.params.is_ground_plane &&
            surface_a.depth_write == surface_b.depth_write &&
+           surface_a.wireframe == surface_b.wireframe &&
            surface_a.depth_bias == surface_b.depth_bias;
   }
 

@@ -1350,6 +1350,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       };
 
       DepthMaskScope const depth_mask(terrain.depth_write);
+      std::optional<PolygonModeScope> polygon_mode_scope;
+      if (terrain.wireframe) {
+        polygon_mode_scope.emplace(GL_LINE);
+      }
       for (std::size_t j = i; j < batch_end; ++j) {
         const auto &single =
             std::get<TerrainSurfaceCmdIndex>(queue.get_sorted(j));

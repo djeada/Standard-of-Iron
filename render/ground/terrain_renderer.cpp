@@ -131,6 +131,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
     cmd.params = chunk.params;
     cmd.sort_key = 0x0080U;
     cmd.depth_write = true;
+    cmd.wireframe = m_wireframe;
     cmd.depth_bias = 0.0F;
     renderer.terrain_surface(cmd);
   }
