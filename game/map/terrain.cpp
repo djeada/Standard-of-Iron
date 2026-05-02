@@ -41,10 +41,6 @@ constexpr float k_entry_mouth_soften_strength = 0.06F;
 constexpr float k_entry_floor_flatten_strength = 0.04F;
 constexpr float k_entry_shoulder_raise_strength = 0.06F;
 
-constexpr float k_slope_noise_strength = 0.20F;
-
-constexpr float k_slope_seed_coord_scale = 2.0F;
-
 inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
   std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
@@ -272,30 +268,12 @@ void TerrainHeightMap::buildFromFeatures(
           if (norm_plateau_dist <= 1.0F) {
             height = feature.height;
           } else {
-
-            float const inner_norm = plateau_width / slope_width;
-            float const t =
-                std::clamp((norm_slope_dist - inner_norm) / (1.0F - inner_norm),
-                           0.0F, 1.0F);
-
-            std::uint32_t const slope_seed = hashCoords(
-                static_cast<int>(grid_center_x * k_slope_seed_coord_scale),
-                static_cast<int>(grid_center_z * k_slope_seed_coord_scale),
-                0xA3F5U);
-            float const slope_noise =
-                valueNoise2D(float(x) * 0.35F, float(z) * 0.35F, slope_seed);
-            float const detail_noise = valueNoise2D(
-                float(x) * 0.72F, float(z) * 0.72F, slope_seed ^ 0xC8D3U);
-            float const fbm_noise = 0.65F * slope_noise + 0.35F * detail_noise;
-
-            float const mid_slope = 4.0F * t * (1.0F - t);
-            float const t_noisy = std::clamp(
-                t + (fbm_noise - 0.5F) * k_slope_noise_strength * mid_slope,
-                0.0F, 1.0F);
-
-            float const smooth_fac =
-                0.5F * (1.0F + std::cos(t_noisy * std::numbers::pi_v<float>));
-            height = feature.height * smooth_fac;
+            float const t = std::clamp((norm_slope_dist - norm_plateau_dist) /
+                                           (1.0F - norm_plateau_dist),
+                                       0.0F, 1.0F);
+            float const smooth =
+                0.5F * (1.0F + std::cos(t * std::numbers::pi_v<float>));
+            height = feature.height * smooth;
           }
 
           if (height > m_heights[idx]) {
@@ -925,16 +903,7 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
         float perturb = (blended - 0.5F) * 2.0F * legacy_amplitude;
 
         if (type == TerrainType::Hill) {
-
-          float const ridge_noise =
-              valueNoise2D(sample_x * 3.5F, sample_z * 3.5F,
-                           surface_profile.seed ^ 0xC7F4B2E3U);
-          float const fine_noise =
-              valueNoise2D(sample_x * 7.0F, sample_z * 7.0F,
-                           surface_profile.seed ^ 0xE5A3D192U);
-          perturb = perturb * 0.50F +
-                    (ridge_noise - 0.5F) * 2.0F * legacy_amplitude * 0.25F +
-                    (fine_noise - 0.5F) * 2.0F * legacy_amplitude * 0.10F;
+          perturb *= 0.6F;
         }
 
         m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
