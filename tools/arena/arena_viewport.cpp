@@ -61,9 +61,10 @@ constexpr int k_terrain_height = 96;
 constexpr float k_terrain_tile_size = 1.0F;
 constexpr int k_selection_drag_threshold = 6;
 
-constexpr int k_buildings_per_row = 4;
-constexpr float k_building_spacing = 5.0F;
-constexpr float k_building_base_z = 25.0F;
+constexpr float k_unit_spawn_clearance = 3.25F;
+constexpr float k_building_spawn_clearance = 5.0F;
+constexpr float k_spawn_search_step_factor = 1.1F;
+constexpr int k_max_spawn_search_ring = 20;
 
 auto local_controllable_selection(
     Engine::Core::World *world,
@@ -183,26 +184,6 @@ auto classify_terrain(float normalized_height) -> Game::Map::TerrainType {
   return Game::Map::TerrainType::Flat;
 }
 
-auto spawn_count_for_owner(
-    Engine::Core::World &world,
-    const std::vector<std::unique_ptr<Game::Units::Unit>> &units,
-    int owner_id) -> int {
-  int count = 0;
-  for (const auto &unit : units) {
-    if (unit == nullptr) {
-      continue;
-    }
-    auto *entity = world.get_entity(unit->id());
-    auto *unit_component =
-        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                          : nullptr;
-    if (unit_component != nullptr && unit_component->owner_id == owner_id) {
-      ++count;
-    }
-  }
-  return count;
-}
-
 auto prettify_identifier(const QString &value) -> QString {
   QString label = value;
   label.replace(QLatin1Char('_'), QLatin1Char(' '));
@@ -229,6 +210,12 @@ auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
   }
   return Game::Units::TroopConfig::instance().get_individuals_per_unit(
       unit.spawn_type);
+}
+
+auto entity_spawn_clearance(const Engine::Core::Entity &entity) -> float {
+  return entity.has_component<Engine::Core::BuildingComponent>()
+             ? k_building_spawn_clearance
+             : k_unit_spawn_clearance;
 }
 
 } // namespace
@@ -396,8 +383,7 @@ void ArenaViewport::paintGL() {
   m_renderer->render_world(m_world.get());
   m_renderer->end_frame();
 
-  if (m_normals_overlay_enabled || m_pose_overlay_enabled ||
-      m_selection_drag_active) {
+  {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, true);
     draw_debug_overlay(painter);
@@ -533,6 +519,7 @@ void ArenaViewport::focusOutEvent(QFocusEvent *event) {
 void ArenaViewport::mousePressEvent(QMouseEvent *event) {
   setFocus(Qt::MouseFocusReason);
   m_last_mouse_pos = event->pos();
+  m_last_mouse_pos_valid = true;
   if (event->button() == Qt::LeftButton) {
     m_selection_anchor = event->pos();
     m_selection_current = event->pos();
@@ -547,6 +534,7 @@ void ArenaViewport::mousePressEvent(QMouseEvent *event) {
 void ArenaViewport::mouseMoveEvent(QMouseEvent *event) {
   QPoint const delta = event->pos() - m_last_mouse_pos;
   m_last_mouse_pos = event->pos();
+  m_last_mouse_pos_valid = true;
 
   if (m_camera != nullptr && (event->buttons() & Qt::MiddleButton) != 0) {
     if ((event->modifiers() & Qt::ShiftModifier) != 0) {
@@ -578,12 +566,15 @@ void ArenaViewport::mouseReleaseEvent(QMouseEvent *event) {
       m_world != nullptr && width() > 0 && height() > 0) {
     m_selection_current = event->pos();
     bool const additive = (event->modifiers() & Qt::ShiftModifier) != 0;
-    if ((m_selection_current - m_selection_anchor).manhattanLength() >=
-        k_selection_drag_threshold) {
+    bool const dragged =
+        (m_selection_current - m_selection_anchor).manhattanLength() >=
+        k_selection_drag_threshold;
+    if (dragged) {
       select_entities_in_rect(QRect(m_selection_anchor, m_selection_current),
                               additive);
     } else {
       QPointF const click_pos = event->position();
+      update_spawn_anchor_from_click(click_pos);
       Engine::Core::EntityID const picked =
           Game::Systems::PickingService::pick_single(
               static_cast<float>(click_pos.x()),
@@ -723,6 +714,107 @@ void ArenaViewport::issue_move_order(const QPointF &screen_pos) {
       m_world.get(), ids, m_picking_service.get(), m_camera.get(),
       screen_pos.x(), screen_pos.y(), width(), height(), k_local_owner_id);
   update();
+}
+
+void ArenaViewport::update_spawn_anchor_from_click(const QPointF &screen_pos) {
+  if (m_camera == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  QVector3D spawn_anchor;
+  if (!Game::Systems::PickingService::screen_to_ground(
+          *m_camera, width(), height(), screen_pos, spawn_anchor)) {
+    return;
+  }
+
+  m_spawn_anchor_world = App::Utils::snap_to_walkable_ground(spawn_anchor);
+  m_spawn_anchor_world_valid = true;
+}
+
+auto ArenaViewport::resolve_spawn_anchor_world() const -> QVector3D {
+  if (m_spawn_anchor_world_valid) {
+    return App::Utils::snap_to_walkable_ground(m_spawn_anchor_world);
+  }
+
+  return App::Utils::snap_to_walkable_ground(
+      Game::Map::TerrainService::instance().resolve_surface_world_position(
+          0.0F, 0.0F, 0.0F, 0.0F));
+}
+
+auto ArenaViewport::is_spawn_position_available(const QVector3D &position,
+                                                float clearance) const -> bool {
+  if (Game::Map::TerrainService::instance().is_forbidden_world(position.x(),
+                                                               position.z())) {
+    return false;
+  }
+
+  if (m_world == nullptr) {
+    return true;
+  }
+
+  for (const auto &unit : m_units) {
+    if (unit == nullptr) {
+      continue;
+    }
+
+    auto *entity = m_world->get_entity(unit->id());
+    auto *transform =
+        entity != nullptr
+            ? entity->get_component<Engine::Core::TransformComponent>()
+            : nullptr;
+    auto *unit_component =
+        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
+                          : nullptr;
+    if (entity == nullptr || transform == nullptr ||
+        unit_component == nullptr || unit_component->health <= 0 ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      continue;
+    }
+
+    float const dx = transform->position.x - position.x();
+    float const dz = transform->position.z - position.z();
+    float const min_distance =
+        std::max(clearance, entity_spawn_clearance(*entity));
+    if ((dx * dx + dz * dz) < (min_distance * min_distance)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+auto ArenaViewport::find_available_spawn_position(
+    const QVector3D &anchor, float clearance) const -> QVector3D {
+  auto resolve_candidate = [anchor](float world_x, float world_z) {
+    return App::Utils::snap_to_walkable_ground(
+        Game::Map::TerrainService::instance().resolve_surface_world_position(
+            world_x, world_z, 0.0F, anchor.y()));
+  };
+
+  QVector3D const snapped_anchor = resolve_candidate(anchor.x(), anchor.z());
+  if (is_spawn_position_available(snapped_anchor, clearance)) {
+    return snapped_anchor;
+  }
+
+  float const step = std::max(1.0F, clearance * k_spawn_search_step_factor);
+  for (int ring = 1; ring <= k_max_spawn_search_ring; ++ring) {
+    for (int grid_z = -ring; grid_z <= ring; ++grid_z) {
+      for (int grid_x = -ring; grid_x <= ring; ++grid_x) {
+        if (std::max(std::abs(grid_x), std::abs(grid_z)) != ring) {
+          continue;
+        }
+
+        QVector3D const candidate =
+            resolve_candidate(anchor.x() + static_cast<float>(grid_x) * step,
+                              anchor.z() + static_cast<float>(grid_z) * step);
+        if (is_spawn_position_available(candidate, clearance)) {
+          return candidate;
+        }
+      }
+    }
+  }
+
+  return snapped_anchor;
 }
 
 void ArenaViewport::apply_keyboard_camera_controls(float real_dt) {
@@ -1293,19 +1385,8 @@ auto ArenaViewport::spawn_single_unit(
 
   Game::Units::TroopType const resolved_unit_type =
       resolve_spawn_unit_type(nation_id, unit_type);
-
-  int const owner_spawn_count =
-      spawn_count_for_owner(*m_world, m_units, owner_id);
-  float const column = static_cast<float>(owner_spawn_count % 4);
-  float const row = static_cast<float>(owner_spawn_count / 4);
-  float const world_x = (column - 1.5F) * 3.5F;
-  float const world_z =
-      owner_id == k_enemy_owner_id ? (6.0F + row * 4.0F) : (-6.0F - row * 4.0F);
-  float const world_y =
-      Game::Map::TerrainService::instance().resolve_surface_world_y(
-          world_x, world_z, 0.0F, 0.0F);
-  QVector3D const spawn_position =
-      App::Utils::snap_to_walkable_ground({world_x, world_y, world_z});
+  QVector3D const spawn_position = find_available_spawn_position(
+      resolve_spawn_anchor_world(), k_unit_spawn_clearance);
 
   Game::Units::SpawnParams params;
   params.position = spawn_position;
@@ -1413,34 +1494,8 @@ auto ArenaViewport::spawn_single_building(
   if (m_unit_factory == nullptr || m_world == nullptr) {
     return 0U;
   }
-
-  int building_count = 0;
-  for (const auto &unit : m_units) {
-    if (unit == nullptr) {
-      continue;
-    }
-    auto *entity = m_world->get_entity(unit->id());
-    auto *unit_component =
-        entity != nullptr ? entity->get_component<Engine::Core::UnitComponent>()
-                          : nullptr;
-    if (unit_component != nullptr && unit_component->owner_id == owner_id &&
-        Game::Units::is_building_spawn(unit_component->spawn_type)) {
-      ++building_count;
-    }
-  }
-
-  float const column = static_cast<float>(building_count % k_buildings_per_row);
-  float const row = static_cast<float>(building_count / k_buildings_per_row);
-  float const world_x =
-      (column - static_cast<float>(k_buildings_per_row - 1) * 0.5F) *
-      k_building_spacing;
-  float const world_z = owner_id == k_enemy_owner_id
-                            ? (k_building_base_z + row * k_building_spacing)
-                            : (-k_building_base_z - row * k_building_spacing);
-  float const world_y =
-      Game::Map::TerrainService::instance().resolve_surface_world_y(
-          world_x, world_z, 0.0F, 0.0F);
-  QVector3D const spawn_position = {world_x, world_y, world_z};
+  QVector3D const spawn_position = find_available_spawn_position(
+      resolve_spawn_anchor_world(), k_building_spawn_clearance);
 
   Game::Units::SpawnParams params;
   params.position = spawn_position;
@@ -1803,6 +1858,7 @@ void ArenaViewport::align_units_to_terrain() {
 }
 
 void ArenaViewport::draw_debug_overlay(QPainter &painter) {
+  draw_spawn_anchor_marker(painter);
   draw_selection_marquee(painter);
   if (m_normals_overlay_enabled) {
     draw_terrain_normals(painter);
@@ -1810,6 +1866,49 @@ void ArenaViewport::draw_debug_overlay(QPainter &painter) {
   if (m_pose_overlay_enabled) {
     draw_pose_overlay(painter);
   }
+}
+
+void ArenaViewport::draw_spawn_anchor_marker(QPainter &painter) {
+  if (m_camera == nullptr || width() <= 0 || height() <= 0) {
+    return;
+  }
+
+  QPointF screen_anchor;
+  if (!Game::Systems::PickingService::world_to_screen(
+          *m_camera, width(), height(), resolve_spawn_anchor_world(),
+          screen_anchor)) {
+    return;
+  }
+
+  QColor const marker_color = m_spawn_anchor_world_valid
+                                  ? QColor(255, 210, 96, 235)
+                                  : QColor(190, 190, 190, 200);
+  QString const label = m_spawn_anchor_world_valid
+                            ? QStringLiteral("Spawn")
+                            : QStringLiteral("Spawn (default)");
+
+  painter.save();
+  painter.setPen(QPen(marker_color, 2.0));
+  painter.setBrush(Qt::NoBrush);
+  painter.drawEllipse(screen_anchor, 10.0, 10.0);
+  painter.drawLine(screen_anchor + QPointF(-15.0, 0.0),
+                   screen_anchor + QPointF(-4.0, 0.0));
+  painter.drawLine(screen_anchor + QPointF(4.0, 0.0),
+                   screen_anchor + QPointF(15.0, 0.0));
+  painter.drawLine(screen_anchor + QPointF(0.0, -15.0),
+                   screen_anchor + QPointF(0.0, -4.0));
+  painter.drawLine(screen_anchor + QPointF(0.0, 4.0),
+                   screen_anchor + QPointF(0.0, 15.0));
+  painter.setBrush(marker_color);
+  painter.drawEllipse(screen_anchor, 3.0, 3.0);
+
+  QRectF const label_box(screen_anchor.x() + 14.0, screen_anchor.y() - 25.0,
+                         110.0, 20.0);
+  painter.fillRect(label_box, QColor(0, 0, 0, 140));
+  painter.setPen(QColor(245, 245, 245, 230));
+  painter.drawText(label_box.adjusted(6.0, 0.0, -6.0, 0.0),
+                   Qt::AlignVCenter | Qt::AlignLeft, label);
+  painter.restore();
 }
 
 void ArenaViewport::draw_selection_marquee(QPainter &painter) {
@@ -2018,7 +2117,8 @@ void ArenaViewport::draw_controls_overlay(QPainter &painter) {
 
   QString const title = QStringLiteral("Arena Controls");
   QStringList const lines{
-      QStringLiteral("LMB: select / drag select"),
+      QStringLiteral("LMB click: select + set spawn anchor"),
+      QStringLiteral("LMB drag: box select"),
       QStringLiteral("Shift+LMB: add to selection"),
       QStringLiteral("RMB: move / attack like the main game"),
       QStringLiteral("Wheel: zoom"),
@@ -2028,6 +2128,7 @@ void ArenaViewport::draw_controls_overlay(QPainter &painter) {
       QStringLiteral("Shift+Arrows: faster pan"),
       QStringLiteral("Q / E: yaw"),
       QStringLiteral("R / F: orbit pitch"),
+      QStringLiteral("Home: reset camera"),
       QStringLiteral("X: select local army"),
       QStringLiteral("Space: pause"),
       QStringLiteral("F1 or ?: toggle this help"),
