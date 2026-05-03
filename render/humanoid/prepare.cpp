@@ -3,12 +3,12 @@
 #include "../../game/core/component.h"
 #include "../../game/core/entity.h"
 #include "../../game/core/world.h"
-#include "../../game/map/terrain_service.h"
 #include "../../game/systems/nation_id.h"
 #include "../../game/units/spawn_type.h"
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../creature/archetype_registry.h"
+#include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
@@ -16,23 +16,19 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/spec.h"
 #include "../entity/registry.h"
-#include "../geom/math_utils.h"
 #include "../geom/parts.h"
 #include "../geom/transforms.h"
 #include "../gl/backend.h"
-#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../gl/humanoid/animation/gait.h"
 #include "../gl/humanoid/humanoid_constants.h"
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
-#include "../gl/resources.h"
 #include "../graphics_settings.h"
 #include "../palette.h"
 #include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
 #include "../submitter.h"
-#include "../visibility_budget.h"
 #include "cache_control.h"
 #include "facial_hair_catalog.h"
 #include "formation_calculator.h"
@@ -45,7 +41,6 @@
 #include "rig_stats_shim.h"
 
 #include <QMatrix4x4>
-#include <QVector2D>
 #include <QVector4D>
 #include <QtMath>
 #include <algorithm>
@@ -137,7 +132,8 @@ make_runtime_prewarm_ctx(const DrawContext &ctx) -> DrawContext {
 
 void HumanoidRendererBase::render(const DrawContext &ctx,
                                   ISubmitter &out) const {
-  AnimationInputs anim = sample_anim_state(ctx);
+  AnimationInputs anim =
+      Render::Creature::Pipeline::resolve_humanoid_animation_state(ctx).inputs;
 
   if (ctx.template_prewarm) {
     render_procedural(make_runtime_prewarm_ctx(ctx), anim, out);
@@ -159,37 +155,15 @@ void HumanoidRendererBase::render_procedural(const DrawContext &ctx,
 
 namespace {
 
-constexpr float k_shadow_size_infantry = 0.16F;
-constexpr float k_shadow_size_mounted = 0.35F;
-
 uint32_t s_current_frame = 0;
 constexpr uint32_t k_pose_cache_max_age = 300;
 constexpr uint32_t k_layout_cache_max_age = 600;
 
 HumanoidRenderStats s_render_stats;
 
-constexpr float k_shadow_ground_offset = 0.02F;
-constexpr float k_shadow_base_alpha = 0.24F;
-const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
-
-constexpr float k_temporal_skip_distance_minimal = 45.0F;
-constexpr uint32_t k_temporal_skip_period_minimal = 3;
-constexpr float k_unit_ambient_anim_duration = 6.0F;
-constexpr float k_unit_cycle_base = 15.0F;
-constexpr float k_unit_cycle_range = 10.0F;
-
 inline auto fast_random(uint32_t &state) -> float {
   state = state * 1664525U + 1013904223U;
   return float(state & 0x7FFFFFU) / float(0x7FFFFFU);
-}
-
-inline auto hash_u32(std::uint32_t x) -> std::uint32_t {
-  x ^= x >> 16;
-  x *= 0x7feb352dU;
-  x ^= x >> 15;
-  x *= 0x846ca68bU;
-  x ^= x >> 16;
-  return x;
 }
 
 } // namespace
@@ -667,38 +641,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       continue;
     }
 
-    RCP::CreatureLodDecisionInputs lod_in{};
-    if (ctx.force_humanoid_lod) {
-      lod_in.forced_lod =
-          static_cast<Render::Creature::CreatureLOD>(ctx.forced_humanoid_lod);
-    }
-    lod_in.has_camera = (ctx.camera != nullptr);
-    float soldier_distance = 0.0F;
-    if (ctx.camera != nullptr) {
-      soldier_distance =
-          (soldier_world_pos - ctx.camera->get_position()).length();
-    }
-    lod_in.distance = soldier_distance;
-    lod_in.thresholds = lod_config.thresholds;
-    lod_in.apply_visibility_budget = lod_config.apply_visibility_budget;
-    lod_in.budget_grant_full = true;
-    lod_in.temporal = lod_config.temporal;
-    lod_in.frame_index = frame_index;
-    lod_in.instance_seed = inst_seed;
-
-    if (lod_in.apply_visibility_budget && !ctx.force_humanoid_lod &&
-        ctx.camera != nullptr) {
-      const auto distance_lod =
-          RCP::select_distance_lod(soldier_distance, lod_in.thresholds);
-      if (distance_lod == Render::Creature::CreatureLOD::Full) {
-        const auto granted =
-            Render::VisibilityBudgetTracker::instance().request_humanoid_lod(
-                HumanoidLOD::Full);
-        lod_in.budget_grant_full = (granted == HumanoidLOD::Full);
-      }
-    }
-
-    const auto lod_decision = RCP::decide_creature_lod(lod_in);
+    RCP::HumanoidLodStateInputs lod_inputs{};
+    lod_inputs.ctx = &ctx;
+    lod_inputs.soldier_world_pos = soldier_world_pos;
+    lod_inputs.config = lod_config;
+    lod_inputs.frame_index = frame_index;
+    lod_inputs.instance_seed = inst_seed;
+    const auto lod_state = RCP::resolve_humanoid_lod_state(lod_inputs);
+    const auto lod_decision = lod_state.decision;
     if (lod_decision.culled) {
       if (lod_decision.reason == RCP::CullReason::Billboard) {
         ++s_render_stats.soldiers_skipped_lod;
@@ -729,107 +679,31 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
 
-    const auto &gfx_settings = Render::GraphicsSettings::instance();
-    const bool should_render_shadow =
-        ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
-        soldier_lod == HumanoidLOD::Full &&
-        soldier_distance < gfx_settings.shadow_max_distance();
+    RCP::HumanoidShadowStateInputs shadow_inputs{};
+    shadow_inputs.ctx = &inst_ctx;
+    shadow_inputs.graph = &graph_output;
+    shadow_inputs.unit = unit_comp;
+    shadow_inputs.soldier_world_pos = soldier_world_pos;
+    shadow_inputs.lod = soldier_lod;
+    shadow_inputs.camera_distance = lod_state.camera_distance;
+    shadow_inputs.mounted = is_mounted_spawn;
+    const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
+    if (shadow_state.enabled) {
+      out.add_post_body_draw(
+          shadow_state.pass, [shadow_state](Render::GL::ISubmitter &submitter) {
+            if (auto *renderer = dynamic_cast<Renderer *>(&submitter)) {
+              Shader *previous_shader = renderer->get_current_shader();
+              renderer->set_current_shader(shadow_state.shader);
+              shadow_state.shader->set_uniform(QStringLiteral("u_lightDir"),
+                                               shadow_state.light_dir);
 
-    if (should_render_shadow && inst_ctx.backend != nullptr &&
-        inst_ctx.resources != nullptr) {
-      auto *shadow_shader =
-          inst_ctx.backend->shader(QStringLiteral("troop_shadow"));
-      auto *quad_mesh = inst_ctx.resources->quad();
+              submitter.mesh(shadow_state.mesh, shadow_state.model,
+                             QVector3D(0.0F, 0.0F, 0.0F), nullptr,
+                             shadow_state.alpha, 0);
 
-      if (shadow_shader != nullptr && quad_mesh != nullptr) {
-
-        float const shadow_size =
-            is_mounted_spawn ? k_shadow_size_mounted : k_shadow_size_infantry;
-        float depth_boost = 1.0F;
-        float width_boost = 1.0F;
-        if (unit_comp != nullptr) {
-          using Game::Units::SpawnType;
-          switch (unit_comp->spawn_type) {
-          case SpawnType::Spearman:
-            depth_boost = 1.8F;
-            width_boost = 0.95F;
-            break;
-          case SpawnType::HorseSpearman:
-            depth_boost = 2.1F;
-            width_boost = 1.05F;
-            break;
-          case SpawnType::Archer:
-          case SpawnType::HorseArcher:
-            depth_boost = 1.2F;
-            width_boost = 0.95F;
-            break;
-          default:
-            break;
-          }
-        }
-
-        float const shadow_width =
-            shadow_size * (is_mounted_spawn ? 1.05F : 1.0F) * width_boost;
-        float const shadow_depth =
-            shadow_size * (is_mounted_spawn ? 1.30F : 1.10F) * depth_boost;
-
-        auto &terrain_service = Game::Map::TerrainService::instance();
-
-        if (terrain_service.is_initialized()) {
-
-          QVector3D const inst_pos =
-              inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-          QVector3D const shadow_pos =
-              terrain_service.resolve_surface_world_position(
-                  inst_pos.x(), inst_pos.z(), 0.0F, inst_pos.y());
-          float const shadow_y = shadow_pos.y();
-
-          QVector3D light_dir = k_shadow_light_dir.normalized();
-          QVector2D light_dir_xz(light_dir.x(), light_dir.z());
-          if (light_dir_xz.lengthSquared() < 1e-6F) {
-            light_dir_xz = QVector2D(0.0F, 1.0F);
-          } else {
-            light_dir_xz.normalize();
-          }
-          QVector2D const shadow_dir = -light_dir_xz;
-          QVector2D dir_for_use = shadow_dir;
-          if (dir_for_use.lengthSquared() < 1e-6F) {
-            dir_for_use = QVector2D(0.0F, 1.0F);
-          } else {
-            dir_for_use.normalize();
-          }
-          float const shadow_offset = shadow_depth * 1.25F;
-          QVector2D const offset_2d = dir_for_use * shadow_offset;
-          float const light_yaw_deg = qRadiansToDegrees(
-              std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
-
-          QMatrix4x4 shadow_model;
-          shadow_model.translate(inst_pos.x() + offset_2d.x(),
-                                 shadow_y + k_shadow_ground_offset,
-                                 inst_pos.z() + offset_2d.y());
-          shadow_model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
-          shadow_model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
-          shadow_model.scale(shadow_width, shadow_depth, 1.0F);
-
-          out.add_post_body_draw(
-              graph_output.pass_intent,
-              [shadow_shader, quad_mesh, shadow_model,
-               dir_for_use](Render::GL::ISubmitter &submitter) {
-                if (auto *renderer = dynamic_cast<Renderer *>(&submitter)) {
-                  Shader *previous_shader = renderer->get_current_shader();
-                  renderer->set_current_shader(shadow_shader);
-                  shadow_shader->set_uniform(QStringLiteral("u_lightDir"),
-                                             dir_for_use);
-
-                  submitter.mesh(quad_mesh, shadow_model,
-                                 QVector3D(0.0F, 0.0F, 0.0F), nullptr,
-                                 k_shadow_base_alpha, 0);
-
-                  renderer->set_current_shader(previous_shader);
-                }
-              });
-        }
-      }
+              renderer->set_current_shader(previous_shader);
+            }
+          });
     }
 
     switch (soldier_lod) {
@@ -843,17 +717,28 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         break;
       }
 
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
+      RCP::PreparedHumanoidBodyState body_state;
+      body_state.graph = graph_output;
+      body_state.pose = pose;
+      body_state.variant = variant;
+      body_state.animation = anim_ctx;
+      out.bodies.add_humanoid(body_state);
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
       break;
     }
 
-    case HumanoidLOD::Minimal:
+    case HumanoidLOD::Minimal: {
 
       ++s_render_stats.lod_minimal;
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
+      RCP::PreparedHumanoidBodyState body_state;
+      body_state.graph = graph_output;
+      body_state.pose = pose;
+      body_state.variant = variant;
+      body_state.animation = anim_ctx;
+      out.bodies.add_humanoid(body_state);
       break;
+    }
 
     case HumanoidLOD::Billboard:
 

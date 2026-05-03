@@ -1,6 +1,7 @@
 #include "prepare.h"
 
 #include "../creature/animation_state_components.h"
+#include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
@@ -178,8 +179,12 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
   auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
   graph_output.spec = owner.visual_spec();
   graph_output.seed = request_seed;
-  out.bodies.add_quadruped(graph_output, v, horse_state_for_motion(motion),
-                           motion.phase);
+  RCP::PreparedHorseBodyState body_state;
+  body_state.graph = graph_output;
+  body_state.variant = v;
+  body_state.animation_state = horse_state_for_motion(motion);
+  body_state.phase = motion.phase;
+  out.bodies.add_quadruped(body_state);
 }
 
 void prepare_horse_render(

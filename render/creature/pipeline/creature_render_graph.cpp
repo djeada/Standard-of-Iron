@@ -8,6 +8,7 @@
 #include "../bpat/bpat_format.h"
 #include "../bpat/bpat_registry.h"
 #include "creature_asset.h"
+#include "creature_prepared_state.h"
 #include "preparation_common.h"
 
 #include "../../../game/core/component.h"
@@ -312,6 +313,10 @@ void CreatureRenderBatch::add_humanoid(
   requests_.push_back(req);
 }
 
+void CreatureRenderBatch::add_humanoid(const PreparedHumanoidBodyState &state) {
+  add_humanoid(state.graph, state.pose, state.variant, state.animation);
+}
+
 void CreatureRenderBatch::add_quadruped(
     const CreatureGraphOutput &output, const Render::GL::HorseVariant &variant,
     Render::Creature::AnimationStateId state, float phase,
@@ -339,6 +344,11 @@ void CreatureRenderBatch::add_quadruped(
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
+}
+
+void CreatureRenderBatch::add_quadruped(const PreparedHorseBodyState &state) {
+  add_quadruped(state.graph, state.variant, state.animation_state, state.phase,
+                state.clip_variant);
 }
 
 void CreatureRenderBatch::add_quadruped(
@@ -369,6 +379,12 @@ void CreatureRenderBatch::add_quadruped(
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
   requests_.push_back(req);
+}
+
+void CreatureRenderBatch::add_quadruped(
+    const PreparedElephantBodyState &state) {
+  add_quadruped(state.graph, state.variant, state.animation_state, state.phase,
+                state.clip_variant);
 }
 
 void CreatureRenderBatch::add_request(
