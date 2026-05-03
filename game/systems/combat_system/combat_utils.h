@@ -17,14 +17,20 @@ namespace Game::Systems::Combat {
 struct CombatQueryContext {
   CombatQueryContext();
 
+  void clear();
+
   std::vector<Engine::Core::Entity *> units;
   std::unordered_map<Engine::Core::EntityID, Engine::Core::Entity *>
       entities_by_id;
   Game::Systems::SpatialGrid unit_grid;
+  mutable std::vector<Engine::Core::EntityID> nearby_unit_ids;
 };
 
 auto build_combat_query_context(Engine::Core::World *world)
     -> CombatQueryContext;
+
+void rebuild_combat_query_context(Engine::Core::World *world,
+                                  CombatQueryContext &query_context);
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool;
 

@@ -11,6 +11,8 @@ protected:
     config.temporal_culling_threshold = 15;
     config.animation_throttle_threshold = 30;
     config.animation_throttle_distance = 40.0F;
+    config.combat_render_priority_distance = 50.0F;
+    config.combat_animation_priority_distance = 36.0F;
     config.animation_skip_frames = 2;
     config.enabled = true;
     optimizer.set_config(config);
@@ -103,6 +105,22 @@ TEST_F(BattleRenderOptimizerTest, ActiveCombatUnitsAlwaysRender) {
   EXPECT_TRUE(optimizer.should_render_unit(1, false, false, false, true));
 }
 
+TEST_F(BattleRenderOptimizerTest, DistantCombatUnitsCanBeTemporallyCulled) {
+  auto &optimizer = BattleRenderOptimizer::instance();
+  optimizer.set_visible_unit_count(100);
+  float const far_distance_sq = 100.0F * 100.0F;
+
+  optimizer.begin_frame();
+  bool const frame1 = optimizer.should_render_unit(1, false, false, false, true,
+                                                   far_distance_sq);
+
+  optimizer.begin_frame();
+  bool const frame2 = optimizer.should_render_unit(1, false, false, false, true,
+                                                   far_distance_sq);
+
+  EXPECT_NE(frame1, frame2);
+}
+
 TEST_F(BattleRenderOptimizerTest,
        AnimationThrottlingBelowThresholdAlwaysUpdates) {
   auto &optimizer = BattleRenderOptimizer::instance();
@@ -150,15 +168,34 @@ TEST_F(BattleRenderOptimizerTest, AnimationThrottlingDistantUnitsThrottled) {
   EXPECT_GT(updated, 0);
 }
 
-TEST_F(BattleRenderOptimizerTest, CombatAnimationsAreNeverThrottled) {
+TEST_F(BattleRenderOptimizerTest, NearbyCombatAnimationsAreNeverThrottled) {
   auto &optimizer = BattleRenderOptimizer::instance();
   optimizer.set_visible_unit_count(100);
 
   for (int frame = 0; frame < 6; ++frame) {
     optimizer.begin_frame();
     EXPECT_TRUE(
-        optimizer.should_update_animation(1, 100.0F * 100.0F, false, true));
+        optimizer.should_update_animation(1, 10.0F * 10.0F, false, true));
   }
+}
+
+TEST_F(BattleRenderOptimizerTest, DistantCombatAnimationsCanBeThrottled) {
+  auto &optimizer = BattleRenderOptimizer::instance();
+  optimizer.set_visible_unit_count(100);
+
+  int updated = 0;
+  int throttled = 0;
+  for (int frame = 0; frame < 6; ++frame) {
+    optimizer.begin_frame();
+    if (optimizer.should_update_animation(1, 100.0F * 100.0F, false, true)) {
+      ++updated;
+    } else {
+      ++throttled;
+    }
+  }
+
+  EXPECT_GT(throttled, 0);
+  EXPECT_GT(updated, 0);
 }
 
 TEST_F(BattleRenderOptimizerTest, BatchingBoostIncreasesWithUnitCount) {

@@ -20,11 +20,25 @@ auto get_entity_from_query_context(const CombatQueryContext &query_context,
 CombatQueryContext::CombatQueryContext()
     : unit_grid(k_combat_query_cell_size) {}
 
+void CombatQueryContext::clear() {
+  units.clear();
+  entities_by_id.clear();
+  unit_grid.clear();
+  nearby_unit_ids.clear();
+}
+
 auto build_combat_query_context(Engine::Core::World *world)
     -> CombatQueryContext {
   CombatQueryContext query_context;
+  rebuild_combat_query_context(world, query_context);
+  return query_context;
+}
+
+void rebuild_combat_query_context(Engine::Core::World *world,
+                                  CombatQueryContext &query_context) {
+  query_context.clear();
   if (world == nullptr) {
-    return query_context;
+    return;
   }
 
   auto const world_units =
@@ -54,8 +68,6 @@ auto build_combat_query_context(Engine::Core::World *world)
                                      transform->position.z);
     }
   }
-
-  return query_context;
 }
 
 auto is_unit_in_hold_mode(Engine::Core::Entity *entity) -> bool {
@@ -197,8 +209,10 @@ auto find_nearest_enemy(
 
   Engine::Core::Entity *nearest_enemy = nullptr;
   float nearest_dist_sq = max_range * max_range;
-  auto const nearby_ids = query_context.unit_grid.get_entities_in_range(
-      unit_transform->position.x, unit_transform->position.z, max_range);
+  auto &nearby_ids = query_context.nearby_unit_ids;
+  query_context.unit_grid.get_entities_in_range(unit_transform->position.x,
+                                                unit_transform->position.z,
+                                                max_range, nearby_ids);
 
   for (auto target_id : nearby_ids) {
     if (scan_iterations != nullptr) {
