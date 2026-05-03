@@ -1,9 +1,5 @@
 # macOS Code Signing and Notarization Guide
 
-This document explains how to set up macOS code signing and notarization for the Standard of Iron project.
-
-## Overview
-
 The macOS build workflow includes automatic code signing and notarization to ensure the application can be opened on macOS without Gatekeeper warnings. This process:
 
 1. **Signs** the `.app` bundle with a Developer ID Application certificate
