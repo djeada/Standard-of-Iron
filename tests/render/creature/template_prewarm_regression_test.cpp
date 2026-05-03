@@ -1,5 +1,7 @@
 
 
+#include "game/core/component.h"
+#include "game/core/entity.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -10,6 +12,7 @@
 #include "render/creature/pipeline/unit_visual_spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
+#include "render/gl/camera.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
@@ -214,6 +217,70 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
 
   EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);
   EXPECT_FALSE(pass_intent_for(state.graph).emits_post_body_draws);
+}
+
+TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
+  Render::GL::AnimationInputs override_anim{};
+  override_anim.time = 3.0F;
+  override_anim.is_attacking = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.animation_override = &override_anim;
+
+  auto const state = resolve_humanoid_animation_state(ctx);
+
+  EXPECT_TRUE(state.used_override);
+  EXPECT_FLOAT_EQ(state.inputs.time, 3.0F);
+  EXPECT_TRUE(state.inputs.is_attacking);
+}
+
+TEST(TemplatePrewarmRegression, ElephantPreparedAnimationPromotesMeleeLock) {
+  Engine::Core::Entity entity(1);
+  auto *attack = entity.add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(attack, nullptr);
+  attack->in_melee_lock = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  auto const state = resolve_elephant_animation_state(ctx);
+
+  EXPECT_FALSE(state.used_override);
+  EXPECT_TRUE(state.inputs.is_attacking);
+  EXPECT_TRUE(state.inputs.is_melee);
+}
+
+TEST(TemplatePrewarmRegression, PreparedHumanoidLodCarriesDistanceCull) {
+  Render::GL::Camera camera;
+  camera.set_position(QVector3D(0.0F, 0.0F, 0.0F));
+
+  Render::GL::DrawContext ctx{};
+  ctx.camera = &camera;
+
+  HumanoidLodStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.soldier_world_pos = QVector3D(0.0F, 0.0F, 50.0F);
+  inputs.config = humanoid_lod_config();
+
+  auto const state = resolve_humanoid_lod_state(inputs);
+
+  EXPECT_EQ(state.decision.lod, Render::Creature::CreatureLOD::Billboard);
+  EXPECT_TRUE(state.decision.culled);
+  EXPECT_EQ(state.decision.reason, CullReason::Billboard);
+}
+
+TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
+  Render::GL::DrawContext ctx{};
+  CreatureGraphOutput graph{};
+
+  HumanoidShadowStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.graph = &graph;
+  inputs.lod = Render::Creature::CreatureLOD::Full;
+
+  auto const shadow = prepare_humanoid_shadow_state(inputs);
+
+  EXPECT_FALSE(shadow.enabled);
 }
 
 TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {

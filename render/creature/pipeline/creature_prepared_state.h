@@ -6,7 +6,19 @@
 #include "../render_request.h"
 #include "creature_render_graph.h"
 
+#include <QMatrix4x4>
+#include <QVector2D>
+#include <QVector3D>
 #include <cstdint>
+
+namespace Engine::Core {
+class UnitComponent;
+} // namespace Engine::Core
+
+namespace Render::GL {
+class Mesh;
+class Shader;
+} // namespace Render::GL
 
 namespace Render::Creature::Pipeline {
 
@@ -41,6 +53,45 @@ struct PreparedRenderPassIntent {
   bool emits_post_body_draws{false};
 };
 
+struct PreparedAnimationState {
+  Render::GL::AnimationInputs inputs{};
+  bool used_override{false};
+};
+
+struct PreparedCreatureLodState {
+  CreatureLodDecision decision{};
+  float camera_distance{0.0F};
+  bool budget_granted_full{true};
+};
+
+struct HumanoidLodStateInputs {
+  const Render::GL::DrawContext *ctx{nullptr};
+  QVector3D soldier_world_pos{};
+  CreatureLodConfig config{};
+  std::uint32_t frame_index{0U};
+  std::uint32_t instance_seed{0U};
+};
+
+struct PreparedHumanoidShadowState {
+  bool enabled{false};
+  RenderPassIntent pass{RenderPassIntent::Main};
+  Render::GL::Shader *shader{nullptr};
+  Render::GL::Mesh *mesh{nullptr};
+  QMatrix4x4 model{};
+  QVector2D light_dir{};
+  float alpha{0.0F};
+};
+
+struct HumanoidShadowStateInputs {
+  const Render::GL::DrawContext *ctx{nullptr};
+  const CreatureGraphOutput *graph{nullptr};
+  Engine::Core::UnitComponent *unit{nullptr};
+  QVector3D soldier_world_pos{};
+  Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
+  float camera_distance{0.0F};
+  bool mounted{false};
+};
+
 [[nodiscard]] inline auto pass_intent_for(
     const CreatureGraphOutput &graph) noexcept -> PreparedRenderPassIntent {
   PreparedRenderPassIntent intent;
@@ -49,5 +100,19 @@ struct PreparedRenderPassIntent {
   intent.emits_post_body_draws = graph.pass_intent == RenderPassIntent::Main;
   return intent;
 }
+
+[[nodiscard]] auto resolve_humanoid_animation_state(
+    const Render::GL::DrawContext &ctx) -> PreparedAnimationState;
+
+[[nodiscard]] auto resolve_elephant_animation_state(
+    const Render::GL::DrawContext &ctx) -> PreparedAnimationState;
+
+[[nodiscard]] auto
+resolve_humanoid_lod_state(const HumanoidLodStateInputs &inputs)
+    -> PreparedCreatureLodState;
+
+[[nodiscard]] auto
+prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
+    -> PreparedHumanoidShadowState;
 
 } // namespace Render::Creature::Pipeline
