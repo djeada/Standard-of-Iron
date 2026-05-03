@@ -3,6 +3,7 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/visuals/team_colors.h"
 #include "../../../creature/anatomy_bake.h"
+#include "../../../creature/pipeline/creature_prepared_state.h"
 #include "../../../elephant/elephant_renderer_base.h"
 #include "../../../geom/math_utils.h"
 #include "../../../geom/transforms.h"
@@ -90,27 +91,9 @@ void register_elephant_renderer(EntityRendererRegistry &registry) {
                 p.entity, seed, fabric_base, metal_base)
                 .profile;
 
-        AnimationInputs anim = sample_anim_state(p);
-
-        if (p.entity != nullptr) {
-          if (auto *combat_state =
-                  p.entity
-                      ->get_component<Engine::Core::CombatStateComponent>()) {
-            if (combat_state->animation_state !=
-                Engine::Core::CombatAnimationState::Idle) {
-              anim.is_attacking = true;
-              anim.is_melee = true;
-            }
-          }
-
-          if (auto *attack =
-                  p.entity->get_component<Engine::Core::AttackComponent>()) {
-            if (attack->in_melee_lock) {
-              anim.is_attacking = true;
-              anim.is_melee = true;
-            }
-          }
-        }
+        AnimationInputs anim =
+            Render::Creature::Pipeline::resolve_elephant_animation_state(p)
+                .inputs;
 
         static_renderer.render(p, anim, profile, nullptr, nullptr, out);
       });

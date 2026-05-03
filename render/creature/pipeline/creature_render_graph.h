@@ -40,6 +40,10 @@ struct ElephantMotionSample;
 
 namespace Render::Creature::Pipeline {
 
+struct PreparedHumanoidBodyState;
+struct PreparedHorseBodyState;
+struct PreparedElephantBodyState;
+
 struct CreatureGraphInputs {
   const Render::GL::DrawContext *ctx{nullptr};
   const Render::GL::AnimationInputs *anim{nullptr};
@@ -122,15 +126,21 @@ public:
                     const Render::GL::HumanoidVariant &variant,
                     const Render::GL::HumanoidAnimationContext &anim);
 
+  void add_humanoid(const PreparedHumanoidBodyState &state);
+
   void add_quadruped(const CreatureGraphOutput &output,
                      const Render::GL::HorseVariant &variant,
                      Render::Creature::AnimationStateId state, float phase,
                      std::uint32_t clip_variant = 0U);
 
+  void add_quadruped(const PreparedHorseBodyState &state);
+
   void add_quadruped(const CreatureGraphOutput &output,
                      const Render::GL::ElephantVariant &variant,
                      Render::Creature::AnimationStateId state, float phase,
                      std::uint32_t clip_variant = 0U);
+
+  void add_quadruped(const PreparedElephantBodyState &state);
 
   void add_request(const Render::Creature::CreatureRenderRequest &request);
 
