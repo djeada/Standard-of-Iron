@@ -1,7 +1,5 @@
 # Mission Framework Documentation
 
-## Overview
-
 The Mission Framework provides a formal authoring layer for creating structured gameplay experiences in Standard of Iron. It separates playable maps from mission logic, allowing designers to create reusable missions and organize them into campaigns.
 
 ## Architecture
