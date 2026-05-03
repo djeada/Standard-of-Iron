@@ -10,6 +10,8 @@ struct BattleRenderConfig {
   int temporal_culling_threshold = 15;
   int animation_throttle_threshold = 30;
   float animation_throttle_distance = 40.0F;
+  float combat_render_priority_distance = 50.0F;
+  float combat_animation_priority_distance = 36.0F;
   int animation_skip_frames = 2;
   bool enabled = true;
 };
@@ -51,14 +53,30 @@ public:
 
   [[nodiscard]] auto
   should_render_unit(uint32_t entity_id, bool is_moving, bool is_selected,
-                     bool is_hovered,
-                     bool is_combat_active = false) const noexcept -> bool {
-    if (!is_battle_mode()) {
+                     bool is_hovered, bool is_combat_active = false,
+                     float distance_sq = 0.0F) const noexcept -> bool {
+    BattleRenderConfig cfg;
+    int visible_count = 0;
+    {
+      std::lock_guard<std::mutex> lock(m_config_mutex);
+      cfg = m_config;
+      visible_count = m_visible_unit_count.load(std::memory_order_relaxed);
+    }
+
+    if (!cfg.enabled || visible_count < cfg.temporal_culling_threshold) {
       return true;
     }
 
-    if (is_selected || is_hovered || is_moving || is_combat_active) {
+    if (is_selected || is_hovered || is_moving) {
       return true;
+    }
+
+    if (is_combat_active) {
+      float const priority_distance_sq = cfg.combat_render_priority_distance *
+                                         cfg.combat_render_priority_distance;
+      if (distance_sq < priority_distance_sq) {
+        return true;
+      }
     }
 
     uint32_t frame = m_frame_counter.load(std::memory_order_relaxed);
@@ -82,7 +100,11 @@ public:
       cfg = m_config;
     }
 
-    if (!cfg.enabled || is_combat_active) {
+    if (!cfg.enabled) {
+      return true;
+    }
+
+    if (is_selected) {
       return true;
     }
 
@@ -91,13 +113,13 @@ public:
       return true;
     }
 
-    if (is_selected) {
-      return true;
+    float priority_distance = cfg.animation_throttle_distance;
+    if (is_combat_active) {
+      priority_distance = cfg.combat_animation_priority_distance;
     }
 
-    float const throttle_distance_sq =
-        cfg.animation_throttle_distance * cfg.animation_throttle_distance;
-    if (distance_sq < throttle_distance_sq) {
+    float const priority_distance_sq = priority_distance * priority_distance;
+    if (distance_sq < priority_distance_sq) {
       return true;
     }
 

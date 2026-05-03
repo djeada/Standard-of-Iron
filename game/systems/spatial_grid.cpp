@@ -71,7 +71,14 @@ void SpatialGrid::update(Engine::Core::EntityID entity_id, float x, float z) {
 auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
     -> std::vector<Engine::Core::EntityID> {
   std::vector<Engine::Core::EntityID> result;
+  get_entities_in_range(x, z, range, result);
+  return result;
+}
 
+void SpatialGrid::get_entities_in_range(
+    float x, float z, float range,
+    std::vector<Engine::Core::EntityID> &result) const {
+  result.clear();
   int const cells_to_check =
       static_cast<int>(std::ceil(range * m_inv_cell_size));
   CellKey const center = to_cell_key(x, z);
@@ -105,8 +112,6 @@ auto SpatialGrid::get_entities_in_range(float x, float z, float range) const
       }
     }
   }
-
-  return result;
 }
 
 auto SpatialGrid::get_nearby_entities(float x, float z) const
