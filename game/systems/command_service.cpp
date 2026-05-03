@@ -33,6 +33,35 @@ constexpr float k_unit_radius_threshold = 0.5F;
 
 constexpr float k_jitter_distance = 1.5F;
 
+auto is_direct_path_walkable(const QVector3D &from, const QVector3D &to,
+                             const Pathfinding &pathfinder) -> bool {
+  Point const end_grid = CommandService::world_to_grid(to.x(), to.z());
+  if (!pathfinder.is_walkable(end_grid.x, end_grid.y)) {
+    return false;
+  }
+
+  QVector3D const direction = to - from;
+  float const length = direction.length();
+  if (length < 0.5F) {
+    return true;
+  }
+
+  constexpr float sample_interval = 0.5F;
+  int const num_samples = static_cast<int>(length / sample_interval);
+
+  for (int i = 1; i <= num_samples; ++i) {
+    float const t = static_cast<float>(i) / static_cast<float>(num_samples + 1);
+    QVector3D const sample_pos = from + direction * t;
+    Point const sample_grid =
+        CommandService::world_to_grid(sample_pos.x(), sample_pos.z());
+    if (!pathfinder.is_walkable(sample_grid.x, sample_grid.y)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 auto are_all_surrounding_cells_invalid(const Point &position,
                                        const Pathfinding &pathfinder,
                                        float unit_radius) -> bool {
@@ -295,8 +324,11 @@ void CommandService::move_unit(Engine::Core::World &world,
 
     int const dx = std::abs(end.x - start.x);
     int const dz = std::abs(end.y - start.y);
-    bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-    use_direct_path = false;
+    QVector3D const current_pos(transform->position.x, 0.0F,
+                                transform->position.z);
+    bool const use_direct_path =
+        ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
+        is_direct_path_walkable(current_pos, target, *s_pathfinder);
 
     if (use_direct_path) {
       mv->target_x = target_x;
@@ -763,8 +795,11 @@ void CommandService::move_group(
 
   int const dx = std::abs(end.x - start.x);
   int const dz = std::abs(end.y - start.y);
-  bool use_direct_path = (dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD;
-  use_direct_path = false;
+  QVector3D const leader_pos(leader.transform->position.x, 0.0F,
+                             leader.transform->position.z);
+  bool const use_direct_path =
+      ((dx + dz) <= CommandService::DIRECT_PATH_THRESHOLD) &&
+      is_direct_path_walkable(leader_pos, leader_target, *s_pathfinder);
 
   if (use_direct_path) {
     for (auto *member : units_needing_new_path) {
