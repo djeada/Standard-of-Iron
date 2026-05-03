@@ -1,6 +1,7 @@
 
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -189,6 +190,30 @@ TEST(TemplatePrewarmRegression, BatchFromPrewarmContextSubmitsNothing) {
   const auto stats = submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 0u);
+}
+
+TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
+  Render::GL::DrawContext prewarm_ctx{};
+  prewarm_ctx.template_prewarm = true;
+
+  CreatureGraphInputs inputs;
+  inputs.ctx = &prewarm_ctx;
+  inputs.camera_distance = 5.0F;
+  inputs.has_camera = true;
+
+  auto output = build_base_graph_output(
+      inputs, evaluate_creature_lod(inputs, humanoid_lod_config()));
+  output.spec.kind = CreatureKind::Humanoid;
+
+  PreparedHumanoidBodyState state;
+  state.graph = output;
+
+  CreatureRenderBatch batch;
+  batch.add_humanoid(state);
+  ASSERT_EQ(batch.requests().size(), 1u);
+
+  EXPECT_EQ(batch.requests().front().pass, RenderPassIntent::Shadow);
+  EXPECT_FALSE(pass_intent_for(state.graph).emits_post_body_draws);
 }
 
 TEST(TemplatePrewarmRegression, MixedNormalAndPrewarmBatchFiltersCorrectly) {

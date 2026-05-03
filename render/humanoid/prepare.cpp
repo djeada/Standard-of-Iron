@@ -9,6 +9,7 @@
 #include "../../game/units/troop_config.h"
 #include "../../game/visuals/team_colors.h"
 #include "../creature/archetype_registry.h"
+#include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/lod_decision.h"
 #include "../creature/pipeline/preparation_common.h"
@@ -843,17 +844,28 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         break;
       }
 
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
+      RCP::PreparedHumanoidBodyState body_state;
+      body_state.graph = graph_output;
+      body_state.pose = pose;
+      body_state.variant = variant;
+      body_state.animation = anim_ctx;
+      out.bodies.add_humanoid(body_state);
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
       break;
     }
 
-    case HumanoidLOD::Minimal:
+    case HumanoidLOD::Minimal: {
 
       ++s_render_stats.lod_minimal;
-      out.bodies.add_humanoid(graph_output, pose, variant, anim_ctx);
+      RCP::PreparedHumanoidBodyState body_state;
+      body_state.graph = graph_output;
+      body_state.pose = pose;
+      body_state.variant = variant;
+      body_state.animation = anim_ctx;
+      out.bodies.add_humanoid(body_state);
       break;
+    }
 
     case HumanoidLOD::Billboard:
 

@@ -1,10 +1,10 @@
 #include "prepare.h"
 
 #include "../creature/animation_state_components.h"
+#include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
-#include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
@@ -20,14 +20,6 @@ namespace Render::Elephant {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet k_elephant_clips{
-    0U,
-    1U,
-    2U,
-    Render::Creature::Quadruped::kInvalidClip,
-    Render::Creature::Quadruped::kInvalidClip,
-    3U};
-
 auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
                                const Render::GL::AnimationInputs &anim) noexcept
     -> Render::Creature::AnimationStateId {
@@ -39,13 +31,6 @@ auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
   }
   return anim.is_running ? Render::Creature::AnimationStateId::Run
                          : Render::Creature::AnimationStateId::Walk;
-}
-
-auto elephant_clip_for_motion(const Render::GL::ElephantMotionSample &motion,
-                              const Render::GL::AnimationInputs &anim) noexcept
-    -> std::uint16_t {
-  return Render::Creature::Quadruped::clip_for_motion(
-      k_elephant_clips, motion.is_moving, anim.is_running, motion.is_fighting);
 }
 
 } // namespace
@@ -163,9 +148,12 @@ void prepare_elephant_render(
   auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
   graph_output.spec = owner.visual_spec();
   graph_output.seed = 0U;
-  std::uint16_t const elephant_clip = elephant_clip_for_motion(motion, anim);
-  out.bodies.add_quadruped(
-      graph_output, v, elephant_state_for_motion(motion, anim), motion.phase);
+  RCP::PreparedElephantBodyState body_state;
+  body_state.graph = graph_output;
+  body_state.variant = v;
+  body_state.animation_state = elephant_state_for_motion(motion, anim);
+  body_state.phase = motion.phase;
+  out.bodies.add_quadruped(body_state);
 }
 
 } // namespace Render::Elephant
