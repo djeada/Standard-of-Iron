@@ -22,6 +22,9 @@ public:
   [[nodiscard]] auto get_entities_in_range(float x, float z, float range) const
       -> std::vector<Engine::Core::EntityID>;
 
+  void get_entities_in_range(float x, float z, float range,
+                             std::vector<Engine::Core::EntityID> &result) const;
+
   [[nodiscard]] auto get_nearby_entities(float x, float z) const
       -> std::vector<Engine::Core::EntityID>;
 

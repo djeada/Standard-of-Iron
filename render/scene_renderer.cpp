@@ -1231,7 +1231,7 @@ void Renderer::render_world(Engine::Core::World *world) {
 
     bool should_update_temporal = battle_optimizer.should_render_unit(
         entry.entity_id, entry.moving, entry.selected, entry.hovered,
-        entry.combat_active);
+        entry.combat_active, entry.distance_sq);
 
     const QMatrix4x4 &model_matrix = entry.model_matrix;
 

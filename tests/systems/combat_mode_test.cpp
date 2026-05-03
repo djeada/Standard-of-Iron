@@ -471,7 +471,7 @@ TEST_F(CombatModeTest, ChasingUnitDoesNotRequestNewPathEveryFrame) {
   attack->melee_cooldown = 0.0F;
 
   auto *enemy = world->create_entity();
-  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  enemy->add_component<TransformComponent>(12.0F, 0.0F, 0.0F);
   auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 
@@ -499,6 +499,40 @@ TEST_F(CombatModeTest, ChasingUnitDoesNotRequestNewPathEveryFrame) {
   EXPECT_EQ(movement->pending_request_id, first_request_id);
 }
 
+TEST_F(CombatModeTest, ShortUnobstructedChaseUsesDirectMovement) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto *attack = attacker->add_component<AttackComponent>();
+  attack->can_melee = true;
+  attack->can_ranged = false;
+  attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attack->cooldown = 0.0F;
+  attack->melee_cooldown = 0.0F;
+
+  auto *enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto *attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = true;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  auto *movement = attacker->get_component<MovementComponent>();
+  ASSERT_NE(movement, nullptr);
+  EXPECT_TRUE(movement->has_target);
+  EXPECT_FALSE(movement->path_pending);
+  EXPECT_EQ(movement->pending_request_id, 0U);
+  EXPECT_TRUE(movement->path.empty());
+}
+
 TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -514,7 +548,7 @@ TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
 
   auto *enemy = world->create_entity();
   auto *enemy_transform =
-      enemy->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+      enemy->add_component<TransformComponent>(12.0F, 0.0F, 0.0F);
   auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 
@@ -537,7 +571,7 @@ TEST_F(CombatModeTest, ChasingUnitRequestsNewPathWhenTargetMovesFarEnough) {
   movement->target_x = movement->goal_x;
   movement->target_y = movement->goal_y;
 
-  enemy_transform->position.x = 10.0F;
+  enemy_transform->position.x = 16.0F;
   enemy_transform->position.z = 0.0F;
 
   auto const second_query_context =
@@ -563,7 +597,7 @@ TEST_F(CombatModeTest, PendingPathDoesNotSubmitDuplicateEquivalentRequest) {
   attack->melee_cooldown = 0.0F;
 
   auto *enemy = world->create_entity();
-  enemy->add_component<TransformComponent>(7.0F, 0.0F, 0.0F);
+  enemy->add_component<TransformComponent>(12.0F, 0.0F, 0.0F);
   auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   enemy_unit->owner_id = 2;
 

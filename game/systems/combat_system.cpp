@@ -8,11 +8,11 @@
 namespace Game::Systems {
 
 void CombatSystem::update(Engine::Core::World *world, float delta_time) {
-  auto const query_context = Combat::build_combat_query_context(world);
+  Combat::rebuild_combat_query_context(world, m_query_context);
   Combat::process_hit_feedback(world, delta_time);
   Combat::process_combat_state(world, delta_time);
-  Combat::process_attacks(world, query_context, delta_time);
-  m_auto_engagement.process(world, query_context, delta_time);
+  Combat::process_attacks(world, m_query_context, delta_time);
+  m_auto_engagement.process(world, m_query_context, delta_time);
 }
 
 } // namespace Game::Systems
