@@ -190,9 +190,8 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
 
   float const shadow_offset = shadow_depth * 1.25F;
   QVector2D const offset_2d = dir_for_use * shadow_offset;
-  float const light_yaw_deg =
-      qRadiansToDegrees(std::atan2(double(dir_for_use.x()),
-                                   double(dir_for_use.y())));
+  float const light_yaw_deg = qRadiansToDegrees(
+      std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
 
   state.model.translate(inputs.soldier_world_pos.x() + offset_2d.x(),
                         shadow_y + k_shadow_ground_offset,

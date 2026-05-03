@@ -13,7 +13,7 @@
 
 namespace Engine::Core {
 class UnitComponent;
-} // namespace Engine::Core
+}
 
 namespace Render::GL {
 class Mesh;
@@ -107,12 +107,10 @@ struct HumanoidShadowStateInputs {
 [[nodiscard]] auto resolve_elephant_animation_state(
     const Render::GL::DrawContext &ctx) -> PreparedAnimationState;
 
-[[nodiscard]] auto
-resolve_humanoid_lod_state(const HumanoidLodStateInputs &inputs)
-    -> PreparedCreatureLodState;
+[[nodiscard]] auto resolve_humanoid_lod_state(
+    const HumanoidLodStateInputs &inputs) -> PreparedCreatureLodState;
 
-[[nodiscard]] auto
-prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
-    -> PreparedHumanoidShadowState;
+[[nodiscard]] auto prepare_humanoid_shadow_state(
+    const HumanoidShadowStateInputs &inputs) -> PreparedHumanoidShadowState;
 
 } // namespace Render::Creature::Pipeline
