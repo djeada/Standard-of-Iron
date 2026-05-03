@@ -1,9 +1,5 @@
 # Windows Code Signing
 
-This document describes the Windows code signing implementation for Standard of Iron.
-
-## Overview
-
 The Windows build pipeline automatically signs the `.exe` file with Authenticode using an organization EV (Extended Validation) certificate. Code signing provides:
 
 - **Verified publisher**: Windows displays the organization name as a verified publisher
