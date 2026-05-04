@@ -228,15 +228,16 @@ auto armor_heavy_carthage_make_static_attachment(
       build_torso(top, bottom, torso_r * 1.10F, 1.05F, 1.00F),
   };
 
-  auto spec = Render::Equipment::build_static_attachment({
-      .archetype = &armor_heavy_carthage_archetype(torso_layers),
-      .socket_bone_index = torso_socket_bone_index,
-      .unit_local_pose_at_bind = torso_local.world,
+  return Render::Equipment::build_prepared_static_attachment({
+      .attachment =
+          {
+              .archetype = &armor_heavy_carthage_archetype(torso_layers),
+              .socket_bone_index = torso_socket_bone_index,
+              .unit_local_pose_at_bind = torso_local.world,
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<3>(base_role_byte),
   });
-  spec.palette_role_remap[0] = base_role_byte;
-  spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[2] = static_cast<std::uint8_t>(base_role_byte + 2U);
-  return spec;
 }
 
 } // namespace Render::GL

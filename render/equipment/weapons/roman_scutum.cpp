@@ -205,27 +205,18 @@ auto roman_scutum_make_static_attachment(std::uint8_t base_role_byte)
   bind_socket.setColumn(1, QVector4D(bind_grip.up, 0.0F));
   bind_socket.setColumn(2, QVector4D(bind_grip.forward, 0.0F));
   bind_socket.setColumn(3, QVector4D(bind_grip.origin, 1.0F));
-  auto spec = Render::Equipment::build_socket_static_attachment({
-      .archetype = &roman_scutum_archetype(),
-      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
-      .bind_bone_transform = bind_bone,
-      .bind_socket_transform = bind_socket,
-      .mesh_from_socket = scutum_local_pose(),
+  return Render::Equipment::build_prepared_socket_static_attachment({
+      .attachment =
+          {
+              .archetype = &roman_scutum_archetype(),
+              .socket_bone_index = static_cast<std::uint16_t>(k_bone),
+              .bind_bone_transform = bind_bone,
+              .bind_socket_transform = bind_socket,
+              .mesh_from_socket = scutum_local_pose(),
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<7>(base_role_byte),
   });
-  spec.palette_role_remap[k_red_even] = base_role_byte;
-  spec.palette_role_remap[k_red_odd] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_bronze_ridge] =
-      static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[k_bronze_ring] =
-      static_cast<std::uint8_t>(base_role_byte + 3U);
-  spec.palette_role_remap[k_bronze_boss] =
-      static_cast<std::uint8_t>(base_role_byte + 4U);
-  spec.palette_role_remap[k_bronze_rim] =
-      static_cast<std::uint8_t>(base_role_byte + 5U);
-  spec.palette_role_remap[k_bronze_rivet] =
-      static_cast<std::uint8_t>(base_role_byte + 6U);
-  return spec;
 }
 
 } // namespace Render::GL

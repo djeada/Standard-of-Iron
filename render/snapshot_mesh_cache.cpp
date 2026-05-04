@@ -5,6 +5,10 @@
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_bake.h"
 
+#include <GL/gl.h>
+#include <QOpenGLContext>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLVersionFunctionsFactory>
 #include <QVector3D>
 #include <QVector4D>
 #include <array>
@@ -13,6 +17,14 @@
 namespace Render::GL {
 
 namespace {
+
+auto snapshot_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core * {
+  auto *ctx = QOpenGLContext::currentContext();
+  if (ctx == nullptr) {
+    return nullptr;
+  }
+  return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
+}
 
 auto build_identity_palette() noexcept
     -> std::array<QMatrix4x4, BonePaletteArena::kPaletteWidth> {
@@ -28,6 +40,40 @@ auto build_identity_palette() noexcept
 auto SnapshotMeshCache::identity_palette() noexcept -> const QMatrix4x4 * {
   static const auto kPalette = build_identity_palette();
   return kPalette.data();
+}
+
+SnapshotMeshCache::~SnapshotMeshCache() {
+  auto *fn = snapshot_cache_gl_funcs();
+  if (fn == nullptr || m_identity_palette_ubo == 0) {
+    return;
+  }
+  fn->glDeleteBuffers(1, &m_identity_palette_ubo);
+  m_identity_palette_ubo = 0;
+}
+
+auto SnapshotMeshCache::identity_palette_ubo() const -> std::uint32_t {
+  if (m_identity_palette_ubo != 0) {
+    return m_identity_palette_ubo;
+  }
+  auto *fn = snapshot_cache_gl_funcs();
+  if (fn == nullptr) {
+    return 0U;
+  }
+
+  std::array<float, BonePaletteArena::kPaletteFloats> packed{};
+  BonePaletteArena::pack_palette_for_gpu(identity_palette(), packed.data());
+
+  fn->glGenBuffers(1, &m_identity_palette_ubo);
+  if (m_identity_palette_ubo == 0) {
+    return 0U;
+  }
+
+  fn->glBindBuffer(GL_UNIFORM_BUFFER, m_identity_palette_ubo);
+  fn->glBufferData(GL_UNIFORM_BUFFER,
+                   static_cast<GLsizeiptr>(packed.size() * sizeof(float)),
+                   packed.data(), GL_STATIC_DRAW);
+  fn->glBindBuffer(GL_UNIFORM_BUFFER, 0);
+  return m_identity_palette_ubo;
 }
 
 namespace {

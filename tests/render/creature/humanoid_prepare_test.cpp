@@ -22,6 +22,7 @@
 #include "render/equipment/weapons/roman_scutum.h"
 #include "render/equipment/weapons/shield_carthage.h"
 #include "render/equipment/weapons/sword_renderer.h"
+#include "render/gl/backend.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/humanoid/formation_calculator.h"
 #include "render/humanoid/humanoid_renderer_base.h"
@@ -34,6 +35,9 @@
 #include "render/template_cache.h"
 
 #include <QMatrix4x4>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QSurfaceFormat>
 #include <QVector3D>
 #include <algorithm>
 #include <gtest/gtest.h>
@@ -373,6 +377,38 @@ public:
   }
 };
 
+struct ScopedOffscreenGlContext {
+  ScopedOffscreenGlContext() {
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setVersion(3, 3);
+    format.setDepthBufferSize(24);
+    format.setStencilBufferSize(8);
+
+    surface.setFormat(format);
+    surface.create();
+
+    context.setFormat(format);
+    if (!context.create()) {
+      return;
+    }
+    valid = context.makeCurrent(&surface);
+  }
+
+  ~ScopedOffscreenGlContext() {
+    if (valid) {
+      context.doneCurrent();
+    }
+  }
+
+  [[nodiscard]] auto is_valid() const noexcept -> bool { return valid; }
+
+  QOffscreenSurface surface;
+  QOpenGLContext context;
+  bool valid{false};
+};
+
 class BowReadyRegressionRenderer : public Render::GL::HumanoidRendererBase {
 public:
   auto visual_spec() const
@@ -471,6 +507,48 @@ TEST(HumanoidPrepare, MainRowStillSubmitsOneRiggedCall) {
 
   EXPECT_EQ(stats.entities_submitted, 1u);
   EXPECT_GT(sink.rigged_calls + sink.meshes, 0);
+}
+
+TEST(HumanoidPrepare, MainPassShadowDrawDoesNotRequireRendererShaderState) {
+  ScopedOffscreenGlContext gl_context;
+  if (!gl_context.is_valid()) {
+    GTEST_SKIP() << "OpenGL offscreen context unavailable";
+  }
+
+  ScopedFlatTerrain terrain(0.0F);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get("troops/roman/swordsman");
+  ASSERT_TRUE(static_cast<bool>(renderer));
+
+  Render::GL::Backend backend;
+  backend.initialize();
+
+  Render::GL::DrawContext ctx{};
+  ctx.backend = &backend;
+  ctx.resources = backend.resources();
+  ctx.allow_template_cache = true;
+  ctx.force_single_soldier = true;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Knight;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+
+  EXPECT_GE(sink.rigged_calls, 1);
+  EXPECT_GE(sink.meshes, 1)
+      << "main-pass shadow draw should reach a plain ISubmitter";
 }
 
 TEST(HumanoidPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
@@ -1125,6 +1203,35 @@ TEST(HumanoidPrepare, BuildLocomotionStateIsDeterministicForRun) {
   EXPECT_EQ(first.has_movement_target, second.has_movement_target);
   EXPECT_GT(first.gait.cycle_time, 0.0F);
   EXPECT_GT(first.gait.stride_distance, 0.0F);
+}
+
+TEST(HumanoidPrepare, ResolveFormationStateUsesUnitHealthAndMountedSpawn) {
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(25, 100, 1.0F, 12.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::HorseSpearman;
+  unit->render_individuals_per_unit_override = 8;
+
+  Render::GL::HumanoidRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+  Render::GL::AnimationInputs anim{};
+
+  Render::Creature::Pipeline::HumanoidFormationStateInputs inputs{};
+  inputs.owner = &owner;
+  inputs.ctx = &ctx;
+  inputs.anim = &anim;
+  inputs.unit = unit;
+
+  auto const state =
+      Render::Creature::Pipeline::resolve_humanoid_formation_state(inputs);
+
+  EXPECT_TRUE(state.mounted);
+  EXPECT_EQ(state.formation.individuals_per_unit, 8);
+  EXPECT_EQ(state.visible_count, 2);
+  EXPECT_GE(state.rows, 1);
+  EXPECT_GE(state.cols, 1);
 }
 
 TEST(

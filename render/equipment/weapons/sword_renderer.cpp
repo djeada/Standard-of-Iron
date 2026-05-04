@@ -425,21 +425,18 @@ auto sword_make_static_attachment(const SwordRenderConfig &config,
   auto const &bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_r;
   QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
   QVector3D blade_dir_local(0.02F, 1.0F, 0.12F);
-  auto spec = Render::Equipment::build_socket_static_attachment({
-      .archetype = &sword_archetype(config),
-      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
-      .bind_bone_transform = bind_bone,
-      .bind_socket_transform = bind_socket,
-      .mesh_from_socket = sword_local_pose(blade_dir_local),
+  return Render::Equipment::build_prepared_socket_static_attachment({
+      .attachment =
+          {
+              .archetype = &sword_archetype(config),
+              .socket_bone_index = static_cast<std::uint16_t>(k_bone),
+              .bind_bone_transform = bind_bone,
+              .bind_socket_transform = bind_socket,
+              .mesh_from_socket = sword_local_pose(blade_dir_local),
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<4>(base_role_byte),
   });
-  spec.palette_role_remap[k_metal_slot] = base_role_byte;
-  spec.palette_role_remap[k_metal_dark_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_fuller_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[k_leather_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 3U);
-  return spec;
 }
 
 auto scabbard_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
@@ -458,15 +455,16 @@ auto scabbard_make_static_attachment(
   using HP = HumanProportions;
   QMatrix4x4 pose;
   pose.translate(QVector3D(0.10F, HP::WAIST_Y - 0.04F, -0.02F));
-  auto spec = Render::Equipment::build_static_attachment({
-      .archetype = &scabbard_archetype(sheath_r),
-      .socket_bone_index = socket_bone_index,
-      .unit_local_pose_at_bind = pose,
+  return Render::Equipment::build_prepared_static_attachment({
+      .attachment =
+          {
+              .archetype = &scabbard_archetype(sheath_r),
+              .socket_bone_index = socket_bone_index,
+              .unit_local_pose_at_bind = pose,
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<2>(base_role_byte),
   });
-  spec.palette_role_remap[k_scabbard_leather_slot] = base_role_byte;
-  spec.palette_role_remap[k_scabbard_metal_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
-  return spec;
 }
 
 } // namespace Render::GL

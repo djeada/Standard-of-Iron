@@ -193,12 +193,14 @@ auto build_base_graph_output(const CreatureGraphInputs &inputs,
 
 void CreatureRenderBatch::clear() noexcept {
   rows_.clear();
-  requests_.clear();
+  direct_requests_.clear();
+  request_cache_.clear();
 }
 
 void CreatureRenderBatch::reserve(std::size_t n) {
   rows_.reserve(n);
-  requests_.reserve(n);
+  direct_requests_.reserve(n);
+  request_cache_.reserve(n);
 }
 
 namespace {
@@ -299,18 +301,16 @@ void CreatureRenderBatch::add_humanoid(
     return;
   }
 
-  if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_humanoid_row(
-        output.spec, pose, variant, anim, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
-    rows_.push_back(std::move(row));
-  }
-
   auto req = build_request(output, archetype_id, state, phase);
   req.creature_asset_id = asset->id;
   req.clip_variant = clip_var;
   populate_role_colors(req, variant);
-  requests_.push_back(req);
+
+  auto visual_state = make_prepared_visual_state(output);
+  visual_state.kind = CreatureKind::Humanoid;
+  auto row = make_prepared_render_row(visual_state);
+  row.request = req;
+  rows_.push_back(std::move(row));
 }
 
 void CreatureRenderBatch::add_humanoid(const PreparedHumanoidBodyState &state) {
@@ -329,12 +329,6 @@ void CreatureRenderBatch::add_quadruped(
   if (asset == nullptr) {
     return;
   }
-  if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_creature_row(
-        output.spec, CreatureKind::Horse, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
-    rows_.push_back(std::move(row));
-  }
   auto const archetype_id =
       (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
           ? output.spec.archetype_id
@@ -343,7 +337,12 @@ void CreatureRenderBatch::add_quadruped(
   req.creature_asset_id = asset->id;
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
-  requests_.push_back(req);
+
+  auto visual_state = make_prepared_visual_state(output);
+  visual_state.kind = CreatureKind::Horse;
+  auto row = make_prepared_render_row(visual_state);
+  row.request = req;
+  rows_.push_back(std::move(row));
 }
 
 void CreatureRenderBatch::add_quadruped(const PreparedHorseBodyState &state) {
@@ -364,12 +363,6 @@ void CreatureRenderBatch::add_quadruped(
   if (asset == nullptr) {
     return;
   }
-  if (output.pass_intent == RenderPassIntent::Shadow) {
-    auto row = make_prepared_creature_row(
-        output.spec, CreatureKind::Elephant, output.world_matrix, output.seed,
-        output.lod, output.entity_id, output.pass_intent);
-    rows_.push_back(std::move(row));
-  }
   auto const archetype_id =
       (output.spec.archetype_id != Render::Creature::kInvalidArchetype)
           ? output.spec.archetype_id
@@ -378,7 +371,12 @@ void CreatureRenderBatch::add_quadruped(
   req.creature_asset_id = asset->id;
   req.clip_variant = static_cast<std::uint8_t>(clip_variant);
   populate_role_colors(req, variant);
-  requests_.push_back(req);
+
+  auto visual_state = make_prepared_visual_state(output);
+  visual_state.kind = CreatureKind::Elephant;
+  auto row = make_prepared_render_row(visual_state);
+  row.request = req;
+  rows_.push_back(std::move(row));
 }
 
 void CreatureRenderBatch::add_quadruped(
@@ -389,7 +387,7 @@ void CreatureRenderBatch::add_quadruped(
 
 void CreatureRenderBatch::add_request(
     const Render::Creature::CreatureRenderRequest &request) {
-  requests_.push_back(request);
+  direct_requests_.push_back(request);
 }
 
 auto CreatureRenderBatch::rows() const noexcept
@@ -399,15 +397,22 @@ auto CreatureRenderBatch::rows() const noexcept
 
 auto CreatureRenderBatch::requests() const noexcept
     -> std::span<const Render::Creature::CreatureRenderRequest> {
-  return requests_;
+  request_cache_.clear();
+  request_cache_.reserve(rows_.size() + direct_requests_.size());
+  for (const auto &row : rows_) {
+    request_cache_.push_back(row.request);
+  }
+  request_cache_.insert(request_cache_.end(), direct_requests_.begin(),
+                        direct_requests_.end());
+  return request_cache_;
 }
 
 auto CreatureRenderBatch::size() const noexcept -> std::size_t {
-  return std::max(rows_.size(), requests_.size());
+  return rows_.size() + direct_requests_.size();
 }
 
 auto CreatureRenderBatch::empty() const noexcept -> bool {
-  return rows_.empty() && requests_.empty();
+  return rows_.empty() && direct_requests_.empty();
 }
 
 } // namespace Render::Creature::Pipeline

@@ -36,6 +36,30 @@ TEST_F(SerializationTest, EntitySerializationBasic) {
             static_cast<qulonglong>(entity_id));
 }
 
+TEST_F(SerializationTest, RecreatingEntityWithSameIdClearsComponentIndexes) {
+  constexpr EntityID kEntityId = 42;
+
+  auto *entity = world->create_entity_with_id(kEntityId);
+  ASSERT_NE(entity, nullptr);
+  entity->add_component<TransformComponent>();
+  entity->add_component<UnitComponent>();
+
+  auto transforms_before = world->get_entities_with<TransformComponent>();
+  auto units_before = world->get_entities_with<UnitComponent>();
+  ASSERT_EQ(transforms_before.size(), 1u);
+  ASSERT_EQ(units_before.size(), 1u);
+
+  auto *replacement = world->create_entity_with_id(kEntityId);
+  ASSERT_NE(replacement, nullptr);
+  EXPECT_FALSE(replacement->has_component<TransformComponent>());
+  EXPECT_FALSE(replacement->has_component<UnitComponent>());
+
+  auto transforms_after = world->get_entities_with<TransformComponent>();
+  auto units_after = world->get_entities_with<UnitComponent>();
+  EXPECT_TRUE(transforms_after.empty());
+  EXPECT_TRUE(units_after.empty());
+}
+
 TEST_F(SerializationTest, TransformComponentSerialization) {
   auto *entity = world->create_entity();
   auto *transform = entity->add_component<TransformComponent>();

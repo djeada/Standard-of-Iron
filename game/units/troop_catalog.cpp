@@ -154,7 +154,7 @@ void TroopCatalog::register_defaults() {
   horse_swordsman.combat.can_melee = true;
 
   horse_swordsman.visuals.render_scale = 0.8F;
-  horse_swordsman.visuals.selection_ring_size = 2.0F;
+  horse_swordsman.visuals.selection_ring_size = 2.2F;
   horse_swordsman.visuals.selection_ring_ground_offset = 0.0F;
   horse_swordsman.visuals.renderer_id = "troops/roman/horse_swordsman";
 
@@ -183,7 +183,7 @@ void TroopCatalog::register_defaults() {
   horse_archer.combat.can_melee = true;
 
   horse_archer.visuals.render_scale = 0.8F;
-  horse_archer.visuals.selection_ring_size = 2.0F;
+  horse_archer.visuals.selection_ring_size = 2.2F;
   horse_archer.visuals.selection_ring_ground_offset = 0.0F;
   horse_archer.visuals.renderer_id = "troops/roman/horse_archer";
 
@@ -247,7 +247,7 @@ void TroopCatalog::register_defaults() {
   horse_spearman.combat.can_melee = true;
 
   horse_spearman.visuals.render_scale = 0.8F;
-  horse_spearman.visuals.selection_ring_size = 2.0F;
+  horse_spearman.visuals.selection_ring_size = 2.2F;
   horse_spearman.visuals.selection_ring_ground_offset = 0.0F;
   horse_spearman.visuals.renderer_id = "troops/roman/horse_spearman";
 

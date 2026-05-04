@@ -94,6 +94,7 @@ add_executable(standard_of_iron_tests
     render/creature/baked_horse_attachment_world_position_test.cpp
     render/creature/render_request_batch_parity_test.cpp
     render/creature/template_prewarm_regression_test.cpp
+    render/shader_audit_integration_test.cpp
     render/software/software_rasterizer_test.cpp
     render/software/software_backend_integration_test.cpp
     render/software/render_backend_factory_test.cpp

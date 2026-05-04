@@ -55,8 +55,19 @@ using namespace Render::GL::ComponentCount;
 namespace {
 
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
+const QVector3D k_troop_shadow_light_dir(0.4F, 1.0F, 0.25F);
 
+[[nodiscard]] auto troop_shadow_light_dir_xz() -> QVector2D {
+  QVector3D light_dir = k_troop_shadow_light_dir.normalized();
+  QVector2D light_dir_xz(light_dir.x(), light_dir.z());
+  if (light_dir_xz.lengthSquared() < 1e-6F) {
+    return QVector2D(0.0F, 1.0F);
+  }
+  light_dir_xz.normalize();
+  return -light_dir_xz;
 }
+
+} // namespace
 
 Backend::Backend() = default;
 Backend::Backend(ShaderQuality quality) : m_shader_quality(quality) {}
@@ -304,6 +315,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       qEnvironmentVariableIsSet("SOI_RENDER_ENABLE_RIGGED_INSTANCING");
   const bool debug_rigged =
       qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_RIGGED");
+  if (m_riggedCharacterPipeline != nullptr) {
+    m_riggedCharacterPipeline->reset_batch_stats();
+  }
   std::size_t debug_rigged_batches = 0;
   std::size_t debug_rigged_cmds = 0;
   std::size_t debug_rigged_instanced_attempts = 0;
@@ -1633,6 +1647,10 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (uniforms->view_proj != Shader::InvalidUniform) {
           active_shader->set_uniform(uniforms->view_proj, view_proj);
         }
+        if (is_shadow_shader && uniforms->light_dir != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->light_dir,
+                                     troop_shadow_light_dir_xz());
+        }
         m_lastBoundShader = active_shader;
       }
 
@@ -1758,6 +1776,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         active_shader->use();
         if (uniforms->view_proj != Shader::InvalidUniform) {
           active_shader->set_uniform(uniforms->view_proj, view_proj);
+        }
+        if (active_shader == m_shadowShader &&
+            uniforms->light_dir != Shader::InvalidUniform) {
+          active_shader->set_uniform(uniforms->light_dir,
+                                     troop_shadow_light_dir_xz());
         }
         m_lastBoundShader = active_shader;
       }
@@ -2153,45 +2176,52 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           prepared.kind == PreparedBatchKind::RiggedCreatureInstanced &&
           m_riggedCharacterPipeline->instanced_shader() != nullptr) {
         thread_local std::vector<RiggedCreatureCmd> rig_batch_scratch;
+        thread_local std::vector<std::size_t> rig_group_sizes;
         const std::size_t cap = std::max<std::size_t>(
             1U, m_riggedCharacterPipeline->max_instances_per_batch());
-        std::size_t j = i;
-        while (j < batch_end) {
-          const std::size_t chunk_end = std::min(batch_end, j + cap);
-          const std::size_t chunk_count = chunk_end - j;
-          if (chunk_count < 2U) {
-            const auto &single =
-                std::get<RiggedCreatureCmdIndex>(queue.get_sorted(j));
+        rig_batch_scratch.clear();
+        rig_batch_scratch.reserve(batch_end - i);
+        for (std::size_t k = i; k < batch_end; ++k) {
+          rig_batch_scratch.push_back(
+              std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
+        }
+        rig_group_sizes.clear();
+        BackendPipelines::RiggedCharacterPipeline::compute_groups(
+            rig_batch_scratch.data(), rig_batch_scratch.size(), cap,
+            rig_group_sizes);
+
+        std::size_t group_start = 0;
+        for (const std::size_t group_count : rig_group_sizes) {
+          if (group_count < 2U) {
+            const auto &single = rig_batch_scratch[group_start];
             m_riggedCharacterPipeline->draw(single, view_proj);
             ++debug_rigged_single_draws;
             m_lastBoundShader = m_riggedCharacterPipeline->shader();
             m_lastBoundTexture = single.texture;
-            ++j;
-            rig_fallback_start = j;
+            group_start += group_count;
             continue;
           }
 
-          rig_batch_scratch.clear();
-          rig_batch_scratch.reserve(chunk_count);
-          for (std::size_t k = j; k < chunk_end; ++k) {
-            rig_batch_scratch.push_back(
-                std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
-          }
           ++debug_rigged_instanced_attempts;
           if (m_riggedCharacterPipeline->draw_instanced(
-                  rig_batch_scratch.data(), rig_batch_scratch.size(),
+                  rig_batch_scratch.data() + group_start, group_count,
                   view_proj)) {
             ++debug_rigged_instanced_successes;
             m_lastBoundShader = m_riggedCharacterPipeline->instanced_shader();
             m_lastBoundTexture = nullptr;
-            j = chunk_end;
-            rig_fallback_start = j;
-            continue;
+          } else {
+            ++debug_rigged_instanced_failures;
+            for (std::size_t local = 0; local < group_count; ++local) {
+              const auto &single = rig_batch_scratch[group_start + local];
+              m_riggedCharacterPipeline->draw(single, view_proj);
+              ++debug_rigged_single_draws;
+              m_lastBoundShader = m_riggedCharacterPipeline->shader();
+              m_lastBoundTexture = single.texture;
+            }
           }
-
-          ++debug_rigged_instanced_failures;
-          break;
+          group_start += group_count;
         }
+        rig_fallback_start = batch_end;
       }
 
       if (rig_fallback_start < batch_end) {

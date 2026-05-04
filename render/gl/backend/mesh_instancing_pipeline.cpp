@@ -72,6 +72,7 @@ void MeshInstancingPipeline::shutdown() {
   }
 
   m_instances.clear();
+  m_configuredMeshesThisFrame.clear();
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
@@ -86,6 +87,7 @@ auto MeshInstancingPipeline::is_initialized() const -> bool {
 
 void MeshInstancingPipeline::begin_frame() {
   m_instances.clear();
+  m_configuredMeshesThisFrame.clear();
   m_currentMesh = nullptr;
   m_currentShader = nullptr;
   m_currentTexture = nullptr;
@@ -191,27 +193,15 @@ void MeshInstancingPipeline::flush() {
     return;
   }
 
-  if (!m_currentMesh->bind_vao()) {
-    m_instances.clear();
-    return;
+  if (m_configuredMeshesThisFrame.insert(m_currentMesh).second) {
+    setup_instance_attributes();
   }
-
-  setup_instance_attributes();
 
   if (m_currentTexture != nullptr) {
     m_currentTexture->bind(0);
   }
 
   m_currentMesh->draw_instanced_raw(count);
-
-  glVertexAttribDivisor(k_instance_model_col0_loc, 0);
-  glVertexAttribDivisor(k_instance_model_col1_loc, 0);
-  glVertexAttribDivisor(k_instance_model_col2_loc, 0);
-  glVertexAttribDivisor(k_instance_color_alpha_loc, 0);
-  glDisableVertexAttribArray(k_instance_model_col0_loc);
-  glDisableVertexAttribArray(k_instance_model_col1_loc);
-  glDisableVertexAttribArray(k_instance_model_col2_loc);
-  glDisableVertexAttribArray(k_instance_color_alpha_loc);
 
   m_currentMesh->unbind_vao();
   glBindBuffer(GL_ARRAY_BUFFER, 0);

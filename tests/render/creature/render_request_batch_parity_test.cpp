@@ -40,10 +40,15 @@ TEST(CreatureRenderBatch, RequestMirrorsHumanoidAdd) {
 
   batch.add_humanoid(output, pose, variant, anim);
 
-  EXPECT_TRUE(batch.rows().empty());
+  ASSERT_EQ(batch.rows().size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
 
+  const auto &row = batch.rows()[0];
   const auto &req = batch.requests()[0];
+  EXPECT_EQ(row.request.archetype, req.archetype);
+  EXPECT_EQ(row.request.state, req.state);
+  EXPECT_FLOAT_EQ(row.request.phase, req.phase);
+  EXPECT_EQ(row.request.seed, req.seed);
   EXPECT_EQ(req.archetype, ArchetypeRegistry::kHumanoidBase);
   EXPECT_EQ(req.state, AnimationStateId::Walk);
   EXPECT_FLOAT_EQ(req.phase, 0.42F);
@@ -74,6 +79,8 @@ TEST(CreatureRenderBatch, RequestMirrorsPassIntent) {
   ASSERT_EQ(batch.rows().size(), 1u);
   EXPECT_EQ(batch.rows()[0].pass,
             Render::Creature::Pipeline::RenderPassIntent::Shadow);
+  EXPECT_EQ(batch.rows()[0].request.pass,
+            Render::Creature::Pipeline::RenderPassIntent::Shadow);
 }
 
 TEST(CreatureRenderBatch, RiderArchetypeStillUsesAbsoluteRequestWorld) {
@@ -89,11 +96,14 @@ TEST(CreatureRenderBatch, RiderArchetypeStillUsesAbsoluteRequestWorld) {
   batch.add_humanoid(output, pose, variant, anim);
 
   ASSERT_EQ(batch.requests().size(), 1u);
+  ASSERT_EQ(batch.rows().size(), 1u);
   auto const expected_key =
       (static_cast<Render::Creature::WorldKey>(output.entity_id) << 32U) |
       static_cast<Render::Creature::WorldKey>(output.seed);
   EXPECT_EQ(batch.requests()[0].world_key, expected_key);
   EXPECT_FLOAT_EQ(batch.requests()[0].world.column(3).y(), 3.25F);
+  EXPECT_EQ(batch.rows()[0].request.world_key, expected_key);
+  EXPECT_FLOAT_EQ(batch.rows()[0].request.world.column(3).y(), 3.25F);
 }
 
 TEST(CreatureRenderBatch, RequestStateForHumanoidHoldAndAttack) {
@@ -164,6 +174,7 @@ TEST(CreatureRenderBatch, RequestMirrorsHorseQuadrupedState) {
   batch.add_quadruped(output, variant, AnimationStateId::Walk, 0.0F);
   batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
+  ASSERT_EQ(batch.rows().size(), 3u);
   ASSERT_EQ(batch.requests().size(), 3u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kHorseBase);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Run);
@@ -181,6 +192,7 @@ TEST(CreatureRenderBatch, RequestMirrorsElephantQuadrupedState) {
   batch.add_quadruped(output, variant, AnimationStateId::Run, 0.7F);
   batch.add_quadruped(output, variant, AnimationStateId::Idle, 0.0F);
 
+  ASSERT_EQ(batch.rows().size(), 2u);
   ASSERT_EQ(batch.requests().size(), 2u);
   EXPECT_EQ(batch.requests()[0].archetype, ArchetypeRegistry::kElephantBase);
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Run);

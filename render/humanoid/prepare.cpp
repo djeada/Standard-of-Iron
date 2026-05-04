@@ -25,6 +25,7 @@
 #include "../gl/primitives.h"
 #include "../gl/render_constants.h"
 #include "../graphics_settings.h"
+#include "../material.h"
 #include "../palette.h"
 #include "../pose_palette_cache.h"
 #include "../scene_renderer.h"
@@ -259,50 +260,376 @@ auto build_soldier_layout(const IFormationCalculator &formation_calculator,
   return layout;
 }
 
-auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs &inputs)
-    -> HumanoidLocomotionState {
-  HumanoidLocomotionState state{};
-  state.motion_state = classify_motion_state(inputs.anim, inputs.move_speed);
-  state.move_speed = inputs.move_speed;
-  state.has_movement_target = inputs.has_movement_target;
-  state.locomotion_direction = inputs.locomotion_direction;
-  state.locomotion_velocity = inputs.locomotion_direction * inputs.move_speed;
-  state.movement_target = inputs.movement_target;
+namespace {
 
-  state.gait.state = state.motion_state;
-  state.gait.speed = state.move_speed;
-  state.gait.velocity = state.locomotion_velocity;
-  state.gait.has_target = state.has_movement_target;
-  state.gait.is_airborne = false;
+struct HumanoidLayoutResolutionInputs {
+  const DrawContext *ctx{nullptr};
+  const AnimationInputs *anim{nullptr};
+  HumanoidLayoutCacheComponent *layout_cache{nullptr};
+  const IFormationCalculator *formation_calculator{nullptr};
+  FormationParams formation{};
+  FormationCalculatorFactory::Nation nation{
+      FormationCalculatorFactory::Nation::Roman};
+  FormationCalculatorFactory::UnitCategory category{
+      FormationCalculatorFactory::UnitCategory::Infantry};
+  int rows{1};
+  int cols{1};
+  int visible_count{1};
+  std::uint32_t seed{0U};
+  std::uint32_t frame_index{0U};
+};
 
-  float const reference_speed = (state.motion_state == HumanoidMotionState::Run)
-                                    ? k_reference_run_speed
-                                    : k_reference_walk_speed;
-  if (inputs.anim.is_moving && reference_speed > 0.0001F) {
-    state.gait.normalized_speed =
-        std::clamp(state.gait.speed / reference_speed, 0.0F, 1.0F);
-  } else {
-    state.gait.normalized_speed = 0.0F;
+auto resolve_soldier_layouts(const HumanoidLayoutResolutionInputs &inputs)
+    -> std::vector<SoldierLayout> {
+  std::vector<SoldierLayout> soldier_layouts;
+  if (inputs.ctx == nullptr || inputs.anim == nullptr ||
+      inputs.formation_calculator == nullptr) {
+    return soldier_layouts;
   }
 
-  if (inputs.anim.is_moving) {
-    float const base_cycle =
-        (state.motion_state == HumanoidMotionState::Run ? 0.56F : 0.92F) /
-        std::max(0.1F, inputs.variation.walk_speed_mult);
-    state.gait.cycle_time = base_cycle;
-    state.gait.cycle_phase =
-        std::fmod((inputs.animation_time + inputs.phase_offset) /
-                      std::max(0.001F, base_cycle),
-                  1.0F);
-    state.gait.stride_distance = state.gait.speed * state.gait.cycle_time;
+  bool loaded_cached_layouts = false;
+  if (inputs.layout_cache != nullptr && inputs.layout_cache->valid) {
+    auto &entry = *inputs.layout_cache;
+    bool const matches =
+        entry.seed == inputs.seed && entry.rows == inputs.rows &&
+        entry.cols == inputs.cols &&
+        entry.layout_version == k_humanoid_layout_cache_version &&
+        entry.formation.individuals_per_unit ==
+            inputs.formation.individuals_per_unit &&
+        entry.formation.max_per_row == inputs.formation.max_per_row &&
+        entry.formation.spacing == inputs.formation.spacing &&
+        entry.nation == inputs.nation && entry.category == inputs.category &&
+        entry.soldiers.size() == static_cast<std::size_t>(inputs.visible_count);
+    bool const cache_valid =
+        !matches ? false
+                 : ((inputs.anim->is_attacking && inputs.anim->is_melee)
+                        ? (entry.frame_number == inputs.frame_index)
+                        : (inputs.frame_index - entry.frame_number <=
+                           ::Render::GL::k_layout_cache_max_age));
+    if (cache_valid) {
+      soldier_layouts = entry.soldiers;
+      entry.frame_number = inputs.frame_index;
+      loaded_cached_layouts = true;
+    }
+  }
+
+  if (loaded_cached_layouts) {
+    return soldier_layouts;
+  }
+
+  soldier_layouts.reserve(static_cast<std::size_t>(inputs.visible_count));
+  for (int idx = 0; idx < inputs.visible_count; ++idx) {
+    SoldierLayoutInputs layout_inputs{};
+    layout_inputs.idx = idx;
+    layout_inputs.row = idx / inputs.cols;
+    layout_inputs.col = idx % inputs.cols;
+    layout_inputs.rows = inputs.rows;
+    layout_inputs.cols = inputs.cols;
+    layout_inputs.formation_spacing = inputs.formation.spacing;
+    layout_inputs.seed = inputs.seed;
+    layout_inputs.force_single_soldier = inputs.ctx->force_single_soldier;
+    layout_inputs.melee_attack =
+        inputs.anim->is_attacking && inputs.anim->is_melee;
+    layout_inputs.animation_time = inputs.anim->time;
+    soldier_layouts.push_back(
+        build_soldier_layout(*inputs.formation_calculator, layout_inputs));
+  }
+
+  if (inputs.layout_cache != nullptr) {
+    inputs.layout_cache->soldiers = soldier_layouts;
+    inputs.layout_cache->formation = inputs.formation;
+    inputs.layout_cache->nation = inputs.nation;
+    inputs.layout_cache->category = inputs.category;
+    inputs.layout_cache->rows = inputs.rows;
+    inputs.layout_cache->cols = inputs.cols;
+    inputs.layout_cache->layout_version = k_humanoid_layout_cache_version;
+    inputs.layout_cache->seed = inputs.seed;
+    inputs.layout_cache->frame_number = inputs.frame_index;
+    inputs.layout_cache->valid = true;
+  }
+
+  return soldier_layouts;
+}
+
+struct HumanoidInstancePreparationInputs {
+  const HumanoidRendererBase *owner{nullptr};
+  const DrawContext *ctx{nullptr};
+  const AnimationInputs *anim{nullptr};
+  Engine::Core::UnitComponent *unit_comp{nullptr};
+  Engine::Core::MovementComponent *movement_comp{nullptr};
+  Engine::Core::TransformComponent *transform_comp{nullptr};
+  FormationParams formation{};
+  HumanoidVariant variant{};
+  SoldierLayout layout{};
+  float height_scale{1.0F};
+  bool needs_height_scaling{false};
+};
+
+struct HumanoidInstancePreparationState {
+  DrawContext inst_ctx{};
+  VariationParams variation{};
+  HumanoidLocomotionState locomotion_state{};
+  HumanoidAnimationContext anim_ctx{};
+  float combined_height_scale{1.0F};
+  std::uint32_t inst_seed{0U};
+};
+
+auto prepare_humanoid_instance_state(
+    const HumanoidInstancePreparationInputs &inputs)
+    -> HumanoidInstancePreparationState {
+  HumanoidInstancePreparationState state{};
+  if (inputs.owner == nullptr || inputs.ctx == nullptr ||
+      inputs.anim == nullptr) {
+    return state;
+  }
+
+  float const offset_x = inputs.layout.offset_x;
+  float const offset_z = inputs.layout.offset_z;
+  float const applied_yaw_offset = inputs.layout.yaw_offset;
+  state.inst_seed = inputs.layout.inst_seed;
+
+  QMatrix4x4 inst_model;
+  float applied_yaw = applied_yaw_offset;
+  const QMatrix4x4 k_identity_matrix;
+
+  if (inputs.transform_comp != nullptr) {
+    applied_yaw = inputs.transform_comp->rotation.y + applied_yaw_offset;
+    QMatrix4x4 m = k_identity_matrix;
+    m.translate(inputs.transform_comp->position.x,
+                inputs.transform_comp->position.y,
+                inputs.transform_comp->position.z);
+    m.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
+    m.scale(inputs.transform_comp->scale.x, inputs.transform_comp->scale.y,
+            inputs.transform_comp->scale.z);
+    m.translate(offset_x, 0.0F, offset_z);
+    inst_model = m;
   } else {
-    state.gait.cycle_time = 0.0F;
-    state.gait.cycle_phase = 0.0F;
-    state.gait.stride_distance = 0.0F;
+    inst_model = inputs.ctx->model;
+    inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
+    inst_model.translate(offset_x, 0.0F, offset_z);
+  }
+
+  state.inst_ctx = *inputs.ctx;
+  state.inst_ctx.model = inst_model;
+
+  state.variation = VariationParams::from_seed(state.inst_seed);
+  inputs.owner->adjust_variation(state.inst_ctx, state.inst_seed,
+                                 state.variation);
+  if (inputs.anim->is_running) {
+    state.variation.walk_speed_mult *= 1.25F;
+    state.variation.arm_swing_amp *= 1.12F;
+    state.variation.stance_width *= 0.96F;
+    state.variation.posture_slump =
+        std::min(0.16F, state.variation.posture_slump + 0.020F);
+  } else if (inputs.anim->is_moving) {
+    state.variation.walk_speed_mult *= 1.05F;
+  }
+
+  state.combined_height_scale =
+      inputs.height_scale * state.variation.height_scale;
+  if (inputs.needs_height_scaling ||
+      std::abs(state.variation.height_scale - 1.0F) > 0.001F) {
+    QMatrix4x4 scale_matrix;
+    scale_matrix.scale(state.variation.bulk_scale, state.combined_height_scale,
+                       1.0F);
+    state.inst_ctx.model = state.inst_ctx.model * scale_matrix;
+  }
+
+  float const yaw_rad = qDegreesToRadians(applied_yaw);
+  QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
+  if (forward.lengthSquared() > 1e-8F) {
+    forward.normalize();
+  } else {
+    forward = QVector3D(0.0F, 0.0F, 1.0F);
+  }
+  QVector3D up(0.0F, 1.0F, 0.0F);
+  QVector3D right = QVector3D::crossProduct(up, forward);
+  if (right.lengthSquared() > 1e-8F) {
+    right.normalize();
+  } else {
+    right = QVector3D(1.0F, 0.0F, 0.0F);
+  }
+
+  QVector3D locomotion_direction = forward;
+  bool has_movement_target = false;
+  float move_speed = 0.0F;
+  QVector3D movement_target(0.0F, 0.0F, 0.0F);
+  if (inputs.movement_comp != nullptr) {
+    QVector3D velocity(inputs.movement_comp->vx, 0.0F,
+                       inputs.movement_comp->vz);
+    move_speed = velocity.length();
+    if (move_speed > 1e-4F) {
+      locomotion_direction = velocity.normalized();
+    }
+    has_movement_target = inputs.movement_comp->has_target;
+    movement_target = QVector3D(inputs.movement_comp->target_x, 0.0F,
+                                inputs.movement_comp->target_y);
+  }
+
+  HumanoidLocomotionInputs locomotion_inputs{};
+  locomotion_inputs.anim = *inputs.anim;
+  locomotion_inputs.variation = state.variation;
+  locomotion_inputs.move_speed = move_speed;
+  locomotion_inputs.locomotion_direction = locomotion_direction;
+  locomotion_inputs.movement_target = movement_target;
+  locomotion_inputs.has_movement_target = has_movement_target;
+  locomotion_inputs.animation_time = inputs.anim->time;
+  locomotion_inputs.phase_offset = inputs.layout.phase_offset;
+  state.locomotion_state = build_humanoid_locomotion_state(locomotion_inputs);
+  if (inputs.unit_comp != nullptr &&
+      inputs.unit_comp->spawn_type == Game::Units::SpawnType::Archer &&
+      !inputs.anim->is_moving && !inputs.anim->is_attacking) {
+    state.locomotion_state.gait.cycle_phase = 0.5F;
+  }
+
+  state.anim_ctx.inputs = *inputs.anim;
+  state.anim_ctx.variation = state.variation;
+  state.anim_ctx.formation = inputs.formation;
+  state.anim_ctx.jitter_seed = inputs.layout.phase_offset;
+  state.anim_ctx.entity_forward = forward;
+  state.anim_ctx.entity_right = right;
+  state.anim_ctx.entity_up = up;
+  state.anim_ctx.locomotion_direction =
+      state.locomotion_state.locomotion_direction;
+  state.anim_ctx.yaw_degrees = applied_yaw;
+  state.anim_ctx.yaw_radians = yaw_rad;
+  state.anim_ctx.has_movement_target =
+      state.locomotion_state.has_movement_target;
+  state.anim_ctx.move_speed = state.locomotion_state.move_speed;
+  state.anim_ctx.movement_target = state.locomotion_state.movement_target;
+  state.anim_ctx.locomotion_velocity =
+      state.locomotion_state.locomotion_velocity;
+  state.anim_ctx.motion_state = state.locomotion_state.motion_state;
+  state.anim_ctx.gait = state.locomotion_state.gait;
+  state.anim_ctx.locomotion_cycle_time = state.locomotion_state.gait.cycle_time;
+  state.anim_ctx.locomotion_phase = state.locomotion_state.gait.cycle_phase;
+  if (inputs.anim->is_attacking) {
+    float const attack_offset = inputs.layout.phase_offset * 1.5F;
+    state.anim_ctx.attack_phase =
+        std::fmod(inputs.anim->time + attack_offset, 1.0F);
+    if (inputs.ctx->has_attack_variant_override) {
+      state.anim_ctx.inputs.attack_variant =
+          inputs.ctx->attack_variant_override;
+    } else {
+      state.anim_ctx.inputs.attack_variant =
+          static_cast<std::uint8_t>(state.inst_seed % 3);
+    }
   }
 
   return state;
 }
+
+struct HumanoidPosePreparationInputs {
+  const HumanoidRendererBase *owner{nullptr};
+  const DrawContext *ctx{nullptr};
+  const AnimationInputs *anim{nullptr};
+  const HumanoidInstancePreparationState *instance_state{nullptr};
+  float entity_ground_offset{0.0F};
+};
+
+struct HumanoidPosePreparationState {
+  DrawContext inst_ctx{};
+  HumanoidAnimationContext anim_ctx{};
+  HumanoidPose pose{};
+  Render::Creature::Pipeline::UnitVisualSpec visual_spec{};
+  bool world_already_grounded{true};
+  QVector3D soldier_world_pos{};
+};
+
+auto prepare_humanoid_pose_state(const HumanoidPosePreparationInputs &inputs)
+    -> HumanoidPosePreparationState {
+  HumanoidPosePreparationState state{};
+  if (inputs.owner == nullptr || inputs.ctx == nullptr ||
+      inputs.anim == nullptr || inputs.instance_state == nullptr) {
+    return state;
+  }
+
+  namespace RCP = Render::Creature::Pipeline;
+  state.inst_ctx = inputs.instance_state->inst_ctx;
+  state.anim_ctx = inputs.instance_state->anim_ctx;
+
+  bool const requires_runtime_pose =
+      RCP::pass_intent_from_ctx(state.inst_ctx) ==
+      RCP::RenderPassIntent::Shadow;
+  if (requires_runtime_pose) {
+    HumanoidRendererBase::compute_locomotion_pose(
+        inputs.instance_state->inst_seed, inputs.anim->time,
+        inputs.instance_state->locomotion_state.gait,
+        inputs.instance_state->variation, state.pose);
+  }
+
+  state.visual_spec = inputs.owner->visual_spec();
+  state.world_already_grounded =
+      inputs.ctx->skip_ground_offset || requires_runtime_pose;
+  if (!inputs.ctx->skip_ground_offset && requires_runtime_pose) {
+    auto const grounding_archetype =
+        (state.visual_spec.archetype_id != Render::Creature::kInvalidArchetype)
+            ? state.visual_spec.archetype_id
+            : Render::Creature::ArchetypeRegistry::kHumanoidBase;
+    float const grounded_contact_y = RCP::grounded_humanoid_contact_y(
+        grounding_archetype, state.pose, state.anim_ctx);
+    RCP::ground_model_contact_to_surface(
+        state.inst_ctx.model, grounded_contact_y,
+        inputs.instance_state->combined_height_scale,
+        inputs.entity_ground_offset);
+  } else if (!state.world_already_grounded) {
+    RCP::ground_model_contact_to_surface(
+        state.inst_ctx.model, 0.0F,
+        inputs.instance_state->combined_height_scale,
+        inputs.entity_ground_offset);
+  }
+
+  state.anim_ctx.instance_position =
+      state.inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
+  state.soldier_world_pos = state.anim_ctx.instance_position;
+  return state;
+}
+
+void emit_humanoid_body_for_lod(
+    const HumanoidVariant &variant, const HumanoidPose &pose,
+    const HumanoidAnimationContext &anim_ctx, bool is_mounted_spawn,
+    HumanoidLOD soldier_lod,
+    const Render::Creature::Pipeline::CreatureGraphOutput &graph_output,
+    const std::function<void()> &append_companion, HumanoidPreparation &out) {
+  namespace RCP = Render::Creature::Pipeline;
+
+  switch (soldier_lod) {
+  case HumanoidLOD::Full: {
+    if (is_mounted_spawn) {
+      if (append_companion) {
+        append_companion();
+      }
+      return;
+    }
+
+    RCP::PreparedHumanoidBodyState body_state;
+    body_state.graph = graph_output;
+    body_state.pose = pose;
+    body_state.variant = variant;
+    body_state.animation = anim_ctx;
+    out.bodies.add_humanoid(body_state);
+    if (append_companion) {
+      append_companion();
+    }
+    return;
+  }
+
+  case HumanoidLOD::Minimal: {
+    RCP::PreparedHumanoidBodyState body_state;
+    body_state.graph = graph_output;
+    body_state.pose = pose;
+    body_state.variant = variant;
+    body_state.animation = anim_ctx;
+    out.bodies.add_humanoid(body_state);
+    return;
+  }
+
+  case HumanoidLOD::Billboard:
+    return;
+  }
+}
+
+} // namespace
 
 void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                                 const DrawContext &ctx,
@@ -310,9 +637,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
                                 std::uint32_t frame_index,
                                 HumanoidPreparation &out) {
   using namespace Render::GL;
-
-  FormationParams const formation =
-      HumanoidRendererBase::resolve_formation(owner, ctx);
 
   Engine::Core::UnitComponent *unit_comp = nullptr;
   if (ctx.entity != nullptr) {
@@ -343,36 +667,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     }
   }
 
-  int cols = std::max(
-      1, std::min(formation.max_per_row, formation.individuals_per_unit));
-  const int rows =
-      std::max(1, (formation.individuals_per_unit + cols - 1) / cols);
-  int effective_rows = rows;
-  if (ctx.force_single_soldier) {
-    cols = 1;
-    effective_rows = 1;
-  }
-
-  bool is_mounted_spawn = owner.uses_mounted_pipeline();
-  if (unit_comp != nullptr) {
-    using Game::Units::SpawnType;
-    auto const st = unit_comp->spawn_type;
-    is_mounted_spawn = is_mounted_spawn || st == SpawnType::MountedKnight ||
-                       st == SpawnType::HorseArcher ||
-                       st == SpawnType::HorseSpearman;
-  }
-
-  int visible_count =
-      std::min(formation.individuals_per_unit, effective_rows * cols);
-  if (!ctx.force_single_soldier && unit_comp != nullptr) {
-    int const mh = std::max(1, unit_comp->max_health);
-    float const ratio = std::clamp(unit_comp->health / float(mh), 0.0F, 1.0F);
-    visible_count = std::max(
-        1, std::min(
-               formation.individuals_per_unit,
-               (int)std::ceil(ratio * float(formation.individuals_per_unit))));
-  }
-
   HumanoidVariant variant;
   owner.get_variant(ctx, seed, variant);
 
@@ -384,10 +678,22 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
   const float height_scale = prop_scale.y();
   const bool needs_height_scaling = std::abs(height_scale - 1.0F) > 0.001F;
 
-  const QMatrix4x4 k_identity_matrix;
-
   using Nation = FormationCalculatorFactory::Nation;
   using UnitCategory = FormationCalculatorFactory::UnitCategory;
+  namespace RCP = Render::Creature::Pipeline;
+  RCP::HumanoidFormationStateInputs formation_inputs{};
+  formation_inputs.owner = &owner;
+  formation_inputs.ctx = &ctx;
+  formation_inputs.anim = &anim;
+  formation_inputs.unit = unit_comp;
+  const auto formation_state =
+      RCP::resolve_humanoid_formation_state(formation_inputs);
+  const FormationParams &formation = formation_state.formation;
+  const int rows = formation_state.rows;
+  const int cols = formation_state.cols;
+  const bool is_mounted_spawn = formation_state.mounted;
+  const int visible_count = formation_state.visible_count;
+
   Nation nation = Nation::Roman;
   if (unit_comp != nullptr &&
       unit_comp->nation_id == Game::Systems::NationID::Carthage) {
@@ -412,227 +718,58 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
   out.post_body_draws.reserve(out.post_body_draws.size() +
                               static_cast<std::size_t>(visible_count));
 
-  namespace RCP = Render::Creature::Pipeline;
   const auto lod_config = RCP::humanoid_lod_config_from_settings();
-  std::vector<SoldierLayout> soldier_layouts;
   HumanoidLayoutCacheComponent *layout_cache_comp =
       (ctx.entity != nullptr)
           ? Engine::Core::get_or_add_component<HumanoidLayoutCacheComponent>(
                 ctx.entity)
           : nullptr;
-  bool loaded_cached_layouts = false;
-  if (layout_cache_comp != nullptr && layout_cache_comp->valid) {
-    auto &entry = *layout_cache_comp;
-    bool const matches =
-        entry.seed == seed && entry.rows == rows && entry.cols == cols &&
-        entry.layout_version == k_humanoid_layout_cache_version &&
-        entry.formation.individuals_per_unit ==
-            formation.individuals_per_unit &&
-        entry.formation.max_per_row == formation.max_per_row &&
-        entry.formation.spacing == formation.spacing &&
-        entry.nation == nation && entry.category == category &&
-        entry.soldiers.size() == static_cast<std::size_t>(visible_count);
-    bool const cache_valid =
-        !matches ? false
-                 : ((anim.is_attacking && anim.is_melee)
-                        ? (entry.frame_number == frame_index)
-                        : (frame_index - entry.frame_number <=
-                           ::Render::GL::k_layout_cache_max_age));
-    if (cache_valid) {
-      soldier_layouts = entry.soldiers;
-      entry.frame_number = frame_index;
-      loaded_cached_layouts = true;
-    }
-  }
-
-  if (!loaded_cached_layouts) {
-    soldier_layouts.reserve(static_cast<std::size_t>(visible_count));
-    for (int idx = 0; idx < visible_count; ++idx) {
-      SoldierLayoutInputs inputs{};
-      inputs.idx = idx;
-      inputs.row = idx / cols;
-      inputs.col = idx % cols;
-      inputs.rows = rows;
-      inputs.cols = cols;
-      inputs.formation_spacing = formation.spacing;
-      inputs.seed = seed;
-      inputs.force_single_soldier = ctx.force_single_soldier;
-      inputs.melee_attack = anim.is_attacking && anim.is_melee;
-      inputs.animation_time = anim.time;
-      soldier_layouts.push_back(
-          build_soldier_layout(*formation_calculator, inputs));
-    }
-
-    if (layout_cache_comp != nullptr) {
-      layout_cache_comp->soldiers = soldier_layouts;
-      layout_cache_comp->formation = formation;
-      layout_cache_comp->nation = nation;
-      layout_cache_comp->category = category;
-      layout_cache_comp->rows = rows;
-      layout_cache_comp->cols = cols;
-      layout_cache_comp->layout_version = k_humanoid_layout_cache_version;
-      layout_cache_comp->seed = seed;
-      layout_cache_comp->frame_number = frame_index;
-      layout_cache_comp->valid = true;
-    }
-  }
+  HumanoidLayoutResolutionInputs layout_inputs{};
+  layout_inputs.ctx = &ctx;
+  layout_inputs.anim = &anim;
+  layout_inputs.layout_cache = layout_cache_comp;
+  layout_inputs.formation_calculator = formation_calculator;
+  layout_inputs.formation = formation;
+  layout_inputs.nation = nation;
+  layout_inputs.category = category;
+  layout_inputs.rows = rows;
+  layout_inputs.cols = cols;
+  layout_inputs.visible_count = visible_count;
+  layout_inputs.seed = seed;
+  layout_inputs.frame_index = frame_index;
+  const auto soldier_layouts = resolve_soldier_layouts(layout_inputs);
 
   for (int idx = 0; idx < visible_count; ++idx) {
-    SoldierLayout const &layout =
-        soldier_layouts[static_cast<std::size_t>(idx)];
-    float const offset_x = layout.offset_x;
-    float const offset_z = layout.offset_z;
-    uint32_t const inst_seed = layout.inst_seed;
-    float const phase_offset = layout.phase_offset;
-    float const applied_yaw_offset = layout.yaw_offset;
+    HumanoidInstancePreparationInputs instance_inputs{};
+    instance_inputs.owner = &owner;
+    instance_inputs.ctx = &ctx;
+    instance_inputs.anim = &anim;
+    instance_inputs.unit_comp = unit_comp;
+    instance_inputs.movement_comp = movement_comp;
+    instance_inputs.transform_comp = transform_comp;
+    instance_inputs.formation = formation;
+    instance_inputs.variant = variant;
+    instance_inputs.layout = soldier_layouts[static_cast<std::size_t>(idx)];
+    instance_inputs.height_scale = height_scale;
+    instance_inputs.needs_height_scaling = needs_height_scaling;
+    const auto prepared_instance =
+        prepare_humanoid_instance_state(instance_inputs);
 
-    QMatrix4x4 inst_model;
-    float applied_yaw = applied_yaw_offset;
+    uint32_t const inst_seed = prepared_instance.inst_seed;
+    HumanoidPosePreparationInputs pose_inputs{};
+    pose_inputs.owner = &owner;
+    pose_inputs.ctx = &ctx;
+    pose_inputs.anim = &anim;
+    pose_inputs.instance_state = &prepared_instance;
+    pose_inputs.entity_ground_offset = entity_ground_offset;
+    const auto prepared_pose = prepare_humanoid_pose_state(pose_inputs);
 
-    if (transform_comp != nullptr) {
-      applied_yaw = transform_comp->rotation.y + applied_yaw_offset;
-      QMatrix4x4 m = k_identity_matrix;
-      m.translate(transform_comp->position.x, transform_comp->position.y,
-                  transform_comp->position.z);
-      m.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
-      m.scale(transform_comp->scale.x, transform_comp->scale.y,
-              transform_comp->scale.z);
-      m.translate(offset_x, 0.0F, offset_z);
-      inst_model = m;
-    } else {
-      inst_model = ctx.model;
-      inst_model.rotate(applied_yaw, 0.0F, 1.0F, 0.0F);
-      inst_model.translate(offset_x, 0.0F, offset_z);
-    }
-
-    DrawContext inst_ctx = ctx;
-    inst_ctx.model = inst_model;
-
-    VariationParams variation = VariationParams::from_seed(inst_seed);
-    owner.adjust_variation(inst_ctx, inst_seed, variation);
-    if (anim.is_running) {
-      variation.walk_speed_mult *= 1.25F;
-      variation.arm_swing_amp *= 1.12F;
-      variation.stance_width *= 0.96F;
-      variation.posture_slump =
-          std::min(0.16F, variation.posture_slump + 0.020F);
-    } else if (anim.is_moving) {
-      variation.walk_speed_mult *= 1.05F;
-    }
-
-    float const combined_height_scale = height_scale * variation.height_scale;
-    if (needs_height_scaling ||
-        std::abs(variation.height_scale - 1.0F) > 0.001F) {
-      QMatrix4x4 scale_matrix;
-      scale_matrix.scale(variation.bulk_scale, combined_height_scale, 1.0F);
-      inst_ctx.model = inst_ctx.model * scale_matrix;
-    }
-    float yaw_rad = qDegreesToRadians(applied_yaw);
-    QVector3D forward(std::sin(yaw_rad), 0.0F, std::cos(yaw_rad));
-    if (forward.lengthSquared() > 1e-8F) {
-      forward.normalize();
-    } else {
-      forward = QVector3D(0.0F, 0.0F, 1.0F);
-    }
-    QVector3D up(0.0F, 1.0F, 0.0F);
-    QVector3D right = QVector3D::crossProduct(up, forward);
-    if (right.lengthSquared() > 1e-8F) {
-      right.normalize();
-    } else {
-      right = QVector3D(1.0F, 0.0F, 0.0F);
-    }
-
-    QVector3D locomotion_direction = forward;
-    bool has_movement_target = false;
-    float move_speed = 0.0F;
-    QVector3D movement_target(0.0F, 0.0F, 0.0F);
-    if (movement_comp != nullptr) {
-      QVector3D velocity(movement_comp->vx, 0.0F, movement_comp->vz);
-      move_speed = velocity.length();
-      if (move_speed > 1e-4F) {
-        locomotion_direction = velocity.normalized();
-      }
-      has_movement_target = movement_comp->has_target;
-      movement_target =
-          QVector3D(movement_comp->target_x, 0.0F, movement_comp->target_y);
-    }
-
-    HumanoidLocomotionInputs locomotion_inputs{};
-    locomotion_inputs.anim = anim;
-    locomotion_inputs.variation = variation;
-    locomotion_inputs.move_speed = move_speed;
-    locomotion_inputs.locomotion_direction = locomotion_direction;
-    locomotion_inputs.movement_target = movement_target;
-    locomotion_inputs.has_movement_target = has_movement_target;
-    locomotion_inputs.animation_time = anim.time;
-    locomotion_inputs.phase_offset = phase_offset;
-    HumanoidLocomotionState locomotion_state =
-        build_humanoid_locomotion_state(locomotion_inputs);
-    if (unit_comp != nullptr &&
-        unit_comp->spawn_type == Game::Units::SpawnType::Archer &&
-        !anim.is_moving && !anim.is_attacking) {
-      locomotion_state.gait.cycle_phase = 0.5F;
-    }
-
-    HumanoidAnimationContext anim_ctx{};
-    anim_ctx.inputs = anim;
-    anim_ctx.variation = variation;
-    anim_ctx.formation = formation;
-    anim_ctx.jitter_seed = phase_offset;
-
-    anim_ctx.entity_forward = forward;
-    anim_ctx.entity_right = right;
-    anim_ctx.entity_up = up;
-    anim_ctx.locomotion_direction = locomotion_state.locomotion_direction;
-    anim_ctx.yaw_degrees = applied_yaw;
-    anim_ctx.yaw_radians = yaw_rad;
-    anim_ctx.has_movement_target = locomotion_state.has_movement_target;
-    anim_ctx.move_speed = locomotion_state.move_speed;
-    anim_ctx.movement_target = locomotion_state.movement_target;
-    anim_ctx.locomotion_velocity = locomotion_state.locomotion_velocity;
-    anim_ctx.motion_state = locomotion_state.motion_state;
-    anim_ctx.gait = locomotion_state.gait;
-    anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
-    anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
-    if (anim.is_attacking) {
-      float const attack_offset = phase_offset * 1.5F;
-      anim_ctx.attack_phase = std::fmod(anim.time + attack_offset, 1.0F);
-      if (ctx.has_attack_variant_override) {
-        anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
-      } else {
-        anim_ctx.inputs.attack_variant =
-            static_cast<std::uint8_t>(inst_seed % 3);
-      }
-    }
-
-    HumanoidPose pose{};
-    bool const requires_runtime_pose =
-        RCP::pass_intent_from_ctx(inst_ctx) == RCP::RenderPassIntent::Shadow;
-    if (requires_runtime_pose) {
-      HumanoidRendererBase::compute_locomotion_pose(
-          inst_seed, anim.time, locomotion_state.gait, variation, pose);
-    }
-    auto const visual_spec = owner.visual_spec();
-    bool world_already_grounded =
-        ctx.skip_ground_offset || requires_runtime_pose;
-    if (!ctx.skip_ground_offset && requires_runtime_pose) {
-      auto const grounding_archetype =
-          (visual_spec.archetype_id != Render::Creature::kInvalidArchetype)
-              ? visual_spec.archetype_id
-              : Render::Creature::ArchetypeRegistry::kHumanoidBase;
-      float const grounded_contact_y =
-          RCP::grounded_humanoid_contact_y(grounding_archetype, pose, anim_ctx);
-      RCP::ground_model_contact_to_surface(inst_ctx.model, grounded_contact_y,
-                                           combined_height_scale,
-                                           entity_ground_offset);
-    } else if (!world_already_grounded) {
-      RCP::ground_model_contact_to_surface(
-          inst_ctx.model, 0.0F, combined_height_scale, entity_ground_offset);
-    }
-    anim_ctx.instance_position =
-        inst_ctx.model.map(QVector3D(0.0F, 0.0F, 0.0F));
-
-    QVector3D const soldier_world_pos = anim_ctx.instance_position;
+    DrawContext inst_ctx = prepared_pose.inst_ctx;
+    HumanoidAnimationContext anim_ctx = prepared_pose.anim_ctx;
+    HumanoidPose pose = prepared_pose.pose;
+    const auto visual_spec = prepared_pose.visual_spec;
+    const bool world_already_grounded = prepared_pose.world_already_grounded;
+    QVector3D const soldier_world_pos = prepared_pose.soldier_world_pos;
 
     constexpr float k_soldier_cull_radius = 0.6F;
     if (ctx.camera != nullptr &&
@@ -660,6 +797,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     HumanoidLOD soldier_lod = static_cast<HumanoidLOD>(lod_decision.lod);
 
     ++s_render_stats.soldiers_rendered;
+    switch (soldier_lod) {
+    case HumanoidLOD::Full:
+      ++s_render_stats.lod_full;
+      break;
+    case HumanoidLOD::Minimal:
+      ++s_render_stats.lod_minimal;
+      break;
+    case HumanoidLOD::Billboard:
+      break;
+    }
 
     RCP::CreatureGraphInputs graph_inputs{};
     graph_inputs.ctx = &inst_ctx;
@@ -679,71 +826,33 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     graph_output.seed = inst_seed;
     graph_output.world_already_grounded = world_already_grounded;
 
-    RCP::HumanoidShadowStateInputs shadow_inputs{};
+    RCP::GroundShadowStateInputs shadow_inputs{};
     shadow_inputs.ctx = &inst_ctx;
     shadow_inputs.graph = &graph_output;
     shadow_inputs.unit = unit_comp;
-    shadow_inputs.soldier_world_pos = soldier_world_pos;
+    shadow_inputs.world_pos = soldier_world_pos;
     shadow_inputs.lod = soldier_lod;
     shadow_inputs.camera_distance = lod_state.camera_distance;
-    shadow_inputs.mounted = is_mounted_spawn;
-    const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
+    const auto shadow_state = RCP::prepare_ground_shadow_state(shadow_inputs);
     if (shadow_state.enabled) {
       out.add_post_body_draw(
           shadow_state.pass, [shadow_state](Render::GL::ISubmitter &submitter) {
-            if (auto *renderer = dynamic_cast<Renderer *>(&submitter)) {
-              Shader *previous_shader = renderer->get_current_shader();
-              renderer->set_current_shader(shadow_state.shader);
-              shadow_state.shader->set_uniform(QStringLiteral("u_lightDir"),
-                                               shadow_state.light_dir);
-
-              submitter.mesh(shadow_state.mesh, shadow_state.model,
-                             QVector3D(0.0F, 0.0F, 0.0F), nullptr,
-                             shadow_state.alpha, 0);
-
-              renderer->set_current_shader(previous_shader);
-            }
+            submitter.part(shadow_state.mesh,
+                           Render::GL::MaterialRegistry::instance().shadow(),
+                           shadow_state.model, QVector3D(0.0F, 0.0F, 0.0F),
+                           nullptr, shadow_state.alpha, 0);
           });
     }
 
-    switch (soldier_lod) {
-    case HumanoidLOD::Full: {
-
-      ++s_render_stats.lod_full;
-
-      if (is_mounted_spawn) {
-        owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
-                                           inst_seed, graph_output.lod, out);
-        break;
-      }
-
-      RCP::PreparedHumanoidBodyState body_state;
-      body_state.graph = graph_output;
-      body_state.pose = pose;
-      body_state.variant = variant;
-      body_state.animation = anim_ctx;
-      out.bodies.add_humanoid(body_state);
+    auto append_companion = [&owner, &inst_ctx, &variant, &pose, &anim_ctx,
+                             inst_seed, &graph_output, &out]() {
       owner.append_companion_preparation(inst_ctx, variant, pose, anim_ctx,
                                          inst_seed, graph_output.lod, out);
-      break;
-    }
+    };
 
-    case HumanoidLOD::Minimal: {
-
-      ++s_render_stats.lod_minimal;
-      RCP::PreparedHumanoidBodyState body_state;
-      body_state.graph = graph_output;
-      body_state.pose = pose;
-      body_state.variant = variant;
-      body_state.animation = anim_ctx;
-      out.bodies.add_humanoid(body_state);
-      break;
-    }
-
-    case HumanoidLOD::Billboard:
-
-      break;
-    }
+    emit_humanoid_body_for_lod(variant, pose, anim_ctx, is_mounted_spawn,
+                               soldier_lod, graph_output, append_companion,
+                               out);
   }
 }
 

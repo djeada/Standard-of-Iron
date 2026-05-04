@@ -184,7 +184,8 @@ auto submit_snapshot_creature(
           cmd.world = world_from_unit;
           cmd.bone_count = 1U;
           cmd.bone_palette = Render::GL::SnapshotMeshCache::identity_palette();
-          cmd.palette_ubo = 0U;
+          cmd.palette_ubo =
+              renderer->snapshot_mesh_cache().identity_palette_ubo();
           cmd.palette_offset = 0U;
           cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
           for (std::size_t i = 0; i < role_colors.size(); ++i) {
@@ -230,7 +231,7 @@ auto submit_snapshot_creature(
   cmd.world = world_from_unit;
   cmd.bone_count = 1U;
   cmd.bone_palette = Render::GL::SnapshotMeshCache::identity_palette();
-  cmd.palette_ubo = 0U;
+  cmd.palette_ubo = renderer->snapshot_mesh_cache().identity_palette_ubo();
   cmd.palette_offset = 0U;
   cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
   for (std::size_t i = 0; i < role_colors.size(); ++i) {

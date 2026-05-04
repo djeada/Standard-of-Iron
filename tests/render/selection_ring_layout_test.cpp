@@ -105,4 +105,11 @@ TEST(SelectionRingLayout, SingleSoldierRingKeepsConfiguredSize) {
   EXPECT_FLOAT_EQ(size, 1.2F);
 }
 
+TEST(SelectionRingLayout, CavalryRingUsesLargerConfiguredSize) {
+  float const size = Render::GL::Detail::selection_ring_visual_size(
+      Game::Units::SpawnType::MountedKnight, 1, 2.2F);
+
+  EXPECT_FLOAT_EQ(size, 2.2F);
+}
+
 } // namespace

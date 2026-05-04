@@ -1,6 +1,7 @@
 
 
 #include "render/creature/archetype_registry.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/lod_decision.h"
@@ -285,6 +286,33 @@ TEST(CreatureRenderGraph, BuildBaseOutputCopiesWorldMatrix) {
   EXPECT_EQ(output.world_matrix, ctx.model);
 }
 
+TEST(CreatureRenderGraph, PreparedVisualAndRowCarrySharedFrameState) {
+  CreatureGraphOutput output;
+  output.spec.kind = CreatureKind::Horse;
+  output.lod = CreatureLOD::Minimal;
+  output.pass_intent = RenderPassIntent::Shadow;
+  output.seed = 17U;
+  output.world_already_grounded = false;
+  output.entity_id = 42U;
+  output.world_matrix.translate(1.0F, 2.0F, 3.0F);
+
+  auto const visual_state = make_prepared_visual_state(output);
+  auto const row = make_prepared_render_row(visual_state);
+
+  EXPECT_EQ(visual_state.kind, CreatureKind::Horse);
+  EXPECT_EQ(visual_state.pass, RenderPassIntent::Shadow);
+  EXPECT_EQ(visual_state.entity_id, 42u);
+  EXPECT_FALSE(visual_state.world_already_grounded);
+  EXPECT_EQ(row.spec.kind, CreatureKind::Horse);
+  EXPECT_EQ(row.kind, CreatureKind::Horse);
+  EXPECT_EQ(row.lod, CreatureLOD::Minimal);
+  EXPECT_EQ(row.pass, RenderPassIntent::Shadow);
+  EXPECT_EQ(row.seed, 17u);
+  EXPECT_EQ(row.entity_id, 42u);
+  EXPECT_FALSE(row.world_already_grounded);
+  EXPECT_EQ(row.world_from_unit, output.world_matrix);
+}
+
 TEST(CreatureRenderBatch, StartsEmpty) {
   CreatureRenderBatch batch;
   EXPECT_TRUE(batch.empty());
@@ -388,7 +416,8 @@ TEST(CreatureRenderGraph, EndToEndHumanoidPrepare) {
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
-  EXPECT_TRUE(batch.rows().empty());
+  ASSERT_EQ(batch.rows().size(), 1u);
+  EXPECT_EQ(batch.rows()[0].request.lod, CreatureLOD::Full);
 }
 
 TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
@@ -413,7 +442,8 @@ TEST(CreatureRenderGraph, EndToEndHorsePrepare) {
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
-  EXPECT_TRUE(batch.rows().empty());
+  ASSERT_EQ(batch.rows().size(), 1u);
+  EXPECT_EQ(batch.rows()[0].request.lod, CreatureLOD::Full);
 }
 
 TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
@@ -438,7 +468,8 @@ TEST(CreatureRenderGraph, EndToEndElephantPrepare) {
   EXPECT_EQ(batch.size(), 1u);
   ASSERT_EQ(batch.requests().size(), 1u);
   EXPECT_EQ(batch.requests()[0].lod, CreatureLOD::Full);
-  EXPECT_TRUE(batch.rows().empty());
+  ASSERT_EQ(batch.rows().size(), 1u);
+  EXPECT_EQ(batch.rows()[0].request.lod, CreatureLOD::Full);
 }
 
 TEST(CreatureRenderGraph, PrewarmContextSetsShadowPassIntent) {

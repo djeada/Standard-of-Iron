@@ -25,6 +25,16 @@ auto safe_normalize(const QVector3D &v,
   return n;
 }
 
+void apply_palette_roles(Render::Creature::StaticAttachmentSpec &spec,
+                         std::span<const std::uint8_t> palette_roles) {
+  const std::size_t copy_count =
+      std::min(palette_roles.size(),
+               Render::Creature::StaticAttachmentSpec::kPaletteSlotCount);
+  for (std::size_t i = 0; i < copy_count; ++i) {
+    spec.palette_role_remap[i] = palette_roles[i];
+  }
+}
+
 } // namespace
 
 auto build_static_attachment(const AttachmentBuildInput &in)
@@ -46,13 +56,7 @@ auto build_static_attachment(const AttachmentBuildInput &in)
   spec.local_offset = local_pose;
   spec.override_color_role = in.override_color_role;
   spec.material_id = in.material_id;
-
-  const std::size_t copy_count =
-      std::min(in.palette_role_remap.size(),
-               Render::Creature::StaticAttachmentSpec::kPaletteSlotCount);
-  for (std::size_t i = 0; i < copy_count; ++i) {
-    spec.palette_role_remap[i] = in.palette_role_remap[i];
-  }
+  apply_palette_roles(spec, in.palette_role_remap);
   return spec;
 }
 
@@ -65,13 +69,22 @@ auto build_socket_static_attachment(const SocketAttachmentBuildInput &in)
   spec.local_offset = in.bind_socket_transform * in.mesh_from_socket;
   spec.override_color_role = in.override_color_role;
   spec.material_id = in.material_id;
+  apply_palette_roles(spec, in.palette_role_remap);
+  return spec;
+}
 
-  const std::size_t copy_count =
-      std::min(in.palette_role_remap.size(),
-               Render::Creature::StaticAttachmentSpec::kPaletteSlotCount);
-  for (std::size_t i = 0; i < copy_count; ++i) {
-    spec.palette_role_remap[i] = in.palette_role_remap[i];
-  }
+auto build_prepared_static_attachment(const PreparedAttachmentBuildInput &in)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = build_static_attachment(in.attachment);
+  apply_palette_roles(spec, in.palette_roles);
+  return spec;
+}
+
+auto build_prepared_socket_static_attachment(
+    const PreparedSocketAttachmentBuildInput &in)
+    -> Render::Creature::StaticAttachmentSpec {
+  auto spec = build_socket_static_attachment(in.attachment);
+  apply_palette_roles(spec, in.palette_roles);
   return spec;
 }
 

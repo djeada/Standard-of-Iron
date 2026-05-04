@@ -219,6 +219,65 @@ TEST(TemplatePrewarmRegression, PreparedBodyStateCarriesPassIntent) {
   EXPECT_FALSE(pass_intent_for(state.graph).emits_post_body_draws);
 }
 
+TEST(TemplatePrewarmRegression, PreparedRowsSubmitShadowPassDirectly) {
+  Render::GL::DrawContext prewarm_ctx{};
+  prewarm_ctx.template_prewarm = true;
+
+  CreatureGraphInputs inputs;
+  inputs.ctx = &prewarm_ctx;
+  inputs.camera_distance = 5.0F;
+  inputs.has_camera = true;
+
+  auto output = build_base_graph_output(
+      inputs, evaluate_creature_lod(inputs, humanoid_lod_config()));
+  output.spec.kind = CreatureKind::Humanoid;
+
+  CreatureRenderBatch batch;
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  batch.add_humanoid(output, pose, variant, anim);
+  ASSERT_EQ(batch.rows().size(), 1u);
+
+  CreaturePreparationResult prep;
+  prep.bodies = std::move(batch);
+
+  PrewarmCountingSubmitter sink;
+  const auto stats = submit_preparation(prep, sink);
+
+  EXPECT_EQ(stats.entities_submitted, 0u);
+  EXPECT_EQ(sink.rigged_calls, 0);
+}
+
+TEST(TemplatePrewarmRegression, PreparedRowsSubmitMainPassDirectly) {
+  Render::GL::DrawContext ctx{};
+
+  CreatureGraphInputs inputs;
+  inputs.ctx = &ctx;
+  inputs.camera_distance = 5.0F;
+  inputs.has_camera = true;
+
+  auto output = build_base_graph_output(
+      inputs, evaluate_creature_lod(inputs, humanoid_lod_config()));
+  output.spec.kind = CreatureKind::Humanoid;
+
+  CreatureRenderBatch batch;
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  batch.add_humanoid(output, pose, variant, anim);
+  ASSERT_EQ(batch.rows().size(), 1u);
+
+  CreaturePreparationResult prep;
+  prep.bodies = std::move(batch);
+
+  PrewarmCountingSubmitter sink;
+  const auto stats = submit_preparation(prep, sink);
+
+  EXPECT_EQ(stats.entities_submitted, 1u);
+  EXPECT_EQ(sink.rigged_calls, 1);
+}
+
 TEST(TemplatePrewarmRegression, PreparedAnimationStateHonorsOverride) {
   Render::GL::AnimationInputs override_anim{};
   override_anim.time = 3.0F;
@@ -273,12 +332,12 @@ TEST(TemplatePrewarmRegression, PreparedHumanoidShadowRequiresResources) {
   Render::GL::DrawContext ctx{};
   CreatureGraphOutput graph{};
 
-  HumanoidShadowStateInputs inputs{};
+  GroundShadowStateInputs inputs{};
   inputs.ctx = &ctx;
   inputs.graph = &graph;
   inputs.lod = Render::Creature::CreatureLOD::Full;
 
-  auto const shadow = prepare_humanoid_shadow_state(inputs);
+  auto const shadow = prepare_ground_shadow_state(inputs);
 
   EXPECT_FALSE(shadow.enabled);
 }

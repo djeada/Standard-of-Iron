@@ -125,6 +125,8 @@ private:
     float world[16];
     float color_alpha[4];
     float variation_material[4];
+    std::uint32_t palette_base = 0;
+    std::uint32_t padding[3]{};
   };
   std::vector<InstanceAttrib> m_instance_scratch;
 

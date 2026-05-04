@@ -8,11 +8,13 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/creature/snapshot_mesh_registry.h"
+#include "render/gl/backend.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/dimensions.h"
 #include "render/horse/horse_motion.h"
@@ -24,6 +26,9 @@
 #include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
+#include <QSurfaceFormat>
 #include <QVector3D>
 #include <gtest/gtest.h>
 
@@ -36,9 +41,12 @@ namespace {
 
 class NullSubmitter : public Render::GL::ISubmitter {
 public:
+  int meshes{0};
   int rigged_calls{0};
   void mesh(Render::GL::Mesh *, const QMatrix4x4 &, const QVector3D &,
-            Render::GL::Texture *, float, int) override {}
+            Render::GL::Texture *, float, int) override {
+    ++meshes;
+  }
   void rigged(const Render::GL::RiggedCreatureCmd &) override {
     ++rigged_calls;
   }
@@ -59,6 +67,40 @@ public:
                     float) override {}
   void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
                       float) override {}
+};
+
+class ScopedOffscreenGlContext {
+public:
+  ScopedOffscreenGlContext() {
+    format_.setRenderableType(QSurfaceFormat::OpenGL);
+    format_.setProfile(QSurfaceFormat::CompatibilityProfile);
+    format_.setVersion(3, 3);
+    surface_.setFormat(format_);
+    surface_.create();
+    if (!surface_.isValid()) {
+      return;
+    }
+
+    context_.setFormat(format_);
+    if (!context_.create()) {
+      return;
+    }
+    valid_ = context_.makeCurrent(&surface_);
+  }
+
+  ~ScopedOffscreenGlContext() {
+    if (valid_) {
+      context_.doneCurrent();
+    }
+  }
+
+  [[nodiscard]] auto is_valid() const -> bool { return valid_; }
+
+private:
+  QSurfaceFormat format_{};
+  QOffscreenSurface surface_{};
+  QOpenGLContext context_{};
+  bool valid_{false};
 };
 
 struct ScopedFlatTerrain {
@@ -131,6 +173,73 @@ TEST(HorsePrepare, MainHorseRowProducesEntitySubmission) {
   const auto stats = Render::Creature::Pipeline::submit_preparation(prep, sink);
 
   EXPECT_EQ(stats.entities_submitted, 1u);
+}
+
+TEST(HorsePrepare, MainPassShadowDrawDoesNotRequireRendererShaderState) {
+  ScopedOffscreenGlContext gl_context;
+  if (!gl_context.is_valid()) {
+    GTEST_SKIP() << "OpenGL offscreen context unavailable";
+  }
+
+  ScopedFlatTerrain terrain(0.0F);
+
+  Render::GL::Backend backend;
+  backend.initialize();
+
+  Render::GL::HorseRendererBase renderer;
+  Render::GL::DrawContext ctx{};
+  ctx.backend = &backend;
+  ctx.resources = backend.resources();
+  ctx.allow_template_cache = true;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+
+  NullSubmitter sink;
+  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, sink);
+
+  EXPECT_GE(sink.rigged_calls, 1);
+  EXPECT_GE(sink.meshes, 1)
+      << "horse shadow draw should reach a plain ISubmitter";
+}
+
+TEST(HorsePrepare, PreparedMotionStateUsesSharedSampleAndResolvedClip) {
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::HorseMotionSample motion{};
+  motion.gait_type = Render::GL::GaitType::WALK;
+  motion.phase = 0.35F;
+  motion.is_fighting = true;
+
+  Render::Creature::Pipeline::HorseMotionStateInputs inputs{};
+  inputs.anim = &anim;
+  inputs.rider_ctx = &rider_ctx;
+  inputs.profile = &profile;
+  inputs.shared_motion = &motion;
+
+  auto const state =
+      Render::Creature::Pipeline::resolve_horse_motion_state(inputs);
+
+  EXPECT_EQ(state.motion.phase, motion.phase);
+  EXPECT_TRUE(state.motion.is_fighting);
+  EXPECT_EQ(state.animation_state,
+            Render::Creature::AnimationStateId::AttackMelee);
+  EXPECT_EQ(state.clip_id, 5u);
 }
 
 TEST(HorsePrepare, MountFrameSeatsRiderOverMiddleTorso) {
@@ -285,6 +394,35 @@ TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
               1.9F - hoof_contact_y, 0.01F);
   EXPECT_NEAR(requests[0].world.map(QVector3D(0.0F, hoof_contact_y, 0.0F)).y(),
               1.9F, 0.01F);
+}
+
+TEST(HorsePrepare, PreparedQuadrupedFrameStateAppliesContactGrounding) {
+  ScopedFlatTerrain terrain(1.9F);
+
+  Render::GL::DrawContext ctx{};
+  ctx.model.translate(-0.3F, 6.0F, 0.45F);
+  Render::GL::AnimationInputs anim{};
+
+  Render::Creature::Pipeline::QuadrupedFrameStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.anim = &anim;
+  inputs.spec.kind = Render::Creature::Pipeline::CreatureKind::Horse;
+  inputs.lod = Render::Creature::CreatureLOD::Minimal;
+  inputs.seed = 11U;
+  inputs.contact_y =
+      Render::Creature::Pipeline::horse_clip_contact_y(0U, 0.0F).value_or(0.0F);
+  inputs.ground_clearance = 1.0e-5F;
+  inputs.use_contact_grounding = true;
+
+  auto const state =
+      Render::Creature::Pipeline::prepare_quadruped_frame_state(inputs);
+
+  EXPECT_EQ(state.graph.spec.kind,
+            Render::Creature::Pipeline::CreatureKind::Horse);
+  EXPECT_EQ(state.graph.seed, 11u);
+  EXPECT_NEAR(
+      state.graph.world_matrix.map(QVector3D(0.0F, inputs.contact_y, 0.0F)).y(),
+      1.9F + inputs.ground_clearance, 0.01F);
 }
 
 TEST(HorsePrepare,

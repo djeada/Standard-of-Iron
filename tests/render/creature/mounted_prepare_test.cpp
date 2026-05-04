@@ -146,6 +146,16 @@ TEST(MountedPrepare, ProducesHorseMountAndHumanoidRiderRows) {
   EXPECT_EQ(set.rider_row.pass, RenderPassIntent::Shadow);
   EXPECT_EQ(set.mount_row.seed, 99u);
   EXPECT_EQ(set.rider_row.seed, 99u);
+  EXPECT_EQ(set.mount_row.request.archetype,
+            Render::Creature::ArchetypeRegistry::kHorseBase);
+  EXPECT_EQ(set.rider_row.request.archetype,
+            Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  EXPECT_EQ(set.mount_row.request.state,
+            Render::Creature::AnimationStateId::Idle);
+  EXPECT_EQ(set.rider_row.request.state,
+            Render::Creature::AnimationStateId::Idle);
+  EXPECT_EQ(set.mount_row.request.pass, RenderPassIntent::Shadow);
+  EXPECT_EQ(set.rider_row.request.pass, RenderPassIntent::Shadow);
 }
 
 TEST(MountedPrepare, ShadowPairProducesNoDrawCalls) {

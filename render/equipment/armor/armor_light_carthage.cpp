@@ -308,17 +308,17 @@ auto armor_light_carthage_make_static_attachment(
       back_radius * std::max(0.22F, (torso_depth * 0.74F) / (torso_r * 0.80F)));
   align_torso_mesh_forward(back_panel);
 
-  auto spec = Render::Equipment::build_static_attachment({
-      .archetype = &armor_light_carthage_archetype(cuirass, straps, front_panel,
-                                                   back_panel),
-      .socket_bone_index = torso_socket_bone_index,
-      .unit_local_pose_at_bind = torso_local.world,
+  return Render::Equipment::build_prepared_static_attachment({
+      .attachment =
+          {
+              .archetype = &armor_light_carthage_archetype(
+                  cuirass, straps, front_panel, back_panel),
+              .socket_bone_index = torso_socket_bone_index,
+              .unit_local_pose_at_bind = torso_local.world,
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<4>(base_role_byte),
   });
-  spec.palette_role_remap[0] = base_role_byte;
-  spec.palette_role_remap[1] = static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[2] = static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[3] = static_cast<std::uint8_t>(base_role_byte + 3U);
-  return spec;
 }
 
 } // namespace Render::GL

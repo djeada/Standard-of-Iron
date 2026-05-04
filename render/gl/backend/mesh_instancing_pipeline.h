@@ -7,6 +7,7 @@
 #include <QVector3D>
 #include <cstddef>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace Render::GL {
@@ -63,6 +64,7 @@ private:
   Texture *m_currentTexture{nullptr};
 
   std::vector<MeshInstanceGpu> m_instances;
+  std::unordered_set<Mesh *> m_configuredMeshesThisFrame;
   std::size_t m_instanceCapacity{0};
 
   GLuint m_instanceBuffer{0};

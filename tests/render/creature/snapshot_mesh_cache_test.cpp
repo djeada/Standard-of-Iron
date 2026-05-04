@@ -7,6 +7,8 @@
 #include "render/snapshot_mesh_cache.h"
 
 #include <QMatrix4x4>
+#include <QOffscreenSurface>
+#include <QOpenGLContext>
 #include <QVector3D>
 #include <gtest/gtest.h>
 #include <memory>
@@ -65,6 +67,32 @@ auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   return entry;
 }
 
+class ScopedOffscreenGlContext {
+public:
+  ScopedOffscreenGlContext() {
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGL);
+    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setVersion(3, 3);
+    surface_.setFormat(format);
+    surface_.create();
+    EXPECT_TRUE(surface_.isValid());
+
+    context_.setFormat(format);
+    EXPECT_TRUE(context_.create());
+    EXPECT_TRUE(context_.makeCurrent(&surface_));
+  }
+
+  ~ScopedOffscreenGlContext() {
+    context_.doneCurrent();
+    surface_.destroy();
+  }
+
+private:
+  QOffscreenSurface surface_{};
+  QOpenGLContext context_{};
+};
+
 TEST(SnapshotMeshCache, IdentityPaletteIsAllIdentity) {
   const QMatrix4x4 *p = SnapshotMeshCache::identity_palette();
   ASSERT_NE(p, nullptr);
@@ -72,6 +100,15 @@ TEST(SnapshotMeshCache, IdentityPaletteIsAllIdentity) {
        ++i) {
     EXPECT_TRUE(p[i].isIdentity()) << "slot " << i;
   }
+}
+
+TEST(SnapshotMeshCache, IdentityPaletteUboIsReusable) {
+  ScopedOffscreenGlContext gl_context;
+  SnapshotMeshCache cache;
+
+  const std::uint32_t first = cache.identity_palette_ubo();
+  ASSERT_NE(first, 0U);
+  EXPECT_EQ(cache.identity_palette_ubo(), first);
 }
 
 TEST(SnapshotMeshCache, BakesAndCachesEntry) {

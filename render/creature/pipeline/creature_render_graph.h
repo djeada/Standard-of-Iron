@@ -156,7 +156,8 @@ public:
 
 private:
   std::vector<PreparedCreatureRenderRow> rows_{};
-  std::vector<Render::Creature::CreatureRenderRequest> requests_{};
+  std::vector<Render::Creature::CreatureRenderRequest> direct_requests_{};
+  mutable std::vector<Render::Creature::CreatureRenderRequest> request_cache_{};
 };
 
 using PostBodyDrawFn = std::function<void(Render::GL::ISubmitter &)>;

@@ -1,11 +1,13 @@
 #include "prepare.h"
 
+#include "../../game/core/component.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/render_stats.h"
+#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "elephant_motion.h"
@@ -20,18 +22,9 @@ namespace Render::Elephant {
 
 namespace {
 
-auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
-                               const Render::GL::AnimationInputs &anim) noexcept
-    -> Render::Creature::AnimationStateId {
-  if (motion.is_fighting) {
-    return Render::Creature::AnimationStateId::AttackMelee;
-  }
-  if (!motion.is_moving) {
-    return Render::Creature::AnimationStateId::Idle;
-  }
-  return anim.is_running ? Render::Creature::AnimationStateId::Run
-                         : Render::Creature::AnimationStateId::Walk;
-}
+constexpr float k_shadow_size_elephant = 0.56F;
+constexpr float k_shadow_width_scale_elephant = 1.35F;
+constexpr float k_shadow_depth_scale_elephant = 1.85F;
 
 } // namespace
 
@@ -121,38 +114,60 @@ void prepare_elephant_render(
   using Render::GL::HowdahAttachmentFrame;
 
   const ElephantVariant &v = profile.variant;
-  ElephantMotionSample const motion =
-      shared_motion
-          ? *shared_motion
-          : evaluate_elephant_motion(
-                profile, anim,
-                Engine::Core::get_or_add_component<
-                    Render::Creature::ElephantAnimationStateComponent>(
-                    ctx.entity));
-
-  HowdahAttachmentFrame const howdah =
-      shared_howdah ? *shared_howdah : motion.howdah;
-
-  Render::GL::DrawContext elephant_ctx = ctx;
-  elephant_ctx.model = ctx.model;
-  elephant_ctx.model.translate(howdah.ground_offset);
-  Render::Creature::Pipeline::ground_model_to_terrain(elephant_ctx.model);
-
   namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  graph_inputs.ctx = &elephant_ctx;
-  graph_inputs.anim = &anim;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = lod;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = 0U;
+  RCP::ElephantMotionStateInputs motion_inputs{};
+  motion_inputs.ctx = &ctx;
+  motion_inputs.anim = &anim;
+  motion_inputs.profile = &profile;
+  motion_inputs.shared_howdah = shared_howdah;
+  motion_inputs.shared_motion = shared_motion;
+  const auto motion_state = RCP::resolve_elephant_motion_state(motion_inputs);
+
+  RCP::QuadrupedFrameStateInputs frame_inputs{};
+  frame_inputs.ctx = &ctx;
+  frame_inputs.anim = &anim;
+  frame_inputs.spec = owner.visual_spec();
+  frame_inputs.lod = lod;
+  frame_inputs.seed = 0U;
+  frame_inputs.pre_ground_translation = motion_state.howdah.ground_offset;
+  const auto frame_state = RCP::prepare_quadruped_frame_state(frame_inputs);
+  auto *unit_comp =
+      ctx.entity != nullptr
+          ? ctx.entity->get_component<Engine::Core::UnitComponent>()
+          : nullptr;
+  QVector3D const world_pos =
+      RCP::model_world_origin(frame_state.graph.world_matrix);
+  float camera_distance = 0.0F;
+  if (frame_state.ctx.camera != nullptr) {
+    camera_distance =
+        (world_pos - frame_state.ctx.camera->get_position()).length();
+  }
+  RCP::GroundShadowStateInputs shadow_inputs{};
+  shadow_inputs.ctx = &frame_state.ctx;
+  shadow_inputs.graph = &frame_state.graph;
+  shadow_inputs.unit = unit_comp;
+  shadow_inputs.world_pos = world_pos;
+  shadow_inputs.lod = lod;
+  shadow_inputs.camera_distance = camera_distance;
+  shadow_inputs.shadow_size = k_shadow_size_elephant;
+  shadow_inputs.width_scale = k_shadow_width_scale_elephant;
+  shadow_inputs.depth_scale = k_shadow_depth_scale_elephant;
+  const auto shadow_state = RCP::prepare_ground_shadow_state(shadow_inputs);
+  if (shadow_state.enabled) {
+    out.add_post_body_draw(
+        shadow_state.pass, [shadow_state](Render::GL::ISubmitter &submitter) {
+          submitter.part(shadow_state.mesh,
+                         Render::GL::MaterialRegistry::instance().shadow(),
+                         shadow_state.model, QVector3D(0.0F, 0.0F, 0.0F),
+                         nullptr, shadow_state.alpha, 0);
+        });
+  }
+
   RCP::PreparedElephantBodyState body_state;
-  body_state.graph = graph_output;
+  body_state.graph = frame_state.graph;
   body_state.variant = v;
-  body_state.animation_state = elephant_state_for_motion(motion, anim);
-  body_state.phase = motion.phase;
+  body_state.animation_state = motion_state.animation_state;
+  body_state.phase = motion_state.motion.phase;
   out.bodies.add_quadruped(body_state);
 }
 

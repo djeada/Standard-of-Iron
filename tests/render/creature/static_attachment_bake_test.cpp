@@ -3,6 +3,7 @@
 #include "render/creature/part_graph.h"
 #include "render/creature/skeleton.h"
 #include "render/creature/spec.h"
+#include "render/equipment/attachment_builder.h"
 #include "render/gl/mesh.h"
 #include "render/gl/primitives.h"
 #include "render/humanoid/humanoid_spec.h"
@@ -118,6 +119,22 @@ TEST(StaticAttachmentBake, PaletteRemapAndOverrideRoleAreApplied) {
   for (std::size_t i = cube_n; i < baked.vertices.size(); ++i) {
     EXPECT_EQ(baked.vertices[i].color_role, 3U) << "fixed draw vertex " << i;
   }
+}
+
+TEST(StaticAttachmentBake, PreparedAttachmentBuilderAppliesSequentialRoles) {
+  auto const spec = Render::Equipment::build_prepared_static_attachment({
+      .attachment =
+          {
+              .archetype = &make_simple_archetype(),
+              .socket_bone_index = OneBoneGraph::kBoneA,
+          },
+      .palette_roles = Render::Equipment::sequential_palette_roles<3>(5),
+  });
+
+  EXPECT_EQ(spec.palette_role_remap[0], 5U);
+  EXPECT_EQ(spec.palette_role_remap[1], 6U);
+  EXPECT_EQ(spec.palette_role_remap[2], 7U);
+  EXPECT_EQ(spec.socket_bone_index, OneBoneGraph::kBoneA);
 }
 
 TEST(StaticAttachmentBake, LocalOffsetTranslatesAttachmentVertices) {

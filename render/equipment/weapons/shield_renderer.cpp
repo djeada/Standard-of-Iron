@@ -242,25 +242,18 @@ auto shield_make_static_attachment(const ShieldRenderConfig &config,
           k_bone)];
   auto const &bind_grip = Render::Humanoid::humanoid_bind_body_frames().grip_l;
   QMatrix4x4 const bind_socket = hand_basis_transform(QMatrix4x4{}, bind_grip);
-  auto spec = Render::Equipment::build_socket_static_attachment({
-      .archetype = &shield_archetype(config),
-      .socket_bone_index = static_cast<std::uint16_t>(k_bone),
-      .bind_bone_transform = bind_bone,
-      .bind_socket_transform = bind_socket,
-      .mesh_from_socket = shield_local_pose(config),
+  return Render::Equipment::build_prepared_socket_static_attachment({
+      .attachment =
+          {
+              .archetype = &shield_archetype(config),
+              .socket_bone_index = static_cast<std::uint16_t>(k_bone),
+              .bind_bone_transform = bind_bone,
+              .bind_socket_transform = bind_socket,
+              .mesh_from_socket = shield_local_pose(config),
+          },
+      .palette_roles =
+          Render::Equipment::sequential_palette_roles<6>(base_role_byte),
   });
-  spec.palette_role_remap[k_shield_slot] = base_role_byte;
-  spec.palette_role_remap[k_back_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 1U);
-  spec.palette_role_remap[k_trim_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 2U);
-  spec.palette_role_remap[k_inner_ring_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 3U);
-  spec.palette_role_remap[k_metal_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 4U);
-  spec.palette_role_remap[k_grip_slot] =
-      static_cast<std::uint8_t>(base_role_byte + 5U);
-  return spec;
 }
 
 } // namespace Render::GL

@@ -131,7 +131,7 @@
       },
       "visuals": {
         "render_scale": 0.8,
-        "selection_ring_size": 2.05,
+        "selection_ring_size": 2.25,
         "renderer_id": "troops/roman/horse_swordsman"
       },
       "formation": {
@@ -198,7 +198,7 @@
       },
       "visuals": {
         "render_scale": 0.75,
-        "selection_ring_size": 1.8,
+        "selection_ring_size": 2.25,
         "renderer_id": "troops/roman/horse_archer"
       },
       "formation": {
@@ -231,7 +231,7 @@
       },
       "visuals": {
         "render_scale": 0.78,
-        "selection_ring_size": 1.9,
+        "selection_ring_size": 2.25,
         "renderer_id": "troops/roman/horse_spearman"
       },
       "formation": {

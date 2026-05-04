@@ -21,6 +21,7 @@
 #include <array>
 #include <cstddef>
 #include <cstring>
+#include <optional>
 
 namespace Render::GL::BackendPipelines {
 
@@ -59,6 +60,42 @@ void copy_palette_to_scratch(const QMatrix4x4 *palette,
                              std::vector<float> &scratch) {
   scratch.resize(BonePaletteArena::kPaletteFloats);
   BonePaletteArena::pack_palette_for_gpu(palette, scratch.data());
+}
+
+auto palette_slot_for_instancing(const RiggedCreatureCmd &cmd)
+    -> std::optional<std::uint32_t> {
+  constexpr auto k_palette_stride_bytes =
+      static_cast<std::uint32_t>(BonePaletteArena::kPaletteBytes);
+  if (cmd.palette_ubo == 0 || k_palette_stride_bytes == 0 ||
+      (cmd.palette_offset % k_palette_stride_bytes) != 0U) {
+    return std::nullopt;
+  }
+  return cmd.palette_offset / k_palette_stride_bytes;
+}
+
+auto same_role_palette(const RiggedCreatureCmd &a,
+                       const RiggedCreatureCmd &b) -> bool;
+
+auto can_instance_with_head(const RiggedCreatureCmd &head,
+                            const RiggedCreatureCmd &candidate,
+                            std::uint32_t current_min_slot,
+                            std::uint32_t current_max_slot,
+                            std::size_t cap) -> bool {
+  if (candidate.mesh != head.mesh || candidate.material != head.material ||
+      candidate.texture != nullptr ||
+      candidate.palette_ubo != head.palette_ubo ||
+      !same_role_palette(head, candidate)) {
+    return false;
+  }
+  const auto candidate_slot = palette_slot_for_instancing(candidate);
+  if (!candidate_slot.has_value()) {
+    return false;
+  }
+  const std::uint32_t next_min =
+      std::min(current_min_slot, candidate_slot.value());
+  const std::uint32_t next_max =
+      std::max(current_max_slot, candidate_slot.value());
+  return (static_cast<std::size_t>(next_max - next_min) + 1U) <= cap;
 }
 
 void flatten_role_colors(
@@ -332,19 +369,25 @@ void RiggedCharacterPipeline::compute_groups(
   std::size_t i = 0;
   while (i < count) {
     const auto &head = cmds[i];
-    if (head.texture != nullptr || head.mesh == nullptr) {
+    const auto head_slot = palette_slot_for_instancing(head);
+    if (head.texture != nullptr || head.mesh == nullptr ||
+        !head_slot.has_value()) {
 
       out_groups.push_back(1);
       ++i;
       continue;
     }
+    std::uint32_t min_slot = head_slot.value();
+    std::uint32_t max_slot = head_slot.value();
     std::size_t j = i + 1;
     while (j < count && (j - i) < cap) {
       const auto &nxt = cmds[j];
-      if (nxt.mesh != head.mesh || nxt.material != head.material ||
-          nxt.texture != nullptr) {
+      if (!can_instance_with_head(head, nxt, min_slot, max_slot, cap)) {
         break;
       }
+      const auto next_slot = palette_slot_for_instancing(nxt);
+      min_slot = std::min(min_slot, next_slot.value());
+      max_slot = std::max(max_slot, next_slot.value());
       ++j;
     }
     out_groups.push_back(j - i);
@@ -448,6 +491,11 @@ auto RiggedCharacterPipeline::ensure_instanced_vao(RiggedMesh &mesh)
   fn->glVertexAttribPointer(11, 4, GL_FLOAT, GL_FALSE, k_inst_stride,
                             reinterpret_cast<void *>(off));
   fn->glVertexAttribDivisor(11, 1);
+  off += sizeof(float) * 4;
+  fn->glEnableVertexAttribArray(12);
+  fn->glVertexAttribIPointer(12, 1, GL_UNSIGNED_INT, k_inst_stride,
+                             reinterpret_cast<void *>(off));
+  fn->glVertexAttribDivisor(12, 1);
 
   ebo->bind();
 
@@ -470,10 +518,20 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (cmds[0].mesh == nullptr || cmds[0].texture != nullptr) {
     return false;
   }
+  const auto head_slot = palette_slot_for_instancing(cmds[0]);
+  if (!head_slot.has_value()) {
+    return false;
+  }
+  std::uint32_t min_slot = head_slot.value();
+  std::uint32_t max_slot = head_slot.value();
   for (std::size_t k = 1; k < count; ++k) {
-    if (!same_role_palette(cmds[0], cmds[k])) {
+    if (!can_instance_with_head(cmds[0], cmds[k], min_slot, max_slot,
+                                m_max_instances_per_batch)) {
       return false;
     }
+    const auto next_slot = palette_slot_for_instancing(cmds[k]);
+    min_slot = std::min(min_slot, next_slot.value());
+    max_slot = std::max(max_slot, next_slot.value());
   }
 
   auto *fn = gl_funcs();
@@ -497,6 +555,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     ia.variation_material[1] = c.variation_scale.y();
     ia.variation_material[2] = c.variation_scale.z();
     ia.variation_material[3] = static_cast<float>(c.material_id);
+    ia.palette_base = palette_slot_for_instancing(c).value() - min_slot;
   }
 
   std::size_t const bytes = count * sizeof(InstanceAttrib);
@@ -504,12 +563,16 @@ auto RiggedCharacterPipeline::draw_instanced(
     return false;
   }
   fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
-
-  fn->glBufferData(GL_ARRAY_BUFFER,
-                   static_cast<GLsizeiptr>(m_instance_vbo_capacity_bytes),
-                   nullptr, GL_DYNAMIC_DRAW);
-  fn->glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(bytes),
-                      m_instance_scratch.data());
+  void *mapped =
+      fn->glMapBufferRange(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(bytes),
+                           GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+  if (mapped != nullptr) {
+    std::memcpy(mapped, m_instance_scratch.data(), bytes);
+    fn->glUnmapBuffer(GL_ARRAY_BUFFER);
+  } else {
+    fn->glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(bytes),
+                        m_instance_scratch.data());
+  }
 
   GLuint const vao = ensure_instanced_vao(*cmds[0].mesh);
   if (vao == 0) {
@@ -523,38 +586,15 @@ auto RiggedCharacterPipeline::draw_instanced(
   set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
                             m_instanced_role_color_count, cmds[0]);
 
-  std::size_t const upload_palette_bytes =
-      count * BonePaletteArena::kPaletteBytes;
-  std::size_t const bound_palette_bytes =
-      palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
-  if (m_palette_ubo == 0) {
-    fn->glGenBuffers(1, &m_palette_ubo);
-  }
-  if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
-    fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-    fn->glBufferData(GL_UNIFORM_BUFFER,
-                     static_cast<GLsizeiptr>(bound_palette_bytes), nullptr,
-                     GL_DYNAMIC_DRAW);
-    m_palette_ubo_capacity_bytes = bound_palette_bytes;
-  }
-
-  std::size_t const floats_per_palette = BonePaletteArena::kPaletteFloats;
-  m_palette_scratch.resize(count * floats_per_palette);
-  for (std::size_t k = 0; k < count; ++k) {
-    const auto &c = cmds[k];
-    float *dst = m_palette_scratch.data() + k * floats_per_palette;
-    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
-  }
-  fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
-
-  fn->glBufferData(GL_UNIFORM_BUFFER,
-                   static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
-                   nullptr, GL_DYNAMIC_DRAW);
-  fn->glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                      static_cast<GLsizeiptr>(upload_palette_bytes),
-                      m_palette_scratch.data());
+  const std::size_t bound_palette_count =
+      static_cast<std::size_t>(max_slot - min_slot) + 1U;
+  const std::size_t bound_palette_bytes =
+      bound_palette_count * BonePaletteArena::kPaletteBytes;
+  const auto palette_base_offset = static_cast<GLintptr>(
+      static_cast<std::size_t>(min_slot) * BonePaletteArena::kPaletteBytes);
   fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
-                        m_palette_ubo, 0,
+                        static_cast<GLuint>(cmds[0].palette_ubo),
+                        palette_base_offset,
                         static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);

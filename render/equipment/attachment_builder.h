@@ -6,6 +6,7 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
 #include <cstdint>
 #include <span>
 
@@ -59,12 +60,40 @@ struct SocketAttachmentBuildInput {
   std::uint32_t material_id{0};
 };
 
+struct PreparedAttachmentBuildInput {
+  AttachmentBuildInput attachment{};
+  std::span<const std::uint8_t> palette_roles{};
+};
+
+struct PreparedSocketAttachmentBuildInput {
+  SocketAttachmentBuildInput attachment{};
+  std::span<const std::uint8_t> palette_roles{};
+};
+
 [[nodiscard]] auto build_static_attachment(const AttachmentBuildInput &in)
     -> Render::Creature::StaticAttachmentSpec;
 
 [[nodiscard]] auto
 build_socket_static_attachment(const SocketAttachmentBuildInput &in)
     -> Render::Creature::StaticAttachmentSpec;
+
+[[nodiscard]] auto
+build_prepared_static_attachment(const PreparedAttachmentBuildInput &in)
+    -> Render::Creature::StaticAttachmentSpec;
+
+[[nodiscard]] auto build_prepared_socket_static_attachment(
+    const PreparedSocketAttachmentBuildInput &in)
+    -> Render::Creature::StaticAttachmentSpec;
+
+template <std::size_t N>
+[[nodiscard]] constexpr auto sequential_palette_roles(std::uint8_t base_role)
+    -> std::array<std::uint8_t, N> {
+  std::array<std::uint8_t, N> roles{};
+  for (std::size_t i = 0; i < N; ++i) {
+    roles[i] = static_cast<std::uint8_t>(base_role + i);
+  }
+  return roles;
+}
 
 [[nodiscard]] auto
 compose_basis_unit_local(const QVector3D &origin, const QVector3D &right,

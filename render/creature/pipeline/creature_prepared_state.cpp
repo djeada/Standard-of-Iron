@@ -4,13 +4,23 @@
 #include "../../../game/core/entity.h"
 #include "../../../game/map/terrain_service.h"
 #include "../../../game/units/spawn_type.h"
+#include "../../../game/units/troop_config.h"
+#include "../../elephant/elephant_motion.h"
 #include "../../entity/registry.h"
 #include "../../gl/backend.h"
 #include "../../gl/camera.h"
 #include "../../gl/humanoid/animation/animation_inputs.h"
+#include "../../gl/humanoid/animation/gait.h"
+#include "../../gl/humanoid/humanoid_constants.h"
 #include "../../gl/resources.h"
 #include "../../graphics_settings.h"
+#include "../../horse/horse_motion.h"
+#include "../../humanoid/formation_calculator.h"
+#include "../../humanoid/humanoid_renderer_base.h"
 #include "../../visibility_budget.h"
+#include "../animation_state_components.h"
+#include "../quadruped/clip_set.h"
+#include "preparation_common.h"
 
 #include <QVector2D>
 #include <QtMath>
@@ -21,13 +31,68 @@ namespace Render::Creature::Pipeline {
 
 namespace {
 
-constexpr float k_shadow_size_infantry = 0.16F;
-constexpr float k_shadow_size_mounted = 0.35F;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
 
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
+    -> int {
+  if (unit.render_individuals_per_unit_override > 0) {
+    return unit.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit.spawn_type);
+}
+
+auto resolve_humanoid_formation_params(
+    const Render::GL::HumanoidRendererBase &owner,
+    const Render::GL::DrawContext &ctx) -> Render::GL::FormationParams {
+  Render::GL::FormationParams params{};
+  params.individuals_per_unit = 1;
+  params.max_per_row = 1;
+  params.spacing = 0.75F;
+
+  if (ctx.entity != nullptr) {
+    auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
+    if (unit != nullptr) {
+      params.individuals_per_unit = resolved_individuals_per_unit(*unit);
+      params.max_per_row =
+          Game::Units::TroopConfig::instance().get_max_units_per_row(
+              unit->spawn_type);
+      switch (unit->spawn_type) {
+      case Game::Units::SpawnType::MountedKnight:
+      case Game::Units::SpawnType::HorseArcher:
+      case Game::Units::SpawnType::HorseSpearman:
+        params.spacing =
+            Render::GL::cavalry_formation_spacing(owner.get_mount_scale());
+        break;
+      default:
+        break;
+      }
+    }
+  } else if (owner.uses_mounted_pipeline()) {
+    params.spacing =
+        Render::GL::cavalry_formation_spacing(owner.get_mount_scale());
+  }
+
+  return params;
+}
+
 } // namespace
+
+auto make_prepared_visual_state(const CreatureGraphOutput &graph) noexcept
+    -> PreparedCreatureVisualState {
+  PreparedCreatureVisualState state;
+  state.spec = graph.spec;
+  state.kind = graph.spec.kind;
+  state.lod = graph.lod;
+  state.pass = graph.pass_intent;
+  state.seed = graph.seed;
+  state.world_from_unit = graph.world_matrix;
+  state.world_already_grounded = graph.world_already_grounded;
+  state.entity_id = graph.entity_id;
+  return state;
+}
 
 auto resolve_humanoid_animation_state(const Render::GL::DrawContext &ctx)
     -> PreparedAnimationState {
@@ -60,6 +125,158 @@ auto resolve_elephant_animation_state(const Render::GL::DrawContext &ctx)
     state.inputs.is_melee = true;
   }
 
+  return state;
+}
+
+auto resolve_horse_motion_state(const HorseMotionStateInputs &inputs)
+    -> PreparedHorseMotionState {
+  PreparedHorseMotionState state;
+  if (inputs.anim == nullptr || inputs.rider_ctx == nullptr ||
+      inputs.profile == nullptr) {
+    return state;
+  }
+
+  state.motion =
+      inputs.shared_motion
+          ? *inputs.shared_motion
+          : Render::GL::evaluate_horse_motion(
+                *inputs.profile, *inputs.anim, *inputs.rider_ctx,
+                Engine::Core::get_or_add_component<
+                    Render::Creature::HorseAnimationStateComponent>(
+                    inputs.ctx != nullptr ? inputs.ctx->entity : nullptr));
+
+  if (state.motion.is_fighting) {
+    state.animation_state = Render::Creature::AnimationStateId::AttackMelee;
+  } else {
+    switch (state.motion.gait_type) {
+    case Render::GL::GaitType::IDLE:
+      state.animation_state = Render::Creature::AnimationStateId::Idle;
+      break;
+    case Render::GL::GaitType::WALK:
+      state.animation_state = Render::Creature::AnimationStateId::Walk;
+      break;
+    case Render::GL::GaitType::TROT:
+    case Render::GL::GaitType::CANTER:
+    case Render::GL::GaitType::GALLOP:
+      state.animation_state = Render::Creature::AnimationStateId::Run;
+      break;
+    }
+  }
+
+  state.clip_id = Render::Creature::Quadruped::clip_for_motion(
+      Render::Creature::Quadruped::ClipSet{0U, 1U, 2U, 3U, 4U, 5U},
+      state.motion.gait_type, state.motion.is_fighting);
+  return state;
+}
+
+auto resolve_elephant_motion_state(const ElephantMotionStateInputs &inputs)
+    -> PreparedElephantMotionState {
+  PreparedElephantMotionState state;
+  if (inputs.anim == nullptr || inputs.profile == nullptr) {
+    return state;
+  }
+
+  state.motion =
+      inputs.shared_motion
+          ? *inputs.shared_motion
+          : Render::GL::evaluate_elephant_motion(
+                *inputs.profile, *inputs.anim,
+                Engine::Core::get_or_add_component<
+                    Render::Creature::ElephantAnimationStateComponent>(
+                    inputs.ctx != nullptr ? inputs.ctx->entity : nullptr));
+  state.howdah =
+      inputs.shared_howdah ? *inputs.shared_howdah : state.motion.howdah;
+
+  if (state.motion.is_fighting) {
+    state.animation_state = Render::Creature::AnimationStateId::AttackMelee;
+  } else if (!state.motion.is_moving) {
+    state.animation_state = Render::Creature::AnimationStateId::Idle;
+  } else {
+    state.animation_state = inputs.anim->is_running
+                                ? Render::Creature::AnimationStateId::Run
+                                : Render::Creature::AnimationStateId::Walk;
+  }
+
+  return state;
+}
+
+auto resolve_humanoid_formation_state(
+    const HumanoidFormationStateInputs &inputs)
+    -> PreparedHumanoidFormationState {
+  PreparedHumanoidFormationState state;
+  if (inputs.owner == nullptr || inputs.ctx == nullptr) {
+    return state;
+  }
+
+  state.formation =
+      resolve_humanoid_formation_params(*inputs.owner, *inputs.ctx);
+
+  state.cols = std::max(1, std::min(state.formation.max_per_row,
+                                    state.formation.individuals_per_unit));
+  state.rows = std::max(
+      1, (state.formation.individuals_per_unit + state.cols - 1) / state.cols);
+  if (inputs.ctx->force_single_soldier) {
+    state.cols = 1;
+    state.rows = 1;
+  }
+
+  state.mounted = inputs.owner->uses_mounted_pipeline();
+  if (inputs.unit != nullptr) {
+    using Game::Units::SpawnType;
+    auto const spawn_type = inputs.unit->spawn_type;
+    state.mounted = state.mounted || spawn_type == SpawnType::MountedKnight ||
+                    spawn_type == SpawnType::HorseArcher ||
+                    spawn_type == SpawnType::HorseSpearman;
+  }
+
+  state.visible_count =
+      std::min(state.formation.individuals_per_unit, state.rows * state.cols);
+  if (!inputs.ctx->force_single_soldier && inputs.unit != nullptr) {
+    int const max_health = std::max(1, inputs.unit->max_health);
+    float const ratio =
+        std::clamp(inputs.unit->health / float(max_health), 0.0F, 1.0F);
+    state.visible_count = std::max(
+        1, std::min(state.formation.individuals_per_unit,
+                    static_cast<int>(std::ceil(
+                        ratio * float(state.formation.individuals_per_unit)))));
+  }
+
+  return state;
+}
+
+auto prepare_quadruped_frame_state(const QuadrupedFrameStateInputs &inputs)
+    -> PreparedQuadrupedFrameState {
+  PreparedQuadrupedFrameState state;
+  if (inputs.ctx == nullptr || inputs.anim == nullptr) {
+    return state;
+  }
+
+  state.ctx = *inputs.ctx;
+  state.ctx.model = inputs.ctx->model;
+  state.ctx.model.translate(inputs.pre_ground_translation);
+
+  if (inputs.use_contact_grounding) {
+    float const y_scale =
+        state.ctx.model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
+    ground_model_contact_to_surface(state.ctx.model, inputs.contact_y, y_scale);
+    if (std::abs(inputs.ground_clearance) > 0.0F) {
+      auto const grounded_origin = model_world_origin(state.ctx.model);
+      set_model_world_y(state.ctx.model,
+                        grounded_origin.y() + inputs.ground_clearance);
+    }
+  } else {
+    ground_model_to_terrain(state.ctx.model);
+  }
+
+  CreatureGraphInputs graph_inputs{};
+  graph_inputs.ctx = &state.ctx;
+  graph_inputs.anim = inputs.anim;
+  graph_inputs.entity = inputs.ctx->entity;
+  CreatureLodDecision lod_decision{};
+  lod_decision.lod = inputs.lod;
+  state.graph = build_base_graph_output(graph_inputs, lod_decision);
+  state.graph.spec = inputs.spec;
+  state.graph.seed = inputs.seed;
   return state;
 }
 
@@ -106,9 +323,9 @@ auto resolve_humanoid_lod_state(const HumanoidLodStateInputs &inputs)
   return state;
 }
 
-auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
-    -> PreparedHumanoidShadowState {
-  PreparedHumanoidShadowState state;
+auto prepare_ground_shadow_state(const GroundShadowStateInputs &inputs)
+    -> PreparedGroundShadowState {
+  PreparedGroundShadowState state;
   if (inputs.ctx == nullptr || inputs.graph == nullptr) {
     return state;
   }
@@ -125,16 +342,12 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
     return state;
   }
 
-  state.shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
   state.mesh = ctx.resources->quad();
-  if (state.shader == nullptr || state.mesh == nullptr) {
-    state.shader = nullptr;
+  if (state.mesh == nullptr) {
     state.mesh = nullptr;
     return state;
   }
 
-  float const shadow_size =
-      inputs.mounted ? k_shadow_size_mounted : k_shadow_size_infantry;
   float depth_boost = 1.0F;
   float width_boost = 1.0F;
   if (inputs.unit != nullptr) {
@@ -159,9 +372,9 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
   }
 
   float const shadow_width =
-      shadow_size * (inputs.mounted ? 1.05F : 1.0F) * width_boost;
+      inputs.shadow_size * inputs.width_scale * width_boost;
   float const shadow_depth =
-      shadow_size * (inputs.mounted ? 1.30F : 1.10F) * depth_boost;
+      inputs.shadow_size * inputs.depth_scale * depth_boost;
 
   auto &terrain_service = Game::Map::TerrainService::instance();
   if (!terrain_service.is_initialized()) {
@@ -169,8 +382,7 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
   }
 
   QVector3D const shadow_pos = terrain_service.resolve_surface_world_position(
-      inputs.soldier_world_pos.x(), inputs.soldier_world_pos.z(), 0.0F,
-      inputs.soldier_world_pos.y());
+      inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
   float const shadow_y = shadow_pos.y();
 
   QVector3D light_dir = k_shadow_light_dir.normalized();
@@ -193,13 +405,12 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
   float const light_yaw_deg = qRadiansToDegrees(
       std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
 
-  state.model.translate(inputs.soldier_world_pos.x() + offset_2d.x(),
+  state.model.translate(inputs.world_pos.x() + offset_2d.x(),
                         shadow_y + k_shadow_ground_offset,
-                        inputs.soldier_world_pos.z() + offset_2d.y());
+                        inputs.world_pos.z() + offset_2d.y());
   state.model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
   state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
   state.model.scale(shadow_width, shadow_depth, 1.0F);
-  state.light_dir = dir_for_use;
   state.alpha = k_shadow_base_alpha;
   state.pass = graph.pass_intent;
   state.enabled = true;
@@ -207,3 +418,55 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
 }
 
 } // namespace Render::Creature::Pipeline
+
+namespace Render::Humanoid {
+
+auto build_humanoid_locomotion_state(const HumanoidLocomotionInputs &inputs)
+    -> HumanoidLocomotionState {
+  HumanoidLocomotionState state{};
+  state.motion_state =
+      Render::GL::classify_motion_state(inputs.anim, inputs.move_speed);
+  state.move_speed = inputs.move_speed;
+  state.has_movement_target = inputs.has_movement_target;
+  state.locomotion_direction = inputs.locomotion_direction;
+  state.locomotion_velocity = inputs.locomotion_direction * inputs.move_speed;
+  state.movement_target = inputs.movement_target;
+
+  state.gait.state = state.motion_state;
+  state.gait.speed = state.move_speed;
+  state.gait.velocity = state.locomotion_velocity;
+  state.gait.has_target = state.has_movement_target;
+  state.gait.is_airborne = false;
+
+  float const reference_speed =
+      (state.motion_state == Render::GL::HumanoidMotionState::Run)
+          ? Render::GL::k_reference_run_speed
+          : Render::GL::k_reference_walk_speed;
+  if (inputs.anim.is_moving && reference_speed > 0.0001F) {
+    state.gait.normalized_speed =
+        std::clamp(state.gait.speed / reference_speed, 0.0F, 1.0F);
+  } else {
+    state.gait.normalized_speed = 0.0F;
+  }
+
+  if (inputs.anim.is_moving) {
+    float const base_cycle =
+        (state.motion_state == Render::GL::HumanoidMotionState::Run ? 0.56F
+                                                                    : 0.92F) /
+        std::max(0.1F, inputs.variation.walk_speed_mult);
+    state.gait.cycle_time = base_cycle;
+    state.gait.cycle_phase =
+        std::fmod((inputs.animation_time + inputs.phase_offset) /
+                      std::max(0.001F, base_cycle),
+                  1.0F);
+    state.gait.stride_distance = state.gait.speed * state.gait.cycle_time;
+  } else {
+    state.gait.cycle_time = 0.0F;
+    state.gait.cycle_phase = 0.0F;
+    state.gait.stride_distance = 0.0F;
+  }
+
+  return state;
+}
+
+} // namespace Render::Humanoid

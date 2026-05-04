@@ -1,5 +1,6 @@
 #include "prepare.h"
 
+#include "../../game/core/component.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
@@ -7,6 +8,7 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
+#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "horse_motion.h"
@@ -22,10 +24,6 @@ namespace Render::Horse {
 
 namespace {
 
-constexpr Render::Creature::Quadruped::ClipSet k_horse_clips{0U, 1U, 2U,
-                                                             3U, 4U, 5U};
-constexpr float k_ground_clearance_epsilon = 1.0e-5F;
-
 auto default_full_horse_request_seed(
     const Render::GL::DrawContext &ctx) noexcept -> std::uint32_t {
   if (ctx.entity == nullptr) {
@@ -35,44 +33,10 @@ auto default_full_horse_request_seed(
       reinterpret_cast<std::uintptr_t>(ctx.entity) & 0xFFFFFFFFU);
 }
 
-auto horse_state_for_motion(
-    const Render::GL::HorseMotionSample &motion) noexcept
-    -> Render::Creature::AnimationStateId {
-  if (motion.is_fighting) {
-    return Render::Creature::AnimationStateId::AttackMelee;
-  }
-  switch (motion.gait_type) {
-  case Render::GL::GaitType::IDLE:
-    return Render::Creature::AnimationStateId::Idle;
-  case Render::GL::GaitType::WALK:
-    return Render::Creature::AnimationStateId::Walk;
-  case Render::GL::GaitType::TROT:
-  case Render::GL::GaitType::CANTER:
-  case Render::GL::GaitType::GALLOP:
-    return Render::Creature::AnimationStateId::Run;
-  }
-  return Render::Creature::AnimationStateId::Idle;
-}
-
-auto horse_clip_for_motion(const Render::GL::HorseMotionSample &motion) noexcept
-    -> std::uint16_t {
-  return Render::Creature::Quadruped::clip_for_motion(
-      k_horse_clips, motion.gait_type, motion.is_fighting);
-}
-
-void ground_horse_model(QMatrix4x4 &model, std::uint16_t clip_id,
-                        float phase) noexcept {
-  float const y_scale = model.mapVector(QVector3D(0.0F, 1.0F, 0.0F)).length();
-  float const contact_y =
-      Render::Creature::Pipeline::horse_clip_contact_y(clip_id, phase)
-          .value_or(0.0F);
-  Render::Creature::Pipeline::ground_model_contact_to_surface(model, contact_y,
-                                                              y_scale);
-  auto const grounded_origin =
-      Render::Creature::Pipeline::model_world_origin(model);
-  Render::Creature::Pipeline::set_model_world_y(
-      model, grounded_origin.y() + k_ground_clearance_epsilon);
-}
+constexpr float k_ground_clearance_epsilon = 1.0e-5F;
+constexpr float k_shadow_size_horse = 0.35F;
+constexpr float k_shadow_width_scale_horse = 1.15F;
+constexpr float k_shadow_depth_scale_horse = 1.65F;
 
 } // namespace
 
@@ -155,35 +119,65 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
   using Render::GL::HorseVariant;
   const HorseVariant &v = profile.variant;
 
-  HorseMotionSample const motion =
-      shared_motion ? *shared_motion
-                    : evaluate_horse_motion(
-                          profile, anim, rider_ctx,
-                          Engine::Core::get_or_add_component<
-                              Render::Creature::HorseAnimationStateComponent>(
-                              ctx.entity));
-  (void)shared_mount;
-  std::uint16_t const horse_clip = horse_clip_for_motion(motion);
-
-  Render::GL::DrawContext horse_ctx = ctx;
-  horse_ctx.model = ctx.model;
-  ground_horse_model(horse_ctx.model, horse_clip, motion.phase);
-
   namespace RCP = Render::Creature::Pipeline;
-  RCP::CreatureGraphInputs graph_inputs{};
-  graph_inputs.ctx = &horse_ctx;
-  graph_inputs.anim = &anim;
-  graph_inputs.entity = ctx.entity;
-  RCP::CreatureLodDecision lod_decision{};
-  lod_decision.lod = lod;
-  auto graph_output = RCP::build_base_graph_output(graph_inputs, lod_decision);
-  graph_output.spec = owner.visual_spec();
-  graph_output.seed = request_seed;
+  RCP::HorseMotionStateInputs motion_inputs{};
+  motion_inputs.ctx = &ctx;
+  motion_inputs.anim = &anim;
+  motion_inputs.rider_ctx = &rider_ctx;
+  motion_inputs.profile = &profile;
+  motion_inputs.shared_motion = shared_motion;
+  const auto motion_state = RCP::resolve_horse_motion_state(motion_inputs);
+  (void)shared_mount;
+
+  RCP::QuadrupedFrameStateInputs frame_inputs{};
+  frame_inputs.ctx = &ctx;
+  frame_inputs.anim = &anim;
+  frame_inputs.spec = owner.visual_spec();
+  frame_inputs.lod = lod;
+  frame_inputs.seed = request_seed;
+  frame_inputs.contact_y =
+      RCP::horse_clip_contact_y(motion_state.clip_id, motion_state.motion.phase)
+          .value_or(0.0F);
+  frame_inputs.ground_clearance = k_ground_clearance_epsilon;
+  frame_inputs.use_contact_grounding = true;
+  const auto frame_state = RCP::prepare_quadruped_frame_state(frame_inputs);
+  auto *unit_comp =
+      ctx.entity != nullptr
+          ? ctx.entity->get_component<Engine::Core::UnitComponent>()
+          : nullptr;
+  QVector3D const world_pos =
+      RCP::model_world_origin(frame_state.graph.world_matrix);
+  float camera_distance = 0.0F;
+  if (frame_state.ctx.camera != nullptr) {
+    camera_distance =
+        (world_pos - frame_state.ctx.camera->get_position()).length();
+  }
+  RCP::GroundShadowStateInputs shadow_inputs{};
+  shadow_inputs.ctx = &frame_state.ctx;
+  shadow_inputs.graph = &frame_state.graph;
+  shadow_inputs.unit = unit_comp;
+  shadow_inputs.world_pos = world_pos;
+  shadow_inputs.lod = lod;
+  shadow_inputs.camera_distance = camera_distance;
+  shadow_inputs.shadow_size = k_shadow_size_horse;
+  shadow_inputs.width_scale = k_shadow_width_scale_horse;
+  shadow_inputs.depth_scale = k_shadow_depth_scale_horse;
+  const auto shadow_state = RCP::prepare_ground_shadow_state(shadow_inputs);
+  if (shadow_state.enabled) {
+    out.add_post_body_draw(
+        shadow_state.pass, [shadow_state](Render::GL::ISubmitter &submitter) {
+          submitter.part(shadow_state.mesh,
+                         Render::GL::MaterialRegistry::instance().shadow(),
+                         shadow_state.model, QVector3D(0.0F, 0.0F, 0.0F),
+                         nullptr, shadow_state.alpha, 0);
+        });
+  }
+
   RCP::PreparedHorseBodyState body_state;
-  body_state.graph = graph_output;
+  body_state.graph = frame_state.graph;
   body_state.variant = v;
-  body_state.animation_state = horse_state_for_motion(motion);
-  body_state.phase = motion.phase;
+  body_state.animation_state = motion_state.animation_state;
+  body_state.phase = motion_state.motion.phase;
   out.bodies.add_quadruped(body_state);
 }
 

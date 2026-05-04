@@ -61,7 +61,7 @@ public:
   };
 
   SnapshotMeshCache() = default;
-  ~SnapshotMeshCache() = default;
+  ~SnapshotMeshCache();
   SnapshotMeshCache(const SnapshotMeshCache &) = delete;
   auto operator=(const SnapshotMeshCache &) -> SnapshotMeshCache & = delete;
 
@@ -78,9 +78,11 @@ public:
   }
 
   [[nodiscard]] static auto identity_palette() noexcept -> const QMatrix4x4 *;
+  [[nodiscard]] auto identity_palette_ubo() const -> std::uint32_t;
 
 private:
   std::unordered_map<Key, SnapshotMeshEntry, KeyHash> m_entries;
+  mutable std::uint32_t m_identity_palette_ubo{0};
 };
 
 } // namespace Render::GL

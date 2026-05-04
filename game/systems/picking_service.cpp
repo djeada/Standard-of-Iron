@@ -104,6 +104,9 @@ auto PickingService::pick_single(
     }
     auto *t = e->get_component<Engine::Core::TransformComponent>();
     auto *u = e->get_component<Engine::Core::UnitComponent>();
+    if (t == nullptr || u == nullptr) {
+      continue;
+    }
 
     if (owner_filter != 0 && u->owner_id != owner_filter) {
       continue;
@@ -251,6 +254,9 @@ auto PickingService::pick_in_rect(
       continue;
     }
     auto *t = e->get_component<Engine::Core::TransformComponent>();
+    if (t == nullptr) {
+      continue;
+    }
     QPointF sp;
     if (!camera.world_to_screen(
             QVector3D(t->position.x, t->position.y, t->position.z), view_w,
