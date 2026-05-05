@@ -7,6 +7,7 @@
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/clip_set.h"
 #include "../creature/quadruped/render_stats.h"
+#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "horse_motion.h"
@@ -185,6 +186,30 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
   body_state.animation_state = horse_state_for_motion(motion);
   body_state.phase = motion.phase;
   out.bodies.add_quadruped(body_state);
+
+  // Shadow
+  QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);
+  float camera_distance = 0.0F;
+  if (horse_ctx.camera != nullptr) {
+    camera_distance =
+        (horse_world_pos - horse_ctx.camera->get_position()).length();
+  }
+  RCP::QuadrupedShadowStateInputs shadow_inputs{};
+  shadow_inputs.ctx = &horse_ctx;
+  shadow_inputs.graph = &graph_output;
+  shadow_inputs.world_pos = horse_world_pos;
+  shadow_inputs.kind = RCP::CreatureKind::Horse;
+  shadow_inputs.lod = lod;
+  shadow_inputs.camera_distance = camera_distance;
+  const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
+  if (shadow_state.enabled) {
+    if (out.shadow_batch.empty()) {
+      out.shadow_batch.init(shadow_state.shader, shadow_state.mesh,
+                            shadow_state.light_dir);
+    }
+    out.shadow_batch.add(shadow_state.model, shadow_state.alpha,
+                         shadow_state.pass);
+  }
 }
 
 void prepare_horse_render(
