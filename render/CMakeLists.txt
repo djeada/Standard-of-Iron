@@ -172,6 +172,7 @@ add_library(render_gl STATIC
     creature/pipeline/creature_visual_definition.cpp
     creature/pipeline/creature_asset.cpp
     creature/pipeline/prepared_submit.cpp
+    creature/pipeline/shadow_batch.cpp
     creature/pipeline/creature_prepared_state.cpp
     creature/pipeline/lod_decision.cpp
     creature/pipeline/preparation_common.cpp

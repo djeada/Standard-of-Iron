@@ -82,6 +82,9 @@ struct PreparedHumanoidShadowState {
   float alpha{0.0F};
 };
 
+// Reuse the same state structure for quadruped (horse/elephant) shadows.
+using PreparedQuadrupedShadowState = PreparedHumanoidShadowState;
+
 struct HumanoidShadowStateInputs {
   const Render::GL::DrawContext *ctx{nullptr};
   const CreatureGraphOutput *graph{nullptr};
@@ -90,6 +93,15 @@ struct HumanoidShadowStateInputs {
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
   float camera_distance{0.0F};
   bool mounted{false};
+};
+
+struct QuadrupedShadowStateInputs {
+  const Render::GL::DrawContext *ctx{nullptr};
+  const CreatureGraphOutput *graph{nullptr};
+  QVector3D world_pos{};
+  CreatureKind kind{CreatureKind::Horse};
+  Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
+  float camera_distance{0.0F};
 };
 
 [[nodiscard]] inline auto pass_intent_for(
@@ -112,5 +124,8 @@ struct HumanoidShadowStateInputs {
 
 [[nodiscard]] auto prepare_humanoid_shadow_state(
     const HumanoidShadowStateInputs &inputs) -> PreparedHumanoidShadowState;
+
+[[nodiscard]] auto prepare_quadruped_shadow_state(
+    const QuadrupedShadowStateInputs &inputs) -> PreparedQuadrupedShadowState;
 
 } // namespace Render::Creature::Pipeline
