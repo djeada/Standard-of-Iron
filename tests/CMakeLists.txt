@@ -82,6 +82,7 @@ add_executable(standard_of_iron_tests
     render/creature/quadruped_mesh_graph_test.cpp
     render/creature/mounted_prepare_test.cpp
     render/creature/creature_render_graph_test.cpp
+    render/creature/shadow_batch_test.cpp
     render/creature/render_request_test.cpp
     render/selection_ring_layout_test.cpp
     render/selection_ring_mesh_test.cpp

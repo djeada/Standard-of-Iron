@@ -211,8 +211,6 @@ using Render::GL::k_reference_run_speed;
 using Render::GL::k_reference_walk_speed;
 using Render::GL::PosePaletteCache;
 using Render::GL::PosePaletteKey;
-using Render::GL::Renderer;
-using Render::GL::Shader;
 using Render::GL::VariationParams;
 
 namespace {
@@ -689,21 +687,12 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     shadow_inputs.mounted = is_mounted_spawn;
     const auto shadow_state = RCP::prepare_humanoid_shadow_state(shadow_inputs);
     if (shadow_state.enabled) {
-      out.add_post_body_draw(
-          shadow_state.pass, [shadow_state](Render::GL::ISubmitter &submitter) {
-            if (auto *renderer = dynamic_cast<Renderer *>(&submitter)) {
-              Shader *previous_shader = renderer->get_current_shader();
-              renderer->set_current_shader(shadow_state.shader);
-              shadow_state.shader->set_uniform(QStringLiteral("u_lightDir"),
-                                               shadow_state.light_dir);
-
-              submitter.mesh(shadow_state.mesh, shadow_state.model,
-                             QVector3D(0.0F, 0.0F, 0.0F), nullptr,
-                             shadow_state.alpha, 0);
-
-              renderer->set_current_shader(previous_shader);
-            }
-          });
+      if (out.shadow_batch.empty()) {
+        out.shadow_batch.init(shadow_state.shader, shadow_state.mesh,
+                              shadow_state.light_dir);
+      }
+      out.shadow_batch.add(shadow_state.model, shadow_state.alpha,
+                           shadow_state.pass);
     }
 
     switch (soldier_lod) {

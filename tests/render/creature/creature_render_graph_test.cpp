@@ -510,6 +510,13 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
 
   EXPECT_TRUE(result.bodies.empty());
   EXPECT_TRUE(result.post_body_draws.empty());
+  EXPECT_TRUE(result.shadow_batch.empty());
+}
+
+TEST(CreaturePreparationResult, ShadowBatchStartsEmpty) {
+  CreaturePreparationResult result;
+  EXPECT_TRUE(result.shadow_batch.empty());
+  EXPECT_EQ(result.shadow_batch.size(), 0u);
 }
 
 } // namespace
