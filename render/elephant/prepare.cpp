@@ -6,6 +6,7 @@
 #include "../creature/pipeline/prepared_submit.h"
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/quadruped/render_stats.h"
+#include "../gl/camera.h"
 #include "../gl/humanoid/animation/animation_inputs.h"
 #include "../submitter.h"
 #include "elephant_motion.h"
@@ -154,6 +155,31 @@ void prepare_elephant_render(
   body_state.animation_state = elephant_state_for_motion(motion, anim);
   body_state.phase = motion.phase;
   out.bodies.add_quadruped(body_state);
+
+  // Shadow
+  QVector3D const elephant_world_pos =
+      RCP::model_world_origin(elephant_ctx.model);
+  float camera_distance = 0.0F;
+  if (elephant_ctx.camera != nullptr) {
+    camera_distance =
+        (elephant_world_pos - elephant_ctx.camera->get_position()).length();
+  }
+  RCP::QuadrupedShadowStateInputs shadow_inputs{};
+  shadow_inputs.ctx = &elephant_ctx;
+  shadow_inputs.graph = &graph_output;
+  shadow_inputs.world_pos = elephant_world_pos;
+  shadow_inputs.kind = RCP::CreatureKind::Elephant;
+  shadow_inputs.lod = lod;
+  shadow_inputs.camera_distance = camera_distance;
+  const auto shadow_state = RCP::prepare_quadruped_shadow_state(shadow_inputs);
+  if (shadow_state.enabled) {
+    if (out.shadow_batch.empty()) {
+      out.shadow_batch.init(shadow_state.shader, shadow_state.mesh,
+                            shadow_state.light_dir);
+    }
+    out.shadow_batch.add(shadow_state.model, shadow_state.alpha,
+                         shadow_state.pass);
+  }
 }
 
 } // namespace Render::Elephant
