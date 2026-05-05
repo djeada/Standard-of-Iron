@@ -1,6 +1,7 @@
 #include "prepared_submit.h"
 
 #include "../../submitter.h"
+#include "shadow_batch.h"
 
 #include <string_view>
 #include <vector>
@@ -34,6 +35,9 @@ auto submit_preparation(CreaturePreparationResult &prep,
     }
     request.draw(out);
   }
+
+  flush_shadow_batch(prep.shadow_batch, out);
+
   return stats;
 }
 

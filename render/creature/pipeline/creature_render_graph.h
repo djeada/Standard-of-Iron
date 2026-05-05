@@ -4,6 +4,7 @@
 #include "bpat_playback.h"
 #include "creature_render_state.h"
 #include "lod_decision.h"
+#include "shadow_batch.h"
 #include "unit_visual_spec.h"
 
 #include <QMatrix4x4>
@@ -169,6 +170,7 @@ struct PostBodyDrawRequest {
 struct CreaturePreparationResult {
   CreatureRenderBatch bodies;
   std::vector<PostBodyDrawRequest> post_body_draws;
+  HumanoidShadowBatch shadow_batch;
 
   void add_post_body_draw(RenderPassIntent pass_intent, PostBodyDrawFn draw) {
     post_body_draws.push_back(
@@ -178,6 +180,7 @@ struct CreaturePreparationResult {
   void clear() noexcept {
     bodies.clear();
     post_body_draws.clear();
+    shadow_batch.clear();
   }
 };
 
