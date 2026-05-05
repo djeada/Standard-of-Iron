@@ -406,4 +406,42 @@ TEST(TemplatePrewarmRegression, MainRowsIncrementLodStats) {
   EXPECT_EQ(stats.lod_minimal, 1u);
 }
 
+TEST(TemplatePrewarmRegression, QuadrupedHorseShadowRequiresResources) {
+  Render::GL::DrawContext ctx{};
+  CreatureGraphOutput graph{};
+  QuadrupedShadowStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.graph = &graph;
+  inputs.lod = Render::Creature::CreatureLOD::Full;
+  inputs.kind = CreatureKind::Horse;
+
+  auto const shadow = prepare_quadruped_shadow_state(inputs);
+
+  EXPECT_FALSE(shadow.enabled);
+}
+
+TEST(TemplatePrewarmRegression, QuadrupedElephantShadowRequiresResources) {
+  Render::GL::DrawContext ctx{};
+  CreatureGraphOutput graph{};
+  QuadrupedShadowStateInputs inputs{};
+  inputs.ctx = &ctx;
+  inputs.graph = &graph;
+  inputs.lod = Render::Creature::CreatureLOD::Full;
+  inputs.kind = CreatureKind::Elephant;
+
+  auto const shadow = prepare_quadruped_shadow_state(inputs);
+
+  EXPECT_FALSE(shadow.enabled);
+}
+
+TEST(TemplatePrewarmRegression, QuadrupedShadowNullCtxReturnDisabled) {
+  QuadrupedShadowStateInputs inputs{};
+  inputs.ctx = nullptr;
+  inputs.graph = nullptr;
+
+  auto const shadow = prepare_quadruped_shadow_state(inputs);
+
+  EXPECT_FALSE(shadow.enabled);
+}
+
 } // namespace

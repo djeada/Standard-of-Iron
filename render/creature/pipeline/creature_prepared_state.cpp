@@ -23,6 +23,8 @@ namespace {
 
 constexpr float k_shadow_size_infantry = 0.16F;
 constexpr float k_shadow_size_mounted = 0.35F;
+constexpr float k_shadow_size_horse = 0.38F;
+constexpr float k_shadow_size_elephant = 0.55F;
 constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
@@ -196,6 +198,87 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
   state.model.translate(inputs.soldier_world_pos.x() + offset_2d.x(),
                         shadow_y + k_shadow_ground_offset,
                         inputs.soldier_world_pos.z() + offset_2d.y());
+  state.model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
+  state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
+  state.model.scale(shadow_width, shadow_depth, 1.0F);
+  state.light_dir = dir_for_use;
+  state.alpha = k_shadow_base_alpha;
+  state.pass = graph.pass_intent;
+  state.enabled = true;
+  return state;
+}
+
+auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs &inputs)
+    -> PreparedQuadrupedShadowState {
+  PreparedQuadrupedShadowState state;
+  if (inputs.ctx == nullptr || inputs.graph == nullptr) {
+    return state;
+  }
+
+  const auto &ctx = *inputs.ctx;
+  const auto &graph = *inputs.graph;
+  const auto &gfx_settings = Render::GraphicsSettings::instance();
+  const bool should_render_shadow =
+      ctx.allow_template_cache && gfx_settings.shadows_enabled() &&
+      inputs.lod == Render::Creature::CreatureLOD::Full &&
+      inputs.camera_distance < gfx_settings.shadow_max_distance();
+  if (!should_render_shadow || ctx.backend == nullptr ||
+      ctx.resources == nullptr) {
+    return state;
+  }
+
+  state.shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
+  state.mesh = ctx.resources->quad();
+  if (state.shader == nullptr || state.mesh == nullptr) {
+    state.shader = nullptr;
+    state.mesh = nullptr;
+    return state;
+  }
+
+  float shadow_size = k_shadow_size_horse;
+  float width_mult = 1.05F;
+  float depth_mult = 1.70F;
+  if (inputs.kind == CreatureKind::Elephant) {
+    shadow_size = k_shadow_size_elephant;
+    width_mult = 1.10F;
+    depth_mult = 2.20F;
+  }
+
+  float const shadow_width = shadow_size * width_mult;
+  float const shadow_depth = shadow_size * depth_mult;
+
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  if (!terrain_service.is_initialized()) {
+    return state;
+  }
+
+  QVector3D const shadow_pos = terrain_service.resolve_surface_world_position(
+      inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
+  float const shadow_y = shadow_pos.y();
+
+  QVector3D light_dir = k_shadow_light_dir.normalized();
+  QVector2D light_dir_xz(light_dir.x(), light_dir.z());
+  if (light_dir_xz.lengthSquared() < 1e-6F) {
+    light_dir_xz = QVector2D(0.0F, 1.0F);
+  } else {
+    light_dir_xz.normalize();
+  }
+  QVector2D const shadow_dir = -light_dir_xz;
+  QVector2D dir_for_use = shadow_dir;
+  if (dir_for_use.lengthSquared() < 1e-6F) {
+    dir_for_use = QVector2D(0.0F, 1.0F);
+  } else {
+    dir_for_use.normalize();
+  }
+
+  float const shadow_offset = shadow_depth * 1.25F;
+  QVector2D const offset_2d = dir_for_use * shadow_offset;
+  float const light_yaw_deg = qRadiansToDegrees(
+      std::atan2(double(dir_for_use.x()), double(dir_for_use.y())));
+
+  state.model.translate(inputs.world_pos.x() + offset_2d.x(),
+                        shadow_y + k_shadow_ground_offset,
+                        inputs.world_pos.z() + offset_2d.y());
   state.model.rotate(light_yaw_deg, 0.0F, 1.0F, 0.0F);
   state.model.rotate(-90.0F, 1.0F, 0.0F, 0.0F);
   state.model.scale(shadow_width, shadow_depth, 1.0F);
