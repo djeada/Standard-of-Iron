@@ -42,6 +42,7 @@ add_library(render_gl STATIC
     ground/terrain_surface_manager.cpp
     ground/ground_renderer.cpp
     ground/fog_renderer.cpp
+    ground/map_boundary_fog_renderer.cpp
     ground/terrain_renderer.cpp
     ground/river_renderer.cpp
     ground/road_renderer.cpp
