@@ -47,6 +47,9 @@ public:
                       const ViewportState &viewport);
   void on_right_double_click(qreal sx, qreal sy, int local_owner_id,
                              const ViewportState &viewport);
+  void on_right_press(qreal sx, qreal sy, int local_owner_id,
+                      const ViewportState &viewport);
+  void on_right_drag_orient(qreal sx, qreal sy, const ViewportState &viewport);
   void on_attack_click(qreal sx, qreal sy, const ViewportState &viewport);
   void on_stop_command();
   void on_hold_command();

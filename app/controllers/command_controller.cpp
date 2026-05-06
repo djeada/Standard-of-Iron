@@ -740,6 +740,7 @@ auto CommandController::on_formation_command() -> CommandResult {
       center.setZ(center.z() / static_cast<float>(valid_count));
 
       m_is_placing_formation = true;
+      m_is_right_drag_formation = false;
       m_formation_placement_position = center;
       m_formation_placement_angle = 0.0F;
 
@@ -790,6 +791,46 @@ void CommandController::update_formation_rotation(float angle_degrees) {
     return;
   }
   m_formation_placement_angle = angle_degrees;
+  emit formation_placement_updated(m_formation_placement_position,
+                                   m_formation_placement_angle);
+}
+
+void CommandController::begin_move_placement_at_position(
+    const QVector3D &position) {
+  if ((m_selection_system == nullptr) || (m_world == nullptr)) {
+    return;
+  }
+
+  const auto &selected = m_selection_system->get_selected_units();
+  if (selected.empty()) {
+    return;
+  }
+
+  m_formation_units.clear();
+
+  for (auto id : selected) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr ||
+        unit->spawn_type == Game::Units::SpawnType::Barracks) {
+      continue;
+    }
+    m_formation_units.push_back(id);
+  }
+
+  if (m_formation_units.empty()) {
+    return;
+  }
+
+  m_is_placing_formation = true;
+  m_is_right_drag_formation = true;
+  m_formation_placement_position = position;
+  m_formation_placement_angle = 0.0F;
+
+  emit formation_placement_started();
   emit formation_placement_updated(m_formation_placement_position,
                                    m_formation_placement_angle);
 }
@@ -848,7 +889,10 @@ void CommandController::confirm_formation_placement() {
   m_is_placing_formation = false;
   m_formation_units.clear();
   emit formation_placement_ended();
-  emit formation_mode_changed(true);
+  if (!m_is_right_drag_formation) {
+    emit formation_mode_changed(true);
+  }
+  m_is_right_drag_formation = false;
 }
 
 void CommandController::cancel_formation_placement() {
@@ -871,7 +915,10 @@ void CommandController::cancel_formation_placement() {
   m_is_placing_formation = false;
   m_formation_units.clear();
   emit formation_placement_ended();
-  emit formation_mode_changed(false);
+  if (!m_is_right_drag_formation) {
+    emit formation_mode_changed(false);
+  }
+  m_is_right_drag_formation = false;
 }
 
 auto CommandController::on_run_command() -> CommandResult {
