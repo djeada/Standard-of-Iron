@@ -450,24 +450,21 @@ TEST(ElephantPrepare, TemplatePrewarmRenderWarmsSnapshotCache) {
 }
 
 TEST(ElephantPrepare, ShadowBatchEmptyWithoutResources) {
-  // Without ctx.backend / ctx.resources the shadow state is disabled,
-  // so prepare_elephant_render must not populate the shadow_batch.
+
   ScopedFlatTerrain terrain(0.0F);
 
   Render::GL::ElephantRendererBase owner;
   Render::GL::DrawContext ctx{};
-  ctx.allow_template_cache = true; // enable shadow code path
+  ctx.allow_template_cache = true;
 
   Render::GL::AnimationInputs anim{};
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
 
   Render::Elephant::ElephantPreparation prep;
-  Render::Elephant::prepare_elephant_render(owner, ctx, anim, profile, nullptr,
-                                            nullptr,
-                                            Render::Creature::CreatureLOD::Full,
-                                            prep);
+  Render::Elephant::prepare_elephant_render(
+      owner, ctx, anim, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Full, prep);
 
-  // No backend/resources → shadow disabled → batch stays empty
   EXPECT_TRUE(prep.shadow_batch.empty());
 }
 

@@ -3,8 +3,13 @@
 #include "../../elephant/elephant_spec.h"
 #include "../../horse/horse_spec.h"
 #include "../../humanoid/humanoid_spec.h"
+#include "../../static_attachment_spec.h"
+#include "../archetype_registry.h"
 #include "../bpat/bpat_format.h"
+#include "../bpat/bpat_registry.h"
 #include "creature_visual_definition.h"
+
+#include <algorithm>
 
 namespace Render::Creature::Pipeline {
 
@@ -165,6 +170,113 @@ auto CreatureAssetRegistry::for_species(CreatureKind kind) const noexcept
     return nullptr;
   }
   return nullptr;
+}
+
+auto resolve_creature_render_asset_handle(
+    CreatureAssetId asset_id,
+    Render::Creature::ArchetypeId archetype_id) -> CreatureRenderAssetHandle {
+  CreatureRenderAssetHandle handle{};
+
+  const auto &asset_registry = CreatureAssetRegistry::instance();
+  const auto &archetype_registry =
+      Render::Creature::ArchetypeRegistry::instance();
+
+  handle.archetype = archetype_registry.get(archetype_id);
+  if (handle.archetype == nullptr) {
+    return handle;
+  }
+
+  handle.asset = asset_id != kInvalidCreatureAsset
+                     ? asset_registry.get(asset_id)
+                     : asset_registry.for_species(handle.archetype->species);
+  if (handle.asset == nullptr || handle.asset->bind_palette == nullptr) {
+    return handle;
+  }
+
+  handle.bind_palette = handle.asset->bind_palette();
+  auto const attachments = handle.archetype->attachments_view();
+  handle.attachments_hash = Render::Creature::static_attachments_hash(
+      attachments.data(), attachments.size());
+
+  auto const species_id = handle.asset->bpat_species_id;
+  const auto *blob =
+      Render::Creature::Bpat::BpatRegistry::instance().blob(species_id);
+
+  for (std::size_t i = 0; i < handle.playback.size(); ++i) {
+    auto const state = static_cast<Render::Creature::AnimationStateId>(i);
+    CreatureClipPlaybackDesc desc{};
+    desc.clip_id = archetype_registry.bpat_clip(archetype_id, state);
+    desc.snapshot = archetype_registry.is_snapshot(archetype_id, state);
+    desc.blob = blob;
+    if (blob != nullptr &&
+        desc.clip_id != Render::Creature::ArchetypeDescriptor::kUnmappedClip &&
+        desc.clip_id < blob->clip_count()) {
+      auto const clip = blob->clip(desc.clip_id);
+      desc.frame_count = clip.frame_count;
+      desc.frame_offset = clip.frame_offset;
+    }
+    handle.playback[i] = desc;
+  }
+
+  return handle;
+}
+
+auto CreatureRenderAssetHandleRegistry::instance()
+    -> CreatureRenderAssetHandleRegistry & {
+  static CreatureRenderAssetHandleRegistry registry;
+  return registry;
+}
+
+auto CreatureRenderAssetHandleRegistry::get_or_create(
+    CreatureAssetId asset_id, Render::Creature::ArchetypeId archetype_id)
+    -> Render::Creature::CreatureRenderAssetHandleId {
+  const Key key{asset_id, archetype_id};
+  if (const auto found = lookup_.find(key); found != lookup_.end()) {
+    return found->second;
+  }
+
+  CreatureRenderAssetHandle handle =
+      resolve_creature_render_asset_handle(asset_id, archetype_id);
+  if (!handle.valid()) {
+    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  }
+  const bool has_playback =
+      std::any_of(handle.playback.begin(), handle.playback.end(),
+                  [](const CreatureClipPlaybackDesc &desc) {
+                    return desc.blob != nullptr && desc.frame_count > 0U;
+                  });
+  if (!has_playback) {
+    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  }
+  if (handles_.size() >= Render::Creature::kInvalidCreatureRenderAssetHandle) {
+    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  }
+
+  const auto id = static_cast<Render::Creature::CreatureRenderAssetHandleId>(
+      handles_.size());
+  handle.id = id;
+  handles_.push_back(handle);
+  lookup_.emplace(key, id);
+  return id;
+}
+
+auto CreatureRenderAssetHandleRegistry::get(
+    Render::Creature::CreatureRenderAssetHandleId id) const
+    -> const CreatureRenderAssetHandle * {
+  if (id == Render::Creature::kInvalidCreatureRenderAssetHandle) {
+    return nullptr;
+  }
+
+  const auto index = static_cast<std::size_t>(id);
+  if (index >= handles_.size()) {
+    return nullptr;
+  }
+  return &handles_[index];
+}
+
+void CreatureRenderAssetHandleRegistry::clear() {
+  lookup_.clear();
+  handles_.clear();
 }
 
 } // namespace Render::Creature::Pipeline

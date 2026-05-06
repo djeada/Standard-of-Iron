@@ -11,6 +11,7 @@
 #include "../bpat/bpat_format.h"
 #include "../bpat/bpat_reader.h"
 #include "../bpat/bpat_registry.h"
+#include "../runtime_bake_guard.h"
 #include "../skeleton.h"
 #include "../snapshot_mesh_registry.h"
 #include "../spec.h"
@@ -24,6 +25,7 @@
 #include <array>
 #include <cmath>
 #include <cstddef>
+#include <sstream>
 #include <unordered_map>
 
 namespace Render::Creature::Pipeline {
@@ -73,29 +75,62 @@ auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
   return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
 }
 
+void report_submit_cache_miss(std::string_view path,
+                              const CreatureRenderAssetHandle &handle,
+                              CreatureLOD lod, ArchetypeId archetype,
+                              VariantId variant, AnimationStateId state,
+                              std::uint16_t clip_id, std::uint8_t clip_variant,
+                              std::uint32_t frame_in_clip,
+                              std::uint64_t attachments_hash) {
+  if (!runtime_bake_forbidden()) {
+    return;
+  }
+  std::ostringstream detail;
+  detail << "path=" << path
+         << " archetype=" << static_cast<std::uint32_t>(archetype) << " asset="
+         << static_cast<std::uint32_t>(handle.asset != nullptr
+                                           ? handle.asset->id
+                                           : kInvalidCreatureAsset)
+         << " lod=" << static_cast<int>(lod)
+         << " state=" << static_cast<int>(state) << " clip=" << clip_id
+         << " frame_in_clip=" << frame_in_clip
+         << " variant=" << static_cast<std::uint32_t>(variant)
+         << " clip_variant=" << static_cast<int>(clip_variant)
+         << " attachments_hash=0x" << std::hex << attachments_hash;
+  report_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss,
+                                detail.str());
+}
+
 void submit_rigged_creature(
-    const CreatureAsset &asset, CreatureLOD lod,
-    std::span<const QVector3D> role_colors, std::uint16_t variant_bucket,
-    const QVector3D &base_color, const QMatrix4x4 &world_from_unit,
+    const CreatureRenderAssetHandle &handle, CreatureLOD lod,
+    ArchetypeId archetype, VariantId variant, AnimationStateId state,
+    std::uint16_t clip_id, std::uint8_t clip_variant,
+    std::uint32_t frame_in_clip, std::span<const QVector3D> role_colors,
+    std::uint16_t variant_bucket, const QVector3D &base_color,
+    const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
     Render::GL::ISubmitter &out,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments = {}) {
-  if (lod == CreatureLOD::Billboard || asset.spec == nullptr ||
-      asset.bind_palette == nullptr) {
+  const CreatureAsset *asset = handle.asset;
+  if (lod == CreatureLOD::Billboard || asset == nullptr ||
+      asset->spec == nullptr || handle.bind_palette.empty()) {
     return;
   }
   auto *renderer = resolve_renderer(out);
-  auto bind = asset.bind_palette();
   auto &cache = (renderer != nullptr)
                     ? renderer->rigged_mesh_cache()
                     : ([]() -> Render::GL::RiggedMeshCache & {
                         thread_local Render::GL::RiggedMeshCache c;
                         return c;
                       })();
-  auto *entry = cache.get_or_bake(*asset.spec, lod, bind, variant_bucket,
-                                  attachments, blob.species_id());
+  auto *entry = cache.get_or_bake_prehashed(
+      *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
+      handle.attachments_hash, blob.species_id());
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
+    report_submit_cache_miss("rigged", handle, lod, archetype, variant, state,
+                             clip_id, clip_variant, frame_in_clip,
+                             handle.attachments_hash);
     return;
   }
 
@@ -137,7 +172,7 @@ void submit_rigged_creature(
 }
 
 auto submit_snapshot_creature(
-    const CreatureAsset &asset, CreatureLOD lod,
+    const CreatureRenderAssetHandle &handle, CreatureLOD lod,
     Render::Creature::ArchetypeId archetype,
     Render::Creature::VariantId variant,
     Render::Creature::AnimationStateId state, std::uint16_t clip_id,
@@ -148,8 +183,9 @@ auto submit_snapshot_creature(
     std::uint32_t frame_in_clip, Render::GL::ISubmitter &out,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments = {})
     -> bool {
-  if (lod == CreatureLOD::Billboard || asset.spec == nullptr ||
-      asset.bind_palette == nullptr) {
+  const CreatureAsset *asset = handle.asset;
+  if (lod == CreatureLOD::Billboard || asset == nullptr ||
+      asset->spec == nullptr || handle.bind_palette.empty()) {
     return false;
   }
 
@@ -166,11 +202,11 @@ auto submit_snapshot_creature(
   key.clip_variant = clip_variant;
   key.frame_in_clip = frame_in_clip;
 
-  if (attachments.empty() && asset.snapshot_mesh_species_id != 0xFFFFFFFFu &&
-      (asset.snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
+  if (attachments.empty() && asset->snapshot_mesh_species_id != 0xFFFFFFFFu &&
+      (asset->snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
     const auto *mesh_blob =
         Render::Creature::Snapshot::SnapshotMeshRegistry::instance().blob(
-            asset.snapshot_mesh_species_id, lod);
+            asset->snapshot_mesh_species_id, lod);
     if (mesh_blob != nullptr) {
       std::uint32_t mesh_global_frame = 0U;
       if (mesh_blob->resolve_global_frame(clip_id, frame_in_clip,
@@ -199,16 +235,22 @@ auto submit_snapshot_creature(
           out.rigged(cmd);
           return true;
         }
+        report_submit_cache_miss("snapshot_load", handle, lod, archetype,
+                                 variant, state, clip_id, clip_variant,
+                                 frame_in_clip, handle.attachments_hash);
       }
     }
   }
 
   auto &rigged_cache = renderer->rigged_mesh_cache();
-  auto bind = asset.bind_palette();
-  auto *source = rigged_cache.get_or_bake(
-      *asset.spec, lod, bind, variant_bucket, attachments, blob.species_id());
+  auto *source = rigged_cache.get_or_bake_prehashed(
+      *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
+      handle.attachments_hash, blob.species_id());
   if (source == nullptr || source->mesh == nullptr ||
       source->mesh->index_count() == 0U) {
+    report_submit_cache_miss("snapshot_source_rigged", handle, lod, archetype,
+                             variant, state, clip_id, clip_variant,
+                             frame_in_clip, handle.attachments_hash);
     return false;
   }
 
@@ -222,6 +264,9 @@ auto submit_snapshot_creature(
       renderer->snapshot_mesh_cache().get_or_bake(key, *source, global_frame);
   if (snap == nullptr || snap->mesh == nullptr ||
       snap->mesh->index_count() == 0U) {
+    report_submit_cache_miss("snapshot_bake", handle, lod, archetype, variant,
+                             state, clip_id, clip_variant, frame_in_clip,
+                             handle.attachments_hash);
     return false;
   }
 
@@ -299,6 +344,32 @@ auto resolve_clip_playback(std::uint32_t species_id, std::uint16_t clip_id,
   return r;
 }
 
+auto resolve_clip_playback(const CreatureClipPlaybackDesc &desc,
+                           float phase) noexcept -> ResolvedPlayback {
+  ResolvedPlayback r{};
+  if (desc.blob == nullptr ||
+      desc.clip_id == Render::Creature::ArchetypeDescriptor::kUnmappedClip ||
+      desc.frame_count == 0U) {
+    return r;
+  }
+  float p = phase - std::floor(phase);
+  if (p < 0.0F) {
+    p += 1.0F;
+  }
+  auto const fc = static_cast<float>(desc.frame_count);
+  auto frame_idx = static_cast<int>(p * fc);
+  if (frame_idx < 0) {
+    frame_idx = 0;
+  }
+  if (frame_idx >= static_cast<int>(desc.frame_count)) {
+    frame_idx = static_cast<int>(desc.frame_count) - 1;
+  }
+  r.blob = desc.blob;
+  r.frame_in_clip = static_cast<std::uint32_t>(frame_idx);
+  r.global_frame = desc.frame_offset + r.frame_in_clip;
+  return r;
+}
+
 auto resolve_blob_palette(std::uint32_t species_id, BpatPlayback playback,
                           const Render::Creature::Bpat::BpatBlob *&out_blob,
                           std::uint32_t &out_global_frame) noexcept
@@ -336,35 +407,33 @@ auto CreaturePipeline::submit_requests(
     return stats;
   }
 
-  const auto &arch_reg = Render::Creature::ArchetypeRegistry::instance();
-  const auto &asset_reg = CreatureAssetRegistry::instance();
-
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest &req) {
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
 
-    const auto *desc = arch_reg.get(req.archetype);
-    if (desc == nullptr) {
+    auto handle_id = req.render_asset_handle;
+    if (handle_id == Render::Creature::kInvalidCreatureRenderAssetHandle) {
+      handle_id = CreatureRenderAssetHandleRegistry::instance().get_or_create(
+          req.creature_asset_id, req.archetype);
+    }
+    const CreatureRenderAssetHandle *handle =
+        CreatureRenderAssetHandleRegistry::instance().get(handle_id);
+    if (handle == nullptr || !handle->valid()) {
       return;
     }
     if (req.lod == CreatureLOD::Billboard) {
       return;
     }
 
-    const auto species_kind = desc->species;
-    const auto *asset = (req.creature_asset_id != kInvalidCreatureAsset)
-                            ? asset_reg.get(req.creature_asset_id)
-                            : asset_reg.for_species(species_kind);
-    if (asset == nullptr) {
-      return;
-    }
-    const auto species_id = asset->bpat_species_id;
-    if (species_id == 0xFFFFFFFFu) {
+    const auto species_kind = handle->archetype->species;
+    const auto state_index = static_cast<std::size_t>(req.state);
+    if (state_index >= handle->playback.size()) {
       return;
     }
 
-    const std::uint16_t clip_id = arch_reg.bpat_clip(req.archetype, req.state);
-    auto const playback = resolve_clip_playback(species_id, clip_id, req.phase);
+    const CreatureClipPlaybackDesc &playback_desc =
+        handle->playback[state_index];
+    auto const playback = resolve_clip_playback(playback_desc, req.phase);
     if (playback.blob == nullptr) {
       return;
     }
@@ -376,22 +445,24 @@ auto CreaturePipeline::submit_requests(
           playback.blob->frame_palette_view(playback.global_frame));
     }
 
-    if (arch_reg.is_snapshot(req.archetype, req.state)) {
+    if (playback_desc.snapshot) {
       const bool emitted = submit_snapshot_creature(
-          *asset, req.lod, req.archetype, req.variant, req.state, clip_id,
-          req.clip_variant, req.role_colors_view(),
+          *handle, req.lod, req.archetype, req.variant, req.state,
+          playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
-          desc->attachments_view());
+          handle->archetype->attachments_view());
       if (emitted) {
         return;
       }
     }
 
     submit_rigged_creature(
-        *asset, req.lod, req.role_colors_view(),
-        static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
-        *playback.blob, playback.global_frame, out, desc->attachments_view());
+        *handle, req.lod, req.archetype, req.variant, req.state,
+        playback_desc.clip_id, req.clip_variant, playback.frame_in_clip,
+        req.role_colors_view(), static_cast<std::uint16_t>(req.variant),
+        req.base_color, draw_world, *playback.blob, playback.global_frame, out,
+        handle->archetype->attachments_view());
   };
 
   for (const auto &req : requests) {

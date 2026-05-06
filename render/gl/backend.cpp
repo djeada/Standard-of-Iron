@@ -985,8 +985,30 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         m_lastBoundTexture = nullptr;
       }
 
+      QVector3D const fog_color(m_clearColor[Red], m_clearColor[Green],
+                                m_clearColor[Blue]);
+      QVector3D const camera_position = cam.get_position();
+      float const fog_start =
+          std::max(cam.get_near() + 8.0F, cam.get_far() * 0.30F);
+      float const fog_end = std::max(fog_start + 1.0F, cam.get_far() * 0.78F);
+
       auto draw_surface = [&](const TerrainSurfaceCmd &single) {
         const QMatrix4x4 mvp = view_proj * single.model;
+        auto const set_fog_uniforms = [&](const auto &uniforms) {
+          if (uniforms.camera_position != Shader::InvalidUniform) {
+            active_shader->set_uniform(uniforms.camera_position,
+                                       camera_position);
+          }
+          if (uniforms.fog_color != Shader::InvalidUniform) {
+            active_shader->set_uniform(uniforms.fog_color, fog_color);
+          }
+          if (uniforms.fog_start != Shader::InvalidUniform) {
+            active_shader->set_uniform(uniforms.fog_start, fog_start);
+          }
+          if (uniforms.fog_end != Shader::InvalidUniform) {
+            active_shader->set_uniform(uniforms.fog_end, fog_end);
+          }
+        };
 
         if (single.params.is_ground_plane) {
           if (m_terrainPipeline->m_groundUniforms.mvp !=
@@ -1023,6 +1045,18 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 m_terrainPipeline->m_groundUniforms.soil_color,
                 single.params.soil_color);
           }
+          if (m_terrainPipeline->m_groundUniforms.rock_low !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.rock_low,
+                single.params.rock_low);
+          }
+          if (m_terrainPipeline->m_groundUniforms.rock_high !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.rock_high,
+                single.params.rock_high);
+          }
           if (m_terrainPipeline->m_groundUniforms.tint !=
               Shader::InvalidUniform) {
             active_shader->set_uniform(m_terrainPipeline->m_groundUniforms.tint,
@@ -1033,6 +1067,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             active_shader->set_uniform(
                 m_terrainPipeline->m_groundUniforms.noise_offset,
                 single.params.noise_offset);
+          }
+          if (m_terrainPipeline->m_groundUniforms.noise_angle !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.noise_angle,
+                single.params.noise_angle);
           }
           if (m_terrainPipeline->m_groundUniforms.tile_size !=
               Shader::InvalidUniform) {
@@ -1109,6 +1149,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 m_terrainPipeline->m_groundUniforms.crack_intensity,
                 single.params.crack_intensity);
           }
+          if (m_terrainPipeline->m_groundUniforms.rock_exposure !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.rock_exposure,
+                single.params.rock_exposure);
+          }
           if (m_terrainPipeline->m_groundUniforms.grass_saturation !=
               Shader::InvalidUniform) {
             active_shader->set_uniform(
@@ -1121,12 +1167,37 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 m_terrainPipeline->m_groundUniforms.soil_roughness,
                 single.params.soil_roughness);
           }
+          if (m_terrainPipeline->m_groundUniforms.micro_bump_amp !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.micro_bump_amp,
+                single.params.micro_bump_amp);
+          }
+          if (m_terrainPipeline->m_groundUniforms.micro_bump_freq !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.micro_bump_freq,
+                single.params.micro_bump_freq);
+          }
+          if (m_terrainPipeline->m_groundUniforms.micro_normal_weight !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.micro_normal_weight,
+                single.params.micro_normal_weight);
+          }
+          if (m_terrainPipeline->m_groundUniforms.albedo_jitter !=
+              Shader::InvalidUniform) {
+            active_shader->set_uniform(
+                m_terrainPipeline->m_groundUniforms.albedo_jitter,
+                single.params.albedo_jitter);
+          }
           if (m_terrainPipeline->m_groundUniforms.snow_color !=
               Shader::InvalidUniform) {
             active_shader->set_uniform(
                 m_terrainPipeline->m_groundUniforms.snow_color,
                 single.params.snow_color);
           }
+          set_fog_uniforms(m_terrainPipeline->m_groundUniforms);
         } else {
           if (m_terrainPipeline->m_terrainUniforms.mvp !=
               Shader::InvalidUniform) {
@@ -1338,6 +1409,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 m_terrainPipeline->m_terrainUniforms.screen_toe_clamp,
                 single.params.screen_toe_clamp);
           }
+          set_fog_uniforms(m_terrainPipeline->m_terrainUniforms);
         }
 
         if (single.depth_bias != 0.0F) {

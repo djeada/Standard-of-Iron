@@ -80,6 +80,14 @@ public:
       std::span<const Render::Creature::StaticAttachmentSpec> attachments,
       std::uint32_t skin_species_id) -> const RiggedMeshEntry *;
 
+  auto get_or_bake_prehashed(
+      const Render::Creature::CreatureSpec &spec,
+      Render::Creature::CreatureLOD lod,
+      std::span<const QMatrix4x4> rest_palette, std::uint16_t variant_bucket,
+      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+      std::uint64_t attachments_hash,
+      std::uint32_t skin_species_id) -> const RiggedMeshEntry *;
+
   void clear() { m_entries.clear(); }
 
   [[nodiscard]] auto size() const noexcept -> std::size_t {

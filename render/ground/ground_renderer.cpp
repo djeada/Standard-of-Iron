@@ -101,12 +101,10 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   float target_amp;
   float target_freq;
   if (surface_profile.ground_irregularity_enabled) {
-
     target_amp = std::clamp(surface_profile.irregularity_amplitude * 0.85F,
                             0.15F, 0.70F);
     target_freq = std::max(0.45F, surface_profile.irregularity_scale * 2.5F);
   } else {
-
     target_amp = std::clamp(surface_profile.height_noise_amplitude * 0.22F,
                             0.10F, 0.20F);
     target_freq =
@@ -115,11 +113,29 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   params.height_noise_strength = target_amp;
   params.height_noise_frequency = target_freq;
 
-  params.micro_bump_amp = 0.07F;
-  params.micro_bump_freq = 2.2F;
-  params.micro_normal_weight = 0.65F;
+  params.rock_exposure =
+      std::clamp(climate_profile.rock_exposure * 0.72F +
+                     climate_profile.crack_intensity * 0.18F +
+                     (1.0F - climate_profile.moisture_level) * 0.08F,
+                 0.04F, 0.82F);
 
-  params.albedo_jitter = 0.05F;
+  params.micro_bump_amp =
+      std::clamp(0.045F + climate_profile.soil_roughness * 0.05F +
+                     params.rock_exposure * 0.04F,
+                 0.04F, 0.14F);
+  params.micro_bump_freq =
+      std::clamp(1.8F + climate_profile.soil_roughness * 1.5F +
+                     climate_profile.crack_intensity * 0.8F,
+                 1.6F, 4.0F);
+  params.micro_normal_weight =
+      std::clamp(0.56F + params.rock_exposure * 0.22F +
+                     climate_profile.moisture_level * 0.08F,
+                 0.56F, 0.86F);
+
+  params.albedo_jitter =
+      std::clamp(0.035F + climate_profile.soil_roughness * 0.035F +
+                     climate_profile.crack_intensity * 0.02F,
+                 0.03F, 0.12F);
 
   params.ambient_boost = surface_profile.terrain_ambient_boost * 0.85F;
 
@@ -136,7 +152,6 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
       std::clamp(climate_profile.moisture_level, 0.0F, 1.0F);
   params.crack_intensity =
       std::clamp(climate_profile.crack_intensity, 0.0F, 1.0F);
-  params.rock_exposure = std::clamp(climate_profile.rock_exposure, 0.0F, 1.0F);
   params.grass_saturation =
       std::clamp(climate_profile.grass_saturation, 0.0F, 1.5F);
   params.soil_roughness =

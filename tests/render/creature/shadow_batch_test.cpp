@@ -10,8 +10,6 @@ namespace {
 
 using namespace Render::Creature::Pipeline;
 
-// Minimal ISubmitter stub – not a real Renderer, so flush_shadow_batch's
-// dynamic_cast<Renderer*> returns nullptr and shadows are not drawn.
 class StubSubmitter : public Render::GL::ISubmitter {
 public:
   int mesh_calls{0};
@@ -38,10 +36,6 @@ public:
   void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
                       float) override {}
 };
-
-// ---------------------------------------------------------------------------
-// HumanoidShadowBatch structural tests
-// ---------------------------------------------------------------------------
 
 TEST(HumanoidShadowBatch, StartsEmpty) {
   HumanoidShadowBatch batch;
@@ -115,10 +109,6 @@ TEST(HumanoidShadowBatch, ShadowPassStoredCorrectly) {
   EXPECT_EQ(batch.instances().front().pass, RenderPassIntent::Shadow);
 }
 
-// ---------------------------------------------------------------------------
-// flush_shadow_batch tests
-// ---------------------------------------------------------------------------
-
 TEST(FlushShadowBatch, EmptyBatchDoesNotCrash) {
   HumanoidShadowBatch batch;
   StubSubmitter sink;
@@ -129,7 +119,7 @@ TEST(FlushShadowBatch, EmptyBatchDoesNotCrash) {
 TEST(FlushShadowBatch, NullShaderIsNoOp) {
   HumanoidShadowBatch batch;
   batch.add(QMatrix4x4{}, 0.5F);
-  // shader is null → flush should be a safe no-op
+
   StubSubmitter sink;
   flush_shadow_batch(batch, sink);
   EXPECT_EQ(sink.mesh_calls, 0);
@@ -140,9 +130,9 @@ TEST(FlushShadowBatch, NonRendererSubmitterIsNoOp) {
   batch.init(nullptr, nullptr, QVector2D(1.0F, 0.0F));
   batch.add(QMatrix4x4{}, 0.5F);
 
-  StubSubmitter sink; // not a Render::GL::Renderer → dynamic_cast fails
+  StubSubmitter sink;
   flush_shadow_batch(batch, sink);
-  // No crash, no draw calls issued on a non-Renderer submitter
+
   EXPECT_EQ(sink.mesh_calls, 0);
 }
 
@@ -154,7 +144,6 @@ TEST(FlushShadowBatch, BatchRemainsIntactAfterFlush) {
   StubSubmitter sink;
   flush_shadow_batch(batch, sink);
 
-  // flush does not clear the batch; caller owns the lifetime
   EXPECT_EQ(batch.size(), 1u);
 }
 

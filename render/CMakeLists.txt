@@ -162,6 +162,7 @@ add_library(render_gl STATIC
     creature/part_graph.cpp
     creature/spec.cpp
     creature/species_manifest.cpp
+    creature/runtime_bake_guard.cpp
     creature/quadruped/skeleton_factory.cpp
     creature/quadruped/gait.cpp
     creature/quadruped/mesh_graph.cpp

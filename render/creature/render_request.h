@@ -46,6 +46,9 @@ inline constexpr ArchetypeId kInvalidArchetype =
 using VariantId = std::uint16_t;
 inline constexpr VariantId kCanonicalVariant = static_cast<VariantId>(0u);
 using WorldKey = std::uint64_t;
+using CreatureRenderAssetHandleId = std::uint16_t;
+inline constexpr CreatureRenderAssetHandleId kInvalidCreatureRenderAssetHandle =
+    static_cast<CreatureRenderAssetHandleId>(0xFFFFu);
 
 struct CreatureRenderRequest {
   ArchetypeId archetype{kInvalidArchetype};
@@ -59,6 +62,8 @@ struct CreatureRenderRequest {
   std::uint32_t entity_id{0};
   std::uint32_t seed{0};
   std::uint16_t creature_asset_id{0xFFFFu};
+  CreatureRenderAssetHandleId render_asset_handle{
+      kInvalidCreatureRenderAssetHandle};
   WorldKey world_key{0};
 
   Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
