@@ -418,6 +418,9 @@ auto shader_bind_audit_snapshot() -> std::vector<ShaderBindAuditEntry> {
 auto classify_shader_for_audit(const QString &name) -> QString {
   static const QStringList pipeline_owned = {
       QStringLiteral("basic"),
+      QStringLiteral("basic_instanced"),
+      QStringLiteral("catapult"),
+      QStringLiteral("catapult_instanced"),
       QStringLiteral("grid"),
       QStringLiteral("character_skinned"),
       QStringLiteral("character_skinned_instanced"),

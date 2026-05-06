@@ -381,7 +381,8 @@ public:
       return false;
     }
     return mesh_a.mesh == mesh_b.mesh && mesh_a.shader == mesh_b.shader &&
-           mesh_a.texture == mesh_b.texture;
+           mesh_a.texture == mesh_b.texture &&
+           mesh_a.material_id == mesh_b.material_id;
   }
 
 private:
