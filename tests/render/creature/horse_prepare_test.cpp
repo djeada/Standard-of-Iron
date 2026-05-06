@@ -258,6 +258,52 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
+TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
+  auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHorse,
+                                root + "/horse.bpat"));
+
+  auto &snapshot_reg =
+      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  snapshot_reg.clear();
+
+  Render::GL::HorseRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::HumanoidAnimationContext rider_ctx{};
+  Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
+      17U, QVector3D(0.4F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  recorder.rigged_mesh_cache().clear();
+
+  renderer.render(ctx, anim, rider_ctx, profile, nullptr, nullptr, recorder,
+                  Render::GL::HorseLOD::Minimal);
+
+  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+}
+
 TEST(HorsePrepare, MinimalPreparationSnapsHorseHoofContactToTerrainHeight) {
   ScopedFlatTerrain terrain(1.9F);
 
