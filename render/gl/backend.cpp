@@ -1712,25 +1712,60 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           prepared.kind == PreparedBatchKind::MeshInstanced &&
           m_meshInstancingPipeline &&
           m_meshInstancingPipeline->is_initialized() && !is_transparent &&
-          !is_shadow_shader && uniforms->instanced != Shader::InvalidUniform;
+          !is_shadow_shader &&
+          (uniforms->instanced != Shader::InvalidUniform ||
+           uniforms->instanced_variant != nullptr);
 
       if (can_execute_prepared_batch) {
+        const bool use_dedicated_variant =
+            (uniforms->instanced_variant != nullptr);
+        GL::Shader *batch_shader =
+            use_dedicated_variant ? uniforms->instanced_variant : active_shader;
 
-        active_shader->set_uniform(uniforms->instanced, true);
+        if (use_dedicated_variant) {
+          auto *inst_uniforms =
+              m_characterPipeline
+                  ? m_characterPipeline->resolve_uniforms(batch_shader)
+                  : nullptr;
+          if (inst_uniforms != nullptr) {
+            batch_shader->use();
+            if (inst_uniforms->view_proj != Shader::InvalidUniform) {
+              batch_shader->set_uniform(inst_uniforms->view_proj, view_proj);
+            }
+            Texture *tex_to_use =
+                (it.texture != nullptr)
+                    ? it.texture
+                    : (m_resources ? m_resources->white() : nullptr);
+            if ((tex_to_use != nullptr) &&
+                tex_to_use != m_lastBoundTexture) {
+              tex_to_use->bind(0);
+              m_lastBoundTexture = tex_to_use;
+              batch_shader->set_uniform(inst_uniforms->texture, 0);
+            }
+            batch_shader->set_uniform(inst_uniforms->use_texture,
+                                      it.texture != nullptr);
+            batch_shader->set_uniform(inst_uniforms->material_id,
+                                      it.material_id);
+            m_lastBoundShader = batch_shader;
+          }
+        } else {
+          active_shader->set_uniform(uniforms->instanced, true);
 
-        Texture *tex_to_use =
-            (it.texture != nullptr)
-                ? it.texture
-                : (m_resources ? m_resources->white() : nullptr);
-        if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
-          tex_to_use->bind(0);
-          m_lastBoundTexture = tex_to_use;
-          active_shader->set_uniform(uniforms->texture, 0);
+          Texture *tex_to_use =
+              (it.texture != nullptr)
+                  ? it.texture
+                  : (m_resources ? m_resources->white() : nullptr);
+          if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
+            tex_to_use->bind(0);
+            m_lastBoundTexture = tex_to_use;
+            active_shader->set_uniform(uniforms->texture, 0);
+          }
+          active_shader->set_uniform(uniforms->use_texture,
+                                     it.texture != nullptr);
+          active_shader->set_uniform(uniforms->material_id, it.material_id);
         }
-        active_shader->set_uniform(uniforms->use_texture,
-                                   it.texture != nullptr);
 
-        m_meshInstancingPipeline->begin_batch(it.mesh, active_shader,
+        m_meshInstancingPipeline->begin_batch(it.mesh, batch_shader,
                                               it.texture);
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto &batch_it = std::get<MeshCmdIndex>(queue.get_sorted(j));
@@ -1740,7 +1775,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         }
         m_meshInstancingPipeline->flush();
 
-        active_shader->set_uniform(uniforms->instanced, false);
+        if (!use_dedicated_variant) {
+          active_shader->set_uniform(uniforms->instanced, false);
+        }
       } else {
         for (std::size_t j = i; j < batch_end; ++j) {
           const auto &single = std::get<MeshCmdIndex>(queue.get_sorted(j));

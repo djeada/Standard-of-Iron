@@ -250,3 +250,48 @@ TEST(QueueSubmitterPart, NullMaterialFallsBackToMeshCmd) {
   ASSERT_EQ(queue.size(), 1U);
   EXPECT_EQ(queue.items().front().index(), Render::GL::MeshCmdIndex);
 }
+
+TEST(DrawQueuePreparedBatches, MeshCommandsWithDifferentMaterialIdAreNotBatched) {
+  Render::GL::DrawQueue queue;
+
+  Render::GL::MeshCmd a{};
+  a.shader = fake_shader(0xA00);
+  a.mesh = fake_mesh(0x1000);
+  a.texture = fake_texture(0xD00);
+  a.material_id = 1;
+
+  Render::GL::MeshCmd b = a;
+  b.material_id = 2;
+
+  queue.submit(a);
+  queue.submit(b);
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::Single);
+  EXPECT_EQ(batches[0].count, 1U);
+  EXPECT_EQ(batches[1].kind, Render::GL::PreparedBatchKind::Single);
+  EXPECT_EQ(batches[1].count, 1U);
+}
+
+TEST(DrawQueuePreparedBatches, MeshCommandsWithSameMaterialIdAreBatched) {
+  Render::GL::DrawQueue queue;
+
+  Render::GL::MeshCmd a{};
+  a.shader = fake_shader(0xA00);
+  a.mesh = fake_mesh(0x1000);
+  a.texture = fake_texture(0xD00);
+  a.material_id = 5;
+
+  Render::GL::MeshCmd b = a;
+
+  queue.submit(a);
+  queue.submit(b);
+  queue.sort_for_batching();
+
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 1U);
+  EXPECT_EQ(batches[0].kind, Render::GL::PreparedBatchKind::MeshInstanced);
+  EXPECT_EQ(batches[0].count, 2U);
+}

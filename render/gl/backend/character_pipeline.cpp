@@ -63,6 +63,10 @@ void CharacterPipeline::cache_basic_uniforms() {
   }
 
   m_basic_uniforms = build_uniform_set(m_basic_shader);
+  if (m_shader_cache != nullptr) {
+    m_basic_uniforms.instanced_variant =
+        m_shader_cache->get(QStringLiteral("basic_instanced"));
+  }
   m_uniform_cache[m_basic_shader] = m_basic_uniforms;
 }
 
@@ -103,11 +107,11 @@ auto CharacterPipeline::build_uniform_set(GL::Shader *shader) const
     return uniforms;
   }
   uniforms.mvp = shader->optional_uniform_handle("u_mvp");
-  uniforms.model = shader->uniform_handle("u_model");
-  uniforms.texture = shader->uniform_handle("u_texture");
-  uniforms.use_texture = shader->uniform_handle("u_useTexture");
-  uniforms.color = shader->uniform_handle("u_color");
-  uniforms.alpha = shader->uniform_handle("u_alpha");
+  uniforms.model = shader->optional_uniform_handle("u_model");
+  uniforms.texture = shader->optional_uniform_handle("u_texture");
+  uniforms.use_texture = shader->optional_uniform_handle("u_useTexture");
+  uniforms.color = shader->optional_uniform_handle("u_color");
+  uniforms.alpha = shader->optional_uniform_handle("u_alpha");
   uniforms.material_id = shader->optional_uniform_handle("u_materialId");
   uniforms.instanced = shader->optional_uniform_handle("u_instanced");
   uniforms.view_proj = shader->optional_uniform_handle("u_viewProj");
