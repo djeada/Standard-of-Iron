@@ -237,6 +237,7 @@ ArenaViewport::ArenaViewport(QWidget *parent)
   m_features = std::move(rendering.features);
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
+  m_boundary_fog = std::move(rendering.boundary_fog);
   m_rain = std::move(rendering.rain);
   m_camera_service = std::make_unique<Game::Systems::CameraService>();
   m_picking_service = std::make_unique<Game::Systems::PickingService>();
@@ -268,6 +269,7 @@ ArenaViewport::~ArenaViewport() {
     m_features.reset();
     m_surface.reset();
     m_fog.reset();
+    m_boundary_fog.reset();
     m_rain.reset();
     if (m_renderer != nullptr) {
       m_renderer->shutdown();
@@ -1145,6 +1147,10 @@ void ArenaViewport::configure_rendering_from_terrain() {
     m_rain->configure(
         world_width, world_height,
         static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)));
+  }
+  if (m_boundary_fog != nullptr) {
+    m_boundary_fog->configure(height_map->getWidth(), height_map->getHeight(),
+                              height_map->getTileSize());
   }
   set_wireframe_enabled(m_wireframe_enabled);
 }

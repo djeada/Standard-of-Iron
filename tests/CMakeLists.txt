@@ -50,6 +50,7 @@ add_executable(standard_of_iron_tests
     render/ground_utils_test.cpp
     render/scatter_runtime_test.cpp
     render/terrain_scene_proxy_test.cpp
+    render/map_boundary_fog_renderer_test.cpp
     render/oriented_parts_test.cpp
     render/draw_part_material_test.cpp
     render/pose_template_cache_test.cpp
