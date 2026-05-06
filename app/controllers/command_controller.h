@@ -61,6 +61,7 @@ public:
   [[nodiscard]] bool is_placing_formation() const {
     return m_is_placing_formation;
   }
+  void begin_move_placement_at_position(const QVector3D &position);
   void update_formation_placement(const QVector3D &position);
   void update_formation_rotation(float angle_degrees);
   void confirm_formation_placement();
@@ -97,6 +98,7 @@ private:
   QVector3D m_patrol_first_waypoint;
 
   bool m_is_placing_formation = false;
+  bool m_is_right_drag_formation = false;
   QVector3D m_formation_placement_position;
   float m_formation_placement_angle = 0.0F;
   std::vector<Engine::Core::EntityID> m_formation_units;
