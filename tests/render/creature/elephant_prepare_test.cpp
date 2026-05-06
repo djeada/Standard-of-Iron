@@ -218,6 +218,51 @@ TEST(ElephantPrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
+TEST(ElephantPrepare,
+     MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
+  auto const root = TestAssets::find_creature_assets_dir("elephant.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesElephant,
+                                root + "/elephant.bpat"));
+
+  auto &snapshot_reg =
+      Render::Creature::Snapshot::SnapshotMeshRegistry::instance();
+  snapshot_reg.clear();
+
+  Render::GL::ElephantRendererBase renderer;
+  Engine::Core::Entity entity(1);
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  unit->spawn_type = Game::Units::SpawnType::Elephant;
+  unit->owner_id = 1;
+  unit->max_health = 100;
+  unit->health = 100;
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  renderable->visible = true;
+
+  Render::GL::DrawContext ctx{};
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::GL::ElephantProfile profile = make_test_elephant_profile();
+  Render::GL::TemplateRecorder recorder;
+  recorder.snapshot_mesh_cache().clear();
+  recorder.rigged_mesh_cache().clear();
+
+  renderer.render(ctx, anim, profile, nullptr, nullptr, recorder,
+                  Render::GL::HorseLOD::Minimal);
+
+  EXPECT_EQ(recorder.snapshot_mesh_cache().size(), 0u);
+  EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
+}
+
 TEST(ElephantPrepare, MotionSampleCarriesResolvedRenderState) {
   Render::GL::ElephantProfile profile = make_test_elephant_profile();
   Render::GL::AnimationInputs anim{

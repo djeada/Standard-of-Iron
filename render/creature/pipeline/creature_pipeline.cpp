@@ -75,6 +75,16 @@ auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
   return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
 }
 
+auto uses_prebaked_lowpoly_path(
+    CreatureKind kind, CreatureLOD lod,
+    std::span<const Render::Creature::StaticAttachmentSpec> attachments) noexcept
+    -> bool {
+  if (lod != CreatureLOD::Minimal || !attachments.empty()) {
+    return false;
+  }
+  return kind == CreatureKind::Horse || kind == CreatureKind::Elephant;
+}
+
 void report_submit_cache_miss(std::string_view path,
                               const CreatureRenderAssetHandle &handle,
                               CreatureLOD lod, ArchetypeId archetype,
@@ -444,6 +454,9 @@ auto CreaturePipeline::submit_requests(
           req.world, species_kind,
           playback.blob->frame_palette_view(playback.global_frame));
     }
+    const auto attachments = handle->archetype->attachments_view();
+    const bool prebaked_lowpoly_required =
+        uses_prebaked_lowpoly_path(species_kind, req.lod, attachments);
 
     if (playback_desc.snapshot) {
       const bool emitted = submit_snapshot_creature(
@@ -451,10 +464,17 @@ auto CreaturePipeline::submit_requests(
           playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
-          handle->archetype->attachments_view());
+          attachments);
       if (emitted) {
         return;
       }
+    }
+    if (prebaked_lowpoly_required) {
+      report_submit_cache_miss("snapshot_prebaked_required", *handle, req.lod,
+                               req.archetype, req.variant, req.state,
+                               playback_desc.clip_id, req.clip_variant,
+                               playback.frame_in_clip, handle->attachments_hash);
+      return;
     }
 
     submit_rigged_creature(
@@ -462,7 +482,7 @@ auto CreaturePipeline::submit_requests(
         playback_desc.clip_id, req.clip_variant, playback.frame_in_clip,
         req.role_colors_view(), static_cast<std::uint16_t>(req.variant),
         req.base_color, draw_world, *playback.blob, playback.global_frame, out,
-        handle->archetype->attachments_view());
+        attachments);
   };
 
   for (const auto &req : requests) {
