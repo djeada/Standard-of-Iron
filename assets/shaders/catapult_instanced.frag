@@ -3,13 +3,12 @@
 in vec3 v_normal;
 in vec2 v_texCoord;
 in vec3 v_worldPos;
+flat in vec3 v_instanceColor;
+flat in float v_instanceAlpha;
 in float v_materialRegion;
 
 uniform sampler2D u_texture;
-uniform vec3 u_color;
 uniform bool u_useTexture;
-uniform float u_alpha;
-uniform int u_materialId;
 
 out vec4 FragColor;
 
@@ -43,7 +42,7 @@ float metal_surface(vec2 p) {
 }
 
 void main() {
-  vec3 color = u_color;
+  vec3 color = v_instanceColor;
   if (u_useTexture) {
     color *= texture(u_texture, v_texCoord).rgb;
   }
@@ -116,5 +115,5 @@ void main() {
   float diff = max(n_dot_l * (1.0 - wrap) + wrap, 0.30);
 
   color *= diff;
-  FragColor = vec4(color, u_alpha);
+  FragColor = vec4(color, v_instanceAlpha);
 }
