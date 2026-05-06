@@ -367,25 +367,22 @@ TEST(HorsePrepare, MoveToIdleTransitionKeepsBpatPhaseContinuous) {
 }
 
 TEST(HorsePrepare, ShadowBatchEmptyWithoutResources) {
-  // Without ctx.backend / ctx.resources the shadow state is disabled,
-  // so prepare_horse_render must not populate the shadow_batch.
+
   ScopedFlatTerrain terrain(0.0F);
 
   Render::GL::HorseRendererBase owner;
   Render::GL::DrawContext ctx{};
-  ctx.allow_template_cache = true; // enable shadow code path
+  ctx.allow_template_cache = true;
   Render::GL::AnimationInputs anim{};
   Render::GL::HumanoidAnimationContext rider_ctx{};
   Render::GL::HorseProfile profile = Render::GL::make_horse_profile(
       42U, QVector3D(0.5F, 0.3F, 0.2F), QVector3D(0.6F, 0.1F, 0.1F));
 
   Render::Horse::HorsePreparation prep;
-  Render::Horse::prepare_horse_render(owner, ctx, anim, rider_ctx, profile,
-                                      nullptr, nullptr,
-                                      Render::Creature::CreatureLOD::Full,
-                                      prep);
+  Render::Horse::prepare_horse_render(
+      owner, ctx, anim, rider_ctx, profile, nullptr, nullptr,
+      Render::Creature::CreatureLOD::Full, prep);
 
-  // No backend/resources → shadow disabled → batch stays empty
   EXPECT_TRUE(prep.shadow_batch.empty());
 }
 

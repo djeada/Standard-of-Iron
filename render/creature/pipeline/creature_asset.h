@@ -1,14 +1,27 @@
 #pragma once
 
 #include "../../creature/spec.h"
+#include "../render_request.h"
 #include "unit_visual_spec.h"
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <array>
+#include <cstddef>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <span>
 #include <string_view>
+#include <unordered_map>
+
+namespace Render::Creature {
+struct ArchetypeDescriptor;
+}
+
+namespace Render::Creature::Bpat {
+class BpatBlob;
+}
 
 namespace Render::Creature::Pipeline {
 
@@ -41,6 +54,70 @@ struct CreatureAsset {
   const CreatureVisualDefinition *visual_definition{nullptr};
 };
 
+struct CreatureClipPlaybackDesc {
+  std::uint16_t clip_id{0xFFFFu};
+  bool snapshot{false};
+  const Render::Creature::Bpat::BpatBlob *blob{nullptr};
+  std::uint32_t frame_count{0U};
+  std::uint32_t frame_offset{0U};
+};
+
+struct CreatureRenderAssetHandle {
+  Render::Creature::CreatureRenderAssetHandleId id{
+      Render::Creature::kInvalidCreatureRenderAssetHandle};
+  const CreatureAsset *asset{nullptr};
+  const Render::Creature::ArchetypeDescriptor *archetype{nullptr};
+  std::span<const QMatrix4x4> bind_palette{};
+  std::uint64_t attachments_hash{0U};
+  std::array<CreatureClipPlaybackDesc,
+             Render::Creature::animation_state_count()>
+      playback{};
+
+  [[nodiscard]] auto valid() const noexcept -> bool {
+    return asset != nullptr && archetype != nullptr && asset->spec != nullptr &&
+           asset->bind_palette != nullptr && !bind_palette.empty();
+  }
+};
+
+class CreatureRenderAssetHandleRegistry {
+public:
+  [[nodiscard]] static auto instance() -> CreatureRenderAssetHandleRegistry &;
+
+  [[nodiscard]] auto get_or_create(CreatureAssetId asset_id,
+                                   Render::Creature::ArchetypeId archetype_id)
+      -> Render::Creature::CreatureRenderAssetHandleId;
+
+  [[nodiscard]] auto get(Render::Creature::CreatureRenderAssetHandleId id) const
+      -> const CreatureRenderAssetHandle *;
+
+  void clear();
+
+private:
+  struct Key {
+    CreatureAssetId asset_id{kInvalidCreatureAsset};
+    Render::Creature::ArchetypeId archetype_id{
+        Render::Creature::kInvalidArchetype};
+
+    auto operator==(const Key &other) const noexcept -> bool {
+      return asset_id == other.asset_id && archetype_id == other.archetype_id;
+    }
+  };
+
+  struct KeyHash {
+    auto operator()(const Key &key) const noexcept -> std::size_t {
+      return (static_cast<std::size_t>(key.asset_id) << 16U) ^
+             static_cast<std::size_t>(key.archetype_id);
+    }
+  };
+
+  CreatureRenderAssetHandleRegistry() = default;
+
+  std::unordered_map<Key, Render::Creature::CreatureRenderAssetHandleId,
+                     KeyHash>
+      lookup_{};
+  std::deque<CreatureRenderAssetHandle> handles_{};
+};
+
 class CreatureAssetRegistry {
 public:
   [[nodiscard]] static auto
@@ -62,5 +139,9 @@ private:
   CreatureAsset m_elephant{};
   CreatureAsset m_humanoid_sword{};
 };
+
+[[nodiscard]] auto resolve_creature_render_asset_handle(
+    CreatureAssetId asset_id,
+    Render::Creature::ArchetypeId archetype_id) -> CreatureRenderAssetHandle;
 
 } // namespace Render::Creature::Pipeline

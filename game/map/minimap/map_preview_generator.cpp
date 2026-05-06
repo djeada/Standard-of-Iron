@@ -33,7 +33,7 @@ auto MapPreviewGenerator::generate_preview(
   MapDefinition map_def;
   QString error;
   if (!MapLoader::loadFromJsonFile(map_path, map_def, &error)) {
-    QImage error_image(200, 200, QImage::Format_RGBA8888);
+    QImage error_image(200, 200, QImage::Format_ARGB32);
     error_image.fill(QColor(40, 40, 40));
     return error_image;
   }

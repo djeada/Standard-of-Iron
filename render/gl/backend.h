@@ -150,7 +150,7 @@ public:
 private:
   int m_viewportWidth{0};
   int m_viewportHeight{0};
-  std::array<float, 4> m_clearColor{0.2F, 0.3F, 0.3F, 0.0F};
+  std::array<float, 4> m_clearColor{0.65F, 0.69F, 0.67F, 1.0F};
   std::unique_ptr<ShaderCache> m_shaderCache;
   std::unique_ptr<ResourceManager> m_resources;
   std::unique_ptr<BackendPipelines::CylinderPipeline> m_cylinderPipeline;

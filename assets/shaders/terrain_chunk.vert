@@ -68,6 +68,8 @@ float sampleTerrainDisplacement(vec3 wp, vec3 worldNormal, vec2 noiseOffset,
   float slope = 1.0 - flatness;
   float shoulderMask = smoothstep(0.04, 0.32, slope);
   shoulderMask = mix(shoulderMask, 1.0, smoothstep(0.55, 0.85, slope) * 0.35);
+  float flatGroundMask = smoothstep(0.92, 0.995, flatness);
+  shoulderMask = max(shoulderMask, flatGroundMask * 0.12);
   shoulderMask *= 1.0 - 0.60 * entryMask;
 
   float heightAmp = clamp(heightNoiseStrength * 1.35, 0.0, 0.22);

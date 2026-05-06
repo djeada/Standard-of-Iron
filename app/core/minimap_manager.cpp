@@ -34,6 +34,11 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
 
   Game::Map::Minimap::MinimapGenerator generator;
   m_minimap_base_image = generator.generate(map_def);
+  if (!m_minimap_base_image.isNull() &&
+      m_minimap_base_image.format() != QImage::Format_ARGB32) {
+    m_minimap_base_image =
+        m_minimap_base_image.convertToFormat(QImage::Format_ARGB32);
+  }
 
   if (!m_minimap_base_image.isNull()) {
     qDebug() << "MinimapManager: Generated minimap of size"
@@ -66,8 +71,6 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
                                   m_world_height);
 
     m_minimap_fog_version = 0;
-    m_minimap_update_timer = MINIMAP_UPDATE_INTERVAL;
-    update_fog(0.0F, 1);
     mark_dirty();
   } else {
     qWarning() << "MinimapManager: Failed to generate minimap";
@@ -118,61 +121,42 @@ void MinimapManager::rebuild_fog_lookup(int vis_width, int vis_height) {
       const float vis_x = (world_x * scale_x) + half_vis_w;
       const float vis_y = (world_y * scale_y) + half_vis_h;
 
-      const int vx0 = std::clamp(static_cast<int>(vis_x), 0, vis_width - 1);
-      const int vx1 = std::clamp(vx0 + 1, 0, vis_width - 1);
-      const int vy0 = std::clamp(static_cast<int>(vis_y), 0, vis_height - 1);
-      const int vy1 = std::clamp(vy0 + 1, 0, vis_height - 1);
+      const int base_vx = static_cast<int>(std::floor(vis_x));
+      const int base_vy = static_cast<int>(std::floor(vis_y));
+      const int vx0 = std::clamp(base_vx, 0, vis_width - 1);
+      const int vx1 = std::clamp(base_vx + 1, 0, vis_width - 1);
+      const int vy0 = std::clamp(base_vy, 0, vis_height - 1);
+      const int vy1 = std::clamp(base_vy + 1, 0, vis_height - 1);
 
       FogLookupEntry &entry = m_fog_lookup_entries[lookup_idx++];
       entry.idx00 = vy0 * vis_width + vx0;
       entry.idx10 = vy0 * vis_width + vx1;
       entry.idx01 = vy1 * vis_width + vx0;
       entry.idx11 = vy1 * vis_width + vx1;
-      entry.fx = vis_x - static_cast<float>(vx0);
-      entry.fy = vis_y - static_cast<float>(vy0);
+      entry.fx = std::clamp(vis_x - static_cast<float>(base_vx), 0.0F, 1.0F);
+      entry.fy = std::clamp(vis_y - static_cast<float>(base_vy), 0.0F, 1.0F);
     }
   }
 }
 
-void MinimapManager::update_fog(float dt, int local_owner_id) {
-  Q_UNUSED(local_owner_id);
-
+void MinimapManager::update_fog(int vis_width, int vis_height,
+                                const std::vector<std::uint8_t> &cells,
+                                std::uint64_t visibility_version) {
   if (m_minimap_base_image.isNull()) {
     return;
   }
 
-  m_minimap_update_timer += dt;
-  if (m_minimap_update_timer < MINIMAP_UPDATE_INTERVAL) {
-    return;
-  }
-  m_minimap_update_timer = 0.0F;
-
-  auto &visibility_service = Game::Map::VisibilityService::instance();
-  if (!visibility_service.is_initialized()) {
-    if (m_minimap_fog_image.isNull() ||
-        m_minimap_fog_image.size() != m_minimap_base_image.size()) {
-      m_minimap_fog_image = m_minimap_base_image.copy();
-    }
-    return;
-  }
-
-  const auto current_version = visibility_service.version();
-  if (current_version == m_minimap_fog_version &&
+  if (visibility_version == m_minimap_fog_version &&
       !m_minimap_fog_image.isNull()) {
     return;
   }
-  m_minimap_fog_version = current_version;
-  mark_dirty();
-
-  const auto visibility_snapshot = visibility_service.snapshot();
-  const int vis_width = visibility_snapshot.width;
-  const int vis_height = visibility_snapshot.height;
-  const auto &cells = visibility_snapshot.cells;
 
   if (cells.empty() || vis_width <= 0 || vis_height <= 0) {
-    m_minimap_fog_image = m_minimap_base_image.copy();
+    clear_fog();
     return;
   }
+
+  m_minimap_fog_version = visibility_version;
 
   const int img_width = m_minimap_base_image.width();
   const int img_height = m_minimap_base_image.height();
@@ -234,7 +218,8 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
 
       const float alpha_top = a00 + (a10 - a00) * sample.fx;
       const float alpha_bot = a01 + (a11 - a01) * sample.fx;
-      const float fog_alpha = alpha_top + (alpha_bot - alpha_top) * sample.fy;
+      const float fog_alpha = std::clamp(
+          alpha_top + (alpha_bot - alpha_top) * sample.fy, 0.0F, 255.0F);
 
       if (fog_alpha > ALPHA_THRESHOLD) {
         const QRgb original = base_scanline[x];
@@ -245,9 +230,12 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
         const float blend = fog_alpha * ALPHA_SCALE;
         const float inv_blend = 1.0F - blend;
 
-        const int new_r = static_cast<int>(orig_r * inv_blend + FOG_R * blend);
-        const int new_g = static_cast<int>(orig_g * inv_blend + FOG_G * blend);
-        const int new_b = static_cast<int>(orig_b * inv_blend + FOG_B * blend);
+        const int new_r = std::clamp(
+            static_cast<int>(orig_r * inv_blend + FOG_R * blend), 0, 255);
+        const int new_g = std::clamp(
+            static_cast<int>(orig_g * inv_blend + FOG_G * blend), 0, 255);
+        const int new_b = std::clamp(
+            static_cast<int>(orig_b * inv_blend + FOG_B * blend), 0, 255);
 
         scanline[x] = qRgba(new_r, new_g, new_b, 255);
       } else {
@@ -255,6 +243,26 @@ void MinimapManager::update_fog(float dt, int local_owner_id) {
       }
     }
   }
+
+  m_minimap_image = m_minimap_fog_image.copy();
+  mark_dirty();
+}
+
+void MinimapManager::clear_fog() {
+  if (m_minimap_base_image.isNull()) {
+    return;
+  }
+
+  if (m_minimap_fog_version == 0 && !m_minimap_fog_image.isNull() &&
+      m_minimap_fog_image.size() == m_minimap_base_image.size() &&
+      m_minimap_fog_image.format() == m_minimap_base_image.format()) {
+    return;
+  }
+
+  m_minimap_fog_version = 0;
+  m_minimap_fog_image = m_minimap_base_image.copy();
+  m_minimap_image = m_minimap_fog_image.copy();
+  mark_dirty();
 }
 
 void MinimapManager::update_units(

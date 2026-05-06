@@ -466,6 +466,9 @@ void TerrainRenderer::build_meshes() {
         section.flip_u = flip;
         section.tint = tint;
       }
+      sections[0].rotation_deg = 0.0F;
+      sections[0].flip_u = false;
+      sections[0].tint = 1.0F;
 
       auto ensure_vertex = [&](SectionData &section,
                                int global_index) -> unsigned int {
@@ -590,127 +593,125 @@ void TerrainRenderer::build_meshes() {
               quad_section(m_terrain_types[idx0], m_terrain_types[idx1],
                            m_terrain_types[idx2], m_terrain_types[idx3]);
 
-          if (section_index > 0) {
-            SectionData &section = sections[section_index];
-            unsigned int const v0 = ensure_vertex(section, idx0);
-            unsigned int const v1 = ensure_vertex(section, idx1);
-            unsigned int const v2 = ensure_vertex(section, idx2);
-            unsigned int const v3 = ensure_vertex(section, idx3);
+          SectionData &section = sections[section_index];
+          unsigned int const v0 = ensure_vertex(section, idx0);
+          unsigned int const v1 = ensure_vertex(section, idx1);
+          unsigned int const v2 = ensure_vertex(section, idx2);
+          unsigned int const v3 = ensure_vertex(section, idx3);
 
-            float entry_factor = 0.0F;
-            if (!entry_weight.empty()) {
-              entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
-                                      entry_weight[idx2] + entry_weight[idx3]);
-            }
-            section.entry_sum += entry_factor;
-            section.entry_peak = std::max(section.entry_peak, entry_factor);
-            section.entry_count += 1;
-            bool const subdivide = entry_factor > 0.25F;
-
-            if (subdivide) {
-              float const gx = float(x);
-              float const gz = float(z);
-              unsigned int const v00 = v0;
-              unsigned int const v20 = v1;
-              unsigned int const v02 = v2;
-              unsigned int const v22 = v3;
-
-              unsigned int const v10 = add_vertex_at_grid(
-                  section, gx + 0.5F, gz, sample_entry_at(gx + 0.5F, gz));
-              unsigned int const v01 = add_vertex_at_grid(
-                  section, gx, gz + 0.5F, sample_entry_at(gx, gz + 0.5F));
-              unsigned int const v21 =
-                  add_vertex_at_grid(section, gx + 1.0F, gz + 0.5F,
-                                     sample_entry_at(gx + 1.0F, gz + 0.5F));
-              unsigned int const v12 =
-                  add_vertex_at_grid(section, gx + 0.5F, gz + 1.0F,
-                                     sample_entry_at(gx + 0.5F, gz + 1.0F));
-              unsigned int const v11 =
-                  add_vertex_at_grid(section, gx + 0.5F, gz + 0.5F,
-                                     sample_entry_at(gx + 0.5F, gz + 0.5F));
-
-              section.indices.push_back(v00);
-              section.indices.push_back(v10);
-              section.indices.push_back(v01);
-              section.indices.push_back(v10);
-              section.indices.push_back(v11);
-              section.indices.push_back(v01);
-
-              section.indices.push_back(v10);
-              section.indices.push_back(v20);
-              section.indices.push_back(v11);
-              section.indices.push_back(v20);
-              section.indices.push_back(v21);
-              section.indices.push_back(v11);
-
-              section.indices.push_back(v01);
-              section.indices.push_back(v11);
-              section.indices.push_back(v02);
-              section.indices.push_back(v11);
-              section.indices.push_back(v12);
-              section.indices.push_back(v02);
-
-              section.indices.push_back(v11);
-              section.indices.push_back(v21);
-              section.indices.push_back(v12);
-              section.indices.push_back(v21);
-              section.indices.push_back(v22);
-              section.indices.push_back(v12);
-            } else {
-              section.indices.push_back(v0);
-              section.indices.push_back(v1);
-              section.indices.push_back(v2);
-              section.indices.push_back(v2);
-              section.indices.push_back(v1);
-              section.indices.push_back(v3);
-            }
-
-            float const quad_height = (height_data[idx0] + height_data[idx1] +
-                                       height_data[idx2] + height_data[idx3]) *
-                                      0.25F;
-            section.height_sum += quad_height;
-            section.height_count += 1;
-
-            float const n_y = (normals[idx0].y() + normals[idx1].y() +
-                               normals[idx2].y() + normals[idx3].y()) *
-                              0.25F;
-            float const slope = 1.0F - std::clamp(n_y, 0.0F, 1.0F);
-            section.slope_sum += slope;
-
-            float const hmin =
-                std::min(std::min(height_data[idx0], height_data[idx1]),
-                         std::min(height_data[idx2], height_data[idx3]));
-            float const hmax =
-                std::max(std::max(height_data[idx0], height_data[idx1]),
-                         std::max(height_data[idx2], height_data[idx3]));
-            section.height_var_sum += (hmax - hmin);
-            section.stat_count += 1;
-
-            auto h = [&](int gx, int gz) {
-              gx = std::clamp(gx, 0, m_width - 1);
-              gz = std::clamp(gz, 0, m_height - 1);
-              return height_data[gz * m_width + gx];
-            };
-            int const cx = x;
-            int const cz = z;
-            float const h_c = quad_height;
-            float ao = 0.0F;
-            ao += std::max(0.0F, h(cx - 1, cz) - h_c);
-            ao += std::max(0.0F, h(cx + 1, cz) - h_c);
-            ao += std::max(0.0F, h(cx, cz - 1) - h_c);
-            ao += std::max(0.0F, h(cx, cz + 1) - h_c);
-            ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
-            section.ao_sum += ao;
-            section.ao_count += 1;
-
-            float const curvature =
-                0.25F * (sample_curvature_magnitude_at(x, z) +
-                         sample_curvature_magnitude_at(x + 1, z) +
-                         sample_curvature_magnitude_at(x, z + 1) +
-                         sample_curvature_magnitude_at(x + 1, z + 1));
-            section.curvature_sum += curvature;
-            section.curvature_count += 1;
+          float entry_factor = 0.0F;
+          if (!entry_weight.empty()) {
+            entry_factor = 0.25F * (entry_weight[idx0] + entry_weight[idx1] +
+                                    entry_weight[idx2] + entry_weight[idx3]);
           }
+          section.entry_sum += entry_factor;
+          section.entry_peak = std::max(section.entry_peak, entry_factor);
+          section.entry_count += 1;
+          bool const subdivide = section_index > 0 && entry_factor > 0.25F;
+
+          if (subdivide) {
+            float const gx = float(x);
+            float const gz = float(z);
+            unsigned int const v00 = v0;
+            unsigned int const v20 = v1;
+            unsigned int const v02 = v2;
+            unsigned int const v22 = v3;
+
+            unsigned int const v10 = add_vertex_at_grid(
+                section, gx + 0.5F, gz, sample_entry_at(gx + 0.5F, gz));
+            unsigned int const v01 = add_vertex_at_grid(
+                section, gx, gz + 0.5F, sample_entry_at(gx, gz + 0.5F));
+            unsigned int const v21 =
+                add_vertex_at_grid(section, gx + 1.0F, gz + 0.5F,
+                                   sample_entry_at(gx + 1.0F, gz + 0.5F));
+            unsigned int const v12 =
+                add_vertex_at_grid(section, gx + 0.5F, gz + 1.0F,
+                                   sample_entry_at(gx + 0.5F, gz + 1.0F));
+            unsigned int const v11 =
+                add_vertex_at_grid(section, gx + 0.5F, gz + 0.5F,
+                                   sample_entry_at(gx + 0.5F, gz + 0.5F));
+
+            section.indices.push_back(v00);
+            section.indices.push_back(v10);
+            section.indices.push_back(v01);
+            section.indices.push_back(v10);
+            section.indices.push_back(v11);
+            section.indices.push_back(v01);
+
+            section.indices.push_back(v10);
+            section.indices.push_back(v20);
+            section.indices.push_back(v11);
+            section.indices.push_back(v20);
+            section.indices.push_back(v21);
+            section.indices.push_back(v11);
+
+            section.indices.push_back(v01);
+            section.indices.push_back(v11);
+            section.indices.push_back(v02);
+            section.indices.push_back(v11);
+            section.indices.push_back(v12);
+            section.indices.push_back(v02);
+
+            section.indices.push_back(v11);
+            section.indices.push_back(v21);
+            section.indices.push_back(v12);
+            section.indices.push_back(v21);
+            section.indices.push_back(v22);
+            section.indices.push_back(v12);
+          } else {
+            section.indices.push_back(v0);
+            section.indices.push_back(v1);
+            section.indices.push_back(v2);
+            section.indices.push_back(v2);
+            section.indices.push_back(v1);
+            section.indices.push_back(v3);
+          }
+
+          float const quad_height = (height_data[idx0] + height_data[idx1] +
+                                     height_data[idx2] + height_data[idx3]) *
+                                    0.25F;
+          section.height_sum += quad_height;
+          section.height_count += 1;
+
+          float const n_y = (normals[idx0].y() + normals[idx1].y() +
+                             normals[idx2].y() + normals[idx3].y()) *
+                            0.25F;
+          float const slope = 1.0F - std::clamp(n_y, 0.0F, 1.0F);
+          section.slope_sum += slope;
+
+          float const hmin =
+              std::min(std::min(height_data[idx0], height_data[idx1]),
+                       std::min(height_data[idx2], height_data[idx3]));
+          float const hmax =
+              std::max(std::max(height_data[idx0], height_data[idx1]),
+                       std::max(height_data[idx2], height_data[idx3]));
+          section.height_var_sum += (hmax - hmin);
+          section.stat_count += 1;
+
+          auto h = [&](int gx, int gz) {
+            gx = std::clamp(gx, 0, m_width - 1);
+            gz = std::clamp(gz, 0, m_height - 1);
+            return height_data[gz * m_width + gx];
+          };
+          int const cx = x;
+          int const cz = z;
+          float const h_c = quad_height;
+          float ao = 0.0F;
+          ao += std::max(0.0F, h(cx - 1, cz) - h_c);
+          ao += std::max(0.0F, h(cx + 1, cz) - h_c);
+          ao += std::max(0.0F, h(cx, cz - 1) - h_c);
+          ao += std::max(0.0F, h(cx, cz + 1) - h_c);
+          ao = std::clamp(ao * 0.15F, 0.0F, 1.0F);
+          section.ao_sum += ao;
+          section.ao_count += 1;
+
+          float const curvature =
+              0.25F * (sample_curvature_magnitude_at(x, z) +
+                       sample_curvature_magnitude_at(x + 1, z) +
+                       sample_curvature_magnitude_at(x, z + 1) +
+                       sample_curvature_magnitude_at(x + 1, z + 1));
+          section.curvature_sum += curvature;
+          section.curvature_count += 1;
         }
       }
 
@@ -839,7 +840,8 @@ void TerrainRenderer::build_meshes() {
                           0.01F * edge_factor,
                       1.0F - 0.02F * plateau_factor + 0.05F * entry_factor);
 
-        chunk.tint = section.tint;
+        chunk.tint =
+            (chunk.type == Game::Map::TerrainType::Flat) ? 1.0F : section.tint;
 
         QVector3D color =
             base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
@@ -865,8 +867,12 @@ void TerrainRenderer::build_meshes() {
         params.rock_high = tint_color(surface_profile.rock_high);
 
         params.tile_size = std::max(0.001F, m_tile_size);
-        params.macro_noise_scale = surface_profile.terrain_macro_noise_scale;
-        params.detail_noise_scale = surface_profile.terrain_detail_noise_scale;
+        params.macro_noise_scale =
+            surface_profile.terrain_macro_noise_scale *
+            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.72F : 1.0F);
+        params.detail_noise_scale =
+            surface_profile.terrain_detail_noise_scale *
+            ((chunk.type == Game::Map::TerrainType::Flat) ? 0.62F : 1.0F);
 
         float slope_threshold = surface_profile.terrain_rock_threshold;
         float sharpness_mul = 1.0F;
@@ -897,6 +903,10 @@ void TerrainRenderer::build_meshes() {
         soil_height += 0.10F * entry_factor - 0.03F * plateau_factor;
         soil_height += 0.03F * curvature_response.gully_response -
                        0.02F * curvature_response.ridge_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          soil_height =
+              std::min(soil_height - 0.95F, chunk.average_height - 0.20F);
+        }
         params.soil_blend_height = soil_height;
 
         params.soil_blend_sharpness =
@@ -910,9 +920,19 @@ void TerrainRenderer::build_meshes() {
         const uint32_t noise_key_b =
             hash_coords(chunk.min_x, chunk.min_z, m_noise_seed ^ 0x68E31DA4U);
         constexpr float k_noise_offset_scale = 256.0F;
-        params.noise_offset =
-            QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
-                      hash_to_01(noise_key_b) * k_noise_offset_scale);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          const uint32_t flat_noise_key_a =
+              hash_coords(0, 0, m_noise_seed ^ 0xB5297A4DU);
+          const uint32_t flat_noise_key_b =
+              hash_coords(0, 0, m_noise_seed ^ 0x68E31DA4U);
+          params.noise_offset =
+              QVector2D(hash_to_01(flat_noise_key_a) * k_noise_offset_scale,
+                        hash_to_01(flat_noise_key_b) * k_noise_offset_scale);
+        } else {
+          params.noise_offset =
+              QVector2D(hash_to_01(noise_key_a) * k_noise_offset_scale,
+                        hash_to_01(noise_key_b) * k_noise_offset_scale);
+        }
 
         float base_amp =
             surface_profile.height_noise_amplitude *
@@ -924,6 +944,9 @@ void TerrainRenderer::build_meshes() {
         }
         base_amp *= (1.0F + 0.10F * edge_factor - 0.08F * plateau_factor -
                      0.10F * entry_factor);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          base_amp = std::clamp(base_amp * 0.32F, 0.012F, 0.028F);
+        }
         params.height_noise_strength = base_amp;
         params.height_noise_frequency = surface_profile.height_noise_frequency;
 
@@ -941,6 +964,10 @@ void TerrainRenderer::build_meshes() {
              0.14F * entry_factor);
         params.rock_detail_strength *=
             1.0F + 0.18F * curvature_response.curvature_emphasis;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.rock_detail_strength =
+              std::clamp(params.rock_detail_strength * 0.08F, 0.0F, 0.03F);
+        }
 
         params.tint = clamp01(QVector3D(chunk.tint, chunk.tint, chunk.tint));
         params.light_direction = QVector3D(0.35F, 0.8F, 0.45F);
@@ -955,6 +982,10 @@ void TerrainRenderer::build_meshes() {
                            0.08F * curvature_response.gully_response -
                            0.05F * curvature_response.ridge_response,
                        0.0F, 1.0F);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.moisture_level =
+              std::clamp(params.moisture_level + 0.10F, 0.0F, 1.0F);
+        }
         params.crack_intensity =
             std::clamp(climate_profile.crack_intensity *
                            (1.0F + 0.10F * edge_factor +
@@ -962,6 +993,10 @@ void TerrainRenderer::build_meshes() {
                             0.30F * entry_factor -
                             0.18F * curvature_response.gully_response),
                        0.0F, 1.0F);
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          params.crack_intensity =
+              std::clamp(params.crack_intensity * 0.35F, 0.0F, 1.0F);
+        }
         float rock_exposure = climate_profile.rock_exposure;
         if (chunk.type == Game::Map::TerrainType::Hill) {
           rock_exposure *= 0.90F;
@@ -972,6 +1007,9 @@ void TerrainRenderer::build_meshes() {
             0.18F * edge_factor + 0.12F * curvature_response.ridge_response;
         rock_exposure -=
             0.24F * entry_factor + 0.10F * curvature_response.gully_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          rock_exposure = climate_profile.rock_exposure * 0.12F;
+        }
         params.rock_exposure = std::clamp(rock_exposure, 0.0F, 1.0F);
         float grass_saturation = climate_profile.grass_saturation;
         if (chunk.type == Game::Map::TerrainType::Mountain) {
@@ -981,6 +1019,9 @@ void TerrainRenderer::build_meshes() {
             0.08F * entry_factor + 0.05F * curvature_response.gully_response;
         grass_saturation -=
             0.06F * edge_factor + 0.05F * curvature_response.ridge_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          grass_saturation += 0.08F;
+        }
         params.grass_saturation = std::clamp(grass_saturation, 0.0F, 1.5F);
         float soil_roughness = climate_profile.soil_roughness;
         if (chunk.type == Game::Map::TerrainType::Hill) {
@@ -992,6 +1033,9 @@ void TerrainRenderer::build_meshes() {
             0.10F * edge_factor + 0.06F * curvature_response.ridge_response;
         soil_roughness -=
             0.12F * entry_factor + 0.08F * curvature_response.gully_response;
+        if (chunk.type == Game::Map::TerrainType::Flat) {
+          soil_roughness *= 0.72F;
+        }
         params.soil_roughness = std::clamp(soil_roughness, 0.0F, 1.0F);
         params.snow_color = clamp01(climate_profile.snow_color);
         if (chunk.type == Game::Map::TerrainType::Hill ||

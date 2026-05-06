@@ -16,12 +16,26 @@
 
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <atomic>
 #include <gtest/gtest.h>
 
 namespace {
 
 using namespace Render::Creature::Pipeline;
 using namespace Render::Creature;
+
+std::atomic<int> g_extra_role_color_calls{0};
+
+auto counted_extra_role_color(const void *, QVector3D *out,
+                              std::uint32_t base_count,
+                              std::size_t max_count) -> std::uint32_t {
+  g_extra_role_color_calls.fetch_add(1, std::memory_order_relaxed);
+  if (base_count < max_count) {
+    out[base_count] = QVector3D(0.25F, 0.5F, 0.75F);
+    return base_count + 1U;
+  }
+  return base_count;
+}
 
 class CountingSubmitter : public Render::GL::ISubmitter {
 public:
@@ -305,6 +319,30 @@ TEST(CreatureRenderBatch, AddHumanoidIncreasesSize) {
   EXPECT_FALSE(batch.empty());
 }
 
+TEST(CreatureRenderBatch, StableRoleColorsAreCachedByVariant) {
+  g_extra_role_color_calls.store(0, std::memory_order_relaxed);
+  const auto archetype = ArchetypeRegistry::instance().register_unit_archetype(
+      "test.role_color_cache", CreatureKind::Humanoid, {},
+      &counted_extra_role_color);
+
+  CreatureRenderBatch batch;
+  CreatureGraphOutput output;
+  output.culled = false;
+  output.spec.archetype_id = archetype;
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+
+  batch.add_humanoid(output, pose, variant, anim);
+  batch.add_humanoid(output, pose, variant, anim);
+
+  ASSERT_EQ(batch.requests().size(), 2u);
+  EXPECT_EQ(batch.requests()[0].role_color_count,
+            batch.requests()[1].role_color_count);
+  EXPECT_EQ(g_extra_role_color_calls.load(std::memory_order_relaxed), 1)
+      << "same asset/archetype/variant should reuse cached role colors";
+}
+
 TEST(CreatureRenderBatch, CulledCreatureNotAdded) {
   CreatureRenderBatch batch;
   CreatureGraphOutput output;
@@ -501,7 +539,7 @@ TEST(CreaturePreparationResult, ClearEmptiesBothContainers) {
 
   result.bodies.add_humanoid(output, pose, variant, anim);
   result.add_post_body_draw(RenderPassIntent::Main,
-                            [](Render::GL::ISubmitter &) {});
+                            PostBodyDrawRequest::Kind::None);
 
   EXPECT_EQ(result.bodies.size(), 1u);
   EXPECT_EQ(result.post_body_draws.size(), 1u);

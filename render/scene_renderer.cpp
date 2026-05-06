@@ -11,6 +11,7 @@
 #include "battle_render_optimizer.h"
 #include "creature/bpat/bpat_registry.h"
 #include "creature/quadruped/render_stats.h"
+#include "creature/runtime_bake_guard.h"
 #include "creature/snapshot_mesh_registry.h"
 #include "decoration_gpu.h"
 #include "draw_queue.h"
@@ -165,6 +166,34 @@ struct RenderEntry {
   bool selected{false};
   bool hovered{false};
 };
+
+class CreatureCacheWarmupSubmitter final : public BatchingSubmitter {
+public:
+  explicit CreatureCacheWarmupSubmitter(Renderer *renderer)
+      : BatchingSubmitter(renderer, nullptr) {}
+
+  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
+            float = 1.0F, int = 0) override {}
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float = 1.0F) override {}
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
+  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
+            float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
+                       float = 0.15F) override {}
+  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
+                    float, float, float, float) override {}
+  void healer_aura(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void combat_dust(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+                    float) override {}
+  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
+                      float = 1.0F) override {}
+  void rigged(const RiggedCreatureCmd &) override {}
+};
 } // namespace
 
 Renderer::Renderer(ShaderQuality quality) : m_shader_quality(quality) {
@@ -174,6 +203,7 @@ Renderer::Renderer(ShaderQuality quality) : m_shader_quality(quality) {
 Renderer::~Renderer() { shutdown(); }
 
 auto Renderer::initialize() -> bool {
+  Render::Creature::set_runtime_bake_forbidden(false);
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
     m_gl_backend = dynamic_cast<Backend *>(m_backend.get());
@@ -199,6 +229,7 @@ auto Renderer::initialize() -> bool {
 
 void Renderer::shutdown() {
   cancel_async_template_prewarm();
+  Render::Creature::set_runtime_bake_forbidden(false);
   m_gl_backend = nullptr;
   m_backend.reset();
 }
@@ -536,10 +567,8 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   ctx.has_attack_variant_override = attack_state;
   ctx.attack_variant_override = anim_key.attack_variant;
 
-  thread_local TemplateRecorder recorder;
-  recorder.reset(192);
-  recorder.set_current_shader(nullptr);
-  profile.fn(ctx, recorder);
+  CreatureCacheWarmupSubmitter warmup_submitter(this);
+  profile.fn(ctx, warmup_submitter);
 }
 
 void Renderer::process_async_template_prewarm() {
@@ -619,6 +648,10 @@ void Renderer::process_async_template_prewarm() {
     std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
     if (m_async_prewarm_state == state) {
       m_async_prewarm_state.reset();
+      if (m_forbid_runtime_bake_when_async_prewarm_done) {
+        Render::Creature::set_runtime_bake_forbidden(true);
+        m_forbid_runtime_bake_when_async_prewarm_done = false;
+      }
     }
   }
 }
@@ -1406,6 +1439,8 @@ void Renderer::prewarm_unit_templates(
     Engine::Core::World *world,
     TemplatePrewarmProgressCallback progress_callback) {
   cancel_async_template_prewarm();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  m_forbid_runtime_bake_when_async_prewarm_done = false;
   if (!m_entity_registry) {
     return;
   }
@@ -1648,6 +1683,7 @@ void Renderer::prewarm_unit_templates(
   }
 
   if (profiles.empty()) {
+    Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -1770,6 +1806,7 @@ void Renderer::prewarm_unit_templates(
 
   const std::size_t domain_count = profiles.size() * owner_ids.size() * 3U;
   if (domain_count == 0) {
+    Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -1823,6 +1860,7 @@ void Renderer::prewarm_unit_templates(
   }
 
   if (selected_core_anim_keys.empty() || variant_values.empty()) {
+    Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0, 0);
     return;
   }
@@ -1877,6 +1915,7 @@ void Renderer::prewarm_unit_templates(
   const std::size_t total_work_count =
       core_work_items.size() + extended_work_items.size();
   if (core_work_items.empty()) {
+    Render::Creature::set_runtime_bake_forbidden(true);
     report_progress(TemplatePrewarmProgress::Phase::Completed, 0,
                     total_work_count);
     return;
@@ -1891,18 +1930,14 @@ void Renderer::prewarm_unit_templates(
 
   std::vector<std::mutex> profile_mutexes(profiles.size());
 
-  const unsigned hw_threads = std::max(1U, std::thread::hardware_concurrency());
-  std::size_t worker_count = std::min<std::size_t>(4U, hw_threads);
-  if (core_work_items.size() < 20'000) {
-    worker_count = 1;
-  }
+  const std::size_t worker_count = 1U;
 
   std::atomic<std::size_t> next_index{0};
   std::atomic<std::size_t> completed_count{0};
   std::atomic<bool> cancel_requested{false};
 
   auto worker = [&]() {
-    TemplateRecorder recorder;
+    CreatureCacheWarmupSubmitter warmup_submitter(this);
     while (true) {
       if (cancel_requested.load(std::memory_order_relaxed)) {
         break;
@@ -1963,18 +1998,21 @@ void Renderer::prewarm_unit_templates(
       ctx.has_attack_variant_override = attack_state;
       ctx.attack_variant_override = item.anim_key.attack_variant;
 
-      recorder.reset(192);
       std::lock_guard<std::mutex> profile_lock(
           profile_mutexes[item.profile_index]);
-      profile.fn(ctx, recorder);
+      profile.fn(ctx, warmup_submitter);
       completed_count.fetch_add(1, std::memory_order_relaxed);
     }
   };
 
   std::vector<std::thread> workers;
   workers.reserve(worker_count);
-  for (std::size_t i = 0; i < worker_count; ++i) {
-    workers.emplace_back(worker);
+  if (worker_count == 1U) {
+    worker();
+  } else {
+    for (std::size_t i = 0; i < worker_count; ++i) {
+      workers.emplace_back(worker);
+    }
   }
 
   constexpr std::size_t k_progress_report_step = 2048;
@@ -2060,7 +2098,10 @@ void Renderer::prewarm_unit_templates(
     {
       std::lock_guard<std::mutex> lock(m_async_prewarm_mutex);
       m_async_prewarm_state = std::move(async_state);
+      m_forbid_runtime_bake_when_async_prewarm_done = true;
     }
+  } else {
+    Render::Creature::set_runtime_bake_forbidden(true);
   }
 
   report_progress(TemplatePrewarmProgress::Phase::Completed, core_done,

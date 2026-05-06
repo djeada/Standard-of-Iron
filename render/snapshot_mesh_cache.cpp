@@ -1,6 +1,7 @@
 #include "snapshot_mesh_cache.h"
 
 #include "bone_palette_arena.h"
+#include "creature/runtime_bake_guard.h"
 #include "creature/snapshot_mesh_asset.h"
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_bake.h"
@@ -9,6 +10,7 @@
 #include <QVector4D>
 #include <array>
 #include <limits>
+#include <sstream>
 
 namespace Render::GL {
 
@@ -42,6 +44,17 @@ auto build_entry(std::span<const RiggedVertex> vertices,
   return entry;
 }
 
+auto describe_snapshot_key(const SnapshotMeshCache::Key &key,
+                           std::uint32_t global_frame) -> std::string {
+  std::ostringstream out;
+  out << "archetype=" << key.archetype << " variant=" << key.variant
+      << " state=" << static_cast<int>(key.state) << " clip=" << key.clip_id
+      << " clip_variant=" << static_cast<int>(key.clip_variant)
+      << " frame_in_clip=" << key.frame_in_clip
+      << " global_frame=" << global_frame;
+  return out.str();
+}
+
 } // namespace
 
 auto SnapshotMeshCache::get_or_bake(
@@ -49,6 +62,12 @@ auto SnapshotMeshCache::get_or_bake(
     std::uint32_t global_frame) -> const SnapshotMeshEntry * {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     return &it->second;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::SnapshotMeshBake,
+        describe_snapshot_key(key, global_frame));
+    return nullptr;
   }
 
   if (source.mesh == nullptr || source.skinned_palettes.empty() ||
@@ -84,6 +103,12 @@ auto SnapshotMeshCache::get_or_load(
     std::uint32_t global_frame) -> const SnapshotMeshEntry * {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     return &it->second;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::SnapshotMeshLoad,
+        describe_snapshot_key(key, global_frame));
+    return nullptr;
   }
 
   const auto vertices = source.frame_vertices_view(global_frame);

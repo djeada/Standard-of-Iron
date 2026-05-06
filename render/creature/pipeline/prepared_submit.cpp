@@ -7,6 +7,18 @@
 #include <vector>
 
 namespace Render::Creature::Pipeline {
+namespace {
+
+void submit_post_body_request(const PostBodyDrawRequest &request,
+                              Render::GL::ISubmitter &out) noexcept {
+  (void)out;
+  switch (request.kind) {
+  case PostBodyDrawRequest::Kind::None:
+    break;
+  }
+}
+
+} // namespace
 
 auto submit_preparation(CreaturePreparationResult &prep,
                         Render::GL::ISubmitter &out) noexcept -> SubmitStats {
@@ -29,11 +41,11 @@ auto submit_preparation(CreaturePreparationResult &prep,
     stats = pipeline.submit_requests(visible_requests, out);
   }
 
-  for (auto &request : prep.post_body_draws) {
-    if (request.pass_intent == RenderPassIntent::Shadow || !request.draw) {
+  for (const auto &request : prep.post_body_draws) {
+    if (request.pass_intent == RenderPassIntent::Shadow) {
       continue;
     }
-    request.draw(out);
+    submit_post_body_request(request, out);
   }
 
   flush_shadow_batch(prep.shadow_batch, out);

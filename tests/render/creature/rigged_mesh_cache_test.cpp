@@ -1,5 +1,6 @@
 
 
+#include "render/creature/runtime_bake_guard.h"
 #include "render/creature/spec.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/horse/horse_spec.h"
@@ -15,6 +16,16 @@ namespace {
 using Render::Creature::CreatureLOD;
 using Render::GL::RiggedMeshCache;
 using Render::GL::RiggedVertex;
+
+class RuntimeBakeGuardReset {
+public:
+  RuntimeBakeGuardReset() {
+    Render::Creature::set_runtime_bake_forbidden(false);
+  }
+  ~RuntimeBakeGuardReset() {
+    Render::Creature::set_runtime_bake_forbidden(false);
+  }
+};
 
 TEST(RiggedMeshCache, RepeatedCallsForSameKeyReturnSameEntry) {
   RiggedMeshCache cache;
@@ -124,6 +135,25 @@ TEST(RiggedMeshCache, BakedVertexFormatCarriesRoleIndexButNoPerUnitColour) {
       std::is_same_v<decltype(v.bone_indices), std::array<std::uint8_t, 4>>);
   static_assert(std::is_same_v<decltype(v.color_role), std::uint8_t>);
   SUCCEED();
+}
+
+TEST(RiggedMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
+  RuntimeBakeGuardReset guard_reset;
+  RiggedMeshCache cache;
+  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto *full = cache.get_or_bake(spec, CreatureLOD::Full, bind);
+  ASSERT_NE(full, nullptr);
+  EXPECT_EQ(cache.size(), 1U);
+
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Full, bind), full)
+      << "warmed rigged mesh hits must remain usable during gameplay";
+  EXPECT_EQ(cache.get_or_bake(spec, CreatureLOD::Minimal, bind), nullptr)
+      << "warmed gameplay must not bake a missing rigged mesh";
+  EXPECT_EQ(cache.size(), 1U);
 }
 
 } // namespace

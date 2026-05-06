@@ -1,10 +1,13 @@
+#include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
+#include "render/creature/bpat/bpat_registry.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
 #include "render/humanoid/skeleton.h"
+#include "tests/render/test_asset_paths.h"
 
 #include <gtest/gtest.h>
 
@@ -194,6 +197,43 @@ TEST(CreatureAssetRegistry, FillRoleColorsProducesValidOutput) {
   auto elcount = el->fill_role_colors(&elvar, elroles.data(), elroles.size());
   EXPECT_GT(elcount, 0U);
   EXPECT_LE(elcount, el->role_count);
+}
+
+TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHumanoid,
+                                root + "/humanoid.bpat"));
+
+  auto &handles = CreatureRenderAssetHandleRegistry::instance();
+  handles.clear();
+
+  auto const id = handles.get_or_create(
+      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  ASSERT_NE(id, Render::Creature::kInvalidCreatureRenderAssetHandle);
+  EXPECT_EQ(
+      handles.get_or_create(kHumanoidAsset,
+                            Render::Creature::ArchetypeRegistry::kHumanoidBase),
+      id);
+
+  const auto *handle = handles.get(id);
+  ASSERT_NE(handle, nullptr);
+  ASSERT_TRUE(handle->valid());
+  ASSERT_NE(handle->asset, nullptr);
+  ASSERT_NE(handle->archetype, nullptr);
+  EXPECT_EQ(handle->asset->id, kHumanoidAsset);
+  EXPECT_EQ(handle->archetype->id,
+            Render::Creature::ArchetypeRegistry::kHumanoidBase);
+
+  const auto &idle = handle->playback[static_cast<std::size_t>(
+      Render::Creature::AnimationStateId::Idle)];
+  EXPECT_NE(idle.blob, nullptr);
+  EXPECT_NE(idle.clip_id, Render::Creature::ArchetypeDescriptor::kUnmappedClip);
+  EXPECT_GT(idle.frame_count, 0U);
 }
 
 } // namespace
