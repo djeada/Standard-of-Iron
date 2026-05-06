@@ -32,7 +32,10 @@ public:
   ~MinimapManager();
 
   void generate_for_map(const Game::Map::MapDefinition &map_def);
-  void update_fog(float dt, int local_owner_id);
+  void update_fog(int vis_width, int vis_height,
+                  const std::vector<std::uint8_t> &cells,
+                  std::uint64_t visibility_version);
+  void clear_fog();
   void update_units(Engine::Core::World *world,
                     Game::Systems::SelectionSystem *selection_system,
                     int local_owner_id);
@@ -77,8 +80,6 @@ private:
   float m_world_width = 0.0F;
   float m_world_height = 0.0F;
   float m_tile_size = 1.0F;
-  float m_minimap_update_timer = 0.0F;
-  static constexpr float MINIMAP_UPDATE_INTERVAL = 0.1F;
 
   bool m_dirty = false;
 

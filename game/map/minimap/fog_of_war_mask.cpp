@@ -290,7 +290,7 @@ auto FogOfWarMask::generate_mask(int target_width,
 
   apply_gaussian_blur(fog_alpha, m_fog_width, m_fog_height);
 
-  QImage mask(target_width, target_height, QImage::Format_RGBA8888);
+  QImage mask(target_width, target_height, QImage::Format_ARGB32);
 
   const float scale_x =
       static_cast<float>(m_fog_width) / static_cast<float>(target_width);

@@ -2,6 +2,7 @@
 
 #include "render/bone_palette_arena.h"
 #include "render/creature/render_request.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/rigged_mesh.h"
 #include "render/rigged_mesh_cache.h"
 #include "render/snapshot_mesh_cache.h"
@@ -18,6 +19,16 @@ using Render::Creature::AnimationStateId;
 using Render::GL::RiggedMeshEntry;
 using Render::GL::RiggedVertex;
 using Render::GL::SnapshotMeshCache;
+
+class RuntimeBakeGuardReset {
+public:
+  RuntimeBakeGuardReset() {
+    Render::Creature::set_runtime_bake_forbidden(false);
+  }
+  ~RuntimeBakeGuardReset() {
+    Render::Creature::set_runtime_bake_forbidden(false);
+  }
+};
 
 auto make_two_bone_quad_entry() -> std::unique_ptr<RiggedMeshEntry> {
   auto entry = std::make_unique<RiggedMeshEntry>();
@@ -226,6 +237,29 @@ TEST(SnapshotMeshCache, KeyDistinguishesClipIdentity) {
   cache.get_or_bake(c, *source, 0U);
 
   EXPECT_EQ(cache.size(), 3U);
+}
+
+TEST(SnapshotMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
+  RuntimeBakeGuardReset guard_reset;
+  auto source = make_two_bone_quad_entry();
+  SnapshotMeshCache cache;
+
+  SnapshotMeshCache::Key warmed{};
+  warmed.frame_in_clip = 0U;
+  const auto *snap = cache.get_or_bake(warmed, *source, 0U);
+  ASSERT_NE(snap, nullptr);
+  EXPECT_EQ(cache.size(), 1U);
+
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  EXPECT_EQ(cache.get_or_bake(warmed, *source, 0U), snap)
+      << "warmed snapshot hits must remain usable during gameplay";
+
+  SnapshotMeshCache::Key missing{};
+  missing.frame_in_clip = 1U;
+  EXPECT_EQ(cache.get_or_bake(missing, *source, 1U), nullptr)
+      << "warmed gameplay must not bake a missing snapshot mesh";
+  EXPECT_EQ(cache.size(), 1U);
 }
 
 } // namespace

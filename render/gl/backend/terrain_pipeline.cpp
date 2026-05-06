@@ -90,9 +90,12 @@ void TerrainPipeline::cache_ground_uniforms() {
       m_groundShader->uniform_handle("u_grassSecondary");
   m_groundUniforms.grass_dry = m_groundShader->uniform_handle("u_grassDry");
   m_groundUniforms.soil_color = m_groundShader->uniform_handle("u_soilColor");
+  m_groundUniforms.rock_low = m_groundShader->uniform_handle("u_rockLow");
+  m_groundUniforms.rock_high = m_groundShader->uniform_handle("u_rockHigh");
   m_groundUniforms.tint = m_groundShader->uniform_handle("u_tint");
   m_groundUniforms.noise_offset =
       m_groundShader->uniform_handle("u_noiseOffset");
+  m_groundUniforms.noise_angle = m_groundShader->uniform_handle("u_noiseAngle");
   m_groundUniforms.tile_size = m_groundShader->uniform_handle("u_tileSize");
   m_groundUniforms.macro_noise_scale =
       m_groundShader->uniform_handle("u_macroNoiseScale");
@@ -116,11 +119,26 @@ void TerrainPipeline::cache_ground_uniforms() {
       m_groundShader->uniform_handle("u_moistureLevel");
   m_groundUniforms.crack_intensity =
       m_groundShader->uniform_handle("u_crackIntensity");
+  m_groundUniforms.rock_exposure =
+      m_groundShader->uniform_handle("u_rockExposure");
   m_groundUniforms.grass_saturation =
       m_groundShader->uniform_handle("u_grassSaturation");
   m_groundUniforms.soil_roughness =
       m_groundShader->uniform_handle("u_soilRoughness");
+  m_groundUniforms.micro_bump_amp =
+      m_groundShader->uniform_handle("u_microBumpAmp");
+  m_groundUniforms.micro_bump_freq =
+      m_groundShader->uniform_handle("u_microBumpFreq");
+  m_groundUniforms.micro_normal_weight =
+      m_groundShader->uniform_handle("u_microNormalWeight");
+  m_groundUniforms.albedo_jitter =
+      m_groundShader->uniform_handle("u_albedoJitter");
   m_groundUniforms.snow_color = m_groundShader->uniform_handle("u_snowColor");
+  m_groundUniforms.camera_position =
+      m_groundShader->uniform_handle("u_cameraPos");
+  m_groundUniforms.fog_color = m_groundShader->uniform_handle("u_fogColor");
+  m_groundUniforms.fog_start = m_groundShader->uniform_handle("u_fogStart");
+  m_groundUniforms.fog_end = m_groundShader->uniform_handle("u_fogEnd");
 }
 
 void TerrainPipeline::cache_terrain_uniforms() {
@@ -189,6 +207,11 @@ void TerrainPipeline::cache_terrain_uniforms() {
       m_terrainShader->uniform_handle("u_screenToeMul");
   m_terrainUniforms.screen_toe_clamp =
       m_terrainShader->uniform_handle("u_screenToeClamp");
+  m_terrainUniforms.camera_position =
+      m_terrainShader->uniform_handle("u_cameraPos");
+  m_terrainUniforms.fog_color = m_terrainShader->uniform_handle("u_fogColor");
+  m_terrainUniforms.fog_start = m_terrainShader->uniform_handle("u_fogStart");
+  m_terrainUniforms.fog_end = m_terrainShader->uniform_handle("u_fogEnd");
 }
 
 void TerrainPipeline::initialize_grass_geometry() {

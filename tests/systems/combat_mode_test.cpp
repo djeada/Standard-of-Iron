@@ -220,6 +220,42 @@ TEST_F(CombatModeTest, HomeDoesNotMoveInMeleeLock) {
   EXPECT_EQ(home_transform->position.x, initial_home_x);
 }
 
+TEST_F(CombatModeTest, InitialMeleeLockClampsRepositionInsteadOfSnapping) {
+  auto *attacker = world->create_entity();
+  auto *attacker_transform =
+      attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  auto *attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->can_melee = true;
+  attacker_attack->can_ranged = false;
+  attacker_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  attacker_attack->melee_range = 1.5F;
+  attacker_attack->cooldown = 0.0F;
+  attacker_attack->melee_cooldown = 0.0F;
+
+  auto *enemy = world->create_entity();
+  enemy->add_component<TransformComponent>(2.0F, 0.0F, 0.0F);
+  auto *enemy_unit = enemy->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  enemy_unit->owner_id = 2;
+
+  auto *attack_target = attacker->add_component<AttackTargetComponent>();
+  attack_target->target_id = enemy->get_id();
+  attack_target->should_chase = true;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  EXPECT_TRUE(attacker_attack->in_melee_lock);
+  EXPECT_EQ(attacker_attack->melee_lock_target_id, enemy->get_id());
+  EXPECT_GT(attacker_transform->position.x, 0.0F);
+  EXPECT_LE(attacker_transform->position.x,
+            Game::Systems::Combat::Constants::k_max_displacement_per_frame +
+                0.0001F);
+}
+
 TEST_F(CombatModeTest, NearestEnemyPrefersClosestValidUnit) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
