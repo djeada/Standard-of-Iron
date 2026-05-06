@@ -3,10 +3,16 @@
         <!-- Shader files -->
         <file>assets/shaders/basic.frag</file>
         <file>assets/shaders/basic.vert</file>
+        <file>assets/shaders/basic_instanced.frag</file>
+        <file>assets/shaders/basic_instanced.vert</file>
         <file>assets/shaders/character_skinned.vert</file>
         <file>assets/shaders/character_skinned.frag</file>
         <file>assets/shaders/character_skinned_instanced.vert</file>
         <file>assets/shaders/character_skinned_instanced.frag</file>
+        <file>assets/shaders/catapult.frag</file>
+        <file>assets/shaders/catapult.vert</file>
+        <file>assets/shaders/catapult_instanced.frag</file>
+        <file>assets/shaders/catapult_instanced.vert</file>
         <file>assets/shaders/bridge.frag</file>
         <file>assets/shaders/bridge.vert</file>
         <file>assets/shaders/campaign_terrain.frag</file>

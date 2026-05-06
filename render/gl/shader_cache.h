@@ -79,6 +79,12 @@ public:
     load(QStringLiteral("basic"), basic_vert, basic_frag);
     load(QStringLiteral("grid"), basic_vert, grid_frag);
 
+    const QString basic_inst_vert =
+        resolve(shader_base + QStringLiteral("basic_instanced.vert"));
+    const QString basic_inst_frag =
+        resolve(shader_base + QStringLiteral("basic_instanced.frag"));
+    load(QStringLiteral("basic_instanced"), basic_inst_vert, basic_inst_frag);
+
     const QString skinned_vert =
         resolve(shader_base + QStringLiteral("character_skinned.vert"));
     const QString skinned_frag =

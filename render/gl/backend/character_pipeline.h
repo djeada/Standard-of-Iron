@@ -32,6 +32,7 @@ public:
     GL::Shader::UniformHandle material_id{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle instanced{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader *instanced_variant{nullptr};
   };
 
   GL::Shader *m_basic_shader = nullptr;
