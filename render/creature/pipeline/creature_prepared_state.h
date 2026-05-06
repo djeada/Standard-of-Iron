@@ -82,7 +82,6 @@ struct PreparedHumanoidShadowState {
   float alpha{0.0F};
 };
 
-// Reuse the same state structure for quadruped (horse/elephant) shadows.
 using PreparedQuadrupedShadowState = PreparedHumanoidShadowState;
 
 struct HumanoidShadowStateInputs {

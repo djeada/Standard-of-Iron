@@ -41,6 +41,10 @@ uniform float u_toeStrength;
 
 uniform float u_screenToeMul;
 uniform float u_screenToeClamp;
+uniform vec3 u_cameraPos;
+uniform vec3 u_fogColor;
+uniform float u_fogStart;
+uniform float u_fogEnd;
 
 float hash21(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -183,6 +187,7 @@ void main() {
   }
 
   float slope = 1.0 - clamp(normal.y, 0.0, 1.0);
+  float flatTerrainMask = 1.0 - smoothstep(0.05, 0.18, slope);
 
   slope *= (1.0 - 0.25 * entryMask);
   float entryShelter = entryMask * (1.0 - smoothstep(0.18, 0.55, slope));
@@ -223,6 +228,8 @@ void main() {
   dryness =
       clamp(dryness - entryShelter * (0.14 + 0.10 * u_moistureLevel), 0.0, 1.0);
   dryness += moistureVar * 0.15;
+  dryness =
+      mix(dryness, dryness * 0.45 + moistureVar * 0.10, flatTerrainMask * 0.80);
 
   float heightFade = smoothstep(0.0, 2.5, v_worldPos.y);
   float drynessByHeight = mix(dryness, dryness * 1.15, heightFade * 0.4);
@@ -230,12 +237,16 @@ void main() {
   grassColor *= (1.0 + microVariation * 0.08);
   grassColor = mix(grassColor, mix(u_grassSecondary, u_soilColor, 0.20),
                    entryShelter * (0.10 + 0.10 * u_moistureLevel));
+  vec3 flatGrassColor =
+      mix(u_grassPrimary, u_grassSecondary, 0.18 + moistureVar * 0.22);
+  grassColor = mix(grassColor, flatGrassColor, flatTerrainMask * 0.45);
 
   float soilWidth = max(0.01, 1.0 / max(u_soilBlendSharpness, 0.001));
 
   float heightNoise =
       (triplanarNoise(v_worldPos, max(0.0001, u_heightNoiseFrequency)) - 0.5) *
       u_heightNoiseStrength;
+  heightNoise *= mix(1.0, 0.35, flatTerrainMask);
 
   float toeLocal = smoothstep(0.25, 0.9, slope);
 
@@ -275,7 +286,9 @@ void main() {
 
   float mudPatch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
   mudPatch = smoothstep(0.65, 0.75, mudPatch);
+  mudPatch *= (1.0 - flatTerrainMask * 0.65);
   soilMix = max(soilMix, mudPatch * 0.85 * (1.0 - slope * 0.6));
+  soilMix *= (1.0 - flatTerrainMask * (0.72 + 0.08 * u_moistureLevel));
 
   vec3 soilBlend = mix(grassColor, u_soilColor, soilMix);
 
@@ -287,6 +300,7 @@ void main() {
   rockMask *= 1.0 - soilMix * 0.75;
 
   rockMask *= (1.0 - 0.50 * entryShelter);
+  rockMask *= (1.0 - flatTerrainMask * 0.85);
 
   float rockLerp = clamp(0.35 + detailNoise * 0.65, 0.0, 1.0);
   vec3 rockColor = mix(u_rockLow, u_rockHigh, rockLerp);
@@ -307,6 +321,7 @@ void main() {
   vec3 microGrad =
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
   float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
+  microAmp *= mix(1.0, 0.40, flatTerrainMask);
   microNormal = normalize(normal + microGrad * microAmp);
 
   float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);
@@ -372,6 +387,7 @@ void main() {
   terrainColor *= wetDarkening;
 
   float jitterAmp = 0.06 * (0.5 + u_soilRoughness * 0.5);
+  jitterAmp *= (1.0 - 0.45 * flatTerrainMask);
   float jitter =
       (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float brightnessVar = (moistureVar - 0.5) * 0.08 * (1.0 - rockMask);
@@ -416,6 +432,15 @@ void main() {
 
   terrainColor *= plateauBrightness * gullyDarkness * rimContrast;
   vec3 litColor = terrainColor * shade * u_ambientBoost;
+
+  vec3 toCamera = u_cameraPos - v_worldPos;
+  float viewDistance = max(length(toCamera), 1e-4);
+  vec3 fogViewDir = toCamera / viewDistance;
+  float distanceFog =
+      smoothstep(u_fogStart, max(u_fogStart + 1e-4, u_fogEnd), viewDistance);
+  float horizonFog = smoothstep(0.20, 0.88, 1.0 - abs(fogViewDir.y));
+  float fogAmount = clamp(distanceFog * (0.72 + 0.60 * horizonFog), 0.0, 1.0);
+  litColor = mix(litColor, u_fogColor, fogAmount);
 
   FragColor = vec4(clamp(litColor, 0.0, 1.0), 1.0);
 }

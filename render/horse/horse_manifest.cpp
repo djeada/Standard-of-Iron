@@ -412,18 +412,26 @@ auto build_horse_whole_nodes()
   float const head_mid_z = head_back_z + hl * 0.40F * k_horse_head_length_scale;
   float const head_front_z =
       head_back_z + hl * 0.82F * k_horse_head_length_scale;
+  (void)head_mid_z;
+  (void)head_front_z;
 
-  std::array<MuzzleRingProfile, 5> const head_rings{{
-      {head_back_z, head_base_y + hh * 0.06F, hw * 0.56F, hh * 0.28F,
-       hh * 0.12F},
-      {head_back_z + hl * 0.18F, head_base_y + hh * 0.16F, hw * 0.78F,
-       hh * 0.68F, hh * 0.20F},
-      {head_mid_z, head_base_y + hh * 0.12F, hw * 0.64F, hh * 0.54F,
-       hh * 0.14F},
-      {head_back_z + hl * 0.72F, head_base_y + hh * 0.08F, hw * 0.30F,
-       hh * 0.22F, hh * 0.06F},
-      {head_front_z + hl * 0.08F, head_base_y + hh * 0.04F, hw * 0.12F,
-       hh * 0.10F, hh * 0.03F},
+  std::array<MuzzleRingProfile, 8> const head_rings{{
+      {head_back_z + hl * 0.00F * k_horse_head_length_scale,
+       head_base_y + hh * 0.06F, hw * 0.52F, hh * 0.34F, hh * 0.24F},
+      {head_back_z + hl * 0.10F * k_horse_head_length_scale,
+       head_base_y + hh * 0.20F, hw * 0.74F, hh * 0.64F, hh * 0.34F},
+      {head_back_z + hl * 0.20F * k_horse_head_length_scale,
+       head_base_y + hh * 0.16F, hw * 0.76F, hh * 0.54F, hh * 0.46F},
+      {head_back_z + hl * 0.31F * k_horse_head_length_scale,
+       head_base_y + hh * 0.10F, hw * 0.56F, hh * 0.38F, hh * 0.34F},
+      {head_back_z + hl * 0.42F * k_horse_head_length_scale,
+       head_base_y + hh * 0.06F, hw * 0.46F, hh * 0.30F, hh * 0.30F},
+      {head_back_z + hl * 0.52F * k_horse_head_length_scale,
+       head_base_y + hh * 0.04F, hw * 0.46F, hh * 0.30F, hh * 0.30F},
+      {head_back_z + hl * 0.63F * k_horse_head_length_scale,
+       head_base_y + hh * 0.04F, hw * 0.46F, hh * 0.30F, hh * 0.28F},
+      {head_back_z + hl * 0.72F * k_horse_head_length_scale,
+       head_base_y + hh * 0.06F, hw * 0.48F, hh * 0.30F, hh * 0.22F},
   }};
   nodes.push_back({"horse.head.upper", static_cast<BoneIndex>(HorseBone::Head),
                    k_role_coat, kLodAll, 0,
@@ -431,8 +439,9 @@ auto build_horse_whole_nodes()
 
   auto add_eye = [&](float side) {
     EllipsoidNode eye;
-    eye.center = QVector3D(-side * hw * 0.56F, head_base_y + hh * 0.48F,
-                           head_back_z + hl * 0.28F);
+    eye.center =
+        QVector3D(-side * hw * 0.62F, head_base_y + hh * 0.36F,
+                  head_back_z + hl * 0.18F * k_horse_head_length_scale);
     eye.radii = QVector3D(hw * 0.055F, hh * 0.090F, hl * 0.080F);
     eye.ring_count = 4U;
     eye.ring_vertices = 6U;

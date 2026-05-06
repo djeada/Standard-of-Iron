@@ -7,15 +7,15 @@
 namespace Render::Creature::Pipeline {
 
 void HumanoidShadowBatch::init(Render::GL::Shader *shader,
-                                Render::GL::Mesh *mesh,
-                                QVector2D light_dir) noexcept {
+                               Render::GL::Mesh *mesh,
+                               QVector2D light_dir) noexcept {
   shader_ = shader;
   mesh_ = mesh;
   light_dir_ = light_dir;
 }
 
 void HumanoidShadowBatch::add(QMatrix4x4 model, float alpha,
-                               RenderPassIntent pass) noexcept {
+                              RenderPassIntent pass) noexcept {
   instances_.push_back({std::move(model), alpha, pass});
 }
 

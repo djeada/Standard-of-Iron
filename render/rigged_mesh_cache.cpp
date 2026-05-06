@@ -3,6 +3,7 @@
 #include "bone_palette_arena.h"
 #include "creature/bpat/bpat_format.h"
 #include "creature/bpat/bpat_reader.h"
+#include "creature/runtime_bake_guard.h"
 #include "creature/spec.h"
 
 #include <GL/gl.h>
@@ -11,6 +12,7 @@
 #include <QOpenGLVersionFunctionsFactory>
 #include <cstring>
 #include <limits>
+#include <sstream>
 #include <vector>
 
 namespace Render::GL {
@@ -25,6 +27,19 @@ auto rigged_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core * {
   return QOpenGLVersionFunctionsFactory::get<QOpenGLFunctions_3_3_Core>(ctx);
 }
 
+auto describe_rigged_key(const Render::Creature::CreatureSpec &spec,
+                         Render::Creature::CreatureLOD lod,
+                         std::uint16_t variant_bucket,
+                         std::uint64_t attachments_hash,
+                         std::uint32_t skin_species_id) -> std::string {
+  std::ostringstream out;
+  out << "spec=" << &spec << " lod=" << static_cast<int>(lod)
+      << " variant_bucket=" << variant_bucket
+      << " skin_species_id=" << skin_species_id << " attachments_hash=0x"
+      << std::hex << attachments_hash;
+  return out.str();
+}
+
 } // namespace
 
 void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
@@ -37,6 +52,12 @@ void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,
     return;
   }
   if (frame_total == 0 || bone_count == 0 || bpat_palettes == nullptr) {
+    return;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::SkinAtlasBuild,
+        "atlas missing for rigged mesh entry");
     return;
   }
   if (bone_count > entry.inverse_bind.size()) {
@@ -63,6 +84,12 @@ void rigged_entry_ensure_skin_ubo(const RiggedMeshEntry &entry) {
   }
   if (entry.skinned_palettes.empty() || entry.skinned_frame_total == 0 ||
       entry.skinned_bone_count == 0) {
+    return;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::SkinUboUpload,
+        "skin palette UBO missing for rigged mesh entry");
     return;
   }
   auto *fn = rigged_cache_gl_funcs();
@@ -125,11 +152,30 @@ auto RiggedMeshCache::get_or_bake(
     std::uint16_t variant_bucket,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
     std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
-  Key const key{&spec, lod, variant_bucket, skin_species_id,
-                Render::Creature::static_attachments_hash(attachments.data(),
-                                                          attachments.size())};
+  return get_or_bake_prehashed(spec, lod, rest_palette, variant_bucket,
+                               attachments,
+                               Render::Creature::static_attachments_hash(
+                                   attachments.data(), attachments.size()),
+                               skin_species_id);
+}
+
+auto RiggedMeshCache::get_or_bake_prehashed(
+    const Render::Creature::CreatureSpec &spec,
+    Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
+    std::uint16_t variant_bucket,
+    std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+    std::uint64_t attachments_hash,
+    std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
+  Key const key{&spec, lod, variant_bucket, skin_species_id, attachments_hash};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     return &it->second;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
+        describe_rigged_key(spec, lod, variant_bucket, attachments_hash,
+                            skin_species_id));
+    return nullptr;
   }
 
   RiggedMeshEntry entry;
@@ -186,6 +232,12 @@ void rigged_entry_ensure_skin_atlas_from_blob(
     return;
   }
   if (frame_total == 0 || bone_count == 0) {
+    return;
+  }
+  if (Render::Creature::runtime_bake_forbidden()) {
+    Render::Creature::report_runtime_bake_violation(
+        Render::Creature::RuntimeBakeOperation::SkinAtlasBuild,
+        "BPAT atlas missing for rigged mesh entry");
     return;
   }
   if (bone_count > entry.inverse_bind.size()) {

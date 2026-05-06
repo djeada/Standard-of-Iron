@@ -970,20 +970,30 @@ void GameEngine::update(float dt) {
 
       const auto new_version = visibility_service.version();
       if (new_version != m_runtime.visibility_version) {
+        const auto visibility_cells = visibility_service.snapshotCells();
         if (m_fog) {
-          m_fog->update_mask(visibility_service.getWidth(),
-                             visibility_service.getHeight(),
-                             visibility_service.getTileSize(),
-                             visibility_service.snapshotCells());
+          m_fog->update_mask(
+              visibility_service.getWidth(), visibility_service.getHeight(),
+              visibility_service.getTileSize(), visibility_cells);
+        }
+        if (m_minimap_manager) {
+          m_minimap_manager->update_fog(visibility_service.getWidth(),
+                                        visibility_service.getHeight(),
+                                        visibility_cells, new_version);
         }
         m_runtime.visibility_version = new_version;
       }
+    } else if (m_runtime.visibility_version != 0) {
+      if (m_fog) {
+        m_fog->update_mask(0, 0, 1.0F, {});
+      }
+      if (m_minimap_manager) {
+        m_minimap_manager->clear_fog();
+      }
+      m_runtime.visibility_version = 0;
     }
 
     if (m_minimap_manager) {
-      if (!m_level.is_spectator_mode) {
-        m_minimap_manager->update_fog(dt, m_runtime.local_owner_id);
-      }
       auto *selection_system =
           m_world->get_system<Game::Systems::SelectionSystem>();
       m_minimap_manager->update_units(m_world.get(), selection_system,

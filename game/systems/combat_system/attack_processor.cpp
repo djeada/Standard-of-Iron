@@ -26,6 +26,21 @@ namespace Game::Systems::Combat {
 namespace {
 thread_local std::mt19937 gen(std::random_device{}());
 
+void clamp_and_apply_displacement(Engine::Core::TransformComponent *transform,
+                                  const QVector3D &direction,
+                                  float displacement) {
+  if (transform == nullptr || displacement <= 0.0F) {
+    return;
+  }
+
+  float const scale =
+      (displacement > Constants::k_max_displacement_per_frame)
+          ? (Constants::k_max_displacement_per_frame / displacement)
+          : 1.0F;
+  transform->position.x += direction.x() * displacement * scale;
+  transform->position.z += direction.z() * displacement * scale;
+}
+
 auto should_queue_chase_command(
     Engine::Core::Entity *attacker, Engine::Core::Entity *target,
     Engine::Core::TransformComponent *attacker_transform,
@@ -182,8 +197,11 @@ void process_melee_lock(Engine::Core::Entity *attacker,
 
       if (dist > Constants::k_min_distance) {
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
-        float const new_x = att_t->position.x + direction.x() * pull_amount;
-        float const new_z = att_t->position.z + direction.z() * pull_amount;
+        QVector3D const clamped_offset =
+            direction *
+            std::min(pull_amount, Constants::k_max_displacement_per_frame);
+        float const new_x = att_t->position.x + clamped_offset.x();
+        float const new_z = att_t->position.z + clamped_offset.z();
 
         auto *pathfinder = CommandService::get_pathfinder();
         if (pathfinder != nullptr) {
@@ -477,13 +495,11 @@ void initiate_melee_combat(Engine::Core::Entity *attacker,
         QVector3D const direction(dx / dist, 0.0F, dz / dist);
 
         if (!is_unit_in_hold_mode(attacker) && !is_building(attacker)) {
-          att_t->position.x += direction.x() * move_amount;
-          att_t->position.z += direction.z() * move_amount;
+          clamp_and_apply_displacement(att_t, direction, move_amount);
         }
 
         if (!is_unit_in_hold_mode(target) && !is_building(target)) {
-          tgt_t->position.x -= direction.x() * move_amount;
-          tgt_t->position.z -= direction.z() * move_amount;
+          clamp_and_apply_displacement(tgt_t, -direction, move_amount);
         }
       }
     }

@@ -407,8 +407,6 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
 
   out.bodies.reserve(out.bodies.size() +
                      static_cast<std::size_t>(visible_count));
-  out.post_body_draws.reserve(out.post_body_draws.size() +
-                              static_cast<std::size_t>(visible_count));
 
   namespace RCP = Render::Creature::Pipeline;
   const auto lod_config = RCP::humanoid_lod_config_from_settings();

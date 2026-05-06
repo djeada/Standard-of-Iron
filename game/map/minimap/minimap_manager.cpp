@@ -49,7 +49,7 @@ auto MinimapManager::get_base_image() const -> const QImage & {
 auto MinimapManager::get_fog_mask() const -> QImage {
   if (!m_fog_mask || !m_config.fog_enabled) {
 
-    QImage empty(m_base_image.size(), QImage::Format_RGBA8888);
+    QImage empty(m_base_image.size(), QImage::Format_ARGB32);
     empty.fill(Qt::transparent);
     return empty;
   }

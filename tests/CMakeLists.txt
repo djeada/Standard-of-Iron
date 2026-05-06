@@ -3,9 +3,11 @@
 
 # Test executable
 add_executable(standard_of_iron_tests
+    ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
+    core/minimap_manager_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp

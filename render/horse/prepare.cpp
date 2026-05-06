@@ -187,7 +187,6 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
   body_state.phase = motion.phase;
   out.bodies.add_quadruped(body_state);
 
-  // Shadow
   QVector3D const horse_world_pos = RCP::model_world_origin(horse_ctx.model);
   float camera_distance = 0.0F;
   if (horse_ctx.camera != nullptr) {

@@ -39,8 +39,11 @@ public:
     GL::Shader::UniformHandle grass_secondary{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_dry{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_low{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_high{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle tint{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle noise_offset{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle noise_angle{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle tile_size{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle macro_noise_scale{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle detail_noise_scale{GL::Shader::InvalidUniform};
@@ -55,9 +58,18 @@ public:
     GL::Shader::UniformHandle snow_coverage{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle moisture_level{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle crack_intensity{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle rock_exposure{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle grass_saturation{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle soil_roughness{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle micro_bump_amp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle micro_bump_freq{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle micro_normal_weight{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle albedo_jitter{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle snow_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
   struct TerrainUniforms {
@@ -98,6 +110,10 @@ public:
     GL::Shader::UniformHandle soil_foot_height{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle screen_toe_mul{GL::Shader::InvalidUniform};
     GL::Shader::UniformHandle screen_toe_clamp{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle camera_position{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_color{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_start{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle fog_end{GL::Shader::InvalidUniform};
   };
 
   GL::Shader *m_grassShader = nullptr;

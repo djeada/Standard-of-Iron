@@ -315,6 +315,7 @@ private:
 
   std::mutex m_async_prewarm_mutex;
   std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;
+  bool m_forbid_runtime_bake_when_async_prewarm_done{false};
 };
 
 struct FrameScope {

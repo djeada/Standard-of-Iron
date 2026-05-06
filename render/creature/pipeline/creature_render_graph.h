@@ -10,7 +10,6 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <cstdint>
-#include <functional>
 #include <optional>
 #include <span>
 #include <utility>
@@ -160,11 +159,13 @@ private:
   std::vector<Render::Creature::CreatureRenderRequest> requests_{};
 };
 
-using PostBodyDrawFn = std::function<void(Render::GL::ISubmitter &)>;
-
 struct PostBodyDrawRequest {
+  enum class Kind : std::uint8_t {
+    None,
+  };
+
   RenderPassIntent pass_intent{RenderPassIntent::Main};
-  PostBodyDrawFn draw{};
+  Kind kind{Kind::None};
 };
 
 struct CreaturePreparationResult {
@@ -172,9 +173,13 @@ struct CreaturePreparationResult {
   std::vector<PostBodyDrawRequest> post_body_draws;
   HumanoidShadowBatch shadow_batch;
 
-  void add_post_body_draw(RenderPassIntent pass_intent, PostBodyDrawFn draw) {
-    post_body_draws.push_back(
-        PostBodyDrawRequest{pass_intent, std::move(draw)});
+  void add_post_body_draw(PostBodyDrawRequest request) {
+    post_body_draws.push_back(request);
+  }
+
+  void add_post_body_draw(RenderPassIntent pass_intent,
+                          PostBodyDrawRequest::Kind kind) {
+    post_body_draws.push_back(PostBodyDrawRequest{pass_intent, kind});
   }
 
   void clear() noexcept {

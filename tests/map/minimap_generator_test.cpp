@@ -1,5 +1,6 @@
 #include "map/map_definition.h"
 #include "map/minimap/minimap_generator.h"
+#include "map/minimap/minimap_utils.h"
 #include <QImage>
 #include <gtest/gtest.h>
 
@@ -9,6 +10,7 @@ using namespace Game::Map::Minimap;
 class MinimapGeneratorTest : public ::testing::Test {
 protected:
   void SetUp() override {
+    MinimapOrientation::instance().set_yaw_degrees(0.0F);
 
     test_map.name = "Test Map";
     test_map.grid.width = 50;
@@ -18,6 +20,11 @@ protected:
     test_map.biome.grass_primary = QVector3D(0.3F, 0.6F, 0.28F);
     test_map.biome.grass_secondary = QVector3D(0.44F, 0.7F, 0.32F);
     test_map.biome.soil_color = QVector3D(0.28F, 0.24F, 0.18F);
+  }
+
+  void TearDown() override {
+    MinimapOrientation::instance().set_yaw_degrees(
+        Constants::k_default_camera_yaw_deg);
   }
 
   MapDefinition test_map;
@@ -30,6 +37,7 @@ TEST_F(MinimapGeneratorTest, GeneratesValidImage) {
   EXPECT_FALSE(result.isNull());
   EXPECT_GT(result.width(), 0);
   EXPECT_GT(result.height(), 0);
+  EXPECT_EQ(result.format(), QImage::Format_ARGB32);
 }
 
 TEST_F(MinimapGeneratorTest, ImageDimensionsMatchGrid) {
@@ -58,6 +66,23 @@ TEST_F(MinimapGeneratorTest, RendersRivers) {
   QImage result = generator.generate(test_map);
 
   EXPECT_FALSE(result.isNull());
+}
+
+TEST_F(MinimapGeneratorTest, RiversNearBoundaryContinueToMapEdge) {
+  RiverSegment river;
+  river.start = QVector3D(0.0F, 0.0F, -19.0F);
+  river.end = QVector3D(0.0F, 0.0F, 19.0F);
+  river.width = 3.0F;
+  test_map.rivers.push_back(river);
+
+  MinimapGenerator generator;
+  QImage result = generator.generate(test_map);
+
+  ASSERT_FALSE(result.isNull());
+
+  const QColor near_top_edge = result.pixelColor(result.width() / 2, 6);
+  EXPECT_GT(near_top_edge.blue(), near_top_edge.red());
+  EXPECT_GT(near_top_edge.blue(), near_top_edge.green() - 10);
 }
 
 TEST_F(MinimapGeneratorTest, RendersTerrainFeatures) {

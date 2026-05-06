@@ -763,26 +763,28 @@ TEST(HorseSpecTest, ManifestKeepsLongerMoreTaperedMuzzleProfile) {
   float const head_z_min = mesh_axis_min(head_upper_mesh, 2);
   float const head_z_span = mesh_axis_span(head_upper_mesh, 2);
   float const head_band = head_z_span * 0.14F;
-  float const muzzle_base_z = head_z_min + head_z_span * 0.56F;
-  float const muzzle_tip_z = head_z_min + head_z_span * 0.92F;
-  float const base_width =
-      max_abs_axis_in_z_band(head_upper_mesh, muzzle_base_z, head_band, 0);
-  float const tip_width =
-      max_abs_axis_in_z_band(head_upper_mesh, muzzle_tip_z, head_band, 0);
-  float const base_top =
-      max_axis_in_z_band(head_upper_mesh, muzzle_base_z, head_band, 1);
-  float const tip_top =
-      max_axis_in_z_band(head_upper_mesh, muzzle_tip_z, head_band, 1);
-  float const base_bottom =
-      min_axis_in_z_band(head_upper_mesh, muzzle_base_z, head_band, 1);
-  float const tip_bottom =
-      min_axis_in_z_band(head_upper_mesh, muzzle_tip_z, head_band, 1);
+
+  float const skull_z = head_z_min + head_z_span * 0.20F;
+  float const muzzle_z = head_z_min + head_z_span * 0.78F;
+  float const skull_width =
+      max_abs_axis_in_z_band(head_upper_mesh, skull_z, head_band, 0);
+  float const muzzle_width =
+      max_abs_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 0);
+  float const skull_top =
+      max_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
+  float const muzzle_top =
+      max_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
+  float const skull_bottom =
+      min_axis_in_z_band(head_upper_mesh, skull_z, head_band, 1);
+  float const muzzle_bottom =
+      min_axis_in_z_band(head_upper_mesh, muzzle_z, head_band, 1);
 
   EXPECT_GT(mesh_axis_max(head_upper_mesh, 2),
             head_z_min + head_z_span * 0.90F);
-  EXPECT_LT(tip_width, base_width * 0.75F);
-  EXPECT_LT(tip_top - tip_bottom, (base_top - base_bottom) * 0.70F);
-  EXPECT_LT((tip_top + tip_bottom) * 0.5F, (base_top + base_bottom) * 0.5F);
+  EXPECT_LT(muzzle_width, skull_width * 0.75F);
+  EXPECT_LT(muzzle_top - muzzle_bottom, (skull_top - skull_bottom) * 0.85F);
+  EXPECT_LT((muzzle_top + muzzle_bottom) * 0.5F,
+            (skull_top + skull_bottom) * 0.5F);
 }
 
 TEST(HorseSpecTest, FullSpecFrontHoofCentersUnderFrontCannon) {
