@@ -24,6 +24,7 @@
 #include "render/gl/camera.h"
 #include "render/graphics_settings.h"
 #include "render/ground/fog_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_scatter_manager.h"
@@ -41,10 +42,13 @@ auto RendererBootstrap::initialize_rendering() -> RenderingComponents {
   components.features = std::make_unique<Render::GL::TerrainFeatureManager>();
   components.scatter = std::make_unique<Render::GL::TerrainScatterManager>();
   components.fog = std::make_unique<Render::GL::FogRenderer>();
+  components.boundary_fog =
+      std::make_unique<Render::GL::MapBoundaryFogRenderer>();
   components.rain = std::make_unique<Render::GL::RainRenderer>();
   components.terrain_scene = std::make_unique<Render::GL::TerrainSceneProxy>(
       components.surface.get(), components.features.get(),
-      components.scatter.get(), components.rain.get(), components.fog.get());
+      components.scatter.get(), components.rain.get(), components.fog.get(),
+      components.boundary_fog.get());
 
   return components;
 }
