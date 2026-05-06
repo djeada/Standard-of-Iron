@@ -18,6 +18,7 @@
 #include "render/ground/biome_renderer.h"
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/ground_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
@@ -370,6 +371,11 @@ auto SkirmishLoader::start(const QString &map_path,
     m_rain->set_intensity(level_result.rainSettings.enabled
                               ? level_result.rainSettings.intensity
                               : 0.0F);
+  }
+
+  if (m_boundary_fog != nullptr) {
+    m_boundary_fog->configure(level_result.grid_width, level_result.grid_height,
+                              level_result.tile_size);
   }
 
   constexpr int default_map_size = 100;

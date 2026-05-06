@@ -10,6 +10,7 @@ class TerrainSurfaceManager;
 class TerrainFeatureManager;
 class TerrainScatterManager;
 class FogRenderer;
+class MapBoundaryFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -27,6 +28,7 @@ public:
     std::unique_ptr<Render::GL::TerrainFeatureManager> features;
     std::unique_ptr<Render::GL::TerrainScatterManager> scatter;
     std::unique_ptr<Render::GL::FogRenderer> fog;
+    std::unique_ptr<Render::GL::MapBoundaryFogRenderer> boundary_fog;
     std::unique_ptr<Render::GL::RainRenderer> rain;
   };
 

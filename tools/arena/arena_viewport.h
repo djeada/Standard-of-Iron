@@ -39,6 +39,7 @@ class TerrainSurfaceManager;
 class TerrainFeatureManager;
 class TerrainScatterManager;
 class FogRenderer;
+class MapBoundaryFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -189,6 +190,7 @@ private:
   std::unique_ptr<Render::GL::TerrainFeatureManager> m_features;
   std::unique_ptr<Render::GL::TerrainScatterManager> m_scatter;
   std::unique_ptr<Render::GL::FogRenderer> m_fog;
+  std::unique_ptr<Render::GL::MapBoundaryFogRenderer> m_boundary_fog;
   std::unique_ptr<Render::GL::RainRenderer> m_rain;
   std::unique_ptr<Game::Systems::CameraService> m_camera_service;
   std::unique_ptr<Game::Systems::PickingService> m_picking_service;

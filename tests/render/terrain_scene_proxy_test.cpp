@@ -2,6 +2,7 @@
 #include "game/map/terrain_service.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/rain_renderer.h"
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
@@ -23,13 +24,14 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   Render::GL::TerrainScatterManager scatter;
   Render::GL::RainRenderer rain;
   Render::GL::FogRenderer fog;
+  Render::GL::MapBoundaryFogRenderer boundary_fog;
 
   Render::GL::TerrainSceneProxy proxy(&surface, &features, &scatter, &rain,
-                                      &fog);
+                                      &fog, &boundary_fog);
 
   const auto &passes = proxy.passes();
 
-  ASSERT_EQ(passes.size(), 14U);
+  ASSERT_EQ(passes.size(), 15U);
   EXPECT_EQ(proxy.surface(), &surface);
   EXPECT_EQ(proxy.ground(), surface.ground());
   EXPECT_EQ(proxy.terrain(), surface.terrain());
@@ -45,6 +47,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
   EXPECT_NE(proxy.firecamp(), nullptr);
   EXPECT_EQ(proxy.rain(), &rain);
   EXPECT_EQ(proxy.fog(), &fog);
+  EXPECT_EQ(proxy.boundary_fog(), &boundary_fog);
   auto river = proxy.river();
   auto road = proxy.road();
   auto riverbank = proxy.riverbank();
@@ -67,6 +70,7 @@ TEST(TerrainSceneProxyTest, GroupsTerrainPassesInLegacySubmissionOrder) {
             static_cast<Render::GL::IRenderPass *>(proxy.firecamp()));
   EXPECT_EQ(passes[12], &rain);
   EXPECT_EQ(passes[13], &fog);
+  EXPECT_EQ(passes[14], &boundary_fog);
 }
 
 TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
