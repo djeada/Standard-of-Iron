@@ -11,6 +11,8 @@
 #include "game/systems/picking_service.h"
 #include "game/systems/selection_system.h"
 #include "render/gl/camera.h"
+#include <cmath>
+#include <numbers>
 
 InputCommandHandler::InputCommandHandler(
     Engine::Core::World *world,
@@ -107,6 +109,111 @@ void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
                                            m_camera, sx, sy, viewport.width,
                                            viewport.height, local_owner_id);
 }
+
+void InputCommandHandler::on_right_press(qreal sx, qreal sy,
+                                         int local_owner_id,
+                                         const ViewportState &viewport) {
+  if (m_is_spectator_mode || !m_world) {
+    return;
+  }
+
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (selection_system == nullptr) {
+    return;
+  }
+
+  if (m_cursor_manager->mode() == CursorMode::Patrol ||
+      m_cursor_manager->mode() == CursorMode::Attack ||
+      m_cursor_manager->mode() == CursorMode::Guard ||
+      m_cursor_manager->mode() == CursorMode::PlaceBuilding ||
+      m_cursor_manager->mode() == CursorMode::Heal ||
+      m_cursor_manager->mode() == CursorMode::Build) {
+    m_cursor_manager->set_mode(CursorMode::Normal);
+    return;
+  }
+
+  const auto &sel = selection_system->get_selected_units();
+  if (sel.empty()) {
+    return;
+  }
+
+  if (m_command_controller) {
+    m_command_controller->disable_run_mode_for_selected();
+  }
+
+  // If the click is on an enemy unit, issue an attack command immediately.
+  if (m_picking_service != nullptr && m_camera != nullptr) {
+    Engine::Core::EntityID const target_id =
+        m_picking_service->pick_unit_first(float(sx), float(sy), *m_world,
+                                           *m_camera, viewport.width,
+                                           viewport.height, 0);
+    if (target_id != 0U) {
+      auto *target_entity = m_world->get_entity(target_id);
+      if (target_entity != nullptr) {
+        auto *target_unit =
+            target_entity->get_component<Engine::Core::UnitComponent>();
+        if (target_unit != nullptr) {
+          bool const is_enemy = (target_unit->owner_id != local_owner_id);
+          bool const is_building =
+              target_entity->has_component<Engine::Core::BuildingComponent>();
+          if (is_enemy && !is_building) {
+            Game::Systems::CommandService::attack_target(*m_world, sel,
+                                                         target_id, true);
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // Begin formation placement at the clicked ground position so the
+  // orientation arrow appears while the right button is held.
+  if (!m_command_controller || !m_camera || !m_picking_service) {
+    return;
+  }
+
+  QVector3D hit;
+  if (m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
+                                          viewport.width, viewport.height,
+                                          hit)) {
+    hit = App::Utils::snap_to_walkable_ground(hit);
+    m_command_controller->begin_move_placement_at_position(hit);
+  }
+}
+
+void InputCommandHandler::on_right_drag_orient(qreal sx, qreal sy,
+                                               const ViewportState &viewport) {
+  if (!m_command_controller || !m_camera || !m_picking_service) {
+    return;
+  }
+
+  if (!m_command_controller->is_placing_formation()) {
+    return;
+  }
+
+  QVector3D hit;
+  if (!m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
+                                           viewport.width, viewport.height,
+                                           hit)) {
+    return;
+  }
+
+  const QVector3D placement_pos =
+      m_command_controller->get_formation_placement_position();
+  const QVector3D delta = hit - placement_pos;
+
+  if (delta.lengthSquared() > 0.01F) {
+    constexpr float k_rad_to_deg = 180.0F / std::numbers::pi_v<float>;
+    float angle_deg = std::atan2(delta.x(), delta.z()) * k_rad_to_deg;
+    angle_deg = std::fmod(angle_deg, 360.0F);
+    if (angle_deg < 0.0F) {
+      angle_deg += 360.0F;
+    }
+    m_command_controller->update_formation_rotation(angle_deg);
+  }
+}
+
 
 void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
                                           const ViewportState &viewport) {

@@ -1,4 +1,5 @@
 #include "formation_arrow.h"
+#include "../gl/primitives.h"
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include <QMatrix4x4>
@@ -14,76 +15,46 @@ void render_formation_arrow(Renderer *renderer, ResourceManager *resources,
     return;
   }
 
+  Mesh *const arrow_mesh = get_orientation_arrow();
+  if (arrow_mesh == nullptr) {
+    return;
+  }
+
+  // The orientation arrow points toward –Z in mesh space.  Rotating around Y
+  // by visual_angle_degrees then aligns it with the intended facing direction.
   float const visual_angle_degrees = placement.angle_degrees + 180.0F;
 
-  QVector3D const arrow_main(0.1F, 0.7F, 0.9F);
-  QVector3D const arrow_accent(0.0F, 0.9F, 1.0F);
-  QVector3D const arrow_edge(0.05F, 0.4F, 0.6F);
+  // Slightly above the ground so the arrow sits on top of the terrain.
+  float const base_y = placement.position.y() + 0.10F;
 
-  float const arrow_length = 1.5F;
-  float const arrow_width = 0.15F;
-  float const arrow_head_size = 0.6F;
-  float const arrow_height = 0.125F;
+  // Primary body – bright cyan with a slight blue tint.
+  QVector3D const body_color(0.10F, 0.80F, 0.95F);
+  // Bright highlight rim drawn on top of the body.
+  QVector3D const rim_color(0.30F, 1.00F, 1.00F);
+  // Subtle dark underlay slightly larger than the body to give a soft shadow.
+  QVector3D const shadow_color(0.02F, 0.20F, 0.30F);
 
-  float const base_y = placement.position.y() + 0.12F;
+  QMatrix4x4 base_xform;
+  base_xform.translate(placement.position.x(), base_y, placement.position.z());
+  base_xform.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
 
+  // ── Shadow underlay (drawn first, slightly below and scaled wider) ─────────
   {
-    QMatrix4x4 shaft_model;
-    shaft_model.translate(placement.position.x(), base_y,
-                          placement.position.z());
-    shaft_model.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
-    shaft_model.translate(0.0F, 0.0F, -arrow_length * 0.25F);
-    shaft_model.scale(arrow_width * 0.3F, arrow_height * 0.8F,
-                      arrow_length * 0.5F);
-
-    renderer->mesh(resources->unit(), shaft_model, arrow_main,
-                   resources->white(), 0.85F);
+    QMatrix4x4 shadow_xform = base_xform;
+    shadow_xform.translate(0.0F, -0.06F, 0.0F);
+    shadow_xform.scale(1.18F, 0.6F, 1.08F);
+    renderer->mesh(arrow_mesh, shadow_xform, shadow_color, nullptr, 0.55F);
   }
 
-  float const head_tip_z = -arrow_length * 0.55F;
-  float const stick_len = arrow_head_size * 0.7F;
-  float const stick_thickness = 0.05F;
-  float const stick_height = arrow_height * 0.8F;
-  float const head_angle_deg = 35.0F;
+  // ── Main body ─────────────────────────────────────────────────────────────
+  renderer->mesh(arrow_mesh, base_xform, body_color, nullptr, 0.92F);
 
+  // ── Highlight rim (very thin layer, full opacity, bright) ─────────────────
   {
-    QMatrix4x4 head_left;
-    head_left.translate(placement.position.x(), base_y, placement.position.z());
-    head_left.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
-    head_left.translate(-arrow_head_size * 0.22F, 0.0F, head_tip_z);
-    head_left.rotate(-head_angle_deg, 0.0F, 1.0F, 0.0F);
-
-    head_left.translate(0.0F, 0.0F, stick_len * 0.5F);
-    head_left.scale(stick_thickness, stick_height, stick_len);
-
-    renderer->mesh(resources->unit(), head_left, arrow_accent,
-                   resources->white(), 0.95F);
-  }
-
-  {
-    QMatrix4x4 head_right;
-    head_right.translate(placement.position.x(), base_y,
-                         placement.position.z());
-    head_right.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
-    head_right.translate(arrow_head_size * 0.22F, 0.0F, head_tip_z);
-    head_right.rotate(head_angle_deg, 0.0F, 1.0F, 0.0F);
-    head_right.translate(0.0F, 0.0F, stick_len * 0.5F);
-    head_right.scale(stick_thickness, stick_height, stick_len);
-
-    renderer->mesh(resources->unit(), head_right, arrow_accent,
-                   resources->white(), 0.95F);
-  }
-
-  {
-    QMatrix4x4 edge_model;
-    edge_model.translate(placement.position.x(), base_y + arrow_height * 0.3F,
-                         placement.position.z());
-    edge_model.rotate(visual_angle_degrees, 0.0F, 1.0F, 0.0F);
-    edge_model.translate(arrow_width * 0.1F, 0.0F, -arrow_length * 0.2F);
-    edge_model.scale(0.05F, 0.04F, arrow_length * 0.45F);
-
-    renderer->mesh(resources->unit(), edge_model, arrow_accent,
-                   resources->white(), 0.6F);
+    QMatrix4x4 rim_xform = base_xform;
+    rim_xform.translate(0.0F, 0.04F, 0.0F);
+    rim_xform.scale(0.78F, 0.35F, 0.78F);
+    renderer->mesh(arrow_mesh, rim_xform, rim_color, nullptr, 0.80F);
   }
 }
 

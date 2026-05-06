@@ -162,6 +162,8 @@ public:
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_double_click(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_press(qreal sx, qreal sy);
+  Q_INVOKABLE void on_right_drag_orient(qreal sx, qreal sy);
   Q_INVOKABLE void on_click_select(qreal sx, qreal sy, bool additive = false);
   Q_INVOKABLE void on_area_selected(qreal x1, qreal y1, qreal x2, qreal y2,
                                     bool additive = false);

@@ -602,6 +602,27 @@ void GameEngine::on_right_double_click(qreal sx, qreal sy) {
   }
 }
 
+void GameEngine::on_right_press(qreal sx, qreal sy) {
+  if (m_window == nullptr) {
+    return;
+  }
+  ensure_initialized();
+  if (m_input_handler) {
+    m_input_handler->on_right_press(sx, sy, m_runtime.local_owner_id,
+                                    m_viewport);
+  }
+}
+
+void GameEngine::on_right_drag_orient(qreal sx, qreal sy) {
+  if (m_window == nullptr) {
+    return;
+  }
+  ensure_initialized();
+  if (m_input_handler) {
+    m_input_handler->on_right_drag_orient(sx, sy, m_viewport);
+  }
+}
+
 void GameEngine::on_attack_click(qreal sx, qreal sy) {
   if (m_window == nullptr) {
     return;

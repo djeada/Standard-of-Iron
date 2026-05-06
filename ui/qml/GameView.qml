@@ -245,9 +245,11 @@ Item {
             }
 
             function onPlacing_formation_changed() {
-                if (typeof game !== 'undefined')
+                if (typeof game !== 'undefined') {
                     gameView.isPlacingFormation = game.is_placing_formation;
-
+                    if (!game.is_placing_formation)
+                        mouseArea.isRightDragOrient = false;
+                }
             }
 
             function onPlacing_construction_changed() {
@@ -265,6 +267,7 @@ Item {
             property bool isSelecting: false
             property real startX: 0
             property real startY: 0
+            property bool isRightDragOrient: false
 
             anchors.fill: parent
             acceptedButtons: Qt.LeftButton | Qt.RightButton
@@ -295,7 +298,11 @@ Item {
                     if (typeof game !== 'undefined' && game.set_hover_at_screen)
                         game.set_hover_at_screen(mouse.x, mouse.y);
 
-                    if (gameView.isPlacingFormation) {
+                    if (mouseArea.isRightDragOrient && (mouse.buttons & Qt.RightButton)) {
+                        if (typeof game !== 'undefined' && game.on_right_drag_orient)
+                            game.on_right_drag_orient(mouse.x, mouse.y);
+
+                    } else if (gameView.isPlacingFormation) {
                         if (typeof game !== 'undefined' && game.on_formation_mouse_move)
                             game.on_formation_mouse_move(mouse.x, mouse.y);
 
@@ -379,6 +386,7 @@ Item {
                         if (game.on_formation_cancel)
                             game.on_formation_cancel();
 
+                        mouseArea.isRightDragOrient = false;
                         return ;
                     }
                     if (typeof game !== 'undefined' && game.is_placing_construction) {
@@ -392,8 +400,9 @@ Item {
                     if (gameView.setRallyMode)
                         gameView.setRallyMode = false;
 
-                    if (typeof game !== 'undefined' && game.on_right_click)
-                        game.on_right_click(mouse.x, mouse.y);
+                    mouseArea.isRightDragOrient = true;
+                    if (typeof game !== 'undefined' && game.on_right_press)
+                        game.on_right_press(mouse.x, mouse.y);
 
                 }
             }
@@ -421,6 +430,14 @@ Item {
                     }
                 }
                 if (mouse.button === Qt.RightButton) {
+                    if (mouseArea.isRightDragOrient) {
+                        mouseArea.isRightDragOrient = false;
+                        if (typeof game !== 'undefined' && game.is_placing_formation) {
+                            if (game.on_formation_confirm)
+                                game.on_formation_confirm();
+
+                        }
+                    }
                     renderArea.mousePanActive = false;
                     mainWindow.edgeScrollDisabled = (renderArea.keyPanCount > 0) || renderArea.mousePanActive;
                 }

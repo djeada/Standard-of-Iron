@@ -710,6 +710,114 @@ const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
     k_default_radial_segments, k_default_torso_height_segments);
 } // namespace
 
+namespace {
+
+// Flat extruded arrow mesh pointing toward -Z, origin at the arrow base.
+//
+// Outline (top-view, CW when viewed from above):
+//   Index:  0        1        2        3     4       5       6
+//   X:      sw       sw       hw       0    -hw     -sw     -sw
+//   Z:      0       -sl      -sl      -tl   -sl     -sl      0
+//
+// Triangulation for the top face (+Y normal, CCW from +Y):
+//   Shaft quad :  (0,1,5), (0,5,6)
+//   Head right :  (1,2,3)
+//   Head centre:  (1,3,5)
+//   Head left  :  (3,4,5)
+//
+// Bottom face uses the reverse winding (-Y normal).
+auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
+  constexpr float sw = 0.11F;       // shaft half-width
+  constexpr float hw = 0.30F;       // head half-width
+  constexpr float sl = 1.20F;       // shaft length (along -Z)
+  constexpr float hl = 0.50F;       // head length
+  constexpr float tl = sl + hl;     // total length
+  constexpr float hh = 0.07F;       // half-height (Y extrusion)
+
+  struct P2D {
+    float x;
+    float z;
+  };
+  const P2D outline[7] = {
+      {sw, 0.0F},  {sw, -sl},   {hw, -sl},
+      {0.0F, -tl}, {-hw, -sl},  {-sw, -sl},
+      {-sw, 0.0F},
+  };
+  constexpr int N = 7;
+
+  std::vector<Vertex> v;
+  std::vector<unsigned int> idx;
+
+  auto push_top = [&](const P2D &p) {
+    v.push_back({{p.x, hh, p.z}, {0.0F, 1.0F, 0.0F}, {0.5F + p.x, -p.z}});
+  };
+  auto push_bot = [&](const P2D &p) {
+    v.push_back({{p.x, -hh, p.z}, {0.0F, -1.0F, 0.0F}, {0.5F + p.x, -p.z}});
+  };
+
+  // ── Top face (+Y normal) ──────────────────────────────────────────────────
+  // Each triangle's normal = (B-A) × (C-A); chosen CCW from +Y gives +Y.
+  int const top_base = static_cast<int>(v.size());
+  for (int i = 0; i < N; ++i) {
+    push_top(outline[i]);
+  }
+  // Shaft quad: (0,1,5) and (0,5,6)
+  idx.push_back(top_base + 0); idx.push_back(top_base + 1); idx.push_back(top_base + 5);
+  idx.push_back(top_base + 0); idx.push_back(top_base + 5); idx.push_back(top_base + 6);
+  // Head: right-wing, centre, left-wing
+  idx.push_back(top_base + 1); idx.push_back(top_base + 2); idx.push_back(top_base + 3);
+  idx.push_back(top_base + 1); idx.push_back(top_base + 3); idx.push_back(top_base + 5);
+  idx.push_back(top_base + 3); idx.push_back(top_base + 4); idx.push_back(top_base + 5);
+
+  // ── Bottom face (-Y normal, reversed winding) ─────────────────────────────
+  int const bot_base = static_cast<int>(v.size());
+  for (int i = 0; i < N; ++i) {
+    push_bot(outline[i]);
+  }
+  idx.push_back(bot_base + 0); idx.push_back(bot_base + 5); idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 0); idx.push_back(bot_base + 6); idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 1); idx.push_back(bot_base + 3); idx.push_back(bot_base + 2);
+  idx.push_back(bot_base + 1); idx.push_back(bot_base + 5); idx.push_back(bot_base + 3);
+  idx.push_back(bot_base + 3); idx.push_back(bot_base + 5); idx.push_back(bot_base + 4);
+
+  // ── Side faces (one quad per outline edge) ────────────────────────────────
+  for (int i = 0; i < N; ++i) {
+    int const next = (i + 1) % N;
+    const P2D &a = outline[i];
+    const P2D &b = outline[next];
+
+    // Outward normal: perpendicular to the edge, pointing away from the arrow
+    // interior.  Rotating the edge direction (ex,0,ez) by -90° around Y gives
+    // the outward horizontal normal (-ez, 0, ex).
+    float const ex = b.x - a.x;
+    float const ez = b.z - a.z;
+    QVector3D n(-ez, 0.0F, ex);
+    n.normalize();
+
+    int const vi = static_cast<int>(v.size());
+    v.push_back({{a.x, -hh, a.z}, {n.x(), n.y(), n.z()}, {0.0F, 0.0F}});
+    v.push_back({{b.x, -hh, b.z}, {n.x(), n.y(), n.z()}, {1.0F, 0.0F}});
+    v.push_back({{b.x, +hh, b.z}, {n.x(), n.y(), n.z()}, {1.0F, 1.0F}});
+    v.push_back({{a.x, +hh, a.z}, {n.x(), n.y(), n.z()}, {0.0F, 1.0F}});
+
+    idx.push_back(vi + 0);
+    idx.push_back(vi + 1);
+    idx.push_back(vi + 2);
+    idx.push_back(vi + 2);
+    idx.push_back(vi + 3);
+    idx.push_back(vi + 0);
+  }
+
+  return std::make_unique<Mesh>(v, idx);
+}
+
+} // namespace
+
+namespace {
+const std::unique_ptr<Mesh> k_orientation_arrow_mesh =
+    create_orientation_arrow_mesh();
+} // namespace
+
 auto get_unit_cylinder(int radial_segments) -> Mesh * {
   radial_segments = std::max(radial_segments, 3);
 
@@ -785,6 +893,10 @@ auto get_unit_torso(int radial_segments, int height_segments) -> Mesh * {
   (void)radial_segments;
   (void)height_segments;
   return k_unit_torso_mesh.get();
+}
+
+auto get_orientation_arrow() -> Mesh * {
+  return k_orientation_arrow_mesh.get();
 }
 
 } // namespace Render::GL
