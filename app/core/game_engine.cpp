@@ -332,6 +332,7 @@ GameEngine::GameEngine(QObject *parent)
   m_features = std::move(rendering.features);
   m_scatter = std::move(rendering.scatter);
   m_fog = std::move(rendering.fog);
+  m_boundary_fog = std::move(rendering.boundary_fog);
   m_rain = std::move(rendering.rain);
 
   RendererBootstrap::initialize_world_systems(*m_world);
@@ -560,6 +561,7 @@ void GameEngine::cleanup_opengl_resources() {
   m_features.reset();
   m_scatter.reset();
   m_fog.reset();
+  m_boundary_fog.reset();
   m_rain.reset();
   m_rainManager.reset();
 
