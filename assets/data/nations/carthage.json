@@ -274,6 +274,74 @@
       }
     },
     {
+      "id": "catapult",
+      "display_name": "Carthaginian Catapult",
+      "production": {
+        "cost": 260,
+        "build_time": 15.0,
+        "priority": 5,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 150,
+        "max_health": 150,
+        "speed": 1.0,
+        "vision_range": 20.0,
+        "ranged_range": 18.0,
+        "ranged_damage": 210,
+        "ranged_cooldown": 4.5,
+        "melee_range": 1.5,
+        "melee_damage": 1,
+        "melee_cooldown": 2.0,
+        "can_ranged": true,
+        "can_melee": false
+      },
+      "visuals": {
+        "render_scale": 1.2,
+        "selection_ring_size": 1.25,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/catapult"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "ballista",
+      "display_name": "Carthaginian Ballista",
+      "production": {
+        "cost": 200,
+        "build_time": 12.0,
+        "priority": 6,
+        "is_melee": false
+      },
+      "combat": {
+        "health": 130,
+        "max_health": 130,
+        "speed": 1.5,
+        "vision_range": 22.0,
+        "ranged_range": 21.0,
+        "ranged_damage": 55,
+        "ranged_cooldown": 2.6,
+        "melee_range": 1.5,
+        "melee_damage": 1,
+        "melee_cooldown": 2.0,
+        "can_ranged": true,
+        "can_melee": false
+      },
+      "visuals": {
+        "render_scale": 1.0,
+        "selection_ring_size": 1.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/ballista"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
       "id": "builder",
       "display_name": "Phoenician Craftsman",
       "production": {
