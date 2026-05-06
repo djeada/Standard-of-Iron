@@ -91,7 +91,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   Render::GL::TerrainFeatureManager features;
   Render::GL::TerrainScatterManager scatter;
   Render::GL::TerrainSceneProxy proxy(&surface, &features, &scatter, nullptr,
-                                      nullptr);
+                                      nullptr, nullptr);
 
   ASSERT_TRUE(proxy.has_field());
   const auto &field = proxy.field();

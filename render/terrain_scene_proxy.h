@@ -33,7 +33,7 @@ public:
                     TerrainFeatureManager *features,
                     TerrainScatterManager *scatter, RainRenderer *rain,
                     FogRenderer *fog,
-                    MapBoundaryFogRenderer *boundary_fog = nullptr)
+                    MapBoundaryFogRenderer *boundary_fog)
       : m_surface(surface), m_features(features), m_scatter(scatter),
         m_rain(rain), m_fog(fog), m_boundary_fog(boundary_fog) {
     if (m_surface != nullptr) {
