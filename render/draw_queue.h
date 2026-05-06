@@ -358,7 +358,7 @@ public:
       m_sort_keys[i] = compute_sort_key(m_items[i]);
     }
 
-    if (count >= 2) {
+    if (count >= 2 && !keys_are_already_sorted(count)) {
       sort_full_keys(count);
     }
     build_prepared_batches();
@@ -442,6 +442,15 @@ private:
                        }
                        return m_sort_keys[lhs] < m_sort_keys[rhs];
                      });
+  }
+
+  [[nodiscard]] auto keys_are_already_sorted(std::size_t count) const -> bool {
+    for (std::size_t i = 1; i < count; ++i) {
+      if (m_sort_keys[i - 1] > m_sort_keys[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {

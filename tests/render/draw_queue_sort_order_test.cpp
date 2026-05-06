@@ -203,6 +203,26 @@ TEST(DrawQueuePreparedBatches,
   EXPECT_EQ(batches[1].count, 1U);
 }
 
+TEST(DrawQueueSortOrder, AlreadySortedInputsKeepSubmissionOrder) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd terrain;
+  queue.submit(terrain);
+
+  MeshCmd mesh;
+  queue.submit(mesh);
+
+  SelectionRingCmd ring;
+  queue.submit(ring);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex);
+}
+
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
 
   Render::FrameBudgetConfig cfg;
