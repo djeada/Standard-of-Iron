@@ -1,8 +1,8 @@
 # Rendering Pipeline Todo
 
-Goal: make the runtime render path modern, scalable, and close to data-only playback while the game is playing. Terrain and static scatter are already mostly in the desired shape; the current hot path is creature asset resolution/cache work plus per-frame command collection/sort/playback.
+Goal: make the runtime render path modern, scalable, and close to data-only playback while the game is playing. Terrain and static scatter are already mostly in the desired shape; the current hot path is still dominated by per-frame collection, creature preparation, sorting, and a few remaining runtime cache/build paths.
 
-The perf sample that motivated this list showed `RiggedMeshCache::get_or_bake`, `Backend::execute`, `__memmove`, allocator calls, `prepare_humanoid_instances`, `SnapshotMeshCache`, and minimap fog work on the hot path. The tasks below are based on the current code, not assumptions.
+The perf sample that motivated this list showed `RiggedMeshCache::get_or_bake`, `Backend::execute`, `__memmove`, allocator calls, `prepare_humanoid_instances`, `SnapshotMeshCache`, and minimap fog activity on the render thread. A later sample additionally showed `Render::Creature::Pipeline::submit_snapshot_creature(...)` as the top app-side hotspot, with visible time in `Render::GL::RiggedMeshCache::get_or_bake_prehashed(...)`, `__memmove_avx_unaligned_erms`, and render-thread work on `QSGRenderThread`.
 
 ## P1 - Persistent Render Lists and Dirty Updates
 
@@ -200,6 +200,60 @@ Work:
 
 Acceptance:
 - Render-thread perf captures do not include combat query rebuilds or target search as regular costs.
+
+### Perf findings from 2026-05-06 sample
+
+Files:
+- `render/creature/pipeline/creature_pipeline.cpp`
+- `render/rigged_mesh_cache.*`
+- `render/snapshot_mesh_cache.*`
+- `render/draw_queue.*`
+- `render/gl/backend.cpp`
+
+Problem:
+- A perf sample shows `Render::Creature::Pipeline::submit_snapshot_creature(...)` as the top app-side hotspot (~6.6%), with additional time in `Render::GL::RiggedMeshCache::get_or_bake_prehashed(...)` (~1.7%).
+- `__memmove_avx_unaligned_erms` and related allocator / kernel memory-accounting samples are prominent on both the main app thread and `QSGRenderThread`, indicating copy-heavy and allocation-heavy render-path behavior.
+- `Render::GL::Backend::execute(...)` is visible but materially smaller than creature submit/caching work, so the primary bottleneck is data preparation rather than final GL dispatch.
+
+Work:
+- Trace `submit_snapshot_creature()` line-by-line and identify all per-creature work that can be moved to registration, prewarm, or frame-shared state.
+- Ensure snapshot mesh cache hits on hot frames do not allocate, load blobs, or rebuild mesh data.
+- Ensure rigged mesh cache hits on hot frames do not bake, upload, or repack skin data.
+- Audit draw submission and cache code for avoidable `std::vector` growth, temporary containers, structure copies, and span-to-owned-data conversions.
+- Add lightweight counters for:
+  - rigged mesh cache hits / misses / bakes
+  - snapshot mesh cache hits / misses / loads / bakes
+  - per-frame bytes uploaded for skin UBO / palette data
+  - draw queue command count, reallocations, and copied bytes
+- Pre-size or reuse hot-path buffers so warmed frames avoid allocator and `memmove` samples.
+- Review whether repeated math such as vector normalization in creature submit can be cached or hoisted when visual state is unchanged.
+
+Acceptance:
+- `submit_snapshot_creature()` is no longer the dominant CPU hotspot in warmed battle captures.
+- Warmed gameplay frames show zero snapshot loads/bakes and zero rigged mesh bakes.
+- Render-thread captures show substantially reduced `memmove` / allocator / memcg samples.
+- Added counters make it obvious when a frame regresses into runtime baking, uploads, or queue churn.
+
+### Treat `QSGRenderThread` as a strict no-allocation hot path
+
+Files:
+- `render/scene_renderer.*`
+- `render/creature/pipeline/*`
+- `render/gl/*`
+- `ui/*` if Qt scene graph integration participates
+
+Problem:
+- The sample shows meaningful work on `QSGRenderThread`, including creature submission, backend execution, memory copies, zlib/png activity, and GL driver/kernel overhead. Any avoidable allocation or asset preparation on this thread directly risks frame pacing.
+
+Work:
+- Document which rendering stages are allowed to execute on `QSGRenderThread` and which must complete earlier.
+- Move asset decoding, cache population, blob parsing, and other non-draw preparation off the render thread.
+- Reuse thread-local or persistent scratch buffers for render submission rather than growing temporary buffers during frame assembly.
+- Add debug/perf logging for render-thread cache misses and first-use initialization so unexpected hot-path work is visible immediately.
+
+Acceptance:
+- Normal gameplay on a warmed scene performs command assembly and draw submission on `QSGRenderThread` without asset decoding, mesh baking, or frequent buffer growth.
+- First-use / cold-start work is clearly separated from steady-state render-thread behavior.
 
 ## P3 - Backend Cleanup After Hot Path Fixes
 
