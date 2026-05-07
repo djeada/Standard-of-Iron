@@ -436,7 +436,7 @@ Item {
 
                         anchors.fill: parent
                         anchors.margins: Theme.spacingSmall
-                        active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+                        active: root.visible
 
                         sourceComponent: Component {
                             CampaignMapView {
@@ -455,6 +455,22 @@ Item {
                                 onHeightChanged: missionDetailPanel.label_refresh += 1
                             }
 
+                        }
+
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: Theme.spacingSmall
+                        color: Theme.cardBase
+                        visible: campaignMapLoader.active && campaignMapLoader.status !== Loader.Ready
+                        z: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("Loading map…")
+                            color: Theme.textDim
+                            font.pointSize: Theme.fontSizeMedium
                         }
 
                     }
