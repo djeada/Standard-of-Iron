@@ -40,8 +40,10 @@
 #include <QImage>
 #include <QOpenGLContext>
 #include <QPainter>
+#include <QPointer>
 #include <QQuickWindow>
 #include <QSize>
+#include <QThread>
 #include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
@@ -816,7 +818,12 @@ void GameEngine::update_cursor(Qt::CursorShape newCursor) {
   }
   if (m_runtime.current_cursor != newCursor) {
     m_runtime.current_cursor = newCursor;
-    m_window->setCursor(newCursor);
+    QPointer<QQuickWindow> safe_window(m_window);
+    QMetaObject::invokeMethod(m_window, [safe_window, newCursor]() {
+      if (safe_window) {
+        safe_window->setCursor(newCursor);
+      }
+    }, Qt::AutoConnection);
   }
 }
 
@@ -1158,6 +1165,12 @@ void GameEngine::update_loading_overlay() {
     return;
   }
 
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_loading_overlay(); },
+                              Qt::QueuedConnection);
+    return;
+  }
+
   if (!m_renderer || !m_renderer->resources()) {
     m_loading_overlay_frames_remaining = 5;
     m_loading_overlay_timer.restart();
@@ -1208,6 +1221,11 @@ void GameEngine::update_loading_overlay() {
 }
 
 void GameEngine::update_cursor_position() {
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_cursor_position(); },
+                              Qt::QueuedConnection);
+    return;
+  }
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();
   if (current_x != m_runtime.last_cursor_x ||
