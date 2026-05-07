@@ -492,6 +492,9 @@ private:
 
     std::size_t covered = 0;
     for (const SubmissionBucketSpan &span : m_submission_bucket_spans) {
+      // Any span mismatch means the recorded submit-time bucket layout no
+      // longer maps cleanly onto the current queue, so correctness requires
+      // falling back to the original full stable sort.
       if (span.start != covered || span.end() > count) {
         return false;
       }
@@ -549,8 +552,8 @@ private:
     identity.pass = type_order;
 
     if (cmd.index() == MeshCmdIndex) {
-      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Mesh);
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
+      identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Mesh);
       identity.transparency_bucket = transparency_bucket(mesh.alpha);
     } else if (cmd.index() == TerrainScatterCmdIndex) {
       const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
