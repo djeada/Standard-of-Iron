@@ -11,9 +11,8 @@ namespace Render::GL {
 namespace {
 
 // Number of tile layers that the boundary band extends INSIDE the map edge.
-// With k_band_inside=2 the loop includes signed_dist values 0 (edge tile) and
-// 1 (one tile inside), giving exactly 2 inside-facing table entries.
-constexpr int k_band_inside = 2;
+// Keep this at zero so fog starts on the first line after the boundary.
+constexpr int k_band_inside = 0;
 // Number of tile layers outside the map edge that receive fog.
 constexpr int k_band_outside = 3;
 
@@ -27,16 +26,13 @@ constexpr float k_fog_b = 0.55F;
 
 // Alpha values indexed by (signed_dist + k_band_outside).
 //   signed_dist < 0  → outside the map  (more negative = further outside)
-//   signed_dist == 0 → map edge tile
-//   signed_dist > 0  → inside the map (tiles with dist >= k_band_inside are
-//                       skipped, so the maximum included value is dist=1)
-// Total entries = k_band_outside + k_band_inside = 3 + 2 = 5.
+//   signed_dist == 0 → map edge tile (excluded, because k_band_inside == 0)
+//   signed_dist > 0  → inside the map (excluded)
+// Total entries = k_band_outside + k_band_inside = 3 + 0 = 3.
 constexpr std::array<float, k_band_outside + k_band_inside> k_alpha_table = {
     0.08F, // signed_dist == -3  (3 tiles outside the map)
     0.18F, // signed_dist == -2  (2 tiles outside the map)
     0.24F, // signed_dist == -1  (1 tile outside the map)
-    0.16F, // signed_dist ==  0  (map edge tile)
-    0.08F, // signed_dist ==  1  (1 tile inside the map edge)
 };
 
 } // namespace

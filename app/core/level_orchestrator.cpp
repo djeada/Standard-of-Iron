@@ -88,6 +88,7 @@ auto LevelOrchestrator::load_skirmish(
   }
 
   loader.set_fog_renderer(renderers.fog);
+  loader.set_boundary_fog_renderer(renderers.boundary_fog);
 
   loader.set_on_owners_updated(owner_update);
   loader.set_on_visibility_mask_ready(visibility_ready);
