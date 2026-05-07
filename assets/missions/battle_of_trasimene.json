@@ -1,8 +1,8 @@
 {
   "id": "battle_of_trasimene",
   "title": "Battle of Lake Trasimene",
-  "summary": "Spring the ambush, seal escape routes, and destroy Roman field camps along the lakeside corridor.",
-  "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits while handling fresh enemy waves.",
+  "summary": "Spring the ambush, seal the escape routes, and capture both Roman field camps along the lakeside corridor.",
+  "teaching_goal": "Multi-vector offense from concealed positions. Teaches closing exits before shifting to camp seizure.",
   "narrative_intent": "The Roman column walks into a trap and is destroyed by converging attacks.",
   "map_path": ":/assets/maps/map_battle_trasimene.json",
   "player_setup": {
@@ -12,8 +12,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 300,
-      "food": 220
+      "gold": 360,
+      "food": 280
     }
   },
   "ai_setups": [
@@ -42,17 +42,17 @@
         {
           "timing": 150.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8}
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6}
           ],
           "entry_point": {"x": 10, "z": 50}
         },
         {
           "timing": 320.0,
           "composition": [
-            {"type": "archer", "count": 6},
-            {"type": "spearman", "count": 8},
-            {"type": "horse_swordsman", "count": 3}
+            {"type": "archer", "count": 4},
+            {"type": "spearman", "count": 6},
+            {"type": "horse_swordsman", "count": 2}
           ],
           "entry_point": {"x": 18, "z": 40}
         }
@@ -83,8 +83,8 @@
         {
           "timing": 240.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 5},
-            {"type": "spearman", "count": 4}
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "spearman", "count": 3}
           ],
           "entry_point": {"x": 35, "z": 20}
         }
@@ -93,8 +93,10 @@
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Destroy all Roman camps and trapped forces"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Capture both Roman field camps after closing the trap"
     }
   ],
   "defeat_conditions": [
@@ -110,10 +112,9 @@
   ],
   "optional_objectives": [
     {
-      "type": "capture_structures",
-      "structure_types": ["barracks"],
-      "min_count": 2,
-      "description": "Capture both Roman field camps"
+      "type": "wave_count",
+      "wave_count": 2,
+      "description": "Break two Roman breakout waves before they escape the corridor"
     }
   ],
   "events": [

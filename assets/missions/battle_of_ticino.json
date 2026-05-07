@@ -1,8 +1,8 @@
 {
   "id": "battle_of_ticino",
   "title": "Battle of Ticino",
-  "summary": "First battle on Italian soil. Win the cavalry duel, then crush Roman reinforcements arriving from multiple directions.",
-  "teaching_goal": "Mobile offense with split threats. Teaches fast response to reinforcements and flank pressure.",
+  "summary": "First battle on Italian soil. Win the cavalry duel, then seize the Roman reserve camp before fresh reinforcements regroup.",
+  "teaching_goal": "Mobile offense with cavalry tempo. Teaches when to press an early advantage and convert it into a camp assault.",
   "narrative_intent": "Hannibal's first Italian victory is a test of tempo and cavalry control.",
   "map_path": ":/assets/maps/map_battle_ticino.json",
   "player_setup": {
@@ -12,8 +12,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 500,
-      "food": 400
+      "gold": 550,
+      "food": 450
     }
   },
   "ai_setups": [
@@ -36,7 +36,7 @@
         {
           "timing": 180.0,
           "composition": [
-            {"type": "spearman", "count": 6},
+            {"type": "spearman", "count": 5},
             {"type": "swordsman", "count": 4},
             {"type": "horse_swordsman", "count": 3}
           ],
@@ -45,8 +45,8 @@
         {
           "timing": 360.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
-            {"type": "spearman", "count": 4},
+            {"type": "horse_swordsman", "count": 5},
+            {"type": "spearman", "count": 3},
             {"type": "archer", "count": 2}
           ],
           "entry_point": {"x": 160, "z": 32}
@@ -78,8 +78,8 @@
         {
           "timing": 240.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "spearman", "count": 4},
+            {"type": "horse_swordsman", "count": 3},
+            {"type": "spearman", "count": 3},
             {"type": "archer", "count": 2}
           ],
           "entry_point": {"x": 178, "z": 90}
@@ -87,9 +87,9 @@
         {
           "timing": 480.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
-            {"type": "swordsman", "count": 5},
-            {"type": "archer", "count": 3}
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "swordsman", "count": 4},
+            {"type": "archer", "count": 2}
           ],
           "entry_point": {"x": 178, "z": 90}
         }
@@ -98,8 +98,10 @@
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Break Roman resistance and destroy all enemy camps"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 1,
+      "description": "Capture the Roman reserve camp to rout Scipio's screen"
     }
   ],
   "defeat_conditions": [
@@ -115,10 +117,9 @@
   ],
   "optional_objectives": [
     {
-      "type": "capture_structures",
-      "structure_types": ["barracks"],
-      "min_count": 1,
-      "description": "Capture the Roman reserve camp"
+      "type": "wave_count",
+      "wave_count": 2,
+      "description": "Break both Roman reinforcement waves before they regroup"
     }
   ],
   "events": [
