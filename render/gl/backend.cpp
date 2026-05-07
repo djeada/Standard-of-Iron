@@ -1736,8 +1736,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
                 (it.texture != nullptr)
                     ? it.texture
                     : (m_resources ? m_resources->white() : nullptr);
-            if ((tex_to_use != nullptr) &&
-                tex_to_use != m_lastBoundTexture) {
+            if ((tex_to_use != nullptr) && tex_to_use != m_lastBoundTexture) {
               tex_to_use->bind(0);
               m_lastBoundTexture = tex_to_use;
               batch_shader->set_uniform(inst_uniforms->texture, 0);

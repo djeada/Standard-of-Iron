@@ -251,7 +251,8 @@ TEST(QueueSubmitterPart, NullMaterialFallsBackToMeshCmd) {
   EXPECT_EQ(queue.items().front().index(), Render::GL::MeshCmdIndex);
 }
 
-TEST(DrawQueuePreparedBatches, MeshCommandsWithDifferentMaterialIdAreNotBatched) {
+TEST(DrawQueuePreparedBatches,
+     MeshCommandsWithDifferentMaterialIdAreNotBatched) {
   Render::GL::DrawQueue queue;
 
   Render::GL::MeshCmd a{};

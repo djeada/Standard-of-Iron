@@ -95,16 +95,17 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
           if (old_barracks != nearest_barracks) {
             prod_comp->max_units += home_comp->population_contribution;
           }
-
         }
       }
     }
 
-    if ((home_prod != nullptr) && (home_comp->family_generation_interval > 0.0F) &&
+    if ((home_prod != nullptr) &&
+        (home_comp->family_generation_interval > 0.0F) &&
         (home_comp->family_manpower_value > 0) &&
         (home_comp->family_generation_cooldown <= 0.0F)) {
       home_prod->manpower_available += home_comp->family_manpower_value;
-      home_comp->family_generation_cooldown = home_comp->family_generation_interval;
+      home_comp->family_generation_cooldown =
+          home_comp->family_generation_interval;
     }
   }
 }

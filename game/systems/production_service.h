@@ -69,7 +69,8 @@ public:
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       const std::string &unit_type) -> ProductionResult {
     return start_production_for_first_selected_home(
-        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
+        world, selected, owner_id,
+        Game::Units::troop_typeFromString(unit_type));
   }
 
   static auto get_selected_barracks_state(
@@ -77,10 +78,10 @@ public:
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       ProductionState &out_state) -> bool;
 
-  static auto get_selected_home_state(
-      Engine::Core::World &world,
-      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
-      ProductionState &out_state) -> bool;
+  static auto
+  get_selected_home_state(Engine::Core::World &world,
+                          const std::vector<Engine::Core::EntityID> &selected,
+                          int owner_id, ProductionState &out_state) -> bool;
 };
 
 } // namespace Game::Systems

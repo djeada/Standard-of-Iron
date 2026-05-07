@@ -77,8 +77,8 @@ auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
 
 auto uses_prebaked_lowpoly_path(
     CreatureKind kind, CreatureLOD lod,
-    std::span<const Render::Creature::StaticAttachmentSpec> attachments) noexcept
-    -> bool {
+    std::span<const Render::Creature::StaticAttachmentSpec>
+        attachments) noexcept -> bool {
   if (lod != CreatureLOD::Minimal || !attachments.empty()) {
     return false;
   }
@@ -192,8 +192,7 @@ auto submit_snapshot_creature(
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
     std::uint32_t frame_in_clip, Render::GL::ISubmitter &out,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments = {},
-    bool allow_bake_fallback = true)
-    -> bool {
+    bool allow_bake_fallback = true) -> bool {
   const CreatureAsset *asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr ||
       asset->spec == nullptr || handle.bind_palette.empty()) {
@@ -481,19 +480,19 @@ auto CreaturePipeline::submit_requests(
       }
     }
     if (prebaked_lowpoly_required) {
-      report_submit_cache_miss("snapshot_prebaked_required", *handle, req.lod,
-                               req.archetype, req.variant, req.state,
-                               playback_desc.clip_id, req.clip_variant,
-                               playback.frame_in_clip, handle->attachments_hash);
+      report_submit_cache_miss(
+          "snapshot_prebaked_required", *handle, req.lod, req.archetype,
+          req.variant, req.state, playback_desc.clip_id, req.clip_variant,
+          playback.frame_in_clip, handle->attachments_hash);
       return;
     }
 
-    submit_rigged_creature(
-        *handle, req.lod, req.archetype, req.variant, req.state,
-        playback_desc.clip_id, req.clip_variant, playback.frame_in_clip,
-        req.role_colors_view(), static_cast<std::uint16_t>(req.variant),
-        req.base_color, draw_world, *playback.blob, playback.global_frame, out,
-        attachments);
+    submit_rigged_creature(*handle, req.lod, req.archetype, req.variant,
+                           req.state, playback_desc.clip_id, req.clip_variant,
+                           playback.frame_in_clip, req.role_colors_view(),
+                           static_cast<std::uint16_t>(req.variant),
+                           req.base_color, draw_world, *playback.blob,
+                           playback.global_frame, out, attachments);
   };
 
   for (const auto &req : requests) {

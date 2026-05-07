@@ -20,8 +20,7 @@
 
 namespace {
 [[nodiscard]] auto hash_combine(std::uint64_t seed,
-                                std::uint64_t value) noexcept
-    -> std::uint64_t {
+                                std::uint64_t value) noexcept -> std::uint64_t {
   seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
   return seed;
 }
@@ -333,19 +332,18 @@ void MinimapManager::update_units(
 
       markers.push_back(marker);
 
-      unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(entity_id));
+      unit_hash =
+          hash_combine(unit_hash, static_cast<std::uint64_t>(entity_id));
       unit_hash = hash_combine(unit_hash, hash_float(marker.world_x));
       unit_hash = hash_combine(unit_hash, hash_float(marker.world_z));
       unit_hash =
           hash_combine(unit_hash, static_cast<std::uint64_t>(marker.owner_id));
-      unit_hash =
-          hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
-      unit_hash =
-          hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
+      unit_hash = hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
+      unit_hash = hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
     }
   }
-  unit_hash = hash_combine(unit_hash,
-                           static_cast<std::uint64_t>(markers.size()));
+  unit_hash =
+      hash_combine(unit_hash, static_cast<std::uint64_t>(markers.size()));
 
   const bool units_changed = (unit_hash != m_last_unit_hash);
   const bool fog_changed =

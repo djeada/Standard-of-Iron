@@ -30,10 +30,10 @@ static auto find_first_selected_barracks(
   return nullptr;
 }
 
-static auto find_first_selected_home(
-    Engine::Core::World &world,
-    const std::vector<Engine::Core::EntityID> &selected,
-    int owner_id) -> Engine::Core::Entity * {
+static auto
+find_first_selected_home(Engine::Core::World &world,
+                         const std::vector<Engine::Core::EntityID> &selected,
+                         int owner_id) -> Engine::Core::Entity * {
   for (auto id : selected) {
     if (auto *e = world.get_entity(id)) {
       auto *u = e->get_component<Engine::Core::UnitComponent>();
