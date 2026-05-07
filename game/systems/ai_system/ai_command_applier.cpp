@@ -147,16 +147,18 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
           Engine::Core::World::count_troops_for_player(ai_owner_id);
       int const max_troops =
           Game::GameConfig::instance().get_max_troops_per_player();
-      Game::Units::TroopType const product_type = production->product_type;
       int const production_cost =
           Game::Units::TroopConfig::instance().get_production_cost(
-              product_type);
+              command.product_type);
       if (current_troops + production_cost > max_troops) {
+        break;
+      }
+      if (production->manpower_available < production_cost) {
         break;
       }
 
       production->product_type = command.product_type;
-
+      production->manpower_available -= production_cost;
       production->time_remaining = production->build_time;
       production->in_progress = true;
 

@@ -81,6 +81,7 @@ public:
 signals:
   void attack_target_selected();
   void troop_limit_reached();
+  void insufficient_manpower();
   void hold_mode_changed(bool active);
   void guard_mode_changed(bool active);
   void formation_mode_changed(bool active);

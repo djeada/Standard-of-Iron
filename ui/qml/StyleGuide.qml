@@ -131,6 +131,7 @@ QtObject {
         "horse_archer": "🏹🐎",
         "horse_spearman": "🐎🛡️",
         "healer": "✚",
+        "civilian": "🧑",
         "builder": "🔨",
         "catapult": "🛞",
         "ballista": "🎯",
@@ -175,6 +176,11 @@ QtObject {
             "default": root.iconPath("healer_rome.png"),
             "roman_republic": root.iconPath("healer_rome.png"),
             "carthage": root.iconPath("healer_cartaghe.png")
+        }),
+        "civilian": ({
+            "default": root.iconPath("builder_rome.png"),
+            "roman_republic": root.iconPath("builder_rome.png"),
+            "carthage": root.iconPath("builder_cartaghe.png")
         }),
         "builder": ({
             "default": root.iconPath("builder_rome.png"),

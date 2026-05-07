@@ -22,6 +22,8 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
     auto *home_transform =
         home_entity->get_component<Engine::Core::TransformComponent>();
     auto *home_unit = home_entity->get_component<Engine::Core::UnitComponent>();
+    auto *home_prod =
+        home_entity->get_component<Engine::Core::ProductionComponent>();
 
     if (home_comp == nullptr || home_transform == nullptr ||
         home_unit == nullptr) {
@@ -29,6 +31,7 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
     }
 
     home_comp->update_cooldown -= delta_time;
+    home_comp->family_generation_cooldown -= delta_time;
     if (home_comp->update_cooldown > 0.0F) {
       continue;
     }
@@ -92,8 +95,16 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
           if (old_barracks != nearest_barracks) {
             prod_comp->max_units += home_comp->population_contribution;
           }
+
         }
       }
+    }
+
+    if ((home_prod != nullptr) && (home_comp->family_generation_interval > 0.0F) &&
+        (home_comp->family_manpower_value > 0) &&
+        (home_comp->family_generation_cooldown <= 0.0F)) {
+      home_prod->manpower_available += home_comp->family_manpower_value;
+      home_comp->family_generation_cooldown = home_comp->family_generation_interval;
     }
   }
 }
