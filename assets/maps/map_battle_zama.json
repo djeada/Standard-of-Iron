@@ -102,6 +102,12 @@
     },
     {
       "type": "horse_swordsman",
+      "x": 32,
+      "z": 56,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
       "x": 70,
       "z": 60,
       "player_id": 1
@@ -110,6 +116,12 @@
       "type": "horse_swordsman",
       "x": 73,
       "z": 58,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 76,
+      "z": 56,
       "player_id": 1
     },
     {
@@ -128,6 +140,12 @@
       "type": "archer",
       "x": 50,
       "z": 75,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 60,
+      "z": 74,
       "player_id": 1
     },
     {
@@ -413,6 +431,38 @@
       "description": "Minor northern elevation"
     },
     {
+      "type": "hill",
+      "x": 82,
+      "z": 86,
+      "radius": 9,
+      "height": 2.3,
+      "description": "Dust ridge shielding Carthaginian reserve redeployment"
+    },
+    {
+      "type": "hill",
+      "x": 142,
+      "z": 34,
+      "radius": 9,
+      "height": 2.3,
+      "description": "Numidian launch ridge on the Roman flank"
+    },
+    {
+      "type": "forest",
+      "x": 108,
+      "z": 44,
+      "radius": 8,
+      "density": 0.38,
+      "description": "Sparse oasis palms and scrub"
+    },
+    {
+      "type": "forest",
+      "x": 96,
+      "z": 88,
+      "radius": 8,
+      "density": 0.35,
+      "description": "Dry acacia belt breaking line of sight"
+    },
+    {
       "type": "village",
       "x": 15,
       "z": 90,
@@ -423,6 +473,36 @@
       "x": 210,
       "z": 30,
       "description": "African village - Roman supply"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 42],
+      "end": [220, 34],
+      "width": 3.0,
+      "description": "Seasonal wadi in the southern half of the battlefield"
+    },
+    {
+      "start": [0, 78],
+      "end": [220, 86],
+      "width": 3.0,
+      "description": "Shallow northern wadi line"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [106, 40],
+      "end": [114, 40],
+      "width": 4.5,
+      "height": 0.6,
+      "description": "Central crossing over the southern wadi"
+    },
+    {
+      "start": [106, 82],
+      "end": [114, 82],
+      "width": 4.5,
+      "height": 0.6,
+      "description": "Northern crossing over the upper wadi"
     }
   ],
   "roads": [
@@ -481,6 +561,21 @@
         [110, 105]
       ],
       "description": "North-south crossing route"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.4,
+      "style": "default",
+      "waypoints": [
+        [20, 95],
+        [45, 82],
+        [72, 72],
+        [108, 60],
+        [145, 48],
+        [180, 35]
+      ],
+      "description": "Oblique maneuver line from Carthaginian left to Roman right"
     }
   ],
   "victory": {

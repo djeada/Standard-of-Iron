@@ -1,7 +1,7 @@
 {
   "id": "campania_campaign",
   "title": "Campania Campaign",
-  "summary": "Hold Campania against coordinated Roman waves from north, south, and west while preserving village control.",
+  "summary": "Hold Campania against coordinated Roman counterattacks while keeping your villages supplied and your reserve intact.",
   "teaching_goal": "Layered defense with selective counterattacks. Teaches distributed defense and reserve management.",
   "narrative_intent": "A prolonged operational defense where Rome attacks from every axis to retake Campania.",
   "map_path": ":/assets/maps/map_campania_campaign.json",
@@ -12,8 +12,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 1300,
-      "food": 900
+      "gold": 1500,
+      "food": 1100
     }
   },
   "ai_setups": [
@@ -36,28 +36,28 @@
         {
           "timing": 180.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
-            {"type": "archer", "count": 6}
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6},
+            {"type": "archer", "count": 4}
           ],
           "entry_point": {"x": 70, "z": 155}
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "spearman", "count": 12},
-            {"type": "swordsman", "count": 10},
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "archer", "count": 6}
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "horse_swordsman", "count": 3},
+            {"type": "archer", "count": 4}
           ],
           "entry_point": {"x": 70, "z": 155}
         },
         {
           "timing": 720.0,
           "composition": [
-            {"type": "spearman", "count": 14},
-            {"type": "swordsman", "count": 12},
-            {"type": "horse_swordsman", "count": 6},
+            {"type": "spearman", "count": 12},
+            {"type": "swordsman", "count": 10},
+            {"type": "horse_swordsman", "count": 4},
             {"type": "catapult", "count": 1}
           ],
           "entry_point": {"x": 70, "z": 155}
@@ -83,27 +83,27 @@
         {
           "timing": 260.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
+            {"type": "horse_swordsman", "count": 5},
             {"type": "archer", "count": 4},
-            {"type": "spearman", "count": 6}
+            {"type": "spearman", "count": 5}
           ],
           "entry_point": {"x": 70, "z": 5}
         },
         {
           "timing": 540.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
-            {"type": "horse_swordsman", "count": 4}
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6},
+            {"type": "horse_swordsman", "count": 3}
           ],
           "entry_point": {"x": 70, "z": 5}
         },
         {
           "timing": 780.0,
           "composition": [
-            {"type": "spearman", "count": 12},
-            {"type": "swordsman", "count": 10},
-            {"type": "horse_swordsman", "count": 6}
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "horse_swordsman", "count": 4}
           ],
           "entry_point": {"x": 70, "z": 5}
         }
@@ -134,16 +134,16 @@
         {
           "timing": 360.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 5},
-            {"type": "archer", "count": 4}
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "archer", "count": 3}
           ],
           "entry_point": {"x": 10, "z": 80}
         },
         {
           "timing": 660.0,
           "composition": [
-            {"type": "swordsman", "count": 8},
-            {"type": "spearman", "count": 6}
+            {"type": "swordsman", "count": 6},
+            {"type": "spearman", "count": 5}
           ],
           "entry_point": {"x": 10, "z": 80}
         }
@@ -153,14 +153,8 @@
   "victory_conditions": [
     {
       "type": "survive_duration",
-      "duration": 900.0,
-      "description": "Hold Campania for 15 minutes against all Roman waves"
-    },
-    {
-      "type": "control_structures",
-      "structure_types": ["village"],
-      "min_count": 2,
-      "description": "Maintain control of at least 2 villages"
+      "duration": 780.0,
+      "description": "Hold Campania for 13 minutes against the Roman counteroffensive"
     }
   ],
   "defeat_conditions": [
@@ -179,7 +173,7 @@
       "type": "control_structures",
       "structure_types": ["village"],
       "min_count": 3,
-      "description": "Hold all three Campanian villages"
+      "description": "Hold all three Campanian villages by the end of the defense"
     },
     {
       "type": "capture_structures",

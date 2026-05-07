@@ -83,6 +83,24 @@
       "player_id": 1
     },
     {
+      "type": "spearman",
+      "x": 40,
+      "z": 90,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 100,
+      "z": 90,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 55,
+      "player_id": 1
+    },
+    {
       "type": "barracks",
       "x": 70,
       "z": 80,
@@ -356,6 +374,38 @@
       "radius": 8,
       "density": 0.4,
       "description": "Northern approach cover"
+    },
+    {
+      "type": "mountain",
+      "x": 70,
+      "z": 135,
+      "radius": 9,
+      "height": 6.0,
+      "description": "Northern gate ridge forcing Roman waves into lanes"
+    },
+    {
+      "type": "mountain",
+      "x": 70,
+      "z": 25,
+      "radius": 9,
+      "height": 6.0,
+      "description": "Southern gate ridge controlling cavalry ingress"
+    },
+    {
+      "type": "forest",
+      "x": 40,
+      "z": 108,
+      "radius": 8,
+      "density": 0.5,
+      "description": "Western village orchard with ambush cover"
+    },
+    {
+      "type": "forest",
+      "x": 100,
+      "z": 108,
+      "radius": 8,
+      "density": 0.5,
+      "description": "Eastern village olive groves"
     }
   ],
   "rivers": [
@@ -370,6 +420,12 @@
       "end": [140, 60],
       "width": 5,
       "description": "Eastern stream"
+    },
+    {
+      "start": [54, 34],
+      "end": [86, 34],
+      "width": 4,
+      "description": "Central irrigation canal across the lower approach"
     }
   ],
   "bridges": [
@@ -386,6 +442,20 @@
       "width": 4,
       "height": 0.6,
       "description": "Eastern stream crossing"
+    },
+    {
+      "start": [62, 32],
+      "end": [68, 36],
+      "width": 4,
+      "height": 0.6,
+      "description": "Canal crossing near the central road"
+    },
+    {
+      "start": [74, 32],
+      "end": [80, 36],
+      "width": 4,
+      "height": 0.6,
+      "description": "Eastern canal crossing for village relief"
     }
   ],
   "roads": [
@@ -446,6 +516,24 @@
         [70, 80]
       ],
       "description": "Path to eastern village"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.2,
+      "style": "default",
+      "waypoints": [
+        [12, 130],
+        [28, 118],
+        [44, 104],
+        [58, 90],
+        [70, 80],
+        [82, 90],
+        [96, 104],
+        [112, 118],
+        [128, 130]
+      ],
+      "description": "Northern perimeter road linking both outer villages"
     }
   ],
   "victory": {
