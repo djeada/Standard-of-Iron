@@ -712,38 +712,50 @@ const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
 
 namespace {
 
-// Flat extruded arrow mesh pointing toward -Z, origin at the arrow base.
+// Flat extruded tactical arrow mesh pointing toward -Z, origin at the arrow
+// base.  A V-notch is cut into the tail to give the shape the classic
+// military movement-order "chevron tail" appearance.
 //
-// Outline (top-view, CW when viewed from above):
-//   Index:  0        1        2        3     4       5       6
-//   X:      sw       sw       hw       0    -hw     -sw     -sw
-//   Z:      0       -sl      -sl      -tl   -sl     -sl      0
+// Outline (top-view, 8 points):
+//   Index:  0      1      2      3     4      5      6      7
+//   X:      sw     sw     hw     0    -hw    -sw    -sw     0
+//   Z:      0     -sl    -sl    -tl   -sl    -sl     0     -nd
+//
+//   (nd = notch depth; the tail centre cuts inward toward the tip)
 //
 // Triangulation for the top face (+Y normal, CCW from +Y):
-//   Shaft quad :  (0,1,5), (0,5,6)
-//   Head right :  (1,2,3)
-//   Head centre:  (1,3,5)
-//   Head left  :  (3,4,5)
+//   Tail notch right:  (7,0,1)
+//   Shaft centre:      (7,1,5)
+//   Tail notch left:   (5,6,7)
+//   Head right:        (1,2,3)
+//   Head centre:       (1,3,5)
+//   Head left:         (3,4,5)
 //
 // Bottom face uses the reverse winding (-Y normal).
 auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
-  constexpr float sw = 0.11F;       // shaft half-width
-  constexpr float hw = 0.30F;       // head half-width
+  constexpr float sw = 0.12F;       // shaft half-width
+  constexpr float hw = 0.34F;       // head half-width (wider for bolder look)
   constexpr float sl = 1.20F;       // shaft length (along -Z)
   constexpr float hl = 0.50F;       // head length
   constexpr float tl = sl + hl;     // total length
-  constexpr float hh = 0.07F;       // half-height (Y extrusion)
+  constexpr float hh = 0.08F;       // half-height (Y extrusion)
+  constexpr float nd = 0.22F;       // V-notch depth at the tail
 
   struct P2D {
     float x;
     float z;
   };
-  const P2D outline[7] = {
-      {sw, 0.0F},  {sw, -sl},   {hw, -sl},
-      {0.0F, -tl}, {-hw, -sl},  {-sw, -sl},
-      {-sw, 0.0F},
+  const P2D outline[8] = {
+      {sw,   0.0F},  // 0: right outer tail
+      {sw,   -sl},   // 1: right shoulder
+      {hw,   -sl},   // 2: right wing
+      {0.0F, -tl},   // 3: tip
+      {-hw,  -sl},   // 4: left wing
+      {-sw,  -sl},   // 5: left shoulder
+      {-sw,  0.0F},  // 6: left outer tail
+      {0.0F, -nd},   // 7: tail V-notch centre
   };
-  constexpr int N = 7;
+  constexpr int N = 8;
 
   std::vector<Vertex> v;
   std::vector<unsigned int> idx;
@@ -761,9 +773,10 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
   for (int i = 0; i < N; ++i) {
     push_top(outline[i]);
   }
-  // Shaft quad: (0,1,5) and (0,5,6)
-  idx.push_back(top_base + 0); idx.push_back(top_base + 1); idx.push_back(top_base + 5);
-  idx.push_back(top_base + 0); idx.push_back(top_base + 5); idx.push_back(top_base + 6);
+  // Tail V-notch: right and left halves, plus the shaft centre triangle
+  idx.push_back(top_base + 7); idx.push_back(top_base + 0); idx.push_back(top_base + 1);
+  idx.push_back(top_base + 7); idx.push_back(top_base + 1); idx.push_back(top_base + 5);
+  idx.push_back(top_base + 5); idx.push_back(top_base + 6); idx.push_back(top_base + 7);
   // Head: right-wing, centre, left-wing
   idx.push_back(top_base + 1); idx.push_back(top_base + 2); idx.push_back(top_base + 3);
   idx.push_back(top_base + 1); idx.push_back(top_base + 3); idx.push_back(top_base + 5);
@@ -774,8 +787,9 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
   for (int i = 0; i < N; ++i) {
     push_bot(outline[i]);
   }
-  idx.push_back(bot_base + 0); idx.push_back(bot_base + 5); idx.push_back(bot_base + 1);
-  idx.push_back(bot_base + 0); idx.push_back(bot_base + 6); idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 7); idx.push_back(bot_base + 1); idx.push_back(bot_base + 0);
+  idx.push_back(bot_base + 7); idx.push_back(bot_base + 5); idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 5); idx.push_back(bot_base + 7); idx.push_back(bot_base + 6);
   idx.push_back(bot_base + 1); idx.push_back(bot_base + 3); idx.push_back(bot_base + 2);
   idx.push_back(bot_base + 1); idx.push_back(bot_base + 5); idx.push_back(bot_base + 3);
   idx.push_back(bot_base + 3); idx.push_back(bot_base + 5); idx.push_back(bot_base + 4);
