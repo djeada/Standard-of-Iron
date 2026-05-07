@@ -269,13 +269,11 @@ TEST(SnapshotMeshCache, FrameStatsCountBakesAndHits) {
   SnapshotMeshCache::Key key{};
   key.frame_in_clip = 0U;
 
-  // First call: miss -> bake
   ASSERT_NE(cache.get_or_bake(key, *source, 0U), nullptr);
   EXPECT_EQ(cache.frame_stats().bakes, 1U);
   EXPECT_EQ(cache.frame_stats().hits, 0U);
   EXPECT_EQ(cache.frame_stats().misses, 0U);
 
-  // Second call with same key: hit
   ASSERT_NE(cache.get_or_bake(key, *source, 0U), nullptr);
   EXPECT_EQ(cache.frame_stats().bakes, 1U);
   EXPECT_EQ(cache.frame_stats().hits, 1U);

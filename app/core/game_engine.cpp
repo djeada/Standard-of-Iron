@@ -487,7 +487,8 @@ GameEngine::GameEngine(QObject *parent)
                 "Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
-          &App::Controllers::CommandController::insufficient_manpower, [this]() {
+          &App::Controllers::CommandController::insufficient_manpower,
+          [this]() {
             set_error("Not enough manpower. Build homes or wait for families.");
           });
   connect(m_commandController.get(),
@@ -823,11 +824,14 @@ void GameEngine::update_cursor(Qt::CursorShape newCursor) {
   if (m_runtime.current_cursor != newCursor) {
     m_runtime.current_cursor = newCursor;
     QPointer<QQuickWindow> safe_window(m_window);
-    QMetaObject::invokeMethod(m_window, [safe_window, newCursor]() {
-      if (safe_window) {
-        safe_window->setCursor(newCursor);
-      }
-    }, Qt::AutoConnection);
+    QMetaObject::invokeMethod(
+        m_window,
+        [safe_window, newCursor]() {
+          if (safe_window) {
+            safe_window->setCursor(newCursor);
+          }
+        },
+        Qt::AutoConnection);
   }
 }
 
@@ -1162,23 +1166,21 @@ void GameEngine::render_game_effects() {
         m_commandController->get_formation_placement_angle();
     placement.active = true;
 
-    // Derive the faction accent colour from the local player's nation so the
-    // movement arrow shows a thin coloured border that matches their faction.
     const auto *nation =
         Game::Systems::NationRegistry::instance().get_nation_for_player(
             m_runtime.local_owner_id);
     if (nation != nullptr) {
       switch (nation->id) {
       case Game::Systems::NationID::RomanRepublic:
-        // Roman crimson – bold red accent.
+
         placement.accent_color = QVector3D(0.85F, 0.12F, 0.10F);
         break;
       case Game::Systems::NationID::Carthage:
-        // Carthaginian royal purple.
+
         placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
         break;
       default:
-        // Unknown nation: leave accent_color unset (neutral cyan arrow).
+
         break;
       }
     }
@@ -1193,8 +1195,8 @@ void GameEngine::update_loading_overlay() {
   }
 
   if (QThread::currentThread() != thread()) {
-    QMetaObject::invokeMethod(this, [this]() { update_loading_overlay(); },
-                              Qt::QueuedConnection);
+    QMetaObject::invokeMethod(
+        this, [this]() { update_loading_overlay(); }, Qt::QueuedConnection);
     return;
   }
 
@@ -1250,8 +1252,8 @@ void GameEngine::update_loading_overlay() {
 
 void GameEngine::update_cursor_position() {
   if (QThread::currentThread() != thread()) {
-    QMetaObject::invokeMethod(this, [this]() { update_cursor_position(); },
-                              Qt::QueuedConnection);
+    QMetaObject::invokeMethod(
+        this, [this]() { update_cursor_position(); }, Qt::QueuedConnection);
     return;
   }
   qreal const current_x = global_cursor_x();
@@ -1270,7 +1272,8 @@ void GameEngine::update_civilian_delivery_availability() {
     const auto hovered_id = m_hoverTracker->getLastHoveredEntity();
     auto *hovered = hovered_id != 0 ? m_world->get_entity(hovered_id) : nullptr;
     auto *hovered_unit =
-        hovered ? hovered->get_component<Engine::Core::UnitComponent>() : nullptr;
+        hovered ? hovered->get_component<Engine::Core::UnitComponent>()
+                : nullptr;
     const bool hovered_friendly_barracks =
         hovered_unit && hovered_unit->owner_id == m_runtime.local_owner_id &&
         hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
@@ -1281,10 +1284,11 @@ void GameEngine::update_civilian_delivery_availability() {
       if (selection_system != nullptr) {
         for (const auto id : selection_system->get_selected_units()) {
           auto *selected_entity = m_world->get_entity(id);
-          auto *selected_unit = selected_entity
-                                    ? selected_entity
-                                          ->get_component<Engine::Core::UnitComponent>()
-                                    : nullptr;
+          auto *selected_unit =
+              selected_entity
+                  ? selected_entity
+                        ->get_component<Engine::Core::UnitComponent>()
+                  : nullptr;
           if ((selected_unit != nullptr) &&
               (selected_unit->owner_id == m_runtime.local_owner_id) &&
               (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {

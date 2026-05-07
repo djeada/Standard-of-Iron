@@ -73,7 +73,8 @@ void main() {
 
   vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
 
-  float avgColor = (v_instanceColor.r + v_instanceColor.g + v_instanceColor.b) / 3.0;
+  float avgColor =
+      (v_instanceColor.r + v_instanceColor.g + v_instanceColor.b) / 3.0;
   float wrapAmount = avgColor > 0.65 ? 0.52 : (avgColor > 0.40 ? 0.20 : 0.05);
 
   float nDotL = dot(normal, lightDir);

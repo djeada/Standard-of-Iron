@@ -12,7 +12,9 @@ namespace {
 
 class HomeManpowerSystemTest : public ::testing::Test {
 protected:
-  void SetUp() override { Game::Systems::TroopCountRegistry::instance().clear(); }
+  void SetUp() override {
+    Game::Systems::TroopCountRegistry::instance().clear();
+  }
 
   void TearDown() override {
     Game::Systems::TroopCountRegistry::instance().clear();
@@ -24,9 +26,11 @@ TEST_F(HomeManpowerSystemTest,
   Engine::Core::World world;
 
   auto *barracks = world.create_entity();
-  auto *barracks_transform = barracks->add_component<Engine::Core::TransformComponent>();
+  auto *barracks_transform =
+      barracks->add_component<Engine::Core::TransformComponent>();
   auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *barracks_production = barracks->add_component<Engine::Core::ProductionComponent>();
+  auto *barracks_production =
+      barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(barracks_transform, nullptr);
   ASSERT_NE(barracks_unit, nullptr);
   ASSERT_NE(barracks_production, nullptr);
@@ -38,10 +42,12 @@ TEST_F(HomeManpowerSystemTest,
   barracks_production->manpower_available = 0;
 
   auto *home = world.create_entity();
-  auto *home_transform = home->add_component<Engine::Core::TransformComponent>();
+  auto *home_transform =
+      home->add_component<Engine::Core::TransformComponent>();
   auto *home_unit = home->add_component<Engine::Core::UnitComponent>();
   auto *home_component = home->add_component<Engine::Core::HomeComponent>();
-  auto *home_production = home->add_component<Engine::Core::ProductionComponent>();
+  auto *home_production =
+      home->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(home_transform, nullptr);
   ASSERT_NE(home_unit, nullptr);
   ASSERT_NE(home_component, nullptr);
@@ -79,7 +85,8 @@ TEST_F(HomeManpowerSystemTest,
 
   auto *barracks = world.create_entity();
   auto *unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *production = barracks->add_component<Engine::Core::ProductionComponent>();
+  auto *production =
+      barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(unit, nullptr);
   ASSERT_NE(production, nullptr);
 
@@ -90,14 +97,16 @@ TEST_F(HomeManpowerSystemTest,
 
   const std::vector<Engine::Core::EntityID> selected = {barracks->get_id()};
 
-  auto result = Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-      world, selected, 1, Game::Units::TroopType::Archer);
+  auto result = Game::Systems::ProductionService::
+      start_production_for_first_selected_barracks(
+          world, selected, 1, Game::Units::TroopType::Archer);
   EXPECT_EQ(result, Game::Systems::ProductionResult::InsufficientManpower);
   EXPECT_FALSE(production->in_progress);
 
   production->manpower_available = 60;
-  result = Game::Systems::ProductionService::start_production_for_first_selected_barracks(
-      world, selected, 1, Game::Units::TroopType::Archer);
+  result = Game::Systems::ProductionService::
+      start_production_for_first_selected_barracks(
+          world, selected, 1, Game::Units::TroopType::Archer);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);

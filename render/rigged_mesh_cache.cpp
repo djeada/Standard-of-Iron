@@ -172,7 +172,7 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     return &it->second;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
-    // Count as a miss: key absent and baking blocked — no result returned.
+
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
@@ -195,7 +195,6 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     entry.inverse_bind.push_back(m.inverted());
   }
 
-  // Count as a bake: key was absent and a new entry was created.
   ++m_frame_stats.bakes;
   auto [it, _] = m_entries.emplace(key, std::move(entry));
   return &it->second;

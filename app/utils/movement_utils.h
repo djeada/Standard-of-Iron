@@ -129,20 +129,21 @@ inline void issue_move_or_attack_command(
           civilian_ids.reserve(selected.size());
           for (const auto selected_id : selected) {
             auto *selected_entity = world->get_entity(selected_id);
-            auto *selected_unit = selected_entity
-                                      ? selected_entity->get_component<
-                                            Engine::Core::UnitComponent>()
-                                      : nullptr;
+            auto *selected_unit =
+                selected_entity
+                    ? selected_entity
+                          ->get_component<Engine::Core::UnitComponent>()
+                    : nullptr;
             if ((selected_unit != nullptr) &&
                 (selected_unit->owner_id == local_owner_id) &&
-                (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
+                (selected_unit->spawn_type ==
+                 Game::Units::SpawnType::Civilian)) {
               civilian_ids.push_back(selected_id);
               auto *delivery = selected_entity->get_component<
                   Engine::Core::CivilianDeliveryComponent>();
               if (delivery == nullptr) {
-                delivery =
-                    selected_entity
-                        ->add_component<Engine::Core::CivilianDeliveryComponent>();
+                delivery = selected_entity->add_component<
+                    Engine::Core::CivilianDeliveryComponent>();
               }
               if (delivery != nullptr) {
                 delivery->target_barracks_id = target_id;
@@ -152,7 +153,8 @@ inline void issue_move_or_attack_command(
 
           if (!civilian_ids.empty()) {
             auto *target_transform =
-                target_entity->get_component<Engine::Core::TransformComponent>();
+                target_entity
+                    ->get_component<Engine::Core::TransformComponent>();
             if (target_transform != nullptr) {
               std::vector<QVector3D> targets(
                   civilian_ids.size(),

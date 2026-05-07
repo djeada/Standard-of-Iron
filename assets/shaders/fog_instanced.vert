@@ -15,6 +15,7 @@ out vec3 v_worldPos;
 out vec3 v_normal;
 out vec3 v_color;
 out float v_alpha;
+out vec2 v_texCoord;
 
 void main() {
   vec3 worldPos =
@@ -25,6 +26,7 @@ void main() {
   v_normal = vec3(0.0, 1.0, 0.0);
   v_color = i_color;
   v_alpha = i_alpha;
+  v_texCoord = a_texCoord;
 
   gl_Position = u_viewProj * vec4(worldPos, 1.0);
 }

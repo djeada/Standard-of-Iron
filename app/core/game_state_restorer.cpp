@@ -22,6 +22,7 @@
 #include "render/ground/firecamp_renderer.h"
 #include "render/ground/fog_renderer.h"
 #include "render/ground/ground_renderer.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/ground/olive_renderer.h"
 #include "render/ground/pine_renderer.h"
 #include "render/ground/plant_renderer.h"
@@ -29,7 +30,6 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
-#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/scene_renderer.h"
 #include <QDebug>
 

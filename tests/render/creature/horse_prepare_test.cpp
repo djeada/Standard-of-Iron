@@ -258,7 +258,8 @@ TEST(HorsePrepare, MinimalRenderUsesPrebakedSnapshotAssetWithoutRiggedBake) {
   EXPECT_EQ(recorder.rigged_mesh_cache().size(), 0u);
 }
 
-TEST(HorsePrepare, MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
+TEST(HorsePrepare,
+     MinimalRenderDoesNotFallbackToRiggedBakeWhenSnapshotMissing) {
   auto const root = TestAssets::find_creature_assets_dir("horse.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";

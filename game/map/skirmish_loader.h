@@ -69,7 +69,8 @@ public:
     m_features = features;
   }
   void set_fog_renderer(Render::GL::FogRenderer *fog) { m_fog = fog; }
-  void set_boundary_fog_renderer(Render::GL::MapBoundaryFogRenderer *boundary_fog) {
+  void
+  set_boundary_fog_renderer(Render::GL::MapBoundaryFogRenderer *boundary_fog) {
     m_boundary_fog = boundary_fog;
   }
   void set_rain_renderer(Render::GL::RainRenderer *rain) { m_rain = rain; }

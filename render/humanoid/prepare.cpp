@@ -613,8 +613,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       if (anim.is_in_hold_mode) {
         effective_kneel = anim.hold_entry_progress * hold_kneel_depth;
       } else if (anim.is_exiting_hold) {
-        effective_kneel =
-            (1.0F - anim.hold_exit_progress) * hold_kneel_depth;
+        effective_kneel = (1.0F - anim.hold_exit_progress) * hold_kneel_depth;
       }
       if (effective_kneel > 1e-4F) {
         HumanoidPoseController kneel_ctrl(pose, anim_ctx);

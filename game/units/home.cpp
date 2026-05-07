@@ -52,7 +52,8 @@ void Home::init(const SpawnParams &params) {
     home_comp->population_contribution = 50;
     home_comp->update_cooldown = 0.0F;
     home_comp->family_generation_interval = 12.0F;
-    home_comp->family_generation_cooldown = home_comp->family_generation_interval;
+    home_comp->family_generation_cooldown =
+        home_comp->family_generation_interval;
     home_comp->family_manpower_value = 8;
   }
 

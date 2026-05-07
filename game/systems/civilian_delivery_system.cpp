@@ -23,7 +23,8 @@ void CivilianDeliverySystem::update(Engine::Core::World *world, float) {
     }
 
     auto *delivery =
-        civilian_entity->get_component<Engine::Core::CivilianDeliveryComponent>();
+        civilian_entity
+            ->get_component<Engine::Core::CivilianDeliveryComponent>();
     auto *civilian_unit =
         civilian_entity->get_component<Engine::Core::UnitComponent>();
     auto *civilian_transform =
@@ -33,33 +34,39 @@ void CivilianDeliverySystem::update(Engine::Core::World *world, float) {
         (civilian_transform == nullptr) ||
         (civilian_unit->spawn_type != Game::Units::SpawnType::Civilian) ||
         (delivery->target_barracks_id == 0)) {
-      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      civilian_entity
+          ->remove_component<Engine::Core::CivilianDeliveryComponent>();
       continue;
     }
 
     auto *barracks_entity = world->get_entity(delivery->target_barracks_id);
-    auto *barracks_unit = barracks_entity
-                              ? barracks_entity->get_component<Engine::Core::UnitComponent>()
-                              : nullptr;
+    auto *barracks_unit =
+        barracks_entity
+            ? barracks_entity->get_component<Engine::Core::UnitComponent>()
+            : nullptr;
     auto *barracks_transform =
         barracks_entity
             ? barracks_entity->get_component<Engine::Core::TransformComponent>()
             : nullptr;
     auto *barracks_prod =
         barracks_entity
-            ? barracks_entity->get_component<Engine::Core::ProductionComponent>()
+            ? barracks_entity
+                  ->get_component<Engine::Core::ProductionComponent>()
             : nullptr;
 
     if ((barracks_entity == nullptr) || (barracks_unit == nullptr) ||
         (barracks_transform == nullptr) || (barracks_prod == nullptr) ||
         (barracks_unit->spawn_type != Game::Units::SpawnType::Barracks) ||
         (barracks_unit->owner_id != civilian_unit->owner_id)) {
-      civilian_entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+      civilian_entity
+          ->remove_component<Engine::Core::CivilianDeliveryComponent>();
       continue;
     }
 
-    float const dx = civilian_transform->position.x - barracks_transform->position.x;
-    float const dz = civilian_transform->position.z - barracks_transform->position.z;
+    float const dx =
+        civilian_transform->position.x - barracks_transform->position.x;
+    float const dz =
+        civilian_transform->position.z - barracks_transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
     if (dist_sq > (k_delivery_radius * k_delivery_radius)) {

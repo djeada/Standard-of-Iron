@@ -27,8 +27,9 @@ TEST(CivilianDeliverySystemTest, HomeRecruitsCivilianUsingHomeManpowerPool) {
   home_prod->manpower_available = 8;
 
   const std::vector<Engine::Core::EntityID> selected = {home->get_id()};
-  auto result = Game::Systems::ProductionService::start_production_for_first_selected_home(
-      world, selected, 1, Game::Units::TroopType::Civilian);
+  auto result = Game::Systems::ProductionService::
+      start_production_for_first_selected_home(
+          world, selected, 1, Game::Units::TroopType::Civilian);
 
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(home_prod->in_progress);
@@ -42,7 +43,8 @@ TEST(CivilianDeliverySystemTest, CivilianEnteringBarracksTransfersManpower) {
   auto *barracks_transform =
       barracks->add_component<Engine::Core::TransformComponent>();
   auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *barracks_prod = barracks->add_component<Engine::Core::ProductionComponent>();
+  auto *barracks_prod =
+      barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(barracks_transform, nullptr);
   ASSERT_NE(barracks_unit, nullptr);
   ASSERT_NE(barracks_prod, nullptr);

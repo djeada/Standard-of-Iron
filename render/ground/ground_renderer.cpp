@@ -12,6 +12,7 @@ namespace Render::GL {
 
 namespace {
 const QMatrix4x4 k_identity_matrix;
+constexpr float k_non_playable_margin_tiles = 48.0F;
 inline auto saturate(const QVector3D &c) -> QVector3D {
   return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
@@ -24,8 +25,9 @@ void GroundRenderer::recompute_model() {
   QMatrix4x4 new_model = k_identity_matrix;
 
   if (m_width > 0 && m_height > 0) {
-    const float scale_x = std::sqrt(float(m_width)) * m_tile_size;
-    const float scale_z = std::sqrt(float(m_height)) * m_tile_size;
+    const float margin = k_non_playable_margin_tiles * m_tile_size;
+    const float scale_x = float(m_width) * m_tile_size + margin * 2.0F;
+    const float scale_z = float(m_height) * m_tile_size + margin * 2.0F;
     new_model.scale(scale_x, 1.0F, scale_z);
   } else {
     new_model.scale(m_extent, 1.0F, m_extent);
@@ -38,9 +40,12 @@ void GroundRenderer::recompute_model() {
 }
 
 void GroundRenderer::update_noise_offset() {
-  const float span_x = (m_width > 0 ? float(m_width) * m_tile_size : m_extent);
+  const float margin = k_non_playable_margin_tiles * m_tile_size;
+  const float span_x =
+      (m_width > 0 ? float(m_width) * m_tile_size + margin * 2.0F : m_extent);
   const float span_z =
-      (m_height > 0 ? float(m_height) * m_tile_size : m_extent);
+      (m_height > 0 ? float(m_height) * m_tile_size + margin * 2.0F
+                    : m_extent);
   const auto seed = static_cast<float>(m_biome_settings.seed % 1024U);
 
   QVector2D new_offset;

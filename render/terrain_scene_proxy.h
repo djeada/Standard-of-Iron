@@ -32,8 +32,7 @@ public:
   TerrainSceneProxy(TerrainSurfaceManager *surface,
                     TerrainFeatureManager *features,
                     TerrainScatterManager *scatter, RainRenderer *rain,
-                    FogRenderer *fog,
-                    MapBoundaryFogRenderer *boundary_fog)
+                    FogRenderer *fog, MapBoundaryFogRenderer *boundary_fog)
       : m_surface(surface), m_features(features), m_scatter(scatter),
         m_rain(rain), m_fog(fog), m_boundary_fog(boundary_fog) {
     if (m_surface != nullptr) {
@@ -61,9 +60,9 @@ public:
     submit_features(renderer, resources);
     submit_scatters(renderer, resources);
 
-    for (auto *pass : {static_cast<IRenderPass *>(m_rain),
-                       static_cast<IRenderPass *>(m_fog),
-                       static_cast<IRenderPass *>(m_boundary_fog)}) {
+    for (auto *pass :
+         {static_cast<IRenderPass *>(m_rain), static_cast<IRenderPass *>(m_fog),
+          static_cast<IRenderPass *>(m_boundary_fog)}) {
       if (pass != nullptr) {
         pass->submit(renderer, resources);
       }

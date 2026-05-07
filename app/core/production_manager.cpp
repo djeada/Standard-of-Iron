@@ -356,8 +356,8 @@ auto ProductionManager::get_selected_builder_production_state() const
   return m;
 }
 
-auto ProductionManager::get_selected_home_production_state(int local_owner_id) const
-    -> QVariantMap {
+auto ProductionManager::get_selected_home_production_state(
+    int local_owner_id) const -> QVariantMap {
   QVariantMap m;
   m["has_home"] = false;
   m["in_progress"] = false;

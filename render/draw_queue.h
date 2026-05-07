@@ -312,8 +312,7 @@ struct PreparedBatch {
 class DrawQueue {
 public:
   void clear() {
-    m_items_high_water =
-        std::max(m_items_high_water, m_items.size());
+    m_items_high_water = std::max(m_items_high_water, m_items.size());
     m_prepared_high_water =
         std::max(m_prepared_high_water, m_prepared_batches.size());
     m_items.clear();
@@ -326,8 +325,7 @@ public:
   }
 
   void reserve_for_frame(std::size_t items_hint = 0) {
-    const std::size_t target =
-        std::max(items_hint, m_items_high_water);
+    const std::size_t target = std::max(items_hint, m_items_high_water);
     if (target > m_items.capacity()) {
       m_items.reserve(target);
       m_sort_indices.reserve(target);
@@ -475,7 +473,8 @@ private:
   };
 
   void sort_full_keys(std::size_t start, std::size_t end) {
-    std::stable_sort(m_sort_indices.begin() + static_cast<std::ptrdiff_t>(start),
+    std::stable_sort(m_sort_indices.begin() +
+                         static_cast<std::ptrdiff_t>(start),
                      m_sort_indices.begin() + static_cast<std::ptrdiff_t>(end),
                      [&](std::uint32_t lhs, std::uint32_t rhs) {
                        if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
@@ -492,9 +491,7 @@ private:
 
     std::size_t covered = 0;
     for (const SubmissionBucketSpan &span : m_submission_bucket_spans) {
-      // Any span mismatch means the recorded submit-time bucket layout no
-      // longer maps cleanly onto the current queue, so correctness requires
-      // falling back to the original full stable sort.
+
       if (span.start != covered || span.end() > count) {
         return false;
       }
@@ -609,8 +606,8 @@ private:
     }
   }
 
-  [[nodiscard]] auto compute_submission_bucket(const DrawCmd &cmd) const
-      -> std::uint32_t {
+  [[nodiscard]] auto
+  compute_submission_bucket(const DrawCmd &cmd) const -> std::uint32_t {
     SortIdentity identity;
     populate_sort_identity_prefix(cmd, identity);
     return (static_cast<std::uint32_t>(identity.pass) << 16) |
@@ -796,8 +793,8 @@ private:
       }
     }
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
-            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
-            rig_a.material == rig_b.material;
+           rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
+           rig_a.material == rig_b.material;
   }
 
   [[nodiscard]] auto

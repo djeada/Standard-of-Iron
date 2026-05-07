@@ -18,12 +18,11 @@ flat out vec3 v_instanceColor;
 flat out float v_instanceAlpha;
 
 void main() {
-  mat4 model =
-      mat4(vec4(a_instanceModelCol0.xyz, 0.0),
-           vec4(a_instanceModelCol1.xyz, 0.0),
-           vec4(a_instanceModelCol2.xyz, 0.0),
-           vec4(a_instanceModelCol0.w, a_instanceModelCol1.w,
-                a_instanceModelCol2.w, 1.0));
+  mat4 model = mat4(vec4(a_instanceModelCol0.xyz, 0.0),
+                    vec4(a_instanceModelCol1.xyz, 0.0),
+                    vec4(a_instanceModelCol2.xyz, 0.0),
+                    vec4(a_instanceModelCol0.w, a_instanceModelCol1.w,
+                         a_instanceModelCol2.w, 1.0));
 
   vec4 worldPos4 = model * vec4(a_position, 1.0);
   v_worldPos = worldPos4.xyz;

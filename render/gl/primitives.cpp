@@ -712,48 +712,22 @@ const std::unique_ptr<Mesh> k_unit_torso_mesh = create_unit_torso_mesh(
 
 namespace {
 
-// Flat extruded tactical arrow mesh pointing toward -Z, origin at the arrow
-// base.  A V-notch is cut into the tail to give the shape the classic
-// military movement-order "chevron tail" appearance.
-//
-// Outline (top-view, 8 points):
-//   Index:  0      1      2      3     4      5      6      7
-//   X:      sw     sw     hw     0    -hw    -sw    -sw     0
-//   Z:      0     -sl    -sl    -tl   -sl    -sl     0     -nd
-//
-//   (nd = notch depth; the tail centre cuts inward toward the tip)
-//
-// Triangulation for the top face (+Y normal, CCW from +Y):
-//   Tail notch right:  (7,0,1)
-//   Shaft centre:      (7,1,5)
-//   Tail notch left:   (5,6,7)
-//   Head right:        (1,2,3)
-//   Head centre:       (1,3,5)
-//   Head left:         (3,4,5)
-//
-// Bottom face uses the reverse winding (-Y normal).
 auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
-  constexpr float sw = 0.12F;       // shaft half-width
-  constexpr float hw = 0.34F;       // head half-width (wider for bolder look)
-  constexpr float sl = 1.20F;       // shaft length (along -Z)
-  constexpr float hl = 0.50F;       // head length
-  constexpr float tl = sl + hl;     // total length
-  constexpr float hh = 0.08F;       // half-height (Y extrusion)
-  constexpr float nd = 0.22F;       // V-notch depth at the tail
+  constexpr float sw = 0.075F;
+  constexpr float hw = 0.28F;
+  constexpr float sl = 1.08F;
+  constexpr float hl = 0.48F;
+  constexpr float tl = sl + hl;
+  constexpr float hh = 0.028F;
+  constexpr float nd = 0.16F;
 
   struct P2D {
     float x;
     float z;
   };
   const P2D outline[8] = {
-      {sw,   0.0F},  // 0: right outer tail
-      {sw,   -sl},   // 1: right shoulder
-      {hw,   -sl},   // 2: right wing
-      {0.0F, -tl},   // 3: tip
-      {-hw,  -sl},   // 4: left wing
-      {-sw,  -sl},   // 5: left shoulder
-      {-sw,  0.0F},  // 6: left outer tail
-      {0.0F, -nd},   // 7: tail V-notch centre
+      {sw, 0.0F}, {sw, -sl},  {hw, -sl},   {0.0F, -tl},
+      {-hw, -sl}, {-sw, -sl}, {-sw, 0.0F}, {0.0F, -nd},
   };
   constexpr int N = 8;
 
@@ -767,42 +741,59 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
     v.push_back({{p.x, -hh, p.z}, {0.0F, -1.0F, 0.0F}, {0.5F + p.x, -p.z}});
   };
 
-  // ── Top face (+Y normal) ──────────────────────────────────────────────────
-  // Each triangle's normal = (B-A) × (C-A); chosen CCW from +Y gives +Y.
   int const top_base = static_cast<int>(v.size());
   for (int i = 0; i < N; ++i) {
     push_top(outline[i]);
   }
-  // Tail V-notch: right and left halves, plus the shaft centre triangle
-  idx.push_back(top_base + 7); idx.push_back(top_base + 0); idx.push_back(top_base + 1);
-  idx.push_back(top_base + 7); idx.push_back(top_base + 1); idx.push_back(top_base + 5);
-  idx.push_back(top_base + 5); idx.push_back(top_base + 6); idx.push_back(top_base + 7);
-  // Head: right-wing, centre, left-wing
-  idx.push_back(top_base + 1); idx.push_back(top_base + 2); idx.push_back(top_base + 3);
-  idx.push_back(top_base + 1); idx.push_back(top_base + 3); idx.push_back(top_base + 5);
-  idx.push_back(top_base + 3); idx.push_back(top_base + 4); idx.push_back(top_base + 5);
 
-  // ── Bottom face (-Y normal, reversed winding) ─────────────────────────────
+  idx.push_back(top_base + 7);
+  idx.push_back(top_base + 0);
+  idx.push_back(top_base + 1);
+  idx.push_back(top_base + 7);
+  idx.push_back(top_base + 1);
+  idx.push_back(top_base + 5);
+  idx.push_back(top_base + 5);
+  idx.push_back(top_base + 6);
+  idx.push_back(top_base + 7);
+
+  idx.push_back(top_base + 1);
+  idx.push_back(top_base + 2);
+  idx.push_back(top_base + 3);
+  idx.push_back(top_base + 1);
+  idx.push_back(top_base + 3);
+  idx.push_back(top_base + 5);
+  idx.push_back(top_base + 3);
+  idx.push_back(top_base + 4);
+  idx.push_back(top_base + 5);
+
   int const bot_base = static_cast<int>(v.size());
   for (int i = 0; i < N; ++i) {
     push_bot(outline[i]);
   }
-  idx.push_back(bot_base + 7); idx.push_back(bot_base + 1); idx.push_back(bot_base + 0);
-  idx.push_back(bot_base + 7); idx.push_back(bot_base + 5); idx.push_back(bot_base + 1);
-  idx.push_back(bot_base + 5); idx.push_back(bot_base + 7); idx.push_back(bot_base + 6);
-  idx.push_back(bot_base + 1); idx.push_back(bot_base + 3); idx.push_back(bot_base + 2);
-  idx.push_back(bot_base + 1); idx.push_back(bot_base + 5); idx.push_back(bot_base + 3);
-  idx.push_back(bot_base + 3); idx.push_back(bot_base + 5); idx.push_back(bot_base + 4);
+  idx.push_back(bot_base + 7);
+  idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 0);
+  idx.push_back(bot_base + 7);
+  idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 7);
+  idx.push_back(bot_base + 6);
+  idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 3);
+  idx.push_back(bot_base + 2);
+  idx.push_back(bot_base + 1);
+  idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 3);
+  idx.push_back(bot_base + 3);
+  idx.push_back(bot_base + 5);
+  idx.push_back(bot_base + 4);
 
-  // ── Side faces (one quad per outline edge) ────────────────────────────────
   for (int i = 0; i < N; ++i) {
     int const next = (i + 1) % N;
     const P2D &a = outline[i];
     const P2D &b = outline[next];
 
-    // Outward normal: perpendicular to the edge, pointing away from the arrow
-    // interior.  Rotating the edge direction (ex,0,ez) by -90° around Y gives
-    // the outward horizontal normal (-ez, 0, ex).
     float const ex = b.x - a.x;
     float const ez = b.z - a.z;
     QVector3D n(-ez, 0.0F, ex);
@@ -830,7 +821,7 @@ auto create_orientation_arrow_mesh() -> std::unique_ptr<Mesh> {
 namespace {
 const std::unique_ptr<Mesh> k_orientation_arrow_mesh =
     create_orientation_arrow_mesh();
-} // namespace
+}
 
 auto get_unit_cylinder(int radial_segments) -> Mesh * {
   radial_segments = std::max(radial_segments, 3);

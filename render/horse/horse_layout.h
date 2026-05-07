@@ -34,17 +34,20 @@ inline constexpr float k_horse_head_visual_length_scale = 1.5F;
 
 [[nodiscard]] inline auto horse_head_visual_width(
     const Render::GL::HorseDimensions &dims) noexcept -> float {
-  return dims.head_width * k_horse_visual_scale * k_horse_head_visual_width_scale;
+  return dims.head_width * k_horse_visual_scale *
+         k_horse_head_visual_width_scale;
 }
 
 [[nodiscard]] inline auto horse_head_visual_height(
     const Render::GL::HorseDimensions &dims) noexcept -> float {
-  return dims.head_height * k_horse_visual_scale * k_horse_head_visual_height_scale;
+  return dims.head_height * k_horse_visual_scale *
+         k_horse_head_visual_height_scale;
 }
 
 [[nodiscard]] inline auto horse_head_visual_length(
     const Render::GL::HorseDimensions &dims) noexcept -> float {
-  return dims.head_length * k_horse_visual_scale * k_horse_head_visual_length_scale;
+  return dims.head_length * k_horse_visual_scale *
+         k_horse_head_visual_length_scale;
 }
 
 [[nodiscard]] inline auto
