@@ -301,7 +301,7 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
 
   const auto &prepared_batches = queue.prepared_batches();
   const bool rigged_instancing_enabled =
-      qEnvironmentVariableIsSet("SOI_RENDER_ENABLE_RIGGED_INSTANCING");
+      !qEnvironmentVariableIsSet("SOI_RENDER_DISABLE_RIGGED_INSTANCING");
   const bool debug_rigged =
       qEnvironmentVariableIsSet("SOI_RENDER_DEBUG_RIGGED");
   std::size_t debug_rigged_batches = 0;

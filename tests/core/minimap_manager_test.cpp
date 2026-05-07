@@ -1,4 +1,7 @@
 #include "app/core/minimap_manager.h"
+#include "core/component.h"
+#include "core/entity.h"
+#include "core/world.h"
 #include "map/map_definition.h"
 #include "map/visibility_service.h"
 
@@ -60,4 +63,70 @@ TEST(MinimapManagerTest, ClearFogRestoresBaseImage) {
   manager.clear_fog();
   EXPECT_TRUE(manager.consume_dirty_flag());
   EXPECT_EQ(manager.get_image().pixel(6, 6), base_pixel);
+}
+
+TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
+  auto world = std::make_unique<Engine::Core::World>();
+  auto *entity = world->create_entity();
+  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
+                                                                1.0F);
+  auto *unit_comp =
+      entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
+  unit_comp->owner_id = 1;
+
+  MinimapManager manager;
+  manager.generate_for_map(make_test_map());
+  (void)manager.consume_dirty_flag();
+
+  const std::vector<std::uint8_t> cells(
+      12 * 12, static_cast<std::uint8_t>(VisibilityState::Visible));
+  manager.update_fog(12, 12, cells, 1);
+  (void)manager.consume_dirty_flag();
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "update_units() must mark dirty on first call (fog composite version "
+         "was unset).";
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_FALSE(manager.consume_dirty_flag())
+      << "update_units() must not mark dirty when neither fog nor units "
+         "changed.";
+
+  manager.update_fog(12, 12, cells, 2);
+  (void)manager.consume_dirty_flag();
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "update_units() must mark dirty when the fog version changes, even if "
+         "the unit hash is unchanged.";
+}
+
+TEST(MinimapManagerTest, UpdateUnitsMarksDirtyWhenRenderedMarkerStateChanges) {
+  auto world = std::make_unique<Engine::Core::World>();
+  auto *entity = world->create_entity();
+  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
+                                                                1.0F);
+  auto *unit_comp =
+      entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
+  unit_comp->owner_id = 1;
+
+  MinimapManager manager;
+  manager.generate_for_map(make_test_map());
+  (void)manager.consume_dirty_flag();
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag());
+
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_FALSE(manager.consume_dirty_flag());
+
+  unit_comp->owner_id = 2;
+  manager.update_units(world.get(), nullptr, 1);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "owner color changes must invalidate the cached unit overlay.";
+
+  manager.update_units(world.get(), nullptr, 2);
+  EXPECT_TRUE(manager.consume_dirty_flag())
+      << "local owner changes can change minimap visibility filtering.";
 }

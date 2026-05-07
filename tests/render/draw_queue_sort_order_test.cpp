@@ -15,6 +15,7 @@ using Render::GL::MeshCmd;
 using Render::GL::MeshCmdIndex;
 using Render::GL::SelectionRingCmd;
 using Render::GL::SelectionRingCmdIndex;
+using Render::GL::Shader;
 using Render::GL::TerrainFeatureCmd;
 using Render::GL::TerrainFeatureCmdIndex;
 using Render::GL::TerrainSurfaceCmd;
@@ -201,6 +202,122 @@ TEST(DrawQueuePreparedBatches,
   ASSERT_EQ(batches.size(), 2U);
   EXPECT_EQ(batches[0].count, 1U);
   EXPECT_EQ(batches[1].count, 1U);
+}
+
+TEST(DrawQueueSortOrder, AlreadySortedInputsKeepSubmissionOrder) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd terrain;
+  queue.submit(terrain);
+
+  MeshCmd mesh;
+  queue.submit(mesh);
+
+  SelectionRingCmd ring;
+  queue.submit(ring);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex);
+}
+
+TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd terrain;
+  queue.submit(terrain);
+
+  MeshCmd mesh_a;
+  mesh_a.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  queue.submit(mesh_a);
+
+  MeshCmd mesh_b;
+  mesh_b.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x2));
+  mesh_b.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  queue.submit(mesh_b);
+
+  MeshCmd mesh_c = mesh_a;
+  queue.submit(mesh_c);
+
+  SelectionRingCmd ring;
+  queue.submit(ring);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 5U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(3).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(4).index(), SelectionRingCmdIndex);
+  EXPECT_EQ(queue.sort_key_for_sorted(1), queue.sort_key_for_sorted(2));
+  EXPECT_LT(queue.sort_key_for_sorted(2), queue.sort_key_for_sorted(3));
+}
+
+TEST(DrawQueueSortOrder, NonMonotonicBucketSequenceFallsBackToGlobalSort) {
+  DrawQueue queue;
+
+  MeshCmd mesh_a;
+  mesh_a.shader = reinterpret_cast<Shader *>(static_cast<std::uintptr_t>(0x1));
+  mesh_a.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  queue.submit(mesh_a);
+
+  TerrainSurfaceCmd terrain;
+  queue.submit(terrain);
+
+  MeshCmd mesh_b = mesh_a;
+  queue.submit(mesh_b);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 3U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.get_sorted(2).index(), MeshCmdIndex);
+  EXPECT_EQ(queue.sort_key_for_sorted(1), queue.sort_key_for_sorted(2));
+}
+
+TEST(DrawQueueMemory, HighWaterMarkTrackedAfterClear) {
+  DrawQueue queue;
+
+  for (int i = 0; i < 50; ++i) {
+    MeshCmd cmd;
+    queue.submit(cmd);
+  }
+  queue.sort_for_batching();
+
+  EXPECT_EQ(queue.items_high_water(), 0U)
+      << "High-water mark is updated by clear(), not sort_for_batching()";
+  EXPECT_EQ(queue.prepared_high_water(), 0U);
+
+  queue.clear();
+
+  EXPECT_EQ(queue.items_high_water(), 50U);
+  EXPECT_GE(queue.prepared_high_water(), 1U);
+}
+
+TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
+  DrawQueue queue;
+
+  for (int i = 0; i < 100; ++i) {
+    MeshCmd cmd;
+    queue.submit(cmd);
+  }
+  queue.sort_for_batching();
+  queue.clear();
+  queue.reserve_for_frame();
+
+  EXPECT_GE(queue.items().capacity(), 100U)
+      << "reserve_for_frame() must retain capacity from previous frame "
+         "high-water mark.";
+
+  queue.clear();
+  EXPECT_GE(queue.items().capacity(), 100U)
+      << "Subsequent clear() must not shrink reserved capacity.";
 }
 
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {

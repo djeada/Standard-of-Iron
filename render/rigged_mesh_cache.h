@@ -61,10 +61,21 @@ public:
     }
   };
 
+  struct FrameStats {
+    std::uint32_t hits{0};
+    std::uint32_t misses{0};
+    std::uint32_t bakes{0};
+  };
+
   RiggedMeshCache() = default;
   ~RiggedMeshCache();
   RiggedMeshCache(const RiggedMeshCache &) = delete;
   auto operator=(const RiggedMeshCache &) -> RiggedMeshCache & = delete;
+
+  void reset_frame_stats() noexcept { m_frame_stats = {}; }
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
+    return m_frame_stats;
+  }
 
   auto get_or_bake(const Render::Creature::CreatureSpec &spec,
                    Render::Creature::CreatureLOD lod,
@@ -96,6 +107,7 @@ public:
 
 private:
   std::unordered_map<Key, RiggedMeshEntry, KeyHash> m_entries;
+  FrameStats m_frame_stats;
 };
 
 void rigged_entry_ensure_skin_atlas(const RiggedMeshEntry &entry,

@@ -255,6 +255,7 @@ void Renderer::begin_frame() {
 
   m_active_queue = &m_queues[m_fill_queue_index];
   m_active_queue->clear();
+  m_active_queue->reserve_for_frame();
 
   if (m_camera != nullptr) {
     m_view_proj =
