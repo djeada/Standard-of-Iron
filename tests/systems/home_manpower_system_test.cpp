@@ -60,6 +60,7 @@ TEST_F(HomeManpowerSystemTest,
   EXPECT_EQ(home_component->nearest_barracks_id, barracks->get_id());
   EXPECT_EQ(barracks_production->max_units, 150);
   EXPECT_EQ(barracks_production->manpower_available, 12);
+  EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 
   home_component->update_cooldown = 0.0F;
   home_component->family_generation_cooldown = 0.0F;
@@ -67,6 +68,7 @@ TEST_F(HomeManpowerSystemTest,
 
   EXPECT_EQ(barracks_production->max_units, 150);
   EXPECT_EQ(barracks_production->manpower_available, 24);
+  EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 }
 
 TEST_F(HomeManpowerSystemTest,
