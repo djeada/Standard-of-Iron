@@ -786,9 +786,11 @@ private:
     if (rig_a.role_color_count != rig_b.role_color_count) {
       return false;
     }
-    const auto role_color_count = std::min<std::size_t>(
-        rig_a.role_color_count, rig_a.role_colors.size());
-    for (std::size_t i = 0; i < role_color_count; ++i) {
+    if (rig_a.role_color_count > rig_a.role_colors.size() ||
+        rig_b.role_color_count > rig_b.role_colors.size()) {
+      return false;
+    }
+    for (std::size_t i = 0; i < rig_a.role_color_count; ++i) {
       if (rig_a.role_colors[i] != rig_b.role_colors[i]) {
         return false;
       }
