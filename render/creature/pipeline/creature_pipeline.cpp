@@ -417,6 +417,12 @@ auto CreaturePipeline::submit_requests(
     return stats;
   }
 
+  auto *renderer = resolve_renderer(out);
+  if (renderer != nullptr) {
+    renderer->rigged_mesh_cache().reset_frame_stats();
+    renderer->snapshot_mesh_cache().reset_frame_stats();
+  }
+
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest &req) {
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
@@ -487,6 +493,18 @@ auto CreaturePipeline::submit_requests(
 
   for (const auto &req : requests) {
     emit_request(req);
+  }
+
+  if (renderer != nullptr) {
+    const auto &rs = renderer->rigged_mesh_cache().frame_stats();
+    stats.rigged_cache_hits = rs.hits;
+    stats.rigged_cache_misses = rs.misses;
+    stats.rigged_cache_bakes = rs.bakes;
+    const auto &ss = renderer->snapshot_mesh_cache().frame_stats();
+    stats.snapshot_cache_hits = ss.hits;
+    stats.snapshot_loads = ss.loads;
+    stats.snapshot_bakes = ss.bakes;
+    stats.snapshot_misses = ss.misses;
   }
 
   return stats;

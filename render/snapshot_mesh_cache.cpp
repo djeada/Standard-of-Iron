@@ -61,9 +61,11 @@ auto SnapshotMeshCache::get_or_bake(
     const Key &key, const RiggedMeshEntry &source,
     std::uint32_t global_frame) -> const SnapshotMeshEntry * {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
+    ++m_frame_stats.hits;
     return &it->second;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
+    ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::SnapshotMeshBake,
         describe_snapshot_key(key, global_frame));
@@ -73,15 +75,18 @@ auto SnapshotMeshCache::get_or_bake(
   if (source.mesh == nullptr || source.skinned_palettes.empty() ||
       source.skinned_bone_count == 0U ||
       global_frame >= source.skinned_frame_total) {
+    ++m_frame_stats.misses;
     return nullptr;
   }
 
   const auto &src_vertices = source.mesh->get_vertices();
   if (src_vertices.empty()) {
+    ++m_frame_stats.misses;
     return nullptr;
   }
   const auto &src_indices = source.mesh->get_indices();
   if (src_indices.empty()) {
+    ++m_frame_stats.misses;
     return nullptr;
   }
 
@@ -95,6 +100,7 @@ auto SnapshotMeshCache::get_or_bake(
 
   SnapshotMeshEntry entry = build_entry(baked, src_indices);
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
+  ++m_frame_stats.bakes;
   return &it->second;
 }
 
@@ -102,9 +108,11 @@ auto SnapshotMeshCache::get_or_load(
     const Key &key, const Render::Creature::Snapshot::SnapshotMeshBlob &source,
     std::uint32_t global_frame) -> const SnapshotMeshEntry * {
   if (auto it = m_entries.find(key); it != m_entries.end()) {
+    ++m_frame_stats.hits;
     return &it->second;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
+    ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::SnapshotMeshLoad,
         describe_snapshot_key(key, global_frame));
@@ -114,11 +122,13 @@ auto SnapshotMeshCache::get_or_load(
   const auto vertices = source.frame_vertices_view(global_frame);
   const auto indices = source.indices_view();
   if (vertices.empty() || indices.empty()) {
+    ++m_frame_stats.misses;
     return nullptr;
   }
 
   SnapshotMeshEntry entry = build_entry(vertices, indices);
   auto [it, _ok] = m_entries.emplace(key, std::move(entry));
+  ++m_frame_stats.loads;
   return &it->second;
 }
 
