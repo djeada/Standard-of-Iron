@@ -29,6 +29,7 @@
 #include "render/ground/terrain_feature_manager.h"
 #include "render/ground/terrain_renderer.h"
 #include "render/ground/terrain_scatter_manager.h"
+#include "render/ground/map_boundary_fog_renderer.h"
 #include "render/scene_renderer.h"
 #include <QDebug>
 
@@ -198,6 +199,10 @@ void GameStateRestorer::restore_environment_from_metadata(
     if (renderers.ground) {
       renderers.ground->configure(tile_size, grid_width, grid_height);
       renderers.ground->set_biome(terrain_service.biome_settings());
+    }
+
+    if (renderers.boundary_fog) {
+      renderers.boundary_fog->configure(grid_width, grid_height, tile_size);
     }
 
     if (height_map != nullptr) {

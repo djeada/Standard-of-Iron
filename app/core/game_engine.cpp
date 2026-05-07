@@ -1790,6 +1790,7 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
       m_features.get(),
       m_scatter.get(),
       m_fog.get(),
+      m_boundary_fog.get(),
       m_rain.get()};
 
   auto visibility_ready = [this]() {
@@ -2585,6 +2586,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
       m_features.get(),
       m_scatter.get(),
       m_fog.get(),
+      m_boundary_fog.get(),
       m_rain.get()};
   GameStateRestorer::restore_environment_from_metadata(
       meta, m_world.get(), renderers, m_level, m_runtime.local_owner_id,
