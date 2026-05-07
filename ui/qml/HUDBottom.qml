@@ -73,24 +73,38 @@ RowLayout {
 
     function commandBannerText() {
         if (!hasMovableUnits)
-            return qsTr("◉ Select Troops for Commands");
+            return qsTr("No troops selected");
 
         if (currentCommandMode === "normal")
-            return qsTr("◉ Normal Mode");
+            return qsTr("Orders ready");
 
         var orderText = qsTr("Stop command");
         if (currentCommandMode === "attack")
-            orderText = qsTr("Attack order - strike the enemy");
+            orderText = qsTr("Attack order");
         else if (currentCommandMode === "guard")
-            orderText = qsTr("Guard order - hold this position");
+            orderText = qsTr("Guard order");
         else if (currentCommandMode === "patrol")
-            orderText = qsTr("Patrol order - mark your route");
+            orderText = qsTr("Patrol order");
         else if (currentCommandMode === "heal")
-            orderText = qsTr("Medic order - aid allied troops");
+            orderText = qsTr("Medic order");
         else if (currentCommandMode === "build")
-            orderText = qsTr("Engineer order - choose fortification");
+            orderText = qsTr("Engineer order");
 
         return orderText;
+    }
+
+    function healthColor(ratio) {
+        if (ratio > 0.6)
+            return "#7F9A5F";
+
+        if (ratio > 0.3)
+            return hs.bronze;
+
+        return hs.waxHover;
+    }
+
+    function staminaColor(running) {
+        return running ? hs.bronze : "#6F8E8C";
     }
 
     function shouldPulseCommandBanner() {
@@ -220,9 +234,9 @@ RowLayout {
                                 Rectangle {
                                     width: 60
                                     height: 10
-                                    color: "#2c3e50"
+                                    color: "#15100C"
                                     radius: 5
-                                    border.color: "#1a252f"
+                                    border.color: hs.bronzeDeep
                                     border.width: 1
 
                                     Rectangle {
@@ -230,13 +244,7 @@ RowLayout {
                                         height: parent.height
                                         color: {
                                             var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
-                                            if (ratio > 0.6)
-                                                return "#27ae60";
-
-                                            if (ratio > 0.3)
-                                                return "#f39c12";
-
-                                            return "#e74c3c";
+                                            return bottomRoot.healthColor(ratio);
                                         }
                                         radius: 5
                                     }
@@ -246,9 +254,9 @@ RowLayout {
                                 Rectangle {
                                     width: 60
                                     height: 6
-                                    color: "#2c3e50"
+                                    color: "#15100C"
                                     radius: 3
-                                    border.color: "#1a252f"
+                                    border.color: hs.bronzeDeep
                                     border.width: 1
                                     visible: (typeof can_run !== 'undefined') ? can_run : false
 
@@ -257,10 +265,7 @@ RowLayout {
                                         height: parent.height
                                         color: {
                                             var running = (typeof is_running !== 'undefined') ? is_running : false;
-                                            if (running)
-                                                return "#e67e22";
-
-                                            return "#3498db";
+                                            return bottomRoot.staminaColor(running);
                                         }
                                         radius: 3
                                     }
@@ -361,7 +366,7 @@ RowLayout {
                 if (btn.hovered)
                     return Qt.lighter(baseColor, 1.2);
 
-                return "#2c3e50";
+                return hs.parchmentLight;
             }
 
             width: parent.width
@@ -738,22 +743,22 @@ RowLayout {
                 background: Rectangle {
                     color: {
                         if (!parent.enabled)
-                            return "#1a252f";
+                            return hs.parchmentDark;
 
                         if (parent.isHoldActive)
-                            return "#8e44ad";
+                            return hs.wax;
 
                         if (parent.pressed)
-                            return "#8e44ad";
+                            return hs.waxDark;
 
                         if (parent.hovered)
-                            return "#9b59b6";
+                            return hs.bannerNeutral;
 
-                        return "#34495e";
+                        return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isHoldActive ? "#d35400" : "#8e44ad") : "#1a252f"
-                    border.width: parent.isHoldActive ? 3 : 2
+                    border.color: parent.enabled ? (parent.isHoldActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: parent.isHoldActive ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -775,7 +780,7 @@ RowLayout {
                         text: (holdButton.isHoldActive ? qsTr("Active ") : "") + holdButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: holdButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: holdButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -829,22 +834,22 @@ RowLayout {
                 background: Rectangle {
                     color: {
                         if (!parent.enabled)
-                            return "#1a252f";
+                            return hs.parchmentDark;
 
                         if (parent.isFormationActive)
-                            return "#16a085";
+                            return "#6F8E8C";
 
                         if (parent.pressed)
-                            return "#16a085";
+                            return "#5F7F83";
 
                         if (parent.hovered)
-                            return "#1abc9c";
+                            return "#82A4A1";
 
-                        return "#34495e";
+                        return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isFormationActive ? "#d35400" : "#16a085") : "#1a252f"
-                    border.width: parent.isFormationActive ? 3 : 2
+                    border.color: parent.enabled ? (parent.isFormationActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: parent.isFormationActive ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -866,7 +871,7 @@ RowLayout {
                         text: (formationButton.isFormationActive ? qsTr("Active ") : "") + formationButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: formationButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: formationButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }

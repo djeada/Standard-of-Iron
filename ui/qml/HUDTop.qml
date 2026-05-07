@@ -399,17 +399,17 @@ Item {
                             text: (typeof game !== 'undefined' ? game.player_troop_count : 0) + " / " + (typeof game !== 'undefined' ? game.max_troops_per_player : 0)
                             color: {
                                 if (typeof game === 'undefined')
-                                    return "#95a5a6";
+                                    return Theme.textDim;
 
                                 var count = game.player_troop_count;
                                 var max = game.max_troops_per_player;
                                 if (count >= max)
-                                    return "#e74c3c";
+                                    return hs.waxHover;
 
                                 if (count >= max * 0.8)
-                                    return "#f39c12";
+                                    return hs.bronze;
 
-                                return "#2ecc71";
+                                return "#7F9A5F";
                             }
                             font.pixelSize: 14
                             font.bold: true
@@ -422,7 +422,7 @@ Item {
                     Rectangle {
                         width: 2
                         height: 24
-                        color: "#34495e"
+                        color: hs.bronzeDeep
                         opacity: 0.5
                         visible: !topRoot.compact
                     }
@@ -494,7 +494,7 @@ Item {
                                 id: humanCountLbl
 
                                 text: ownersContainer.playerCount()
-                                color: "#ecf0f1"
+                                color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
                             }
@@ -512,7 +512,7 @@ Item {
                                 id: aiCountLbl
 
                                 text: ownersContainer.aiCount()
-                                color: "#ecf0f1"
+                                color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
                             }
@@ -553,7 +553,7 @@ Item {
                             id: enemyLbl
 
                             text: (typeof game !== 'undefined' ? game.enemy_troops_defeated : 0)
-                            color: "#ecf0f1"
+                            color: Theme.textMain
                             font.pixelSize: 14
                             elide: Text.ElideRight
                             verticalAlignment: Text.AlignVCenter
@@ -589,16 +589,16 @@ Item {
         anchors.rightMargin: 8
         anchors.topMargin: 8
         z: 100
-        color: "#0f1a22"
+        color: hs.parchmentDark
         radius: 8
         border.width: 2
-        border.color: "#3498db"
+        border.color: hs.bronze
 
         Rectangle {
             anchors.fill: parent
             anchors.margins: 3
             radius: 6
-            color: "#0a0f14"
+            color: "#120D09"
 
             Image {
                 id: minimapImage
@@ -626,7 +626,7 @@ Item {
                 Label {
                     anchors.centerIn: parent
                     text: qsTr("MINIMAP")
-                    color: "#3f5362"
+                    color: Theme.textDim
                     font.pixelSize: 12
                     font.bold: true
                     visible: parent.status !== Image.Ready

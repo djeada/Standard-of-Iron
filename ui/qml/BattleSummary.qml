@@ -97,7 +97,7 @@ Rectangle {
     }
 
     function getBannerColor(owner_id, isLocal, isAI, aiIndex) {
-        var colors = ["#DC143C", "#228B22", "#C9A200", "#4169E1", "#9370DB", "#32CD32"];
+        var colors = ["#8F2F2A", "#496C4A", "#9A7A38", "#536D7A", "#6A5C7D", "#6F7F4B"];
         if (isLocal)
             return colors[0];
 
@@ -120,7 +120,7 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.9)
+    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.92)
     visible: false
     z: 101
 
@@ -133,10 +133,10 @@ Rectangle {
             id: mainTitle
 
             anchors.horizontalCenter: parent.horizontalCenter
-            text: isVictory ? qsTr("VICTORY!") : qsTr("FAILURE!")
-            color: Theme.accentBright
+            text: isVictory ? qsTr("Victory Secured") : qsTr("Army Broken")
+            color: isVictory ? Theme.accentBright : hs.waxHover
             font.family: "serif"
-            font.pointSize: 64
+            font.pointSize: 52
             font.bold: true
             style: Text.Outline
             styleColor: hs.parchmentDark
@@ -179,7 +179,7 @@ Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             width: parent.width * 0.4
                             height: 20
-                            color: "#8B7355"
+                            color: hs.bronzeDeep
                             radius: 4
 
                             Rectangle {
@@ -187,7 +187,7 @@ Rectangle {
                                 width: 8
                                 height: 8
                                 radius: 4
-                                color: "#FFD700"
+                                color: Theme.accentBright
                             }
 
                         }
@@ -202,7 +202,7 @@ Rectangle {
                             height: parent.height - 30
                             color: model.bannerColor
                             radius: 4
-                            border.color: "#8B7355"
+                            border.color: hs.bronzeDeep
                             border.width: 4
                             opacity: model.isLocalPlayer ? 0.8 : 0.95
 
@@ -242,7 +242,7 @@ Rectangle {
                                 anchors.fill: parent
                                 anchors.margins: 4
                                 color: "transparent"
-                                border.color: "#FFD700"
+                                border.color: Theme.accentBright
                                 border.width: 2
                                 radius: 3
                             }
@@ -255,7 +255,7 @@ Rectangle {
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: model.name
-                                    color: "#FFD700"
+                                    color: Theme.accentBright
                                     font.family: "serif"
                                     font.pointSize: 18
                                     font.bold: true
@@ -263,27 +263,27 @@ Rectangle {
                                     wrapMode: Text.WordWrap
                                     width: parent.width
                                     style: Text.Outline
-                                    styleColor: "#000000"
+                                    styleColor: hs.parchmentDark
                                 }
 
                                 Rectangle {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: parent.width * 0.8
                                     height: 24
-                                    color: model.isWinner ? "#228B22" : "#8B0000"
+                                    color: model.isWinner ? "#496C4A" : hs.waxDark
                                     radius: 4
-                                    border.color: model.isWinner ? "#32CD32" : "#DC143C"
+                                    border.color: model.isWinner ? "#8FA46B" : hs.waxHover
                                     border.width: 2
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: model.isWinner ? qsTr("VICTORIOUS") : qsTr("DEFEATED")
-                                        color: "white"
+                                        text: model.isWinner ? qsTr("Held the Field") : qsTr("Routed")
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 11
                                         font.bold: true
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                 }
@@ -292,7 +292,7 @@ Rectangle {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: parent.width * 0.9
                                     height: 2
-                                    color: "#8B7355"
+                                    color: hs.bronzeDeep
                                 }
 
                                 Column {
@@ -303,56 +303,56 @@ Rectangle {
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: qsTr("Kills: %1").arg(model.kills)
-                                        color: "#F5F5DC"
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: qsTr("Losses: %1").arg(model.losses)
-                                        color: "#F5F5DC"
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: qsTr("Units Trained: %1").arg(model.unitsTrained)
-                                        color: "#F5F5DC"
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: qsTr("Villages: %1").arg(model.villages)
-                                        color: "#F5F5DC"
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: qsTr("Play Time: %1").arg(model.playTime)
-                                        color: "#F5F5DC"
+                                        color: Theme.textMain
                                         font.family: "serif"
                                         font.pointSize: 13
                                         horizontalAlignment: Text.AlignHCenter
                                         style: Text.Outline
-                                        styleColor: "#000000"
+                                        styleColor: hs.parchmentDark
                                     }
 
                                 }
@@ -365,31 +365,31 @@ Rectangle {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     width: parent.width * 0.9
                                     height: 2
-                                    color: "#8B7355"
+                                    color: hs.bronzeDeep
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: qsTr("SCORE")
-                                    color: "#FFD700"
+                                    color: Theme.accentBright
                                     font.family: "serif"
                                     font.pointSize: 15
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
                                     style: Text.Outline
-                                    styleColor: "#000000"
+                                    styleColor: hs.parchmentDark
                                 }
 
                                 Text {
                                     anchors.horizontalCenter: parent.horizontalCenter
                                     text: model.score
-                                    color: "#FFD700"
+                                    color: Theme.accentBright
                                     font.family: "serif"
                                     font.pointSize: 22
                                     font.bold: true
                                     horizontalAlignment: Text.AlignHCenter
                                     style: Text.Outline
-                                    styleColor: "#000000"
+                                    styleColor: hs.parchmentDark
                                 }
 
                             }
@@ -430,7 +430,7 @@ Rectangle {
                             anchors.leftMargin: banner.width * 0.3
                             width: 3
                             height: 20
-                            color: "#8B7355"
+                            color: hs.bronzeDeep
 
                             Rectangle {
                                 anchors.bottom: parent.bottom
@@ -438,7 +438,7 @@ Rectangle {
                                 width: 8
                                 height: 8
                                 radius: 4
-                                color: "#FFD700"
+                                color: Theme.accentBright
                             }
 
                         }
@@ -452,7 +452,7 @@ Rectangle {
                             anchors.rightMargin: banner.width * 0.3
                             width: 3
                             height: 20
-                            color: "#8B7355"
+                            color: hs.bronzeDeep
 
                             Rectangle {
                                 anchors.bottom: parent.bottom
@@ -460,7 +460,7 @@ Rectangle {
                                 width: 8
                                 height: 8
                                 radius: 4
-                                color: "#FFD700"
+                                color: Theme.accentBright
                             }
 
                         }
@@ -475,15 +475,15 @@ Rectangle {
                         anchors.leftMargin: -5
                         width: 80
                         height: 30
-                        color: "#8B4513"
+                        color: hs.bannerNeutral
                         radius: 4
-                        border.color: "#FFD700"
+                        border.color: Theme.accentBright
                         border.width: 2
 
                         Text {
                             anchors.centerIn: parent
                             text: qsTr("YOU")
-                            color: "#FFD700"
+                            color: Theme.accentBright
                             font.family: "serif"
                             font.pointSize: 12
                             font.bold: true

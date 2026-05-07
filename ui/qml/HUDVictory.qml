@@ -22,7 +22,7 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: Qt.rgba(0, 0, 0, 0.7)
+    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.78)
     visible: !manuallyHidden && (typeof game !== 'undefined' && game.victory_state !== "")
     z: 100
     onVisibleChanged: {
@@ -53,20 +53,29 @@ Rectangle {
             anchors.centerIn: parent
             width: Math.min(parent.width * 0.7, 680)
             height: 260
-            radius: Theme.radiusPanel
+            radius: 8
             color: hs.parchmentDark
             border.color: hs.bronze
             border.width: 2
             opacity: 0.96
 
+            Image {
+                anchors.fill: parent
+                anchors.margins: 2
+                source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
+                fillMode: Image.PreserveAspectCrop
+                opacity: 0.14
+                smooth: true
+            }
+
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: 6
-                radius: Theme.radiusLarge
+                radius: 6
                 color: hs.parchmentLight
                 border.color: hs.bronzeDeep
                 border.width: 1
-                opacity: 0.7
+                opacity: 0.72
             }
 
             Column {
@@ -75,7 +84,7 @@ Rectangle {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: hs.romanGlyph + " · " + hs.carthageGlyph
+                    text: qsTr("BATTLE REPORT")
                     color: Theme.accentBright
                     font.pointSize: 16
                     font.bold: true
@@ -85,15 +94,18 @@ Rectangle {
                     id: victoryText
 
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
-                    color: (typeof game !== 'undefined' && game.victory_state === "victory") ? Theme.successText : Theme.removeColor
-                    font.pointSize: 48
+                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Victory Secured") : qsTr("Army Broken")
+                    color: (typeof game !== 'undefined' && game.victory_state === "victory") ? Theme.accentBright : hs.waxHover
+                    font.family: "serif"
+                    font.pointSize: 42
                     font.bold: true
+                    style: Text.Outline
+                    styleColor: hs.parchmentDark
                 }
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your army was crushed")
+                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy command has fallen") : qsTr("Your command has collapsed")
                     color: Theme.textMain
                     font.pointSize: 18
                 }

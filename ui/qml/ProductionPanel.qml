@@ -71,6 +71,30 @@ Rectangle {
         };
     }
 
+    function meterColor(ratio) {
+        if (ratio > 0.6)
+            return "#7F9A5F";
+
+        if (ratio > 0.3)
+            return hs.bronze;
+
+        return hs.waxHover;
+    }
+
+    function recruitCardColor(enabled, hovered) {
+        if (!enabled)
+            return "#120D09";
+
+        return hovered ? hs.bannerNeutral : hs.parchmentDark;
+    }
+
+    function recruitCardBorder(enabled, hovered) {
+        if (!enabled)
+            return hs.parchmentLight;
+
+        return hovered ? hs.bronze : hs.bronzeDeep;
+    }
+
     color: hs.parchmentDark
     border.color: hs.bronze
     border.width: 2
@@ -145,8 +169,8 @@ Rectangle {
                                 width: 36
                                 height: 36
                                 radius: 6
-                                color: isProducing ? "#27ae60" : (isOccupied ? "#2c3e50" : "#1a1a1a")
-                                border.color: isProducing ? "#229954" : (isOccupied ? "#4a6572" : "#2a2a2a")
+                                color: isProducing ? "#7F9A5F" : (isOccupied ? "#2F251D" : "#120D09")
+                                border.color: isProducing ? "#8FA46B" : (isOccupied ? "#6F8E8C" : "#3B2F24")
                                 border.width: 2
 
                                 Image {
@@ -164,7 +188,7 @@ Rectangle {
                                 Text {
                                     anchors.centerIn: parent
                                     text: parent.isOccupied ? productionPanel.unitIconEmoji(parent.queueUnitType) : "·"
-                                    color: parent.isProducing ? "#ffffff" : (parent.isOccupied ? "#bdc3c7" : "#3a3a3a")
+                                    color: parent.isProducing ? "#F4E7C8" : (parent.isOccupied ? "#D4B57C" : "#6B5231")
                                     font.pointSize: parent.isOccupied ? 16 : 20
                                     font.bold: parent.isProducing
                                     visible: !queueIconImage.visible
@@ -175,7 +199,7 @@ Rectangle {
                                     anchors.bottom: parent.bottom
                                     anchors.margins: 2
                                     text: (index + 1).toString()
-                                    color: parent.isOccupied ? "#7f8c8d" : "#2a2a2a"
+                                    color: parent.isOccupied ? "#8D7146" : "#3B2F24"
                                     font.pointSize: 7
                                     font.bold: true
                                 }
@@ -209,7 +233,7 @@ Rectangle {
 
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: queueTotal + " / 5"
-                        color: queueTotal >= 5 ? "#e74c3c" : "#bdc3c7"
+                        color: queueTotal >= 5 ? "#C0403B" : "#D4B57C"
                         font.pointSize: 9
                         font.bold: queueTotal >= 5
                     }
@@ -219,8 +243,8 @@ Rectangle {
                         height: 20
                         anchors.horizontalCenter: parent.horizontalCenter
                         radius: 10
-                        color: "#0a0f14"
-                        border.color: "#2c3e50"
+                        color: "#120D09"
+                        border.color: "#2F251D"
                         border.width: 2
                         visible: productionContent.prod.in_progress
 
@@ -236,7 +260,7 @@ Rectangle {
                                 var progress = 1 - (Math.max(0, productionContent.prod.time_remaining) / productionContent.prod.build_time);
                                 return Math.max(0, (parent.width - 4) * progress);
                             }
-                            color: "#27ae60"
+                            color: "#7F9A5F"
                             radius: 8
 
                             SequentialAnimation on opacity {
@@ -262,11 +286,11 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             text: productionContent.prod.in_progress ? Math.max(0, productionContent.prod.time_remaining).toFixed(1) + "s" : "Idle"
-                            color: "#ecf0f1"
+                            color: "#F4E7C8"
                             font.pointSize: 9
                             font.bold: true
                             style: Text.Outline
-                            styleColor: "#000000"
+                            styleColor: "#120D09"
                         }
 
                     }
@@ -274,7 +298,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Units Produced: %1 / %2").arg(productionContent.prod.produced_count || 0).arg(productionContent.prod.max_units || 0)
-                        color: (productionContent.prod.produced_count >= productionContent.prod.max_units) ? "#e74c3c" : "#bdc3c7"
+                        color: (productionContent.prod.produced_count >= productionContent.prod.max_units) ? "#C0403B" : "#D4B57C"
                         font.pointSize: 8
                     }
 
@@ -326,11 +350,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: archerRecruitIcon
@@ -347,7 +371,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !archerRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("archer")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -362,7 +386,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -395,7 +419,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: archerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -432,11 +456,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: swordsmanRecruitIcon
@@ -453,7 +477,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !swordsmanRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("swordsman")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -468,7 +492,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -501,7 +525,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: swordsmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -538,11 +562,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: spearmanRecruitIcon
@@ -559,7 +583,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !spearmanRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("spearman")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -574,7 +598,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -607,7 +631,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: spearmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -644,11 +668,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: horseKnightIcon
@@ -665,7 +689,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !horseKnightIcon.visible
                                 text: productionPanel.unitIconEmoji("horse_swordsman")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -680,7 +704,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -688,7 +712,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 150
-                                    color: horseKnightCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: horseKnightCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -713,7 +737,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: horseKnightMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -750,11 +774,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: horseArcherIcon
@@ -771,7 +795,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !horseArcherIcon.visible
                                 text: productionPanel.unitIconEmoji("horse_archer")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -786,7 +810,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -794,7 +818,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 120
-                                    color: horseArcherCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: horseArcherCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -819,7 +843,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: horseArcherMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -856,11 +880,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: horseSpearmanIcon
@@ -877,7 +901,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !horseSpearmanIcon.visible
                                 text: productionPanel.unitIconEmoji("horse_spearman")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -892,7 +916,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -900,7 +924,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 130
-                                    color: horseSpearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: horseSpearmanCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -925,7 +949,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: horseSpearmanMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -962,11 +986,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: healerRecruitIcon
@@ -983,7 +1007,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !healerRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("healer")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -998,7 +1022,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -1006,7 +1030,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 100
-                                    color: healerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: healerCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -1031,7 +1055,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: healerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1068,11 +1092,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: builderRecruitIcon
@@ -1089,7 +1113,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !builderRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("builder")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1104,7 +1128,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -1112,7 +1136,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 60
-                                    color: builderCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: builderCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -1137,7 +1161,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: builderMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1174,11 +1198,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
                             visible: unitGridContent.prod.nation_id === "carthage"
 
                             Image {
@@ -1196,7 +1220,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !elephantRecruitIcon.visible
                                 text: productionPanel.unitIconEmoji("elephant")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1211,7 +1235,7 @@ Rectangle {
                                 anchors.bottomMargin: 6
                                 radius: 8
                                 color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
-                                border.color: parent.isEnabled ? hs.bronze : "#555555"
+                                border.color: parent.isEnabled ? hs.bronze : "#8C6A3E"
                                 border.width: 1
 
                                 Text {
@@ -1219,7 +1243,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 250
-                                    color: elephantCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: elephantCostBadge.parent.isEnabled ? "#F4E7C8" : "#8D7146"
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -1244,7 +1268,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: elephantMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1283,7 +1307,7 @@ Rectangle {
 
                 width: parent.width
                 height: 1
-                color: "#34495e"
+                color: "#3B2F24"
                 visible: has_barracks
             }
 
@@ -1292,7 +1316,7 @@ Rectangle {
 
                 width: parent.width
                 height: rallyContent.height + 12
-                color: "#1a252f"
+                color: "#120D09"
                 radius: 6
                 border.color: hs.bronzeDeep
                 border.width: 1
@@ -1321,9 +1345,9 @@ Rectangle {
                         ToolTip.delay: 500
 
                         background: Rectangle {
-                            color: parent.enabled ? (parent.down ? "#16a085" : (parent.hovered ? "#1abc9c" : "#2c3e50")) : "#1a1a1a"
+                            color: parent.enabled ? (parent.down ? "#6F8E8C" : (parent.hovered ? "#82A4A1" : "#2F251D")) : "#120D09"
                             radius: 6
-                            border.color: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "#1abc9c" : "#34495e"
+                            border.color: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "#82A4A1" : "#3B2F24"
                             border.width: 2
                         }
 
@@ -1331,7 +1355,7 @@ Rectangle {
                             text: parent.text
                             font.pointSize: 9
                             font.bold: true
-                            color: parent.enabled ? "#ecf0f1" : "#5a5a5a"
+                            color: parent.enabled ? "#F4E7C8" : "#6B5231"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -1341,7 +1365,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? qsTr("Right-click to cancel") : ""
-                        color: "#7f8c8d"
+                        color: "#8D7146"
                         font.pointSize: 8
                         font.italic: true
                     }
@@ -1362,7 +1386,7 @@ Rectangle {
 
                 width: parent.width
                 height: builderProductionContent.height + 16
-                color: "#1a252f"
+                color: "#120D09"
                 radius: 6
                 border.color: hs.bronzeDeep
                 border.width: 1
@@ -1402,7 +1426,7 @@ Rectangle {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : qsTr("🔨 BUILDER CONSTRUCTION")
-                            color: "#3498db"
+                            color: "#5F7F83"
                             font.pointSize: 9
                             font.bold: true
                         }
@@ -1412,7 +1436,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Build siege weapons and structures")
-                        color: "#7f8c8d"
+                        color: "#8D7146"
                         font.pointSize: 7
                     }
 
@@ -1421,8 +1445,8 @@ Rectangle {
                         height: 20
                         anchors.horizontalCenter: parent.horizontalCenter
                         radius: 10
-                        color: "#0a0f14"
-                        border.color: "#2c3e50"
+                        color: "#120D09"
+                        border.color: "#2F251D"
                         border.width: 2
                         visible: builderProductionContent.builderProd.in_progress
 
@@ -1438,7 +1462,7 @@ Rectangle {
                                 var progress = 1 - (Math.max(0, builderProductionContent.builderProd.time_remaining) / builderProductionContent.builderProd.build_time);
                                 return Math.max(0, (parent.width - 4) * progress);
                             }
-                            color: "#27ae60"
+                            color: "#7F9A5F"
                             radius: 8
 
                             SequentialAnimation on opacity {
@@ -1464,11 +1488,11 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             text: builderProductionContent.builderProd.in_progress ? Math.max(0, builderProductionContent.builderProd.time_remaining).toFixed(1) + "s" : "Idle"
-                            color: "#ecf0f1"
+                            color: "#F4E7C8"
                             font.pointSize: 9
                             font.bold: true
                             style: Text.Outline
-                            styleColor: "#000000"
+                            styleColor: "#120D09"
                         }
 
                     }
@@ -1476,7 +1500,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: builderProductionContent.builderProd.in_progress ? qsTr("Building: %1").arg(builderProductionContent.builderProd.product_type) : qsTr("Select an item to build")
-                        color: builderProductionContent.builderProd.in_progress ? "#27ae60" : "#7f8c8d"
+                        color: builderProductionContent.builderProd.in_progress ? "#7F9A5F" : "#8D7146"
                         font.pointSize: 8
                         font.bold: builderProductionContent.builderProd.in_progress
                         visible: true
@@ -1495,11 +1519,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: builderCatapultIcon
@@ -1517,7 +1541,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !builderCatapultIcon.visible
                                 text: productionPanel.unitIconEmoji("catapult")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1527,7 +1551,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Catapult")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                color: parent.isEnabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1550,7 +1574,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: builderCatapultMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1585,11 +1609,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: builderBallistaIcon
@@ -1607,7 +1631,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !builderBallistaIcon.visible
                                 text: productionPanel.unitIconEmoji("ballista")
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1617,7 +1641,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Ballista")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                color: parent.isEnabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1640,7 +1664,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: builderBallistaMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1675,11 +1699,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: builderDefenseTowerIcon
@@ -1697,7 +1721,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !builderDefenseTowerIcon.visible
                                 text: "🏰"
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1707,7 +1731,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Defense Tower")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                color: parent.isEnabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1730,7 +1754,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: builderDefenseTowerMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1765,11 +1789,11 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
-                            border.width: isHovered && isEnabled ? 4 : 2
+                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
+                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
-                            scale: isHovered && isEnabled ? 1.1 : 1
+                            scale: isHovered && isEnabled ? 1.025 : 1
 
                             Image {
                                 id: builderHomeIcon
@@ -1787,7 +1811,7 @@ Rectangle {
                                 anchors.centerIn: parent
                                 visible: !builderHomeIcon.visible
                                 text: "🏠"
-                                color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                                color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
                             }
@@ -1797,7 +1821,7 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 text: qsTr("Home")
-                                color: parent.isEnabled ? "#bdc3c7" : "#5a5a5a"
+                                color: parent.isEnabled ? "#D4B57C" : "#6B5231"
                                 font.pointSize: 8
                                 font.bold: true
                             }
@@ -1820,7 +1844,7 @@ Rectangle {
 
                             Rectangle {
                                 anchors.fill: parent
-                                color: "#ffffff"
+                                color: "#F4E7C8"
                                 opacity: builderHomeMouseArea.pressed ? 0.2 : 0
                                 radius: parent.radius
                             }
@@ -1869,14 +1893,14 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "🏰"
-                        color: "#34495e"
+                        color: "#3B2F24"
                         font.pointSize: 32
                     }
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("No Barracks Selected")
-                        color: "#7f8c8d"
+                        color: "#8D7146"
                         font.pointSize: 11
                         font.bold: true
                     }
@@ -1884,7 +1908,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Select a barracks to recruit units")
-                        color: "#5a6c7d"
+                        color: "#6F8E8C"
                         font.pointSize: 9
                     }
 
