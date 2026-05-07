@@ -1,13 +1,18 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import QtQuick.Layouts 1.3
-import QtQuick.Window 2.15
+import QtQuick.Layouts 1.15
 import StandardOfIron 1.0
 
 Item {
     id: root
 
     property bool gameStarted: false
+    readonly property bool compact: width < 820
+    readonly property bool narrow: width < 620
+    readonly property int sideMargin: Math.max(18, Math.min(56, width * 0.055))
+    readonly property int topMargin: Math.max(18, Math.min(48, height * 0.055))
+    readonly property int commandWidth: root.compact ? width - sideMargin * 2 : Math.min(560, Math.max(480, width * 0.42))
+    readonly property var hs: StyleGuide.historical
 
     signal openSkirmish()
     signal openCampaign()
@@ -20,420 +25,588 @@ Item {
     anchors.fill: parent
     z: 10
     focus: true
+
+    function trigger(index) {
+        var m = menuModel.get(index);
+        if (!m || (m.requiresGame && !root.gameStarted))
+            return;
+
+        if (m.idStr === "skirmish")
+            root.openSkirmish();
+        else if (m.idStr === "campaign")
+            root.openCampaign();
+        else if (m.idStr === "objectives")
+            root.openObjectives();
+        else if (m.idStr === "save")
+            root.saveGame();
+        else if (m.idStr === "load")
+            root.loadSave();
+        else if (m.idStr === "settings")
+            root.openSettings();
+        else if (m.idStr === "exit")
+            root.exitRequested();
+    }
+
+    function moveSelection(direction) {
+        var next = commandList.currentIndex + direction;
+        while (next >= 0 && next < menuModel.count) {
+            var m = menuModel.get(next);
+            if (!m.requiresGame || root.gameStarted) {
+                commandList.currentIndex = next;
+                return;
+            }
+            next += direction;
+        }
+    }
+
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
-            var newIndex = container.selectedIndex + 1;
-            while (newIndex < menuModel.count) {
-                var m = menuModel.get(newIndex);
-                if (!m.requiresGame || root.gameStarted) {
-                    container.selectedIndex = newIndex;
-                    break;
-                }
-                newIndex++;
-            }
+            moveSelection(1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            var newIndex = container.selectedIndex - 1;
-            while (newIndex >= 0) {
-                var m = menuModel.get(newIndex);
-                if (!m.requiresGame || root.gameStarted) {
-                    container.selectedIndex = newIndex;
-                    break;
-                }
-                newIndex--;
-            }
+            moveSelection(-1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            var m = menuModel.get(container.selectedIndex);
-            if (m.requiresGame && !root.gameStarted) {
-                event.accepted = true;
-                return ;
-            }
-            if (m.idStr === "skirmish")
-                root.openSkirmish();
-            else if (m.idStr === "campaign")
-                root.openCampaign();
-            else if (m.idStr === "objectives")
-                root.openObjectives();
-            else if (m.idStr === "save")
-                root.saveGame();
-            else if (m.idStr === "load")
-                root.loadSave();
-            else if (m.idStr === "settings")
-                root.openSettings();
-            else if (m.idStr === "exit")
-                root.exitRequested();
+            trigger(commandList.currentIndex);
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
-            if (typeof mainWindow !== 'undefined' && mainWindow.menuVisible && mainWindow.gameStarted) {
+            if (typeof mainWindow !== "undefined" && mainWindow.menuVisible && mainWindow.gameStarted) {
                 mainWindow.menuVisible = false;
                 event.accepted = true;
             }
         }
     }
 
-    Rectangle {
+    ListModel {
+        id: menuModel
+
+        ListElement {
+            idStr: "skirmish"
+            title: QT_TR_NOOP("Play Skirmish")
+            subtitle: QT_TR_NOOP("Choose the field and deploy armies")
+            detail: QT_TR_NOOP("Battle")
+            requiresGame: false
+            accent: "#B6362F"
+        }
+
+        ListElement {
+            idStr: "campaign"
+            title: QT_TR_NOOP("Campaign")
+            subtitle: QT_TR_NOOP("March through the Second Punic War")
+            detail: QT_TR_NOOP("War Map")
+            requiresGame: false
+            accent: "#C29555"
+        }
+
+        ListElement {
+            idStr: "objectives"
+            title: QT_TR_NOOP("Objectives")
+            subtitle: QT_TR_NOOP("Review active orders")
+            detail: QT_TR_NOOP("Orders")
+            requiresGame: true
+            accent: "#668C55"
+        }
+
+        ListElement {
+            idStr: "save"
+            title: QT_TR_NOOP("Save Game")
+            subtitle: QT_TR_NOOP("Record the current campaign state")
+            detail: QT_TR_NOOP("Archive")
+            requiresGame: true
+            accent: "#3A9CA8"
+        }
+
+        ListElement {
+            idStr: "load"
+            title: QT_TR_NOOP("Load Game")
+            subtitle: QT_TR_NOOP("Return to a saved command")
+            detail: QT_TR_NOOP("Return")
+            requiresGame: false
+            accent: "#8A7047"
+        }
+
+        ListElement {
+            idStr: "settings"
+            title: QT_TR_NOOP("Settings")
+            subtitle: QT_TR_NOOP("Display, audio, and controls")
+            detail: QT_TR_NOOP("Options")
+            requiresGame: false
+            accent: "#8C6A3E"
+        }
+
+        ListElement {
+            idStr: "exit"
+            title: QT_TR_NOOP("Exit")
+            subtitle: QT_TR_NOOP("Leave the war table")
+            detail: QT_TR_NOOP("Retire")
+            requiresGame: false
+            accent: "#6E2B25"
+        }
+    }
+
+    Image {
+        id: backdrop
+
         anchors.fill: parent
-        color: Theme.dim
+        source: "qrc:/StandardOfIron/assets/visuals/load_screen.png"
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        smooth: true
+        opacity: 0.74
     }
 
     Rectangle {
-        id: container
-
-        property int selectedIndex: 0
-
-        width: Math.min(parent.width * 0.78, 1100)
-        height: Math.min(parent.height * 0.78, 700)
-        anchors.centerIn: parent
-        radius: Theme.radiusPanel
-        color: Theme.panelBase
-        border.color: Theme.panelBr
-        border.width: 1
-        opacity: 0.98
-        clip: true
-
-        Item {
-            id: contentArea
-
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: footerRow.top
-            anchors.margins: Theme.spacingXLarge
-
-            GridLayout {
-                id: grid
-
-                anchors.fill: parent
-                rowSpacing: Theme.spacingMedium
-                columnSpacing: 18
-                columns: parent.width > 900 ? 2 : 1
-
-                ColumnLayout {
-                    Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
-                    spacing: Theme.spacingLarge
-
-                    ColumnLayout {
-                        spacing: Theme.spacingSmall
-
-                        Label {
-                            text: qsTr("STANDARD OF IRON")
-                            color: Theme.textMain
-                            font.pointSize: Theme.fontSizeHero
-                            font.bold: true
-                            horizontalAlignment: Text.AlignLeft
-                            Layout.fillWidth: true
-                            elide: Label.ElideRight
-                        }
-
-                        Label {
-                            text: qsTr("A tiny but ambitious RTS")
-                            color: Theme.textSub
-                            font.pointSize: Theme.fontSizeMedium
-                            horizontalAlignment: Text.AlignLeft
-                            Layout.fillWidth: true
-                            elide: Label.ElideRight
-                        }
-
-                    }
-
-                    ListModel {
-                        id: menuModel
-
-                        ListElement {
-                            idStr: "skirmish"
-                            title: QT_TR_NOOP("Play — Skirmish")
-                            subtitle: QT_TR_NOOP("Select a map and start")
-                            requiresGame: false
-                        }
-
-                        ListElement {
-                            idStr: "campaign"
-                            title: QT_TR_NOOP("Play — Campaign")
-                            subtitle: QT_TR_NOOP("Story missions and battles")
-                            requiresGame: false
-                        }
-
-                        ListElement {
-                            idStr: "objectives"
-                            title: QT_TR_NOOP("Objectives")
-                            subtitle: QT_TR_NOOP("View current mission objectives")
-                            requiresGame: true
-                        }
-
-                        ListElement {
-                            idStr: "save"
-                            title: QT_TR_NOOP("Save Game")
-                            subtitle: QT_TR_NOOP("Save your current progress")
-                            requiresGame: true
-                        }
-
-                        ListElement {
-                            idStr: "load"
-                            title: QT_TR_NOOP("Load Game")
-                            subtitle: QT_TR_NOOP("Resume a previous game")
-                            requiresGame: false
-                        }
-
-                        ListElement {
-                            idStr: "settings"
-                            title: QT_TR_NOOP("Settings")
-                            subtitle: QT_TR_NOOP("Adjust graphics & controls")
-                            requiresGame: false
-                        }
-
-                        ListElement {
-                            idStr: "exit"
-                            title: QT_TR_NOOP("Exit")
-                            subtitle: QT_TR_NOOP("Quit the game")
-                            requiresGame: false
-                        }
-
-                    }
-
-                    Repeater {
-                        model: menuModel
-
-                        delegate: Item {
-                            id: menuItem
-
-                            property int idx: index
-                            property bool itemEnabled: !model.requiresGame || root.gameStarted
-
-                            Layout.fillWidth: true
-                            Layout.preferredHeight: container.width > 900 ? 64 : 56
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Theme.radiusLarge
-                                clip: true
-                                color: container.selectedIndex === idx ? Theme.selectedBg : menuItemMouse.containsPress ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
-                                border.width: 1
-                                border.color: container.selectedIndex === idx ? Theme.selectedBr : Theme.cardBorder
-                                opacity: itemEnabled ? 1 : 0.4
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    anchors.margins: Theme.spacingSmall
-                                    spacing: Theme.spacingMedium
-
-                                    Item {
-                                        Layout.fillWidth: true
-                                        Layout.preferredWidth: 1
-                                    }
-
-                                    ColumnLayout {
-                                        Layout.fillWidth: true
-                                        spacing: Theme.spacingTiny
-
-                                        Text {
-                                            text: qsTr(model.title)
-                                            Layout.fillWidth: true
-                                            elide: Text.ElideRight
-                                            color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textBright) : Theme.textDim
-                                            font.pointSize: Theme.fontSizeLarge
-                                            font.bold: container.selectedIndex === idx
-                                        }
-
-                                        Text {
-                                            text: qsTr(model.subtitle)
-                                            Layout.fillWidth: true
-                                            elide: Text.ElideRight
-                                            color: itemEnabled ? (container.selectedIndex === idx ? Theme.accentBright : Theme.textSubLite) : Theme.textHint
-                                            font.pointSize: Theme.fontSizeSmall
-                                        }
-
-                                    }
-
-                                    Text {
-                                        text: "›"
-                                        font.pointSize: Theme.fontSizeTitle
-                                        color: itemEnabled ? (container.selectedIndex === idx ? Theme.textMain : Theme.textHint) : Theme.textDim
-                                        opacity: itemEnabled ? 1 : 0.3
-                                    }
-
-                                }
-
-                                Behavior on color {
-                                    ColorAnimation {
-                                        duration: Theme.animNormal
-                                    }
-
-                                }
-
-                                Behavior on border.color {
-                                    ColorAnimation {
-                                        duration: Theme.animNormal
-                                    }
-
-                                }
-
-                            }
-
-                            MouseArea {
-                                id: menuItemMouse
-
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                acceptedButtons: Qt.LeftButton
-                                cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
-                                onEntered: {
-                                    if (itemEnabled)
-                                        container.selectedIndex = idx;
-
-                                }
-                                onClicked: {
-                                    if (!itemEnabled)
-                                        return ;
-
-                                    if (model.idStr === "skirmish")
-                                        root.openSkirmish();
-                                    else if (model.idStr === "campaign")
-                                        root.openCampaign();
-                                    else if (model.idStr === "objectives")
-                                        root.openObjectives();
-                                    else if (model.idStr === "save")
-                                        root.saveGame();
-                                    else if (model.idStr === "load")
-                                        root.loadSave();
-                                    else if (model.idStr === "settings")
-                                        root.openSettings();
-                                    else if (model.idStr === "exit")
-                                        root.exitRequested();
-                                }
-                            }
-
-                        }
-
-                    }
-
-                }
-
-                Rectangle {
-                    color: Qt.rgba(0, 0, 0, 0)
-                    radius: Theme.radiusMedium
-                    Layout.preferredWidth: parent.width > 900 ? parent.width * 0.45 : parent.width
-
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: Theme.spacingSmall
-                        spacing: Theme.spacingMedium
-
-                        Rectangle {
-                            id: promo
-
-                            color: Theme.cardBase
-                            radius: Theme.radiusLarge
-                            border.color: Theme.border
-                            border.width: 1
-                            Layout.preferredHeight: 260
-                            clip: true
-
-                            ColumnLayout {
-                                anchors.fill: parent
-                                anchors.margins: Theme.spacingMedium
-                                spacing: Theme.spacingSmall
-
-                                Label {
-                                    text: qsTr("Featured")
-                                    color: Theme.accent
-                                    font.pointSize: Theme.fontSizeMedium
-                                    Layout.fillWidth: true
-                                    elide: Label.ElideRight
-                                }
-
-                                Label {
-                                    text: qsTr("Skirmish Mode")
-                                    color: Theme.textMain
-                                    font.pointSize: Theme.fontSizeTitle
-                                    font.bold: true
-                                    Layout.fillWidth: true
-                                    elide: Label.ElideRight
-                                }
-
-                                Text {
-                                    text: qsTr("Pick a map, adjust your forces and jump into battle. Modern controls and responsive UI.")
-                                    color: Theme.textSubLite
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 3
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-
-                            }
-
-                        }
-
-                        Rectangle {
-                            color: Theme.cardBase
-                            radius: Theme.radiusLarge
-                            border.color: Theme.border
-                            border.width: 1
-                            Layout.preferredHeight: 120
-                            clip: true
-
-                            ColumnLayout {
-                                anchors.fill: parent
-                                anchors.margins: Theme.spacingSmall
-                                spacing: Theme.spacingSmall
-
-                                Label {
-                                    text: qsTr("Tips")
-                                    color: Theme.accent
-                                    font.pointSize: Theme.fontSizeMedium
-                                    Layout.fillWidth: true
-                                    elide: Label.ElideRight
-                                }
-
-                                Text {
-                                    text: qsTr("Hover menu items or use Up/Down and Enter to navigate. Play opens map selection.")
-                                    color: Theme.textSubLite
-                                    wrapMode: Text.WordWrap
-                                    maximumLineCount: 3
-                                    elide: Text.ElideRight
-                                    Layout.fillWidth: true
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                }
-
+        anchors.fill: parent
+        color: "#120D09"
+        opacity: backdrop.status === Image.Ready ? 0.28 : 1
+    }
+
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            orientation: Gradient.Horizontal
+
+            GradientStop {
+                position: 0
+                color: "#15100C"
             }
 
+            GradientStop {
+                position: root.compact ? 0.78 : 0.48
+                color: "#20160FDD"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#07050433"
+            }
         }
+    }
 
-        RowLayout {
-            id: footerRow
-
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            anchors.margins: Theme.spacingXLarge
-            spacing: Theme.spacingSmall
-
-            Label {
-                text: qsTr("v0.9 — prototype")
-                color: Theme.textDim
-                font.pointSize: Theme.fontSizeSmall
+    Rectangle {
+        anchors.fill: parent
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#00000000"
             }
+
+            GradientStop {
+                position: 1
+                color: "#070504AA"
+            }
+        }
+        opacity: root.compact ? 0.25 : 0.55
+    }
+
+    Rectangle {
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        height: 3
+        color: hs.bronze
+        opacity: 0.85
+    }
+
+    RowLayout {
+        id: stage
+
+        anchors.fill: parent
+        anchors.leftMargin: root.sideMargin
+        anchors.rightMargin: root.sideMargin
+        anchors.topMargin: root.topMargin
+        anchors.bottomMargin: root.topMargin
+        spacing: root.compact ? 0 : Math.max(24, root.width * 0.035)
+
+        ColumnLayout {
+            id: commandColumn
+
+            Layout.fillHeight: true
+            Layout.preferredWidth: root.compact ? stage.width : root.commandWidth
+            Layout.maximumWidth: root.compact ? stage.width : root.commandWidth
+            spacing: Math.max(12, Math.min(22, root.height * 0.022))
 
             Item {
                 Layout.fillWidth: true
+                Layout.preferredHeight: root.narrow ? 114 : 146
+
+                Column {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 7
+
+                    Row {
+                        width: parent.width
+                        height: 34
+                        spacing: 10
+
+                        Image {
+                            width: 32
+                            height: 32
+                            source: "qrc:/StandardOfIron/assets/visuals/emblems/rome.png"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("SPQR  /  QART-HADAST")
+                            color: Theme.accentBright
+                            font.pixelSize: root.narrow ? 12 : 13
+                            font.bold: true
+                        }
+
+                        Image {
+                            width: 32
+                            height: 32
+                            source: "qrc:/StandardOfIron/assets/visuals/emblems/cartaghe.png"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                        }
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: qsTr("STANDARD OF IRON")
+                        color: Theme.textMain
+                        font.family: "serif"
+                        font.pixelSize: root.narrow ? 36 : 52
+                        font.bold: true
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                        style: Text.Outline
+                        styleColor: "#120D09"
+                    }
+
+                    Rectangle {
+                        width: Math.min(parent.width, 360)
+                        height: 2
+                        color: hs.bronze
+                        opacity: 0.85
+                    }
+
+                    Text {
+                        width: parent.width
+                        text: qsTr("Rome and Carthage at the edge of empire")
+                        color: Theme.textSubLite
+                        font.pixelSize: root.narrow ? 14 : 16
+                        elide: Text.ElideRight
+                        maximumLineCount: 1
+                    }
+                }
             }
 
-            Label {
-                text: Qt.formatDateTime(new Date(), "yyyy-MM-dd")
-                color: Theme.textHint
-                font.pointSize: Theme.fontSizeSmall
-                elide: Label.ElideRight
-            }
+            ListView {
+                id: commandList
 
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                model: menuModel
+                currentIndex: 0
+                spacing: 10
+                clip: true
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: contentHeight > height
+
+                delegate: Item {
+                    id: commandItem
+
+                    required property int index
+                    required property string idStr
+                    required property string title
+                    required property string subtitle
+                    required property string detail
+                    required property bool requiresGame
+                    required property string accent
+
+                    readonly property bool itemEnabled: !requiresGame || root.gameStarted
+                    readonly property bool selected: ListView.isCurrentItem
+                    readonly property int rowHeight: root.narrow ? 60 : 70
+
+                    width: commandList.width
+                    height: rowHeight
+                    opacity: itemEnabled ? 1 : 0.46
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 7
+                        color: "transparent"
+                        border.width: selected ? 2 : 1
+                        border.color: selected ? hs.bronze : menuMouse.containsMouse ? Theme.thumbBr : Qt.rgba(0.67, 0.51, 0.29, 0.62)
+
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+
+                            GradientStop {
+                                position: 0
+                                color: selected ? "#8F2F2A" : (menuMouse.containsMouse ? "#3B2F24" : "#17110CEE")
+                            }
+
+                            GradientStop {
+                                position: 0.7
+                                color: selected ? "#4B2119" : (menuMouse.containsMouse ? "#241B13EE" : "#120D09DD")
+                            }
+
+                            GradientStop {
+                                position: 1
+                                color: selected ? "#1D1610" : "#090604DD"
+                            }
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            width: selected ? 7 : 4
+                            radius: 2
+                            color: accent
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.top: parent.top
+                            height: 1
+                            color: Theme.accentBright
+                            opacity: selected ? 0.6 : 0.16
+                        }
+
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 1
+                            color: "#000000"
+                            opacity: 0.42
+                        }
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 20
+                            anchors.rightMargin: 14
+                            anchors.topMargin: 9
+                            anchors.bottomMargin: 9
+                            spacing: 12
+
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                Layout.fillHeight: true
+                                spacing: 3
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: qsTr(title)
+                                    color: selected ? Theme.textMain : Theme.textBright
+                                    font.family: "serif"
+                                    font.pixelSize: root.narrow ? 19 : 22
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                }
+
+                                Text {
+                                    Layout.fillWidth: true
+                                    text: qsTr(subtitle)
+                                    color: selected ? Theme.accentBright : Theme.textSubLite
+                                    font.pixelSize: root.narrow ? 12 : 14
+                                    elide: Text.ElideRight
+                                    maximumLineCount: 1
+                                }
+                            }
+
+                            Text {
+                                Layout.preferredWidth: root.narrow ? 64 : 92
+                                text: qsTr(detail)
+                                color: selected ? Theme.textMain : Theme.textDim
+                                font.pixelSize: 10
+                                font.bold: selected
+                                horizontalAlignment: Text.AlignRight
+                                verticalAlignment: Text.AlignVCenter
+                                elide: Text.ElideRight
+                                maximumLineCount: 1
+                                visible: commandItem.width > 390
+                            }
+
+                            Item {
+                                Layout.preferredWidth: 16
+
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: selected ? 14 : 9
+                                    height: selected ? 14 : 9
+                                    rotation: 45
+                                    color: selected ? Theme.accentBright : Theme.textHint
+                                    opacity: selected ? 0.95 : 0.45
+                                }
+                            }
+                        }
+
+                        Behavior on color {
+                            ColorAnimation {
+                                duration: Theme.animNormal
+                            }
+                        }
+
+                        Behavior on border.color {
+                            ColorAnimation {
+                                duration: Theme.animNormal
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: menuMouse
+
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        acceptedButtons: Qt.LeftButton
+                        cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                        onEntered: {
+                            if (itemEnabled)
+                                commandList.currentIndex = commandItem.index;
+                        }
+                        onClicked: {
+                            if (itemEnabled)
+                                root.trigger(commandItem.index);
+                        }
+                    }
+                }
+            }
         }
 
-    }
+        Item {
+            id: visualColumn
 
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            visible: !root.compact
+
+            Item {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                width: Math.min(parent.width, 500)
+                height: Math.min(parent.height, 620)
+
+                Image {
+                    id: commanderPortrait
+
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    source: "qrc:/StandardOfIron/assets/visuals/hannibal.png"
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    smooth: true
+                    opacity: 0.92
+                    clip: true
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+
+                        GradientStop {
+                            position: 0
+                            color: "#120D09EE"
+                        }
+
+                        GradientStop {
+                            position: 0.45
+                            color: "#120D0944"
+                        }
+
+                        GradientStop {
+                            position: 1
+                            color: "#120D0900"
+                        }
+                    }
+                }
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    height: 124
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: "#120D0900"
+                        }
+
+                        GradientStop {
+                            position: 1
+                            color: "#120D09EE"
+                        }
+                    }
+                }
+
+                Rectangle {
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 2
+                    color: hs.bronze
+                    opacity: 0.7
+                }
+
+                RowLayout {
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.bottom: parent.bottom
+                    anchors.margins: 22
+                    spacing: 14
+
+                    Image {
+                        Layout.preferredWidth: 54
+                        Layout.preferredHeight: 54
+                        source: "qrc:/StandardOfIron/assets/visuals/emblems/rome.png"
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    Rectangle {
+                        Layout.preferredWidth: 1
+                        Layout.fillHeight: true
+                        color: hs.bronze
+                        opacity: 0.7
+                    }
+
+                    Image {
+                        Layout.preferredWidth: 54
+                        Layout.preferredHeight: 54
+                        source: "qrc:/StandardOfIron/assets/visuals/emblems/cartaghe.png"
+                        fillMode: Image.PreserveAspectFit
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 2
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: qsTr("SECOND PUNIC WAR")
+                            color: Theme.textMain
+                            font.family: "serif"
+                            font.pixelSize: 18
+                            font.bold: true
+                            elide: Text.ElideRight
+                            maximumLineCount: 1
+                        }
+
+                        Text {
+                            Layout.fillWidth: true
+                            text: qsTr("Legions, fleets, elephants, and contested supply lines")
+                            color: Theme.textSubLite
+                            font.pixelSize: 13
+                            wrapMode: Text.WordWrap
+                            maximumLineCount: 2
+                            elide: Text.ElideRight
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

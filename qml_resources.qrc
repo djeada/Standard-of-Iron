@@ -66,6 +66,9 @@
         <file alias="assets/visuals/icons/troop_count.png">assets/visuals/icons/troop_count.png</file>
         <file alias="assets/visuals/icons/defeated.png">assets/visuals/icons/defeated.png</file>
         <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
+        <file alias="assets/visuals/hannibal.png">assets/visuals/hannibal.png</file>
+        <file alias="assets/visuals/emblems/rome.png">assets/visuals/emblems/rome.png</file>
+        <file alias="assets/visuals/emblems/cartaghe.png">assets/visuals/emblems/cartaghe.png</file>
     </qresource>
     <!-- Duplicate critical assets under the Qt6-installed module prefix -->
     <qresource prefix="/qt/qml/StandardOfIron">
@@ -87,5 +90,8 @@
         <file alias="assets/visuals/icons/troop_count.png">assets/visuals/icons/troop_count.png</file>
         <file alias="assets/visuals/icons/defeated.png">assets/visuals/icons/defeated.png</file>
         <file alias="assets/visuals/load_screen.png">assets/visuals/load_screen.png</file>
+        <file alias="assets/visuals/hannibal.png">assets/visuals/hannibal.png</file>
+        <file alias="assets/visuals/emblems/rome.png">assets/visuals/emblems/rome.png</file>
+        <file alias="assets/visuals/emblems/cartaghe.png">assets/visuals/emblems/cartaghe.png</file>
     </qresource>
 </RCC>
