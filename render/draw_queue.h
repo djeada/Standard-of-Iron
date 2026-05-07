@@ -783,9 +783,19 @@ private:
     }
     const auto &rig_a = std::get<RiggedCreatureCmdIndex>(a);
     const auto &rig_b = std::get<RiggedCreatureCmdIndex>(b);
+    if (rig_a.role_color_count != rig_b.role_color_count) {
+      return false;
+    }
+    const auto role_color_count = std::min<std::size_t>(
+        rig_a.role_color_count, rig_a.role_colors.size());
+    for (std::size_t i = 0; i < role_color_count; ++i) {
+      if (rig_a.role_colors[i] != rig_b.role_colors[i]) {
+        return false;
+      }
+    }
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
-           rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
-           rig_a.material == rig_b.material;
+            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
+            rig_a.material == rig_b.material;
   }
 
   [[nodiscard]] auto
