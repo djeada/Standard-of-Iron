@@ -6,7 +6,6 @@
 
 namespace {
 
-// Returns the Y component of the cross-product normal for a triangle.
 auto triangle_normal_y(const Render::GL::Vertex &a, const Render::GL::Vertex &b,
                        const Render::GL::Vertex &c) -> float {
   QVector3D const pa(a.position[0], a.position[1], a.position[2]);
@@ -25,11 +24,10 @@ TEST(OrientationArrowMesh, HasSufficientGeometry) {
   ASSERT_NE(mesh, nullptr);
   const auto &verts = mesh->get_vertices();
   const auto &idx = mesh->get_indices();
-  // Expect at least the 8 top-face vertices + 8 bottom-face vertices + side
-  // vertices, and at least the two face fans' worth of triangles.
+
   EXPECT_GE(verts.size(), 16u);
-  EXPECT_GE(idx.size(), 36u);         // (6+6 face tris) * 3 indices each = 36
-  EXPECT_EQ(idx.size() % 3, 0u);     // must be whole triangles
+  EXPECT_GE(idx.size(), 36u);
+  EXPECT_EQ(idx.size() % 3, 0u);
 }
 
 TEST(OrientationArrowMesh, AllVerticesWithinExpectedBounds) {
@@ -37,13 +35,11 @@ TEST(OrientationArrowMesh, AllVerticesWithinExpectedBounds) {
   ASSERT_NE(mesh, nullptr);
   const auto &verts = mesh->get_vertices();
 
-  // Arrow points toward -Z; shaft starts at Z=0, tip at Z < -1.7.
-  // Width (X) must stay within ±0.4, height (Y) within ±0.15.
   for (const auto &v : verts) {
-    EXPECT_LE(v.position[0], 0.4F)  << "X too large";
+    EXPECT_LE(v.position[0], 0.4F) << "X too large";
     EXPECT_GE(v.position[0], -0.4F) << "X too small";
     EXPECT_LE(v.position[1], 0.15F) << "Y too large";
-    EXPECT_GE(v.position[1], -0.15F)<< "Y too small";
+    EXPECT_GE(v.position[1], -0.15F) << "Y too small";
     EXPECT_LE(v.position[2], 0.01F) << "Z should be <= 0 (points toward -Z)";
     EXPECT_GE(v.position[2], -2.0F) << "Z too far";
   }
@@ -55,9 +51,6 @@ TEST(OrientationArrowMesh, TopFaceNormalsPointUpward) {
   const auto &verts = mesh->get_vertices();
   const auto &idx = mesh->get_indices();
 
-  // The first batch of triangles form the top face; their normals must point
-  // upward (positive Y).
-  // 8-point outline: 3 tail/shaft tris + 3 head tris = 6 top-face triangles.
   constexpr int k_top_tris = 6;
   ASSERT_GE(idx.size(), static_cast<std::size_t>(k_top_tris * 3));
   for (int i = 0; i < k_top_tris; ++i) {

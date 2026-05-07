@@ -513,7 +513,8 @@ TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
       << "Completed exit should restore original standing height";
 }
 
-TEST_F(HumanoidPoseControllerTest, KneelSwordsmanShallowestSpearmanMiddleArcherDeepest) {
+TEST_F(HumanoidPoseControllerTest,
+       KneelSwordsmanShallowestSpearmanMiddleArcherDeepest) {
   HumanoidPose spear_pose = pose;
   HumanoidPoseController spear_ctrl(spear_pose, anim_ctx);
   spear_ctrl.kneel(0.875F);

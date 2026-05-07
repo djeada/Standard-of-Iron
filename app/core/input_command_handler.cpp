@@ -110,8 +110,7 @@ void InputCommandHandler::on_right_double_click(qreal sx, qreal sy,
                                            viewport.height, local_owner_id);
 }
 
-void InputCommandHandler::on_right_press(qreal sx, qreal sy,
-                                         int local_owner_id,
+void InputCommandHandler::on_right_press(qreal sx, qreal sy, int local_owner_id,
                                          const ViewportState &viewport) {
   if (m_is_spectator_mode || !m_world) {
     return;
@@ -142,12 +141,10 @@ void InputCommandHandler::on_right_press(qreal sx, qreal sy,
     m_command_controller->disable_run_mode_for_selected();
   }
 
-  // If the click is on an enemy unit, issue an attack command immediately.
   if (m_picking_service != nullptr && m_camera != nullptr) {
-    Engine::Core::EntityID const target_id =
-        m_picking_service->pick_unit_first(float(sx), float(sy), *m_world,
-                                           *m_camera, viewport.width,
-                                           viewport.height, 0);
+    Engine::Core::EntityID const target_id = m_picking_service->pick_unit_first(
+        float(sx), float(sy), *m_world, *m_camera, viewport.width,
+        viewport.height, 0);
     if (target_id != 0U) {
       auto *target_entity = m_world->get_entity(target_id);
       if (target_entity != nullptr) {
@@ -167,16 +164,13 @@ void InputCommandHandler::on_right_press(qreal sx, qreal sy,
     }
   }
 
-  // Begin formation placement at the clicked ground position so the
-  // orientation arrow appears while the right button is held.
   if (!m_command_controller || !m_camera || !m_picking_service) {
     return;
   }
 
   QVector3D hit;
-  if (m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                          viewport.width, viewport.height,
-                                          hit)) {
+  if (m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
     hit = App::Utils::snap_to_walkable_ground(hit);
     m_command_controller->begin_move_placement_at_position(hit);
   }
@@ -193,9 +187,8 @@ void InputCommandHandler::on_right_drag_orient(qreal sx, qreal sy,
   }
 
   QVector3D hit;
-  if (!m_picking_service->screen_to_ground(QPointF(sx, sy), *m_camera,
-                                           viewport.width, viewport.height,
-                                           hit)) {
+  if (!m_picking_service->screen_to_ground(
+          QPointF(sx, sy), *m_camera, viewport.width, viewport.height, hit)) {
     return;
   }
 
@@ -213,7 +206,6 @@ void InputCommandHandler::on_right_drag_orient(qreal sx, qreal sy,
     m_command_controller->update_formation_rotation(angle_deg);
   }
 }
-
 
 void InputCommandHandler::on_attack_click(qreal sx, qreal sy,
                                           const ViewportState &viewport) {

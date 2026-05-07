@@ -85,8 +85,7 @@ private:
   bool m_dirty = false;
 
   std::uint64_t m_last_unit_hash = 0;
-  // max() is an unset sentinel so the first unit update after fog changes
-  // forces a fresh composite and dirty flag.
+
   std::uint64_t m_last_fog_composite_version =
       std::numeric_limits<std::uint64_t>::max();
   float m_last_camera_x = 0.0F;
