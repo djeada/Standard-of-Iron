@@ -162,17 +162,17 @@ TEST(RiggedMeshCache, FrameStatsCountBakesAndHits) {
   auto const &spec = Render::Humanoid::humanoid_creature_spec();
   auto const bind = Render::Humanoid::humanoid_bind_palette();
 
-  // First call: bake
+  // First call: bake (not a miss — we got a valid result)
   ASSERT_NE(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
   EXPECT_EQ(cache.frame_stats().bakes, 1U);
-  EXPECT_EQ(cache.frame_stats().misses, 1U);
+  EXPECT_EQ(cache.frame_stats().misses, 0U);
   EXPECT_EQ(cache.frame_stats().hits, 0U);
 
   // Second call: hit
   ASSERT_NE(cache.get_or_bake(spec, CreatureLOD::Full, bind), nullptr);
   EXPECT_EQ(cache.frame_stats().hits, 1U);
   EXPECT_EQ(cache.frame_stats().bakes, 1U);
-  EXPECT_EQ(cache.frame_stats().misses, 1U);
+  EXPECT_EQ(cache.frame_stats().misses, 0U);
 }
 
 TEST(RiggedMeshCache, FrameStatsResetClearsCounters) {
@@ -189,7 +189,6 @@ TEST(RiggedMeshCache, FrameStatsResetClearsCounters) {
   EXPECT_EQ(cache.frame_stats().misses, 0U);
   EXPECT_EQ(cache.frame_stats().bakes, 0U);
 }
-
 TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
   RuntimeBakeGuardReset guard_reset;
   RiggedMeshCache cache;

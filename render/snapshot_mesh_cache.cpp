@@ -74,22 +74,15 @@ auto SnapshotMeshCache::get_or_bake(
 
   if (source.mesh == nullptr || source.skinned_palettes.empty() ||
       source.skinned_bone_count == 0U ||
-      global_frame >= source.skinned_frame_total) {
+      global_frame >= source.skinned_frame_total ||
+      source.mesh->get_vertices().empty() ||
+      source.mesh->get_indices().empty()) {
     ++m_frame_stats.misses;
     return nullptr;
   }
 
   const auto &src_vertices = source.mesh->get_vertices();
-  if (src_vertices.empty()) {
-    ++m_frame_stats.misses;
-    return nullptr;
-  }
   const auto &src_indices = source.mesh->get_indices();
-  if (src_indices.empty()) {
-    ++m_frame_stats.misses;
-    return nullptr;
-  }
-
   const QMatrix4x4 *frame_palette =
       source.skinned_palettes.data() +
       static_cast<std::size_t>(global_frame) *
