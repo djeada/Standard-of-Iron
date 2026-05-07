@@ -45,7 +45,7 @@ QtObject {
         "bannerNeutral": "#5C4A33",
         "bannerAttack": "#7A1F1D",
         "romanGlyph": "SPQR",
-        "carthageGlyph": "𐤒 QRT"
+        "carthageGlyph": "𐤒 Qart-Ḥadašt"
     })
     readonly property var button: ({
         "primary": {
