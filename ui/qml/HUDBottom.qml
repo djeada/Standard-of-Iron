@@ -90,10 +90,10 @@ RowLayout {
         else if (currentCommandMode === "build")
             orderText = qsTr("Engineer order — choose fortification");
 
-        return commandBannerDualCivilizationPrefix() + " — " + orderText;
+        return formatCivilizationPrefix() + " - " + orderText;
     }
 
-    function commandBannerDualCivilizationPrefix() {
+    function formatCivilizationPrefix() {
         return hs.romanGlyph + " · " + hs.carthageGlyph;
     }
 
