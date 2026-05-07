@@ -78,6 +78,9 @@ auto ProductionService::start_production_for_first_selected_barracks(
 
   int const individuals_per_unit = profile.individuals_per_unit;
   int const production_cost = profile.production.cost;
+  if (p->manpower_available < production_cost) {
+    return ProductionResult::InsufficientManpower;
+  }
 
   if (p->produced_count + production_cost > p->max_units) {
     return ProductionResult::PerBarracksLimitReached;
@@ -107,6 +110,7 @@ auto ProductionService::start_production_for_first_selected_barracks(
     p->time_remaining = p->build_time;
     p->in_progress = true;
   }
+  p->manpower_available -= production_cost;
 
   return ProductionResult::Success;
 }
@@ -155,6 +159,7 @@ auto ProductionService::get_selected_barracks_state(
     out_state.produced_count = p->produced_count;
     out_state.max_units = p->max_units;
     out_state.villager_cost = p->villager_cost;
+    out_state.manpower_available = p->manpower_available;
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
   }

@@ -23,6 +23,7 @@ add_executable(standard_of_iron_tests
     systems/nation_loader_test.cpp
     systems/troop_catalog_loader_test.cpp
     systems/stamina_system_test.cpp
+    systems/home_manpower_system_test.cpp
     systems/building_collision_test.cpp
     systems/combat_mode_test.cpp
     systems/archer_bonus_test.cpp

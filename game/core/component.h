@@ -289,6 +289,7 @@ public:
   float rally_x{0.0F}, rally_z{0.0F};
   bool rally_set{false};
   int villager_cost{1};
+  int manpower_available{0};
   std::vector<Game::Units::TroopType> production_queue;
 };
 
@@ -515,6 +516,9 @@ public:
   int population_contribution{50};
   Engine::Core::EntityID nearest_barracks_id{0};
   float update_cooldown{0.0F};
+  float family_generation_cooldown{0.0F};
+  float family_generation_interval{12.0F};
+  int family_manpower_value{8};
 };
 
 } // namespace Engine::Core

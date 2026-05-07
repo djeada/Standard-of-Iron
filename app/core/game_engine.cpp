@@ -485,6 +485,10 @@ GameEngine::GameEngine(QObject *parent)
                 "Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
+          &App::Controllers::CommandController::insufficient_manpower, [this]() {
+            set_error("Not enough manpower. Build homes or wait for families.");
+          });
+  connect(m_commandController.get(),
           &App::Controllers::CommandController::hold_mode_changed, this,
           &GameEngine::hold_mode_changed);
   connect(m_commandController.get(),

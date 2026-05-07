@@ -348,6 +348,8 @@ void CommandController::recruit_near_selected(const QString &unit_type,
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troop_limit_reached();
+  } else if (result == Game::Systems::ProductionResult::InsufficientManpower) {
+    emit insufficient_manpower();
   }
 }
 

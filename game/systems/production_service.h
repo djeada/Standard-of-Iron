@@ -15,6 +15,7 @@ namespace Game::Systems {
 enum class ProductionResult {
   Success,
   NoBarracks,
+  InsufficientManpower,
   PerBarracksLimitReached,
   GlobalTroopLimitReached,
   AlreadyInProgress,
@@ -31,6 +32,7 @@ struct ProductionState {
   int produced_count = 0;
   int max_units = 0;
   int villager_cost = 1;
+  int manpower_available = 0;
   int queue_size = 0;
   std::vector<Game::Units::TroopType> production_queue;
 };
