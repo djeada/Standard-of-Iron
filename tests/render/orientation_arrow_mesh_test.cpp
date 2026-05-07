@@ -25,10 +25,10 @@ TEST(OrientationArrowMesh, HasSufficientGeometry) {
   ASSERT_NE(mesh, nullptr);
   const auto &verts = mesh->get_vertices();
   const auto &idx = mesh->get_indices();
-  // Expect at least the 7 top-face vertices + 7 bottom-face vertices + side
+  // Expect at least the 8 top-face vertices + 8 bottom-face vertices + side
   // vertices, and at least the two face fans' worth of triangles.
-  EXPECT_GE(verts.size(), 14u);
-  EXPECT_GE(idx.size(), 30u);         // (5+5 face tris) * 3 indices each = 30
+  EXPECT_GE(verts.size(), 16u);
+  EXPECT_GE(idx.size(), 36u);         // (6+6 face tris) * 3 indices each = 36
   EXPECT_EQ(idx.size() % 3, 0u);     // must be whole triangles
 }
 
@@ -37,7 +37,7 @@ TEST(OrientationArrowMesh, AllVerticesWithinExpectedBounds) {
   ASSERT_NE(mesh, nullptr);
   const auto &verts = mesh->get_vertices();
 
-  // Arrow points toward -Z; shaft starts at Z=0, tip at Z < -1.5.
+  // Arrow points toward -Z; shaft starts at Z=0, tip at Z < -1.7.
   // Width (X) must stay within ±0.4, height (Y) within ±0.15.
   for (const auto &v : verts) {
     EXPECT_LE(v.position[0], 0.4F)  << "X too large";
@@ -57,7 +57,8 @@ TEST(OrientationArrowMesh, TopFaceNormalsPointUpward) {
 
   // The first batch of triangles form the top face; their normals must point
   // upward (positive Y).
-  constexpr int k_top_tris = 5; // shaft quad (2) + head fan (3)
+  // 8-point outline: 3 tail/shaft tris + 3 head tris = 6 top-face triangles.
+  constexpr int k_top_tris = 6;
   ASSERT_GE(idx.size(), static_cast<std::size_t>(k_top_tris * 3));
   for (int i = 0; i < k_top_tris; ++i) {
     float ny = triangle_normal_y(verts[idx[i * 3 + 0]], verts[idx[i * 3 + 1]],
