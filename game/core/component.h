@@ -29,6 +29,7 @@ inline constexpr int k_production_max_units = 10000;
 inline constexpr float k_capture_required_time = 15.0F;
 
 inline constexpr float k_hold_stand_up_duration = 2.0F;
+inline constexpr float k_hold_kneel_duration = 1.5F;
 
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
@@ -334,11 +335,15 @@ public:
 
 class HoldModeComponent : public Component {
 public:
-  HoldModeComponent() : stand_up_duration(Defaults::k_hold_stand_up_duration) {}
+  HoldModeComponent()
+      : stand_up_duration(Defaults::k_hold_stand_up_duration),
+        kneel_duration(Defaults::k_hold_kneel_duration) {}
 
   bool active{true};
   float exit_cooldown{0.0F};
   float stand_up_duration;
+  float kneel_entry_progress{0.0F};
+  float kneel_duration;
 };
 
 class GuardModeComponent : public Component {
