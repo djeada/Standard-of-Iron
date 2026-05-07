@@ -25,6 +25,7 @@ struct AnimationInputs {
   bool is_in_hold_mode;
   bool is_exiting_hold;
   float hold_exit_progress;
+  float hold_entry_progress;
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   float combat_phase_progress{0.0F};
   std::uint8_t attack_variant{0};

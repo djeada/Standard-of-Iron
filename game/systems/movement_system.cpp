@@ -121,6 +121,15 @@ void MovementSystem::move_unit(Engine::Core::Entity *entity,
       movement->clear_path();
       movement->path_pending = false;
       in_hold_mode = true;
+
+      if (hold_mode->kneel_duration > 0.0F &&
+          hold_mode->kneel_entry_progress < 1.0F) {
+        hold_mode->kneel_entry_progress = std::min(
+            1.0F, hold_mode->kneel_entry_progress +
+                      delta_time / hold_mode->kneel_duration);
+      }
+    } else {
+      hold_mode->kneel_entry_progress = 0.0F;
     }
 
     if (hold_mode->exit_cooldown > 0.0F && !in_hold_mode) {

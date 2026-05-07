@@ -876,6 +876,50 @@ TEST_F(SerializationTest, HoldModeComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->stand_up_duration, 4.0F);
 }
 
+TEST_F(SerializationTest, HoldModeComponentKneelEntrySerializationRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *hold_mode = original_entity->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+  hold_mode->exit_cooldown = 0.0F;
+  hold_mode->stand_up_duration = 2.0F;
+  hold_mode->kneel_entry_progress = 0.75F;
+  hold_mode->kneel_duration = 1.5F;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  ASSERT_TRUE(json.contains("hold_mode"));
+  QJsonObject hold_mode_obj = json["hold_mode"].toObject();
+  EXPECT_FLOAT_EQ(hold_mode_obj["kneel_entry_progress"].toDouble(), 0.75);
+  EXPECT_FLOAT_EQ(hold_mode_obj["kneel_duration"].toDouble(), 1.5);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<HoldModeComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->kneel_entry_progress, 0.75F);
+  EXPECT_FLOAT_EQ(deserialized->kneel_duration, 1.5F);
+}
+
+TEST_F(SerializationTest, HoldModeComponentKneelFieldsDefaultOnLegacyData) {
+  auto *entity = world->create_entity();
+
+  QJsonObject legacy_json;
+  QJsonObject hold_mode_obj;
+  hold_mode_obj["active"] = true;
+  hold_mode_obj["exit_cooldown"] = 0.0;
+  hold_mode_obj["stand_up_duration"] = 2.0;
+  legacy_json["hold_mode"] = hold_mode_obj;
+
+  Serialization::deserialize_entity(entity, legacy_json);
+
+  auto *hold_mode = entity->get_component<HoldModeComponent>();
+  ASSERT_NE(hold_mode, nullptr);
+  EXPECT_FLOAT_EQ(hold_mode->kneel_entry_progress, 0.0F);
+  EXPECT_FLOAT_EQ(hold_mode->kneel_duration,
+                  Engine::Core::Defaults::k_hold_kneel_duration);
+}
+
 TEST_F(SerializationTest, GuardModeComponentSerialization) {
   auto *entity = world->create_entity();
   auto *guard_mode = entity->add_component<GuardModeComponent>();

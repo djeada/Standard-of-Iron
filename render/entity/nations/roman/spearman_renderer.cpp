@@ -101,7 +101,10 @@ public:
 
   auto get_torso_scale() const -> float override { return 0.64F; }
 
-public:
+  auto get_hold_kneel_depth() const -> float override {
+    return k_kneel_depth_multiplier;
+  }
+
   auto visual_spec() const
       -> const Render::Creature::Pipeline::UnitVisualSpec & override {
     using namespace Render::Creature::Pipeline;
