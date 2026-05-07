@@ -513,7 +513,7 @@ TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
       << "Completed exit should restore original standing height";
 }
 
-TEST_F(HumanoidPoseControllerTest, KneelSwordsmanDepthBetweenSpearAndArcher) {
+TEST_F(HumanoidPoseControllerTest, KneelSwordsmanShallowestSpearmanMiddleArcherDeepest) {
   HumanoidPose spear_pose = pose;
   HumanoidPoseController spear_ctrl(spear_pose, anim_ctx);
   spear_ctrl.kneel(0.875F);
@@ -527,7 +527,9 @@ TEST_F(HumanoidPoseControllerTest, KneelSwordsmanDepthBetweenSpearAndArcher) {
   archer_ctrl.kneel(1.125F);
 
   EXPECT_GT(sword_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
-      << "Swordsman should kneel less than archer";
+      << "Swordsman (0.825) should kneel less deeply than archer (1.125)";
   EXPECT_GT(sword_pose.pelvis_pos.y(), spear_pose.pelvis_pos.y())
-      << "Swordsman should kneel less than spearman";
+      << "Swordsman (0.825) should kneel less deeply than spearman (0.875)";
+  EXPECT_GT(spear_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
+      << "Spearman (0.875) should kneel less deeply than archer (1.125)";
 }
