@@ -65,6 +65,18 @@ public:
   SnapshotMeshCache(const SnapshotMeshCache &) = delete;
   auto operator=(const SnapshotMeshCache &) -> SnapshotMeshCache & = delete;
 
+  struct FrameStats {
+    std::uint32_t hits{0};
+    std::uint32_t loads{0};
+    std::uint32_t bakes{0};
+    std::uint32_t misses{0};
+  };
+
+  void reset_frame_stats() noexcept { m_frame_stats = {}; }
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
+    return m_frame_stats;
+  }
+
   auto get_or_bake(const Key &key, const RiggedMeshEntry &source,
                    std::uint32_t global_frame) -> const SnapshotMeshEntry *;
   auto get_or_load(const Key &key,
@@ -81,6 +93,7 @@ public:
 
 private:
   std::unordered_map<Key, SnapshotMeshEntry, KeyHash> m_entries;
+  FrameStats m_frame_stats;
 };
 
 } // namespace Render::GL
