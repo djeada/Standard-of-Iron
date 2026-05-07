@@ -11,28 +11,33 @@ namespace Render::GL {
 namespace {
 
 // Number of tile layers that the boundary band extends INSIDE the map edge.
-// Keep this at zero so fog starts on the first line after the boundary.
-constexpr int k_band_inside = 0;
+// Set to 3 so the first three rows of playable tiles receive dense fog, making
+// the world boundary clearly visible when the camera faces the edge.
+constexpr int k_band_inside = 3;
 // Number of tile layers outside the map edge that receive fog.
 constexpr int k_band_outside = 3;
 
-// Y height of each fog quad (low to the ground so it doesn't obscure units).
-constexpr float k_fog_y = 0.15F;
+// Y height of each fog quad – raised so the fog forms a visible wall rather
+// than hugging the ground.
+constexpr float k_fog_y = 1.5F;
 
-// Subtle warm-gray fog colour.
-constexpr float k_fog_r = 0.60F;
-constexpr float k_fog_g = 0.58F;
-constexpr float k_fog_b = 0.55F;
+// Cool blue-grey colour to evoke an ethereal world edge.
+constexpr float k_fog_r = 0.55F;
+constexpr float k_fog_g = 0.60F;
+constexpr float k_fog_b = 0.72F;
 
 // Alpha values indexed by (signed_dist + k_band_outside).
 //   signed_dist < 0  → outside the map  (more negative = further outside)
-//   signed_dist == 0 → map edge tile (excluded, because k_band_inside == 0)
-//   signed_dist > 0  → inside the map (excluded)
-// Total entries = k_band_outside + k_band_inside = 3 + 0 = 3.
+//   signed_dist == 0 → map edge tile
+//   signed_dist > 0  → inside the map (up to k_band_inside - 1)
+// Total entries = k_band_outside + k_band_inside = 3 + 3 = 6.
 constexpr std::array<float, k_band_outside + k_band_inside> k_alpha_table = {
-    0.08F, // signed_dist == -3  (3 tiles outside the map)
-    0.18F, // signed_dist == -2  (2 tiles outside the map)
-    0.24F, // signed_dist == -1  (1 tile outside the map)
+    0.15F, // signed_dist == -3  (3 tiles outside the map)
+    0.30F, // signed_dist == -2  (2 tiles outside the map)
+    0.55F, // signed_dist == -1  (1 tile outside the map)
+    0.90F, // signed_dist ==  0  (map edge tile)
+    0.70F, // signed_dist ==  1  (1 tile inside the map)
+    0.40F, // signed_dist ==  2  (2 tiles inside the map)
 };
 
 } // namespace
