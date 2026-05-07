@@ -8,6 +8,7 @@ Rectangle {
 
     property int selectionTick: 0
     property var gameInstance: null
+    readonly property var hs: StyleGuide.historical
 
     signal recruitUnit(string unitType)
     signal rallyModeToggled()
@@ -70,8 +71,8 @@ Rectangle {
         };
     }
 
-    color: "#0f1419"
-    border.color: "#3498db"
+    color: hs.parchmentDark
+    border.color: hs.bronze
     border.width: 2
     radius: 6
 
@@ -91,9 +92,9 @@ Rectangle {
 
                 width: parent.width
                 height: productionContent.height + 16
-                color: "#1a252f"
+                color: hs.parchmentLight
                 radius: 6
-                border.color: "#34495e"
+                border.color: hs.bronzeDeep
                 border.width: 1
                 visible: has_barracks
 
@@ -111,7 +112,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("PRODUCTION QUEUE")
-                        color: "#3498db"
+                        color: hs.bronze
                         font.pointSize: 8
                         font.bold: true
                     }
@@ -286,9 +287,9 @@ Rectangle {
 
                 width: parent.width
                 height: unitGridContent.height + 16
-                color: "#1a252f"
+                color: hs.parchmentLight
                 radius: 6
-                border.color: "#34495e"
+                border.color: hs.bronzeDeep
                 border.width: 1
                 visible: has_barracks
 
@@ -305,7 +306,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("RECRUIT UNITS")
-                        color: "#3498db"
+                        color: hs.bronze
                         font.pointSize: 8
                         font.bold: true
                     }
@@ -325,8 +326,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -360,8 +361,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -369,7 +370,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 50
-                                    color: archerCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: archerCostBadge.parent.isEnabled ? Theme.textMain : Theme.textDim
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -431,8 +432,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -466,8 +467,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -475,7 +476,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 90
-                                    color: swordsmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: swordsmanCostBadge.parent.isEnabled ? Theme.textMain : Theme.textDim
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -537,8 +538,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -572,8 +573,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -581,7 +582,7 @@ Rectangle {
 
                                     anchors.centerIn: parent
                                     text: parent.parent.unitInfo.cost || 75
-                                    color: spearmanCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                    color: spearmanCostBadge.parent.isEnabled ? Theme.textMain : Theme.textDim
                                     font.pointSize: 16
                                     font.bold: true
                                 }
@@ -643,8 +644,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -678,8 +679,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -749,8 +750,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -784,8 +785,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -855,8 +856,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -890,8 +891,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -961,8 +962,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -996,8 +997,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -1067,8 +1068,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1102,8 +1103,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -1173,8 +1174,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1209,8 +1210,8 @@ Rectangle {
                                 anchors.bottom: parent.bottom
                                 anchors.bottomMargin: 6
                                 radius: 8
-                                color: parent.isEnabled ? "#000000b3" : "#00000066"
-                                border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                                color: parent.isEnabled ? "#2a1d12cc" : "#1f150d99"
+                                border.color: parent.isEnabled ? hs.bronze : "#555555"
                                 border.width: 1
 
                                 Text {
@@ -1293,7 +1294,7 @@ Rectangle {
                 height: rallyContent.height + 12
                 color: "#1a252f"
                 radius: 6
-                border.color: "#34495e"
+                border.color: hs.bronzeDeep
                 border.width: 1
                 visible: has_barracks
 
@@ -1363,7 +1364,7 @@ Rectangle {
                 height: builderProductionContent.height + 16
                 color: "#1a252f"
                 radius: 6
-                border.color: "#34495e"
+                border.color: hs.bronzeDeep
                 border.width: 1
                 visible: has_builder
 
@@ -1494,8 +1495,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1584,8 +1585,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1674,8 +1675,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1
@@ -1764,8 +1765,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
-                            border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                            color: isEnabled ? (isHovered ? hs.waxHover : hs.parchmentDark) : "#1a1a1a"
+                            border.color: isEnabled ? (isHovered ? hs.bronze : hs.bronzeDeep) : "#2a2a2a"
                             border.width: isHovered && isEnabled ? 4 : 2
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.1 : 1

@@ -11,6 +11,7 @@ Item {
     readonly property int barmin_height: 72
     readonly property bool compact: width < 800
     readonly property bool ultraCompact: width < 560
+    readonly property var hs: StyleGuide.historical
 
     signal pauseToggled()
     signal speedChanged(real speed)
@@ -22,7 +23,7 @@ Item {
         anchors.right: parent.right
         anchors.top: parent.top
         height: barmin_height
-        color: "#1a1a1a"
+        color: hs.parchmentDark
         opacity: 0.98
         clip: true
 
@@ -33,12 +34,12 @@ Item {
             gradient: Gradient {
                 GradientStop {
                     position: 0
-                    color: "#22303a"
+                    color: hs.parchmentLight
                 }
 
                 GradientStop {
                     position: 1
-                    color: "#0f1a22"
+                    color: hs.parchmentDark
                 }
 
             }
@@ -59,7 +60,7 @@ Item {
 
                 GradientStop {
                     position: 0.5
-                    color: "#3498db"
+                    color: hs.bronze
                 }
 
                 GradientStop {
@@ -96,16 +97,16 @@ Item {
                     onClicked: topRoot.pauseToggled()
 
                     background: Rectangle {
-                        color: parent.pressed ? "#e74c3c" : parent.hovered ? "#c0392b" : "#34495e"
+                        color: parent.pressed ? hs.waxDark : parent.hovered ? hs.waxHover : hs.wax
                         radius: 6
-                        border.color: "#2c3e50"
+                        border.color: hs.bronzeDeep
                         border.width: 1
                     }
 
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
-                        color: "#ecf0f1"
+                        color: Theme.textMain
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -126,7 +127,7 @@ Item {
 
                         GradientStop {
                             position: 0.5
-                            color: "#34495e"
+                            color: hs.bronzeDeep
                         }
 
                         GradientStop {
@@ -145,7 +146,7 @@ Item {
                     Label {
                         text: qsTr("Speed:")
                         visible: !topRoot.compact
-                        color: "#ecf0f1"
+                        color: Theme.textMain
                         font.pixelSize: 14
                         font.bold: true
                         verticalAlignment: Text.AlignVCenter
@@ -179,9 +180,9 @@ Item {
                                 onClicked: topRoot.speedChanged(modelData)
 
                                 background: Rectangle {
-                                    color: parent.checked ? "#27ae60" : parent.hovered ? "#34495e" : "#2c3e50"
+                                    color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
                                     radius: 6
-                                    border.color: parent.checked ? "#229954" : "#1a252f"
+                                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                                     border.width: 1
                                 }
 
@@ -189,7 +190,7 @@ Item {
                                     text: parent.text
                                     font.pixelSize: 13
                                     font.bold: true
-                                    color: parent.enabled ? "#ecf0f1" : "#7f8c8d"
+                                    color: parent.enabled ? Theme.textMain : Theme.textDim
                                     horizontalAlignment: Text.AlignHCenter
                                     verticalAlignment: Text.AlignVCenter
                                 }
@@ -231,7 +232,7 @@ Item {
 
                         GradientStop {
                             position: 0.5
-                            color: "#34495e"
+                            color: hs.bronzeDeep
                         }
 
                         GradientStop {
@@ -250,7 +251,7 @@ Item {
                     Label {
                         text: qsTr("Camera:")
                         visible: !topRoot.compact
-                        color: "#ecf0f1"
+                        color: Theme.textMain
                         font.pixelSize: 14
                         font.bold: true
                         verticalAlignment: Text.AlignVCenter
@@ -272,16 +273,16 @@ Item {
                         }
 
                         background: Rectangle {
-                            color: parent.checked ? "#3498db" : parent.hovered ? "#34495e" : "#2c3e50"
+                            color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
                             radius: 6
-                            border.color: parent.checked ? "#2980b9" : "#1a252f"
+                            border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                             border.width: 1
                         }
 
                         contentItem: Text {
                             text: parent.text
                             font: parent.font
-                            color: "#ecf0f1"
+                            color: Theme.textMain
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -303,16 +304,16 @@ Item {
                         }
 
                         background: Rectangle {
-                            color: parent.hovered ? "#34495e" : "#2c3e50"
+                            color: parent.hovered ? hs.parchmentLight : hs.parchmentDark
                             radius: 6
-                            border.color: "#1a252f"
+                            border.color: hs.bronzeDeep
                             border.width: 1
                         }
 
                         contentItem: Text {
                             text: parent.text
                             font: parent.font
-                            color: "#ecf0f1"
+                            color: Theme.textMain
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
                         }
@@ -333,9 +334,9 @@ Item {
                 visible: typeof game !== 'undefined' && game.is_spectator_mode
                 Layout.preferredWidth: spectatorLabel.width + 24
                 Layout.preferredHeight: Math.min(36, topPanel.height - 16)
-                color: "#e74c3c"
+                color: hs.wax
                 radius: 6
-                border.color: "#c0392b"
+                border.color: hs.bronze
                 border.width: 1
                 Layout.alignment: Qt.AlignVCenter
 
@@ -344,7 +345,7 @@ Item {
 
                     anchors.centerIn: parent
                     text: "👁 " + qsTr("SPECTATOR MODE")
-                    color: "#ecf0f1"
+                    color: Theme.textMain
                     font.pixelSize: 13
                     font.bold: true
                 }

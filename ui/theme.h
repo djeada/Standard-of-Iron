@@ -92,38 +92,38 @@ public:
   static auto instance() -> Theme *;
   static auto create(QQmlEngine *engine, QJSEngine *scriptEngine) -> Theme *;
 
-  [[nodiscard]] static auto bg() -> QColor { return {"#071018"}; }
-  [[nodiscard]] static auto bgShade() -> QColor { return {"#061214"}; }
+  [[nodiscard]] static auto bg() -> QColor { return {"#17110C"}; }
+  [[nodiscard]] static auto bgShade() -> QColor { return {"#120D09"}; }
   [[nodiscard]] static auto dim() -> QColor { return {0, 0, 0, 115}; }
 
-  [[nodiscard]] static auto panelBase() -> QColor { return {"#071018"}; }
-  [[nodiscard]] static auto panelBr() -> QColor { return {"#0f2430"}; }
-  [[nodiscard]] static auto panelBorder() -> QColor { return {"#0f2430"}; }
+  [[nodiscard]] static auto panelBase() -> QColor { return {"#231B14"}; }
+  [[nodiscard]] static auto panelBr() -> QColor { return {"#8C6A3E"}; }
+  [[nodiscard]] static auto panelBorder() -> QColor { return {"#8C6A3E"}; }
 
-  [[nodiscard]] static auto cardBase() -> QColor { return {"#061214"}; }
-  [[nodiscard]] static auto cardBaseA() -> QColor { return {"#061214AA"}; }
-  [[nodiscard]] static auto cardBaseB() -> QColor { return {"#061214"}; }
-  [[nodiscard]] static auto cardBorder() -> QColor { return {"#12323a"}; }
+  [[nodiscard]] static auto cardBase() -> QColor { return {"#2F251D"}; }
+  [[nodiscard]] static auto cardBaseA() -> QColor { return {"#2F251DBB"}; }
+  [[nodiscard]] static auto cardBaseB() -> QColor { return {"#1D1610"}; }
+  [[nodiscard]] static auto cardBorder() -> QColor { return {"#A7814A"}; }
 
-  [[nodiscard]] static auto hover() -> QColor { return {"#184c7a"}; }
-  [[nodiscard]] static auto hoverBg() -> QColor { return {"#184c7a"}; }
-  [[nodiscard]] static auto selected() -> QColor { return {"#1f8bf5"}; }
-  [[nodiscard]] static auto selectedBg() -> QColor { return {"#1f8bf5"}; }
-  [[nodiscard]] static auto selectedBr() -> QColor { return {"#1b74d1"}; }
+  [[nodiscard]] static auto hover() -> QColor { return {"#6B4D2A"}; }
+  [[nodiscard]] static auto hoverBg() -> QColor { return {"#6B4D2A"}; }
+  [[nodiscard]] static auto selected() -> QColor { return {"#A32925"}; }
+  [[nodiscard]] static auto selectedBg() -> QColor { return {"#A32925"}; }
+  [[nodiscard]] static auto selectedBr() -> QColor { return {"#C0403B"}; }
 
-  [[nodiscard]] static auto thumbBr() -> QColor { return {"#2A4E56"}; }
-  [[nodiscard]] static auto border() -> QColor { return {"#0f2b34"}; }
+  [[nodiscard]] static auto thumbBr() -> QColor { return {"#B08A50"}; }
+  [[nodiscard]] static auto border() -> QColor { return {"#7A5C36"}; }
 
-  [[nodiscard]] static auto textMain() -> QColor { return {"#eaf6ff"}; }
-  [[nodiscard]] static auto textBright() -> QColor { return {"#dff0ff"}; }
-  [[nodiscard]] static auto textSub() -> QColor { return {"#86a7b6"}; }
-  [[nodiscard]] static auto textSubLite() -> QColor { return {"#79a6b7"}; }
-  [[nodiscard]] static auto textDim() -> QColor { return {"#4f6a75"}; }
-  [[nodiscard]] static auto textHint() -> QColor { return {"#2a5e6e"}; }
+  [[nodiscard]] static auto textMain() -> QColor { return {"#F4E7C8"}; }
+  [[nodiscard]] static auto textBright() -> QColor { return {"#EEDDB3"}; }
+  [[nodiscard]] static auto textSub() -> QColor { return {"#C7A66D"}; }
+  [[nodiscard]] static auto textSubLite() -> QColor { return {"#D4B57C"}; }
+  [[nodiscard]] static auto textDim() -> QColor { return {"#8D7146"}; }
+  [[nodiscard]] static auto textHint() -> QColor { return {"#6B5231"}; }
 
-  [[nodiscard]] static auto accent() -> QColor { return {"#9fd9ff"}; }
-  [[nodiscard]] static auto accentBright() -> QColor { return {"#d0e8ff"}; }
-  [[nodiscard]] static auto accentBr() -> QColor { return {"#7eb8db"}; }
+  [[nodiscard]] static auto accent() -> QColor { return {"#D4A15A"}; }
+  [[nodiscard]] static auto accentBright() -> QColor { return {"#E8C98B"}; }
+  [[nodiscard]] static auto accentBr() -> QColor { return {"#BE8E49"}; }
 
   [[nodiscard]] static auto addColor() -> QColor { return {"#3A9CA8"}; }
   [[nodiscard]] static auto removeColor() -> QColor { return {"#D04040"}; }
@@ -134,11 +134,11 @@ public:
   [[nodiscard]] static auto successBg() -> QColor { return {"#1e4a2c"}; }
   [[nodiscard]] static auto successBr() -> QColor { return {"#2d6b3f"}; }
   [[nodiscard]] static auto successText() -> QColor { return {"#8fdc9f"}; }
-  [[nodiscard]] static auto disabledBg() -> QColor { return {"#1a2a32"}; }
+  [[nodiscard]] static auto disabledBg() -> QColor { return {"#2A2119"}; }
 
-  [[nodiscard]] static auto infoBg() -> QColor { return {"#1a3a5a"}; }
-  [[nodiscard]] static auto infoBr() -> QColor { return {"#2a5a8a"}; }
-  [[nodiscard]] static auto infoText() -> QColor { return {"#7ab8e8"}; }
+  [[nodiscard]] static auto infoBg() -> QColor { return {"#3B2E21"}; }
+  [[nodiscard]] static auto infoBr() -> QColor { return {"#A7814A"}; }
+  [[nodiscard]] static auto infoText() -> QColor { return {"#E8C98B"}; }
 
   [[nodiscard]] static auto warningText() -> QColor { return {"#f5a623"}; }
 
