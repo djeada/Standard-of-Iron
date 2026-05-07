@@ -1,8 +1,8 @@
 {
   "id": "battle_of_zama",
   "title": "Battle of Zama",
-  "summary": "Final battle in Africa: defeat Scipio's main line, Numidian cavalry allies, and reserve camps across a wide front.",
-  "teaching_goal": "Full-spectrum command. Teaches managing elephants, center pressure, and multi-camp enemy logistics.",
+  "summary": "Final battle in Africa: blunt Scipio's line, survive the Numidian cavalry, and seize the Roman camps before the rear guard stabilizes the field.",
+  "teaching_goal": "Full-spectrum command. Teaches managing elephants and flank pressure while transitioning into a decisive camp assault.",
   "narrative_intent": "The final confrontation becomes a layered battle of adaptation and endurance.",
   "map_path": ":/assets/maps/map_battle_zama.json",
   "player_setup": {
@@ -12,8 +12,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 550,
-      "food": 420
+      "gold": 650,
+      "food": 520
     }
   },
   "ai_setups": [
@@ -36,17 +36,17 @@
         {
           "timing": 220.0,
           "composition": [
-            {"type": "spearman", "count": 12},
-            {"type": "swordsman", "count": 10},
-            {"type": "archer", "count": 6}
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 4}
           ],
           "entry_point": {"x": 200, "z": 60}
         },
         {
           "timing": 460.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 8},
-            {"type": "spearman", "count": 8}
+            {"type": "horse_swordsman", "count": 6},
+            {"type": "spearman", "count": 6}
           ],
           "entry_point": {"x": 170, "z": 30}
         }
@@ -77,17 +77,17 @@
         {
           "timing": 180.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 8},
-            {"type": "horse_archer", "count": 4}
+            {"type": "horse_swordsman", "count": 6},
+            {"type": "horse_archer", "count": 3}
           ],
           "entry_point": {"x": 210, "z": 30}
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 10},
-            {"type": "archer", "count": 6},
-            {"type": "spearman", "count": 6}
+            {"type": "horse_swordsman", "count": 8},
+            {"type": "archer", "count": 4},
+            {"type": "spearman", "count": 4}
           ],
           "entry_point": {"x": 210, "z": 30}
         }
@@ -118,9 +118,9 @@
         {
           "timing": 520.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
-            {"type": "archer", "count": 6},
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6},
+            {"type": "archer", "count": 4},
             {"type": "catapult", "count": 1}
           ],
           "entry_point": {"x": 200, "z": 95}
@@ -130,8 +130,10 @@
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Destroy Scipio's army and every Roman field camp"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Capture two Roman camps to break Scipio's battlefield control"
     }
   ],
   "defeat_conditions": [
@@ -149,8 +151,8 @@
     {
       "type": "capture_structures",
       "structure_types": ["barracks"],
-      "min_count": 2,
-      "description": "Capture at least two Roman camps"
+      "min_count": 3,
+      "description": "Capture every Roman field camp"
     }
   ],
   "events": [
