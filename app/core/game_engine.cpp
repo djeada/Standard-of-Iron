@@ -40,8 +40,10 @@
 #include <QImage>
 #include <QOpenGLContext>
 #include <QPainter>
+#include <QPointer>
 #include <QQuickWindow>
 #include <QSize>
+#include <QThread>
 #include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
@@ -816,7 +818,12 @@ void GameEngine::update_cursor(Qt::CursorShape newCursor) {
   }
   if (m_runtime.current_cursor != newCursor) {
     m_runtime.current_cursor = newCursor;
-    m_window->setCursor(newCursor);
+    QPointer<QQuickWindow> safe_window(m_window);
+    QMetaObject::invokeMethod(m_window, [safe_window, newCursor]() {
+      if (safe_window) {
+        safe_window->setCursor(newCursor);
+      }
+    }, Qt::AutoConnection);
   }
 }
 
@@ -1176,7 +1183,13 @@ void GameEngine::render_game_effects() {
 }
 
 void GameEngine::update_loading_overlay() {
-  if (!m_loading_overlay_wait_for_first_frame) {
+  if (!m_loading_overlay_wait_for_first_frame.load(std::memory_order_acquire)) {
+    return;
+  }
+
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_loading_overlay(); },
+                              Qt::QueuedConnection);
     return;
   }
 
@@ -1213,7 +1226,8 @@ void GameEngine::update_loading_overlay() {
       qWarning() << "Loading overlay timed out waiting for GPU readiness"
                  << pending_components.join(", ");
     }
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_loading_overlay_active = false;
     if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
       m_loading_progress_tracker->set_stage(
@@ -1230,6 +1244,11 @@ void GameEngine::update_loading_overlay() {
 }
 
 void GameEngine::update_cursor_position() {
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_cursor_position(); },
+                              Qt::QueuedConnection);
+    return;
+  }
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();
   if (current_x != m_runtime.last_cursor_x ||
@@ -1842,7 +1861,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     set_error(load_result.error_message);
     m_runtime.loading = false;
     m_loading_overlay_active = false;
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_finalize_progress_after_overlay = false;
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
@@ -2505,7 +2525,7 @@ void GameEngine::center_camera_on_local_forces() {
 
 void GameEngine::finalize_skirmish_load() {
   m_runtime.loading = false;
-  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
@@ -2572,7 +2592,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     set_error(m_saveLoadService->get_last_error());
     m_runtime.loading = false;
     m_loading_overlay_active = false;
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_finalize_progress_after_overlay = false;
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
@@ -2637,7 +2658,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   }
 
   m_runtime.loading = false;
-  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();

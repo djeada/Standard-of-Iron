@@ -26,6 +26,7 @@
 #include <QVariant>
 #include <QVector3D>
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -433,7 +434,7 @@ private:
   QVariantList m_available_maps;
   bool m_maps_loading = false;
   bool m_loading_overlay_active = false;
-  bool m_loading_overlay_wait_for_first_frame = false;
+  std::atomic_bool m_loading_overlay_wait_for_first_frame{false};
   int m_loading_overlay_frames_remaining = 0;
   qint64 m_loading_overlay_min_duration_ms = 0;
   QElapsedTimer m_loading_overlay_timer;
