@@ -262,4 +262,49 @@ TEST(SnapshotMeshCache, RuntimeBakeGuardAllowsHitsButRejectsMisses) {
   EXPECT_EQ(cache.size(), 1U);
 }
 
+TEST(SnapshotMeshCache, FrameStatsCountBakesAndHits) {
+  auto source = make_two_bone_quad_entry();
+  SnapshotMeshCache cache;
+
+  SnapshotMeshCache::Key key{};
+  key.frame_in_clip = 0U;
+
+  // First call: miss -> bake
+  ASSERT_NE(cache.get_or_bake(key, *source, 0U), nullptr);
+  EXPECT_EQ(cache.frame_stats().bakes, 1U);
+  EXPECT_EQ(cache.frame_stats().hits, 0U);
+  EXPECT_EQ(cache.frame_stats().misses, 0U);
+
+  // Second call with same key: hit
+  ASSERT_NE(cache.get_or_bake(key, *source, 0U), nullptr);
+  EXPECT_EQ(cache.frame_stats().bakes, 1U);
+  EXPECT_EQ(cache.frame_stats().hits, 1U);
+}
+
+TEST(SnapshotMeshCache, FrameStatsResetClearsCounters) {
+  auto source = make_two_bone_quad_entry();
+  SnapshotMeshCache cache;
+
+  SnapshotMeshCache::Key key{};
+  cache.get_or_bake(key, *source, 0U);
+  EXPECT_GT(cache.frame_stats().bakes, 0U);
+
+  cache.reset_frame_stats();
+  EXPECT_EQ(cache.frame_stats().hits, 0U);
+  EXPECT_EQ(cache.frame_stats().bakes, 0U);
+  EXPECT_EQ(cache.frame_stats().misses, 0U);
+  EXPECT_EQ(cache.frame_stats().loads, 0U);
+}
+
+TEST(SnapshotMeshCache, FrameStatsMissOnOutOfRange) {
+  auto source = make_two_bone_quad_entry();
+  SnapshotMeshCache cache;
+
+  SnapshotMeshCache::Key key{};
+  EXPECT_EQ(cache.get_or_bake(key, *source, 99U), nullptr);
+  EXPECT_EQ(cache.frame_stats().misses, 1U);
+  EXPECT_EQ(cache.frame_stats().bakes, 0U);
+  EXPECT_EQ(cache.frame_stats().hits, 0U);
+}
+
 } // namespace

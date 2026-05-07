@@ -4,6 +4,30 @@ Goal: make the runtime render path modern, scalable, and close to data-only play
 
 The perf sample that motivated this list showed `RiggedMeshCache::get_or_bake`, `Backend::execute`, `__memmove`, allocator calls, `prepare_humanoid_instances`, `SnapshotMeshCache`, and minimap fog activity on the render thread. A later sample additionally showed `Render::Creature::Pipeline::submit_snapshot_creature(...)` as the top app-side hotspot, with visible time in `Render::GL::RiggedMeshCache::get_or_bake_prehashed(...)`, `__memmove_avx_unaligned_erms`, and render-thread work on `QSGRenderThread`.
 
+## Branch status - 2026-05-07
+
+Implemented and verified on `copilot/start-implementing-todo-md`:
+- Draw queue high-water reservation, bucket-aware sorting, and prepared-batch regression tests.
+- Rigged creature instancing enabled by default, with `SOI_RENDER_DISABLE_RIGGED_INSTANCING` as the opt-out flag.
+- Rigged and snapshot mesh cache frame counters for hits, misses, bakes, and snapshot loads.
+- Minimal horse/elephant snapshot rendering no longer falls back to runtime rigged/snapshot baking when the required prebaked snapshot asset is missing.
+- Minimap fog recomposition avoids repeated work for unchanged visibility versions, and unit overlay recomposition tracks fog, unit, owner, selection, building, and local-player state.
+- Regression tests for draw queue memory/sort behavior, cache counters, rigged batching by role palette, minimap dirty handling, and missing prebaked snapshot behavior.
+
+Verification:
+- `cmake --build build --target standard_of_iron_tests -j 4`
+- `ctest --test-dir build --output-on-failure -j 4` passed 1031/1031 tests.
+
+Still open:
+- Persistent render registries and dirty component events.
+- Cached static building `RenderInstance` submission.
+- Full terrain/scatter dirty-upload proof.
+- Equipment data handles and stable `AttachmentSetId` ownership.
+- Moving/confirming simulation query work outside render-thread captures.
+- Full QSG render-thread stage documentation and first-use logging.
+- Backend execution cleanup.
+- Additional perf regression coverage for terrain uploads and building cached instances.
+
 ## P1 - Persistent Render Lists and Dirty Updates
 
 ### Split render world collection into persistent buckets
@@ -47,6 +71,8 @@ Acceptance:
 
 ### Stabilize draw queue memory
 
+Status: partially done. `DrawQueue` now tracks high-water marks for items and prepared batches, reserves items/sort indices/sort keys from the previous frame high-water mark, and `Renderer::begin_frame()` calls `reserve_for_frame()`. Tests cover capacity retention. Remaining work: broader audit of primitive/backend scratch buffers and measured allocator-sample reduction in gameplay captures.
+
 Files:
 - `render/draw_queue.h`
 - `render/scene_renderer.cpp`
@@ -69,6 +95,8 @@ Acceptance:
 
 ### Avoid full stable sort for already-bucketed commands
 
+Status: partially done. `DrawQueue` records coarse submission bucket spans and sorts within bucketed ranges when submission order is already monotonic, falling back to the original full stable sort when needed. Tests cover sorted input, within-bucket sorting, and non-monotonic fallback. Remaining work: material/mesh/texture precomputed sort ids and measured sort-time reduction in large stable scenes.
+
 Files:
 - `render/draw_queue.h`
 - `render/scene_renderer.cpp`
@@ -88,6 +116,8 @@ Acceptance:
 - Terrain/scatter batches bypass unnecessary full-queue sorting.
 
 ### Make rigged instancing a production path or remove dead path
+
+Status: done for the current path. Rigged creature instancing is enabled by default and can be disabled with `SOI_RENDER_DISABLE_RIGGED_INSTANCING`. Role-color palettes are included in batching compatibility so unlike palettes split batches.
 
 Files:
 - `render/draw_queue.h`
@@ -124,6 +154,8 @@ Acceptance:
 - Stable terrain frames perform no terrain/scatter CPU generation and no buffer upload except intentional animated/time uniforms.
 
 ### Separate minimap fog cadence from render frame cadence
+
+Status: partially done. Fog updates now skip unchanged visibility versions, unit overlay recomposition tracks fog version changes, and marker hashing includes rendered marker state plus local owner. Remaining work: fixed-cadence scheduling/off-thread recomputation and dirty-region texture uploads.
 
 Files:
 - `app/core/minimap_manager.*`
@@ -203,6 +235,8 @@ Acceptance:
 
 ### Perf findings from 2026-05-06 sample
 
+Status: partially done. Added frame counters for rigged mesh cache hits/misses/bakes and snapshot cache hits/misses/loads/bakes, plus regression coverage. Minimal horse/elephant snapshot submit no longer performs runtime rigged/snapshot bake fallback when a required prebaked snapshot is missing. Remaining work: counters for skin UBO bytes, draw queue reallocations/copied bytes, cache-hit no-allocation proof, and warmed battle perf validation.
+
 Files:
 - `render/creature/pipeline/creature_pipeline.cpp`
 - `render/rigged_mesh_cache.*`
@@ -275,6 +309,8 @@ Acceptance:
 - Perf is unchanged or better versus the current backend.
 
 ### Add automated performance regression tests
+
+Status: partially done. Added tests for draw queue high-water behavior, cache hit/bake/miss counters, rigged role-palette batching, minimap dirty recomposition, and missing prebaked snapshot no-fallback behavior. Remaining work: stable terrain no-upload and cached building render-instance tests.
 
 Files:
 - `tests/render/*`

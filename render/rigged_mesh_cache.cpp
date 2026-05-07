@@ -168,9 +168,12 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
   Key const key{&spec, lod, variant_bucket, skin_species_id, attachments_hash};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
+    ++m_frame_stats.hits;
     return &it->second;
   }
   if (Render::Creature::runtime_bake_forbidden()) {
+    // Count as a miss: key absent and baking blocked — no result returned.
+    ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
         describe_rigged_key(spec, lod, variant_bucket, attachments_hash,
@@ -192,6 +195,8 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     entry.inverse_bind.push_back(m.inverted());
   }
 
+  // Count as a bake: key was absent and a new entry was created.
+  ++m_frame_stats.bakes;
   auto [it, _] = m_entries.emplace(key, std::move(entry));
   return &it->second;
 }
