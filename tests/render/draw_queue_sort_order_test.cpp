@@ -223,6 +223,45 @@ TEST(DrawQueueSortOrder, AlreadySortedInputsKeepSubmissionOrder) {
   EXPECT_EQ(queue.get_sorted(2).index(), SelectionRingCmdIndex);
 }
 
+TEST(DrawQueueMemory, HighWaterMarkTrackedAfterClear) {
+  DrawQueue queue;
+
+  for (int i = 0; i < 50; ++i) {
+    MeshCmd cmd;
+    queue.submit(cmd);
+  }
+  queue.sort_for_batching();
+
+  EXPECT_EQ(queue.items_high_water(), 0U)
+      << "High-water mark is updated by clear(), not sort_for_batching()";
+  EXPECT_EQ(queue.prepared_high_water(), 0U);
+
+  queue.clear();
+
+  EXPECT_EQ(queue.items_high_water(), 50U);
+  EXPECT_GE(queue.prepared_high_water(), 1U);
+}
+
+TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
+  DrawQueue queue;
+
+  for (int i = 0; i < 100; ++i) {
+    MeshCmd cmd;
+    queue.submit(cmd);
+  }
+  queue.sort_for_batching();
+  queue.clear();
+  queue.reserve_for_frame();
+
+  EXPECT_GE(queue.items().capacity(), 100U)
+      << "reserve_for_frame() must retain capacity from previous frame "
+         "high-water mark.";
+
+  queue.clear();
+  EXPECT_GE(queue.items().capacity(), 100U)
+      << "Subsequent clear() must not shrink reserved capacity.";
+}
+
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
 
   Render::FrameBudgetConfig cfg;

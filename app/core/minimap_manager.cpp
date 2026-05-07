@@ -71,6 +71,7 @@ void MinimapManager::generate_for_map(const Game::Map::MapDefinition &map_def) {
                                   m_world_height);
 
     m_minimap_fog_version = 0;
+    m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
     mark_dirty();
   } else {
     qWarning() << "MinimapManager: Failed to generate minimap";
@@ -260,6 +261,7 @@ void MinimapManager::clear_fog() {
   }
 
   m_minimap_fog_version = 0;
+  m_last_fog_composite_version = std::numeric_limits<std::uint64_t>::max();
   m_minimap_fog_image = m_minimap_base_image.copy();
   m_minimap_image = m_minimap_fog_image.copy();
   mark_dirty();
@@ -329,26 +331,33 @@ void MinimapManager::update_units(
     }
   }
 
-  if (unit_hash != m_last_unit_hash) {
-    m_last_unit_hash = unit_hash;
+  const bool units_changed = (unit_hash != m_last_unit_hash);
+  const bool fog_changed =
+      (m_minimap_fog_version != m_last_fog_composite_version);
+
+  if (units_changed || fog_changed) {
+    if (units_changed) {
+      m_last_unit_hash = unit_hash;
+    }
+    m_last_fog_composite_version = m_minimap_fog_version;
     mark_dirty();
+
+    auto &visibility_service = Game::Map::VisibilityService::instance();
+    Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
+
+    if (visibility_service.is_initialized()) {
+      auto visibility_snapshot =
+          std::make_shared<Game::Map::VisibilityService::Snapshot>(
+              visibility_service.snapshot());
+      visibility_check = [visibility_snapshot](float world_x,
+                                               float world_z) -> bool {
+        return visibility_snapshot->isVisibleWorld(world_x, world_z) ||
+               visibility_snapshot->isExploredWorld(world_x, world_z);
+      };
+    }
+
+    m_unit_layer->update(markers, local_owner_id, visibility_check, nullptr);
   }
-
-  auto &visibility_service = Game::Map::VisibilityService::instance();
-  Game::Map::Minimap::VisibilityCheckFn visibility_check = nullptr;
-
-  if (visibility_service.is_initialized()) {
-    auto visibility_snapshot =
-        std::make_shared<Game::Map::VisibilityService::Snapshot>(
-            visibility_service.snapshot());
-    visibility_check = [visibility_snapshot](float world_x,
-                                             float world_z) -> bool {
-      return visibility_snapshot->isVisibleWorld(world_x, world_z) ||
-             visibility_snapshot->isExploredWorld(world_x, world_z);
-    };
-  }
-
-  m_unit_layer->update(markers, local_owner_id, visibility_check, nullptr);
 
   const QImage &unit_overlay = m_unit_layer->get_image();
   if (!unit_overlay.isNull()) {

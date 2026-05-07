@@ -312,11 +312,35 @@ struct PreparedBatch {
 class DrawQueue {
 public:
   void clear() {
+    m_items_high_water =
+        std::max(m_items_high_water, m_items.size());
+    m_prepared_high_water =
+        std::max(m_prepared_high_water, m_prepared_batches.size());
     m_items.clear();
     m_sort_indices.clear();
     m_sort_keys.clear();
     m_prepared_batches.clear();
     clear_sort_id_maps();
+  }
+
+  void reserve_for_frame(std::size_t items_hint = 0) {
+    const std::size_t target =
+        std::max(items_hint, m_items_high_water);
+    if (target > m_items.capacity()) {
+      m_items.reserve(target);
+      m_sort_indices.reserve(target);
+      m_sort_keys.reserve(target);
+    }
+    if (m_prepared_high_water > m_prepared_batches.capacity()) {
+      m_prepared_batches.reserve(m_prepared_high_water);
+    }
+  }
+
+  [[nodiscard]] auto items_high_water() const noexcept -> std::size_t {
+    return m_items_high_water;
+  }
+  [[nodiscard]] auto prepared_high_water() const noexcept -> std::size_t {
+    return m_prepared_high_water;
   }
 
   template <typename CmdT, typename = std::enable_if_t<
@@ -799,6 +823,8 @@ private:
   std::uint32_t m_next_material_id = 1;
   std::uint32_t m_next_mesh_id = 1;
   std::uint32_t m_next_texture_id = 1;
+  std::size_t m_items_high_water = 0;
+  std::size_t m_prepared_high_water = 0;
 };
 
 } // namespace Render::GL

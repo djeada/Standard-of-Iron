@@ -2,6 +2,7 @@
 
 #include <QImage>
 #include <cstdint>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -84,6 +85,8 @@ private:
   bool m_dirty = false;
 
   std::uint64_t m_last_unit_hash = 0;
+  std::uint64_t m_last_fog_composite_version =
+      std::numeric_limits<std::uint64_t>::max();
   float m_last_camera_x = 0.0F;
   float m_last_camera_z = 0.0F;
   float m_last_viewport_w = 0.0F;
