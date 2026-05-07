@@ -14,8 +14,22 @@
 #include <QDebug>
 #include <QPainter>
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <unordered_set>
+
+namespace {
+[[nodiscard]] auto hash_combine(std::uint64_t seed,
+                                std::uint64_t value) noexcept
+    -> std::uint64_t {
+  seed ^= value + 0x9E3779B97F4A7C15ULL + (seed << 6U) + (seed >> 2U);
+  return seed;
+}
+
+[[nodiscard]] auto hash_float(float value) noexcept -> std::uint64_t {
+  return static_cast<std::uint64_t>(std::bit_cast<std::uint32_t>(value));
+}
+} // namespace
 
 MinimapManager::MinimapManager() = default;
 
@@ -287,7 +301,8 @@ void MinimapManager::update_units(
     selected_ids.insert(sel.begin(), sel.end());
   }
 
-  std::uint64_t unit_hash = 0;
+  std::uint64_t unit_hash =
+      hash_combine(0, static_cast<std::uint64_t>(local_owner_id));
 
   {
     const std::lock_guard<std::recursive_mutex> lock(world->get_entity_mutex());
@@ -318,18 +333,19 @@ void MinimapManager::update_units(
 
       markers.push_back(marker);
 
-      unit_hash ^= static_cast<std::uint64_t>(entity_id);
-      unit_hash ^=
-          static_cast<std::uint64_t>(
-              *reinterpret_cast<const std::uint32_t *>(&marker.world_x))
-          << 1;
-      unit_hash ^=
-          static_cast<std::uint64_t>(
-              *reinterpret_cast<const std::uint32_t *>(&marker.world_z))
-          << 2;
-      unit_hash ^= static_cast<std::uint64_t>(marker.is_selected) << 3;
+      unit_hash = hash_combine(unit_hash, static_cast<std::uint64_t>(entity_id));
+      unit_hash = hash_combine(unit_hash, hash_float(marker.world_x));
+      unit_hash = hash_combine(unit_hash, hash_float(marker.world_z));
+      unit_hash =
+          hash_combine(unit_hash, static_cast<std::uint64_t>(marker.owner_id));
+      unit_hash =
+          hash_combine(unit_hash, marker.is_selected ? 1ULL : 0ULL);
+      unit_hash =
+          hash_combine(unit_hash, marker.is_building ? 1ULL : 0ULL);
     }
   }
+  unit_hash = hash_combine(unit_hash,
+                           static_cast<std::uint64_t>(markers.size()));
 
   const bool units_changed = (unit_hash != m_last_unit_hash);
   const bool fog_changed =
