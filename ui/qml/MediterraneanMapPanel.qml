@@ -235,6 +235,13 @@ Rectangle {
     onCampaign_stateChanged: {
         apply_campaign_state();
     }
+    onVisibleChanged: {
+        if (visible) {
+            load_provinces();
+            load_campaign_state();
+            apply_campaign_state();
+        }
+    }
 
     Item {
         id: mapViewport
@@ -247,7 +254,7 @@ Rectangle {
             id: campaignMapLoader
 
             anchors.fill: parent
-            active: root.visible && (typeof mainWindow === 'undefined' || !mainWindow.gameStarted)
+            active: root.visible
             onStatusChanged: {
                 if (status === Loader.Ready) {
                     root.load_provinces();
@@ -310,6 +317,22 @@ Rectangle {
 
                 }
 
+            }
+
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            color: "#28445C"
+            visible: campaignMapLoader.active && campaignMapLoader.status !== Loader.Ready
+            z: 1
+
+            Text {
+                anchors.centerIn: parent
+                text: qsTr("Loading map…")
+                color: "#c8b89a"
+                font.pointSize: Theme.fontSizeMedium
+                font.bold: true
             }
 
         }
