@@ -1,14 +1,41 @@
 #include "cursor_manager.h"
 #include "app/models/cursor_mode.h"
 #include <QCursor>
+#include <QMetaObject>
 #include <QPoint>
+#include <QPointer>
 #include <QQuickWindow>
+#include <QThread>
 #include <qglobal.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qpoint.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
+
+namespace {
+auto window_local_cursor_pos(QQuickWindow *window) -> QPoint {
+  if (window == nullptr) {
+    return {};
+  }
+
+  if (QThread::currentThread() == window->thread()) {
+    return window->mapFromGlobal(QCursor::pos());
+  }
+
+  QPoint local_pos;
+  const bool invoked = QMetaObject::invokeMethod(
+      window,
+      [window, &local_pos]() {
+        local_pos = window->mapFromGlobal(QCursor::pos());
+      },
+      Qt::BlockingQueuedConnection);
+  if (!invoked) {
+    return {};
+  }
+  return local_pos;
+}
+} // namespace
 
 CursorManager::CursorManager(QObject *parent) : QObject(parent) {}
 
@@ -41,25 +68,22 @@ void CursorManager::update_cursor_shape(QQuickWindow *window) {
 
   if (m_current_cursor != desired_cursor) {
     m_current_cursor = desired_cursor;
-    window->setCursor(desired_cursor);
+    QPointer<QQuickWindow> safe_window(window);
+    QMetaObject::invokeMethod(window, [safe_window, desired_cursor]() {
+      if (safe_window) {
+        safe_window->setCursor(desired_cursor);
+      }
+    }, Qt::AutoConnection);
   }
 }
 
 auto CursorManager::global_cursor_x(QQuickWindow *window) -> qreal {
-  if (window == nullptr) {
-    return 0;
-  }
-  QPoint const global_pos = QCursor::pos();
-  QPoint const local_pos = window->mapFromGlobal(global_pos);
+  QPoint const local_pos = window_local_cursor_pos(window);
   return local_pos.x();
 }
 
 auto CursorManager::global_cursor_y(QQuickWindow *window) -> qreal {
-  if (window == nullptr) {
-    return 0;
-  }
-  QPoint const global_pos = QCursor::pos();
-  QPoint const local_pos = window->mapFromGlobal(global_pos);
+  QPoint const local_pos = window_local_cursor_pos(window);
   return local_pos.y();
 }
 
