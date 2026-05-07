@@ -71,6 +71,32 @@ RowLayout {
         return false;
     }
 
+    function commandBannerText() {
+        if (!hasMovableUnits)
+            return qsTr("◉ Select Troops for Commands");
+
+        if (currentCommandMode === "normal")
+            return qsTr("◉ Normal Mode");
+
+        var orderText = qsTr("Stop command");
+        if (currentCommandMode === "attack")
+            orderText = qsTr("Legion attack order — strike the enemy");
+        else if (currentCommandMode === "guard")
+            orderText = qsTr("Guard order — hold this position");
+        else if (currentCommandMode === "patrol")
+            orderText = qsTr("Patrol order — mark your route");
+        else if (currentCommandMode === "heal")
+            orderText = qsTr("Medic order — aid allied troops");
+        else if (currentCommandMode === "build")
+            orderText = qsTr("Engineer order — choose fortification");
+
+        return hs.romanGlyph + " · " + hs.carthageGlyph + " — " + orderText;
+    }
+
+    function shouldPulseCommandBanner() {
+        return hasMovableUnits && (currentCommandMode === "attack" || currentCommandMode === "guard" || currentCommandMode === "patrol");
+    }
+
     Component.onCompleted: updateModeAvailability()
     onSelectionTickChanged: updateModeAvailability()
     anchors.fill: parent
@@ -294,14 +320,14 @@ RowLayout {
 
             Text {
                 anchors.centerIn: parent
-                text: !bottomRoot.hasMovableUnits ? qsTr("◉ Select Troops for Commands") : (bottomRoot.currentCommandMode === "normal" ? qsTr("◉ Normal Mode") : (hs.romanGlyph + " · " + hs.carthageGlyph + " — " + (bottomRoot.currentCommandMode === "attack" ? qsTr("Legion attack order — strike the enemy") : bottomRoot.currentCommandMode === "guard" ? qsTr("Guard order — hold this position") : bottomRoot.currentCommandMode === "patrol" ? qsTr("Patrol order — mark your route") : bottomRoot.currentCommandMode === "heal" ? qsTr("Medic order — aid allied troops") : bottomRoot.currentCommandMode === "build" ? qsTr("Engineer order — choose fortification") : qsTr("Stop command"))))
+                text: bottomRoot.commandBannerText()
                 color: !bottomRoot.hasMovableUnits ? Theme.textDim : Theme.textMain
                 font.pointSize: bottomRoot.currentCommandMode === "normal" ? 10 : 11
                 font.bold: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits
             }
 
             SequentialAnimation on opacity {
-                running: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits
+                running: bottomRoot.shouldPulseCommandBanner()
                 loops: Animation.Infinite
 
                 NumberAnimation {
