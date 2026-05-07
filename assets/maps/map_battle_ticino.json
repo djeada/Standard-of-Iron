@@ -59,6 +59,18 @@
       "player_id": 1
     },
     {
+      "type": "horse_swordsman",
+      "x": 44,
+      "z": 61,
+      "player_id": 1
+    },
+    {
+      "type": "horse_archer",
+      "x": 36,
+      "z": 60,
+      "player_id": 1
+    },
+    {
       "type": "spearman",
       "x": 50,
       "z": 65,
@@ -269,6 +281,12 @@
       "width": 80,
       "depth": 50,
       "description": "Open cavalry battlefield"
+    },
+    {
+      "type": "village",
+      "x": 105,
+      "z": 60,
+      "description": "Po Valley farmstead near the Roman withdrawal route"
     }
   ],
   "rivers": [

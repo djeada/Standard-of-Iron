@@ -101,6 +101,18 @@
       "player_id": 1
     },
     {
+      "type": "spearman",
+      "x": 18,
+      "z": 24,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 32,
+      "z": 36,
+      "player_id": 1
+    },
+    {
       "type": "elephant",
       "x": 28,
       "z": 22,
@@ -413,6 +425,12 @@
       "radius": 12,
       "density": 0.5,
       "description": "Italian side forest - journey's end"
+    },
+    {
+      "type": "village",
+      "x": 152,
+      "z": 150,
+      "description": "Italian frontier hamlet signaling the end of the crossing"
     }
   ],
   "roads": [

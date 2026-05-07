@@ -104,6 +104,13 @@
       "hidden": true
     },
     {
+      "type": "archer",
+      "x": 27,
+      "z": 47,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
       "type": "horse_swordsman",
       "x": 95,
       "z": 50,
@@ -121,6 +128,13 @@
       "type": "swordsman",
       "x": 92,
       "z": 52,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 100,
+      "z": 50,
       "player_id": 1,
       "hidden": true
     },
@@ -334,6 +348,12 @@
       "z": 55,
       "width": 8,
       "description": "Secondary ford"
+    },
+    {
+      "type": "village",
+      "x": 60,
+      "z": 60,
+      "description": "Abandoned riverside settlement caught between both armies"
     }
   ],
   "rivers": [

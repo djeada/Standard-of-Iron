@@ -83,6 +83,24 @@
       "player_id": 1
     },
     {
+      "type": "spearman",
+      "x": 40,
+      "z": 90,
+      "player_id": 1
+    },
+    {
+      "type": "spearman",
+      "x": 100,
+      "z": 90,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 70,
+      "z": 55,
+      "player_id": 1
+    },
+    {
       "type": "barracks",
       "x": 70,
       "z": 80,

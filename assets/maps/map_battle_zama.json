@@ -102,6 +102,12 @@
     },
     {
       "type": "horse_swordsman",
+      "x": 32,
+      "z": 56,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
       "x": 70,
       "z": 60,
       "player_id": 1
@@ -110,6 +116,12 @@
       "type": "horse_swordsman",
       "x": 73,
       "z": 58,
+      "player_id": 1
+    },
+    {
+      "type": "horse_swordsman",
+      "x": 76,
+      "z": 56,
       "player_id": 1
     },
     {
@@ -128,6 +140,12 @@
       "type": "archer",
       "x": 50,
       "z": 75,
+      "player_id": 1
+    },
+    {
+      "type": "archer",
+      "x": 60,
+      "z": 74,
       "player_id": 1
     },
     {

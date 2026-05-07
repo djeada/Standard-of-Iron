@@ -78,6 +78,13 @@
       "hidden": true
     },
     {
+      "type": "horse_swordsman",
+      "x": 110,
+      "z": 78,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
       "type": "archer",
       "x": 80,
       "z": 35,
@@ -102,6 +109,13 @@
       "type": "spearman",
       "x": 105,
       "z": 82,
+      "player_id": 1,
+      "hidden": true
+    },
+    {
+      "type": "archer",
+      "x": 92,
+      "z": 48,
       "player_id": 1,
       "hidden": true
     },
@@ -298,6 +312,12 @@
       "radius": 8,
       "density": 0.5,
       "description": "Cavalry concealment"
+    },
+    {
+      "type": "village",
+      "x": 28,
+      "z": 24,
+      "description": "Roman lakeside camp followers and supply wagons"
     },
     {
       "type": "mountain",
