@@ -47,6 +47,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   anim.is_in_hold_mode = false;
   anim.is_exiting_hold = false;
   anim.hold_exit_progress = 0.0F;
+  anim.hold_entry_progress = 0.0F;
   anim.combat_phase = CombatAnimPhase::Idle;
   anim.combat_phase_progress = 0.0F;
   anim.attack_variant = 0;
@@ -77,6 +78,9 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->get_component<Engine::Core::StaminaComponent>();
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
+  if (anim.is_in_hold_mode && hold_mode != nullptr) {
+    anim.hold_entry_progress = hold_mode->kneel_entry_progress;
+  }
   if ((hold_mode != nullptr) && !hold_mode->active &&
       hold_mode->exit_cooldown > 0.0F) {
     anim.is_exiting_hold = true;
