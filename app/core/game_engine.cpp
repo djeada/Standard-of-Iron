@@ -1149,6 +1149,25 @@ void GameEngine::render_game_effects() {
     placement.angle_degrees =
         m_commandController->get_formation_placement_angle();
     placement.active = true;
+
+    // Derive the faction accent colour from the local player's nation so the
+    // movement arrow shows a thin coloured border that matches their faction.
+    const auto *nation =
+        Game::Systems::NationRegistry::instance().get_nation_for_player(
+            m_runtime.local_owner_id);
+    if (nation != nullptr) {
+      switch (nation->id) {
+      case Game::Systems::NationID::RomanRepublic:
+        // Roman crimson – bold red accent.
+        placement.accent_color = QVector3D(0.85F, 0.12F, 0.10F);
+        break;
+      case Game::Systems::NationID::Carthage:
+        // Carthaginian royal purple.
+        placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
+        break;
+      }
+    }
+
     Render::GL::render_formation_arrow(m_renderer.get(), res, placement);
   }
 }
