@@ -59,6 +59,7 @@ add_library(game_systems STATIC
     systems/command_service.cpp
     systems/production_service.cpp
     systems/production_system.cpp
+    systems/civilian_delivery_system.cpp
     systems/capture_system.cpp
     systems/terrain_alignment_system.cpp
     systems/healing_system.cpp
@@ -109,6 +110,7 @@ add_library(game_systems STATIC
     units/catapult.cpp
     units/ballista.cpp
     units/elephant.cpp
+    units/civilian.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     units/building_spawn_setup.cpp

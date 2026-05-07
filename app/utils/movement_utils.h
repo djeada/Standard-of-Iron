@@ -121,6 +121,52 @@ inline void issue_move_or_attack_command(
       auto *target_unit =
           target_entity->get_component<Engine::Core::UnitComponent>();
       if (target_unit != nullptr) {
+        bool const is_friendly_barracks =
+            (target_unit->owner_id == local_owner_id) &&
+            (target_unit->spawn_type == Game::Units::SpawnType::Barracks);
+        if (is_friendly_barracks) {
+          std::vector<Engine::Core::EntityID> civilian_ids;
+          civilian_ids.reserve(selected.size());
+          for (const auto selected_id : selected) {
+            auto *selected_entity = world->get_entity(selected_id);
+            auto *selected_unit = selected_entity
+                                      ? selected_entity->get_component<
+                                            Engine::Core::UnitComponent>()
+                                      : nullptr;
+            if ((selected_unit != nullptr) &&
+                (selected_unit->owner_id == local_owner_id) &&
+                (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
+              civilian_ids.push_back(selected_id);
+              auto *delivery = selected_entity->get_component<
+                  Engine::Core::CivilianDeliveryComponent>();
+              if (delivery == nullptr) {
+                delivery =
+                    selected_entity
+                        ->add_component<Engine::Core::CivilianDeliveryComponent>();
+              }
+              if (delivery != nullptr) {
+                delivery->target_barracks_id = target_id;
+              }
+            }
+          }
+
+          if (!civilian_ids.empty()) {
+            auto *target_transform =
+                target_entity->get_component<Engine::Core::TransformComponent>();
+            if (target_transform != nullptr) {
+              std::vector<QVector3D> targets(
+                  civilian_ids.size(),
+                  QVector3D(target_transform->position.x, 0.0F,
+                            target_transform->position.z));
+              Game::Systems::CommandService::MoveOptions opts;
+              opts.group_move = civilian_ids.size() > 1;
+              Game::Systems::CommandService::move_units(*world, civilian_ids,
+                                                        targets, opts);
+              return;
+            }
+          }
+        }
+
         bool const is_enemy = (target_unit->owner_id != local_owner_id);
         bool const is_building =
             target_entity->has_component<Engine::Core::BuildingComponent>();

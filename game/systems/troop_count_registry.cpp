@@ -36,7 +36,7 @@ auto TroopCountRegistry::get_troop_count(int owner_id) const -> int {
 
 void TroopCountRegistry::on_unit_spawned(
     const Engine::Core::UnitSpawnedEvent &event) {
-  if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+  if (!Game::Units::isTroopSpawn(event.spawn_type)) {
     return;
   }
 
@@ -48,7 +48,7 @@ void TroopCountRegistry::on_unit_spawned(
 
 void TroopCountRegistry::on_unit_died(
     const Engine::Core::UnitDiedEvent &event) {
-  if (event.spawn_type == Game::Units::SpawnType::Barracks) {
+  if (!Game::Units::isTroopSpawn(event.spawn_type)) {
     return;
   }
 
@@ -72,7 +72,7 @@ void TroopCountRegistry::rebuild_from_world(Engine::Core::World &world) {
       continue;
     }
 
-    if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+    if (!Game::Units::isTroopSpawn(unit->spawn_type)) {
       continue;
     }
 

@@ -50,6 +50,8 @@ public:
 
   [[nodiscard]] QVariantMap
   get_selected_production_state(int local_owner_id) const;
+  [[nodiscard]] QVariantMap
+  get_selected_home_production_state(int local_owner_id) const;
   [[nodiscard]] QVariantMap get_selected_builder_production_state() const;
   [[nodiscard]] QVariantMap
   get_unit_production_info(const QString &unit_type,

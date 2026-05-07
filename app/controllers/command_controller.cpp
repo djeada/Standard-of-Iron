@@ -343,11 +343,17 @@ void CommandController::recruit_near_selected(const QString &unit_type,
   }
 
   auto result = Game::Systems::ProductionService::
-      start_production_for_first_selected_barracks(
-          *m_world, sel, local_owner_id, unit_type.toStdString());
+      start_production_for_first_selected_barracks(*m_world, sel, local_owner_id,
+                                                   unit_type.toStdString());
+  if (unit_type.compare(QStringLiteral("civilian"), Qt::CaseInsensitive) == 0) {
+    result = Game::Systems::ProductionService::start_production_for_first_selected_home(
+        *m_world, sel, local_owner_id, unit_type.toStdString());
+  }
 
   if (result == Game::Systems::ProductionResult::GlobalTroopLimitReached) {
     emit troop_limit_reached();
+  } else if (result == Game::Systems::ProductionResult::InsufficientManpower) {
+    emit insufficient_manpower();
   }
 }
 

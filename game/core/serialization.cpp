@@ -218,6 +218,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     production_obj["rally_z"] = production->rally_z;
     production_obj["rally_set"] = production->rally_set;
     production_obj["villager_cost"] = production->villager_cost;
+    production_obj["manpower_available"] = production->manpower_available;
 
     QJsonArray queue_array;
     for (const auto &queued : production->production_queue) {
@@ -435,6 +436,11 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     home_obj["nearest_barracks_id"] =
         static_cast<qint64>(home->nearest_barracks_id);
     home_obj["update_cooldown"] = static_cast<double>(home->update_cooldown);
+    home_obj["family_generation_cooldown"] =
+        static_cast<double>(home->family_generation_cooldown);
+    home_obj["family_generation_interval"] =
+        static_cast<double>(home->family_generation_interval);
+    home_obj["family_manpower_value"] = home->family_manpower_value;
     entity_obj["home"] = home_obj;
   }
 
@@ -639,6 +645,8 @@ void Serialization::deserialize_entity(Entity *entity,
         static_cast<float>(production_obj["rally_z"].toDouble());
     production->rally_set = production_obj["rally_set"].toBool(false);
     production->villager_cost = production_obj["villager_cost"].toInt(1);
+    production->manpower_available =
+        production_obj["manpower_available"].toInt(0);
 
     production->production_queue.clear();
     const auto queue_array = production_obj["queue"].toArray();
@@ -886,6 +894,11 @@ void Serialization::deserialize_entity(Entity *entity,
         home_obj["nearest_barracks_id"].toVariant().toULongLong());
     home->update_cooldown =
         static_cast<float>(home_obj["update_cooldown"].toDouble(0.0));
+    home->family_generation_cooldown = static_cast<float>(
+        home_obj["family_generation_cooldown"].toDouble(0.0));
+    home->family_generation_interval = static_cast<float>(
+        home_obj["family_generation_interval"].toDouble(12.0));
+    home->family_manpower_value = home_obj["family_manpower_value"].toInt(8);
   }
 }
 

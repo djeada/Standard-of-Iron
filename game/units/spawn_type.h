@@ -20,6 +20,7 @@ enum class SpawnType : std::uint8_t {
   Catapult,
   Ballista,
   Elephant,
+  Civilian,
   Builder,
   Barracks,
   DefenseTower,
@@ -48,6 +49,8 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("ballista");
   case SpawnType::Elephant:
     return QStringLiteral("elephant");
+  case SpawnType::Civilian:
+    return QStringLiteral("civilian");
   case SpawnType::Builder:
     return QStringLiteral("builder");
   case SpawnType::Barracks:
@@ -107,6 +110,10 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Elephant;
     return true;
   }
+  if (lowered == QStringLiteral("civilian")) {
+    out = SpawnType::Civilian;
+    return true;
+  }
   if (lowered == QStringLiteral("builder")) {
     out = SpawnType::Builder;
     return true;
@@ -162,6 +169,9 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   if (str == "elephant") {
     return SpawnType::Elephant;
   }
+  if (str == "civilian") {
+    return SpawnType::Civilian;
+  }
   if (str == "builder") {
     return SpawnType::Builder;
   }
@@ -216,6 +226,7 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::Knight:
   case SpawnType::Spearman:
   case SpawnType::Healer:
+  case SpawnType::Civilian:
   case SpawnType::Builder:
   case SpawnType::MountedKnight:
   case SpawnType::HorseArcher:
@@ -253,6 +264,8 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Ballista;
   case SpawnType::Elephant:
     return TroopType::Elephant;
+  case SpawnType::Civilian:
+    return TroopType::Civilian;
   case SpawnType::Builder:
     return TroopType::Builder;
   case SpawnType::Barracks:
@@ -287,6 +300,8 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Ballista;
   case TroopType::Elephant:
     return SpawnType::Elephant;
+  case TroopType::Civilian:
+    return SpawnType::Civilian;
   case TroopType::Builder:
     return SpawnType::Builder;
   }
