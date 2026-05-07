@@ -68,10 +68,8 @@ TEST(MinimapManagerTest, ClearFogRestoresBaseImage) {
 TEST(MinimapManagerTest, UpdateUnitsMarksDirtyOnFirstCallAfterFogChange) {
   auto world = std::make_unique<Engine::Core::World>();
   auto *entity = world->create_entity();
-  auto *transform =
-      entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
-                                                              1.0F);
-  (void)transform;
+  (void)entity->add_component<Engine::Core::TransformComponent>(1.0F, 0.0F,
+                                                                1.0F);
   auto *unit_comp =
       entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 5.0F);
   unit_comp->owner_id = 1;
