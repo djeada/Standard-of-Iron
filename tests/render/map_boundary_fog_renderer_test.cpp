@@ -5,25 +5,18 @@
 using Render::GL::MapBoundaryFogRenderer;
 
 namespace {
-constexpr std::size_t kOutsideBandTiles = 3U;
-constexpr std::size_t kInsideBandTiles  = 3U;
+constexpr std::size_t kOutsideBandTiles = 4U;
+constexpr std::size_t kFogLayers        = 7U;
 
-// Returns the expected number of fog instances for a map of given dimensions.
-// Fog covers:
-//   * all tiles outside the map up to kOutsideBandTiles away, AND
-//   * the kInsideBandTiles innermost tile rings on the playable side.
-auto expected_fog_band_count(int width, int height) -> std::size_t {
+// Expected total fog instances for a map of given dimensions:
+// (expanded bounding box area − map area) × number of vertical layers.
+auto expected_fog_count(int width, int height) -> std::size_t {
   const auto w = static_cast<std::size_t>(width);
   const auto h = static_cast<std::size_t>(height);
-  // Outside tiles: expanded bounding box minus map area.
-  const auto expanded_w = w + 2U * kOutsideBandTiles;
-  const auto expanded_h = h + 2U * kOutsideBandTiles;
-  const auto outside_count = expanded_w * expanded_h - w * h;
-  // Inside tiles: map area minus the untouched inner core.
-  const auto inner_w = w > 2U * kInsideBandTiles ? w - 2U * kInsideBandTiles : 0U;
-  const auto inner_h = h > 2U * kInsideBandTiles ? h - 2U * kInsideBandTiles : 0U;
-  const auto inside_count = w * h - inner_w * inner_h;
-  return outside_count + inside_count;
+  const auto exp_w = w + 2U * kOutsideBandTiles;
+  const auto exp_h = h + 2U * kOutsideBandTiles;
+  const auto outside_tiles = exp_w * exp_h - w * h;
+  return outside_tiles * kFogLayers;
 }
 
 // ---------------------------------------------------------------------------
@@ -61,10 +54,10 @@ TEST(MapBoundaryFogRendererTest, ConfigureWithValidDimsProducesInstances) {
   EXPECT_GT(renderer.instance_count(), 0U);
 }
 
-TEST(MapBoundaryFogRendererTest, FogCoversBothInsideAndOutsideBoundary) {
+TEST(MapBoundaryFogRendererTest, FogIsOnlyOutsideMapBoundary) {
   MapBoundaryFogRenderer renderer;
   renderer.configure(20, 20, 1.0F);
-  EXPECT_EQ(renderer.instance_count(), expected_fog_band_count(20, 20));
+  EXPECT_EQ(renderer.instance_count(), expected_fog_count(20, 20));
 }
 
 // ---------------------------------------------------------------------------
@@ -129,12 +122,12 @@ TEST(MapBoundaryFogRendererTest, ReconfigureToZeroClearsInstances) {
 // Instance count is bounded (performance guard)
 // ---------------------------------------------------------------------------
 
-// For a 200x200 map, the boundary band should stay well below 10 000 instances
-// so it cannot dominate the per-frame fog budget even on large maps.
+// For a 200×200 map the boundary band produces (208²−200²)×7 ≈ 22 848
+// instances. Keep the budget ceiling generous enough for rendering performance.
 TEST(MapBoundaryFogRendererTest, LargeMapInstanceCountIsWithinBudget) {
   MapBoundaryFogRenderer renderer;
   renderer.configure(200, 200, 1.0F);
-  constexpr std::size_t k_max_budget = 10000U;
+  constexpr std::size_t k_max_budget = 25000U;
   EXPECT_LE(renderer.instance_count(), k_max_budget);
 }
 
