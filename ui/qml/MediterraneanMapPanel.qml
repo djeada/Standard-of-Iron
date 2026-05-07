@@ -237,9 +237,7 @@ Rectangle {
     }
     onVisibleChanged: {
         if (visible) {
-            load_provinces();
             load_campaign_state();
-            apply_campaign_state();
         }
     }
 
@@ -332,7 +330,6 @@ Rectangle {
                 text: qsTr("Loading map…")
                 color: "#c8b89a"
                 font.pointSize: Theme.fontSizeMedium
-                font.bold: true
             }
 
         }
