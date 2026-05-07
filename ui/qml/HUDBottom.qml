@@ -80,15 +80,15 @@ RowLayout {
 
         var orderText = qsTr("Stop command");
         if (currentCommandMode === "attack")
-            orderText = qsTr("Legion attack order — strike the enemy");
+            orderText = qsTr("Attack order - strike the enemy");
         else if (currentCommandMode === "guard")
-            orderText = qsTr("Guard order — hold this position");
+            orderText = qsTr("Guard order - hold this position");
         else if (currentCommandMode === "patrol")
-            orderText = qsTr("Patrol order — mark your route");
+            orderText = qsTr("Patrol order - mark your route");
         else if (currentCommandMode === "heal")
-            orderText = qsTr("Medic order — aid allied troops");
+            orderText = qsTr("Medic order - aid allied troops");
         else if (currentCommandMode === "build")
-            orderText = qsTr("Engineer order — choose fortification");
+            orderText = qsTr("Engineer order - choose fortification");
 
         return formatCivilizationPrefix() + " - " + orderText;
     }

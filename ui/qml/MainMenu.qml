@@ -8,6 +8,7 @@ Item {
     id: root
 
     property bool gameStarted: false
+    readonly property var hs: StyleGuide.historical
 
     signal openSkirmish()
     signal openCampaign()
@@ -117,7 +118,7 @@ Item {
                         spacing: Theme.spacingSmall
 
                         Label {
-                            text: qsTr("STANDARD OF IRON")
+                            text: qsTr("STANDARD OF IRON · %1 · %2").arg(hs.romanGlyph).arg(hs.carthageGlyph)
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeHero
                             font.bold: true
@@ -127,12 +128,49 @@ Item {
                         }
 
                         Label {
-                            text: qsTr("A tiny but ambitious RTS")
+                            text: qsTr("War table command interface")
                             color: Theme.textSub
                             font.pointSize: Theme.fontSizeMedium
                             horizontalAlignment: Text.AlignLeft
                             Layout.fillWidth: true
                             elide: Label.ElideRight
+                        }
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 30
+                            radius: Theme.radiusMedium
+                            color: hs.bannerNeutral
+                            border.color: hs.bronze
+                            border.width: 1
+                            opacity: 0.94
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: qsTr("Command Banner - Prepare Legions and Fleets")
+                                color: Theme.textMain
+                                font.pointSize: Theme.fontSizeSmall
+                                font.bold: true
+                            }
+
+                            SequentialAnimation on opacity {
+                                running: root.visible
+                                loops: Animation.Infinite
+
+                                NumberAnimation {
+                                    from: 0.86
+                                    to: 0.98
+                                    duration: 900
+                                }
+
+                                NumberAnimation {
+                                    from: 0.98
+                                    to: 0.86
+                                    duration: 900
+                                }
+
+                            }
+
                         }
 
                     }

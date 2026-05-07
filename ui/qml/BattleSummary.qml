@@ -1,5 +1,6 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron 1.0
 
 Rectangle {
     id: summaryOverlay
@@ -7,6 +8,7 @@ Rectangle {
     property bool isVictory: (typeof game !== 'undefined' && game.victory_state === "victory")
     property var onClose: null
     property var onReturnToMainMenu: null
+    readonly property var hs: StyleGuide.historical
 
     function show() {
         visible = true;
@@ -118,7 +120,7 @@ Rectangle {
     }
 
     anchors.fill: parent
-    color: Qt.rgba(0, 0, 0, 0.85)
+    color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.9)
     visible: false
     z: 101
 
@@ -132,12 +134,12 @@ Rectangle {
 
             anchors.horizontalCenter: parent.horizontalCenter
             text: isVictory ? qsTr("VICTORY!") : qsTr("FAILURE!")
-            color: "#FFD700"
+            color: Theme.accentBright
             font.family: "serif"
             font.pointSize: 64
             font.bold: true
             style: Text.Outline
-            styleColor: "#3a2a1a"
+            styleColor: hs.parchmentDark
         }
 
         Row {

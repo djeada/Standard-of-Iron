@@ -1,11 +1,13 @@
 import QtQuick 2.15
 import QtQuick.Controls 2.15
+import StandardOfIron 1.0
 
 Rectangle {
     id: victoryOverlay
 
     property bool showingSummary: false
     property bool manuallyHidden: false
+    readonly property var hs: StyleGuide.historical
 
     signal returnToMainMenuRequested()
 
@@ -47,35 +49,65 @@ Rectangle {
         color: "transparent"
         visible: !showingSummary
 
-        Column {
+        Rectangle {
             anchors.centerIn: parent
-            spacing: 20
+            width: Math.min(parent.width * 0.7, 680)
+            height: 260
+            radius: Theme.radiusPanel
+            color: hs.parchmentDark
+            border.color: hs.bronze
+            border.width: 2
+            opacity: 0.96
 
-            Text {
-                id: victoryText
-
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
-                color: (typeof game !== 'undefined' && game.victory_state === "victory") ? "#27ae60" : "#e74c3c"
-                font.pointSize: 48
-                font.bold: true
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 6
+                radius: Theme.radiusLarge
+                color: hs.parchmentLight
+                border.color: hs.bronzeDeep
+                border.width: 1
+                opacity: 0.7
             }
 
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your army was crushed")
-                color: "white"
-                font.pointSize: 18
-            }
+            Column {
+                anchors.centerIn: parent
+                spacing: 20
 
-            StyledButton {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Continue")
-                focusPolicy: Qt.NoFocus
-                onClicked: {
-                    showingSummary = true;
-                    battleSummary.show();
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: hs.romanGlyph + " · " + hs.carthageGlyph
+                    color: Theme.accentBright
+                    font.pointSize: 16
+                    font.bold: true
                 }
+
+                Text {
+                    id: victoryText
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("VICTORY!") : qsTr("DEFEAT")
+                    color: (typeof game !== 'undefined' && game.victory_state === "victory") ? Theme.successText : Theme.removeColor
+                    font.pointSize: 48
+                    font.bold: true
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: (typeof game !== 'undefined' && game.victory_state === "victory") ? qsTr("Enemy barracks destroyed!") : qsTr("Your army was crushed")
+                    color: Theme.textMain
+                    font.pointSize: 18
+                }
+
+                StyledButton {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: qsTr("Continue")
+                    focusPolicy: Qt.NoFocus
+                    onClicked: {
+                        showingSummary = true;
+                        battleSummary.show();
+                    }
+                }
+
             }
 
         }
