@@ -249,6 +249,10 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
         static_cast<double>(hold_mode->exit_cooldown);
     hold_mode_obj["stand_up_duration"] =
         static_cast<double>(hold_mode->stand_up_duration);
+    hold_mode_obj["kneel_entry_progress"] =
+        static_cast<double>(hold_mode->kneel_entry_progress);
+    hold_mode_obj["kneel_duration"] =
+        static_cast<double>(hold_mode->kneel_duration);
     entity_obj["hold_mode"] = hold_mode_obj;
   }
 
@@ -670,6 +674,11 @@ void Serialization::deserialize_entity(Entity *entity,
     hold_mode->stand_up_duration =
         static_cast<float>(hold_mode_obj["stand_up_duration"].toDouble(
             static_cast<double>(Defaults::k_hold_stand_up_duration)));
+    hold_mode->kneel_entry_progress =
+        static_cast<float>(hold_mode_obj["kneel_entry_progress"].toDouble(0.0));
+    hold_mode->kneel_duration =
+        static_cast<float>(hold_mode_obj["kneel_duration"].toDouble(
+            static_cast<double>(Defaults::k_hold_kneel_duration)));
   }
 
   if (json.contains("guard_mode")) {

@@ -52,6 +52,7 @@ namespace {
 constexpr std::string_view k_swordsman_default_style_key = "default";
 constexpr float k_swordsman_team_mix_weight = 0.6F;
 constexpr float k_swordsman_style_mix_weight = 0.4F;
+constexpr float k_kneel_depth_multiplier = 0.825F;
 
 auto swordsman_style_registry()
     -> std::unordered_map<std::string, KnightStyleConfig> & {
@@ -139,6 +140,10 @@ public:
   }
 
   auto get_torso_scale() const -> float override { return kTorsoWidthScale; }
+
+  auto get_hold_kneel_depth() const -> float override {
+    return k_kneel_depth_multiplier;
+  }
 
 public:
   auto visual_spec() const

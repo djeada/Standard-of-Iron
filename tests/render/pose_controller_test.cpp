@@ -445,3 +445,89 @@ TEST_F(HumanoidPoseControllerTest, SpearThrustFromHoldAppliesTorsoTwist) {
   EXPECT_LT(pose.shoulder_r.z(), original_shoulder_r_z);
   EXPECT_GT(pose.shoulder_l.z(), original_shoulder_l_z);
 }
+
+TEST_F(HumanoidPoseControllerTest, KneelWithDepthMultiplierLowersTorso) {
+  using HP = HumanProportions;
+
+  HumanoidPose spear_pose = pose;
+  HumanoidPoseController spear_ctrl(spear_pose, anim_ctx);
+  spear_ctrl.kneel(0.875F);
+
+  HumanoidPose archer_pose = pose;
+  HumanoidPoseController archer_ctrl(archer_pose, anim_ctx);
+  archer_ctrl.kneel(1.125F);
+
+  EXPECT_LT(spear_pose.pelvis_pos.y(), HP::WAIST_Y);
+  EXPECT_LT(archer_pose.pelvis_pos.y(), HP::WAIST_Y);
+  EXPECT_GT(spear_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
+      << "Spearman should kneel less than archer";
+
+  EXPECT_LT(spear_pose.shoulder_l.y(), HP::SHOULDER_Y);
+  EXPECT_LT(archer_pose.shoulder_l.y(), HP::SHOULDER_Y);
+}
+
+TEST_F(HumanoidPoseControllerTest, KneelEntryProgressPartialKneel) {
+  using HP = HumanProportions;
+
+  float const full_kneel_depth = 1.0F;
+
+  HumanoidPose full_pose = pose;
+  HumanoidPoseController full_ctrl(full_pose, anim_ctx);
+  full_ctrl.kneel(full_kneel_depth);
+
+  HumanoidPose half_pose = pose;
+  HumanoidPoseController half_ctrl(half_pose, anim_ctx);
+  half_ctrl.kneel(0.5F * full_kneel_depth);
+
+  HumanoidPose standing_pose = pose;
+  float const standing_pelvis_y = standing_pose.pelvis_pos.y();
+
+  EXPECT_LT(full_pose.pelvis_pos.y(), half_pose.pelvis_pos.y())
+      << "Full kneel should be lower than half kneel";
+  EXPECT_LT(half_pose.pelvis_pos.y(), standing_pelvis_y)
+      << "Half kneel should be lower than standing";
+}
+
+TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
+  using HP = HumanProportions;
+
+  float const kneel_depth = 1.0F;
+  float const standing_pelvis_y = pose.pelvis_pos.y();
+
+  HumanoidPose fully_kneeled_pose = pose;
+  HumanoidPoseController kneeled_ctrl(fully_kneeled_pose, anim_ctx);
+  kneeled_ctrl.kneel(kneel_depth);
+
+  HumanoidPose half_exit_pose = pose;
+  HumanoidPoseController half_exit_ctrl(half_exit_pose, anim_ctx);
+  float const exit_progress_half = 0.5F;
+  half_exit_ctrl.kneel((1.0F - exit_progress_half) * kneel_depth);
+
+  HumanoidPose full_exit_pose = pose;
+  HumanoidPoseController full_exit_ctrl(full_exit_pose, anim_ctx);
+  full_exit_ctrl.kneel((1.0F - 1.0F) * kneel_depth);
+
+  EXPECT_LT(fully_kneeled_pose.pelvis_pos.y(), half_exit_pose.pelvis_pos.y())
+      << "Full kneel should be lower than half-way through exit";
+  EXPECT_NEAR(full_exit_pose.pelvis_pos.y(), standing_pelvis_y, 0.001F)
+      << "Completed exit should restore original standing height";
+}
+
+TEST_F(HumanoidPoseControllerTest, KneelSwordsmanDepthBetweenSpearAndArcher) {
+  HumanoidPose spear_pose = pose;
+  HumanoidPoseController spear_ctrl(spear_pose, anim_ctx);
+  spear_ctrl.kneel(0.875F);
+
+  HumanoidPose sword_pose = pose;
+  HumanoidPoseController sword_ctrl(sword_pose, anim_ctx);
+  sword_ctrl.kneel(0.825F);
+
+  HumanoidPose archer_pose = pose;
+  HumanoidPoseController archer_ctrl(archer_pose, anim_ctx);
+  archer_ctrl.kneel(1.125F);
+
+  EXPECT_GT(sword_pose.pelvis_pos.y(), archer_pose.pelvis_pos.y())
+      << "Swordsman should kneel less than archer";
+  EXPECT_GT(sword_pose.pelvis_pos.y(), spear_pose.pelvis_pos.y())
+      << "Swordsman should kneel less than spearman";
+}

@@ -58,6 +58,8 @@ public:
 
   virtual auto get_mount_scale() const -> float { return 1.0F; }
 
+  virtual auto get_hold_kneel_depth() const -> float { return 1.0F; }
+
   virtual auto
   visual_spec() const -> const Render::Creature::Pipeline::UnitVisualSpec &;
 
