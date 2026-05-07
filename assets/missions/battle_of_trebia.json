@@ -1,8 +1,8 @@
 {
   "id": "battle_of_trebia",
   "title": "Battle of Trebia",
-  "summary": "Hold the river line, trigger your ambush, and defeat Roman reinforcements from multiple crossings.",
-  "teaching_goal": "Defense-to-offense transition. Teaches timing: absorb pressure, then collapse the enemy line.",
+  "summary": "Hold the river line, spring the ambush, and seize the Roman winter camp before their reserves recover.",
+  "teaching_goal": "Defense-to-offense transition. Teaches when to absorb the crossing, then commit the hidden strike force.",
   "narrative_intent": "The Romans are baited into the winter river and punished by coordinated counterattacks.",
   "map_path": ":/assets/maps/map_battle_trebia.json",
   "player_setup": {
@@ -12,8 +12,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 450,
-      "food": 320
+      "gold": 500,
+      "food": 380
     }
   },
   "ai_setups": [
@@ -36,17 +36,17 @@
         {
           "timing": 120.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 6},
-            {"type": "archer", "count": 4}
+            {"type": "spearman", "count": 7},
+            {"type": "swordsman", "count": 5},
+            {"type": "archer", "count": 3}
           ],
           "entry_point": {"x": 60, "z": 8}
         },
         {
           "timing": 300.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 6},
             {"type": "horse_swordsman", "count": 3}
           ],
           "entry_point": {"x": 70, "z": 12}
@@ -78,7 +78,7 @@
         {
           "timing": 210.0,
           "composition": [
-            {"type": "swordsman", "count": 6},
+            {"type": "swordsman", "count": 5},
             {"type": "spearman", "count": 4},
             {"type": "archer", "count": 2}
           ],
@@ -87,8 +87,8 @@
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "swordsman", "count": 6}
+            {"type": "horse_swordsman", "count": 3},
+            {"type": "swordsman", "count": 5}
           ],
           "entry_point": {"x": 25, "z": 12}
         }
@@ -97,8 +97,10 @@
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Destroy the Roman invasion force and its camps"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 1,
+      "description": "Capture the Roman winter camp after springing the ambush"
     }
   ],
   "defeat_conditions": [
@@ -115,8 +117,8 @@
   "optional_objectives": [
     {
       "type": "wave_count",
-      "wave_count": 2,
-      "description": "Crush at least two reinforcement waves before they reach the river"
+      "wave_count": 3,
+      "description": "Smash three Roman waves before they can regroup beyond the river"
     }
   ],
   "events": [

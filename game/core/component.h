@@ -29,6 +29,7 @@ inline constexpr int k_production_max_units = 10000;
 inline constexpr float k_capture_required_time = 15.0F;
 
 inline constexpr float k_hold_stand_up_duration = 2.0F;
+inline constexpr float k_hold_kneel_duration = 1.5F;
 
 inline constexpr float k_guard_default_radius = 10.0F;
 inline constexpr float k_guard_return_threshold = 1.0F;
@@ -289,6 +290,7 @@ public:
   float rally_x{0.0F}, rally_z{0.0F};
   bool rally_set{false};
   int villager_cost{1};
+  int manpower_available{0};
   std::vector<Game::Units::TroopType> production_queue;
 };
 
@@ -334,11 +336,15 @@ public:
 
 class HoldModeComponent : public Component {
 public:
-  HoldModeComponent() : stand_up_duration(Defaults::k_hold_stand_up_duration) {}
+  HoldModeComponent()
+      : stand_up_duration(Defaults::k_hold_stand_up_duration),
+        kneel_duration(Defaults::k_hold_kneel_duration) {}
 
   bool active{true};
   float exit_cooldown{0.0F};
   float stand_up_duration;
+  float kneel_entry_progress{0.0F};
+  float kneel_duration;
 };
 
 class GuardModeComponent : public Component {
@@ -515,6 +521,16 @@ public:
   int population_contribution{50};
   Engine::Core::EntityID nearest_barracks_id{0};
   float update_cooldown{0.0F};
+  float family_generation_cooldown{0.0F};
+  float family_generation_interval{12.0F};
+  int family_manpower_value{8};
+};
+
+class CivilianDeliveryComponent : public Component {
+public:
+  CivilianDeliveryComponent() = default;
+
+  EntityID target_barracks_id{0};
 };
 
 } // namespace Engine::Core

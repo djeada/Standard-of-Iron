@@ -125,6 +125,10 @@ public:
     variation.stance_width *= 0.92F;
   }
 
+  auto get_hold_kneel_depth() const -> float override {
+    return k_kneel_depth_multiplier;
+  }
+
 public:
   auto visual_spec() const
       -> const Render::Creature::Pipeline::UnitVisualSpec & override {

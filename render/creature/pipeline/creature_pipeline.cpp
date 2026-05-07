@@ -191,7 +191,8 @@ auto submit_snapshot_creature(
     const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
     std::uint32_t frame_in_clip, Render::GL::ISubmitter &out,
-    std::span<const Render::Creature::StaticAttachmentSpec> attachments = {})
+    std::span<const Render::Creature::StaticAttachmentSpec> attachments = {},
+    bool allow_bake_fallback = true)
     -> bool {
   const CreatureAsset *asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr ||
@@ -250,6 +251,10 @@ auto submit_snapshot_creature(
                                  frame_in_clip, handle.attachments_hash);
       }
     }
+  }
+
+  if (!allow_bake_fallback) {
+    return false;
   }
 
   auto &rigged_cache = renderer->rigged_mesh_cache();
@@ -417,6 +422,12 @@ auto CreaturePipeline::submit_requests(
     return stats;
   }
 
+  auto *renderer = resolve_renderer(out);
+  if (renderer != nullptr) {
+    renderer->rigged_mesh_cache().reset_frame_stats();
+    renderer->snapshot_mesh_cache().reset_frame_stats();
+  }
+
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest &req) {
     ++stats.entities_submitted;
     bump_lod_counters(req.lod, stats);
@@ -464,7 +475,7 @@ auto CreaturePipeline::submit_requests(
           playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
-          attachments);
+          attachments, !prebaked_lowpoly_required);
       if (emitted) {
         return;
       }
@@ -487,6 +498,18 @@ auto CreaturePipeline::submit_requests(
 
   for (const auto &req : requests) {
     emit_request(req);
+  }
+
+  if (renderer != nullptr) {
+    const auto &rs = renderer->rigged_mesh_cache().frame_stats();
+    stats.rigged_cache_hits = rs.hits;
+    stats.rigged_cache_misses = rs.misses;
+    stats.rigged_cache_bakes = rs.bakes;
+    const auto &ss = renderer->snapshot_mesh_cache().frame_stats();
+    stats.snapshot_cache_hits = ss.hits;
+    stats.snapshot_loads = ss.loads;
+    stats.snapshot_bakes = ss.bakes;
+    stats.snapshot_misses = ss.misses;
   }
 
   return stats;

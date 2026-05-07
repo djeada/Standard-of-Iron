@@ -40,8 +40,10 @@
 #include <QImage>
 #include <QOpenGLContext>
 #include <QPainter>
+#include <QPointer>
 #include <QQuickWindow>
 #include <QSize>
+#include <QThread>
 #include <QTimer>
 #include <QVariant>
 #include <QVariantMap>
@@ -485,6 +487,10 @@ GameEngine::GameEngine(QObject *parent)
                 "Maximum troop limit reached. Cannot produce more units.");
           });
   connect(m_commandController.get(),
+          &App::Controllers::CommandController::insufficient_manpower, [this]() {
+            set_error("Not enough manpower. Build homes or wait for families.");
+          });
+  connect(m_commandController.get(),
           &App::Controllers::CommandController::hold_mode_changed, this,
           &GameEngine::hold_mode_changed);
   connect(m_commandController.get(),
@@ -816,7 +822,12 @@ void GameEngine::update_cursor(Qt::CursorShape newCursor) {
   }
   if (m_runtime.current_cursor != newCursor) {
     m_runtime.current_cursor = newCursor;
-    m_window->setCursor(newCursor);
+    QPointer<QQuickWindow> safe_window(m_window);
+    QMetaObject::invokeMethod(m_window, [safe_window, newCursor]() {
+      if (safe_window) {
+        safe_window->setCursor(newCursor);
+      }
+    }, Qt::AutoConnection);
   }
 }
 
@@ -869,6 +880,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
   if (m_input_handler) {
     m_input_handler->set_hover_at_screen(sx, sy, m_viewport);
   }
+  update_civilian_delivery_availability();
 }
 
 void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
@@ -1149,12 +1161,40 @@ void GameEngine::render_game_effects() {
     placement.angle_degrees =
         m_commandController->get_formation_placement_angle();
     placement.active = true;
+
+    // Derive the faction accent colour from the local player's nation so the
+    // movement arrow shows a thin coloured border that matches their faction.
+    const auto *nation =
+        Game::Systems::NationRegistry::instance().get_nation_for_player(
+            m_runtime.local_owner_id);
+    if (nation != nullptr) {
+      switch (nation->id) {
+      case Game::Systems::NationID::RomanRepublic:
+        // Roman crimson – bold red accent.
+        placement.accent_color = QVector3D(0.85F, 0.12F, 0.10F);
+        break;
+      case Game::Systems::NationID::Carthage:
+        // Carthaginian royal purple.
+        placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
+        break;
+      default:
+        // Unknown nation: leave accent_color unset (neutral cyan arrow).
+        break;
+      }
+    }
+
     Render::GL::render_formation_arrow(m_renderer.get(), res, placement);
   }
 }
 
 void GameEngine::update_loading_overlay() {
-  if (!m_loading_overlay_wait_for_first_frame) {
+  if (!m_loading_overlay_wait_for_first_frame.load(std::memory_order_acquire)) {
+    return;
+  }
+
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_loading_overlay(); },
+                              Qt::QueuedConnection);
     return;
   }
 
@@ -1191,7 +1231,8 @@ void GameEngine::update_loading_overlay() {
       qWarning() << "Loading overlay timed out waiting for GPU readiness"
                  << pending_components.join(", ");
     }
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_loading_overlay_active = false;
     if (m_finalize_progress_after_overlay && m_loading_progress_tracker) {
       m_loading_progress_tracker->set_stage(
@@ -1208,6 +1249,11 @@ void GameEngine::update_loading_overlay() {
 }
 
 void GameEngine::update_cursor_position() {
+  if (QThread::currentThread() != thread()) {
+    QMetaObject::invokeMethod(this, [this]() { update_cursor_position(); },
+                              Qt::QueuedConnection);
+    return;
+  }
   qreal const current_x = global_cursor_x();
   qreal const current_y = global_cursor_y();
   if (current_x != m_runtime.last_cursor_x ||
@@ -1215,6 +1261,44 @@ void GameEngine::update_cursor_position() {
     m_runtime.last_cursor_x = current_x;
     m_runtime.last_cursor_y = current_y;
     emit global_cursor_changed();
+  }
+}
+
+void GameEngine::update_civilian_delivery_availability() {
+  bool available = false;
+  if (m_world && m_hoverTracker) {
+    const auto hovered_id = m_hoverTracker->getLastHoveredEntity();
+    auto *hovered = hovered_id != 0 ? m_world->get_entity(hovered_id) : nullptr;
+    auto *hovered_unit =
+        hovered ? hovered->get_component<Engine::Core::UnitComponent>() : nullptr;
+    const bool hovered_friendly_barracks =
+        hovered_unit && hovered_unit->owner_id == m_runtime.local_owner_id &&
+        hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
+
+    if (hovered_friendly_barracks) {
+      auto *selection_system =
+          m_world->get_system<Game::Systems::SelectionSystem>();
+      if (selection_system != nullptr) {
+        for (const auto id : selection_system->get_selected_units()) {
+          auto *selected_entity = m_world->get_entity(id);
+          auto *selected_unit = selected_entity
+                                    ? selected_entity
+                                          ->get_component<Engine::Core::UnitComponent>()
+                                    : nullptr;
+          if ((selected_unit != nullptr) &&
+              (selected_unit->owner_id == m_runtime.local_owner_id) &&
+              (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
+            available = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (m_civilian_delivery_available != available) {
+    m_civilian_delivery_available = available;
+    emit civilian_delivery_available_changed();
   }
 }
 
@@ -1246,6 +1330,7 @@ void GameEngine::sync_selection_flags() {
       set_cursor_mode(CursorMode::Normal);
     }
   }
+  update_civilian_delivery_availability();
 }
 
 void GameEngine::camera_move(float dx, float dz) {
@@ -1476,6 +1561,13 @@ auto GameEngine::pending_building_type() const -> QString {
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
   return m_production_manager
              ? m_production_manager->get_selected_production_state(
+                   m_runtime.local_owner_id)
+             : QVariantMap();
+}
+
+auto GameEngine::get_selected_home_production_state() const -> QVariantMap {
+  return m_production_manager
+             ? m_production_manager->get_selected_home_production_state(
                    m_runtime.local_owner_id)
              : QVariantMap();
 }
@@ -1820,7 +1912,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     set_error(load_result.error_message);
     m_runtime.loading = false;
     m_loading_overlay_active = false;
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_finalize_progress_after_overlay = false;
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
@@ -2483,7 +2576,7 @@ void GameEngine::center_camera_on_local_forces() {
 
 void GameEngine::finalize_skirmish_load() {
   m_runtime.loading = false;
-  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();
@@ -2550,7 +2643,8 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
     set_error(m_saveLoadService->get_last_error());
     m_runtime.loading = false;
     m_loading_overlay_active = false;
-    m_loading_overlay_wait_for_first_frame = false;
+    m_loading_overlay_wait_for_first_frame.store(false,
+                                                 std::memory_order_release);
     m_finalize_progress_after_overlay = false;
     m_show_objectives_after_loading = false;
     emit is_loading_changed();
@@ -2615,7 +2709,7 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   }
 
   m_runtime.loading = false;
-  m_loading_overlay_wait_for_first_frame = true;
+  m_loading_overlay_wait_for_first_frame.store(true, std::memory_order_release);
   m_loading_overlay_frames_remaining = 5;
   m_loading_overlay_min_duration_ms = 1000;
   m_loading_overlay_timer.restart();

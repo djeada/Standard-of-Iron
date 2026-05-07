@@ -385,6 +385,7 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   production->rally_z = 200.0F;
   production->rally_set = true;
   production->villager_cost = 2;
+  production->manpower_available = 37;
   production->production_queue.push_back(Game::Units::TroopType::Spearman);
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
@@ -403,6 +404,7 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   EXPECT_FLOAT_EQ(prod_obj["rally_z"].toDouble(), 200.0);
   EXPECT_TRUE(prod_obj["rally_set"].toBool());
   EXPECT_EQ(prod_obj["villager_cost"].toInt(), 2);
+  EXPECT_EQ(prod_obj["manpower_available"].toInt(), 37);
 
   ASSERT_TRUE(prod_obj.contains("queue"));
   QJsonArray queue = prod_obj["queue"].toArray();
@@ -538,6 +540,7 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   production->rally_z = 250.0F;
   production->rally_set = true;
   production->villager_cost = 3;
+  production->manpower_available = 65;
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
   QJsonObject json = Serialization::serialize_entity(original_entity);
@@ -557,8 +560,34 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   EXPECT_FLOAT_EQ(deserialized->rally_z, 250.0F);
   EXPECT_TRUE(deserialized->rally_set);
   EXPECT_EQ(deserialized->villager_cost, 3);
+  EXPECT_EQ(deserialized->manpower_available, 65);
   EXPECT_EQ(deserialized->production_queue.size(), 1UL);
   EXPECT_EQ(deserialized->production_queue[0], Game::Units::TroopType::Archer);
+}
+
+TEST_F(SerializationTest, HomeComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *home = original_entity->add_component<HomeComponent>();
+  home->population_contribution = 70;
+  home->nearest_barracks_id = 15U;
+  home->update_cooldown = 1.5F;
+  home->family_generation_cooldown = 3.5F;
+  home->family_generation_interval = 9.0F;
+  home->family_manpower_value = 12;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<HomeComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->population_contribution, 70);
+  EXPECT_EQ(deserialized->nearest_barracks_id, 15U);
+  EXPECT_FLOAT_EQ(deserialized->update_cooldown, 1.5F);
+  EXPECT_FLOAT_EQ(deserialized->family_generation_cooldown, 3.5F);
+  EXPECT_FLOAT_EQ(deserialized->family_generation_interval, 9.0F);
+  EXPECT_EQ(deserialized->family_manpower_value, 12);
 }
 
 TEST_F(SerializationTest, RenderableComponentSerialization) {
@@ -874,6 +903,50 @@ TEST_F(SerializationTest, HoldModeComponentRoundTrip) {
   EXPECT_TRUE(deserialized->active);
   EXPECT_FLOAT_EQ(deserialized->exit_cooldown, 2.5F);
   EXPECT_FLOAT_EQ(deserialized->stand_up_duration, 4.0F);
+}
+
+TEST_F(SerializationTest, HoldModeComponentKneelEntrySerializationRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *hold_mode = original_entity->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+  hold_mode->exit_cooldown = 0.0F;
+  hold_mode->stand_up_duration = 2.0F;
+  hold_mode->kneel_entry_progress = 0.75F;
+  hold_mode->kneel_duration = 1.5F;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  ASSERT_TRUE(json.contains("hold_mode"));
+  QJsonObject hold_mode_obj = json["hold_mode"].toObject();
+  EXPECT_FLOAT_EQ(hold_mode_obj["kneel_entry_progress"].toDouble(), 0.75);
+  EXPECT_FLOAT_EQ(hold_mode_obj["kneel_duration"].toDouble(), 1.5);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<HoldModeComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->kneel_entry_progress, 0.75F);
+  EXPECT_FLOAT_EQ(deserialized->kneel_duration, 1.5F);
+}
+
+TEST_F(SerializationTest, HoldModeComponentKneelFieldsDefaultOnLegacyData) {
+  auto *entity = world->create_entity();
+
+  QJsonObject legacy_json;
+  QJsonObject hold_mode_obj;
+  hold_mode_obj["active"] = true;
+  hold_mode_obj["exit_cooldown"] = 0.0;
+  hold_mode_obj["stand_up_duration"] = 2.0;
+  legacy_json["hold_mode"] = hold_mode_obj;
+
+  Serialization::deserialize_entity(entity, legacy_json);
+
+  auto *hold_mode = entity->get_component<HoldModeComponent>();
+  ASSERT_NE(hold_mode, nullptr);
+  EXPECT_FLOAT_EQ(hold_mode->kneel_entry_progress, 0.0F);
+  EXPECT_FLOAT_EQ(hold_mode->kneel_duration,
+                  Engine::Core::Defaults::k_hold_kneel_duration);
 }
 
 TEST_F(SerializationTest, GuardModeComponentSerialization) {

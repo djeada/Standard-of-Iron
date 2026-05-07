@@ -145,4 +145,31 @@ TEST(RiggedPipeline, QueueSubmitterShaderStateDoesNotAffectRiggedBatching) {
   EXPECT_EQ(batches.front().count, 2U);
 }
 
+TEST(RiggedPipeline, DifferentRolePalettesSplitRiggedPreparedBatches) {
+  using namespace Render::GL;
+
+  DrawQueue queue;
+
+  auto *mesh = reinterpret_cast<RiggedMesh *>(0x1000);
+  auto *material = reinterpret_cast<const Material *>(0x2000);
+
+  RiggedCreatureCmd first;
+  first.mesh = mesh;
+  first.material = material;
+  first.bone_count = 12;
+  first.role_color_count = 1;
+  first.role_colors[0] = QVector3D(1.0F, 0.0F, 0.0F);
+  queue.submit(first);
+
+  RiggedCreatureCmd second = first;
+  second.role_colors[0] = QVector3D(0.0F, 0.0F, 1.0F);
+  queue.submit(second);
+
+  queue.sort_for_batching();
+  const auto &batches = queue.prepared_batches();
+  ASSERT_EQ(batches.size(), 2U);
+  EXPECT_EQ(batches[0].kind, PreparedBatchKind::Single);
+  EXPECT_EQ(batches[1].kind, PreparedBatchKind::Single);
+}
+
 } // namespace

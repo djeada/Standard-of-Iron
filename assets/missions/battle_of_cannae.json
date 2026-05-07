@@ -1,8 +1,8 @@
 {
   "id": "battle_of_cannae",
   "title": "Battle of Cannae",
-  "summary": "Execute the encirclement while Roman reserves reinforce from secondary camps and flanks.",
-  "teaching_goal": "Large-scale offense with multi-front awareness. Teaches maintaining an encirclement under pressure.",
+  "summary": "Execute the encirclement, then seize both Roman camps before their reserves can restore the line.",
+  "teaching_goal": "Large-scale offense with multi-front awareness. Teaches maintaining the pocket while rotating into camp assaults.",
   "narrative_intent": "Hannibal's masterpiece becomes a prolonged operational battle, not a single frontal collision.",
   "historical_context": "216 BC: Hannibal faced a numerically superior Roman force near Cannae and won through coordinated enveloping tactics.",
   "terrain_type": "plains",
@@ -14,8 +14,8 @@
     "starting_units": [],
     "starting_buildings": [],
     "starting_resources": {
-      "gold": 650,
-      "food": 520
+      "gold": 750,
+      "food": 600
     }
   },
   "ai_setups": [
@@ -38,17 +38,17 @@
         {
           "timing": 210.0,
           "composition": [
-            {"type": "spearman", "count": 12},
-            {"type": "swordsman", "count": 10},
-            {"type": "archer", "count": 6}
+            {"type": "spearman", "count": 10},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 4}
           ],
           "entry_point": {"x": 155, "z": 60}
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
-            {"type": "spearman", "count": 8}
+            {"type": "horse_swordsman", "count": 4},
+            {"type": "spearman", "count": 6}
           ],
           "entry_point": {"x": 150, "z": 40}
         }
@@ -79,18 +79,18 @@
         {
           "timing": 300.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 8},
-            {"type": "horse_swordsman", "count": 4}
+            {"type": "spearman", "count": 6},
+            {"type": "swordsman", "count": 6},
+            {"type": "horse_swordsman", "count": 3}
           ],
           "entry_point": {"x": 160, "z": 25}
         },
         {
           "timing": 540.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 10},
-            {"type": "archer", "count": 6}
+            {"type": "spearman", "count": 8},
+            {"type": "swordsman", "count": 8},
+            {"type": "archer", "count": 4}
           ],
           "entry_point": {"x": 160, "z": 25}
         }
@@ -99,8 +99,10 @@
   ],
   "victory_conditions": [
     {
-      "type": "destroy_all_enemies",
-      "description": "Destroy the Roman army and all Roman camps"
+      "type": "capture_structures",
+      "structure_types": ["barracks"],
+      "min_count": 2,
+      "description": "Seize both Roman camps to complete the encirclement"
     }
   ],
   "defeat_conditions": [

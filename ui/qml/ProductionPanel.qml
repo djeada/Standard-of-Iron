@@ -25,9 +25,11 @@ Rectangle {
             "production_queue": [],
             "product_type": "",
             "villager_cost": 1,
+            "manpower_available": 0,
             "build_time": 0,
             "time_remaining": 0,
-            "nation_id": ""
+            "nation_id": "",
+            "has_home": false
         };
     }
 
@@ -1303,12 +1305,132 @@ Rectangle {
             }
 
             Rectangle {
+                property bool has_home: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
+
+                width: parent.width
+                height: homeProductionContent.height + 16
+                color: "#1a252f"
+                radius: 6
+                border.color: "#34495e"
+                border.width: 1
+                visible: has_home
+
+                Column {
+                    id: homeProductionContent
+
+                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_home_production_state) ? productionPanel.gameInstance.get_selected_home_production_state() : productionPanel.defaultProductionState())
+
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.top: parent.top
+                    anchors.margins: 8
+                    spacing: 8
+                    width: parent.width - 16
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("HOME RECRUITMENT")
+                        color: "#3498db"
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: qsTr("Available families: %1").arg(homeProductionContent.prod.manpower_available || 0)
+                        color: "#bdc3c7"
+                        font.pointSize: 8
+                    }
+
+                    Rectangle {
+                        property int queueTotal: (homeProductionContent.prod.in_progress ? 1 : 0) + (homeProductionContent.prod.queue_size || 0)
+                        property bool isEnabled: homeProductionContent.prod.has_home && queueTotal < 3
+                        property var unitInfo: productionPanel.getUnitProductionInfo("civilian", homeProductionContent.prod.nation_id)
+                        property bool isHovered: civilianMouseArea.containsMouse
+
+                        width: 110
+                        height: 80
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        radius: 6
+                        color: isEnabled ? (isHovered ? "#1f8dd9" : "#2c3e50") : "#1a1a1a"
+                        border.color: isEnabled ? (isHovered ? "#00d4ff" : "#4a6572") : "#2a2a2a"
+                        border.width: isHovered && isEnabled ? 4 : 2
+                        opacity: isEnabled ? 1 : 0.5
+                        scale: isHovered && isEnabled ? 1.08 : 1
+
+                        Image {
+                            id: civilianRecruitIcon
+
+                            anchors.fill: parent
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            source: productionPanel.unitIconSource("civilian", homeProductionContent.prod.nation_id)
+                            visible: source !== ""
+                            opacity: parent.isEnabled ? 1 : 0.35
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !civilianRecruitIcon.visible
+                            text: productionPanel.unitIconEmoji("civilian")
+                            color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
+                            font.pointSize: 36
+                            opacity: parent.isEnabled ? 0.9 : 0.4
+                        }
+
+                        Rectangle {
+                            id: civilianCostBadge
+
+                            width: civilianCostText.implicitWidth + 12
+                            height: civilianCostText.implicitHeight + 6
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.bottom: parent.bottom
+                            anchors.bottomMargin: 6
+                            radius: 8
+                            color: parent.isEnabled ? "#000000b3" : "#00000066"
+                            border.color: parent.isEnabled ? "#f39c12" : "#555555"
+                            border.width: 1
+
+                            Text {
+                                id: civilianCostText
+
+                                anchors.centerIn: parent
+                                text: parent.parent.unitInfo.cost || 8
+                                color: civilianCostBadge.parent.isEnabled ? "#fdf7e3" : "#8a8a8a"
+                                font.pointSize: 16
+                                font.bold: true
+                            }
+
+                        }
+
+                        MouseArea {
+                            id: civilianMouseArea
+
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: {
+                                if (parent.isEnabled)
+                                    productionPanel.recruitUnit("civilian");
+
+                            }
+                            cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                            ToolTip.visible: containsMouse
+                            ToolTip.text: parent.isEnabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nRight-click on a friendly barracks to send civilians in and transfer manpower.").arg(parent.unitInfo.display_name || "Civilian").arg(parent.unitInfo.cost || 8).arg((parent.unitInfo.build_time || 5).toFixed(0)) : qsTr("Cannot recruit")
+                            ToolTip.delay: 300
+                        }
+
+                    }
+
+                }
+
+            }
+
+            Rectangle {
                 property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: 1
                 color: "#3B2F24"
-                visible: has_barracks
+                visible: has_barracks || (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home"))
             }
 
             Rectangle {
@@ -1376,9 +1498,10 @@ Rectangle {
 
             Item {
                 property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_homeSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
 
                 height: 20
-                visible: !has_barracksSelected
+                visible: !has_barracksSelected && !has_homeSelected
             }
 
             Rectangle {
@@ -1881,8 +2004,9 @@ Rectangle {
             Item {
                 property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
                 property bool has_builder: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("builder")))
+                property bool has_home: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
 
-                visible: !has_barracks && !has_builder
+                visible: !has_barracks && !has_builder && !has_home
                 width: parent.width
                 height: 200
 

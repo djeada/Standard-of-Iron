@@ -312,17 +312,45 @@ struct PreparedBatch {
 class DrawQueue {
 public:
   void clear() {
+    m_items_high_water =
+        std::max(m_items_high_water, m_items.size());
+    m_prepared_high_water =
+        std::max(m_prepared_high_water, m_prepared_batches.size());
     m_items.clear();
     m_sort_indices.clear();
     m_sort_keys.clear();
     m_prepared_batches.clear();
     clear_sort_id_maps();
+    m_submission_bucket_spans.clear();
+    m_submission_bucket_ordered = true;
+  }
+
+  void reserve_for_frame(std::size_t items_hint = 0) {
+    const std::size_t target =
+        std::max(items_hint, m_items_high_water);
+    if (target > m_items.capacity()) {
+      m_items.reserve(target);
+      m_sort_indices.reserve(target);
+      m_sort_keys.reserve(target);
+    }
+    if (m_prepared_high_water > m_prepared_batches.capacity()) {
+      m_prepared_batches.reserve(m_prepared_high_water);
+    }
+  }
+
+  [[nodiscard]] auto items_high_water() const noexcept -> std::size_t {
+    return m_items_high_water;
+  }
+  [[nodiscard]] auto prepared_high_water() const noexcept -> std::size_t {
+    return m_prepared_high_water;
   }
 
   template <typename CmdT, typename = std::enable_if_t<
                                std::is_constructible_v<DrawCmd, CmdT &&>>>
   void submit(CmdT &&cmd) {
-    m_items.emplace_back(std::forward<CmdT>(cmd));
+    DrawCmd draw_cmd(std::forward<CmdT>(cmd));
+    record_submission_bucket(draw_cmd);
+    m_items.emplace_back(std::move(draw_cmd));
   }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
@@ -359,7 +387,9 @@ public:
     }
 
     if (count >= 2) {
-      sort_full_keys(count);
+      if (!m_submission_bucket_ordered || !sort_bucketed_ranges(count)) {
+        sort_full_keys(0, count);
+      }
     }
     build_prepared_batches();
   }
@@ -406,6 +436,16 @@ private:
     }
   };
 
+  struct SubmissionBucketSpan {
+    std::uint32_t bucket = 0;
+    std::size_t start = 0;
+    std::size_t count = 0;
+
+    [[nodiscard]] auto end() const noexcept -> std::size_t {
+      return start + count;
+    }
+  };
+
   enum class SortPipeline : std::uint8_t {
     Mesh = 0,
     DrawPart = 1,
@@ -434,8 +474,9 @@ private:
     ModeIndicator = 34
   };
 
-  void sort_full_keys(std::size_t count) {
-    std::stable_sort(m_sort_indices.begin(), m_sort_indices.begin() + count,
+  void sort_full_keys(std::size_t start, std::size_t end) {
+    std::stable_sort(m_sort_indices.begin() + static_cast<std::ptrdiff_t>(start),
+                     m_sort_indices.begin() + static_cast<std::ptrdiff_t>(end),
                      [&](std::uint32_t lhs, std::uint32_t rhs) {
                        if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
                          return lhs < rhs;
@@ -444,8 +485,30 @@ private:
                      });
   }
 
-  [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
+  [[nodiscard]] auto sort_bucketed_ranges(std::size_t count) -> bool {
+    if (m_submission_bucket_spans.empty()) {
+      return false;
+    }
 
+    std::size_t covered = 0;
+    for (const SubmissionBucketSpan &span : m_submission_bucket_spans) {
+      // Any span mismatch means the recorded submit-time bucket layout no
+      // longer maps cleanly onto the current queue, so correctness requires
+      // falling back to the original full stable sort.
+      if (span.start != covered || span.end() > count) {
+        return false;
+      }
+      if (span.count >= 2U) {
+        sort_full_keys(span.start, span.end());
+      }
+      covered = span.end();
+    }
+
+    return covered == count;
+  }
+
+  void populate_sort_identity_prefix(const DrawCmd &cmd,
+                                     SortIdentity &identity) const {
     enum class RenderOrder : uint8_t {
       TerrainSurface = 0,
       TerrainFeature = 1,
@@ -486,62 +549,40 @@ private:
                                    ? k_type_order[type_index]
                                    : static_cast<uint8_t>(type_index);
 
-    SortIdentity identity;
     identity.pass = type_order;
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Mesh);
       identity.transparency_bucket = transparency_bucket(mesh.alpha);
-      identity.material = pack_12(intern_material_id(mesh.shader));
-      identity.mesh = pack_16(intern_mesh_id(mesh.mesh));
-      identity.texture = pack_12(intern_texture_id(mesh.texture));
     } else if (cmd.index() == TerrainScatterCmdIndex) {
       const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::TerrainScatterGrass) +
           static_cast<std::uint8_t>(deco.species);
-      identity.material = pack_12(intern_material_id(deco.material));
-      identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
     } else if (cmd.index() == TerrainSurfaceCmdIndex) {
-      const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::TerrainSurface);
-      identity.material = pack_12(chunk.sort_key);
-      identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
-      identity.texture = pack_12(intern_material_id(chunk.material));
     } else if (cmd.index() == TerrainFeatureCmdIndex) {
       const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::TerrainFeatureRiver) +
           static_cast<std::uint8_t>(feature.kind);
       identity.transparency_bucket = transparency_bucket(feature.alpha);
-      identity.mesh = pack_16(intern_mesh_id(feature.mesh));
-      identity.texture = pack_12(intern_texture_id(feature.visibility.texture));
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::PrimitiveSphere) +
           static_cast<std::uint8_t>(prim.type);
-      identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
-          prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
     } else if (cmd.index() == DrawPartCmdIndex) {
       const auto &part = std::get<DrawPartCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::DrawPart);
       identity.transparency_bucket = transparency_bucket(part.alpha);
-      identity.material = pack_12(intern_material_id(part.material));
-      identity.mesh = pack_16(intern_mesh_id(part.mesh));
-      identity.texture = pack_12(intern_texture_id(part.texture));
-      identity.skeleton = part.palette.empty() ? 0U : 1U;
     } else if (cmd.index() == RiggedCreatureCmdIndex) {
       const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::RiggedCreature);
       identity.transparency_bucket = transparency_bucket(rig.alpha);
-      identity.material = pack_12(intern_material_id(rig.material));
-      identity.mesh = pack_16(intern_mesh_id(rig.mesh));
-      identity.texture = pack_12(intern_texture_id(rig.texture));
-      identity.skeleton = pack_4(rig.bone_count);
     } else if (cmd.index() == CylinderCmdIndex) {
       const auto &cy = std::get<CylinderCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Cylinder);
@@ -551,9 +592,7 @@ private:
     } else if (cmd.index() == RainBatchCmdIndex) {
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Rain);
     } else if (cmd.index() == EffectBatchCmdIndex) {
-      const auto &effect = std::get<EffectBatchCmdIndex>(cmd);
       identity.pipeline = static_cast<std::uint8_t>(SortPipeline::Effect);
-      identity.material = pack_12(static_cast<std::uint32_t>(effect.kind));
     } else if (cmd.index() == SelectionSmokeCmdIndex) {
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::SelectionSmoke);
@@ -565,9 +604,81 @@ private:
           static_cast<std::uint8_t>(SortPipeline::SelectionRing);
       identity.transparency_bucket = 1U;
     } else if (cmd.index() == ModeIndicatorCmdIndex) {
-      const auto &mode = std::get<ModeIndicatorCmdIndex>(cmd);
       identity.pipeline =
           static_cast<std::uint8_t>(SortPipeline::ModeIndicator);
+    }
+  }
+
+  [[nodiscard]] auto compute_submission_bucket(const DrawCmd &cmd) const
+      -> std::uint32_t {
+    SortIdentity identity;
+    populate_sort_identity_prefix(cmd, identity);
+    return (static_cast<std::uint32_t>(identity.pass) << 16) |
+           (static_cast<std::uint32_t>(identity.pipeline) << 8) |
+           static_cast<std::uint32_t>(identity.transparency_bucket & 0x0FU);
+  }
+
+  void record_submission_bucket(const DrawCmd &cmd) {
+    const std::uint32_t bucket = compute_submission_bucket(cmd);
+    const std::size_t next_index = m_items.size();
+    if (!m_submission_bucket_spans.empty()) {
+      SubmissionBucketSpan &last = m_submission_bucket_spans.back();
+      if (bucket < last.bucket) {
+        m_submission_bucket_ordered = false;
+      }
+      if (bucket == last.bucket) {
+        ++last.count;
+        return;
+      }
+    }
+
+    m_submission_bucket_spans.push_back(
+        SubmissionBucketSpan{bucket, next_index, 1U});
+  }
+
+  [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
+    SortIdentity identity;
+    populate_sort_identity_prefix(cmd, identity);
+
+    if (cmd.index() == MeshCmdIndex) {
+      const auto &mesh = std::get<MeshCmdIndex>(cmd);
+      identity.material = pack_12(intern_material_id(mesh.shader));
+      identity.mesh = pack_16(intern_mesh_id(mesh.mesh));
+      identity.texture = pack_12(intern_texture_id(mesh.texture));
+    } else if (cmd.index() == TerrainScatterCmdIndex) {
+      const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
+      identity.material = pack_12(intern_material_id(deco.material));
+      identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
+    } else if (cmd.index() == TerrainSurfaceCmdIndex) {
+      const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
+      identity.material = pack_12(chunk.sort_key);
+      identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
+      identity.texture = pack_12(intern_material_id(chunk.material));
+    } else if (cmd.index() == TerrainFeatureCmdIndex) {
+      const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      identity.mesh = pack_16(intern_mesh_id(feature.mesh));
+      identity.texture = pack_12(intern_texture_id(feature.visibility.texture));
+    } else if (cmd.index() == PrimitiveBatchCmdIndex) {
+      const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
+      identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
+          prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
+    } else if (cmd.index() == DrawPartCmdIndex) {
+      const auto &part = std::get<DrawPartCmdIndex>(cmd);
+      identity.material = pack_12(intern_material_id(part.material));
+      identity.mesh = pack_16(intern_mesh_id(part.mesh));
+      identity.texture = pack_12(intern_texture_id(part.texture));
+      identity.skeleton = part.palette.empty() ? 0U : 1U;
+    } else if (cmd.index() == RiggedCreatureCmdIndex) {
+      const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
+      identity.material = pack_12(intern_material_id(rig.material));
+      identity.mesh = pack_16(intern_mesh_id(rig.mesh));
+      identity.texture = pack_12(intern_texture_id(rig.texture));
+      identity.skeleton = pack_4(rig.bone_count);
+    } else if (cmd.index() == EffectBatchCmdIndex) {
+      const auto &effect = std::get<EffectBatchCmdIndex>(cmd);
+      identity.material = pack_12(static_cast<std::uint32_t>(effect.kind));
+    } else if (cmd.index() == ModeIndicatorCmdIndex) {
+      const auto &mode = std::get<ModeIndicatorCmdIndex>(cmd);
       identity.material = pack_12(static_cast<std::uint32_t>(mode.mode_type));
     }
 
@@ -672,9 +783,21 @@ private:
     }
     const auto &rig_a = std::get<RiggedCreatureCmdIndex>(a);
     const auto &rig_b = std::get<RiggedCreatureCmdIndex>(b);
+    if (rig_a.role_color_count != rig_b.role_color_count) {
+      return false;
+    }
+    if (rig_a.role_color_count > rig_a.role_colors.size() ||
+        rig_b.role_color_count > rig_b.role_colors.size()) {
+      return false;
+    }
+    for (std::size_t i = 0; i < rig_a.role_color_count; ++i) {
+      if (rig_a.role_colors[i] != rig_b.role_colors[i]) {
+        return false;
+      }
+    }
     return rig_a.mesh != nullptr && rig_a.texture == nullptr &&
-           rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
-           rig_a.material == rig_b.material;
+            rig_b.texture == nullptr && rig_a.mesh == rig_b.mesh &&
+            rig_a.material == rig_b.material;
   }
 
   [[nodiscard]] auto
@@ -790,6 +913,10 @@ private:
   std::uint32_t m_next_material_id = 1;
   std::uint32_t m_next_mesh_id = 1;
   std::uint32_t m_next_texture_id = 1;
+  std::vector<SubmissionBucketSpan> m_submission_bucket_spans;
+  bool m_submission_bucket_ordered = true;
+  std::size_t m_items_high_water = 0;
+  std::size_t m_prepared_high_water = 0;
 };
 
 } // namespace Render::GL

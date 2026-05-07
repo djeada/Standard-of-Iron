@@ -286,6 +286,37 @@ void TroopCatalog::register_defaults() {
   builder.max_units_per_row = 4;
 
   register_class(std::move(builder));
+
+  TroopClass civilian{};
+  civilian.unit_type = Game::Units::TroopType::Civilian;
+  civilian.display_name = "Civilian";
+  civilian.production.cost = 8;
+  civilian.production.build_time = 5.0F;
+  civilian.production.priority = 1;
+  civilian.production.is_melee = true;
+
+  civilian.combat.health = 35;
+  civilian.combat.max_health = 35;
+  civilian.combat.speed = 2.3F;
+  civilian.combat.vision_range = 10.0F;
+  civilian.combat.ranged_range = 1.0F;
+  civilian.combat.ranged_damage = 1;
+  civilian.combat.ranged_cooldown = 2.0F;
+  civilian.combat.melee_range = 1.2F;
+  civilian.combat.melee_damage = 2;
+  civilian.combat.melee_cooldown = 1.2F;
+  civilian.combat.can_ranged = false;
+  civilian.combat.can_melee = true;
+
+  civilian.visuals.render_scale = 0.48F;
+  civilian.visuals.selection_ring_size = 0.95F;
+  civilian.visuals.selection_ring_ground_offset = 0.0F;
+  civilian.visuals.renderer_id = "troops/roman/civilian";
+
+  civilian.individuals_per_unit = 1;
+  civilian.max_units_per_row = 5;
+
+  register_class(std::move(civilian));
 }
 
 } // namespace Game::Units
