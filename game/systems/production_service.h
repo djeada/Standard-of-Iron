@@ -24,6 +24,7 @@ enum class ProductionResult {
 
 struct ProductionState {
   bool has_barracks = false;
+  bool has_home = false;
   bool in_progress = false;
   NationID nation_id = NationID::RomanRepublic;
   Game::Units::TroopType product_type = Game::Units::TroopType::Archer;
@@ -58,7 +59,25 @@ public:
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       float x, float z) -> bool;
 
+  static auto start_production_for_first_selected_home(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      Game::Units::TroopType unit_type) -> ProductionResult;
+
+  static auto start_production_for_first_selected_home(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      const std::string &unit_type) -> ProductionResult {
+    return start_production_for_first_selected_home(
+        world, selected, owner_id, Game::Units::troop_typeFromString(unit_type));
+  }
+
   static auto get_selected_barracks_state(
+      Engine::Core::World &world,
+      const std::vector<Engine::Core::EntityID> &selected, int owner_id,
+      ProductionState &out_state) -> bool;
+
+  static auto get_selected_home_state(
       Engine::Core::World &world,
       const std::vector<Engine::Core::EntityID> &selected, int owner_id,
       ProductionState &out_state) -> bool;

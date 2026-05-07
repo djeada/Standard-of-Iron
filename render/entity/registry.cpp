@@ -69,6 +69,10 @@ void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
 
   Roman::register_builder_renderer(registry);
   Carthage::register_builder_renderer(registry);
+  registry.register_renderer("troops/roman/civilian",
+                             registry.get("troops/roman/builder"));
+  registry.register_renderer("troops/carthage/civilian",
+                             registry.get("troops/carthage/builder"));
 
   register_catapult_renderer(registry);
 

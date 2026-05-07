@@ -274,7 +274,7 @@ Item {
             hoverEnabled: true
             propagateComposedEvents: true
             preventStealing: true
-            cursorShape: (gameView.cursorMode === "normal") ? Qt.ArrowCursor : Qt.BlankCursor
+            cursorShape: (gameView.cursorMode === "normal") ? ((typeof game !== 'undefined' && game.civilian_delivery_available) ? Qt.PointingHandCursor : Qt.ArrowCursor) : Qt.BlankCursor
             enabled: gameView.visible
             onEntered: {
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)

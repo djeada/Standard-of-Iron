@@ -159,6 +159,8 @@ public:
                  placing_construction_changed)
   Q_PROPERTY(bool is_campaign_mission READ is_campaign_mission NOTIFY
                  campaign_mission_changed)
+  Q_PROPERTY(bool civilian_delivery_available READ civilian_delivery_available
+                 NOTIFY civilian_delivery_available_changed)
 
   Q_INVOKABLE void on_map_clicked(qreal sx, qreal sy);
   Q_INVOKABLE void on_right_click(qreal sx, qreal sy);
@@ -259,6 +261,8 @@ public:
   Q_INVOKABLE [[nodiscard]] QString pending_building_type() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap get_selected_production_state() const;
   Q_INVOKABLE [[nodiscard]] QVariantMap
+  get_selected_home_production_state() const;
+  Q_INVOKABLE [[nodiscard]] QVariantMap
   get_selected_builder_production_state() const;
   Q_INVOKABLE void start_builder_construction(const QString &item_type);
   Q_INVOKABLE [[nodiscard]] QVariantMap
@@ -308,6 +312,9 @@ public:
   [[nodiscard]] QString loading_stage_text() const;
 
   [[nodiscard]] bool is_campaign_mission() const;
+  [[nodiscard]] bool civilian_delivery_available() const {
+    return m_civilian_delivery_available;
+  }
 
   QObject *audio_system();
 
@@ -358,6 +365,7 @@ private:
   bool screen_to_ground(const QPointF &screenPt, QVector3D &outWorld);
   bool world_to_screen(const QVector3D &world, QPointF &outScreen) const;
   void sync_selection_flags();
+  void update_civilian_delivery_availability();
   static void reset_movement(Engine::Core::Entity *entity);
   QAbstractItemModel *selected_units_model();
   void on_unit_spawned(const Engine::Core::UnitSpawnedEvent &event);
@@ -408,6 +416,7 @@ private:
   std::unique_ptr<Game::Systems::SaveLoadService> m_saveLoadService;
   std::unique_ptr<CursorManager> m_cursor_manager;
   std::unique_ptr<HoverTracker> m_hoverTracker;
+  bool m_civilian_delivery_available = false;
   std::unique_ptr<Game::Systems::CameraService> m_cameraService;
   std::unique_ptr<Game::Systems::SelectionController> m_selectionController;
   std::unique_ptr<App::Controllers::CommandController> m_commandController;
@@ -474,5 +483,6 @@ signals:
   void placing_formation_changed();
   void placing_construction_changed();
   void campaign_mission_changed();
+  void civilian_delivery_available_changed();
   void mission_announcement(QString text);
 };

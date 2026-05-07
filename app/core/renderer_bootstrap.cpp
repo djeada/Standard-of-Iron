@@ -8,6 +8,7 @@
 #include "game/systems/catapult_attack_system.h"
 #include "game/systems/cleanup_system.h"
 #include "game/systems/combat_system.h"
+#include "game/systems/civilian_delivery_system.h"
 #include "game/systems/defense_tower_system.h"
 #include "game/systems/elephant_attack_system.h"
 #include "game/systems/guard_system.h"
@@ -71,6 +72,7 @@ void RendererBootstrap::initialize_world_systems(Engine::Core::World &world) {
   world.add_system(std::make_unique<Game::Systems::AISystem>());
   world.add_system(std::make_unique<Game::Systems::ProductionSystem>());
   world.add_system(std::make_unique<Game::Systems::HomeSystem>());
+  world.add_system(std::make_unique<Game::Systems::CivilianDeliverySystem>());
   world.add_system(std::make_unique<Game::Systems::TerrainAlignmentSystem>());
   world.add_system(std::make_unique<Game::Systems::CleanupSystem>());
   world.add_system(std::make_unique<Game::Systems::SelectionSystem>());

@@ -521,4 +521,11 @@ public:
   int family_manpower_value{8};
 };
 
+class CivilianDeliveryComponent : public Component {
+public:
+  CivilianDeliveryComponent() = default;
+
+  EntityID target_barracks_id{0};
+};
+
 } // namespace Engine::Core

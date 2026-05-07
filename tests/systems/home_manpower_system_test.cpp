@@ -41,9 +41,11 @@ TEST_F(HomeManpowerSystemTest,
   auto *home_transform = home->add_component<Engine::Core::TransformComponent>();
   auto *home_unit = home->add_component<Engine::Core::UnitComponent>();
   auto *home_component = home->add_component<Engine::Core::HomeComponent>();
+  auto *home_production = home->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(home_transform, nullptr);
   ASSERT_NE(home_unit, nullptr);
   ASSERT_NE(home_component, nullptr);
+  ASSERT_NE(home_production, nullptr);
 
   home_transform->position = {10.0F, 0.0F, 0.0F};
   home_unit->spawn_type = Game::Units::SpawnType::Home;
@@ -59,7 +61,7 @@ TEST_F(HomeManpowerSystemTest,
 
   EXPECT_EQ(home_component->nearest_barracks_id, barracks->get_id());
   EXPECT_EQ(barracks_production->max_units, 150);
-  EXPECT_EQ(barracks_production->manpower_available, 12);
+  EXPECT_EQ(home_production->manpower_available, 12);
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 
   home_component->update_cooldown = 0.0F;
@@ -67,7 +69,7 @@ TEST_F(HomeManpowerSystemTest,
   home_system.update(&world, 0.1F);
 
   EXPECT_EQ(barracks_production->max_units, 150);
-  EXPECT_EQ(barracks_production->manpower_available, 24);
+  EXPECT_EQ(home_production->manpower_available, 24);
   EXPECT_FLOAT_EQ(home_component->family_generation_cooldown, 8.0F);
 }
 

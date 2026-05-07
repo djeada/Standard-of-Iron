@@ -4,7 +4,9 @@
 #include "../core/ownership_constants.h"
 #include "../core/world.h"
 #include "../systems/building_collision_registry.h"
+#include "../systems/troop_profile_service.h"
 #include "building_spawn_setup.h"
+#include "units/troop_type.h"
 #include "units/unit.h"
 #include <memory>
 
@@ -52,6 +54,26 @@ void Home::init(const SpawnParams &params) {
     home_comp->family_generation_interval = 12.0F;
     home_comp->family_generation_cooldown = home_comp->family_generation_interval;
     home_comp->family_manpower_value = 8;
+  }
+
+  if (!Game::Core::isNeutralOwner(m_u->owner_id)) {
+    if (auto *prod = e->add_component<Engine::Core::ProductionComponent>()) {
+      prod->product_type = TroopType::Civilian;
+      prod->in_progress = false;
+      prod->time_remaining = 0.0F;
+      prod->produced_count = 0;
+      prod->max_units = 10000;
+      prod->manpower_available = 0;
+      prod->rally_x = m_t->position.x + 2.0F;
+      prod->rally_z = m_t->position.z + 1.0F;
+      prod->rally_set = true;
+
+      const auto profile =
+          Game::Systems::TroopProfileService::instance().get_profile(
+              nation_id, prod->product_type);
+      prod->build_time = profile.production.build_time;
+      prod->villager_cost = profile.production.cost;
+    }
   }
 
   Game::Systems::BuildingCollisionRegistry::instance().register_building(

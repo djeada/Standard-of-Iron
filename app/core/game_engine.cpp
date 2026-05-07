@@ -873,6 +873,7 @@ void GameEngine::set_hover_at_screen(qreal sx, qreal sy) {
   if (m_input_handler) {
     m_input_handler->set_hover_at_screen(sx, sy, m_viewport);
   }
+  update_civilian_delivery_availability();
 }
 
 void GameEngine::on_click_select(qreal sx, qreal sy, bool additive) {
@@ -1222,6 +1223,44 @@ void GameEngine::update_cursor_position() {
   }
 }
 
+void GameEngine::update_civilian_delivery_availability() {
+  bool available = false;
+  if (m_world && m_hoverTracker) {
+    const auto hovered_id = m_hoverTracker->getLastHoveredEntity();
+    auto *hovered = hovered_id != 0 ? m_world->get_entity(hovered_id) : nullptr;
+    auto *hovered_unit =
+        hovered ? hovered->get_component<Engine::Core::UnitComponent>() : nullptr;
+    const bool hovered_friendly_barracks =
+        hovered_unit && hovered_unit->owner_id == m_runtime.local_owner_id &&
+        hovered_unit->spawn_type == Game::Units::SpawnType::Barracks;
+
+    if (hovered_friendly_barracks) {
+      auto *selection_system =
+          m_world->get_system<Game::Systems::SelectionSystem>();
+      if (selection_system != nullptr) {
+        for (const auto id : selection_system->get_selected_units()) {
+          auto *selected_entity = m_world->get_entity(id);
+          auto *selected_unit = selected_entity
+                                    ? selected_entity
+                                          ->get_component<Engine::Core::UnitComponent>()
+                                    : nullptr;
+          if ((selected_unit != nullptr) &&
+              (selected_unit->owner_id == m_runtime.local_owner_id) &&
+              (selected_unit->spawn_type == Game::Units::SpawnType::Civilian)) {
+            available = true;
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  if (m_civilian_delivery_available != available) {
+    m_civilian_delivery_available = available;
+    emit civilian_delivery_available_changed();
+  }
+}
+
 auto GameEngine::screen_to_ground(const QPointF &screenPt,
                                   QVector3D &outWorld) -> bool {
   return App::Utils::screen_to_ground(m_pickingService.get(), m_camera.get(),
@@ -1250,6 +1289,7 @@ void GameEngine::sync_selection_flags() {
       set_cursor_mode(CursorMode::Normal);
     }
   }
+  update_civilian_delivery_availability();
 }
 
 void GameEngine::camera_move(float dx, float dz) {
@@ -1480,6 +1520,13 @@ auto GameEngine::pending_building_type() const -> QString {
 auto GameEngine::get_selected_production_state() const -> QVariantMap {
   return m_production_manager
              ? m_production_manager->get_selected_production_state(
+                   m_runtime.local_owner_id)
+             : QVariantMap();
+}
+
+auto GameEngine::get_selected_home_production_state() const -> QVariantMap {
+  return m_production_manager
+             ? m_production_manager->get_selected_home_production_state(
                    m_runtime.local_owner_id)
              : QVariantMap();
 }
