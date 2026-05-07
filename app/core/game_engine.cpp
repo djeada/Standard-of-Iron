@@ -1165,6 +1165,9 @@ void GameEngine::render_game_effects() {
         // Carthaginian royal purple.
         placement.accent_color = QVector3D(0.62F, 0.08F, 0.78F);
         break;
+      default:
+        // Unknown nation: leave accent_color unset (neutral cyan arrow).
+        break;
       }
     }
 
