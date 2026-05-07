@@ -19,6 +19,7 @@ class TerrainRenderer;
 class TerrainFeatureManager;
 class TerrainScatterManager;
 class FogRenderer;
+class MapBoundaryFogRenderer;
 class RainRenderer;
 } // namespace Render::GL
 
@@ -46,6 +47,7 @@ public:
     Render::GL::TerrainFeatureManager *features;
     Render::GL::TerrainScatterManager *scatter;
     Render::GL::FogRenderer *fog;
+    Render::GL::MapBoundaryFogRenderer *boundary_fog;
     Render::GL::RainRenderer *rain;
   };
 
