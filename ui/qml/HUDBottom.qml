@@ -9,6 +9,7 @@ RowLayout {
     property string currentCommandMode
     property int selectionTick
     property bool hasMovableUnits
+    readonly property var hs: StyleGuide.historical
     property var modeAvailability: ({
         "canAttack": true,
         "canGuard": true,
@@ -70,6 +71,46 @@ RowLayout {
         return false;
     }
 
+    function commandBannerText() {
+        if (!hasMovableUnits)
+            return qsTr("No troops selected");
+
+        if (currentCommandMode === "normal")
+            return qsTr("Orders ready");
+
+        var orderText = qsTr("Stop command");
+        if (currentCommandMode === "attack")
+            orderText = qsTr("Attack order");
+        else if (currentCommandMode === "guard")
+            orderText = qsTr("Guard order");
+        else if (currentCommandMode === "patrol")
+            orderText = qsTr("Patrol order");
+        else if (currentCommandMode === "heal")
+            orderText = qsTr("Medic order");
+        else if (currentCommandMode === "build")
+            orderText = qsTr("Engineer order");
+
+        return orderText;
+    }
+
+    function healthColor(ratio) {
+        if (ratio > 0.6)
+            return "#7F9A5F";
+
+        if (ratio > 0.3)
+            return hs.bronze;
+
+        return hs.waxHover;
+    }
+
+    function staminaColor(running) {
+        return running ? hs.bronze : "#6F8E8C";
+    }
+
+    function shouldPulseCommandBanner() {
+        return hasMovableUnits && (currentCommandMode === "attack" || currentCommandMode === "guard" || currentCommandMode === "patrol");
+    }
+
     Component.onCompleted: updateModeAvailability()
     onSelectionTickChanged: updateModeAvailability()
     anchors.fill: parent
@@ -81,8 +122,8 @@ RowLayout {
         Layout.preferredWidth: Math.max(240, bottomPanel.width * 0.3)
         Layout.fillHeight: true
         Layout.alignment: Qt.AlignTop
-        color: "#0f1419"
-        border.color: "#3498db"
+        color: hs.parchmentDark
+        border.color: hs.bronze
         border.width: 2
         radius: 6
 
@@ -94,13 +135,13 @@ RowLayout {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 25
-                color: "#1a252f"
+                color: hs.parchmentLight
                 radius: 4
 
                 Text {
                     anchors.centerIn: parent
                     text: qsTr("SELECTED UNITS")
-                    color: "#3498db"
+                    color: hs.bronze
                     font.pointSize: 10
                     font.bold: true
                 }
@@ -131,9 +172,9 @@ RowLayout {
 
                         width: selectedUnitsList.width - 10
                         height: 36
-                        color: isHovered ? "#243346" : "#1a252f"
+                        color: isHovered ? hs.parchmentLight : hs.parchmentDark
                         radius: 4
-                        border.color: isHovered ? "#4aa3ff" : "#34495e"
+                        border.color: isHovered ? hs.bronze : hs.bronzeDeep
                         border.width: isHovered ? 2 : 1
 
                         MouseArea {
@@ -179,7 +220,7 @@ RowLayout {
                                 Text {
                                     anchors.centerIn: parent
                                     text: bottomRoot.unitIconEmoji(selectedUnitItem.unitTypeKey)
-                                    color: "#ecf0f1"
+                                    color: Theme.textMain
                                     font.pixelSize: 16
                                     visible: selectedUnitIcon.source === "" || selectedUnitIcon.status === Image.Error
                                 }
@@ -193,9 +234,9 @@ RowLayout {
                                 Rectangle {
                                     width: 60
                                     height: 10
-                                    color: "#2c3e50"
+                                    color: "#15100C"
                                     radius: 5
-                                    border.color: "#1a252f"
+                                    border.color: hs.bronzeDeep
                                     border.width: 1
 
                                     Rectangle {
@@ -203,13 +244,7 @@ RowLayout {
                                         height: parent.height
                                         color: {
                                             var ratio = (typeof health_ratio !== 'undefined' ? health_ratio : 0);
-                                            if (ratio > 0.6)
-                                                return "#27ae60";
-
-                                            if (ratio > 0.3)
-                                                return "#f39c12";
-
-                                            return "#e74c3c";
+                                            return bottomRoot.healthColor(ratio);
                                         }
                                         radius: 5
                                     }
@@ -219,9 +254,9 @@ RowLayout {
                                 Rectangle {
                                     width: 60
                                     height: 6
-                                    color: "#2c3e50"
+                                    color: "#15100C"
                                     radius: 3
-                                    border.color: "#1a252f"
+                                    border.color: hs.bronzeDeep
                                     border.width: 1
                                     visible: (typeof can_run !== 'undefined') ? can_run : false
 
@@ -230,10 +265,7 @@ RowLayout {
                                         height: parent.height
                                         color: {
                                             var running = (typeof is_running !== 'undefined') ? is_running : false;
-                                            if (running)
-                                                return "#e67e22";
-
-                                            return "#3498db";
+                                            return bottomRoot.staminaColor(running);
                                         }
                                         radius: 3
                                     }
@@ -245,7 +277,7 @@ RowLayout {
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitDisplayName)
-                                color: "#ecf0f1"
+                                color: Theme.textMain
                                 font.pointSize: 8
                                 font.bold: false
                                 elide: Text.ElideRight
@@ -274,8 +306,8 @@ RowLayout {
         Rectangle {
             width: parent.width
             height: 36
-            color: bottomRoot.currentCommandMode === "normal" ? "#0f1419" : (bottomRoot.currentCommandMode === "attack" ? "#8b1a1a" : "#1a252f")
-            border.color: bottomRoot.currentCommandMode === "normal" ? "#34495e" : (bottomRoot.currentCommandMode === "attack" ? "#e74c3c" : "#3498db")
+            color: bottomRoot.currentCommandMode === "normal" ? hs.parchmentDark : (bottomRoot.currentCommandMode === "attack" ? hs.bannerAttack : hs.bannerNeutral)
+            border.color: bottomRoot.currentCommandMode === "normal" ? hs.bronzeDeep : hs.bronze
             border.width: 2
             radius: 6
             opacity: bottomRoot.hasMovableUnits ? 1 : 0.5
@@ -284,7 +316,7 @@ RowLayout {
                 anchors.fill: parent
                 anchors.margins: -4
                 color: "transparent"
-                border.color: bottomRoot.currentCommandMode === "attack" ? "#e74c3c" : "#3498db"
+                border.color: hs.bronze
                 border.width: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits ? 1 : 0
                 radius: 8
                 opacity: 0.4
@@ -293,14 +325,14 @@ RowLayout {
 
             Text {
                 anchors.centerIn: parent
-                text: !bottomRoot.hasMovableUnits ? qsTr("◉ Select Troops for Commands") : (bottomRoot.currentCommandMode === "normal" ? qsTr("◉ Normal Mode") : bottomRoot.currentCommandMode === "attack" ? qsTr("Attack mode - click enemy") : bottomRoot.currentCommandMode === "guard" ? qsTr("Guard mode - click position") : bottomRoot.currentCommandMode === "patrol" ? qsTr("Patrol mode - set waypoints") : bottomRoot.currentCommandMode === "heal" ? qsTr("Heal mode - click ally") : bottomRoot.currentCommandMode === "build" ? qsTr("Build mode - choose structure") : qsTr("Stop command"))
-                color: !bottomRoot.hasMovableUnits ? "#5a6c7d" : (bottomRoot.currentCommandMode === "normal" ? "#7f8c8d" : (bottomRoot.currentCommandMode === "attack" ? "#ff6b6b" : "#3498db"))
+                text: bottomRoot.commandBannerText()
+                color: !bottomRoot.hasMovableUnits ? Theme.textDim : Theme.textMain
                 font.pointSize: bottomRoot.currentCommandMode === "normal" ? 10 : 11
                 font.bold: bottomRoot.currentCommandMode !== "normal" && bottomRoot.hasMovableUnits
             }
 
             SequentialAnimation on opacity {
-                running: bottomRoot.currentCommandMode === "attack" && bottomRoot.hasMovableUnits
+                running: bottomRoot.shouldPulseCommandBanner()
                 loops: Animation.Infinite
 
                 NumberAnimation {
@@ -334,7 +366,7 @@ RowLayout {
                 if (btn.hovered)
                     return Qt.lighter(baseColor, 1.2);
 
-                return "#2c3e50";
+                return hs.parchmentLight;
             }
 
             width: parent.width
@@ -362,9 +394,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? "#e74c3c" : (parent.hovered ? "#c0392b" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? "#c0392b" : "#1a252f"
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -387,7 +419,7 @@ RowLayout {
                         text: attackButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: attackButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: attackButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -416,9 +448,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? "#3498db" : (parent.hovered ? "#2980b9" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? "#2980b9" : "#1a252f"
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -441,7 +473,7 @@ RowLayout {
                         text: guardButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: guardButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: guardButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -470,9 +502,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? "#27ae60" : (parent.hovered ? "#229954" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? "#229954" : "#1a252f"
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -495,7 +527,7 @@ RowLayout {
                         text: patrolButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: patrolButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: patrolButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -531,9 +563,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? "#1abc9c" : (parent.hovered ? "#16a085" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? "#16a085" : "#1a252f"
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -556,7 +588,7 @@ RowLayout {
                         text: healButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: healButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: healButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -583,9 +615,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.pressed ? "#d35400" : (parent.hovered ? "#e67e22" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.pressed ? hs.waxDark : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.enabled ? "#d35400" : "#1a252f"
+                    border.color: parent.enabled ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -598,7 +630,7 @@ RowLayout {
                         text: "\u25a0"
                         font.pointSize: 18
                         font.bold: true
-                        color: stopButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: stopButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -607,7 +639,7 @@ RowLayout {
                         text: stopButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: stopButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: stopButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -643,9 +675,9 @@ RowLayout {
                 ToolTip.delay: 500
 
                 background: Rectangle {
-                    color: parent.enabled ? (parent.checked ? "#f1c40f" : (parent.hovered ? "#f39c12" : "#34495e")) : "#1a252f"
+                    color: parent.enabled ? (parent.checked ? hs.wax : (parent.hovered ? hs.waxHover : hs.parchmentLight)) : hs.parchmentDark
                     radius: 6
-                    border.color: parent.checked ? "#f39c12" : "#1a252f"
+                    border.color: parent.checked ? hs.bronze : hs.bronzeDeep
                     border.width: 2
                 }
 
@@ -668,7 +700,7 @@ RowLayout {
                         text: buildButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: buildButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: buildButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -711,22 +743,22 @@ RowLayout {
                 background: Rectangle {
                     color: {
                         if (!parent.enabled)
-                            return "#1a252f";
+                            return hs.parchmentDark;
 
                         if (parent.isHoldActive)
-                            return "#8e44ad";
+                            return hs.wax;
 
                         if (parent.pressed)
-                            return "#8e44ad";
+                            return hs.waxDark;
 
                         if (parent.hovered)
-                            return "#9b59b6";
+                            return hs.bannerNeutral;
 
-                        return "#34495e";
+                        return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isHoldActive ? "#d35400" : "#8e44ad") : "#1a252f"
-                    border.width: parent.isHoldActive ? 3 : 2
+                    border.color: parent.enabled ? (parent.isHoldActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: parent.isHoldActive ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -748,7 +780,7 @@ RowLayout {
                         text: (holdButton.isHoldActive ? qsTr("Active ") : "") + holdButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: holdButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: holdButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }
@@ -802,22 +834,22 @@ RowLayout {
                 background: Rectangle {
                     color: {
                         if (!parent.enabled)
-                            return "#1a252f";
+                            return hs.parchmentDark;
 
                         if (parent.isFormationActive)
-                            return "#16a085";
+                            return "#6F8E8C";
 
                         if (parent.pressed)
-                            return "#16a085";
+                            return "#5F7F83";
 
                         if (parent.hovered)
-                            return "#1abc9c";
+                            return "#82A4A1";
 
-                        return "#34495e";
+                        return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isFormationActive ? "#d35400" : "#16a085") : "#1a252f"
-                    border.width: parent.isFormationActive ? 3 : 2
+                    border.color: parent.enabled ? (parent.isFormationActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: parent.isFormationActive ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -839,7 +871,7 @@ RowLayout {
                         text: (formationButton.isFormationActive ? qsTr("Active ") : "") + formationButton.text
                         font.pointSize: 11
                         font.bold: true
-                        color: formationButton.enabled ? "#ecf0f1" : "#7f8c8d"
+                        color: formationButton.enabled ? Theme.textMain : Theme.textDim
                         horizontalAlignment: Text.AlignLeft
                         verticalAlignment: Text.AlignVCenter
                     }

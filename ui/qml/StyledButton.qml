@@ -111,6 +111,16 @@ Button {
 
         }
 
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: 2
+            radius: Math.max(2, parent.radius - 2)
+            color: "transparent"
+            border.width: buttonStyle === "primary" ? 1 : 0
+            border.color: buttonStyle === "primary" ? StyleGuide.historical.bronze : "transparent"
+            opacity: 0.65
+        }
+
     }
 
 }
