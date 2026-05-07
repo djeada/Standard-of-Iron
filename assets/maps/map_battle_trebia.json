@@ -350,6 +350,30 @@
       "description": "Secondary ford"
     },
     {
+      "type": "hill",
+      "x": 40,
+      "z": 34,
+      "radius": 8,
+      "height": 2.0,
+      "description": "Roman rally knoll overlooking the western ford"
+    },
+    {
+      "type": "hill",
+      "x": 82,
+      "z": 34,
+      "radius": 8,
+      "height": 2.0,
+      "description": "Eastern rally knoll guarding the reserve approach"
+    },
+    {
+      "type": "forest",
+      "x": 60,
+      "z": 62,
+      "radius": 9,
+      "density": 0.55,
+      "description": "Frozen reed beds in the center crossing"
+    },
+    {
       "type": "village",
       "x": 60,
       "z": 60,
@@ -362,6 +386,34 @@
       "end": [140, 55],
       "width": 12,
       "description": "The freezing Trebia River"
+    },
+    {
+      "start": [18, 46],
+      "end": [44, 55],
+      "width": 4.0,
+      "description": "Braided western channel"
+    },
+    {
+      "start": [78, 56],
+      "end": [112, 46],
+      "width": 4.0,
+      "description": "Braided eastern channel"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [44, 53],
+      "end": [50, 57],
+      "width": 4.0,
+      "height": 0.7,
+      "description": "Western timber crossing"
+    },
+    {
+      "start": [72, 57],
+      "end": [78, 53],
+      "width": 4.0,
+      "height": 0.7,
+      "description": "Eastern timber crossing"
     }
   ],
   "roads": [
@@ -404,6 +456,19 @@
         [85, 55]
       ],
       "description": "Eastern flanking path"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [30, 22],
+        [40, 32],
+        [52, 42],
+        [60, 55]
+      ],
+      "description": "Roman advance lane into the central ford"
     }
   ],
   "victory": {

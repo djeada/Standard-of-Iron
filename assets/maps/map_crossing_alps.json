@@ -427,10 +427,64 @@
       "description": "Italian side forest - journey's end"
     },
     {
+      "type": "forest",
+      "x": 92,
+      "z": 122,
+      "radius": 10,
+      "density": 0.45,
+      "description": "High-altitude pine belt around the final switchbacks"
+    },
+    {
+      "type": "mountain",
+      "x": 112,
+      "z": 56,
+      "radius": 14,
+      "height": 9.5,
+      "description": "Sheer cliff splitting the central pass"
+    },
+    {
+      "type": "hill",
+      "x": 142,
+      "z": 146,
+      "radius": 9,
+      "height": 2.5,
+      "description": "Italian lookout mound above the descent"
+    },
+    {
       "type": "village",
       "x": 152,
       "z": 150,
       "description": "Italian frontier hamlet signaling the end of the crossing"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [42, 18],
+      "end": [72, 46],
+      "width": 3.0,
+      "description": "Meltwater torrent cutting across the lower pass"
+    },
+    {
+      "start": [112, 122],
+      "end": [168, 172],
+      "width": 3.5,
+      "description": "Alpine runoff stream near the final descent"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [58, 34],
+      "end": [64, 40],
+      "width": 4.0,
+      "height": 0.8,
+      "description": "Rope bridge over the lower meltwater torrent"
+    },
+    {
+      "start": [142, 148],
+      "end": [148, 154],
+      "width": 4.0,
+      "height": 0.7,
+      "description": "Stone bridge on the Italian approach stream"
     }
   ],
   "roads": [
@@ -466,6 +520,21 @@
         [50, 80]
       ],
       "description": "Alternative western route - longer but safer"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.4,
+      "style": "default",
+      "waypoints": [
+        [70, 60],
+        [85, 68],
+        [102, 84],
+        [118, 98],
+        [132, 116],
+        [150, 138]
+      ],
+      "description": "Exposed eastern traverse that shortens the final climb"
     }
   ],
   "victory": {

@@ -314,6 +314,30 @@
       "description": "Cavalry concealment"
     },
     {
+      "type": "forest",
+      "x": 52,
+      "z": 30,
+      "radius": 10,
+      "density": 0.55,
+      "description": "Wet woodland pinching the lakeside march route"
+    },
+    {
+      "type": "hill",
+      "x": 22,
+      "z": 34,
+      "radius": 7,
+      "height": 2.2,
+      "description": "Lakeside chokepoint rise"
+    },
+    {
+      "type": "mountain",
+      "x": 76,
+      "z": 92,
+      "radius": 9,
+      "height": 6.8,
+      "description": "High rear cliff preventing Roman breakout north"
+    },
+    {
       "type": "village",
       "x": 28,
       "z": 24,
@@ -334,6 +358,36 @@
       "radius": 10,
       "height": 7.0,
       "description": "Northeastern mountain barrier"
+    }
+  ],
+  "rivers": [
+    {
+      "start": [0, 34],
+      "end": [62, 24],
+      "width": 3.0,
+      "description": "Western runoff stream feeding into the lake"
+    },
+    {
+      "start": [148, 36],
+      "end": [92, 24],
+      "width": 3.0,
+      "description": "Eastern runoff stream narrowing the retreat corridor"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [58, 31],
+      "end": [64, 29],
+      "width": 3.5,
+      "height": 0.6,
+      "description": "Roman plank bridge over western runoff"
+    },
+    {
+      "start": [90, 28],
+      "end": [96, 30],
+      "width": 3.5,
+      "height": 0.6,
+      "description": "Roman plank bridge over eastern runoff"
     }
   ],
   "roads": [
@@ -365,6 +419,20 @@
         [130, 85]
       ],
       "description": "Path to Carthaginian staging area"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.0,
+      "style": "default",
+      "waypoints": [
+        [20, 34],
+        [40, 38],
+        [62, 42],
+        [88, 46],
+        [112, 50]
+      ],
+      "description": "Ridge track used by Roman scouts above the corridor"
     }
   ],
   "victory": {

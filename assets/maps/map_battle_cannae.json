@@ -385,6 +385,30 @@
       "description": "Northern ridge - prevents flanking from north"
     },
     {
+      "type": "hill",
+      "x": 112,
+      "z": 96,
+      "radius": 11,
+      "height": 2.6,
+      "description": "Rear maneuver rise for Carthaginian reserves"
+    },
+    {
+      "type": "forest",
+      "x": 34,
+      "z": 44,
+      "radius": 10,
+      "density": 0.45,
+      "description": "Left-wing dust cover near the Roman cavalry approach"
+    },
+    {
+      "type": "forest",
+      "x": 146,
+      "z": 78,
+      "radius": 9,
+      "density": 0.45,
+      "description": "Right-wing scrubland masking reserve movement"
+    },
+    {
       "type": "village",
       "x": 20,
       "z": 100,
@@ -403,6 +427,28 @@
       "end": [100, 25],
       "width": 10,
       "description": "Aufidus River - northern boundary"
+    },
+    {
+      "start": [100, 25],
+      "end": [138, 38],
+      "width": 7,
+      "description": "Aufidus bend toward the Roman rear"
+    }
+  ],
+  "bridges": [
+    {
+      "start": [96, 25],
+      "end": [104, 27],
+      "width": 5.0,
+      "height": 0.8,
+      "description": "Main ford bridge near the center"
+    },
+    {
+      "start": [124, 34],
+      "end": [132, 36],
+      "width": 4.0,
+      "height": 0.7,
+      "description": "Roman logistics bridge on the river bend"
     }
   ],
   "roads": [
@@ -445,6 +491,32 @@
         [160, 30]
       ],
       "description": "Roman supply route"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [20, 96],
+        [40, 82],
+        [65, 70],
+        [90, 60]
+      ],
+      "description": "Carthaginian left-hook route toward the encirclement pocket"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [158, 28],
+        [145, 40],
+        [130, 52],
+        [110, 60]
+      ],
+      "description": "Roman reserve lane vulnerable to interception"
     }
   ],
   "victory": {

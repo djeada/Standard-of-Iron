@@ -275,6 +275,27 @@
       "description": "Central copse"
     },
     {
+      "type": "forest",
+      "x": 120,
+      "z": 35,
+      "radius": 9,
+      "density": 0.45,
+      "description": "Riparian woodland screening the Roman flank"
+    },
+    {
+      "type": "hill",
+      "x": 135,
+      "z": 95,
+      "radius": 11,
+      "height": 2.8,
+      "description": "Southern spur controlling the retreat track",
+      "entrances": [
+        {"x": 126, "z": 95},
+        {"x": 144, "z": 95},
+        {"x": 135, "z": 86}
+      ]
+    },
+    {
       "type": "plain",
       "x": 100,
       "z": 60,
@@ -301,6 +322,12 @@
       "end": [60, 20],
       "width": 4,
       "description": "Small tributary stream"
+    },
+    {
+      "start": [60, 102],
+      "end": [140, 108],
+      "width": 3.5,
+      "description": "Southern irrigation channel that complicates cavalry pursuit"
     }
   ],
   "bridges": [
@@ -317,6 +344,13 @@
       "width": 5,
       "height": 0.8,
       "description": "Southern crossing"
+    },
+    {
+      "start": [96, 104],
+      "end": [102, 106],
+      "width": 4,
+      "height": 0.6,
+      "description": "Field bridge over the southern channel"
     }
   ],
   "roads": [
@@ -362,6 +396,20 @@
         [25, 30]
       ],
       "description": "Path to Carthaginian flanking position"
+    },
+    {
+      "start": [0, 0],
+      "end": [0, 0],
+      "width": 2.5,
+      "style": "default",
+      "waypoints": [
+        [175, 60],
+        [165, 72],
+        [148, 86],
+        [132, 96],
+        [105, 105]
+      ],
+      "description": "Roman fallback track along the southern spur"
     }
   ],
   "victory": {
