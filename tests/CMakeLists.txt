@@ -45,6 +45,7 @@ add_executable(standard_of_iron_tests
     render/building_archetype_desc_test.cpp
     render/building_render_common_test.cpp
     render/unit_render_cache_test.cpp
+    render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/linear_feature_geometry_test.cpp

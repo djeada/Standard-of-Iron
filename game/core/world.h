@@ -2,6 +2,7 @@
 
 #include "entity.h"
 #include "system.h"
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <typeindex>
@@ -13,6 +14,11 @@ namespace Engine::Core {
 
 class World {
 public:
+  using ComponentObserverCallback =
+      std::function<void(EntityID, std::type_index, bool)>;
+  using EntityDestroyedCallback = std::function<void(EntityID)>;
+  using WorldClearedCallback = std::function<void()>;
+
   World();
   ~World();
 
@@ -79,6 +85,10 @@ public:
 
   auto get_entity_mutex() -> std::recursive_mutex & { return m_entity_mutex; }
 
+  void add_component_observer(ComponentObserverCallback callback);
+  void add_entity_destroyed_observer(EntityDestroyedCallback callback);
+  void add_world_cleared_observer(WorldClearedCallback callback);
+
 private:
   void on_component_changed(EntityID entity_id, std::type_index component_type,
                             bool added);
@@ -92,6 +102,10 @@ private:
 
   std::unordered_map<std::type_index, std::unordered_set<EntityID>>
       m_component_index;
+
+  std::vector<ComponentObserverCallback> m_component_observers;
+  std::vector<EntityDestroyedCallback> m_entity_destroyed_observers;
+  std::vector<WorldClearedCallback> m_world_cleared_observers;
 };
 
 } // namespace Engine::Core

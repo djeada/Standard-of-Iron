@@ -988,6 +988,12 @@ void Renderer::render_world(Engine::Core::World *world) {
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
+  // Attach persistent registry to this world if it has changed.
+  if (!m_render_registry.is_attached_to(world)) {
+    m_cached_world = world;
+    m_render_registry.attach(world);
+  }
+
   auto &vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
@@ -995,8 +1001,9 @@ void Renderer::render_world(Engine::Core::World *world) {
     visibility_snapshot = vis.snapshot();
   }
 
-  auto renderable_entities =
-      world->get_entities_with<Engine::Core::RenderableComponent>();
+  const auto &unit_ids = m_render_registry.unit_ids();
+  const auto &building_ids = m_render_registry.building_ids();
+  const auto &other_ids = m_render_registry.other_ids();
 
   const auto &gfx_settings = Render::GraphicsSettings::instance();
   const auto &batch_config = gfx_settings.batching_config();
@@ -1012,16 +1019,22 @@ void Renderer::render_world(Engine::Core::World *world) {
   std::vector<UnitRenderEntry> unit_entries;
   std::vector<RenderEntry> building_entries;
   std::vector<RenderEntry> other_entries;
-  unit_entries.reserve(renderable_entities.size());
-  building_entries.reserve(renderable_entities.size());
-  other_entries.reserve(renderable_entities.size());
+  unit_entries.reserve(unit_ids.size());
+  building_entries.reserve(building_ids.size());
+  other_entries.reserve(other_ids.size());
 
-  for (auto *entity : renderable_entities) {
+  for (std::uint32_t entity_id : unit_ids) {
+    // Safety guard: the registry updates are driven by observer callbacks and
+    // are always processed under the entity mutex (same lock held here), so
+    // stale IDs should not occur in practice.  The nullptr check is a
+    // defensive guard against unexpected ordering or future code paths.
+    Engine::Core::Entity *entity = world->get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
     if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-
-    uint32_t const entity_id = entity->get_id();
 
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && unit_comp->health <= 0) {
@@ -1106,18 +1119,29 @@ void Renderer::render_world(Engine::Core::World *world) {
       entry.has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
       unit_entries.push_back(std::move(entry));
-      continue;
+    }
+  }
+
+  auto collect_non_unit_entry = [&](std::uint32_t entity_id,
+                                    std::vector<RenderEntry> &dest) {
+    // Defensive null guard; see comment above the unit_ids loop.
+    Engine::Core::Entity *entity = world->get_entity(entity_id);
+    if (entity == nullptr) {
+      return;
+    }
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      return;
     }
 
     auto *renderable =
         entity->get_component<Engine::Core::RenderableComponent>();
     if ((renderable == nullptr) || !renderable->visible) {
-      continue;
+      return;
     }
 
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
-      continue;
+      return;
     }
 
     RenderEntry entry;
@@ -1132,14 +1156,15 @@ void Renderer::render_world(Engine::Core::World *world) {
       entry.renderer_key = std::string(
           canonicalize_building_renderer_key(renderable->renderer_id));
     }
+    dest.push_back(std::move(entry));
+  };
 
-    auto *building_comp =
-        entity->get_component<Engine::Core::BuildingComponent>();
-    if (building_comp != nullptr) {
-      building_entries.push_back(std::move(entry));
-    } else {
-      other_entries.push_back(std::move(entry));
-    }
+  for (std::uint32_t entity_id : building_ids) {
+    collect_non_unit_entry(entity_id, building_entries);
+  }
+
+  for (std::uint32_t entity_id : other_ids) {
+    collect_non_unit_entry(entity_id, other_entries);
   }
 
   m_unit_render_cache.prune(m_frame_counter);

@@ -10,6 +10,7 @@
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "i_render_backend.h"
+#include "persistent_render_registry.h"
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_cache.h"
 #include "submitter.h"
@@ -312,6 +313,9 @@ private:
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
+
+  Render::PersistentRenderRegistry m_render_registry;
+  Engine::Core::World *m_cached_world{nullptr};
 
   std::mutex m_async_prewarm_mutex;
   std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;

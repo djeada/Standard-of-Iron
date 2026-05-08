@@ -31,6 +31,10 @@ void World::on_component_changed(EntityID entity_id,
       }
     }
   }
+
+  for (auto &cb : m_component_observers) {
+    cb(entity_id, component_type, added);
+  }
 }
 
 void World::setup_entity_callback(Entity *entity) {
@@ -82,6 +86,10 @@ void World::destroy_entity(EntityID entity_id) {
   } else {
     m_entities.erase(entity_id);
   }
+
+  for (auto &cb : m_entity_destroyed_observers) {
+    cb(entity_id);
+  }
 }
 
 void World::clear() {
@@ -89,6 +97,10 @@ void World::clear() {
   m_entities.clear();
   m_component_index.clear();
   m_next_entity_id = 1;
+
+  for (auto &cb : m_world_cleared_observers) {
+    cb();
+  }
 }
 
 auto World::get_entity(EntityID entity_id) -> Entity * {
@@ -192,6 +204,18 @@ auto World::get_next_entity_id() const -> EntityID {
 void World::set_next_entity_id(EntityID next_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   m_next_entity_id = std::max(next_id, m_next_entity_id);
+}
+
+void World::add_component_observer(ComponentObserverCallback callback) {
+  m_component_observers.push_back(std::move(callback));
+}
+
+void World::add_entity_destroyed_observer(EntityDestroyedCallback callback) {
+  m_entity_destroyed_observers.push_back(std::move(callback));
+}
+
+void World::add_world_cleared_observer(WorldClearedCallback callback) {
+  m_world_cleared_observers.push_back(std::move(callback));
 }
 
 } // namespace Engine::Core
