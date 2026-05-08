@@ -26,8 +26,6 @@ constexpr std::uint64_t k_building_cache_max_age = 2048;
 
 struct CachedBuildingInstance {
   StoredRenderInstance<k_cached_building_palette_capacity> instance;
-  QMatrix4x4 world;
-  bool world_valid{false};
   std::uint64_t last_seen_tick{0};
 };
 
@@ -222,8 +220,8 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   const bool needs_rebuild =
       inserted || cached.instance.archetype != &archetype ||
       cached.instance.default_texture != default_texture ||
-      cached.instance.lod != lod || !cached.world_valid ||
-      !matrix_equals(cached.world, ctx.model) ||
+      cached.instance.lod != lod ||
+      !matrix_equals(cached.instance.world, ctx.model) ||
       !palette_equals(cached.instance, palette);
 
   if (needs_rebuild) {
@@ -233,8 +231,6 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
     cached.instance.default_texture = default_texture;
     cached.instance.lod = lod;
     cached.instance.set_palette(palette);
-    cached.world = ctx.model;
-    cached.world_valid = true;
   }
 
   submit_render_instance(out, cached.instance.render_instance());

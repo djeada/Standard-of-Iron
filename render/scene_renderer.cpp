@@ -1030,7 +1030,8 @@ void Renderer::render_world(Engine::Core::World *world) {
     // Safety guard: the registry updates are driven by observer callbacks and
     // are always processed under the entity mutex (same lock held here), so
     // stale IDs should not occur in practice.  The nullptr check is a
-    // defensive guard against unexpected ordering or future code paths.
+    // defensive guard against unexpected ordering or future code paths; on
+    // mismatch we skip this id and continue with the next one.
     Engine::Core::Entity *entity = world->get_entity(entity_id);
     if (entity == nullptr) {
       continue;
