@@ -13,14 +13,16 @@ Implemented and verified on `copilot/start-implementing-todo-md`:
 - Minimal horse/elephant snapshot rendering no longer falls back to runtime rigged/snapshot baking when the required prebaked snapshot asset is missing.
 - Minimap fog recomposition avoids repeated work for unchanged visibility versions, and unit overlay recomposition tracks fog, unit, owner, selection, building, and local-player state.
 - **Persistent render registry (`PersistentRenderRegistry`)**: `Renderer::render_world()` no longer calls `world->get_entities_with<RenderableComponent>()` each frame. Entity IDs are pre-classified into unit/building/other lists and kept up to date through component-observer callbacks registered on the world. Tests added in `tests/render/persistent_render_registry_test.cpp`.
+- **Cached static building render instances**: `submit_building_instance()` now uses a per-entity cached `StoredRenderInstance` keyed by entity id and invalidates only on archetype/palette/world/default-texture/LOD changes. Added cache-hit/miss/rebuild counters and tests in `tests/render/building_render_common_test.cpp`.
+- **Render-world scratch buffer reuse**: `render_world()` now reuses thread-local scratch vectors for unit/building/other entries and a thread-local `PrimitiveBatcher`, removing per-frame vector/batcher construction.
 - Regression tests for draw queue memory/sort behavior, cache counters, rigged batching by role palette, minimap dirty handling, and missing prebaked snapshot behavior.
 
 Verification:
 - `cmake --build build --target standard_of_iron_tests -j 4`
-- `ctest --test-dir build --output-on-failure -j 4` passed 1019/1019 (1058 total, 20 skipped, 19 pre-existing failures).
+- `./build/bin/standard_of_iron_tests --gtest_filter='BuildingRenderCommon.*:PersistentRenderRegistry.*'` passed 23/23.
+- `./build/bin/standard_of_iron_tests --gtest_brief=1` currently reports 1021 passed, 20 skipped, 19 pre-existing failures (1060 total).
 
 Still open:
-- Cached static building `RenderInstance` submission (P1 - make static buildings submit from cached render instances).
 - Full terrain/scatter dirty-upload proof.
 - Equipment data handles and stable `AttachmentSetId` ownership.
 - Moving/confirming simulation query work outside render-thread captures.
@@ -44,6 +46,8 @@ Files:
 
 ### Make static buildings submit from cached render instances
 
+Status: done. `submit_building_instance()` now builds and stores per-entity cached `StoredRenderInstance` data (archetype pointer, palette, world matrix, default texture, LOD). Runtime submission uses `submit_render_instance()` with cached data, and invalidation is local to affected entities when state/owner/damage (archetype/palette), transform (world), or LOD bucket changes. Added cache stats (`hits`, `misses`, `rebuilds`) and regression tests for unchanged reuse and LOD-triggered rebuild.
+
 Files:
 - `render/entity/building_archetype_desc.*`
 - `render/render_archetype.*`
@@ -63,7 +67,7 @@ Acceptance:
 
 ### Stabilize draw queue memory
 
-Status: partially done. `DrawQueue` now tracks high-water marks for items and prepared batches, reserves items/sort indices/sort keys from the previous frame high-water mark, and `Renderer::begin_frame()` calls `reserve_for_frame()`. Tests cover capacity retention. Remaining work: broader audit of primitive/backend scratch buffers and measured allocator-sample reduction in gameplay captures.
+Status: done for the render-world/queue scope. `DrawQueue` retains and reuses command/sort/prepared-batch capacity via high-water marks and `reserve_for_frame()`. `Renderer::render_world()` now reuses thread-local scratch vectors for unit/building/other lists and a thread-local `PrimitiveBatcher`, removing avoidable per-frame vector and batcher construction in the hot path. Remaining long-term work is perf-capture validation and any additional backend scratch-buffer audits.
 
 Files:
 - `render/draw_queue.h`

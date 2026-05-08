@@ -4,6 +4,7 @@
 #include "../render_archetype.h"
 #include "building_state.h"
 #include "registry.h"
+#include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
@@ -22,6 +23,12 @@ struct BuildingSelectionStyle {
   float scale_z{1.5F};
 };
 
+struct BuildingInstanceCacheStats {
+  std::uint64_t hits{0};
+  std::uint64_t misses{0};
+  std::uint64_t rebuilds{0};
+};
+
 auto resolve_building_health_ratio(const DrawContext &ctx) -> float;
 auto resolve_building_state(const DrawContext &ctx) -> BuildingState;
 auto building_renderer_key(std::string_view nation_slug,
@@ -37,6 +44,8 @@ auto resolve_building_renderer_key(
 void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
                               const RenderArchetype &archetype,
                               std::span<const QVector3D> palette = {});
+auto get_building_instance_cache_stats() -> BuildingInstanceCacheStats;
+void reset_building_instance_cache_for_tests();
 void submit_building_box(ISubmitter &out, Mesh *mesh, Texture *texture,
                          const QMatrix4x4 &model, const QVector3D &pos,
                          const QVector3D &size, const QVector3D &color,

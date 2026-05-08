@@ -1016,9 +1016,12 @@ void Renderer::render_world(Engine::Core::World *world) {
   ++m_frame_counter;
 
   int visible_unit_count = 0;
-  std::vector<UnitRenderEntry> unit_entries;
-  std::vector<RenderEntry> building_entries;
-  std::vector<RenderEntry> other_entries;
+  static thread_local std::vector<UnitRenderEntry> unit_entries;
+  static thread_local std::vector<RenderEntry> building_entries;
+  static thread_local std::vector<RenderEntry> other_entries;
+  unit_entries.clear();
+  building_entries.clear();
+  other_entries.clear();
   unit_entries.reserve(unit_ids.size());
   building_entries.reserve(building_ids.size());
   other_entries.reserve(other_ids.size());
@@ -1180,7 +1183,8 @@ void Renderer::render_world(Engine::Core::World *world) {
   float batching_boost = battle_optimizer.get_batching_boost();
   batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
-  PrimitiveBatcher batcher;
+  static thread_local PrimitiveBatcher batcher;
+  batcher.clear();
   if (batching_ratio > 0.0F) {
     batcher.reserve(2000, 4000, 500);
   }
