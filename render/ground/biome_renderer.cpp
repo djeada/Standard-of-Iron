@@ -218,8 +218,11 @@ void BiomeRenderer::generate_grass_instances() {
     QVector3D const lush_mix =
         scatter_profile.grass_primary * (1.0F - lush_noise) +
         scatter_profile.grass_secondary * lush_noise;
-    QVector3D const color =
+    QVector3D const raw_color =
         lush_mix * (1.0F - dryness) + scatter_profile.grass_dry * dryness;
+    QVector3D const color =
+        contrast_grass_blade_color(raw_color, scatter_profile.soil_color,
+                                   scatter_profile.ground_type, dryness);
 
     float const height = remap(rand_01(state), scatter_profile.blade_height_min,
                                scatter_profile.blade_height_max) *

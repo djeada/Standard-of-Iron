@@ -85,6 +85,9 @@ public:
   [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
     return m_frame_stats;
   }
+  void reserve_for_frame(std::size_t expected_entries) {
+    m_entries.reserve(m_entries.size() + expected_entries);
+  }
 
   auto get_or_bake(const Key &key, const RiggedMeshEntry &source,
                    std::uint32_t global_frame) -> const SnapshotMeshEntry *;

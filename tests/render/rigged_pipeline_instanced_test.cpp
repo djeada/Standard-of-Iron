@@ -126,4 +126,19 @@ TEST(RiggedPipelineInstanced, HeadlessDrawInstancedRecordsBatchSize) {
   EXPECT_TRUE(pipe.batch_sizes_for_test().empty());
 }
 
+TEST(RiggedPipelineInstanced, HeadlessDrawInstancedPointerBatchReturnsFalse) {
+  RiggedCharacterPipeline pipe(nullptr, nullptr);
+
+  std::vector<RiggedCreatureCmd> cmds(5, make_cmd(k_mesh_a, k_mat_a));
+  std::vector<const RiggedCreatureCmd *> refs;
+  refs.reserve(cmds.size());
+  for (const auto &cmd : cmds) {
+    refs.push_back(&cmd);
+  }
+
+  bool ok = pipe.draw_instanced(refs.data(), refs.size(), QMatrix4x4{});
+  EXPECT_FALSE(ok);
+  EXPECT_TRUE(pipe.batch_sizes_for_test().empty());
+}
+
 } // namespace

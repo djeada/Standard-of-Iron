@@ -316,11 +316,13 @@ TEST(DrawQueueMemory, HighWaterMarkTrackedAfterClear) {
   EXPECT_EQ(queue.items_high_water(), 0U)
       << "High-water mark is updated by clear(), not sort_for_batching()";
   EXPECT_EQ(queue.prepared_high_water(), 0U);
+  EXPECT_EQ(queue.submission_bucket_high_water(), 0U);
 
   queue.clear();
 
   EXPECT_EQ(queue.items_high_water(), 50U);
   EXPECT_GE(queue.prepared_high_water(), 1U);
+  EXPECT_GE(queue.submission_bucket_high_water(), 1U);
 }
 
 TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
@@ -337,6 +339,10 @@ TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
   EXPECT_GE(queue.items().capacity(), 100U)
       << "reserve_for_frame() must retain capacity from previous frame "
          "high-water mark.";
+  EXPECT_GE(queue.submission_bucket_capacity(),
+            queue.submission_bucket_high_water())
+      << "reserve_for_frame() should pre-reserve submission bucket spans "
+         "based on previous frame high-water mark.";
 
   queue.clear();
   EXPECT_GE(queue.items().capacity(), 100U)

@@ -44,6 +44,8 @@ public:
 
   auto draw_instanced(const RiggedCreatureCmd *cmds, std::size_t count,
                       const QMatrix4x4 &view_proj) -> bool;
+  auto draw_instanced(const RiggedCreatureCmd *const *cmds, std::size_t count,
+                      const QMatrix4x4 &view_proj) -> bool;
 
   [[nodiscard]] auto shader() const -> GL::Shader * { return m_shader; }
   [[nodiscard]] auto instanced_shader() const -> GL::Shader * {
