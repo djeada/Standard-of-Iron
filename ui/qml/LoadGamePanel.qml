@@ -8,7 +8,7 @@ Item {
     id: root
 
     signal cancelled()
-    signal loadRequested(string slotName)
+    signal load_requested(string slot_name)
 
     anchors.fill: parent
     z: 25
@@ -17,10 +17,10 @@ Item {
             return ;
 
         if (typeof loadListModel !== 'undefined')
-            loadListModel.loadFromGame();
+            loadListModel.load_from_game();
 
         if (typeof loadListView !== 'undefined')
-            loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1;
+            loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? 0 : -1;
 
     }
     Keys.onPressed: function(event) {
@@ -28,18 +28,18 @@ Item {
             root.cancelled();
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
-            if (loadListView.selectedIndex < loadListModel.count - 1)
-                loadListView.selectedIndex++;
+            if (loadListView.selected_index < loadListModel.count - 1)
+                loadListView.selected_index++;
 
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            if (loadListView.selectedIndex > 0)
-                loadListView.selectedIndex--;
+            if (loadListView.selected_index > 0)
+                loadListView.selected_index--;
 
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty)
-                root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName);
+            if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
+                root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
 
             event.accepted = true;
         }
@@ -47,7 +47,7 @@ Item {
     Component.onCompleted: {
         forceActiveFocus();
         if (loadListModel.count > 0 && !loadListModel.get(0).isEmpty)
-            loadListView.selectedIndex = 0;
+            loadListView.selected_index = 0;
 
     }
 
@@ -57,13 +57,13 @@ Item {
                 return ;
 
             var previousSlot = "";
-            if (typeof loadListView !== 'undefined' && loadListView.selectedIndex >= 0 && loadListView.selectedIndex < loadListModel.count) {
-                var current = loadListModel.get(loadListView.selectedIndex);
+            if (typeof loadListView !== 'undefined' && loadListView.selected_index >= 0 && loadListView.selected_index < loadListModel.count) {
+                var current = loadListModel.get(loadListView.selected_index);
                 if (current && !current.isEmpty)
-                    previousSlot = current.slotName;
+                    previousSlot = current.slot_name;
 
             }
-            loadListModel.loadFromGame();
+            loadListModel.load_from_game();
             if (typeof loadListView === 'undefined')
                 return ;
 
@@ -71,7 +71,7 @@ Item {
             if (previousSlot !== "") {
                 for (var i = 0; i < loadListModel.count; ++i) {
                     var slot = loadListModel.get(i);
-                    if (!slot.isEmpty && slot.slotName === previousSlot) {
+                    if (!slot.isEmpty && slot.slot_name === previousSlot) {
                         newIndex = i;
                         break;
                     }
@@ -82,7 +82,7 @@ Item {
                     newIndex = 0;
 
             }
-            loadListView.selectedIndex = newIndex;
+            loadListView.selected_index = newIndex;
         }
 
         target: typeof game !== 'undefined' ? game : null
@@ -124,7 +124,7 @@ Item {
 
                 StyledButton {
                     text: qsTr("Cancel")
-                    buttonStyle: "secondary"
+                    button_style: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -152,18 +152,18 @@ Item {
                     ListView {
                         id: loadListView
 
-                        property int selectedIndex: -1
+                        property int selected_index: -1
 
                         spacing: Theme.spacingSmall
 
                         model: ListModel {
                             id: loadListModel
 
-                            function loadFromGame() {
+                            function load_from_game() {
                                 clear();
                                 if (typeof game === 'undefined' || !game.get_save_slots) {
                                     append({
-                                        "slotName": qsTr("No saves found"),
+                                        "slot_name": qsTr("No saves found"),
                                         "title": "",
                                         "timestamp": 0,
                                         "map_name": "",
@@ -176,8 +176,8 @@ Item {
                                 var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        "slotName": slots[i].slotName || slots[i].name,
-                                        "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        "slot_name": slots[i].slot_name || slots[i].name,
+                                        "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
                                         "timestamp": slots[i].timestamp,
                                         "map_name": slots[i].map_name || "Unknown Map",
                                         "playTime": slots[i].playTime || "",
@@ -187,7 +187,7 @@ Item {
                                 }
                                 if (count === 0)
                                     append({
-                                    "slotName": qsTr("No saves found"),
+                                    "slot_name": qsTr("No saves found"),
                                     "title": "",
                                     "timestamp": 0,
                                     "map_name": "",
@@ -199,16 +199,16 @@ Item {
                             }
 
                             Component.onCompleted: {
-                                loadFromGame();
+                                load_from_game();
                             }
                         }
 
                         delegate: Rectangle {
                             width: loadListView.width
                             height: model.isEmpty ? 100 : 130
-                            color: loadListView.selectedIndex === index ? Theme.selectedBg : mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
+                            color: loadListView.selected_index === index ? Theme.selectedBg : mouseArea.containsMouse ? Theme.hoverBg : Qt.rgba(0, 0, 0, 0)
                             radius: Theme.radiusMedium
-                            border.color: loadListView.selectedIndex === index ? Theme.selectedBr : Theme.cardBorder
+                            border.color: loadListView.selected_index === index ? Theme.selectedBr : Theme.cardBorder
                             border.width: 1
                             visible: !model.isEmpty || loadListModel.count === 1
 
@@ -264,7 +264,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: qsTr("Slot: %1").arg(model.slotName)
+                                        text: qsTr("Slot: %1").arg(model.slot_name)
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
@@ -303,7 +303,7 @@ Item {
                                 }
 
                                 Label {
-                                    text: model.slotName
+                                    text: model.slot_name
                                     color: Theme.textDim
                                     font.pointSize: Theme.fontSizeLarge
                                     Layout.fillWidth: true
@@ -313,21 +313,21 @@ Item {
 
                                 StyledButton {
                                     text: qsTr("Load")
-                                    buttonStyle: "small"
+                                    button_style: "small"
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        root.loadRequested(model.slotName);
+                                        root.load_requested(model.slot_name);
                                     }
                                 }
 
                                 StyledButton {
                                     text: qsTr("Delete")
-                                    buttonStyle: "danger"
+                                    button_style: "danger"
                                     implicitWidth: 80
                                     visible: !model.isEmpty
                                     onClicked: {
-                                        confirmDeleteDialog.slotName = model.slotName;
-                                        confirmDeleteDialog.slotIndex = index;
+                                        confirmDeleteDialog.slot_name = model.slot_name;
+                                        confirmDeleteDialog.slot_index = index;
                                         confirmDeleteDialog.open();
                                     }
                                 }
@@ -341,11 +341,11 @@ Item {
                                 hoverEnabled: true
                                 enabled: !model.isEmpty
                                 onClicked: {
-                                    loadListView.selectedIndex = index;
+                                    loadListView.selected_index = index;
                                 }
                                 onDoubleClicked: {
                                     if (!model.isEmpty)
-                                        root.loadRequested(model.slotName);
+                                        root.load_requested(model.slot_name);
 
                                 }
                             }
@@ -367,17 +367,17 @@ Item {
                 }
 
                 Label {
-                    text: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty ? qsTr("Selected: %1").arg(loadListModel.get(loadListView.selectedIndex).title) : qsTr("Select a save to load")
+                    text: loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty ? qsTr("Selected: %1").arg(loadListModel.get(loadListView.selected_index).title) : qsTr("Select a save to load")
                     color: Theme.textSub
                     font.pointSize: Theme.fontSizeMedium
                 }
 
                 StyledButton {
                     text: qsTr("Load Selected")
-                    enabled: loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty
+                    enabled: loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty
                     onClicked: {
-                        if (loadListView.selectedIndex >= 0 && !loadListModel.get(loadListView.selectedIndex).isEmpty)
-                            root.loadRequested(loadListModel.get(loadListView.selectedIndex).slotName);
+                        if (loadListView.selected_index >= 0 && !loadListModel.get(loadListView.selected_index).isEmpty)
+                            root.load_requested(loadListModel.get(loadListView.selected_index).slot_name);
 
                     }
                 }
@@ -391,8 +391,8 @@ Item {
     Dialog {
         id: confirmDeleteDialog
 
-        property string slotName: ""
-        property int slotIndex: -1
+        property string slot_name: ""
+        property int slot_index: -1
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 400)
@@ -401,11 +401,11 @@ Item {
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
             if (typeof game !== 'undefined' && game.delete_save_slot) {
-                if (game.delete_save_slot(slotName)) {
-                    loadListModel.remove(slotIndex);
+                if (game.delete_save_slot(slot_name)) {
+                    loadListModel.remove(slot_index);
                     if (loadListModel.count === 0)
                         loadListModel.append({
-                        "slotName": qsTr("No saves found"),
+                        "slot_name": qsTr("No saves found"),
                         "title": "",
                         "timestamp": 0,
                         "map_name": "",
@@ -414,8 +414,8 @@ Item {
                         "isEmpty": true
                     });
 
-                    if (loadListView.selectedIndex >= loadListModel.count)
-                        loadListView.selectedIndex = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
+                    if (loadListView.selected_index >= loadListModel.count)
+                        loadListView.selected_index = loadListModel.count > 0 && !loadListModel.get(0).isEmpty ? loadListModel.count - 1 : -1;
 
                 }
             }
@@ -433,7 +433,7 @@ Item {
                 Label {
                     id: warningText
 
-                    text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slotName)
+                    text: qsTr("Are you sure you want to delete the save:\n\"%1\"?\n\nThis action cannot be undone.").arg(confirmDeleteDialog.slot_name)
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true

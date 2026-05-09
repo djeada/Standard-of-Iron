@@ -6,15 +6,15 @@ import StandardOfIron 1.0
 Rectangle {
     id: root
 
-    property var mapPath: ""
-    property var playerConfigs: []
+    property var map_path: ""
+    property var player_configs: []
     property bool loading: false
-    property string previewId: ""
+    property string preview_id: ""
 
-    function refreshPreview() {
-        if (!mapPath || mapPath === "" || !playerConfigs || playerConfigs.length === 0) {
+    function refresh_preview() {
+        if (!map_path || map_path === "" || !player_configs || player_configs.length === 0) {
             previewImage.source = "";
-            previewId = "";
+            preview_id = "";
             return ;
         }
         if (typeof game === "undefined" || !game.generate_map_preview)
@@ -22,18 +22,18 @@ Rectangle {
 
         loading = true;
         try {
-            var configStr = JSON.stringify(playerConfigs);
+            var configStr = JSON.stringify(player_configs);
             var hash = 0;
             for (var i = 0; i < configStr.length; i++) {
                 var codePoint = configStr.charCodeAt(i);
                 hash = ((hash << 5) - hash) + codePoint;
                 hash = hash & hash;
             }
-            var newId = mapPath + "_" + hash + "_" + Date.now();
-            var preview = game.generate_map_preview(mapPath, playerConfigs);
+            var newId = map_path + "_" + hash + "_" + Date.now();
+            var preview = game.generate_map_preview(map_path, player_configs);
             if (typeof mapPreviewProvider !== "undefined") {
                 mapPreviewProvider.set_preview_image(newId, preview);
-                previewId = newId;
+                preview_id = newId;
                 previewImage.source = "image://mappreview/" + newId;
             }
             loading = false;
@@ -48,8 +48,8 @@ Rectangle {
     border.color: Theme.panelBr
     border.width: 1
     clip: true
-    onMapPathChanged: refreshPreview()
-    onPlayerConfigsChanged: refreshPreview()
+    onMap_pathChanged: refresh_preview()
+    onPlayer_configsChanged: refresh_preview()
 
     Text {
         id: titleText
@@ -122,7 +122,7 @@ Rectangle {
                 verticalAlignment: Text.AlignVCenter
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
-                visible: mapPath !== ""
+                visible: map_path !== ""
             }
 
         }
@@ -133,7 +133,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.status !== Image.Ready && mapPath === ""
+            visible: !loading && previewImage.status !== Image.Ready && map_path === ""
         }
 
         Text {
@@ -142,7 +142,7 @@ Rectangle {
             color: Theme.textHint
             font.pixelSize: 13
             horizontalAlignment: Text.AlignHCenter
-            visible: !loading && previewImage.status !== Image.Ready && mapPath !== ""
+            visible: !loading && previewImage.status !== Image.Ready && map_path !== ""
         }
 
         Item {

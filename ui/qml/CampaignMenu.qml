@@ -8,10 +8,10 @@ Item {
 
     property var campaigns: []
 
-    signal missionSelected(string campaignId)
+    signal mission_selected(string campaign_id)
     signal cancelled()
 
-    function refreshCampaigns() {
+    function refresh_campaigns() {
         if (typeof game !== "undefined" && game.available_campaigns)
             campaigns = game.available_campaigns;
 
@@ -35,7 +35,7 @@ Item {
     onVisibleChanged: {
         if (visible && typeof game !== "undefined" && game.load_campaigns) {
             game.load_campaigns();
-            refreshCampaigns();
+            refresh_campaigns();
         }
     }
     anchors.fill: parent
@@ -49,7 +49,7 @@ Item {
 
     Connections {
         function onAvailable_campaigns_changed() {
-            refreshCampaigns();
+            refresh_campaigns();
         }
 
         target: (typeof game !== "undefined") ? game : null
@@ -129,7 +129,7 @@ Item {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 missionDetailPanel.visible = true;
-                                missionDetailPanel.campaignData = modelData;
+                                missionDetailPanel.campaign_data = modelData;
                             }
                         }
 
@@ -250,16 +250,16 @@ Item {
     Rectangle {
         id: missionDetailPanel
 
-        property var campaignData: null
+        property var campaign_data: null
         property real map_orbit_yaw: 180
         property real map_orbit_pitch: 90
         property real map_orbit_distance: 1.2
         property var province_labels: []
-        property string hoverProvinceName: ""
-        property string hoverProvinceOwner: ""
-        property real hoverMouseX: 0
-        property real hoverMouseY: 0
-        property var ownerLegend: [{
+        property string hover_province_name: ""
+        property string hover_province_owner: ""
+        property real hover_mouse_x: 0
+        property real hover_mouse_y: 0
+        property var owner_legend: [{
             "name": qsTr("Rome"),
             "color": "#d01f1a"
         }, {
@@ -269,15 +269,15 @@ Item {
             "name": qsTr("Neutral"),
             "color": "#3a3a3a"
         }]
-        property var provinceSources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
+        property var province_sources: ["assets/campaign_map/provinces.json", "qrc:/assets/campaign_map/provinces.json", "qrc:/StandardOfIron/assets/campaign_map/provinces.json", "qrc:/qt/qml/StandardOfIron/assets/campaign_map/provinces.json"]
         property int label_refresh: 0
         property int current_mission_index: 7
 
-        function loadProvinces() {
-            loadProvincesFrom(0);
+        function load_provinces() {
+            load_provinces_from(0);
         }
 
-        function labelUvFor(prov) {
+        function label_uv_for(prov) {
             if (prov && prov.label_uv && prov.label_uv.length === 2)
                 return prov.label_uv;
 
@@ -303,7 +303,7 @@ Item {
             return [sumU / count, sumV / count];
         }
 
-        function provinceInfoFor(id) {
+        function province_info_for(id) {
             if (!id)
                 return null;
 
@@ -316,18 +316,18 @@ Item {
             return null;
         }
 
-        function loadProvincesFrom(index) {
-            if (index >= provinceSources.length)
+        function load_provinces_from(index) {
+            if (index >= province_sources.length)
                 return ;
 
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", provinceSources[index]);
+            xhr.open("GET", province_sources[index]);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState !== XMLHttpRequest.DONE)
                     return ;
 
                 if (xhr.status !== 200 && xhr.status !== 0) {
-                    loadProvincesFrom(index + 1);
+                    load_provinces_from(index + 1);
                     return ;
                 }
                 try {
@@ -342,14 +342,14 @@ Item {
                             }
                         }
                         if (!hasCities) {
-                            loadProvincesFrom(index + 1);
+                            load_provinces_from(index + 1);
                             return ;
                         }
                         missionDetailPanel.province_labels = data.provinces;
                         missionDetailPanel.label_refresh += 1;
                     }
                 } catch (e) {
-                    loadProvincesFrom(index + 1);
+                    load_provinces_from(index + 1);
                 }
             };
             xhr.send();
@@ -357,17 +357,17 @@ Item {
 
         onProvince_labels_changed: label_refresh += 1
         Component.onCompleted: {
-            refreshCampaigns();
+            refresh_campaigns();
             if (campaignMapLoader.item) {
                 var labels = campaignMapLoader.item.province_labels;
                 if (labels && labels.length > 0) {
                     missionDetailPanel.province_labels = labels;
                     missionDetailPanel.label_refresh += 1;
                 } else {
-                    loadProvinces();
+                    load_provinces();
                 }
             } else {
-                loadProvinces();
+                load_provinces();
             }
         }
         onCampaignDataChanged: {
@@ -406,7 +406,7 @@ Item {
                 spacing: Theme.spacingLarge
 
                 Label {
-                    text: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.title || "") : ""
+                    text: missionDetailPanel.campaign_data ? (missionDetailPanel.campaign_data.title || "") : ""
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeHero
                     font.bold: true
@@ -414,7 +414,7 @@ Item {
                 }
 
                 Label {
-                    text: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.description || "") : ""
+                    text: missionDetailPanel.campaign_data ? (missionDetailPanel.campaign_data.description || "") : ""
                     color: Theme.textSubLite
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
@@ -476,24 +476,24 @@ Item {
                     }
 
                     MouseArea {
-                        property real lastX: 0
-                        property real lastY: 0
+                        property real last_x: 0
+                        property real last_y: 0
 
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
                         onPressed: function(mouse) {
-                            lastX = mouse.x;
-                            lastY = mouse.y;
+                            last_x = mouse.x;
+                            last_y = mouse.y;
                         }
                         onPositionChanged: function(mouse) {
                             if (!(mouse.buttons & Qt.LeftButton))
                                 return ;
 
-                            var dx = mouse.x - lastX;
-                            var dy = mouse.y - lastY;
-                            lastX = mouse.x;
-                            lastY = mouse.y;
+                            var dx = mouse.x - last_x;
+                            var dy = mouse.y - last_y;
+                            last_x = mouse.x;
+                            last_y = mouse.y;
                             missionDetailPanel.map_orbit_yaw += dx * 0.4;
                             missionDetailPanel.map_orbit_pitch = Math.max(5, Math.min(90, missionDetailPanel.map_orbit_pitch + dy * 0.4));
                         }
@@ -501,32 +501,32 @@ Item {
                             if (!hoverEnabled || !campaignMapLoader.item)
                                 return ;
 
-                            missionDetailPanel.hoverMouseX = mouseX;
-                            missionDetailPanel.hoverMouseY = mouseY;
+                            missionDetailPanel.hover_mouse_x = mouseX;
+                            missionDetailPanel.hover_mouse_y = mouseY;
                             var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
                             var id = info && info.id ? info.id : "";
                             campaignMapLoader.item.hover_province_id = id;
-                            missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
-                            missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
+                            missionDetailPanel.hover_province_name = info && info.name ? info.name : "";
+                            missionDetailPanel.hover_province_owner = info && info.owner ? info.owner : "";
                         }
                         onMouseYChanged: function() {
                             if (!hoverEnabled || !campaignMapLoader.item)
                                 return ;
 
-                            missionDetailPanel.hoverMouseX = mouseX;
-                            missionDetailPanel.hoverMouseY = mouseY;
+                            missionDetailPanel.hover_mouse_x = mouseX;
+                            missionDetailPanel.hover_mouse_y = mouseY;
                             var info = campaignMapLoader.item.province_info_at_screen(mouseX, mouseY);
                             var id = info && info.id ? info.id : "";
                             campaignMapLoader.item.hover_province_id = id;
-                            missionDetailPanel.hoverProvinceName = info && info.name ? info.name : "";
-                            missionDetailPanel.hoverProvinceOwner = info && info.owner ? info.owner : "";
+                            missionDetailPanel.hover_province_name = info && info.name ? info.name : "";
+                            missionDetailPanel.hover_province_owner = info && info.owner ? info.owner : "";
                         }
                         onExited: {
                             if (campaignMapLoader.item)
                                 campaignMapLoader.item.hover_province_id = "";
 
-                            missionDetailPanel.hoverProvinceName = "";
-                            missionDetailPanel.hoverProvinceOwner = "";
+                            missionDetailPanel.hover_province_name = "";
+                            missionDetailPanel.hover_province_owner = "";
                         }
                         onWheel: function(wheel) {
                             var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
@@ -543,8 +543,8 @@ Item {
 
                         property int _refresh: missionDetailPanel.label_refresh
                         property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
-                        property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
-                        property int _iconIndex: 0
+                        property var icon_sources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+                        property int icon_index: 0
 
                         visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0
                         z: 10
@@ -574,7 +574,7 @@ Item {
                         }
 
                         Image {
-                            source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
+                            source: hannibalIcon.icon_sources[hannibalIcon.icon_index]
                             width: 36
                             height: 36
                             x: -width / 2
@@ -585,9 +585,9 @@ Item {
                             cache: true
                             asynchronous: false
                             onStatusChanged: {
-                                if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
-                                    hannibalIcon._iconIndex += 1;
-                                    source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                                if (status === Image.Error && hannibalIcon.icon_index + 1 < hannibalIcon.icon_sources.length) {
+                                    hannibalIcon.icon_index += 1;
+                                    source = hannibalIcon.icon_sources[hannibalIcon.icon_index];
                                 }
                             }
                         }
@@ -651,9 +651,9 @@ Item {
                         model: missionDetailPanel.province_labels
 
                         delegate: Text {
-                            property var _labelUv: missionDetailPanel.labelUvFor(modelData)
+                            property var label_uv: missionDetailPanel.label_uv_for(modelData)
                             property int _refresh: missionDetailPanel.label_refresh
-                            property var _pos: (_labelUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_labelUv[0], _labelUv[1]) : Qt.point(0, 0)
+                            property var _pos: (label_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(label_uv[0], label_uv[1]) : Qt.point(0, 0)
 
                             visible: false
                             text: modelData.name
@@ -679,12 +679,12 @@ Item {
                             model: _cities
 
                             delegate: Item {
-                                property var cityData: modelData
-                                property var _cityUv: cityData.uv && cityData.uv.length === 2 ? cityData.uv : null
+                                property var city_data: modelData
+                                property var city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
                                 property int _refresh: missionDetailPanel.label_refresh
-                                property var _pos: (_cityUv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_cityUv[0], _cityUv[1]) : Qt.point(0, 0)
+                                property var _pos: (city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(city_uv[0], city_uv[1]) : Qt.point(0, 0)
 
-                                visible: _cityUv !== null && cityData.name && cityData.name.length > 0
+                                visible: city_uv !== null && city_data.name && city_data.name.length > 0
                                 z: 4
                                 x: _pos.x
                                 y: _pos.y
@@ -701,7 +701,7 @@ Item {
                                 }
 
                                 Text {
-                                    text: cityData.name
+                                    text: city_data.name
                                     color: "#111111"
                                     font.pointSize: Theme.fontSizeTiny
                                     font.bold: true
@@ -720,9 +720,9 @@ Item {
                     Rectangle {
                         id: hoverTooltip
 
-                        visible: campaignMap.hover_province_id !== "" && missionDetailPanel.hoverProvinceName !== ""
-                        x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseX + 12))
-                        y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hoverMouseY + 12))
+                        visible: campaignMap.hover_province_id !== "" && missionDetailPanel.hover_province_name !== ""
+                        x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hover_mouse_x + 12))
+                        y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, missionDetailPanel.hover_mouse_y + 12))
                         radius: 6
                         color: "#1a1a1a"
                         border.color: "#2c2c2c"
@@ -736,7 +736,7 @@ Item {
                             spacing: 2
 
                             Label {
-                                text: missionDetailPanel.hoverProvinceName
+                                text: missionDetailPanel.hover_province_name
                                 color: "#ffffff"
                                 style: Text.Outline
                                 styleColor: "#000000"
@@ -745,7 +745,7 @@ Item {
                             }
 
                             Label {
-                                text: qsTr("Control: ") + missionDetailPanel.hoverProvinceOwner
+                                text: qsTr("Control: ") + missionDetailPanel.hover_province_owner
                                 color: "#ffffff"
                                 style: Text.Outline
                                 styleColor: "#000000"
@@ -770,7 +770,7 @@ Item {
                     }
 
                     Repeater {
-                        model: missionDetailPanel.ownerLegend
+                        model: missionDetailPanel.owner_legend
 
                         delegate: RowLayout {
                             spacing: Theme.spacingTiny
@@ -818,7 +818,7 @@ Item {
                     ListView {
                         id: missionListView
 
-                        model: missionDetailPanel.campaignData ? (missionDetailPanel.campaignData.missions || []) : []
+                        model: missionDetailPanel.campaign_data ? (missionDetailPanel.campaign_data.missions || []) : []
                         spacing: Theme.spacingMedium
 
                         delegate: Rectangle {
@@ -836,8 +836,8 @@ Item {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: {
-                                    if (missionDetailPanel.campaignData && modelData.mission_id)
-                                        root.missionSelected(missionDetailPanel.campaignData.id + "/" + modelData.mission_id);
+                                    if (missionDetailPanel.campaign_data && modelData.mission_id)
+                                        root.mission_selected(missionDetailPanel.campaign_data.id + "/" + modelData.mission_id);
 
                                 }
                                 onContainsMouseChanged: {

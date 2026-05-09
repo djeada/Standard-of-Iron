@@ -56,7 +56,7 @@ QtObject {
             "normalBorder": historical.bronze,
             "hoverBorder": historical.bronze,
             "disabledBorder": palette.panelBr,
-            "textColor": palette.textMain,
+            "text_color": palette.textMain,
             "disabledTextColor": palette.textDim,
             "radius": 9,
             "height": 40,
@@ -72,7 +72,7 @@ QtObject {
             "normalBorder": historical.bronzeDeep,
             "hoverBorder": palette.thumbBr,
             "disabledBorder": palette.panelBr,
-            "textColor": palette.textBright,
+            "text_color": palette.textBright,
             "disabledTextColor": palette.textDim,
             "radius": 8,
             "height": 38,
@@ -88,7 +88,7 @@ QtObject {
             "normalBorder": Qt.lighter(palette.addColor, 1.1),
             "hoverBorder": Qt.lighter(palette.addColor, 1.3),
             "disabledBorder": palette.thumbBr,
-            "textColor": "white",
+            "text_color": "white",
             "disabledTextColor": palette.textDim,
             "radius": 6,
             "height": 32,
@@ -104,7 +104,7 @@ QtObject {
             "normalBorder": palette.dangerColor,
             "hoverBorder": palette.dangerColor,
             "disabledBorder": palette.thumbBr,
-            "textColor": palette.dangerColor,
+            "text_color": palette.dangerColor,
             "hoverTextColor": "white",
             "disabledTextColor": palette.textDim,
             "radius": 4,
@@ -123,7 +123,7 @@ QtObject {
         "selectedBg": palette.selected,
         "selectedBorder": palette.selectedBr
     })
-    readonly property var listItem: ({
+    readonly property var list_item: ({
         "height": 48,
         "radius": 6,
         "spacing": 10,
@@ -136,7 +136,7 @@ QtObject {
         "normal": 160,
         "slow": 200
     })
-    readonly property var unitIcons: ({
+    readonly property var unit_icons: ({
         "archer": "🏹",
         "swordsman": "⚔️",
         "spearman": "🛡️",
@@ -154,88 +154,88 @@ QtObject {
         "home": "🏠",
         "default": "👤"
     })
-    readonly property var unitIconSources: ({
+    readonly property var unit_icon_sources: ({
         "archer": ({
-            "default": root.iconPath("archer_rome.png"),
-            "roman_republic": root.iconPath("archer_rome.png"),
-            "carthage": root.iconPath("archer_cartaghe.png")
+            "default": root.icon_path("archer_rome.png"),
+            "roman_republic": root.icon_path("archer_rome.png"),
+            "carthage": root.icon_path("archer_cartaghe.png")
         }),
         "swordsman": ({
-            "default": root.iconPath("swordsman_rome.png"),
-            "roman_republic": root.iconPath("swordsman_rome.png"),
-            "carthage": root.iconPath("swordsman_cartaghe.png")
+            "default": root.icon_path("swordsman_rome.png"),
+            "roman_republic": root.icon_path("swordsman_rome.png"),
+            "carthage": root.icon_path("swordsman_cartaghe.png")
         }),
         "spearman": ({
-            "default": root.iconPath("spearman_rome.png"),
-            "roman_republic": root.iconPath("spearman_rome.png"),
-            "carthage": root.iconPath("spearman_cartaghe.png")
+            "default": root.icon_path("spearman_rome.png"),
+            "roman_republic": root.icon_path("spearman_rome.png"),
+            "carthage": root.icon_path("spearman_cartaghe.png")
         }),
         "horse_swordsman": ({
-            "default": root.iconPath("horse_swordsman_rome.png"),
-            "roman_republic": root.iconPath("horse_swordsman_rome.png"),
-            "carthage": root.iconPath("horse_swordsman_cartaghe.png")
+            "default": root.icon_path("horse_swordsman_rome.png"),
+            "roman_republic": root.icon_path("horse_swordsman_rome.png"),
+            "carthage": root.icon_path("horse_swordsman_cartaghe.png")
         }),
         "horse_archer": ({
-            "default": root.iconPath("horse_archer_rome.png"),
-            "roman_republic": root.iconPath("horse_archer_rome.png"),
-            "carthage": root.iconPath("horse_archer_cartaghe.png")
+            "default": root.icon_path("horse_archer_rome.png"),
+            "roman_republic": root.icon_path("horse_archer_rome.png"),
+            "carthage": root.icon_path("horse_archer_cartaghe.png")
         }),
         "horse_spearman": ({
-            "default": root.iconPath("horse_spearman_rome.png"),
-            "roman_republic": root.iconPath("horse_spearman_rome.png"),
-            "carthage": root.iconPath("horse_spearman_cartaghe.png")
+            "default": root.icon_path("horse_spearman_rome.png"),
+            "roman_republic": root.icon_path("horse_spearman_rome.png"),
+            "carthage": root.icon_path("horse_spearman_cartaghe.png")
         }),
         "healer": ({
-            "default": root.iconPath("healer_rome.png"),
-            "roman_republic": root.iconPath("healer_rome.png"),
-            "carthage": root.iconPath("healer_cartaghe.png")
+            "default": root.icon_path("healer_rome.png"),
+            "roman_republic": root.icon_path("healer_rome.png"),
+            "carthage": root.icon_path("healer_cartaghe.png")
         }),
         "civilian": ({
-            "default": root.iconPath("builder_rome.png"),
-            "roman_republic": root.iconPath("builder_rome.png"),
-            "carthage": root.iconPath("builder_cartaghe.png")
+            "default": root.icon_path("builder_rome.png"),
+            "roman_republic": root.icon_path("builder_rome.png"),
+            "carthage": root.icon_path("builder_cartaghe.png")
         }),
         "builder": ({
-            "default": root.iconPath("builder_rome.png"),
-            "roman_republic": root.iconPath("builder_rome.png"),
-            "carthage": root.iconPath("builder_cartaghe.png")
+            "default": root.icon_path("builder_rome.png"),
+            "roman_republic": root.icon_path("builder_rome.png"),
+            "carthage": root.icon_path("builder_cartaghe.png")
         }),
         "catapult": ({
-            "default": root.iconPath("catapult_rome.png"),
-            "roman_republic": root.iconPath("catapult_rome.png"),
-            "carthage": root.iconPath("catapult_cartaghe.png")
+            "default": root.icon_path("catapult_rome.png"),
+            "roman_republic": root.icon_path("catapult_rome.png"),
+            "carthage": root.icon_path("catapult_cartaghe.png")
         }),
         "ballista": ({
-            "default": root.iconPath("ballista_rome.png"),
-            "roman_republic": root.iconPath("ballista_rome.png"),
-            "carthage": root.iconPath("ballista_cartaghe.png")
+            "default": root.icon_path("ballista_rome.png"),
+            "roman_republic": root.icon_path("ballista_rome.png"),
+            "carthage": root.icon_path("ballista_cartaghe.png")
         }),
         "elephant": ({
-            "default": root.iconPath("elephant_cartaghe.png"),
-            "roman_republic": root.iconPath("elephant_cartaghe.png"),
-            "carthage": root.iconPath("elephant_cartaghe.png")
+            "default": root.icon_path("elephant_cartaghe.png"),
+            "roman_republic": root.icon_path("elephant_cartaghe.png"),
+            "carthage": root.icon_path("elephant_cartaghe.png")
         }),
         "defense_tower": ({
-            "default": root.iconPath("defense_tower_rome.png"),
-            "roman_republic": root.iconPath("defense_tower_rome.png"),
-            "carthage": root.iconPath("defense_tower_cartaghe.png")
+            "default": root.icon_path("defense_tower_rome.png"),
+            "roman_republic": root.icon_path("defense_tower_rome.png"),
+            "carthage": root.icon_path("defense_tower_cartaghe.png")
         }),
         "wall": ({
-            "default": root.iconPath("wall_rome.png"),
-            "roman_republic": root.iconPath("wall_rome.png"),
-            "carthage": root.iconPath("wall_cartaghe.png")
+            "default": root.icon_path("wall_rome.png"),
+            "roman_republic": root.icon_path("wall_rome.png"),
+            "carthage": root.icon_path("wall_cartaghe.png")
         }),
         "home": ({
-            "default": root.iconPath("house_rome.png"),
-            "roman_republic": root.iconPath("house_rome.png"),
-            "carthage": root.iconPath("house_cartaghe.png")
+            "default": root.icon_path("house_rome.png"),
+            "roman_republic": root.icon_path("house_rome.png"),
+            "carthage": root.icon_path("house_cartaghe.png")
         }),
         "default": ({
             "default": ""
         })
     })
 
-    function iconPath(filename) {
+    function icon_path(filename) {
         return Qt.resolvedUrl("../../assets/visuals/icons/" + filename);
     }
 

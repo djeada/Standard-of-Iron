@@ -6,17 +6,17 @@ Item {
 
     property var colors: ({
     })
-    property var playersModel: null
-    property var teamIcons: []
-    property var currentMapData: null
-    property string mapTitle: "Select a map"
-    property string mapPreview: ""
+    property var players_model: null
+    property var team_icons: []
+    property var current_map_data: null
+    property string map_title: "Select a map"
+    property string map_preview: ""
 
-    signal addCPUClicked()
-    signal removePlayerClicked(int index)
-    signal playerColorClicked(int index)
-    signal playerTeamClicked(int index)
-    signal playerFactionClicked(int index)
+    signal add_cpu_clicked()
+    signal remove_player_clicked(int index)
+    signal player_color_clicked(int index)
+    signal player_team_clicked(int index)
+    signal player_faction_clicked(int index)
 
     anchors.fill: parent
 
@@ -24,36 +24,36 @@ Item {
         id: playerListItemComponent
 
         Loader {
-            property var itemColors: root.colors
-            property var itemPlayerData: model
-            property var itemTeamIcons: root.teamIcons
-            property bool itemCanRemove: !model.isHuman
+            property var item_colors: root.colors
+            property var item_player_data: model
+            property var item_team_icons: root.team_icons
+            property bool item_can_remove: !model.isHuman
 
             source: "./PlayerListItem.qml"
             onLoaded: {
                 item.colors = Qt.binding(function() {
-                    return itemColors;
+                    return item_colors;
                 });
-                item.playerData = Qt.binding(function() {
-                    return itemPlayerData;
+                item.player_data = Qt.binding(function() {
+                    return item_player_data;
                 });
-                item.teamIcons = Qt.binding(function() {
-                    return itemTeamIcons;
+                item.team_icons = Qt.binding(function() {
+                    return item_team_icons;
                 });
-                item.canRemove = Qt.binding(function() {
-                    return itemCanRemove;
+                item.can_remove = Qt.binding(function() {
+                    return item_can_remove;
                 });
-                item.removeClicked.connect(function() {
-                    root.removePlayerClicked(index);
+                item.remove_clicked.connect(function() {
+                    root.remove_player_clicked(index);
                 });
-                item.colorClicked.connect(function() {
-                    root.playerColorClicked(index);
+                item.color_clicked.connect(function() {
+                    root.player_color_clicked(index);
                 });
-                item.teamClicked.connect(function() {
-                    root.playerTeamClicked(index);
+                item.team_clicked.connect(function() {
+                    root.player_team_clicked(index);
                 });
-                item.factionClicked.connect(function() {
-                    root.playerFactionClicked(index);
+                item.faction_clicked.connect(function() {
+                    root.player_faction_clicked(index);
                 });
             }
         }
@@ -63,7 +63,7 @@ Item {
     Text {
         id: title
 
-        text: root.mapTitle
+        text: root.map_title
         color: colors.textMain
         font.pixelSize: 20
         font.bold: true
@@ -92,7 +92,7 @@ Item {
         Text {
             id: playerSectionTitle
 
-            text: "Players (" + (playersModel ? playersModel.count : 0) + ")"
+            text: "Players (" + (players_model ? players_model.count : 0) + ")"
             color: colors.textMain
             font.pixelSize: 16
             font.bold: true
@@ -137,7 +137,7 @@ Item {
 
                 anchors.fill: parent
                 anchors.margins: 8
-                model: root.playersModel
+                model: root.players_model
                 spacing: 6
                 clip: true
                 boundsBehavior: Flickable.StopAtBounds
@@ -145,7 +145,7 @@ Item {
 
                 Item {
                     anchors.fill: parent
-                    visible: !playersModel || playersModel.count === 0
+                    visible: !players_model || players_model.count === 0
 
                     Text {
                         anchors.centerIn: parent
@@ -169,16 +169,16 @@ Item {
 
             text: "+ Add CPU"
             enabled: {
-                if (!currentMapData || !currentMapData.player_ids)
+                if (!current_map_data || !current_map_data.player_ids)
                     return false;
 
-                if (!playersModel)
+                if (!players_model)
                     return false;
 
-                return playersModel.count < currentMapData.player_ids.length;
+                return players_model.count < current_map_data.player_ids.length;
             }
             hoverEnabled: true
-            onClicked: root.addCPUClicked()
+            onClicked: root.add_cpu_clicked()
 
             anchors {
                 bottom: parent.bottom
@@ -230,13 +230,13 @@ Item {
 
         Text {
             text: {
-                if (!currentMapData || !currentMapData.player_ids)
+                if (!current_map_data || !current_map_data.player_ids)
                     return "";
 
-                if (!playersModel)
+                if (!players_model)
                     return "";
 
-                var available = currentMapData.player_ids.length - playersModel.count;
+                var available = current_map_data.player_ids.length - players_model.count;
                 if (available <= 0)
                     return "Max players reached";
 
@@ -276,7 +276,7 @@ Item {
             id: previewImage
 
             anchors.fill: parent
-            source: root.mapPreview
+            source: root.map_preview
             asynchronous: true
             fillMode: Image.PreserveAspectFit
             visible: status === Image.Ready

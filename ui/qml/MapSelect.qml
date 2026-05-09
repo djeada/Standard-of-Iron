@@ -6,27 +6,27 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    property var mapsModel: (typeof game !== "undefined" && game.available_maps) ? game.available_maps : []
-    property bool mapsLoading: (typeof game !== "undefined" && game.maps_loading) ? game.maps_loading : false
-    property int selectedMapIndex: -1
-    property var selectedMapData: null
-    property string selectedMapPath: ""
-    property string validationError: ""
-    property var availableNations: []
+    property var maps_model: (typeof game !== "undefined" && game.available_maps) ? game.available_maps : []
+    property bool maps_loading: (typeof game !== "undefined" && game.maps_loading) ? game.maps_loading : false
+    property int selected_map_index: -1
+    property var selected_map_data: null
+    property string selected_map_path: ""
+    property string validation_error: ""
+    property var available_nations: []
 
-    signal mapChosen(string map_path, var playerConfigs)
+    signal map_chosen(string map_path, var player_configs)
     signal cancelled()
 
-    function refreshAvailableNations() {
+    function refresh_available_nations() {
         if (typeof game !== "undefined" && game.available_nations)
-            availableNations = game.available_nations;
+            available_nations = game.available_nations;
         else
-            availableNations = [];
+            available_nations = [];
     }
 
-    function defaultNationEntry() {
-        if (availableNations && availableNations.length > 0)
-            return availableNations[0];
+    function default_nation_entry() {
+        if (available_nations && available_nations.length > 0)
+            return available_nations[0];
 
         return {
             "id": "roman_republic",
@@ -34,10 +34,10 @@ Item {
         };
     }
 
-    function hasMinimumDistinctTeams() {
+    function has_minimum_distinct_teams() {
         let enabledPlayers = [];
-        for (let i = 0; i < playersModel.count; i++) {
-            let p = playersModel.get(i);
+        for (let i = 0; i < players_model.count; i++) {
+            let p = players_model.get(i);
             if (p.isEnabled)
                 enabledPlayers.push(p);
 
@@ -52,26 +52,26 @@ Item {
         return teams.size >= 2;
     }
 
-    function updateValidationError() {
+    function update_validation_error() {
         let enabledCount = 0;
-        for (let i = 0; i < playersModel.count; i++) {
-            if (playersModel.get(i).isEnabled)
+        for (let i = 0; i < players_model.count; i++) {
+            if (players_model.get(i).isEnabled)
                 enabledCount++;
 
         }
         if (enabledCount < 2)
-            validationError = "Need at least 2 enabled players to start";
-        else if (!hasMinimumDistinctTeams())
-            validationError = "At least two teams must be selected to start a match";
+            validation_error = "Need at least 2 enabled players to start";
+        else if (!has_minimum_distinct_teams())
+            validation_error = "At least two teams must be selected to start a match";
         else
-            validationError = "";
+            validation_error = "";
     }
 
     function field(obj, key) {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
     }
 
-    function nationEmblemFor(nationId) {
+    function nation_emblem_for(nationId) {
         if (!nationId || !Theme.nationEmblems)
             return "";
 
@@ -82,32 +82,32 @@ Item {
         return String(emblem);
     }
 
-    function getMapData(index) {
-        if (!mapsModel || index < 0 || index >= (mapsModel.length || list.count))
+    function get_map_data(index) {
+        if (!maps_model || index < 0 || index >= (maps_model.length || list.count))
             return null;
 
-        let m = (mapsModel.length !== undefined) ? mapsModel[index] : null;
+        let m = (maps_model.length !== undefined) ? maps_model[index] : null;
         if (m && m.get)
             return m.get(index);
 
         return m;
     }
 
-    function initializePlayers(mapData) {
-        playersModel.clear();
+    function initialize_players(mapData) {
+        players_model.clear();
         if (!mapData || !mapData.player_ids || mapData.player_ids.length === 0)
             return ;
 
         let humanPlayerId = mapData.player_ids.length > 0 ? mapData.player_ids[0] : 1;
-        let defaultNation = defaultNationEntry();
-        playersModel.append({
+        let defaultNation = default_nation_entry();
+        players_model.append({
             "player_id": humanPlayerId,
             "playerName": "Player " + (humanPlayerId + 1),
             "colorIndex": 0,
             "colorHex": Theme.playerColors[0].hex,
             "colorName": Theme.playerColors[0].name,
             "team_id": 0,
-            "teamIcon": Theme.teamIcons[0],
+            "teamIcon": Theme.team_icons[0],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
             "isHuman": true,
@@ -117,24 +117,24 @@ Item {
             return id !== humanPlayerId;
         });
         if (cpuId !== undefined)
-            addCPU();
+            add_cpu();
 
-        updateValidationError();
+        update_validation_error();
     }
 
-    function addCPU() {
-        if (!selectedMapData || !selectedMapData.player_ids)
+    function add_cpu() {
+        if (!selected_map_data || !selected_map_data.player_ids)
             return ;
 
-        if (playersModel.count >= selectedMapData.player_ids.length)
+        if (players_model.count >= selected_map_data.player_ids.length)
             return ;
 
         let usedIds = [];
-        for (let i = 0; i < playersModel.count; i++) usedIds.push(playersModel.get(i).player_id)
+        for (let i = 0; i < players_model.count; i++) usedIds.push(players_model.get(i).player_id)
         let nextId = -1;
-        for (let j = 0; j < selectedMapData.player_ids.length; j++) {
-            if (usedIds.indexOf(selectedMapData.player_ids[j]) === -1) {
-                nextId = selectedMapData.player_ids[j];
+        for (let j = 0; j < selected_map_data.player_ids.length; j++) {
+            if (usedIds.indexOf(selected_map_data.player_ids[j]) === -1) {
+                nextId = selected_map_data.player_ids[j];
                 break;
             }
         }
@@ -142,7 +142,7 @@ Item {
             return ;
 
         let usedColors = [];
-        for (let k = 0; k < playersModel.count; k++) usedColors.push(playersModel.get(k).colorIndex)
+        for (let k = 0; k < players_model.count; k++) usedColors.push(players_model.get(k).colorIndex)
         let colorIdx = 0;
         for (let c = 0; c < Theme.playerColors.length; c++) {
             if (usedColors.indexOf(c) === -1) {
@@ -150,45 +150,45 @@ Item {
                 break;
             }
         }
-        let defaultTeamId = playersModel.count > 0 ? 1 : 0;
-        let defaultNation = defaultNationEntry();
-        playersModel.append({
+        let defaultTeamId = players_model.count > 0 ? 1 : 0;
+        let defaultNation = default_nation_entry();
+        players_model.append({
             "player_id": nextId,
             "playerName": "CPU " + nextId,
             "colorIndex": colorIdx,
             "colorHex": Theme.playerColors[colorIdx].hex,
             "colorName": Theme.playerColors[colorIdx].name,
             "team_id": defaultTeamId,
-            "teamIcon": Theme.teamIcons[defaultTeamId],
+            "teamIcon": Theme.team_icons[defaultTeamId],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
             "isHuman": false,
             "isEnabled": true
         });
-        updateValidationError();
+        update_validation_error();
     }
 
-    function removePlayer(index) {
-        if (index < 0 || index >= playersModel.count)
+    function remove_player(index) {
+        if (index < 0 || index >= players_model.count)
             return ;
 
-        let p = playersModel.get(index);
+        let p = players_model.get(index);
         if (p.isHuman)
             return ;
 
-        playersModel.remove(index);
-        updateValidationError();
+        players_model.remove(index);
+        update_validation_error();
     }
 
-    function cyclePlayerColor(index) {
-        if (index < 0 || index >= playersModel.count)
+    function cycle_player_color(index) {
+        if (index < 0 || index >= players_model.count)
             return ;
 
-        let p = playersModel.get(index);
+        let p = players_model.get(index);
         let usedColors = [];
-        for (let i = 0; i < playersModel.count; i++) {
+        for (let i = 0; i < players_model.count; i++) {
             if (i !== index)
-                usedColors.push(playersModel.get(i).colorIndex);
+                usedColors.push(players_model.get(i).colorIndex);
 
         }
         let startIdx = p.colorIndex;
@@ -201,58 +201,58 @@ Item {
         if (attempts >= Theme.playerColors.length)
             newIdx = (startIdx + 1) % Theme.playerColors.length;
 
-        playersModel.setProperty(index, "colorIndex", newIdx);
-        playersModel.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
-        playersModel.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
+        players_model.setProperty(index, "colorIndex", newIdx);
+        players_model.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
+        players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
     }
 
-    function cyclePlayerTeam(index) {
-        if (index < 0 || index >= playersModel.count)
+    function cycle_player_team(index) {
+        if (index < 0 || index >= players_model.count)
             return ;
 
-        let p = playersModel.get(index);
-        let maxTeam = Math.min(8, playersModel.count);
+        let p = players_model.get(index);
+        let maxTeam = Math.min(8, players_model.count);
         let newTeamId = (p.team_id + 1) % (maxTeam + 1);
-        playersModel.setProperty(index, "team_id", newTeamId);
-        playersModel.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId]);
-        updateValidationError();
+        players_model.setProperty(index, "team_id", newTeamId);
+        players_model.setProperty(index, "teamIcon", Theme.team_icons[newTeamId]);
+        update_validation_error();
     }
 
-    function cyclePlayerNation(index) {
-        if (index < 0 || index >= playersModel.count)
+    function cycle_player_nation(index) {
+        if (index < 0 || index >= players_model.count)
             return ;
 
-        if (!availableNations || availableNations.length === 0)
+        if (!available_nations || available_nations.length === 0)
             return ;
 
-        let p = playersModel.get(index);
-        let currentId = p.nationId || availableNations[0].id;
+        let p = players_model.get(index);
+        let currentId = p.nationId || available_nations[0].id;
         let nextIndex = 0;
-        for (let i = 0; i < availableNations.length; i++) {
-            if (availableNations[i].id === currentId) {
-                nextIndex = (i + 1) % availableNations.length;
+        for (let i = 0; i < available_nations.length; i++) {
+            if (available_nations[i].id === currentId) {
+                nextIndex = (i + 1) % available_nations.length;
                 break;
             }
         }
-        let nextNation = availableNations[nextIndex];
-        playersModel.setProperty(index, "nationId", nextNation.id);
-        playersModel.setProperty(index, "nationName", nextNation.name);
+        let nextNation = available_nations[nextIndex];
+        players_model.setProperty(index, "nationId", nextNation.id);
+        players_model.setProperty(index, "nationName", nextNation.name);
     }
 
-    function togglePlayerEnabled(index) {
-        if (index < 0 || index >= playersModel.count)
+    function toggle_player_enabled(index) {
+        if (index < 0 || index >= players_model.count)
             return ;
 
-        let p = playersModel.get(index);
+        let p = players_model.get(index);
         let newEnabled = !p.isEnabled;
-        playersModel.setProperty(index, "isEnabled", newEnabled);
-        updateValidationError();
+        players_model.setProperty(index, "isEnabled", newEnabled);
+        update_validation_error();
     }
 
-    function getPlayerConfigs() {
+    function get_player_configs() {
         let configs = [];
-        for (let i = 0; i < playersModel.count; i++) {
-            let p = playersModel.get(i);
+        for (let i = 0; i < players_model.count; i++) {
+            let p = players_model.get(i);
             if (!p.isEnabled)
                 continue;
 
@@ -269,59 +269,59 @@ Item {
         return configs;
     }
 
-    function acceptSelection() {
-        if (selectedMapIndex < 0 || !selectedMapPath)
+    function accept_selection() {
+        if (selected_map_index < 0 || !selected_map_path)
             return ;
 
         let enabledCount = 0;
-        for (let i = 0; i < playersModel.count; i++) {
-            if (playersModel.get(i).isEnabled)
+        for (let i = 0; i < players_model.count; i++) {
+            if (players_model.get(i).isEnabled)
                 enabledCount++;
 
         }
         if (enabledCount < 2) {
             console.log("MapSelect: Need at least 2 enabled players to start");
-            updateValidationError();
+            update_validation_error();
             return ;
         }
-        if (!hasMinimumDistinctTeams()) {
+        if (!has_minimum_distinct_teams()) {
             console.log("MapSelect: Need at least 2 different teams to start");
-            updateValidationError();
+            update_validation_error();
             return ;
         }
-        validationError = "";
-        let configs = getPlayerConfigs();
+        validation_error = "";
+        let configs = get_player_configs();
         console.log("MapSelect: Starting game with", configs.length, "enabled players");
-        root.mapChosen(selectedMapPath, configs);
+        root.map_chosen(selected_map_path, configs);
     }
 
-    function playerColorClicked(index) {
-        cyclePlayerColor(index);
+    function player_color_clicked(index) {
+        cycle_player_color(index);
     }
 
-    function playerTeamClicked(index) {
-        cyclePlayerTeam(index);
+    function player_team_clicked(index) {
+        cycle_player_team(index);
     }
 
-    function addCPUClicked() {
-        addCPU();
+    function add_cpu_clicked() {
+        add_cpu();
     }
 
-    function removePlayerClicked(index) {
-        removePlayer(index);
+    function remove_player_clicked(index) {
+        remove_player(index);
     }
 
-    Component.onCompleted: refreshAvailableNations()
+    Component.onCompleted: refresh_available_nations()
     anchors.fill: parent
     focus: true
     onVisibleChanged: {
         if (visible) {
             root.focus = true;
-            selectedMapIndex = -1;
-            selectedMapData = null;
-            selectedMapPath = "";
-            playersModel.clear();
-            refreshAvailableNations();
+            selected_map_index = -1;
+            selected_map_data = null;
+            selected_map_path = "";
+            players_model.clear();
+            refresh_available_nations();
             if (typeof game !== "undefined" && game.start_loading_maps)
                 game.start_loading_maps();
 
@@ -335,7 +335,7 @@ Item {
             root.cancelled();
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            acceptSelection();
+            accept_selection();
             event.accepted = true;
         } else if (event.key === Qt.Key_Down) {
             if (list.count > 0)
@@ -351,7 +351,7 @@ Item {
     }
 
     ListModel {
-        id: playersModel
+        id: players_model
     }
 
     Rectangle {
@@ -406,9 +406,9 @@ Item {
 
                     Layout.fillWidth: true
                     Layout.preferredHeight: visible ? 240 : 0
-                    visible: selectedMapData !== null
-                    mapPath: selectedMapPath
-                    playerConfigs: getPlayerConfigs()
+                    visible: selected_map_data !== null
+                    map_path: selected_map_path
+                    player_configs: get_player_configs()
                 }
 
                 Rectangle {
@@ -420,30 +420,30 @@ Item {
                     border.width: 1
                     clip: true
                     Layout.fillWidth: true
-                    Layout.fillHeight: (!mapsLoading && list.count > 0)
+                    Layout.fillHeight: (!maps_loading && list.count > 0)
 
                     ListView {
                         id: list
 
                         anchors.fill: parent
                         anchors.margins: Theme.spacingSmall
-                        model: mapsModel
+                        model: maps_model
                         spacing: Theme.spacingSmall
                         currentIndex: (count > 0 ? 0 : -1)
                         keyNavigationWraps: false
                         boundsBehavior: Flickable.StopAtBounds
                         onCurrentIndexChanged: {
                             if (currentIndex < 0) {
-                                selectedMapIndex = -1;
-                                selectedMapData = null;
-                                selectedMapPath = "";
-                                playersModel.clear();
+                                selected_map_index = -1;
+                                selected_map_data = null;
+                                selected_map_path = "";
+                                players_model.clear();
                                 return ;
                             }
-                            selectedMapIndex = currentIndex;
-                            selectedMapData = getMapData(currentIndex);
-                            selectedMapPath = selectedMapData ? (selectedMapData.path || selectedMapData.file || "") : "";
-                            initializePlayers(selectedMapData);
+                            selected_map_index = currentIndex;
+                            selected_map_data = get_map_data(currentIndex);
+                            selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
+                            initialize_players(selected_map_data);
                         }
 
                         delegate: Item {
@@ -460,7 +460,7 @@ Item {
                                 acceptedButtons: Qt.LeftButton
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: list.currentIndex = index
-                                onDoubleClicked: acceptSelection()
+                                onDoubleClicked: accept_selection()
                             }
 
                             Rectangle {
@@ -605,7 +605,7 @@ Item {
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: visible
-                    visible: list.count === 0 && !mapsLoading
+                    visible: list.count === 0 && !maps_loading
 
                     Text {
                         text: qsTr("No maps available")
@@ -619,7 +619,7 @@ Item {
                 Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: visible
-                    visible: mapsLoading
+                    visible: maps_loading
 
                     Column {
                         anchors.centerIn: parent
@@ -636,7 +636,7 @@ Item {
                                 to: 360
                                 duration: 1500
                                 loops: Animation.Infinite
-                                running: mapsLoading
+                                running: maps_loading
                             }
 
                         }
@@ -673,10 +673,10 @@ Item {
             Text {
                 id: breadcrumb
 
-                text: selectedMapData ? qsTr("► %1").arg(field(selectedMapData, "name")) : qsTr("Select a map to continue")
-                color: selectedMapData ? Theme.accent : Theme.textHint
+                text: selected_map_data ? qsTr("► %1").arg(field(selected_map_data, "name")) : qsTr("Select a map to continue")
+                color: selected_map_data ? Theme.accent : Theme.textHint
                 font.pixelSize: 13
-                font.italic: !selectedMapData
+                font.italic: !selected_map_data
                 elide: Text.ElideRight
 
                 anchors {
@@ -690,7 +690,7 @@ Item {
             Item {
                 id: loadingIndicator
 
-                visible: mapsLoading && list.count === 0
+                visible: maps_loading && list.count === 0
                 height: 100
 
                 anchors {
@@ -734,7 +734,7 @@ Item {
             Item {
                 id: loadingSkeleton
 
-                visible: !selectedMapData && !mapsLoading && list.currentIndex >= 0
+                visible: !selected_map_data && !maps_loading && list.currentIndex >= 0
                 height: 200
 
                 anchors {
@@ -843,11 +843,11 @@ Item {
                 id: title
 
                 text: {
-                    var it = selectedMapData;
+                    var it = selected_map_data;
                     var t = field(it, "name");
                     return t || field(it, "path") || qsTr("No Map Selected");
                 }
-                visible: selectedMapData !== null
+                visible: selected_map_data !== null
                 color: Theme.textMain
                 font.pixelSize: 24
                 font.bold: true
@@ -865,8 +865,8 @@ Item {
             Text {
                 id: descr
 
-                text: field(selectedMapData, "description")
-                visible: selectedMapData !== null
+                text: field(selected_map_data, "description")
+                visible: selected_map_data !== null
                 color: Theme.textSubLite
                 font.pixelSize: 13
                 wrapMode: Text.WordWrap
@@ -885,12 +885,12 @@ Item {
             Rectangle {
                 id: playerConfigPanel
 
-                height: Math.min(240, (playersModel.count * 60) + 90)
+                height: Math.min(240, (players_model.count * 60) + 90)
                 radius: Theme.radiusLarge
                 color: Theme.cardBaseA
                 border.color: Theme.panelBr
                 border.width: 1
-                visible: selectedMapData !== null
+                visible: selected_map_data !== null
 
                 anchors {
                     top: descr.bottom
@@ -926,7 +926,7 @@ Item {
 
                             Text {
                                 anchors.centerIn: parent
-                                text: playersModel.count
+                                text: players_model.count
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 font.bold: true
@@ -956,8 +956,8 @@ Item {
                         id: playersList
 
                         width: parent.width
-                        height: Math.min(200, playersModel.count * 60)
-                        model: playersModel
+                        height: Math.min(200, players_model.count * 60)
+                        model: players_model
                         spacing: Theme.spacingMedium
                         clip: true
 
@@ -1024,7 +1024,7 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: togglePlayerEnabled(index)
+                                        onClicked: toggle_player_enabled(index)
                                     }
 
                                     Behavior on color {
@@ -1104,7 +1104,7 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cyclePlayerColor(index)
+                                            onClicked: cycle_player_color(index)
                                         }
 
                                         Rectangle {
@@ -1132,11 +1132,11 @@ Item {
                                     }
 
                                     Rectangle {
-                                        readonly property real emblemSize: Math.min(playerCard.height - Theme.spacingSmall * 2, 72)
-                                        property string emblemSource: root.nationEmblemFor(model.nationId)
+                                        readonly property real emblem_size: Math.min(playerCard.height - Theme.spacingSmall * 2, 72)
+                                        property string emblem_source: root.nation_emblem_for(model.nationId)
 
-                                        width: emblemSize
-                                        height: emblemSize
+                                        width: emblem_size
+                                        height: emblem_size
                                         radius: Theme.radiusSmall
                                         anchors.verticalCenter: parent.verticalCenter
                                         color: nationMA.containsMouse ? Qt.lighter(Theme.cardBaseB, 1.1) : Theme.cardBaseB
@@ -1147,8 +1147,8 @@ Item {
 
                                         Image {
                                             anchors.centerIn: parent
-                                            visible: parent.emblemSource !== ""
-                                            source: parent.emblemSource
+                                            visible: parent.emblem_source !== ""
+                                            source: parent.emblem_source
                                             width: parent.width * 0.8
                                             height: width
                                             fillMode: Image.PreserveAspectFit
@@ -1158,7 +1158,7 @@ Item {
 
                                         Text {
                                             anchors.centerIn: parent
-                                            visible: parent.emblemSource === ""
+                                            visible: parent.emblem_source === ""
                                             text: model.nationName || qsTr("Nation")
                                             color: Theme.textMain
                                             font.pixelSize: 11
@@ -1171,7 +1171,7 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cyclePlayerNation(index)
+                                            onClicked: cycle_player_nation(index)
                                         }
 
                                         Behavior on color {
@@ -1236,7 +1236,7 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: cyclePlayerTeam(index)
+                                            onClicked: cycle_player_team(index)
                                         }
 
                                         Behavior on color {
@@ -1288,7 +1288,7 @@ Item {
                                             anchors.fill: parent
                                             hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
-                                            onClicked: removePlayer(index)
+                                            onClicked: remove_player(index)
                                         }
 
                                         Behavior on color {
@@ -1344,8 +1344,8 @@ Item {
 
                     Button {
                         text: qsTr("+ Add CPU")
-                        enabled: playersModel.count < (selectedMapData && selectedMapData.player_ids ? selectedMapData.player_ids.length : 0)
-                        onClicked: addCPU()
+                        enabled: players_model.count < (selected_map_data && selected_map_data.player_ids ? selected_map_data.player_ids.length : 0)
+                        onClicked: add_cpu()
                         hoverEnabled: true
                         implicitHeight: 38
                         implicitWidth: 120
@@ -1440,7 +1440,7 @@ Item {
 
                     Text {
                         text: "Available Player Slots: " + (function() {
-                            var it = selectedMapData;
+                            var it = selected_map_data;
                             return (it && typeof it.playerCount !== 'undefined') ? it.playerCount : 0;
                         })()
                         color: Theme.textMain
@@ -1460,7 +1460,7 @@ Item {
 
                         Repeater {
                             model: {
-                                var it = selectedMapData;
+                                var it = selected_map_data;
                                 return (it && it.player_ids) ? it.player_ids : [];
                             }
 
@@ -1525,7 +1525,7 @@ Item {
                             if (typeof game === 'undefined')
                                 return "";
 
-                            var it = selectedMapData;
+                            var it = selected_map_data;
                             if (!it || !it.player_ids)
                                 return "";
 
@@ -1582,8 +1582,8 @@ Item {
             Text {
                 id: validationErrorText
 
-                text: validationError
-                visible: validationError !== ""
+                text: validation_error
+                visible: validation_error !== ""
                 color: Theme.removeColor
                 font.pixelSize: 13
                 font.bold: true
@@ -1682,15 +1682,15 @@ Item {
 
             Button {
                 text: qsTr("Play")
-                enabled: list.currentIndex >= 0 && list.count > 0 && playersModel.count >= 2 && hasMinimumDistinctTeams()
-                onClicked: acceptSelection()
+                enabled: list.currentIndex >= 0 && list.count > 0 && players_model.count >= 2 && has_minimum_distinct_teams()
+                onClicked: accept_selection()
                 hoverEnabled: true
                 implicitHeight: 42
                 implicitWidth: 130
                 ToolTip.visible: playHover.containsMouse
                 ToolTip.text: {
-                    if (validationError !== "")
-                        return validationError;
+                    if (validation_error !== "")
+                        return validation_error;
 
                     return qsTr("Start game (Enter)");
                 }

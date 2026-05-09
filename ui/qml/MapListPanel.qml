@@ -4,13 +4,13 @@ import QtQuick.Controls 2.15
 Item {
     id: root
 
-    property var mapsModel: []
-    property int currentIndex: 0
+    property var maps_model: []
+    property int selected_index: 0
     property var colors: ({
     })
 
-    signal mapSelected(int index)
-    signal mapDoubleClicked()
+    signal map_selected(int index)
+    signal map_double_clicked()
 
     function field(obj, key) {
         return (obj && obj[key] !== undefined) ? String(obj[key]) : "";
@@ -71,16 +71,16 @@ Item {
 
             anchors.fill: parent
             anchors.margins: 8
-            model: root.mapsModel
+            model: root.maps_model
             clip: true
             spacing: 8
-            currentIndex: root.currentIndex
+            currentIndex: root.selected_index
             keyNavigationWraps: false
             boundsBehavior: Flickable.StopAtBounds
             onCurrentIndexChanged: {
-                root.currentIndex = currentIndex;
+                root.selected_index = currentIndex;
                 if (currentIndex >= 0)
-                    root.mapSelected(currentIndex);
+                    root.map_selected(currentIndex);
 
             }
             highlightMoveDuration: 120
@@ -122,7 +122,7 @@ Item {
                     acceptedButtons: Qt.LeftButton
                     cursorShape: Qt.PointingHandCursor
                     onClicked: list.currentIndex = index
-                    onDoubleClicked: root.mapDoubleClicked()
+                    onDoubleClicked: root.map_double_clicked()
                 }
 
                 Rectangle {
