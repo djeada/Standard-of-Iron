@@ -74,6 +74,19 @@ void register_built_in_entity_renderers(EntityRendererRegistry &registry) {
   registry.register_renderer("troops/carthage/civilian",
                              registry.get("troops/carthage/builder"));
 
+  registry.register_renderer("troops/roman/commanders/fabius_maximus",
+                             registry.get("troops/roman/spearman"));
+  registry.register_renderer("troops/roman/commanders/scipio_africanus",
+                             registry.get("troops/roman/swordsman"));
+  registry.register_renderer("troops/roman/commanders/marcellus",
+                             registry.get("troops/roman/archer"));
+  registry.register_renderer("troops/carthage/commanders/hanno_the_great",
+                             registry.get("troops/carthage/spearman"));
+  registry.register_renderer("troops/carthage/commanders/hasdrubal_barca",
+                             registry.get("troops/carthage/archer"));
+  registry.register_renderer("troops/carthage/commanders/hannibal_barca",
+                             registry.get("troops/carthage/swordsman"));
+
   register_catapult_renderer(registry);
 
   register_elephant_renderer(registry);

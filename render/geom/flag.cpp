@@ -14,19 +14,39 @@ auto Flag::create(float world_x, float world_z, const QVector3D &flag_color,
   FlagMatrices result;
   result.pennant_color = flag_color;
   result.pole_color = pole_color;
+  QVector3D const warm_trim(0.88F, 0.76F, 0.28F);
+  result.pennant_trim_color =
+      QVector3D(flag_color.x() * 0.42F + warm_trim.x() * 0.58F,
+                flag_color.y() * 0.42F + warm_trim.y() * 0.58F,
+                flag_color.z() * 0.42F + warm_trim.z() * 0.58F);
 
-  result.pole = k_identity_matrix;
-  result.pole.translate(world_x, (0.15F + 0.35F) * scale, world_z);
-  result.pole.scale(0.05F * scale, 0.70F * scale, 0.05F * scale);
+  float const pole_base_y = 0.08F * scale;
+  float const pole_top_y = 1.18F * scale;
+  result.pole_start = QVector3D(world_x, pole_base_y, world_z);
+  result.pole_end = QVector3D(world_x, pole_top_y, world_z);
+  result.pole_radius = 0.028F * scale;
 
+  float const pennant_width = 0.52F * scale;
+  float const pennant_height = 0.30F * scale;
+  float const crossbeam_y = pole_top_y - 0.13F * scale;
+  result.crossbeam_start =
+      QVector3D(world_x + 0.02F * scale, crossbeam_y, world_z);
+  result.crossbeam_end =
+      QVector3D(world_x + pennant_width * 0.84F, crossbeam_y, world_z);
+  result.crossbeam_radius = 0.013F * scale;
+
+  QVector3D const pennant_center(world_x + pennant_width * 0.50F,
+                                 crossbeam_y - pennant_height * 0.52F,
+                                 world_z + 0.015F * scale);
   result.pennant = k_identity_matrix;
-  result.pennant.translate(world_x + 0.20F * scale, (0.60F + 0.15F) * scale,
-                           world_z);
-  result.pennant.scale(0.38F * scale, 0.28F * scale, 0.03F * scale);
+  result.pennant.translate(pennant_center);
+  result.pennant.rotate(90.0F, 1.0F, 0.0F, 0.0F);
+  result.pennant.scale(pennant_width, pennant_height, 1.0F);
 
-  result.finial = k_identity_matrix;
-  result.finial.translate(world_x, (0.90F + 0.15F) * scale, world_z);
-  result.finial.scale(0.10F * scale, 0.10F * scale, 0.10F * scale);
+  result.pennant_fallback = k_identity_matrix;
+  result.pennant_fallback.translate(pennant_center);
+  result.pennant_fallback.scale(pennant_width * 0.92F, pennant_height,
+                                0.018F * scale);
 
   return result;
 }

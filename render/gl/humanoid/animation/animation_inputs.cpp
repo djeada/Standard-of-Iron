@@ -11,6 +11,8 @@ namespace Render::GL {
 
 namespace {
 
+constexpr float k_builder_construct_cycles_per_second = 1.75F;
+
 auto map_combat_state_to_phase(Engine::Core::CombatAnimationState state)
     -> CombatAnimPhase {
   switch (state) {
@@ -140,9 +142,12 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     }
     if (builder_prod->in_progress) {
       anim.is_constructing = true;
-      if (builder_prod->build_time > 0.0F) {
-        anim.construction_progress =
-            1.0F - (builder_prod->time_remaining / builder_prod->build_time);
+      float const build_elapsed =
+          std::max(0.0F, builder_prod->build_time - builder_prod->time_remaining);
+      anim.construction_progress =
+          std::fmod(build_elapsed * k_builder_construct_cycles_per_second, 1.0F);
+      if (anim.construction_progress < 0.0F) {
+        anim.construction_progress += 1.0F;
       }
     }
   }

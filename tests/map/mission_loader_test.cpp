@@ -19,6 +19,7 @@ protected:
         "nation": "roman_republic",
         "faction": "roman",
         "color": "red",
+        "commander_troop": "roman_veteran_consul",
         "starting_units": [
           {
             "type": "spearman",
@@ -44,6 +45,7 @@ protected:
           "nation": "carthage",
           "faction": "carthaginian",
           "color": "blue",
+          "commander_troop": "carthage_elephant_master",
           "difficulty": "medium",
           "personality": {
             "aggression": 0.7,
@@ -116,6 +118,8 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
   EXPECT_EQ(mission.player_setup.nation, "roman_republic");
   EXPECT_EQ(mission.player_setup.faction, "roman");
   EXPECT_EQ(mission.player_setup.color, "red");
+  ASSERT_TRUE(mission.player_setup.commander_troop.has_value());
+  EXPECT_EQ(*mission.player_setup.commander_troop, "roman_veteran_consul");
   EXPECT_EQ(mission.player_setup.starting_units.size(), 1);
   EXPECT_EQ(mission.player_setup.starting_buildings.size(), 1);
   EXPECT_EQ(mission.player_setup.starting_resources.gold, 1000);
@@ -137,6 +141,8 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
   ASSERT_EQ(mission.ai_setups.size(), 1);
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
   EXPECT_EQ(mission.ai_setups[0].nation, "carthage");
+  ASSERT_TRUE(mission.ai_setups[0].commander_troop.has_value());
+  EXPECT_EQ(*mission.ai_setups[0].commander_troop, "carthage_elephant_master");
   EXPECT_EQ(mission.ai_setups[0].difficulty, "medium");
   EXPECT_FLOAT_EQ(mission.ai_setups[0].personality.aggression, 0.7F);
   EXPECT_EQ(mission.ai_setups[0].waves.size(), 1);

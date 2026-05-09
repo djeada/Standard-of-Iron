@@ -11,47 +11,43 @@ uniform float u_windStrength;
 
 out vec3 v_normal;
 out vec2 v_texCoord;
-out vec3 v_worldPos;
 out float v_waveOffset;
 out float v_clothDepth;
-
-float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
 void main() {
   vec3 pos = a_position;
 
-  float horizontalPos = pos.x + 0.5;
+  float horizontalPos = clamp(a_texCoord.x, 0.0, 1.0);
+  float verticalPos = clamp(1.0 - a_texCoord.y, 0.0, 1.0);
+  float freeEdge = horizontalPos * horizontalPos;
+  float centerBias = 1.0 - abs(verticalPos * 2.0 - 1.0);
 
-  float verticalPos = clamp(0.5 - pos.y, 0.0, 1.0);
+  float wavePhase = u_time * 2.3 + horizontalPos * 4.8 - verticalPos * 1.6;
+  float zOffset = sin(wavePhase) * u_windStrength * freeEdge *
+                  (0.18 + centerBias * 0.08);
 
-  float wavePhase = u_time * 3.0 + horizontalPos * 4.0 + verticalPos * 2.0;
-  float waveAmplitude = u_windStrength * horizontalPos * horizontalPos * 0.25;
-  float zOffset = sin(wavePhase) * waveAmplitude;
+  float ripplePhase = u_time * 5.1 + horizontalPos * 10.5 + verticalPos * 6.0;
+  float ripple = sin(ripplePhase) * u_windStrength * freeEdge * 0.045;
 
-  float ripplePhase = u_time * 4.5 + horizontalPos * 6.0 + verticalPos * 3.0;
-  float ripple = sin(ripplePhase) * u_windStrength * horizontalPos * 0.08;
+  float curlPhase = u_time * 7.8 + verticalPos * 3.5 + horizontalPos * 13.0;
+  float trailingCurl =
+      sin(curlPhase) * u_windStrength * freeEdge * freeEdge * 0.03;
 
-  float flutterPhase = u_time * 8.0 + horizontalPos * 10.0;
-  float flutter =
-      sin(flutterPhase) * u_windStrength * horizontalPos * horizontalPos * 0.04;
+  float swayPhase = u_time * 1.6 + horizontalPos * 1.4 + verticalPos * 2.4;
+  float yOffset = sin(swayPhase) * u_windStrength * freeEdge * 0.04;
+  float sag = freeEdge * (0.014 + (1.0 - verticalPos) * 0.02) * u_windStrength;
 
-  float swayPhase = u_time * 1.5;
-  float yOffset = sin(swayPhase + horizontalPos * 0.8) * u_windStrength *
-                  horizontalPos * 0.02;
-
-  pos.z += zOffset + ripple + flutter;
-  pos.y += yOffset;
-
-  pos.y -= horizontalPos * horizontalPos * 0.015 * u_windStrength;
+  pos.z += zOffset + ripple + trailingCurl;
+  pos.y += yOffset - sag;
+  pos.x -= freeEdge * u_windStrength * 0.035;
 
   vec3 normal = a_normal;
-  float normalWave = cos(wavePhase) * waveAmplitude * 3.0;
-  normal.z += normalWave;
+  normal.z += cos(wavePhase) * u_windStrength * freeEdge * 0.45;
+  normal.x -= sin(ripplePhase) * u_windStrength * freeEdge * 0.12;
   normal = normalize(normal);
 
   v_normal = mat3(transpose(inverse(u_model))) * normal;
   v_texCoord = a_texCoord;
-  v_worldPos = vec3(u_model * vec4(pos, 1.0));
   v_waveOffset = zOffset + ripple;
   v_clothDepth = horizontalPos;
 

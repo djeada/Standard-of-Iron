@@ -159,6 +159,7 @@ void register_built_in_equipment() {
 
   ToolBeltConfig roman_tool_belt_config;
   roman_tool_belt_config.leather_color = QVector3D(0.52F, 0.40F, 0.28F);
+  roman_tool_belt_config.include_saw = true;
   auto tool_belt_roman =
       std::make_shared<ToolBeltRenderer>(roman_tool_belt_config);
   registry.register_equipment(EquipmentCategory::Armor, "tool_belt_roman",
@@ -166,6 +167,7 @@ void register_built_in_equipment() {
 
   ToolBeltConfig carthage_tool_belt_config;
   carthage_tool_belt_config.leather_color = QVector3D(0.46F, 0.34F, 0.22F);
+  carthage_tool_belt_config.include_saw = true;
   auto tool_belt_carthage =
       std::make_shared<ToolBeltRenderer>(carthage_tool_belt_config);
   registry.register_equipment(EquipmentCategory::Armor, "tool_belt_carthage",

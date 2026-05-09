@@ -4,6 +4,7 @@
 #include "../../game_config.h"
 #include "../../units/troop_config.h"
 #include "../command_service.h"
+#include "../production_service.h"
 #include "ai_utils.h"
 #include "systems/ai_system/ai_types.h"
 #include "units/spawn_type.h"
@@ -134,10 +135,6 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
         break;
       }
 
-      if (production->in_progress) {
-        break;
-      }
-
       auto *unit = entity->get_component<Engine::Core::UnitComponent>();
       if ((unit != nullptr) && unit->owner_id != ai_owner_id) {
         break;
@@ -157,10 +154,13 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
         break;
       }
 
-      production->product_type = command.product_type;
-      production->manpower_available -= production_cost;
-      production->time_remaining = production->build_time;
-      production->in_progress = true;
+      const std::vector<Engine::Core::EntityID> selected{command.building_id};
+      const auto result = Game::Systems::ProductionService::
+          start_production_for_first_selected_barracks(
+              world, selected, ai_owner_id, command.product_type);
+      if (result != Game::Systems::ProductionResult::Success) {
+        break;
+      }
 
       break;
     }

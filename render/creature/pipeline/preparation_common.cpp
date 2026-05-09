@@ -23,6 +23,14 @@ namespace {
 
 constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
 
+auto looping_phase(float phase) noexcept -> float {
+  float wrapped = std::fmod(phase, 1.0F);
+  if (wrapped < 0.0F) {
+    wrapped += 1.0F;
+  }
+  return wrapped;
+}
+
 auto hold_phase_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
   float const hold_phase = Render::GL::hold_transition_amount(anim.inputs);
@@ -84,6 +92,9 @@ auto humanoid_state_for_anim(
       return Render::Creature::AnimationStateId::AttackBow;
     }
   }
+  if (anim.inputs.is_constructing) {
+    return Render::Creature::AnimationStateId::AttackSword;
+  }
   switch (anim.motion_state) {
   case Render::GL::HumanoidMotionState::Idle:
     return Render::Creature::AnimationStateId::Idle;
@@ -110,6 +121,9 @@ auto humanoid_phase_for_anim(
   if (state == Render::Creature::AnimationStateId::Hold) {
     return hold_phase_for_anim(anim);
   }
+  if (anim.inputs.is_constructing) {
+    return looping_phase(anim.inputs.construction_progress + anim.jitter_seed);
+  }
   bool const is_attack_state =
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||
@@ -133,6 +147,12 @@ auto humanoid_requested_clip_variant_for_anim(
   if (state == Render::Creature::AnimationStateId::Die ||
       state == Render::Creature::AnimationStateId::Dead) {
     return anim.inputs.death_variant;
+  }
+  if (anim.inputs.is_constructing &&
+      state == Render::Creature::AnimationStateId::AttackSword) {
+    auto const bucket =
+        static_cast<std::uint32_t>(std::floor(anim.jitter_seed * 64.0F));
+    return static_cast<std::uint8_t>(bucket % 3U);
   }
   bool const is_attack_state =
       (state == Render::Creature::AnimationStateId::AttackSword ||

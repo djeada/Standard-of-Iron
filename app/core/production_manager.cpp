@@ -12,6 +12,7 @@
 #include "game/systems/production_service.h"
 #include "game/systems/selection_system.h"
 #include "game/systems/troop_profile_service.h"
+#include "game/units/commander_catalog.h"
 #include "game/units/factory.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
@@ -277,6 +278,7 @@ auto ProductionManager::get_selected_production_state(int local_owner_id) const
   m["max_units"] = 0;
   m["villager_cost"] = 1;
   m["manpower_available"] = 0;
+  m["commander_committed"] = false;
 
   if (!m_world) {
     return m;
@@ -302,6 +304,7 @@ auto ProductionManager::get_selected_production_state(int local_owner_id) const
   m["max_units"] = st.max_units;
   m["villager_cost"] = st.villager_cost;
   m["manpower_available"] = st.manpower_available;
+  m["commander_committed"] = st.commander_committed;
   m["queue_size"] = st.queue_size;
   m["nation_id"] =
       QString::fromStdString(Game::Systems::nation_id_to_string(st.nation_id));
@@ -428,10 +431,40 @@ auto ProductionManager::get_unit_production_info(
         Game::Systems::NationRegistry::instance().default_nation_id());
     auto profile = Game::Systems::TroopProfileService::instance().get_profile(
         nation_id_enum, *troop_type_opt);
+    info["cost"] = profile.production.cost;
+    info["build_time"] = static_cast<double>(profile.production.build_time);
+    info["individuals_per_unit"] = profile.individuals_per_unit;
     info["display_name"] = QString::fromStdString(profile.display_name);
+    if (const auto *commander =
+            Game::Units::commander_definition(*troop_type_opt)) {
+      info["is_commander"] = true;
+      info["strategic_identity"] =
+          QString::fromStdString(commander->strategic_identity);
+      info["recruitment_effect"] =
+          QString::fromStdString(commander->recruitment_effect);
+      info["battlefield_role"] =
+          QString::fromStdString(commander->battlefield_role);
+      info["strengths"] = QString::fromStdString(commander->strengths);
+      info["weaknesses"] = QString::fromStdString(commander->weaknesses);
+      info["passive_aura"] = QString::fromStdString(commander->passive_aura);
+      info["bonus_type"] = QString::fromStdString(commander->bonus_type);
+      info["bonus_summary"] = QString::fromStdString(commander->bonus_summary);
+      info["aura_bonus_value"] = static_cast<double>(commander->aura_bonus_value);
+      info["rally_ability"] = QString::fromStdString(commander->rally_ability);
+      info["death_consequence"] =
+          QString::fromStdString(commander->death_consequence);
+      info["visual_requirements"] =
+          QString::fromStdString(commander->visual_requirements);
+      info["bodyguard_count"] = commander->bodyguard_count;
+      info["aura_radius"] = static_cast<double>(commander->aura_radius);
+      info["rally_cooldown"] = static_cast<double>(commander->rally_cooldown);
+    } else {
+      info["is_commander"] = false;
+    }
   } else {
 
     info["display_name"] = unit_type;
+    info["is_commander"] = false;
   }
 
   return info;

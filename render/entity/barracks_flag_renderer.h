@@ -76,7 +76,8 @@ private:
 };
 
 inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
-                                   Texture *white, const FlagColors &colors) {
+                                   Texture *white, const FlagColors &colors,
+                                   const ClothBannerResources *cloth = nullptr) {
   if (auto *prod =
           p.entity->get_component<Engine::Core::ProductionComponent>()) {
     if (prod->rally_set && (p.resources != nullptr)) {
@@ -86,9 +87,23 @@ inline void draw_rally_flag_if_any(const DrawContext &p, ISubmitter &out,
                                              colors.wood_dark, 1.6F);
 
       Mesh *unit = p.resources->unit();
-      out.mesh(unit, flag.pole, flag.pole_color, white, 1.0F);
-      out.mesh(unit, flag.pennant, flag.pennant_color, white, 1.0F);
-      out.mesh(unit, flag.finial, flag.pennant_color, white, 1.0F);
+      out.mesh(get_unit_cylinder(),
+               Render::Geom::cylinder_between(flag.pole_start, flag.pole_end,
+                                              flag.pole_radius),
+               flag.pole_color, white, 1.0F);
+      out.mesh(get_unit_cylinder(),
+               Render::Geom::cylinder_between(flag.crossbeam_start,
+                                              flag.crossbeam_end,
+                                              flag.crossbeam_radius),
+               colors.timber_light, white, 1.0F);
+      if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
+          cloth->banner_shader != nullptr) {
+        BannerShaderScope shader_scope(out, cloth->banner_shader);
+        out.banner(cloth->cloth_mesh, flag.pennant, flag.pennant_color,
+                   flag.pennant_trim_color, white, 1.0F);
+      } else {
+        out.mesh(unit, flag.pennant_fallback, flag.pennant_color, white, 1.0F);
+      }
     }
   }
 }
@@ -98,7 +113,6 @@ inline void draw_banner_with_tassels(
     const QVector3D &banner_center, float half_width, float half_height,
     float depth, const QVector3D &banner_color, const QVector3D &trim_color,
     const ClothBannerResources *cloth = nullptr, int material_id = 0) {
-  (void)trim_color;
   (void)depth;
 
   QMatrix4x4 banner_transform;
@@ -110,8 +124,8 @@ inline void draw_banner_with_tassels(
   if (cloth != nullptr && cloth->cloth_mesh != nullptr &&
       cloth->banner_shader != nullptr) {
     BannerShaderScope shader_scope(out, cloth->banner_shader);
-    out.mesh(cloth->cloth_mesh, p.model * banner_transform, banner_color, white,
-             1.0F, material_id);
+    out.banner(cloth->cloth_mesh, p.model * banner_transform, banner_color,
+               trim_color, white, 1.0F, material_id);
   } else {
 
     QMatrix4x4 box_transform =

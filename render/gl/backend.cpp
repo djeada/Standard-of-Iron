@@ -1707,7 +1707,8 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.color,
                                      single.color);
 
-          QVector3D trim_color = single.color * 0.7F;
+          QVector3D const trim_color =
+              single.has_trim_color ? single.trim_color : (single.color * 0.7F);
           active_shader->set_uniform(
               m_bannerPipeline->m_bannerUniforms.trim_color, trim_color);
           active_shader->set_uniform(m_bannerPipeline->m_bannerUniforms.alpha,

@@ -16,7 +16,8 @@
     "starting_resources": {
       "gold": 450,
       "food": 650
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -36,7 +37,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 75, "z": 55},
+          "position": {
+            "x": 75,
+            "z": 55
+          },
           "max_population": 130
         }
       ],
@@ -44,20 +48,39 @@
         {
           "timing": 150.0,
           "composition": [
-            {"type": "spearman", "count": 6},
-            {"type": "archer", "count": 3}
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 75, "z": 55}
+          "entry_point": {
+            "x": 75,
+            "z": 55
+          }
         },
         {
           "timing": 360.0,
           "composition": [
-            {"type": "swordsman", "count": 5},
-            {"type": "spearman", "count": 5}
+            {
+              "type": "swordsman",
+              "count": 5
+            },
+            {
+              "type": "spearman",
+              "count": 5
+            }
           ],
-          "entry_point": {"x": 82, "z": 62}
+          "entry_point": {
+            "x": 82,
+            "z": 62
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_field_commander"
     },
     {
       "id": "mountain_tribes_pass_two",
@@ -76,7 +99,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 105, "z": 85},
+          "position": {
+            "x": 105,
+            "z": 85
+          },
           "max_population": 130
         }
       ],
@@ -84,20 +110,39 @@
         {
           "timing": 240.0,
           "composition": [
-            {"type": "archer", "count": 4},
-            {"type": "spearman", "count": 6}
+            {
+              "type": "archer",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 6
+            }
           ],
-          "entry_point": {"x": 105, "z": 85}
+          "entry_point": {
+            "x": 105,
+            "z": 85
+          }
         },
         {
           "timing": 480.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 3},
-            {"type": "swordsman", "count": 5}
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            },
+            {
+              "type": "swordsman",
+              "count": 5
+            }
           ],
-          "entry_point": {"x": 112, "z": 92}
+          "entry_point": {
+            "x": 112,
+            "z": 92
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_legion_organizer"
     },
     {
       "id": "mountain_tribes_final_pass",
@@ -116,7 +161,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 125, "z": 115},
+          "position": {
+            "x": 125,
+            "z": 115
+          },
           "max_population": 150
         }
       ],
@@ -124,28 +172,55 @@
         {
           "timing": 600.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 6},
-            {"type": "archer", "count": 4}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
           ],
-          "entry_point": {"x": 125, "z": 115}
+          "entry_point": {
+            "x": 125,
+            "z": 115
+          }
         },
         {
           "timing": 780.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 8},
-            {"type": "horse_swordsman", "count": 3}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 132, "z": 122}
+          "entry_point": {
+            "x": 132,
+            "z": 122
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_veteran_consul"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 3,
       "description": "Capture all three tribal camps to secure the Alpine route"
     }

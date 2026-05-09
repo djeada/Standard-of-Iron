@@ -52,6 +52,13 @@ constexpr SkeletonTopology k_elephant_topology{
 };
 
 constexpr float k_pi = 3.14159265358979323846F;
+constexpr float k_rear_stride_scale = 0.58F;
+constexpr float k_rear_backward_stride_damping = 0.60F;
+constexpr float k_fight_trunk_side_swing = 0.18F;
+constexpr float k_fight_trunk_lift_base = 0.34F;
+constexpr float k_fight_trunk_lift_wave = 0.08F;
+constexpr float k_fight_trunk_forward_base = 0.08F;
+constexpr float k_fight_trunk_forward_wave = 0.06F;
 
 [[nodiscard]] auto
 translation_matrix(const QVector3D &origin) noexcept -> QMatrix4x4 {
@@ -169,9 +176,12 @@ struct LegResult {
   } else if (motion.is_moving) {
     float const angle = leg_phase * 2.0F * k_pi;
 
-    float const stride_scale = is_front ? 0.52F : 0.68F;
+    float const stride_scale = is_front ? 0.52F : k_rear_stride_scale;
     float const lift_scale = is_front ? 1.05F : 0.85F;
     stride = std::sin(angle) * g.stride_swing * stride_scale;
+    if (!is_front && stride < 0.0F) {
+      stride *= k_rear_backward_stride_damping;
+    }
     float const lift_raw = std::sin(angle);
     lift = lift_raw > 0.0F ? lift_raw * g.stride_lift * lift_scale : 0.0F;
   }
@@ -337,12 +347,17 @@ void make_elephant_spec_pose_animated(
   out_pose.trunk_base_radius = dims.trunk_base_radius * 0.8F;
 
   if (motion.is_fighting) {
-
     float const phase_wave = std::sin(motion.anim_time * k_pi * 2.0F / 1.15F);
-    float const trunk_raise = dims.trunk_length * (0.55F + 0.08F * phase_wave);
-    float const trunk_retract_z =
-        dims.trunk_length * (0.10F + 0.02F * std::max(phase_wave, 0.0F));
-    out_pose.trunk_end += QVector3D(0.0F, trunk_raise, -trunk_retract_z);
+    float const phase_push = 0.5F + 0.5F * phase_wave;
+    float const trunk_swing_x = dims.head_width * k_fight_trunk_side_swing *
+                                phase_wave;
+    float const trunk_raise =
+        dims.trunk_length *
+        (k_fight_trunk_lift_base + k_fight_trunk_lift_wave * phase_push);
+    float const trunk_reach_z =
+        dims.trunk_length *
+        (k_fight_trunk_forward_base + k_fight_trunk_forward_wave * phase_push);
+    out_pose.trunk_end += QVector3D(trunk_swing_x, trunk_raise, trunk_reach_z);
   }
 
   float const front_forward = dims.body_length * 0.35F;

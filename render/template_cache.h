@@ -111,6 +111,9 @@ public:
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
             Texture *texture = nullptr, float alpha = 1.0F,
             int material_id = 0) override;
+  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+              const QVector3D &trim_color, Texture *texture = nullptr,
+              float alpha = 1.0F, int material_id = 0) override;
   void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
             const QVector3D &color, Texture *texture = nullptr,
             float alpha = 1.0F, int material_id = 0) override;

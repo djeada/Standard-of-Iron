@@ -301,7 +301,7 @@ public:
       static const Render::Creature::StaticAttachmentSpec k_helmet_spec =
           Render::GL::roman_light_helmet_make_static_attachment(
               k_head_bone, k_helmet_base_role_byte, k_head_bind_matrix);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 5>
+      static const std::array<Render::Creature::StaticAttachmentSpec, 6>
           k_tool_belt_specs = Render::GL::tool_belt_make_static_attachments(
               k_pelvis_bone, k_tool_belt_base_role_byte);
       static const std::array<Render::Creature::StaticAttachmentSpec, 3>
@@ -315,14 +315,14 @@ public:
               k_chest_bone, k_work_tunic_base_role_byte);
       static const Render::Creature::StaticAttachmentSpec k_hammer_spec =
           builder_hammer_make_static_attachment(k_hammer_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 13>
+      static const std::array<Render::Creature::StaticAttachmentSpec, 14>
           k_attachments{k_helmet_spec,         k_tool_belt_specs[0],
                         k_tool_belt_specs[1],  k_tool_belt_specs[2],
                         k_tool_belt_specs[3],  k_tool_belt_specs[4],
-                        k_work_apron_specs[0], k_work_apron_specs[1],
-                        k_work_apron_specs[2], k_arm_guards_specs[0],
-                        k_arm_guards_specs[1], k_work_tunic_spec,
-                        k_hammer_spec};
+                        k_tool_belt_specs[5],  k_work_apron_specs[0],
+                        k_work_apron_specs[1], k_work_apron_specs[2],
+                        k_arm_guards_specs[0], k_arm_guards_specs[1],
+                        k_work_tunic_spec,     k_hammer_spec};
       static const auto k_archetype =
           Render::Creature::ArchetypeRegistry::instance()
               .register_unit_archetype(

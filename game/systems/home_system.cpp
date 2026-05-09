@@ -8,6 +8,25 @@
 
 namespace Game::Systems {
 
+namespace {
+
+auto home_manpower_capacity(
+    const Engine::Core::ProductionComponent *home_prod) -> int {
+  if (home_prod == nullptr) {
+    return 0;
+  }
+
+  int const committed_civilians =
+      home_prod->produced_count + (home_prod->in_progress ? 1 : 0) +
+      static_cast<int>(home_prod->production_queue.size());
+  int const remaining_recruit_slots =
+      std::max(0, home_prod->max_units - committed_civilians);
+  int const civilian_cost = std::max(0, home_prod->villager_cost);
+  return remaining_recruit_slots * civilian_cost;
+}
+
+} // namespace
+
 void HomeSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
@@ -103,7 +122,9 @@ void HomeSystem::update(Engine::Core::World *world, float delta_time) {
         (home_comp->family_generation_interval > 0.0F) &&
         (home_comp->family_manpower_value > 0) &&
         (home_comp->family_generation_cooldown <= 0.0F)) {
-      home_prod->manpower_available += home_comp->family_manpower_value;
+      home_prod->manpower_available = std::min(
+          home_manpower_capacity(home_prod),
+          home_prod->manpower_available + home_comp->family_manpower_value);
       home_comp->family_generation_cooldown =
           home_comp->family_generation_interval;
     }

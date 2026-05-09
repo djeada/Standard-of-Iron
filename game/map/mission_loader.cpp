@@ -42,6 +42,9 @@ auto MissionLoader::parsePlayerSetup(const QJsonObject &obj) -> PlayerSetup {
   setup.nation = obj["nation"].toString();
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
+  if (obj.contains("commander_troop")) {
+    setup.commander_troop = obj["commander_troop"].toString();
+  }
 
   const QJsonArray units = obj["starting_units"].toArray();
   for (const auto &unit_val : units) {
@@ -99,6 +102,9 @@ auto MissionLoader::parseAISetup(const QJsonObject &obj) -> AISetup {
   setup.faction = obj["faction"].toString();
   setup.color = obj["color"].toString();
   setup.difficulty = obj["difficulty"].toString();
+  if (obj.contains("commander_troop")) {
+    setup.commander_troop = obj["commander_troop"].toString();
+  }
 
   if (obj.contains("team_id")) {
     setup.team_id = obj["team_id"].toInt();

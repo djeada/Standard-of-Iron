@@ -22,6 +22,13 @@ public:
   virtual void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
                     Texture *tex = nullptr, float alpha = 1.0F,
                     int material_id = 0) = 0;
+  virtual void banner(Mesh *mesh, const QMatrix4x4 &model,
+                      const QVector3D &color, const QVector3D &trim_color,
+                      Texture *tex = nullptr, float alpha = 1.0F,
+                      int material_id = 0) {
+    (void)trim_color;
+    this->mesh(mesh, model, color, tex, alpha, material_id);
+  }
 
   virtual void part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
                     const QVector3D &color, Texture *tex = nullptr,
@@ -101,6 +108,26 @@ public:
     cmd.texture = tex;
     cmd.model = model;
     cmd.color = color;
+    cmd.alpha = alpha;
+    cmd.material_id = material_id;
+    cmd.shader = m_shader;
+    m_queue->submit(std::move(cmd));
+  }
+
+  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+              const QVector3D &trim_color, Texture *tex = nullptr,
+              float alpha = 1.0F, int material_id = 0) override {
+    if ((m_queue == nullptr) || (mesh == nullptr)) {
+      return;
+    }
+
+    MeshCmd cmd;
+    cmd.mesh = mesh;
+    cmd.texture = tex;
+    cmd.model = model;
+    cmd.color = color;
+    cmd.trim_color = trim_color;
+    cmd.has_trim_color = true;
     cmd.alpha = alpha;
     cmd.material_id = material_id;
     cmd.shader = m_shader;
@@ -300,6 +327,15 @@ public:
 
     if (m_fallback != nullptr) {
       m_fallback->mesh(mesh, model, color, tex, alpha, material_id);
+    }
+  }
+
+  void banner(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
+              const QVector3D &trim_color, Texture *tex = nullptr,
+              float alpha = 1.0F, int material_id = 0) override {
+    if (m_fallback != nullptr) {
+      m_fallback->banner(mesh, model, color, trim_color, tex, alpha,
+                         material_id);
     }
   }
 
