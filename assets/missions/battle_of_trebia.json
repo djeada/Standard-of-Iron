@@ -14,7 +14,8 @@
     "starting_resources": {
       "gold": 500,
       "food": 380
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -36,22 +37,47 @@
         {
           "timing": 120.0,
           "composition": [
-            {"type": "spearman", "count": 7},
-            {"type": "swordsman", "count": 5},
-            {"type": "archer", "count": 3}
+            {
+              "type": "spearman",
+              "count": 7
+            },
+            {
+              "type": "swordsman",
+              "count": 5
+            },
+            {
+              "type": "archer",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 60, "z": 8}
+          "entry_point": {
+            "x": 60,
+            "z": 8
+          }
         },
         {
           "timing": 300.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 6},
-            {"type": "horse_swordsman", "count": 3}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 70, "z": 12}
+          "entry_point": {
+            "x": 70,
+            "z": 12
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_field_commander"
     },
     {
       "id": "roman_west_reserve",
@@ -70,7 +96,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 25, "z": 12},
+          "position": {
+            "x": 25,
+            "z": 12
+          },
           "max_population": 160
         }
       ],
@@ -78,27 +107,51 @@
         {
           "timing": 210.0,
           "composition": [
-            {"type": "swordsman", "count": 5},
-            {"type": "spearman", "count": 4},
-            {"type": "archer", "count": 2}
+            {
+              "type": "swordsman",
+              "count": 5
+            },
+            {
+              "type": "spearman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
           ],
-          "entry_point": {"x": 25, "z": 12}
+          "entry_point": {
+            "x": 25,
+            "z": 12
+          }
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 3},
-            {"type": "swordsman", "count": 5}
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            },
+            {
+              "type": "swordsman",
+              "count": 5
+            }
           ],
-          "entry_point": {"x": 25, "z": 12}
+          "entry_point": {
+            "x": 25,
+            "z": 12
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_legion_organizer"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 1,
       "description": "Capture the Roman winter camp after springing the ambush"
     }

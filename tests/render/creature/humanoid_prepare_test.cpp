@@ -356,6 +356,104 @@ auto render_archer_idle_bone_palette(const char *renderer_id)
   return sink.last_bone_palette;
 }
 
+auto render_builder_submission_count(const char *renderer_id,
+                                     Game::Systems::NationID nation_id,
+                                     bool constructing) -> int {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return 0;
+  }
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  EXPECT_NE(unit, nullptr);
+  if (unit == nullptr) {
+    return 0;
+  }
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = nation_id;
+
+  if (constructing) {
+    auto *builder =
+        entity.add_component<Engine::Core::BuilderProductionComponent>();
+    EXPECT_NE(builder, nullptr);
+    if (builder == nullptr) {
+      return 0;
+    }
+    builder->in_progress = true;
+    builder->has_construction_site = true;
+    builder->at_construction_site = true;
+    builder->build_time = 10.0F;
+    builder->time_remaining = 5.0F;
+    builder->construction_site_x = 2.0F;
+    builder->construction_site_z = 0.0F;
+  }
+
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  return sink.rigged_calls;
+}
+
+auto render_builder_bone_palette(const char *renderer_id,
+                                 Game::Systems::NationID nation_id,
+                                 bool constructing, float time_remaining)
+    -> const QMatrix4x4 * {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return nullptr;
+  }
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  EXPECT_NE(unit, nullptr);
+  if (unit == nullptr) {
+    return nullptr;
+  }
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = nation_id;
+
+  if (constructing) {
+    auto *builder =
+        entity.add_component<Engine::Core::BuilderProductionComponent>();
+    EXPECT_NE(builder, nullptr);
+    if (builder == nullptr) {
+      return nullptr;
+    }
+    builder->in_progress = true;
+    builder->has_construction_site = true;
+    builder->at_construction_site = true;
+    builder->build_time = 10.0F;
+    builder->time_remaining = time_remaining;
+    builder->construction_site_x = 2.0F;
+    builder->construction_site_z = 0.0F;
+  }
+
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  EXPECT_GT(sink.rigged_calls, 0);
+  return sink.last_bone_palette;
+}
+
 auto request_idle_bone_palette(Render::Creature::ArchetypeId archetype_id,
                                float phase) -> const QMatrix4x4 * {
   using Render::Creature::AnimationStateId;
@@ -390,6 +488,55 @@ struct ScopedFlatTerrain {
 
   ~ScopedFlatTerrain() { Game::Map::TerrainService::instance().clear(); }
 };
+
+auto render_builder_min_world_y(const char *renderer_id,
+                                Game::Systems::NationID nation_id,
+                                float terrain_height) -> float {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return std::numeric_limits<float>::infinity();
+  }
+
+  ScopedFlatTerrain terrain(terrain_height);
+
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 0.0F, 0.0F);
+  EXPECT_NE(unit, nullptr);
+  if (unit == nullptr) {
+    return std::numeric_limits<float>::infinity();
+  }
+  unit->spawn_type = Game::Units::SpawnType::Builder;
+  unit->nation_id = nation_id;
+  unit->render_individuals_per_unit_override = 1;
+
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  EXPECT_NE(transform, nullptr);
+  if (transform == nullptr) {
+    return std::numeric_limits<float>::infinity();
+  }
+  transform->position.x = 0.35F;
+  transform->position.y = 6.0F;
+  transform->position.z = -0.2F;
+  transform->scale.x = 0.5F;
+  transform->scale.y = 0.5F;
+  transform->scale.z = 0.5F;
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  EXPECT_GT(sink.rigged_calls, 0);
+  if (sink.rigged_mesh_min_world_y.empty()) {
+    return std::numeric_limits<float>::infinity();
+  }
+  return sink.rigged_mesh_min_world_y.front();
+}
 
 class BeardRenderer : public Render::GL::HumanoidRendererBase {
 public:
@@ -597,6 +744,101 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
             request_idle_bone_palette(carthage_id, 0.5F));
   EXPECT_NE(carthage_idle_palette,
             request_idle_bone_palette(carthage_id, 0.0F));
+}
+
+TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometry) {
+  EXPECT_GT(render_builder_submission_count("troops/roman/builder",
+                                            Game::Systems::NationID::RomanRepublic,
+                                            false),
+            0);
+  EXPECT_GT(render_builder_submission_count("troops/carthage/builder",
+                                            Game::Systems::NationID::Carthage,
+                                            false),
+            0);
+}
+
+TEST(HumanoidPrepare, BuiltInBuildersSubmitRiggedGeometryWhileConstructing) {
+  EXPECT_GT(render_builder_submission_count("troops/roman/builder",
+                                            Game::Systems::NationID::RomanRepublic,
+                                            true),
+            0);
+  EXPECT_GT(render_builder_submission_count("troops/carthage/builder",
+                                            Game::Systems::NationID::Carthage,
+                                            true),
+            0);
+}
+
+TEST(HumanoidPrepare, BuiltInBuildersVisibleIdleGeometryTouchesTerrain) {
+  EXPECT_NEAR(render_builder_min_world_y("troops/roman/builder",
+                                         Game::Systems::NationID::RomanRepublic,
+                                         2.4F),
+              2.4F, 0.25F);
+  EXPECT_NEAR(render_builder_min_world_y("troops/carthage/builder",
+                                         Game::Systems::NationID::Carthage,
+                                         2.4F),
+              2.4F, 0.25F);
+}
+
+TEST(HumanoidPrepare, BuilderConstructionFormationFacesInward) {
+  using Render::GL::FormationCalculatorFactory;
+  auto const *calculator = FormationCalculatorFactory::get_calculator(
+      FormationCalculatorFactory::Nation::Roman,
+      FormationCalculatorFactory::UnitCategory::BuilderConstruction);
+  ASSERT_NE(calculator, nullptr);
+
+  float const spacing = 2.0F;
+  auto const offset =
+      calculator->calculate_offset(1, 0, 1, 1, 4, spacing, 0x12345678U);
+  float const expected_yaw =
+      std::atan2(-offset.offset_x, -offset.offset_z) *
+      (180.0F / 3.14159265358979F);
+  EXPECT_NEAR(offset.yaw_offset, expected_yaw, 0.0001F);
+}
+
+TEST(HumanoidPrepare, BuilderConstructionPlaybackUsesWorkClip) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+  using Render::Creature::Pipeline::humanoid_clip_variant_for_anim;
+
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const builder_id = find_archetype_id("troops/roman/builder");
+  ASSERT_NE(builder_id, Render::Creature::kInvalidArchetype);
+
+  Render::GL::HumanoidAnimationContext construct_anim{};
+  construct_anim.inputs.is_constructing = true;
+  construct_anim.inputs.construction_progress = 0.35F;
+  construct_anim.jitter_seed = 0.11F;
+
+  auto const playback =
+      humanoid_bpat_playback_for_anim(builder_id, construct_anim);
+  ASSERT_TRUE(playback.has_value());
+  EXPECT_EQ(playback->clip_id,
+            registry.resolve_bpat_clip(
+                builder_id, AnimationStateId::AttackSword,
+                humanoid_clip_variant_for_anim(builder_id, construct_anim)));
+  EXPECT_NE(playback->clip_id, registry.bpat_clip(builder_id, AnimationStateId::Idle));
+}
+
+TEST(HumanoidPrepare, BuiltInBuildersUseDifferentPoseWhileConstructing) {
+  auto const *roman_idle =
+      render_builder_bone_palette("troops/roman/builder",
+                                  Game::Systems::NationID::RomanRepublic, false,
+                                  10.0F);
+  auto const *roman_constructing =
+      render_builder_bone_palette("troops/roman/builder",
+                                  Game::Systems::NationID::RomanRepublic, true,
+                                  9.0F);
+  auto const *carthage_idle =
+      render_builder_bone_palette("troops/carthage/builder",
+                                  Game::Systems::NationID::Carthage, false,
+                                  10.0F);
+  auto const *carthage_constructing =
+      render_builder_bone_palette("troops/carthage/builder",
+                                  Game::Systems::NationID::Carthage, true,
+                                  9.0F);
+
+  EXPECT_NE(roman_idle, roman_constructing);
+  EXPECT_NE(carthage_idle, carthage_constructing);
 }
 
 TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {

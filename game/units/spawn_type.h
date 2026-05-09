@@ -20,6 +20,12 @@ enum class SpawnType : std::uint8_t {
   Catapult,
   Ballista,
   Elephant,
+  RomanLegionOrganizer,
+  RomanVeteranConsul,
+  RomanFieldCommander,
+  CarthageMercenaryBroker,
+  CarthageCavalryPatron,
+  CarthageElephantMaster,
   Civilian,
   Builder,
   Barracks,
@@ -49,6 +55,18 @@ inline auto spawn_typeToQString(SpawnType type) -> QString {
     return QStringLiteral("ballista");
   case SpawnType::Elephant:
     return QStringLiteral("elephant");
+  case SpawnType::RomanLegionOrganizer:
+    return QStringLiteral("roman_legion_organizer");
+  case SpawnType::RomanVeteranConsul:
+    return QStringLiteral("roman_veteran_consul");
+  case SpawnType::RomanFieldCommander:
+    return QStringLiteral("roman_field_commander");
+  case SpawnType::CarthageMercenaryBroker:
+    return QStringLiteral("carthage_mercenary_broker");
+  case SpawnType::CarthageCavalryPatron:
+    return QStringLiteral("carthage_cavalry_patron");
+  case SpawnType::CarthageElephantMaster:
+    return QStringLiteral("carthage_elephant_master");
   case SpawnType::Civilian:
     return QStringLiteral("civilian");
   case SpawnType::Builder:
@@ -110,6 +128,30 @@ inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
     out = SpawnType::Elephant;
     return true;
   }
+  if (lowered == QStringLiteral("roman_legion_organizer")) {
+    out = SpawnType::RomanLegionOrganizer;
+    return true;
+  }
+  if (lowered == QStringLiteral("roman_veteran_consul")) {
+    out = SpawnType::RomanVeteranConsul;
+    return true;
+  }
+  if (lowered == QStringLiteral("roman_field_commander")) {
+    out = SpawnType::RomanFieldCommander;
+    return true;
+  }
+  if (lowered == QStringLiteral("carthage_mercenary_broker")) {
+    out = SpawnType::CarthageMercenaryBroker;
+    return true;
+  }
+  if (lowered == QStringLiteral("carthage_cavalry_patron")) {
+    out = SpawnType::CarthageCavalryPatron;
+    return true;
+  }
+  if (lowered == QStringLiteral("carthage_elephant_master")) {
+    out = SpawnType::CarthageElephantMaster;
+    return true;
+  }
   if (lowered == QStringLiteral("civilian")) {
     out = SpawnType::Civilian;
     return true;
@@ -168,6 +210,24 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   }
   if (str == "elephant") {
     return SpawnType::Elephant;
+  }
+  if (str == "roman_legion_organizer") {
+    return SpawnType::RomanLegionOrganizer;
+  }
+  if (str == "roman_veteran_consul") {
+    return SpawnType::RomanVeteranConsul;
+  }
+  if (str == "roman_field_commander") {
+    return SpawnType::RomanFieldCommander;
+  }
+  if (str == "carthage_mercenary_broker") {
+    return SpawnType::CarthageMercenaryBroker;
+  }
+  if (str == "carthage_cavalry_patron") {
+    return SpawnType::CarthageCavalryPatron;
+  }
+  if (str == "carthage_elephant_master") {
+    return SpawnType::CarthageElephantMaster;
   }
   if (str == "civilian") {
     return SpawnType::Civilian;
@@ -231,6 +291,12 @@ inline auto can_use_patrol_mode(SpawnType type) -> bool {
   case SpawnType::MountedKnight:
   case SpawnType::HorseArcher:
   case SpawnType::HorseSpearman:
+  case SpawnType::RomanLegionOrganizer:
+  case SpawnType::RomanVeteranConsul:
+  case SpawnType::RomanFieldCommander:
+  case SpawnType::CarthageMercenaryBroker:
+  case SpawnType::CarthageCavalryPatron:
+  case SpawnType::CarthageElephantMaster:
     return true;
   case SpawnType::Catapult:
   case SpawnType::Ballista:
@@ -264,6 +330,18 @@ inline auto spawn_typeToTroopType(SpawnType type) -> std::optional<TroopType> {
     return TroopType::Ballista;
   case SpawnType::Elephant:
     return TroopType::Elephant;
+  case SpawnType::RomanLegionOrganizer:
+    return TroopType::RomanLegionOrganizer;
+  case SpawnType::RomanVeteranConsul:
+    return TroopType::RomanVeteranConsul;
+  case SpawnType::RomanFieldCommander:
+    return TroopType::RomanFieldCommander;
+  case SpawnType::CarthageMercenaryBroker:
+    return TroopType::CarthageMercenaryBroker;
+  case SpawnType::CarthageCavalryPatron:
+    return TroopType::CarthageCavalryPatron;
+  case SpawnType::CarthageElephantMaster:
+    return TroopType::CarthageElephantMaster;
   case SpawnType::Civilian:
     return TroopType::Civilian;
   case SpawnType::Builder:
@@ -300,6 +378,18 @@ inline auto spawn_typeFromTroopType(TroopType type) -> SpawnType {
     return SpawnType::Ballista;
   case TroopType::Elephant:
     return SpawnType::Elephant;
+  case TroopType::RomanLegionOrganizer:
+    return SpawnType::RomanLegionOrganizer;
+  case TroopType::RomanVeteranConsul:
+    return SpawnType::RomanVeteranConsul;
+  case TroopType::RomanFieldCommander:
+    return SpawnType::RomanFieldCommander;
+  case TroopType::CarthageMercenaryBroker:
+    return SpawnType::CarthageMercenaryBroker;
+  case TroopType::CarthageCavalryPatron:
+    return SpawnType::CarthageCavalryPatron;
+  case TroopType::CarthageElephantMaster:
+    return SpawnType::CarthageElephantMaster;
   case TroopType::Civilian:
     return SpawnType::Civilian;
   case TroopType::Builder:

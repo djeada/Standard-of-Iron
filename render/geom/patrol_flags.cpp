@@ -4,6 +4,7 @@
 #include "../gl/resources.h"
 #include "../scene_renderer.h"
 #include "flag.h"
+#include "transforms.h"
 #include <cstdint>
 #include <optional>
 #include <qvectornd.h>
@@ -13,6 +14,41 @@ namespace Render::GL {
 
 constexpr float k_position_grid_precision = 10.0F;
 constexpr int k_position_hash_shift = 32;
+
+void draw_flag(Renderer *renderer, ResourceManager *resources,
+               const Geom::Flag::FlagMatrices &flag) {
+  if ((renderer == nullptr) || (resources == nullptr)) {
+    return;
+  }
+
+  renderer->mesh(get_unit_cylinder(),
+                 Render::Geom::cylinder_between(flag.pole_start, flag.pole_end,
+                                                flag.pole_radius),
+                 flag.pole_color, resources->white(), 1.0F);
+  renderer->mesh(get_unit_cylinder(),
+                 Render::Geom::cylinder_between(flag.crossbeam_start,
+                                                flag.crossbeam_end,
+                                                flag.crossbeam_radius),
+                 flag.pole_color, resources->white(), 1.0F);
+
+  Mesh *cloth_mesh = nullptr;
+  Shader *banner_shader = nullptr;
+  if (renderer->backend() != nullptr) {
+    cloth_mesh = renderer->backend()->banner_mesh();
+    banner_shader = renderer->backend()->banner_shader();
+  }
+
+  if (cloth_mesh != nullptr && banner_shader != nullptr) {
+    Shader *const previous_shader = renderer->get_current_shader();
+    renderer->set_current_shader(banner_shader);
+    renderer->banner(cloth_mesh, flag.pennant, flag.pennant_color,
+                     flag.pennant_trim_color, resources->white(), 1.0F);
+    renderer->set_current_shader(previous_shader);
+  } else {
+    renderer->mesh(resources->unit(), flag.pennant_fallback, flag.pennant_color,
+                   resources->white(), 1.0F);
+  }
+}
 
 void render_patrol_flags(Renderer *renderer, ResourceManager *resources,
                          Engine::Core::World &world,
@@ -27,13 +63,7 @@ void render_patrol_flags(Renderer *renderer, ResourceManager *resources,
     auto flag = Geom::Flag::create(preview_waypoint->x(), preview_waypoint->z(),
                                    QVector3D(0.4F, 1.0F, 0.5F),
                                    QVector3D(0.35F, 0.25F, 0.15F), 1.5F);
-
-    renderer->mesh(resources->unit(), flag.pole, flag.pole_color,
-                   resources->white(), 1.0F);
-    renderer->mesh(resources->unit(), flag.pennant, flag.pennant_color,
-                   resources->white(), 1.0F);
-    renderer->mesh(resources->unit(), flag.finial, flag.pennant_color,
-                   resources->white(), 1.0F);
+    draw_flag(renderer, resources, flag);
 
     auto const grid_x =
         static_cast<int32_t>(preview_waypoint->x() * k_position_grid_precision);
@@ -77,13 +107,7 @@ void render_patrol_flags(Renderer *renderer, ResourceManager *resources,
       auto flag = Geom::Flag::create(waypoint.first, waypoint.second,
                                      QVector3D(0.3F, 1.0F, 0.4F),
                                      QVector3D(0.35F, 0.25F, 0.15F), 1.4F);
-
-      renderer->mesh(resources->unit(), flag.pole, flag.pole_color,
-                     resources->white(), 1.0F);
-      renderer->mesh(resources->unit(), flag.pennant, flag.pennant_color,
-                     resources->white(), 1.0F);
-      renderer->mesh(resources->unit(), flag.finial, flag.pennant_color,
-                     resources->white(), 1.0F);
+      draw_flag(renderer, resources, flag);
     }
   }
 }

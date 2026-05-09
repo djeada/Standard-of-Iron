@@ -2,7 +2,6 @@
 
 in vec3 v_normal;
 in vec2 v_texCoord;
-in vec3 v_worldPos;
 in float v_waveOffset;
 in float v_clothDepth;
 
@@ -43,54 +42,75 @@ float fbm(vec2 p) {
   return value;
 }
 
-float clothWeave(vec2 p) {
-  float warp = sin(p.x * 80.0) * 0.5 + 0.5;
-  float weft = sin(p.y * 80.0) * 0.5 + 0.5;
-  return warp * weft * 0.08;
+float clothWeave(vec2 uv) {
+  float warp = sin(uv.x * 130.0) * 0.5 + 0.5;
+  float weft = sin(uv.y * 110.0) * 0.5 + 0.5;
+  return (warp * weft - 0.25) * 0.12;
+}
+
+float ringMask(vec2 uv, vec2 center, vec2 radius, float thickness) {
+  vec2 p = (uv - center) / radius;
+  float d = length(p);
+  return (1.0 - smoothstep(1.0, 1.0 + thickness, d)) *
+         smoothstep(1.0 - thickness, 1.0, d);
+}
+
+float diamondMask(vec2 uv, vec2 center, vec2 size) {
+  vec2 p = abs((uv - center) / size);
+  float d = p.x + p.y;
+  return 1.0 - smoothstep(0.9, 1.05, d);
 }
 
 void main() {
+  vec2 uv = v_texCoord;
   vec3 color = u_color;
   if (u_useTexture) {
-    color *= texture(u_texture, v_texCoord).rgb;
+    color *= texture(u_texture, uv).rgb;
   }
 
   vec3 normal = normalize(v_normal);
-  vec2 uv = v_worldPos.xz;
+  if (!gl_FrontFacing) {
+    normal = -normal;
+  }
 
   float weave = clothWeave(uv);
 
-  float foldShadow = 1.0 - abs(v_waveOffset) * 3.0;
-  foldShadow = clamp(foldShadow, 0.7, 1.0);
+  float foldShadow = clamp(1.0 - abs(v_waveOffset) * 2.2, 0.76, 1.0);
+  float mastShadow = 1.0 - smoothstep(0.0, 0.22, uv.x) * 0.16;
+  float hemTone = mix(0.94, 1.04, uv.y);
+  float fabricNoise = fbm(uv * vec2(16.0, 22.0) + vec2(0.0, u_time * 0.03)) *
+                          0.08 -
+                      0.04;
 
-  float fabricNoise = fbm(uv * 15.0) * 0.08 - 0.04;
-
-  vec3 viewDir = normalize(vec3(0.0, 1.0, 0.5));
-  float viewAngle = abs(dot(normal, viewDir));
-  float sheen = pow(1.0 - viewAngle, 4.0) * 0.2;
-
-  color = color * (1.0 + fabricNoise + weave) * foldShadow;
-  color += vec3(sheen);
+  color *= (1.0 + fabricNoise + weave) * foldShadow * mastShadow * hemTone;
 
   float borderWidth = 0.08;
-  float edgeDist = min(min(v_texCoord.x, 1.0 - v_texCoord.x),
-                       min(v_texCoord.y, 1.0 - v_texCoord.y));
-  if (edgeDist < borderWidth) {
-    float trimBlend = smoothstep(0.0, borderWidth, edgeDist);
-    color = mix(u_trimColor, color, trimBlend);
-  }
+  float edgeDist =
+      min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
+  float borderMask = 1.0 - smoothstep(borderWidth * 0.65, borderWidth, edgeDist);
+  float mastBand = 1.0 - smoothstep(0.08, 0.14, abs(uv.x - 0.14));
+  float roundel = ringMask(uv, vec2(0.52, 0.54), vec2(0.16, 0.20), 0.16);
+  float diamond = diamondMask(uv, vec2(0.52, 0.54), vec2(0.055, 0.09));
+  float motif = max(borderMask, max(mastBand * 0.65, max(roundel, diamond * 0.85)));
+  color = mix(color, u_trimColor, motif * 0.92);
 
-  vec3 lightDir = normalize(vec3(1.0, 1.0, 1.0));
+  vec3 lightDir = normalize(vec3(0.55, 0.80, 0.40));
   float nDotL = dot(normal, lightDir);
 
-  float wrapAmount = 0.5;
-  float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.25);
+  float wrapAmount = 0.55;
+  float diff = max(nDotL * (1.0 - wrapAmount) + wrapAmount, 0.22);
 
-  float ao = 1.0 - v_clothDepth * 0.15;
+  float ao = 1.0 - v_clothDepth * 0.12;
+  float backscatter = max(dot(-normal, lightDir), 0.0) * 0.12 *
+                      (1.0 - v_clothDepth * 0.35);
+  vec3 viewDir = normalize(vec3(0.0, 0.7, 0.7));
+  vec3 halfDir = normalize(lightDir + viewDir);
+  float sheen = pow(max(dot(normal, halfDir), 0.0), 18.0) * 0.08;
 
   color *= diff * ao;
-
-  color = mix(color, color * 0.92, v_clothDepth * 0.3);
+  color += u_color * (0.24 + backscatter);
+  color += u_trimColor * sheen;
+  color = mix(color, color * 0.94, v_clothDepth * 0.28);
 
   FragColor = vec4(clamp(color, 0.0, 1.0), u_alpha);
 }

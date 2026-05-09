@@ -4,7 +4,7 @@
 
 namespace Game::Systems {
 
-class CivilianDeliverySystem : public Engine::Core::System {
+class CommanderSystem : public Engine::Core::System {
 public:
   void update(Engine::Core::World *world, float delta_time) override;
 };

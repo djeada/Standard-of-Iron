@@ -2,6 +2,9 @@
 
 #include "game/core/component.h"
 #include "game/core/entity.h"
+#include "game/core/world.h"
+#include "game/systems/nation_registry.h"
+#include "game/systems/troop_profile_service.h"
 #include "render/creature/archetype_registry.h"
 #include "render/creature/pipeline/creature_prepared_state.h"
 #include "render/creature/pipeline/creature_render_graph.h"
@@ -10,12 +13,14 @@
 #include "render/creature/pipeline/preparation_common.h"
 #include "render/creature/pipeline/prepared_submit.h"
 #include "render/creature/pipeline/unit_visual_spec.h"
+#include "render/creature/runtime_bake_guard.h"
 #include "render/elephant/elephant_spec.h"
 #include "render/entity/registry.h"
 #include "render/gl/camera.h"
 #include "render/gl/humanoid/humanoid_types.h"
 #include "render/horse/horse_spec.h"
 #include "render/humanoid/humanoid_spec.h"
+#include "render/scene_renderer.h"
 #include "render/submitter.h"
 
 #include <QMatrix4x4>
@@ -102,6 +107,32 @@ auto submit_requests_for_test(std::span<const CreatureRenderRequest> requests,
     prep.bodies.add_request(request);
   }
   return submit_preparation(prep, sink);
+}
+
+void add_test_unit(Engine::Core::Entity &entity,
+                   Game::Units::SpawnType spawn_type,
+                   Game::Systems::NationID nation_id, int owner_id,
+                   const char *renderer_id) {
+  auto *unit = entity.add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = spawn_type;
+  unit->nation_id = nation_id;
+  unit->owner_id = owner_id;
+  unit->health = 100;
+  unit->max_health = 100;
+
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position = {0.0F, 0.0F, 0.0F};
+  transform->rotation = {0.0F, 0.0F, 0.0F};
+  transform->scale = {1.0F, 1.0F, 1.0F};
+
+  auto *renderable =
+      entity.add_component<Engine::Core::RenderableComponent>("", "");
+  ASSERT_NE(renderable, nullptr);
+  renderable->renderer_id = renderer_id;
+  renderable->visible = true;
+  renderable->color = {1.0F, 1.0F, 1.0F};
 }
 
 TEST(TemplatePrewarmRegression, PassIntentFromCtxDetectsPrewarm) {
@@ -442,6 +473,124 @@ TEST(TemplatePrewarmRegression, QuadrupedShadowNullCtxReturnDisabled) {
   auto const shadow = prepare_quadruped_shadow_state(inputs);
 
   EXPECT_FALSE(shadow.enabled);
+}
+
+TEST(TemplatePrewarmRegression, WorldPrewarmSupplementsMissingBuilderProfiles) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation roman{};
+  roman.id = NationID::RomanRepublic;
+  roman.display_name = "Roman Republic";
+  roman.formation_type = Game::Systems::FormationType::Roman;
+  nation_registry.register_nation(std::move(roman));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity *archer = world.create_entity();
+  ASSERT_NE(archer, nullptr);
+  add_test_unit(*archer, SpawnType::Archer, NationID::RomanRepublic, 1,
+                "troops/roman/archer");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto builder_renderer = registry.get("troops/roman/builder");
+  ASSERT_TRUE(static_cast<bool>(builder_renderer));
+
+  Engine::Core::Entity builder(9001);
+  add_test_unit(builder, SpawnType::Builder, NationID::RomanRepublic, 1,
+                "troops/roman/builder");
+
+  renderer.rigged_mesh_cache().reset_frame_stats();
+
+  Render::GL::DrawContext ctx{renderer.resources(), &builder, nullptr,
+                              QMatrix4x4()};
+  ctx.renderer_id = "troops/roman/builder";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.has_variant_override = true;
+  ctx.variant_override = 0;
+
+  builder_renderer(ctx, renderer);
+
+  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  EXPECT_EQ(stats.misses, 0U);
+  EXPECT_GT(stats.hits, 0U);
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
+}
+
+TEST(TemplatePrewarmRegression, WorldPrewarmsCivilianAliases) {
+  using Game::Systems::NationID;
+  using Game::Units::SpawnType;
+  using Render::Creature::CreatureLOD;
+
+  auto &nation_registry = Game::Systems::NationRegistry::instance();
+  nation_registry.clear();
+  Game::Systems::Nation roman{};
+  roman.id = NationID::RomanRepublic;
+  roman.display_name = "Roman Republic";
+  roman.formation_type = Game::Systems::FormationType::Roman;
+  nation_registry.register_nation(std::move(roman));
+  Game::Systems::TroopProfileService::instance().clear();
+
+  Render::GL::Renderer renderer(Render::ShaderQuality::None);
+  ASSERT_TRUE(renderer.initialize());
+
+  Engine::Core::World world;
+  Engine::Core::Entity *civilian = world.create_entity();
+  ASSERT_NE(civilian, nullptr);
+  add_test_unit(*civilian, SpawnType::Civilian, NationID::RomanRepublic, 1,
+                "troops/roman/civilian");
+
+  renderer.prewarm_unit_templates(&world);
+  Render::Creature::set_runtime_bake_forbidden(true);
+
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto civilian_renderer = registry.get("troops/roman/civilian");
+  ASSERT_TRUE(static_cast<bool>(civilian_renderer));
+
+  Engine::Core::Entity civilian_entity(9002);
+  add_test_unit(civilian_entity, SpawnType::Civilian, NationID::RomanRepublic,
+                1, "troops/roman/civilian");
+
+  renderer.rigged_mesh_cache().reset_frame_stats();
+
+  Render::GL::DrawContext ctx{renderer.resources(), &civilian_entity, nullptr,
+                              QMatrix4x4()};
+  ctx.renderer_id = "troops/roman/civilian";
+  ctx.backend = renderer.backend();
+  ctx.allow_template_cache = true;
+  ctx.force_humanoid_lod = true;
+  ctx.forced_humanoid_lod = CreatureLOD::Full;
+  ctx.has_variant_override = true;
+  ctx.variant_override = 0;
+
+  civilian_renderer(ctx, renderer);
+
+  const auto &stats = renderer.rigged_mesh_cache().frame_stats();
+  EXPECT_EQ(stats.misses, 0U);
+  EXPECT_GT(stats.hits, 0U);
+
+  renderer.shutdown();
+  Render::Creature::set_runtime_bake_forbidden(false);
+  Game::Systems::TroopProfileService::instance().clear();
+  nation_registry.clear();
 }
 
 } // namespace

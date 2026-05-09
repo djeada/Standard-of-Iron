@@ -12,6 +12,12 @@
 
 namespace Game::Units {
 
+namespace {
+
+constexpr int k_max_home_civilians = 3;
+
+}
+
 Home::Home(Engine::Core::World &world) : Unit(world, "home") {}
 
 auto Home::Create(Engine::Core::World &world,
@@ -63,8 +69,6 @@ void Home::init(const SpawnParams &params) {
       prod->in_progress = false;
       prod->time_remaining = 0.0F;
       prod->produced_count = 0;
-      prod->max_units = 10000;
-      prod->manpower_available = 0;
       prod->rally_x = m_t->position.x + 2.0F;
       prod->rally_z = m_t->position.z + 1.0F;
       prod->rally_set = true;
@@ -74,6 +78,8 @@ void Home::init(const SpawnParams &params) {
               nation_id, prod->product_type);
       prod->build_time = profile.production.build_time;
       prod->villager_cost = profile.production.cost;
+      prod->max_units = k_max_home_civilians;
+      prod->manpower_available = profile.production.cost * k_max_home_civilians;
     }
   }
 

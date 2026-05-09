@@ -296,6 +296,9 @@ auto build_player_setup_map(const Game::Mission::PlayerSetup &setup)
   map["nation"] = setup.nation;
   map["faction"] = setup.faction;
   map["color"] = setup.color;
+  if (setup.commander_troop.has_value()) {
+    map["commander_troop"] = setup.commander_troop.value();
+  }
   map["starting_units"] = build_unit_setup_list(setup.starting_units);
   map["starting_buildings"] =
       build_building_setup_list(setup.starting_buildings);
@@ -1970,6 +1973,14 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
   }
 
   m_runtime.local_owner_id = load_result.updated_player_id;
+  if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
+    const bool is_campaign =
+        m_campaign_manager &&
+        m_campaign_manager->current_mission_context().is_campaign();
+    // Campaign commanders are mission-authored at setup time; skirmish relies on
+    // AI production decisions to recruit commanders at runtime.
+    ai_system->set_commander_recruitment_enabled(!is_campaign);
+  }
 
   apply_mission_setup();
   configure_mission_victory_conditions();
@@ -2203,6 +2214,65 @@ void GameEngine::apply_mission_setup() {
         }
       };
 
+  auto spawn_commander_for_owner = [&](int owner_id,
+                                       const Game::Systems::NationID nation_id,
+                                       const QString &commander_troop,
+                                       const Game::Mission::Position &position) {
+    if (commander_troop.trimmed().isEmpty()) {
+      return;
+    }
+    const auto spawn_type = Game::Units::spawn_typeFromString(
+        commander_troop.trimmed().toStdString());
+    if (!spawn_type.has_value()) {
+      qWarning() << "Mission setup: unknown commander troop" << commander_troop;
+      return;
+    }
+    const auto troop_type = Game::Units::spawn_typeToTroopType(*spawn_type);
+    if (!troop_type.has_value() || !Game::Units::is_commander_troop(*troop_type)) {
+      qWarning() << "Mission setup: non-commander troop configured as commander"
+                 << commander_troop;
+      return;
+    }
+    if (m_world == nullptr) {
+      return;
+    }
+    for (auto *entity : m_world->get_entities_with<Engine::Core::CommanderComponent>()) {
+      if (entity == nullptr) {
+        continue;
+      }
+      const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+      if (unit != nullptr && unit->owner_id == owner_id && unit->health > 0) {
+        return;
+      }
+    }
+    Game::Units::SpawnParams sp;
+    sp.position = mission_position_to_world(position);
+    sp.player_id = owner_id;
+    sp.spawn_type = *spawn_type;
+    sp.ai_controlled = owner_registry.is_ai(owner_id);
+    sp.nation_id = nation_id;
+    auto unit = reg->create(sp.spawn_type, *m_world, sp);
+    if (!unit) {
+      qWarning() << "Mission setup: failed to spawn commander" << commander_troop
+                 << "for owner" << owner_id;
+      return;
+    }
+    apply_team_color(m_world->get_entity(unit->id()), owner_id);
+  };
+
+  auto default_commander_position =
+      [](const std::vector<Game::Mission::UnitSetup> &units,
+         const std::vector<Game::Mission::BuildingSetup> &buildings,
+         const Game::Mission::Position &fallback) {
+        if (!buildings.empty()) {
+          return buildings.front().position;
+        }
+        if (!units.empty()) {
+          return units.front().position;
+        }
+        return fallback;
+      };
+
   auto spawn_buildings_for_owner =
       [&](int owner_id, const Game::Systems::NationID nation_id,
           const std::vector<Game::Mission::BuildingSetup> &buildings) {
@@ -2250,6 +2320,18 @@ void GameEngine::apply_mission_setup() {
   nation_registry.set_player_nation(local_owner_id, player_nation_id);
   apply_owner_color(local_owner_id, mission.player_setup.color);
 
+  const QString fallback_player_commander =
+      (player_nation_id == Game::Systems::NationID::Carthage)
+          ? QStringLiteral("carthage_elephant_master")
+          : QStringLiteral("roman_veteran_consul");
+  const QString player_commander_troop =
+      mission.player_setup.commander_troop.value_or(fallback_player_commander);
+  const auto player_commander_pos =
+      default_commander_position(mission.player_setup.starting_units,
+                                 mission.player_setup.starting_buildings,
+                                 {68.0F, 70.0F});
+  spawn_commander_for_owner(local_owner_id, player_nation_id,
+                            player_commander_troop, player_commander_pos);
   spawn_units_for_owner(local_owner_id, player_nation_id,
                         mission.player_setup.starting_units);
   spawn_buildings_for_owner(local_owner_id, player_nation_id,
@@ -2278,6 +2360,15 @@ void GameEngine::apply_mission_setup() {
     nation_registry.set_player_nation(ai_owner_id, ai_nation_id);
     apply_owner_color(ai_owner_id, ai_setup.color);
 
+    if (ai_setup.commander_troop.has_value()) {
+      const auto ai_commander_pos =
+          default_commander_position(ai_setup.starting_units,
+                                     ai_setup.starting_buildings,
+                                     {132.0F, 80.0F});
+      spawn_commander_for_owner(ai_owner_id, ai_nation_id,
+                                ai_setup.commander_troop.value(),
+                                ai_commander_pos);
+    }
     spawn_units_for_owner(ai_owner_id, ai_nation_id, ai_setup.starting_units);
     spawn_buildings_for_owner(ai_owner_id, ai_nation_id,
                               ai_setup.starting_buildings);
@@ -2750,6 +2841,10 @@ auto GameEngine::load_from_slot(const QString &slot) -> bool {
   if (auto *ai_system = m_world->get_system<Game::Systems::AISystem>()) {
     qInfo() << "Reinitializing AI system after loading saved game";
     ai_system->reinitialize();
+    const bool is_campaign =
+        m_campaign_manager &&
+        m_campaign_manager->current_mission_context().is_campaign();
+    ai_system->set_commander_recruitment_enabled(!is_campaign);
   }
 
   if (m_victoryService) {

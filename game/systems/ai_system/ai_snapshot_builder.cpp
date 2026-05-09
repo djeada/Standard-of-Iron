@@ -53,6 +53,7 @@ auto AISnapshotBuilder::build(const Engine::Core::World &world,
             entity->get_component<Engine::Core::ProductionComponent>()) {
       data.production.has_component = true;
       data.production.in_progress = production->in_progress;
+      data.production.commander_committed = production->commander_committed;
       data.production.build_time = production->build_time;
       data.production.time_remaining = production->time_remaining;
       data.production.produced_count = production->produced_count;

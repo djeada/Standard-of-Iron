@@ -1,9 +1,9 @@
 {
   "id": "crossing_the_rhone",
-  "title": "Crossing the Rhône",
-  "summary": "Navigate through a winding maze of hills and valleys, cross the Rhône at strategic bridges, and capture both Roman villages",
+  "title": "Crossing the Rh\u00f4ne",
+  "summary": "Navigate through a winding maze of hills and valleys, cross the Rh\u00f4ne at strategic bridges, and capture both Roman villages",
   "teaching_goal": "Introduce maze navigation, multiple river crossings, and dealing with scattered enemy patrols plus fortified positions.",
-  "narrative_intent": "Hannibal's forces must find their way through treacherous terrain to reach and overcome Roman settlements guarding the Rhône crossing.",
+  "narrative_intent": "Hannibal's forces must find their way through treacherous terrain to reach and overcome Roman settlements guarding the Rh\u00f4ne crossing.",
   "map_path": ":/assets/maps/map_crossing_rhone.json",
   "player_setup": {
     "nation": "carthage",
@@ -14,7 +14,8 @@
     "starting_resources": {
       "gold": 300,
       "food": 200
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -31,7 +32,8 @@
         "harassment": 0.2
       },
       "starting_units": [],
-      "starting_buildings": []
+      "starting_buildings": [],
+      "commander_troop": "roman_legion_organizer"
     },
     {
       "id": "roman_patrol_forces",
@@ -47,13 +49,16 @@
         "harassment": 0.6
       },
       "starting_units": [],
-      "starting_buildings": []
+      "starting_buildings": [],
+      "commander_troop": "roman_veteran_consul"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 2,
       "description": "Capture both Roman villages across the river"
     }
@@ -92,7 +97,7 @@
       "actions": [
         {
           "type": "show_message",
-          "text": "Two bridges cross the Rhône. Choose your path wisely - you may need both routes!"
+          "text": "Two bridges cross the Rh\u00f4ne. Choose your path wisely - you may need both routes!"
         }
       ]
     },

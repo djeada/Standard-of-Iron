@@ -511,7 +511,7 @@ public:
           k_headwrap_base_role_byte + k_carthage_headwrap_role_count);
       static const auto k_hammer_base_role_byte = static_cast<std::uint8_t>(
           k_robes_base_role_byte + k_carthage_robes_role_count);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 5>
+      static const std::array<Render::Creature::StaticAttachmentSpec, 6>
           k_tool_belt_specs = Render::GL::tool_belt_make_static_attachments(
               k_pelvis_bone, k_tool_belt_base_role_byte);
       static const std::array<Render::Creature::StaticAttachmentSpec, 3>
@@ -528,14 +528,14 @@ public:
                                                 k_robes_base_role_byte);
       static const Render::Creature::StaticAttachmentSpec k_hammer_spec =
           carthage_hammer_make_static_attachment(k_hammer_base_role_byte);
-      static const std::array<Render::Creature::StaticAttachmentSpec, 13>
+      static const std::array<Render::Creature::StaticAttachmentSpec, 14>
           k_attachments{k_tool_belt_specs[0],  k_tool_belt_specs[1],
                         k_tool_belt_specs[2],  k_tool_belt_specs[3],
-                        k_tool_belt_specs[4],  k_work_apron_specs[0],
-                        k_work_apron_specs[1], k_work_apron_specs[2],
-                        k_arm_guards_specs[0], k_arm_guards_specs[1],
-                        k_headwrap_spec,       k_robes_spec,
-                        k_hammer_spec};
+                        k_tool_belt_specs[4],  k_tool_belt_specs[5],
+                        k_work_apron_specs[0], k_work_apron_specs[1],
+                        k_work_apron_specs[2], k_arm_guards_specs[0],
+                        k_arm_guards_specs[1], k_headwrap_spec,
+                        k_robes_spec,          k_hammer_spec};
       static const auto k_archetype =
           Render::Creature::ArchetypeRegistry::instance()
               .register_unit_archetype(

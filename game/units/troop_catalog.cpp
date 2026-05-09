@@ -15,6 +15,11 @@ void TroopCatalog::register_class(TroopClass troop_class) {
   m_classes[troop_class.unit_type] = std::move(troop_class);
 }
 
+void TroopCatalog::reset_to_defaults() {
+  m_classes.clear();
+  register_defaults();
+}
+
 auto TroopCatalog::get_class(Game::Units::TroopType type) const
     -> const TroopClass * {
   auto it = m_classes.find(type);

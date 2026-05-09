@@ -8,10 +8,16 @@ namespace Render::Geom {
 class Flag {
 public:
   struct FlagMatrices {
-    QMatrix4x4 pole;
+    QVector3D pole_start;
+    QVector3D pole_end;
+    float pole_radius;
+    QVector3D crossbeam_start;
+    QVector3D crossbeam_end;
+    float crossbeam_radius;
     QMatrix4x4 pennant;
-    QMatrix4x4 finial;
+    QMatrix4x4 pennant_fallback;
     QVector3D pennant_color;
+    QVector3D pennant_trim_color;
     QVector3D pole_color;
   };
 
