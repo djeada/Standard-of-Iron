@@ -83,6 +83,9 @@ public:
   [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
     return m_frame_stats;
   }
+  void reserve_for_frame(std::size_t expected_entries) {
+    m_entries.reserve(m_entries.size() + expected_entries);
+  }
 
   void record_skin_atlas_build() noexcept { ++m_frame_stats.skin_atlas_builds; }
   void record_skin_ubo_upload(std::uint64_t bytes) noexcept {

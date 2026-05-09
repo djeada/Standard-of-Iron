@@ -6,23 +6,6 @@ The perf sample that motivated this list showed `RiggedMeshCache::get_or_bake`, 
 
 ## P2 - Terrain and World Assets
 
-### Keep terrain/scatter as the model for static data
-
-Files:
-- `render/ground/*`
-- `render/terrain_scene_proxy.h`
-
-Problem:
-- Terrain scatter is close to the target, but stable-frame upload behavior still needs a proof path.
-
-Work:
-- Ensure all terrain feature types follow the same pattern: load/configure builds immutable GPU buffers; frame submit only references buffers plus small time/visibility parameters.
-- Add dirty flags so `Scatter::sync_direct_state()` and similar upload paths can prove they do not upload in stable frames.
-- Add perf regression coverage for terrain uploads.
-
-Acceptance:
-- Stable terrain frames perform no terrain/scatter CPU generation and no buffer upload except intentional animated/time uniforms.
-
 ### Separate minimap fog cadence from render frame cadence
 
 Files:
@@ -77,33 +60,8 @@ Problem:
 
 Work:
 - Audit backend scratch buffers for avoidable per-frame allocation and copying.
-- Reuse frame-local backend buffers where possible.
+- Reuse frame-local backend buffers where possible (started with rigged instancing submitting command references instead of command-struct copies).
 - Add lightweight counters for draw queue command count, reallocations, and copied bytes.
 
 Acceptance:
 - Stable frames avoid backend scratch allocations and avoidable command-data copies.
-
-## P2 - Creature Submit and Cache Hot Path
-
-### Reduce snapshot and rigged creature submit cost
-
-Files:
-- `render/creature/pipeline/creature_pipeline.cpp`
-- `render/rigged_mesh_cache.*`
-- `render/snapshot_mesh_cache.*`
-- `render/draw_queue.*`
-- `render/gl/backend.cpp`
-
-Problem:
-- A perf sample shows `Render::Creature::Pipeline::submit_snapshot_creature(...)` as the top app-side hotspot.
-- `__memmove_avx_unaligned_erms` and allocator/kernel memory-accounting samples are prominent on both the main app thread and `QSGRenderThread`.
-- `Render::GL::Backend::execute(...)` is visible but materially smaller than creature submit/caching work, so the primary bottleneck is data preparation rather than final GL dispatch.
-
-Work:
-- Audit draw submission and cache code for avoidable `std::vector` growth, temporary containers, structure copies, and span-to-owned-data conversions.
-- Pre-size or reuse hot-path buffers so warmed frames avoid allocator and `memmove` samples.
-- Review whether repeated math such as vector normalization in creature submit can be cached or hoisted when visual state is unchanged.
-
-Acceptance:
-- Warmed creature-heavy frames avoid runtime mesh bake/load work, minimize allocation/copy samples, and reduce `submit_snapshot_creature()` cost in captures.
-
