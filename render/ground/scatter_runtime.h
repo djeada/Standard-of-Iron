@@ -8,6 +8,42 @@
 
 namespace Render::Ground::Scatter {
 
+struct SyncStats {
+  std::uint32_t visibility_rebuilds = 0;
+  std::uint32_t buffer_uploads = 0;
+  std::uint32_t buffer_resets = 0;
+
+  [[nodiscard]] auto did_upload_or_rebuild() const noexcept -> bool {
+    return visibility_rebuilds != 0U || buffer_uploads != 0U ||
+           buffer_resets != 0U;
+  }
+
+  auto operator+=(const SyncStats &other) noexcept -> SyncStats & {
+    visibility_rebuilds += other.visibility_rebuilds;
+    buffer_uploads += other.buffer_uploads;
+    buffer_resets += other.buffer_resets;
+    return *this;
+  }
+};
+
+[[nodiscard]] inline auto
+direct_needs_buffer_upload(bool instances_empty, bool has_buffer,
+                           bool instances_dirty) noexcept -> bool {
+  return !instances_empty && (instances_dirty || !has_buffer);
+}
+
+[[nodiscard]] inline auto filtered_needs_visibility_rebuild(
+    bool instances_empty, bool visible_instances_empty, bool has_buffer,
+    bool visibility_dirty, std::uint64_t current_visibility_version,
+    std::uint64_t cached_visibility_version) noexcept -> bool {
+  if (instances_empty) {
+    return false;
+  }
+  return visibility_dirty ||
+         (current_visibility_version != cached_visibility_version) ||
+         (!visible_instances_empty && !has_buffer);
+}
+
 template <typename Instance, typename PositionAccessor>
 auto collect_visible_instances(
     const std::vector<Instance> &instances,
@@ -34,8 +70,12 @@ auto sync_filtered_instances(
     std::vector<Instance> &visible_instances,
     std::unique_ptr<Render::GL::Buffer> &instance_buffer,
     std::uint64_t &cached_visibility_version, bool &visibility_dirty,
-    PositionAccessor position_accessor) -> std::uint32_t {
+    PositionAccessor position_accessor,
+    SyncStats *stats = nullptr) -> std::uint32_t {
   if (instances.empty()) {
+    if (instance_buffer && stats != nullptr) {
+      ++stats->buffer_resets;
+    }
     visible_instances.clear();
     instance_buffer.reset();
     cached_visibility_version = 0;
@@ -47,11 +87,14 @@ auto sync_filtered_instances(
   const bool use_visibility = visibility.is_initialized();
   const std::uint64_t current_version =
       use_visibility ? visibility.version() : 0;
-  const bool needs_visibility_update =
-      visibility_dirty || (current_version != cached_visibility_version) ||
-      (!visible_instances.empty() && !instance_buffer);
+  const bool needs_visibility_update = filtered_needs_visibility_rebuild(
+      instances.empty(), visible_instances.empty(), instance_buffer != nullptr,
+      visibility_dirty, current_version, cached_visibility_version);
 
   if (needs_visibility_update) {
+    if (stats != nullptr) {
+      ++stats->visibility_rebuilds;
+    }
     if (use_visibility) {
       visible_instances = collect_visible_instances(
           instances, visibility.snapshot(), position_accessor);
@@ -69,7 +112,13 @@ auto sync_filtered_instances(
       }
       instance_buffer->set_data(visible_instances,
                                 Render::GL::Buffer::Usage::Static);
+      if (stats != nullptr) {
+        ++stats->buffer_uploads;
+      }
     } else {
+      if (instance_buffer && stats != nullptr) {
+        ++stats->buffer_resets;
+      }
       instance_buffer.reset();
     }
   }
@@ -80,14 +129,19 @@ auto sync_filtered_instances(
 template <typename Instance>
 auto sync_direct_instances(const std::vector<Instance> &instances,
                            std::unique_ptr<Render::GL::Buffer> &instance_buffer,
-                           bool &instances_dirty) -> std::uint32_t {
+                           bool &instances_dirty,
+                           SyncStats *stats = nullptr) -> std::uint32_t {
   if (instances.empty()) {
+    if (instance_buffer && stats != nullptr) {
+      ++stats->buffer_resets;
+    }
     instance_buffer.reset();
     instances_dirty = false;
     return 0;
   }
 
-  const bool needs_upload = instances_dirty || !instance_buffer;
+  const bool needs_upload = direct_needs_buffer_upload(
+      instances.empty(), instance_buffer != nullptr, instances_dirty);
   if (!instance_buffer) {
     instance_buffer =
         std::make_unique<Render::GL::Buffer>(Render::GL::Buffer::Type::Vertex);
@@ -95,6 +149,9 @@ auto sync_direct_instances(const std::vector<Instance> &instances,
   if (needs_upload && instance_buffer) {
     instance_buffer->set_data(instances, Render::GL::Buffer::Usage::Static);
     instances_dirty = false;
+    if (stats != nullptr) {
+      ++stats->buffer_uploads;
+    }
   }
 
   return static_cast<std::uint32_t>(instances.size());

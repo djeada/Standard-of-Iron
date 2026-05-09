@@ -89,6 +89,12 @@ auto same_role_palette(const RiggedCreatureCmd &a,
   return true;
 }
 
+auto same_instanced_batch_key(const RiggedCreatureCmd &head,
+                              const RiggedCreatureCmd &cmd) -> bool {
+  return cmd.mesh == head.mesh && cmd.material == head.material &&
+         cmd.texture == nullptr && same_role_palette(head, cmd);
+}
+
 void set_role_palette_uniforms(GL::Shader *shader,
                                GL::Shader::UniformHandle colors_handle,
                                GL::Shader::UniformHandle count_handle,
@@ -471,7 +477,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     return false;
   }
   for (std::size_t k = 1; k < count; ++k) {
-    if (!same_role_palette(cmds[0], cmds[k])) {
+    if (!same_instanced_batch_key(cmds[0], cmds[k])) {
       return false;
     }
   }
@@ -589,7 +595,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     return false;
   }
   for (std::size_t k = 1; k < count; ++k) {
-    if (cmds[k] == nullptr || !same_role_palette(*cmds[0], *cmds[k])) {
+    if (cmds[k] == nullptr || !same_instanced_batch_key(*cmds[0], *cmds[k])) {
       return false;
     }
   }

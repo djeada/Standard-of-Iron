@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../game/map/terrain.h"
+#include "ground/scatter_runtime.h"
 #include "i_render_pass.h"
 #include <cstddef>
 
@@ -42,6 +43,7 @@ struct ScatterChunk {
   IRenderPass *pass = nullptr;
   std::size_t instance_count = 0;
   bool gpu_ready = false;
+  Render::Ground::Scatter::SyncStats last_sync_stats{};
 };
 
 } // namespace Render::GL

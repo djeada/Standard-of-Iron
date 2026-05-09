@@ -142,23 +142,61 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
 
   return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::InstanceFiltered,
            m_biome.get(), m_biome != nullptr ? m_biome->instance_count() : 0U,
-           m_biome == nullptr || m_biome->is_gpu_ready()},
+           m_biome == nullptr || m_biome->is_gpu_ready(),
+           m_biome != nullptr ? m_biome->last_sync_stats()
+                              : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::Stone, ScatterVisibilityMode::InstanceFiltered,
            m_stone.get(), m_stone != nullptr ? m_stone->instance_count() : 0U,
-           m_stone == nullptr || m_stone->is_gpu_ready()},
+           m_stone == nullptr || m_stone->is_gpu_ready(),
+           m_stone != nullptr ? m_stone->last_sync_stats()
+                              : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::Plant, ScatterVisibilityMode::InstanceFiltered,
            m_plant.get(), m_plant != nullptr ? m_plant->instance_count() : 0U,
-           m_plant == nullptr || m_plant->is_gpu_ready()},
+           m_plant == nullptr || m_plant->is_gpu_ready(),
+           m_plant != nullptr ? m_plant->last_sync_stats()
+                              : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::Pine, ScatterVisibilityMode::InstanceFiltered,
            m_pine.get(), m_pine != nullptr ? m_pine->instance_count() : 0U,
-           m_pine == nullptr || m_pine->is_gpu_ready()},
+           m_pine == nullptr || m_pine->is_gpu_ready(),
+           m_pine != nullptr ? m_pine->last_sync_stats()
+                             : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::Olive, ScatterVisibilityMode::InstanceFiltered,
            m_olive.get(), m_olive != nullptr ? m_olive->instance_count() : 0U,
-           m_olive == nullptr || m_olive->is_gpu_ready()},
+           m_olive == nullptr || m_olive->is_gpu_ready(),
+           m_olive != nullptr ? m_olive->last_sync_stats()
+                              : Render::Ground::Scatter::SyncStats{}},
           {ScatterSpeciesId::FireCamp, ScatterVisibilityMode::InstanceFiltered,
            m_firecamp.get(),
            m_firecamp != nullptr ? m_firecamp->instance_count() : 0U,
-           m_firecamp == nullptr || m_firecamp->is_gpu_ready()}};
+           m_firecamp == nullptr || m_firecamp->is_gpu_ready(),
+           m_firecamp != nullptr ? m_firecamp->last_sync_stats()
+                                 : Render::Ground::Scatter::SyncStats{}}};
+}
+
+auto TerrainScatterManager::last_sync_stats() const
+    -> Render::Ground::Scatter::SyncStats {
+  std::lock_guard<std::mutex> lock(m_mutex);
+
+  Render::Ground::Scatter::SyncStats stats{};
+  if (m_biome != nullptr) {
+    stats += m_biome->last_sync_stats();
+  }
+  if (m_stone != nullptr) {
+    stats += m_stone->last_sync_stats();
+  }
+  if (m_plant != nullptr) {
+    stats += m_plant->last_sync_stats();
+  }
+  if (m_pine != nullptr) {
+    stats += m_pine->last_sync_stats();
+  }
+  if (m_olive != nullptr) {
+    stats += m_olive->last_sync_stats();
+  }
+  if (m_firecamp != nullptr) {
+    stats += m_firecamp->last_sync_stats();
+  }
+  return stats;
 }
 
 auto TerrainScatterManager::passes() const

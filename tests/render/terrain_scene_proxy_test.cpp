@@ -136,6 +136,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
   EXPECT_EQ(scatters[0].instance_count, 0U);
   EXPECT_TRUE(scatters[0].gpu_ready);
+  EXPECT_FALSE(scatters[0].last_sync_stats.did_upload_or_rebuild());
   EXPECT_EQ(scatters[1].species, Render::GL::ScatterSpeciesId::Stone);
   EXPECT_EQ(scatters[1].visibility_mode,
             Render::GL::ScatterVisibilityMode::InstanceFiltered);
@@ -146,6 +147,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   EXPECT_EQ(scatters[4].species, Render::GL::ScatterSpeciesId::Olive);
   EXPECT_EQ(scatters[5].species, Render::GL::ScatterSpeciesId::FireCamp);
   EXPECT_TRUE(scatters[5].gpu_ready);
+  EXPECT_FALSE(scatter.last_sync_stats().did_upload_or_rebuild());
 }
 
 } // namespace

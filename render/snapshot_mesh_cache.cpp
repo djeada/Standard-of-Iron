@@ -48,8 +48,8 @@ auto build_entry(std::vector<RiggedVertex> &&vertices,
                  std::span<const std::uint32_t> indices) -> SnapshotMeshEntry {
   SnapshotMeshEntry entry{};
   std::vector<std::uint32_t> indices_copy(indices.begin(), indices.end());
-  entry.mesh =
-      std::make_unique<RiggedMesh>(std::move(vertices), std::move(indices_copy));
+  entry.mesh = std::make_unique<RiggedMesh>(std::move(vertices),
+                                            std::move(indices_copy));
   return entry;
 }
 
@@ -98,7 +98,7 @@ auto SnapshotMeshCache::get_or_bake(
       source.skinned_palettes.data() +
       static_cast<std::size_t>(global_frame) *
           static_cast<std::size_t>(source.skinned_bone_count);
-  auto const baked = bake_snapshot_vertices(
+  auto baked = bake_snapshot_vertices(
       src_vertices,
       {frame_palette, static_cast<std::size_t>(source.skinned_bone_count)});
 
