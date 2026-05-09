@@ -80,13 +80,12 @@ private:
     int center_x;
     int center_z;
     int cell_radius;
-    float expanded_range_sq;
+    float expanded_radius_cells_sq;
   };
 
   struct JobPayload {
     int width;
     int height;
-    float tile_size;
     std::vector<std::uint8_t> cells;
     std::vector<VisionSource> sources;
     std::uint64_t generation;

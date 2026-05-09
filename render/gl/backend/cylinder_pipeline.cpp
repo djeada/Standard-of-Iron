@@ -61,6 +61,7 @@ void CylinderPipeline::cache_uniforms() {
 
   if (m_fogShader != nullptr) {
     m_fogUniforms.view_proj = m_fogShader->uniform_handle("u_viewProj");
+    m_fogUniforms.time = m_fogShader->optional_uniform_handle("u_time");
   }
 }
 
@@ -264,27 +265,48 @@ void CylinderPipeline::initialize_fog_pipeline() {
   initializeOpenGLFunctions();
   shutdown_fog_pipeline();
 
-  const Vertex vertices[Geometry::QuadVertexCount] = {
-      {{-0.5F, 0.0F, -0.5F}, {0.0F, 1.0F, 0.0F}, {0.0F, 0.0F}},
-      {{0.5F, 0.0F, -0.5F}, {0.0F, 1.0F, 0.0F}, {1.0F, 0.0F}},
-      {{-0.5F, 0.0F, 0.5F}, {0.0F, 1.0F, 0.0F}, {0.0F, 1.0F}},
-      {{0.5F, 0.0F, 0.5F}, {0.0F, 1.0F, 0.0F}, {1.0F, 1.0F}},
-  };
+  constexpr int k_fog_grid_segments = 4;
+  std::vector<Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(static_cast<std::size_t>((k_fog_grid_segments + 1) *
+                                            (k_fog_grid_segments + 1)));
+  indices.reserve(
+      static_cast<std::size_t>(k_fog_grid_segments * k_fog_grid_segments * 6));
 
-  const unsigned int indices[Geometry::QuadIndexCount] = {0, 1, 2, 2, 1, 3};
+  for (int z = 0; z <= k_fog_grid_segments; ++z) {
+    const float v = static_cast<float>(z) / k_fog_grid_segments;
+    for (int x = 0; x <= k_fog_grid_segments; ++x) {
+      const float u = static_cast<float>(x) / k_fog_grid_segments;
+      vertices.push_back(
+          {{u - 0.5F, 0.0F, v - 0.5F}, {0.0F, 1.0F, 0.0F}, {u, v}});
+    }
+  }
+
+  for (int z = 0; z < k_fog_grid_segments; ++z) {
+    for (int x = 0; x < k_fog_grid_segments; ++x) {
+      const auto i0 =
+          static_cast<unsigned int>(z * (k_fog_grid_segments + 1) + x);
+      const auto i1 = i0 + 1U;
+      const auto i2 =
+          static_cast<unsigned int>((z + 1) * (k_fog_grid_segments + 1) + x);
+      const auto i3 = i2 + 1U;
+      indices.insert(indices.end(), {i0, i1, i2, i2, i1, i3});
+    }
+  }
 
   glGenVertexArrays(1, &m_fogVao);
   glBindVertexArray(m_fogVao);
 
   glGenBuffers(1, &m_fogVertexBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, m_fogVertexBuffer);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex),
+               vertices.data(), GL_STATIC_DRAW);
 
   glGenBuffers(1, &m_fogIndexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_fogIndexBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-  m_fogIndexCount = Geometry::QuadIndexCount;
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
+               indices.data(), GL_STATIC_DRAW);
+  m_fogIndexCount = static_cast<GLsizei>(indices.size());
 
   glEnableVertexAttribArray(VertexAttrib::Position);
   glVertexAttribPointer(VertexAttrib::Position, ComponentCount::Vec3, GL_FLOAT,
@@ -394,6 +416,44 @@ void CylinderPipeline::upload_fog_instances(std::size_t count) {
   glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(FogInstanceGpu),
                   m_fogScratch.data());
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void CylinderPipeline::bind_fog_instance_buffer(GL::Buffer *instance_buffer) {
+  if (instance_buffer == nullptr || m_fogVao == 0U) {
+    return;
+  }
+
+  initializeOpenGLFunctions();
+  glBindVertexArray(m_fogVao);
+  instance_buffer->bind();
+
+  const auto stride = static_cast<GLsizei>(sizeof(FogInstanceGpu));
+  glEnableVertexAttribArray(VertexAttrib::InstancePosition);
+  glVertexAttribPointer(
+      VertexAttrib::InstancePosition, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, center)));
+  glVertexAttribDivisor(VertexAttrib::InstancePosition, 1);
+
+  glEnableVertexAttribArray(VertexAttrib::InstanceScale);
+  glVertexAttribPointer(
+      VertexAttrib::InstanceScale, 1, GL_FLOAT, GL_FALSE, stride,
+      reinterpret_cast<void *>(offsetof(FogInstanceGpu, size)));
+  glVertexAttribDivisor(VertexAttrib::InstanceScale, 1);
+
+  glEnableVertexAttribArray(VertexAttrib::InstanceColor);
+  glVertexAttribPointer(
+      VertexAttrib::InstanceColor, ComponentCount::Vec3, GL_FLOAT, GL_FALSE,
+      stride, reinterpret_cast<void *>(offsetof(FogInstanceGpu, color)));
+  glVertexAttribDivisor(VertexAttrib::InstanceColor, 1);
+
+  glEnableVertexAttribArray(VertexAttrib::InstanceAlpha);
+  glVertexAttribPointer(
+      VertexAttrib::InstanceAlpha, 1, GL_FLOAT, GL_FALSE, stride,
+      reinterpret_cast<void *>(offsetof(FogInstanceGpu, alpha)));
+  glVertexAttribDivisor(VertexAttrib::InstanceAlpha, 1);
+
+  glBindVertexArray(0);
+  instance_buffer->unbind();
 }
 
 void CylinderPipeline::draw_fog(std::size_t count) {

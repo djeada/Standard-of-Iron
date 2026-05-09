@@ -1,5 +1,6 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
 #include "tests/render/test_asset_paths.h"
 
 #include <QMatrix4x4>
@@ -9,7 +10,7 @@
 
 using namespace Render::Creature::Bpat;
 
-TEST(RidingClip, HumanoidBpatHasAtLeast15Clips) {
+TEST(RidingClip, HumanoidBpatHasAtLeast16Clips) {
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
@@ -18,7 +19,7 @@ TEST(RidingClip, HumanoidBpatHasAtLeast15Clips) {
   ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
   auto const *blob = reg.blob(kSpeciesHumanoid);
   ASSERT_NE(blob, nullptr);
-  EXPECT_GE(blob->clip_count(), 15U)
+  EXPECT_GE(blob->clip_count(), 16U)
       << "humanoid.bpat must contain riding clips (re-run bpat_baker)";
 }
 
@@ -31,10 +32,12 @@ TEST(RidingClip, RidingIdleClipDiffersFromInfantryIdle) {
   ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
   auto const *blob = reg.blob(kSpeciesHumanoid);
   ASSERT_NE(blob, nullptr);
-  ASSERT_GE(blob->clip_count(), 12U);
+  ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(
+                                    Render::Creature::kHumanoidRidingIdleClip));
 
-  constexpr std::uint16_t kRidingIdleClip = 11U;
-  constexpr std::uint16_t kIdleClip = 0U;
+  constexpr std::uint16_t kRidingIdleClip =
+      Render::Creature::kHumanoidRidingIdleClip;
+  constexpr std::uint16_t kIdleClip = Render::Creature::kHumanoidIdleClip;
 
   std::array<QMatrix4x4, 64> riding_palette{};
   auto const n = reg.sample_palette(kSpeciesHumanoid, kRidingIdleClip, 0U,
@@ -65,9 +68,12 @@ TEST(RidingClip, RidingChargeClipIsNonLooping) {
   ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
   auto const *blob = reg.blob(kSpeciesHumanoid);
   ASSERT_NE(blob, nullptr);
-  ASSERT_GE(blob->clip_count(), 13U);
+  ASSERT_GT(
+      blob->clip_count(),
+      static_cast<std::uint32_t>(Render::Creature::kHumanoidRidingChargeClip));
 
-  constexpr std::uint16_t kRidingChargeClip = 12U;
+  constexpr std::uint16_t kRidingChargeClip =
+      Render::Creature::kHumanoidRidingChargeClip;
   auto const clip = blob->clip(kRidingChargeClip);
   EXPECT_FALSE(clip.loops) << "riding_charge must be non-looping";
   EXPECT_GT(clip.frame_count, 0U);

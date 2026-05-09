@@ -29,6 +29,17 @@ constexpr float k_shadow_ground_offset = 0.02F;
 constexpr float k_shadow_base_alpha = 0.24F;
 const QVector3D k_shadow_light_dir(0.4F, 1.0F, 0.25F);
 
+const QVector3D k_shadow_light_dir_normalized = k_shadow_light_dir.normalized();
+const QVector2D k_shadow_dir_xz_normalized = []() {
+  QVector2D v(k_shadow_light_dir_normalized.x(),
+              k_shadow_light_dir_normalized.z());
+  if (v.lengthSquared() < 1e-6F) {
+    return QVector2D(0.0F, 1.0F);
+  }
+  v.normalize();
+  return v;
+}();
+
 } // namespace
 
 auto resolve_humanoid_animation_state(const Render::GL::DrawContext &ctx)
@@ -127,7 +138,7 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
     return state;
   }
 
-  state.shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
+  state.shader = ctx.backend->troop_shadow_shader();
   state.mesh = ctx.resources->quad();
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;
@@ -175,19 +186,10 @@ auto prepare_humanoid_shadow_state(const HumanoidShadowStateInputs &inputs)
       inputs.soldier_world_pos.y());
   float const shadow_y = shadow_pos.y();
 
-  QVector3D light_dir = k_shadow_light_dir.normalized();
-  QVector2D light_dir_xz(light_dir.x(), light_dir.z());
-  if (light_dir_xz.lengthSquared() < 1e-6F) {
-    light_dir_xz = QVector2D(0.0F, 1.0F);
-  } else {
-    light_dir_xz.normalize();
-  }
-  QVector2D const shadow_dir = -light_dir_xz;
+  QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;
   if (dir_for_use.lengthSquared() < 1e-6F) {
     dir_for_use = QVector2D(0.0F, 1.0F);
-  } else {
-    dir_for_use.normalize();
   }
 
   float const shadow_offset = shadow_depth * 1.25F;
@@ -227,7 +229,7 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs &inputs)
     return state;
   }
 
-  state.shader = ctx.backend->shader(QStringLiteral("troop_shadow"));
+  state.shader = ctx.backend->troop_shadow_shader();
   state.mesh = ctx.resources->quad();
   if (state.shader == nullptr || state.mesh == nullptr) {
     state.shader = nullptr;
@@ -256,19 +258,10 @@ auto prepare_quadruped_shadow_state(const QuadrupedShadowStateInputs &inputs)
       inputs.world_pos.x(), inputs.world_pos.z(), 0.0F, inputs.world_pos.y());
   float const shadow_y = shadow_pos.y();
 
-  QVector3D light_dir = k_shadow_light_dir.normalized();
-  QVector2D light_dir_xz(light_dir.x(), light_dir.z());
-  if (light_dir_xz.lengthSquared() < 1e-6F) {
-    light_dir_xz = QVector2D(0.0F, 1.0F);
-  } else {
-    light_dir_xz.normalize();
-  }
-  QVector2D const shadow_dir = -light_dir_xz;
+  QVector2D const shadow_dir = -k_shadow_dir_xz_normalized;
   QVector2D dir_for_use = shadow_dir;
   if (dir_for_use.lengthSquared() < 1e-6F) {
     dir_for_use = QVector2D(0.0F, 1.0F);
-  } else {
-    dir_for_use.normalize();
   }
 
   float const shadow_offset = shadow_depth * 1.25F;

@@ -3,6 +3,7 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
+#include "../../../creature/humanoid_clip_ids.h"
 #include "../../../creature/pipeline/creature_render_graph.h"
 #include "../../../creature/pipeline/preparation_common.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
@@ -10,7 +11,6 @@
 #include "../../../equipment/armor/roman_armor.h"
 #include "../../../equipment/armor/roman_greaves.h"
 #include "../../../equipment/equipment_registry.h"
-#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/helmets/roman_light_helmet.h"
 #include "../../../equipment/weapons/bow_renderer.h"
 #include "../../../equipment/weapons/quiver_renderer.h"
@@ -38,6 +38,7 @@
 #include <QMatrix4x4>
 #include <QString>
 #include <QVector3D>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
@@ -198,9 +199,9 @@ public:
                                                    k_cloak_base_role_byte);
       static const std::array<Render::Creature::StaticAttachmentSpec, 12>
           k_attachments{k_helmet_spec,     k_greaves_l_spec,  k_greaves_r_spec,
-                        k_quiver_specs[0], k_quiver_specs[1], k_quiver_specs[2],
-                        k_quiver_specs[3], k_quiver_specs[4], k_armor_spec,
-                        k_bow_specs[0],    k_bow_specs[1],    k_cloak_spec};
+                         k_quiver_specs[0], k_quiver_specs[1], k_quiver_specs[2],
+                         k_quiver_specs[3], k_quiver_specs[4], k_armor_spec,
+                         k_bow_specs[0],    k_bow_specs[1],    k_cloak_spec};
       static const auto k_archer_archetype = []() {
         using Render::Creature::AnimationStateId;
         using Render::Creature::ArchetypeDescriptor;
@@ -272,7 +273,7 @@ public:
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
             attack_bow_clip;
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-            attack_bow_clip;
+            Render::Creature::kHumanoidHoldBowClip;
         return registry.register_archetype(desc);
       }();
 
@@ -297,14 +298,14 @@ public:
 
   void append_companion_preparation(
       const DrawContext &ctx, const HumanoidVariant &variant,
-      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
-      std::uint32_t, Render::Creature::CreatureLOD,
+      const HumanoidPose &, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t, Render::Creature::CreatureLOD lod,
       Render::Creature::Pipeline::CreaturePreparationResult &out)
       const override {
     (void)ctx;
     (void)variant;
-    (void)pose;
     (void)anim_ctx;
+    (void)lod;
     (void)out;
   }
 

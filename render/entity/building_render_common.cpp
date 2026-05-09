@@ -10,13 +10,68 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <string>
+#include <unordered_map>
 
 namespace Render::GL {
 namespace {
 
 using Render::Geom::clamp_vec_01;
+constexpr std::size_t k_cached_building_palette_capacity = 8;
+constexpr std::uint64_t k_building_cache_prune_interval = 256;
+constexpr std::uint64_t k_building_cache_max_age = 2048;
+
+struct CachedBuildingInstance {
+  StoredRenderInstance<k_cached_building_palette_capacity> instance;
+  std::uint64_t last_seen_tick{0};
+};
+
+thread_local std::unordered_map<std::uint32_t, CachedBuildingInstance>
+    s_building_instance_cache;
+thread_local std::uint64_t s_building_submit_tick{0};
+thread_local BuildingInstanceCacheStats s_building_instance_cache_stats;
+
+auto matrix_equals(const QMatrix4x4 &lhs, const QMatrix4x4 &rhs) -> bool {
+  for (int row = 0; row < 4; ++row) {
+    for (int col = 0; col < 4; ++col) {
+      if (lhs(row, col) != rhs(row, col)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+auto palette_equals(
+    const StoredRenderInstance<k_cached_building_palette_capacity> &stored,
+    std::span<const QVector3D> palette) -> bool {
+  if (stored.palette_count != palette.size()) {
+    return false;
+  }
+  for (std::size_t i = 0; i < palette.size(); ++i) {
+    if (stored.palette_storage[i] != palette[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void prune_building_instance_cache(std::uint64_t current_tick) {
+  if ((current_tick % k_building_cache_prune_interval) != 0) {
+    return;
+  }
+  for (auto it = s_building_instance_cache.begin();
+       it != s_building_instance_cache.end();) {
+    if (current_tick - it->second.last_seen_tick > k_building_cache_max_age) {
+      it = s_building_instance_cache.erase(it);
+    } else {
+      ++it;
+    }
+  }
+}
 
 auto building_unit(const DrawContext &ctx) -> Engine::Core::UnitComponent * {
   return (ctx.entity != nullptr)
@@ -132,14 +187,64 @@ auto resolve_building_renderer_key(
 void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
                               const RenderArchetype &archetype,
                               std::span<const QVector3D> palette) {
-  RenderInstance instance;
-  instance.archetype = &archetype;
-  instance.world = ctx.model;
-  instance.palette = palette;
-  instance.default_texture = building_white_texture(ctx);
-  instance.lod =
+  Texture *default_texture = building_white_texture(ctx);
+  RenderArchetypeLod lod =
       select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
-  submit_render_instance(out, instance);
+
+  if (ctx.entity == nullptr ||
+      palette.size() > k_cached_building_palette_capacity) {
+    RenderInstance instance;
+    instance.archetype = &archetype;
+    instance.world = ctx.model;
+    instance.palette = palette;
+    instance.default_texture = default_texture;
+    instance.lod = lod;
+    submit_render_instance(out, instance);
+    return;
+  }
+
+  ++s_building_submit_tick;
+  prune_building_instance_cache(s_building_submit_tick);
+
+  std::uint32_t const entity_id = ctx.entity->get_id();
+  auto [it, inserted] = s_building_instance_cache.try_emplace(
+      entity_id, CachedBuildingInstance{});
+  auto &cached = it->second;
+  cached.last_seen_tick = s_building_submit_tick;
+
+  if (inserted) {
+    ++s_building_instance_cache_stats.misses;
+  } else {
+    ++s_building_instance_cache_stats.hits;
+  }
+
+  const bool needs_rebuild =
+      inserted || cached.instance.archetype != &archetype ||
+      cached.instance.default_texture != default_texture ||
+      cached.instance.lod != lod ||
+      !matrix_equals(cached.instance.world, ctx.model) ||
+      !palette_equals(cached.instance, palette);
+
+  if (needs_rebuild) {
+    ++s_building_instance_cache_stats.rebuilds;
+    cached.instance.archetype = &archetype;
+    cached.instance.world = ctx.model;
+    cached.instance.default_texture = default_texture;
+    cached.instance.lod = lod;
+    cached.instance.set_palette(palette);
+  }
+
+  submit_render_instance(out, cached.instance.render_instance());
+}
+
+auto get_building_instance_cache_stats() -> BuildingInstanceCacheStats {
+  return s_building_instance_cache_stats;
+}
+
+void reset_building_instance_cache_for_tests() {
+  s_building_instance_cache.clear();
+  s_building_submit_tick = 0;
+  s_building_instance_cache_stats = {};
 }
 
 void submit_building_box(ISubmitter &out, Mesh *mesh, Texture *texture,

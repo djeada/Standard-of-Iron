@@ -347,14 +347,19 @@ TEST(ElephantSpecTest, MinimalSpecKeepsHeadAndTrunkIdentity) {
 TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   auto const &spec = Render::Elephant::elephant_creature_spec();
   auto const &manifest = Render::Elephant::elephant_manifest();
+  auto const dims = Render::GL::make_elephant_dimensions(0U);
   auto const *front_thigh =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.thigh");
   auto const *front_calf =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.calf");
   auto const *front_hoof =
       find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.fl.hoof");
+  auto const *rear_thigh =
+      find_mesh_node(manifest.lod_full.mesh_nodes, "elephant.leg.bl.thigh");
   auto const *thigh_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.fl.thigh");
+  auto const *rear_thigh_prim =
+      find_primitive(spec.lod_full.primitives, "elephant.leg.bl.thigh");
   auto const *calf_prim =
       find_primitive(spec.lod_full.primitives, "elephant.leg.fl.calf");
   auto const *hoof_prim =
@@ -363,22 +368,31 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   ASSERT_NE(front_thigh, nullptr);
   ASSERT_NE(front_calf, nullptr);
   ASSERT_NE(front_hoof, nullptr);
+  ASSERT_NE(rear_thigh, nullptr);
   ASSERT_NE(thigh_prim, nullptr);
+  ASSERT_NE(rear_thigh_prim, nullptr);
   ASSERT_NE(calf_prim, nullptr);
   ASSERT_NE(hoof_prim, nullptr);
-  EXPECT_NE(
-      std::get_if<Render::Creature::Quadruped::TubeNode>(&front_thigh->data),
-      nullptr);
-  EXPECT_NE(
-      std::get_if<Render::Creature::Quadruped::TubeNode>(&front_calf->data),
-      nullptr);
-  EXPECT_NE(std::get_if<Render::Creature::Quadruped::EllipsoidNode>(
-                &front_hoof->data),
-            nullptr);
-  EXPECT_EQ(thigh_prim->shape, Render::Creature::PrimitiveShape::Cylinder);
+  auto const *front_thigh_tube =
+      std::get_if<Render::Creature::Quadruped::TubeNode>(&front_thigh->data);
+  auto const *front_calf_tube =
+      std::get_if<Render::Creature::Quadruped::TubeNode>(&front_calf->data);
+  auto const *front_hoof_ellipsoid =
+      std::get_if<Render::Creature::Quadruped::EllipsoidNode>(
+          &front_hoof->data);
+  auto const *rear_thigh_tube =
+      std::get_if<Render::Creature::Quadruped::TubeNode>(&rear_thigh->data);
+  ASSERT_NE(front_thigh_tube, nullptr);
+  ASSERT_NE(front_calf_tube, nullptr);
+  ASSERT_NE(front_hoof_ellipsoid, nullptr);
+  ASSERT_NE(rear_thigh_tube, nullptr);
+  EXPECT_EQ(thigh_prim->shape, Render::Creature::PrimitiveShape::BoneSpanMesh);
+  EXPECT_EQ(rear_thigh_prim->shape,
+            Render::Creature::PrimitiveShape::BoneSpanMesh);
   EXPECT_EQ(calf_prim->shape, Render::Creature::PrimitiveShape::Cylinder);
   EXPECT_EQ(hoof_prim->shape, Render::Creature::PrimitiveShape::Box);
   ASSERT_NE(thigh_prim->custom_mesh, nullptr);
+  ASSERT_NE(rear_thigh_prim->custom_mesh, nullptr);
   ASSERT_NE(calf_prim->custom_mesh, nullptr);
   EXPECT_EQ(thigh_prim->params.anchor_bone,
             static_cast<Render::Creature::BoneIndex>(
@@ -395,7 +409,63 @@ TEST(ElephantSpecTest, FullSpecUsesFacetedSegmentMeshesForTrunkAndLegs) {
   EXPECT_EQ(hoof_prim->params.anchor_bone,
             static_cast<Render::Creature::BoneIndex>(
                 Render::Elephant::ElephantBone::FootFL));
-  EXPECT_GT(hoof_prim->params.head_offset.y(), 0.0F);
+  float constexpr k_elephant_visual_scale = 1.85F;
+  float constexpr k_elephant_body_height_scale = 1.02F;
+  float constexpr k_elephant_thigh_thickness_scale = 2.0F;
+  float constexpr k_elephant_hoof_thickness_scale = 0.8F;
+  float const untrimmed_shoulder_y = -dims.body_height *
+                                     k_elephant_body_height_scale *
+                                     k_elephant_visual_scale * 0.30F;
+  float const sole_y = -dims.leg_length * k_elephant_visual_scale * 2.04F;
+  float const knee_y =
+      untrimmed_shoulder_y + (sole_y - untrimmed_shoulder_y) * 0.36F;
+  float const expected_trimmed_start_y =
+      untrimmed_shoulder_y + (knee_y - untrimmed_shoulder_y) * 0.22F;
+  float const rear_shoulder_z =
+      -dims.body_length * 0.56F * k_elephant_visual_scale * 0.44F;
+  float const front_leg_scale =
+      dims.leg_radius * k_elephant_visual_scale * 2.15F;
+  float const front_foot_scale = dims.foot_radius * k_elephant_visual_scale;
+  EXPECT_NEAR(front_thigh_tube->start.y(), expected_trimmed_start_y, 0.0001F);
+  EXPECT_NEAR(rear_thigh_tube->start.z(), rear_shoulder_z, 0.0001F);
+  EXPECT_NEAR(front_thigh_tube->start_radius,
+              front_leg_scale * 0.44F * k_elephant_thigh_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(front_thigh_tube->end_radius,
+              front_leg_scale * 0.20F * k_elephant_thigh_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(thigh_prim->params.head_offset.y(), dims.leg_length * 0.10F,
+              0.0001F);
+  EXPECT_NEAR(rear_thigh_prim->params.head_offset.y(), dims.leg_length * 0.06F,
+              0.0001F);
+  EXPECT_GT(thigh_prim->params.head_offset.z(), 0.0F);
+  EXPECT_GT(rear_thigh_prim->params.head_offset.z(),
+            thigh_prim->params.head_offset.z());
+  EXPECT_NEAR(thigh_prim->params.radius,
+              dims.leg_radius * 1.95F * k_elephant_thigh_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(thigh_prim->params.depth_radius,
+              dims.leg_radius * 2.25F * k_elephant_thigh_thickness_scale,
+              0.0001F);
+  EXPECT_GT(thigh_prim->params.depth_radius, thigh_prim->params.radius);
+  EXPECT_NEAR(front_hoof_ellipsoid->radii.x(),
+              front_foot_scale * 1.22F * k_elephant_hoof_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(front_hoof_ellipsoid->radii.y(),
+              front_foot_scale * 0.86F * 0.5F * k_elephant_hoof_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(hoof_prim->params.head_offset.y(),
+              dims.foot_radius * (0.56F / 3.0F) *
+                  k_elephant_hoof_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(hoof_prim->params.half_extents.x(),
+              dims.foot_radius * (0.88F / 3.0F) *
+                  k_elephant_hoof_thickness_scale,
+              0.0001F);
+  EXPECT_NEAR(hoof_prim->params.half_extents.y(),
+              dims.foot_radius * (0.56F / 3.0F) *
+                  k_elephant_hoof_thickness_scale,
+              0.0001F);
   EXPECT_GT(thigh_prim->params.radius, calf_prim->params.radius * 1.6F);
   EXPECT_LT(thigh_prim->custom_mesh->get_vertices().size(),
             Render::GL::get_unit_cylinder()->get_vertices().size());
@@ -631,6 +701,9 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
 
   EXPECT_GT(fight_pose.trunk_end.y(),
             idle_pose.trunk_end.y() + dims.trunk_length * 0.30F);
+  EXPECT_GT(fight_pose.trunk_end.z(),
+            fight_pose.head_center.z() + fight_pose.head_half.z());
+  EXPECT_GE(fight_pose.head_center.y(), idle_pose.head_center.y());
 }
 
 TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {

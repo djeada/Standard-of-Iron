@@ -185,11 +185,12 @@ auto bow_string_archetype(const BowRenderConfig &config)
 }
 
 auto bow_body_transform(const QMatrix4x4 &parent, const QVector3D &grip,
-                        const QVector3D &outward) -> QMatrix4x4 {
+                        const QVector3D &outward, const QVector3D &bow_up,
+                        const QVector3D &bow_forward) -> QMatrix4x4 {
   QMatrix4x4 local;
   local.setColumn(0, QVector4D(outward, 0.0F));
-  local.setColumn(1, QVector4D(0.0F, 1.0F, 0.0F, 0.0F));
-  local.setColumn(2, QVector4D(0.0F, 0.0F, 1.0F, 0.0F));
+  local.setColumn(1, QVector4D(bow_up, 0.0F));
+  local.setColumn(2, QVector4D(bow_forward, 0.0F));
   local.setColumn(3, QVector4D(grip, 1.0F));
   return parent * local;
 }
@@ -221,9 +222,6 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
 
   float const bow_half_height = (m_config.bow_top_y - m_config.bow_bot_y) *
                                 0.5F * m_config.bow_height_scale;
-  float const bow_mid_y = grip.y();
-  float const bow_top_y = bow_mid_y + bow_half_height;
-  float const bow_bot_y = bow_mid_y - bow_half_height;
 
   QVector3D outward = grip_socket.right;
   if (outward.lengthSquared() < 1e-6F) {
@@ -236,26 +234,50 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
     outward.normalize();
   }
 
-  QVector3D const side = outward * 0.02F;
+  bool const is_bow_attacking =
+      anim.inputs.is_attacking && !anim.inputs.is_melee;
+  float const hold_blend =
+      is_bow_attacking ? 0.0F : hold_transition_amount(anim.inputs);
+  QVector3D bow_up = up;
+  if (hold_blend > 1e-4F) {
+    QVector3D const hold_axis(0.0F, 0.62F, 0.78F);
+    bow_up = up * (1.0F - hold_blend) + hold_axis * hold_blend;
+    bow_up.normalize();
+  }
+
+  QVector3D bow_forward = QVector3D::crossProduct(outward, bow_up);
+  if (bow_forward.lengthSquared() < 1e-6F) {
+    bow_forward = forward;
+  } else {
+    bow_forward.normalize();
+  }
+
+  QVector3D const bow_base = grip + outward * (m_config.bow_x + 0.02F);
   std::array<QVector3D, 1> const body_palette{k_dark_bow_color};
 
   if (m_config.draw_body) {
-    append_equipment_archetype(batch, bow_body_archetype(m_config),
-                               bow_body_transform(ctx.model, grip, outward),
-                               body_palette);
+    append_equipment_archetype(
+        batch, bow_body_archetype(m_config),
+        bow_body_transform(ctx.model, grip, outward, bow_up, bow_forward),
+        body_palette);
   }
 
-  float const bow_plane_x = grip.x() + m_config.bow_x + side.x();
-  float const bow_plane_z = grip.z() + side.z();
+  QVector3D const top_end = bow_base + bow_up * bow_half_height;
+  QVector3D const bot_end = bow_base - bow_up * bow_half_height;
 
-  QVector3D const top_end(bow_plane_x, bow_top_y, bow_plane_z);
-  QVector3D const bot_end(bow_plane_x, bow_bot_y, bow_plane_z);
-
-  QVector3D const string_hand = frames.hand_l.origin;
-  QVector3D const nock(
-      bow_plane_x,
-      clamp_f(string_hand.y(), bow_bot_y + 0.05F, bow_top_y - 0.05F),
-      clamp_f(string_hand.z(), bow_plane_z - 0.30F, bow_plane_z + 0.30F));
+  QVector3D nock = bow_base;
+  if (hold_blend > 1e-4F) {
+    nock += bow_up * 0.02F;
+  } else {
+    QVector3D const string_hand = frames.hand_l.origin;
+    float const nock_along =
+        clamp_f(QVector3D::dotProduct(string_hand - bow_base, bow_up),
+                -bow_half_height + 0.05F, bow_half_height - 0.05F);
+    float const nock_depth =
+        clamp_f(QVector3D::dotProduct(string_hand - bow_base, bow_forward),
+                -0.30F, 0.30F);
+    nock = bow_base + bow_up * nock_along + bow_forward * nock_depth;
+  }
   std::array<QVector3D, 1> const string_palette{m_config.string_color};
 
   if (m_config.draw_string) {
@@ -273,8 +295,6 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
         string_palette);
   }
 
-  bool const is_bow_attacking =
-      anim.inputs.is_attacking && !anim.inputs.is_melee;
   if (is_bow_attacking) {
     std::array<QVector3D, 1> const attack_string_palette{m_config.string_color *
                                                          0.9F};
@@ -317,8 +337,8 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
   bool const show_arrow = arrow_visible();
 
   if (show_arrow) {
-    QVector3D const tail = nock - forward * 0.06F;
-    QVector3D const tip = tail + forward * 0.90F;
+    QVector3D const tail = nock - bow_forward * 0.06F;
+    QVector3D const tip = tail + bow_forward * 0.90F;
     std::array<QVector3D, 3> const arrow_palette{
         palette.wood, m_config.metal_color, m_config.fletching_color};
     append_equipment_archetype(
@@ -327,7 +347,7 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
         oriented_segment_transform(ctx.model, tail, tip - tail, outward),
         arrow_palette);
 
-    QVector3D const head_base = tip - forward * 0.10F;
+    QVector3D const head_base = tip - bow_forward * 0.10F;
     append_equipment_archetype(
         batch,
         arrow_head_archetype(0.05F, m_config.material_id, "bow_arrow_head"),
@@ -335,10 +355,10 @@ void BowRenderer::submit(const BowRenderConfig &m_config,
                                    outward),
         arrow_palette);
 
-    QVector3D const f1b = tail - forward * 0.02F;
-    QVector3D const f1a = f1b - forward * 0.06F;
-    QVector3D const f2b = tail + forward * 0.02F;
-    QVector3D const f2a = f2b + forward * 0.06F;
+    QVector3D const f1b = tail - bow_forward * 0.02F;
+    QVector3D const f1a = f1b - bow_forward * 0.06F;
+    QVector3D const f2b = tail + bow_forward * 0.02F;
+    QVector3D const f2a = f2b + bow_forward * 0.06F;
 
     append_equipment_archetype(
         batch,
@@ -390,7 +410,9 @@ auto bow_make_static_attachments(const BowRenderConfig &config,
   } else {
     outward.normalize();
   }
-  QMatrix4x4 const unit_pose = bow_body_transform(QMatrix4x4{}, grip, outward);
+  QMatrix4x4 const unit_pose = bow_body_transform(QMatrix4x4{}, grip, outward,
+                                                  QVector3D(0.0F, 1.0F, 0.0F),
+                                                  QVector3D(0.0F, 0.0F, 1.0F));
   QMatrix4x4 const mesh_from_socket =
       bind_socket_invertible ? bind_socket_inverse * unit_pose : unit_pose;
 

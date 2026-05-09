@@ -14,6 +14,15 @@ inline constexpr float k_horse_torso_mesh_height_scale = 1.16F;
 inline constexpr float k_horse_head_visual_width_scale = 1.5F;
 inline constexpr float k_horse_head_visual_height_scale = 1.5F;
 inline constexpr float k_horse_head_visual_length_scale = 1.5F;
+inline constexpr float k_horse_muzzle_length_scale = 0.80F;
+inline constexpr float k_horse_torso_part_height_scale = 1.30F;
+inline constexpr float k_horse_torso_chain_drop_fraction = 0.20F;
+inline constexpr float k_horse_neck_width_boost = 3.08F;
+inline constexpr float k_horse_neck_base_body_height_scale = 1.86F;
+inline constexpr float k_horse_neck_top_body_height_scale = 2.46F;
+inline constexpr float k_horse_neck_base_body_length_scale = 0.50F;
+inline constexpr float k_horse_neck_forward_visual_scale = 0.48F;
+inline constexpr float k_horse_head_setback_scale = 0.08F;
 
 [[nodiscard]] inline auto horse_body_visual_width(
     const Render::GL::HorseDimensions &dims) noexcept -> float {
@@ -55,6 +64,16 @@ horse_torso_lift(const Render::GL::HorseDimensions &dims) noexcept -> float {
   return horse_body_visual_height(dims) * 0.96F;
 }
 
+[[nodiscard]] inline auto horse_torso_chain_drop(
+    const Render::GL::HorseDimensions &dims) noexcept -> float {
+  return horse_torso_lift(dims) * k_horse_torso_chain_drop_fraction;
+}
+
+[[nodiscard]] inline auto horse_torso_visual_lift(
+    const Render::GL::HorseDimensions &dims) noexcept -> float {
+  return horse_torso_lift(dims) - horse_torso_chain_drop(dims);
+}
+
 [[nodiscard]] inline auto horse_front_leg_attach_local(
     const Render::GL::HorseDimensions &dims) noexcept -> QVector3D {
   float const bh = horse_body_visual_height(dims);
@@ -79,28 +98,34 @@ horse_torso_lift(const Render::GL::HorseDimensions &dims) noexcept -> float {
     const Render::GL::HorseDimensions &dims) noexcept -> QVector3D {
   float const bh = horse_body_visual_height(dims);
   float const bl = horse_body_visual_length(dims);
-  return {0.0F, bh * 1.82F, bl * 0.52F};
+  float const torso_drop = horse_torso_chain_drop(dims);
+  return {0.0F, bh * k_horse_neck_base_body_height_scale - torso_drop,
+          bl * k_horse_neck_base_body_length_scale};
 }
 
 [[nodiscard]] inline auto horse_neck_top_local(
     const Render::GL::HorseDimensions &dims) noexcept -> QVector3D {
   float const bh = horse_body_visual_height(dims);
-  float const bl = horse_body_visual_length(dims);
-  return {0.0F, bh * 2.42F, bl * 0.76F};
+  QVector3D const neck_base = horse_neck_base_local(dims);
+  return {0.0F, bh * k_horse_neck_top_body_height_scale,
+          neck_base.z() + dims.neck_length * k_horse_visual_scale *
+                              k_horse_neck_forward_visual_scale};
 }
 
 [[nodiscard]] inline auto horse_tail_base_local(
     const Render::GL::HorseDimensions &dims) noexcept -> QVector3D {
   float const bh = horse_body_visual_height(dims);
   float const bl = horse_body_visual_length(dims);
-  return {0.0F, bh * 1.82F, -bl * 0.56F};
+  float const torso_drop = horse_torso_chain_drop(dims);
+  return {0.0F, bh * 1.82F - torso_drop, -bl * 0.56F};
 }
 
 [[nodiscard]] inline auto horse_tail_tip_local(
     const Render::GL::HorseDimensions &dims) noexcept -> QVector3D {
   float const bh = horse_body_visual_height(dims);
   float const bl = horse_body_visual_length(dims);
-  return {0.0F, bh * 1.36F, -bl * 0.70F};
+  float const torso_drop = horse_torso_chain_drop(dims);
+  return {0.0F, bh * 1.36F - torso_drop, -bl * 0.70F};
 }
 
 } // namespace Render::Horse

@@ -517,6 +517,43 @@ TEST(StatelessWeaponRenderers, BowAttackStringUsesArchetypePath) {
   EXPECT_EQ(hash_batch(via_submit), hash_batch(via_render));
 }
 
+TEST(StatelessWeaponRenderers, BowHoldTiltsUpperLimbForward) {
+  const auto frames = make_frames();
+  auto anim = make_anim();
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch;
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames, palette, anim, batch);
+
+  ASSERT_FALSE(batch.archetypes.empty());
+  QVector3D const bow_up =
+      batch.archetypes.front().world.column(1).toVector3D();
+  EXPECT_GT(bow_up.z(), 0.45F);
+  EXPECT_GT(bow_up.y(), 0.45F);
+}
+
+TEST(StatelessWeaponRenderers, BowHoldStringDoesNotFollowOffhandDrawPosition) {
+  auto frames_a = make_frames();
+  auto frames_b = make_frames();
+  frames_b.hand_l.origin = {-0.60F, 1.42F, -0.18F};
+
+  auto anim = make_anim();
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+  const auto palette = make_palette();
+  const auto ctx = make_ctx();
+
+  EquipmentBatch batch_a;
+  EquipmentBatch batch_b;
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames_a, palette, anim, batch_a);
+  BowRenderer::submit(BowRenderConfig{}, ctx, frames_b, palette, anim, batch_b);
+
+  EXPECT_EQ(hash_batch(batch_a), hash_batch(batch_b));
+}
+
 TEST(StatelessWeaponRenderers, QuiverSubmitIsStateless) {
   QuiverRenderer renderer{};
   QuiverRenderConfig a;

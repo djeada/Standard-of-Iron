@@ -142,6 +142,7 @@ TEST(BuildingRenderCommon, RegisteredVariantDispatcherRoutesByNation) {
 
 TEST(BuildingRenderCommon, BuildingInstanceSelectsFullLodWhenNearby) {
   using namespace Render::GL;
+  reset_building_instance_cache_for_tests();
 
   RenderArchetypeBuilder builder("building_lod_test");
   builder.set_max_distance(60.0F);
@@ -161,6 +162,7 @@ TEST(BuildingRenderCommon, BuildingInstanceSelectsFullLodWhenNearby) {
 
 TEST(BuildingRenderCommon, BuildingInstanceSelectsMinimalLodWhenFar) {
   using namespace Render::GL;
+  reset_building_instance_cache_for_tests();
 
   RenderArchetypeBuilder builder("building_lod_test_far");
   builder.set_max_distance(60.0F);
@@ -187,6 +189,66 @@ TEST(BuildingRenderCommon, RegisterBuildingRendererUsesCanonicalKeyOnly) {
 
   EXPECT_TRUE(static_cast<bool>(registry.get("troops/roman/barracks")));
   EXPECT_FALSE(static_cast<bool>(registry.get("barracks_roman")));
+}
+
+TEST(BuildingRenderCommon, BuildingInstanceCacheReusesUnchangedEntityData) {
+  using namespace Render::GL;
+  reset_building_instance_cache_for_tests();
+
+  RenderArchetypeBuilder builder("building_cache_same");
+  builder.set_max_distance(60.0F);
+  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
+  builder.use_lod(RenderArchetypeLod::Minimal);
+  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
+  RenderArchetype archetype = std::move(builder).build();
+
+  Engine::Core::Entity entity(77);
+  DrawContext ctx;
+  ctx.entity = &entity;
+  ctx.distance_sq = 20.0F * 20.0F;
+  RecordingSubmitter submitter;
+
+  submit_building_instance(submitter, ctx, archetype);
+  const auto stats_after_first = get_building_instance_cache_stats();
+  submit_building_instance(submitter, ctx, archetype);
+  const auto stats_after_second = get_building_instance_cache_stats();
+
+  EXPECT_EQ(stats_after_first.misses, 1U);
+  EXPECT_EQ(stats_after_first.rebuilds, 1U);
+  EXPECT_EQ(stats_after_second.hits, 1U);
+  EXPECT_EQ(stats_after_second.rebuilds, 1U);
+}
+
+TEST(BuildingRenderCommon, BuildingInstanceCacheRebuildsOnLodChange) {
+  using namespace Render::GL;
+  reset_building_instance_cache_for_tests();
+
+  RenderArchetypeBuilder builder("building_cache_lod_change");
+  builder.set_max_distance(60.0F);
+  builder.add_mesh(fake_mesh(1), QMatrix4x4{}, QVector3D(1.0F, 0.0F, 0.0F));
+  builder.use_lod(RenderArchetypeLod::Minimal);
+  builder.add_mesh(fake_mesh(2), QMatrix4x4{}, QVector3D(0.0F, 1.0F, 0.0F));
+  RenderArchetype archetype = std::move(builder).build();
+
+  Engine::Core::Entity entity(78);
+  DrawContext ctx;
+  ctx.entity = &entity;
+  RecordingSubmitter submitter;
+
+  ctx.distance_sq = 10.0F * 10.0F;
+  submit_building_instance(submitter, ctx, archetype);
+  const auto stats_after_near = get_building_instance_cache_stats();
+
+  ctx.distance_sq = 90.0F * 90.0F;
+  submit_building_instance(submitter, ctx, archetype);
+  const auto stats_after_far = get_building_instance_cache_stats();
+
+  ASSERT_GE(submitter.meshes.size(), 2U);
+  EXPECT_EQ(submitter.meshes[0].mesh, fake_mesh(1));
+  EXPECT_EQ(submitter.meshes[1].mesh, fake_mesh(2));
+  EXPECT_EQ(stats_after_near.rebuilds, 1U);
+  EXPECT_EQ(stats_after_far.rebuilds, 2U);
+  EXPECT_EQ(stats_after_far.hits, 1U);
 }
 
 } // namespace

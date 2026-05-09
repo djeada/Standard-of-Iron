@@ -258,6 +258,29 @@ TEST(DrawQueueSortOrder, BucketedInputsOnlySortWithinMatchingBucket) {
   EXPECT_LT(queue.sort_key_for_sorted(2), queue.sort_key_for_sorted(3));
 }
 
+TEST(DrawQueueSortOrder, TerrainSurfaceBucketPreservesAppendOrder) {
+  DrawQueue queue;
+
+  TerrainSurfaceCmd first;
+  first.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x2));
+  first.sort_key = 20;
+  queue.submit(first);
+
+  TerrainSurfaceCmd second;
+  second.mesh = reinterpret_cast<Mesh *>(static_cast<std::uintptr_t>(0x1));
+  second.sort_key = 10;
+  queue.submit(second);
+
+  queue.sort_for_batching();
+
+  ASSERT_EQ(queue.size(), 2U);
+  EXPECT_EQ(queue.get_sorted(0).index(), TerrainSurfaceCmdIndex);
+  EXPECT_EQ(queue.get_sorted(1).index(), TerrainSurfaceCmdIndex);
+  EXPECT_GT(queue.sort_key_for_sorted(0), queue.sort_key_for_sorted(1))
+      << "Stable terrain surface spans should preserve append order instead "
+         "of sorting by full key.";
+}
+
 TEST(DrawQueueSortOrder, NonMonotonicBucketSequenceFallsBackToGlobalSort) {
   DrawQueue queue;
 

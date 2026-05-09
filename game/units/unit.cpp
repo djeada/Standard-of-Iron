@@ -71,8 +71,8 @@ void Unit::move_to(float x, float z) {
 
   if (auto *e = entity()) {
     auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
-    if (hold_comp != nullptr) {
-      hold_comp->active = false;
+    if ((hold_comp != nullptr) && hold_comp->active) {
+      hold_comp->begin_exit();
     }
     auto *guard_comp = e->get_component<Engine::Core::GuardModeComponent>();
     if (guard_comp != nullptr) {
@@ -111,6 +111,9 @@ void Unit::set_hold_mode(bool enabled) {
     if (hold_comp == nullptr) {
       hold_comp = e->add_component<Engine::Core::HoldModeComponent>();
     }
+    if (!hold_comp->active) {
+      hold_comp->kneel_entry_progress = 0.0F;
+    }
     hold_comp->active = true;
     hold_comp->exit_cooldown = 0.0F;
 
@@ -126,9 +129,8 @@ void Unit::set_hold_mode(bool enabled) {
       mv->path_pending = false;
     }
   } else {
-    if (hold_comp != nullptr) {
-      hold_comp->active = false;
-      hold_comp->exit_cooldown = hold_comp->stand_up_duration;
+    if ((hold_comp != nullptr) && hold_comp->active) {
+      hold_comp->begin_exit();
     }
   }
 }
@@ -159,8 +161,8 @@ void Unit::set_guard_mode(bool enabled) {
     guard_comp->returning_to_guard_position = false;
 
     auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
-    if (hold_comp != nullptr) {
-      hold_comp->active = false;
+    if ((hold_comp != nullptr) && hold_comp->active) {
+      hold_comp->begin_exit();
     }
 
     if (!guard_comp->has_guard_target) {
@@ -197,8 +199,8 @@ void Unit::set_guard_target(Engine::Core::EntityID target_id) {
   guard_comp->has_guard_target = true;
 
   auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
-  if (hold_comp != nullptr) {
-    hold_comp->active = false;
+  if ((hold_comp != nullptr) && hold_comp->active) {
+    hold_comp->begin_exit();
   }
 }
 
@@ -221,8 +223,8 @@ void Unit::set_guard_position(float x, float z) {
   guard_comp->has_guard_target = true;
 
   auto *hold_comp = e->get_component<Engine::Core::HoldModeComponent>();
-  if (hold_comp != nullptr) {
-    hold_comp->active = false;
+  if ((hold_comp != nullptr) && hold_comp->active) {
+    hold_comp->begin_exit();
   }
 }
 

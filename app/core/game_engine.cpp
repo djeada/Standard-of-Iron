@@ -1334,6 +1334,11 @@ void GameEngine::sync_selection_flags() {
       set_cursor_mode(CursorMode::Normal);
     }
   }
+
+  emit hold_mode_changed(any_selected_in_hold_mode());
+  emit guard_mode_changed(any_selected_in_guard_mode());
+  emit formation_mode_changed(any_selected_in_formation_mode());
+  emit run_mode_changed(any_selected_in_run_mode());
   update_civilian_delivery_availability();
 }
 
@@ -1599,6 +1604,13 @@ auto GameEngine::get_selected_units_command_mode() const -> QString {
   return m_selection_query_service
              ? m_selection_query_service->get_selected_units_command_mode()
              : "normal";
+}
+
+auto GameEngine::get_selected_units_toggle_state(const QString &mode) const
+    -> QString {
+  return m_selection_query_service
+             ? m_selection_query_service->get_selected_units_toggle_state(mode)
+             : "none";
 }
 
 auto GameEngine::get_selected_units_mode_availability() const -> QVariantMap {

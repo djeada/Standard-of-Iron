@@ -11,7 +11,9 @@
 
 #include <array>
 #include <cmath>
+#include <memory>
 #include <numbers>
+#include <span>
 #include <vector>
 
 namespace Render::Elephant {
@@ -31,6 +33,17 @@ constexpr float k_elephant_head_scale = 1.55F;
 constexpr float k_elephant_torso_width_scale = 1.20F;
 constexpr float k_elephant_torso_height_scale = 1.10F;
 constexpr int k_elephant_leg_radial_segments = 6;
+constexpr float k_elephant_whole_thigh_upper_trim = 0.22F;
+constexpr float k_elephant_front_thigh_head_y = 0.10F;
+constexpr float k_elephant_rear_thigh_head_y = 0.06F;
+constexpr float k_elephant_front_thigh_tail_y = 0.03F;
+constexpr float k_elephant_rear_thigh_tail_y = 0.04F;
+constexpr float k_elephant_front_thigh_head_z = 0.02F;
+constexpr float k_elephant_rear_thigh_head_z = 0.07F;
+constexpr float k_elephant_front_thigh_tail_z = 0.01F;
+constexpr float k_elephant_rear_thigh_tail_z = 0.04F;
+constexpr float k_elephant_thigh_thickness_scale = 2.0F;
+constexpr float k_elephant_hoof_thickness_scale = 0.8F;
 
 struct ElephantClipSpec {
   Render::Creature::BakeClipDescriptor desc;
@@ -168,8 +181,8 @@ auto build_elephant_whole_nodes()
     float const sole_y = -dims.leg_length * k_elephant_visual_scale * 2.04F;
     float const leg_drop = sole_y - top_y;
     float const knee_y = top_y + leg_drop * (front ? 0.36F : 0.34F);
-    float const hoof_height =
-        dims.foot_radius * k_elephant_visual_scale * 0.86F;
+    float const hoof_height = dims.foot_radius * k_elephant_visual_scale *
+                              0.86F * k_elephant_hoof_thickness_scale;
     float const hoof_top_y = sole_y + hoof_height;
     float const calf_end_y =
         hoof_top_y + dims.leg_radius * k_elephant_visual_scale * 0.08F;
@@ -198,12 +211,14 @@ auto build_elephant_whole_nodes()
     }
     float const knee_gap = leg_scale * 0.34F;
     float const ankle_gap = foot_scale * 0.24F;
+    float const thigh_trim_y = (knee_local.y() - shoulder_local.y()) *
+                               k_elephant_whole_thigh_upper_trim;
 
     TubeNode thigh;
-    thigh.start = shoulder_local;
+    thigh.start = shoulder_local + QVector3D(0.0F, thigh_trim_y, 0.0F);
     thigh.end = knee_local - thigh_axis * knee_gap;
-    thigh.start_radius = leg_scale * 0.44F;
-    thigh.end_radius = leg_scale * 0.20F;
+    thigh.start_radius = leg_scale * 0.44F * k_elephant_thigh_thickness_scale;
+    thigh.end_radius = leg_scale * 0.20F * k_elephant_thigh_thickness_scale;
     thigh.segment_count = 4U;
     thigh.ring_vertices = 6U;
     nodes.push_back(
@@ -220,8 +235,10 @@ auto build_elephant_whole_nodes()
 
     EllipsoidNode hoof;
     hoof.center = QVector3D(ankle_x, hoof_top_y - hoof_radius_y, ankle_z);
-    hoof.radii = QVector3D(foot_scale * (front ? 1.22F : 1.14F), hoof_radius_y,
-                           foot_scale * (front ? 1.42F : 1.28F));
+    hoof.radii = QVector3D(
+        foot_scale * (front ? 1.22F : 1.14F) * k_elephant_hoof_thickness_scale,
+        hoof_radius_y,
+        foot_scale * (front ? 1.42F : 1.28F) * k_elephant_hoof_thickness_scale);
     hoof.ring_count = 4U;
     hoof.ring_vertices = 6U;
     nodes.push_back({hoof_name, foot_bone, k_role_skin, kLodAll, 0, hoof});
@@ -320,6 +337,120 @@ const auto k_elephant_whole_nodes = build_elephant_whole_nodes();
 const std::array<std::string_view, 1> k_elephant_full_excluded_prefixes{
     "elephant.leg."};
 
+struct ElephantLegRingProfile {
+  float y{};
+  float x_shift{};
+  float z_shift{};
+  float x_outer{};
+  float x_inner{};
+  float z_front{};
+  float z_back{};
+};
+
+auto build_elephant_leg_span_mesh(std::span<const ElephantLegRingProfile> rings)
+    -> std::unique_ptr<Render::GL::Mesh> {
+  constexpr int k_ring_vertices = 8;
+  std::vector<Render::GL::Vertex> vertices;
+  std::vector<unsigned int> indices;
+  vertices.reserve(rings.size() * k_ring_vertices + 2U);
+  indices.reserve((rings.size() - 1U) * k_ring_vertices * 6U +
+                  k_ring_vertices * 6U);
+
+  auto append_vertex = [&](float x, float y, float z, float u, float v) {
+    QVector3D normal(x, 0.0F, z);
+    if (normal.lengthSquared() < 1.0e-6F) {
+      normal = QVector3D(0.0F, 1.0F, 0.0F);
+    } else {
+      normal.normalize();
+    }
+    vertices.push_back(
+        {{x, y, z}, {normal.x(), normal.y(), normal.z()}, {u, v}});
+  };
+
+  for (ElephantLegRingProfile const &ring : rings) {
+    append_vertex(ring.x_shift + ring.x_outer * 0.60F, ring.y,
+                  ring.z_shift + ring.z_front * 0.88F, 0.00F, ring.y + 0.5F);
+    append_vertex(ring.x_shift, ring.y, ring.z_shift + ring.z_front, 0.14F,
+                  ring.y + 0.5F);
+    append_vertex(ring.x_shift - ring.x_inner * 0.60F, ring.y,
+                  ring.z_shift + ring.z_front * 0.88F, 0.28F, ring.y + 0.5F);
+    append_vertex(ring.x_shift - ring.x_inner, ring.y, ring.z_shift, 0.42F,
+                  ring.y + 0.5F);
+    append_vertex(ring.x_shift - ring.x_inner * 0.60F, ring.y,
+                  ring.z_shift - ring.z_back * 0.84F, 0.56F, ring.y + 0.5F);
+    append_vertex(ring.x_shift, ring.y, ring.z_shift - ring.z_back, 0.70F,
+                  ring.y + 0.5F);
+    append_vertex(ring.x_shift + ring.x_outer * 0.60F, ring.y,
+                  ring.z_shift - ring.z_back * 0.84F, 0.84F, ring.y + 0.5F);
+    append_vertex(ring.x_shift + ring.x_outer, ring.y, ring.z_shift, 1.00F,
+                  ring.y + 0.5F);
+  }
+
+  for (std::size_t ring = 0; ring + 1U < rings.size(); ++ring) {
+    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    unsigned int const next =
+        static_cast<unsigned int>((ring + 1U) * k_ring_vertices);
+    for (int i = 0; i < k_ring_vertices; ++i) {
+      unsigned int const a = base + static_cast<unsigned int>(i);
+      unsigned int const b =
+          base + static_cast<unsigned int>((i + 1) % k_ring_vertices);
+      unsigned int const c =
+          next + static_cast<unsigned int>((i + 1) % k_ring_vertices);
+      unsigned int const d = next + static_cast<unsigned int>(i);
+      indices.insert(indices.end(), {a, b, c, c, d, a});
+    }
+  }
+
+  auto add_cap = [&](std::size_t ring, bool top) {
+    ElephantLegRingProfile const &profile = rings[ring];
+    unsigned int const center = static_cast<unsigned int>(vertices.size());
+    vertices.push_back({{profile.x_shift, profile.y, profile.z_shift},
+                        {0.0F, top ? -1.0F : 1.0F, 0.0F},
+                        {0.5F, 0.5F}});
+    unsigned int const base = static_cast<unsigned int>(ring * k_ring_vertices);
+    for (int i = 0; i < k_ring_vertices; ++i) {
+      unsigned int const a = base + static_cast<unsigned int>(i);
+      unsigned int const b =
+          base + static_cast<unsigned int>((i + 1) % k_ring_vertices);
+      if (top) {
+        indices.insert(indices.end(), {center, b, a});
+      } else {
+        indices.insert(indices.end(), {center, a, b});
+      }
+    }
+  };
+  add_cap(0U, true);
+  add_cap(rings.size() - 1U, false);
+
+  return std::make_unique<Render::GL::Mesh>(vertices, indices);
+}
+
+auto elephant_front_thigh_mesh() noexcept -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+    auto const rings = std::array<ElephantLegRingProfile, 4>{{
+        {-0.50F, 0.00F, 0.08F, 0.82F, 0.76F, 0.96F, 0.58F},
+        {-0.18F, 0.00F, 0.05F, 0.68F, 0.62F, 0.80F, 0.50F},
+        {0.16F, 0.00F, 0.02F, 0.46F, 0.40F, 0.54F, 0.34F},
+        {0.50F, 0.00F, 0.00F, 0.20F, 0.18F, 0.24F, 0.16F},
+    }};
+    return build_elephant_leg_span_mesh(rings);
+  }();
+  return mesh.get();
+}
+
+auto elephant_rear_thigh_mesh() noexcept -> Render::GL::Mesh * {
+  static std::unique_ptr<Render::GL::Mesh> mesh = [] {
+    auto const rings = std::array<ElephantLegRingProfile, 4>{{
+        {-0.50F, 0.00F, 0.12F, 0.86F, 0.80F, 0.86F, 0.52F},
+        {-0.18F, 0.00F, 0.08F, 0.70F, 0.64F, 0.72F, 0.46F},
+        {0.16F, 0.00F, 0.03F, 0.48F, 0.42F, 0.48F, 0.30F},
+        {0.50F, 0.00F, 0.00F, 0.22F, 0.18F, 0.22F, 0.14F},
+    }};
+    return build_elephant_leg_span_mesh(rings);
+  }();
+  return mesh.get();
+}
+
 auto elephant_leg_segment_mesh() noexcept -> Render::GL::Mesh * {
   static Render::GL::Mesh *const mesh =
       Render::GL::get_unit_cylinder(k_elephant_leg_radial_segments);
@@ -341,13 +472,27 @@ auto build_elephant_full_leg_overlays()
                      Render::Creature::BoneIndex foot_bone, bool front) {
     PrimitiveInstance &thigh = out[idx++];
     thigh.debug_name = thigh_name;
-    thigh.shape = Render::Creature::PrimitiveShape::Cylinder;
+    thigh.shape = Render::Creature::PrimitiveShape::BoneSpanMesh;
     thigh.params.anchor_bone = shoulder_bone;
     thigh.params.tail_bone = knee_bone;
-    thigh.params.head_offset = QVector3D(0.0F, dims.leg_length * 0.34F, 0.0F);
-    thigh.params.tail_offset = QVector3D(0.0F, -dims.leg_length * 0.06F, 0.0F);
-    thigh.params.radius = dims.leg_radius * (front ? 1.60F : 1.50F);
-    thigh.custom_mesh = elephant_leg_segment_mesh();
+    thigh.params.head_offset =
+        QVector3D(0.0F,
+                  dims.leg_length * (front ? k_elephant_front_thigh_head_y
+                                           : k_elephant_rear_thigh_head_y),
+                  dims.body_length * (front ? k_elephant_front_thigh_head_z
+                                            : k_elephant_rear_thigh_head_z));
+    thigh.params.tail_offset =
+        QVector3D(0.0F,
+                  dims.leg_length * (front ? k_elephant_front_thigh_tail_y
+                                           : k_elephant_rear_thigh_tail_y),
+                  dims.body_length * (front ? k_elephant_front_thigh_tail_z
+                                            : k_elephant_rear_thigh_tail_z));
+    thigh.params.radius = dims.leg_radius * (front ? 1.95F : 1.90F) *
+                          k_elephant_thigh_thickness_scale;
+    thigh.params.depth_radius = dims.leg_radius * (front ? 2.25F : 2.10F) *
+                                k_elephant_thigh_thickness_scale;
+    thigh.custom_mesh =
+        front ? elephant_front_thigh_mesh() : elephant_rear_thigh_mesh();
     thigh.color_role = k_role_skin;
     thigh.material_id = k_elephant_material_id;
     thigh.lod_mask = Render::Creature::kLodFull;
@@ -370,13 +515,17 @@ auto build_elephant_full_leg_overlays()
     hoof.debug_name = hoof_name;
     hoof.shape = Render::Creature::PrimitiveShape::Box;
     hoof.params.anchor_bone = foot_bone;
-    hoof.params.head_offset =
-        QVector3D(0.0F, dims.foot_radius * (0.56F / 3.0F),
-                  (front ? 1.0F : -1.0F) * dims.foot_radius * (0.10F / 3.0F));
-    hoof.params.half_extents =
-        QVector3D(dims.foot_radius * (front ? 0.88F / 3.0F : 0.82F / 3.0F),
-                  dims.foot_radius * (0.56F / 3.0F),
-                  dims.foot_radius * (front ? 1.18F / 3.0F : 1.02F / 3.0F));
+    hoof.params.head_offset = QVector3D(
+        0.0F,
+        dims.foot_radius * (0.56F / 3.0F) * k_elephant_hoof_thickness_scale,
+        (front ? 1.0F : -1.0F) * dims.foot_radius * (0.10F / 3.0F) *
+            k_elephant_hoof_thickness_scale);
+    hoof.params.half_extents = QVector3D(
+        dims.foot_radius * (front ? 0.88F / 3.0F : 0.82F / 3.0F) *
+            k_elephant_hoof_thickness_scale,
+        dims.foot_radius * (0.56F / 3.0F) * k_elephant_hoof_thickness_scale,
+        dims.foot_radius * (front ? 1.18F / 3.0F : 1.02F / 3.0F) *
+            k_elephant_hoof_thickness_scale);
     hoof.color_role = k_role_skin;
     hoof.material_id = k_elephant_material_id;
     hoof.lod_mask = Render::Creature::kLodFull;
