@@ -196,7 +196,7 @@ Item {
                         color: Theme.textMain
                         font.pointSize: Theme.fontSizeHero
                         font.bold: true
-                        font.family: "Times New Roman"
+                        font.family: "serif"
                         Layout.fillWidth: true
                     }
 
@@ -204,7 +204,7 @@ Item {
                         text: "SPQR • " + (current_campaign ? current_campaign.description : "")
                         color: Theme.textSubLite
                         font.pointSize: Theme.fontSizeMedium
-                        font.family: "Georgia"
+                        font.family: "serif"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                         maximumLineCount: 2
@@ -255,7 +255,7 @@ Item {
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeTitle
                             font.bold: true
-                            font.family: "Times New Roman"
+                            font.family: "serif"
                         }
 
                         Rectangle {
@@ -283,7 +283,7 @@ Item {
                                         color: Theme.textMain
                                         font.pointSize: Theme.fontSizeSmall
                                         font.bold: true
-                                        font.family: "Georgia"
+                                        font.family: "serif"
                                     }
 
                                     Rectangle {
@@ -412,7 +412,7 @@ Item {
                                 color: "#f0dfbc"
                                 font.pointSize: Theme.fontSizeMedium
                                 font.bold: true
-                                font.family: "Times New Roman"
+                                font.family: "serif"
                             }
                         }
 

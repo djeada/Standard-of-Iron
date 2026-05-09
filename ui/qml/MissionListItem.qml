@@ -92,7 +92,7 @@ Rectangle {
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeLarge
                     font.bold: true
-                    font.family: "Times New Roman"
+                    font.family: "serif"
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
@@ -163,7 +163,7 @@ Rectangle {
                 elide: Text.ElideRight
                 Layout.fillWidth: true
                 font.pointSize: Theme.fontSizeSmall
-                font.family: "Georgia"
+                font.family: "serif"
             }
 
             RowLayout {

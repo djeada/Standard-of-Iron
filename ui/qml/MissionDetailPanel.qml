@@ -28,9 +28,12 @@ Rectangle {
     property bool is_carthage_campaign: campaign_id && campaign_id.toLowerCase().indexOf("carth") !== -1
     property string command_glyph: is_carthage_campaign ? StyleGuide.historical.carthageGlyph : StyleGuide.historical.romanGlyph
     property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
+    readonly property int base_casualty_forecast: 420
+    readonly property int casualty_per_difficulty_step: 95
     property string tactical_rating: mission_data && mission_data.difficulty_modifier ? Math.min(5, Math.max(1, Math.round(mission_data.difficulty_modifier))).toString() + "/5" : qsTr("3/5")
-    property string casualty_forecast: mission_data && mission_data.difficulty_modifier ? Math.round(420 + mission_data.difficulty_modifier * 95).toString() : qsTr("610")
+    property string casualty_forecast: mission_data && mission_data.difficulty_modifier ? Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString() : qsTr("610")
     property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? qsTr("67%") : qsTr("Unknown"))
+    property string reward_summary: mission_data && mission_data.completed ? qsTr("Rewards: Laurels Inscribed • Veteran Honors Claimed") : (mission_data && mission_data.unlocked ? qsTr("Rewards: Bronze Standard • Veteran Cohort") : qsTr("Rewards: Sealed until prior victories"))
 
     signal start_mission_clicked()
 
@@ -103,7 +106,7 @@ Rectangle {
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeTitle
                     font.bold: true
-                    font.family: "Times New Roman"
+                    font.family: "serif"
                     Layout.fillWidth: true
                 }
 
@@ -184,7 +187,7 @@ Rectangle {
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 font.pointSize: Theme.fontSizeMedium
-                font.family: "Georgia"
+                font.family: "serif"
             }
 
             Rectangle {
@@ -217,7 +220,7 @@ Rectangle {
                         Layout.fillWidth: true
                         font.pointSize: Theme.fontSizeTiny
                         font.italic: true
-                        font.family: "Georgia"
+                        font.family: "serif"
                     }
 
                 }
@@ -446,7 +449,7 @@ Rectangle {
                         color: Theme.textMain
                         font.pointSize: Theme.fontSizeSmall
                         font.bold: true
-                        font.family: "Times New Roman"
+                        font.family: "serif"
                         Layout.fillWidth: true
                     }
 
@@ -458,7 +461,7 @@ Rectangle {
                     }
 
                     Label {
-                        text: qsTr("Rewards: Bronze Standard • Veteran Cohort")
+                        text: reward_summary
                         color: Theme.textSubLite
                         wrapMode: Text.WordWrap
                         font.pointSize: Theme.fontSizeTiny
