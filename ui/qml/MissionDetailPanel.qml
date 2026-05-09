@@ -25,6 +25,12 @@ Rectangle {
         "desert": "#d4a574",
         "hills": "#a89968"
     })
+    property bool is_carthage_campaign: campaign_id && campaign_id.toLowerCase().indexOf("carth") !== -1
+    property string command_glyph: is_carthage_campaign ? StyleGuide.historical.carthageGlyph : StyleGuide.historical.romanGlyph
+    property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
+    property string tactical_rating: mission_data && mission_data.difficulty_modifier ? Math.min(5, Math.max(1, Math.round(mission_data.difficulty_modifier))).toString() + "/5" : qsTr("3/5")
+    property string casualty_forecast: mission_data && mission_data.difficulty_modifier ? Math.round(420 + mission_data.difficulty_modifier * 95).toString() : qsTr("610")
+    property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? qsTr("67%") : qsTr("Unknown"))
 
     signal start_mission_clicked()
 
@@ -58,9 +64,20 @@ Rectangle {
 
     onMission_dataChanged: load_mission_definition()
     radius: Theme.radiusMedium
-    color: Theme.panelBase
-    border.color: Theme.panelBr
-    border.width: 1
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: "#3a2d22"
+        }
+
+        GradientStop {
+            position: 1
+            color: "#241b14"
+        }
+
+    }
+    border.color: "#a7814a"
+    border.width: 2
 
     RowLayout {
         anchors.fill: parent
@@ -86,7 +103,28 @@ Rectangle {
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeTitle
                     font.bold: true
+                    font.family: "Times New Roman"
                     Layout.fillWidth: true
+                }
+
+                Rectangle {
+                    Layout.preferredHeight: 24
+                    Layout.preferredWidth: wax_seal_text.implicitWidth + Theme.spacingMedium
+                    radius: 12
+                    color: "#7a1f1d"
+                    border.color: "#c29555"
+                    border.width: 1
+
+                    Label {
+                        id: wax_seal_text
+
+                        anchors.centerIn: parent
+                        text: command_glyph
+                        color: "#f2dfba"
+                        font.pointSize: Theme.fontSizeTiny
+                        font.bold: true
+                    }
+
                 }
 
                 Rectangle {
@@ -140,12 +178,13 @@ Rectangle {
             }
 
             Label {
-                visible: !!(mission_definition && mission_definition.historical_context)
-                text: mission_data && mission_data.intro_text ? mission_data.intro_text : ""
+                visible: !!(mission_data && mission_data.intro_text)
+                text: qsTr("Dispatch: ") + (mission_data && mission_data.intro_text ? mission_data.intro_text : "")
                 color: Theme.textSubLite
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
                 font.pointSize: Theme.fontSizeMedium
+                font.family: "Georgia"
             }
 
             Rectangle {
@@ -153,8 +192,8 @@ Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: historical_context_text.implicitHeight + Theme.spacingSmall * 2
                 radius: Theme.radiusSmall
-                color: Theme.infoBg
-                border.color: Theme.infoBr
+                color: "#2f241a"
+                border.color: "#8f6d43"
                 border.width: 1
                 opacity: 0.7
 
@@ -178,6 +217,7 @@ Rectangle {
                         Layout.fillWidth: true
                         font.pointSize: Theme.fontSizeTiny
                         font.italic: true
+                        font.family: "Georgia"
                     }
 
                 }
@@ -193,7 +233,7 @@ Rectangle {
                     spacing: Theme.spacingTiny
 
                     Label {
-                        text: qsTr("Objectives:")
+                        text: qsTr("Campaign Objectives:")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeSmall
                         font.bold: true
@@ -283,7 +323,7 @@ Rectangle {
                     visible: !!(mission_definition && mission_definition.player_setup && mission_definition.player_setup.starting_units)
 
                     Label {
-                        text: qsTr("Your Forces:")
+                        text: qsTr("Army Composition:")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeSmall
                         font.bold: true
@@ -349,7 +389,7 @@ Rectangle {
                     spacing: Theme.spacingTiny
 
                     Label {
-                        text: qsTr("Stats:")
+                        text: qsTr("Historical Ledger:")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeSmall
                         font.bold: true
@@ -359,13 +399,19 @@ Rectangle {
                         spacing: Theme.spacingMedium
 
                         Label {
-                            text: qsTr("Attempts: -")
+                            text: qsTr("Casualties Forecast: ") + casualty_forecast
                             color: Theme.textSubLite
                             font.pointSize: Theme.fontSizeSmall
                         }
 
                         Label {
-                            text: qsTr("Best Time: -")
+                            text: qsTr("Tactical Rating: ") + tactical_rating
+                            color: Theme.textSubLite
+                            font.pointSize: Theme.fontSizeSmall
+                        }
+
+                        Label {
+                            text: qsTr("Campaign Success: ") + success_estimate
                             color: Theme.textSubLite
                             font.pointSize: Theme.fontSizeSmall
                         }
@@ -381,6 +427,47 @@ Rectangle {
         ColumnLayout {
             Layout.alignment: Qt.AlignVCenter
             spacing: Theme.spacingMedium
+
+            Rectangle {
+                Layout.preferredWidth: 170
+                Layout.preferredHeight: 96
+                radius: Theme.radiusSmall
+                color: "#281e16"
+                border.color: "#8f6d43"
+                border.width: 1
+
+                ColumnLayout {
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingSmall
+                    spacing: Theme.spacingTiny
+
+                    Label {
+                        text: commander_title
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeSmall
+                        font.bold: true
+                        font.family: "Times New Roman"
+                        Layout.fillWidth: true
+                    }
+
+                    Label {
+                        text: command_glyph
+                        color: "#c29555"
+                        font.pointSize: Theme.fontSizeMedium
+                        font.bold: true
+                    }
+
+                    Label {
+                        text: qsTr("Rewards: Bronze Standard • Veteran Cohort")
+                        color: Theme.textSubLite
+                        wrapMode: Text.WordWrap
+                        font.pointSize: Theme.fontSizeTiny
+                        Layout.fillWidth: true
+                    }
+
+                }
+
+            }
 
             StyledButton {
                 text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")

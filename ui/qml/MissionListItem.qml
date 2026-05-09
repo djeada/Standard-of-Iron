@@ -28,16 +28,20 @@ Rectangle {
 
     height: 90
     radius: Theme.radiusMedium
-    color: {
-        if (is_selected)
-            return Theme.selectedBg;
+    gradient: Gradient {
+        GradientStop {
+            position: 0
+            color: is_selected ? "#54372b" : (mouse_area.containsMouse ? "#4a3526" : "#372a1f")
+        }
 
-        if (mouse_area.containsMouse)
-            return Theme.hoverBg;
+        GradientStop {
+            position: 1
+            color: is_selected ? "#39251e" : "#241c15"
+        }
 
-        return Theme.cardBase;
     }
-    border.color: is_selected ? Theme.selectedBr : Theme.cardBorder
+    color: "transparent"
+    border.color: is_selected ? "#c29555" : "#8f6d43"
     border.width: is_selected ? 2 : 1
     opacity: (mission_data && mission_data.unlocked === false) ? 0.5 : 1
     clip: true
@@ -61,14 +65,14 @@ Rectangle {
             Layout.preferredHeight: 36
             Layout.alignment: Qt.AlignVCenter
             radius: 18
-            color: mission_data && mission_data.completed ? Theme.successBg : Theme.accent
-            border.color: mission_data && mission_data.completed ? Theme.successBr : Theme.accentBr
+            color: mission_data && mission_data.completed ? "#355738" : "#7c3728"
+            border.color: mission_data && mission_data.completed ? "#79a67a" : "#c29555"
             border.width: 1
 
             Label {
                 anchors.centerIn: parent
                 text: mission_data ? (mission_data.order_index + 1).toString() : "?"
-                color: Theme.textMain
+                color: "#f5e7c5"
                 font.pointSize: Theme.fontSizeMedium
                 font.bold: true
             }
@@ -84,10 +88,11 @@ Rectangle {
                 spacing: Theme.spacingSmall
 
                 Label {
-                    text: mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : ""
+                    text: "✦ " + (mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "")
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeLarge
                     font.bold: true
+                    font.family: "Times New Roman"
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
@@ -103,7 +108,7 @@ Rectangle {
 
                     Label {
                         anchors.centerIn: parent
-                        text: qsTr("✓ Done")
+                        text: qsTr("✓ Archived")
                         color: Theme.successText
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
@@ -122,7 +127,7 @@ Rectangle {
 
                     Label {
                         anchors.centerIn: parent
-                        text: qsTr("🔒 Locked")
+                        text: qsTr("🔒 Sealed")
                         color: Theme.textDim
                         font.pointSize: Theme.fontSizeTiny
                     }
@@ -140,7 +145,7 @@ Rectangle {
 
                     Label {
                         anchors.centerIn: parent
-                        text: qsTr("Available")
+                        text: qsTr("Open Order")
                         color: Theme.infoText
                         font.pointSize: Theme.fontSizeTiny
                         font.bold: true
@@ -158,6 +163,7 @@ Rectangle {
                 elide: Text.ElideRight
                 Layout.fillWidth: true
                 font.pointSize: Theme.fontSizeSmall
+                font.family: "Georgia"
             }
 
             RowLayout {
@@ -191,9 +197,9 @@ Rectangle {
         }
 
         Text {
-            text: "›"
+            text: "➤"
             font.pointSize: Theme.fontSizeTitle
-            color: Theme.textHint
+            color: "#c29555"
             Layout.alignment: Qt.AlignVCenter
         }
 

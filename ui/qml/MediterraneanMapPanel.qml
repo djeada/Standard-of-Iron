@@ -215,7 +215,7 @@ Rectangle {
         return [sum_u / count, sum_v / count];
     }
 
-    color: "#28445C"
+    color: "#20170f"
     radius: Theme.radiusMedium
     Component.onCompleted: {
         load_provinces();
@@ -321,7 +321,7 @@ Rectangle {
 
         Rectangle {
             anchors.fill: parent
-            color: "#28445C"
+            color: "#2a2118"
             visible: campaignMapLoader.active && campaignMapLoader.status !== Loader.Ready
             z: 1
 
@@ -330,6 +330,121 @@ Rectangle {
                 text: qsTr("Loading map…")
                 color: "#c8b89a"
                 font.pointSize: Theme.fontSizeMedium
+            }
+
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 2
+            color: "transparent"
+            border.color: "#8f6d43"
+            border.width: 1
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 2
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#0f0a06aa"
+                }
+
+                GradientStop {
+                    position: 0.5
+                    color: "transparent"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#190f08bb"
+                }
+
+            }
+        }
+
+        Repeater {
+            model: 7
+
+            delegate: Rectangle {
+                property int _refresh: root.label_refresh
+                property real start_u: 0.36
+                property real start_v: 0.72
+                property real end_u: root.active_region_id === "southern_italy" ? 0.5 : (root.active_region_id === "etruria" ? 0.44 : 0.42)
+                property real end_v: root.active_region_id === "southern_italy" ? 0.53 : (root.active_region_id === "etruria" ? 0.48 : 0.38)
+                property real t: (index + 1) / 8
+                property var _start_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(start_u, start_v) : Qt.point(0, 0)
+                property var _end_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(end_u, end_v) : Qt.point(0, 0)
+                property real dot_x: _start_pos.x + (_end_pos.x - _start_pos.x) * t
+                property real dot_y: _start_pos.y + (_end_pos.y - _start_pos.y) * t
+
+                width: 6
+                height: 6
+                radius: 3
+                color: "#c29555"
+                border.color: "#f0dfbc"
+                border.width: 1
+                opacity: 0.65
+                visible: root.selected_mission && campaignMapLoader.item
+                x: dot_x - width / 2
+                y: dot_y - height / 2
+                z: 5
+
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                    running: root.visible && campaignMapLoader.item
+
+                    NumberAnimation {
+                        from: 0.2
+                        to: 0.85
+                        duration: 900
+                    }
+
+                    NumberAnimation {
+                        from: 0.85
+                        to: 0.2
+                        duration: 900
+                    }
+
+                }
+
+            }
+
+        }
+
+        Repeater {
+            model: 10
+
+            delegate: Rectangle {
+                width: 2 + (index % 3)
+                height: width
+                radius: width / 2
+                color: index % 2 === 0 ? "#c29555" : "#7a1f1d"
+                opacity: 0.18
+                x: (index * 97) % mapViewport.width
+                y: mapViewport.height + index * 12
+                z: 3
+
+                SequentialAnimation on y {
+                    loops: Animation.Infinite
+                    running: root.visible
+
+                    NumberAnimation {
+                        from: mapViewport.height + index * 12
+                        to: -20
+                        duration: 3000 + index * 250
+                        easing.type: Easing.OutQuad
+                    }
+
+                    NumberAnimation {
+                        from: -20
+                        to: mapViewport.height + index * 12
+                        duration: 0
+                    }
+
+                }
+
             }
 
         }
@@ -350,8 +465,8 @@ Rectangle {
                 height: 24
                 width: pitchDownLabel.implicitWidth + 12
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: pitchDownArea.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
                 opacity: pitchDownArea.containsMouse ? 1 : 0.9
 
@@ -360,7 +475,7 @@ Rectangle {
 
                     anchors.centerIn: parent
                     text: qsTr("Tilt -")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
@@ -382,8 +497,8 @@ Rectangle {
                 height: 24
                 width: pitchUpLabel.implicitWidth + 12
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: pitchUpArea.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
                 opacity: pitchUpArea.containsMouse ? 1 : 0.9
 
@@ -392,7 +507,7 @@ Rectangle {
 
                     anchors.centerIn: parent
                     text: qsTr("Tilt +")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
@@ -414,8 +529,8 @@ Rectangle {
                 height: 24
                 width: resetViewLabel.implicitWidth + 16
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: resetViewArea.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
                 opacity: resetViewArea.containsMouse ? 1 : 0.9
 
@@ -424,7 +539,7 @@ Rectangle {
 
                     anchors.centerIn: parent
                     text: qsTr("Reset view")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }

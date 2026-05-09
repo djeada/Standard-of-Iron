@@ -152,10 +152,31 @@ Item {
         height: Math.min(parent.height * 0.95, 1000)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
-        color: Theme.panelBase
-        border.color: Theme.panelBr
-        border.width: 1
+        gradient: Gradient {
+            GradientStop {
+                position: 0
+                color: "#2b2118"
+            }
+
+            GradientStop {
+                position: 1
+                color: "#1a140f"
+            }
+
+        }
+        border.color: "#8f6d43"
+        border.width: 2
         opacity: 0.98
+        clip: true
+
+        Rectangle {
+            anchors.fill: parent
+            color: "transparent"
+            border.color: "#4a3722"
+            border.width: 1
+            radius: Math.max(2, container.radius - 4)
+            anchors.margins: 4
+        }
 
         ColumnLayout {
             anchors.fill: parent
@@ -175,13 +196,15 @@ Item {
                         color: Theme.textMain
                         font.pointSize: Theme.fontSizeHero
                         font.bold: true
+                        font.family: "Times New Roman"
                         Layout.fillWidth: true
                     }
 
                     Label {
-                        text: current_campaign ? current_campaign.description : ""
+                        text: "SPQR • " + (current_campaign ? current_campaign.description : "")
                         color: Theme.textSubLite
                         font.pointSize: Theme.fontSizeMedium
+                        font.family: "Georgia"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
                         maximumLineCount: 2
@@ -205,11 +228,22 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.45
+                    Layout.preferredWidth: parent.width * 0.38
                     radius: Theme.radiusMedium
-                    color: Theme.cardBase
-                    border.color: Theme.cardBorder
-                    border.width: 1
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0
+                            color: "#3a2f23"
+                        }
+
+                        GradientStop {
+                            position: 1
+                            color: "#241b14"
+                        }
+
+                    }
+                    border.color: "#a7814a"
+                    border.width: 2
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -217,10 +251,11 @@ Item {
                         spacing: Theme.spacingMedium
 
                         Label {
-                            text: qsTr("Missions")
+                            text: qsTr("Campaign Chronicle")
                             color: Theme.textMain
                             font.pointSize: Theme.fontSizeTitle
                             font.bold: true
+                            font.family: "Times New Roman"
                         }
 
                         Rectangle {
@@ -228,8 +263,8 @@ Item {
                             implicitHeight: progress_layout.implicitHeight + Theme.spacingSmall * 2
                             Layout.preferredHeight: implicitHeight
                             radius: Theme.radiusSmall
-                            color: Theme.cardBase
-                            border.color: Theme.cardBorder
+                            color: "#241c14"
+                            border.color: "#8f6d43"
                             border.width: 1
 
                             ColumnLayout {
@@ -244,10 +279,11 @@ Item {
                                     spacing: Theme.spacingSmall
 
                                     Label {
-                                        text: qsTr("Progress:")
+                                        text: qsTr("Campaign Progress:")
                                         color: Theme.textMain
                                         font.pointSize: Theme.fontSizeSmall
                                         font.bold: true
+                                        font.family: "Georgia"
                                     }
 
                                     Rectangle {
@@ -351,22 +387,33 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.55
+                    Layout.preferredWidth: parent.width * 0.62
                     radius: Theme.radiusMedium
-                    color: Theme.cardBase
-                    border.color: Theme.cardBorder
+                    color: "#201913"
+                    border.color: "#8f6d43"
                     border.width: 1
 
                     ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: Theme.spacingMedium
+                        anchors.margins: Theme.spacingSmall
                         spacing: Theme.spacingMedium
 
-                        Label {
-                            text: qsTr("Mediterranean Strategic Map")
-                            color: Theme.textMain
-                            font.pointSize: Theme.fontSizeTitle
-                            font.bold: true
+                        Rectangle {
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 36
+                            radius: Theme.radiusSmall
+                            color: "#5a2f23"
+                            border.color: "#a7814a"
+                            border.width: 1
+
+                            Label {
+                                anchors.centerIn: parent
+                                text: qsTr("Imperium Command Table • Mediterranean Theater")
+                                color: "#f0dfbc"
+                                font.pointSize: Theme.fontSizeMedium
+                                font.bold: true
+                                font.family: "Times New Roman"
+                            }
                         }
 
                         MediterraneanMapPanel {
@@ -389,7 +436,7 @@ Item {
                 id: mission_detail_panel
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? 180 : 0
+                Layout.preferredHeight: visible ? 236 : 0
                 visible: selected_mission_index >= 0
                 mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                 campaign_id: current_campaign ? current_campaign.id : ""
