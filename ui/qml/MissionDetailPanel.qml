@@ -30,10 +30,10 @@ Rectangle {
     property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
     readonly property int base_casualty_forecast: 420
     readonly property int casualty_per_difficulty_step: 95
-    property string tactical_rating: mission_data && mission_data.difficulty_modifier ? Math.min(5, Math.max(1, Math.round(mission_data.difficulty_modifier))).toString() + "/5" : qsTr("3/5")
-    property string casualty_forecast: mission_data && mission_data.difficulty_modifier ? Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString() : qsTr("610")
+    property string tactical_rating: calculate_tactical_rating()
+    property string casualty_forecast: calculate_casualty_forecast()
     property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? qsTr("67%") : qsTr("Unknown"))
-    property string reward_summary: mission_data && mission_data.completed ? qsTr("Rewards: Laurels Inscribed • Veteran Honors Claimed") : (mission_data && mission_data.unlocked ? qsTr("Rewards: Bronze Standard • Veteran Cohort") : qsTr("Rewards: Sealed until prior victories"))
+    property string reward_summary: reward_summary_text()
 
     signal start_mission_clicked()
 
@@ -63,6 +63,30 @@ Rectangle {
         var optional_count = mission_definition && mission_definition.optional_objectives ? mission_definition.optional_objectives.length : 0;
         var defeat_count = mission_definition && mission_definition.defeat_conditions ? mission_definition.defeat_conditions.length : 0;
         return (victory_count + optional_count + defeat_count) === 0;
+    }
+
+    function calculate_tactical_rating() {
+        if (!mission_data || !mission_data.difficulty_modifier)
+            return qsTr("3/5");
+
+        return Math.min(5, Math.max(1, Math.round(mission_data.difficulty_modifier))).toString() + "/5";
+    }
+
+    function calculate_casualty_forecast() {
+        if (!mission_data || !mission_data.difficulty_modifier)
+            return qsTr("610");
+
+        return Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString();
+    }
+
+    function reward_summary_text() {
+        if (!mission_data || !mission_data.unlocked)
+            return qsTr("Rewards: Sealed until prior victories");
+
+        if (mission_data.completed)
+            return qsTr("Rewards: Laurels Inscribed • Veteran Honors Claimed");
+
+        return qsTr("Rewards: Bronze Standard • Veteran Cohort");
     }
 
     onMission_dataChanged: load_mission_definition()

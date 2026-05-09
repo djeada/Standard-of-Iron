@@ -28,6 +28,11 @@ Rectangle {
         "carthage": [0.8, 0.56, 0.28, 0.45],
         "neutral": [0.25, 0.25, 0.25, 0.25]
     })
+    property var campaign_route_targets: ({
+        "southern_italy": [0.5, 0.53],
+        "etruria": [0.44, 0.48],
+        "default": [0.42, 0.38]
+    })
     property var region_camera_positions: ({
         "transalpine_gaul": {
             "yaw": 200,
@@ -125,6 +130,13 @@ Rectangle {
             return owner_color_map[key];
 
         return owner_color_map.neutral;
+    }
+
+    function route_target_uv_for(region_id) {
+        if (campaign_route_targets[region_id])
+            return campaign_route_targets[region_id];
+
+        return campaign_route_targets.default;
     }
 
     function apply_campaign_state() {
@@ -371,8 +383,9 @@ Rectangle {
                 property int _refresh: root.label_refresh
                 property real start_u: 0.36
                 property real start_v: 0.72
-                property real end_u: root.active_region_id === "southern_italy" ? 0.5 : (root.active_region_id === "etruria" ? 0.44 : 0.42)
-                property real end_v: root.active_region_id === "southern_italy" ? 0.53 : (root.active_region_id === "etruria" ? 0.48 : 0.38)
+                property var target_uv: root.route_target_uv_for(root.active_region_id)
+                property real end_u: target_uv[0]
+                property real end_v: target_uv[1]
                 property real t: (index + 1) / 8
                 property var _start_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(start_u, start_v) : Qt.point(0, 0)
                 property var _end_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(end_u, end_v) : Qt.point(0, 0)
