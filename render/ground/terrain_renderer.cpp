@@ -37,7 +37,7 @@ using namespace Render::Ground;
 
 const QMatrix4x4 k_identity_matrix;
 
-inline auto applyTint(const QVector3D &color, float tint) -> QVector3D {
+inline auto apply_tint(const QVector3D &color, float tint) -> QVector3D {
   QVector3D const c = color * tint;
   return {std::clamp(c.x(), 0.0F, 1.0F), std::clamp(c.y(), 0.0F, 1.0F),
           std::clamp(c.z(), 0.0F, 1.0F)};
@@ -845,7 +845,7 @@ void TerrainRenderer::build_meshes() {
 
         QVector3D color =
             base_color * (1.0F - slope_mix) + rock_tint * slope_mix;
-        color = applyTint(color, chunk.tint);
+        color = apply_tint(color, chunk.tint);
         color *= macro_shade;
         color.setX(color.x() * aspect_tint.x() * feature_tint.x());
         color.setY(color.y() * aspect_tint.y() * feature_tint.y());
@@ -857,7 +857,7 @@ void TerrainRenderer::build_meshes() {
 
         TerrainChunkParams params;
         auto tint_color = [&](const QVector3D &base) {
-          return clamp01(applyTint(base, chunk.tint));
+          return clamp01(apply_tint(base, chunk.tint));
         };
         params.grass_primary = tint_color(surface_profile.grass_primary);
         params.grass_secondary = tint_color(surface_profile.grass_secondary);
