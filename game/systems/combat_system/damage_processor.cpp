@@ -43,6 +43,8 @@ auto resolve_death_reaction(Engine::Core::Entity *target,
 
   if (attacker_unit->spawn_type == Game::Units::SpawnType::Elephant) {
     auto *elephant = attacker->get_component<Engine::Core::ElephantComponent>();
+    // Mix both entity ids (with a simple shift+xor) so each pair yields a
+    // deterministic but varied elephant impact reaction.
     std::uint32_t seed = target->get_id() ^ (attacker->get_id() << 1U);
     seed = mix_hash(seed);
     std::uint32_t const style = seed % 5U;

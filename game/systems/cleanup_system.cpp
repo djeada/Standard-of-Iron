@@ -4,6 +4,7 @@
 #include "core/entity.h"
 #include <algorithm>
 #include <cmath>
+#include <numbers>
 #include <vector>
 
 namespace Game::Systems {
@@ -41,7 +42,7 @@ void CleanupSystem::update(Engine::Core::World *world, float delta_time) {
       pitch = 18.0F * progress;
       transform->position.y -= 0.18F * progress * delta_time;
     } else if (death->reaction == Engine::Core::DeathReactionType::Thrown) {
-      float const arc = std::sin(progress * 3.14159265F) * 0.20F;
+      float const arc = std::sin(progress * std::numbers::pi_v<float>) * 0.20F;
       transform->position.y += arc * delta_time;
       pitch = 88.0F * progress;
     } else if (death->reaction == Engine::Core::DeathReactionType::SpinFall) {
