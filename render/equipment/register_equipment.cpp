@@ -12,6 +12,14 @@
 #include "helmets/carthage_heavy_helmet.h"
 #include "helmets/carthage_light_helmet.h"
 #include "helmets/headwrap.h"
+#include "horse/armor/champion_renderer.h"
+#include "horse/armor/crupper_renderer.h"
+#include "horse/armor/leather_barding_renderer.h"
+#include "horse/armor/scale_barding_renderer.h"
+#include "horse/decorations/saddle_bag_renderer.h"
+#include "horse/tack/blanket_renderer.h"
+#include "horse/tack/bridle_renderer.h"
+#include "horse/tack/reins_renderer.h"
 #include "weapons/bow_renderer.h"
 #include "weapons/quiver_renderer.h"
 #include "weapons/roman_scutum.h"
@@ -178,6 +186,30 @@ void register_built_in_equipment() {
   auto arm_guards = std::make_shared<ArmGuardsRenderer>(arm_guards_config);
   registry.register_equipment(EquipmentCategory::Armor, "arm_guards",
                               arm_guards);
+
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseTack, "horse_bridle",
+      std::make_shared<BridleRenderer>());
+  registry.register_horse_equipment(EquipmentCategory::HorseTack, "horse_reins",
+                                    std::make_shared<ReinsRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseTack, "horse_blanket",
+      std::make_shared<BlanketRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseArmor, "horse_leather_barding",
+      std::make_shared<LeatherBardingRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseArmor, "horse_scale_barding",
+      std::make_shared<ScaleBardingRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseArmor, "horse_champion_barding",
+      std::make_shared<ChampionRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseArmor, "horse_crupper",
+      std::make_shared<CrupperRenderer>());
+  registry.register_horse_equipment(
+      EquipmentCategory::HorseDecoration, "horse_saddle_bag",
+      std::make_shared<SaddleBagRenderer>());
 }
 
 } // namespace Render::GL

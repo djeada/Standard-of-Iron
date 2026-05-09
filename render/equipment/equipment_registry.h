@@ -9,7 +9,16 @@
 
 namespace Render::GL {
 
-enum class EquipmentCategory { Helmet, Armor, Weapon };
+class IHorseEquipmentRenderer;
+
+enum class EquipmentCategory {
+  Helmet,
+  Armor,
+  Weapon,
+  HorseTack,
+  HorseArmor,
+  HorseDecoration
+};
 using EquipmentHandle = std::uint32_t;
 inline constexpr EquipmentHandle kInvalidEquipmentHandle = 0;
 
@@ -20,8 +29,16 @@ public:
   void register_equipment(EquipmentCategory category, const std::string &id,
                           std::shared_ptr<IEquipmentRenderer> renderer);
 
+  void register_horse_equipment(EquipmentCategory category,
+                                const std::string &id,
+                                std::shared_ptr<IHorseEquipmentRenderer>
+                                    renderer);
+
   auto get(EquipmentCategory category,
            const std::string &id) const -> std::shared_ptr<IEquipmentRenderer>;
+
+  auto get_horse(EquipmentCategory category, const std::string &id) const
+      -> std::shared_ptr<IHorseEquipmentRenderer>;
 
   auto has(EquipmentCategory category, const std::string &id) const -> bool;
 
@@ -29,6 +46,9 @@ public:
                       const std::string &id) const -> EquipmentHandle;
 
   auto get(EquipmentHandle handle) const -> std::shared_ptr<IEquipmentRenderer>;
+
+  auto get_horse(EquipmentHandle handle) const
+      -> std::shared_ptr<IHorseEquipmentRenderer>;
 
   auto has(EquipmentHandle handle) const -> bool;
 
