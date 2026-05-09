@@ -25,9 +25,11 @@ Rectangle {
         "desert": "#d4a574",
         "hills": "#a89968"
     })
-    property bool is_carthage_campaign: campaign_id && campaign_id.toLowerCase().indexOf("carth") !== -1
-    property string command_glyph: is_carthage_campaign ? StyleGuide.historical.carthageGlyph : StyleGuide.historical.romanGlyph
-    property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
+    property string player_faction: resolve_player_faction()
+    property bool is_player_carthaginian: player_faction.indexOf("carth") !== -1
+    property string command_glyph: is_player_carthaginian ? StyleGuide.historical.carthageGlyph : StyleGuide.historical.romanGlyph
+    property string commander_title: is_player_carthaginian ? qsTr("Suffete Command") : qsTr("Consular Command")
+    property string command_banner_text: is_player_carthaginian ? qsTr("Carthaginian High Command") : qsTr("Roman High Command")
     readonly property int base_casualty_forecast: 420
     readonly property int casualty_per_difficulty_step: 95
     readonly property int tactical_rating_min: 1
@@ -38,6 +40,22 @@ Rectangle {
     property string reward_summary: reward_summary_text()
 
     signal start_mission_clicked()
+
+    function resolve_player_faction() {
+        if (mission_definition && mission_definition.player_setup) {
+            var player_setup = mission_definition.player_setup;
+            if (player_setup.faction)
+                return player_setup.faction.toLowerCase();
+
+            if (player_setup.nation)
+                return player_setup.nation.toLowerCase();
+        }
+
+        if (campaign_id && campaign_id.toLowerCase().indexOf("carth") !== -1)
+            return "carthaginian";
+
+        return "roman";
+    }
 
     function load_mission_definition() {
         if (mission_data && mission_data.mission_id && typeof game !== "undefined" && game.get_mission_definition)
@@ -124,295 +142,315 @@ Rectangle {
     RowLayout {
         anchors.fill: parent
         anchors.margins: Theme.spacingMedium
-        spacing: Theme.spacingLarge
+        spacing: Theme.spacingMedium
 
-        ColumnLayout {
+        ScrollView {
+            id: mission_content_scroll
+
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: Theme.spacingSmall
+            Layout.minimumWidth: 0
+            clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacingMedium
+            Item {
+                id: mission_content_container
 
-                Label {
-                    text: {
-                        if (mission_definition && mission_definition.title)
-                            return mission_definition.title;
+                width: mission_content_scroll.availableWidth > 0 ? mission_content_scroll.availableWidth : mission_content_scroll.width
+                implicitWidth: width
+                implicitHeight: mission_content_column.implicitHeight
 
-                        return mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "";
-                    }
-                    color: Theme.textMain
-                    font.pointSize: Theme.fontSizeTitle
-                    font.bold: true
-                    font.family: "serif"
-                    Layout.fillWidth: true
-                }
+                ColumnLayout {
+                    id: mission_content_column
 
-                Rectangle {
-                    Layout.preferredHeight: 24
-                    Layout.preferredWidth: wax_seal_text.implicitWidth + Theme.spacingMedium
-                    radius: 12
-                    color: "#7a1f1d"
-                    border.color: "#c29555"
-                    border.width: 1
+                    width: parent.width
+                    spacing: Theme.spacingMedium
 
                     Label {
-                        id: wax_seal_text
+                        text: {
+                            if (mission_definition && mission_definition.title)
+                                return mission_definition.title;
 
-                        anchors.centerIn: parent
-                        text: command_glyph
-                        color: "#f2dfba"
-                        font.pointSize: Theme.fontSizeTiny
+                            return mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "";
+                        }
+                        color: Theme.textMain
+                        font.pointSize: Theme.fontSizeTitle
                         font.bold: true
+                        font.family: "serif"
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                        maximumLineCount: 2
+                        elide: Text.ElideRight
                     }
-
-                }
-
-                Rectangle {
-                    visible: !!(mission_definition && mission_definition.terrain_type)
-                    Layout.preferredWidth: terrain_badge_layout.implicitWidth + 12
-                    Layout.preferredHeight: 24
-                    radius: Theme.radiusSmall
-                    color: {
-                        if (!mission_definition || !mission_definition.terrain_type)
-                            return Theme.disabledBg;
-
-                        return terrain_colors[mission_definition.terrain_type] || Theme.disabledBg;
-                    }
-                    border.color: Theme.border
-                    border.width: 1
-                    opacity: 0.85
 
                     RowLayout {
-                        id: terrain_badge_layout
+                        spacing: Theme.spacingSmall
 
-                        anchors.centerIn: parent
-                        spacing: 4
+                        Rectangle {
+                            Layout.preferredHeight: 24
+                            Layout.preferredWidth: wax_seal_text.implicitWidth + Theme.spacingMedium
+                            radius: 12
+                            color: "#7a1f1d"
+                            border.color: "#c29555"
+                            border.width: 1
+
+                            Label {
+                                id: wax_seal_text
+
+                                anchors.centerIn: parent
+                                text: command_glyph
+                                color: "#f2dfba"
+                                font.pointSize: Theme.fontSizeTiny
+                                font.bold: true
+                            }
+
+                        }
+
+                        Rectangle {
+                            visible: !!(mission_definition && mission_definition.terrain_type)
+                            Layout.preferredWidth: terrain_badge_layout.implicitWidth + 12
+                            Layout.preferredHeight: 24
+                            radius: Theme.radiusSmall
+                            color: {
+                                if (!mission_definition || !mission_definition.terrain_type)
+                                    return Theme.disabledBg;
+
+                                return terrain_colors[mission_definition.terrain_type] || Theme.disabledBg;
+                            }
+                            border.color: Theme.border
+                            border.width: 1
+                            opacity: 0.85
+
+                            RowLayout {
+                                id: terrain_badge_layout
+
+                                anchors.centerIn: parent
+                                spacing: 4
+
+                                Label {
+                                    text: {
+                                        if (!mission_definition || !mission_definition.terrain_type)
+                                            return "";
+
+                                        return terrain_icons[mission_definition.terrain_type] || "🗺️";
+                                    }
+                                    font.pointSize: Theme.fontSizeSmall
+                                }
+
+                                Label {
+                                    text: {
+                                        if (!mission_definition || !mission_definition.terrain_type)
+                                            return "";
+
+                                        var terrain = mission_definition.terrain_type;
+                                        return terrain.charAt(0).toUpperCase() + terrain.slice(1);
+                                    }
+                                    color: "#ffffff"
+                                    font.pointSize: Theme.fontSizeTiny
+                                    font.bold: true
+                                }
+
+                            }
+
+                        }
+
+                    }
+
+                    Label {
+                        visible: !!(mission_data && mission_data.intro_text)
+                        text: qsTr("Dispatch: ") + (mission_data && mission_data.intro_text ? mission_data.intro_text : "")
+                        color: Theme.textSubLite
+                        wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
+                        font.pointSize: Theme.fontSizeMedium
+                        font.family: "serif"
+                    }
+
+                    Rectangle {
+                        visible: !!(mission_definition && mission_definition.historical_context)
+                        Layout.fillWidth: true
+                        implicitHeight: historical_context_text.implicitHeight + Theme.spacingSmall * 2
+                        Layout.preferredHeight: implicitHeight
+                        radius: Theme.radiusSmall
+                        color: "#2f241a"
+                        border.color: "#8f6d43"
+                        border.width: 1
+                        opacity: 0.7
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.margins: Theme.spacingSmall
+                            spacing: Theme.spacingSmall
+
+                            Label {
+                                text: "📜"
+                                font.pointSize: Theme.fontSizeMedium
+                                Layout.alignment: Qt.AlignTop
+                            }
+
+                            Label {
+                                id: historical_context_text
+
+                                text: mission_definition && mission_definition.historical_context ? mission_definition.historical_context : ""
+                                color: Theme.textSubLite
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                                font.pointSize: Theme.fontSizeTiny
+                                font.italic: true
+                                font.family: "serif"
+                            }
+
+                        }
+
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingTiny
 
                         Label {
-                            text: {
-                                if (!mission_definition || !mission_definition.terrain_type)
-                                    return "";
-
-                                return terrain_icons[mission_definition.terrain_type] || "🗺️";
-                            }
+                            text: qsTr("Campaign Objectives:")
+                            color: Theme.textDim
                             font.pointSize: Theme.fontSizeSmall
+                            font.bold: true
+                        }
+
+                        Repeater {
+                            model: {
+                                if (!mission_definition || !mission_definition.victory_conditions)
+                                    return [];
+
+                                return mission_definition.victory_conditions;
+                            }
+
+                            delegate: Label {
+                                text: "• " + (modelData.description || qsTr("Complete mission objective"))
+                                color: Theme.textSubLite
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+
                         }
 
                         Label {
-                            text: {
-                                if (!mission_definition || !mission_definition.terrain_type)
-                                    return "";
-
-                                var terrain = mission_definition.terrain_type;
-                                return terrain.charAt(0).toUpperCase() + terrain.slice(1);
-                            }
-                            color: "#ffffff"
+                            visible: !!(mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0)
+                            text: qsTr("Optional:")
+                            color: Theme.textDim
                             font.pointSize: Theme.fontSizeTiny
                             font.bold: true
                         }
 
-                    }
+                        Repeater {
+                            model: {
+                                if (!mission_definition || !mission_definition.optional_objectives)
+                                    return [];
 
-                }
+                                return mission_definition.optional_objectives;
+                            }
 
-            }
+                            delegate: Label {
+                                text: "• " + (modelData.description || qsTr("Complete optional objective"))
+                                color: Theme.textSubLite
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
 
-            Label {
-                visible: !!(mission_data && mission_data.intro_text)
-                text: qsTr("Dispatch: ") + (mission_data && mission_data.intro_text ? mission_data.intro_text : "")
-                color: Theme.textSubLite
-                wrapMode: Text.WordWrap
-                Layout.fillWidth: true
-                font.pointSize: Theme.fontSizeMedium
-                font.family: "serif"
-            }
-
-            Rectangle {
-                visible: !!(mission_definition && mission_definition.historical_context)
-                Layout.fillWidth: true
-                Layout.preferredHeight: historical_context_text.implicitHeight + Theme.spacingSmall * 2
-                radius: Theme.radiusSmall
-                color: "#2f241a"
-                border.color: "#8f6d43"
-                border.width: 1
-                opacity: 0.7
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    spacing: Theme.spacingSmall
-
-                    Label {
-                        text: "📜"
-                        font.pointSize: Theme.fontSizeMedium
-                        Layout.alignment: Qt.AlignTop
-                    }
-
-                    Label {
-                        id: historical_context_text
-
-                        text: mission_definition && mission_definition.historical_context ? mission_definition.historical_context : ""
-                        color: Theme.textSubLite
-                        wrapMode: Text.WordWrap
-                        Layout.fillWidth: true
-                        font.pointSize: Theme.fontSizeTiny
-                        font.italic: true
-                        font.family: "serif"
-                    }
-
-                }
-
-            }
-
-            RowLayout {
-                spacing: Theme.spacingMedium
-                Layout.fillWidth: true
-
-                ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: Theme.spacingTiny
-
-                    Label {
-                        text: qsTr("Campaign Objectives:")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeSmall
-                        font.bold: true
-                    }
-
-                    Repeater {
-                        model: {
-                            if (!mission_definition || !mission_definition.victory_conditions)
-                                return [];
-
-                            return mission_definition.victory_conditions;
                         }
 
-                        delegate: Label {
-                            text: "• " + (modelData.description || qsTr("Complete mission objective"))
-                            color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
+                        Label {
+                            visible: !!(mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0)
+                            text: qsTr("Failure:")
+                            color: Theme.textDim
+                            font.pointSize: Theme.fontSizeTiny
+                            font.bold: true
                         }
-
-                    }
-
-                    Label {
-                        visible: !!(mission_definition && mission_definition.optional_objectives && mission_definition.optional_objectives.length > 0)
-                        text: qsTr("Optional:")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeTiny
-                        font.bold: true
-                    }
-
-                    Repeater {
-                        model: {
-                            if (!mission_definition || !mission_definition.optional_objectives)
-                                return [];
-
-                            return mission_definition.optional_objectives;
-                        }
-
-                        delegate: Label {
-                            text: "• " + (modelData.description || qsTr("Complete optional objective"))
-                            color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                    }
-
-                    Label {
-                        visible: !!(mission_definition && mission_definition.defeat_conditions && mission_definition.defeat_conditions.length > 0)
-                        text: qsTr("Failure:")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeTiny
-                        font.bold: true
-                    }
-
-                    Repeater {
-                        model: {
-                            if (!mission_definition || !mission_definition.defeat_conditions)
-                                return [];
-
-                            return mission_definition.defeat_conditions;
-                        }
-
-                        delegate: Label {
-                            text: "• " + (modelData.description || qsTr("Avoid mission failure"))
-                            color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
-                            wrapMode: Text.WordWrap
-                            Layout.fillWidth: true
-                        }
-
-                    }
-
-                    Label {
-                        visible: !mission_definition || objectives_empty()
-                        text: qsTr("• Complete the mission successfully")
-                        color: Theme.textSubLite
-                        font.pointSize: Theme.fontSizeSmall
-                    }
-
-                }
-
-                ColumnLayout {
-                    spacing: Theme.spacingTiny
-                    visible: !!(mission_definition && mission_definition.player_setup && mission_definition.player_setup.starting_units)
-
-                    Label {
-                        text: qsTr("Army Composition:")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeSmall
-                        font.bold: true
-                    }
-
-                    Flow {
-                        Layout.preferredWidth: 180
-                        spacing: Theme.spacingTiny
 
                         Repeater {
                             model: {
-                                if (!mission_definition || !mission_definition.player_setup || !mission_definition.player_setup.starting_units)
+                                if (!mission_definition || !mission_definition.defeat_conditions)
                                     return [];
 
-                                var units = mission_definition.player_setup.starting_units;
-                                var grouped = {
-                                };
-                                for (var i = 0; i < units.length; i++) {
-                                    var unit = units[i];
-                                    var type = unit.type || "unknown";
-                                    grouped[type] = (grouped[type] || 0) + (unit.count || 1);
-                                }
-                                var result = [];
-                                for (var key in grouped) {
-                                    result.push({
-                                        "type": key,
-                                        "count": grouped[key]
-                                    });
-                                }
-                                return result;
+                                return mission_definition.defeat_conditions;
                             }
 
-                            delegate: Rectangle {
-                                width: unit_label.implicitWidth + 8
-                                height: 20
-                                radius: Theme.radiusSmall
-                                color: Theme.infoBg
-                                border.color: Theme.infoBr
-                                border.width: 1
+                            delegate: Label {
+                                text: "• " + (modelData.description || qsTr("Avoid mission failure"))
+                                color: Theme.textSubLite
+                                font.pointSize: Theme.fontSizeSmall
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
 
-                                Label {
-                                    id: unit_label
+                        }
 
-                                    anchors.centerIn: parent
-                                    text: modelData.count + "x " + modelData.type
-                                    color: Theme.infoText
-                                    font.pointSize: Theme.fontSizeTiny
+                        Label {
+                            visible: !mission_definition || objectives_empty()
+                            text: qsTr("• Complete the mission successfully")
+                            color: Theme.textSubLite
+                            font.pointSize: Theme.fontSizeSmall
+                        }
+
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingTiny
+                        visible: !!(mission_definition && mission_definition.player_setup && mission_definition.player_setup.starting_units)
+
+                        Label {
+                            text: qsTr("Army Composition:")
+                            color: Theme.textDim
+                            font.pointSize: Theme.fontSizeSmall
+                            font.bold: true
+                        }
+
+                        Flow {
+                            Layout.fillWidth: true
+                            width: mission_content_container.width
+                            spacing: Theme.spacingTiny
+
+                            Repeater {
+                                model: {
+                                    if (!mission_definition || !mission_definition.player_setup || !mission_definition.player_setup.starting_units)
+                                        return [];
+
+                                    var units = mission_definition.player_setup.starting_units;
+                                    var grouped = {
+                                    };
+                                    for (var i = 0; i < units.length; i++) {
+                                        var unit = units[i];
+                                        var type = unit.type || "unknown";
+                                        grouped[type] = (grouped[type] || 0) + (unit.count || 1);
+                                    }
+                                    var result = [];
+                                    for (var key in grouped) {
+                                        result.push({
+                                            "type": key,
+                                            "count": grouped[key]
+                                        });
+                                    }
+                                    return result;
+                                }
+
+                                delegate: Rectangle {
+                                    width: unit_label.implicitWidth + 12
+                                    height: 22
+                                    radius: Theme.radiusSmall
+                                    color: Theme.infoBg
+                                    border.color: Theme.infoBr
+                                    border.width: 1
+
+                                    Label {
+                                        id: unit_label
+
+                                        anchors.centerIn: parent
+                                        text: modelData.count + "x " + titleize(modelData.type)
+                                        color: Theme.infoText
+                                        font.pointSize: Theme.fontSizeTiny
+                                    }
+
                                 }
 
                             }
@@ -421,41 +459,52 @@ Rectangle {
 
                     }
 
-                }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                ColumnLayout {
-                    spacing: Theme.spacingTiny
-
-                    Label {
-                        text: qsTr("Historical Ledger:")
-                        color: Theme.textDim
-                        font.pointSize: Theme.fontSizeSmall
-                        font.bold: true
-                    }
-
-                    RowLayout {
-                        spacing: Theme.spacingMedium
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: Theme.spacingTiny
 
                         Label {
-                            text: qsTr("Casualties Forecast: ") + casualty_forecast
-                            color: Theme.textSubLite
+                            text: qsTr("Historical Ledger:")
+                            color: Theme.textDim
                             font.pointSize: Theme.fontSizeSmall
+                            font.bold: true
                         }
 
-                        Label {
-                            text: qsTr("Tactical Rating: ") + tactical_rating
-                            color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
-                        }
+                        Flow {
+                            Layout.fillWidth: true
+                            width: mission_content_container.width
+                            spacing: Theme.spacingSmall
 
-                        Label {
-                            text: qsTr("Campaign Success: ") + success_estimate
-                            color: Theme.textSubLite
-                            font.pointSize: Theme.fontSizeSmall
+                            Repeater {
+                                model: [{
+                                        "text": qsTr("Casualties Forecast: ") + casualty_forecast
+                                    }, {
+                                        "text": qsTr("Tactical Rating: ") + tactical_rating
+                                    }, {
+                                        "text": qsTr("Campaign Success: ") + success_estimate
+                                    }]
+
+                                delegate: Rectangle {
+                                    width: stat_label.implicitWidth + 16
+                                    height: 24
+                                    radius: Theme.radiusSmall
+                                    color: "#2f241a"
+                                    border.color: "#8f6d43"
+                                    border.width: 1
+
+                                    Label {
+                                        id: stat_label
+
+                                        anchors.centerIn: parent
+                                        text: modelData.text
+                                        color: Theme.textSubLite
+                                        font.pointSize: Theme.fontSizeTiny
+                                    }
+
+                                }
+
+                            }
+
                         }
 
                     }
@@ -467,21 +516,28 @@ Rectangle {
         }
 
         ColumnLayout {
-            Layout.alignment: Qt.AlignVCenter
-            spacing: Theme.spacingMedium
+            Layout.minimumWidth: 248
+            Layout.preferredWidth: 248
+            Layout.maximumWidth: 248
+            Layout.fillHeight: true
+            Layout.alignment: Qt.AlignTop
+            spacing: Theme.spacingSmall
 
             Rectangle {
-                Layout.preferredWidth: 170
-                Layout.preferredHeight: 96
+                Layout.fillWidth: true
+                implicitHeight: command_panel_layout.implicitHeight + Theme.spacingMedium * 2
+                Layout.preferredHeight: implicitHeight
                 radius: Theme.radiusSmall
                 color: "#281e16"
                 border.color: "#8f6d43"
                 border.width: 1
 
                 ColumnLayout {
+                    id: command_panel_layout
+
                     anchors.fill: parent
-                    anchors.margins: Theme.spacingSmall
-                    spacing: Theme.spacingTiny
+                    anchors.margins: Theme.spacingMedium
+                    spacing: Theme.spacingSmall
 
                     Label {
                         text: commander_title
@@ -490,6 +546,7 @@ Rectangle {
                         font.bold: true
                         font.family: "serif"
                         Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
                     }
 
                     Label {
@@ -497,6 +554,17 @@ Rectangle {
                         color: "#c29555"
                         font.pointSize: Theme.fontSizeMedium
                         font.bold: true
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Label {
+                        text: command_banner_text
+                        color: Theme.textDim
+                        font.pointSize: Theme.fontSizeTiny
+                        font.bold: true
+                        Layout.fillWidth: true
+                        wrapMode: Text.WordWrap
                     }
 
                     Label {
@@ -511,7 +579,35 @@ Rectangle {
 
             }
 
+            Rectangle {
+                Layout.fillWidth: true
+                implicitHeight: readiness_text.implicitHeight + Theme.spacingSmall * 2
+                Layout.preferredHeight: implicitHeight
+                radius: Theme.radiusSmall
+                color: "#2f241a"
+                border.color: "#8f6d43"
+                border.width: 1
+
+                Label {
+                    id: readiness_text
+
+                    anchors.fill: parent
+                    anchors.margins: Theme.spacingSmall
+                    text: mission_data && !mission_data.unlocked ? qsTr("Orders sealed until prior victories are secured.") : (mission_data && mission_data.completed ? qsTr("Victory recorded. You may replay this engagement at will.") : qsTr("Orders issued. Deploy when ready."))
+                    color: Theme.textSubLite
+                    wrapMode: Text.WordWrap
+                    font.pointSize: Theme.fontSizeTiny
+                    verticalAlignment: Text.AlignVCenter
+                }
+
+            }
+
+            Item {
+                Layout.fillHeight: true
+            }
+
             StyledButton {
+                Layout.fillWidth: true
                 text: mission_data && mission_data.completed ? qsTr("Replay Mission") : qsTr("Start Mission")
                 enabled: !!(mission_data && mission_data.unlocked)
                 onClicked: root.start_mission_clicked()

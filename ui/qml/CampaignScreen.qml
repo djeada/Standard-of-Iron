@@ -10,6 +10,7 @@ Item {
     property var campaigns: []
     property int selected_mission_index: -1
     property var campaign_map_state: null
+    readonly property string theater_heading: qsTr("Campaign War Table • Mediterranean Theater")
 
     signal mission_selected(string campaign_id, string mission_id)
     signal cancelled()
@@ -148,8 +149,8 @@ Item {
     Rectangle {
         id: container
 
-        width: Math.min(parent.width * 0.95, 1600)
-        height: Math.min(parent.height * 0.95, 1000)
+        width: Math.min(parent.width * 0.975, 1660)
+        height: Math.min(parent.height * 0.975, 1040)
         anchors.centerIn: parent
         radius: Theme.radiusPanel
         gradient: Gradient {
@@ -180,8 +181,8 @@ Item {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: Theme.spacingXLarge
-            spacing: Theme.spacingLarge
+            anchors.margins: Theme.spacingLarge
+            spacing: Theme.spacingMedium
 
             RowLayout {
                 Layout.fillWidth: true
@@ -207,7 +208,7 @@ Item {
                         font.family: "serif"
                         wrapMode: Text.WordWrap
                         Layout.fillWidth: true
-                        maximumLineCount: 2
+                        maximumLineCount: 3
                         elide: Text.ElideRight
                     }
 
@@ -228,7 +229,7 @@ Item {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    Layout.preferredWidth: parent.width * 0.38
+                    Layout.preferredWidth: parent.width * 0.36
                     radius: Theme.radiusMedium
                     gradient: Gradient {
                         GradientStop {
@@ -408,7 +409,7 @@ Item {
 
                             Label {
                                 anchors.centerIn: parent
-                                text: qsTr("Imperium Command Table • Mediterranean Theater")
+                                text: root.theater_heading
                                 color: "#f0dfbc"
                                 font.pointSize: Theme.fontSizeMedium
                                 font.bold: true
@@ -421,7 +422,7 @@ Item {
                             Layout.fillHeight: true
                             selected_mission: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                             campaign_state: root.campaign_map_state
-                            onRegionSelected: function(region_id) {
+                            onRegion_selected: function(region_id) {
                                 select_mission_by_region(region_id);
                             }
                         }
@@ -436,7 +437,7 @@ Item {
                 id: mission_detail_panel
 
                 Layout.fillWidth: true
-                Layout.preferredHeight: visible ? 236 : 0
+                Layout.preferredHeight: visible ? Math.max(260, Math.min(container.height * 0.38, 340)) : 0
                 visible: selected_mission_index >= 0
                 mission_data: selected_mission_index >= 0 && current_campaign && current_campaign.missions ? current_campaign.missions[selected_mission_index] : null
                 campaign_id: current_campaign ? current_campaign.id : ""

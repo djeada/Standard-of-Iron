@@ -126,7 +126,7 @@ Item {
         id: hudVictory
 
         anchors.fill: parent
-        onReturnToMainMenuRequested: {
+        onReturn_to_main_menu_requested: {
             hud.return_to_main_menu_requested();
         }
 

@@ -27,7 +27,8 @@ Rectangle {
         return parts.join(" ");
     }
 
-    height: 90
+    implicitHeight: Math.max(112, item_layout.implicitHeight + Theme.spacingMedium * 2)
+    height: implicitHeight
     radius: Theme.radiusMedium
     gradient: Gradient {
         GradientStop {
@@ -57,6 +58,8 @@ Rectangle {
     }
 
     RowLayout {
+        id: item_layout
+
         anchors.fill: parent
         anchors.margins: Theme.spacingMedium
         spacing: Theme.spacingMedium
@@ -85,22 +88,26 @@ Rectangle {
             spacing: Theme.spacingTiny
 
             RowLayout {
+                id: heading_row
+
                 Layout.fillWidth: true
                 spacing: Theme.spacingSmall
 
                 Label {
                     text: mission_glyph_prefix + (mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "")
                     color: Theme.textMain
-                    font.pointSize: Theme.fontSizeLarge
+                    font.pointSize: Theme.fontSizeMedium
                     font.bold: true
                     font.family: "serif"
                     Layout.fillWidth: true
+                    wrapMode: Text.WordWrap
+                    maximumLineCount: 2
                     elide: Text.ElideRight
                 }
 
                 Rectangle {
                     visible: mission_data && mission_data.completed
-                    Layout.preferredWidth: 80
+                    Layout.preferredWidth: archived_label.implicitWidth + 16
                     Layout.preferredHeight: 20
                     radius: Theme.radiusSmall
                     color: Theme.successBg
@@ -108,6 +115,8 @@ Rectangle {
                     border.width: 1
 
                     Label {
+                        id: archived_label
+
                         anchors.centerIn: parent
                         text: qsTr("✓ Archived")
                         color: Theme.successText
@@ -119,7 +128,7 @@ Rectangle {
 
                 Rectangle {
                     visible: mission_data && mission_data.unlocked === false
-                    Layout.preferredWidth: 70
+                    Layout.preferredWidth: sealed_label.implicitWidth + 16
                     Layout.preferredHeight: 20
                     radius: Theme.radiusSmall
                     color: Theme.disabledBg
@@ -127,6 +136,8 @@ Rectangle {
                     border.width: 1
 
                     Label {
+                        id: sealed_label
+
                         anchors.centerIn: parent
                         text: qsTr("🔒 Sealed")
                         color: Theme.textDim
@@ -137,7 +148,7 @@ Rectangle {
 
                 Rectangle {
                     visible: mission_data && mission_data.unlocked && !mission_data.completed
-                    Layout.preferredWidth: 80
+                    Layout.preferredWidth: open_order_label.implicitWidth + 16
                     Layout.preferredHeight: 20
                     radius: Theme.radiusSmall
                     color: Theme.infoBg
@@ -145,6 +156,8 @@ Rectangle {
                     border.width: 1
 
                     Label {
+                        id: open_order_label
+
                         anchors.centerIn: parent
                         text: qsTr("Open Order")
                         color: Theme.infoText
@@ -157,6 +170,8 @@ Rectangle {
             }
 
             Label {
+                id: mission_intro_label
+
                 text: mission_data && mission_data.intro_text ? mission_data.intro_text : ""
                 color: Theme.textSubLite
                 wrapMode: Text.WordWrap
