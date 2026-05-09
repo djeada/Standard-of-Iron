@@ -70,8 +70,8 @@ Item {
             trigger_selection(commandList.currentIndex);
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
-            if (typeof mainWindow !== "undefined" && mainWindow.menuVisible && mainWindow.gameStarted) {
-                mainWindow.menuVisible = false;
+            if (typeof mainWindow !== "undefined" && mainWindow.menu_visible && mainWindow.game_started) {
+                mainWindow.menu_visible = false;
                 event.accepted = true;
             }
         }
@@ -320,13 +320,13 @@ Item {
                     required property bool requiresGame
                     required property string accent
 
-                    readonly property bool itemEnabled: !requiresGame || root.game_started
+                    readonly property bool item_enabled: !requiresGame || root.game_started
                     readonly property bool selected: ListView.isCurrentItem
-                    readonly property int rowHeight: root.narrow ? 60 : 70
+                    readonly property int row_height: root.narrow ? 60 : 70
 
                     width: commandList.width
-                    height: rowHeight
-                    opacity: itemEnabled ? 1 : 0.46
+                    height: row_height
+                    opacity: item_enabled ? 1 : 0.46
 
                     Rectangle {
                         anchors.fill: parent
@@ -461,13 +461,13 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
-                        cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                        cursorShape: item_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         onEntered: {
-                            if (itemEnabled)
+                            if (item_enabled)
                                 commandList.currentIndex = commandItem.index;
                         }
                         onClicked: {
-                            if (itemEnabled)
+                            if (item_enabled)
                                 root.trigger_selection(commandItem.index);
                         }
                     }

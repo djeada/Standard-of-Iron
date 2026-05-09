@@ -133,7 +133,7 @@ Item {
         Connections {
             function onHud_became_visible() {
                 if (typeof game !== 'undefined' && game.victory_state === "")
-                    hudVictory.forceHide();
+                    hudVictory.force_hide();
 
             }
 

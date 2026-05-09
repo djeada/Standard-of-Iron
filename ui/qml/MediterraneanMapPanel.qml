@@ -65,7 +65,7 @@ Rectangle {
         }
     })
 
-    signal regionSelected(string region_id)
+    signal region_selected(string region_id)
 
     function focus_on_region(region_id) {
         if (!region_id || region_id === "")
@@ -629,7 +629,7 @@ Rectangle {
                 var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
                 var id = info && info.id ? info.id : "";
                 if (id !== "")
-                    root.regionSelected(id);
+                    root.region_selected(id);
 
             }
             onWheel: function(wheel) {
@@ -790,8 +790,8 @@ Rectangle {
 
             property int _refresh: root.label_refresh
             property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
-            property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
-            property int _iconIndex: 0
+            property var icon_sources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+            property int icon_index: 0
 
             visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
             z: 10
@@ -821,7 +821,7 @@ Rectangle {
             }
 
             Image {
-                source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
+                source: hannibalIcon.icon_sources[hannibalIcon.icon_index]
                 width: 36
                 height: 36
                 x: -width / 2
@@ -832,9 +832,9 @@ Rectangle {
                 cache: true
                 asynchronous: false
                 onStatusChanged: {
-                    if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
-                        hannibalIcon._iconIndex += 1;
-                        source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                    if (status === Image.Error && hannibalIcon.icon_index + 1 < hannibalIcon.icon_sources.length) {
+                        hannibalIcon.icon_index += 1;
+                        source = hannibalIcon.icon_sources[hannibalIcon.icon_index];
                     }
                 }
             }

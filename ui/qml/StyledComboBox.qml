@@ -5,30 +5,30 @@ import StandardOfIron 1.0
 ComboBox {
     id: root
 
-    property int textPointSize: Theme.fontSizeMedium
-    property int textPixelSize: -1
-    property color textColor: Theme.textMain
-    property color backgroundColor: Theme.cardBase
-    property color borderColor: activeFocus ? Theme.accentBr : Theme.cardBorder
-    property color popupBackground: Theme.panelBase
-    property color popupBorder: Theme.cardBorder
-    property color highlightBackground: Theme.hoverBg
-    property color highlightBorder: Theme.selectedBr
-    property color itemBackground: Theme.cardBase
-    property color itemBorder: Theme.cardBorder
-    property var delegateText: function(data) {
+    property int text_point_size: Theme.fontSizeMedium
+    property int text_pixel_size: -1
+    property color text_color: Theme.textMain
+    property color background_color: Theme.cardBase
+    property color border_color: activeFocus ? Theme.accentBr : Theme.cardBorder
+    property color popup_background: Theme.panelBase
+    property color popup_border: Theme.cardBorder
+    property color highlight_background: Theme.hoverBg
+    property color highlight_border: Theme.selectedBr
+    property color item_background: Theme.cardBase
+    property color item_border: Theme.cardBorder
+    property var delegate_text: function(data) {
         return data;
     }
 
-    function resolveDelegateText(data) {
-        return (typeof delegateText === "function") ? delegateText(data) : data;
+    function resolve_delegate_text(data) {
+        return (typeof delegate_text === "function") ? delegate_text(data) : data;
     }
 
     contentItem: Text {
         text: root.displayText
-        color: root.textColor
-        font.pointSize: root.textPixelSize > 0 ? -1 : root.textPointSize
-        font.pixelSize: root.textPixelSize > 0 ? root.textPixelSize : -1
+        color: root.text_color
+        font.pointSize: root.text_pixel_size > 0 ? -1 : root.text_point_size
+        font.pixelSize: root.text_pixel_size > 0 ? root.text_pixel_size : -1
         elide: Text.ElideRight
         verticalAlignment: Text.AlignVCenter
         anchors.fill: parent
@@ -38,8 +38,8 @@ ComboBox {
 
     background: Rectangle {
         radius: Theme.radiusSmall
-        color: root.backgroundColor
-        border.color: root.borderColor
+        color: root.background_color
+        border.color: root.border_color
         border.width: 1
     }
 
@@ -54,7 +54,7 @@ ComboBox {
         onPaint: {
             var ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            ctx.fillStyle = root.textColor;
+            ctx.fillStyle = root.text_color;
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineTo(width, 0);
@@ -67,7 +67,7 @@ ComboBox {
         onHeightChanged: requestPaint()
 
         Connections {
-            function onTextColorChanged() {
+            function onText_colorChanged() {
                 rootIndicator.requestPaint();
             }
 
@@ -91,8 +91,8 @@ ComboBox {
 
         background: Rectangle {
             radius: Theme.radiusSmall
-            color: root.popupBackground
-            border.color: root.popupBorder
+            color: root.popup_background
+            border.color: root.popup_border
             border.width: 1
         }
 
@@ -103,16 +103,16 @@ ComboBox {
         highlighted: root.highlightedIndex === index
 
         background: Rectangle {
-            color: highlighted ? root.highlightBackground : root.itemBackground
-            border.color: highlighted ? root.highlightBorder : root.itemBorder
+            color: highlighted ? root.highlight_background : root.item_background
+            border.color: highlighted ? root.highlight_border : root.item_border
             border.width: 1
         }
 
         contentItem: Text {
-            text: root.resolveDelegateText(modelData)
-            color: root.textColor
-            font.pointSize: root.textPixelSize > 0 ? -1 : root.textPointSize
-            font.pixelSize: root.textPixelSize > 0 ? root.textPixelSize : -1
+            text: root.resolve_delegate_text(modelData)
+            color: root.text_color
+            font.pointSize: root.text_pixel_size > 0 ? -1 : root.text_point_size
+            font.pixelSize: root.text_pixel_size > 0 ? root.text_pixel_size : -1
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }

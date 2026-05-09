@@ -5,25 +5,25 @@ import StandardOfIron 1.0
 Button {
     id: control
 
-    property string buttonStyle: "primary"
-    property var styleConfig: {
-        if (buttonStyle === "primary")
+    property string button_style: "primary"
+    property var style_config: {
+        if (button_style === "primary")
             return StyleGuide.button.primary;
 
-        if (buttonStyle === "secondary")
+        if (button_style === "secondary")
             return StyleGuide.button.secondary;
 
-        if (buttonStyle === "small")
+        if (button_style === "small")
             return StyleGuide.button.small;
 
-        if (buttonStyle === "danger")
+        if (button_style === "danger")
             return StyleGuide.button.danger;
 
         return StyleGuide.button.primary;
     }
 
-    implicitHeight: styleConfig.height
-    implicitWidth: styleConfig.minWidth
+    implicitHeight: style_config.height
+    implicitWidth: style_config.minWidth
     hoverEnabled: true
     ToolTip.visible: control.ToolTip.text !== "" && hoverArea.containsMouse
     ToolTip.delay: 500
@@ -39,16 +39,16 @@ Button {
 
     contentItem: Text {
         text: control.text
-        font.pointSize: control.enabled ? (hoverArea.containsMouse ? styleConfig.hoverFontSize : styleConfig.fontSize) : styleConfig.fontSize
+        font.pointSize: control.enabled ? (hoverArea.containsMouse ? style_config.hoverFontSize : style_config.fontSize) : style_config.fontSize
         font.bold: true
         color: {
             if (!control.enabled)
-                return styleConfig.disabledTextColor;
+                return style_config.disabledTextColor;
 
-            if (buttonStyle === "danger" && hoverArea.containsMouse)
-                return styleConfig.hoverTextColor || styleConfig.textColor;
+            if (button_style === "danger" && hoverArea.containsMouse)
+                return style_config.hoverTextColor || style_config.text_color;
 
-            return styleConfig.textColor;
+            return style_config.text_color;
         }
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
@@ -71,30 +71,30 @@ Button {
     }
 
     background: Rectangle {
-        implicitWidth: styleConfig.minWidth
-        implicitHeight: styleConfig.height
-        radius: styleConfig.radius
+        implicitWidth: style_config.minWidth
+        implicitHeight: style_config.height
+        radius: style_config.radius
         color: {
             if (!control.enabled)
-                return styleConfig.disabledBg;
+                return style_config.disabledBg;
 
             if (control.down)
-                return styleConfig.pressBg;
+                return style_config.pressBg;
 
             if (hoverArea.containsMouse)
-                return styleConfig.hoverBg;
+                return style_config.hoverBg;
 
-            return styleConfig.normalBg;
+            return style_config.normalBg;
         }
         border.width: 1
         border.color: {
             if (!control.enabled)
-                return styleConfig.disabledBorder;
+                return style_config.disabledBorder;
 
             if (hoverArea.containsMouse)
-                return styleConfig.hoverBorder;
+                return style_config.hoverBorder;
 
-            return styleConfig.normalBorder;
+            return style_config.normalBorder;
         }
 
         Behavior on color {
@@ -116,8 +116,8 @@ Button {
             anchors.margins: 2
             radius: Math.max(2, parent.radius - 2)
             color: "transparent"
-            border.width: buttonStyle === "primary" ? 1 : 0
-            border.color: buttonStyle === "primary" ? StyleGuide.historical.bronze : "transparent"
+            border.width: button_style === "primary" ? 1 : 0
+            border.color: button_style === "primary" ? StyleGuide.historical.bronze : "transparent"
             opacity: 0.65
         }
 

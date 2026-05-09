@@ -28,21 +28,21 @@ RowLayout {
 
     }
 
-    function unit_icon_source(unitType, nationKey) {
-        if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unitType)
+    function unit_icon_source(unitType, nation_key) {
+        if (typeof StyleGuide === "undefined" || !StyleGuide.unit_icon_sources || !unitType)
             return "";
 
-        var sources = StyleGuide.unitIconSources[unitType];
+        var sources = StyleGuide.unit_icon_sources[unitType];
         if (!sources)
-            sources = StyleGuide.unitIconSources["default"];
+            sources = StyleGuide.unit_icon_sources["default"];
 
-        var key = (nationKey && sources[nationKey]) ? nationKey : "default";
+        var key = (nation_key && sources[nation_key]) ? nation_key : "default";
         return sources[key] || "";
     }
 
     function unit_icon_emoji(unitType) {
-        if (typeof StyleGuide !== "undefined" && StyleGuide.unitIcons)
-            return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
+        if (typeof StyleGuide !== "undefined" && StyleGuide.unit_icons)
+            return StyleGuide.unit_icons[unitType] || StyleGuide.unit_icons["default"] || "👤";
 
         return "👤";
     }
@@ -61,7 +61,7 @@ RowLayout {
         if (typeof StyleGuide === "undefined" || !filename)
             return "";
 
-        return StyleGuide.iconPath(filename);
+        return StyleGuide.icon_path(filename);
     }
 
     function has_selected_unit(type) {
@@ -165,17 +165,17 @@ RowLayout {
                     delegate: Rectangle {
                         id: selectedUnitItem
 
-                        property bool isHovered: false
-                        property string unitDisplayName: (typeof name !== "undefined") ? name : ""
-                        property string unitTypeKey: (typeof unit_type !== "undefined" && unit_type !== "") ? unit_type : bottomRoot.unit_type_key_from_display_name(unitDisplayName)
-                        property string nationKey: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
+                        property bool is_hovered: false
+                        property string unit_display_name: (typeof name !== "undefined") ? name : ""
+                        property string unit_type_key: (typeof unit_type !== "undefined" && unit_type !== "") ? unit_type : bottomRoot.unit_type_key_from_display_name(unit_display_name)
+                        property string nation_key: (typeof nation !== "undefined" && nation !== "") ? nation : "default"
 
                         width: selectedUnitsList.width - 10
                         height: 36
-                        color: isHovered ? hs.parchmentLight : hs.parchmentDark
+                        color: is_hovered ? hs.parchmentLight : hs.parchmentDark
                         radius: 4
-                        border.color: isHovered ? hs.bronze : hs.bronzeDeep
-                        border.width: isHovered ? 2 : 1
+                        border.color: is_hovered ? hs.bronze : hs.bronzeDeep
+                        border.width: is_hovered ? 2 : 1
 
                         MouseArea {
                             id: selectedUnitMouseArea
@@ -184,8 +184,8 @@ RowLayout {
                             hoverEnabled: true
                             propagateComposedEvents: false
                             cursorShape: Qt.PointingHandCursor
-                            onEntered: selectedUnitItem.isHovered = true
-                            onExited: selectedUnitItem.isHovered = false
+                            onEntered: selectedUnitItem.is_hovered = true
+                            onExited: selectedUnitItem.is_hovered = false
                             onClicked: function(mouse) {
                                 if (mouse.button === Qt.LeftButton && typeof game !== 'undefined' && game.select_unit_by_id && typeof unit_id !== 'undefined')
                                     game.select_unit_by_id(unit_id);
@@ -213,13 +213,13 @@ RowLayout {
                                     width: 24
                                     height: 24
                                     fillMode: Image.PreserveAspectFit
-                                    source: bottomRoot.unit_icon_source(selectedUnitItem.unitTypeKey, selectedUnitItem.nationKey)
+                                    source: bottomRoot.unit_icon_source(selectedUnitItem.unit_type_key, selectedUnitItem.nation_key)
                                     visible: source !== "" && status !== Image.Error
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: bottomRoot.unit_icon_emoji(selectedUnitItem.unitTypeKey)
+                                    text: bottomRoot.unit_icon_emoji(selectedUnitItem.unit_type_key)
                                     color: Theme.textMain
                                     font.pixelSize: 16
                                     visible: selectedUnitIcon.source === "" || selectedUnitIcon.status === Image.Error
@@ -276,7 +276,7 @@ RowLayout {
 
                             Text {
                                 anchors.verticalCenter: parent.verticalCenter
-                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unitDisplayName)
+                                text: (typeof name !== 'undefined' ? name : selectedUnitItem.unit_display_name)
                                 color: Theme.textMain
                                 font.pointSize: 8
                                 font.bold: false
@@ -354,9 +354,9 @@ RowLayout {
         GridLayout {
             id: cmdGrid
 
-            property int cmdIconSize: 42
+            property int cmd_icon_size: 42
 
-            function getButtonColor(btn, baseColor) {
+            function get_button_color(btn, baseColor) {
                 if (btn.pressed)
                     return Qt.darker(baseColor, 1.3);
 
@@ -377,20 +377,20 @@ RowLayout {
             Button {
                 id: attackButton
 
-                property bool modeAvailable: bottomRoot.mode_availability.canAttack !== false
+                property bool mode_available: bottomRoot.mode_availability.canAttack !== false
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Attack")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable
+                enabled: bottomRoot.has_movable_units && mode_available
                 checkable: true
                 checked: bottomRoot.current_command_mode === "attack" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "attack" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Attack not available for selected units (e.g. healers)") : (bottomRoot.has_movable_units ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first"))
+                ToolTip.text: !mode_available ? qsTr("Attack not available for selected units (e.g. healers)") : (bottomRoot.has_movable_units ? qsTr("Attack enemy units or buildings.\nUnits will chase targets.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -406,8 +406,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("attack_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -431,20 +431,20 @@ RowLayout {
             Button {
                 id: guardButton
 
-                property bool modeAvailable: bottomRoot.mode_availability.canGuard !== false
+                property bool mode_available: bottomRoot.mode_availability.canGuard !== false
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Guard")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable
+                enabled: bottomRoot.has_movable_units && mode_available
                 checkable: true
                 checked: bottomRoot.current_command_mode === "guard" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "guard" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Guard not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first"))
+                ToolTip.text: !mode_available ? qsTr("Guard not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Guard a position.\nUnits will defend from all sides.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -460,8 +460,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("defend_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -485,20 +485,20 @@ RowLayout {
             Button {
                 id: patrolButton
 
-                property bool modeAvailable: bottomRoot.mode_availability.canPatrol !== false
+                property bool mode_available: bottomRoot.mode_availability.canPatrol !== false
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Patrol")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable
+                enabled: bottomRoot.has_movable_units && mode_available
                 checkable: true
                 checked: bottomRoot.current_command_mode === "patrol" && bottomRoot.has_movable_units
                 onClicked: {
                     bottomRoot.command_mode_changed(checked ? "patrol" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Patrol not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first"))
+                ToolTip.text: !mode_available ? qsTr("Patrol not available for selected units") : (bottomRoot.has_movable_units ? qsTr("Patrol between waypoints.\nClick start and end points.") : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -514,8 +514,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("patrol_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -539,8 +539,8 @@ RowLayout {
             Button {
                 id: healButton
 
-                property bool modeAvailable: bottomRoot.mode_availability.canHeal !== false
-                property bool hasHealerSelected: {
+                property bool mode_available: bottomRoot.mode_availability.canHeal !== false
+                property bool has_healer_selected: {
                     bottomRoot.selection_tick;
                     return bottomRoot.has_selected_unit("healer");
                 }
@@ -549,7 +549,7 @@ RowLayout {
                 Layout.preferredHeight: 48
                 text: qsTr("Heal")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable && hasHealerSelected
+                enabled: bottomRoot.has_movable_units && mode_available && has_healer_selected
                 checkable: true
                 checked: bottomRoot.current_command_mode === "heal" && bottomRoot.has_movable_units
                 onClicked: {
@@ -559,7 +559,7 @@ RowLayout {
                     bottomRoot.command_mode_changed(checked ? "heal" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Heal not available for selected units") : (!hasHealerSelected ? qsTr("Select healer units") : qsTr("Heal allies in range"))
+                ToolTip.text: !mode_available ? qsTr("Heal not available for selected units") : (!has_healer_selected ? qsTr("Select healer units") : qsTr("Heal allies in range"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -575,8 +575,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("heal_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -651,8 +651,8 @@ RowLayout {
             Button {
                 id: buildButton
 
-                property bool modeAvailable: bottomRoot.mode_availability.canBuild !== false
-                property bool hasBuilderSelected: {
+                property bool mode_available: bottomRoot.mode_availability.canBuild !== false
+                property bool has_builder_selected: {
                     bottomRoot.selection_tick;
                     return bottomRoot.has_selected_unit("builder");
                 }
@@ -661,7 +661,7 @@ RowLayout {
                 Layout.preferredHeight: 48
                 text: qsTr("Build")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable && hasBuilderSelected
+                enabled: bottomRoot.has_movable_units && mode_available && has_builder_selected
                 checkable: true
                 checked: bottomRoot.current_command_mode === "build" && bottomRoot.has_movable_units
                 onClicked: {
@@ -671,7 +671,7 @@ RowLayout {
                     bottomRoot.command_mode_changed(checked ? "build" : "normal");
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Build not available for selected units") : (!hasBuilderSelected ? qsTr("Select builder units") : qsTr("Build structures or place foundations"))
+                ToolTip.text: !mode_available ? qsTr("Build not available for selected units") : (!has_builder_selected ? qsTr("Select builder units") : qsTr("Build structures or place foundations"))
                 ToolTip.delay: 500
 
                 background: Rectangle {
@@ -687,8 +687,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("build_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -712,33 +712,33 @@ RowLayout {
             Button {
                 id: holdButton
 
-                property int activeStateTick: 0
-                property string holdModeState: {
+                property int active_state_tick: 0
+                property string hold_mode_state: {
                     bottomRoot.selection_tick;
-                    activeStateTick;
+                    active_state_tick;
                     return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("hold") : "none";
                 }
-                readonly property bool isHoldActive: holdModeState === "all"
-                readonly property bool isHoldMixed: holdModeState === "mixed"
-                property bool modeAvailable: bottomRoot.mode_availability.canHold !== false
+                readonly property bool is_hold_active: hold_mode_state === "all"
+                readonly property bool is_hold_mixed: hold_mode_state === "mixed"
+                property bool mode_available: bottomRoot.mode_availability.canHold !== false
 
                 Layout.fillWidth: true
                 Layout.preferredHeight: 48
                 text: qsTr("Hold")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && modeAvailable
+                enabled: bottomRoot.has_movable_units && mode_available
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_hold_command)
                         game.on_hold_command();
 
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Hold not available for selected units") : (bottomRoot.has_movable_units ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : (isHoldMixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))) : qsTr("Select troops first"))
+                ToolTip.text: !mode_available ? qsTr("Hold not available for selected units") : (bottomRoot.has_movable_units ? (is_hold_active ? qsTr("Exit hold mode (toggle)") : (is_hold_mixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))) : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 Connections {
                     function onHold_mode_changed(active) {
-                        holdButton.activeStateTick += 1;
+                        holdButton.active_state_tick += 1;
                     }
 
                     target: (typeof game !== 'undefined') ? game : null
@@ -749,10 +749,10 @@ RowLayout {
                         if (!parent.enabled)
                             return hs.parchmentDark;
 
-                        if (parent.isHoldActive)
+                        if (parent.is_hold_active)
                             return hs.wax;
 
-                        if (parent.isHoldMixed)
+                        if (parent.is_hold_mixed)
                             return hs.waxHover;
 
                         if (parent.pressed)
@@ -764,8 +764,8 @@ RowLayout {
                         return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? ((parent.isHoldActive || parent.isHoldMixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
-                    border.width: (parent.isHoldActive || parent.isHoldMixed) ? 2 : 1
+                    border.color: parent.enabled ? ((parent.is_hold_active || parent.is_hold_mixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: (parent.is_hold_active || parent.is_hold_mixed) ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -774,8 +774,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("hold_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -784,7 +784,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: (holdButton.isHoldActive ? qsTr("Active ") : (holdButton.isHoldMixed ? qsTr("Mixed ") : "")) + holdButton.text
+                        text: (holdButton.is_hold_active ? qsTr("Active ") : (holdButton.is_hold_mixed ? qsTr("Mixed ") : "")) + holdButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: holdButton.enabled ? Theme.textMain : Theme.textDim
@@ -799,15 +799,15 @@ RowLayout {
             Button {
                 id: formationButton
 
-                property int activeStateTick: 0
-                property string formationModeState: {
+                property int active_state_tick: 0
+                property string formation_mode_state: {
                     bottomRoot.selection_tick;
-                    activeStateTick;
+                    active_state_tick;
                     return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("formation") : "none";
                 }
-                readonly property bool isFormationActive: formationModeState === "all"
-                readonly property bool isFormationMixed: formationModeState === "mixed"
-                property int selectedCount: {
+                readonly property bool is_formation_active: formation_mode_state === "all"
+                readonly property bool is_formation_mixed: formation_mode_state === "mixed"
+                property int selected_count: {
                     bottomRoot.selection_tick;
                     return (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0;
                 }
@@ -816,7 +816,7 @@ RowLayout {
                 Layout.preferredHeight: 48
                 text: qsTr("Formation")
                 focusPolicy: Qt.NoFocus
-                enabled: bottomRoot.has_movable_units && selectedCount > 1
+                enabled: bottomRoot.has_movable_units && selected_count > 1
                 onClicked: {
                     if (typeof game !== 'undefined' && game.on_formation_command)
                         game.on_formation_command();
@@ -827,13 +827,13 @@ RowLayout {
                     if (!bottomRoot.has_movable_units)
                         return qsTr("Select troops first");
 
-                    if (selectedCount <= 1)
+                    if (selected_count <= 1)
                         return qsTr("Select multiple units to use formation");
 
-                    if (isFormationActive)
+                    if (is_formation_active)
                         return qsTr("Exit formation mode (toggle)");
 
-                    if (isFormationMixed)
+                    if (is_formation_mixed)
                         return qsTr("Some selected troops are already in formation mode. Click to apply formation mode to the full eligible selection.");
 
                     return qsTr("Arrange units in tactical formation");
@@ -842,7 +842,7 @@ RowLayout {
 
                 Connections {
                     function onFormation_mode_changed(active) {
-                        formationButton.activeStateTick += 1;
+                        formationButton.active_state_tick += 1;
                     }
 
                     target: (typeof game !== 'undefined') ? game : null
@@ -853,10 +853,10 @@ RowLayout {
                         if (!parent.enabled)
                             return hs.parchmentDark;
 
-                        if (parent.isFormationActive)
+                        if (parent.is_formation_active)
                             return hs.bannerNeutral;
 
-                        if (parent.isFormationMixed)
+                        if (parent.is_formation_mixed)
                             return hs.parchmentLight;
 
                         if (parent.pressed)
@@ -868,8 +868,8 @@ RowLayout {
                         return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? ((parent.isFormationActive || parent.isFormationMixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
-                    border.width: (parent.isFormationActive || parent.isFormationMixed) ? 2 : 1
+                    border.color: parent.enabled ? ((parent.is_formation_active || parent.is_formation_mixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: (parent.is_formation_active || parent.is_formation_mixed) ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -878,8 +878,8 @@ RowLayout {
                     anchors.verticalCenter: parent.verticalCenter
 
                     Image {
-                        width: cmdGrid.cmdIconSize
-                        height: cmdGrid.cmdIconSize
+                        width: cmdGrid.cmd_icon_size
+                        height: cmdGrid.cmd_icon_size
                         source: bottomRoot.command_icon("formation_mode.png")
                         fillMode: Image.PreserveAspectFit
                         smooth: true
@@ -888,7 +888,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: (formationButton.isFormationActive ? qsTr("Active ") : (formationButton.isFormationMixed ? qsTr("Mixed ") : "")) + formationButton.text
+                        text: (formationButton.is_formation_active ? qsTr("Active ") : (formationButton.is_formation_mixed ? qsTr("Mixed ") : "")) + formationButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: formationButton.enabled ? Theme.textMain : Theme.textDim
@@ -916,7 +916,7 @@ RowLayout {
         }
         onRally_mode_toggled: {
             if (typeof gameView !== 'undefined')
-                gameView.setRallyMode = !gameView.setRallyMode;
+                gameView.set_rally_mode = !gameView.set_rally_mode;
 
         }
         onBuild_tower: {

@@ -209,7 +209,7 @@ Item {
                         model: ["0.5x", "1x", "2x"]
                         currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
                         enabled: !topRoot.game_is_paused
-                        textPixelSize: 13
+                        text_pixel_size: 13
                         onActivated: function(i) {
                             var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
                             topRoot.speed_changed(v);
@@ -387,7 +387,7 @@ Item {
                         Image {
                             width: 33
                             height: 33
-                            source: StyleGuide.iconPath("troop_count.png")
+                            source: StyleGuide.icon_path("troop_count.png")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             mipmap: true
@@ -432,7 +432,7 @@ Item {
 
                         property var owners: (typeof game !== 'undefined') ? game.owner_info : []
 
-                        function playerCount() {
+                        function player_count() {
                             var ownersList = ownersContainer.owners || [];
                             var count = 0;
                             for (var i = 0; i < ownersList.length; i++) {
@@ -443,7 +443,7 @@ Item {
                             return count;
                         }
 
-                        function aiCount() {
+                        function ai_count() {
                             var ownersList = ownersContainer.owners || [];
                             var count = 0;
                             for (var i = 0; i < ownersList.length; i++) {
@@ -454,7 +454,7 @@ Item {
                             return count;
                         }
 
-                        function ownersTooltip() {
+                        function owners_tooltip() {
                             if (typeof game === 'undefined')
                                 return "";
 
@@ -484,7 +484,7 @@ Item {
                             Image {
                                 width: 30
                                 height: 30
-                                source: StyleGuide.iconPath("human_player.png")
+                                source: StyleGuide.icon_path("human_player.png")
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
@@ -493,7 +493,7 @@ Item {
                             Label {
                                 id: humanCountLbl
 
-                                text: ownersContainer.playerCount()
+                                text: ownersContainer.player_count()
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
@@ -502,7 +502,7 @@ Item {
                             Image {
                                 width: 30
                                 height: 30
-                                source: StyleGuide.iconPath("ai_player.png")
+                                source: StyleGuide.icon_path("ai_player.png")
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
@@ -511,7 +511,7 @@ Item {
                             Label {
                                 id: aiCountLbl
 
-                                text: ownersContainer.aiCount()
+                                text: ownersContainer.ai_count()
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
@@ -522,7 +522,7 @@ Item {
                         ToolTip {
                             visible: ownersMA.containsMouse
                             delay: 500
-                            text: ownersContainer.ownersTooltip()
+                            text: ownersContainer.owners_tooltip()
                         }
 
                         MouseArea {
@@ -543,7 +543,7 @@ Item {
                         Image {
                             width: 30
                             height: 30
-                            source: StyleGuide.iconPath("defeated.png")
+                            source: StyleGuide.icon_path("defeated.png")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             mipmap: true
@@ -603,11 +603,11 @@ Item {
             Image {
                 id: minimapImage
 
-                property int imageVersion: 0
+                property int image_version: 0
 
                 anchors.fill: parent
                 anchors.margins: 2
-                source: imageVersion > 0 ? "image://minimap/v" + imageVersion : ""
+                source: image_version > 0 ? "image://minimap/v" + image_version : ""
                 fillMode: Image.PreserveAspectFit
                 smooth: true
                 cache: false
@@ -616,7 +616,7 @@ Item {
                 Connections {
                     function onMinimap_image_changed() {
                         Qt.callLater(function() {
-                            minimapImage.imageVersion++;
+                            minimapImage.image_version++;
                         });
                     }
 

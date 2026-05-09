@@ -8,7 +8,7 @@ Item {
     id: root
 
     signal cancelled()
-    signal saveRequested(string slotName)
+    signal save_requested(string slot_name)
 
     anchors.fill: parent
     z: 25
@@ -17,7 +17,7 @@ Item {
             return ;
 
         if (typeof saveListModel !== 'undefined')
-            saveListModel.loadFromGame();
+            saveListModel.load_from_game();
 
         if (typeof saveNameField !== 'undefined' && saveNameField)
             saveNameField.text = "Save_" + Qt.formatDateTime(new Date(), "yyyy-MM-dd_HH-mm");
@@ -36,7 +36,7 @@ Item {
     Connections {
         function onSave_slots_changed() {
             if (typeof saveListModel !== 'undefined')
-                saveListModel.loadFromGame();
+                saveListModel.load_from_game();
 
         }
 
@@ -79,7 +79,7 @@ Item {
 
                 StyledButton {
                     text: qsTr("Cancel")
-                    buttonStyle: "secondary"
+                    button_style: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -123,11 +123,11 @@ Item {
                     text: qsTr("Save")
                     enabled: saveNameField.text.length > 0
                     onClicked: {
-                        if (saveListModel.slotExists(saveNameField.text)) {
-                            confirmOverwriteDialog.slotName = saveNameField.text;
+                        if (saveListModel.slot_exists(saveNameField.text)) {
+                            confirmOverwriteDialog.slot_name = saveNameField.text;
                             confirmOverwriteDialog.open();
                         } else {
-                            root.saveRequested(saveNameField.text);
+                            root.save_requested(saveNameField.text);
                         }
                     }
                 }
@@ -161,16 +161,16 @@ Item {
                         model: ListModel {
                             id: saveListModel
 
-                            function slotExists(name) {
+                            function slot_exists(name) {
                                 for (var i = 0; i < count; i++) {
-                                    if (get(i).slotName === name)
+                                    if (get(i).slot_name === name)
                                         return true;
 
                                 }
                                 return false;
                             }
 
-                            function loadFromGame() {
+                            function load_from_game() {
                                 clear();
                                 if (typeof game === 'undefined' || !game.get_save_slots)
                                     return ;
@@ -178,8 +178,8 @@ Item {
                                 var slots = game.get_save_slots();
                                 for (var i = 0; i < slots.length; i++) {
                                     append({
-                                        "slotName": slots[i].slotName || slots[i].name,
-                                        "title": slots[i].title || slots[i].name || slots[i].slotName || "Untitled Save",
+                                        "slot_name": slots[i].slot_name || slots[i].name,
+                                        "title": slots[i].title || slots[i].name || slots[i].slot_name || "Untitled Save",
                                         "timestamp": slots[i].timestamp,
                                         "map_name": slots[i].map_name || "Unknown Map",
                                         "thumbnail": slots[i].thumbnail || ""
@@ -188,7 +188,7 @@ Item {
                             }
 
                             Component.onCompleted: {
-                                loadFromGame();
+                                load_from_game();
                             }
                         }
 
@@ -250,7 +250,7 @@ Item {
                                     }
 
                                     Label {
-                                        text: qsTr("Slot: %1").arg(model.slotName)
+                                        text: qsTr("Slot: %1").arg(model.slot_name)
                                         color: Theme.textSub
                                         font.pointSize: Theme.fontSizeSmall
                                         Layout.fillWidth: true
@@ -277,10 +277,10 @@ Item {
 
                                 StyledButton {
                                     text: qsTr("Overwrite")
-                                    buttonStyle: "danger"
+                                    button_style: "danger"
                                     implicitWidth: 100
                                     onClicked: {
-                                        confirmOverwriteDialog.slotName = model.slotName;
+                                        confirmOverwriteDialog.slot_name = model.slot_name;
                                         confirmOverwriteDialog.open();
                                     }
                                 }
@@ -293,7 +293,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 onClicked: {
-                                    saveNameField.text = model.slotName;
+                                    saveNameField.text = model.slot_name;
                                 }
                             }
 
@@ -312,7 +312,7 @@ Item {
     Dialog {
         id: confirmOverwriteDialog
 
-        property string slotName: ""
+        property string slot_name: ""
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.5, 400)
@@ -320,7 +320,7 @@ Item {
         modal: true
         standardButtons: Dialog.Yes | Dialog.No
         onAccepted: {
-            root.saveRequested(slotName);
+            root.save_requested(slot_name);
         }
 
         contentItem: Rectangle {
@@ -335,7 +335,7 @@ Item {
                 Label {
                     id: warningText
 
-                    text: qsTr("Are you sure you want to overwrite the save:\n\"%1\"?").arg(confirmOverwriteDialog.slotName)
+                    text: qsTr("Are you sure you want to overwrite the save:\n\"%1\"?").arg(confirmOverwriteDialog.slot_name)
                     color: Theme.textMain
                     wrapMode: Text.WordWrap
                     Layout.fillWidth: true
