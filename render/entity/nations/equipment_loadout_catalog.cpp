@@ -21,6 +21,10 @@ auto default_loadouts() -> LoadoutMap {
   roman_horse_archer.quiver = "quiver";
   roman_horse_archer.armor = "roman_light_armor";
   roman_horse_archer.cloak = "cloak_carthage";
+  roman_horse_archer.horse_bridle = "horse_bridle";
+  roman_horse_archer.horse_reins = "horse_reins";
+  roman_horse_archer.horse_blanket = "horse_blanket";
+  roman_horse_archer.horse_decoration = "horse_saddle_bag";
   map.emplace("troops/roman/horse_archer", std::move(roman_horse_archer));
 
   EquipmentLoadoutIds carthage_horse_archer{};
@@ -29,12 +33,20 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_archer.helmet = "carthage_light";
   carthage_horse_archer.armor = "armor_light_carthage";
   carthage_horse_archer.cloak = "cloak_carthage";
+  carthage_horse_archer.horse_bridle = "horse_bridle";
+  carthage_horse_archer.horse_reins = "horse_reins";
+  carthage_horse_archer.horse_blanket = "horse_blanket";
+  carthage_horse_archer.horse_decoration = "horse_saddle_bag";
   map.emplace("troops/carthage/horse_archer", std::move(carthage_horse_archer));
 
   EquipmentLoadoutIds roman_horse_spearman{};
   roman_horse_spearman.spear = "spear";
   roman_horse_spearman.armor = "roman_heavy_armor";
   roman_horse_spearman.shoulder = "roman_shoulder_cover_cavalry";
+  roman_horse_spearman.horse_bridle = "horse_bridle";
+  roman_horse_spearman.horse_reins = "horse_reins";
+  roman_horse_spearman.horse_blanket = "horse_blanket";
+  roman_horse_spearman.horse_barding = "horse_leather_barding";
   map.emplace("troops/roman/horse_spearman", std::move(roman_horse_spearman));
 
   EquipmentLoadoutIds carthage_horse_spearman{};
@@ -42,6 +54,10 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_spearman.helmet = "carthage_heavy";
   carthage_horse_spearman.armor = "armor_heavy_carthage";
   carthage_horse_spearman.shoulder = "carthage_shoulder_cover_cavalry";
+  carthage_horse_spearman.horse_bridle = "horse_bridle";
+  carthage_horse_spearman.horse_reins = "horse_reins";
+  carthage_horse_spearman.horse_blanket = "horse_blanket";
+  carthage_horse_spearman.horse_barding = "horse_leather_barding";
   map.emplace("troops/carthage/horse_spearman",
               std::move(carthage_horse_spearman));
 
@@ -50,6 +66,11 @@ auto default_loadouts() -> LoadoutMap {
   roman_horse_swordsman.shield = "roman_scutum";
   roman_horse_swordsman.armor = "roman_heavy_armor";
   roman_horse_swordsman.shoulder = "roman_shoulder_cover_cavalry";
+  roman_horse_swordsman.horse_bridle = "horse_bridle";
+  roman_horse_swordsman.horse_reins = "horse_reins";
+  roman_horse_swordsman.horse_blanket = "horse_blanket";
+  roman_horse_swordsman.horse_barding = "horse_scale_barding";
+  roman_horse_swordsman.horse_crupper = "horse_crupper";
   map.emplace("troops/roman/horse_swordsman", std::move(roman_horse_swordsman));
 
   EquipmentLoadoutIds carthage_horse_swordsman{};
@@ -58,6 +79,11 @@ auto default_loadouts() -> LoadoutMap {
   carthage_horse_swordsman.helmet = "carthage_heavy";
   carthage_horse_swordsman.armor = "armor_heavy_carthage";
   carthage_horse_swordsman.shoulder = "carthage_shoulder_cover_cavalry";
+  carthage_horse_swordsman.horse_bridle = "horse_bridle";
+  carthage_horse_swordsman.horse_reins = "horse_reins";
+  carthage_horse_swordsman.horse_blanket = "horse_blanket";
+  carthage_horse_swordsman.horse_barding = "horse_champion_barding";
+  carthage_horse_swordsman.horse_crupper = "horse_crupper";
   map.emplace("troops/carthage/horse_swordsman",
               std::move(carthage_horse_swordsman));
   return map;
@@ -73,6 +99,12 @@ void parse_loadout_object(const QJsonObject &obj, EquipmentLoadoutIds &out) {
   out.armor = obj.value("armor").toString().toStdString();
   out.shoulder = obj.value("shoulder").toString().toStdString();
   out.cloak = obj.value("cloak").toString().toStdString();
+  out.horse_bridle = obj.value("horse_bridle").toString().toStdString();
+  out.horse_reins = obj.value("horse_reins").toString().toStdString();
+  out.horse_blanket = obj.value("horse_blanket").toString().toStdString();
+  out.horse_barding = obj.value("horse_barding").toString().toStdString();
+  out.horse_crupper = obj.value("horse_crupper").toString().toStdString();
+  out.horse_decoration = obj.value("horse_decoration").toString().toStdString();
 }
 
 void merge_json_loadouts(LoadoutMap &map) {
@@ -147,6 +179,18 @@ auto resolve_equipment_loadout(std::string_view renderer_key)
       resolve_slot_handle(EquipmentCategory::Armor, out.ids.shoulder);
   out.cloak_handle =
       resolve_slot_handle(EquipmentCategory::Armor, out.ids.cloak);
+  out.horse_bridle_handle =
+      resolve_slot_handle(EquipmentCategory::HorseTack, out.ids.horse_bridle);
+  out.horse_reins_handle =
+      resolve_slot_handle(EquipmentCategory::HorseTack, out.ids.horse_reins);
+  out.horse_blanket_handle =
+      resolve_slot_handle(EquipmentCategory::HorseTack, out.ids.horse_blanket);
+  out.horse_barding_handle =
+      resolve_slot_handle(EquipmentCategory::HorseArmor, out.ids.horse_barding);
+  out.horse_crupper_handle =
+      resolve_slot_handle(EquipmentCategory::HorseArmor, out.ids.horse_crupper);
+  out.horse_decoration_handle = resolve_slot_handle(
+      EquipmentCategory::HorseDecoration, out.ids.horse_decoration);
   return out;
 }
 
