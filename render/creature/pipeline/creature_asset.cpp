@@ -248,6 +248,11 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
   if (!has_playback) {
     return Render::Creature::kInvalidCreatureRenderAssetHandle;
   }
+  handle.attachment_set_id =
+      acquire_attachment_set_id(archetype_id, handle.attachments_hash);
+  if (handle.attachment_set_id == kInvalidAttachmentSetId) {
+    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  }
   if (handles_.size() >= Render::Creature::kInvalidCreatureRenderAssetHandle) {
     return Render::Creature::kInvalidCreatureRenderAssetHandle;
   }
@@ -277,6 +282,26 @@ auto CreatureRenderAssetHandleRegistry::get(
 void CreatureRenderAssetHandleRegistry::clear() {
   lookup_.clear();
   handles_.clear();
+  attachment_sets_.clear();
+  next_attachment_set_id_ = 1U;
+}
+
+auto CreatureRenderAssetHandleRegistry::acquire_attachment_set_id(
+    Render::Creature::ArchetypeId archetype_id, std::uint64_t attachments_hash)
+    -> AttachmentSetId {
+  const AttachmentSetKey key{archetype_id, attachments_hash};
+  if (const auto found = attachment_sets_.find(key);
+      found != attachment_sets_.end()) {
+    return found->second;
+  }
+
+  if (next_attachment_set_id_ == kInvalidAttachmentSetId) {
+    return kInvalidAttachmentSetId;
+  }
+  const auto id = next_attachment_set_id_;
+  ++next_attachment_set_id_;
+  attachment_sets_.emplace(key, id);
+  return id;
 }
 
 } // namespace Render::Creature::Pipeline

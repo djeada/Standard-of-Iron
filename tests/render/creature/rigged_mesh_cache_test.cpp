@@ -200,4 +200,40 @@ TEST(RiggedMeshCache, FrameStatsMissOnRuntimeBakeRejection) {
   EXPECT_EQ(cache.frame_stats().hits, 0U);
 }
 
+TEST(RiggedMeshCache, PrehashedLookupHonorsAttachmentSetId) {
+  RiggedMeshCache cache;
+  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto *first = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 0U);
+  ASSERT_NE(first, nullptr);
+
+  const auto *hit = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 1U, 0U);
+  EXPECT_EQ(hit, first);
+
+  const auto *different_set = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0x12U, 2U, 0U);
+  ASSERT_NE(different_set, nullptr);
+  EXPECT_NE(different_set, first);
+  EXPECT_EQ(cache.size(), 2U);
+}
+
+TEST(RiggedMeshCache, PrehashedLookupFallsBackToHashWhenSetIdIsInvalid) {
+  RiggedMeshCache cache;
+  auto const &spec = Render::Humanoid::humanoid_creature_spec();
+  auto const bind = Render::Humanoid::humanoid_bind_palette();
+
+  const auto *first = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0xAAU, 0U, 0U);
+  const auto *second = cache.get_or_bake_prehashed(
+      spec, CreatureLOD::Full, bind, 0U, {}, 0xBBU, 0U, 0U);
+
+  ASSERT_NE(first, nullptr);
+  ASSERT_NE(second, nullptr);
+  EXPECT_NE(first, second);
+  EXPECT_EQ(cache.size(), 2U);
+}
+
 } // namespace

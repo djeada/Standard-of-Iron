@@ -40,12 +40,14 @@ public:
     Render::Creature::CreatureLOD lod{Render::Creature::CreatureLOD::Full};
     std::uint16_t variant_bucket{0};
     std::uint32_t skin_species_id{0};
+    std::uint32_t attachment_set_id{0};
     std::uint64_t attachments_hash{0};
 
     auto operator==(const Key &o) const noexcept -> bool {
       return spec == o.spec && lod == o.lod &&
              variant_bucket == o.variant_bucket &&
              skin_species_id == o.skin_species_id &&
+             attachment_set_id == o.attachment_set_id &&
              attachments_hash == o.attachments_hash;
     }
   };
@@ -57,6 +59,8 @@ public:
              (static_cast<std::size_t>(k.lod) << 1U) ^
              (static_cast<std::size_t>(k.variant_bucket) << 16U) ^
              (static_cast<std::size_t>(k.skin_species_id) << 24U) ^
+             (static_cast<std::size_t>(k.attachment_set_id) *
+              0x9E3779B185EBCA87ULL) ^
              static_cast<std::size_t>(k.attachments_hash);
     }
   };
@@ -96,7 +100,7 @@ public:
       Render::Creature::CreatureLOD lod,
       std::span<const QMatrix4x4> rest_palette, std::uint16_t variant_bucket,
       std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-      std::uint64_t attachments_hash,
+      std::uint64_t attachments_hash, std::uint32_t attachment_set_id,
       std::uint32_t skin_species_id) -> const RiggedMeshEntry *;
 
   void clear() { m_entries.clear(); }

@@ -91,6 +91,7 @@ void report_submit_cache_miss(std::string_view path,
                               VariantId variant, AnimationStateId state,
                               std::uint16_t clip_id, std::uint8_t clip_variant,
                               std::uint32_t frame_in_clip,
+                              std::uint32_t attachment_set_id,
                               std::uint64_t attachments_hash) {
   if (!runtime_bake_forbidden()) {
     return;
@@ -102,11 +103,12 @@ void report_submit_cache_miss(std::string_view path,
                                            ? handle.asset->id
                                            : kInvalidCreatureAsset)
          << " lod=" << static_cast<int>(lod)
-         << " state=" << static_cast<int>(state) << " clip=" << clip_id
-         << " frame_in_clip=" << frame_in_clip
-         << " variant=" << static_cast<std::uint32_t>(variant)
-         << " clip_variant=" << static_cast<int>(clip_variant)
-         << " attachments_hash=0x" << std::hex << attachments_hash;
+          << " state=" << static_cast<int>(state) << " clip=" << clip_id
+          << " frame_in_clip=" << frame_in_clip
+          << " variant=" << static_cast<std::uint32_t>(variant)
+          << " clip_variant=" << static_cast<int>(clip_variant)
+          << " attachment_set_id=" << attachment_set_id
+          << " attachments_hash=0x" << std::hex << attachments_hash;
   report_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss,
                                 detail.str());
 }
@@ -134,11 +136,12 @@ void submit_rigged_creature(
                       })();
   auto *entry = cache.get_or_bake_prehashed(
       *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
-      handle.attachments_hash, blob.species_id());
+      handle.attachments_hash, handle.attachment_set_id, blob.species_id());
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
     report_submit_cache_miss("rigged", handle, lod, archetype, variant, state,
                              clip_id, clip_variant, frame_in_clip,
+                             handle.attachment_set_id,
                              handle.attachments_hash);
     return;
   }
@@ -246,7 +249,8 @@ auto submit_snapshot_creature(
         }
         report_submit_cache_miss("snapshot_load", handle, lod, archetype,
                                  variant, state, clip_id, clip_variant,
-                                 frame_in_clip, handle.attachments_hash);
+                                 frame_in_clip, handle.attachment_set_id,
+                                 handle.attachments_hash);
       }
     }
   }
@@ -258,12 +262,13 @@ auto submit_snapshot_creature(
   auto &rigged_cache = renderer->rigged_mesh_cache();
   auto *source = rigged_cache.get_or_bake_prehashed(
       *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
-      handle.attachments_hash, blob.species_id());
+      handle.attachments_hash, handle.attachment_set_id, blob.species_id());
   if (source == nullptr || source->mesh == nullptr ||
       source->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_source_rigged", handle, lod, archetype,
                              variant, state, clip_id, clip_variant,
-                             frame_in_clip, handle.attachments_hash);
+                             frame_in_clip, handle.attachment_set_id,
+                             handle.attachments_hash);
     return false;
   }
 
@@ -279,6 +284,7 @@ auto submit_snapshot_creature(
       snap->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_bake", handle, lod, archetype, variant,
                              state, clip_id, clip_variant, frame_in_clip,
+                             handle.attachment_set_id,
                              handle.attachments_hash);
     return false;
   }
@@ -482,7 +488,8 @@ auto CreaturePipeline::submit_requests(
       report_submit_cache_miss(
           "snapshot_prebaked_required", *handle, req.lod, req.archetype,
           req.variant, req.state, playback_desc.clip_id, req.clip_variant,
-          playback.frame_in_clip, handle->attachments_hash);
+          playback.frame_in_clip, handle->attachment_set_id,
+          handle->attachments_hash);
       return;
     }
 

@@ -228,12 +228,47 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   EXPECT_EQ(handle->asset->id, kHumanoidAsset);
   EXPECT_EQ(handle->archetype->id,
             Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  EXPECT_NE(handle->attachment_set_id, kInvalidAttachmentSetId);
 
   const auto &idle = handle->playback[static_cast<std::size_t>(
       Render::Creature::AnimationStateId::Idle)];
   EXPECT_NE(idle.blob, nullptr);
   EXPECT_NE(idle.clip_id, Render::Creature::ArchetypeDescriptor::kUnmappedClip);
   EXPECT_GT(idle.frame_count, 0U);
+}
+
+TEST(CreatureRenderAssetHandleRegistry, AttachmentSetIdStablePerArchetype) {
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found";
+  }
+
+  auto &bpat = Render::Creature::Bpat::BpatRegistry::instance();
+  ASSERT_TRUE(bpat.load_species(Render::Creature::Bpat::kSpeciesHumanoid,
+                                root + "/humanoid.bpat"));
+
+  auto &handles = CreatureRenderAssetHandleRegistry::instance();
+  handles.clear();
+
+  const auto base_id = handles.get_or_create(
+      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  const auto rider_id = handles.get_or_create(
+      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kRiderBase);
+  ASSERT_NE(base_id, Render::Creature::kInvalidCreatureRenderAssetHandle);
+  ASSERT_NE(rider_id, Render::Creature::kInvalidCreatureRenderAssetHandle);
+
+  const auto *base = handles.get(base_id);
+  const auto *rider = handles.get(rider_id);
+  ASSERT_NE(base, nullptr);
+  ASSERT_NE(rider, nullptr);
+  EXPECT_NE(base->attachment_set_id, kInvalidAttachmentSetId);
+  EXPECT_NE(rider->attachment_set_id, kInvalidAttachmentSetId);
+
+  const auto base_id_again = handles.get_or_create(
+      kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);
+  const auto *base_again = handles.get(base_id_again);
+  ASSERT_NE(base_again, nullptr);
+  EXPECT_EQ(base_again->attachment_set_id, base->attachment_set_id);
 }
 
 } // namespace
