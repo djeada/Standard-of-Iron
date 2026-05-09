@@ -826,7 +826,6 @@ private:
                         .type = type,
                         .kind = kind,
                         .sort_key = m_sort_keys[m_sort_indices[i]]});
-      m_frame_stats.command_count = m_items.size();
       i = end;
     }
   }
