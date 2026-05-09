@@ -214,7 +214,7 @@ Item {
         anchors.fill: parent
         anchors.leftMargin: root.side_margin
         anchors.rightMargin: root.side_margin
-        anchors.top_margin: root.top_margin
+        anchors.topMargin: root.top_margin
         anchors.bottomMargin: root.top_margin
         spacing: root.compact ? 0 : Math.max(24, root.width * 0.035)
 
@@ -385,7 +385,7 @@ Item {
                             anchors.fill: parent
                             anchors.leftMargin: 20
                             anchors.rightMargin: 14
-                            anchors.top_margin: 9
+                            anchors.topMargin: 9
                             anchors.bottomMargin: 9
                             spacing: 12
 

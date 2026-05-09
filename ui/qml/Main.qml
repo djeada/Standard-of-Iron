@@ -195,7 +195,7 @@ ApplicationWindow {
             if (visible) {
                 mainMenu.forceActiveFocus();
                 gameViewItem.focus = false;
-            } else if (game_started) {
+            } else if (mainMenu.game_started) {
                 gameViewItem.forceActiveFocus();
             }
         }
