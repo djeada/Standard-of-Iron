@@ -810,24 +810,14 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
     return;
   }
 
-  bool const has_structural_elevation =
-      std::any_of(m_heights.begin(), m_heights.end(),
-                  [](float height) { return std::abs(height) > 0.0001F; });
-  bool const has_non_flat_terrain =
-      std::any_of(m_terrain_types.begin(), m_terrain_types.end(),
-                  [](TerrainType type) { return type != TerrainType::Flat; });
-  if (!has_structural_elevation && !has_non_flat_terrain) {
-    return;
-  }
-
   const auto surface_profile = make_surface_profile(settings);
 
   if (surface_profile.ground_irregularity_enabled) {
-    const float amplitude =
-        std::max(0.0F, surface_profile.irregularity_amplitude);
+    const float amplitude = std::max(
+        0.16F, std::max(0.0F, surface_profile.irregularity_amplitude) * 3.0F);
     if (amplitude > 0.0001F) {
       const float frequency =
-          std::max(0.0001F, surface_profile.irregularity_scale);
+          std::max(0.22F, surface_profile.irregularity_scale * 1.8F);
       const float half_width = m_width * 0.5F - 0.5F;
       const float half_height = m_height * 0.5F - 0.5F;
 
@@ -862,7 +852,8 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
 
           float const blended =
               0.5F * base_noise + 0.35F * detail_noise + 0.15F * fine_noise;
-          float const perturb = (blended - 0.5F) * 2.0F * amplitude;
+          float const perturb =
+              (blended - 0.5F) * 2.0F * amplitude + amplitude * 0.42F;
 
           m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);
         }
@@ -904,6 +895,8 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
 
         if (type == TerrainType::Hill) {
           perturb *= 0.6F;
+        } else if (type == TerrainType::Flat) {
+          perturb = perturb * 0.85F + legacy_amplitude * 0.28F;
         }
 
         m_heights[idx] = std::max(0.0F, m_heights[idx] + perturb);

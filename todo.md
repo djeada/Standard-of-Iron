@@ -63,63 +63,6 @@ Work:
 Acceptance:
 - Adding a helmet/armor/weapon variant mostly requires data plus one renderer implementation, not editing multiple unit renderer paths.
 
-### Normalize attachment ownership
-
-Files:
-- `render/static_attachment_spec.*`
-- `render/equipment/*`
-- `render/creature/archetype_registry.*`
-- `render/creature/pipeline/*`
-
-Problem:
-- Attachment sets affect rigged mesh cache keys. Runtime hashing/comparison of attachment spans is visible risk.
-
-Work:
-- Assign each unique attachment set a stable `AttachmentSetId` at registration/prewarm time.
-- Store attachment hashes and resolved specs in the archetype descriptor or render asset handle.
-- Use `AttachmentSetId` in cache keys instead of hashing spans during gameplay.
-
-Acceptance:
-- Creature hot path does not call `static_attachments_hash()` per rendered creature.
-
-## P2 - Thread and System Boundaries
-
-### Keep simulation queries out of render-thread captures
-
-Files:
-- `app/core/game_engine.cpp`
-- `game/systems/combat_system*`
-- `render/scene_renderer.cpp`
-
-Problem:
-- The sample includes combat query rebuild/find-nearest-enemy on `QSGRenderThread`.
-
-Work:
-- Verify whether simulation update is intentionally running on the same thread before render.
-- If not intentional, move combat query rebuilds and nearest-enemy searches fully into simulation update.
-- Render should consume visual state produced before rendering: combat active, attack phase, hit reaction, target direction, and mode flags.
-
-Acceptance:
-- Render-thread perf captures do not include combat query rebuilds or target search as regular costs.
-
-### Add render-thread stage documentation and first-use logging
-
-Files:
-- `app/core/game_engine.cpp`
-- `render/scene_renderer.cpp`
-- `render/gl/backend.cpp`
-
-Problem:
-- QSG render-thread captures need clearer stage boundaries and first-use logging to distinguish expected one-time work from steady-frame cost.
-
-Work:
-- Document the expected QSG render-thread stages.
-- Add first-use logging around expensive render setup/cache paths.
-- Keep logs lightweight and disabled or rate-limited for normal gameplay.
-
-Acceptance:
-- Perf captures can distinguish one-time initialization from recurring render-thread costs.
-
 ## P2 - Backend Execution Cleanup
 
 ### Reduce backend scratch and dispatch overhead
@@ -157,14 +100,9 @@ Problem:
 - `Render::GL::Backend::execute(...)` is visible but materially smaller than creature submit/caching work, so the primary bottleneck is data preparation rather than final GL dispatch.
 
 Work:
-- Trace `submit_snapshot_creature()` line-by-line and identify all per-creature work that can be moved to registration, prewarm, or frame-shared state.
-- Ensure snapshot mesh cache hits on hot frames do not allocate, load blobs, or rebuild mesh data.
-- Ensure rigged mesh cache hits on hot frames do not bake, upload, or repack skin data.
 - Audit draw submission and cache code for avoidable `std::vector` growth, temporary containers, structure copies, and span-to-owned-data conversions.
-- Add lightweight counters for per-frame bytes uploaded for skin UBO / palette data.
 - Pre-size or reuse hot-path buffers so warmed frames avoid allocator and `memmove` samples.
 - Review whether repeated math such as vector normalization in creature submit can be cached or hoisted when visual state is unchanged.
-- Add warmed-battle perf validation.
 
 Acceptance:
 - Warmed creature-heavy frames avoid runtime mesh bake/load work, minimize allocation/copy samples, and reduce `submit_snapshot_creature()` cost in captures.

@@ -12,7 +12,7 @@ protected:
   void TearDown() override { Game::Map::TerrainService::instance().clear(); }
 };
 
-TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrain) {
+TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrainWithIrregularity) {
   Game::Map::MapDefinition map_def;
   map_def.grid.width = 6;
   map_def.grid.height = 5;
@@ -30,9 +30,13 @@ TEST_F(TerrainServiceTest, BuildsDerivedFieldForFlatTerrain) {
   EXPECT_EQ(field.heights.size(), 30U);
   EXPECT_EQ(field.slopes.size(), 30U);
   EXPECT_EQ(field.curvature.size(), 30U);
-  EXPECT_FLOAT_EQ(field.sample_height_at(2.0F, 3.0F), 0.0F);
-  EXPECT_NEAR(field.sample_slope_at(2, 3), 0.0F, 1e-6F);
-  EXPECT_NEAR(field.sample_curvature_at(2, 3), 0.0F, 1e-6F);
+  EXPECT_TRUE(std::any_of(field.heights.begin(), field.heights.end(),
+                          [](float height) { return height > 0.005F; }));
+  EXPECT_TRUE(std::any_of(field.slopes.begin(), field.slopes.end(),
+                          [](float slope) { return slope > 0.0005F; }));
+  EXPECT_TRUE(std::any_of(
+      field.curvature.begin(), field.curvature.end(),
+      [](float curvature) { return std::abs(curvature) > 0.0001F; }));
 }
 
 TEST_F(TerrainServiceTest, DerivedFieldCapturesSlopeAndCurvature) {

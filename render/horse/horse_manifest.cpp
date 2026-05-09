@@ -765,7 +765,8 @@ auto build_horse_full_leg_overlays()
     thigh.shape = Render::Creature::PrimitiveShape::BoneSpanMesh;
     thigh.params.anchor_bone = shoulder_bone;
     thigh.params.tail_bone = knee_bone;
-    thigh.params.head_offset = QVector3D(0.0F, adjusted_thigh_head_y, thigh_head_z);
+    thigh.params.head_offset =
+        QVector3D(0.0F, adjusted_thigh_head_y, thigh_head_z);
     thigh.params.tail_offset = QVector3D(0.0F, thigh_tail_y, thigh_tail_z);
     thigh.params.radius = dims.body_width * (front ? 0.690F : 0.780F) * 2.0F *
                           k_horse_thigh_thickness_scale;

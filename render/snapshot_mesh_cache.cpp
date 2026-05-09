@@ -47,8 +47,10 @@ auto build_entry(std::span<const RiggedVertex> vertices,
 auto describe_snapshot_key(const SnapshotMeshCache::Key &key,
                            std::uint32_t global_frame) -> std::string {
   std::ostringstream out;
-  out << "archetype=" << key.archetype << " variant=" << key.variant
-      << " state=" << static_cast<int>(key.state) << " clip=" << key.clip_id
+  out << "asset=" << key.asset_id << " archetype=" << key.archetype
+      << " attachment_set_id=" << key.attachment_set_id
+      << " variant=" << key.variant << " state=" << static_cast<int>(key.state)
+      << " clip=" << key.clip_id
       << " clip_variant=" << static_cast<int>(key.clip_variant)
       << " frame_in_clip=" << key.frame_in_clip
       << " global_frame=" << global_frame;

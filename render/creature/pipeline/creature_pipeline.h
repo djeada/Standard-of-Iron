@@ -24,6 +24,9 @@ struct SubmitStats {
   std::uint32_t rigged_cache_hits{0};
   std::uint32_t rigged_cache_misses{0};
   std::uint32_t rigged_cache_bakes{0};
+  std::uint32_t skin_atlas_builds{0};
+  std::uint32_t skin_ubo_uploads{0};
+  std::uint64_t skin_ubo_bytes_uploaded{0};
 
   std::uint32_t snapshot_cache_hits{0};
   std::uint32_t snapshot_loads{0};
@@ -40,6 +43,9 @@ struct SubmitStats {
     rigged_cache_hits += other.rigged_cache_hits;
     rigged_cache_misses += other.rigged_cache_misses;
     rigged_cache_bakes += other.rigged_cache_bakes;
+    skin_atlas_builds += other.skin_atlas_builds;
+    skin_ubo_uploads += other.skin_ubo_uploads;
+    skin_ubo_bytes_uploaded += other.skin_ubo_bytes_uploaded;
     snapshot_cache_hits += other.snapshot_cache_hits;
     snapshot_loads += other.snapshot_loads;
     snapshot_bakes += other.snapshot_bakes;

@@ -28,6 +28,9 @@ using std::uint32_t;
 using namespace Render::Ground;
 using namespace Render::GL::Geometry;
 
+constexpr float k_grass_height_scale = 1.12F;
+constexpr float k_grass_width_scale = 1.18F;
+
 inline auto section_for(Game::Map::TerrainType type) -> int {
   switch (type) {
   case Game::Map::TerrainType::Mountain:
@@ -75,8 +78,11 @@ void BiomeRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
 void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  Scatter::sync_direct_state(m_grass_state);
-  if (m_grass_state.instance_count == 0 || !m_grass_state.instance_buffer) {
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_grass_state, [](const GrassInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_height;
+      });
+  if (visible_count == 0 || !m_grass_state.instance_buffer) {
     return;
   }
 
@@ -85,7 +91,7 @@ void BiomeRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Grass;
   cmd.instance_buffer = m_grass_state.instance_buffer.get();
-  cmd.instance_count = m_grass_state.instance_count;
+  cmd.instance_count = visible_count;
   cmd.grass = params;
   renderer.terrain_scatter(cmd);
 }
@@ -217,10 +223,10 @@ void BiomeRenderer::generate_grass_instances() {
 
     float const height = remap(rand_01(state), scatter_profile.blade_height_min,
                                scatter_profile.blade_height_max) *
-                         tile_safe * 0.5F;
+                         tile_safe * 0.5F * k_grass_height_scale;
     float const width = remap(rand_01(state), scatter_profile.blade_width_min,
                               scatter_profile.blade_width_max) *
-                        tile_safe;
+                        tile_safe * k_grass_width_scale;
 
     float const sway_strength = remap(rand_01(state), 0.75F, 1.25F);
     float const sway_speed = remap(rand_01(state), 0.85F, 1.15F);
@@ -442,6 +448,7 @@ void BiomeRenderer::generate_grass_instances() {
 
   grass_instance_count = grass_instances.size();
   grass_instances_dirty = grass_instance_count > 0;
+  m_grass_state.visibility_dirty = grass_instance_count > 0;
 }
 
 } // namespace Render::GL

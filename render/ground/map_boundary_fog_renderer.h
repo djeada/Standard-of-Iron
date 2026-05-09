@@ -4,6 +4,7 @@
 #include "../i_render_pass.h"
 #include <QVector2D>
 #include <QVector3D>
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -24,6 +25,14 @@ public:
 
   [[nodiscard]] auto mountain_triangle_count() const -> std::size_t {
     return m_mountain_indices.size() / 3U;
+  }
+
+  [[nodiscard]] auto mountain_geometry_signature() const -> std::uint64_t {
+    return m_mountain_geometry_signature;
+  }
+
+  [[nodiscard]] auto mountain_height_span() const -> float {
+    return m_mountain_max_height - m_mountain_min_height;
   }
 
   void submit(Renderer &renderer, ResourceManager *resources) override;
@@ -47,6 +56,9 @@ private:
   std::vector<BoundaryCard> m_cards;
   std::vector<Vertex> m_mountain_vertices;
   std::vector<unsigned int> m_mountain_indices;
+  std::uint64_t m_mountain_geometry_signature = 0U;
+  float m_mountain_min_height = 0.0F;
+  float m_mountain_max_height = 0.0F;
   std::unique_ptr<Mesh> m_mountain_mesh;
 };
 

@@ -245,6 +245,37 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
   EXPECT_NEAR(map_def.biome.grass_primary.z(), 0.30F, 0.001F);
 }
 
+TEST_F(GroundTypeTest, MapLoaderReadsSpawnEdgePadding) {
+  QTemporaryFile temp_file;
+  ASSERT_TRUE(temp_file.open());
+
+  QJsonObject biome;
+  biome["ground_type"] = "grass_dry";
+  biome["spawn_edge_padding"] = 0.02;
+
+  QJsonObject grid;
+  grid["width"] = 50;
+  grid["height"] = 50;
+  grid["tile_size"] = 1.0;
+
+  QJsonObject root;
+  root["name"] = "Test Map With Spawn Edge Padding";
+  root["grid"] = grid;
+  root["biome"] = biome;
+
+  QJsonDocument doc(root);
+  temp_file.write(doc.toJson());
+  temp_file.close();
+
+  MapDefinition map_def;
+  QString error;
+  bool success =
+      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+
+  ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
+  EXPECT_FLOAT_EQ(map_def.biome.spawn_edge_padding, 0.02F);
+}
+
 TEST_F(GroundTypeTest, AllGroundTypesFromString) {
   auto forest_mud = ground_type_from_string("forest_mud");
   ASSERT_TRUE(forest_mud.has_value());
