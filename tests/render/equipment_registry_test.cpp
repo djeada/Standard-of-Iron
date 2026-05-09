@@ -164,3 +164,43 @@ TEST_F(EquipmentRegistryTest, NationSpecificWeapons) {
   EXPECT_EQ(retrieved_carthage, sword_carthage);
   EXPECT_EQ(retrieved_roman, sword_roman);
 }
+
+TEST_F(EquipmentRegistryTest, ResolveHandleForRegisteredEquipment) {
+  auto helmet = std::make_shared<MockEquipmentRenderer>("handle_helmet");
+  registry->register_equipment(EquipmentCategory::Helmet, "handle_helmet",
+                               helmet);
+
+  const auto handle =
+      registry->resolve_handle(EquipmentCategory::Helmet, "handle_helmet");
+
+  EXPECT_NE(handle, kInvalidEquipmentHandle);
+  EXPECT_TRUE(registry->has(handle));
+  EXPECT_EQ(registry->get(handle), helmet);
+}
+
+TEST_F(EquipmentRegistryTest, ResolveHandleForMissingEquipment) {
+  const auto handle =
+      registry->resolve_handle(EquipmentCategory::Weapon, "missing_weapon");
+
+  EXPECT_EQ(handle, kInvalidEquipmentHandle);
+  EXPECT_FALSE(registry->has(handle));
+  EXPECT_EQ(registry->get(handle), nullptr);
+}
+
+TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
+  auto armor_v1 = std::make_shared<MockEquipmentRenderer>("armor_v1");
+  auto armor_v2 = std::make_shared<MockEquipmentRenderer>("armor_v2");
+  registry->register_equipment(EquipmentCategory::Armor, "stable_armor",
+                               armor_v1);
+  const auto handle_v1 =
+      registry->resolve_handle(EquipmentCategory::Armor, "stable_armor");
+
+  registry->register_equipment(EquipmentCategory::Armor, "stable_armor",
+                               armor_v2);
+  const auto handle_v2 =
+      registry->resolve_handle(EquipmentCategory::Armor, "stable_armor");
+
+  EXPECT_EQ(handle_v1, handle_v2);
+  EXPECT_NE(handle_v1, kInvalidEquipmentHandle);
+  EXPECT_EQ(registry->get(handle_v2), armor_v2);
+}

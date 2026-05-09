@@ -2,6 +2,7 @@
 
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
+#include "../equipment/equipment_registry.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QVector3D>
@@ -29,6 +30,9 @@ struct HorseSpearmanRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
+
+  EquipmentHandle spear_handle{kInvalidEquipmentHandle};
+  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
 };
 
 class HorseSpearmanRendererBase : public MountedHumanoidRendererBase {
@@ -61,6 +65,8 @@ private:
   void build_visual_spec();
 
   HorseSpearmanRendererConfig m_config;
+  EquipmentHandle m_spear_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_shield_handle{kInvalidEquipmentHandle};
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
 };
 

@@ -463,12 +463,15 @@ public:
       -> const Render::Creature::Pipeline::UnitVisualSpec & override {
     using namespace Render::Creature::Pipeline;
     static auto &reg = Render::GL::EquipmentRegistry::instance();
-    static auto work_apron_ptr =
-        reg.get(Render::GL::EquipmentCategory::Armor, "work_apron_carthage");
-    static auto tool_belt_ptr =
-        reg.get(Render::GL::EquipmentCategory::Armor, "tool_belt_carthage");
-    static auto arm_guards_ptr =
-        reg.get(Render::GL::EquipmentCategory::Armor, "arm_guards");
+    static const auto work_apron_handle = reg.resolve_handle(
+        Render::GL::EquipmentCategory::Armor, "work_apron_carthage");
+    static const auto tool_belt_handle = reg.resolve_handle(
+        Render::GL::EquipmentCategory::Armor, "tool_belt_carthage");
+    static const auto arm_guards_handle =
+        reg.resolve_handle(Render::GL::EquipmentCategory::Armor, "arm_guards");
+    static auto work_apron_ptr = reg.get(work_apron_handle);
+    static auto tool_belt_ptr = reg.get(tool_belt_handle);
+    static auto arm_guards_ptr = reg.get(arm_guards_handle);
 
     static const WorkApronConfig work_apron_cfg = []() {
       auto *r = dynamic_cast<WorkApronRenderer *>(work_apron_ptr.get());

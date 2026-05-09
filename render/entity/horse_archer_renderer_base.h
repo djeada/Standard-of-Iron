@@ -2,6 +2,7 @@
 
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
+#include "../equipment/equipment_registry.h"
 #include "../equipment/i_equipment_renderer.h"
 #include "mounted_humanoid_renderer_base.h"
 
@@ -36,6 +37,9 @@ struct HorseArcherRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
+
+  EquipmentHandle bow_handle{kInvalidEquipmentHandle};
+  EquipmentHandle quiver_handle{kInvalidEquipmentHandle};
 };
 
 class HorseArcherRendererBase : public MountedHumanoidRendererBase {
@@ -73,6 +77,8 @@ private:
   void build_visual_spec();
 
   HorseArcherRendererConfig m_config;
+  EquipmentHandle m_bow_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_quiver_handle{kInvalidEquipmentHandle};
   Render::Creature::ArchetypeId m_rider_archetype_with_bow{
       Render::Creature::kInvalidArchetype};
 

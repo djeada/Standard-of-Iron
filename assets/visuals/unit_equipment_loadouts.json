@@ -1,0 +1,41 @@
+{
+  "loadouts": {
+    "troops/roman/horse_archer": {
+      "bow": "bow_roman",
+      "quiver": "quiver",
+      "armor": "roman_light_armor",
+      "cloak": "cloak_carthage"
+    },
+    "troops/carthage/horse_archer": {
+      "bow": "bow_carthage",
+      "quiver": "quiver",
+      "helmet": "carthage_light",
+      "armor": "armor_light_carthage",
+      "cloak": "cloak_carthage"
+    },
+    "troops/roman/horse_spearman": {
+      "spear": "spear",
+      "armor": "roman_heavy_armor",
+      "shoulder": "roman_shoulder_cover_cavalry"
+    },
+    "troops/carthage/horse_spearman": {
+      "spear": "spear",
+      "helmet": "carthage_heavy",
+      "armor": "armor_heavy_carthage",
+      "shoulder": "carthage_shoulder_cover_cavalry"
+    },
+    "troops/roman/horse_swordsman": {
+      "sword": "sword_roman",
+      "shield": "roman_scutum",
+      "armor": "roman_heavy_armor",
+      "shoulder": "roman_shoulder_cover_cavalry"
+    },
+    "troops/carthage/horse_swordsman": {
+      "sword": "sword_carthage",
+      "shield": "shield_carthage",
+      "helmet": "carthage_heavy",
+      "armor": "armor_heavy_carthage",
+      "shoulder": "carthage_shoulder_cover_cavalry"
+    }
+  }
+}

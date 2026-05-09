@@ -38,12 +38,15 @@
 #include <cmath>
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <qglobal.h>
 #include <qmatrix4x4.h>
 #include <qopenglcontext.h>
 #include <qstringliteral.h>
 #include <qvectornd.h>
+#include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Render::GL {
@@ -56,7 +59,28 @@ namespace {
 
 const QVector3D k_grid_line_color(0.22F, 0.25F, 0.22F);
 
+auto render_stage_logging_enabled() -> bool {
+  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
+
+void log_render_first_use_once(const char *stage, const QString &detail) {
+  if (!render_stage_logging_enabled()) {
+    return;
+  }
+
+  static std::mutex mutex;
+  static std::unordered_set<std::string> emitted_stages;
+
+  std::lock_guard<std::mutex> const lock(mutex);
+  if (!emitted_stages.emplace(stage).second) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
+                           .arg(QString::fromLatin1(stage), detail);
+}
+
+} // namespace
 
 Backend::Backend() = default;
 Backend::Backend(ShaderQuality quality) : m_shader_quality(quality) {}
@@ -300,6 +324,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
   bool polygon_offset_enabled = (glIsEnabled(GL_POLYGON_OFFSET_FILL) != 0U);
 
   const auto &prepared_batches = queue.prepared_batches();
+  log_render_first_use_once(
+      "backend-execute",
+      QStringLiteral("first playback has %1 commands and %2 prepared batches")
+          .arg(queue.size())
+          .arg(prepared_batches.size()));
   const bool rigged_instancing_enabled =
       !qEnvironmentVariableIsSet("SOI_RENDER_DISABLE_RIGGED_INSTANCING");
   const bool debug_rigged =
