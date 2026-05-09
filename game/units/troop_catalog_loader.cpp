@@ -145,7 +145,7 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
   }
 
   auto &catalog = TroopCatalog::instance();
-  catalog.clear();
+  catalog.reset_to_defaults();
 
   for (const QJsonValue &value : troops) {
     const QJsonObject troop_obj = ensure_object(value);

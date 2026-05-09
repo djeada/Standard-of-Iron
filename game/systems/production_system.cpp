@@ -43,6 +43,15 @@ auto resolve_nation_id(const Engine::Core::UnitComponent *unit,
   return registry.default_nation_id();
 }
 
+auto production_count_increment(const Engine::Core::UnitComponent *unit_comp,
+                                int production_cost) -> int {
+  if (unit_comp != nullptr &&
+      unit_comp->spawn_type == Game::Units::SpawnType::Home) {
+    return 1;
+  }
+  return production_cost;
+}
+
 auto compute_builder_exit_position(
     float center_x, float center_z, const QVector3D &builder_pos,
     float unit_radius, const std::string &building_type) -> QVector3D {
@@ -178,8 +187,10 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
         nation_id, prod->product_type);
     int const individuals_per_unit = current_profile.individuals_per_unit;
     int const production_cost = current_profile.production.cost;
+    int const capacity_increment =
+        production_count_increment(unit_comp, production_cost);
 
-    if (prod->produced_count + production_cost > prod->max_units) {
+    if (prod->produced_count + capacity_increment > prod->max_units) {
       prod->in_progress = false;
       continue;
     }
@@ -224,7 +235,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
           }
         }
 
-        prod->produced_count += production_cost;
+        prod->produced_count += capacity_increment;
       }
 
       prod->in_progress = false;

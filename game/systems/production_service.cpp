@@ -130,6 +130,16 @@ auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
   return false;
 }
 
+auto home_committed_civilian_count(
+    const Engine::Core::ProductionComponent *prod) -> int {
+  if (prod == nullptr) {
+    return 0;
+  }
+
+  return prod->produced_count + (prod->in_progress ? 1 : 0) +
+         static_cast<int>(prod->production_queue.size());
+}
+
 } // namespace
 
 auto ProductionService::start_production_for_first_selected_barracks(
@@ -280,6 +290,10 @@ auto ProductionService::start_production_for_first_selected_home(
   int const production_cost = profile.production.cost;
   if (p->manpower_available < production_cost) {
     return ProductionResult::InsufficientManpower;
+  }
+
+  if (home_committed_civilian_count(p) >= p->max_units) {
+    return ProductionResult::PerBarracksLimitReached;
   }
 
   const int max_queue_size = 3;

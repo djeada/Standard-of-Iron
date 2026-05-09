@@ -40,6 +40,8 @@ struct MeshCmd {
   Texture *texture = nullptr;
   QMatrix4x4 model;
   QVector3D color{1, 1, 1};
+  QVector3D trim_color{1, 1, 1};
+  bool has_trim_color = false;
   float alpha = 1.0F;
   int material_id = 0;
   class Shader *shader = nullptr;

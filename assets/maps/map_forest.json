@@ -81,7 +81,7 @@
       "x": 60,
       "z": 60,
       "player_id": 1,
-      "max_population": 200,
+      "max_population": 500,
       "nation": "roman_republic"
     },
     {
@@ -125,7 +125,7 @@
       "x": 190,
       "z": 190,
       "player_id": 2,
-      "max_population": 200,
+      "max_population": 500,
       "nation": "roman_republic"
     },
     {

@@ -7,8 +7,8 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 
-#include <gtest/gtest.h>
 #include <cmath>
+#include <gtest/gtest.h>
 #include <vector>
 
 namespace {
@@ -26,24 +26,28 @@ TEST(CommanderCatalogTest, DefinesThreeCommandersForEachPlayableNation) {
   bool has_attack_bonus = false;
   bool has_production_bonus = false;
 
-  auto inspect_definition = [&](const Game::Units::CommanderDefinition *definition) {
-    ASSERT_NE(definition, nullptr);
-    EXPECT_FALSE(definition->strategic_identity.empty());
-    EXPECT_FALSE(definition->recruitment_effect.empty());
-    EXPECT_FALSE(definition->battlefield_role.empty());
-    EXPECT_FALSE(definition->strengths.empty());
-    EXPECT_FALSE(definition->weaknesses.empty());
-    EXPECT_FALSE(definition->visual_requirements.empty());
-    EXPECT_FALSE(definition->bonus_type.empty());
-    EXPECT_FALSE(definition->bonus_summary.empty());
-    EXPECT_TRUE(Game::Units::is_commander_troop(definition->troop_type));
+  auto inspect_definition =
+      [&](const Game::Units::CommanderDefinition *definition) {
+        ASSERT_NE(definition, nullptr);
+        EXPECT_FALSE(definition->strategic_identity.empty());
+        EXPECT_FALSE(definition->recruitment_effect.empty());
+        EXPECT_FALSE(definition->battlefield_role.empty());
+        EXPECT_FALSE(definition->strengths.empty());
+        EXPECT_FALSE(definition->weaknesses.empty());
+        EXPECT_FALSE(definition->visual_requirements.empty());
+        EXPECT_FALSE(definition->bonus_type.empty());
+        EXPECT_FALSE(definition->bonus_summary.empty());
+        EXPECT_TRUE(Game::Units::is_commander_troop(definition->troop_type));
 
-    has_hannibal = has_hannibal || definition->display_name == "Hannibal Barca";
-    has_health_bonus = has_health_bonus || definition->bonus_type == "health_regen";
-    has_attack_bonus = has_attack_bonus || definition->bonus_type == "attack_boost";
-    has_production_bonus =
-        has_production_bonus || definition->bonus_type == "production_haste";
-  };
+        has_hannibal =
+            has_hannibal || definition->display_name == "Hannibal Barca";
+        has_health_bonus =
+            has_health_bonus || definition->bonus_type == "health_regen";
+        has_attack_bonus =
+            has_attack_bonus || definition->bonus_type == "attack_boost";
+        has_production_bonus = has_production_bonus ||
+                               definition->bonus_type == "production_haste";
+      };
 
   for (const auto *definition : roman) {
     inspect_definition(definition);
@@ -62,7 +66,8 @@ TEST(CommanderProductionTest, ReservesOneCommanderPerOwnerWhenQueued) {
   Engine::Core::World world;
 
   auto *first_barracks = world.create_entity();
-  auto *first_unit = first_barracks->add_component<Engine::Core::UnitComponent>();
+  auto *first_unit =
+      first_barracks->add_component<Engine::Core::UnitComponent>();
   auto *first_production =
       first_barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(first_unit, nullptr);
@@ -105,7 +110,8 @@ TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
 
   auto *barracks = world.create_entity();
   auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
-  auto *production = barracks->add_component<Engine::Core::ProductionComponent>();
+  auto *production =
+      barracks->add_component<Engine::Core::ProductionComponent>();
   ASSERT_NE(barracks_unit, nullptr);
   ASSERT_NE(production, nullptr);
   barracks_unit->spawn_type = Game::Units::SpawnType::Barracks;
@@ -114,7 +120,8 @@ TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
   production->manpower_available = 1000;
 
   auto *commander = world.create_entity();
-  auto *commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  auto *commander_unit =
+      commander->add_component<Engine::Core::UnitComponent>();
   ASSERT_NE(commander_unit, nullptr);
   commander_unit->owner_id = 1;
   commander_unit->health = 100;
@@ -154,7 +161,8 @@ TEST(CommanderSystemTest, CommanderDeathDisablesAuraAndShocksNearbyAllies) {
 
   auto *ally = world.create_entity();
   auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
-  auto *ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
   auto *ally_morale = ally->add_component<Engine::Core::MoraleComponent>();
   ASSERT_NE(ally_unit, nullptr);
   ASSERT_NE(ally_transform, nullptr);
@@ -196,7 +204,8 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
 
   auto *ally = world.create_entity();
   auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
-  auto *ally_transform = ally->add_component<Engine::Core::TransformComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
   auto *ally_attack = ally->add_component<Engine::Core::AttackComponent>();
   ASSERT_NE(ally_unit, nullptr);
   ASSERT_NE(ally_transform, nullptr);
@@ -208,8 +217,7 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   ally_transform->position = {2.0F, 0.0F, 0.0F};
 
   auto *barracks = world.create_entity();
-  auto *barracks_unit =
-      barracks->add_component<Engine::Core::UnitComponent>();
+  auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
   auto *barracks_transform =
       barracks->add_component<Engine::Core::TransformComponent>();
   auto *barracks_prod =
@@ -224,9 +232,10 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   barracks_prod->in_progress = true;
   barracks_prod->time_remaining = 20.0F;
 
-  const auto base_profile = Game::Systems::TroopProfileService::instance()
-                                .get_profile(Game::Systems::NationID::RomanRepublic,
-                                             Game::Units::TroopType::Swordsman);
+  const auto base_profile =
+      Game::Systems::TroopProfileService::instance().get_profile(
+          Game::Systems::NationID::RomanRepublic,
+          Game::Units::TroopType::Swordsman);
   const int expected_boosted_melee = static_cast<int>(
       std::round(static_cast<float>(base_profile.combat.melee_damage) * 1.25F));
 
@@ -238,8 +247,108 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   commander_data->aura_bonus_value = 0.5F;
   const float before_haste = barracks_prod->time_remaining;
   system.update(&world, 1.0F);
-  const float expected_haste_time = before_haste - commander_data->aura_bonus_value;
+  const float expected_haste_time =
+      before_haste - commander_data->aura_bonus_value;
   EXPECT_FLOAT_EQ(barracks_prod->time_remaining, expected_haste_time);
+}
+
+TEST(CommanderSystemTest, AttackBoostFallsOffOutsideAura) {
+  Engine::Core::World world;
+
+  auto *commander = world.create_entity();
+  auto *commander_unit =
+      commander->add_component<Engine::Core::UnitComponent>();
+  auto *commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto *commander_data =
+      commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->bonus_type = "attack_boost";
+  commander_data->aura_bonus_value = 0.25F;
+  commander_data->aura_radius = 5.0F;
+
+  auto *ally = world.create_entity();
+  auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
+  auto *ally_attack = ally->add_component<Engine::Core::AttackComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ASSERT_NE(ally_attack, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Knight;
+  ally_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  const auto base_profile =
+      Game::Systems::TroopProfileService::instance().get_profile(
+          Game::Systems::NationID::RomanRepublic,
+          Game::Units::TroopType::Swordsman);
+  const int boosted_melee = static_cast<int>(
+      std::round(static_cast<float>(base_profile.combat.melee_damage) * 1.25F));
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 1.0F);
+  EXPECT_EQ(ally_attack->melee_damage, boosted_melee);
+
+  ally_transform->position = {10.0F, 0.0F, 0.0F};
+  system.update(&world, 1.0F);
+
+  EXPECT_EQ(ally_attack->damage, base_profile.combat.ranged_damage);
+  EXPECT_EQ(ally_attack->melee_damage, base_profile.combat.melee_damage);
+}
+
+TEST(CommanderSystemTest, SpeedBoostFallsOffWhenCommanderIsWounded) {
+  Engine::Core::World world;
+
+  auto *commander = world.create_entity();
+  auto *commander_unit =
+      commander->add_component<Engine::Core::UnitComponent>();
+  auto *commander_transform =
+      commander->add_component<Engine::Core::TransformComponent>();
+  auto *commander_data =
+      commander->add_component<Engine::Core::CommanderComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  ASSERT_NE(commander_transform, nullptr);
+  ASSERT_NE(commander_data, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_transform->position = {0.0F, 0.0F, 0.0F};
+  commander_data->bonus_type = "speed_boost";
+  commander_data->aura_bonus_value = 0.20F;
+  commander_data->aura_radius = 5.0F;
+
+  auto *ally = world.create_entity();
+  auto *ally_unit = ally->add_component<Engine::Core::UnitComponent>();
+  auto *ally_transform =
+      ally->add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(ally_unit, nullptr);
+  ASSERT_NE(ally_transform, nullptr);
+  ally_unit->owner_id = 1;
+  ally_unit->health = 100;
+  ally_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  ally_unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  ally_transform->position = {2.0F, 0.0F, 0.0F};
+
+  const auto base_profile =
+      Game::Systems::TroopProfileService::instance().get_profile(
+          Game::Systems::NationID::RomanRepublic,
+          Game::Units::TroopType::Spearman);
+
+  Game::Systems::CommanderSystem system;
+  system.update(&world, 1.0F);
+  EXPECT_FLOAT_EQ(ally_unit->speed, base_profile.combat.speed * 1.20F);
+
+  commander_unit->health = 0;
+  system.update(&world, 1.0F);
+
+  EXPECT_FLOAT_EQ(ally_unit->speed, base_profile.combat.speed);
 }
 
 } // namespace

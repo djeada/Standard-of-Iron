@@ -57,6 +57,8 @@ void Barracks::init(const SpawnParams &params) {
       prod->product_type = TroopType::Archer;
       prod->build_time = 10.0F;
       prod->max_units = params.max_population;
+      prod->manpower_available = params.is_initial_spawn ? params.max_population
+                                                         : 0;
       prod->in_progress = false;
       prod->time_remaining = 0.0F;
       prod->produced_count = 0;

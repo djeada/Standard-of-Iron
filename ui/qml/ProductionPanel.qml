@@ -1476,15 +1476,23 @@ Rectangle {
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: qsTr("Available families: %1").arg(homeProductionContent.prod.manpower_available || 0)
+                        text: {
+                            var info = productionPanel.get_unit_production_info("civilian", homeProductionContent.prod.nation_id);
+                            var cost = Math.max(1, info.cost || 1);
+                            var ready = Math.floor((homeProductionContent.prod.manpower_available || 0) / cost);
+                            return qsTr("Available civilians: %1 / %2").arg(ready).arg(homeProductionContent.prod.max_units || 0);
+                        }
                         color: "#bdc3c7"
                         font.pointSize: 8
                     }
 
                     Rectangle {
                         property int queue_total: (homeProductionContent.prod.in_progress ? 1 : 0) + (homeProductionContent.prod.queue_size || 0)
-                        property bool is_enabled: homeProductionContent.prod.has_home && queue_total < 3
                         property var unit_info: productionPanel.get_unit_production_info("civilian", homeProductionContent.prod.nation_id)
+                        property int committed_total: (homeProductionContent.prod.produced_count || 0) + queue_total
+                        property bool has_capacity: committed_total < (homeProductionContent.prod.max_units || 0)
+                        property bool has_families: (homeProductionContent.prod.manpower_available || 0) >= (unit_info.cost || 0)
+                        property bool is_enabled: homeProductionContent.prod.has_home && has_capacity && has_families
                         property bool is_hovered: civilianMouseArea.containsMouse
 
                         width: 110
@@ -1554,7 +1562,7 @@ Rectangle {
                             }
                             cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                             ToolTip.visible: containsMouse
-                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nRight-click on a friendly barracks to send civilians in and transfer manpower.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : qsTr("Cannot recruit")
+                            ToolTip.text: parent.is_enabled ? qsTr("Recruit %1\nCost: %2 families\nBuild time: %3s\nRight-click on a friendly barracks to send civilians in and transfer manpower.").arg(parent.unit_info.display_name || "Civilian").arg(parent.unit_info.cost || 8).arg((parent.unit_info.build_time || 5).toFixed(0)) : (!parent.has_capacity ? qsTr("This home already committed its 3 civilians") : (!parent.has_families ? qsTr("Not enough families available") : qsTr("Cannot recruit")))
                             ToolTip.delay: 300
                         }
 

@@ -619,6 +619,7 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       }
     }
 
+    auto const visual_spec = owner.visual_spec();
     HumanoidPose pose{};
     bool const requires_runtime_pose =
         RCP::pass_intent_from_ctx(inst_ctx) == RCP::RenderPassIntent::Shadow;
@@ -633,8 +634,14 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         HumanoidPoseController kneel_ctrl(pose, anim_ctx);
         kneel_ctrl.kneel(effective_kneel);
       }
+      if (soldier_anim.is_constructing) {
+        HumanoidPoseController construct_ctrl(pose, anim_ctx);
+        construct_ctrl.sword_slash_variant(
+            RCP::humanoid_phase_for_anim(anim_ctx),
+            RCP::humanoid_clip_variant_for_anim(visual_spec.archetype_id,
+                                                anim_ctx));
+      }
     }
-    auto const visual_spec = owner.visual_spec();
     bool world_already_grounded =
         ctx.skip_ground_offset || requires_runtime_pose;
     if (!ctx.skip_ground_offset && requires_runtime_pose) {

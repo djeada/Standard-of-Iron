@@ -185,6 +185,50 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     entity_obj["attack_target"] = attack_target_obj;
   }
 
+  if (const auto *commander = entity->get_component<CommanderComponent>()) {
+    QJsonObject commander_obj;
+    commander_obj["commander_id"] =
+        QString::fromStdString(commander->commander_id);
+    commander_obj["display_name"] =
+        QString::fromStdString(commander->display_name);
+    commander_obj["strategic_identity"] =
+        QString::fromStdString(commander->strategic_identity);
+    commander_obj["passive_aura"] =
+        QString::fromStdString(commander->passive_aura);
+    commander_obj["bonus_type"] = QString::fromStdString(commander->bonus_type);
+    commander_obj["bonus_summary"] =
+        QString::fromStdString(commander->bonus_summary);
+    commander_obj["rally_ability"] =
+        QString::fromStdString(commander->rally_ability);
+    commander_obj["death_consequence"] =
+        QString::fromStdString(commander->death_consequence);
+    commander_obj["bodyguard_count"] = commander->bodyguard_count;
+    commander_obj["aura_radius"] = commander->aura_radius;
+    commander_obj["aura_morale_bonus"] = commander->aura_morale_bonus;
+    commander_obj["aura_bonus_value"] = commander->aura_bonus_value;
+    commander_obj["rally_range"] = commander->rally_range;
+    commander_obj["rally_cooldown"] = commander->rally_cooldown;
+    commander_obj["rally_morale_restore"] = commander->rally_morale_restore;
+    commander_obj["rally_cooldown_remaining"] =
+        commander->rally_cooldown_remaining;
+    commander_obj["rally_feedback_time"] = commander->rally_feedback_time;
+    commander_obj["death_shock_radius"] = commander->death_shock_radius;
+    commander_obj["death_morale_shock"] = commander->death_morale_shock;
+    commander_obj["aura_active"] = commander->aura_active;
+    commander_obj["wounded"] = commander->wounded;
+    entity_obj["commander"] = commander_obj;
+  }
+
+  if (const auto *morale = entity->get_component<MoraleComponent>()) {
+    QJsonObject morale_obj;
+    morale_obj["morale"] = morale->morale;
+    morale_obj["commander_aura_bonus"] = morale->commander_aura_bonus;
+    morale_obj["shock_timer"] = morale->shock_timer;
+    morale_obj["wavering"] = morale->wavering;
+    morale_obj["routing"] = morale->routing;
+    entity_obj["morale"] = morale_obj;
+  }
+
   if (const auto *patrol = entity->get_component<PatrolComponent>()) {
     QJsonObject patrol_obj;
     patrol_obj["current_waypoint"] = static_cast<int>(patrol->current_waypoint);
@@ -606,6 +650,73 @@ void Serialization::deserialize_entity(Entity *entity,
         attack_target_obj["target_id"].toVariant().toULongLong());
     attack_target->should_chase =
         attack_target_obj["should_chase"].toBool(false);
+  }
+
+  if (json.contains("commander")) {
+    const auto commander_obj = json["commander"].toObject();
+    auto *commander = entity->add_component<CommanderComponent>();
+    commander->commander_id =
+        commander_obj["commander_id"].toString().toStdString();
+    commander->display_name =
+        commander_obj["display_name"].toString().toStdString();
+    commander->strategic_identity =
+        commander_obj["strategic_identity"].toString().toStdString();
+    commander->passive_aura =
+        commander_obj["passive_aura"].toString().toStdString();
+    commander->bonus_type =
+        commander_obj["bonus_type"].toString().toStdString();
+    commander->bonus_summary =
+        commander_obj["bonus_summary"].toString().toStdString();
+    commander->rally_ability =
+        commander_obj["rally_ability"].toString().toStdString();
+    commander->death_consequence =
+        commander_obj["death_consequence"].toString().toStdString();
+    commander->bodyguard_count =
+        commander_obj["bodyguard_count"].toInt(commander->bodyguard_count);
+    commander->aura_radius = static_cast<float>(
+        commander_obj["aura_radius"].toDouble(commander->aura_radius));
+    commander->aura_morale_bonus =
+        static_cast<float>(commander_obj["aura_morale_bonus"].toDouble(
+            commander->aura_morale_bonus));
+    commander->aura_bonus_value =
+        static_cast<float>(commander_obj["aura_bonus_value"].toDouble(
+            commander->aura_bonus_value));
+    commander->rally_range = static_cast<float>(
+        commander_obj["rally_range"].toDouble(commander->rally_range));
+    commander->rally_cooldown = static_cast<float>(
+        commander_obj["rally_cooldown"].toDouble(commander->rally_cooldown));
+    commander->rally_morale_restore =
+        static_cast<float>(commander_obj["rally_morale_restore"].toDouble(
+            commander->rally_morale_restore));
+    commander->rally_cooldown_remaining =
+        static_cast<float>(commander_obj["rally_cooldown_remaining"].toDouble(
+            commander->rally_cooldown_remaining));
+    commander->rally_feedback_time =
+        static_cast<float>(commander_obj["rally_feedback_time"].toDouble(
+            commander->rally_feedback_time));
+    commander->death_shock_radius =
+        static_cast<float>(commander_obj["death_shock_radius"].toDouble(
+            commander->death_shock_radius));
+    commander->death_morale_shock =
+        static_cast<float>(commander_obj["death_morale_shock"].toDouble(
+            commander->death_morale_shock));
+    commander->aura_active =
+        commander_obj["aura_active"].toBool(commander->aura_active);
+    commander->wounded = commander_obj["wounded"].toBool(commander->wounded);
+  }
+
+  if (json.contains("morale")) {
+    const auto morale_obj = json["morale"].toObject();
+    auto *morale = entity->add_component<MoraleComponent>();
+    morale->morale =
+        static_cast<float>(morale_obj["morale"].toDouble(morale->morale));
+    morale->commander_aura_bonus =
+        static_cast<float>(morale_obj["commander_aura_bonus"].toDouble(
+            morale->commander_aura_bonus));
+    morale->shock_timer = static_cast<float>(
+        morale_obj["shock_timer"].toDouble(morale->shock_timer));
+    morale->wavering = morale_obj["wavering"].toBool(morale->wavering);
+    morale->routing = morale_obj["routing"].toBool(morale->routing);
   }
 
   if (json.contains("patrol")) {

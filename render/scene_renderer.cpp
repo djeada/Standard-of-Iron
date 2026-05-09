@@ -90,149 +90,174 @@ auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
   default:
     return Engine::Core::CombatAttackFamily::None;
   }
-  auto render_stage_logging_enabled() -> bool {
-    return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
-  }
-
-  void log_render_first_use_once(const char *stage, const QString &detail) {
-    if (!render_stage_logging_enabled()) {
-      return;
-    }
-
-    static std::mutex mutex;
-    static std::unordered_set<std::string> emitted_stages;
-
-    std::lock_guard<std::mutex> const lock(mutex);
-    if (!emitted_stages.emplace(stage).second) {
-      return;
-    }
-
-    qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
-                             .arg(QString::fromLatin1(stage), detail);
-  }
-
-  float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
-    switch (spawn_type) {
-    case Game::Units::SpawnType::MountedKnight:
-      return 4.0F;
-    case Game::Units::SpawnType::Spearman:
-    case Game::Units::SpawnType::Archer:
-    case Game::Units::SpawnType::Knight:
-      return 2.5F;
-    default:
-      return 3.0F;
-    }
-  }
-
-  auto resolved_individuals_per_unit(
-      const Engine::Core::UnitComponent &unit_comp) -> int {
-    if (unit_comp.render_individuals_per_unit_override > 0) {
-      return unit_comp.render_individuals_per_unit_override;
-    }
-    return Game::Units::TroopConfig::instance().get_individuals_per_unit(
-        unit_comp.spawn_type);
-  }
-
-  auto is_unit_moving(
-      const Engine::Core::MovementComponent *move_comp) -> bool {
-    if (move_comp == nullptr) {
-      return false;
-    }
-    return move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
-           (std::abs(move_comp->vz) > 0.01F);
-  }
-
-  auto is_unit_combat_active(
-      const Engine::Core::AttackComponent *attack_comp,
-      const Engine::Core::AttackTargetComponent *attack_target,
-      const Engine::Core::CombatStateComponent *combat_state,
-      const Engine::Core::HitFeedbackComponent *hit_feedback) -> bool {
-    if ((hit_feedback != nullptr) && hit_feedback->is_reacting) {
-      return true;
-    }
-
-    if ((combat_state != nullptr) &&
-        (combat_state->animation_state !=
-         Engine::Core::CombatAnimationState::Idle)) {
-      return true;
-    }
-
-    if (attack_comp == nullptr) {
-      return false;
-    }
-
-    if (attack_comp->in_melee_lock) {
-      return true;
-    }
-
-    if ((attack_target == nullptr) || (attack_target->target_id == 0)) {
-      return false;
-    }
-
-    return attack_comp->time_since_last < attack_comp->get_current_cooldown();
-  }
-
-  struct UnitRenderEntry {
-    Engine::Core::Entity *entity{nullptr};
-    Engine::Core::RenderableComponent *renderable{nullptr};
-    Engine::Core::TransformComponent *transform{nullptr};
-    Engine::Core::UnitComponent *unit{nullptr};
-    Engine::Core::MovementComponent *movement{nullptr};
-    std::string renderer_key;
-    QMatrix4x4 model_matrix;
-    uint32_t entity_id{0};
-    bool selected{false};
-    bool hovered{false};
-    bool moving{false};
-    bool combat_active{false};
-    bool in_frustum{true};
-    bool fog_visible{true};
-    bool has_attack{false};
-    bool has_guard_mode{false};
-    bool has_hold_mode{false};
-    bool has_patrol{false};
-    float distance_sq{0.0F};
-  };
-
-  struct RenderEntry {
-    Engine::Core::Entity *entity{nullptr};
-    Engine::Core::RenderableComponent *renderable{nullptr};
-    Engine::Core::TransformComponent *transform{nullptr};
-    Engine::Core::UnitComponent *unit{nullptr};
-    std::string renderer_key;
-    uint32_t entity_id{0};
-    bool selected{false};
-    bool hovered{false};
-  };
-
-  class CreatureCacheWarmupSubmitter final : public BatchingSubmitter {
-  public:
-    explicit CreatureCacheWarmupSubmitter(Renderer *renderer)
-        : BatchingSubmitter(renderer, nullptr) {}
-
-    void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &,
-              Texture * = nullptr, float = 1.0F, int = 0) override {}
-    void cylinder(const QVector3D &, const QVector3D &, float,
-                  const QVector3D &, float = 1.0F) override {}
-    void selection_ring(const QMatrix4x4 &, float, float,
-                        const QVector3D &) override {}
-    void grid(const QMatrix4x4 &, const QVector3D &, float, float,
-              float) override {}
-    void selection_smoke(const QMatrix4x4 &, const QVector3D &,
-                         float = 0.15F) override {}
-    void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
-                      float, float, float, float) override {}
-    void healer_aura(const QVector3D &, const QVector3D &, float, float,
-                     float) override {}
-    void combat_dust(const QVector3D &, const QVector3D &, float, float,
-                     float) override {}
-    void stone_impact(const QVector3D &, const QVector3D &, float, float,
-                      float) override {}
-    void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
-                        float = 1.0F) override {}
-    void rigged(const RiggedCreatureCmd &) override {}
-  };
 }
+
+auto prewarm_seed_for_variant(int owner_id,
+                              std::uint8_t variant) noexcept -> std::uint32_t {
+  std::uint32_t seed = static_cast<std::uint32_t>(owner_id) * 2654435761U;
+  seed ^= (static_cast<std::uint32_t>(variant) + 1U) * 2246822519U;
+  seed ^= seed >> 15U;
+  seed *= 2246822519U;
+  seed ^= seed >> 13U;
+  seed *= 3266489917U;
+  seed ^= seed >> 16U;
+  return seed;
+}
+
+auto prewarm_entity_id_for_variant(
+    std::size_t profile_index, int owner_id, std::uint8_t lod,
+    std::uint8_t variant) noexcept -> std::uint32_t {
+  return 1U + static_cast<std::uint32_t>((((profile_index * 16U) +
+                                           static_cast<std::size_t>(owner_id)) *
+                                              4U +
+                                          static_cast<std::size_t>(lod)) *
+                                             k_template_variant_count +
+                                         static_cast<std::size_t>(variant));
+}
+
+auto render_stage_logging_enabled() -> bool {
+  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
+}
+
+void log_render_first_use_once(const char *stage, const QString &detail) {
+  if (!render_stage_logging_enabled()) {
+    return;
+  }
+
+  static std::mutex mutex;
+  static std::unordered_set<std::string> emitted_stages;
+
+  std::lock_guard<std::mutex> const lock(mutex);
+  if (!emitted_stages.emplace(stage).second) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
+                           .arg(QString::fromLatin1(stage), detail);
+}
+
+float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
+  switch (spawn_type) {
+  case Game::Units::SpawnType::MountedKnight:
+    return 4.0F;
+  case Game::Units::SpawnType::Spearman:
+  case Game::Units::SpawnType::Archer:
+  case Game::Units::SpawnType::Knight:
+    return 2.5F;
+  default:
+    return 3.0F;
+  }
+}
+
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit_comp)
+    -> int {
+  if (unit_comp.render_individuals_per_unit_override > 0) {
+    return unit_comp.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit_comp.spawn_type);
+}
+
+auto is_unit_moving(const Engine::Core::MovementComponent *move_comp) -> bool {
+  if (move_comp == nullptr) {
+    return false;
+  }
+  return move_comp->has_target || (std::abs(move_comp->vx) > 0.01F) ||
+         (std::abs(move_comp->vz) > 0.01F);
+}
+
+auto is_unit_combat_active(
+    const Engine::Core::AttackComponent *attack_comp,
+    const Engine::Core::AttackTargetComponent *attack_target,
+    const Engine::Core::CombatStateComponent *combat_state,
+    const Engine::Core::HitFeedbackComponent *hit_feedback) -> bool {
+  if ((hit_feedback != nullptr) && hit_feedback->is_reacting) {
+    return true;
+  }
+
+  if ((combat_state != nullptr) && (combat_state->animation_state !=
+                                    Engine::Core::CombatAnimationState::Idle)) {
+    return true;
+  }
+
+  if (attack_comp == nullptr) {
+    return false;
+  }
+
+  if (attack_comp->in_melee_lock) {
+    return true;
+  }
+
+  if ((attack_target == nullptr) || (attack_target->target_id == 0)) {
+    return false;
+  }
+
+  return attack_comp->time_since_last < attack_comp->get_current_cooldown();
+}
+
+struct UnitRenderEntry {
+  Engine::Core::Entity *entity{nullptr};
+  Engine::Core::RenderableComponent *renderable{nullptr};
+  Engine::Core::TransformComponent *transform{nullptr};
+  Engine::Core::UnitComponent *unit{nullptr};
+  Engine::Core::MovementComponent *movement{nullptr};
+  std::string renderer_key;
+  QMatrix4x4 model_matrix;
+  uint32_t entity_id{0};
+  bool selected{false};
+  bool hovered{false};
+  bool moving{false};
+  bool combat_active{false};
+  bool in_frustum{true};
+  bool fog_visible{true};
+  bool has_attack{false};
+  bool has_guard_mode{false};
+  bool has_hold_mode{false};
+  bool has_patrol{false};
+  float distance_sq{0.0F};
+};
+
+struct RenderEntry {
+  Engine::Core::Entity *entity{nullptr};
+  Engine::Core::RenderableComponent *renderable{nullptr};
+  Engine::Core::TransformComponent *transform{nullptr};
+  Engine::Core::UnitComponent *unit{nullptr};
+  std::string renderer_key;
+  uint32_t entity_id{0};
+  bool selected{false};
+  bool hovered{false};
+};
+
+class CreatureCacheWarmupSubmitter final : public BatchingSubmitter {
+public:
+  explicit CreatureCacheWarmupSubmitter(Renderer *renderer)
+      : BatchingSubmitter(renderer, nullptr) {}
+
+  void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
+            float = 1.0F, int = 0) override {}
+  void banner(Mesh *, const QMatrix4x4 &, const QVector3D &, const QVector3D &,
+              Texture * = nullptr, float = 1.0F, int = 0) override {}
+  void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
+                float = 1.0F) override {}
+  void selection_ring(const QMatrix4x4 &, float, float,
+                      const QVector3D &) override {}
+  void grid(const QMatrix4x4 &, const QVector3D &, float, float,
+            float) override {}
+  void selection_smoke(const QMatrix4x4 &, const QVector3D &,
+                       float = 0.15F) override {}
+  void healing_beam(const QVector3D &, const QVector3D &, const QVector3D &,
+                    float, float, float, float) override {}
+  void healer_aura(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void combat_dust(const QVector3D &, const QVector3D &, float, float,
+                   float) override {}
+  void stone_impact(const QVector3D &, const QVector3D &, float, float,
+                    float) override {}
+  void mode_indicator(const QMatrix4x4 &, int, const QVector3D &,
+                      float = 1.0F) override {}
+  void rigged(const RiggedCreatureCmd &) override {}
+};
+} // namespace
 
 Renderer::Renderer(ShaderQuality quality) : m_shader_quality(quality) {
   m_active_queue = &m_queues[m_fill_queue_index];
@@ -441,6 +466,28 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
+void Renderer::banner(Mesh *mesh, const QMatrix4x4 &model,
+                      const QVector3D &color, const QVector3D &trim_color,
+                      Texture *texture, float alpha, int material_id) {
+  if (mesh == nullptr) {
+    return;
+  }
+
+  MeshCmd cmd;
+  cmd.mesh = mesh;
+  cmd.texture = texture;
+  cmd.model = model;
+  cmd.color = color;
+  cmd.trim_color = trim_color;
+  cmd.has_trim_color = true;
+  cmd.alpha = alpha * m_alpha_override;
+  cmd.material_id = material_id;
+  cmd.shader = m_current_shader;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
                     const QVector3D &color, Texture *texture, float alpha,
                     int material_id) {
@@ -577,7 +624,9 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
     return;
   }
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+      static_cast<std::size_t>(item.profile_index), item.owner_id, item.lod,
+      item.variant));
   auto *unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = static_cast<Game::Units::SpawnType>(profile.spawn_type);
   unit->owner_id = item.owner_id;
@@ -605,6 +654,8 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   ctx.camera = nullptr;
   ctx.allow_template_cache = true;
   ctx.template_prewarm = true;
+  ctx.has_seed_override = true;
+  ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
   ctx.has_variant_override = true;
   ctx.variant_override = item.variant;
   ctx.force_humanoid_lod = true;
@@ -1607,6 +1658,7 @@ void Renderer::prewarm_unit_templates(
     case SpawnType::HorseArcher:
     case SpawnType::HorseSpearman:
     case SpawnType::Healer:
+    case SpawnType::Civilian:
     case SpawnType::Builder:
     case SpawnType::Elephant:
       return true;
@@ -1627,6 +1679,7 @@ void Renderer::prewarm_unit_templates(
     case TroopType::HorseArcher:
     case TroopType::HorseSpearman:
     case TroopType::Healer:
+    case TroopType::Civilian:
     case TroopType::Builder:
     case TroopType::Elephant:
       return true;
@@ -1745,7 +1798,7 @@ void Renderer::prewarm_unit_templates(
     add_owner(0);
   }
 
-  if (profiles.empty()) {
+  {
     const auto &troops =
         Game::Units::TroopCatalog::instance().get_all_classes();
     const auto &nations =
@@ -2071,7 +2124,9 @@ void Renderer::prewarm_unit_templates(
       const PrewarmWorkItem &item = core_work_items[idx];
       const PrewarmProfile &profile = profiles[item.profile_index];
 
-      Engine::Core::Entity entity(1);
+      Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+          item.profile_index, item.owner_id,
+          static_cast<std::uint8_t>(item.lod), item.variant));
       auto *unit = entity.add_component<Engine::Core::UnitComponent>();
       unit->spawn_type = profile.spawn_type;
       unit->owner_id = item.owner_id;
@@ -2101,6 +2156,8 @@ void Renderer::prewarm_unit_templates(
       ctx.camera = nullptr;
       ctx.allow_template_cache = true;
       ctx.template_prewarm = true;
+      ctx.has_seed_override = true;
+      ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
       ctx.has_variant_override = true;
       ctx.variant_override = item.variant;
       ctx.force_humanoid_lod = true;

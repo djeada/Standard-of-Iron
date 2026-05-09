@@ -276,13 +276,14 @@ void draw_standards(const DrawContext &p, ISubmitter &out, Mesh *unit,
 }
 
 void draw_rally_flag(const DrawContext &p, ISubmitter &out, Texture *white,
-                     const CarthagePalette &c) {
+                     const CarthagePalette &c,
+                     const BarracksFlagRenderer::ClothBannerResources *cloth) {
   BarracksFlagRenderer::FlagColors colors{.team = c.team,
                                           .team_trim = c.team_trim,
                                           .timber = c.wood,
                                           .timber_light = c.stone_light,
                                           .wood_dark = c.wood_dark};
-  BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors);
+  BarracksFlagRenderer::draw_rally_flag_if_any(p, out, white, colors, cloth);
 }
 
 void draw_barracks(const DrawContext &p, ISubmitter &out) {
@@ -310,7 +311,7 @@ void draw_barracks(const DrawContext &p, ISubmitter &out) {
   submit_building_instance(
       out, p, barracks_archetype(resolve_building_state(p), unit, white));
   draw_standards(p, out, unit, white, c, &cloth);
-  draw_rally_flag(p, out, white, c);
+  draw_rally_flag(p, out, white, c, &cloth);
   draw_building_health_bar(out, p,
                            BuildingHealthBarStyle{1.4F, 0.10F, 2.45F, true});
   draw_building_selection_overlay(out, p, BuildingSelectionStyle{2.4F, 2.0F});

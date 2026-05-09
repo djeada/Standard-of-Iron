@@ -529,6 +529,91 @@ TEST_F(SerializationTest, AttackComponentRoundTrip) {
   EXPECT_EQ(deserialized->melee_lock_target_id, 42U);
 }
 
+TEST_F(SerializationTest, CommanderComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *commander = original_entity->add_component<CommanderComponent>();
+  commander->commander_id = "carthage_elephant_master";
+  commander->display_name = "Hannibal Barca";
+  commander->strategic_identity = "Carthage's premier battlefield commander.";
+  commander->passive_aura = "Hannibalic Offensive";
+  commander->bonus_type = "attack_boost";
+  commander->bonus_summary = "Nearby allied troops gain attack damage.";
+  commander->rally_ability = "Supreme Rally";
+  commander->death_consequence = "Nearby allied morale takes a heavy shock.";
+  commander->bodyguard_count = 9;
+  commander->aura_radius = 12.0F;
+  commander->aura_morale_bonus = 8.0F;
+  commander->aura_bonus_value = 0.28F;
+  commander->rally_range = 10.0F;
+  commander->rally_cooldown = 50.0F;
+  commander->rally_morale_restore = 36.0F;
+  commander->rally_cooldown_remaining = 17.5F;
+  commander->rally_feedback_time = 0.75F;
+  commander->death_shock_radius = 17.0F;
+  commander->death_morale_shock = 34.0F;
+  commander->aura_active = false;
+  commander->wounded = true;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<CommanderComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_EQ(deserialized->commander_id, commander->commander_id);
+  EXPECT_EQ(deserialized->display_name, commander->display_name);
+  EXPECT_EQ(deserialized->strategic_identity, commander->strategic_identity);
+  EXPECT_EQ(deserialized->passive_aura, commander->passive_aura);
+  EXPECT_EQ(deserialized->bonus_type, commander->bonus_type);
+  EXPECT_EQ(deserialized->bonus_summary, commander->bonus_summary);
+  EXPECT_EQ(deserialized->rally_ability, commander->rally_ability);
+  EXPECT_EQ(deserialized->death_consequence, commander->death_consequence);
+  EXPECT_EQ(deserialized->bodyguard_count, commander->bodyguard_count);
+  EXPECT_FLOAT_EQ(deserialized->aura_radius, commander->aura_radius);
+  EXPECT_FLOAT_EQ(deserialized->aura_morale_bonus,
+                  commander->aura_morale_bonus);
+  EXPECT_FLOAT_EQ(deserialized->aura_bonus_value, commander->aura_bonus_value);
+  EXPECT_FLOAT_EQ(deserialized->rally_range, commander->rally_range);
+  EXPECT_FLOAT_EQ(deserialized->rally_cooldown, commander->rally_cooldown);
+  EXPECT_FLOAT_EQ(deserialized->rally_morale_restore,
+                  commander->rally_morale_restore);
+  EXPECT_FLOAT_EQ(deserialized->rally_cooldown_remaining,
+                  commander->rally_cooldown_remaining);
+  EXPECT_FLOAT_EQ(deserialized->rally_feedback_time,
+                  commander->rally_feedback_time);
+  EXPECT_FLOAT_EQ(deserialized->death_shock_radius,
+                  commander->death_shock_radius);
+  EXPECT_FLOAT_EQ(deserialized->death_morale_shock,
+                  commander->death_morale_shock);
+  EXPECT_FALSE(deserialized->aura_active);
+  EXPECT_TRUE(deserialized->wounded);
+}
+
+TEST_F(SerializationTest, MoraleComponentRoundTrip) {
+  auto *original_entity = world->create_entity();
+  auto *morale = original_entity->add_component<MoraleComponent>();
+  morale->morale = 18.0F;
+  morale->commander_aura_bonus = 7.5F;
+  morale->shock_timer = 3.25F;
+  morale->wavering = false;
+  morale->routing = true;
+
+  QJsonObject json = Serialization::serialize_entity(original_entity);
+
+  auto *new_entity = world->create_entity();
+  Serialization::deserialize_entity(new_entity, json);
+
+  auto *deserialized = new_entity->get_component<MoraleComponent>();
+  ASSERT_NE(deserialized, nullptr);
+  EXPECT_FLOAT_EQ(deserialized->morale, morale->morale);
+  EXPECT_FLOAT_EQ(deserialized->commander_aura_bonus,
+                  morale->commander_aura_bonus);
+  EXPECT_FLOAT_EQ(deserialized->shock_timer, morale->shock_timer);
+  EXPECT_FALSE(deserialized->wavering);
+  EXPECT_TRUE(deserialized->routing);
+}
+
 TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   auto *original_entity = world->create_entity();
   auto *production = original_entity->add_component<ProductionComponent>();
