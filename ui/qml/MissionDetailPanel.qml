@@ -30,10 +30,11 @@ Rectangle {
     property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
     readonly property int base_casualty_forecast: 420
     readonly property int casualty_per_difficulty_step: 95
-    readonly property string default_success_estimate: qsTr("67%")
+    readonly property int tactical_rating_min: 1
+    readonly property int tactical_rating_max: 5
     property string tactical_rating: calculate_tactical_rating()
     property string casualty_forecast: calculate_casualty_forecast()
-    property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? default_success_estimate : qsTr("Unknown"))
+    property string success_estimate: calculate_success_estimate()
     property string reward_summary: reward_summary_text()
 
     signal start_mission_clicked()
@@ -70,7 +71,7 @@ Rectangle {
         if (!mission_data || !mission_data.difficulty_modifier)
             return qsTr("3/5");
 
-        return Math.min(5, Math.max(1, Math.round(mission_data.difficulty_modifier))).toString() + "/5";
+        return Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier))).toString() + "/5";
     }
 
     function calculate_casualty_forecast() {
@@ -78,6 +79,19 @@ Rectangle {
             return qsTr("610");
 
         return Math.round(base_casualty_forecast + mission_data.difficulty_modifier * casualty_per_difficulty_step).toString();
+    }
+
+    function calculate_success_estimate() {
+        if (!mission_data)
+            return qsTr("Unknown");
+
+        if (mission_data.completed)
+            return qsTr("100%");
+
+        if (!mission_data.unlocked)
+            return qsTr("Sealed");
+
+        return qsTr("In Progress");
     }
 
     function reward_summary_text() {

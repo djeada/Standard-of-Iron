@@ -30,6 +30,8 @@ Rectangle {
     })
     readonly property var campaign_route_start: [0.36, 0.72]
     readonly property int ember_spacing: 97
+    readonly property int route_segment_count: 8
+    readonly property int ember_vertical_spacing: 12
     property var campaign_route_targets: ({
         "southern_italy": [0.5, 0.53],
         "etruria": [0.44, 0.48],
@@ -388,7 +390,7 @@ Rectangle {
                 property var target_uv: root.route_target_uv_for(root.active_region_id)
                 property real end_u: target_uv[0]
                 property real end_v: target_uv[1]
-                property real t: (index + 1) / 8
+                property real t: (index + 1) / root.route_segment_count
                 property var _start_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(start_u, start_v) : Qt.point(0, 0)
                 property var _end_pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(end_u, end_v) : Qt.point(0, 0)
                 property real dot_x: _start_pos.x + (_end_pos.x - _start_pos.x) * t
@@ -438,7 +440,7 @@ Rectangle {
                 color: index % 2 === 0 ? "#c29555" : "#7a1f1d"
                 opacity: 0.18
                 x: (index * root.ember_spacing) % mapViewport.width
-                y: mapViewport.height + index * 12
+                y: mapViewport.height + index * root.ember_vertical_spacing
                 z: 3
 
                 SequentialAnimation on y {
@@ -446,7 +448,7 @@ Rectangle {
                     running: root.visible
 
                     NumberAnimation {
-                        from: mapViewport.height + index * 12
+                        from: mapViewport.height + index * root.ember_vertical_spacing
                         to: -20
                         duration: 3000 + index * 250
                         easing.type: Easing.OutQuad
@@ -454,7 +456,7 @@ Rectangle {
 
                     NumberAnimation {
                         from: -20
-                        to: mapViewport.height + index * 12
+                        to: mapViewport.height + index * root.ember_vertical_spacing
                         duration: 0
                     }
 
