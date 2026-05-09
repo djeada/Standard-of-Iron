@@ -57,6 +57,7 @@ add_library(game_systems STATIC
     systems/camera_visibility_service.cpp
     systems/picking_service.cpp
     systems/command_service.cpp
+    systems/commander_system.cpp
     systems/production_service.cpp
     systems/production_system.cpp
     systems/civilian_delivery_system.cpp
@@ -111,6 +112,7 @@ add_library(game_systems STATIC
     units/ballista.cpp
     units/elephant.cpp
     units/civilian.cpp
+    units/commander_catalog.cpp
     units/troop_catalog.cpp
     units/troop_catalog_loader.cpp
     units/building_spawn_setup.cpp

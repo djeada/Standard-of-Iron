@@ -219,6 +219,7 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     production_obj["rally_set"] = production->rally_set;
     production_obj["villager_cost"] = production->villager_cost;
     production_obj["manpower_available"] = production->manpower_available;
+    production_obj["commander_committed"] = production->commander_committed;
 
     QJsonArray queue_array;
     for (const auto &queued : production->production_queue) {
@@ -649,6 +650,8 @@ void Serialization::deserialize_entity(Entity *entity,
     production->villager_cost = production_obj["villager_cost"].toInt(1);
     production->manpower_available =
         production_obj["manpower_available"].toInt(0);
+    production->commander_committed =
+        production_obj["commander_committed"].toBool(false);
 
     production->production_queue.clear();
     const auto queue_array = production_obj["queue"].toArray();

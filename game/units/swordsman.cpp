@@ -3,6 +3,8 @@
 #include "../core/event_manager.h"
 #include "../core/world.h"
 #include "../systems/troop_profile_service.h"
+#include "commander_catalog.h"
+#include "spawn_type.h"
 #include "units/troop_type.h"
 #include "units/unit.h"
 #include <memory>
@@ -41,8 +43,10 @@ void Swordsman::init(const SpawnParams &params) {
   m_id = e->get_id();
 
   const auto nation_id = resolve_nation_id(params);
+  const auto troop_type =
+      spawn_typeToTroopType(params.spawn_type).value_or(TroopType::Swordsman);
   auto profile = Game::Systems::TroopProfileService::instance().get_profile(
-      nation_id, TroopType::Swordsman);
+      nation_id, troop_type);
 
   m_t = e->add_component<Engine::Core::TransformComponent>();
   m_t->position = {params.position.x(), params.position.y(),
@@ -62,6 +66,25 @@ void Swordsman::init(const SpawnParams &params) {
   m_u->owner_id = params.player_id;
   m_u->vision_range = profile.combat.vision_range;
   m_u->nation_id = nation_id;
+  if (auto const *definition = commander_definition(troop_type)) {
+    auto *commander = e->add_component<Engine::Core::CommanderComponent>();
+    if (commander != nullptr) {
+      commander->commander_id = definition->id;
+      commander->display_name = definition->display_name;
+      commander->strategic_identity = definition->strategic_identity;
+      commander->passive_aura = definition->passive_aura;
+      commander->rally_ability = definition->rally_ability;
+      commander->death_consequence = definition->death_consequence;
+      commander->bodyguard_count = definition->bodyguard_count;
+      commander->aura_radius = definition->aura_radius;
+      commander->aura_morale_bonus = definition->aura_morale_bonus;
+      commander->rally_range = definition->rally_range;
+      commander->rally_cooldown = definition->rally_cooldown;
+      commander->rally_morale_restore = definition->rally_morale_restore;
+      commander->death_shock_radius = definition->death_shock_radius;
+      commander->death_morale_shock = definition->death_morale_shock;
+    }
+  }
 
   if (params.ai_controlled) {
     e->add_component<Engine::Core::AIControlledComponent>();

@@ -365,7 +365,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.50,
+        "render_scale": 0.5,
         "selection_ring_size": 1.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/carthage/builder"
@@ -373,6 +373,108 @@
       "formation": {
         "individuals_per_unit": 12,
         "max_units_per_row": 4
+      }
+    },
+    {
+      "id": "carthage_mercenary_broker",
+      "display_name": "Mercenary Broker",
+      "production": {
+        "cost": 380,
+        "build_time": 30.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 950,
+        "max_health": 950,
+        "speed": 2.1,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 1.85,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/swordsman"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "carthage_cavalry_patron",
+      "display_name": "Cavalry Patron",
+      "production": {
+        "cost": 340,
+        "build_time": 27.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1000,
+        "max_health": 1000,
+        "speed": 2.6,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 1.9,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/horse_swordsman"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "carthage_elephant_master",
+      "display_name": "Elephant Master",
+      "production": {
+        "cost": 420,
+        "build_time": 34.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1200,
+        "max_health": 1200,
+        "speed": 1.8,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 2.0,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/carthage/spearman"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
       }
     }
   ]

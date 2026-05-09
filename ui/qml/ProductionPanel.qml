@@ -55,10 +55,27 @@ Rectangle {
     }
 
     function unit_icon_emoji(unit_type) {
+        if (unit_type && unit_type.indexOf("commander") !== -1 || unit_type === "roman_legion_organizer" || unit_type === "roman_veteran_consul" || unit_type === "carthage_mercenary_broker" || unit_type === "carthage_cavalry_patron" || unit_type === "carthage_elephant_master")
+            return "⚜";
+
         if (typeof StyleGuide !== "undefined" && StyleGuide.unit_icons)
             return StyleGuide.unit_icons[unit_type] || StyleGuide.unit_icons["default"] || "👤";
 
         return "👤";
+    }
+
+    function commander_options(nation_id) {
+        if (nation_id && nation_id.indexOf("carthage") !== -1)
+            return ["carthage_mercenary_broker", "carthage_cavalry_patron", "carthage_elephant_master"];
+
+        return ["roman_legion_organizer", "roman_veteran_consul", "roman_field_commander"];
+    }
+
+    function commander_tooltip(info, enabled, limit_reached, queue_full) {
+        if (!enabled)
+            return limit_reached ? qsTr("Commander limit reached: one commander per player per game") : (queue_full ? qsTr("Queue is full (5/5)") : qsTr("Cannot recruit commander"));
+
+        return qsTr("%1\nCOMMANDER — one per game\nCost: %2 villagers\nBuild time: %3s\nAura: %4\nRally: %5\nRisk: %6").arg(info.display_name || "Commander").arg(info.cost || 300).arg((info.build_time || 30).toFixed(0)).arg(info.passive_aura || "").arg(info.rally_ability || "").arg(info.death_consequence || "");
     }
 
     function get_unit_production_info(unit_type, nation_id) {
@@ -335,6 +352,117 @@ Rectangle {
                         color: hs.bronze
                         font.pointSize: 8
                         font.bold: true
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width
+                        text: unitGridContent.prod.commander_committed ? qsTr("COMMANDER COMMITTED — one per game") : qsTr("CHOOSE ONE COMMANDER")
+                        color: unitGridContent.prod.commander_committed ? "#C0403B" : hs.bronze
+                        horizontalAlignment: Text.AlignHCenter
+                        font.pointSize: 8
+                        font.bold: true
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 8
+
+                        Repeater {
+                            model: productionPanel.commander_options(unitGridContent.prod.nation_id)
+
+                            Rectangle {
+                                property string commander_id: modelData
+                                property int queue_total: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
+                                property bool limit_reached: unitGridContent.prod.commander_committed || false
+                                property var unit_info: productionPanel.get_unit_production_info(commander_id, unitGridContent.prod.nation_id)
+                                property bool is_hovered: commanderMouseArea.containsMouse
+                                property bool is_enabled: unitGridContent.prod.has_barracks && !limit_reached && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queue_total < 5
+
+                                width: 110
+                                height: 96
+                                radius: 8
+                                color: is_enabled ? (is_hovered ? "#4A2D15" : "#2F1C10") : Theme.bgShade
+                                border.color: is_enabled ? "#D4AF37" : hs.parchmentLight
+                                border.width: is_enabled ? 2 : 1
+                                opacity: is_enabled ? 1 : 0.55
+                                scale: is_hovered && is_enabled ? 1.025 : 1
+
+                                Text {
+                                    anchors.top: parent.top
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.topMargin: 6
+                                    text: productionPanel.unit_icon_emoji(parent.commander_id)
+                                    color: "#F4D27A"
+                                    font.pointSize: 26
+                                    font.bold: true
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: commanderCostBadge.top
+                                    anchors.margins: 4
+                                    text: parent.unit_info.display_name || qsTr("Commander")
+                                    color: Theme.textMain
+                                    font.pointSize: 8
+                                    font.bold: true
+                                    horizontalAlignment: Text.AlignHCenter
+                                    wrapMode: Text.WordWrap
+                                    maximumLineCount: 2
+                                }
+
+                                Rectangle {
+                                    id: commanderCostBadge
+
+                                    width: commanderCostText.implicitWidth + 12
+                                    height: commanderCostText.implicitHeight + 6
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: 6
+                                    radius: 8
+                                    color: "#1f150dcc"
+                                    border.color: "#D4AF37"
+
+                                    Text {
+                                        id: commanderCostText
+
+                                        anchors.centerIn: parent
+                                        text: parent.parent.unit_info.cost || 300
+                                        color: parent.parent.is_enabled ? "#F4E7C8" : Theme.textDim
+                                        font.pointSize: 13
+                                        font.bold: true
+                                    }
+
+                                }
+
+                                MouseArea {
+                                    id: commanderMouseArea
+
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    onClicked: {
+                                        if (parent.is_enabled)
+                                            productionPanel.recruit_unit(parent.commander_id);
+
+                                    }
+                                    cursorShape: parent.is_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                                    ToolTip.visible: containsMouse
+                                    ToolTip.text: productionPanel.commander_tooltip(parent.unit_info, parent.is_enabled, parent.limit_reached, parent.queue_total >= 5)
+                                    ToolTip.delay: 300
+                                }
+
+                                Behavior on scale {
+                                    NumberAnimation {
+                                        duration: 100
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
                     }
 
                     Grid {

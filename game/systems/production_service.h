@@ -18,6 +18,7 @@ enum class ProductionResult {
   InsufficientManpower,
   PerBarracksLimitReached,
   GlobalTroopLimitReached,
+  CommanderLimitReached,
   AlreadyInProgress,
   QueueFull
 };
@@ -34,6 +35,7 @@ struct ProductionState {
   int max_units = 0;
   int villager_cost = 1;
   int manpower_available = 0;
+  bool commander_committed = false;
   int queue_size = 0;
   std::vector<Game::Units::TroopType> production_queue;
 };

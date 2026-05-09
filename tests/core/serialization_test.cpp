@@ -386,6 +386,7 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   production->rally_set = true;
   production->villager_cost = 2;
   production->manpower_available = 37;
+  production->commander_committed = true;
   production->production_queue.push_back(Game::Units::TroopType::Spearman);
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
@@ -405,6 +406,7 @@ TEST_F(SerializationTest, ProductionComponentSerialization) {
   EXPECT_TRUE(prod_obj["rally_set"].toBool());
   EXPECT_EQ(prod_obj["villager_cost"].toInt(), 2);
   EXPECT_EQ(prod_obj["manpower_available"].toInt(), 37);
+  EXPECT_TRUE(prod_obj["commander_committed"].toBool());
 
   ASSERT_TRUE(prod_obj.contains("queue"));
   QJsonArray queue = prod_obj["queue"].toArray();
@@ -541,6 +543,7 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   production->rally_set = true;
   production->villager_cost = 3;
   production->manpower_available = 65;
+  production->commander_committed = true;
   production->production_queue.push_back(Game::Units::TroopType::Archer);
 
   QJsonObject json = Serialization::serialize_entity(original_entity);
@@ -561,6 +564,7 @@ TEST_F(SerializationTest, ProductionComponentRoundTrip) {
   EXPECT_TRUE(deserialized->rally_set);
   EXPECT_EQ(deserialized->villager_cost, 3);
   EXPECT_EQ(deserialized->manpower_available, 65);
+  EXPECT_TRUE(deserialized->commander_committed);
   EXPECT_EQ(deserialized->production_queue.size(), 1UL);
   EXPECT_EQ(deserialized->production_queue[0], Game::Units::TroopType::Archer);
 }
