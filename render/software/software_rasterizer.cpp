@@ -80,12 +80,12 @@ struct CubeTri {
   int b;
   int c;
 };
-constexpr std::array<QVector3D, 8> kCubeVerts = {
+constexpr std::array<QVector3D, 8> k_cube_verts = {
     QVector3D{-1, -1, -1}, QVector3D{1, -1, -1}, QVector3D{1, 1, -1},
     QVector3D{-1, 1, -1},  QVector3D{-1, -1, 1}, QVector3D{1, -1, 1},
     QVector3D{1, 1, 1},    QVector3D{-1, 1, 1},
 };
-constexpr std::array<CubeTri, 12> kCubeTris = {{
+constexpr std::array<CubeTri, 12> k_cube_tris = {{
     {0, 2, 1},
     {0, 3, 2},
     {4, 5, 6},
@@ -105,10 +105,10 @@ constexpr std::array<CubeTri, 12> kCubeTris = {{
 void SoftwareRasterizer::submit_cube(const QMatrix4x4 &model,
                                      const QVector3D &color, float alpha) {
   std::array<QVector3D, 8> world;
-  for (std::size_t i = 0; i < kCubeVerts.size(); ++i) {
-    world[i] = model.map(kCubeVerts[i]);
+  for (std::size_t i = 0; i < k_cube_verts.size(); ++i) {
+    world[i] = model.map(k_cube_verts[i]);
   }
-  for (auto const &t : kCubeTris) {
+  for (auto const &t : k_cube_tris) {
     m_triangles.push_back({world[t.a], world[t.b], world[t.c], color, alpha});
   }
 }

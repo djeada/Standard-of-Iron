@@ -145,7 +145,7 @@ void AIReasoner::update_context(const AISnapshot &snapshot, AIContext &ctx) {
       ctx.enemy_buildings_count++;
 
       if (enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-          Game::Core::isNeutralOwner(enemy.owner_id)) {
+          Game::Core::is_neutral_owner(enemy.owner_id)) {
         ctx.neutral_barracks_count++;
       }
     }

@@ -76,7 +76,7 @@ inline auto troop_typeToString(TroopType type) -> std::string {
   return troop_typeToQString(type).toStdString();
 }
 
-inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
+inline auto try_parse_troop_type(const QString &value, TroopType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = TroopType::Archer;
@@ -159,16 +159,16 @@ inline auto tryParseTroopType(const QString &value, TroopType &out) -> bool {
 
 inline auto troop_typeFromString(const std::string &str) -> TroopType {
   TroopType result;
-  if (tryParseTroopType(QString::fromStdString(str), result)) {
+  if (try_parse_troop_type(QString::fromStdString(str), result)) {
     return result;
   }
   return TroopType::Archer;
 }
 
 inline auto
-tryParseTroopType(const std::string &str) -> std::optional<TroopType> {
+try_parse_troop_type(const std::string &str) -> std::optional<TroopType> {
   TroopType result;
-  if (tryParseTroopType(QString::fromStdString(str), result)) {
+  if (try_parse_troop_type(QString::fromStdString(str), result)) {
     return result;
   }
   return std::nullopt;

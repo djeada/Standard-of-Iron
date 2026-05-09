@@ -12,7 +12,7 @@ namespace Game::Map {
 struct Environment {
   static void apply(const MapDefinition &def, Render::GL::Renderer &renderer,
                     Render::GL::Camera &camera);
-  static void applyDefault(Render::GL::Renderer &renderer,
+  static void apply_default(Render::GL::Renderer &renderer,
                            Render::GL::Camera &camera);
 };
 

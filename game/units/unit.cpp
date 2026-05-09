@@ -28,7 +28,7 @@ auto Unit::resolve_nation_id(const SpawnParams &params)
   return params.nation_id;
 }
 
-void Unit::ensureCoreComponents() {
+void Unit::ensure_core_components() {
   if (m_world == nullptr) {
     return;
   }
@@ -52,7 +52,7 @@ void Unit::ensureCoreComponents() {
 }
 
 void Unit::move_to(float x, float z) {
-  ensureCoreComponents();
+  ensure_core_components();
   if (m_mv == nullptr) {
     if (auto *e = entity()) {
       m_mv = e->add_component<Engine::Core::MovementComponent>();

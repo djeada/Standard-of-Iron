@@ -222,7 +222,7 @@ void ArenaViewport::configure_runtime() {
   Game::Systems::CommandService::initialize(k_terrain_width, k_terrain_height);
 
   m_unit_factory = std::make_shared<Game::Units::UnitFactoryRegistry>();
-  Game::Units::registerBuiltInUnits(*m_unit_factory);
+  Game::Units::register_built_in_units(*m_unit_factory);
 
   setup_default_players();
   sync_spawn_selection_defaults();
@@ -1159,7 +1159,7 @@ void ArenaViewport::set_spawn_nation(const QString &nation_id) {
 
 void ArenaViewport::set_spawn_unit_type(const QString &unit_type) {
   Game::Units::TroopType parsed{};
-  if (!Game::Units::tryParseTroopType(unit_type, parsed)) {
+  if (!Game::Units::try_parse_troop_type(unit_type, parsed)) {
     return;
   }
   m_spawn_unit_type = parsed;
@@ -1394,7 +1394,7 @@ void ArenaViewport::set_spawn_building_nation(const QString &nation_id) {
 
 void ArenaViewport::set_spawn_building_type(const QString &building_type) {
   Game::Units::SpawnType parsed{};
-  if (!Game::Units::tryParseSpawnType(building_type, parsed) ||
+  if (!Game::Units::try_parse_spawn_type(building_type, parsed) ||
       !Game::Units::is_building_spawn(parsed)) {
     return;
   }

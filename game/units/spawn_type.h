@@ -85,7 +85,7 @@ inline auto spawn_typeToString(SpawnType type) -> std::string {
   return spawn_typeToQString(type).toStdString();
 }
 
-inline auto tryParseSpawnType(const QString &value, SpawnType &out) -> bool {
+inline auto try_parse_spawn_type(const QString &value, SpawnType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("archer")) {
     out = SpawnType::Archer;
@@ -250,7 +250,7 @@ spawn_typeFromString(const std::string &str) -> std::optional<SpawnType> {
   return std::nullopt;
 }
 
-inline auto isTroopSpawn(SpawnType type) -> bool {
+inline auto is_troop_spawn(SpawnType type) -> bool {
   return type != SpawnType::Barracks && type != SpawnType::DefenseTower &&
          type != SpawnType::Home;
 }

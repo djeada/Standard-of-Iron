@@ -173,7 +173,7 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
 
     auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) &&
-        Game::Core::isNeutralOwner(unit_comp->owner_id)) {
+        Game::Core::is_neutral_owner(unit_comp->owner_id)) {
       continue;
     }
 

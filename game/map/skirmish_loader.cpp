@@ -84,7 +84,7 @@ void SkirmishLoader::reset_game_state() {
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
   owner_registry.clear();
 
-  Game::Map::MapTransformer::clearPlayerTeamOverrides();
+  Game::Map::MapTransformer::clear_player_team_overrides();
 
   auto &visibility_service = Game::Map::VisibilityService::instance();
   visibility_service.reset();
@@ -232,11 +232,11 @@ auto SkirmishLoader::start(const QString &map_path,
   }
 
   if (team_overrides.size() >= 2 && unique_teams.size() < 2) {
-    result.errorMessage = "Invalid team configuration: At least two teams must "
+    result.error_message = "Invalid team configuration: At least two teams must "
                           "be selected to start a match.";
     m_renderer.unlock_world_for_modification();
     m_renderer.resume();
-    qWarning() << "SkirmishLoader: " << result.errorMessage;
+    qWarning() << "SkirmishLoader: " << result.error_message;
     return result;
   }
 
@@ -270,8 +270,8 @@ auto SkirmishLoader::start(const QString &map_path,
       map_path, m_world, m_renderer, m_camera, allow_default_player_barracks);
   pump_events();
 
-  if (!level_result.ok && !level_result.errorMessage.isEmpty()) {
-    result.errorMessage = level_result.errorMessage;
+  if (!level_result.ok && !level_result.error_message.isEmpty()) {
+    result.error_message = level_result.error_message;
     m_renderer.unlock_world_for_modification();
     m_renderer.resume();
     return result;
@@ -395,7 +395,7 @@ auto SkirmishLoader::start(const QString &map_path,
       m_fog->setEnabled(false);
     }
   } else {
-    visibility_service.computeImmediate(m_world, player_owner_id);
+    visibility_service.compute_immediate(m_world, player_owner_id);
     if (m_fog != nullptr) {
       m_fog->setEnabled(true);
     }
@@ -404,7 +404,7 @@ auto SkirmishLoader::start(const QString &map_path,
   if ((m_fog != nullptr) && visibility_service.is_initialized()) {
     m_fog->update_mask(
         visibility_service.getWidth(), visibility_service.getHeight(),
-        visibility_service.getTileSize(), visibility_service.snapshotCells());
+        visibility_service.getTileSize(), visibility_service.snapshot_cells());
 
     if (m_onVisibilityMaskReady) {
       m_onVisibilityMaskReady();

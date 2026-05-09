@@ -20,7 +20,7 @@ auto main(int argc, char *argv[]) -> int {
   MapDefinition mapDef;
   QString error;
 
-  if (!MapLoader::loadFromJsonFile(mapPath, mapDef, &error)) {
+  if (!MapLoader::load_from_json_file(mapPath, mapDef, &error)) {
     qCritical() << "Failed to load map:" << error;
     return 1;
   }
@@ -76,7 +76,7 @@ auto main(int argc, char *argv[]) -> int {
   qDebug() << "";
   qDebug() << "  1. Load your map JSON:";
   qDebug() << "     MapDefinition mapDef;";
-  qDebug() << "     MapLoader::loadFromJsonFile(path, mapDef);";
+  qDebug() << "     MapLoader::load_from_json_file(path, mapDef);";
   qDebug() << "";
   qDebug() << "  2. Generate the minimap:";
   qDebug() << "     MinimapTextureManager minimap;";

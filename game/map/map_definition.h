@@ -19,8 +19,8 @@ struct GridDefinition {
 struct CameraDefinition {
   QVector3D center{0.0F, 0.0F, 0.0F};
   float distance = 15.0F;
-  float tiltDeg = 45.0F;
-  float fovY = 45.0F;
+  float tilt_deg = 45.0F;
+  float fov_y = 45.0F;
 
   float near_plane = 1.0F;
   float far_plane = 200.0F;
@@ -49,11 +49,11 @@ struct FireCamp {
 enum class CoordSystem { Grid, World };
 
 struct VictoryConfig {
-  QString victoryType = "elimination";
+  QString victory_type = "elimination";
   std::vector<QString> keyStructures = {"barracks"};
-  float surviveTimeDuration = 0.0F;
+  float survive_time_duration = 0.0F;
   std::vector<QString> defeatConditions = {"no_key_structures"};
-  int requiredKeyStructures = 0;
+  int required_key_structures = 0;
 };
 
 enum class WeatherType { Rain, Snow };

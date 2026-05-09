@@ -44,7 +44,7 @@ auto resolve_troop_type(const Engine::Core::UnitComponent *unit)
 
 auto is_living_troop(const Engine::Core::UnitComponent *unit) -> bool {
   return unit != nullptr && unit->health > 0 &&
-         Game::Units::isTroopSpawn(unit->spawn_type);
+         Game::Units::is_troop_spawn(unit->spawn_type);
 }
 
 void reset_commander_modified_stats(Engine::Core::World *world) {

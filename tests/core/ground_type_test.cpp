@@ -165,7 +165,7 @@ TEST_F(GroundTypeTest, MapLoaderWithGroundType) {
   MapDefinition map_def;
   QString error;
   bool success =
-      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::GrassDry);
@@ -196,7 +196,7 @@ TEST_F(GroundTypeTest, MapLoaderWithoutGroundTypeUsesDefault) {
   MapDefinition map_def;
   QString error;
   bool success =
-      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::ForestMud);
@@ -234,7 +234,7 @@ TEST_F(GroundTypeTest, MapLoaderGroundTypeOverriddenByExplicitValues) {
   MapDefinition map_def;
   QString error;
   bool success =
-      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_EQ(map_def.biome.ground_type, GroundType::AlpineMix);
@@ -270,7 +270,7 @@ TEST_F(GroundTypeTest, MapLoaderReadsSpawnEdgePadding) {
   MapDefinition map_def;
   QString error;
   bool success =
-      MapLoader::loadFromJsonFile(temp_file.fileName(), map_def, &error);
+      MapLoader::load_from_json_file(temp_file.fileName(), map_def, &error);
 
   ASSERT_TRUE(success) << "Failed to load map: " << error.toStdString();
   EXPECT_FLOAT_EQ(map_def.biome.spawn_edge_padding, 0.02F);

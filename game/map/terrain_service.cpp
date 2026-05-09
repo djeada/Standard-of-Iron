@@ -98,11 +98,11 @@ void TerrainService::initialize(const MapDefinition &mapDef) {
   m_height_map = std::make_unique<TerrainHeightMap>(
       mapDef.grid.width, mapDef.grid.height, mapDef.grid.tile_size);
 
-  m_height_map->buildFromFeatures(mapDef.terrain);
-  m_height_map->addRiverSegments(mapDef.rivers);
-  m_height_map->addBridges(mapDef.bridges);
+  m_height_map->build_from_features(mapDef.terrain);
+  m_height_map->add_river_segments(mapDef.rivers);
+  m_height_map->add_bridges(mapDef.bridges);
   m_biome_settings = mapDef.biome;
-  m_height_map->applyBiomeVariation(m_biome_settings);
+  m_height_map->apply_biome_variation(m_biome_settings);
   m_fire_camps = mapDef.firecamps;
   m_road_segments = mapDef.roads;
   rebuild_terrain_field();
@@ -243,7 +243,7 @@ void TerrainService::restore_from_serialized(
     const std::vector<RoadSegment> &roads, const std::vector<Bridge> &bridges,
     const BiomeSettings &biome) {
   m_height_map = std::make_unique<TerrainHeightMap>(width, height, tile_size);
-  m_height_map->restoreFromData(heights, terrain_types, rivers, bridges);
+  m_height_map->restore_from_data(heights, terrain_types, rivers, bridges);
   m_biome_settings = biome;
   m_road_segments = roads;
   rebuild_terrain_field();

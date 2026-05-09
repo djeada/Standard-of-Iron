@@ -31,7 +31,7 @@ namespace Game::Map {
 struct SkirmishLoadResult {
   bool ok = false;
   QString map_name;
-  QString errorMessage;
+  QString error_message;
   Engine::Core::EntityID player_unit_id = 0;
   float cam_fov = 45.0F;
   float cam_near = 0.1F;
