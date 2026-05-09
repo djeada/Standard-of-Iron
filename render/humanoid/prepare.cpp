@@ -365,13 +365,16 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
   int live_count = total_layout_count;
   if (!ctx.force_single_soldier && unit_comp != nullptr) {
     live_count = Engine::Core::resolve_surviving_individual_count(
-        unit_comp->health, unit_comp->max_health, formation.individuals_per_unit);
+        unit_comp->health, unit_comp->max_health,
+        formation.individuals_per_unit);
   }
   bool const has_entity_death = anim.is_dying || anim.is_dead;
-  int const visible_count = has_entity_death ? std::max(1, live_count) : live_count;
+  int const visible_count =
+      has_entity_death ? std::max(1, live_count) : live_count;
   auto *casualties_comp =
       (ctx.entity != nullptr)
-          ? ctx.entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>()
+          ? ctx.entity->get_component<
+                Engine::Core::SoldierCasualtyAnimationComponent>()
           : nullptr;
   std::size_t active_casualty_count = 0U;
   if (!ctx.force_single_soldier && casualties_comp != nullptr) {
@@ -445,8 +448,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     bool const cache_valid =
         !matches ? false
                  : ((anim.is_attacking && anim.is_melee)
-                         ? (entry.frame_number == frame_index)
-                         : (frame_index - entry.frame_number <=
+                        ? (entry.frame_number == frame_index)
+                        : (frame_index - entry.frame_number <=
                            ::Render::GL::k_layout_cache_max_age));
     if (cache_valid) {
       soldier_layouts = entry.soldiers;
@@ -606,10 +609,11 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
     anim_ctx.locomotion_cycle_time = locomotion_state.gait.cycle_time;
     anim_ctx.locomotion_phase = locomotion_state.gait.cycle_phase;
     if (soldier_anim.is_attacking) {
-      float const attack_offset =
-          soldier_anim.has_attack_offset ? soldier_anim.attack_offset
-                                         : (phase_offset * 1.5F);
-      anim_ctx.attack_phase = std::fmod(soldier_anim.time + attack_offset, 1.0F);
+      float const attack_offset = soldier_anim.has_attack_offset
+                                      ? soldier_anim.attack_offset
+                                      : (phase_offset * 1.5F);
+      anim_ctx.attack_phase =
+          std::fmod(soldier_anim.time + attack_offset, 1.0F);
       if (ctx.has_attack_variant_override) {
         anim_ctx.inputs.attack_variant = ctx.attack_variant_override;
       }
@@ -749,10 +753,10 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
       break;
     }
 
-      case HumanoidLOD::Billboard:
+    case HumanoidLOD::Billboard:
 
-        break;
-      }
+      break;
+    }
   };
 
   for (int idx = 0; idx < visible_count; ++idx) {
@@ -773,13 +777,15 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
         casualty_anim.is_dying = true;
         casualty_anim.death_progress =
             (entry.state_duration > 0.0F)
-                ? std::clamp(entry.state_time / entry.state_duration, 0.0F, 1.0F)
+                ? std::clamp(entry.state_time / entry.state_duration, 0.0F,
+                             1.0F)
                 : 1.0F;
       } else {
         casualty_anim.is_dead = true;
         casualty_anim.death_progress = 1.0F;
       }
-      append_prepared_soldier(static_cast<int>(entry.slot_index), casualty_anim);
+      append_prepared_soldier(static_cast<int>(entry.slot_index),
+                              casualty_anim);
     }
   }
 }

@@ -38,10 +38,11 @@ void begin_attack_animation(Engine::Core::Entity *attacker,
   auto *attack = attacker->get_component<Engine::Core::AttackComponent>();
   bool const had_combat_state = (combat_state != nullptr);
   if (combat_state == nullptr) {
-    combat_state = attacker->add_component<Engine::Core::CombatStateComponent>();
+    combat_state =
+        attacker->add_component<Engine::Core::CombatStateComponent>();
   }
   if (combat_state != nullptr && combat_state->animation_state ==
-                                   Engine::Core::CombatAnimationState::Idle) {
+                                     Engine::Core::CombatAnimationState::Idle) {
     combat_state->animation_state = Engine::Core::CombatAnimationState::Advance;
     combat_state->state_time = 0.0F;
     combat_state->state_duration =
@@ -56,7 +57,8 @@ void begin_attack_animation(Engine::Core::Entity *attacker,
       std::uniform_real_distribution<float> offset_dist(0.0F, 0.15F);
       combat_state->attack_offset = offset_dist(gen);
       std::uniform_int_distribution<int> variant_dist(
-          0, Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1);
+          0,
+          Engine::Core::CombatStateComponent::k_attack_variant_seed_slots - 1);
       combat_state->attack_variant =
           static_cast<std::uint8_t>(variant_dist(gen));
     }

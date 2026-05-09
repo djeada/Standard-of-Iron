@@ -11,15 +11,17 @@ void CleanupSystem::update(Engine::Core::World *world, float delta_time) {
   if (world == nullptr) {
     return;
   }
-  auto casualty_entities =
-      world->get_entities_with<Engine::Core::SoldierCasualtyAnimationComponent>();
+  auto casualty_entities = world->get_entities_with<
+      Engine::Core::SoldierCasualtyAnimationComponent>();
   for (auto *entity : casualty_entities) {
-    if (entity == nullptr || entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    if (entity == nullptr ||
+        entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
 
     auto *casualties =
-        entity->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+        entity
+            ->get_component<Engine::Core::SoldierCasualtyAnimationComponent>();
     if (casualties == nullptr) {
       continue;
     }
@@ -34,16 +36,17 @@ void CleanupSystem::update(Engine::Core::World *world, float delta_time) {
       }
     }
 
-    entries.erase(std::remove_if(entries.begin(), entries.end(),
-                                 [](const auto &entry) {
-                                   return entry.state ==
-                                              Engine::Core::DeathSequenceState::DeadHold &&
-                                          entry.state_time >=
-                                              entry.dead_hold_duration;
-                                 }),
+    entries.erase(std::remove_if(
+                      entries.begin(), entries.end(),
+                      [](const auto &entry) {
+                        return entry.state ==
+                                   Engine::Core::DeathSequenceState::DeadHold &&
+                               entry.state_time >= entry.dead_hold_duration;
+                      }),
                   entries.end());
     if (entries.empty()) {
-      entity->remove_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+      entity
+          ->remove_component<Engine::Core::SoldierCasualtyAnimationComponent>();
     }
   }
 
@@ -55,8 +58,10 @@ void CleanupSystem::update(Engine::Core::World *world, float delta_time) {
       continue;
     }
 
-    auto *death = entity->get_component<Engine::Core::DeathAnimationComponent>();
-    auto *renderable = entity->get_component<Engine::Core::RenderableComponent>();
+    auto *death =
+        entity->get_component<Engine::Core::DeathAnimationComponent>();
+    auto *renderable =
+        entity->get_component<Engine::Core::RenderableComponent>();
     if (death == nullptr) {
       entity->add_component<Engine::Core::PendingRemovalComponent>();
       continue;

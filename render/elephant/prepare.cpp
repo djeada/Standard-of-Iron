@@ -23,10 +23,10 @@ namespace Render::Elephant {
 
 namespace {
 
-auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
-                               const Render::GL::AnimationInputs &anim,
-                               const Engine::Core::DeathAnimationComponent
-                                   *death_anim) noexcept
+auto elephant_state_for_motion(
+    const Render::GL::ElephantMotionSample &motion,
+    const Render::GL::AnimationInputs &anim,
+    const Engine::Core::DeathAnimationComponent *death_anim) noexcept
     -> Render::Creature::AnimationStateId {
   if (death_anim != nullptr) {
     return death_anim->state == Engine::Core::DeathSequenceState::Dying
@@ -142,9 +142,10 @@ void prepare_elephant_render(
 
   HowdahAttachmentFrame const howdah =
       shared_howdah ? *shared_howdah : motion.howdah;
-  auto *death_anim = (ctx.entity != nullptr)
-                         ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
-                         : nullptr;
+  auto *death_anim =
+      (ctx.entity != nullptr)
+          ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
+          : nullptr;
 
   Render::GL::DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
@@ -164,12 +165,13 @@ void prepare_elephant_render(
   RCP::PreparedElephantBodyState body_state;
   body_state.graph = graph_output;
   body_state.variant = v;
-  body_state.animation_state = elephant_state_for_motion(motion, anim, death_anim);
+  body_state.animation_state =
+      elephant_state_for_motion(motion, anim, death_anim);
   if (death_anim != nullptr &&
       death_anim->state == Engine::Core::DeathSequenceState::Dying &&
       death_anim->state_duration > 0.0F) {
-    body_state.phase =
-        std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
+    body_state.phase = std::clamp(
+        death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
   } else {
     body_state.phase = (death_anim == nullptr) ? motion.phase : 0.0F;
   }

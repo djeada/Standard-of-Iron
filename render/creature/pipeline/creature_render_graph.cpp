@@ -439,7 +439,8 @@ void CreatureRenderBatch::add_humanoid(
 
   auto const state = humanoid_state_for_anim(anim);
   float const phase = humanoid_phase_for_anim(anim);
-  std::uint8_t const clip_var = humanoid_clip_variant_for_anim(archetype_id, anim);
+  std::uint8_t const clip_var =
+      humanoid_clip_variant_for_anim(archetype_id, anim);
   const auto *asset = CreatureAssetRegistry::instance().resolve(output.spec);
   if (asset == nullptr) {
     return;

@@ -173,9 +173,10 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
                               ctx.entity));
   (void)shared_mount;
   std::uint16_t const horse_clip = horse_clip_for_motion(motion);
-  auto *death_anim = (ctx.entity != nullptr)
-                         ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
-                         : nullptr;
+  auto *death_anim =
+      (ctx.entity != nullptr)
+          ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
+          : nullptr;
 
   Render::GL::DrawContext horse_ctx = ctx;
   horse_ctx.model = ctx.model;
@@ -198,8 +199,8 @@ void prepare_horse_impl(const Render::GL::HorseRendererBase &owner,
   if (death_anim != nullptr &&
       death_anim->state == Engine::Core::DeathSequenceState::Dying &&
       death_anim->state_duration > 0.0F) {
-    body_state.phase =
-        std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
+    body_state.phase = std::clamp(
+        death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
   } else {
     body_state.phase = 0.0F;
     if (death_anim == nullptr) {

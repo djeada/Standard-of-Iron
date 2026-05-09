@@ -231,10 +231,9 @@ enum class CombatAttackFamily : std::uint8_t {
   Bow = 3
 };
 
-[[nodiscard]] inline auto
-resolve_combat_attack_family(Game::Units::SpawnType spawn_type,
-                             AttackComponent::CombatMode mode) noexcept
-    -> CombatAttackFamily {
+[[nodiscard]] inline auto resolve_combat_attack_family(
+    Game::Units::SpawnType spawn_type,
+    AttackComponent::CombatMode mode) noexcept -> CombatAttackFamily {
   using Game::Units::SpawnType;
   if (mode == AttackComponent::CombatMode::Ranged) {
     switch (spawn_type) {

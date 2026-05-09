@@ -100,9 +100,8 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     if (death_anim->state == Engine::Core::DeathSequenceState::Dying) {
       anim.is_dying = true;
       if (death_anim->state_duration > 0.0F) {
-        anim.death_progress =
-            std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F,
-                       1.0F);
+        anim.death_progress = std::clamp(
+            death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
       } else {
         anim.death_progress = 1.0F;
       }
@@ -162,12 +161,12 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
     if (combat_state->animation_state !=
         Engine::Core::CombatAnimationState::Idle) {
       anim.is_attacking = true;
-      anim.is_melee = (anim.attack_family == Engine::Core::CombatAttackFamily::None)
-                          ? ((attack != nullptr) &&
-                             (attack->current_mode ==
-                              Engine::Core::AttackComponent::CombatMode::Melee))
-                          : (anim.attack_family !=
-                             Engine::Core::CombatAttackFamily::Bow);
+      anim.is_melee =
+          (anim.attack_family == Engine::Core::CombatAttackFamily::None)
+              ? ((attack != nullptr) &&
+                 (attack->current_mode ==
+                  Engine::Core::AttackComponent::CombatMode::Melee))
+              : (anim.attack_family != Engine::Core::CombatAttackFamily::Bow);
     }
   }
 
@@ -181,8 +180,8 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   }
 
   if ((combat_state == nullptr) && (attack != nullptr) &&
-      (attack_target != nullptr) &&
-      attack_target->target_id > 0 && (transform != nullptr)) {
+      (attack_target != nullptr) && attack_target->target_id > 0 &&
+      (transform != nullptr)) {
     if (unit != nullptr) {
       anim.attack_family = Engine::Core::resolve_combat_attack_family(
           unit->spawn_type, attack->current_mode);

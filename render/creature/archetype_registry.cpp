@@ -56,8 +56,7 @@ make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidHoldClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidHoldClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] =
-      kHumanoidDieInfantryClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidDieInfantryClip;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] =
       kHumanoidDeadInfantryClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
@@ -115,8 +114,7 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidAttackBowClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] =
-      kHumanoidDieMountedClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidDieMountedClip;
   t[static_cast<std::size_t>(AnimationStateId::Dead)] =
       kHumanoidDeadMountedClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
@@ -136,26 +134,26 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
   return t;
 }
 
-constexpr auto make_humanoid_variant_count_table()
-    -> std::array<std::uint8_t, k_state_count> {
+constexpr auto
+make_humanoid_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   auto t = make_variant_count_table_for_clips(make_humanoid_clip_table());
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   return t;
 }
 
-constexpr auto make_horse_variant_count_table()
-    -> std::array<std::uint8_t, k_state_count> {
+constexpr auto
+make_horse_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   return make_variant_count_table_for_clips(make_horse_clip_table());
 }
 
-constexpr auto make_elephant_variant_count_table()
-    -> std::array<std::uint8_t, k_state_count> {
+constexpr auto
+make_elephant_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   return make_variant_count_table_for_clips(make_elephant_clip_table());
 }
 
-constexpr auto make_rider_variant_count_table()
-    -> std::array<std::uint8_t, k_state_count> {
+constexpr auto
+make_rider_variant_count_table() -> std::array<std::uint8_t, k_state_count> {
   auto t = make_variant_count_table_for_clips(make_rider_clip_table());
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;

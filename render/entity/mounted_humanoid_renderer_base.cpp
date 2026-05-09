@@ -85,8 +85,8 @@ auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
   if (clip.frame_count == 0U) {
     return std::nullopt;
   }
-  auto const palette = blob->frame_palette_view(
-      clip.frame_offset + playback->frame_in_clip);
+  auto const palette =
+      blob->frame_palette_view(clip.frame_offset + playback->frame_in_clip);
   auto const root_index =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Root);
   if (palette.size() <= root_index) {

@@ -119,7 +119,8 @@ auto humanoid_phase_for_anim(
 
 namespace {
 
-auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noexcept
+auto default_humanoid_archetype(
+    Render::Creature::ArchetypeId archetype_id) noexcept
     -> Render::Creature::ArchetypeId {
   return (archetype_id != Render::Creature::kInvalidArchetype)
              ? archetype_id
@@ -166,10 +167,10 @@ auto humanoid_bpat_playback_for_anim(
   archetype_id = default_humanoid_archetype(archetype_id);
 
   auto const state = humanoid_state_for_anim(anim);
-  auto const clip_id = Render::Creature::ArchetypeRegistry::instance()
-                           .resolve_bpat_clip(
-                               archetype_id, state,
-                               humanoid_clip_variant_for_anim(archetype_id, anim));
+  auto const clip_id =
+      Render::Creature::ArchetypeRegistry::instance().resolve_bpat_clip(
+          archetype_id, state,
+          humanoid_clip_variant_for_anim(archetype_id, anim));
   if (clip_id == ArchetypeDescriptor::kUnmappedClip) {
     return std::nullopt;
   }

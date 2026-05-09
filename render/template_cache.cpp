@@ -67,8 +67,8 @@ inline auto clamp_frame_index(std::uint8_t frame) -> std::size_t {
   return std::min<std::size_t>(frame, k_frame_slots - 1);
 }
 
-inline auto clamp_attack_family_index(
-    Engine::Core::CombatAttackFamily family) -> std::size_t {
+inline auto clamp_attack_family_index(Engine::Core::CombatAttackFamily family)
+    -> std::size_t {
   return std::min<std::size_t>(static_cast<std::size_t>(family),
                                TemplateCache::k_dense_attack_family_slots - 1);
 }
