@@ -331,7 +331,7 @@
         "can_melee": true
       },
       "visuals": {
-        "render_scale": 0.50,
+        "render_scale": 0.5,
         "selection_ring_size": 1.0,
         "selection_ring_ground_offset": 0.0,
         "renderer_id": "troops/roman/builder"
@@ -339,6 +339,108 @@
       "formation": {
         "individuals_per_unit": 12,
         "max_units_per_row": 4
+      }
+    },
+    {
+      "id": "roman_legion_organizer",
+      "display_name": "Quintus Fabius Maximus",
+      "production": {
+        "cost": 340,
+        "build_time": 30.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1180,
+        "max_health": 1180,
+        "speed": 2.0,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 1.9,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/commanders/fabius_maximus"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "roman_veteran_consul",
+      "display_name": "Publius Cornelius Scipio",
+      "production": {
+        "cost": 360,
+        "build_time": 31.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1120,
+        "max_health": 1120,
+        "speed": 2.15,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 1.85,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/commanders/scipio_africanus"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
+      }
+    },
+    {
+      "id": "roman_field_commander",
+      "display_name": "Marcus Claudius Marcellus",
+      "production": {
+        "cost": 320,
+        "build_time": 27.0,
+        "priority": 20,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 1040,
+        "max_health": 1040,
+        "speed": 2.35,
+        "vision_range": 18.0,
+        "ranged_range": 1.5,
+        "ranged_damage": 4,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.8,
+        "melee_damage": 14,
+        "melee_cooldown": 1.0,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.72,
+        "selection_ring_size": 1.8,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/commanders/marcellus"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 1
       }
     }
   ]

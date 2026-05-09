@@ -59,6 +59,7 @@ public:
   static auto instance() -> TroopCatalog &;
 
   void register_class(TroopClass troop_class);
+  void reset_to_defaults();
 
   [[nodiscard]] auto
   get_class(Game::Units::TroopType type) const -> const TroopClass *;

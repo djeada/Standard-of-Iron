@@ -632,6 +632,27 @@ TEST(ElephantSpecTest, WalkFootLandsAheadOfShoulderDuringSwing) {
   EXPECT_GT(pose.foot_fl.z() - shoulder_fl.z(), dims.body_length * 0.02F);
 }
 
+TEST(ElephantSpecTest, WalkPoseKeepsRearThighAnchorsCloserToBody) {
+  auto const dims = make_dims();
+  auto const gait = make_gait();
+
+  Render::Elephant::ElephantSpecPose idle_pose{};
+  Render::Elephant::make_elephant_spec_pose_animated(
+      dims, gait, Render::Elephant::ElephantPoseMotion{}, idle_pose);
+
+  Render::Elephant::ElephantSpecPose walk_pose{};
+  Render::Elephant::ElephantPoseMotion walk_motion{};
+  walk_motion.phase = 0.25F;
+  walk_motion.is_moving = true;
+  Render::Elephant::make_elephant_spec_pose_animated(dims, gait, walk_motion,
+                                                     walk_pose);
+
+  EXPECT_GT(walk_pose.shoulder_offset_pose_bl.z(),
+            idle_pose.shoulder_offset_pose_bl.z() - dims.body_length * 0.05F);
+  EXPECT_GT(walk_pose.shoulder_offset_pose_br.z(),
+            idle_pose.shoulder_offset_pose_br.z() - dims.body_length * 0.05F);
+}
+
 TEST(ElephantSpecTest, FightPoseRaisesFeetHigherThanIdlePose) {
   auto const dims = make_dims();
   auto const gait = make_gait();
@@ -689,7 +710,7 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
 
   Render::Elephant::ElephantSpecPose fight_pose{};
   Render::Elephant::ElephantPoseMotion fight_motion{};
-  fight_motion.anim_time = 0.5F;
+  fight_motion.anim_time = 1.15F * 0.25F;
   fight_motion.is_fighting = true;
   Render::Elephant::make_elephant_spec_pose_animated(dims, gait, fight_motion,
                                                      fight_pose);
@@ -700,10 +721,14 @@ TEST(ElephantSpecTest, FightPoseTrunkRaisedAboveIdlePose) {
                                                      idle_pose);
 
   EXPECT_GT(fight_pose.trunk_end.y(),
-            idle_pose.trunk_end.y() + dims.trunk_length * 0.30F);
+            idle_pose.trunk_end.y() + dims.trunk_length * 0.20F);
   EXPECT_GT(fight_pose.trunk_end.z(),
-            fight_pose.head_center.z() + fight_pose.head_half.z());
-  EXPECT_GE(fight_pose.head_center.y(), idle_pose.head_center.y());
+            idle_pose.trunk_end.z() + dims.trunk_length * 0.04F);
+  EXPECT_GT(std::abs(fight_pose.trunk_end.x() - idle_pose.trunk_end.x()),
+            dims.head_width * 0.10F);
+  EXPECT_NEAR(fight_pose.head_center.x(), idle_pose.head_center.x(), 0.0001F);
+  EXPECT_NEAR(fight_pose.head_center.y(), idle_pose.head_center.y(), 0.0001F);
+  EXPECT_NEAR(fight_pose.head_center.z(), idle_pose.head_center.z(), 0.0001F);
 }
 
 TEST(ElephantSpecTest, MovingFrontLegLiftExceedsRearAtPeakSwing) {

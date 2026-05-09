@@ -70,6 +70,17 @@ void registerBuiltInUnits(UnitFactoryRegistry &reg) {
     return Elephant::Create(world, params);
   });
 
+  auto commander_factory = [](Engine::Core::World &world,
+                              const SpawnParams &params) {
+    return Swordsman::Create(world, params);
+  };
+  reg.registerFactory(SpawnType::RomanLegionOrganizer, commander_factory);
+  reg.registerFactory(SpawnType::RomanVeteranConsul, commander_factory);
+  reg.registerFactory(SpawnType::RomanFieldCommander, commander_factory);
+  reg.registerFactory(SpawnType::CarthageMercenaryBroker, commander_factory);
+  reg.registerFactory(SpawnType::CarthageCavalryPatron, commander_factory);
+  reg.registerFactory(SpawnType::CarthageElephantMaster, commander_factory);
+
   reg.registerFactory(SpawnType::Civilian, [](Engine::Core::World &world,
                                               const SpawnParams &params) {
     return Civilian::Create(world, params);

@@ -14,7 +14,8 @@
     "starting_resources": {
       "gold": 360,
       "food": 280
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -34,7 +35,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 18, "z": 50},
+          "position": {
+            "x": 18,
+            "z": 50
+          },
           "max_population": 180
         }
       ],
@@ -42,21 +46,43 @@
         {
           "timing": 150.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 6}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 6
+            }
           ],
-          "entry_point": {"x": 10, "z": 50}
+          "entry_point": {
+            "x": 10,
+            "z": 50
+          }
         },
         {
           "timing": 320.0,
           "composition": [
-            {"type": "archer", "count": 4},
-            {"type": "spearman", "count": 6},
-            {"type": "horse_swordsman", "count": 2}
+            {
+              "type": "archer",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 2
+            }
           ],
-          "entry_point": {"x": 18, "z": 40}
+          "entry_point": {
+            "x": 18,
+            "z": 40
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_legion_organizer"
     },
     {
       "id": "roman_escape_force",
@@ -75,7 +101,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 35, "z": 20},
+          "position": {
+            "x": 35,
+            "z": 20
+          },
           "max_population": 140
         }
       ],
@@ -83,18 +112,30 @@
         {
           "timing": 240.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "spearman", "count": 3}
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 35, "z": 20}
+          "entry_point": {
+            "x": 35,
+            "z": 20
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_veteran_consul"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 2,
       "description": "Capture both Roman field camps after closing the trap"
     }

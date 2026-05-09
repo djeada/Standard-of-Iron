@@ -370,6 +370,40 @@
         "individuals_per_unit": 12,
         "max_units_per_row": 4
       }
+    },
+    {
+      "id": "civilian",
+      "display_name": "Civilian",
+      "production": {
+        "cost": 8,
+        "build_time": 5.0,
+        "priority": 1,
+        "is_melee": true
+      },
+      "combat": {
+        "health": 35,
+        "max_health": 35,
+        "speed": 2.3,
+        "vision_range": 10.0,
+        "ranged_range": 1.0,
+        "ranged_damage": 1,
+        "ranged_cooldown": 2.0,
+        "melee_range": 1.2,
+        "melee_damage": 2,
+        "melee_cooldown": 1.2,
+        "can_ranged": false,
+        "can_melee": true
+      },
+      "visuals": {
+        "render_scale": 0.48,
+        "selection_ring_size": 0.95,
+        "selection_ring_ground_offset": 0.0,
+        "renderer_id": "troops/roman/civilian"
+      },
+      "formation": {
+        "individuals_per_unit": 1,
+        "max_units_per_row": 5
+      }
     }
   ]
 }

@@ -3,10 +3,25 @@
 #include "../core/component.h"
 #include "../core/world.h"
 #include "../units/troop_config.h"
+#include "building_collision_registry.h"
 #include "units/spawn_type.h"
+#include <algorithm>
 #include <vector>
 
 namespace Game::Systems {
+namespace {
+
+auto barracks_delivery_radius() -> float {
+  auto const size = BuildingCollisionRegistry::get_building_size("barracks");
+  float const unit_radius =
+      Game::Units::TroopConfig::instance().get_selection_ring_size(
+          Game::Units::SpawnType::Civilian) *
+      0.5F;
+  return std::max(size.width, size.depth) * 0.5F +
+         BuildingCollisionRegistry::get_grid_padding() + unit_radius + 0.5F;
+}
+
+} // namespace
 
 void CivilianDeliverySystem::update(Engine::Core::World *world, float) {
   if (world == nullptr) {
@@ -69,7 +84,8 @@ void CivilianDeliverySystem::update(Engine::Core::World *world, float) {
         civilian_transform->position.z - barracks_transform->position.z;
     float const dist_sq = dx * dx + dz * dz;
 
-    if (dist_sq > (k_delivery_radius * k_delivery_radius)) {
+    float const delivery_radius = barracks_delivery_radius();
+    if (dist_sq > (delivery_radius * delivery_radius)) {
       continue;
     }
 

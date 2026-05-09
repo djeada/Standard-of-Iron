@@ -58,6 +58,7 @@ struct MovementSnapshot {
 struct ProductionSnapshot {
   bool has_component = false;
   bool in_progress = false;
+  bool commander_committed = false;
   float build_time = 0.0F;
   float time_remaining = 0.0F;
   int produced_count = 0;
@@ -179,6 +180,7 @@ struct AIContext {
   int barracks_count = 0;
 
   int max_troops_per_player = 500;
+  bool allow_commander_recruitment = false;
 
   std::unordered_map<Engine::Core::EntityID, float> buildings_under_attack;
 

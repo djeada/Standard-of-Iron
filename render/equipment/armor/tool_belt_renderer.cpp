@@ -96,6 +96,31 @@ auto tool_belt_chisel_archetype() -> const RenderArchetype & {
   return archetype;
 }
 
+auto tool_belt_saw_archetype() -> const RenderArchetype & {
+  static const RenderArchetype archetype = [] {
+    std::array<GeneratedEquipmentPrimitive, 7> const primitives{{
+        generated_cylinder(QVector3D(0.534F, -0.161F, -0.802F),
+                           QVector3D(0.695F, -0.286F, -0.910F), 0.029F,
+                           k_wood_slot),
+        generated_cylinder(QVector3D(0.704F, -0.286F, -0.919F),
+                           QVector3D(0.945F, -0.455F, -1.035F), 0.024F,
+                           k_metal_dark_slot),
+        generated_sphere(QVector3D(0.625F, -0.232F, -0.865F), 0.037F,
+                         k_leather_dark_slot),
+        generated_sphere(QVector3D(0.792F, -0.357F, -0.965F), 0.018F,
+                         k_metal_slot),
+        generated_sphere(QVector3D(0.847F, -0.393F, -0.991F), 0.018F,
+                         k_metal_slot),
+        generated_sphere(QVector3D(0.901F, -0.429F, -1.017F), 0.018F,
+                         k_metal_slot),
+        generated_sphere(QVector3D(0.956F, -0.464F, -1.043F), 0.018F,
+                         k_metal_slot),
+    }};
+    return build_generated_equipment_archetype("tool_belt_saw", primitives);
+  }();
+  return archetype;
+}
+
 auto tool_belt_pouches_archetype() -> const RenderArchetype & {
   static const RenderArchetype archetype = [] {
     std::array<GeneratedEquipmentPrimitive, 24> primitives{};
@@ -169,6 +194,10 @@ void ToolBeltRenderer::submit(const ToolBeltConfig &config,
     append_humanoid_attachment_archetype(batch, ctx, waist,
                                          tool_belt_chisel_archetype(), palette);
   }
+  if (config.include_saw) {
+    append_humanoid_attachment_archetype(batch, ctx, waist,
+                                         tool_belt_saw_archetype(), palette);
+  }
   if (config.include_pouches) {
     append_humanoid_attachment_archetype(
         batch, ctx, waist, tool_belt_pouches_archetype(), palette);
@@ -192,7 +221,7 @@ auto tool_belt_fill_role_colors(const HumanoidPalette &palette, QVector3D *out,
 
 auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
                                        std::uint8_t base_role_byte)
-    -> std::array<Render::Creature::StaticAttachmentSpec, 5> {
+    -> std::array<Render::Creature::StaticAttachmentSpec, 6> {
   const auto &bind_frames = Render::Humanoid::humanoid_bind_body_frames();
   const AttachmentFrame &waist = bind_frames.waist;
 
@@ -226,6 +255,7 @@ auto tool_belt_make_static_attachments(std::uint16_t waist_socket_bone_index,
       make_spec(tool_belt_buckle_archetype(), uniform_bind),
       make_spec(tool_belt_hammer_archetype(), uniform_bind),
       make_spec(tool_belt_chisel_archetype(), uniform_bind),
+      make_spec(tool_belt_saw_archetype(), uniform_bind),
       make_spec(tool_belt_pouches_archetype(), uniform_bind),
   };
 }

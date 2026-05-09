@@ -44,6 +44,7 @@ public:
   void set_ai_strategy(int player_id, AI::AIStrategy strategy,
                        float aggression = 0.5F, float defense = 0.5F,
                        float harassment = 0.5F);
+  void set_commander_recruitment_enabled(bool enabled);
 
 private:
   struct AIInstance {
@@ -63,6 +64,7 @@ private:
 
   float m_total_game_time = 0.0F;
   float m_update_interval = 0.3F;
+  bool m_allow_commander_recruitment = false;
 
   Engine::Core::ScopedEventSubscription<Engine::Core::BuildingAttackedEvent>
       m_building_attacked_subscription;

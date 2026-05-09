@@ -16,7 +16,8 @@
     "starting_resources": {
       "gold": 750,
       "food": 600
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -38,21 +39,43 @@
         {
           "timing": 210.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
-            {"type": "archer", "count": 4}
+            {
+              "type": "spearman",
+              "count": 10
+            },
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
           ],
-          "entry_point": {"x": 155, "z": 60}
+          "entry_point": {
+            "x": 155,
+            "z": 60
+          }
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "spearman", "count": 6}
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 6
+            }
           ],
-          "entry_point": {"x": 150, "z": 40}
+          "entry_point": {
+            "x": 150,
+            "z": 40
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_field_commander"
     },
     {
       "id": "roman_reserve_wing",
@@ -71,7 +94,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 160, "z": 25},
+          "position": {
+            "x": 160,
+            "z": 25
+          },
           "max_population": 220
         }
       ],
@@ -79,28 +105,55 @@
         {
           "timing": 300.0,
           "composition": [
-            {"type": "spearman", "count": 6},
-            {"type": "swordsman", "count": 6},
-            {"type": "horse_swordsman", "count": 3}
+            {
+              "type": "spearman",
+              "count": 6
+            },
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 160, "z": 25}
+          "entry_point": {
+            "x": 160,
+            "z": 25
+          }
         },
         {
           "timing": 540.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 8},
-            {"type": "archer", "count": 4}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
           ],
-          "entry_point": {"x": 160, "z": 25}
+          "entry_point": {
+            "x": 160,
+            "z": 25
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_legion_organizer"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 2,
       "description": "Seize both Roman camps to complete the encirclement"
     }
@@ -119,7 +172,9 @@
   "optional_objectives": [
     {
       "type": "control_structures",
-      "structure_types": ["village"],
+      "structure_types": [
+        "village"
+      ],
       "min_count": 1,
       "description": "Hold the Cannae village ruins during the encirclement"
     }

@@ -4,10 +4,12 @@
 #include "../game_config.h"
 #include "../systems/nation_registry.h"
 #include "../systems/troop_profile_service.h"
+#include "../units/commander_catalog.h"
 #include "../units/troop_config.h"
 #include "core/entity.h"
 #include "units/spawn_type.h"
 #include "units/troop_type.h"
+#include <optional>
 #include <vector>
 
 namespace Game::Systems {
@@ -71,6 +73,73 @@ void apply_production_profile(Engine::Core::ProductionComponent *prod,
   prod->villager_cost = profile.production.cost;
 }
 
+auto production_owner(const Engine::Core::Entity *entity) -> std::optional<int> {
+  if (entity == nullptr) {
+    return std::nullopt;
+  }
+  const auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return std::nullopt;
+  }
+  return unit->owner_id;
+}
+
+auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
+    -> bool {
+  auto has_commander_in_queue = [](const Engine::Core::ProductionComponent *prod)
+      -> bool {
+    if (prod == nullptr) {
+      return false;
+    }
+    if (prod->in_progress && Game::Units::is_commander_troop(prod->product_type)) {
+      return true;
+    }
+    for (const auto queued : prod->production_queue) {
+      if (Game::Units::is_commander_troop(queued)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  for (const auto &entry : world.get_entities()) {
+    auto *entity = entry.second.get();
+    if (entity == nullptr) {
+      continue;
+    }
+
+    if (auto *unit = entity->get_component<Engine::Core::UnitComponent>()) {
+      if (unit->owner_id == owner_id && unit->health > 0) {
+        const auto troop_type = Game::Units::spawn_typeToTroopType(unit->spawn_type);
+        if (troop_type.has_value() &&
+            Game::Units::is_commander_troop(*troop_type)) {
+          return true;
+        }
+      }
+    }
+
+    auto *prod = entity->get_component<Engine::Core::ProductionComponent>();
+    if (prod == nullptr || !has_commander_in_queue(prod)) {
+      continue;
+    }
+    const auto owner = production_owner(entity);
+    if (owner.has_value() && *owner == owner_id) {
+      return true;
+    }
+  }
+  return false;
+}
+
+auto home_committed_civilian_count(
+    const Engine::Core::ProductionComponent *prod) -> int {
+  if (prod == nullptr) {
+    return 0;
+  }
+
+  return prod->produced_count + (prod->in_progress ? 1 : 0) +
+         static_cast<int>(prod->production_queue.size());
+}
+
 } // namespace
 
 auto ProductionService::start_production_for_first_selected_barracks(
@@ -96,6 +165,11 @@ auto ProductionService::start_production_for_first_selected_barracks(
 
   int const individuals_per_unit = profile.individuals_per_unit;
   int const production_cost = profile.production.cost;
+  const bool is_commander = Game::Units::is_commander_troop(unit_type);
+  if (is_commander && owner_has_commander_committed(world, owner_id)) {
+    return ProductionResult::CommanderLimitReached;
+  }
+
   if (p->manpower_available < production_cost) {
     return ProductionResult::InsufficientManpower;
   }
@@ -127,6 +201,11 @@ auto ProductionService::start_production_for_first_selected_barracks(
     apply_production_profile(p, nation_id, unit_type);
     p->time_remaining = p->build_time;
     p->in_progress = true;
+  }
+  if (is_commander) {
+    p->commander_committed = true;
+  } else {
+    p->commander_committed = owner_has_commander_committed(world, owner_id);
   }
   p->manpower_available -= production_cost;
 
@@ -179,6 +258,7 @@ auto ProductionService::get_selected_barracks_state(
     out_state.max_units = p->max_units;
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
+    out_state.commander_committed = owner_has_commander_committed(world, owner_id);
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
   }
@@ -210,6 +290,10 @@ auto ProductionService::start_production_for_first_selected_home(
   int const production_cost = profile.production.cost;
   if (p->manpower_available < production_cost) {
     return ProductionResult::InsufficientManpower;
+  }
+
+  if (home_committed_civilian_count(p) >= p->max_units) {
+    return ProductionResult::PerBarracksLimitReached;
   }
 
   const int max_queue_size = 3;

@@ -83,6 +83,7 @@ void AISystem::initialize_ai_players() {
     AIInstance instance;
     instance.context.player_id = player_id;
     instance.context.state = AI::AIState::Idle;
+    instance.context.allow_commander_recruitment = m_allow_commander_recruitment;
     instance.worker = std::make_unique<AI::AIWorker>(m_reasoner, m_executor,
                                                      m_behavior_registry);
     instance.update_timer =
@@ -105,6 +106,13 @@ void AISystem::set_ai_strategy(int player_id, AI::AIStrategy strategy,
                                                aggression, defense, harassment);
       break;
     }
+  }
+}
+
+void AISystem::set_commander_recruitment_enabled(bool enabled) {
+  m_allow_commander_recruitment = enabled;
+  for (auto &ai : m_ai_instances) {
+    ai.context.allow_commander_recruitment = enabled;
   }
 }
 

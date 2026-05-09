@@ -5,6 +5,7 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/terrain_service.h"
+#include "game/systems/building_collision_registry.h"
 #include "game/systems/command_service.h"
 #include "game/systems/formation_planner.h"
 #include "game/systems/pathfinding.h"
@@ -13,7 +14,9 @@
 
 #include <QPointF>
 #include <QVector3D>
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <vector>
 
 namespace App::Utils {
@@ -100,6 +103,122 @@ snap_to_walkable_ground(const QVector3D &world_position) -> QVector3D {
   return snapped;
 }
 
+inline void clear_civilian_delivery_command(Engine::Core::Entity *entity) {
+  if (entity == nullptr) {
+    return;
+  }
+
+  auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr || unit->spawn_type != Game::Units::SpawnType::Civilian) {
+    return;
+  }
+
+  entity->remove_component<Engine::Core::CivilianDeliveryComponent>();
+}
+
+inline auto snap_to_walkable_ground_for_unit(const QVector3D &world_position,
+                                             float unit_radius) -> QVector3D {
+  QVector3D snapped = world_position;
+  auto &terrain_service = Game::Map::TerrainService::instance();
+  snapped.setY(terrain_service.resolve_surface_world_y(snapped.x(), snapped.z(),
+                                                       0.0F, snapped.y()));
+
+  auto *pathfinder = Game::Systems::CommandService::get_pathfinder();
+  if (pathfinder == nullptr && !terrain_service.is_initialized()) {
+    return snapped;
+  }
+
+  auto const is_walkable = [&](int x, int z) {
+    bool path_walkable = true;
+    if (pathfinder != nullptr) {
+      path_walkable =
+          unit_radius > 0.5F
+              ? pathfinder->is_walkable_with_radius(x, z, unit_radius)
+              : pathfinder->is_walkable(x, z);
+    }
+    if (!path_walkable) {
+      return false;
+    }
+    if (terrain_service.is_initialized()) {
+      return terrain_service.is_walkable(x, z);
+    }
+    return true;
+  };
+
+  Game::Systems::Point const grid =
+      Game::Systems::CommandService::world_to_grid(snapped.x(), snapped.z());
+  if (is_walkable(grid.x, grid.y)) {
+    return snapped;
+  }
+
+  Game::Systems::Point nearest = grid;
+  bool found = false;
+  for (int radius = 1; radius <= 24 && !found; ++radius) {
+    for (int dz = -radius; dz <= radius && !found; ++dz) {
+      for (int dx = -radius; dx <= radius; ++dx) {
+        if (std::abs(dx) != radius && std::abs(dz) != radius) {
+          continue;
+        }
+        int const check_x = grid.x + dx;
+        int const check_z = grid.y + dz;
+        if (!is_walkable(check_x, check_z)) {
+          continue;
+        }
+        nearest = {check_x, check_z};
+        found = true;
+        break;
+      }
+    }
+  }
+
+  QVector3D const nearest_world =
+      Game::Systems::CommandService::grid_to_world(found ? nearest : grid);
+  snapped.setX(nearest_world.x());
+  snapped.setZ(nearest_world.z());
+  snapped.setY(terrain_service.resolve_surface_world_y(snapped.x(), snapped.z(),
+                                                       0.0F, snapped.y()));
+  return snapped;
+}
+
+inline auto
+barracks_delivery_target_position(const QVector3D &civilian_position,
+                                  const QVector3D &barracks_position,
+                                  float unit_radius) -> QVector3D {
+  auto const size =
+      Game::Systems::BuildingCollisionRegistry::get_building_size("barracks");
+  float dir_x = civilian_position.x() - barracks_position.x();
+  float dir_z = civilian_position.z() - barracks_position.z();
+  float const len_sq = dir_x * dir_x + dir_z * dir_z;
+  if (len_sq < 0.0001F) {
+    dir_x = 1.0F;
+    dir_z = 0.0F;
+  } else {
+    float const len = std::sqrt(len_sq);
+    dir_x /= len;
+    dir_z /= len;
+  }
+
+  float const clearance =
+      Game::Systems::BuildingCollisionRegistry::get_grid_padding() +
+      unit_radius + 0.25F;
+  float const half_width = size.width * 0.5F;
+  float const half_depth = size.depth * 0.5F;
+  float const abs_x = std::fabs(dir_x);
+  float const abs_z = std::fabs(dir_z);
+  float const sx = abs_x > 0.0001F ? (half_width + clearance) / abs_x
+                                   : std::numeric_limits<float>::infinity();
+  float const sz = abs_z > 0.0001F ? (half_depth + clearance) / abs_z
+                                   : std::numeric_limits<float>::infinity();
+  float const scale = std::min(sx, sz);
+  float const fallback_scale = std::max(half_width, half_depth) + clearance;
+  float const final_scale =
+      std::isfinite(scale) && scale > 0.0F ? scale : fallback_scale;
+
+  QVector3D target(barracks_position.x() + dir_x * final_scale, 0.0F,
+                   barracks_position.z() + dir_z * final_scale);
+  return snap_to_walkable_ground_for_unit(target, unit_radius);
+}
+
 inline void issue_move_or_attack_command(
     Engine::Core::World *world,
     const std::vector<Engine::Core::EntityID> &selected,
@@ -127,6 +246,10 @@ inline void issue_move_or_attack_command(
         if (is_friendly_barracks) {
           std::vector<Engine::Core::EntityID> civilian_ids;
           civilian_ids.reserve(selected.size());
+          std::vector<QVector3D> targets;
+          targets.reserve(selected.size());
+          auto *target_transform =
+              target_entity->get_component<Engine::Core::TransformComponent>();
           for (const auto selected_id : selected) {
             auto *selected_entity = world->get_entity(selected_id);
             auto *selected_unit =
@@ -148,25 +271,41 @@ inline void issue_move_or_attack_command(
               if (delivery != nullptr) {
                 delivery->target_barracks_id = target_id;
               }
+              auto *selected_transform =
+                  selected_entity
+                      ->get_component<Engine::Core::TransformComponent>();
+              if (target_transform != nullptr) {
+                float const unit_radius =
+                    Game::Systems::CommandService::get_unit_radius(*world,
+                                                                   selected_id);
+                QVector3D const current_position =
+                    selected_transform != nullptr
+                        ? QVector3D(selected_transform->position.x,
+                                    selected_transform->position.y,
+                                    selected_transform->position.z)
+                        : QVector3D(target_transform->position.x, 0.0F,
+                                    target_transform->position.z);
+                targets.push_back(barracks_delivery_target_position(
+                    current_position,
+                    QVector3D(target_transform->position.x, 0.0F,
+                              target_transform->position.z),
+                    unit_radius));
+              }
             }
           }
 
-          if (!civilian_ids.empty()) {
-            auto *target_transform =
-                target_entity
-                    ->get_component<Engine::Core::TransformComponent>();
-            if (target_transform != nullptr) {
-              std::vector<QVector3D> targets(
-                  civilian_ids.size(),
-                  QVector3D(target_transform->position.x, 0.0F,
-                            target_transform->position.z));
-              Game::Systems::CommandService::MoveOptions opts;
-              opts.group_move = civilian_ids.size() > 1;
-              Game::Systems::CommandService::move_units(*world, civilian_ids,
-                                                        targets, opts);
-              return;
-            }
+          if (!civilian_ids.empty() && target_transform != nullptr &&
+              targets.size() == civilian_ids.size()) {
+            Game::Systems::CommandService::MoveOptions opts;
+            opts.group_move = false;
+            Game::Systems::CommandService::move_units(*world, civilian_ids,
+                                                      targets, opts);
+            return;
           }
+        }
+
+        for (const auto selected_id : selected) {
+          clear_civilian_delivery_command(world->get_entity(selected_id));
         }
 
         bool const is_enemy = (target_unit->owner_id != local_owner_id);
@@ -192,6 +331,10 @@ inline void issue_move_or_attack_command(
       Game::Systems::FormationPlanner::get_formation_with_facing(
           *world, selected, hit,
           Game::GameConfig::instance().gameplay().formation_spacing_default);
+
+  for (const auto selected_id : selected) {
+    clear_civilian_delivery_command(world->get_entity(selected_id));
+  }
 
   for (size_t i = 0; i < selected.size(); ++i) {
     auto *entity = world->get_entity(selected[i]);

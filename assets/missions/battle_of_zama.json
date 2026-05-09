@@ -14,7 +14,8 @@
     "starting_resources": {
       "gold": 650,
       "food": 520
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -36,21 +37,43 @@
         {
           "timing": 220.0,
           "composition": [
-            {"type": "spearman", "count": 10},
-            {"type": "swordsman", "count": 8},
-            {"type": "archer", "count": 4}
+            {
+              "type": "spearman",
+              "count": 10
+            },
+            {
+              "type": "swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 4
+            }
           ],
-          "entry_point": {"x": 200, "z": 60}
+          "entry_point": {
+            "x": 200,
+            "z": 60
+          }
         },
         {
           "timing": 460.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
-            {"type": "spearman", "count": 6}
+            {
+              "type": "horse_swordsman",
+              "count": 6
+            },
+            {
+              "type": "spearman",
+              "count": 6
+            }
           ],
-          "entry_point": {"x": 170, "z": 30}
+          "entry_point": {
+            "x": 170,
+            "z": 30
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_veteran_consul"
     },
     {
       "id": "roman_numidian_allies",
@@ -69,7 +92,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 210, "z": 30},
+          "position": {
+            "x": 210,
+            "z": 30
+          },
           "max_population": 180
         }
       ],
@@ -77,21 +103,43 @@
         {
           "timing": 180.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 6},
-            {"type": "horse_archer", "count": 3}
+            {
+              "type": "horse_swordsman",
+              "count": 6
+            },
+            {
+              "type": "horse_archer",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 210, "z": 30}
+          "entry_point": {
+            "x": 210,
+            "z": 30
+          }
         },
         {
           "timing": 420.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 8},
-            {"type": "archer", "count": 4},
-            {"type": "spearman", "count": 4}
+            {
+              "type": "horse_swordsman",
+              "count": 8
+            },
+            {
+              "type": "archer",
+              "count": 4
+            },
+            {
+              "type": "spearman",
+              "count": 4
+            }
           ],
-          "entry_point": {"x": 210, "z": 30}
+          "entry_point": {
+            "x": 210,
+            "z": 30
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_field_commander"
     },
     {
       "id": "roman_rear_guard",
@@ -110,7 +158,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 200, "z": 95},
+          "position": {
+            "x": 200,
+            "z": 95
+          },
           "max_population": 170
         }
       ],
@@ -118,20 +169,38 @@
         {
           "timing": 520.0,
           "composition": [
-            {"type": "spearman", "count": 8},
-            {"type": "swordsman", "count": 6},
-            {"type": "archer", "count": 4},
-            {"type": "catapult", "count": 1}
+            {
+              "type": "spearman",
+              "count": 8
+            },
+            {
+              "type": "swordsman",
+              "count": 6
+            },
+            {
+              "type": "archer",
+              "count": 4
+            },
+            {
+              "type": "catapult",
+              "count": 1
+            }
           ],
-          "entry_point": {"x": 200, "z": 95}
+          "entry_point": {
+            "x": 200,
+            "z": 95
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_legion_organizer"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 2,
       "description": "Capture two Roman camps to break Scipio's battlefield control"
     }
@@ -150,7 +219,9 @@
   "optional_objectives": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 3,
       "description": "Capture every Roman field camp"
     }

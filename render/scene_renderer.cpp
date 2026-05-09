@@ -92,6 +92,28 @@ auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
   }
 }
 
+auto prewarm_seed_for_variant(int owner_id,
+                              std::uint8_t variant) noexcept -> std::uint32_t {
+  std::uint32_t seed = static_cast<std::uint32_t>(owner_id) * 2654435761U;
+  seed ^= (static_cast<std::uint32_t>(variant) + 1U) * 2246822519U;
+  seed ^= seed >> 15U;
+  seed *= 2246822519U;
+  seed ^= seed >> 13U;
+  seed *= 3266489917U;
+  seed ^= seed >> 16U;
+  return seed;
+}
+
+auto prewarm_entity_id_for_variant(
+    std::size_t profile_index, int owner_id, std::uint8_t lod,
+    std::uint8_t variant) noexcept -> std::uint32_t {
+  return 1U + static_cast<std::uint32_t>((((profile_index * 16U) +
+                                           static_cast<std::size_t>(owner_id)) *
+                                              4U +
+                                          static_cast<std::size_t>(lod)) *
+                                             k_template_variant_count +
+                                          static_cast<std::size_t>(variant));
+}
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
@@ -212,6 +234,8 @@ public:
 
   void mesh(Mesh *, const QMatrix4x4 &, const QVector3D &, Texture * = nullptr,
             float = 1.0F, int = 0) override {}
+  void banner(Mesh *, const QMatrix4x4 &, const QVector3D &, const QVector3D &,
+              Texture * = nullptr, float = 1.0F, int = 0) override {}
   void cylinder(const QVector3D &, const QVector3D &, float, const QVector3D &,
                 float = 1.0F) override {}
   void selection_ring(const QMatrix4x4 &, float, float,
@@ -441,6 +465,28 @@ void Renderer::mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &color,
   }
 }
 
+void Renderer::banner(Mesh *mesh, const QMatrix4x4 &model,
+                      const QVector3D &color, const QVector3D &trim_color,
+                      Texture *texture, float alpha, int material_id) {
+  if (mesh == nullptr) {
+    return;
+  }
+
+  MeshCmd cmd;
+  cmd.mesh = mesh;
+  cmd.texture = texture;
+  cmd.model = model;
+  cmd.color = color;
+  cmd.trim_color = trim_color;
+  cmd.has_trim_color = true;
+  cmd.alpha = alpha * m_alpha_override;
+  cmd.material_id = material_id;
+  cmd.shader = m_current_shader;
+  if (m_active_queue != nullptr) {
+    m_active_queue->submit(std::move(cmd));
+  }
+}
+
 void Renderer::part(Mesh *mesh, Material *material, const QMatrix4x4 &model,
                     const QVector3D &color, Texture *texture, float alpha,
                     int material_id) {
@@ -577,7 +623,9 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
     return;
   }
 
-  Engine::Core::Entity entity(1);
+  Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+      static_cast<std::size_t>(item.profile_index), item.owner_id, item.lod,
+      item.variant));
   auto *unit = entity.add_component<Engine::Core::UnitComponent>();
   unit->spawn_type = static_cast<Game::Units::SpawnType>(profile.spawn_type);
   unit->owner_id = item.owner_id;
@@ -605,6 +653,8 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   ctx.camera = nullptr;
   ctx.allow_template_cache = true;
   ctx.template_prewarm = true;
+  ctx.has_seed_override = true;
+  ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
   ctx.has_variant_override = true;
   ctx.variant_override = item.variant;
   ctx.force_humanoid_lod = true;
@@ -1607,6 +1657,7 @@ void Renderer::prewarm_unit_templates(
     case SpawnType::HorseArcher:
     case SpawnType::HorseSpearman:
     case SpawnType::Healer:
+    case SpawnType::Civilian:
     case SpawnType::Builder:
     case SpawnType::Elephant:
       return true;
@@ -1627,6 +1678,7 @@ void Renderer::prewarm_unit_templates(
     case TroopType::HorseArcher:
     case TroopType::HorseSpearman:
     case TroopType::Healer:
+    case TroopType::Civilian:
     case TroopType::Builder:
     case TroopType::Elephant:
       return true;
@@ -1745,7 +1797,7 @@ void Renderer::prewarm_unit_templates(
     add_owner(0);
   }
 
-  if (profiles.empty()) {
+  {
     const auto &troops =
         Game::Units::TroopCatalog::instance().get_all_classes();
     const auto &nations =
@@ -2071,7 +2123,9 @@ void Renderer::prewarm_unit_templates(
       const PrewarmWorkItem &item = core_work_items[idx];
       const PrewarmProfile &profile = profiles[item.profile_index];
 
-      Engine::Core::Entity entity(1);
+      Engine::Core::Entity entity(prewarm_entity_id_for_variant(
+          item.profile_index, item.owner_id,
+          static_cast<std::uint8_t>(item.lod), item.variant));
       auto *unit = entity.add_component<Engine::Core::UnitComponent>();
       unit->spawn_type = profile.spawn_type;
       unit->owner_id = item.owner_id;
@@ -2101,6 +2155,8 @@ void Renderer::prewarm_unit_templates(
       ctx.camera = nullptr;
       ctx.allow_template_cache = true;
       ctx.template_prewarm = true;
+      ctx.has_seed_override = true;
+      ctx.seed_override = prewarm_seed_for_variant(item.owner_id, item.variant);
       ctx.has_variant_override = true;
       ctx.variant_override = item.variant;
       ctx.force_humanoid_lod = true;

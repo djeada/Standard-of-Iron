@@ -203,7 +203,9 @@ auto builder_circle_local_offset(int idx, int rows, int cols, float spacing,
   float const jitter = spacing * 0.08F;
   offset_x += (fast_random(rng_state) - 0.5F) * jitter;
   offset_z += (fast_random(rng_state) - 0.5F) * jitter;
-  return {offset_x, offset_z, 0.0F};
+  float const yaw_offset =
+      std::atan2(-offset_x, -offset_z) * (180.0F / 3.14159265358979F);
+  return {offset_x, offset_z, yaw_offset};
 }
 } // namespace
 

@@ -250,6 +250,12 @@ enum class CombatAttackFamily : std::uint8_t {
   case SpawnType::MountedKnight:
   case SpawnType::Archer:
   case SpawnType::HorseArcher:
+  case SpawnType::RomanLegionOrganizer:
+  case SpawnType::RomanVeteranConsul:
+  case SpawnType::RomanFieldCommander:
+  case SpawnType::CarthageMercenaryBroker:
+  case SpawnType::CarthageCavalryPatron:
+  case SpawnType::CarthageElephantMaster:
     return CombatAttackFamily::Sword;
   case SpawnType::Spearman:
   case SpawnType::HorseSpearman:
@@ -344,7 +350,46 @@ public:
   bool rally_set{false};
   int villager_cost{1};
   int manpower_available{0};
+  bool commander_committed{false};
   std::vector<Game::Units::TroopType> production_queue;
+};
+
+class MoraleComponent : public Component {
+public:
+  MoraleComponent() = default;
+
+  float morale{70.0F};
+  float commander_aura_bonus{0.0F};
+  float shock_timer{0.0F};
+  bool wavering{false};
+  bool routing{false};
+};
+
+class CommanderComponent : public Component {
+public:
+  CommanderComponent() = default;
+
+  std::string commander_id;
+  std::string display_name;
+  std::string strategic_identity;
+  std::string passive_aura;
+  std::string bonus_type;
+  std::string bonus_summary;
+  std::string rally_ability;
+  std::string death_consequence;
+  int bodyguard_count{6};
+  float aura_radius{12.0F};
+  float aura_morale_bonus{5.0F};
+  float aura_bonus_value{0.0F};
+  float rally_range{10.0F};
+  float rally_cooldown{45.0F};
+  float rally_morale_restore{25.0F};
+  float rally_cooldown_remaining{0.0F};
+  float rally_feedback_time{0.0F};
+  float death_shock_radius{14.0F};
+  float death_morale_shock{25.0F};
+  bool aura_active{true};
+  bool wounded{false};
 };
 
 class AIControlledComponent : public Component {

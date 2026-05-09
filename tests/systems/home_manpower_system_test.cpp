@@ -3,6 +3,8 @@
 #include "game/systems/home_system.h"
 #include "game/systems/production_service.h"
 #include "game/systems/troop_count_registry.h"
+#include "game/units/barracks.h"
+#include "game/units/home.h"
 #include "game/units/spawn_type.h"
 
 #include <gtest/gtest.h>
@@ -111,6 +113,62 @@ TEST_F(HomeManpowerSystemTest,
   EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
   EXPECT_TRUE(production->in_progress);
   EXPECT_EQ(production->manpower_available, 10);
+}
+
+TEST_F(HomeManpowerSystemTest,
+       InitialBarracksSpawnStartsWithAuthoredManpowerReserve) {
+  Engine::Core::World world;
+
+  Game::Units::SpawnParams initial_params;
+  initial_params.player_id = 1;
+  initial_params.spawn_type = Game::Units::SpawnType::Barracks;
+  initial_params.max_population = 180;
+  initial_params.is_initial_spawn = true;
+
+  auto initial_barracks = Game::Units::Barracks::Create(world, initial_params);
+  auto *initial_entity = world.get_entity(initial_barracks->id());
+  ASSERT_NE(initial_entity, nullptr);
+  auto *initial_production =
+      initial_entity->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(initial_production, nullptr);
+  EXPECT_EQ(initial_production->max_units, 180);
+  EXPECT_EQ(initial_production->manpower_available, 180);
+
+  Game::Units::SpawnParams built_params;
+  built_params.player_id = 1;
+  built_params.spawn_type = Game::Units::SpawnType::Barracks;
+  built_params.max_population = 180;
+  built_params.is_initial_spawn = false;
+
+  auto built_barracks = Game::Units::Barracks::Create(world, built_params);
+  auto *built_entity = world.get_entity(built_barracks->id());
+  ASSERT_NE(built_entity, nullptr);
+  auto *built_production =
+      built_entity->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(built_production, nullptr);
+  EXPECT_EQ(built_production->max_units, 180);
+  EXPECT_EQ(built_production->manpower_available, 0);
+}
+
+TEST_F(HomeManpowerSystemTest,
+       InitialHomeSpawnStartsWithThreeCivilianRecruitsReady) {
+  Engine::Core::World world;
+
+  Game::Units::SpawnParams params;
+  params.player_id = 1;
+  params.spawn_type = Game::Units::SpawnType::Home;
+  params.is_initial_spawn = true;
+
+  auto home = Game::Units::Home::Create(world, params);
+  auto *entity = world.get_entity(home->id());
+  ASSERT_NE(entity, nullptr);
+  auto *production =
+      entity->get_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(production, nullptr);
+
+  EXPECT_EQ(production->product_type, Game::Units::TroopType::Civilian);
+  EXPECT_EQ(production->max_units, 3);
+  EXPECT_EQ(production->manpower_available, production->villager_cost * 3);
 }
 
 } // namespace

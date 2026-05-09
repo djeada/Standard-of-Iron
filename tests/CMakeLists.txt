@@ -29,6 +29,7 @@ add_executable(standard_of_iron_tests
     systems/civilian_delivery_system_test.cpp
     systems/building_collision_test.cpp
     systems/combat_mode_test.cpp
+    systems/commander_system_test.cpp
     systems/archer_bonus_test.cpp
     systems/ai_system_test.cpp
     systems/defense_tower_system_test.cpp

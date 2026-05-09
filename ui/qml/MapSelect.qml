@@ -17,6 +17,17 @@ Item {
     signal map_chosen(string map_path, var player_configs)
     signal cancelled()
 
+    onMaps_modelChanged: Qt.callLater(function() {
+        if (selected_map_data !== null || !maps_model || (maps_model.length || 0) <= 0)
+            return ;
+
+        list.currentIndex = 0;
+        selected_map_index = 0;
+        selected_map_data = get_map_data(0);
+        selected_map_path = selected_map_data ? (selected_map_data.path || selected_map_data.file || "") : "";
+        initialize_players(selected_map_data);
+    })
+
     function refresh_available_nations() {
         if (typeof game !== "undefined" && game.available_nations)
             available_nations = game.available_nations;
@@ -93,12 +104,81 @@ Item {
         return m;
     }
 
+    function value_for(obj, key) {
+        if (!obj)
+            return undefined;
+
+        if (obj[key] !== undefined)
+            return obj[key];
+
+        if (obj.get !== undefined) {
+            try {
+                return obj.get(key);
+            } catch (e) {
+            }
+        }
+        return undefined;
+    }
+
+    function variant_list_to_array(value) {
+        if (!value)
+            return [];
+
+        if (Array.isArray(value))
+            return value;
+
+        let result = [];
+        if (typeof value.length === "number") {
+            for (let i = 0; i < value.length; i++)
+                result.push(value[i]);
+
+            return result;
+        }
+        if (typeof value.count === "number") {
+            for (let j = 0; j < value.count; j++) {
+                if (value.get !== undefined)
+                    result.push(value.get(j));
+                else
+                    result.push(value[j]);
+            }
+            return result;
+        }
+        return [];
+    }
+
+    function player_ids_for_map(mapData) {
+        let ids = variant_list_to_array(value_for(mapData, "player_ids"));
+        if (ids.length > 0)
+            return ids.map(function(id) {
+                return Number(id);
+            });
+
+        let count = Number(value_for(mapData, "playerCount") || 0);
+        for (let i = 1; i <= count; i++)
+            ids.push(i);
+
+        return ids;
+    }
+
+    function refresh_map_preview() {
+        Qt.callLater(function() {
+            if (mapPreviewLeft && mapPreviewLeft.refresh_preview) {
+                mapPreviewLeft.player_configs = get_player_configs();
+                mapPreviewLeft.refresh_preview();
+            }
+        });
+    }
+
     function initialize_players(mapData) {
         players_model.clear();
-        if (!mapData || !mapData.player_ids || mapData.player_ids.length === 0)
+        let playerIds = player_ids_for_map(mapData);
+        if (!mapData || playerIds.length === 0) {
+            refresh_map_preview();
             return ;
+        }
 
-        let humanPlayerId = mapData.player_ids.length > 0 ? mapData.player_ids[0] : 1;
+        let requestedPlayerId = (typeof game !== "undefined") ? Number(game.selected_player_id) : Number(playerIds[0]);
+        let humanPlayerId = playerIds.indexOf(requestedPlayerId) !== -1 ? requestedPlayerId : Number(playerIds[0]);
         let defaultNation = default_nation_entry();
         players_model.append({
             "player_id": humanPlayerId,
@@ -107,34 +187,36 @@ Item {
             "colorHex": Theme.playerColors[0].hex,
             "colorName": Theme.playerColors[0].name,
             "team_id": 0,
-            "teamIcon": Theme.team_icons[0],
+            "teamIcon": Theme.teamIcons[0],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
             "isHuman": true,
             "isEnabled": true
         });
-        let cpuId = mapData.player_ids.find(function(id) {
+        let cpuId = playerIds.find(function(id) {
             return id !== humanPlayerId;
         });
         if (cpuId !== undefined)
             add_cpu();
 
         update_validation_error();
+        refresh_map_preview();
     }
 
     function add_cpu() {
-        if (!selected_map_data || !selected_map_data.player_ids)
+        let playerIds = player_ids_for_map(selected_map_data);
+        if (!selected_map_data || playerIds.length === 0)
             return ;
 
-        if (players_model.count >= selected_map_data.player_ids.length)
+        if (players_model.count >= playerIds.length)
             return ;
 
         let usedIds = [];
         for (let i = 0; i < players_model.count; i++) usedIds.push(players_model.get(i).player_id)
         let nextId = -1;
-        for (let j = 0; j < selected_map_data.player_ids.length; j++) {
-            if (usedIds.indexOf(selected_map_data.player_ids[j]) === -1) {
-                nextId = selected_map_data.player_ids[j];
+        for (let j = 0; j < playerIds.length; j++) {
+            if (usedIds.indexOf(Number(playerIds[j])) === -1) {
+                nextId = Number(playerIds[j]);
                 break;
             }
         }
@@ -159,13 +241,14 @@ Item {
             "colorHex": Theme.playerColors[colorIdx].hex,
             "colorName": Theme.playerColors[colorIdx].name,
             "team_id": defaultTeamId,
-            "teamIcon": Theme.team_icons[defaultTeamId],
+            "teamIcon": Theme.teamIcons[defaultTeamId],
             "nationId": defaultNation.id,
             "nationName": defaultNation.name,
             "isHuman": false,
             "isEnabled": true
         });
         update_validation_error();
+        refresh_map_preview();
     }
 
     function remove_player(index) {
@@ -178,6 +261,7 @@ Item {
 
         players_model.remove(index);
         update_validation_error();
+        refresh_map_preview();
     }
 
     function cycle_player_color(index) {
@@ -204,6 +288,7 @@ Item {
         players_model.setProperty(index, "colorIndex", newIdx);
         players_model.setProperty(index, "colorHex", Theme.playerColors[newIdx].hex);
         players_model.setProperty(index, "colorName", Theme.playerColors[newIdx].name);
+        refresh_map_preview();
     }
 
     function cycle_player_team(index) {
@@ -214,8 +299,9 @@ Item {
         let maxTeam = Math.min(8, players_model.count);
         let newTeamId = (p.team_id + 1) % (maxTeam + 1);
         players_model.setProperty(index, "team_id", newTeamId);
-        players_model.setProperty(index, "teamIcon", Theme.team_icons[newTeamId]);
+        players_model.setProperty(index, "teamIcon", Theme.teamIcons[newTeamId]);
         update_validation_error();
+        refresh_map_preview();
     }
 
     function cycle_player_nation(index) {
@@ -237,6 +323,7 @@ Item {
         let nextNation = available_nations[nextIndex];
         players_model.setProperty(index, "nationId", nextNation.id);
         players_model.setProperty(index, "nationName", nextNation.name);
+        refresh_map_preview();
     }
 
     function toggle_player_enabled(index) {
@@ -247,6 +334,7 @@ Item {
         let newEnabled = !p.isEnabled;
         players_model.setProperty(index, "isEnabled", newEnabled);
         update_validation_error();
+        refresh_map_preview();
     }
 
     function get_player_configs() {
@@ -1344,7 +1432,7 @@ Item {
 
                     Button {
                         text: qsTr("+ Add CPU")
-                        enabled: players_model.count < (selected_map_data && selected_map_data.player_ids ? selected_map_data.player_ids.length : 0)
+                        enabled: players_model.count < player_ids_for_map(selected_map_data).length
                         onClicked: add_cpu()
                         hoverEnabled: true
                         implicitHeight: 38
@@ -1440,8 +1528,7 @@ Item {
 
                     Text {
                         text: "Available Player Slots: " + (function() {
-                            var it = selected_map_data;
-                            return (it && typeof it.playerCount !== 'undefined') ? it.playerCount : 0;
+                            return player_ids_for_map(selected_map_data).length;
                         })()
                         color: Theme.textMain
                         font.pixelSize: 14
@@ -1460,8 +1547,7 @@ Item {
 
                         Repeater {
                             model: {
-                                var it = selected_map_data;
-                                return (it && it.player_ids) ? it.player_ids : [];
+                                return player_ids_for_map(selected_map_data);
                             }
 
                             delegate: Rectangle {
@@ -1509,7 +1595,9 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         if (typeof game !== 'undefined')
-                                            game.selected_player_id = modelData;
+                                            game.selected_player_id = Number(modelData);
+
+                                        initialize_players(selected_map_data);
 
                                     }
                                 }
@@ -1525,14 +1613,14 @@ Item {
                             if (typeof game === 'undefined')
                                 return "";
 
-                            var it = selected_map_data;
-                            if (!it || !it.player_ids)
+                            var ids = player_ids_for_map(selected_map_data);
+                            if (ids.length === 0)
                                 return "";
 
                             var others = [];
-                            for (var i = 0; i < it.player_ids.length; i++) {
-                                if (it.player_ids[i] !== game.selected_player_id)
-                                    others.push(it.player_ids[i]);
+                            for (var i = 0; i < ids.length; i++) {
+                                if (Number(ids[i]) !== game.selected_player_id)
+                                    others.push(Number(ids[i]));
 
                             }
                             if (others.length === 0)
