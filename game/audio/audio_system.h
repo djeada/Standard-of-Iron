@@ -37,7 +37,7 @@ enum class AudioCategory { SFX, VOICE, MUSIC };
 
 struct AudioEvent {
   AudioEventType type;
-  std::string resourceId;
+  std::string resource_id;
   float volume = AudioConstants::DEFAULT_VOLUME;
   bool loop = false;
   int priority = AudioConstants::DEFAULT_PRIORITY;
@@ -47,50 +47,50 @@ struct AudioEvent {
              float vol = AudioConstants::DEFAULT_VOLUME, bool l = false,
              int p = AudioConstants::DEFAULT_PRIORITY,
              AudioCategory cat = AudioCategory::SFX)
-      : type(t), resourceId(std::move(id)), volume(vol), loop(l), priority(p),
+      : type(t), resource_id(std::move(id)), volume(vol), loop(l), priority(p),
         category(cat) {}
 };
 
 class AudioSystem {
 public:
-  static auto getInstance() -> AudioSystem &;
+  static auto get_instance() -> AudioSystem &;
 
   auto initialize() -> bool;
   void shutdown();
 
-  void playSound(const std::string &sound_id,
+  void play_sound(const std::string &sound_id,
                  float volume = AudioConstants::DEFAULT_VOLUME,
                  bool loop = false,
                  int priority = AudioConstants::DEFAULT_PRIORITY,
                  AudioCategory category = AudioCategory::SFX);
-  void playMusic(const std::string &music_id,
+  void play_music(const std::string &music_id,
                  float volume = AudioConstants::DEFAULT_VOLUME,
                  bool crossfade = true);
-  void stopSound(const std::string &sound_id);
-  void stopMusic();
-  void setMasterVolume(float volume);
-  void setSoundVolume(float volume);
-  void setMusicVolume(float volume);
-  void setVoiceVolume(float volume);
-  void pauseAll();
-  void resumeAll();
+  void stop_sound(const std::string &sound_id);
+  void stop_music();
+  void set_master_volume(float volume);
+  void set_sound_volume(float volume);
+  void set_music_volume(float volume);
+  void set_voice_volume(float volume);
+  void pause_all();
+  void resume_all();
 
-  auto loadSound(const std::string &sound_id, const std::string &filePath,
+  auto load_sound(const std::string &sound_id, const std::string &filePath,
                  AudioCategory category = AudioCategory::SFX) -> bool;
-  auto loadMusic(const std::string &music_id,
+  auto load_music(const std::string &music_id,
                  const std::string &filePath) -> bool;
-  void unloadSound(const std::string &sound_id);
-  void unloadMusic(const std::string &music_id);
-  void unloadAllSounds();
-  void unloadAllMusic();
+  void unload_sound(const std::string &sound_id);
+  void unload_music(const std::string &music_id);
+  void unload_all_sounds();
+  void unload_all_music();
 
-  void setMaxChannels(size_t maxChannels);
-  auto getActiveChannelCount() const -> size_t;
+  void set_max_channels(size_t maxChannels);
+  auto get_active_channel_count() const -> size_t;
 
-  auto getMasterVolume() const -> float { return masterVolume; }
-  auto getSoundVolume() const -> float { return soundVolume; }
-  auto getMusicVolume() const -> float { return musicVolume; }
-  auto getVoiceVolume() const -> float { return voiceVolume; }
+  auto get_master_volume() const -> float { return masterVolume; }
+  auto get_sound_volume() const -> float { return soundVolume; }
+  auto get_music_volume() const -> float { return musicVolume; }
+  auto get_voice_volume() const -> float { return voiceVolume; }
 
 private:
   AudioSystem();
@@ -99,13 +99,13 @@ private:
   AudioSystem(const AudioSystem &) = delete;
   auto operator=(const AudioSystem &) -> AudioSystem & = delete;
 
-  void audioThreadFunc();
-  void processEvent(const AudioEvent &event);
-  void cleanupInactiveSounds();
-  auto canPlaySound(int priority) -> bool;
-  void evictLowestPrioritySound();
-  void evictLowestPrioritySoundLocked();
-  auto getEffectiveVolume(AudioCategory category,
+  void audio_thread_func();
+  void process_event(const AudioEvent &event);
+  void cleanup_inactive_sounds();
+  auto can_play_sound(int priority) -> bool;
+  void evict_lowest_priority_sound();
+  void evict_lowest_priority_sound_locked();
+  auto get_effective_volume(AudioCategory category,
                           float eventVolume) const -> float;
 
   std::unordered_map<std::string, std::unique_ptr<Sound>> sounds;
@@ -118,7 +118,7 @@ private:
   std::thread audioThread;
   std::queue<AudioEvent> eventQueue;
   mutable std::mutex queueMutex;
-  std::condition_variable queueCondition;
+  std::condition_variable queue_condition;
   std::atomic<bool> isRunning;
 
   std::atomic<float> masterVolume;

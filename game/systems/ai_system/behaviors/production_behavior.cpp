@@ -126,7 +126,7 @@ void ProductionBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (Game::Core::isNeutralOwner(entity.owner_id)) {
+    if (Game::Core::is_neutral_owner(entity.owner_id)) {
       continue;
     }
 

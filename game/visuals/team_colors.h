@@ -6,7 +6,7 @@
 namespace Game::Visuals {
 inline auto team_colorForOwner(int owner_id) -> QVector3D {
 
-  if (Game::Core::isNeutralOwner(owner_id)) {
+  if (Game::Core::is_neutral_owner(owner_id)) {
     return {0.5F, 0.5F, 0.5F};
   }
 

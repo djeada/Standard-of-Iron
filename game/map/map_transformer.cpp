@@ -54,7 +54,7 @@ void MapTransformer::setPlayerTeamOverrides(
   s_player_team_overrides = overrides;
 }
 
-void MapTransformer::clearPlayerTeamOverrides() {
+void MapTransformer::clear_player_team_overrides() {
   s_player_team_overrides.clear();
 }
 

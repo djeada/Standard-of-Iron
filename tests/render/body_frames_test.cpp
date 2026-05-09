@@ -30,14 +30,14 @@ protected:
 
   HumanoidPose pose;
 
-  bool approxEqual(const QVector3D &a, const QVector3D &b,
+  bool approx_equal(const QVector3D &a, const QVector3D &b,
                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
            std::abs(a.y() - b.y()) < epsilon &&
            std::abs(a.z() - b.z()) < epsilon;
   }
 
-  bool approxEqual(float a, float b, float epsilon = 0.01F) {
+  bool approx_equal(float a, float b, float epsilon = 0.01F) {
     return std::abs(a - b) < epsilon;
   }
 };
@@ -53,15 +53,15 @@ TEST_F(BodyFramesTest, AttachmentFrameStructHasCorrectFields) {
 
 TEST_F(BodyFramesTest, HeadFrameIsAliasForAttachmentFrame) {
 
-  HeadFrame headFrame;
-  AttachmentFrame attachFrame;
+  HeadFrame head_frame;
+  AttachmentFrame attach_frame;
 
-  headFrame.origin = QVector3D(1.0F, 2.0F, 3.0F);
-  headFrame.radius = 0.5F;
+  head_frame.origin = QVector3D(1.0F, 2.0F, 3.0F);
+  head_frame.radius = 0.5F;
 
-  attachFrame = headFrame;
-  EXPECT_EQ(attachFrame.origin, QVector3D(1.0F, 2.0F, 3.0F));
-  EXPECT_EQ(attachFrame.radius, 0.5F);
+  attach_frame = head_frame;
+  EXPECT_EQ(attach_frame.origin, QVector3D(1.0F, 2.0F, 3.0F));
+  EXPECT_EQ(attach_frame.radius, 0.5F);
 }
 
 TEST_F(BodyFramesTest, BodyFramesHasAllRequiredFrames) {
@@ -91,7 +91,7 @@ TEST_F(BodyFramesTest, FrameLocalPositionComputesCorrectly) {
   QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
   QVector3D expected = QVector3D(1.5F, 2.0F, 3.0F);
-  EXPECT_TRUE(approxEqual(world, expected));
+  EXPECT_TRUE(approx_equal(world, expected));
 }
 
 TEST_F(BodyFramesTest, FrameLocalPositionWithMultipleAxes) {
@@ -106,7 +106,7 @@ TEST_F(BodyFramesTest, FrameLocalPositionWithMultipleAxes) {
   QVector3D world = HumanoidRendererBase::frame_local_position(frame, local);
 
   QVector3D expected = QVector3D(1.0F, 1.0F, 1.0F);
-  EXPECT_TRUE(approxEqual(world, expected));
+  EXPECT_TRUE(approx_equal(world, expected));
 }
 
 TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
@@ -118,40 +118,40 @@ TEST_F(BodyFramesTest, MakeFrameLocalTransformCreatesValidMatrix) {
   frame.radius = 0.5F;
 
   QMatrix4x4 parent;
-  QVector3D localOffset(0.0F, 0.0F, 0.0F);
-  float uniformScale = 1.0F;
+  QVector3D local_offset(0.0F, 0.0F, 0.0F);
+  float uniform_scale = 1.0F;
 
   QMatrix4x4 result = HumanoidRendererBase::make_frame_local_transform(
-      parent, frame, localOffset, uniformScale);
+      parent, frame, local_offset, uniform_scale);
 
   QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_TRUE(approxEqual(translation, frame.origin));
+  EXPECT_TRUE(approx_equal(translation, frame.origin));
 }
 
 TEST_F(BodyFramesTest, LegacyHeadFunctionsStillWork) {
   using HP = HumanProportions;
-  HeadFrame headFrame;
+  HeadFrame head_frame;
   float const head_center_y = HP::HEAD_CENTER_Y;
-  headFrame.origin = QVector3D(0.0F, head_center_y, 0.0F);
-  headFrame.right = QVector3D(1.0F, 0.0F, 0.0F);
-  headFrame.up = QVector3D(0.0F, 1.0F, 0.0F);
-  headFrame.forward = QVector3D(0.0F, 0.0F, 1.0F);
-  headFrame.radius = HP::HEAD_RADIUS;
+  head_frame.origin = QVector3D(0.0F, head_center_y, 0.0F);
+  head_frame.right = QVector3D(1.0F, 0.0F, 0.0F);
+  head_frame.up = QVector3D(0.0F, 1.0F, 0.0F);
+  head_frame.forward = QVector3D(0.0F, 0.0F, 1.0F);
+  head_frame.radius = HP::HEAD_RADIUS;
 
   QVector3D local(1.0F, 0.0F, 0.0F);
-  QVector3D world = HumanoidRendererBase::head_local_position(headFrame, local);
+  QVector3D world = HumanoidRendererBase::head_local_position(head_frame, local);
   QVector3D expected = QVector3D(HP::HEAD_RADIUS, head_center_y, 0.0F);
-  EXPECT_TRUE(approxEqual(world, expected));
+  EXPECT_TRUE(approx_equal(world, expected));
 
   QMatrix4x4 parent;
-  QVector3D localOffset(0.0F, 0.0F, 0.0F);
-  float uniformScale = 1.0F;
+  QVector3D local_offset(0.0F, 0.0F, 0.0F);
+  float uniform_scale = 1.0F;
 
   QMatrix4x4 result = HumanoidRendererBase::make_head_local_transform(
-      parent, headFrame, localOffset, uniformScale);
+      parent, head_frame, local_offset, uniform_scale);
 
   QVector3D translation = result.map(QVector3D(0.0F, 0.0F, 0.0F));
-  EXPECT_TRUE(approxEqual(translation, headFrame.origin));
+  EXPECT_TRUE(approx_equal(translation, head_frame.origin));
 }
 
 TEST_F(BodyFramesTest, PoseHasBothHeadFrameAndBodyFrames) {

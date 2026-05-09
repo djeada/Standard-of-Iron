@@ -81,7 +81,7 @@ void render_combat_dust(Renderer *renderer, ResourceManager *,
     fog_snapshot = fog_of_war.snapshot();
   }
   auto is_fog_visible = [&fog_snapshot](float world_x, float world_z) -> bool {
-    return fog_snapshot.isVisibleWorld(world_x, world_z);
+    return fog_snapshot.is_visible_world(world_x, world_z);
   };
 
   auto units = world->get_entities_with<Engine::Core::AttackComponent>();

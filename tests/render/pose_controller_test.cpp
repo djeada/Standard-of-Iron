@@ -43,7 +43,7 @@ protected:
   HumanoidPose pose;
   HumanoidAnimationContext anim_ctx;
 
-  bool approxEqual(const QVector3D &a, const QVector3D &b,
+  bool approx_equal(const QVector3D &a, const QVector3D &b,
                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
            std::abs(a.y() - b.y()) < epsilon &&
@@ -66,8 +66,8 @@ TEST_F(HumanoidPoseControllerTest, StandIdleDoesNotModifyPose) {
 
   controller.stand_idle();
 
-  EXPECT_TRUE(approxEqual(pose.pelvis_pos, original_pelvis));
-  EXPECT_TRUE(approxEqual(pose.shoulder_l, original_shoulder_l));
+  EXPECT_TRUE(approx_equal(pose.pelvis_pos, original_pelvis));
+  EXPECT_TRUE(approx_equal(pose.shoulder_l, original_shoulder_l));
 }
 
 TEST_F(HumanoidPoseControllerTest, KneelLowersPelvis) {
@@ -125,7 +125,7 @@ TEST_F(HumanoidPoseControllerTest, LeanZeroAmountNoChange) {
 
   controller.lean(lean_direction, 0.0F);
 
-  EXPECT_TRUE(approxEqual(pose.shoulder_l, original_shoulder_l));
+  EXPECT_TRUE(approx_equal(pose.shoulder_l, original_shoulder_l));
 }
 
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
@@ -135,7 +135,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtSetsHandPosition) {
 
   controller.place_hand_at(false, target_position);
 
-  EXPECT_TRUE(approxEqual(pose.hand_r, target_position));
+  EXPECT_TRUE(approx_equal(pose.hand_r, target_position));
 }
 
 TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
@@ -146,7 +146,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtComputesElbow) {
 
   controller.place_hand_at(false, target_position);
 
-  EXPECT_FALSE(approxEqual(pose.elbow_r, original_elbow));
+  EXPECT_FALSE(approx_equal(pose.elbow_r, original_elbow));
 
   float const shoulder_to_elbow_dist =
       (pose.elbow_r - pose.shoulder_r).length();
@@ -210,7 +210,7 @@ TEST_F(HumanoidPoseControllerTest, PlaceHandAtLeftHandWorks) {
 
   controller.place_hand_at(true, target_position);
 
-  EXPECT_TRUE(approxEqual(pose.hand_l, target_position));
+  EXPECT_TRUE(approx_equal(pose.hand_l, target_position));
 
   EXPECT_GT((pose.elbow_l - pose.shoulder_l).length(), 0.0F);
 }
@@ -345,7 +345,7 @@ TEST_F(HumanoidPoseControllerTest, LookAtWithSamePositionDoesNothing) {
 
   controller.look_at(pose.head_pos);
 
-  EXPECT_TRUE(approxEqual(pose.head_pos, original_head_pos));
+  EXPECT_TRUE(approx_equal(pose.head_pos, original_head_pos));
 }
 
 TEST_F(HumanoidPoseControllerTest, GetShoulderYReturnsCorrectValues) {
@@ -590,7 +590,7 @@ TEST_F(HumanoidPoseControllerTest, SpearDirectionMatchesExitHoldDepth) {
   exit_inputs.hold_exit_progress = 0.25F;
   QVector3D const exit_dir = compute_spear_direction(exit_inputs);
 
-  EXPECT_TRUE(approxEqual(entry_dir, exit_dir, 0.001F));
+  EXPECT_TRUE(approx_equal(entry_dir, exit_dir, 0.001F));
 }
 
 TEST_F(HumanoidPoseControllerTest,
