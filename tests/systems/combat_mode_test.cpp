@@ -9,6 +9,7 @@
 #include "systems/combat_system/combat_types.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
+#include "systems/cleanup_system.h"
 #include "systems/command_service.h"
 #include "systems/owner_registry.h"
 #include "units/troop_config.h"
@@ -844,4 +845,78 @@ TEST_F(CombatModeTest, HitPauseUsesPerUnitCombatAnimationConstant) {
 
   Game::Systems::Combat::process_combat_state(world.get(), 0.1F);
   EXPECT_GT(combat_state->state_time, 0.25F);
+}
+
+TEST_F(CombatModeTest, LethalDamageCreatesDeathMotionBeforeCleanup) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
+  auto *attacker_attack = attacker->add_component<AttackComponent>();
+  attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
+
+  auto *target = world->create_entity();
+  target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  target->add_component<RenderableComponent>("mesh", "tex");
+  auto *movement = target->add_component<MovementComponent>();
+  movement->has_target = true;
+  movement->vx = 1.0F;
+  movement->vz = 1.0F;
+  auto *target_unit = target->add_component<UnitComponent>(30, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 120, attacker->get_id());
+
+  EXPECT_EQ(target_unit->health, 0);
+  EXPECT_TRUE(target->has_component<DeathMotionComponent>());
+  EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
+  EXPECT_FALSE(movement->has_target);
+}
+
+TEST_F(CombatModeTest, ElephantChargeDeathsUseContextualReactionProfiles) {
+  auto *elephant = world->create_entity();
+  elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *elephant_unit = elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  elephant_unit->owner_id = 1;
+  elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
+  auto *elephant_comp = elephant->add_component<ElephantComponent>();
+  elephant_comp->charge_state = ElephantComponent::ChargeState::Charging;
+
+  auto *target = world->create_entity();
+  target->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
+  auto *target_unit = target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 80, elephant->get_id());
+
+  auto *death = target->get_component<DeathMotionComponent>();
+  ASSERT_NE(death, nullptr);
+  EXPECT_NE(death->reaction, DeathReactionType::Collapse);
+  EXPECT_GE(death->duration, 1.1F);
+}
+
+TEST_F(CombatModeTest, CleanupSystemFinalizesDeathMotionThenRemovesEntity) {
+  auto *target = world->create_entity();
+  auto target_id = target->get_id();
+  auto *transform = target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  target->add_component<RenderableComponent>("mesh", "tex");
+  target->add_component<UnitComponent>(0, 100, 1.0F, 12.0F);
+  auto *death = target->add_component<DeathMotionComponent>();
+  death->reaction = DeathReactionType::Thrown;
+  death->duration = 0.1F;
+  death->impulse_x = 1.0F;
+  death->impulse_z = 0.0F;
+  death->angular_velocity = 90.0F;
+
+  CleanupSystem cleanup;
+  cleanup.update(world.get(), 0.02F);
+  EXPECT_GT(transform->position.x, 0.0F);
+  EXPECT_NE(world->get_entity(target_id), nullptr);
+
+  for (int i = 0; i < 8; ++i) {
+    cleanup.update(world.get(), 0.02F);
+  }
+  EXPECT_EQ(world->get_entity(target_id), nullptr);
 }

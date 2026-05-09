@@ -1045,12 +1045,15 @@ void Renderer::render_world(Engine::Core::World *world) {
     if (entity == nullptr) {
       continue;
     }
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    bool const has_death_motion =
+        entity->get_component<Engine::Core::DeathMotionComponent>() != nullptr;
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
+        !has_death_motion) {
       continue;
     }
 
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
+    if ((unit_comp != nullptr) && unit_comp->health <= 0 && !has_death_motion) {
       continue;
     }
 

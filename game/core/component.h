@@ -334,6 +334,27 @@ public:
   PendingRemovalComponent() = default;
 };
 
+enum class DeathReactionType : std::uint8_t {
+  Collapse,
+  Knockback,
+  BackwardFall,
+  SpinFall,
+  Thrown,
+  Crushed
+};
+
+class DeathMotionComponent : public Component {
+public:
+  DeathMotionComponent() = default;
+
+  DeathReactionType reaction{DeathReactionType::Collapse};
+  float elapsed_time{0.0F};
+  float duration{1.4F};
+  float impulse_x{0.0F};
+  float impulse_z{0.0F};
+  float angular_velocity{0.0F};
+};
+
 class HoldModeComponent : public Component {
 public:
   HoldModeComponent()
