@@ -40,6 +40,10 @@ public:
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return m_firecamp_state.instances.size();
   }
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+    return m_firecamp_state.last_sync_stats;
+  }
 
 private:
   void generate_firecamp_instances();

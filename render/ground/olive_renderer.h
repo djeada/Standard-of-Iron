@@ -32,6 +32,10 @@ public:
   [[nodiscard]] auto instance_count() const -> std::size_t {
     return m_olive_state.instances.size();
   }
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats {
+    return m_olive_state.last_sync_stats;
+  }
 
 private:
   void generate_olive_instances();

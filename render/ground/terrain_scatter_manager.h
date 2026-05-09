@@ -39,6 +39,8 @@ public:
   [[nodiscard]] auto olive() const -> OliveRenderer *;
   [[nodiscard]] auto firecamp() const -> FireCampRenderer *;
   [[nodiscard]] auto chunks() const -> std::vector<ScatterChunk>;
+  [[nodiscard]] auto
+  last_sync_stats() const -> Render::Ground::Scatter::SyncStats;
   [[nodiscard]] auto passes() const -> const std::vector<IRenderPass *> &;
 
 private:

@@ -2,6 +2,7 @@
 
 #include "../../game/map/terrain.h"
 #include "../gl/render_constants.h"
+#include <QVector3D>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
@@ -99,6 +100,52 @@ inline auto smoothstep(float edge0, float edge1, float x) -> float {
   float const width = std::max(1e-6F, edge1 - edge0);
   float const t = std::clamp((x - edge0) / width, 0.0F, 1.0F);
   return t * t * (3.0F - 2.0F * t);
+}
+
+inline auto color_luminance(QVector3D const &color) -> float {
+  return color.x() * 0.2126F + color.y() * 0.7152F + color.z() * 0.0722F;
+}
+
+inline auto clamp_color(QVector3D const &color) -> QVector3D {
+  return {std::clamp(color.x(), 0.0F, 1.0F), std::clamp(color.y(), 0.0F, 1.0F),
+          std::clamp(color.z(), 0.0F, 1.0F)};
+}
+
+inline auto contrast_grass_blade_color(QVector3D const &blade_color,
+                                       QVector3D const &soil_color,
+                                       Game::Map::GroundType ground_type,
+                                       float dryness) -> QVector3D {
+  QVector3D const blade = clamp_color(blade_color);
+  if (ground_type != Game::Map::GroundType::GrassDry) {
+    return blade;
+  }
+
+  float const soil_luma = color_luminance(soil_color);
+  float const blade_luma = color_luminance(blade);
+  float const luma_gap = std::abs(soil_luma - blade_luma);
+  float const close_to_soil = 1.0F - std::clamp(luma_gap / 0.20F, 0.0F, 1.0F);
+  float const dry_factor = std::clamp(dryness, 0.0F, 1.0F);
+  float const bright_soil = smoothstep(0.38F, 0.58F, soil_luma);
+  float const adjustment = std::clamp(
+      0.12F + dry_factor * 0.36F + close_to_soil * 0.38F + bright_soil * 0.14F,
+      0.0F, 0.78F);
+
+  QVector3D const olive_shadow{0.18F, 0.26F, 0.09F};
+  QVector3D const dry_olive{0.30F, 0.34F, 0.13F};
+  QVector3D const target = olive_shadow * (0.55F + dry_factor * 0.25F) +
+                           dry_olive * (0.45F - dry_factor * 0.25F);
+
+  QVector3D adjusted = blade * (1.0F - adjustment) + target * adjustment;
+  float const adjusted_luma = color_luminance(adjusted);
+  float const min_gap = 0.12F + bright_soil * 0.04F;
+  if (soil_luma > 0.38F && soil_luma - adjusted_luma < min_gap) {
+    float const extra = std::clamp(
+        (min_gap - (soil_luma - adjusted_luma)) / min_gap, 0.0F, 1.0F);
+    adjusted =
+        adjusted * (1.0F - extra * 0.80F) + olive_shadow * (extra * 0.80F);
+  }
+
+  return clamp_color(adjusted);
 }
 
 inline auto compute_curvature_shading_response(

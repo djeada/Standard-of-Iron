@@ -317,6 +317,8 @@ public:
     m_items_high_water = std::max(m_items_high_water, m_items.size());
     m_prepared_high_water =
         std::max(m_prepared_high_water, m_prepared_batches.size());
+    m_submission_bucket_high_water =
+        std::max(m_submission_bucket_high_water, m_submission_bucket_spans.size());
     m_items.clear();
     m_sort_indices.clear();
     m_sort_keys.clear();
@@ -335,6 +337,9 @@ public:
     if (m_prepared_high_water > m_prepared_batches.capacity()) {
       m_prepared_batches.reserve(m_prepared_high_water);
     }
+    if (m_submission_bucket_high_water > m_submission_bucket_spans.capacity()) {
+      m_submission_bucket_spans.reserve(m_submission_bucket_high_water);
+    }
   }
 
   [[nodiscard]] auto items_high_water() const noexcept -> std::size_t {
@@ -342,6 +347,14 @@ public:
   }
   [[nodiscard]] auto prepared_high_water() const noexcept -> std::size_t {
     return m_prepared_high_water;
+  }
+  [[nodiscard]] auto
+  submission_bucket_high_water() const noexcept -> std::size_t {
+    return m_submission_bucket_high_water;
+  }
+  [[nodiscard]] auto submission_bucket_capacity() const noexcept
+      -> std::size_t {
+    return m_submission_bucket_spans.capacity();
   }
 
   template <typename CmdT, typename = std::enable_if_t<
@@ -976,6 +989,7 @@ private:
   bool m_submission_bucket_ordered = true;
   std::size_t m_items_high_water = 0;
   std::size_t m_prepared_high_water = 0;
+  std::size_t m_submission_bucket_high_water = 0;
 };
 
 } // namespace Render::GL

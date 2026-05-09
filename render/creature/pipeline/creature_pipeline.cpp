@@ -128,6 +128,48 @@ void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache &cache,
   }
 }
 
+auto make_snapshot_key(const CreatureRenderAssetHandle &handle,
+                       ArchetypeId archetype, VariantId variant,
+                       AnimationStateId state, std::uint16_t clip_id,
+                       std::uint8_t clip_variant,
+                       std::uint32_t frame_in_clip) noexcept
+    -> Render::GL::SnapshotMeshCache::Key {
+  Render::GL::SnapshotMeshCache::Key key{};
+  key.asset_id =
+      handle.asset != nullptr ? handle.asset->id : kInvalidCreatureAsset;
+  key.archetype = archetype;
+  key.attachment_set_id = handle.attachment_set_id;
+  key.variant = variant;
+  key.state = state;
+  key.clip_id = clip_id;
+  key.clip_variant = clip_variant;
+  key.frame_in_clip = frame_in_clip;
+  return key;
+}
+
+void copy_role_colors(Render::GL::RiggedCreatureCmd &cmd,
+                      std::span<const QVector3D> role_colors) noexcept {
+  const auto count =
+      std::min<std::size_t>(role_colors.size(), cmd.role_colors.size());
+  cmd.role_color_count = static_cast<std::uint32_t>(count);
+  std::copy_n(role_colors.data(), count, cmd.role_colors.data());
+}
+
+auto make_rigged_cmd(
+    Render::GL::RiggedMesh *mesh, const QMatrix4x4 &world_from_unit,
+    const QMatrix4x4 *bone_palette, std::uint32_t bone_count,
+    std::span<const QVector3D> role_colors,
+    const QVector3D &base_color) -> Render::GL::RiggedCreatureCmd {
+  Render::GL::RiggedCreatureCmd cmd{};
+  cmd.mesh = mesh;
+  cmd.world = world_from_unit;
+  cmd.bone_count = bone_count;
+  cmd.bone_palette = bone_palette;
+  copy_role_colors(cmd, role_colors);
+  cmd.color = base_color;
+  return cmd;
+}
+
 void submit_rigged_creature(
     const CreatureRenderAssetHandle &handle, CreatureLOD lod,
     ArchetypeId archetype, VariantId variant, AnimationStateId state,
@@ -175,25 +217,13 @@ void submit_rigged_creature(
       static_cast<std::size_t>(global_frame) * entry->skinned_bone_count;
   QMatrix4x4 const &draw_world = world_from_unit;
 
-  Render::GL::RiggedCreatureCmd cmd{};
-  cmd.mesh = entry->mesh.get();
-  cmd.world = draw_world;
-  cmd.bone_count = entry->skinned_bone_count;
-  cmd.bone_palette = frame_palette;
+  auto cmd =
+      make_rigged_cmd(entry->mesh.get(), draw_world, frame_palette,
+                      entry->skinned_bone_count, role_colors, base_color);
   cmd.palette_ubo = entry->skin_palette_ubo;
   cmd.palette_offset =
       static_cast<std::uint32_t>(static_cast<std::size_t>(global_frame) *
                                  entry->skin_palette_frame_stride_bytes);
-  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
-  for (std::size_t i = 0; i < role_colors.size(); ++i) {
-    cmd.role_colors[i] = role_colors[i];
-  }
-  cmd.color = base_color;
-  cmd.alpha = 1.0F;
-  cmd.texture = nullptr;
-  cmd.material_id = 0;
-  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
-
   out.rigged(cmd);
 }
 
@@ -218,15 +248,8 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  Render::GL::SnapshotMeshCache::Key key{};
-  key.asset_id = asset->id;
-  key.archetype = archetype;
-  key.attachment_set_id = handle.attachment_set_id;
-  key.variant = variant;
-  key.state = state;
-  key.clip_id = clip_id;
-  key.clip_variant = clip_variant;
-  key.frame_in_clip = frame_in_clip;
+  const auto key = make_snapshot_key(handle, archetype, variant, state, clip_id,
+                                     clip_variant, frame_in_clip);
 
   if (!handle.has_static_attachments &&
       asset->snapshot_mesh_species_id != 0xFFFFFFFFu &&
@@ -242,22 +265,12 @@ auto submit_snapshot_creature(
             key, *mesh_blob, mesh_global_frame);
         if (snap != nullptr && snap->mesh != nullptr &&
             snap->mesh->index_count() != 0U) {
-          Render::GL::RiggedCreatureCmd cmd{};
-          cmd.mesh = snap->mesh.get();
-          cmd.world = world_from_unit;
-          cmd.bone_count = 1U;
-          cmd.bone_palette = Render::GL::SnapshotMeshCache::identity_palette();
+          auto cmd =
+              make_rigged_cmd(snap->mesh.get(), world_from_unit,
+                              Render::GL::SnapshotMeshCache::identity_palette(),
+                              1U, role_colors, base_color);
           cmd.palette_ubo = 0U;
           cmd.palette_offset = 0U;
-          cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
-          for (std::size_t i = 0; i < role_colors.size(); ++i) {
-            cmd.role_colors[i] = role_colors[i];
-          }
-          cmd.color = base_color;
-          cmd.alpha = 1.0F;
-          cmd.texture = nullptr;
-          cmd.material_id = 0;
-          cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
 
           out.rigged(cmd);
           return true;
@@ -304,22 +317,11 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  Render::GL::RiggedCreatureCmd cmd{};
-  cmd.mesh = snap->mesh.get();
-  cmd.world = world_from_unit;
-  cmd.bone_count = 1U;
-  cmd.bone_palette = Render::GL::SnapshotMeshCache::identity_palette();
+  auto cmd = make_rigged_cmd(snap->mesh.get(), world_from_unit,
+                             Render::GL::SnapshotMeshCache::identity_palette(),
+                             1U, role_colors, base_color);
   cmd.palette_ubo = 0U;
   cmd.palette_offset = 0U;
-  cmd.role_color_count = static_cast<std::uint32_t>(role_colors.size());
-  for (std::size_t i = 0; i < role_colors.size(); ++i) {
-    cmd.role_colors[i] = role_colors[i];
-  }
-  cmd.color = base_color;
-  cmd.alpha = 1.0F;
-  cmd.texture = nullptr;
-  cmd.material_id = 0;
-  cmd.variation_scale = QVector3D(1.0F, 1.0F, 1.0F);
 
   out.rigged(cmd);
   return true;
@@ -445,6 +447,8 @@ auto CreaturePipeline::submit_requests(
   if (renderer != nullptr) {
     renderer->rigged_mesh_cache().reset_frame_stats();
     renderer->snapshot_mesh_cache().reset_frame_stats();
+    renderer->rigged_mesh_cache().reserve_for_frame(requests.size());
+    renderer->snapshot_mesh_cache().reserve_for_frame(requests.size());
   }
 
   auto emit_request = [&](const Render::Creature::CreatureRenderRequest &req) {

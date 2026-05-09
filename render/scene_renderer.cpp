@@ -112,9 +112,8 @@ auto prewarm_entity_id_for_variant(
                                               4U +
                                           static_cast<std::size_t>(lod)) *
                                              k_template_variant_count +
-                                         static_cast<std::size_t>(variant));
+                                          static_cast<std::size_t>(variant));
 }
-
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
