@@ -35,6 +35,7 @@ namespace Render::Creature::Pipeline {
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float;
 
 [[nodiscard]] auto humanoid_clip_variant_for_anim(
+    Render::Creature::ArchetypeId archetype_id,
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t;
 
 [[nodiscard]] auto humanoid_bpat_playback_for_anim(

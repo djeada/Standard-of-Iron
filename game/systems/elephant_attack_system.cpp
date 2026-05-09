@@ -1,6 +1,7 @@
 #include "elephant_attack_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
+#include "combat_system/damage_processor.h"
 #include "../units/spawn_type.h"
 #include <algorithm>
 #include <array>
@@ -261,10 +262,8 @@ void ElephantAttackSystem::process_trample_damage(
 
     if (dist <= elephant_comp->trample_radius) {
       int const old_health = other_unit->health;
-      other_unit->health -= damage;
-      if (other_unit->health < 0) {
-        other_unit->health = 0;
-      }
+      Game::Systems::Combat::deal_damage(world, other_entity, damage,
+                                         elephant->get_id());
 
       if (old_health > 0 && other_unit->health < old_health) {
         FootOffset const stomp_pos =

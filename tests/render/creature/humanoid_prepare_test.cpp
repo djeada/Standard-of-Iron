@@ -729,6 +729,49 @@ TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
             registry.bpat_clip(roman_id, AnimationStateId::Hold));
 }
 
+TEST(HumanoidPrepare, RiderDeathPlaybackUsesMountedDeathClips) {
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  Render::GL::HumanoidAnimationContext dying_anim{};
+  dying_anim.inputs.is_dying = true;
+  dying_anim.inputs.death_progress = 0.5F;
+  auto const dying = humanoid_bpat_playback_for_anim(
+      Render::Creature::ArchetypeRegistry::kRiderBase, dying_anim);
+  ASSERT_TRUE(dying.has_value());
+  EXPECT_EQ(dying->clip_id, Render::Creature::kHumanoidDieMountedClip);
+
+  Render::GL::HumanoidAnimationContext dead_anim{};
+  dead_anim.inputs.is_dead = true;
+  dead_anim.inputs.death_progress = 1.0F;
+  auto const dead = humanoid_bpat_playback_for_anim(
+      Render::Creature::ArchetypeRegistry::kRiderBase, dead_anim);
+  ASSERT_TRUE(dead.has_value());
+  EXPECT_EQ(dead->clip_id, Render::Creature::kHumanoidDeadMountedClip);
+}
+
+TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const archetype_id = Render::Creature::ArchetypeRegistry::kHumanoidBase;
+
+  Render::GL::HumanoidAnimationContext attack_anim{};
+  attack_anim.inputs.is_attacking = true;
+  attack_anim.inputs.is_melee = true;
+  attack_anim.inputs.attack_family = Engine::Core::CombatAttackFamily::Spear;
+  attack_anim.inputs.attack_variant = 1U;
+  attack_anim.motion_state = Render::GL::HumanoidMotionState::Attacking;
+  attack_anim.gait.state = Render::GL::HumanoidMotionState::Attacking;
+  attack_anim.attack_phase = 0.35F;
+
+  auto const attack = humanoid_bpat_playback_for_anim(archetype_id, attack_anim);
+  ASSERT_TRUE(attack.has_value());
+  EXPECT_EQ(attack->clip_id,
+            registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackSpear,
+                                       1U));
+}
+
 TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
   Render::GL::EntityRendererRegistry registry;
   Render::GL::register_built_in_entity_renderers(registry);
@@ -959,6 +1002,57 @@ TEST(HumanoidPrepare, RenderIndividualsOverrideLimitsPreparedSoldiers) {
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
   EXPECT_EQ(prep.bodies.requests().size(), 3u);
+}
+
+TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
+  ScopedFlatTerrain terrain(0.0F);
+
+  Render::GL::HumanoidRendererBase owner;
+  Render::GL::DrawContext ctx{};
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(60, 100, 0.0F, 0.0F);
+  ASSERT_NE(unit, nullptr);
+  unit->spawn_type = Game::Units::SpawnType::Archer;
+  unit->nation_id = Game::Systems::NationID::RomanRepublic;
+  unit->render_individuals_per_unit_override = 3;
+
+  auto *transform = entity.add_component<Engine::Core::TransformComponent>();
+  ASSERT_NE(transform, nullptr);
+  transform->position.x = 0.0F;
+  transform->position.y = 0.0F;
+  transform->position.z = 0.0F;
+  transform->scale.x = 1.0F;
+  transform->scale.y = 1.0F;
+  transform->scale.z = 1.0F;
+
+  auto *casualties =
+      entity.add_component<Engine::Core::SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  casualties->entries.push_back({
+      .slot_index = 2U,
+      .profile = Engine::Core::DeathSequenceProfile::Infantry,
+      .state = Engine::Core::DeathSequenceState::Dying,
+      .state_time = 0.2F,
+      .state_duration = 1.0F,
+      .dead_hold_duration = 0.8F,
+      .sequence_variant = 0U,
+  });
+
+  ctx.entity = &entity;
+
+  Render::GL::AnimationInputs anim{};
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
+
+  ASSERT_EQ(prep.bodies.requests().size(), 3u);
+  EXPECT_EQ(std::count_if(prep.bodies.requests().begin(),
+                          prep.bodies.requests().end(), [](const auto &req) {
+                            return req.state == Render::Creature::AnimationStateId::Die;
+                          }),
+            1);
 }
 
 TEST(HumanoidPrepare, BowReadySubmittedVisibleGeometryTouchesTerrain) {

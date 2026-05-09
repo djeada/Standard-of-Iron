@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../../game/core/component.h"
 #include "../../palette.h"
 #include <QVector3D>
 #include <algorithm>
@@ -29,7 +30,11 @@ struct AnimationInputs {
   float hold_entry_progress;
   CombatAnimPhase combat_phase{CombatAnimPhase::Idle};
   float combat_phase_progress{0.0F};
+  Engine::Core::CombatAttackFamily attack_family{
+      Engine::Core::CombatAttackFamily::None};
   std::uint8_t attack_variant{0};
+  float attack_offset{0.0F};
+  bool has_attack_offset{false};
   bool is_hit_reacting{false};
   float hit_reaction_intensity{0.0F};
   bool is_healing{false};
@@ -37,6 +42,10 @@ struct AnimationInputs {
   float healing_target_dz{0.0F};
   bool is_constructing{false};
   float construction_progress{0.0F};
+  bool is_dying{false};
+  bool is_dead{false};
+  float death_progress{0.0F};
+  std::uint8_t death_variant{0};
 };
 
 inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {
