@@ -77,8 +77,7 @@ Problem:
 
 Work:
 - Audit backend scratch buffers for avoidable per-frame allocation and copying.
-- Reuse frame-local backend buffers where possible.
-- Add lightweight counters for draw queue command count, reallocations, and copied bytes.
+- Reuse frame-local backend buffers where possible (started with rigged instancing submitting command references instead of command-struct copies).
 
 Acceptance:
 - Stable frames avoid backend scratch allocations and avoidable command-data copies.
@@ -106,4 +105,3 @@ Work:
 
 Acceptance:
 - Warmed creature-heavy frames avoid runtime mesh bake/load work, minimize allocation/copy samples, and reduce `submit_snapshot_creature()` cost in captures.
-

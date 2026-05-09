@@ -464,14 +464,30 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (cmds == nullptr || count == 0) {
     return false;
   }
+  thread_local std::vector<const RiggedCreatureCmd *> cmd_refs;
+  cmd_refs.clear();
+  cmd_refs.reserve(count);
+  for (std::size_t k = 0; k < count; ++k) {
+    cmd_refs.push_back(&cmds[k]);
+  }
+  return draw_instanced(cmd_refs.data(), count, view_proj);
+}
+
+auto RiggedCharacterPipeline::draw_instanced(
+    const RiggedCreatureCmd *const *cmds, std::size_t count,
+    const QMatrix4x4 &view_proj) -> bool {
+  if (cmds == nullptr || count == 0) {
+    return false;
+  }
   if (count > m_max_instances_per_batch || m_instanced_shader == nullptr) {
     return false;
   }
-  if (cmds[0].mesh == nullptr || cmds[0].texture != nullptr) {
+  if (cmds[0] == nullptr || cmds[0]->mesh == nullptr ||
+      cmds[0]->texture != nullptr) {
     return false;
   }
   for (std::size_t k = 1; k < count; ++k) {
-    if (!same_role_palette(cmds[0], cmds[k])) {
+    if (cmds[k] == nullptr || !same_role_palette(*cmds[0], *cmds[k])) {
       return false;
     }
   }
@@ -485,7 +501,7 @@ auto RiggedCharacterPipeline::draw_instanced(
 
   m_instance_scratch.resize(count);
   for (std::size_t k = 0; k < count; ++k) {
-    const auto &c = cmds[k];
+    const auto &c = *cmds[k];
     InstanceAttrib &ia = m_instance_scratch[k];
     const float *src = c.world.constData();
     std::memcpy(ia.world, src, sizeof(float) * 16);
@@ -511,7 +527,7 @@ auto RiggedCharacterPipeline::draw_instanced(
   fn->glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(bytes),
                       m_instance_scratch.data());
 
-  GLuint const vao = ensure_instanced_vao(*cmds[0].mesh);
+  GLuint const vao = ensure_instanced_vao(*cmds[0]->mesh);
   if (vao == 0) {
     return false;
   }
@@ -521,7 +537,7 @@ auto RiggedCharacterPipeline::draw_instanced(
     m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
   }
   set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
-                            m_instanced_role_color_count, cmds[0]);
+                            m_instanced_role_color_count, *cmds[0]);
 
   std::size_t const upload_palette_bytes =
       count * BonePaletteArena::kPaletteBytes;
@@ -541,7 +557,7 @@ auto RiggedCharacterPipeline::draw_instanced(
   std::size_t const floats_per_palette = BonePaletteArena::kPaletteFloats;
   m_palette_scratch.resize(count * floats_per_palette);
   for (std::size_t k = 0; k < count; ++k) {
-    const auto &c = cmds[k];
+    const auto &c = *cmds[k];
     float *dst = m_palette_scratch.data() + k * floats_per_palette;
     BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
   }
@@ -558,7 +574,7 @@ auto RiggedCharacterPipeline::draw_instanced(
                         static_cast<GLsizeiptr>(bound_palette_bytes));
 
   fn->glBindVertexArray(vao);
-  GLsizei const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());
+  GLsizei const idx_count = static_cast<GLsizei>(cmds[0]->mesh->index_count());
   fn->glDrawElementsInstanced(GL_TRIANGLES, idx_count, GL_UNSIGNED_INT, nullptr,
                               static_cast<GLsizei>(count));
   fn->glBindVertexArray(0);

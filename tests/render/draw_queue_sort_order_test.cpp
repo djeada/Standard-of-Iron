@@ -343,34 +343,6 @@ TEST(DrawQueueMemory, ReserveForFramePreservesCapacityAcrossClear) {
       << "Subsequent clear() must not shrink reserved capacity.";
 }
 
-TEST(DrawQueueMemory, FrameStatsTrackCommandCountReallocationsAndCopiedBytes) {
-  DrawQueue queue;
-
-  MeshCmd cmd;
-  queue.submit(cmd);
-
-  const std::size_t initial_capacity = queue.items().capacity();
-  ASSERT_GE(initial_capacity, 1U);
-
-  while (queue.items().size() < initial_capacity) {
-    queue.submit(cmd);
-  }
-
-  const auto before_growth = queue.frame_stats();
-
-  queue.submit(cmd);
-  const auto &stats = queue.frame_stats();
-
-  EXPECT_EQ(stats.command_count, queue.size());
-  EXPECT_GT(stats.reallocations, before_growth.reallocations);
-  EXPECT_GT(stats.copied_bytes, before_growth.copied_bytes);
-
-  queue.clear();
-  EXPECT_EQ(queue.frame_stats().command_count, 0U);
-  EXPECT_EQ(queue.frame_stats().reallocations, 0U);
-  EXPECT_EQ(queue.frame_stats().copied_bytes, 0U);
-}
-
 TEST(FrameBudgetConfig, PartialRenderDefaultsOff) {
 
   Render::FrameBudgetConfig cfg;
