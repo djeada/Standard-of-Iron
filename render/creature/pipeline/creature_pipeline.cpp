@@ -119,14 +119,13 @@ void submit_rigged_creature(
     std::uint16_t variant_bucket, const QVector3D &base_color,
     const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
-    Render::GL::ISubmitter &out,
+    Render::GL::ISubmitter &out, Render::GL::Renderer *renderer,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments = {}) {
   const CreatureAsset *asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr ||
       asset->spec == nullptr || handle.bind_palette.empty()) {
     return;
   }
-  auto *renderer = resolve_renderer(out);
   auto &cache = (renderer != nullptr)
                     ? renderer->rigged_mesh_cache()
                     : ([]() -> Render::GL::RiggedMeshCache & {
@@ -191,6 +190,7 @@ auto submit_snapshot_creature(
     const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
     std::uint32_t frame_in_clip, Render::GL::ISubmitter &out,
+    Render::GL::Renderer *renderer,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments = {},
     bool allow_bake_fallback = true) -> bool {
   const CreatureAsset *asset = handle.asset;
@@ -199,7 +199,6 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  auto *renderer = resolve_renderer(out);
   if (renderer == nullptr) {
     return false;
   }
@@ -474,7 +473,7 @@ auto CreaturePipeline::submit_requests(
           playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
-          attachments, !prebaked_lowpoly_required);
+          renderer, attachments, !prebaked_lowpoly_required);
       if (emitted) {
         return;
       }
@@ -492,7 +491,7 @@ auto CreaturePipeline::submit_requests(
                            playback.frame_in_clip, req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color, draw_world, *playback.blob,
-                           playback.global_frame, out, attachments);
+                           playback.global_frame, out, renderer, attachments);
   };
 
   for (const auto &req : requests) {

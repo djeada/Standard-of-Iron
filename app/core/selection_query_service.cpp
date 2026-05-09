@@ -6,6 +6,20 @@
 #include "game/units/spawn_type.h"
 #include "game/units/troop_config.h"
 
+namespace {
+
+auto classify_toggle_state(int eligible_count, int active_count) -> QString {
+  if (eligible_count <= 0 || active_count <= 0) {
+    return QStringLiteral("none");
+  }
+  if (active_count >= eligible_count) {
+    return QStringLiteral("all");
+  }
+  return QStringLiteral("mixed");
+}
+
+} // namespace
+
 SelectionQueryService::SelectionQueryService(Engine::Core::World *world,
                                              QObject *parent)
     : QObject(parent), m_world(world) {}
@@ -73,6 +87,81 @@ auto SelectionQueryService::get_selected_units_command_mode() const -> QString {
   }
 
   return "normal";
+}
+
+auto SelectionQueryService::get_selected_units_toggle_state(
+    const QString &mode) const -> QString {
+  if (!m_world) {
+    return QStringLiteral("none");
+  }
+  auto *selection_system =
+      m_world->get_system<Game::Systems::SelectionSystem>();
+  if (!selection_system) {
+    return QStringLiteral("none");
+  }
+
+  const auto &sel = selection_system->get_selected_units();
+  if (sel.empty()) {
+    return QStringLiteral("none");
+  }
+
+  int eligible_count = 0;
+  int active_count = 0;
+
+  for (auto id : sel) {
+    auto *entity = m_world->get_entity(id);
+    if (entity == nullptr) {
+      continue;
+    }
+
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr) {
+      continue;
+    }
+
+    if (mode == QStringLiteral("hold")) {
+      if (!Game::Units::can_use_hold_mode(unit->spawn_type)) {
+        continue;
+      }
+      ++eligible_count;
+      auto *hold = entity->get_component<Engine::Core::HoldModeComponent>();
+      active_count += ((hold != nullptr) && hold->active) ? 1 : 0;
+      continue;
+    }
+
+    if (mode == QStringLiteral("formation")) {
+      if (unit->spawn_type == Game::Units::SpawnType::Barracks) {
+        continue;
+      }
+      ++eligible_count;
+      auto *formation =
+          entity->get_component<Engine::Core::FormationModeComponent>();
+      active_count += ((formation != nullptr) && formation->active) ? 1 : 0;
+      continue;
+    }
+
+    if (mode == QStringLiteral("guard")) {
+      if (!Game::Units::can_use_guard_mode(unit->spawn_type)) {
+        continue;
+      }
+      ++eligible_count;
+      auto *guard = entity->get_component<Engine::Core::GuardModeComponent>();
+      active_count += ((guard != nullptr) && guard->active) ? 1 : 0;
+      continue;
+    }
+
+    if (mode == QStringLiteral("run")) {
+      if (!Game::Units::can_use_run_mode(unit->spawn_type)) {
+        continue;
+      }
+      ++eligible_count;
+      auto *stamina = entity->get_component<Engine::Core::StaminaComponent>();
+      active_count += ((stamina != nullptr) && stamina->run_requested) ? 1 : 0;
+      continue;
+    }
+  }
+
+  return classify_toggle_state(eligible_count, active_count);
 }
 
 auto SelectionQueryService::get_selected_units_mode_availability() const

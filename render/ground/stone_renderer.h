@@ -45,8 +45,8 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  Render::Ground::Scatter::DirectRendererState<StoneInstanceGpu,
-                                               StoneBatchParams>
+  Render::Ground::Scatter::FilteredRendererState<StoneInstanceGpu,
+                                                 StoneBatchParams>
       m_stone_state;
 };
 

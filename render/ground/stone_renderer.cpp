@@ -53,15 +53,19 @@ void StoneRenderer::configure(const Game::Map::TerrainHeightMap &height_map,
 
 void StoneRenderer::submit(Renderer &renderer, ResourceManager *resources) {
   Q_UNUSED(resources);
-  Scatter::sync_direct_state(m_stone_state);
-  if (m_stone_state.instance_count == 0 || !m_stone_state.instance_buffer) {
+
+  const auto visible_count = Scatter::sync_filtered_state(
+      m_stone_state, [](const StoneInstanceGpu &instance) -> const QVector4D & {
+        return instance.pos_scale;
+      });
+  if (visible_count == 0 || !m_stone_state.instance_buffer) {
     return;
   }
 
   TerrainScatterCmd cmd;
   cmd.species = TerrainScatterCmd::Species::Stone;
   cmd.instance_buffer = m_stone_state.instance_buffer.get();
-  cmd.instance_count = m_stone_state.instance_count;
+  cmd.instance_count = visible_count;
   cmd.stone = m_stone_state.params;
   renderer.terrain_scatter(cmd);
 }

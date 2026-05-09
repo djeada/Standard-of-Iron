@@ -107,6 +107,9 @@ public:
     const QString fog_frag =
         resolve(shader_base + QStringLiteral("fog_instanced.frag"));
     load(QStringLiteral("fog_instanced"), fog_vert, fog_frag);
+    load(QStringLiteral("boundary_gas"),
+         resolve(shader_base + QStringLiteral("boundary_gas.vert")),
+         resolve(shader_base + QStringLiteral("boundary_gas.frag")));
     const QString grass_vert =
         resolve(shader_base + QStringLiteral("grass_instanced.vert"));
     const QString grass_frag =

@@ -191,7 +191,8 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   RenderArchetypeLod lod =
       select_render_archetype_lod(archetype, std::sqrt(ctx.distance_sq));
 
-  if (ctx.entity == nullptr || palette.size() > k_cached_building_palette_capacity) {
+  if (ctx.entity == nullptr ||
+      palette.size() > k_cached_building_palette_capacity) {
     RenderInstance instance;
     instance.archetype = &archetype;
     instance.world = ctx.model;
@@ -206,8 +207,8 @@ void submit_building_instance(ISubmitter &out, const DrawContext &ctx,
   prune_building_instance_cache(s_building_submit_tick);
 
   std::uint32_t const entity_id = ctx.entity->get_id();
-  auto [it, inserted] =
-      s_building_instance_cache.try_emplace(entity_id, CachedBuildingInstance{});
+  auto [it, inserted] = s_building_instance_cache.try_emplace(
+      entity_id, CachedBuildingInstance{});
   auto &cached = it->second;
   cached.last_seen_tick = s_building_submit_tick;
 

@@ -5,6 +5,7 @@
 #include "game/map/terrain.h"
 #include "game/map/terrain_service.h"
 #include "render/creature/archetype_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/creature_render_state.h"
 #include "render/creature/pipeline/preparation_common.h"
@@ -195,6 +196,48 @@ auto render_bow_mesh_count(const char *renderer_id,
     }
   }
   return visible_bow_count;
+}
+
+auto render_direct_bow_mesh_count(const char *renderer_id,
+                                  Game::Units::SpawnType spawn_type,
+                                  Game::Systems::NationID nation_id,
+                                  bool hold_active) -> int {
+  Render::GL::EntityRendererRegistry registry;
+  Render::GL::register_built_in_entity_renderers(registry);
+  const auto renderer = registry.get(renderer_id);
+  EXPECT_TRUE(static_cast<bool>(renderer));
+  if (!renderer) {
+    return 0;
+  }
+
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Engine::Core::Entity entity(1);
+  auto *unit =
+      entity.add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 12.0F);
+  EXPECT_NE(unit, nullptr);
+  if (unit == nullptr) {
+    return 0;
+  }
+  unit->spawn_type = spawn_type;
+  unit->nation_id = nation_id;
+  if (hold_active) {
+    auto *hold = entity.add_component<Engine::Core::HoldModeComponent>();
+    EXPECT_NE(hold, nullptr);
+    if (hold == nullptr) {
+      return 0;
+    }
+    hold->active = true;
+    hold->kneel_entry_progress = 1.0F;
+  }
+  ctx.entity = &entity;
+
+  CountingSubmitter sink;
+  renderer(ctx, sink);
+  EXPECT_GT(sink.rigged_calls, 0);
+  return sink.meshes;
 }
 
 auto render_runtime_mesh_count(const char *renderer_id,
@@ -556,6 +599,25 @@ TEST(HumanoidPrepare, BuiltInArchersUseBowReadyIdleClip) {
             request_idle_bone_palette(carthage_id, 0.0F));
 }
 
+TEST(HumanoidPrepare, BuiltInArchersUseDedicatedBowHoldClip) {
+  using Render::Creature::AnimationStateId;
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+
+  auto const roman_id = find_archetype_id("troops/roman/archer");
+  ASSERT_NE(roman_id, Render::Creature::kInvalidArchetype);
+  EXPECT_EQ(registry.bpat_clip(roman_id, AnimationStateId::Hold),
+            Render::Creature::kHumanoidHoldBowClip);
+  EXPECT_NE(registry.bpat_clip(roman_id, AnimationStateId::Hold),
+            registry.bpat_clip(roman_id, AnimationStateId::AttackBow));
+
+  auto const carthage_id = find_archetype_id("troops/carthage/archer");
+  ASSERT_NE(carthage_id, Render::Creature::kInvalidArchetype);
+  EXPECT_EQ(registry.bpat_clip(carthage_id, AnimationStateId::Hold),
+            Render::Creature::kHumanoidHoldBowClip);
+  EXPECT_NE(registry.bpat_clip(carthage_id, AnimationStateId::Hold),
+            registry.bpat_clip(carthage_id, AnimationStateId::AttackBow));
+}
+
 TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {
   EXPECT_GT(render_bow_mesh_count(
                 "troops/roman/archer", Game::Units::SpawnType::Archer,
@@ -624,6 +686,47 @@ TEST(HumanoidPrepare, BuiltInArchersKeepBowVisibleWhileMoving) {
                                       Game::Units::SpawnType::HorseArcher,
                                       Game::Systems::NationID::Carthage, true),
             0);
+}
+
+TEST(HumanoidPrepare, BuiltInFootArchersKeepBowBakedInHold) {
+  EXPECT_EQ(render_direct_bow_mesh_count(
+                "troops/roman/archer", Game::Units::SpawnType::Archer,
+                Game::Systems::NationID::RomanRepublic, true),
+            0);
+  EXPECT_EQ(render_direct_bow_mesh_count(
+                "troops/carthage/archer", Game::Units::SpawnType::Archer,
+                Game::Systems::NationID::Carthage, true),
+            0);
+}
+
+TEST(HumanoidPrepare, HumanoidBpatPlaybackFollowsArcherVisibleClipState) {
+  using Render::Creature::AnimationStateId;
+  using Render::Creature::Pipeline::humanoid_bpat_playback_for_anim;
+
+  auto &registry = Render::Creature::ArchetypeRegistry::instance();
+  auto const roman_id = find_archetype_id("troops/roman/archer");
+  ASSERT_NE(roman_id, Render::Creature::kInvalidArchetype);
+
+  Render::GL::HumanoidAnimationContext moving_anim{};
+  moving_anim.inputs.is_moving = true;
+  moving_anim.motion_state = Render::GL::HumanoidMotionState::Walk;
+  moving_anim.gait.state = Render::GL::HumanoidMotionState::Walk;
+  moving_anim.gait.cycle_phase = 0.35F;
+  auto const moving = humanoid_bpat_playback_for_anim(roman_id, moving_anim);
+  ASSERT_TRUE(moving.has_value());
+  EXPECT_EQ(moving->clip_id,
+            registry.bpat_clip(roman_id, AnimationStateId::Walk));
+
+  Render::GL::HumanoidAnimationContext hold_anim{};
+  hold_anim.inputs.is_in_hold_mode = true;
+  hold_anim.inputs.hold_entry_progress = 1.0F;
+  hold_anim.motion_state = Render::GL::HumanoidMotionState::Hold;
+  hold_anim.gait.state = Render::GL::HumanoidMotionState::Hold;
+  hold_anim.gait.cycle_phase = 0.20F;
+  auto const hold = humanoid_bpat_playback_for_anim(roman_id, hold_anim);
+  ASSERT_TRUE(hold.has_value());
+  EXPECT_EQ(hold->clip_id,
+            registry.bpat_clip(roman_id, AnimationStateId::Hold));
 }
 
 TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {

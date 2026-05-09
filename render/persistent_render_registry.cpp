@@ -33,9 +33,7 @@ void PersistentRenderRegistry::attach(Engine::Core::World *world) {
   }
   m_world = world;
 
-  // Register observers on the new world.  Lambda captures a raw pointer to
-  // this registry.  The registry must outlive the world or call detach() first.
-  world->add_component_observer(
+  m_component_observer_handle = world->add_component_observer(
       [this](std::uint32_t entity_id, std::type_index type, bool added) {
         if (m_world == nullptr) {
           return;
@@ -43,21 +41,21 @@ void PersistentRenderRegistry::attach(Engine::Core::World *world) {
         on_component_changed(entity_id, type, added);
       });
 
-  world->add_entity_destroyed_observer([this](std::uint32_t entity_id) {
-    if (m_world == nullptr) {
-      return;
-    }
-    on_entity_destroyed(entity_id);
-  });
+  m_entity_destroyed_observer_handle =
+      world->add_entity_destroyed_observer([this](std::uint32_t entity_id) {
+        if (m_world == nullptr) {
+          return;
+        }
+        on_entity_destroyed(entity_id);
+      });
 
-  world->add_world_cleared_observer([this] {
+  m_world_cleared_observer_handle = world->add_world_cleared_observer([this] {
     if (m_world == nullptr) {
       return;
     }
     on_world_cleared();
   });
 
-  // Perform initial scan of existing entities.
   for (const auto &[id, entity] : world->get_entities()) {
     if (entity->has_component<Engine::Core::RenderableComponent>()) {
       m_renderable_ids.insert(id);
@@ -67,9 +65,23 @@ void PersistentRenderRegistry::attach(Engine::Core::World *world) {
 }
 
 void PersistentRenderRegistry::detach() {
-  // Clear all cached state.  The observers remain registered on the world but
-  // are no-ops because they check m_world == nullptr.
+  if (m_world != nullptr) {
+    if (m_component_observer_handle != 0U) {
+      m_world->remove_component_observer(m_component_observer_handle);
+    }
+    if (m_entity_destroyed_observer_handle != 0U) {
+      m_world->remove_entity_destroyed_observer(
+          m_entity_destroyed_observer_handle);
+    }
+    if (m_world_cleared_observer_handle != 0U) {
+      m_world->remove_world_cleared_observer(m_world_cleared_observer_handle);
+    }
+  }
+
   m_world = nullptr;
+  m_component_observer_handle = 0;
+  m_entity_destroyed_observer_handle = 0;
+  m_world_cleared_observer_handle = 0;
   m_renderable_ids.clear();
   m_unit_ids.clear();
   m_building_ids.clear();
@@ -77,9 +89,9 @@ void PersistentRenderRegistry::detach() {
 }
 
 void PersistentRenderRegistry::on_component_changed(std::uint32_t entity_id,
-                                                     std::type_index type,
-                                                     bool added) {
-  // Only care about components that affect classification.
+                                                    std::type_index type,
+                                                    bool added) {
+
   if (type != k_renderable_type && type != k_unit_type &&
       type != k_building_type && type != k_pending_removal_type) {
     return;
@@ -96,8 +108,6 @@ void PersistentRenderRegistry::on_component_changed(std::uint32_t entity_id,
     return;
   }
 
-  // For unit/building/pending-removal changes, reclassify if the entity is
-  // already tracked (has a RenderableComponent).
   if (m_renderable_ids.count(entity_id) != 0U) {
     reclassify(entity_id);
   }
@@ -125,8 +135,6 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
     return;
   }
 
-  // If the entity has PendingRemovalComponent or no longer has
-  // RenderableComponent, remove it from lists.
   if (!entity->has_component<Engine::Core::RenderableComponent>() ||
       entity->has_component<Engine::Core::PendingRemovalComponent>()) {
     m_renderable_ids.erase(entity_id);
@@ -138,7 +146,6 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
   const bool has_building =
       entity->has_component<Engine::Core::BuildingComponent>();
 
-  // Determine target list.
   std::vector<std::uint32_t> *target_list{nullptr};
   if (has_unit) {
     target_list = &m_unit_ids;
@@ -148,7 +155,6 @@ void PersistentRenderRegistry::reclassify(std::uint32_t entity_id) {
     target_list = &m_other_ids;
   }
 
-  // Remove from any other list first, then add to target if not already there.
   if (target_list != &m_unit_ids) {
     remove_id(m_unit_ids, entity_id);
   }
@@ -173,11 +179,8 @@ void PersistentRenderRegistry::remove_from_lists(std::uint32_t entity_id) {
 }
 
 void PersistentRenderRegistry::remove_id(std::vector<std::uint32_t> &vec,
-                                          std::uint32_t id) {
-  // Swap-and-pop is O(1) but does not preserve insertion order.  Rendering
-  // does not rely on a stable iteration order within a category, so this is
-  // acceptable.  If deterministic ordering is ever required, switch to
-  // std::erase with std::find.
+                                         std::uint32_t id) {
+
   const auto it = std::find(vec.begin(), vec.end(), id);
   if (it != vec.end()) {
     *it = vec.back();

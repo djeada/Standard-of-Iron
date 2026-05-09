@@ -712,10 +712,14 @@ RowLayout {
             Button {
                 id: holdButton
 
-                property bool isHoldActive: {
+                property int activeStateTick: 0
+                property string holdModeState: {
                     bottomRoot.selectionTick;
-                    return (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
+                    activeStateTick;
+                    return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("hold") : "none";
                 }
+                readonly property bool isHoldActive: holdModeState === "all"
+                readonly property bool isHoldMixed: holdModeState === "mixed"
                 property bool modeAvailable: bottomRoot.modeAvailability.canHold !== false
 
                 Layout.fillWidth: true
@@ -729,12 +733,12 @@ RowLayout {
 
                 }
                 ToolTip.visible: hovered
-                ToolTip.text: !modeAvailable ? qsTr("Hold not available for selected units") : (bottomRoot.hasMovableUnits ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : qsTr("Hold position and defend")) : qsTr("Select troops first"))
+                ToolTip.text: !modeAvailable ? qsTr("Hold not available for selected units") : (bottomRoot.hasMovableUnits ? (isHoldActive ? qsTr("Exit hold mode (toggle)") : (isHoldMixed ? qsTr("Some selected troops are already holding. Click to apply hold to all eligible selected troops.") : qsTr("Hold position and defend"))) : qsTr("Select troops first"))
                 ToolTip.delay: 500
 
                 Connections {
                     function onHold_mode_changed(active) {
-                        holdButton.isHoldActive = (typeof game !== 'undefined' && game.any_selected_in_hold_mode) ? game.any_selected_in_hold_mode() : false;
+                        holdButton.activeStateTick += 1;
                     }
 
                     target: (typeof game !== 'undefined') ? game : null
@@ -748,6 +752,9 @@ RowLayout {
                         if (parent.isHoldActive)
                             return hs.wax;
 
+                        if (parent.isHoldMixed)
+                            return hs.waxHover;
+
                         if (parent.pressed)
                             return hs.waxDark;
 
@@ -757,8 +764,8 @@ RowLayout {
                         return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isHoldActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
-                    border.width: parent.isHoldActive ? 2 : 1
+                    border.color: parent.enabled ? ((parent.isHoldActive || parent.isHoldMixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: (parent.isHoldActive || parent.isHoldMixed) ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -777,7 +784,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: (holdButton.isHoldActive ? qsTr("Active ") : "") + holdButton.text
+                        text: (holdButton.isHoldActive ? qsTr("Active ") : (holdButton.isHoldMixed ? qsTr("Mixed ") : "")) + holdButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: holdButton.enabled ? Theme.textMain : Theme.textDim
@@ -792,10 +799,14 @@ RowLayout {
             Button {
                 id: formationButton
 
-                property bool isFormationActive: {
+                property int activeStateTick: 0
+                property string formationModeState: {
                     bottomRoot.selectionTick;
-                    return (typeof game !== 'undefined' && game.any_selected_in_formation_mode) ? game.any_selected_in_formation_mode() : false;
+                    activeStateTick;
+                    return (typeof game !== 'undefined' && game.get_selected_units_toggle_state) ? game.get_selected_units_toggle_state("formation") : "none";
                 }
+                readonly property bool isFormationActive: formationModeState === "all"
+                readonly property bool isFormationMixed: formationModeState === "mixed"
                 property int selectedCount: {
                     bottomRoot.selectionTick;
                     return (typeof game !== 'undefined' && game.selected_units_model) ? game.selected_units_model.rowCount() : 0;
@@ -819,13 +830,19 @@ RowLayout {
                     if (selectedCount <= 1)
                         return qsTr("Select multiple units to use formation");
 
-                    return isFormationActive ? qsTr("Exit formation mode (toggle)") : qsTr("Arrange units in tactical formation");
+                    if (isFormationActive)
+                        return qsTr("Exit formation mode (toggle)");
+
+                    if (isFormationMixed)
+                        return qsTr("Some selected troops are already in formation mode. Click to apply formation mode to the full eligible selection.");
+
+                    return qsTr("Arrange units in tactical formation");
                 }
                 ToolTip.delay: 500
 
                 Connections {
                     function onFormation_mode_changed(active) {
-                        formationButton.isFormationActive = (typeof game !== 'undefined' && game.any_selected_in_formation_mode) ? game.any_selected_in_formation_mode() : false;
+                        formationButton.activeStateTick += 1;
                     }
 
                     target: (typeof game !== 'undefined') ? game : null
@@ -839,6 +856,9 @@ RowLayout {
                         if (parent.isFormationActive)
                             return "#6F8E8C";
 
+                        if (parent.isFormationMixed)
+                            return "#82A4A1";
+
                         if (parent.pressed)
                             return "#5F7F83";
 
@@ -848,8 +868,8 @@ RowLayout {
                         return hs.parchmentLight;
                     }
                     radius: 6
-                    border.color: parent.enabled ? (parent.isFormationActive ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
-                    border.width: parent.isFormationActive ? 2 : 1
+                    border.color: parent.enabled ? ((parent.isFormationActive || parent.isFormationMixed) ? hs.bronze : hs.bronzeDeep) : hs.bronzeDeep
+                    border.width: (parent.isFormationActive || parent.isFormationMixed) ? 2 : 1
                 }
 
                 contentItem: Row {
@@ -868,7 +888,7 @@ RowLayout {
                     }
 
                     Text {
-                        text: (formationButton.isFormationActive ? qsTr("Active ") : "") + formationButton.text
+                        text: (formationButton.isFormationActive ? qsTr("Active ") : (formationButton.isFormationMixed ? qsTr("Mixed ") : "")) + formationButton.text
                         font.pointSize: 11
                         font.bold: true
                         color: formationButton.enabled ? Theme.textMain : Theme.textDim

@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <limits>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -58,13 +57,14 @@ struct CylinderCmd {
 
 struct FogInstanceData {
   QVector3D center{0.0F, 0.25F, 0.0F};
+  float size = 1.0F;
   QVector3D color{0.05F, 0.05F, 0.05F};
   float alpha = 1.0F;
-  float size = 1.0F;
 };
 
 struct FogBatchCmd {
   const FogInstanceData *instances = nullptr;
+  Buffer *instance_buffer = nullptr;
   std::size_t count = 0;
   CommandPriority priority{CommandPriority::Low};
 };
@@ -319,7 +319,6 @@ public:
     m_sort_indices.clear();
     m_sort_keys.clear();
     m_prepared_batches.clear();
-    clear_sort_id_maps();
     m_submission_bucket_spans.clear();
     m_submission_bucket_ordered = true;
   }
@@ -377,7 +376,6 @@ public:
     m_sort_keys.resize(count);
     m_sort_indices.resize(count);
     m_prepared_batches.clear();
-    clear_sort_id_maps();
 
     for (std::size_t i = 0; i < count; ++i) {
       m_sort_indices[i] = static_cast<uint32_t>(i);
@@ -438,6 +436,7 @@ private:
     std::uint32_t bucket = 0;
     std::size_t start = 0;
     std::size_t count = 0;
+    bool preserves_append_order = false;
 
     [[nodiscard]] auto end() const noexcept -> std::size_t {
       return start + count;
@@ -473,15 +472,20 @@ private:
   };
 
   void sort_full_keys(std::size_t start, std::size_t end) {
-    std::stable_sort(m_sort_indices.begin() +
-                         static_cast<std::ptrdiff_t>(start),
-                     m_sort_indices.begin() + static_cast<std::ptrdiff_t>(end),
-                     [&](std::uint32_t lhs, std::uint32_t rhs) {
-                       if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
-                         return lhs < rhs;
-                       }
-                       return m_sort_keys[lhs] < m_sort_keys[rhs];
-                     });
+    std::stable_sort(
+        m_sort_indices.begin() + static_cast<std::ptrdiff_t>(start),
+        m_sort_indices.begin() + static_cast<std::ptrdiff_t>(end),
+        [&](std::uint32_t lhs, std::uint32_t rhs) {
+          if (m_sort_keys[lhs] == m_sort_keys[rhs]) {
+            const auto lhs_full = full_resource_identity(m_items[lhs]);
+            const auto rhs_full = full_resource_identity(m_items[rhs]);
+            if (lhs_full != rhs_full) {
+              return lhs_full < rhs_full;
+            }
+            return lhs < rhs;
+          }
+          return m_sort_keys[lhs] < m_sort_keys[rhs];
+        });
   }
 
   [[nodiscard]] auto sort_bucketed_ranges(std::size_t count) -> bool {
@@ -495,7 +499,7 @@ private:
       if (span.start != covered || span.end() > count) {
         return false;
       }
-      if (span.count >= 2U) {
+      if (span.count >= 2U && !span.preserves_append_order) {
         sort_full_keys(span.start, span.end());
       }
       covered = span.end();
@@ -615,8 +619,32 @@ private:
            static_cast<std::uint32_t>(identity.transparency_bucket & 0x0FU);
   }
 
+  [[nodiscard]] auto preserves_append_order(const DrawCmd &cmd) const -> bool {
+    switch (cmd.index()) {
+    case TerrainScatterCmdIndex:
+    case RainBatchCmdIndex:
+    case TerrainSurfaceCmdIndex:
+    case PrimitiveBatchCmdIndex:
+    case FogBatchCmdIndex:
+    case SelectionSmokeCmdIndex:
+    case SelectionRingCmdIndex:
+    case GridCmdIndex:
+    case EffectBatchCmdIndex:
+    case ModeIndicatorCmdIndex:
+      return true;
+    case TerrainFeatureCmdIndex: {
+      const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      return feature.kind != LinearFeatureKind::Riverbank ||
+             !feature.visibility.enabled;
+    }
+    default:
+      return false;
+    }
+  }
+
   void record_submission_bucket(const DrawCmd &cmd) {
     const std::uint32_t bucket = compute_submission_bucket(cmd);
+    const bool append_ordered = preserves_append_order(cmd);
     const std::size_t next_index = m_items.size();
     if (!m_submission_bucket_spans.empty()) {
       SubmissionBucketSpan &last = m_submission_bucket_spans.back();
@@ -625,12 +653,17 @@ private:
       }
       if (bucket == last.bucket) {
         ++last.count;
+        last.preserves_append_order =
+            last.preserves_append_order && append_ordered;
         return;
       }
     }
 
     m_submission_bucket_spans.push_back(
-        SubmissionBucketSpan{bucket, next_index, 1U});
+        SubmissionBucketSpan{.bucket = bucket,
+                             .start = next_index,
+                             .count = 1U,
+                             .preserves_append_order = append_ordered});
   }
 
   [[nodiscard]] auto compute_sort_key(const DrawCmd &cmd) -> uint64_t {
@@ -639,37 +672,43 @@ private:
 
     if (cmd.index() == MeshCmdIndex) {
       const auto &mesh = std::get<MeshCmdIndex>(cmd);
-      identity.material = pack_12(intern_material_id(mesh.shader));
-      identity.mesh = pack_16(intern_mesh_id(mesh.mesh));
-      identity.texture = pack_12(intern_texture_id(mesh.texture));
+      identity.material = pack_12(sort_id(mesh.shader));
+      identity.mesh = pack_16(sort_id(mesh.mesh));
+      identity.texture = pack_12(sort_id(mesh.texture));
     } else if (cmd.index() == TerrainScatterCmdIndex) {
       const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
-      identity.material = pack_12(intern_material_id(deco.material));
-      identity.mesh = pack_16(intern_mesh_id(deco.instance_buffer));
+      identity.material = pack_12(sort_id(deco.material));
+      identity.mesh = pack_16(sort_id(deco.instance_buffer));
+    } else if (cmd.index() == FogBatchCmdIndex) {
+      const auto &fog = std::get<FogBatchCmdIndex>(cmd);
+      identity.mesh =
+          pack_16(sort_id(fog.instance_buffer != nullptr
+                              ? static_cast<const void *>(fog.instance_buffer)
+                              : static_cast<const void *>(fog.instances)));
     } else if (cmd.index() == TerrainSurfaceCmdIndex) {
       const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
       identity.material = pack_12(chunk.sort_key);
-      identity.mesh = pack_16(intern_mesh_id(chunk.mesh));
-      identity.texture = pack_12(intern_material_id(chunk.material));
+      identity.mesh = pack_16(sort_id(chunk.mesh));
+      identity.texture = pack_12(sort_id(chunk.material));
     } else if (cmd.index() == TerrainFeatureCmdIndex) {
       const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
-      identity.mesh = pack_16(intern_mesh_id(feature.mesh));
-      identity.texture = pack_12(intern_texture_id(feature.visibility.texture));
+      identity.mesh = pack_16(sort_id(feature.mesh));
+      identity.texture = pack_12(sort_id(feature.visibility.texture));
     } else if (cmd.index() == PrimitiveBatchCmdIndex) {
       const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
       identity.mesh = pack_16(static_cast<std::uint32_t>(std::min<std::size_t>(
           prim.instance_count(), std::numeric_limits<std::uint16_t>::max())));
     } else if (cmd.index() == DrawPartCmdIndex) {
       const auto &part = std::get<DrawPartCmdIndex>(cmd);
-      identity.material = pack_12(intern_material_id(part.material));
-      identity.mesh = pack_16(intern_mesh_id(part.mesh));
-      identity.texture = pack_12(intern_texture_id(part.texture));
+      identity.material = pack_12(sort_id(part.material));
+      identity.mesh = pack_16(sort_id(part.mesh));
+      identity.texture = pack_12(sort_id(part.texture));
       identity.skeleton = part.palette.empty() ? 0U : 1U;
     } else if (cmd.index() == RiggedCreatureCmdIndex) {
       const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
-      identity.material = pack_12(intern_material_id(rig.material));
-      identity.mesh = pack_16(intern_mesh_id(rig.mesh));
-      identity.texture = pack_12(intern_texture_id(rig.texture));
+      identity.material = pack_12(sort_id(rig.material));
+      identity.mesh = pack_16(sort_id(rig.mesh));
+      identity.texture = pack_12(sort_id(rig.texture));
       identity.skeleton = pack_4(rig.bone_count);
     } else if (cmd.index() == EffectBatchCmdIndex) {
       const auto &effect = std::get<EffectBatchCmdIndex>(cmd);
@@ -845,15 +884,6 @@ private:
            feature_a.visibility.enabled == feature_b.visibility.enabled;
   }
 
-  void clear_sort_id_maps() {
-    m_material_ids.clear();
-    m_mesh_ids.clear();
-    m_texture_ids.clear();
-    m_next_material_id = 1;
-    m_next_mesh_id = 1;
-    m_next_texture_id = 1;
-  }
-
   static auto transparency_bucket(float alpha) noexcept -> std::uint8_t {
     return alpha < k_opaque_threshold ? 1U : 0U;
   }
@@ -870,46 +900,76 @@ private:
     return static_cast<std::uint16_t>(std::min<std::uint32_t>(value, 0xFFFFU));
   }
 
-  auto intern_material_id(const void *ptr) -> std::uint32_t {
-    return intern_id(m_material_ids, m_next_material_id, ptr);
-  }
-
-  auto intern_mesh_id(const void *ptr) -> std::uint32_t {
-    return intern_id(m_mesh_ids, m_next_mesh_id, ptr);
-  }
-
-  auto intern_texture_id(const void *ptr) -> std::uint32_t {
-    return intern_id(m_texture_ids, m_next_texture_id, ptr);
-  }
-
-  static auto intern_id(std::unordered_map<const void *, std::uint32_t> &ids,
-                        std::uint32_t &next, const void *ptr) -> std::uint32_t {
+  static auto sort_id(const void *ptr) noexcept -> std::uint32_t {
     if (ptr == nullptr) {
       return 0;
     }
-    auto found = ids.find(ptr);
-    if (found != ids.end()) {
-      return found->second;
-    }
+    const auto value =
+        static_cast<std::uintptr_t>(reinterpret_cast<std::uintptr_t>(ptr));
+    return static_cast<std::uint32_t>(value ^ (value >> 16U) ^ (value >> 32U));
+  }
 
-    const std::uint32_t id = next;
-    if (next != std::numeric_limits<std::uint32_t>::max()) {
-      ++next;
+  [[nodiscard]] static auto
+  ptr_value(const void *ptr) noexcept -> std::uintptr_t {
+    return reinterpret_cast<std::uintptr_t>(ptr);
+  }
+
+  [[nodiscard]] static auto full_resource_identity(const DrawCmd &cmd) noexcept
+      -> std::array<std::uintptr_t, 4> {
+    if (cmd.index() == MeshCmdIndex) {
+      const auto &mesh = std::get<MeshCmdIndex>(cmd);
+      return {ptr_value(mesh.shader), ptr_value(mesh.mesh),
+              ptr_value(mesh.texture), 0U};
     }
-    ids.emplace(ptr, id);
-    return id;
+    if (cmd.index() == TerrainScatterCmdIndex) {
+      const auto &deco = std::get<TerrainScatterCmdIndex>(cmd);
+      return {ptr_value(deco.material), ptr_value(deco.instance_buffer), 0U,
+              0U};
+    }
+    if (cmd.index() == FogBatchCmdIndex) {
+      const auto &fog = std::get<FogBatchCmdIndex>(cmd);
+      return {ptr_value(fog.instance_buffer), ptr_value(fog.instances),
+              fog.count, 0U};
+    }
+    if (cmd.index() == TerrainSurfaceCmdIndex) {
+      const auto &chunk = std::get<TerrainSurfaceCmdIndex>(cmd);
+      return {static_cast<std::uintptr_t>(chunk.sort_key),
+              ptr_value(chunk.mesh), ptr_value(chunk.material), 0U};
+    }
+    if (cmd.index() == TerrainFeatureCmdIndex) {
+      const auto &feature = std::get<TerrainFeatureCmdIndex>(cmd);
+      return {ptr_value(feature.mesh), ptr_value(feature.visibility.texture),
+              0U, 0U};
+    }
+    if (cmd.index() == PrimitiveBatchCmdIndex) {
+      const auto &prim = std::get<PrimitiveBatchCmdIndex>(cmd);
+      return {prim.instance_count(), 0U, 0U, 0U};
+    }
+    if (cmd.index() == DrawPartCmdIndex) {
+      const auto &part = std::get<DrawPartCmdIndex>(cmd);
+      return {ptr_value(part.material), ptr_value(part.mesh),
+              ptr_value(part.texture), part.palette.empty() ? 0U : 1U};
+    }
+    if (cmd.index() == RiggedCreatureCmdIndex) {
+      const auto &rig = std::get<RiggedCreatureCmdIndex>(cmd);
+      return {ptr_value(rig.material), ptr_value(rig.mesh),
+              ptr_value(rig.texture), rig.bone_count};
+    }
+    if (cmd.index() == EffectBatchCmdIndex) {
+      const auto &effect = std::get<EffectBatchCmdIndex>(cmd);
+      return {static_cast<std::uintptr_t>(effect.kind), 0U, 0U, 0U};
+    }
+    if (cmd.index() == ModeIndicatorCmdIndex) {
+      const auto &mode = std::get<ModeIndicatorCmdIndex>(cmd);
+      return {static_cast<std::uintptr_t>(mode.mode_type), 0U, 0U, 0U};
+    }
+    return {0U, 0U, 0U, 0U};
   }
 
   std::vector<DrawCmd> m_items;
   std::vector<uint32_t> m_sort_indices;
   std::vector<uint64_t> m_sort_keys;
   std::vector<PreparedBatch> m_prepared_batches;
-  std::unordered_map<const void *, std::uint32_t> m_material_ids;
-  std::unordered_map<const void *, std::uint32_t> m_mesh_ids;
-  std::unordered_map<const void *, std::uint32_t> m_texture_ids;
-  std::uint32_t m_next_material_id = 1;
-  std::uint32_t m_next_mesh_id = 1;
-  std::uint32_t m_next_texture_id = 1;
   std::vector<SubmissionBucketSpan> m_submission_bucket_spans;
   bool m_submission_bucket_ordered = true;
   std::size_t m_items_high_water = 0;

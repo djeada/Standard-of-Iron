@@ -3,13 +3,13 @@
 #include "../../../../game/core/entity.h"
 #include "../../../../game/systems/nation_id.h"
 #include "../../../creature/archetype_registry.h"
+#include "../../../creature/humanoid_clip_ids.h"
 #include "../../../creature/pipeline/creature_render_graph.h"
 #include "../../../creature/pipeline/preparation_common.h"
 #include "../../../creature/pipeline/unit_visual_spec.h"
 #include "../../../equipment/armor/armor_light_carthage.h"
 #include "../../../equipment/armor/cloak_renderer.h"
 #include "../../../equipment/equipment_registry.h"
-#include "../../../equipment/equipment_submit.h"
 #include "../../../equipment/helmets/carthage_light_helmet.h"
 #include "../../../equipment/helmets/headwrap.h"
 #include "../../../equipment/weapons/bow_renderer.h"
@@ -39,6 +39,7 @@
 #include <QString>
 #include <QVector3D>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
 #include <numbers>
@@ -297,7 +298,7 @@ public:
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Idle)] =
             attack_bow_clip;
         desc.bpat_clip[static_cast<std::size_t>(AnimationStateId::Hold)] =
-            attack_bow_clip;
+            Render::Creature::kHumanoidHoldBowClip;
         return registry.register_archetype(desc);
       }();
 
@@ -335,14 +336,14 @@ public:
 
   void append_companion_preparation(
       const DrawContext &ctx, const HumanoidVariant &variant,
-      const HumanoidPose &pose, const HumanoidAnimationContext &anim_ctx,
-      std::uint32_t, Render::Creature::CreatureLOD,
+      const HumanoidPose &, const HumanoidAnimationContext &anim_ctx,
+      std::uint32_t, Render::Creature::CreatureLOD lod,
       Render::Creature::Pipeline::CreaturePreparationResult &out)
       const override {
     (void)ctx;
     (void)variant;
-    (void)pose;
     (void)anim_ctx;
+    (void)lod;
     (void)out;
   }
 

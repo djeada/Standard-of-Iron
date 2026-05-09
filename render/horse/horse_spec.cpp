@@ -103,7 +103,7 @@ struct horse_pose_profile {
   float neck_rise_scale{2.85F};
   float neck_length_scale{2.03F};
   float neck_radius_scale{0.23F};
-  QVector3D head_center_scale{0.0F, 0.08F, 0.30F};
+  QVector3D head_center_scale{0.0F, 0.08F, 0.22F};
   QVector3D head_half_scale{0.34F, 0.26F, 0.48F};
   QVector3D front_anchor_scale{0.0F, 0.18F, 0.46F};
   QVector3D rear_anchor_scale{0.0F, 0.16F, -0.18F};
@@ -298,10 +298,13 @@ void make_horse_spec_pose(const Render::GL::HorseDimensions &dims, float bob,
   QVector3D const neck_top = horse_neck_top_local(dims);
   out_pose.neck_base = center + horse_neck_base_local(dims);
   out_pose.neck_top = center + neck_top;
-  out_pose.neck_radius = body_width_vis * 0.16F;
+  float const neck_width_radius =
+      body_width_vis * 0.16F * Render::Horse::k_horse_neck_width_boost;
+  float const neck_height_radius = body_height_vis * 0.10F;
+  out_pose.neck_radius = neck_width_radius * 0.65F + neck_height_radius * 0.35F;
   out_pose.head_center =
       out_pose.neck_top +
-      QVector3D(0.0F, head_height_vis * 0.08F, head_length_vis * 0.28F);
+      QVector3D(0.0F, head_height_vis * 0.08F, head_length_vis * 0.20F);
   out_pose.head_half = QVector3D(
       head_width_vis * 0.40F, head_height_vis * 0.30F, head_length_vis * 0.34F);
 }
@@ -438,7 +441,10 @@ void make_horse_spec_pose_animated(const Render::GL::HorseDimensions &dims,
   out_pose.neck_top = center + QVector3D(neck_top_local.x(),
                                          neck_top_local.y() * head_height_scale,
                                          neck_top_local.z());
-  out_pose.neck_radius = body_width_vis * 0.16F;
+  float const neck_width_radius =
+      body_width_vis * 0.16F * Render::Horse::k_horse_neck_width_boost;
+  float const neck_height_radius = body_height_vis * 0.10F;
+  out_pose.neck_radius = neck_width_radius * 0.65F + neck_height_radius * 0.35F;
 
   out_pose.head_center =
       out_pose.neck_top +

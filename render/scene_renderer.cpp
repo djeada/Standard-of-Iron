@@ -444,6 +444,17 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
+void Renderer::fog_batch(Buffer *instance_buffer, std::size_t count) {
+  if ((instance_buffer == nullptr) || count == 0 ||
+      (m_active_queue == nullptr)) {
+    return;
+  }
+  FogBatchCmd cmd;
+  cmd.instance_buffer = instance_buffer;
+  cmd.count = count;
+  m_active_queue->submit(std::move(cmd));
+}
+
 void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const RainBatchParams &params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
@@ -917,11 +928,14 @@ void Renderer::enqueue_mode_indicator(
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
+      indicator_height = Render::Geom::indicator_height_for_unit(
+          profile.visuals.selection_ring_size, profile.visuals.render_scale);
+    } else {
+      indicator_height = Render::Geom::indicator_height_for_unit(
+          Game::Units::TroopConfig::instance().get_selection_ring_size(
+              unit_comp->spawn_type),
+          1.0F);
     }
-  }
-
-  if (transform != nullptr) {
-    indicator_height *= transform->scale.y;
   }
 
   QVector3D const pos(transform->position.x,
@@ -988,7 +1002,6 @@ void Renderer::render_world(Engine::Core::World *world) {
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
-  // Attach persistent registry to this world if it has changed.
   if (!m_render_registry.is_attached_to(world)) {
     m_cached_world = world;
     m_render_registry.attach(world);
@@ -1027,11 +1040,7 @@ void Renderer::render_world(Engine::Core::World *world) {
   other_entries.reserve(other_ids.size());
 
   for (std::uint32_t entity_id : unit_ids) {
-    // Safety guard: the registry updates are driven by observer callbacks and
-    // are always processed under the entity mutex (same lock held here), so
-    // stale IDs should not occur in practice.  The nullptr check is a
-    // defensive guard against unexpected ordering or future code paths; on
-    // mismatch we skip this id and continue with the next one.
+
     Engine::Core::Entity *entity = world->get_entity(entity_id);
     if (entity == nullptr) {
       continue;
@@ -1128,7 +1137,6 @@ void Renderer::render_world(Engine::Core::World *world) {
 
   auto collect_non_unit_entry = [&](std::uint32_t entity_id,
                                     std::vector<RenderEntry> &dest) {
-    // Defensive null guard; see comment above the unit_ids loop.
     Engine::Core::Entity *entity = world->get_entity(entity_id);
     if (entity == nullptr) {
       return;

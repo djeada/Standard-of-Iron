@@ -86,6 +86,24 @@ TEST_F(CombatModeTest, AttackModeTriggersWhenEngaged) {
   EXPECT_EQ(attacker_attack->current_mode, AttackComponent::CombatMode::Melee);
 }
 
+TEST_F(CombatModeTest, MoveCommandScalesHoldExitToCurrentKneelDepth) {
+  auto *unit = world->create_entity();
+  unit->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *unit_comp = unit->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  unit_comp->owner_id = 1;
+  unit->add_component<MovementComponent>();
+  auto *hold_mode = unit->add_component<HoldModeComponent>();
+  hold_mode->active = true;
+  hold_mode->stand_up_duration = 2.0F;
+  hold_mode->kneel_entry_progress = 0.5F;
+
+  CommandService::move_unit(*world, unit->get_id(),
+                            QVector3D(8.0F, 0.0F, 6.0F));
+
+  EXPECT_FALSE(hold_mode->active);
+  EXPECT_FLOAT_EQ(hold_mode->exit_cooldown, 1.0F);
+}
+
 TEST_F(CombatModeTest, BuildingsExcludedFromCombatMode) {
 
   auto *attacker = world->create_entity();

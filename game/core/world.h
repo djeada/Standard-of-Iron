@@ -14,6 +14,7 @@ namespace Engine::Core {
 
 class World {
 public:
+  using ObserverHandle = std::uint64_t;
   using ComponentObserverCallback =
       std::function<void(EntityID, std::type_index, bool)>;
   using EntityDestroyedCallback = std::function<void(EntityID)>;
@@ -85,9 +86,13 @@ public:
 
   auto get_entity_mutex() -> std::recursive_mutex & { return m_entity_mutex; }
 
-  void add_component_observer(ComponentObserverCallback callback);
-  void add_entity_destroyed_observer(EntityDestroyedCallback callback);
-  void add_world_cleared_observer(WorldClearedCallback callback);
+  ObserverHandle add_component_observer(ComponentObserverCallback callback);
+  ObserverHandle
+  add_entity_destroyed_observer(EntityDestroyedCallback callback);
+  ObserverHandle add_world_cleared_observer(WorldClearedCallback callback);
+  void remove_component_observer(ObserverHandle handle);
+  void remove_entity_destroyed_observer(ObserverHandle handle);
+  void remove_world_cleared_observer(ObserverHandle handle);
 
 private:
   void on_component_changed(EntityID entity_id, std::type_index component_type,
@@ -103,9 +108,16 @@ private:
   std::unordered_map<std::type_index, std::unordered_set<EntityID>>
       m_component_index;
 
-  std::vector<ComponentObserverCallback> m_component_observers;
-  std::vector<EntityDestroyedCallback> m_entity_destroyed_observers;
-  std::vector<WorldClearedCallback> m_world_cleared_observers;
+  template <typename Callback> struct ObserverEntry {
+    ObserverHandle handle{0};
+    Callback callback;
+  };
+
+  ObserverHandle m_next_observer_handle{1};
+  std::vector<ObserverEntry<ComponentObserverCallback>> m_component_observers;
+  std::vector<ObserverEntry<EntityDestroyedCallback>>
+      m_entity_destroyed_observers;
+  std::vector<ObserverEntry<WorldClearedCallback>> m_world_cleared_observers;
 };
 
 } // namespace Engine::Core

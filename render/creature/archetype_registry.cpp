@@ -1,6 +1,7 @@
 #include "archetype_registry.h"
 
 #include "bpat/bpat_format.h"
+#include "humanoid_clip_ids.h"
 
 #include <algorithm>
 
@@ -33,17 +34,22 @@ constexpr auto make_snapshot_table_for_clips(
 constexpr auto
 make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
-  t[static_cast<std::size_t>(AnimationStateId::Idle)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Walk)] = 1U;
-  t[static_cast<std::size_t>(AnimationStateId::Run)] = 2U;
-  t[static_cast<std::size_t>(AnimationStateId::Hold)] = 3U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 3U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 3U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 4U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 7U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 10U;
+  t[static_cast<std::size_t>(AnimationStateId::Idle)] = kHumanoidIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Walk)] = kHumanoidWalkClip;
+  t[static_cast<std::size_t>(AnimationStateId::Run)] = kHumanoidRunClip;
+  t[static_cast<std::size_t>(AnimationStateId::Hold)] = kHumanoidHoldClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] =
+      kHumanoidHoldClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
+      kHumanoidHoldClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
+      kHumanoidAttackSwordAClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
+      kHumanoidAttackSpearAClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] =
+      kHumanoidAttackBowClip;
   return t;
 }
 
@@ -84,21 +90,31 @@ make_elephant_clip_table() -> std::array<std::uint16_t, k_state_count> {
 constexpr auto
 make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
   auto t = make_unmapped_clip_table();
-  t[static_cast<std::size_t>(AnimationStateId::Idle)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::Walk)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::Run)] = 12U;
-  t[static_cast<std::size_t>(AnimationStateId::Hold)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 4U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 10U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 4U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 7U;
-  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 10U;
-  t[static_cast<std::size_t>(AnimationStateId::RidingIdle)] = 11U;
-  t[static_cast<std::size_t>(AnimationStateId::RidingCharge)] = 12U;
-  t[static_cast<std::size_t>(AnimationStateId::RidingReining)] = 13U;
-  t[static_cast<std::size_t>(AnimationStateId::RidingBowShot)] = 14U;
+  t[static_cast<std::size_t>(AnimationStateId::Idle)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Walk)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Run)] =
+      kHumanoidRidingChargeClip;
+  t[static_cast<std::size_t>(AnimationStateId::Hold)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] =
+      kHumanoidAttackSwordAClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
+      kHumanoidAttackBowClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
+      kHumanoidAttackSwordAClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
+      kHumanoidAttackSpearAClip;
+  t[static_cast<std::size_t>(AnimationStateId::AttackBow)] =
+      kHumanoidAttackBowClip;
+  t[static_cast<std::size_t>(AnimationStateId::RidingIdle)] =
+      kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::RidingCharge)] =
+      kHumanoidRidingChargeClip;
+  t[static_cast<std::size_t>(AnimationStateId::RidingReining)] =
+      kHumanoidRidingReiningClip;
+  t[static_cast<std::size_t>(AnimationStateId::RidingBowShot)] =
+      kHumanoidRidingBowShotClip;
   return t;
 }
 

@@ -8,18 +8,9 @@
 
 namespace {
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-auto has_id(const std::vector<std::uint32_t> &vec,
-            std::uint32_t id) -> bool {
+auto has_id(const std::vector<std::uint32_t> &vec, std::uint32_t id) -> bool {
   return std::find(vec.begin(), vec.end(), id) != vec.end();
 }
-
-// ---------------------------------------------------------------------------
-// Basic population
-// ---------------------------------------------------------------------------
 
 TEST(PersistentRenderRegistry, EmptyWorldHasNoEntries) {
   Engine::Core::World world;
@@ -72,10 +63,6 @@ TEST(PersistentRenderRegistry, PlainRenderableClassifiedAsOther) {
   EXPECT_TRUE(has_id(reg.other_ids(), entity->get_id()));
 }
 
-// ---------------------------------------------------------------------------
-// Non-renderable entities are ignored
-// ---------------------------------------------------------------------------
-
 TEST(PersistentRenderRegistry, NonRenderableEntityNotTracked) {
   Engine::Core::World world;
   Render::PersistentRenderRegistry reg;
@@ -88,10 +75,6 @@ TEST(PersistentRenderRegistry, NonRenderableEntityNotTracked) {
   EXPECT_TRUE(reg.building_ids().empty());
   EXPECT_TRUE(reg.other_ids().empty());
 }
-
-// ---------------------------------------------------------------------------
-// Entity destruction
-// ---------------------------------------------------------------------------
 
 TEST(PersistentRenderRegistry, DestroyedEntityRemovedFromRegistry) {
   Engine::Core::World world;
@@ -109,10 +92,6 @@ TEST(PersistentRenderRegistry, DestroyedEntityRemovedFromRegistry) {
 
   EXPECT_FALSE(has_id(reg.unit_ids(), id));
 }
-
-// ---------------------------------------------------------------------------
-// World clear
-// ---------------------------------------------------------------------------
 
 TEST(PersistentRenderRegistry, WorldClearEmptiesRegistry) {
   Engine::Core::World world;
@@ -136,10 +115,6 @@ TEST(PersistentRenderRegistry, WorldClearEmptiesRegistry) {
   EXPECT_TRUE(reg.building_ids().empty());
   EXPECT_TRUE(reg.other_ids().empty());
 }
-
-// ---------------------------------------------------------------------------
-// Reclassification when components change
-// ---------------------------------------------------------------------------
 
 TEST(PersistentRenderRegistry, AddingUnitComponentMovesToUnitList) {
   Engine::Core::World world;
@@ -175,10 +150,6 @@ TEST(PersistentRenderRegistry, AddingBuildingComponentMovesToBuildingList) {
   EXPECT_FALSE(has_id(reg.other_ids(), id));
 }
 
-// ---------------------------------------------------------------------------
-// Attach to existing world picks up existing entities
-// ---------------------------------------------------------------------------
-
 TEST(PersistentRenderRegistry, AttachPicksUpExistingEntities) {
   Engine::Core::World world;
 
@@ -203,10 +174,6 @@ TEST(PersistentRenderRegistry, AttachPicksUpExistingEntities) {
             3U);
 }
 
-// ---------------------------------------------------------------------------
-// Detach / is_attached_to
-// ---------------------------------------------------------------------------
-
 TEST(PersistentRenderRegistry, DetachClearsState) {
   Engine::Core::World world;
   Render::PersistentRenderRegistry reg;
@@ -221,6 +188,45 @@ TEST(PersistentRenderRegistry, DetachClearsState) {
 
   EXPECT_TRUE(reg.other_ids().empty());
   EXPECT_FALSE(reg.is_attached_to(&world));
+}
+
+TEST(PersistentRenderRegistry, DetachedWorldChangesDoNotAffectRegistry) {
+  Engine::Core::World world1;
+  Engine::Core::World world2;
+  Render::PersistentRenderRegistry reg;
+
+  reg.attach(&world1);
+  reg.detach();
+  reg.attach(&world2);
+
+  auto *world1_entity = world1.create_entity();
+  world1_entity->add_component<Engine::Core::RenderableComponent>("", "");
+  world1_entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F,
+                                                            10.0F);
+
+  EXPECT_TRUE(reg.unit_ids().empty());
+
+  auto *world2_entity = world2.create_entity();
+  world2_entity->add_component<Engine::Core::RenderableComponent>("", "");
+  world2_entity->add_component<Engine::Core::BuildingComponent>();
+
+  EXPECT_TRUE(reg.unit_ids().empty());
+  EXPECT_TRUE(has_id(reg.building_ids(), world2_entity->get_id()));
+}
+
+TEST(PersistentRenderRegistry, RegistryDestructionUnregistersObservers) {
+  Engine::Core::World world;
+  {
+    Render::PersistentRenderRegistry reg;
+    reg.attach(&world);
+  }
+
+  auto *entity = world.create_entity();
+  ASSERT_NE(entity, nullptr);
+  entity->add_component<Engine::Core::RenderableComponent>("", "");
+  entity->add_component<Engine::Core::UnitComponent>(100, 100, 1.0F, 10.0F);
+  world.destroy_entity(entity->get_id());
+  world.clear();
 }
 
 TEST(PersistentRenderRegistry, IsAttachedToReturnsTrueForAttachedWorld) {
@@ -242,10 +248,6 @@ TEST(PersistentRenderRegistry, IsAttachedToReturnsFalseForDifferentWorld) {
   EXPECT_FALSE(reg.is_attached_to(&world2));
 }
 
-// ---------------------------------------------------------------------------
-// No duplicate IDs on re-add
-// ---------------------------------------------------------------------------
-
 TEST(PersistentRenderRegistry, ReaddingRenderableDoesNotDuplicate) {
   Engine::Core::World world;
   Render::PersistentRenderRegistry reg;
@@ -257,17 +259,11 @@ TEST(PersistentRenderRegistry, ReaddingRenderableDoesNotDuplicate) {
 
   EXPECT_EQ(reg.other_ids().size(), 1U);
 
-  // Simulate adding RenderableComponent again (e.g., world re-scan).
-  // In practice add_component overwrites, firing the callback once.
   entity->add_component<Engine::Core::RenderableComponent>("new", "new");
 
   EXPECT_EQ(reg.other_ids().size(), 1U);
   EXPECT_TRUE(has_id(reg.other_ids(), id));
 }
-
-// ---------------------------------------------------------------------------
-// UnitComponent entities with BuildingComponent stay in unit list
-// ---------------------------------------------------------------------------
 
 TEST(PersistentRenderRegistry, EntityWithBothUnitAndBuildingClassifiedAsUnit) {
   Engine::Core::World world;
@@ -280,7 +276,6 @@ TEST(PersistentRenderRegistry, EntityWithBothUnitAndBuildingClassifiedAsUnit) {
   entity->add_component<Engine::Core::BuildingComponent>();
   const auto id = entity->get_id();
 
-  // UnitComponent takes priority (same as the original render_world logic).
   EXPECT_TRUE(has_id(reg.unit_ids(), id));
   EXPECT_FALSE(has_id(reg.building_ids(), id));
   EXPECT_FALSE(has_id(reg.other_ids(), id));

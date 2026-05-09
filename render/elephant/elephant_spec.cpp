@@ -340,10 +340,9 @@ void make_elephant_spec_pose_animated(
 
     float const phase_wave = std::sin(motion.anim_time * k_pi * 2.0F / 1.15F);
     float const trunk_raise = dims.trunk_length * (0.55F + 0.08F * phase_wave);
-    float const trunk_retract_z = dims.trunk_length * 0.35F;
+    float const trunk_retract_z =
+        dims.trunk_length * (0.10F + 0.02F * std::max(phase_wave, 0.0F));
     out_pose.trunk_end += QVector3D(0.0F, trunk_raise, -trunk_retract_z);
-    float const head_lower = dims.head_height * 0.07F;
-    out_pose.head_center += QVector3D(0.0F, -head_lower, 0.0F);
   }
 
   float const front_forward = dims.body_length * 0.35F;

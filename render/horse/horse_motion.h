@@ -27,10 +27,10 @@ constexpr float k_stirrup_width_scale = 0.92F;
 constexpr float k_stirrup_thickness_offset = 0.10F;
 constexpr float k_stirrup_forward_scale = 0.28F;
 
-constexpr float k_neck_top_body_height_scale = 1.16F;
-constexpr float k_neck_top_body_length_scale = 0.73F;
+constexpr float k_neck_top_body_height_scale = 1.18F;
+constexpr float k_neck_top_body_length_scale = 0.71F;
 constexpr float k_head_center_height_scale = 0.12F;
-constexpr float k_head_center_length_scale = 0.40F;
+constexpr float k_head_center_length_scale = 0.30F;
 
 constexpr float k_muzzle_height_offset = 0.12F;
 constexpr float k_muzzle_length_offset = 0.34F;

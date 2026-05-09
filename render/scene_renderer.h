@@ -205,6 +205,7 @@ public:
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
   void fog_batch(const FogInstanceData *instances, std::size_t count);
+  void fog_batch(Buffer *instance_buffer, std::size_t count);
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 

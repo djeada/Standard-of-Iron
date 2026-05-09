@@ -100,8 +100,9 @@ void main() {
       1.0 - smoothstep(soilBase - sw + sN, soilBase + sw + sN, v_worldPos.y);
   soilMix = clamp(soilMix, 0.0, 1.0);
   float mudPatch = fbm(wuv * 0.08 + vec2(7.3, 11.2));
-  mudPatch = smoothstep(0.62, 0.76, mudPatch + lowland * 0.18);
-  soilMix = max(soilMix, mudPatch * (0.70 + 0.18 * u_moistureLevel));
+  mudPatch = smoothstep(0.54, 0.72,
+                        mudPatch + lowland * 0.20 + u_moistureLevel * 0.10);
+  soilMix = max(soilMix, mudPatch * (0.76 + 0.22 * u_moistureLevel));
   soilMix = max(soilMix, lowland * (0.25 + 0.20 * u_moistureLevel));
 
   vec3 soilCol =
@@ -149,6 +150,19 @@ void main() {
   float wetDarkening = 1.0 - (u_moistureLevel * 0.12 + puddleMask * 0.10);
   baseCol *= wetDarkening;
 
+  float broadBreakup = fbm(wuv * 0.11 + vec2(31.0, -12.0));
+  float dampStain = smoothstep(
+      0.55, 0.80, broadBreakup + lowland * 0.16 + u_moistureLevel * 0.12);
+  float dryScuff = smoothstep(
+      0.64, 0.88, detail * 0.68 + patchNoise * 0.24 + dryness * 0.32);
+  vec3 dampSoil =
+      mix(u_soilColor * 0.58, u_soilColor * 0.90, moistureVar * 0.65);
+  vec3 dustyGrass = mix(u_grassDry, u_soilColor, 0.34);
+  float stainWeight =
+      dampStain * (0.10 + 0.24 * u_moistureLevel) * (1.0 - gravelMask * 0.45);
+  baseCol = mix(baseCol, dampSoil, stainWeight);
+  baseCol = mix(baseCol, dustyGrass, dryScuff * 0.13 * (1.0 - soilMix * 0.40));
+
   vec3 dx = dFdx(v_worldPos);
   float mScale = max(u_detailNoiseScale * (6.0 + u_microBumpFreq * 2.5), 0.2);
   float h0 = fbm(wuv * mScale);
@@ -157,15 +171,23 @@ void main() {
   vec2 g = vec2(hx - h0, hy - h0);
   vec3 t = normalize(dx - n * dot(n, dx));
   vec3 b = normalize(cross(n, t));
+  float reliefMask = clamp(0.35 + gravelMask * 0.55 + soilMix * 0.35 +
+                               dryScuff * 0.22 + dampStain * 0.18,
+                           0.0, 1.0);
   float microAmp =
-      clamp(u_microBumpAmp, 0.01, 0.20) * mix(0.7, 1.2, gravelMask);
+      clamp(u_microBumpAmp, 0.02, 0.28) * mix(0.82, 1.55, reliefMask);
   vec3 microPerturb = normalize(n - (t * g.x + b * g.y) * microAmp);
   vec3 nMicro =
       normalize(mix(n, microPerturb, clamp(u_microNormalWeight, 0.0, 1.0)));
   float jitterAmp = max(0.01, u_albedoJitter) * (0.65 + u_soilRoughness * 0.6);
   float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
-  float brightnessVar = (moistureVar - 0.5) * 0.08;
+  float speckle = step(0.74, noise21(wuv * 23.0 + vec2(2.0, 5.0)));
+  float patchBrightness =
+      (broadBreakup - 0.5) * 0.11 + (patchNoise - 0.5) * 0.07;
+  float brightnessVar =
+      (moistureVar - 0.5) * 0.09 + patchBrightness * (1.0 - puddleMask * 0.45);
   vec3 col = baseCol * (1.0 + jitter + brightnessVar);
+  col *= 1.0 + (speckle - 0.35) * 0.035 * (1.0 - puddleMask);
   col *= u_tint;
   vec3 L = normalize(u_lightDir);
   float ndl = max(dot(nMicro, L), 0.0);
