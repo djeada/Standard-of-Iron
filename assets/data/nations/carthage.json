@@ -377,17 +377,17 @@
     },
     {
       "id": "carthage_mercenary_broker",
-      "display_name": "Mercenary Broker",
+      "display_name": "Hanno the Great",
       "production": {
-        "cost": 380,
-        "build_time": 30.0,
+        "cost": 385,
+        "build_time": 31.0,
         "priority": 20,
         "is_melee": true
       },
       "combat": {
-        "health": 950,
-        "max_health": 950,
-        "speed": 2.1,
+        "health": 980,
+        "max_health": 980,
+        "speed": 2.05,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
@@ -400,9 +400,9 @@
       },
       "visuals": {
         "render_scale": 0.72,
-        "selection_ring_size": 1.85,
+        "selection_ring_size": 1.86,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/carthage/swordsman"
+        "renderer_id": "troops/carthage/commanders/hanno_the_great"
       },
       "formation": {
         "individuals_per_unit": 1,
@@ -411,17 +411,17 @@
     },
     {
       "id": "carthage_cavalry_patron",
-      "display_name": "Cavalry Patron",
+      "display_name": "Hasdrubal Barca",
       "production": {
-        "cost": 340,
-        "build_time": 27.0,
+        "cost": 350,
+        "build_time": 28.0,
         "priority": 20,
         "is_melee": true
       },
       "combat": {
-        "health": 1000,
-        "max_health": 1000,
-        "speed": 2.6,
+        "health": 1030,
+        "max_health": 1030,
+        "speed": 2.45,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
@@ -434,9 +434,9 @@
       },
       "visuals": {
         "render_scale": 0.72,
-        "selection_ring_size": 1.9,
+        "selection_ring_size": 1.88,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/carthage/horse_swordsman"
+        "renderer_id": "troops/carthage/commanders/hasdrubal_barca"
       },
       "formation": {
         "individuals_per_unit": 1,
@@ -445,17 +445,17 @@
     },
     {
       "id": "carthage_elephant_master",
-      "display_name": "Elephant Master",
+      "display_name": "Hannibal Barca",
       "production": {
-        "cost": 420,
+        "cost": 430,
         "build_time": 34.0,
         "priority": 20,
         "is_melee": true
       },
       "combat": {
-        "health": 1200,
-        "max_health": 1200,
-        "speed": 1.8,
+        "health": 1260,
+        "max_health": 1260,
+        "speed": 2.0,
         "vision_range": 18.0,
         "ranged_range": 1.5,
         "ranged_damage": 4,
@@ -468,9 +468,9 @@
       },
       "visuals": {
         "render_scale": 0.72,
-        "selection_ring_size": 2.0,
+        "selection_ring_size": 1.95,
         "selection_ring_ground_offset": 0.0,
-        "renderer_id": "troops/carthage/spearman"
+        "renderer_id": "troops/carthage/commanders/hannibal_barca"
       },
       "formation": {
         "individuals_per_unit": 1,

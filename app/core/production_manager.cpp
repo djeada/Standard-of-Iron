@@ -447,6 +447,9 @@ auto ProductionManager::get_unit_production_info(
       info["strengths"] = QString::fromStdString(commander->strengths);
       info["weaknesses"] = QString::fromStdString(commander->weaknesses);
       info["passive_aura"] = QString::fromStdString(commander->passive_aura);
+      info["bonus_type"] = QString::fromStdString(commander->bonus_type);
+      info["bonus_summary"] = QString::fromStdString(commander->bonus_summary);
+      info["aura_bonus_value"] = static_cast<double>(commander->aura_bonus_value);
       info["rally_ability"] = QString::fromStdString(commander->rally_ability);
       info["death_consequence"] =
           QString::fromStdString(commander->death_consequence);

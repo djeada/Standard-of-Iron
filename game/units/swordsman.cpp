@@ -73,11 +73,14 @@ void Swordsman::init(const SpawnParams &params) {
       commander->display_name = definition->display_name;
       commander->strategic_identity = definition->strategic_identity;
       commander->passive_aura = definition->passive_aura;
+      commander->bonus_type = definition->bonus_type;
+      commander->bonus_summary = definition->bonus_summary;
       commander->rally_ability = definition->rally_ability;
       commander->death_consequence = definition->death_consequence;
       commander->bodyguard_count = definition->bodyguard_count;
       commander->aura_radius = definition->aura_radius;
       commander->aura_morale_bonus = definition->aura_morale_bonus;
+      commander->aura_bonus_value = definition->aura_bonus_value;
       commander->rally_range = definition->rally_range;
       commander->rally_cooldown = definition->rally_cooldown;
       commander->rally_morale_restore = definition->rally_morale_restore;

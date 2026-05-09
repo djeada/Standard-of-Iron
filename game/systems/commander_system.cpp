@@ -2,8 +2,11 @@
 
 #include "../core/component.h"
 #include "../core/world.h"
-#include <algorithm>
+#include "troop_profile_service.h"
 #include <cmath>
+#include <optional>
+#include "units/spawn_type.h"
+#include <algorithm>
 
 namespace Game::Systems {
 namespace {
@@ -28,6 +31,14 @@ void refresh_morale_state(Engine::Core::MoraleComponent &morale) {
   morale.morale = std::clamp(morale.morale, 0.0F, 100.0F);
   morale.routing = morale.morale < 20.0F;
   morale.wavering = !morale.routing && morale.morale < 40.0F;
+}
+
+auto resolve_troop_type(const Engine::Core::UnitComponent *unit)
+    -> std::optional<Game::Units::TroopType> {
+  if (unit == nullptr) {
+    return std::nullopt;
+  }
+  return Game::Units::spawn_typeToTroopType(unit->spawn_type);
 }
 
 void apply_commander_death_shock(Engine::Core::World *world,
@@ -74,6 +85,24 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
     }
     morale->commander_aura_bonus = 0.0F;
     morale->shock_timer = std::max(0.0F, morale->shock_timer - delta_time);
+  }
+
+  for (auto *entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
+    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
+    if (unit == nullptr || unit->health <= 0) {
+      continue;
+    }
+    auto troop_type_opt = resolve_troop_type(unit);
+    if (!troop_type_opt.has_value()) {
+      continue;
+    }
+    const auto profile = TroopProfileService::instance().get_profile(
+        unit->nation_id, *troop_type_opt);
+    unit->speed = profile.combat.speed;
+    if (auto *attack = entity->get_component<Engine::Core::AttackComponent>()) {
+      attack->damage = profile.combat.ranged_damage;
+      attack->melee_damage = profile.combat.melee_damage;
+    }
   }
 
   for (auto *commander_entity :
@@ -126,12 +155,40 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
 
       const float dist_sq = distance_sq(*transform, *candidate_transform);
       if (dist_sq <= aura_radius_sq) {
-        if (auto *morale = morale_for(candidate)) {
+        auto *morale = morale_for(candidate);
+        if (morale != nullptr) {
           morale->commander_aura_bonus =
               std::max(morale->commander_aura_bonus,
                        commander->aura_morale_bonus);
           morale->morale += commander->aura_morale_bonus * delta_time * 0.05F;
           refresh_morale_state(*morale);
+        }
+
+        if (commander->bonus_type == "health_regen") {
+          candidate_unit->health = std::min(
+              candidate_unit->max_health,
+              candidate_unit->health + static_cast<int>(
+                                 std::round(commander->aura_bonus_value *
+                                            delta_time)));
+        } else if (commander->bonus_type == "attack_boost") {
+          if (auto *attack = candidate->get_component<Engine::Core::AttackComponent>()) {
+            const float factor = 1.0F + commander->aura_bonus_value;
+            attack->damage =
+                std::max(1, static_cast<int>(std::round(attack->damage * factor)));
+            attack->melee_damage = std::max(
+                1, static_cast<int>(std::round(attack->melee_damage * factor)));
+          }
+        } else if (commander->bonus_type == "speed_boost") {
+          candidate_unit->speed *= (1.0F + commander->aura_bonus_value);
+        } else if (commander->bonus_type == "production_haste") {
+          if (auto *production =
+                  candidate->get_component<Engine::Core::ProductionComponent>()) {
+            if (production->in_progress) {
+              const float haste = std::max(0.0F, commander->aura_bonus_value);
+              production->time_remaining =
+                  std::max(0.0F, production->time_remaining - delta_time * haste);
+            }
+          }
         }
       }
 

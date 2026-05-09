@@ -373,11 +373,14 @@ public:
   std::string display_name;
   std::string strategic_identity;
   std::string passive_aura;
+  std::string bonus_type;
+  std::string bonus_summary;
   std::string rally_ability;
   std::string death_consequence;
   int bodyguard_count{6};
   float aura_radius{12.0F};
   float aura_morale_bonus{5.0F};
+  float aura_bonus_value{0.0F};
   float rally_range{10.0F};
   float rally_cooldown{45.0F};
   float rally_morale_restore{25.0F};
