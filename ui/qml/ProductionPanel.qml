@@ -80,11 +80,13 @@ Rectangle {
             qsTr("COMMANDER — one per game"),
             qsTr("Cost: %1 villagers").arg(info.cost || 300),
             qsTr("Build time: %1s").arg((info.build_time || 30).toFixed(0)),
-            qsTr("Bonus: %1").arg(info.bonus_summary || info.passive_aura || ""),
-            qsTr("Aura: %1").arg(info.passive_aura || ""),
             qsTr("Rally: %1").arg(info.rally_ability || ""),
             qsTr("Risk: %1").arg(info.death_consequence || "")
         ];
+        if (info.bonus_summary)
+            lines.push(qsTr("Bonus: %1").arg(info.bonus_summary));
+
+        lines.push(qsTr("Aura: %1").arg(info.passive_aura || ""));
         return lines.join("\n");
     }
 
