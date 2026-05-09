@@ -140,7 +140,8 @@ auto TerrainScatterManager::firecamp() const -> FireCampRenderer * {
 auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
   std::lock_guard<std::mutex> lock(m_mutex);
 
-  return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::None, m_biome.get(),
+  return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::InstanceFiltered,
+           m_biome.get(),
            m_biome != nullptr ? m_biome->instance_count() : 0U,
            m_biome == nullptr || m_biome->is_gpu_ready()},
           {ScatterSpeciesId::Stone, ScatterVisibilityMode::InstanceFiltered,

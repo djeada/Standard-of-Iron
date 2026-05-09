@@ -20,6 +20,10 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
+constexpr int k_tree_cell_span = 4;
+constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
+constexpr float k_tree_edge_padding_scale = 0.35F;
+
 } // namespace
 
 namespace Render::GL {
@@ -108,7 +112,8 @@ void PineRenderer::generate_pine_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding *
+                        k_tree_edge_padding_scale;
 
   SpawnValidator validator(terrain_cache, config);
 
@@ -160,11 +165,13 @@ void PineRenderer::generate_pine_instances() {
     return true;
   };
 
-  for (int z = 0; z < m_height; z += 6) {
-    for (int x = 0; x < m_width; x += 6) {
-      int const idx = z * m_width + x;
+  for (int z = 0; z < m_height; z += k_tree_cell_span) {
+    for (int x = 0; x < m_width; x += k_tree_cell_span) {
+      int const sample_x = std::min(x + k_tree_cell_span / 2, m_width - 1);
+      int const sample_z = std::min(z + k_tree_cell_span / 2, m_height - 1);
+      int const idx = sample_z * m_width + sample_x;
 
-      float const slope = terrain_cache.get_slope_at(x, z);
+      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
       if (slope > 0.75F) {
         continue;
       }
@@ -172,20 +179,8 @@ void PineRenderer::generate_pine_instances() {
       uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0xAB12CD34U ^ static_cast<uint32_t>(idx));
 
-      float world_x = 0.0F;
-      float world_z = 0.0F;
-      validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
-                              world_x, world_z);
-
-      float const cluster_noise = value_noise(world_x * 0.03F, world_z * 0.03F,
-                                              m_noiseSeed ^ 0x7F8E9D0AU);
-
-      if (cluster_noise < 0.35F) {
-        continue;
-      }
-
       Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(x, z);
+          terrain_cache.get_terrain_type_at(sample_x, sample_z);
       float density_mult = 1.0F;
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 1.2F;
@@ -193,7 +188,8 @@ void PineRenderer::generate_pine_instances() {
         density_mult = 0.4F;
       }
 
-      float const effective_density = pine_density * density_mult * 0.8F;
+      float const effective_density =
+          pine_density * density_mult * 0.8F * k_tree_density_area_scale;
       int pine_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(pine_count);
       if (rand_01(state) < frac) {
@@ -201,8 +197,8 @@ void PineRenderer::generate_pine_instances() {
       }
 
       for (int i = 0; i < pine_count; ++i) {
-        float const gx = float(x) + rand_01(state) * 6.0F;
-        float const gz = float(z) + rand_01(state) * 6.0F;
+        float const gx = float(x) + rand_01(state) * float(k_tree_cell_span);
+        float const gz = float(z) + rand_01(state) * float(k_tree_cell_span);
         add_pine(gx, gz, state);
       }
     }

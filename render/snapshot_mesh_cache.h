@@ -1,5 +1,6 @@
 #pragma once
 
+#include "creature/pipeline/creature_asset.h"
 #include "creature/render_request.h"
 #include "rigged_mesh.h"
 
@@ -31,8 +32,12 @@ struct SnapshotMeshEntry {
 class SnapshotMeshCache {
 public:
   struct Key {
+    Render::Creature::Pipeline::CreatureAssetId asset_id{
+        Render::Creature::Pipeline::kInvalidCreatureAsset};
     Render::Creature::ArchetypeId archetype{
         Render::Creature::kInvalidArchetype};
+    Render::Creature::Pipeline::AttachmentSetId attachment_set_id{
+        Render::Creature::Pipeline::kInvalidAttachmentSetId};
     Render::Creature::VariantId variant{Render::Creature::kCanonicalVariant};
     Render::Creature::AnimationStateId state{
         Render::Creature::AnimationStateId::Idle};
@@ -41,7 +46,8 @@ public:
     std::uint32_t frame_in_clip{0};
 
     auto operator==(const Key &o) const noexcept -> bool {
-      return archetype == o.archetype && variant == o.variant &&
+      return asset_id == o.asset_id && archetype == o.archetype &&
+             attachment_set_id == o.attachment_set_id && variant == o.variant &&
              state == o.state && clip_id == o.clip_id &&
              clip_variant == o.clip_variant && frame_in_clip == o.frame_in_clip;
     }
@@ -50,12 +56,15 @@ public:
   struct KeyHash {
     auto operator()(const Key &k) const noexcept -> std::size_t {
       auto const a = static_cast<std::size_t>(k.archetype);
+      auto const asset = static_cast<std::size_t>(k.asset_id);
+      auto const set = static_cast<std::size_t>(k.attachment_set_id);
       auto const v = static_cast<std::size_t>(k.variant);
       auto const s = static_cast<std::size_t>(k.state);
       auto const c = static_cast<std::size_t>(k.clip_id);
       auto const cv = static_cast<std::size_t>(k.clip_variant);
       auto const f = static_cast<std::size_t>(k.frame_in_clip);
-      return ((a * 0x9E3779B1u) ^ (v << 13U) ^ (s << 21U) ^
+      return ((asset * 0x165667B1ULL) ^ (a * 0x9E3779B1u) ^
+              (set * 0x27D4EB2FULL) ^ (v << 13U) ^ (s << 21U) ^
               (c * 0x85EBCA6BULL) ^ (cv << 7U) ^ (f * 0xC2B2AE35ULL));
     }
   };

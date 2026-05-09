@@ -8,6 +8,15 @@ This is the story of how Standard of Iron takes game state and turns it into pix
 
 We'll start with the big picture of how data flows through the system, then dig into each layer: how Qt bootstraps OpenGL, how we record what needs to be drawn, how the backend executes those commands efficiently, where OpenGL actually lives in the code, how different nations get their unique visual styles, and finally how our shaders generate infinite detail without eating all your VRAM.
 
+## QSG render-thread stages
+
+`ui/gl_view.cpp` owns the frame callback through `GLView::GLRenderer::render()`. Qt runs that callback with the FBO OpenGL context current on the QSG render thread. The callback intentionally performs two engine stages in order:
+
+1. `GameEngine::update(dt)` advances simulation systems before rendering. `World::update(dt)` runs here, so combat query rebuilds, target searches, attack state updates, hit feedback, target direction, and mode flags are simulation costs even when a profiler groups them under `QSGRenderThread`.
+2. `GameEngine::render(width, height)` records and plays back rendering work from state that already exists. `Renderer::render_world(world)` may read components such as combat state, attack target, hit feedback, transforms, visibility, and renderable data, but it must not rebuild combat query state or search for targets. `Renderer::end_frame()` sorts the `DrawQueue`, then `Backend::execute(...)` performs OpenGL playback.
+
+When a capture needs stage markers, set `SOI_RENDER_STAGE_LOG=1`. The extra logs are first-use only and remain disabled during normal gameplay. They identify the simulation update, render submit, renderer setup/cache attachment, creature asset registry load, and first backend playback so one-time setup can be separated from steady-frame costs.
+
 
 ## The two-phase dance
 

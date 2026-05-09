@@ -237,7 +237,8 @@ TEST(CreatureRenderAssetHandleRegistry, CreatesStableHandleAfterBpatLoad) {
   EXPECT_GT(idle.frame_count, 0U);
 }
 
-TEST(CreatureRenderAssetHandleRegistry, AttachmentSetIdStablePerArchetype) {
+TEST(CreatureRenderAssetHandleRegistry,
+     AttachmentSetIdDeduplicatesIdenticalSets) {
   auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
   if (root.empty()) {
     GTEST_SKIP() << "baked .bpat assets not found";
@@ -263,6 +264,7 @@ TEST(CreatureRenderAssetHandleRegistry, AttachmentSetIdStablePerArchetype) {
   ASSERT_NE(rider, nullptr);
   EXPECT_NE(base->attachment_set_id, kInvalidAttachmentSetId);
   EXPECT_NE(rider->attachment_set_id, kInvalidAttachmentSetId);
+  EXPECT_EQ(base->attachment_set_id, rider->attachment_set_id);
 
   const auto base_id_again = handles.get_or_create(
       kHumanoidAsset, Render::Creature::ArchetypeRegistry::kHumanoidBase);

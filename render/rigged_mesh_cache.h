@@ -69,6 +69,9 @@ public:
     std::uint32_t hits{0};
     std::uint32_t misses{0};
     std::uint32_t bakes{0};
+    std::uint32_t skin_atlas_builds{0};
+    std::uint32_t skin_ubo_uploads{0};
+    std::uint64_t skin_ubo_bytes_uploaded{0};
   };
 
   RiggedMeshCache() = default;
@@ -79,6 +82,12 @@ public:
   void reset_frame_stats() noexcept { m_frame_stats = {}; }
   [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
     return m_frame_stats;
+  }
+
+  void record_skin_atlas_build() noexcept { ++m_frame_stats.skin_atlas_builds; }
+  void record_skin_ubo_upload(std::uint64_t bytes) noexcept {
+    ++m_frame_stats.skin_ubo_uploads;
+    m_frame_stats.skin_ubo_bytes_uploaded += bytes;
   }
 
   auto get_or_bake(const Render::Creature::CreatureSpec &spec,

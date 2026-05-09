@@ -73,23 +73,32 @@ void main() {
       vec2(fbm(baseUv * 0.22), fbm((baseUv + vec2(13.7, -6.1)) * 0.22));
   vec2 wuv = baseUv + (warpNoise - 0.5) * 1.1;
 
+  float landform = fbm(wuv * max(u_macroNoiseScale * 0.13, 0.0025));
+  float landform2 =
+      fbm(wuv * max(u_macroNoiseScale * 0.25, 0.004) + vec2(-22.0, 8.0));
+  float basin = smoothstep(0.18, 0.64, 1.0 - landform);
+  float raisedShelf = smoothstep(0.54, 0.86, landform * 0.72 + landform2 * 0.28);
   float macro = fbm(wuv * u_macroNoiseScale);
   float detail = fbm(wuv * max(u_detailNoiseScale * 1.8, 0.12));
   float patchNoise = fbm(wuv * max(u_macroNoiseScale * 0.45, 0.006));
+  float fieldPatch = fbm(wuv * max(u_macroNoiseScale * 0.20, 0.0035) +
+                         vec2(15.7, -31.4));
   float gravelNoise =
       fbm(wuv * max(u_detailNoiseScale * 3.2, 0.18) + vec2(5.2, 17.3));
   float pebbleNoise = noise21(wuv * max(u_detailNoiseScale * 14.0, 0.9));
   float moistureVar = smoothstep(0.28, 0.72, patchNoise);
   float lush = smoothstep(0.18, 0.82, macro);
-  lush = mix(lush, moistureVar, 0.38);
-  float lowland = smoothstep(0.0, 0.11, -v_disp);
-  float rise = smoothstep(0.03, 0.10, v_disp);
+  lush = mix(lush, moistureVar, 0.34);
+  lush = mix(lush, smoothstep(0.30, 0.76, fieldPatch), 0.20);
+  float lowland = max(smoothstep(0.0, 0.34, -v_disp), basin * 0.38);
+  float rise = max(smoothstep(0.10, 0.46, v_disp), raisedShelf * 0.26);
   float windScour = smoothstep(0.45, 0.82, detail + rise * 0.55 + slope * 0.30);
 
   vec3 lushGrass = mix(u_grassPrimary, u_grassSecondary, lush);
-  float dryness = 0.18 + detail * 0.18 + windScour * 0.42;
+  float dryness = 0.16 + detail * 0.15 + windScour * 0.38;
+  dryness += raisedShelf * 0.16;
   dryness += (1.0 - u_moistureLevel) * 0.18;
-  dryness -= lowland * (0.18 + 0.24 * u_moistureLevel);
+  dryness -= lowland * (0.16 + 0.26 * u_moistureLevel);
   dryness = clamp(dryness, 0.0, 1.0);
   vec3 grassCol = mix(lushGrass, u_grassDry, dryness);
   grassCol = mix(grassCol, u_grassSecondary, lowland * 0.16);
@@ -99,9 +108,12 @@ void main() {
   float soilMix =
       1.0 - smoothstep(soilBase - sw + sN, soilBase + sw + sN, v_worldPos.y);
   soilMix = clamp(soilMix, 0.0, 1.0);
-  float mudPatch = fbm(wuv * 0.08 + vec2(7.3, 11.2));
-  mudPatch = smoothstep(0.54, 0.72,
-                        mudPatch + lowland * 0.20 + u_moistureLevel * 0.10);
+  float mudPatch = fbm(wuv * 0.045 + vec2(7.3, 11.2));
+  float mudPatchFine = fbm(wuv * 0.11 + vec2(-8.4, 19.6));
+  mudPatch = smoothstep(0.50, 0.70,
+                        mudPatch * 0.72 + mudPatchFine * 0.28 +
+                            basin * 0.20 + lowland * 0.16 +
+                            u_moistureLevel * 0.10);
   soilMix = max(soilMix, mudPatch * (0.76 + 0.22 * u_moistureLevel));
   soilMix = max(soilMix, lowland * (0.25 + 0.20 * u_moistureLevel));
 
@@ -150,18 +162,23 @@ void main() {
   float wetDarkening = 1.0 - (u_moistureLevel * 0.12 + puddleMask * 0.10);
   baseCol *= wetDarkening;
 
-  float broadBreakup = fbm(wuv * 0.11 + vec2(31.0, -12.0));
-  float dampStain = smoothstep(
-      0.55, 0.80, broadBreakup + lowland * 0.16 + u_moistureLevel * 0.12);
+  float broadBreakup = fbm(wuv * 0.055 + vec2(31.0, -12.0));
+  float broadBreakup2 = fbm(wuv * 0.018 + vec2(-41.0, 6.0));
+  float dampStain = smoothstep(0.50, 0.78,
+                               broadBreakup * 0.62 + broadBreakup2 * 0.38 +
+                                   lowland * 0.18 + basin * 0.18 +
+                                   u_moistureLevel * 0.12);
   float dryScuff = smoothstep(
-      0.64, 0.88, detail * 0.68 + patchNoise * 0.24 + dryness * 0.32);
+      0.60, 0.86,
+      detail * 0.54 + patchNoise * 0.18 + fieldPatch * 0.22 + dryness * 0.30 +
+          raisedShelf * 0.14);
   vec3 dampSoil =
       mix(u_soilColor * 0.58, u_soilColor * 0.90, moistureVar * 0.65);
   vec3 dustyGrass = mix(u_grassDry, u_soilColor, 0.34);
   float stainWeight =
-      dampStain * (0.10 + 0.24 * u_moistureLevel) * (1.0 - gravelMask * 0.45);
+      dampStain * (0.12 + 0.28 * u_moistureLevel) * (1.0 - gravelMask * 0.45);
   baseCol = mix(baseCol, dampSoil, stainWeight);
-  baseCol = mix(baseCol, dustyGrass, dryScuff * 0.13 * (1.0 - soilMix * 0.40));
+  baseCol = mix(baseCol, dustyGrass, dryScuff * 0.18 * (1.0 - soilMix * 0.35));
 
   vec3 dx = dFdx(v_worldPos);
   float mScale = max(u_detailNoiseScale * (6.0 + u_microBumpFreq * 2.5), 0.2);
@@ -183,7 +200,8 @@ void main() {
   float jitter = (hash21(wuv * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float speckle = step(0.74, noise21(wuv * 23.0 + vec2(2.0, 5.0)));
   float patchBrightness =
-      (broadBreakup - 0.5) * 0.11 + (patchNoise - 0.5) * 0.07;
+      (broadBreakup - 0.5) * 0.13 + (broadBreakup2 - 0.5) * 0.10 +
+      (patchNoise - 0.5) * 0.06 + (landform - 0.5) * 0.08;
   float brightnessVar =
       (moistureVar - 0.5) * 0.09 + patchBrightness * (1.0 - puddleMask * 0.45);
   vec3 col = baseCol * (1.0 + jitter + brightnessVar);

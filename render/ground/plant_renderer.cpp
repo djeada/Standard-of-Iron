@@ -20,6 +20,10 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
+constexpr int k_plant_cell_span = 2;
+constexpr float k_plant_density_area_scale = 4.0F / 9.0F;
+constexpr float k_plant_edge_padding_scale = 0.35F;
+
 } // namespace
 
 namespace Render::GL {
@@ -107,7 +111,8 @@ void PlantRenderer::generate_plant_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding;
+  config.edge_padding = scatter_profile.spawn_edge_padding *
+                        k_plant_edge_padding_scale;
 
   SpawnValidator validator(terrain_cache, config);
 
@@ -155,18 +160,20 @@ void PlantRenderer::generate_plant_instances() {
     return true;
   };
 
-  for (int z = 0; z < m_height; z += 3) {
-    for (int x = 0; x < m_width; x += 3) {
-      int const idx = z * m_width + x;
+  for (int z = 0; z < m_height; z += k_plant_cell_span) {
+    for (int x = 0; x < m_width; x += k_plant_cell_span) {
+      int const sample_x = std::min(x + k_plant_cell_span / 2, m_width - 1);
+      int const sample_z = std::min(z + k_plant_cell_span / 2, m_height - 1);
+      int const idx = sample_z * m_width + sample_x;
 
       Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(x, z);
+          terrain_cache.get_terrain_type_at(sample_x, sample_z);
       if (terrain_type == Game::Map::TerrainType::Mountain ||
           terrain_type == Game::Map::TerrainType::River) {
         continue;
       }
 
-      float const slope = terrain_cache.get_slope_at(x, z);
+      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
       if (slope > 0.65F) {
         continue;
       }
@@ -174,24 +181,13 @@ void PlantRenderer::generate_plant_instances() {
       uint32_t state = hash_coords(
           x, z, m_noiseSeed ^ 0x8F3C5A7EU ^ static_cast<uint32_t>(idx));
 
-      float world_x = 0.0F;
-      float world_z = 0.0F;
-      validator.grid_to_world(static_cast<float>(x), static_cast<float>(z),
-                              world_x, world_z);
-
-      float const cluster_noise = value_noise(world_x * 0.05F, world_z * 0.05F,
-                                              m_noiseSeed ^ 0x4B9D2F1AU);
-
-      if (cluster_noise < 0.45F) {
-        continue;
-      }
-
       float density_mult = 1.0F;
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 0.6F;
       }
 
-      float const effective_density = plant_density * density_mult * 0.8F;
+      float const effective_density =
+          plant_density * density_mult * 0.8F * k_plant_density_area_scale;
       int plant_count = static_cast<int>(std::floor(effective_density));
       float const frac = effective_density - float(plant_count);
       if (rand_01(state) < frac) {
@@ -199,8 +195,8 @@ void PlantRenderer::generate_plant_instances() {
       }
 
       for (int i = 0; i < plant_count; ++i) {
-        float const gx = float(x) + rand_01(state) * 3.0F;
-        float const gz = float(z) + rand_01(state) * 3.0F;
+        float const gx = float(x) + rand_01(state) * float(k_plant_cell_span);
+        float const gz = float(z) + rand_01(state) * float(k_plant_cell_span);
         add_plant(gx, gz, state);
       }
     }

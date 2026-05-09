@@ -158,10 +158,34 @@
 #include <QStringList>
 #include <algorithm>
 #include <cmath>
+#include <mutex>
+#include <string>
 #include <utility>
 #include <vector>
 
 namespace {
+
+auto render_stage_logging_enabled() -> bool {
+  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
+}
+
+void log_render_stage_once(const char *stage, const QString &detail) {
+  if (!render_stage_logging_enabled()) {
+    return;
+  }
+
+  static std::mutex mutex;
+  static std::unordered_set<std::string> emitted_stages;
+
+  std::lock_guard<std::mutex> const lock(mutex);
+  if (!emitted_stages.emplace(stage).second) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("SOI render stage [%1]: %2")
+                           .arg(QString::fromLatin1(stage), detail)
+                    << "thread" << QThread::currentThread();
+}
 
 auto resolve_mission_file_path(const QString &mission_id) -> QString {
   const QStringList search_paths = {
@@ -994,6 +1018,15 @@ void GameEngine::update(float dt) {
   }
 
   if (m_world) {
+    // GLView::GLRenderer::render() intentionally runs simulation update on the
+    // Qt FBO render callback thread immediately before render submit. Systems
+    // that build gameplay query state, including CombatSystem, belong here;
+    // GameEngine::render() and Renderer::render_world() consume the resulting
+    // component state without running combat searches.
+    log_render_stage_once(
+        "simulation-update",
+        QStringLiteral(
+            "world systems run before render; combat queries rebuild here"));
     m_world->update(dt);
 
     auto &visibility_service = Game::Map::VisibilityService::instance();
@@ -1086,6 +1119,10 @@ void GameEngine::render(int pixelWidth, int pixelHeight) {
   if (!m_renderer || !m_world || !m_runtime.initialized || m_runtime.loading) {
     return;
   }
+
+  log_render_stage_once("render-submit",
+                        QStringLiteral("records draw commands from existing "
+                                       "visual state; no combat queries"));
 
   Game::Systems::CameraVisibilityService::instance().set_camera(m_camera.get());
 

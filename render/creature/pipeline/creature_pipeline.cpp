@@ -75,16 +75,6 @@ auto creature_lod_bit(CreatureLOD lod) noexcept -> std::uint8_t {
   return static_cast<std::uint8_t>(1U << static_cast<std::uint8_t>(lod));
 }
 
-auto uses_prebaked_lowpoly_path(
-    CreatureKind kind, CreatureLOD lod,
-    std::span<const Render::Creature::StaticAttachmentSpec>
-        attachments) noexcept -> bool {
-  if (lod != CreatureLOD::Minimal || !attachments.empty()) {
-    return false;
-  }
-  return kind == CreatureKind::Horse || kind == CreatureKind::Elephant;
-}
-
 void report_submit_cache_miss(std::string_view path,
                               const CreatureRenderAssetHandle &handle,
                               CreatureLOD lod, ArchetypeId archetype,
@@ -103,14 +93,39 @@ void report_submit_cache_miss(std::string_view path,
                                            ? handle.asset->id
                                            : kInvalidCreatureAsset)
          << " lod=" << static_cast<int>(lod)
-          << " state=" << static_cast<int>(state) << " clip=" << clip_id
-          << " frame_in_clip=" << frame_in_clip
-          << " variant=" << static_cast<std::uint32_t>(variant)
-          << " clip_variant=" << static_cast<int>(clip_variant)
-          << " attachment_set_id=" << attachment_set_id
-          << " attachments_hash=0x" << std::hex << attachments_hash;
+         << " state=" << static_cast<int>(state) << " clip=" << clip_id
+         << " frame_in_clip=" << frame_in_clip
+         << " variant=" << static_cast<std::uint32_t>(variant)
+         << " clip_variant=" << static_cast<int>(clip_variant)
+         << " attachment_set_id=" << attachment_set_id << " attachments_hash=0x"
+         << std::hex << attachments_hash;
   report_runtime_bake_violation(RuntimeBakeOperation::CreatureSubmitMiss,
                                 detail.str());
+}
+
+void ensure_skin_atlas_for_submit(
+    Render::GL::RiggedMeshCache &cache,
+    const Render::GL::RiggedMeshEntry &entry,
+    const Render::Creature::Bpat::BpatBlob &blob) {
+  const bool had_atlas = entry.skinned_frame_total == blob.frame_total() &&
+                         entry.skinned_bone_count != 0U &&
+                         !entry.skinned_palettes.empty();
+  Render::GL::rigged_entry_ensure_skin_atlas_from_blob(entry, blob);
+  if (!had_atlas && entry.skinned_frame_total == blob.frame_total() &&
+      entry.skinned_bone_count != 0U && !entry.skinned_palettes.empty()) {
+    cache.record_skin_atlas_build();
+  }
+}
+
+void ensure_skin_ubo_for_submit(Render::GL::RiggedMeshCache &cache,
+                                const Render::GL::RiggedMeshEntry &entry) {
+  const bool had_ubo = entry.skin_palette_ubo != 0U;
+  Render::GL::rigged_entry_ensure_skin_ubo(entry);
+  if (!had_ubo && entry.skin_palette_ubo != 0U) {
+    const auto bytes = static_cast<std::uint64_t>(entry.skinned_frame_total) *
+                       Render::GL::BonePaletteArena::kPaletteBytes;
+    cache.record_skin_ubo_upload(bytes);
+  }
 }
 
 void submit_rigged_creature(
@@ -121,8 +136,7 @@ void submit_rigged_creature(
     std::uint16_t variant_bucket, const QVector3D &base_color,
     const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
-    Render::GL::ISubmitter &out, Render::GL::Renderer *renderer,
-    std::span<const Render::Creature::StaticAttachmentSpec> attachments = {}) {
+    Render::GL::ISubmitter &out, Render::GL::Renderer *renderer) {
   const CreatureAsset *asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr ||
       asset->spec == nullptr || handle.bind_palette.empty()) {
@@ -135,20 +149,20 @@ void submit_rigged_creature(
                         return c;
                       })();
   auto *entry = cache.get_or_bake_prehashed(
-      *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
-      handle.attachments_hash, handle.attachment_set_id, blob.species_id());
+      *asset->spec, lod, handle.bind_palette, variant_bucket,
+      handle.attachments, handle.attachments_hash, handle.attachment_set_id,
+      blob.species_id());
   if (entry == nullptr || entry->mesh == nullptr ||
       entry->mesh->index_count() == 0U) {
     report_submit_cache_miss("rigged", handle, lod, archetype, variant, state,
                              clip_id, clip_variant, frame_in_clip,
-                             handle.attachment_set_id,
-                             handle.attachments_hash);
+                             handle.attachment_set_id, handle.attachments_hash);
     return;
   }
 
-  Render::GL::rigged_entry_ensure_skin_atlas_from_blob(*entry, blob);
+  ensure_skin_atlas_for_submit(cache, *entry, blob);
   if (renderer != nullptr) {
-    Render::GL::rigged_entry_ensure_skin_ubo(*entry);
+    ensure_skin_ubo_for_submit(cache, *entry);
   }
 
   if (entry->skinned_palettes.empty() || entry->skinned_bone_count == 0 ||
@@ -193,9 +207,7 @@ auto submit_snapshot_creature(
     const QMatrix4x4 &world_from_unit,
     const Render::Creature::Bpat::BpatBlob &blob, std::uint32_t global_frame,
     std::uint32_t frame_in_clip, Render::GL::ISubmitter &out,
-    Render::GL::Renderer *renderer,
-    std::span<const Render::Creature::StaticAttachmentSpec> attachments = {},
-    bool allow_bake_fallback = true) -> bool {
+    Render::GL::Renderer *renderer, bool allow_bake_fallback = true) -> bool {
   const CreatureAsset *asset = handle.asset;
   if (lod == CreatureLOD::Billboard || asset == nullptr ||
       asset->spec == nullptr || handle.bind_palette.empty()) {
@@ -207,14 +219,17 @@ auto submit_snapshot_creature(
   }
 
   Render::GL::SnapshotMeshCache::Key key{};
+  key.asset_id = asset->id;
   key.archetype = archetype;
+  key.attachment_set_id = handle.attachment_set_id;
   key.variant = variant;
   key.state = state;
   key.clip_id = clip_id;
   key.clip_variant = clip_variant;
   key.frame_in_clip = frame_in_clip;
 
-  if (attachments.empty() && asset->snapshot_mesh_species_id != 0xFFFFFFFFu &&
+  if (!handle.has_static_attachments &&
+      asset->snapshot_mesh_species_id != 0xFFFFFFFFu &&
       (asset->snapshot_mesh_lod_mask & creature_lod_bit(lod)) != 0U) {
     const auto *mesh_blob =
         Render::Creature::Snapshot::SnapshotMeshRegistry::instance().blob(
@@ -261,8 +276,9 @@ auto submit_snapshot_creature(
 
   auto &rigged_cache = renderer->rigged_mesh_cache();
   auto *source = rigged_cache.get_or_bake_prehashed(
-      *asset->spec, lod, handle.bind_palette, variant_bucket, attachments,
-      handle.attachments_hash, handle.attachment_set_id, blob.species_id());
+      *asset->spec, lod, handle.bind_palette, variant_bucket,
+      handle.attachments, handle.attachments_hash, handle.attachment_set_id,
+      blob.species_id());
   if (source == nullptr || source->mesh == nullptr ||
       source->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_source_rigged", handle, lod, archetype,
@@ -272,7 +288,7 @@ auto submit_snapshot_creature(
     return false;
   }
 
-  Render::GL::rigged_entry_ensure_skin_atlas_from_blob(*source, blob);
+  ensure_skin_atlas_for_submit(rigged_cache, *source, blob);
   if (source->skinned_palettes.empty() || source->skinned_bone_count == 0 ||
       global_frame >= source->skinned_frame_total) {
     return false;
@@ -284,8 +300,7 @@ auto submit_snapshot_creature(
       snap->mesh->index_count() == 0U) {
     report_submit_cache_miss("snapshot_bake", handle, lod, archetype, variant,
                              state, clip_id, clip_variant, frame_in_clip,
-                             handle.attachment_set_id,
-                             handle.attachments_hash);
+                             handle.attachment_set_id, handle.attachments_hash);
     return false;
   }
 
@@ -469,9 +484,9 @@ auto CreaturePipeline::submit_requests(
           req.world, species_kind,
           playback.blob->frame_palette_view(playback.global_frame));
     }
-    const auto attachments = handle->archetype->attachments_view();
     const bool prebaked_lowpoly_required =
-        uses_prebaked_lowpoly_path(species_kind, req.lod, attachments);
+        req.lod == CreatureLOD::Minimal &&
+        handle->requires_prebaked_minimal_snapshot;
 
     if (playback_desc.snapshot) {
       const bool emitted = submit_snapshot_creature(
@@ -479,7 +494,7 @@ auto CreaturePipeline::submit_requests(
           playback_desc.clip_id, req.clip_variant, req.role_colors_view(),
           static_cast<std::uint16_t>(req.variant), req.base_color, draw_world,
           *playback.blob, playback.global_frame, playback.frame_in_clip, out,
-          renderer, attachments, !prebaked_lowpoly_required);
+          renderer, !prebaked_lowpoly_required);
       if (emitted) {
         return;
       }
@@ -498,7 +513,7 @@ auto CreaturePipeline::submit_requests(
                            playback.frame_in_clip, req.role_colors_view(),
                            static_cast<std::uint16_t>(req.variant),
                            req.base_color, draw_world, *playback.blob,
-                           playback.global_frame, out, renderer, attachments);
+                           playback.global_frame, out, renderer);
   };
 
   for (const auto &req : requests) {
@@ -510,6 +525,9 @@ auto CreaturePipeline::submit_requests(
     stats.rigged_cache_hits = rs.hits;
     stats.rigged_cache_misses = rs.misses;
     stats.rigged_cache_bakes = rs.bakes;
+    stats.skin_atlas_builds = rs.skin_atlas_builds;
+    stats.skin_ubo_uploads = rs.skin_ubo_uploads;
+    stats.skin_ubo_bytes_uploaded = rs.skin_ubo_bytes_uploaded;
     const auto &ss = renderer->snapshot_mesh_cache().frame_stats();
     stats.snapshot_cache_hits = ss.hits;
     stats.snapshot_loads = ss.loads;

@@ -47,7 +47,8 @@ void main() {
   vec3 normal = normalize(vec3(sinO, 1.6, cosO));
   float lightTerm = clamp(dot(normal, lightDir), 0.0, 1.0);
   float tipHighlight = mix(0.7, 1.0, tip);
-  vec3 soilBlend = mix(u_soilColor, bladeColor, tip);
+  vec3 rootTint = mix(u_soilColor * 0.45, bladeColor, 0.52);
+  vec3 soilBlend = mix(rootTint, bladeColor, smoothstep(0.0, 0.72, tip));
   v_color = soilBlend * (0.7 + 0.3 * lightTerm) * tipHighlight;
 
   float edgeFade = 1.0 - smoothstep(0.35, 0.5, abs(a_uv.x - 0.5));

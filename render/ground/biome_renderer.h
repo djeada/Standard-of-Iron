@@ -47,8 +47,8 @@ private:
   Game::Map::BiomeSettings m_biome_settings;
   std::uint32_t m_noiseSeed = 0U;
 
-  Render::Ground::Scatter::DirectRendererState<GrassInstanceGpu,
-                                               GrassBatchParams>
+  Render::Ground::Scatter::FilteredRendererState<GrassInstanceGpu,
+                                                 GrassBatchParams>
       m_grass_state;
 };
 

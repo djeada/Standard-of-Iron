@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../creature/spec.h"
+#include "../../static_attachment_spec.h"
 #include "../render_request.h"
 #include "unit_visual_spec.h"
 
@@ -14,6 +15,7 @@
 #include <span>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace Render::Creature {
 struct ArchetypeDescriptor;
@@ -28,6 +30,7 @@ namespace Render::Creature::Pipeline {
 struct CreatureVisualDefinition;
 
 inline constexpr std::size_t kMaxCreatureBones = 24;
+inline constexpr std::size_t kMaxAttachmentSetSpecs = 16;
 using AttachmentSetId = std::uint32_t;
 inline constexpr AttachmentSetId kInvalidAttachmentSetId = 0U;
 
@@ -70,8 +73,11 @@ struct CreatureRenderAssetHandle {
   const CreatureAsset *asset{nullptr};
   const Render::Creature::ArchetypeDescriptor *archetype{nullptr};
   std::span<const QMatrix4x4> bind_palette{};
+  std::span<const Render::Creature::StaticAttachmentSpec> attachments{};
   std::uint64_t attachments_hash{0U};
   AttachmentSetId attachment_set_id{kInvalidAttachmentSetId};
+  bool has_static_attachments{false};
+  bool requires_prebaked_minimal_snapshot{false};
   std::array<CreatureClipPlaybackDesc,
              Render::Creature::animation_state_count()>
       playback{};
@@ -115,34 +121,23 @@ private:
 
   CreatureRenderAssetHandleRegistry() = default;
 
-  struct AttachmentSetKey {
-    Render::Creature::ArchetypeId archetype_id{
-        Render::Creature::kInvalidArchetype};
-    std::uint64_t attachments_hash{0U};
-
-    auto operator==(const AttachmentSetKey &other) const noexcept -> bool {
-      return archetype_id == other.archetype_id &&
-             attachments_hash == other.attachments_hash;
-    }
-  };
-
-  struct AttachmentSetKeyHash {
-    auto operator()(const AttachmentSetKey &key) const noexcept -> std::size_t {
-      return (static_cast<std::size_t>(key.archetype_id) << 32U) ^
-             static_cast<std::size_t>(key.attachments_hash);
-    }
+  struct AttachmentSetRecord {
+    std::uint64_t hash{0U};
+    std::array<Render::Creature::StaticAttachmentSpec, kMaxAttachmentSetSpecs>
+        attachments{};
+    std::uint8_t attachment_count{0U};
+    AttachmentSetId id{kInvalidAttachmentSetId};
   };
 
   [[nodiscard]] auto acquire_attachment_set_id(
-      Render::Creature::ArchetypeId archetype_id,
+      std::span<const Render::Creature::StaticAttachmentSpec> attachments,
       std::uint64_t attachments_hash) -> AttachmentSetId;
 
   std::unordered_map<Key, Render::Creature::CreatureRenderAssetHandleId,
                      KeyHash>
       lookup_{};
   std::deque<CreatureRenderAssetHandle> handles_{};
-  std::unordered_map<AttachmentSetKey, AttachmentSetId, AttachmentSetKeyHash>
-      attachment_sets_{};
+  std::vector<AttachmentSetRecord> attachment_sets_{};
   AttachmentSetId next_attachment_set_id_{1U};
 };
 
