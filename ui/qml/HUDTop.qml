@@ -6,15 +6,15 @@ import StandardOfIron 1.0
 Item {
     id: topRoot
 
-    property bool gameIsPaused: false
-    property real currentSpeed: 1
-    readonly property int barmin_height: 72
+    property bool game_is_paused: false
+    property real current_speed: 1
+    readonly property int bar_min_height: 72
     readonly property bool compact: width < 800
-    readonly property bool ultraCompact: width < 560
+    readonly property bool ultra_compact: width < 560
     readonly property var hs: StyleGuide.historical
 
-    signal pauseToggled()
-    signal speedChanged(real speed)
+    signal pause_toggled()
+    signal speed_changed(real speed)
 
     Rectangle {
         id: topPanel
@@ -22,7 +22,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: barmin_height
+        height: bar_min_height
         color: hs.parchmentDark
         opacity: 0.98
         clip: true
@@ -90,11 +90,11 @@ Item {
 
                     Layout.preferredWidth: topRoot.compact ? 48 : 56
                     Layout.preferredHeight: Math.min(40, topPanel.height - 12)
-                    text: topRoot.gameIsPaused ? "\u25B6" : "\u23F8"
+                    text: topRoot.game_is_paused ? "\u25B6" : "\u23F8"
                     font.pixelSize: 26
                     font.bold: true
                     focusPolicy: Qt.NoFocus
-                    onClicked: topRoot.pauseToggled()
+                    onClicked: topRoot.pause_toggled()
 
                     background: Rectangle {
                         color: parent.pressed ? hs.waxDark : parent.hovered ? hs.waxHover : hs.wax
@@ -172,12 +172,12 @@ Item {
                                 width: 56
                                 height: Math.min(34, topPanel.height - 16)
                                 checkable: true
-                                enabled: !topRoot.gameIsPaused
-                                checked: (topRoot.currentSpeed === modelData) && !topRoot.gameIsPaused
+                                enabled: !topRoot.game_is_paused
+                                checked: (topRoot.current_speed === modelData) && !topRoot.game_is_paused
                                 focusPolicy: Qt.NoFocus
                                 text: modelData + "x"
                                 ButtonGroup.group: speedGroup
-                                onClicked: topRoot.speedChanged(modelData)
+                                onClicked: topRoot.speed_changed(modelData)
 
                                 background: Rectangle {
                                     color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
@@ -207,12 +207,12 @@ Item {
                         visible: topRoot.compact
                         Layout.preferredWidth: 120
                         model: ["0.5x", "1x", "2x"]
-                        currentIndex: topRoot.currentSpeed === 0.5 ? 0 : topRoot.currentSpeed === 1 ? 1 : 2
-                        enabled: !topRoot.gameIsPaused
-                        textPixelSize: 13
+                        currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
+                        enabled: !topRoot.game_is_paused
+                        text_pixel_size: 13
                         onActivated: function(i) {
                             var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
-                            topRoot.speedChanged(v);
+                            topRoot.speed_changed(v);
                         }
                     }
 
@@ -387,7 +387,7 @@ Item {
                         Image {
                             width: 33
                             height: 33
-                            source: StyleGuide.iconPath("troop_count.png")
+                            source: StyleGuide.icon_path("troop_count.png")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             mipmap: true
@@ -409,7 +409,7 @@ Item {
                                 if (count >= max * 0.8)
                                     return hs.bronze;
 
-                                return "#7F9A5F";
+                                return Theme.accent;
                             }
                             font.pixelSize: 14
                             font.bold: true
@@ -432,7 +432,7 @@ Item {
 
                         property var owners: (typeof game !== 'undefined') ? game.owner_info : []
 
-                        function playerCount() {
+                        function player_count() {
                             var ownersList = ownersContainer.owners || [];
                             var count = 0;
                             for (var i = 0; i < ownersList.length; i++) {
@@ -443,7 +443,7 @@ Item {
                             return count;
                         }
 
-                        function aiCount() {
+                        function ai_count() {
                             var ownersList = ownersContainer.owners || [];
                             var count = 0;
                             for (var i = 0; i < ownersList.length; i++) {
@@ -454,7 +454,7 @@ Item {
                             return count;
                         }
 
-                        function ownersTooltip() {
+                        function owners_tooltip() {
                             if (typeof game === 'undefined')
                                 return "";
 
@@ -484,7 +484,7 @@ Item {
                             Image {
                                 width: 30
                                 height: 30
-                                source: StyleGuide.iconPath("human_player.png")
+                                source: StyleGuide.icon_path("human_player.png")
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
@@ -493,7 +493,7 @@ Item {
                             Label {
                                 id: humanCountLbl
 
-                                text: ownersContainer.playerCount()
+                                text: ownersContainer.player_count()
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
@@ -502,7 +502,7 @@ Item {
                             Image {
                                 width: 30
                                 height: 30
-                                source: StyleGuide.iconPath("ai_player.png")
+                                source: StyleGuide.icon_path("ai_player.png")
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
@@ -511,7 +511,7 @@ Item {
                             Label {
                                 id: aiCountLbl
 
-                                text: ownersContainer.aiCount()
+                                text: ownersContainer.ai_count()
                                 color: Theme.textMain
                                 font.pixelSize: 13
                                 verticalAlignment: Text.AlignVCenter
@@ -522,7 +522,7 @@ Item {
                         ToolTip {
                             visible: ownersMA.containsMouse
                             delay: 500
-                            text: ownersContainer.ownersTooltip()
+                            text: ownersContainer.owners_tooltip()
                         }
 
                         MouseArea {
@@ -543,7 +543,7 @@ Item {
                         Image {
                             width: 30
                             height: 30
-                            source: StyleGuide.iconPath("defeated.png")
+                            source: StyleGuide.icon_path("defeated.png")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             mipmap: true
@@ -566,7 +566,7 @@ Item {
                 Item {
                     id: miniWrap
 
-                    visible: !topRoot.ultraCompact
+                    visible: !topRoot.ultra_compact
                     Layout.preferredWidth: Math.round(topPanel.height * 2.2)
                     Layout.minimumWidth: Math.round(topPanel.height * 1.6)
                     Layout.preferredHeight: topPanel.height - 8
@@ -581,7 +581,7 @@ Item {
     Rectangle {
         id: minimapContainer
 
-        visible: !topRoot.ultraCompact
+        visible: !topRoot.ultra_compact
         width: 240
         height: 240
         anchors.right: parent.right
@@ -598,16 +598,16 @@ Item {
             anchors.fill: parent
             anchors.margins: 3
             radius: 6
-            color: "#120D09"
+            color: Theme.bgShade
 
             Image {
                 id: minimapImage
 
-                property int imageVersion: 0
+                property int image_version: 0
 
                 anchors.fill: parent
                 anchors.margins: 2
-                source: imageVersion > 0 ? "image://minimap/v" + imageVersion : ""
+                source: image_version > 0 ? "image://minimap/v" + image_version : ""
                 fillMode: Image.PreserveAspectFit
                 smooth: true
                 cache: false
@@ -616,7 +616,7 @@ Item {
                 Connections {
                     function onMinimap_image_changed() {
                         Qt.callLater(function() {
-                            minimapImage.imageVersion++;
+                            minimapImage.image_version++;
                         });
                     }
 

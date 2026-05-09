@@ -3,24 +3,24 @@ import QtQuick 2.15
 Item {
     id: cursorManager
 
-    property string currentMode: "normal"
-    property var cursorItem: null
+    property string current_mode: "normal"
+    property var cursor_item: null
 
-    function updateCursor(mode) {
-        currentMode = mode;
-        if (cursorItem) {
-            cursorItem.destroy();
-            cursorItem = null;
+    function update_cursor(mode) {
+        current_mode = mode;
+        if (cursor_item) {
+            cursor_item.destroy();
+            cursor_item = null;
         }
         switch (mode) {
         case "attack":
-            cursorItem = attackCursorComponent.createObject(cursorManager);
+            cursor_item = attackCursorComponent.createObject(cursorManager);
             break;
         case "guard":
-            cursorItem = guardCursorComponent.createObject(cursorManager);
+            cursor_item = guardCursorComponent.createObject(cursorManager);
             break;
         case "patrol":
-            cursorItem = patrolCursorComponent.createObject(cursorManager);
+            cursor_item = patrolCursorComponent.createObject(cursorManager);
             break;
         default:
             break;

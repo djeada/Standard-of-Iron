@@ -28,6 +28,15 @@ Rectangle {
         "carthage": [0.8, 0.56, 0.28, 0.45],
         "neutral": [0.25, 0.25, 0.25, 0.25]
     })
+    readonly property var campaign_route_start: [0.36, 0.72]
+    readonly property int ember_spacing: 97
+    readonly property int route_segment_count: 8
+    readonly property int ember_vertical_spacing: 12
+    property var campaign_route_targets: ({
+        "southern_italy": [0.5, 0.53],
+        "etruria": [0.44, 0.48],
+        "default": [0.42, 0.38]
+    })
     property var region_camera_positions: ({
         "transalpine_gaul": {
             "yaw": 200,
@@ -56,7 +65,7 @@ Rectangle {
         }
     })
 
-    signal regionSelected(string region_id)
+    signal region_selected(string region_id)
 
     function focus_on_region(region_id) {
         if (!region_id || region_id === "")
@@ -73,8 +82,8 @@ Rectangle {
     }
 
     function load_provinces() {
-        if (campaignMapLoader.item) {
-            var labels = campaignMapLoader.item.province_labels;
+        if (campaign_map_loader.item) {
+            var labels = campaign_map_loader.item.province_labels;
             if (labels && labels.length > 0) {
                 province_labels = labels;
                 label_refresh += 1;
@@ -127,8 +136,15 @@ Rectangle {
         return owner_color_map.neutral;
     }
 
+    function route_target_uv_for(region_id) {
+        if (campaign_route_targets[region_id])
+            return campaign_route_targets[region_id];
+
+        return campaign_route_targets.default;
+    }
+
     function apply_campaign_state() {
-        if (!campaignMapLoader.item)
+        if (!campaign_map_loader.item)
             return ;
 
         if (!campaign_state || !campaign_state.provinces)
@@ -173,7 +189,7 @@ Rectangle {
             }
         }
         if (entries.length > 0)
-            campaignMapLoader.item.apply_province_state(entries);
+            campaign_map_loader.item.apply_province_state(entries);
 
     }
 
@@ -215,7 +231,7 @@ Rectangle {
         return [sum_u / count, sum_v / count];
     }
 
-    color: "#28445C"
+    color: "#20170f"
     radius: Theme.radiusMedium
     Component.onCompleted: {
         load_provinces();
@@ -242,14 +258,14 @@ Rectangle {
     }
 
     Item {
-        id: mapViewport
+        id: map_viewport
 
         anchors.fill: parent
         anchors.margins: Theme.spacingSmall
         clip: true
 
         Loader {
-            id: campaignMapLoader
+            id: campaign_map_loader
 
             anchors.fill: parent
             active: root.visible
@@ -321,8 +337,8 @@ Rectangle {
 
         Rectangle {
             anchors.fill: parent
-            color: "#28445C"
-            visible: campaignMapLoader.active && campaignMapLoader.status !== Loader.Ready
+            color: "#2a2118"
+            visible: campaign_map_loader.active && campaign_map_loader.status !== Loader.Ready
             z: 1
 
             Text {
@@ -334,39 +350,155 @@ Rectangle {
 
         }
 
+        Rectangle {
+            anchors.fill: parent
+            z: 2
+            color: "transparent"
+            border.color: "#8f6d43"
+            border.width: 1
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            z: 2
+            gradient: Gradient {
+                GradientStop {
+                    position: 0
+                    color: "#0f0a06aa"
+                }
+
+                GradientStop {
+                    position: 0.5
+                    color: "transparent"
+                }
+
+                GradientStop {
+                    position: 1
+                    color: "#190f08bb"
+                }
+
+            }
+        }
+
+        Repeater {
+            model: root.route_segment_count
+
+            delegate: Rectangle {
+                property int _refresh: root.label_refresh
+                property real start_u: root.campaign_route_start[0]
+                property real start_v: root.campaign_route_start[1]
+                property var target_uv: root.route_target_uv_for(root.active_region_id)
+                property real end_u: target_uv[0]
+                property real end_v: target_uv[1]
+                property real t: (index + 1) / root.route_segment_count
+                property var _start_pos: (_refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(start_u, start_v) : Qt.point(0, 0)
+                property var _end_pos: (_refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(end_u, end_v) : Qt.point(0, 0)
+                property real dot_x: _start_pos.x + (_end_pos.x - _start_pos.x) * t
+                property real dot_y: _start_pos.y + (_end_pos.y - _start_pos.y) * t
+
+                width: 6
+                height: 6
+                radius: 3
+                color: "#c29555"
+                border.color: "#f0dfbc"
+                border.width: 1
+                opacity: 0.65
+                visible: root.selected_mission && campaign_map_loader.item
+                x: dot_x - width / 2
+                y: dot_y - height / 2
+                z: 5
+
+                SequentialAnimation on opacity {
+                    loops: Animation.Infinite
+                        running: root.visible && campaign_map_loader.item
+
+                    NumberAnimation {
+                        from: 0.2
+                        to: 0.85
+                        duration: 900
+                    }
+
+                    NumberAnimation {
+                        from: 0.85
+                        to: 0.2
+                        duration: 900
+                    }
+
+                }
+
+            }
+
+        }
+
+        Repeater {
+            model: 10
+
+            delegate: Rectangle {
+                width: 2 + (index % 3)
+                height: width
+                radius: width / 2
+                color: index % 2 === 0 ? "#c29555" : "#7a1f1d"
+                opacity: 0.18
+                x: (index * root.ember_spacing) % map_viewport.width
+                y: map_viewport.height + index * root.ember_vertical_spacing
+                z: 3
+
+                SequentialAnimation on y {
+                    loops: Animation.Infinite
+                    running: root.visible
+
+                    NumberAnimation {
+                        from: map_viewport.height + index * root.ember_vertical_spacing
+                        to: -20
+                        duration: 3000 + index * 250
+                        easing.type: Easing.OutQuad
+                    }
+
+                    NumberAnimation {
+                        from: -20
+                        to: map_viewport.height + index * root.ember_vertical_spacing
+                        duration: 0
+                    }
+
+                }
+
+            }
+
+        }
+
         Row {
-            id: mapControlRow
+            id: map_control_row
 
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: Theme.spacingMedium
             spacing: Theme.spacingSmall
             z: 8
-            visible: campaignMapLoader.item
+            visible: campaign_map_loader.item
 
             Rectangle {
-                id: pitchDownButton
+                id: pitch_down_button
 
                 height: 24
-                width: pitchDownLabel.implicitWidth + 12
+                width: pitch_down_label.implicitWidth + 12
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: pitch_down_area.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
-                opacity: pitchDownArea.containsMouse ? 1 : 0.9
+                opacity: pitch_down_area.containsMouse ? 1 : 0.9
 
                 Label {
-                    id: pitchDownLabel
+                    id: pitch_down_label
 
                     anchors.centerIn: parent
                     text: qsTr("Tilt -")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
 
                 MouseArea {
-                    id: pitchDownArea
+                    id: pitch_down_area
 
                     anchors.fill: parent
                     hoverEnabled: true
@@ -377,28 +509,28 @@ Rectangle {
             }
 
             Rectangle {
-                id: pitchUpButton
+                id: pitch_up_button
 
                 height: 24
-                width: pitchUpLabel.implicitWidth + 12
+                width: pitch_up_label.implicitWidth + 12
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: pitch_up_area.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
-                opacity: pitchUpArea.containsMouse ? 1 : 0.9
+                opacity: pitch_up_area.containsMouse ? 1 : 0.9
 
                 Label {
-                    id: pitchUpLabel
+                    id: pitch_up_label
 
                     anchors.centerIn: parent
                     text: qsTr("Tilt +")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
 
                 MouseArea {
-                    id: pitchUpArea
+                    id: pitch_up_area
 
                     anchors.fill: parent
                     hoverEnabled: true
@@ -409,28 +541,28 @@ Rectangle {
             }
 
             Rectangle {
-                id: resetViewButton
+                id: reset_view_button
 
                 height: 24
-                width: resetViewLabel.implicitWidth + 16
+                width: reset_view_label.implicitWidth + 16
                 radius: 4
-                color: "#f5f0e6"
-                border.color: "#8b7355"
+                color: reset_view_area.containsMouse ? "#7a1f1d" : "#3b2a1d"
+                border.color: "#c29555"
                 border.width: 1
-                opacity: resetViewArea.containsMouse ? 1 : 0.9
+                opacity: reset_view_area.containsMouse ? 1 : 0.9
 
                 Label {
-                    id: resetViewLabel
+                    id: reset_view_label
 
                     anchors.centerIn: parent
                     text: qsTr("Reset view")
-                    color: "#2d241c"
+                    color: "#f2dfba"
                     font.pointSize: Theme.fontSizeTiny
                     font.bold: true
                 }
 
                 MouseArea {
-                    id: resetViewArea
+                    id: reset_view_area
 
                     anchors.fill: parent
                     hoverEnabled: true
@@ -471,8 +603,8 @@ Rectangle {
                 last_y = mouse.y;
                 root.hover_mouse_x = mouse.x;
                 root.hover_mouse_y = mouse.y;
-                if (root.active_region_id === "" && campaignMapLoader.item) {
-                    var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
+                if (root.active_region_id === "" && campaign_map_loader.item) {
+                    var info = campaign_map_loader.item.province_info_at_screen(mouse.x, mouse.y);
                     var id = info && info.id ? info.id : "";
                     root.hover_province_name = info && info.name ? info.name : "";
                     root.hover_province_owner = info && info.owner ? info.owner : "";
@@ -491,20 +623,20 @@ Rectangle {
                 if (drag_distance > 6)
                     return ;
 
-                if (!campaignMapLoader.item)
+                if (!campaign_map_loader.item)
                     return ;
 
-                var info = campaignMapLoader.item.province_info_at_screen(mouse.x, mouse.y);
+                var info = campaign_map_loader.item.province_info_at_screen(mouse.x, mouse.y);
                 var id = info && info.id ? info.id : "";
                 if (id !== "")
-                    root.regionSelected(id);
+                    root.region_selected(id);
 
             }
             onWheel: function(wheel) {
                 var step = wheel.angleDelta.y > 0 ? 0.9 : 1.1;
                 var next_distance = root.map_orbit_distance * step;
-                if (campaignMapLoader.item)
-                    root.map_orbit_distance = Math.min(campaignMapLoader.item.max_orbit_distance, Math.max(campaignMapLoader.item.min_orbit_distance, next_distance));
+                if (campaign_map_loader.item)
+                    root.map_orbit_distance = Math.min(campaign_map_loader.item.max_orbit_distance, Math.max(campaign_map_loader.item.min_orbit_distance, next_distance));
 
                 wheel.accepted = true;
             }
@@ -522,7 +654,7 @@ Rectangle {
                     property var city_data: modelData
                     property var _city_uv: city_data.uv && city_data.uv.length === 2 ? city_data.uv : null
                     property int _refresh: root.label_refresh
-                    property var _pos: (_city_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
+                    property var _pos: (_city_uv !== null && _refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(_city_uv[0], _city_uv[1]) : Qt.point(0, 0)
 
                     visible: _city_uv !== null && city_data.name && city_data.name.length > 0
                     z: 4
@@ -558,7 +690,7 @@ Rectangle {
         }
 
         Repeater {
-            id: missionMarkerRepeater
+            id: mission_marker_repeater
 
             property var mission_region_map: ({
                 "transalpine_gaul": {
@@ -586,10 +718,10 @@ Rectangle {
             model: root.selected_mission ? 1 : 0
 
             delegate: Item {
-                property var region_info: missionMarkerRepeater.mission_region_map[root.active_region_id] || null
+                property var region_info: mission_marker_repeater.mission_region_map[root.active_region_id] || null
                 property var marker_uv: region_info ? region_info.uv : null
                 property int _refresh: root.label_refresh
-                property var _pos: (marker_uv !== null && _refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
+                property var _pos: (marker_uv !== null && _refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.screen_pos_for_uv(marker_uv[0], marker_uv[1]) : Qt.point(0, 0)
 
                 visible: marker_uv !== null && root.active_region_id !== ""
                 z: 6
@@ -654,14 +786,14 @@ Rectangle {
         }
 
         Item {
-            id: hannibalIcon
+            id: hannibal_icon
 
             property int _refresh: root.label_refresh
-            property var _pos: (_refresh >= 0 && campaignMapLoader.item) ? campaignMapLoader.item.hannibal_icon_position() : Qt.point(0, 0)
-            property var _iconSources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
-            property int _iconIndex: 0
+            property var _pos: (_refresh >= 0 && campaign_map_loader.item) ? campaign_map_loader.item.hannibal_icon_position() : Qt.point(0, 0)
+            property var icon_sources: ["qrc:/StandardOfIron/assets/visuals/hannibal.png", "qrc:/assets/visuals/hannibal.png", "assets/visuals/hannibal.png", "qrc:/qt/qml/StandardOfIron/assets/visuals/hannibal.png"]
+            property int icon_index: 0
 
-            visible: campaignMapLoader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
+            visible: campaign_map_loader.item && _pos.x > 0 && _pos.y > 0 && root.selected_mission
             z: 10
             x: _pos.x
             y: _pos.y
@@ -689,7 +821,7 @@ Rectangle {
             }
 
             Image {
-                source: hannibalIcon._iconSources[hannibalIcon._iconIndex]
+                source: hannibal_icon.icon_sources[hannibal_icon.icon_index]
                 width: 36
                 height: 36
                 x: -width / 2
@@ -700,9 +832,9 @@ Rectangle {
                 cache: true
                 asynchronous: false
                 onStatusChanged: {
-                    if (status === Image.Error && hannibalIcon._iconIndex + 1 < hannibalIcon._iconSources.length) {
-                        hannibalIcon._iconIndex += 1;
-                        source = hannibalIcon._iconSources[hannibalIcon._iconIndex];
+                    if (status === Image.Error && hannibal_icon.icon_index + 1 < hannibal_icon.icon_sources.length) {
+                        hannibal_icon.icon_index += 1;
+                        source = hannibal_icon.icon_sources[hannibal_icon.icon_index];
                     }
                 }
             }
@@ -720,7 +852,7 @@ Rectangle {
 
                 SequentialAnimation on opacity {
                     loops: Animation.Infinite
-                    running: hannibalIcon.visible
+                    running: hannibal_icon.visible
 
                     NumberAnimation {
                         from: 0.4
@@ -737,7 +869,7 @@ Rectangle {
 
                 SequentialAnimation on scale {
                     loops: Animation.Infinite
-                    running: hannibalIcon.visible
+                    running: hannibal_icon.visible
 
                     NumberAnimation {
                         from: 1
@@ -765,7 +897,7 @@ Rectangle {
         Rectangle {
             id: hover_tooltip
 
-            visible: (root.active_region_id !== "" || (campaignMapLoader.item && campaignMapLoader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
+            visible: (root.active_region_id !== "" || (campaign_map_loader.item && campaign_map_loader.item.hover_province_id !== "" && root.hover_province_name !== "")) && root.active_region_id === ""
             x: Math.min(parent.width - width - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_x + 12))
             y: Math.min(parent.height - height - Theme.spacingSmall, Math.max(Theme.spacingSmall, root.hover_mouse_y + 12))
             width: tooltip_layout.implicitWidth + 16
