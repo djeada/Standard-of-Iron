@@ -69,9 +69,9 @@ Rectangle {
 
     function calculate_tactical_rating() {
         if (!mission_data || !mission_data.difficulty_modifier)
-            return qsTr("3/5");
+            return qsTr("3/") + tactical_rating_max.toString();
 
-        return Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier))).toString() + "/5";
+        return Math.min(tactical_rating_max, Math.max(tactical_rating_min, Math.round(mission_data.difficulty_modifier))).toString() + "/" + tactical_rating_max.toString();
     }
 
     function calculate_casualty_forecast() {
@@ -88,7 +88,7 @@ Rectangle {
         if (mission_data.completed)
             return qsTr("100%");
 
-        if (!mission_data.unlocked)
+        if (mission_data.unlocked === false)
             return qsTr("Sealed");
 
         return qsTr("In Progress");

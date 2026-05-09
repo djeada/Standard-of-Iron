@@ -381,7 +381,7 @@ Rectangle {
         }
 
         Repeater {
-            model: 7
+            model: root.route_segment_count
 
             delegate: Rectangle {
                 property int _refresh: root.label_refresh
