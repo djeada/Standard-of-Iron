@@ -6,12 +6,12 @@ import StandardOfIron 1.0
 ApplicationWindow {
     id: mainWindow
 
-    property alias gameView: gameViewItem
-    property bool menuVisible: true
-    property bool gameStarted: false
-    property bool gamePaused: false
-    property bool edgeScrollDisabled: false
-    property string missionAnnouncementText: ""
+    property alias game_view: gameViewItem
+    property bool menu_visible: true
+    property bool game_started: false
+    property bool game_paused: false
+    property bool edge_scroll_disabled: false
+    property string mission_announcement_text: ""
 
     width: 1280
     height: 720
@@ -25,8 +25,8 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 0
-        focus: !mainWindow.menuVisible
-        visible: gameStarted
+        focus: !mainWindow.menu_visible
+        visible: game_started
     }
 
     HUD {
@@ -34,22 +34,22 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 1
-        visible: !mainWindow.menuVisible && gameStarted
+        visible: !mainWindow.menu_visible && game_started
         onActiveFocusChanged: {
             if (activeFocus)
                 gameViewItem.forceActiveFocus();
 
         }
-        onPauseToggled: {
-            mainWindow.gamePaused = !mainWindow.gamePaused;
-            gameViewItem.setPaused(mainWindow.gamePaused);
+        onPause_toggled: {
+            mainWindow.game_paused = !mainWindow.game_paused;
+            gameViewItem.set_paused(mainWindow.game_paused);
             gameViewItem.forceActiveFocus();
         }
-        onSpeedChanged: function(speed) {
-            gameViewItem.setGameSpeed(speed);
+        onSpeed_changed: function(speed) {
+            gameViewItem.set_game_speed(speed);
             gameViewItem.forceActiveFocus();
         }
-        onCommandModeChanged: function(mode) {
+        onCommand_mode_changed: function(mode) {
             console.log("Main: Command mode changed to:", mode);
             if (typeof game !== 'undefined') {
                 console.log("Main: Setting game.cursor_mode property to", mode);
@@ -59,40 +59,40 @@ ApplicationWindow {
             }
             gameViewItem.forceActiveFocus();
         }
-        onRecruit: function(unitType) {
+        onRecruit_unit: function(unit_type) {
             if (typeof game !== 'undefined' && game.recruit_near_selected)
-                game.recruit_near_selected(unitType);
+                game.recruit_near_selected(unit_type);
 
             gameViewItem.forceActiveFocus();
         }
-        onReturnToMainMenuRequested: {
-            mainWindow.menuVisible = true;
+        onReturn_to_main_menu_requested: {
+            mainWindow.menu_visible = true;
         }
     }
 
     Rectangle {
-        id: missionAnnouncementToast
+        id: mission_announcement_toast
 
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: parent.top
         anchors.topMargin: 26
         z: 12
-        visible: gameStarted && opacity > 0.01
+        visible: game_started && opacity > 0.01
         opacity: 0
         radius: 8
-        color: "#cc1f1f1f"
-        border.color: "#d9d9d9"
+        color: "#cc2a1d12"
+        border.color: Theme.thumbBr
         border.width: 1
         width: Math.min(parent.width * 0.7, 700)
-        height: missionAnnouncementLabel.implicitHeight + 22
+        height: mission_announcement_label.implicitHeight + 22
 
         Text {
-            id: missionAnnouncementLabel
+            id: mission_announcement_label
 
             anchors.centerIn: parent
             width: parent.width - 28
-            text: mainWindow.missionAnnouncementText
-            color: "#f5f5f5"
+            text: mainWindow.mission_announcement_text
+            color: Theme.textMain
             font.pixelSize: 18
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
@@ -109,28 +109,28 @@ ApplicationWindow {
     }
 
     Timer {
-        id: missionAnnouncementTimer
+        id: mission_announcement_timer
 
         interval: 3600
         repeat: false
-        onTriggered: missionAnnouncementToast.opacity = 0
+        onTriggered: mission_announcement_toast.opacity = 0
     }
 
     Rectangle {
-        id: pauseOverlay
+        id: pause_overlay
 
         anchors.fill: parent
         z: 10
-        visible: mainWindow.gamePaused && gameStarted
-        color: "#80000000"
+        visible: mainWindow.game_paused && game_started
+        color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.72)
 
         Rectangle {
             anchors.centerIn: parent
             width: 300
             height: 150
-            color: "#2c3e50"
+            color: Theme.panelBase
             radius: 8
-            border.color: "#34495e"
+            border.color: Theme.panelBr
             border.width: 2
 
             Column {
@@ -139,7 +139,7 @@ ApplicationWindow {
 
                 Text {
                     text: qsTr("PAUSED")
-                    color: "#ecf0f1"
+                    color: Theme.textMain
                     font.pixelSize: 36
                     font.bold: true
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -147,7 +147,7 @@ ApplicationWindow {
 
                 Text {
                     text: qsTr("Press Space to resume")
-                    color: "#bdc3c7"
+                    color: Theme.textSubLite
                     font.pixelSize: 14
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -184,10 +184,10 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 20
-        visible: mainWindow.menuVisible
-        gameStarted: mainWindow.gameStarted
+        visible: mainWindow.menu_visible
+        game_started: mainWindow.game_started
         Component.onCompleted: {
-            if (mainWindow.menuVisible)
+            if (mainWindow.menu_visible)
                 mainMenu.forceActiveFocus();
 
         }
@@ -195,37 +195,37 @@ ApplicationWindow {
             if (visible) {
                 mainMenu.forceActiveFocus();
                 gameViewItem.focus = false;
-            } else if (gameStarted) {
+            } else if (mainMenu.game_started) {
                 gameViewItem.forceActiveFocus();
             }
         }
-        onOpenSkirmish: function() {
+        onOpen_skirmish: function() {
             mapSelect.visible = true;
-            mainWindow.menuVisible = false;
+            mainWindow.menu_visible = false;
         }
-        onOpenCampaign: function() {
+        onOpen_campaign: function() {
             campaign_screen.visible = true;
-            mainWindow.menuVisible = false;
+            mainWindow.menu_visible = false;
         }
-        onSaveGame: function() {
-            if (mainWindow.gameStarted) {
-                saveGamePanel.visible = true;
-                mainWindow.menuVisible = false;
+        onSave_game: function() {
+            if (mainWindow.game_started) {
+                save_game_panel.visible = true;
+                mainWindow.menu_visible = false;
             }
         }
-        onLoadSave: function() {
-            loadGamePanel.visible = true;
-            mainWindow.menuVisible = false;
+        onLoad_save: function() {
+            load_game_panel.visible = true;
+            mainWindow.menu_visible = false;
         }
-        onOpenSettings: function() {
+        onOpen_settings: function() {
             settingsPanel.visible = true;
-            mainWindow.menuVisible = false;
+            mainWindow.menu_visible = false;
         }
-        onOpenObjectives: function() {
+        onOpen_objectives: function() {
             objectivesPanel.visible = true;
-            mainWindow.menuVisible = false;
+            mainWindow.menu_visible = false;
         }
-        onExitRequested: function() {
+        onExit_requested: function() {
             if (typeof game !== 'undefined' && game.exit_game)
                 game.exit_game();
 
@@ -244,20 +244,20 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onMapChosen: function(map_path, playerConfigs) {
-            console.log("Main: onMapChosen received", map_path, "with", playerConfigs.length, "player configs");
+        onMap_chosen: function(map_path, player_configs) {
+            console.log("Main: onMap_chosen received", map_path, "with", player_configs.length, "player configs");
             if (typeof game !== 'undefined' && game.start_skirmish)
-                game.start_skirmish(map_path, playerConfigs);
+                game.start_skirmish(map_path, player_configs);
 
             mapSelect.visible = false;
-            mainWindow.menuVisible = false;
-            mainWindow.gameStarted = true;
-            mainWindow.gamePaused = false;
+            mainWindow.menu_visible = false;
+            mainWindow.game_started = true;
+            mainWindow.game_paused = false;
             gameViewItem.forceActiveFocus();
         }
         onCancelled: function() {
             mapSelect.visible = false;
-            mainWindow.menuVisible = true;
+            mainWindow.menu_visible = true;
         }
     }
 
@@ -278,70 +278,70 @@ ApplicationWindow {
             if (typeof game !== 'undefined' && game.start_campaign_mission) {
                 game.start_campaign_mission(campaign_id + "/" + mission_id);
                 campaign_screen.visible = false;
-                mainWindow.menuVisible = false;
-                mainWindow.gameStarted = true;
-                mainWindow.gamePaused = false;
+                mainWindow.menu_visible = false;
+                mainWindow.game_started = true;
+                mainWindow.game_paused = false;
                 gameViewItem.forceActiveFocus();
             }
         }
         onCancelled: function() {
             campaign_screen.visible = false;
-            mainWindow.menuVisible = true;
+            mainWindow.menu_visible = true;
         }
     }
 
     SaveGamePanel {
-        id: saveGamePanel
+        id: save_game_panel
 
         anchors.fill: parent
         z: 22
         visible: false
         onVisibleChanged: {
             if (visible) {
-                saveGamePanel.forceActiveFocus();
+                save_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
         }
-        onSaveRequested: function(slotName) {
-            console.log("Main: Save requested for slot:", slotName);
+        onSave_requested: function(slot_name) {
+            console.log("Main: Save requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.save_gameToSlot)
-                game.save_gameToSlot(slotName);
+                game.save_gameToSlot(slot_name);
 
-            saveGamePanel.visible = false;
-            mainWindow.menuVisible = true;
+            save_game_panel.visible = false;
+            mainWindow.menu_visible = true;
         }
         onCancelled: function() {
-            saveGamePanel.visible = false;
-            mainWindow.menuVisible = true;
+            save_game_panel.visible = false;
+            mainWindow.menu_visible = true;
         }
     }
 
     LoadGamePanel {
-        id: loadGamePanel
+        id: load_game_panel
 
         anchors.fill: parent
         z: 22
         visible: false
         onVisibleChanged: {
             if (visible) {
-                loadGamePanel.forceActiveFocus();
+                load_game_panel.forceActiveFocus();
                 gameViewItem.focus = false;
             }
         }
-        onLoadRequested: function(slotName) {
-            console.log("Main: Load requested for slot:", slotName);
+        onLoad_requested: function(slot_name) {
+            console.log("Main: Load requested for slot:", slot_name);
             if (typeof game !== 'undefined' && game.load_game_from_slot) {
-                game.load_game_from_slot(slotName);
-                loadGamePanel.visible = false;
-                mainWindow.menuVisible = false;
-                mainWindow.gameStarted = true;
-                mainWindow.gamePaused = false;
+                game.load_game_from_slot(slot_name);
+                load_game_panel.visible = false;
+                mainWindow.menu_visible = false;
+                mainWindow.game_started = true;
+                mainWindow.game_paused = false;
                 gameViewItem.forceActiveFocus();
             }
         }
         onCancelled: function() {
-            loadGamePanel.visible = false;
-            mainWindow.menuVisible = true;
+            load_game_panel.visible = false;
+            mainWindow.menu_visible = true;
         }
     }
 
@@ -359,7 +359,7 @@ ApplicationWindow {
         }
         onCancelled: function() {
             settingsPanel.visible = false;
-            mainWindow.menuVisible = true;
+            mainWindow.menu_visible = true;
         }
     }
 
@@ -375,30 +375,30 @@ ApplicationWindow {
                 gameViewItem.focus = false;
             }
         }
-        onCloseRequested: function() {
+        onClose_requested: function() {
             objectivesPanel.visible = false;
-            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.gameStarted) {
-                mainWindow.gamePaused = false;
-                gameViewItem.setPaused(false);
+            if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && mainWindow.game_started) {
+                mainWindow.game_paused = false;
+                gameViewItem.set_paused(false);
                 gameViewItem.forceActiveFocus();
             } else {
-                mainWindow.menuVisible = true;
+                mainWindow.menu_visible = true;
             }
         }
     }
 
     Item {
-        id: edgeScrollOverlay
+        id: edge_scroll_overlay
 
-        property real horzThreshold: 12
-        property real horzMaxSpeed: 0.15
-        property real vertThreshold: 10
-        property real vertMaxSpeed: 0.01
-        property real xPos: -1
-        property real yPos: -1
-        property int verticalShift: 6
+        property real horz_threshold: 12
+        property real horz_max_speed: 0.15
+        property real vert_threshold: 10
+        property real vert_max_speed: 0.01
+        property real x_pos: -1
+        property real y_pos: -1
+        property int vertical_shift: 6
 
-        function inHudZone(x, y) {
+        function in_hud_zone(x, y) {
             var topH = (typeof hud !== 'undefined' && hud && hud.topPanelHeight) ? hud.topPanelHeight : 0;
             var bottomH = (typeof hud !== 'undefined' && hud && hud.bottomPanelHeight) ? hud.bottomPanelHeight : 0;
             if (y < topH)
@@ -412,7 +412,7 @@ ApplicationWindow {
 
         anchors.fill: parent
         z: 2
-        visible: !mainWindow.menuVisible && !mapSelect.visible
+        visible: !mainWindow.menu_visible && !mapSelect.visible
         enabled: visible
 
         MouseArea {
@@ -422,21 +422,21 @@ ApplicationWindow {
             propagateComposedEvents: true
             preventStealing: false
             onPositionChanged: function(mouse) {
-                edgeScrollOverlay.xPos = mouse.x;
-                edgeScrollOverlay.yPos = mouse.y;
+                edge_scroll_overlay.x_pos = mouse.x;
+                edge_scroll_overlay.y_pos = mouse.y;
                 if (typeof game !== 'undefined' && game.set_hover_at_screen) {
-                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
+                    if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.set_hover_at_screen(mouse.x, mouse.y);
                     else
                         game.set_hover_at_screen(-1, -1);
                 }
                 if (typeof game !== 'undefined' && game.is_placing_formation && game.on_formation_mouse_move) {
-                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
+                    if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.on_formation_mouse_move(mouse.x, mouse.y);
 
                 }
                 if (typeof game !== 'undefined' && game.is_placing_construction && game.on_construction_mouse_move) {
-                    if (!edgeScrollOverlay.inHudZone(mouse.x, mouse.y))
+                    if (!edge_scroll_overlay.in_hud_zone(mouse.x, mouse.y))
                         game.on_construction_mouse_move(mouse.x, mouse.y);
 
                 }
@@ -453,18 +453,18 @@ ApplicationWindow {
                 w.accepted = false;
             }
             onEntered: function() {
-                edgeScrollTimer.start();
+                edge_scroll_timer.start();
                 if (typeof game !== 'undefined' && game.set_hover_at_screen) {
-                    if (!edgeScrollOverlay.inHudZone(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos))
-                        game.set_hover_at_screen(edgeScrollOverlay.xPos, edgeScrollOverlay.yPos);
+                    if (!edge_scroll_overlay.in_hud_zone(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos))
+                        game.set_hover_at_screen(edge_scroll_overlay.x_pos, edge_scroll_overlay.y_pos);
                     else
                         game.set_hover_at_screen(-1, -1);
                 }
             }
             onExited: function() {
-                edgeScrollTimer.stop();
-                edgeScrollOverlay.xPos = -1;
-                edgeScrollOverlay.yPos = -1;
+                edge_scroll_timer.stop();
+                edge_scroll_overlay.x_pos = -1;
+                edge_scroll_overlay.y_pos = -1;
                 if (typeof game !== 'undefined' && game.set_hover_at_screen)
                     game.set_hover_at_screen(-1, -1);
 
@@ -472,7 +472,7 @@ ApplicationWindow {
         }
 
         Timer {
-            id: edgeScrollTimer
+            id: edge_scroll_timer
 
             interval: 16
             repeat: true
@@ -480,14 +480,14 @@ ApplicationWindow {
                 if (typeof game === 'undefined')
                     return ;
 
-                const w = edgeScrollOverlay.width;
-                const h = edgeScrollOverlay.height;
-                const x = edgeScrollOverlay.xPos;
-                const y = edgeScrollOverlay.yPos;
+                const w = edge_scroll_overlay.width;
+                const h = edge_scroll_overlay.height;
+                const x = edge_scroll_overlay.x_pos;
+                const y = edge_scroll_overlay.y_pos;
                 if (x < 0 || y < 0)
                     return ;
 
-                if (mainWindow.edgeScrollDisabled) {
+                if (mainWindow.edge_scroll_disabled) {
                     if (game.set_hover_at_screen)
                         game.set_hover_at_screen(-1, -1);
 
@@ -496,8 +496,8 @@ ApplicationWindow {
                 if (game.set_hover_at_screen)
                     game.set_hover_at_screen(x, y);
 
-                const th = edgeScrollOverlay.horzThreshold;
-                const tv = edgeScrollOverlay.vertThreshold;
+                const th = edge_scroll_overlay.horz_threshold;
+                const tv = edge_scroll_overlay.vert_threshold;
                 const clamp = function clamp(v, lo, hi) {
                     return Math.max(lo, Math.min(hi, v));
                 };
@@ -518,10 +518,10 @@ ApplicationWindow {
                 const curveV = function curveV(a) {
                     return a * a * a;
                 };
-                const rawDx = (curveH(ir) - curveH(il)) * edgeScrollOverlay.horzMaxSpeed;
-                const rawDz = (curveV(iu) - curveV(id)) * edgeScrollOverlay.vertMaxSpeed;
-                const dx = rawDx / edgeScrollOverlay.horzMaxSpeed;
-                const dz = rawDz / edgeScrollOverlay.vertMaxSpeed;
+                const rawDx = (curveH(ir) - curveH(il)) * edge_scroll_overlay.horz_max_speed;
+                const rawDz = (curveV(iu) - curveV(id)) * edge_scroll_overlay.vert_max_speed;
+                const dx = rawDx / edge_scroll_overlay.horz_max_speed;
+                const dz = rawDz / edge_scroll_overlay.vert_max_speed;
                 if (dx !== 0 || dz !== 0)
                     game.camera_move(dx, dz);
 
@@ -531,7 +531,7 @@ ApplicationWindow {
     }
 
     Dialog {
-        id: errorDialog
+        id: error_dialog
 
         anchors.centerIn: parent
         width: Math.min(parent.width * 0.6, 500)
@@ -545,16 +545,16 @@ ApplicationWindow {
         }
 
         contentItem: Rectangle {
-            color: "#2a2a2a"
-            implicitHeight: errorText.implicitHeight + 40
+            color: Theme.panelBase
+            implicitHeight: error_text.implicitHeight + 40
 
             Text {
-                id: errorText
+                id: error_text
 
                 anchors.centerIn: parent
                 width: parent.width - 40
                 text: game ? game.last_error : ""
-                color: "#ffcccc"
+                color: Theme.accentBright
                 wrapMode: Text.WordWrap
                 font.pixelSize: 14
             }
@@ -566,7 +566,7 @@ ApplicationWindow {
     Connections {
         function onLast_error_changed() {
             if (game.last_error !== "")
-                errorDialog.open();
+                error_dialog.open();
 
         }
 
@@ -576,8 +576,8 @@ ApplicationWindow {
     Connections {
         function onCampaign_mission_changed() {
             if (typeof game !== 'undefined' && typeof game.is_campaign_mission !== 'undefined' && game.is_campaign_mission && !game.is_loading) {
-                mainWindow.gamePaused = true;
-                gameViewItem.setPaused(true);
+                mainWindow.game_paused = true;
+                gameViewItem.set_paused(true);
                 objectivesPanel.visible = true;
             }
         }
@@ -587,12 +587,12 @@ ApplicationWindow {
 
     Connections {
         function onMission_announcement(text) {
-            if (!text || !mainWindow.gameStarted)
+            if (!text || !mainWindow.game_started)
                 return ;
 
-            mainWindow.missionAnnouncementText = text;
-            missionAnnouncementToast.opacity = 1;
-            missionAnnouncementTimer.restart();
+            mainWindow.mission_announcement_text = text;
+            mission_announcement_toast.opacity = 1;
+            mission_announcement_timer.restart();
         }
 
         target: game

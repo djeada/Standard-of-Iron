@@ -5,38 +5,38 @@ import StandardOfIron 1.0
 Rectangle {
     id: victoryOverlay
 
-    property bool showingSummary: false
-    property bool manuallyHidden: false
+    property bool showing_summary: false
+    property bool manually_hidden: false
     readonly property var hs: StyleGuide.historical
 
-    signal returnToMainMenuRequested()
+    signal return_to_main_menu_requested()
 
-    function resetState() {
-        showingSummary = false;
-        manuallyHidden = false;
+    function reset_state() {
+        showing_summary = false;
+        manually_hidden = false;
     }
 
-    function forceHide() {
-        resetState();
-        manuallyHidden = true;
+    function force_hide() {
+        reset_state();
+        manually_hidden = true;
     }
 
     anchors.fill: parent
     color: Qt.rgba(8 / 255, 6 / 255, 4 / 255, 0.78)
-    visible: !manuallyHidden && (typeof game !== 'undefined' && game.victory_state !== "")
+    visible: !manually_hidden && (typeof game !== 'undefined' && game.victory_state !== "")
     z: 100
     onVisibleChanged: {
         if (!visible)
-            resetState();
+            reset_state();
 
     }
 
     Connections {
         function onVictory_state_changed() {
             if (typeof game !== 'undefined' && game.victory_state === "")
-                resetState();
+                reset_state();
             else if (typeof game !== 'undefined' && game.victory_state !== "")
-                manuallyHidden = false;
+                manually_hidden = false;
         }
 
         target: (typeof game !== 'undefined') ? game : null
@@ -47,7 +47,7 @@ Rectangle {
 
         anchors.fill: parent
         color: "transparent"
-        visible: !showingSummary
+        visible: !showing_summary
 
         Rectangle {
             anchors.centerIn: parent
@@ -115,7 +115,7 @@ Rectangle {
                     text: qsTr("Continue")
                     focusPolicy: Qt.NoFocus
                     onClicked: {
-                        showingSummary = true;
+                        showing_summary = true;
                         battleSummary.show();
                     }
                 }
@@ -130,13 +130,13 @@ Rectangle {
         id: battleSummary
 
         anchors.fill: parent
-        visible: showingSummary
-        onClose: function() {
-            showingSummary = false;
+        visible: showing_summary
+        on_close: function() {
+            showing_summary = false;
         }
-        onReturnToMainMenu: function() {
-            resetState();
-            victoryOverlay.returnToMainMenuRequested();
+        on_return_to_main_menu: function() {
+            reset_state();
+            victoryOverlay.return_to_main_menu_requested();
         }
     }
 
