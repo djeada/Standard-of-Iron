@@ -6,15 +6,15 @@ Rectangle {
 
     property var colors: ({
     })
-    property var playerData: ({
+    property var player_data: ({
     })
-    property var teamIcons: []
-    property bool canRemove: true
+    property var team_icons: []
+    property bool can_remove: true
 
-    signal removeClicked()
-    signal colorClicked()
-    signal teamClicked()
-    signal factionClicked()
+    signal remove_clicked()
+    signal color_clicked()
+    signal team_clicked()
+    signal faction_clicked()
 
     width: parent ? parent.width : 400
     height: 48
@@ -34,10 +34,10 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: playerData.playerName || ""
-                color: playerData.isHuman ? colors.addColor : colors.textMain
+                text: player_data.playerName || ""
+                color: player_data.isHuman ? colors.addColor : colors.textMain
                 font.pixelSize: 14
-                font.bold: playerData.isHuman || false
+                font.bold: player_data.isHuman || false
             }
 
         }
@@ -46,13 +46,13 @@ Rectangle {
             width: 90
             height: parent.height
             radius: 4
-            color: playerData.colorHex || "#666666"
-            border.color: Qt.lighter(playerData.colorHex || "#666666", 1.3)
+            color: player_data.colorHex || "#666666"
+            border.color: Qt.lighter(player_data.colorHex || "#666666", 1.3)
             border.width: 1
 
             Text {
                 anchors.centerIn: parent
-                text: playerData.colorName || "Color"
+                text: player_data.colorName || "Color"
                 color: "white"
                 font.pixelSize: 11
                 font.bold: true
@@ -63,7 +63,7 @@ Rectangle {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.colorClicked()
+                onClicked: root.color_clicked()
             }
 
             ToolTip {
@@ -89,10 +89,10 @@ Rectangle {
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: {
-                        if (!playerData.team_id || !teamIcons || teamIcons.length === 0)
+                        if (!player_data.team_id || !team_icons || team_icons.length === 0)
                             return "●";
 
-                        return teamIcons[(playerData.team_id - 1) % teamIcons.length];
+                        return team_icons[(player_data.team_id - 1) % team_icons.length];
                     }
                     color: colors.textMain
                     font.pixelSize: 18
@@ -100,7 +100,7 @@ Rectangle {
 
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: "T" + (playerData.team_id || 1)
+                    text: "T" + (player_data.team_id || 1)
                     color: colors.textSubLite
                     font.pixelSize: 9
                 }
@@ -111,7 +111,7 @@ Rectangle {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
                 hoverEnabled: true
-                onClicked: root.teamClicked()
+                onClicked: root.team_clicked()
             }
 
             ToolTip {
@@ -133,7 +133,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: playerData.factionName || "Standard of Iron"
+                text: player_data.factionName || "Standard of Iron"
                 color: colors.textSub
                 font.pixelSize: 11
                 elide: Text.ElideRight
@@ -145,7 +145,7 @@ Rectangle {
                 anchors.fill: parent
                 cursorShape: Qt.ArrowCursor
                 enabled: false
-                onClicked: root.factionClicked()
+                onClicked: root.faction_clicked()
             }
 
         }
@@ -162,7 +162,7 @@ Rectangle {
             color: removeMouseArea.containsMouse ? colors.dangerColor : colors.cardBaseA
             border.color: colors.dangerColor
             border.width: 1
-            visible: root.canRemove && !playerData.isHuman
+            visible: root.can_remove && !player_data.isHuman
 
             Text {
                 anchors.centerIn: parent
@@ -178,7 +178,7 @@ Rectangle {
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
-                onClicked: root.removeClicked()
+                onClicked: root.remove_clicked()
             }
 
             ToolTip {

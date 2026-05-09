@@ -6,52 +6,52 @@ import StandardOfIron 1.0
 Item {
     id: root
 
-    property bool gameStarted: false
+    property bool game_started: false
     readonly property bool compact: width < 820
     readonly property bool narrow: width < 620
-    readonly property int sideMargin: Math.max(18, Math.min(56, width * 0.055))
-    readonly property int topMargin: Math.max(18, Math.min(48, height * 0.055))
-    readonly property int commandWidth: root.compact ? width - sideMargin * 2 : Math.min(560, Math.max(480, width * 0.42))
+    readonly property int side_margin: Math.max(18, Math.min(56, width * 0.055))
+    readonly property int top_margin: Math.max(18, Math.min(48, height * 0.055))
+    readonly property int command_width: root.compact ? width - side_margin * 2 : Math.min(560, Math.max(480, width * 0.42))
     readonly property var hs: StyleGuide.historical
 
-    signal openSkirmish()
-    signal openCampaign()
-    signal openObjectives()
-    signal openSettings()
-    signal loadSave()
-    signal saveGame()
-    signal exitRequested()
+    signal open_skirmish()
+    signal open_campaign()
+    signal open_objectives()
+    signal open_settings()
+    signal load_save()
+    signal save_game()
+    signal exit_requested()
 
     anchors.fill: parent
     z: 10
     focus: true
 
-    function trigger(index) {
+    function trigger_selection(index) {
         var m = menuModel.get(index);
-        if (!m || (m.requiresGame && !root.gameStarted))
+        if (!m || (m.requiresGame && !root.game_started))
             return;
 
         if (m.idStr === "skirmish")
-            root.openSkirmish();
+            root.open_skirmish();
         else if (m.idStr === "campaign")
-            root.openCampaign();
+            root.open_campaign();
         else if (m.idStr === "objectives")
-            root.openObjectives();
+            root.open_objectives();
         else if (m.idStr === "save")
-            root.saveGame();
+            root.save_game();
         else if (m.idStr === "load")
-            root.loadSave();
+            root.load_save();
         else if (m.idStr === "settings")
-            root.openSettings();
+            root.open_settings();
         else if (m.idStr === "exit")
-            root.exitRequested();
+            root.exit_requested();
     }
 
-    function moveSelection(direction) {
+    function move_selection(direction) {
         var next = commandList.currentIndex + direction;
         while (next >= 0 && next < menuModel.count) {
             var m = menuModel.get(next);
-            if (!m.requiresGame || root.gameStarted) {
+            if (!m.requiresGame || root.game_started) {
                 commandList.currentIndex = next;
                 return;
             }
@@ -61,17 +61,17 @@ Item {
 
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Down) {
-            moveSelection(1);
+            move_selection(1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Up) {
-            moveSelection(-1);
+            move_selection(-1);
             event.accepted = true;
         } else if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-            trigger(commandList.currentIndex);
+            trigger_selection(commandList.currentIndex);
             event.accepted = true;
         } else if (event.key === Qt.Key_Escape) {
-            if (typeof mainWindow !== "undefined" && mainWindow.menuVisible && mainWindow.gameStarted) {
-                mainWindow.menuVisible = false;
+            if (typeof mainWindow !== "undefined" && mainWindow.menu_visible && mainWindow.game_started) {
+                mainWindow.menu_visible = false;
                 event.accepted = true;
             }
         }
@@ -104,7 +104,7 @@ Item {
             subtitle: QT_TR_NOOP("Review active orders")
             detail: QT_TR_NOOP("Orders")
             requiresGame: true
-            accent: "#668C55"
+            accent: "#8C6A3E"
         }
 
         ListElement {
@@ -113,7 +113,7 @@ Item {
             subtitle: QT_TR_NOOP("Record the current campaign state")
             detail: QT_TR_NOOP("Archive")
             requiresGame: true
-            accent: "#3A9CA8"
+            accent: "#A7814A"
         }
 
         ListElement {
@@ -212,18 +212,18 @@ Item {
         id: stage
 
         anchors.fill: parent
-        anchors.leftMargin: root.sideMargin
-        anchors.rightMargin: root.sideMargin
-        anchors.topMargin: root.topMargin
-        anchors.bottomMargin: root.topMargin
+        anchors.leftMargin: root.side_margin
+        anchors.rightMargin: root.side_margin
+        anchors.topMargin: root.top_margin
+        anchors.bottomMargin: root.top_margin
         spacing: root.compact ? 0 : Math.max(24, root.width * 0.035)
 
         ColumnLayout {
             id: commandColumn
 
             Layout.fillHeight: true
-            Layout.preferredWidth: root.compact ? stage.width : root.commandWidth
-            Layout.maximumWidth: root.compact ? stage.width : root.commandWidth
+            Layout.preferredWidth: root.compact ? stage.width : root.command_width
+            Layout.maximumWidth: root.compact ? stage.width : root.command_width
             spacing: Math.max(12, Math.min(22, root.height * 0.022))
 
             Item {
@@ -320,13 +320,13 @@ Item {
                     required property bool requiresGame
                     required property string accent
 
-                    readonly property bool itemEnabled: !requiresGame || root.gameStarted
+                    readonly property bool item_enabled: !requiresGame || root.game_started
                     readonly property bool selected: ListView.isCurrentItem
-                    readonly property int rowHeight: root.narrow ? 60 : 70
+                    readonly property int row_height: root.narrow ? 60 : 70
 
                     width: commandList.width
-                    height: rowHeight
-                    opacity: itemEnabled ? 1 : 0.46
+                    height: row_height
+                    opacity: item_enabled ? 1 : 0.46
 
                     Rectangle {
                         anchors.fill: parent
@@ -461,14 +461,14 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         acceptedButtons: Qt.LeftButton
-                        cursorShape: itemEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
+                        cursorShape: item_enabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
                         onEntered: {
-                            if (itemEnabled)
+                            if (item_enabled)
                                 commandList.currentIndex = commandItem.index;
                         }
                         onClicked: {
-                            if (itemEnabled)
-                                root.trigger(commandItem.index);
+                            if (item_enabled)
+                                root.trigger_selection(commandItem.index);
                         }
                     }
                 }

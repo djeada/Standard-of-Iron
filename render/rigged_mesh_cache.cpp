@@ -30,12 +30,14 @@ auto rigged_cache_gl_funcs() -> QOpenGLFunctions_3_3_Core * {
 auto describe_rigged_key(const Render::Creature::CreatureSpec &spec,
                          Render::Creature::CreatureLOD lod,
                          std::uint16_t variant_bucket,
+                         std::uint32_t attachment_set_id,
                          std::uint64_t attachments_hash,
                          std::uint32_t skin_species_id) -> std::string {
   std::ostringstream out;
   out << "spec=" << &spec << " lod=" << static_cast<int>(lod)
       << " variant_bucket=" << variant_bucket
-      << " skin_species_id=" << skin_species_id << " attachments_hash=0x"
+      << " skin_species_id=" << skin_species_id
+      << " attachment_set_id=" << attachment_set_id << " attachments_hash=0x"
       << std::hex << attachments_hash;
   return out.str();
 }
@@ -156,7 +158,7 @@ auto RiggedMeshCache::get_or_bake(
                                attachments,
                                Render::Creature::static_attachments_hash(
                                    attachments.data(), attachments.size()),
-                               skin_species_id);
+                               0U, skin_species_id);
 }
 
 auto RiggedMeshCache::get_or_bake_prehashed(
@@ -164,9 +166,11 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     Render::Creature::CreatureLOD lod, std::span<const QMatrix4x4> rest_palette,
     std::uint16_t variant_bucket,
     std::span<const Render::Creature::StaticAttachmentSpec> attachments,
-    std::uint64_t attachments_hash,
+    std::uint64_t attachments_hash, std::uint32_t attachment_set_id,
     std::uint32_t skin_species_id) -> const RiggedMeshEntry * {
-  Key const key{&spec, lod, variant_bucket, skin_species_id, attachments_hash};
+  Key const key{
+      &spec,           lod, variant_bucket, skin_species_id, attachment_set_id,
+      attachments_hash};
   if (auto it = m_entries.find(key); it != m_entries.end()) {
     ++m_frame_stats.hits;
     return &it->second;
@@ -176,8 +180,8 @@ auto RiggedMeshCache::get_or_bake_prehashed(
     ++m_frame_stats.misses;
     Render::Creature::report_runtime_bake_violation(
         Render::Creature::RuntimeBakeOperation::RiggedMeshBake,
-        describe_rigged_key(spec, lod, variant_bucket, attachments_hash,
-                            skin_species_id));
+        describe_rigged_key(spec, lod, variant_bucket, attachment_set_id,
+                            attachments_hash, skin_species_id));
     return nullptr;
   }
 

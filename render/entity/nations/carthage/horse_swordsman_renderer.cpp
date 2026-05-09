@@ -16,6 +16,7 @@
 #include "../../../humanoid/style_palette.h"
 #include "../../../submitter.h"
 #include "../../mounted_knight_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 #include "swordsman_style.h"
 
 #include <memory>
@@ -203,11 +204,15 @@ auto register_horse_swordsman_rider_archetype()
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
-  config.sword_equipment_id = "sword_carthage";
-  config.shield_equipment_id = "shield_carthage";
-  config.helmet_equipment_id = "carthage_heavy";
-  config.armor_equipment_id = "armor_heavy_carthage";
-  config.shoulder_equipment_id = "carthage_shoulder_cover_cavalry";
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/carthage/horse_swordsman");
+  config.sword_equipment_id = loadout.ids.sword;
+  config.shield_equipment_id = loadout.ids.shield;
+  config.helmet_equipment_id = loadout.ids.helmet;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.shoulder_equipment_id = loadout.ids.shoulder;
+  config.sword_handle = loadout.sword_handle;
+  config.shield_handle = loadout.shield_handle;
   config.metal_color = QVector3D(0.70F, 0.68F, 0.52F);
   config.has_shoulder = true;
   config.helmet_offset_moving = 0.03F;

@@ -20,6 +20,10 @@ namespace {
 using std::uint32_t;
 using namespace Render::Ground;
 
+constexpr int k_tree_cell_span = 4;
+constexpr float k_tree_density_area_scale = 16.0F / 36.0F;
+constexpr float k_tree_edge_padding_scale = 0.35F;
+
 } // namespace
 
 namespace Render::GL {
@@ -108,7 +112,8 @@ void OliveRenderer::generate_olive_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding;
+  config.edge_padding =
+      scatter_profile.spawn_edge_padding * k_tree_edge_padding_scale;
   config.max_slope = 0.65F;
 
   SpawnValidator validator(terrain_cache, config);
@@ -164,11 +169,13 @@ void OliveRenderer::generate_olive_instances() {
     return true;
   };
 
-  for (int z = 0; z < m_height; z += 6) {
-    for (int x = 0; x < m_width; x += 6) {
-      int const idx = z * m_width + x;
+  for (int z = 0; z < m_height; z += k_tree_cell_span) {
+    for (int x = 0; x < m_width; x += k_tree_cell_span) {
+      int const sample_x = std::min(x + k_tree_cell_span / 2, m_width - 1);
+      int const sample_z = std::min(z + k_tree_cell_span / 2, m_height - 1);
+      int const idx = sample_z * m_width + sample_x;
 
-      float const slope = terrain_cache.get_slope_at(x, z);
+      float const slope = terrain_cache.get_slope_at(sample_x, sample_z);
       if (slope > 0.65F) {
         continue;
       }
@@ -177,7 +184,7 @@ void OliveRenderer::generate_olive_instances() {
           x, z, m_noiseSeed ^ 0xCD34EF56U ^ static_cast<uint32_t>(idx));
 
       Game::Map::TerrainType const terrain_type =
-          terrain_cache.get_terrain_type_at(x, z);
+          terrain_cache.get_terrain_type_at(sample_x, sample_z);
       float density_mult = 1.0F;
       if (terrain_type == Game::Map::TerrainType::Hill) {
         density_mult = 1.15F;
@@ -185,12 +192,13 @@ void OliveRenderer::generate_olive_instances() {
         density_mult = 0.5F;
       }
 
-      float const effective_density = olive_density * density_mult;
+      float const effective_density =
+          olive_density * density_mult * k_tree_density_area_scale;
       int olive_count = static_cast<int>(std::ceil(effective_density));
 
       for (int i = 0; i < olive_count; ++i) {
-        float const gx = float(x) + rand_01(state) * 6.0F;
-        float const gz = float(z) + rand_01(state) * 6.0F;
+        float const gx = float(x) + rand_01(state) * float(k_tree_cell_span);
+        float const gz = float(z) + rand_01(state) * float(k_tree_cell_span);
         add_olive(gx, gz, state);
       }
     }

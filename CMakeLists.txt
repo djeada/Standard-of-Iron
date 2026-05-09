@@ -260,6 +260,7 @@ if(QT_VERSION_MAJOR EQUAL 6)
             assets/campaign_map/campaign_state.json
             assets/campaign_map/provinces.json
             assets/visuals/unit_visuals.json
+            assets/visuals/unit_equipment_loadouts.json
             assets/visuals/emblems/rome.png
             assets/visuals/emblems/cartaghe.png
             assets/visuals/load_screen.png

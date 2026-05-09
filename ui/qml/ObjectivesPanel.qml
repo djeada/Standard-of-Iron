@@ -8,9 +8,9 @@ Item {
 
     property var mission_objectives: null
 
-    signal closeRequested()
+    signal close_requested()
 
-    function refreshObjectives() {
+    function refresh_objectives() {
         if (typeof game !== 'undefined' && game.get_current_mission_objectives)
             mission_objectives = game.get_current_mission_objectives();
         else
@@ -22,16 +22,16 @@ Item {
     focus: true
     Keys.onPressed: function(event) {
         if (event.key === Qt.Key_Escape) {
-            root.closeRequested();
+            root.close_requested();
             event.accepted = true;
         }
     }
     Component.onCompleted: {
-        refreshObjectives();
+        refresh_objectives();
     }
     onVisibleChanged: {
         if (visible)
-            refreshObjectives();
+            refresh_objectives();
 
     }
 
@@ -73,7 +73,7 @@ Item {
                     text: "×"
                     Layout.preferredWidth: 40
                     Layout.preferredHeight: 40
-                    onClicked: root.closeRequested()
+                    onClicked: root.close_requested()
                 }
 
             }
@@ -310,7 +310,7 @@ Item {
 
                 StyledButton {
                     text: qsTr("Close")
-                    onClicked: root.closeRequested()
+                    onClicked: root.close_requested()
                 }
 
             }

@@ -1,6 +1,7 @@
 
 
 #include "render/bone_palette_arena.h"
+#include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/render_request.h"
 #include "render/creature/runtime_bake_guard.h"
 #include "render/rigged_mesh.h"
@@ -235,6 +236,29 @@ TEST(SnapshotMeshCache, KeyDistinguishesClipIdentity) {
   cache.get_or_bake(a, *source, 0U);
   cache.get_or_bake(b, *source, 0U);
   cache.get_or_bake(c, *source, 0U);
+
+  EXPECT_EQ(cache.size(), 3U);
+}
+
+TEST(SnapshotMeshCache, KeyDistinguishesAssetAndAttachmentSet) {
+  auto source = make_two_bone_quad_entry();
+  SnapshotMeshCache cache;
+
+  SnapshotMeshCache::Key base{};
+  base.asset_id = Render::Creature::Pipeline::kHumanoidAsset;
+  base.archetype = 0U;
+  base.attachment_set_id = 1U;
+  base.frame_in_clip = 0U;
+
+  SnapshotMeshCache::Key different_asset = base;
+  different_asset.asset_id = Render::Creature::Pipeline::kHumanoidSwordAsset;
+
+  SnapshotMeshCache::Key different_attachment_set = base;
+  different_attachment_set.attachment_set_id = 2U;
+
+  cache.get_or_bake(base, *source, 0U);
+  cache.get_or_bake(different_asset, *source, 0U);
+  cache.get_or_bake(different_attachment_set, *source, 0U);
 
   EXPECT_EQ(cache.size(), 3U);
 }

@@ -57,7 +57,7 @@ Item {
 
                 StyledButton {
                     text: qsTr("Close")
-                    buttonStyle: "secondary"
+                    button_style: "secondary"
                     onClicked: root.cancelled()
                 }
 
@@ -366,7 +366,7 @@ Item {
                                         languageManager.setLanguage(currentText);
 
                                 }
-                                delegateText: function(data) {
+                                delegate_text: function(data) {
                                     return typeof languageManager !== 'undefined' ? languageManager.languageDisplayName(data) : data;
                                 }
                             }

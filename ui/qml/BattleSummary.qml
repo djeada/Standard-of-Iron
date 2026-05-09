@@ -5,30 +5,30 @@ import StandardOfIron 1.0
 Rectangle {
     id: summaryOverlay
 
-    property bool isVictory: (typeof game !== 'undefined' && game.victory_state === "victory")
-    property var onClose: null
-    property var onReturnToMainMenu: null
+    property bool is_victory: (typeof game !== 'undefined' && game.victory_state === "victory")
+    property var on_close: null
+    property var on_return_to_main_menu: null
     readonly property var hs: StyleGuide.historical
 
     function show() {
         visible = true;
-        buildPlayerList();
+        build_player_list();
     }
 
     function hide() {
         visible = false;
-        if (onClose)
-            onClose();
+        if (on_close)
+            on_close();
 
     }
 
-    function returnToMainMenu() {
-        if (onReturnToMainMenu)
-            onReturnToMainMenu();
+    function return_to_main_menu() {
+        if (on_return_to_main_menu)
+            on_return_to_main_menu();
 
     }
 
-    function buildPlayerList() {
+    function build_player_list() {
         playerBannersModel.clear();
         if (typeof game === 'undefined')
             return ;
@@ -44,7 +44,7 @@ Rectangle {
                 break;
             }
         }
-        if (isVictory) {
+        if (is_victory) {
             winningTeamId = localTeamId;
         } else {
             for (var t = 0; t < owners.length; t++) {
@@ -62,12 +62,12 @@ Rectangle {
                 var stats = game.get_player_stats(owner.id);
                 var isLocalPlayer = (owner.id === localOwnerId);
                 var isWinner = (owner.team_id === winningTeamId);
-                var bannerColor = getBannerColor(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
+                var bannerColor = get_banner_color(owner.id, isLocalPlayer, owner.type === "AI", aiColorIndex);
                 if (owner.type === "AI")
                     aiColorIndex++;
 
-                var score = calculateScore(stats);
-                var playTimeFormatted = formatPlayTime(stats.playTimeSec);
+                var score = calculate_score(stats);
+                var playTimeFormatted = format_play_time(stats.playTimeSec);
                 playerBanners.push({
                     "owner_id": owner.id,
                     "name": owner.name,
@@ -96,7 +96,7 @@ Rectangle {
         for (var k = 0; k < playerBanners.length; k++) playerBannersModel.append(playerBanners[k])
     }
 
-    function getBannerColor(owner_id, isLocal, isAI, aiIndex) {
+    function get_banner_color(owner_id, isLocal, isAI, aiIndex) {
         var colors = ["#8F2F2A", "#496C4A", "#9A7A38", "#536D7A", "#6A5C7D", "#6F7F4B"];
         if (isLocal)
             return colors[0];
@@ -108,11 +108,11 @@ Rectangle {
         return colors[1];
     }
 
-    function calculateScore(stats) {
+    function calculate_score(stats) {
         return stats.enemiesKilled * 100 + stats.troopsRecruited * 10 + stats.barracksOwned * 500;
     }
 
-    function formatPlayTime(seconds) {
+    function format_play_time(seconds) {
         var h = Math.floor(seconds / 3600);
         var m = Math.floor((seconds % 3600) / 60);
         var s = Math.floor(seconds % 60);
@@ -133,8 +133,8 @@ Rectangle {
             id: mainTitle
 
             anchors.horizontalCenter: parent.horizontalCenter
-            text: isVictory ? qsTr("Victory Secured") : qsTr("Army Broken")
-            color: isVictory ? Theme.accentBright : hs.waxHover
+            text: is_victory ? qsTr("Victory Secured") : qsTr("Army Broken")
+            color: is_victory ? Theme.accentBright : hs.waxHover
             font.family: "serif"
             font.pointSize: 52
             font.bold: true
@@ -502,7 +502,7 @@ Rectangle {
             text: qsTr("Return to Menu")
             focusPolicy: Qt.NoFocus
             onClicked: {
-                summaryOverlay.returnToMainMenu();
+                summaryOverlay.return_to_main_menu();
             }
         }
 
