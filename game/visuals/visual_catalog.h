@@ -21,7 +21,7 @@ struct VisualDef {
 
 class VisualCatalog {
 public:
-  auto loadFromJsonFile(const QString &path,
+  auto load_from_json_file(const QString &path,
                         QString *out_error = nullptr) -> bool;
   auto lookup(const std::string &unitType, VisualDef &out) const -> bool;
 
@@ -29,7 +29,7 @@ private:
   std::unordered_map<std::string, VisualDef> m_units;
 };
 
-auto meshKindFromString(const QString &s) -> VisualDef::MeshKind;
+auto mesh_kind_from_string(const QString &s) -> VisualDef::MeshKind;
 
 void apply_to_renderable(const VisualDef &def,
                          Engine::Core::RenderableComponent &r);

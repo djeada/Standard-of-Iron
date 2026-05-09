@@ -26,7 +26,7 @@ using namespace JsonKeys;
 
 namespace {
 
-auto readGrid(const QJsonObject &obj, GridDefinition &grid) -> bool {
+auto read_grid(const QJsonObject &obj, GridDefinition &grid) -> bool {
   if (obj.contains(WIDTH)) {
     grid.width = obj.value(WIDTH).toInt(grid.width);
   }
@@ -39,7 +39,7 @@ auto readGrid(const QJsonObject &obj, GridDefinition &grid) -> bool {
   return grid.width > 0 && grid.height > 0 && grid.tile_size > 0.0F;
 }
 
-auto readCamera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
+auto read_camera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
   if (obj.contains(CENTER)) {
     auto arr = obj.value(CENTER).toArray();
     if (arr.size() == 3) {
@@ -51,10 +51,10 @@ auto readCamera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
     cam.distance = float(obj.value(DISTANCE).toDouble(cam.distance));
   }
   if (obj.contains(TILT_DEG)) {
-    cam.tiltDeg = float(obj.value(TILT_DEG).toDouble(cam.tiltDeg));
+    cam.tilt_deg = float(obj.value(TILT_DEG).toDouble(cam.tilt_deg));
   }
   if (obj.contains(FOV_Y)) {
-    cam.fovY = float(obj.value(FOV_Y).toDouble(cam.fovY));
+    cam.fov_y = float(obj.value(FOV_Y).toDouble(cam.fov_y));
   }
   if (obj.contains(NEAR)) {
     cam.near_plane = float(obj.value(NEAR).toDouble(cam.near_plane));
@@ -70,7 +70,7 @@ auto readCamera(const QJsonObject &obj, CameraDefinition &cam) -> bool {
   return true;
 }
 
-auto readVector3(const QJsonValue &value,
+auto read_vector3(const QJsonValue &value,
                  const QVector3D &fallback) -> QVector3D {
   if (!value.isArray()) {
     return fallback;
@@ -84,7 +84,7 @@ auto readVector3(const QJsonValue &value,
           float(arr[2].toDouble(fallback.z()))};
 }
 
-void readBiome(const QJsonObject &obj, BiomeSettings &out) {
+void read_biome(const QJsonObject &obj, BiomeSettings &out) {
 
   if (obj.contains(GROUND_TYPE)) {
     const QString ground_type_str = obj.value(GROUND_TYPE).toString();
@@ -148,23 +148,23 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
 
   if (obj.contains(GRASS_PRIMARY)) {
     out.grass_primary =
-        readVector3(obj.value(GRASS_PRIMARY), out.grass_primary);
+        read_vector3(obj.value(GRASS_PRIMARY), out.grass_primary);
   }
   if (obj.contains(GRASS_SECONDARY)) {
     out.grass_secondary =
-        readVector3(obj.value(GRASS_SECONDARY), out.grass_secondary);
+        read_vector3(obj.value(GRASS_SECONDARY), out.grass_secondary);
   }
   if (obj.contains(GRASS_DRY)) {
-    out.grass_dry = readVector3(obj.value(GRASS_DRY), out.grass_dry);
+    out.grass_dry = read_vector3(obj.value(GRASS_DRY), out.grass_dry);
   }
   if (obj.contains(SOIL_COLOR)) {
-    out.soil_color = readVector3(obj.value(SOIL_COLOR), out.soil_color);
+    out.soil_color = read_vector3(obj.value(SOIL_COLOR), out.soil_color);
   }
   if (obj.contains(ROCK_LOW)) {
-    out.rock_low = readVector3(obj.value(ROCK_LOW), out.rock_low);
+    out.rock_low = read_vector3(obj.value(ROCK_LOW), out.rock_low);
   }
   if (obj.contains(ROCK_HIGH)) {
-    out.rock_high = readVector3(obj.value(ROCK_HIGH), out.rock_high);
+    out.rock_high = read_vector3(obj.value(ROCK_HIGH), out.rock_high);
   }
   if (obj.contains(TERRAIN_MACRO_NOISE_SCALE)) {
     out.terrain_macro_noise_scale =
@@ -257,14 +257,14 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
         float(obj.value(SOIL_ROUGHNESS).toDouble(out.soil_roughness));
   }
   if (obj.contains(SNOW_COLOR)) {
-    out.snow_color = readVector3(obj.value(SNOW_COLOR), out.snow_color);
+    out.snow_color = read_vector3(obj.value(SNOW_COLOR), out.snow_color);
   }
 }
 
-void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
+void read_victory_config(const QJsonObject &obj, VictoryConfig &out) {
 
   if (obj.contains("type")) {
-    out.victoryType = obj.value("type").toString("elimination");
+    out.victory_type = obj.value("type").toString("elimination");
   }
 
   if (obj.contains("key_structures") && obj.value("key_structures").isArray()) {
@@ -276,7 +276,7 @@ void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
   }
 
   if (obj.contains("duration")) {
-    out.surviveTimeDuration = float(obj.value("duration").toDouble(0.0));
+    out.survive_time_duration = float(obj.value("duration").toDouble(0.0));
   }
 
   if (obj.contains("defeat_conditions") &&
@@ -289,11 +289,11 @@ void readVictoryConfig(const QJsonObject &obj, VictoryConfig &out) {
   }
 
   if (obj.contains("min_count")) {
-    out.requiredKeyStructures = obj.value("min_count").toInt(0);
+    out.required_key_structures = obj.value("min_count").toInt(0);
   }
 }
 
-void readRainConfig(const QJsonObject &obj, RainSettings &out) {
+void read_rain_config(const QJsonObject &obj, RainSettings &out) {
   if (obj.contains(RAIN_ENABLED)) {
     out.enabled = obj.value(RAIN_ENABLED).toBool(out.enabled);
   }
@@ -326,14 +326,14 @@ void readRainConfig(const QJsonObject &obj, RainSettings &out) {
   }
 }
 
-void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
+void read_spawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   out.clear();
   out.reserve(arr.size());
   for (const auto &spawn_val : arr) {
     auto spawn_obj = spawn_val.toObject();
     UnitSpawn spawn;
     const QString type_str = spawn_obj.value(TYPE).toString();
-    if (!Game::Units::tryParseSpawnType(type_str, spawn.type)) {
+    if (!Game::Units::try_parse_spawn_type(type_str, spawn.type)) {
       qWarning() << "MapLoader: unknown spawn type" << type_str << "- skipping";
       continue;
     }
@@ -366,7 +366,7 @@ void readSpawns(const QJsonArray &arr, std::vector<UnitSpawn> &out) {
   }
 }
 
-void readFireCamps(const QJsonArray &arr, std::vector<FireCamp> &out) {
+void read_fire_camps(const QJsonArray &arr, std::vector<FireCamp> &out) {
   out.clear();
   out.reserve(arr.size());
   for (const auto &camp_val : arr) {
@@ -383,7 +383,7 @@ void readFireCamps(const QJsonArray &arr, std::vector<FireCamp> &out) {
   }
 }
 
-void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
+void read_terrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
                  const GridDefinition &grid, CoordSystem coordSys) {
   out.clear();
   out.reserve(arr.size());
@@ -398,7 +398,7 @@ void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
     TerrainFeature feature;
 
     const QString type_str = terrain_obj.value("type").toString("flat");
-    if (!tryParseTerrainType(type_str, feature.type)) {
+    if (!try_parse_terrain_type(type_str, feature.type)) {
       qWarning() << "MapLoader: unknown terrain type" << type_str
                  << "- defaulting to flat";
       feature.type = TerrainType::Flat;
@@ -432,7 +432,7 @@ void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
 
     feature.height =
         float(terrain_obj.value("height").toDouble(default_terrain_height));
-    feature.rotationDeg = float(terrain_obj.value("rotation").toDouble(0.0));
+    feature.rotation_deg = float(terrain_obj.value("rotation").toDouble(0.0));
 
     if (terrain_obj.contains("entrances") &&
         terrain_obj.value("entrances").isArray()) {
@@ -461,7 +461,7 @@ void readTerrain(const QJsonArray &arr, std::vector<TerrainFeature> &out,
   }
 }
 
-void readRivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
+void read_rivers(const QJsonArray &arr, std::vector<RiverSegment> &out,
                 const GridDefinition &grid, CoordSystem coordSys) {
   out.clear();
   out.reserve(arr.size());
@@ -593,7 +593,7 @@ void read_roads(const QJsonArray &arr, std::vector<RoadSegment> &out,
   }
 }
 
-void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
+void read_bridges(const QJsonArray &arr, std::vector<Bridge> &out,
                  const GridDefinition &grid, CoordSystem coordSys) {
   out.clear();
   out.reserve(arr.size());
@@ -666,7 +666,7 @@ void readBridges(const QJsonArray &arr, std::vector<Bridge> &out,
 
 } // namespace
 
-auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
+auto MapLoader::load_from_json_file(const QString &path, MapDefinition &outMap,
                                  QString *out_error) -> bool {
   QFile map_file(path);
   if (!map_file.open(QIODevice::ReadOnly)) {
@@ -715,7 +715,7 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   }
 
   if (root.contains(GRID) && root.value(GRID).isObject()) {
-    if (!readGrid(root.value(GRID).toObject(), outMap.grid)) {
+    if (!read_grid(root.value(GRID).toObject(), outMap.grid)) {
       if (out_error != nullptr) {
         *out_error = "Invalid grid definition";
       }
@@ -724,24 +724,24 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   }
 
   if (root.contains(CAMERA) && root.value(CAMERA).isObject()) {
-    readCamera(root.value(CAMERA).toObject(), outMap.camera);
+    read_camera(root.value(CAMERA).toObject(), outMap.camera);
   }
 
   if (root.contains(SPAWNS) && root.value(SPAWNS).isArray()) {
-    readSpawns(root.value(SPAWNS).toArray(), outMap.spawns);
+    read_spawns(root.value(SPAWNS).toArray(), outMap.spawns);
   }
 
   if (root.contains(FIRECAMPS) && root.value(FIRECAMPS).isArray()) {
-    readFireCamps(root.value(FIRECAMPS).toArray(), outMap.firecamps);
+    read_fire_camps(root.value(FIRECAMPS).toArray(), outMap.firecamps);
   }
 
   if (root.contains(TERRAIN) && root.value(TERRAIN).isArray()) {
-    readTerrain(root.value(TERRAIN).toArray(), outMap.terrain, outMap.grid,
+    read_terrain(root.value(TERRAIN).toArray(), outMap.terrain, outMap.grid,
                 outMap.coordSystem);
   }
 
   if (root.contains(RIVERS) && root.value(RIVERS).isArray()) {
-    readRivers(root.value(RIVERS).toArray(), outMap.rivers, outMap.grid,
+    read_rivers(root.value(RIVERS).toArray(), outMap.rivers, outMap.grid,
                outMap.coordSystem);
   }
 
@@ -751,20 +751,20 @@ auto MapLoader::loadFromJsonFile(const QString &path, MapDefinition &outMap,
   }
 
   if (root.contains(BRIDGES) && root.value(BRIDGES).isArray()) {
-    readBridges(root.value(BRIDGES).toArray(), outMap.bridges, outMap.grid,
+    read_bridges(root.value(BRIDGES).toArray(), outMap.bridges, outMap.grid,
                 outMap.coordSystem);
   }
 
   if (root.contains(BIOME) && root.value(BIOME).isObject()) {
-    readBiome(root.value(BIOME).toObject(), outMap.biome);
+    read_biome(root.value(BIOME).toObject(), outMap.biome);
   }
 
   if (root.contains(VICTORY) && root.value(VICTORY).isObject()) {
-    readVictoryConfig(root.value(VICTORY).toObject(), outMap.victory);
+    read_victory_config(root.value(VICTORY).toObject(), outMap.victory);
   }
 
   if (root.contains(RAIN) && root.value(RAIN).isObject()) {
-    readRainConfig(root.value(RAIN).toObject(), outMap.rain);
+    read_rain_config(root.value(RAIN).toObject(), outMap.rain);
   }
 
   return true;

@@ -72,7 +72,7 @@ TEST_F(TerrainServiceTest, HillEntrancesCarveLowerCenterPathThanShoulders) {
   };
   hill.entrances.push_back(QVector3D(0.0F, 0.0F, -7.0F));
 
-  height_map.buildFromFeatures({hill});
+  height_map.build_from_features({hill});
 
   constexpr int kCenterX = 20;
   EXPECT_TRUE(height_map.isHillEntrance(kCenterX, 15));
@@ -177,7 +177,7 @@ TEST_F(TerrainServiceTest, HillFootprintStaysInsidePlateauBounds) {
       .depth = 20.0F,
       .height = 4.0F,
   };
-  height_map.buildFromFeatures({hill});
+  height_map.build_from_features({hill});
 
   for (auto const [x, z] : {std::pair{30, 19}, std::pair{41, 30},
                             std::pair{30, 41}, std::pair{19, 30}}) {

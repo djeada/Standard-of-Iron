@@ -82,7 +82,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
   Game::Systems::BuildingCollisionRegistry::instance().update_building_owner(
       barrack->get_id(), new_owner_id);
 
-  if (!Game::Core::isNeutralOwner(new_owner_id) && (prod == nullptr)) {
+  if (!Game::Core::is_neutral_owner(new_owner_id) && (prod == nullptr)) {
     prod = barrack->add_component<Engine::Core::ProductionComponent>();
     if (prod != nullptr) {
       prod->product_type = Game::Units::TroopType::Archer;
@@ -98,7 +98,7 @@ void CaptureSystem::transfer_barrack_ownership(Engine::Core::World *,
       prod->build_time = profile.production.build_time;
       prod->villager_cost = profile.production.cost;
     }
-  } else if (Game::Core::isNeutralOwner(new_owner_id) && (prod != nullptr)) {
+  } else if (Game::Core::is_neutral_owner(new_owner_id) && (prod != nullptr)) {
     barrack->remove_component<Engine::Core::ProductionComponent>();
   } else if (prod != nullptr) {
     prod->produced_count = 0;
@@ -150,7 +150,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
     for (auto *e : entities) {
       auto *u = e->get_component<Engine::Core::UnitComponent>();
       if ((u != nullptr) && u->owner_id != barrack_owner_id &&
-          !Game::Core::isNeutralOwner(u->owner_id)) {
+          !Game::Core::is_neutral_owner(u->owner_id)) {
         if (std::find(player_ids.begin(), player_ids.end(), u->owner_id) ==
             player_ids.end()) {
           player_ids.push_back(u->owner_id);
@@ -168,7 +168,7 @@ void CaptureSystem::process_barrack_capture(Engine::Core::World *world,
     }
 
     int defender_troops = 0;
-    if (!Game::Core::isNeutralOwner(barrack_owner_id)) {
+    if (!Game::Core::is_neutral_owner(barrack_owner_id)) {
       defender_troops = count_nearby_troops(world, barrack_x, barrack_z,
                                             barrack_owner_id, capture_radius);
     }

@@ -19,14 +19,14 @@
 
 using namespace Game::Audio;
 
-static inline void requireGuiThread(const char *where) {
+static inline void require_gui_thread(const char *where) {
   if ((QCoreApplication::instance() == nullptr) ||
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
     qFatal("%s must be called on the GUI thread", where);
   }
 }
 
-auto MusicPlayer::getInstance() -> MusicPlayer & {
+auto MusicPlayer::get_instance() -> MusicPlayer & {
   static MusicPlayer instance;
   return instance;
 }
@@ -44,13 +44,13 @@ auto MusicPlayer::initialize(int musicChannels) -> bool {
     qWarning() << "MusicPlayer: no Q(Gui)Application instance";
     return false;
   }
-  ensureOnGuiThread("MusicPlayer::initialize");
+  ensure_on_gui_thread("MusicPlayer::initialize");
 
-  m_channelCount = std::max(MIN_CHANNELS, musicChannels);
+  m_channel_count = std::max(MIN_CHANNELS, musicChannels);
   m_backend = new MiniaudioBackend(this);
   if (!m_backend->initialize(AudioConstants::DEFAULT_SAMPLE_RATE,
                              AudioConstants::DEFAULT_OUTPUT_CHANNELS,
-                             m_channelCount)) {
+                             m_channel_count)) {
     qWarning() << "MusicPlayer: backend init failed";
     m_backend->deleteLater();
     m_backend = nullptr;
@@ -59,7 +59,7 @@ auto MusicPlayer::initialize(int musicChannels) -> bool {
 
   m_initialized = true;
   qInfo() << "MusicPlayer initialized (miniaudio backend) channels:"
-          << m_channelCount;
+          << m_channel_count;
   return true;
 }
 
@@ -75,28 +75,28 @@ void MusicPlayer::shutdown() {
     return;
   }
 
-  ensureOnGuiThread("MusicPlayer::shutdown");
+  ensure_on_gui_thread("MusicPlayer::shutdown");
   if (m_backend != nullptr) {
     m_backend->shutdown();
     m_backend->deleteLater();
     m_backend = nullptr;
   }
   m_tracks.clear();
-  m_channelCount = 0;
+  m_channel_count = 0;
   m_initialized = false;
 }
 
-void MusicPlayer::registerTrack(const std::string &trackId,
+void MusicPlayer::register_track(const std::string &trackId,
                                 const std::string &filePath) {
 
   if ((QCoreApplication::instance() != nullptr) &&
       QThread::currentThread() != QCoreApplication::instance()->thread()) {
     QMetaObject::invokeMethod(
-        this, [this, trackId, filePath]() { registerTrack(trackId, filePath); },
+        this, [this, trackId, filePath]() { register_track(trackId, filePath); },
         Qt::QueuedConnection);
     return;
   }
-  ensureOnGuiThread("MusicPlayer::registerTrack");
+  ensure_on_gui_thread("MusicPlayer::register_track");
 
   QFileInfo const fi(QString::fromStdString(filePath));
   if (!fi.exists()) {
@@ -119,15 +119,15 @@ void MusicPlayer::registerTrack(const std::string &trackId,
 }
 
 void MusicPlayer::play(const std::string &id, float v, bool loop) {
-  play(id, v, loop, m_defaultChannel, AudioConstants::DEFAULT_FADE_IN_MS);
+  play(id, v, loop, m_default_channel, AudioConstants::DEFAULT_FADE_IN_MS);
 }
 void MusicPlayer::stop() {
-  stop(m_defaultChannel, AudioConstants::DEFAULT_FADE_OUT_MS);
+  stop(m_default_channel, AudioConstants::DEFAULT_FADE_OUT_MS);
 }
-void MusicPlayer::pause() { pause(m_defaultChannel); }
-void MusicPlayer::resume() { resume(m_defaultChannel); }
-void MusicPlayer::setVolume(float v) {
-  setVolume(m_defaultChannel, v, AudioConstants::NO_FADE_MS);
+void MusicPlayer::pause() { pause(m_default_channel); }
+void MusicPlayer::resume() { resume(m_default_channel); }
+void MusicPlayer::set_volume(float v) {
+  set_volume(m_default_channel, v, AudioConstants::NO_FADE_MS);
 }
 
 auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
@@ -141,8 +141,8 @@ auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
     QMetaObject::invokeMethod(
         this,
         [this, id, vol, loop, channel, fadeMs, &result]() mutable {
-          int const ch = channel < 0 ? findFreeChannel()
-                                     : std::min(channel, m_channelCount - 1);
+          int const ch = channel < 0 ? find_free_channel()
+                                     : std::min(channel, m_channel_count - 1);
           play_gui(id, vol, loop, ch, fadeMs);
           result = ch;
         },
@@ -150,7 +150,7 @@ auto MusicPlayer::play(const std::string &id, float vol, bool loop, int channel,
     return result;
   }
   int const ch =
-      channel < 0 ? findFreeChannel() : std::min(channel, m_channelCount - 1);
+      channel < 0 ? find_free_channel() : std::min(channel, m_channel_count - 1);
   play_gui(id, vol, loop, ch, fadeMs);
   return ch;
 }
@@ -188,7 +188,7 @@ void MusicPlayer::resume(int ch) {
   }
   resume_gui(ch);
 }
-void MusicPlayer::setVolume(int ch, float v, int ms) {
+void MusicPlayer::set_volume(int ch, float v, int ms) {
   if (!m_initialized || (m_backend == nullptr)) {
     return;
   }
@@ -200,7 +200,7 @@ void MusicPlayer::setVolume(int ch, float v, int ms) {
   }
   setVolume_gui(ch, v, ms);
 }
-void MusicPlayer::stopAll(int ms) {
+void MusicPlayer::stop_all(int ms) {
   if (!m_initialized || (m_backend == nullptr)) {
     return;
   }
@@ -211,7 +211,7 @@ void MusicPlayer::stopAll(int ms) {
   }
   stopAll_gui(ms);
 }
-void MusicPlayer::setMasterVolume(float v, int ms) {
+void MusicPlayer::set_master_volume(float v, int ms) {
   if (!m_initialized || (m_backend == nullptr)) {
     return;
   }
@@ -224,21 +224,21 @@ void MusicPlayer::setMasterVolume(float v, int ms) {
   setMasterVolume_gui(v, ms);
 }
 
-auto MusicPlayer::isPlaying() const -> bool {
+auto MusicPlayer::is_playing() const -> bool {
   return (m_backend != nullptr) && m_backend->any_channel_playing();
 }
-auto MusicPlayer::isPlaying(int ch) const -> bool {
+auto MusicPlayer::is_playing(int ch) const -> bool {
   return (m_backend != nullptr) && m_backend->channel_playing(ch);
 }
 
-void MusicPlayer::ensureOnGuiThread(const char *where) {
-  requireGuiThread(where);
+void MusicPlayer::ensure_on_gui_thread(const char *where) {
+  require_gui_thread(where);
 }
-auto MusicPlayer::findFreeChannel() const -> int {
+auto MusicPlayer::find_free_channel() const -> int {
   if (m_backend == nullptr) {
     return 0;
   }
-  for (int i = 0; i < m_channelCount; ++i) {
+  for (int i = 0; i < m_channel_count; ++i) {
     if (!m_backend->channel_playing(i)) {
       return i;
     }

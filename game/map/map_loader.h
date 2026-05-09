@@ -7,7 +7,7 @@ namespace Game::Map {
 
 class MapLoader {
 public:
-  static auto loadFromJsonFile(const QString &path, MapDefinition &outMap,
+  static auto load_from_json_file(const QString &path, MapDefinition &outMap,
                                QString *out_error = nullptr) -> bool;
 };
 

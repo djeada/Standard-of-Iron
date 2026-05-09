@@ -12,8 +12,8 @@ void Environment::apply(const MapDefinition &def,
                         Render::GL::Camera &camera) {
 
   camera.set_rts_view(def.camera.center, def.camera.distance,
-                      def.camera.tiltDeg, def.camera.yaw_deg);
-  camera.set_perspective(def.camera.fovY, 16.0F / 9.0F, def.camera.near_plane,
+                      def.camera.tilt_deg, def.camera.yaw_deg);
+  camera.set_perspective(def.camera.fov_y, 16.0F / 9.0F, def.camera.near_plane,
                          def.camera.far_plane);
   Render::GL::Renderer::GridParams gp;
   gp.cell_size = def.grid.tile_size;
@@ -22,7 +22,7 @@ void Environment::apply(const MapDefinition &def,
   renderer.set_grid_params(gp);
 }
 
-void Environment::applyDefault(Render::GL::Renderer &renderer,
+void Environment::apply_default(Render::GL::Renderer &renderer,
                                Render::GL::Camera &camera) {
   const auto &camera_config = Game::GameConfig::instance().camera();
   camera.set_rts_view(QVector3D(0, 0, 0), 15.0F, camera_config.default_pitch,

@@ -47,20 +47,20 @@ void VictoryService::configure(const Game::Map::VictoryConfig &config,
 
   m_local_owner_id = local_owner_id;
 
-  if (config.victoryType == "elimination") {
+  if (config.victory_type == "elimination") {
     m_victory_type = VictoryType::Elimination;
     m_key_structures = config.keyStructures;
-  } else if (config.victoryType == "control_structures") {
+  } else if (config.victory_type == "control_structures") {
     m_victory_type = VictoryType::ControlStructures;
     m_key_structures = config.keyStructures;
-    m_required_key_structures = config.requiredKeyStructures;
-  } else if (config.victoryType == "capture_structures") {
+    m_required_key_structures = config.required_key_structures;
+  } else if (config.victory_type == "capture_structures") {
     m_victory_type = VictoryType::CaptureStructures;
     m_key_structures = config.keyStructures;
-    m_required_key_structures = config.requiredKeyStructures;
-  } else if (config.victoryType == "survive_time") {
+    m_required_key_structures = config.required_key_structures;
+  } else if (config.victory_type == "survive_time") {
     m_victory_type = VictoryType::SurviveTime;
-    m_survive_time_duration = config.surviveTimeDuration;
+    m_survive_time_duration = config.survive_time_duration;
   } else {
     m_victory_type = VictoryType::Elimination;
     m_key_structures = {"barracks"};

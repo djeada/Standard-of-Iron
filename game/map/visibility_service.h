@@ -34,14 +34,14 @@ public:
     float half_height = 0.0F;
     std::vector<std::uint8_t> cells;
 
-    auto stateAt(int grid_x, int grid_z) const -> VisibilityState;
-    auto isVisibleWorld(float world_x, float world_z) const -> bool;
-    auto isExploredWorld(float world_x, float world_z) const -> bool;
+    auto state_at(int grid_x, int grid_z) const -> VisibilityState;
+    auto is_visible_world(float world_x, float world_z) const -> bool;
+    auto is_explored_world(float world_x, float world_z) const -> bool;
 
   private:
-    auto inBounds(int grid_x, int grid_z) const -> bool;
+    auto in_bounds(int grid_x, int grid_z) const -> bool;
     auto index(int grid_x, int grid_z) const -> int;
-    auto worldToGrid(float world_coord, float half) const -> int;
+    auto world_to_grid(float world_coord, float half) const -> int;
   };
 
   static auto instance() -> VisibilityService &;
@@ -49,7 +49,7 @@ public:
   void initialize(int width, int height, float tile_size);
   void reset();
   auto update(Engine::Core::World &world, int player_id) -> bool;
-  void computeImmediate(Engine::Core::World &world, int player_id);
+  void compute_immediate(Engine::Core::World &world, int player_id);
 
   auto is_initialized() const -> bool { return m_initialized; }
 
@@ -57,12 +57,12 @@ public:
   auto getHeight() const -> int { return m_height; }
   auto getTileSize() const -> float { return m_tile_size; }
 
-  auto stateAt(int grid_x, int grid_z) const -> VisibilityState;
-  auto isVisibleWorld(float world_x, float world_z) const -> bool;
-  auto isExploredWorld(float world_x, float world_z) const -> bool;
+  auto state_at(int grid_x, int grid_z) const -> VisibilityState;
+  auto is_visible_world(float world_x, float world_z) const -> bool;
+  auto is_explored_world(float world_x, float world_z) const -> bool;
   auto snapshot() const -> Snapshot;
 
-  auto snapshotCells() const -> std::vector<std::uint8_t>;
+  auto snapshot_cells() const -> std::vector<std::uint8_t>;
   auto version() const -> std::uint64_t {
     return m_version.load(std::memory_order_relaxed);
   }
@@ -72,9 +72,9 @@ public:
   ~VisibilityService();
 
 private:
-  auto inBounds(int x, int z) const -> bool;
+  auto in_bounds(int x, int z) const -> bool;
   auto index(int x, int z) const -> int;
-  auto worldToGrid(float world_coord, float half) const -> int;
+  auto world_to_grid(float world_coord, float half) const -> int;
 
   struct VisionSource {
     int center_x;
@@ -97,17 +97,17 @@ private:
     bool changed;
   };
 
-  auto gatherVisionSources(Engine::Core::World &world,
+  auto gather_vision_sources(Engine::Core::World &world,
                            int player_id) -> std::vector<VisionSource>;
-  auto composeJobPayload(const std::vector<VisionSource> &sources) const
+  auto compose_job_payload(const std::vector<VisionSource> &sources) const
       -> JobPayload;
-  void enqueueJob(JobPayload &&payload);
-  void integrateResult(JobResult &&result);
-  auto shouldStartNewJob() const -> bool;
-  void resetThrottle();
-  void workerLoop();
-  void ensureWorkerRunning();
-  static auto executeJob(JobPayload payload) -> JobResult;
+  void enqueue_job(JobPayload &&payload);
+  void integrate_result(JobResult &&result);
+  auto should_start_new_job() const -> bool;
+  void reset_throttle();
+  void worker_loop();
+  void ensure_worker_running();
+  static auto execute_job(JobPayload payload) -> JobResult;
 
   VisibilityService() = default;
 
@@ -137,7 +137,7 @@ private:
     int grid_z;
   };
   std::unordered_map<std::uint32_t, CachedPosition> m_lastPositions;
-  bool m_forceFullUpdate{true};
+  bool m_force_full_update{true};
 };
 
 } // namespace Game::Map

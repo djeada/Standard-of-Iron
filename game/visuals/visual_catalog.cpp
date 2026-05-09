@@ -14,7 +14,7 @@
 
 namespace Game::Visuals {
 
-auto meshKindFromString(const QString &s) -> VisualDef::MeshKind {
+auto mesh_kind_from_string(const QString &s) -> VisualDef::MeshKind {
   const QString t = s.trimmed().toLower();
   if (t == "quad") {
     return VisualDef::MeshKind::Quad;
@@ -34,7 +34,7 @@ auto meshKindFromString(const QString &s) -> VisualDef::MeshKind {
   return VisualDef::MeshKind::None;
 }
 
-static auto toRenderableMesh(VisualDef::MeshKind k)
+static auto to_renderable_mesh(VisualDef::MeshKind k)
     -> Engine::Core::RenderableComponent::MeshKind {
   using RM = Engine::Core::RenderableComponent::MeshKind;
   switch (k) {
@@ -53,7 +53,7 @@ static auto toRenderableMesh(VisualDef::MeshKind k)
   }
 }
 
-auto VisualCatalog::loadFromJsonFile(const QString &path,
+auto VisualCatalog::load_from_json_file(const QString &path,
                                      QString *out_error) -> bool {
   QFile f(path);
   if (!f.open(QIODevice::ReadOnly)) {
@@ -79,7 +79,7 @@ auto VisualCatalog::loadFromJsonFile(const QString &path,
   for (auto it = units.begin(); it != units.end(); ++it) {
     VisualDef def;
     QJsonObject const o = it.value().toObject();
-    def.mesh = meshKindFromString(o.value("mesh").toString("cube"));
+    def.mesh = mesh_kind_from_string(o.value("mesh").toString("cube"));
     QJsonArray col = o.value("color").toArray();
     if (col.size() == 3) {
       def.color =
@@ -104,7 +104,7 @@ auto VisualCatalog::lookup(const std::string &unitType,
 
 void apply_to_renderable(const VisualDef &def,
                          Engine::Core::RenderableComponent &r) {
-  r.mesh = toRenderableMesh(def.mesh);
+  r.mesh = to_renderable_mesh(def.mesh);
   r.color[0] = def.color.x();
   r.color[1] = def.color.y();
   r.color[2] = def.color.z();

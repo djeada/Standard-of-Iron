@@ -63,7 +63,7 @@ protected:
   Unit(Engine::Core::World &world, std::string type);
   [[nodiscard]] auto entity() const -> Engine::Core::Entity *;
 
-  void ensureCoreComponents();
+  void ensure_core_components();
 
   static auto
   resolve_nation_id(const SpawnParams &params) -> Game::Systems::NationID;

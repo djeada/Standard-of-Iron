@@ -125,7 +125,7 @@ static auto nation_loader_logger() -> QLoggingCategory & { return logger(); }
     return false;
   }
 
-  const auto type_opt = Game::Units::tryParseTroopType(troop_id.toStdString());
+  const auto type_opt = Game::Units::try_parse_troop_type(troop_id.toStdString());
   if (!type_opt.has_value()) {
     qCWarning(logger()) << "Unknown troop type" << troop_id << "for nation"
                         << nation_id_to_qstring(nation.id);

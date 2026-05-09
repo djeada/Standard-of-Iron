@@ -39,7 +39,7 @@ auto LevelLoader::loadFromAssets(
   if (QFile::exists(visuals_path)) {
     QString visuals_err;
     visuals_loaded =
-        visual_catalog.loadFromJsonFile(visuals_path, &visuals_err);
+        visual_catalog.load_from_json_file(visuals_path, &visuals_err);
     if (!visuals_loaded && !visuals_err.isEmpty()) {
       qWarning() << "LevelLoader: Visual catalog parse failed:" << visuals_err;
     }
@@ -49,7 +49,7 @@ auto LevelLoader::loadFromAssets(
   }
 
   auto unit_reg = std::make_shared<Game::Units::UnitFactoryRegistry>();
-  Game::Units::registerBuiltInUnits(*unit_reg);
+  Game::Units::register_built_in_units(*unit_reg);
   Game::Map::MapTransformer::setFactoryRegistry(unit_reg);
 
   const QString resolved_map_path =
@@ -57,7 +57,7 @@ auto LevelLoader::loadFromAssets(
 
   Game::Map::MapDefinition def;
   QString err;
-  if (Game::Map::MapLoader::loadFromJsonFile(resolved_map_path, def, &err)) {
+  if (Game::Map::MapLoader::load_from_json_file(resolved_map_path, def, &err)) {
     res.ok = true;
     res.map_name = def.name;
     res.rainSettings = def.rain;
@@ -66,7 +66,7 @@ auto LevelLoader::loadFromAssets(
     Game::Map::TerrainService::instance().initialize(def);
 
     Game::Map::Environment::apply(def, renderer, camera);
-    res.cam_fov = def.camera.fovY;
+    res.cam_fov = def.camera.fov_y;
     res.cam_near = def.camera.near_plane;
     res.cam_far = def.camera.far_plane;
     res.grid_width = def.grid.width;
@@ -138,11 +138,11 @@ auto LevelLoader::loadFromAssets(
     }
   } else {
     res.ok = false;
-    res.errorMessage = QString("Map load failed: %1").arg(err);
+    res.error_message = QString("Map load failed: %1").arg(err);
     qWarning() << "LevelLoader: Map load failed:" << err
                << "(path:" << resolved_map_path << ')'
                << "- applying default environment";
-    Game::Map::Environment::applyDefault(renderer, camera);
+    Game::Map::Environment::apply_default(renderer, camera);
     res.ok = false;
     res.cam_fov = camera.get_fov();
     res.cam_near = camera.get_near();

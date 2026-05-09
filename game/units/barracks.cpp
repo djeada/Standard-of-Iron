@@ -52,7 +52,7 @@ void Barracks::init(const SpawnParams &params) {
   Game::Systems::BuildingCollisionRegistry::instance().register_building(
       m_id, m_type_string, m_t->position.x, m_t->position.z, m_u->owner_id);
 
-  if (!Game::Core::isNeutralOwner(m_u->owner_id)) {
+  if (!Game::Core::is_neutral_owner(m_u->owner_id)) {
     if (auto *prod = e->add_component<Engine::Core::ProductionComponent>()) {
       prod->product_type = TroopType::Archer;
       prod->build_time = 10.0F;

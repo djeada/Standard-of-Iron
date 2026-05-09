@@ -110,7 +110,7 @@ void TerrainRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         bool any_visible = false;
         for (int gz = chunk.min_z; gz <= chunk.max_z && !any_visible; ++gz) {
           for (int gx = chunk.min_x; gx <= chunk.max_x; ++gx) {
-            if (visibility_snapshot.stateAt(gx, gz) ==
+            if (visibility_snapshot.state_at(gx, gz) ==
                 Game::Map::VisibilityState::Visible) {
               any_visible = true;
               break;
