@@ -28,6 +28,8 @@ Rectangle {
         "carthage": [0.8, 0.56, 0.28, 0.45],
         "neutral": [0.25, 0.25, 0.25, 0.25]
     })
+    readonly property var campaign_route_start: [0.36, 0.72]
+    readonly property int ember_spacing: 97
     property var campaign_route_targets: ({
         "southern_italy": [0.5, 0.53],
         "etruria": [0.44, 0.48],
@@ -381,8 +383,8 @@ Rectangle {
 
             delegate: Rectangle {
                 property int _refresh: root.label_refresh
-                property real start_u: 0.36
-                property real start_v: 0.72
+                property real start_u: root.campaign_route_start[0]
+                property real start_v: root.campaign_route_start[1]
                 property var target_uv: root.route_target_uv_for(root.active_region_id)
                 property real end_u: target_uv[0]
                 property real end_v: target_uv[1]
@@ -435,7 +437,7 @@ Rectangle {
                 radius: width / 2
                 color: index % 2 === 0 ? "#c29555" : "#7a1f1d"
                 opacity: 0.18
-                x: (index * 97) % mapViewport.width
+                x: (index * root.ember_spacing) % mapViewport.width
                 y: mapViewport.height + index * 12
                 z: 3
 

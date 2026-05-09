@@ -8,6 +8,7 @@ Rectangle {
 
     property var mission_data: null
     property bool is_selected: false
+    readonly property string mission_glyph_prefix: "✦ "
 
     signal clicked()
 
@@ -88,7 +89,7 @@ Rectangle {
                 spacing: Theme.spacingSmall
 
                 Label {
-                    text: "✦ " + (mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "")
+                    text: mission_glyph_prefix + (mission_data && mission_data.mission_id ? titleize(mission_data.mission_id) : "")
                     color: Theme.textMain
                     font.pointSize: Theme.fontSizeLarge
                     font.bold: true

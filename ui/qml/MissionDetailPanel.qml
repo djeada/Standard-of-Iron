@@ -30,9 +30,10 @@ Rectangle {
     property string commander_title: is_carthage_campaign ? qsTr("Suffete Command") : qsTr("Consular Command")
     readonly property int base_casualty_forecast: 420
     readonly property int casualty_per_difficulty_step: 95
+    readonly property string default_success_estimate: qsTr("67%")
     property string tactical_rating: calculate_tactical_rating()
     property string casualty_forecast: calculate_casualty_forecast()
-    property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? qsTr("67%") : qsTr("Unknown"))
+    property string success_estimate: mission_data && mission_data.completed ? qsTr("100%") : (mission_data && mission_data.unlocked ? default_success_estimate : qsTr("Unknown"))
     property string reward_summary: reward_summary_text()
 
     signal start_mission_clicked()

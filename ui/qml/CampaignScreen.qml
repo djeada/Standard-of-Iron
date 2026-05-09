@@ -10,8 +10,6 @@ Item {
     property var campaigns: []
     property int selected_mission_index: -1
     property var campaign_map_state: null
-    property bool is_carthage_campaign: current_campaign && current_campaign.id && current_campaign.id.toLowerCase().indexOf("carth") !== -1
-    property string campaign_heading_prefix: is_carthage_campaign ? "Qart-Ḥadašt • " : "SPQR • "
 
     signal mission_selected(string campaign_id, string mission_id)
     signal cancelled()
@@ -203,7 +201,7 @@ Item {
                     }
 
                     Label {
-                        text: campaign_heading_prefix + (current_campaign ? current_campaign.description : "")
+                        text: qsTr("Campaign Chronicle • ") + (current_campaign ? current_campaign.description : "")
                         color: Theme.textSubLite
                         font.pointSize: Theme.fontSizeMedium
                         font.family: "serif"
