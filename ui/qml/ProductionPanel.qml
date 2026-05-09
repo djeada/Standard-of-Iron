@@ -75,7 +75,16 @@ Rectangle {
         if (!enabled)
             return limit_reached ? qsTr("Commander limit reached: one commander per player per game") : (queue_full ? qsTr("Queue is full (5/5)") : qsTr("Cannot recruit commander"));
 
-        return qsTr("%1\nCOMMANDER — one per game\nCost: %2 villagers\nBuild time: %3s\nAura: %4\nRally: %5\nRisk: %6").arg(info.display_name || "Commander").arg(info.cost || 300).arg((info.build_time || 30).toFixed(0)).arg(info.passive_aura || "").arg(info.rally_ability || "").arg(info.death_consequence || "");
+        var lines = [
+            qsTr("%1").arg(info.display_name || "Commander"),
+            qsTr("COMMANDER — one per game"),
+            qsTr("Cost: %1 villagers").arg(info.cost || 300),
+            qsTr("Build time: %1s").arg((info.build_time || 30).toFixed(0)),
+            qsTr("Aura: %1").arg(info.passive_aura || ""),
+            qsTr("Rally: %1").arg(info.rally_ability || ""),
+            qsTr("Risk: %1").arg(info.death_consequence || "")
+        ];
+        return lines.join("\n");
     }
 
     function get_unit_production_info(unit_type, nation_id) {
