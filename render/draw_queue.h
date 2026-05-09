@@ -311,7 +311,14 @@ struct PreparedBatch {
 
 class DrawQueue {
 public:
+  struct FrameStats {
+    std::size_t command_count = 0;
+    std::size_t reallocations = 0;
+    std::size_t copied_bytes = 0;
+  };
+
   void clear() {
+    m_frame_stats = FrameStats{};
     m_items_high_water = std::max(m_items_high_water, m_items.size());
     m_prepared_high_water =
         std::max(m_prepared_high_water, m_prepared_batches.size());
@@ -326,12 +333,27 @@ public:
   void reserve_for_frame(std::size_t items_hint = 0) {
     const std::size_t target = std::max(items_hint, m_items_high_water);
     if (target > m_items.capacity()) {
+      const std::size_t items_size_before = m_items.size();
+      const std::size_t items_capacity_before = m_items.capacity();
       m_items.reserve(target);
+      record_reallocation(m_items, items_size_before, items_capacity_before);
+      const std::size_t sort_indices_size_before = m_sort_indices.size();
+      const std::size_t sort_indices_capacity_before = m_sort_indices.capacity();
       m_sort_indices.reserve(target);
+      record_reallocation(m_sort_indices, sort_indices_size_before,
+                          sort_indices_capacity_before);
+      const std::size_t sort_keys_size_before = m_sort_keys.size();
+      const std::size_t sort_keys_capacity_before = m_sort_keys.capacity();
       m_sort_keys.reserve(target);
+      record_reallocation(m_sort_keys, sort_keys_size_before,
+                          sort_keys_capacity_before);
     }
     if (m_prepared_high_water > m_prepared_batches.capacity()) {
+      const std::size_t prepared_size_before = m_prepared_batches.size();
+      const std::size_t prepared_capacity_before = m_prepared_batches.capacity();
       m_prepared_batches.reserve(m_prepared_high_water);
+      record_reallocation(m_prepared_batches, prepared_size_before,
+                          prepared_capacity_before);
     }
   }
 
@@ -341,13 +363,20 @@ public:
   [[nodiscard]] auto prepared_high_water() const noexcept -> std::size_t {
     return m_prepared_high_water;
   }
+  [[nodiscard]] auto frame_stats() const noexcept -> const FrameStats & {
+    return m_frame_stats;
+  }
 
   template <typename CmdT, typename = std::enable_if_t<
                                std::is_constructible_v<DrawCmd, CmdT &&>>>
   void submit(CmdT &&cmd) {
+    const std::size_t items_size_before = m_items.size();
+    const std::size_t items_capacity_before = m_items.capacity();
     DrawCmd draw_cmd(std::forward<CmdT>(cmd));
     record_submission_bucket(draw_cmd);
     m_items.emplace_back(std::move(draw_cmd));
+    record_reallocation(m_items, items_size_before, items_capacity_before);
+    m_frame_stats.command_count = m_items.size();
   }
 
   [[nodiscard]] auto empty() const -> bool { return m_items.empty(); }
@@ -373,8 +402,16 @@ public:
   void sort_for_batching() {
     const std::size_t count = m_items.size();
 
+    const std::size_t sort_keys_size_before = m_sort_keys.size();
+    const std::size_t sort_keys_capacity_before = m_sort_keys.capacity();
     m_sort_keys.resize(count);
+    record_reallocation(m_sort_keys, sort_keys_size_before,
+                        sort_keys_capacity_before);
+    const std::size_t sort_indices_size_before = m_sort_indices.size();
+    const std::size_t sort_indices_capacity_before = m_sort_indices.capacity();
     m_sort_indices.resize(count);
+    record_reallocation(m_sort_indices, sort_indices_size_before,
+                        sort_indices_capacity_before);
     m_prepared_batches.clear();
 
     for (std::size_t i = 0; i < count; ++i) {
@@ -412,6 +449,17 @@ public:
   }
 
 private:
+  template <typename T>
+  void record_reallocation(const std::vector<T> &vec,
+                           std::size_t size_before,
+                           std::size_t capacity_before) {
+    if (vec.capacity() == capacity_before) {
+      return;
+    }
+    ++m_frame_stats.reallocations;
+    m_frame_stats.copied_bytes += size_before * sizeof(T);
+  }
+
   struct SortIdentity {
     std::uint8_t pass = 0;
     std::uint8_t pipeline = 0;
@@ -778,6 +826,7 @@ private:
                         .type = type,
                         .kind = kind,
                         .sort_key = m_sort_keys[m_sort_indices[i]]});
+      m_frame_stats.command_count = m_items.size();
       i = end;
     }
   }
@@ -974,6 +1023,7 @@ private:
   bool m_submission_bucket_ordered = true;
   std::size_t m_items_high_water = 0;
   std::size_t m_prepared_high_water = 0;
+  FrameStats m_frame_stats;
 };
 
 } // namespace Render::GL
