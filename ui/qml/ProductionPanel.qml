@@ -6,16 +6,16 @@ import StandardOfIron 1.0
 Rectangle {
     id: productionPanel
 
-    property int selectionTick: 0
-    property var gameInstance: null
+    property int selection_tick: 0
+    property var game_instance: null
     readonly property var hs: StyleGuide.historical
 
-    signal recruitUnit(string unitType)
-    signal rallyModeToggled()
-    signal buildTower()
-    signal builderConstruction(string itemType)
+    signal recruit_unit(string unit_type)
+    signal rally_mode_toggled()
+    signal build_tower()
+    signal builder_construction(string item_type)
 
-    function defaultProductionState() {
+    function default_production_state() {
         return {
             "has_barracks": false,
             "produced_count": 0,
@@ -33,17 +33,17 @@ Rectangle {
         };
     }
 
-    function unitIconSource(unitType, nationKey) {
-        if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unitType)
+    function unit_icon_source(unit_type, nation_key) {
+        if (typeof StyleGuide === "undefined" || !StyleGuide.unitIconSources || !unit_type)
             return "";
 
-        var sources = StyleGuide.unitIconSources[unitType];
+        var sources = StyleGuide.unitIconSources[unit_type];
         if (!sources)
             sources = StyleGuide.unitIconSources["default"];
 
         if (typeof sources === "object" && sources !== null) {
-            if (nationKey && sources[nationKey])
-                return sources[nationKey];
+            if (nation_key && sources[nation_key])
+                return sources[nation_key];
 
             if (sources["default"])
                 return sources["default"];
@@ -54,28 +54,28 @@ Rectangle {
         return "";
     }
 
-    function unitIconEmoji(unitType) {
+    function unit_icon_emoji(unit_type) {
         if (typeof StyleGuide !== "undefined" && StyleGuide.unitIcons)
-            return StyleGuide.unitIcons[unitType] || StyleGuide.unitIcons["default"] || "👤";
+            return StyleGuide.unitIcons[unit_type] || StyleGuide.unitIcons["default"] || "👤";
 
         return "👤";
     }
 
-    function getUnitProductionInfo(unitType, nationId) {
-        if (productionPanel.gameInstance && productionPanel.gameInstance.get_unit_production_info)
-            return productionPanel.gameInstance.get_unit_production_info(unitType, nationId || "");
+    function get_unit_production_info(unit_type, nation_id) {
+        if (productionPanel.game_instance && productionPanel.game_instance.get_unit_production_info)
+            return productionPanel.game_instance.get_unit_production_info(unit_type, nation_id || "");
 
         return {
             "cost": 50,
             "build_time": 5,
             "individuals_per_unit": 1,
-            "display_name": unitType
+            "display_name": unit_type
         };
     }
 
-    function meterColor(ratio) {
+    function meter_color(ratio) {
         if (ratio > 0.6)
-            return "#7F9A5F";
+            return Theme.accent;
 
         if (ratio > 0.3)
             return hs.bronze;
@@ -83,14 +83,14 @@ Rectangle {
         return hs.waxHover;
     }
 
-    function recruitCardColor(enabled, hovered) {
+    function recruit_card_color(enabled, hovered) {
         if (!enabled)
-            return "#120D09";
+            return Theme.bgShade;
 
         return hovered ? hs.bannerNeutral : hs.parchmentDark;
     }
 
-    function recruitCardBorder(enabled, hovered) {
+    function recruit_card_border(enabled, hovered) {
         if (!enabled)
             return hs.parchmentLight;
 
@@ -114,7 +114,7 @@ Rectangle {
             spacing: 8
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: productionContent.height + 16
@@ -127,7 +127,7 @@ Rectangle {
                 Column {
                     id: productionContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -183,13 +183,13 @@ Rectangle {
                                     height: 28
                                     fillMode: Image.PreserveAspectFit
                                     smooth: true
-                                    source: parent.isOccupied ? productionPanel.unitIconSource(parent.queueUnitType, productionContent.prod.nation_id) : ""
+                                    source: parent.isOccupied ? productionPanel.unit_icon_source(parent.queueUnitType, productionContent.prod.nation_id) : ""
                                     visible: parent.isOccupied && source !== ""
                                 }
 
                                 Text {
                                     anchors.centerIn: parent
-                                    text: parent.isOccupied ? productionPanel.unitIconEmoji(parent.queueUnitType) : "·"
+                                    text: parent.isOccupied ? productionPanel.unit_icon_emoji(parent.queueUnitType) : "·"
                                     color: parent.isProducing ? "#F4E7C8" : (parent.isOccupied ? "#D4B57C" : "#6B5231")
                                     font.pointSize: parent.isOccupied ? 16 : 20
                                     font.bold: parent.isProducing
@@ -309,7 +309,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: unitGridContent.height + 16
@@ -322,7 +322,7 @@ Rectangle {
                 Column {
                     id: unitGridContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -346,14 +346,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("archer", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("archer", unitGridContent.prod.nation_id)
                             property bool isHovered: archerMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -364,7 +364,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("archer", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("archer", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -372,7 +372,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !archerRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("archer")
+                                text: productionPanel.unit_icon_emoji("archer")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -410,7 +410,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("archer");
+                                        productionPanel.recruit_unit("archer");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -452,14 +452,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("swordsman", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("swordsman", unitGridContent.prod.nation_id)
                             property bool isHovered: swordsmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -470,7 +470,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("swordsman", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("swordsman", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -478,7 +478,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !swordsmanRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("swordsman")
+                                text: productionPanel.unit_icon_emoji("swordsman")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -516,7 +516,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("swordsman");
+                                        productionPanel.recruit_unit("swordsman");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -558,14 +558,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("spearman", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("spearman", unitGridContent.prod.nation_id)
                             property bool isHovered: spearmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -576,7 +576,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("spearman", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("spearman", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -584,7 +584,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !spearmanRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("spearman")
+                                text: productionPanel.unit_icon_emoji("spearman")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -622,7 +622,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("spearman");
+                                        productionPanel.recruit_unit("spearman");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -664,14 +664,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_swordsman", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("horse_swordsman", unitGridContent.prod.nation_id)
                             property bool isHovered: horseKnightMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -682,7 +682,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("horse_swordsman", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("horse_swordsman", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -690,7 +690,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !horseKnightIcon.visible
-                                text: productionPanel.unitIconEmoji("horse_swordsman")
+                                text: productionPanel.unit_icon_emoji("horse_swordsman")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -728,7 +728,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("horse_swordsman");
+                                        productionPanel.recruit_unit("horse_swordsman");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -770,14 +770,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_archer", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("horse_archer", unitGridContent.prod.nation_id)
                             property bool isHovered: horseArcherMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -788,7 +788,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("horse_archer", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("horse_archer", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -796,7 +796,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !horseArcherIcon.visible
-                                text: productionPanel.unitIconEmoji("horse_archer")
+                                text: productionPanel.unit_icon_emoji("horse_archer")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -834,7 +834,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("horse_archer");
+                                        productionPanel.recruit_unit("horse_archer");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -876,14 +876,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("horse_spearman", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("horse_spearman", unitGridContent.prod.nation_id)
                             property bool isHovered: horseSpearmanMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -894,7 +894,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("horse_spearman", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("horse_spearman", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -902,7 +902,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !horseSpearmanIcon.visible
-                                text: productionPanel.unitIconEmoji("horse_spearman")
+                                text: productionPanel.unit_icon_emoji("horse_spearman")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -940,7 +940,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("horse_spearman");
+                                        productionPanel.recruit_unit("horse_spearman");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -982,14 +982,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("healer", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("healer", unitGridContent.prod.nation_id)
                             property bool isHovered: healerMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1000,7 +1000,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("healer", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("healer", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1008,7 +1008,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !healerRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("healer")
+                                text: productionPanel.unit_icon_emoji("healer")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1046,7 +1046,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("healer");
+                                        productionPanel.recruit_unit("healer");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1088,14 +1088,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("builder", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("builder", unitGridContent.prod.nation_id)
                             property bool isHovered: builderMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1106,7 +1106,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("builder", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("builder", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1114,7 +1114,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("builder")
+                                text: productionPanel.unit_icon_emoji("builder")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1152,7 +1152,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("builder");
+                                        productionPanel.recruit_unit("builder");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1194,14 +1194,14 @@ Rectangle {
                         Rectangle {
                             property int queueTotal: (unitGridContent.prod.in_progress ? 1 : 0) + (unitGridContent.prod.queue_size || 0)
                             property bool isEnabled: unitGridContent.prod.has_barracks && unitGridContent.prod.produced_count < unitGridContent.prod.max_units && queueTotal < 5
-                            property var unitInfo: productionPanel.getUnitProductionInfo("elephant", unitGridContent.prod.nation_id)
+                            property var unitInfo: productionPanel.get_unit_production_info("elephant", unitGridContent.prod.nation_id)
                             property bool isHovered: elephantMouseArea.containsMouse
 
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1213,7 +1213,7 @@ Rectangle {
                                 anchors.fill: parent
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("elephant", unitGridContent.prod.nation_id)
+                                source: productionPanel.unit_icon_source("elephant", unitGridContent.prod.nation_id)
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1221,7 +1221,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !elephantRecruitIcon.visible
-                                text: productionPanel.unitIconEmoji("elephant")
+                                text: productionPanel.unit_icon_emoji("elephant")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 42
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1259,7 +1259,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.recruitUnit("elephant");
+                                        productionPanel.recruit_unit("elephant");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1305,7 +1305,7 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_home: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
+                property bool has_home: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
 
                 width: parent.width
                 height: homeProductionContent.height + 16
@@ -1318,7 +1318,7 @@ Rectangle {
                 Column {
                     id: homeProductionContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_home_production_state) ? productionPanel.gameInstance.get_selected_home_production_state() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_home_production_state) ? productionPanel.game_instance.get_selected_home_production_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1344,7 +1344,7 @@ Rectangle {
                     Rectangle {
                         property int queueTotal: (homeProductionContent.prod.in_progress ? 1 : 0) + (homeProductionContent.prod.queue_size || 0)
                         property bool isEnabled: homeProductionContent.prod.has_home && queueTotal < 3
-                        property var unitInfo: productionPanel.getUnitProductionInfo("civilian", homeProductionContent.prod.nation_id)
+                        property var unitInfo: productionPanel.get_unit_production_info("civilian", homeProductionContent.prod.nation_id)
                         property bool isHovered: civilianMouseArea.containsMouse
 
                         width: 110
@@ -1363,7 +1363,7 @@ Rectangle {
                             anchors.fill: parent
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
-                            source: productionPanel.unitIconSource("civilian", homeProductionContent.prod.nation_id)
+                            source: productionPanel.unit_icon_source("civilian", homeProductionContent.prod.nation_id)
                             visible: source !== ""
                             opacity: parent.isEnabled ? 1 : 0.35
                         }
@@ -1371,7 +1371,7 @@ Rectangle {
                         Text {
                             anchors.centerIn: parent
                             visible: !civilianRecruitIcon.visible
-                            text: productionPanel.unitIconEmoji("civilian")
+                            text: productionPanel.unit_icon_emoji("civilian")
                             color: parent.isEnabled ? "#ecf0f1" : "#5a5a5a"
                             font.pointSize: 36
                             opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1409,7 +1409,7 @@ Rectangle {
                             hoverEnabled: true
                             onClicked: {
                                 if (parent.isEnabled)
-                                    productionPanel.recruitUnit("civilian");
+                                    productionPanel.recruit_unit("civilian");
 
                             }
                             cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1425,16 +1425,16 @@ Rectangle {
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: 1
                 color: "#3B2F24"
-                visible: has_barracks || (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home"))
+                visible: has_barracks || (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home"))
             }
 
             Rectangle {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
 
                 width: parent.width
                 height: rallyContent.height + 12
@@ -1447,7 +1447,7 @@ Rectangle {
                 Column {
                     id: rallyContent
 
-                    property var prod: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_production_state) ? productionPanel.gameInstance.get_selected_production_state() : productionPanel.defaultProductionState())
+                    property var prod: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_production_state) ? productionPanel.game_instance.get_selected_production_state() : productionPanel.default_production_state())
 
                     anchors.horizontalCenter: parent.horizontalCenter
                     anchors.top: parent.top
@@ -1461,15 +1461,15 @@ Rectangle {
                         text: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? qsTr("📍 Click Map to Set Rally") : qsTr("📍 Set Rally Point")
                         focusPolicy: Qt.NoFocus
                         enabled: rallyContent.prod.has_barracks
-                        onClicked: productionPanel.rallyModeToggled()
+                        onClicked: productionPanel.rally_mode_toggled()
                         ToolTip.visible: hovered
                         ToolTip.text: qsTr("Set where newly recruited units will gather.\nRight-click to cancel.")
                         ToolTip.delay: 500
 
                         background: Rectangle {
-                            color: parent.enabled ? (parent.down ? "#6F8E8C" : (parent.hovered ? "#82A4A1" : "#2F251D")) : "#120D09"
+                            color: parent.enabled ? (parent.down ? hs.bronzeDeep : (parent.hovered ? hs.bronze : hs.parchmentDark)) : Theme.bgShade
                             radius: 6
-                            border.color: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? "#82A4A1" : "#3B2F24"
+                            border.color: (typeof gameView !== 'undefined' && gameView.setRallyMode) ? hs.bronze : hs.bronzeDeep
                             border.width: 2
                         }
 
@@ -1497,15 +1497,15 @@ Rectangle {
             }
 
             Item {
-                property bool has_barracksSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
-                property bool has_homeSelected: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
+                property bool has_barracksSelected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_homeSelected: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
 
                 height: 20
                 visible: !has_barracksSelected && !has_homeSelected
             }
 
             Rectangle {
-                property bool has_builder: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("builder")))
+                property bool has_builder: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("builder")))
 
                 width: parent.width
                 height: builderProductionContent.height + 16
@@ -1518,7 +1518,7 @@ Rectangle {
                 Column {
                     id: builderProductionContent
 
-                    property var builderProd: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.get_selected_builder_production_state) ? productionPanel.gameInstance.get_selected_builder_production_state() : {
+                    property var builderProd: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.get_selected_builder_production_state) ? productionPanel.game_instance.get_selected_builder_production_state() : {
                         "in_progress": false,
                         "build_time": 10,
                         "time_remaining": 0,
@@ -1540,7 +1540,7 @@ Rectangle {
 
                             width: 18
                             height: 18
-                            source: productionPanel.unitIconSource("builder")
+                            source: productionPanel.unit_icon_source("builder")
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             visible: source !== ""
@@ -1549,7 +1549,7 @@ Rectangle {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: builderHeaderIcon.visible ? qsTr("BUILDER CONSTRUCTION") : qsTr("🔨 BUILDER CONSTRUCTION")
-                            color: "#5F7F83"
+                            color: hs.bronze
                             font.pointSize: 9
                             font.bold: true
                         }
@@ -1642,8 +1642,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1655,7 +1655,7 @@ Rectangle {
                                 anchors.margins: 6
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("catapult")
+                                source: productionPanel.unit_icon_source("catapult")
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1663,7 +1663,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderCatapultIcon.visible
-                                text: productionPanel.unitIconEmoji("catapult")
+                                text: productionPanel.unit_icon_emoji("catapult")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1686,7 +1686,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.builderConstruction("catapult");
+                                        productionPanel.builder_construction("catapult");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1732,8 +1732,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1745,7 +1745,7 @@ Rectangle {
                                 anchors.margins: 6
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("ballista")
+                                source: productionPanel.unit_icon_source("ballista")
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1753,7 +1753,7 @@ Rectangle {
                             Text {
                                 anchors.centerIn: parent
                                 visible: !builderBallistaIcon.visible
-                                text: productionPanel.unitIconEmoji("ballista")
+                                text: productionPanel.unit_icon_emoji("ballista")
                                 color: parent.isEnabled ? "#F4E7C8" : "#6B5231"
                                 font.pointSize: 36
                                 opacity: parent.isEnabled ? 0.9 : 0.4
@@ -1776,7 +1776,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.builderConstruction("ballista");
+                                        productionPanel.builder_construction("ballista");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1822,8 +1822,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1835,7 +1835,7 @@ Rectangle {
                                 anchors.margins: 6
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("defense_tower")
+                                source: productionPanel.unit_icon_source("defense_tower")
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1866,7 +1866,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.builderConstruction("defense_tower");
+                                        productionPanel.builder_construction("defense_tower");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -1912,8 +1912,8 @@ Rectangle {
                             width: 110
                             height: 80
                             radius: 6
-                            color: productionPanel.recruitCardColor(isEnabled, isHovered)
-                            border.color: productionPanel.recruitCardBorder(isEnabled, isHovered)
+                            color: productionPanel.recruit_card_color(isEnabled, isHovered)
+                            border.color: productionPanel.recruit_card_border(isEnabled, isHovered)
                             border.width: isHovered && isEnabled ? 2 : 1
                             opacity: isEnabled ? 1 : 0.5
                             scale: isHovered && isEnabled ? 1.025 : 1
@@ -1925,7 +1925,7 @@ Rectangle {
                                 anchors.margins: 6
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
-                                source: productionPanel.unitIconSource("home")
+                                source: productionPanel.unit_icon_source("home")
                                 visible: source !== ""
                                 opacity: parent.isEnabled ? 1 : 0.35
                             }
@@ -1956,7 +1956,7 @@ Rectangle {
                                 hoverEnabled: true
                                 onClicked: {
                                     if (parent.isEnabled)
-                                        productionPanel.builderConstruction("home");
+                                        productionPanel.builder_construction("home");
 
                                 }
                                 cursorShape: parent.isEnabled ? Qt.PointingHandCursor : Qt.ForbiddenCursor
@@ -2002,9 +2002,9 @@ Rectangle {
             }
 
             Item {
-                property bool has_barracks: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("barracks")))
-                property bool has_builder: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("builder")))
-                property bool has_home: (productionPanel.selectionTick, (productionPanel.gameInstance && productionPanel.gameInstance.has_selected_type && productionPanel.gameInstance.has_selected_type("home")))
+                property bool has_barracks: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("barracks")))
+                property bool has_builder: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("builder")))
+                property bool has_home: (productionPanel.selection_tick, (productionPanel.game_instance && productionPanel.game_instance.has_selected_type && productionPanel.game_instance.has_selected_type("home")))
 
                 visible: !has_barracks && !has_builder && !has_home
                 width: parent.width
@@ -2032,7 +2032,7 @@ Rectangle {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: qsTr("Select a barracks to recruit units")
-                        color: "#6F8E8C"
+                        color: Theme.textSubLite
                         font.pointSize: 9
                     }
 

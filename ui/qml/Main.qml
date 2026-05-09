@@ -40,16 +40,16 @@ ApplicationWindow {
                 gameViewItem.forceActiveFocus();
 
         }
-        onPauseToggled: {
+        onPause_toggled: {
             mainWindow.gamePaused = !mainWindow.gamePaused;
             gameViewItem.setPaused(mainWindow.gamePaused);
             gameViewItem.forceActiveFocus();
         }
-        onSpeedChanged: function(speed) {
+        onSpeed_changed: function(speed) {
             gameViewItem.setGameSpeed(speed);
             gameViewItem.forceActiveFocus();
         }
-        onCommandModeChanged: function(mode) {
+        onCommand_mode_changed: function(mode) {
             console.log("Main: Command mode changed to:", mode);
             if (typeof game !== 'undefined') {
                 console.log("Main: Setting game.cursor_mode property to", mode);
@@ -59,13 +59,13 @@ ApplicationWindow {
             }
             gameViewItem.forceActiveFocus();
         }
-        onRecruit: function(unitType) {
+        onRecruit_unit: function(unit_type) {
             if (typeof game !== 'undefined' && game.recruit_near_selected)
-                game.recruit_near_selected(unitType);
+                game.recruit_near_selected(unit_type);
 
             gameViewItem.forceActiveFocus();
         }
-        onReturnToMainMenuRequested: {
+        onReturn_to_main_menu_requested: {
             mainWindow.menuVisible = true;
         }
     }
@@ -80,8 +80,8 @@ ApplicationWindow {
         visible: gameStarted && opacity > 0.01
         opacity: 0
         radius: 8
-        color: "#cc1f1f1f"
-        border.color: "#d9d9d9"
+        color: "#cc2a1d12"
+        border.color: Theme.thumbBr
         border.width: 1
         width: Math.min(parent.width * 0.7, 700)
         height: missionAnnouncementLabel.implicitHeight + 22
@@ -92,7 +92,7 @@ ApplicationWindow {
             anchors.centerIn: parent
             width: parent.width - 28
             text: mainWindow.missionAnnouncementText
-            color: "#f5f5f5"
+            color: Theme.textMain
             font.pixelSize: 18
             font.bold: true
             horizontalAlignment: Text.AlignHCenter
@@ -185,7 +185,7 @@ ApplicationWindow {
         anchors.fill: parent
         z: 20
         visible: mainWindow.menuVisible
-        gameStarted: mainWindow.gameStarted
+        game_started: mainWindow.gameStarted
         Component.onCompleted: {
             if (mainWindow.menuVisible)
                 mainMenu.forceActiveFocus();
@@ -195,37 +195,37 @@ ApplicationWindow {
             if (visible) {
                 mainMenu.forceActiveFocus();
                 gameViewItem.focus = false;
-            } else if (gameStarted) {
+            } else if (game_started) {
                 gameViewItem.forceActiveFocus();
             }
         }
-        onOpenSkirmish: function() {
+        onOpen_skirmish: function() {
             mapSelect.visible = true;
             mainWindow.menuVisible = false;
         }
-        onOpenCampaign: function() {
+        onOpen_campaign: function() {
             campaign_screen.visible = true;
             mainWindow.menuVisible = false;
         }
-        onSaveGame: function() {
+        onSave_game: function() {
             if (mainWindow.gameStarted) {
                 saveGamePanel.visible = true;
                 mainWindow.menuVisible = false;
             }
         }
-        onLoadSave: function() {
+        onLoad_save: function() {
             loadGamePanel.visible = true;
             mainWindow.menuVisible = false;
         }
-        onOpenSettings: function() {
+        onOpen_settings: function() {
             settingsPanel.visible = true;
             mainWindow.menuVisible = false;
         }
-        onOpenObjectives: function() {
+        onOpen_objectives: function() {
             objectivesPanel.visible = true;
             mainWindow.menuVisible = false;
         }
-        onExitRequested: function() {
+        onExit_requested: function() {
             if (typeof game !== 'undefined' && game.exit_game)
                 game.exit_game();
 

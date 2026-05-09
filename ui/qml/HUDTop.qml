@@ -6,15 +6,15 @@ import StandardOfIron 1.0
 Item {
     id: topRoot
 
-    property bool gameIsPaused: false
-    property real currentSpeed: 1
-    readonly property int barmin_height: 72
+    property bool game_is_paused: false
+    property real current_speed: 1
+    readonly property int bar_min_height: 72
     readonly property bool compact: width < 800
-    readonly property bool ultraCompact: width < 560
+    readonly property bool ultra_compact: width < 560
     readonly property var hs: StyleGuide.historical
 
-    signal pauseToggled()
-    signal speedChanged(real speed)
+    signal pause_toggled()
+    signal speed_changed(real speed)
 
     Rectangle {
         id: topPanel
@@ -22,7 +22,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        height: barmin_height
+        height: bar_min_height
         color: hs.parchmentDark
         opacity: 0.98
         clip: true
@@ -90,11 +90,11 @@ Item {
 
                     Layout.preferredWidth: topRoot.compact ? 48 : 56
                     Layout.preferredHeight: Math.min(40, topPanel.height - 12)
-                    text: topRoot.gameIsPaused ? "\u25B6" : "\u23F8"
+                    text: topRoot.game_is_paused ? "\u25B6" : "\u23F8"
                     font.pixelSize: 26
                     font.bold: true
                     focusPolicy: Qt.NoFocus
-                    onClicked: topRoot.pauseToggled()
+                    onClicked: topRoot.pause_toggled()
 
                     background: Rectangle {
                         color: parent.pressed ? hs.waxDark : parent.hovered ? hs.waxHover : hs.wax
@@ -172,12 +172,12 @@ Item {
                                 width: 56
                                 height: Math.min(34, topPanel.height - 16)
                                 checkable: true
-                                enabled: !topRoot.gameIsPaused
-                                checked: (topRoot.currentSpeed === modelData) && !topRoot.gameIsPaused
+                                enabled: !topRoot.game_is_paused
+                                checked: (topRoot.current_speed === modelData) && !topRoot.game_is_paused
                                 focusPolicy: Qt.NoFocus
                                 text: modelData + "x"
                                 ButtonGroup.group: speedGroup
-                                onClicked: topRoot.speedChanged(modelData)
+                                onClicked: topRoot.speed_changed(modelData)
 
                                 background: Rectangle {
                                     color: parent.checked ? hs.wax : parent.hovered ? hs.parchmentLight : hs.parchmentDark
@@ -207,12 +207,12 @@ Item {
                         visible: topRoot.compact
                         Layout.preferredWidth: 120
                         model: ["0.5x", "1x", "2x"]
-                        currentIndex: topRoot.currentSpeed === 0.5 ? 0 : topRoot.currentSpeed === 1 ? 1 : 2
-                        enabled: !topRoot.gameIsPaused
+                        currentIndex: topRoot.current_speed === 0.5 ? 0 : topRoot.current_speed === 1 ? 1 : 2
+                        enabled: !topRoot.game_is_paused
                         textPixelSize: 13
                         onActivated: function(i) {
                             var v = i === 0 ? 0.5 : (i === 1 ? 1 : 2);
-                            topRoot.speedChanged(v);
+                            topRoot.speed_changed(v);
                         }
                     }
 
@@ -409,7 +409,7 @@ Item {
                                 if (count >= max * 0.8)
                                     return hs.bronze;
 
-                                return "#7F9A5F";
+                                return Theme.accent;
                             }
                             font.pixelSize: 14
                             font.bold: true
@@ -566,7 +566,7 @@ Item {
                 Item {
                     id: miniWrap
 
-                    visible: !topRoot.ultraCompact
+                    visible: !topRoot.ultra_compact
                     Layout.preferredWidth: Math.round(topPanel.height * 2.2)
                     Layout.minimumWidth: Math.round(topPanel.height * 1.6)
                     Layout.preferredHeight: topPanel.height - 8
@@ -581,7 +581,7 @@ Item {
     Rectangle {
         id: minimapContainer
 
-        visible: !topRoot.ultraCompact
+        visible: !topRoot.ultra_compact
         width: 240
         height: 240
         anchors.right: parent.right
@@ -598,7 +598,7 @@ Item {
             anchors.fill: parent
             anchors.margins: 3
             radius: 6
-            color: "#120D09"
+            color: Theme.bgShade
 
             Image {
                 id: minimapImage
