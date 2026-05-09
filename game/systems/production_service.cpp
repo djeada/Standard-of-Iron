@@ -86,6 +86,22 @@ auto production_owner(const Engine::Core::Entity *entity) -> std::optional<int> 
 
 auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
     -> bool {
+  auto has_commander_in_queue = [](const Engine::Core::ProductionComponent *prod)
+      -> bool {
+    if (prod == nullptr) {
+      return false;
+    }
+    if (prod->in_progress && Game::Units::is_commander_troop(prod->product_type)) {
+      return true;
+    }
+    for (const auto queued : prod->production_queue) {
+      if (Game::Units::is_commander_troop(queued)) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   for (const auto &entry : world.get_entities()) {
     auto *entity = entry.second.get();
     if (entity == nullptr) {
@@ -103,7 +119,7 @@ auto owner_has_commander_committed(Engine::Core::World &world, int owner_id)
     }
 
     auto *prod = entity->get_component<Engine::Core::ProductionComponent>();
-    if (prod == nullptr || !prod->commander_committed) {
+    if (prod == nullptr || !has_commander_in_queue(prod)) {
       continue;
     }
     const auto owner = production_owner(entity);
@@ -178,6 +194,8 @@ auto ProductionService::start_production_for_first_selected_barracks(
   }
   if (is_commander) {
     p->commander_committed = true;
+  } else {
+    p->commander_committed = owner_has_commander_committed(world, owner_id);
   }
   p->manpower_available -= production_cost;
 
@@ -230,7 +248,7 @@ auto ProductionService::get_selected_barracks_state(
     out_state.max_units = p->max_units;
     out_state.villager_cost = p->villager_cost;
     out_state.manpower_available = p->manpower_available;
-    out_state.commander_committed = p->commander_committed;
+    out_state.commander_committed = owner_has_commander_committed(world, owner_id);
     out_state.queue_size = static_cast<int>(p->production_queue.size());
     out_state.production_queue = p->production_queue;
   }

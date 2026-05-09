@@ -14,7 +14,8 @@
     "starting_resources": {
       "gold": 550,
       "food": 450
-    }
+    },
+    "commander_troop": "carthage_elephant_master"
   },
   "ai_setups": [
     {
@@ -36,22 +37,47 @@
         {
           "timing": 180.0,
           "composition": [
-            {"type": "spearman", "count": 5},
-            {"type": "swordsman", "count": 4},
-            {"type": "horse_swordsman", "count": 3}
+            {
+              "type": "spearman",
+              "count": 5
+            },
+            {
+              "type": "swordsman",
+              "count": 4
+            },
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            }
           ],
-          "entry_point": {"x": 175, "z": 60}
+          "entry_point": {
+            "x": 175,
+            "z": 60
+          }
         },
         {
           "timing": 360.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 5},
-            {"type": "spearman", "count": 3},
-            {"type": "archer", "count": 2}
+            {
+              "type": "horse_swordsman",
+              "count": 5
+            },
+            {
+              "type": "spearman",
+              "count": 3
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
           ],
-          "entry_point": {"x": 160, "z": 32}
+          "entry_point": {
+            "x": 160,
+            "z": 32
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_veteran_consul"
     },
     {
       "id": "roman_reserve",
@@ -70,7 +96,10 @@
       "starting_buildings": [
         {
           "type": "barracks",
-          "position": {"x": 178, "z": 90},
+          "position": {
+            "x": 178,
+            "z": 90
+          },
           "max_population": 150
         }
       ],
@@ -78,28 +107,55 @@
         {
           "timing": 240.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 3},
-            {"type": "spearman", "count": 3},
-            {"type": "archer", "count": 2}
+            {
+              "type": "horse_swordsman",
+              "count": 3
+            },
+            {
+              "type": "spearman",
+              "count": 3
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
           ],
-          "entry_point": {"x": 178, "z": 90}
+          "entry_point": {
+            "x": 178,
+            "z": 90
+          }
         },
         {
           "timing": 480.0,
           "composition": [
-            {"type": "horse_swordsman", "count": 4},
-            {"type": "swordsman", "count": 4},
-            {"type": "archer", "count": 2}
+            {
+              "type": "horse_swordsman",
+              "count": 4
+            },
+            {
+              "type": "swordsman",
+              "count": 4
+            },
+            {
+              "type": "archer",
+              "count": 2
+            }
           ],
-          "entry_point": {"x": 178, "z": 90}
+          "entry_point": {
+            "x": 178,
+            "z": 90
+          }
         }
-      ]
+      ],
+      "commander_troop": "roman_field_commander"
     }
   ],
   "victory_conditions": [
     {
       "type": "capture_structures",
-      "structure_types": ["barracks"],
+      "structure_types": [
+        "barracks"
+      ],
       "min_count": 1,
       "description": "Capture the Roman reserve camp to rout Scipio's screen"
     }

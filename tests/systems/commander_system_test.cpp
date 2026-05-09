@@ -98,6 +98,40 @@ TEST(CommanderProductionTest, ReservesOneCommanderPerOwnerWhenQueued) {
   EXPECT_FALSE(second_production->in_progress);
 }
 
+TEST(CommanderProductionTest, AllowsRecruitingReplacementCommanderAfterDeath) {
+  Engine::Core::World world;
+
+  auto *barracks = world.create_entity();
+  auto *barracks_unit = barracks->add_component<Engine::Core::UnitComponent>();
+  auto *production = barracks->add_component<Engine::Core::ProductionComponent>();
+  ASSERT_NE(barracks_unit, nullptr);
+  ASSERT_NE(production, nullptr);
+  barracks_unit->spawn_type = Game::Units::SpawnType::Barracks;
+  barracks_unit->owner_id = 1;
+  production->max_units = 10000;
+  production->manpower_available = 1000;
+
+  auto *commander = world.create_entity();
+  auto *commander_unit = commander->add_component<Engine::Core::UnitComponent>();
+  ASSERT_NE(commander_unit, nullptr);
+  commander_unit->owner_id = 1;
+  commander_unit->health = 100;
+  commander_unit->spawn_type = Game::Units::SpawnType::CarthageElephantMaster;
+
+  auto result = Game::Systems::ProductionService::
+      start_production_for_first_selected_barracks(
+          world, {barracks->get_id()}, 1,
+          Game::Units::TroopType::CarthageMercenaryBroker);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::CommanderLimitReached);
+
+  commander_unit->health = 0;
+  result = Game::Systems::ProductionService::
+      start_production_for_first_selected_barracks(
+          world, {barracks->get_id()}, 1,
+          Game::Units::TroopType::CarthageMercenaryBroker);
+  EXPECT_EQ(result, Game::Systems::ProductionResult::Success);
+}
+
 TEST(CommanderSystemTest, CommanderDeathDisablesAuraAndShocksNearbyAllies) {
   Engine::Core::World world;
 

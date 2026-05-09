@@ -150,6 +150,17 @@ void ProductionSystem::update(Engine::Core::World *world, float delta_time) {
     if (prod == nullptr) {
       continue;
     }
+    bool commander_in_queue =
+        prod->in_progress && Game::Units::is_commander_troop(prod->product_type);
+    if (!commander_in_queue) {
+      for (const auto queued : prod->production_queue) {
+        if (Game::Units::is_commander_troop(queued)) {
+          commander_in_queue = true;
+          break;
+        }
+      }
+    }
+    prod->commander_committed = commander_in_queue;
 
     auto *unit_comp = e->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) &&

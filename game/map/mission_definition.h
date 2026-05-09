@@ -33,6 +33,7 @@ struct PlayerSetup {
   QString nation;
   QString faction;
   QString color;
+  std::optional<QString> commander_troop;
   std::vector<UnitSetup> starting_units;
   std::vector<BuildingSetup> starting_buildings;
   Resources starting_resources;
@@ -61,6 +62,7 @@ struct AISetup {
   QString faction;
   QString color;
   QString difficulty;
+  std::optional<QString> commander_troop;
   std::optional<int> team_id;
   std::optional<QString> strategy;
   AIPersonality personality;
