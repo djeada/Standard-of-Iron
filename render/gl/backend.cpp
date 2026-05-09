@@ -2312,6 +2312,9 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         thread_local std::vector<const RiggedCreatureCmd *> rig_batch_refs;
         const std::size_t cap = std::max<std::size_t>(
             1U, m_riggedCharacterPipeline->max_instances_per_batch());
+        if (rig_batch_refs.capacity() < cap) {
+          rig_batch_refs.reserve(cap);
+        }
         std::size_t j = i;
         while (j < batch_end) {
           const std::size_t chunk_end = std::min(batch_end, j + cap);
@@ -2329,7 +2332,6 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           }
 
           rig_batch_refs.clear();
-          rig_batch_refs.reserve(chunk_count);
           for (std::size_t k = j; k < chunk_end; ++k) {
             rig_batch_refs.push_back(
                 &std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
