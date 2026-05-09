@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../draw_queue.h"
+#include "../gl/buffer.h"
 #include "../i_render_pass.h"
 #include <QMatrix4x4>
 #include <QVector3D>
@@ -27,6 +28,7 @@ public:
 
 private:
   void build_chunks();
+  void upload_instances();
 
   using FogInstance = FogInstanceData;
 
@@ -38,6 +40,8 @@ private:
   float m_half_height = 0.0F;
   std::vector<std::uint8_t> m_cells;
   std::vector<FogInstance> m_instances;
+  std::unique_ptr<Buffer> m_instance_buffer;
+  bool m_instances_dirty = false;
 };
 
 } // namespace Render::GL

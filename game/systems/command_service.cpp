@@ -201,8 +201,7 @@ void CommandService::move_unit(Engine::Core::World &world,
 
   auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
   if ((hold_mode != nullptr) && hold_mode->active) {
-    hold_mode->active = false;
-    hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+    hold_mode->begin_exit();
   }
 
   auto *guard_mode = e->get_component<Engine::Core::GuardModeComponent>();
@@ -497,8 +496,7 @@ void CommandService::move_group(
 
     auto *hold_mode = entity->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
-      hold_mode->active = false;
-      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+      hold_mode->begin_exit();
     }
 
     auto *guard_mode =
@@ -1088,9 +1086,7 @@ void CommandService::attack_target(
 
     auto *hold_mode = e->get_component<Engine::Core::HoldModeComponent>();
     if ((hold_mode != nullptr) && hold_mode->active) {
-
-      hold_mode->active = false;
-      hold_mode->exit_cooldown = hold_mode->stand_up_duration;
+      hold_mode->begin_exit();
     }
 
     auto *guard_mode = e->get_component<Engine::Core::GuardModeComponent>();

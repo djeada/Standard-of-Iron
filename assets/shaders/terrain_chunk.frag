@@ -246,7 +246,7 @@ void main() {
   float heightNoise =
       (triplanarNoise(v_worldPos, max(0.0001, u_heightNoiseFrequency)) - 0.5) *
       u_heightNoiseStrength;
-  heightNoise *= mix(1.0, 0.35, flatTerrainMask);
+  heightNoise *= mix(1.0, 0.68, flatTerrainMask);
 
   float toeLocal = smoothstep(0.25, 0.9, slope);
 
@@ -285,10 +285,11 @@ void main() {
   soilMix = max(soilMix, entryShelter * (0.10 + 0.18 * (1.0 - slope)));
 
   float mudPatch = fbm(world_coord * 0.08 + vec2(7.3, 11.2));
-  mudPatch = smoothstep(0.65, 0.75, mudPatch);
-  mudPatch *= (1.0 - flatTerrainMask * 0.65);
-  soilMix = max(soilMix, mudPatch * 0.85 * (1.0 - slope * 0.6));
-  soilMix *= (1.0 - flatTerrainMask * (0.72 + 0.08 * u_moistureLevel));
+  mudPatch = smoothstep(0.57, 0.76,
+                        mudPatch + gullyMask * 0.10 + u_moistureLevel * 0.08);
+  mudPatch *= (1.0 - flatTerrainMask * 0.18);
+  soilMix = max(soilMix, mudPatch * 0.88 * (1.0 - slope * 0.55));
+  soilMix *= (1.0 - flatTerrainMask * (0.34 + 0.06 * u_moistureLevel));
 
   vec3 soilBlend = mix(grassColor, u_soilColor, soilMix);
 
@@ -321,7 +322,7 @@ void main() {
   vec3 microGrad =
       vec3((hx - h0) / microOffset.x, 0.0, (hz - h0) / microOffset.x);
   float microAmp = 0.18 * u_rockDetailStrength * (0.15 + 0.85 * slope);
-  microAmp *= mix(1.0, 0.40, flatTerrainMask);
+  microAmp *= mix(1.0, 0.72, flatTerrainMask);
   microNormal = normalize(normal + microGrad * microAmp);
 
   float fineDetail = triplanarNoise(v_worldPos, microDetailScale * 2.5);
@@ -387,7 +388,7 @@ void main() {
   terrainColor *= wetDarkening;
 
   float jitterAmp = 0.06 * (0.5 + u_soilRoughness * 0.5);
-  jitterAmp *= (1.0 - 0.45 * flatTerrainMask);
+  jitterAmp *= (1.0 - 0.16 * flatTerrainMask);
   float jitter =
       (hash21(world_coord * 0.27 + vec2(17.0, 9.0)) - 0.5) * jitterAmp;
   float brightnessVar = (moistureVar - 0.5) * 0.08 * (1.0 - rockMask);

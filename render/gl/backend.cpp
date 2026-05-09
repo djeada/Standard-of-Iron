@@ -365,18 +365,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       const auto &batch = std::get<FogBatchCmdIndex>(cmd);
       const FogInstanceData *instances = batch.instances;
       const std::size_t instance_count = batch.count;
-      if ((instances != nullptr) && instance_count > 0 &&
-          (m_cylinderPipeline->fog_shader() != nullptr)) {
-        m_cylinderPipeline->m_fogScratch.resize(instance_count);
-        for (std::size_t idx = 0; idx < instance_count; ++idx) {
-          BackendPipelines::CylinderPipeline::FogInstanceGpu gpu{};
-          gpu.center = instances[idx].center;
-          gpu.size = instances[idx].size;
-          gpu.color = instances[idx].color;
-          gpu.alpha = instances[idx].alpha;
-          m_cylinderPipeline->m_fogScratch[idx] = gpu;
-        }
-        glDepthMask(GL_TRUE);
+      if (((instances != nullptr) || (batch.instance_buffer != nullptr)) &&
+          instance_count > 0 && (m_cylinderPipeline->fog_shader() != nullptr)) {
+        DepthMaskScope const depth_mask(false);
+        BlendScope const blend(true);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         if (polygon_offset_enabled) {
           glDisable(GL_POLYGON_OFFSET_FILL);
           polygon_offset_enabled = false;
@@ -392,7 +385,24 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
           fog_shader->set_uniform(m_cylinderPipeline->m_fogUniforms.view_proj,
                                   view_proj);
         }
-        m_cylinderPipeline->upload_fog_instances(instance_count);
+        if (m_cylinderPipeline->m_fogUniforms.time != Shader::InvalidUniform) {
+          fog_shader->set_uniform(m_cylinderPipeline->m_fogUniforms.time,
+                                  m_animationTime);
+        }
+        if (batch.instance_buffer != nullptr) {
+          m_cylinderPipeline->bind_fog_instance_buffer(batch.instance_buffer);
+        } else {
+          m_cylinderPipeline->m_fogScratch.resize(instance_count);
+          for (std::size_t idx = 0; idx < instance_count; ++idx) {
+            BackendPipelines::CylinderPipeline::FogInstanceGpu gpu{};
+            gpu.center = instances[idx].center;
+            gpu.size = instances[idx].size;
+            gpu.color = instances[idx].color;
+            gpu.alpha = instances[idx].alpha;
+            m_cylinderPipeline->m_fogScratch[idx] = gpu;
+          }
+          m_cylinderPipeline->upload_fog_instances(instance_count);
+        }
         m_cylinderPipeline->draw_fog(instance_count);
       }
       break;
@@ -1705,6 +1715,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
         if (uniforms->view_proj != Shader::InvalidUniform) {
           active_shader->set_uniform(uniforms->view_proj, view_proj);
         }
+        const Shader::UniformHandle time_uniform =
+            active_shader->optional_uniform_handle("u_time");
+        if (time_uniform != Shader::InvalidUniform) {
+          active_shader->set_uniform(time_uniform, m_animationTime);
+        }
         m_lastBoundShader = active_shader;
       }
 
@@ -1731,6 +1746,11 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             batch_shader->use();
             if (inst_uniforms->view_proj != Shader::InvalidUniform) {
               batch_shader->set_uniform(inst_uniforms->view_proj, view_proj);
+            }
+            const Shader::UniformHandle time_uniform =
+                batch_shader->optional_uniform_handle("u_time");
+            if (time_uniform != Shader::InvalidUniform) {
+              batch_shader->set_uniform(time_uniform, m_animationTime);
             }
             Texture *tex_to_use =
                 (it.texture != nullptr)

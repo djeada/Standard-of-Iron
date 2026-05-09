@@ -444,6 +444,17 @@ void Renderer::fog_batch(const FogInstanceData *instances, std::size_t count) {
   m_active_queue->submit(std::move(cmd));
 }
 
+void Renderer::fog_batch(Buffer *instance_buffer, std::size_t count) {
+  if ((instance_buffer == nullptr) || count == 0 ||
+      (m_active_queue == nullptr)) {
+    return;
+  }
+  FogBatchCmd cmd;
+  cmd.instance_buffer = instance_buffer;
+  cmd.count = count;
+  m_active_queue->submit(std::move(cmd));
+}
+
 void Renderer::rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                           const RainBatchParams &params) {
   if ((instance_buffer == nullptr) || instance_count == 0 ||
@@ -917,11 +928,14 @@ void Renderer::enqueue_mode_indicator(
       const auto profile =
           Game::Systems::TroopProfileService::instance().get_profile(
               nation_id, *troop_type_opt);
+      indicator_height = Render::Geom::indicator_height_for_unit(
+          profile.visuals.selection_ring_size, profile.visuals.render_scale);
+    } else {
+      indicator_height = Render::Geom::indicator_height_for_unit(
+          Game::Units::TroopConfig::instance().get_selection_ring_size(
+              unit_comp->spawn_type),
+          1.0F);
     }
-  }
-
-  if (transform != nullptr) {
-    indicator_height *= transform->scale.y;
   }
 
   QVector3D const pos(transform->position.x,
@@ -988,6 +1002,11 @@ void Renderer::render_world(Engine::Core::World *world) {
 
   std::lock_guard<std::recursive_mutex> const guard(world->get_entity_mutex());
 
+  if (!m_render_registry.is_attached_to(world)) {
+    m_cached_world = world;
+    m_render_registry.attach(world);
+  }
+
   auto &vis = Game::Map::VisibilityService::instance();
   const bool visibility_enabled = vis.is_initialized();
   Game::Map::VisibilityService::Snapshot visibility_snapshot;
@@ -995,8 +1014,9 @@ void Renderer::render_world(Engine::Core::World *world) {
     visibility_snapshot = vis.snapshot();
   }
 
-  auto renderable_entities =
-      world->get_entities_with<Engine::Core::RenderableComponent>();
+  const auto &unit_ids = m_render_registry.unit_ids();
+  const auto &building_ids = m_render_registry.building_ids();
+  const auto &other_ids = m_render_registry.other_ids();
 
   const auto &gfx_settings = Render::GraphicsSettings::instance();
   const auto &batch_config = gfx_settings.batching_config();
@@ -1009,19 +1029,25 @@ void Renderer::render_world(Engine::Core::World *world) {
   ++m_frame_counter;
 
   int visible_unit_count = 0;
-  std::vector<UnitRenderEntry> unit_entries;
-  std::vector<RenderEntry> building_entries;
-  std::vector<RenderEntry> other_entries;
-  unit_entries.reserve(renderable_entities.size());
-  building_entries.reserve(renderable_entities.size());
-  other_entries.reserve(renderable_entities.size());
+  static thread_local std::vector<UnitRenderEntry> unit_entries;
+  static thread_local std::vector<RenderEntry> building_entries;
+  static thread_local std::vector<RenderEntry> other_entries;
+  unit_entries.clear();
+  building_entries.clear();
+  other_entries.clear();
+  unit_entries.reserve(unit_ids.size());
+  building_entries.reserve(building_ids.size());
+  other_entries.reserve(other_ids.size());
 
-  for (auto *entity : renderable_entities) {
+  for (std::uint32_t entity_id : unit_ids) {
+
+    Engine::Core::Entity *entity = world->get_entity(entity_id);
+    if (entity == nullptr) {
+      continue;
+    }
     if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
       continue;
     }
-
-    uint32_t const entity_id = entity->get_id();
 
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
     if ((unit_comp != nullptr) && unit_comp->health <= 0) {
@@ -1106,18 +1132,28 @@ void Renderer::render_world(Engine::Core::World *world) {
       entry.has_patrol = (patrol_comp != nullptr) && patrol_comp->patrolling;
 
       unit_entries.push_back(std::move(entry));
-      continue;
+    }
+  }
+
+  auto collect_non_unit_entry = [&](std::uint32_t entity_id,
+                                    std::vector<RenderEntry> &dest) {
+    Engine::Core::Entity *entity = world->get_entity(entity_id);
+    if (entity == nullptr) {
+      return;
+    }
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+      return;
     }
 
     auto *renderable =
         entity->get_component<Engine::Core::RenderableComponent>();
     if ((renderable == nullptr) || !renderable->visible) {
-      continue;
+      return;
     }
 
     auto *transform = entity->get_component<Engine::Core::TransformComponent>();
     if (transform == nullptr) {
-      continue;
+      return;
     }
 
     RenderEntry entry;
@@ -1132,14 +1168,15 @@ void Renderer::render_world(Engine::Core::World *world) {
       entry.renderer_key = std::string(
           canonicalize_building_renderer_key(renderable->renderer_id));
     }
+    dest.push_back(std::move(entry));
+  };
 
-    auto *building_comp =
-        entity->get_component<Engine::Core::BuildingComponent>();
-    if (building_comp != nullptr) {
-      building_entries.push_back(std::move(entry));
-    } else {
-      other_entries.push_back(std::move(entry));
-    }
+  for (std::uint32_t entity_id : building_ids) {
+    collect_non_unit_entry(entity_id, building_entries);
+  }
+
+  for (std::uint32_t entity_id : other_ids) {
+    collect_non_unit_entry(entity_id, other_entries);
   }
 
   m_unit_render_cache.prune(m_frame_counter);
@@ -1155,7 +1192,8 @@ void Renderer::render_world(Engine::Core::World *world) {
   float batching_boost = battle_optimizer.get_batching_boost();
   batching_ratio = std::min(1.0F, batching_ratio * batching_boost);
 
-  PrimitiveBatcher batcher;
+  static thread_local PrimitiveBatcher batcher;
+  batcher.clear();
   if (batching_ratio > 0.0F) {
     batcher.reserve(2000, 4000, 500);
   }

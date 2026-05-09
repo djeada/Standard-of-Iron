@@ -1,5 +1,7 @@
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
+#include "render/humanoid/skeleton.h"
 #include "tests/render/test_asset_paths.h"
 
 #include <QCoreApplication>
@@ -112,9 +114,10 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   auto const *blob = reg.blob(kSpeciesHumanoid);
   ASSERT_NE(blob, nullptr);
 
-  constexpr std::uint16_t kAttackSwordAClip = 4U;
+  constexpr std::uint16_t kAttackSwordAClip =
+      Render::Creature::kHumanoidAttackSwordAClip;
   ASSERT_GT(blob->clip_count(), static_cast<std::uint32_t>(kAttackSwordAClip))
-      << "humanoid.bpat must contain at least 11 clips (re-run bpat_baker)";
+      << "humanoid.bpat is missing attack_sword_a (re-run bpat_baker)";
 
   auto const attack_clip = blob->clip(kAttackSwordAClip);
   ASSERT_GT(attack_clip.frame_count, 0U);
@@ -141,6 +144,80 @@ TEST(BpatRegistry, AttackSwordClipExistsAndDiffersFromIdle) {
   }
   EXPECT_TRUE(any_different)
       << "attack_sword_a mid-frame palette must differ from idle frame 0";
+}
+
+TEST(BpatRegistry, HoldClipsBakeKneelingWeaponReadyPoses) {
+  using Render::Humanoid::HumanoidBone;
+
+  auto const root = TestAssets::find_creature_assets_dir("humanoid.bpat");
+  if (root.empty()) {
+    GTEST_SKIP() << "baked .bpat assets not found in CWD";
+  }
+  auto &reg = BpatRegistry::instance();
+  ASSERT_TRUE(reg.load_species(kSpeciesHumanoid, root + "/humanoid.bpat"));
+  ASSERT_TRUE(
+      reg.load_species(kSpeciesHumanoidSword, root + "/humanoid_sword.bpat"));
+
+  auto sample_bone = [&](std::uint32_t species_id, std::uint16_t clip_index,
+                         std::uint32_t frame_in_clip, HumanoidBone bone) {
+    std::array<QMatrix4x4, 64> palette{};
+    auto const n = reg.sample_palette(species_id, clip_index, frame_in_clip,
+                                      std::span<QMatrix4x4>(palette));
+    auto const bone_index = static_cast<std::size_t>(bone);
+    EXPECT_GT(n, bone_index);
+    return palette[bone_index].column(3).toVector3D();
+  };
+
+  auto const *default_blob = reg.blob(kSpeciesHumanoid);
+  auto const *sword_blob = reg.blob(kSpeciesHumanoidSword);
+  ASSERT_NE(default_blob, nullptr);
+  ASSERT_NE(sword_blob, nullptr);
+
+  auto const idle_pelvis =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+                  HumanoidBone::Pelvis);
+  auto const idle_hand_r =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+                  HumanoidBone::HandR);
+  auto const idle_hand_l =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidIdleClip, 0U,
+                  HumanoidBone::HandL);
+
+  auto const spear_hold_frame =
+      default_blob->clip(Render::Creature::kHumanoidHoldClip).frame_count - 1U;
+  auto const bow_hold_frame =
+      default_blob->clip(Render::Creature::kHumanoidHoldBowClip).frame_count -
+      1U;
+  auto const sword_hold_frame =
+      sword_blob->clip(Render::Creature::kHumanoidHoldClip).frame_count - 1U;
+
+  auto const spear_hold_pelvis =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldClip,
+                  spear_hold_frame, HumanoidBone::Pelvis);
+  auto const spear_hold_hand_r =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldClip,
+                  spear_hold_frame, HumanoidBone::HandR);
+
+  auto const bow_hold_pelvis =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldBowClip,
+                  bow_hold_frame, HumanoidBone::Pelvis);
+  auto const bow_hold_hand_l =
+      sample_bone(kSpeciesHumanoid, Render::Creature::kHumanoidHoldBowClip,
+                  bow_hold_frame, HumanoidBone::HandL);
+
+  auto const sword_idle_pelvis =
+      sample_bone(kSpeciesHumanoidSword, Render::Creature::kHumanoidIdleClip,
+                  0U, HumanoidBone::Pelvis);
+  auto const sword_hold_pelvis =
+      sample_bone(kSpeciesHumanoidSword, Render::Creature::kHumanoidHoldClip,
+                  sword_hold_frame, HumanoidBone::Pelvis);
+
+  EXPECT_LT(spear_hold_pelvis.y(), idle_pelvis.y());
+  EXPECT_LT(bow_hold_pelvis.y(), idle_pelvis.y());
+  EXPECT_LT(sword_hold_pelvis.y(), sword_idle_pelvis.y());
+
+  EXPECT_GT((spear_hold_hand_r - idle_hand_r).length(), 0.05F);
+  EXPECT_GT((bow_hold_hand_l - idle_hand_l).length(), 0.05F);
 }
 
 TEST(BpatRegistry, SwordHumanoidIdleDiffersFromDefaultHumanoid) {

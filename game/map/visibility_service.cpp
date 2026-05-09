@@ -23,6 +23,7 @@ constexpr float k_default_vision_range = 12.0F;
 constexpr float k_half_cell_offset = 0.5F;
 constexpr float k_min_tile_size = 0.0001F;
 constexpr std::chrono::milliseconds k_min_job_interval{50};
+constexpr std::uint8_t k_current_visible_marker = 0x80U;
 
 auto inBoundsStatic(int grid_x, int grid_z, int width, int height) -> bool {
   return grid_x >= 0 && grid_x < width && grid_z >= 0 && grid_z < height;
@@ -138,6 +139,7 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
   const float range_padding = m_tile_size * k_half_cell_offset;
 
   auto &owner_registry = Game::Systems::OwnerRegistry::instance();
+  const float inverse_tile_size_sq = 1.0F / (m_tile_size * m_tile_size);
 
   std::unordered_map<std::uint32_t, CachedPosition> current_positions;
   bool any_moved = m_forceFullUpdate;
@@ -185,8 +187,11 @@ auto VisibilityService::gatherVisionSources(Engine::Core::World &world,
         std::max(1, static_cast<int>(std::ceil(vision_range / m_tile_size)));
     const float expanded_range_sq =
         (vision_range + range_padding) * (vision_range + range_padding);
+    const float expanded_radius_cells_sq =
+        expanded_range_sq * inverse_tile_size_sq;
 
-    sources.push_back({center_x, center_z, cell_radius, expanded_range_sq});
+    sources.push_back(
+        {center_x, center_z, cell_radius, expanded_radius_cells_sq});
   }
 
   if (!any_moved) {
@@ -214,8 +219,7 @@ auto VisibilityService::composeJobPayload(
   std::shared_lock<std::shared_mutex> const lock(m_cellsMutex);
   const auto generation_value =
       m_generation.fetch_add(1ULL, std::memory_order_relaxed);
-  return JobPayload{m_width, m_height, m_tile_size,
-                    m_cells, sources,  generation_value};
+  return JobPayload{m_width, m_height, m_cells, sources, generation_value};
 }
 
 void VisibilityService::enqueueJob(JobPayload &&payload) {
@@ -281,26 +285,32 @@ void VisibilityService::workerLoop() {
 auto VisibilityService::executeJob(JobPayload payload)
     -> VisibilityService::JobResult {
   const int cell_count = payload.width * payload.height;
-  std::vector<std::uint8_t> current_visible(cell_count, 0U);
+  const auto visible_val = static_cast<std::uint8_t>(VisibilityState::Visible);
+  const auto explored_val =
+      static_cast<std::uint8_t>(VisibilityState::Explored);
 
   for (const auto &source : payload.sources) {
-    for (int dz = -source.cell_radius; dz <= source.cell_radius; ++dz) {
-      const int grid_z = source.center_z + dz;
-      if (!inBoundsStatic(source.center_x, grid_z, payload.width,
-                          payload.height)) {
+    const int min_z = std::max(0, source.center_z - source.cell_radius);
+    const int max_z =
+        std::min(payload.height - 1, source.center_z + source.cell_radius);
+    const int min_x = std::max(0, source.center_x - source.cell_radius);
+    const int max_x =
+        std::min(payload.width - 1, source.center_x + source.cell_radius);
+
+    for (int grid_z = min_z; grid_z <= max_z; ++grid_z) {
+      const int dz = grid_z - source.center_z;
+      const int dz_sq = dz * dz;
+      if (static_cast<float>(dz_sq) > source.expanded_radius_cells_sq) {
         continue;
       }
-      const float world_dz = static_cast<float>(dz) * payload.tile_size;
-      for (int dx = -source.cell_radius; dx <= source.cell_radius; ++dx) {
-        const int grid_x = source.center_x + dx;
-        if (!inBoundsStatic(grid_x, grid_z, payload.width, payload.height)) {
-          continue;
-        }
-        const float world_dx = static_cast<float>(dx) * payload.tile_size;
-        const float dist_sq = world_dx * world_dx + world_dz * world_dz;
-        if (dist_sq <= source.expanded_range_sq) {
+
+      for (int grid_x = min_x; grid_x <= max_x; ++grid_x) {
+        const int dx = grid_x - source.center_x;
+        const int dist_cells_sq = dx * dx + dz_sq;
+        if (static_cast<float>(dist_cells_sq) <=
+            source.expanded_radius_cells_sq) {
           const int idx = indexStatic(grid_x, grid_z, payload.width);
-          current_visible[idx] = 1U;
+          payload.cells[idx] |= k_current_visible_marker;
         }
       }
     }
@@ -308,21 +318,16 @@ auto VisibilityService::executeJob(JobPayload payload)
 
   bool changed = false;
   for (int idx = 0; idx < cell_count; ++idx) {
-    const std::uint8_t now_visible = current_visible[idx];
-    const auto visible_val =
-        static_cast<std::uint8_t>(VisibilityState::Visible);
-    const auto explored_val =
-        static_cast<std::uint8_t>(VisibilityState::Explored);
-
-    if (now_visible != 0U) {
-      if (payload.cells[idx] != visible_val) {
-        payload.cells[idx] = visible_val;
-        changed = true;
-      }
-    } else if (payload.cells[idx] == visible_val) {
-      payload.cells[idx] = explored_val;
-      changed = true;
-    }
+    const std::uint8_t previous_state =
+        payload.cells[idx] & ~k_current_visible_marker;
+    const bool now_visible =
+        (payload.cells[idx] & k_current_visible_marker) != 0U;
+    const std::uint8_t next_state =
+        now_visible
+            ? visible_val
+            : (previous_state == visible_val ? explored_val : previous_state);
+    changed = changed || (next_state != previous_state);
+    payload.cells[idx] = next_state;
   }
 
   return JobResult{std::move(payload.cells), payload.generation, changed};

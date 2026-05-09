@@ -2,6 +2,7 @@
 
 #include "../../palette.h"
 #include <QVector3D>
+#include <algorithm>
 #include <cstdint>
 
 namespace Render::GL {
@@ -37,6 +38,16 @@ struct AnimationInputs {
   bool is_constructing{false};
   float construction_progress{0.0F};
 };
+
+inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {
+  if (inputs.is_in_hold_mode) {
+    return std::clamp(inputs.hold_entry_progress, 0.0F, 1.0F);
+  }
+  if (inputs.is_exiting_hold) {
+    return std::clamp(1.0F - inputs.hold_exit_progress, 0.0F, 1.0F);
+  }
+  return 0.0F;
+}
 
 struct FormationParams {
   int individuals_per_unit;

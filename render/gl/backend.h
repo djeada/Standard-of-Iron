@@ -85,6 +85,10 @@ public:
 
   [[nodiscard]] auto banner_shader() const -> Shader *;
 
+  [[nodiscard]] auto troop_shadow_shader() const noexcept -> Shader * {
+    return m_shadowShader;
+  }
+
   [[nodiscard]] auto
   healing_beam_pipeline() -> BackendPipelines::HealingBeamPipeline * {
     return m_healingBeamPipeline.get();

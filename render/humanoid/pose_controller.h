@@ -51,6 +51,9 @@ public:
   void sword_slash_variant(float attack_phase, std::uint8_t variant);
   void spear_thrust_variant(float attack_phase, std::uint8_t variant);
   void mount_on_horse(float saddle_height);
+  void brace_spear_for_hold();
+  void hold_bow_ready();
+  void brace_sword_and_shield_for_hold();
   void hold_sword_and_shield();
   void look_at(const QVector3D &target);
   void hit_flinch(float intensity);

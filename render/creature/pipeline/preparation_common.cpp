@@ -19,6 +19,21 @@
 
 namespace Render::Creature::Pipeline {
 
+namespace {
+
+constexpr float k_terminal_non_looping_phase = std::nextafter(1.0F, 0.0F);
+
+auto hold_phase_for_anim(
+    const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
+  float const hold_phase = Render::GL::hold_transition_amount(anim.inputs);
+  if (hold_phase > 0.0F) {
+    return std::clamp(hold_phase, 0.0F, k_terminal_non_looping_phase);
+  }
+  return k_terminal_non_looping_phase;
+}
+
+} // namespace
+
 auto pass_intent_from_ctx(const Render::GL::DrawContext &ctx) noexcept
     -> RenderPassIntent {
   return ctx.template_prewarm ? RenderPassIntent::Shadow
@@ -70,6 +85,9 @@ auto humanoid_state_for_anim(
 auto humanoid_phase_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
   auto const state = humanoid_state_for_anim(anim);
+  if (state == Render::Creature::AnimationStateId::Hold) {
+    return hold_phase_for_anim(anim);
+  }
   bool const is_attack_state =
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||
@@ -90,9 +108,10 @@ auto humanoid_clip_variant_for_anim(
              : 0U;
 }
 
-auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
-                             const Render::GL::HumanoidAnimationContext
-                                 &anim) noexcept -> std::optional<float> {
+auto humanoid_bpat_playback_for_anim(
+    Render::Creature::ArchetypeId archetype_id,
+    const Render::GL::HumanoidAnimationContext &anim) noexcept
+    -> std::optional<BpatPlayback> {
   using Render::Creature::ArchetypeDescriptor;
 
   if (archetype_id == Render::Creature::kInvalidArchetype) {
@@ -136,8 +155,30 @@ auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
                       : static_cast<int>(phase * frame_count);
   frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
 
-  auto const palette = blob->frame_palette_view(
-      clip.frame_offset + static_cast<std::uint32_t>(frame_idx));
+  return BpatPlayback{clip_id, static_cast<std::uint16_t>(frame_idx)};
+}
+
+auto humanoid_clip_contact_y(Render::Creature::ArchetypeId archetype_id,
+                             const Render::GL::HumanoidAnimationContext
+                                 &anim) noexcept -> std::optional<float> {
+  auto const playback = humanoid_bpat_playback_for_anim(archetype_id, anim);
+  if (!playback.has_value()) {
+    return std::nullopt;
+  }
+
+  auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
+      Render::Creature::Bpat::kSpeciesHumanoid);
+  if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
+    return std::nullopt;
+  }
+
+  auto const clip = blob->clip(playback->clip_id);
+  if (clip.frame_count == 0U) {
+    return std::nullopt;
+  }
+
+  auto const palette =
+      blob->frame_palette_view(clip.frame_offset + playback->frame_in_clip);
   if (palette.size() < Render::Humanoid::k_bone_count) {
     return std::nullopt;
   }

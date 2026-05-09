@@ -111,6 +111,55 @@ TEST(CreatureRenderBatch, RequestStateForHumanoidHoldAndAttack) {
   EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
 }
 
+TEST(CreatureRenderBatch, HoldEntryUsesKneelProgressForRequestPhase) {
+  CreatureRenderBatch batch;
+  const auto output = make_output(CreatureKind::Humanoid, 4U, 0.0F);
+
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 0.5F;
+
+  batch.add_humanoid(output, pose, variant, anim);
+  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
+  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.5F);
+}
+
+TEST(CreatureRenderBatch, HoldExitUsesReverseStandUpProgressForRequestPhase) {
+  CreatureRenderBatch batch;
+  const auto output = make_output(CreatureKind::Humanoid, 5U, 0.0F);
+
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_exiting_hold = true;
+  anim.inputs.hold_exit_progress = 0.25F;
+
+  batch.add_humanoid(output, pose, variant, anim);
+  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
+  EXPECT_FLOAT_EQ(batch.requests()[0].phase, 0.75F);
+}
+
+TEST(CreatureRenderBatch, FullHoldKeepsTerminalKneelFrame) {
+  CreatureRenderBatch batch;
+  const auto output = make_output(CreatureKind::Humanoid, 6U, 0.0F);
+
+  Render::GL::HumanoidPose pose{};
+  Render::GL::HumanoidVariant variant{};
+  Render::GL::HumanoidAnimationContext anim{};
+  anim.inputs.is_in_hold_mode = true;
+  anim.inputs.hold_entry_progress = 1.0F;
+
+  batch.add_humanoid(output, pose, variant, anim);
+  ASSERT_EQ(batch.requests().size(), 1u);
+  EXPECT_EQ(batch.requests()[0].state, AnimationStateId::Hold);
+  EXPECT_GT(batch.requests()[0].phase, 0.99F);
+  EXPECT_LT(batch.requests()[0].phase, 1.0F);
+}
+
 TEST(CreatureRenderBatch, RequestStateForHumanoidMeleeAttack) {
   CreatureRenderBatch batch;
   const auto output = make_output(CreatureKind::Humanoid, 2U, 0.0F);

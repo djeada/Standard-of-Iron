@@ -4,10 +4,12 @@
 # Test executable
 add_executable(standard_of_iron_tests
     ${CMAKE_SOURCE_DIR}/app/core/minimap_manager.cpp
+    ${CMAKE_SOURCE_DIR}/app/core/selection_query_service.cpp
     core/serialization_test.cpp
     core/ground_type_test.cpp
     core/building_spawn_setup_test.cpp
     core/minimap_manager_test.cpp
+    core/selection_query_service_test.cpp
     db/save_storage_test.cpp
     db/mission_progress_test.cpp
     map/terrain_profiles_test.cpp
@@ -44,7 +46,10 @@ add_executable(standard_of_iron_tests
     render/barracks_flag_renderer_test.cpp
     render/building_archetype_desc_test.cpp
     render/building_render_common_test.cpp
+    render/mode_indicator_test.cpp
+    render/mode_indicator_placement_test.cpp
     render/unit_render_cache_test.cpp
+    render/persistent_render_registry_test.cpp
     render/render_archetype_test.cpp
     render/draw_queue_sort_order_test.cpp
     render/linear_feature_geometry_test.cpp
@@ -137,6 +142,10 @@ set_target_properties(standard_of_iron_tests PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+if(TARGET bake_creature_assets)
+    add_dependencies(standard_of_iron_tests bake_creature_assets)
+endif()
+
 # --- Subset test binary -------------------------------------------------
 # Three test files have pre-existing compile breakage as of Stage 15.5c
 # (equipment_registry_test.cpp / helmet_renderers_test.cpp /
@@ -178,3 +187,7 @@ set_target_properties(standard_of_iron_tests_subset PROPERTIES
     AUTOUIC ON
     AUTORCC ON
 )
+
+if(TARGET bake_creature_assets)
+    add_dependencies(standard_of_iron_tests_subset bake_creature_assets)
+endif()

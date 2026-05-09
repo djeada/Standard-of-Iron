@@ -16,6 +16,8 @@ public:
                                  QObject *parent = nullptr);
 
   [[nodiscard]] QString get_selected_units_command_mode() const;
+  [[nodiscard]] QString
+  get_selected_units_toggle_state(const QString &mode) const;
   [[nodiscard]] QVariantMap get_selected_units_mode_availability() const;
 
 private:

@@ -7,6 +7,10 @@
 #include <memory>
 #include <vector>
 
+namespace Render::GL {
+class Buffer;
+}
+
 namespace Render::GL::BackendPipelines {
 
 class CylinderPipeline : public IPipeline {
@@ -27,6 +31,7 @@ public:
   void draw_cylinders(std::size_t count);
 
   void upload_fog_instances(std::size_t count);
+  void bind_fog_instance_buffer(GL::Buffer *instance_buffer);
   void draw_fog(std::size_t count);
 
   [[nodiscard]] auto cylinder_shader() const -> GL::Shader * {
@@ -40,6 +45,7 @@ public:
 
   struct FogUniforms {
     GL::Shader::UniformHandle view_proj{GL::Shader::InvalidUniform};
+    GL::Shader::UniformHandle time{GL::Shader::InvalidUniform};
   };
 
   struct CylinderInstanceGpu {

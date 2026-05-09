@@ -361,6 +361,10 @@ endif()
 install(TARGETS standard_of_iron RUNTIME DESTINATION .)
 install(DIRECTORY assets/ DESTINATION assets)
 
+if(TARGET bake_creature_assets)
+    add_dependencies(standard_of_iron bake_creature_assets)
+endif()
+
 # Copy assets next to the binary for dev runs
 file(COPY assets/ DESTINATION ${CMAKE_BINARY_DIR}/bin/assets/)
 

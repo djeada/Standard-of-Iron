@@ -271,6 +271,13 @@ TEST(HumanoidStateMachineTest, HoldBeatsLocomotion) {
   EXPECT_EQ(select_state(inputs), HumanoidState::Hold);
 }
 
+TEST(HumanoidStateMachineTest, ExitingHoldKeepsHoldState) {
+  AnimationInputs inputs{};
+  inputs.is_exiting_hold = true;
+  inputs.is_moving = true;
+  EXPECT_EQ(select_state(inputs), HumanoidState::Hold);
+}
+
 TEST(HumanoidStateMachineTest, AttackRangedVsMelee) {
   AnimationInputs inputs{};
   inputs.is_attacking = true;
