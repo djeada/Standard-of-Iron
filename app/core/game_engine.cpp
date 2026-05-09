@@ -1977,6 +1977,8 @@ void GameEngine::perform_skirmish_load(const QString &map_path,
     const bool is_campaign =
         m_campaign_manager &&
         m_campaign_manager->current_mission_context().is_campaign();
+    // Campaign commanders are mission-authored at setup time; skirmish relies on
+    // AI production decisions to recruit commanders at runtime.
     ai_system->set_commander_recruitment_enabled(!is_campaign);
   }
 
@@ -2318,9 +2320,12 @@ void GameEngine::apply_mission_setup() {
   nation_registry.set_player_nation(local_owner_id, player_nation_id);
   apply_owner_color(local_owner_id, mission.player_setup.color);
 
+  const QString fallback_player_commander =
+      (player_nation_id == Game::Systems::NationID::Carthage)
+          ? QStringLiteral("carthage_elephant_master")
+          : QStringLiteral("roman_veteran_consul");
   const QString player_commander_troop =
-      mission.player_setup.commander_troop.value_or(
-          QStringLiteral("carthage_elephant_master"));
+      mission.player_setup.commander_troop.value_or(fallback_player_commander);
   const auto player_commander_pos =
       default_commander_position(mission.player_setup.starting_units,
                                  mission.player_setup.starting_buildings,

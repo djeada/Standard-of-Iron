@@ -155,10 +155,12 @@ void AICommandApplier::apply(Engine::Core::World &world, int ai_owner_id,
       }
 
       const std::vector<Engine::Core::EntityID> selected{command.building_id};
-      (void)Game::Systems::ProductionService::
-          start_production_for_first_selected_barracks(world, selected,
-                                                       ai_owner_id,
-                                                       command.product_type);
+      const auto result = Game::Systems::ProductionService::
+          start_production_for_first_selected_barracks(
+              world, selected, ai_owner_id, command.product_type);
+      if (result != Game::Systems::ProductionResult::Success) {
+        break;
+      }
 
       break;
     }

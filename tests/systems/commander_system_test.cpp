@@ -2,11 +2,13 @@
 #include "game/core/world.h"
 #include "game/systems/commander_system.h"
 #include "game/systems/production_service.h"
+#include "game/systems/troop_profile_service.h"
 #include "game/units/commander_catalog.h"
 #include "game/units/spawn_type.h"
 #include "game/units/troop_type.h"
 
 #include <gtest/gtest.h>
+#include <cmath>
 #include <vector>
 
 namespace {
@@ -222,15 +224,22 @@ TEST(CommanderSystemTest, AuraAppliesAttackAndProductionBonusesByType) {
   barracks_prod->in_progress = true;
   barracks_prod->time_remaining = 20.0F;
 
+  const auto base_profile = Game::Systems::TroopProfileService::instance()
+                                .get_profile(Game::Systems::NationID::RomanRepublic,
+                                             Game::Units::TroopType::Swordsman);
+  const int expected_boosted_melee = static_cast<int>(
+      std::round(static_cast<float>(base_profile.combat.melee_damage) * 1.25F));
+
   Game::Systems::CommanderSystem system;
   system.update(&world, 1.0F);
-  EXPECT_GT(ally_attack->melee_damage, 22);
+  EXPECT_EQ(ally_attack->melee_damage, expected_boosted_melee);
 
   commander_data->bonus_type = "production_haste";
   commander_data->aura_bonus_value = 0.5F;
   const float before_haste = barracks_prod->time_remaining;
   system.update(&world, 1.0F);
-  EXPECT_LT(barracks_prod->time_remaining, before_haste - 0.45F);
+  const float expected_haste_time = before_haste - commander_data->aura_bonus_value;
+  EXPECT_FLOAT_EQ(barracks_prod->time_remaining, expected_haste_time);
 }
 
 } // namespace

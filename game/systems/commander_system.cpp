@@ -87,24 +87,6 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
     morale->shock_timer = std::max(0.0F, morale->shock_timer - delta_time);
   }
 
-  for (auto *entity : world->get_entities_with<Engine::Core::UnitComponent>()) {
-    auto *unit = entity->get_component<Engine::Core::UnitComponent>();
-    if (unit == nullptr || unit->health <= 0) {
-      continue;
-    }
-    auto troop_type_opt = resolve_troop_type(unit);
-    if (!troop_type_opt.has_value()) {
-      continue;
-    }
-    const auto profile = TroopProfileService::instance().get_profile(
-        unit->nation_id, *troop_type_opt);
-    unit->speed = profile.combat.speed;
-    if (auto *attack = entity->get_component<Engine::Core::AttackComponent>()) {
-      attack->damage = profile.combat.ranged_damage;
-      attack->melee_damage = profile.combat.melee_damage;
-    }
-  }
-
   for (auto *commander_entity :
        world->get_entities_with<Engine::Core::CommanderComponent>()) {
     auto *commander =
@@ -172,6 +154,13 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
                                             delta_time)));
         } else if (commander->bonus_type == "attack_boost") {
           if (auto *attack = candidate->get_component<Engine::Core::AttackComponent>()) {
+            const auto troop_type_opt = resolve_troop_type(candidate_unit);
+            if (troop_type_opt.has_value()) {
+              const auto profile = TroopProfileService::instance().get_profile(
+                  candidate_unit->nation_id, *troop_type_opt);
+              attack->damage = profile.combat.ranged_damage;
+              attack->melee_damage = profile.combat.melee_damage;
+            }
             const float factor = 1.0F + commander->aura_bonus_value;
             attack->damage =
                 std::max(1, static_cast<int>(std::round(attack->damage * factor)));
@@ -179,7 +168,15 @@ void CommanderSystem::update(Engine::Core::World *world, float delta_time) {
                 1, static_cast<int>(std::round(attack->melee_damage * factor)));
           }
         } else if (commander->bonus_type == "speed_boost") {
-          candidate_unit->speed *= (1.0F + commander->aura_bonus_value);
+          const auto troop_type_opt = resolve_troop_type(candidate_unit);
+          if (troop_type_opt.has_value()) {
+            const auto profile = TroopProfileService::instance().get_profile(
+                candidate_unit->nation_id, *troop_type_opt);
+            candidate_unit->speed =
+                profile.combat.speed * (1.0F + commander->aura_bonus_value);
+          } else {
+            candidate_unit->speed *= (1.0F + commander->aura_bonus_value);
+          }
         } else if (commander->bonus_type == "production_haste") {
           if (auto *production =
                   candidate->get_component<Engine::Core::ProductionComponent>()) {
