@@ -3,6 +3,7 @@
 #include "../../core/event_manager.h"
 #include "../../core/world.h"
 #include "../../units/spawn_type.h"
+#include "../../units/troop_config.h"
 #include "../building_collision_registry.h"
 
 #include <algorithm>
@@ -14,15 +15,6 @@
 namespace Game::Systems::Combat {
 
 namespace {
-
-auto mix_hash(std::uint32_t value) -> std::uint32_t {
-  value ^= value >> 16U;
-  value *= 0x7feb352dU;
-  value ^= value >> 15U;
-  value *= 0x846ca68bU;
-  value ^= value >> 16U;
-  return value;
-}
 
 auto is_mounted_spawn(Game::Units::SpawnType spawn_type) -> bool {
   using Game::Units::SpawnType;
@@ -51,28 +43,129 @@ auto resolve_death_profile(const Engine::Core::UnitComponent *unit)
   return DeathSequenceProfile::Infantry;
 }
 
+struct DeathSequenceTiming {
+  float state_duration{1.0F};
+  float dead_hold_duration{0.8F};
+  std::uint8_t sequence_variant{0U};
+};
+
 auto resolve_death_variant(Engine::Core::Entity *target,
                            Engine::Core::Entity *attacker,
                            Engine::Core::DeathSequenceProfile profile)
     -> std::uint8_t {
-  if (target == nullptr) {
-    return 0U;
-  }
-  std::uint32_t seed = target->get_id() * 2654435761U;
-  if (attacker != nullptr) {
-    seed ^= attacker->get_id() * 2246822519U;
-  }
-  seed = mix_hash(seed);
+  (void)target;
+  (void)attacker;
   switch (profile) {
   case Engine::Core::DeathSequenceProfile::MountedRider:
-    return 2U;
   case Engine::Core::DeathSequenceProfile::Elephant:
-    return static_cast<std::uint8_t>(seed & 1U);
   case Engine::Core::DeathSequenceProfile::Horse:
-    return 0U;
   case Engine::Core::DeathSequenceProfile::Infantry:
   default:
-    return static_cast<std::uint8_t>(seed & 1U);
+    // Death profile selects the archetype/clip family; sequence variants remain
+    // local within that family instead of encoding raw cross-family offsets.
+    return 0U;
+  }
+}
+
+auto resolve_death_timing(Engine::Core::DeathSequenceProfile profile,
+                          std::uint8_t variant) -> DeathSequenceTiming {
+  DeathSequenceTiming timing{};
+  timing.sequence_variant = variant;
+  switch (profile) {
+  case Engine::Core::DeathSequenceProfile::MountedRider:
+    timing.state_duration = 1.15F;
+    timing.dead_hold_duration = 0.95F;
+    break;
+  case Engine::Core::DeathSequenceProfile::Horse:
+    timing.state_duration = 1.20F;
+    timing.dead_hold_duration = 1.00F;
+    timing.sequence_variant = 0U;
+    break;
+  case Engine::Core::DeathSequenceProfile::Elephant:
+    timing.state_duration = 1.50F;
+    timing.dead_hold_duration = 1.25F;
+    break;
+  case Engine::Core::DeathSequenceProfile::Infantry:
+  default:
+    break;
+  }
+  return timing;
+}
+
+void apply_death_sequence(Engine::Core::DeathAnimationComponent &death,
+                          Engine::Core::DeathSequenceProfile profile,
+                          std::uint8_t variant) {
+  auto const timing = resolve_death_timing(profile, variant);
+  death.profile = profile;
+  death.state = Engine::Core::DeathSequenceState::Dying;
+  death.state_time = 0.0F;
+  death.state_duration = timing.state_duration;
+  death.dead_hold_duration = timing.dead_hold_duration;
+  death.sequence_variant = timing.sequence_variant;
+}
+
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit) -> int {
+  if (unit.render_individuals_per_unit_override > 0) {
+    return unit.render_individuals_per_unit_override;
+  }
+  return Game::Units::TroopConfig::instance().get_individuals_per_unit(
+      unit.spawn_type);
+}
+
+void begin_soldier_casualties(Engine::Core::Entity *target,
+                              Engine::Core::Entity *attacker, int prev_health,
+                              int new_health) {
+  if (target == nullptr) {
+    return;
+  }
+
+  auto *unit = target->get_component<Engine::Core::UnitComponent>();
+  if (unit == nullptr) {
+    return;
+  }
+
+  int const individuals_per_unit = resolved_individuals_per_unit(*unit);
+  if (individuals_per_unit <= 1) {
+    return;
+  }
+
+  int const prev_survivors = Engine::Core::resolve_surviving_individual_count(
+      prev_health, unit->max_health, individuals_per_unit);
+  int const new_survivors = Engine::Core::resolve_surviving_individual_count(
+      new_health, unit->max_health, individuals_per_unit);
+  int const casualty_start = (new_health <= 0) ? 1 : new_survivors;
+  if (prev_survivors <= casualty_start) {
+    return;
+  }
+
+  auto const profile = resolve_death_profile(unit);
+  auto *casualties =
+      Engine::Core::get_or_add_component<
+          Engine::Core::SoldierCasualtyAnimationComponent>(target);
+  if (casualties == nullptr) {
+    return;
+  }
+
+  auto const variant = resolve_death_variant(target, attacker, profile);
+  auto const timing = resolve_death_timing(profile, variant);
+  for (int slot = casualty_start; slot < prev_survivors; ++slot) {
+    Engine::Core::SoldierCasualtyAnimationComponent::Entry entry{};
+    entry.slot_index = static_cast<std::uint16_t>(slot);
+    entry.profile = profile;
+    entry.state = Engine::Core::DeathSequenceState::Dying;
+    entry.state_time = 0.0F;
+    entry.state_duration = timing.state_duration;
+    entry.dead_hold_duration = timing.dead_hold_duration;
+    entry.sequence_variant = timing.sequence_variant;
+
+    auto existing = std::find_if(
+        casualties->entries.begin(), casualties->entries.end(),
+        [slot](const auto &active) { return active.slot_index == slot; });
+    if (existing != casualties->entries.end()) {
+      *existing = entry;
+    } else {
+      casualties->entries.push_back(entry);
+    }
   }
 }
 
@@ -91,32 +184,9 @@ void begin_death_sequence(Engine::Core::Entity *target,
     return;
   }
 
-  death->profile = resolve_death_profile(unit);
-  death->state = Engine::Core::DeathSequenceState::Dying;
-  death->state_time = 0.0F;
-  death->state_duration = 1.0F;
-  death->dead_hold_duration = 0.8F;
-  death->sequence_variant =
-      resolve_death_variant(target, attacker, death->profile);
-
-  switch (death->profile) {
-  case Engine::Core::DeathSequenceProfile::MountedRider:
-    death->state_duration = 1.15F;
-    death->dead_hold_duration = 0.95F;
-    break;
-  case Engine::Core::DeathSequenceProfile::Horse:
-    death->state_duration = 1.20F;
-    death->dead_hold_duration = 1.00F;
-    death->sequence_variant = 0U;
-    break;
-  case Engine::Core::DeathSequenceProfile::Elephant:
-    death->state_duration = 1.50F;
-    death->dead_hold_duration = 1.25F;
-    break;
-  case Engine::Core::DeathSequenceProfile::Infantry:
-  default:
-    break;
-  }
+  auto const profile = resolve_death_profile(unit);
+  auto const variant = resolve_death_variant(target, attacker, profile);
+  apply_death_sequence(*death, profile, variant);
 }
 
 } // namespace
@@ -133,6 +203,12 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
   bool const is_killing_blow = (prev_health > 0 && prev_health <= damage);
 
   unit->health = new_health;
+
+  begin_soldier_casualties(target,
+                           (attacker_id != 0 && world != nullptr)
+                               ? world->get_entity(attacker_id)
+                               : nullptr,
+                           prev_health, new_health);
 
   int attacker_owner_id = 0;
   std::optional<Game::Units::SpawnType> attacker_type_opt;

@@ -66,59 +66,27 @@ auto rider_state_for_anim(const HumanoidAnimationContext &anim) noexcept
   return Render::Creature::Pipeline::humanoid_state_for_anim(anim);
 }
 
-auto rider_phase_for_anim(const HumanoidAnimationContext &anim) noexcept
-    -> float {
-  return Render::Creature::Pipeline::humanoid_phase_for_anim(anim);
-}
-
-auto rider_clip_variant_for_anim(const HumanoidAnimationContext &anim) noexcept
-    -> std::uint8_t {
-  return Render::Creature::Pipeline::humanoid_clip_variant_for_anim(anim);
-}
-
 auto rider_root_transform(Render::Creature::ArchetypeId archetype_id,
                           const HumanoidAnimationContext &anim) noexcept
     -> std::optional<QMatrix4x4> {
-  using Render::Creature::ArchetypeDescriptor;
-  auto const state = rider_state_for_anim(anim);
-  auto const base_clip =
-      Render::Creature::ArchetypeRegistry::instance().bpat_clip(archetype_id,
-                                                                state);
-  if (base_clip == ArchetypeDescriptor::kUnmappedClip) {
+  auto const playback =
+      Render::Creature::Pipeline::humanoid_bpat_playback_for_anim(archetype_id,
+                                                                  anim);
+  if (!playback.has_value()) {
     return std::nullopt;
   }
-
-  auto const clip_id =
-      static_cast<std::uint16_t>(base_clip + rider_clip_variant_for_anim(anim));
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
       Render::Creature::Bpat::kSpeciesHumanoid);
-  if (blob == nullptr || clip_id >= blob->clip_count()) {
+  if (blob == nullptr || playback->clip_id >= blob->clip_count()) {
     return std::nullopt;
   }
 
-  auto const clip = blob->clip(clip_id);
+  auto const clip = blob->clip(playback->clip_id);
   if (clip.frame_count == 0U) {
     return std::nullopt;
   }
-
-  float phase = rider_phase_for_anim(anim);
-  if (!clip.loops && phase >= 1.0F) {
-    phase = 1.0F;
-  } else {
-    phase -= std::floor(phase);
-    if (phase < 0.0F) {
-      phase += 1.0F;
-    }
-  }
-
-  auto const frame_count = static_cast<float>(clip.frame_count);
-  int frame_idx = (!clip.loops && phase >= 1.0F)
-                      ? static_cast<int>(clip.frame_count - 1U)
-                      : static_cast<int>(phase * frame_count);
-  frame_idx = std::clamp(frame_idx, 0, static_cast<int>(clip.frame_count) - 1);
-
   auto const palette = blob->frame_palette_view(
-      clip.frame_offset + static_cast<std::uint32_t>(frame_idx));
+      clip.frame_offset + playback->frame_in_clip);
   auto const root_index =
       static_cast<std::size_t>(Render::Humanoid::HumanoidBone::Root);
   if (palette.size() <= root_index) {

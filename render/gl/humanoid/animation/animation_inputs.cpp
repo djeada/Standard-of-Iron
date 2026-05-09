@@ -50,7 +50,10 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   anim.hold_entry_progress = 0.0F;
   anim.combat_phase = CombatAnimPhase::Idle;
   anim.combat_phase_progress = 0.0F;
+  anim.attack_family = Engine::Core::CombatAttackFamily::None;
   anim.attack_variant = 0;
+  anim.attack_offset = 0.0F;
+  anim.has_attack_offset = false;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
   anim.is_dying = false;
@@ -72,6 +75,7 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
 
   auto *movement = ctx.entity->get_component<Engine::Core::MovementComponent>();
   auto *attack = ctx.entity->get_component<Engine::Core::AttackComponent>();
+  auto *unit = ctx.entity->get_component<Engine::Core::UnitComponent>();
   auto *attack_target =
       ctx.entity->get_component<Engine::Core::AttackTargetComponent>();
   auto *transform =
@@ -152,6 +156,19 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
           combat_state->state_time / combat_state->state_duration;
     }
     anim.attack_variant = combat_state->attack_variant;
+    anim.attack_offset = combat_state->attack_offset;
+    anim.has_attack_offset = true;
+    anim.attack_family = combat_state->attack_family;
+    if (combat_state->animation_state !=
+        Engine::Core::CombatAnimationState::Idle) {
+      anim.is_attacking = true;
+      anim.is_melee = (anim.attack_family == Engine::Core::CombatAttackFamily::None)
+                          ? ((attack != nullptr) &&
+                             (attack->current_mode ==
+                              Engine::Core::AttackComponent::CombatMode::Melee))
+                          : (anim.attack_family !=
+                             Engine::Core::CombatAttackFamily::Bow);
+    }
   }
 
   if (hit_feedback != nullptr && hit_feedback->is_reacting) {
@@ -163,8 +180,13 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
         hit_feedback->reaction_intensity * std::max(0.0F, 1.0F - progress);
   }
 
-  if ((attack != nullptr) && (attack_target != nullptr) &&
+  if ((combat_state == nullptr) && (attack != nullptr) &&
+      (attack_target != nullptr) &&
       attack_target->target_id > 0 && (transform != nullptr)) {
+    if (unit != nullptr) {
+      anim.attack_family = Engine::Core::resolve_combat_attack_family(
+          unit->spawn_type, attack->current_mode);
+    }
     anim.is_melee = (attack->current_mode ==
                      Engine::Core::AttackComponent::CombatMode::Melee);
 

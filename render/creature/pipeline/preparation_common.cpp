@@ -69,10 +69,20 @@ auto humanoid_state_for_anim(
     return Render::Creature::AnimationStateId::Hold;
   }
   if (anim.is_attacking()) {
-    if (anim.inputs.is_melee) {
+    switch (anim.inputs.attack_family) {
+    case Engine::Core::CombatAttackFamily::Spear:
+      return Render::Creature::AnimationStateId::AttackSpear;
+    case Engine::Core::CombatAttackFamily::Bow:
+      return Render::Creature::AnimationStateId::AttackBow;
+    case Engine::Core::CombatAttackFamily::Sword:
       return Render::Creature::AnimationStateId::AttackSword;
+    case Engine::Core::CombatAttackFamily::None:
+    default:
+      if (anim.inputs.is_melee) {
+        return Render::Creature::AnimationStateId::AttackSword;
+      }
+      return Render::Creature::AnimationStateId::AttackBow;
     }
-    return Render::Creature::AnimationStateId::AttackBow;
   }
   switch (anim.motion_state) {
   case Render::GL::HumanoidMotionState::Idle:
@@ -107,7 +117,16 @@ auto humanoid_phase_for_anim(
   return is_attack_state ? anim.attack_phase : anim.gait.cycle_phase;
 }
 
-auto humanoid_clip_variant_for_anim(
+namespace {
+
+auto default_humanoid_archetype(Render::Creature::ArchetypeId archetype_id) noexcept
+    -> Render::Creature::ArchetypeId {
+  return (archetype_id != Render::Creature::kInvalidArchetype)
+             ? archetype_id
+             : Render::Creature::ArchetypeRegistry::kHumanoidBase;
+}
+
+auto humanoid_requested_clip_variant_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t {
   auto const state = humanoid_state_for_anim(anim);
   if (state == Render::Creature::AnimationStateId::Die ||
@@ -118,10 +137,24 @@ auto humanoid_clip_variant_for_anim(
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||
        state == Render::Creature::AnimationStateId::AttackBow);
-  return (is_attack_state &&
-          state != Render::Creature::AnimationStateId::AttackBow)
-             ? std::min<std::uint8_t>(anim.inputs.attack_variant, 2U)
-             : 0U;
+  return is_attack_state ? anim.inputs.attack_variant : 0U;
+}
+
+} // namespace
+
+auto humanoid_clip_variant_for_anim(
+    Render::Creature::ArchetypeId archetype_id,
+    const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t {
+  auto const resolved_archetype = default_humanoid_archetype(archetype_id);
+  auto const state = humanoid_state_for_anim(anim);
+  auto const variant_count =
+      Render::Creature::ArchetypeRegistry::instance().clip_variant_count(
+          resolved_archetype, state);
+  if (variant_count <= 1U) {
+    return 0U;
+  }
+  return std::min<std::uint8_t>(humanoid_requested_clip_variant_for_anim(anim),
+                                variant_count - 1U);
 }
 
 auto humanoid_bpat_playback_for_anim(
@@ -130,20 +163,16 @@ auto humanoid_bpat_playback_for_anim(
     -> std::optional<BpatPlayback> {
   using Render::Creature::ArchetypeDescriptor;
 
-  if (archetype_id == Render::Creature::kInvalidArchetype) {
-    archetype_id = Render::Creature::ArchetypeRegistry::kHumanoidBase;
-  }
+  archetype_id = default_humanoid_archetype(archetype_id);
 
   auto const state = humanoid_state_for_anim(anim);
-  auto const base_clip =
-      Render::Creature::ArchetypeRegistry::instance().bpat_clip(archetype_id,
-                                                                state);
-  if (base_clip == ArchetypeDescriptor::kUnmappedClip) {
+  auto const clip_id = Render::Creature::ArchetypeRegistry::instance()
+                           .resolve_bpat_clip(
+                               archetype_id, state,
+                               humanoid_clip_variant_for_anim(archetype_id, anim));
+  if (clip_id == ArchetypeDescriptor::kUnmappedClip) {
     return std::nullopt;
   }
-
-  auto const clip_id = static_cast<std::uint16_t>(
-      base_clip + humanoid_clip_variant_for_anim(anim));
   auto const *blob = Render::Creature::Bpat::BpatRegistry::instance().blob(
       Render::Creature::Bpat::kSpeciesHumanoid);
   if (blob == nullptr || clip_id >= blob->clip_count()) {

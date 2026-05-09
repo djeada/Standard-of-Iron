@@ -713,7 +713,7 @@ TEST_F(CombatModeTest, UnitStillAttacksWhenTargetReachesRange) {
 }
 
 TEST_F(CombatModeTest,
-       RepeatedMeleeLockDoesNotResetExistingAttackAnimationSeed) {
+       RepeatedMeleeLockRestartsAttackCycleWithoutResettingSeed) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto *attacker_unit =
@@ -747,14 +747,90 @@ TEST_F(CombatModeTest,
   auto *combat_state = attacker->add_component<CombatStateComponent>();
   combat_state->animation_state = CombatAnimationState::Idle;
   combat_state->attack_offset = 0.123F;
+  combat_state->attack_family = CombatAttackFamily::Spear;
   combat_state->attack_variant = 2;
 
   auto const query_context =
       Game::Systems::Combat::build_combat_query_context(world.get());
   Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
 
+  EXPECT_EQ(combat_state->animation_state, CombatAnimationState::Advance);
+  EXPECT_FLOAT_EQ(combat_state->state_time, 0.0F);
+  EXPECT_FLOAT_EQ(combat_state->state_duration,
+                  CombatStateComponent::k_advance_duration);
   EXPECT_FLOAT_EQ(combat_state->attack_offset, 0.123F);
+  EXPECT_EQ(combat_state->attack_family, CombatAttackFamily::Spear);
   EXPECT_EQ(combat_state->attack_variant, 2);
+}
+
+TEST_F(CombatModeTest, AttackAnimationFamilyFollowsUnitTypeAndMode) {
+  auto *spearman = world->create_entity();
+  spearman->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *spearman_unit =
+      spearman->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  spearman_unit->owner_id = 1;
+  spearman_unit->spawn_type = Game::Units::SpawnType::Spearman;
+  auto *spearman_attack = spearman->add_component<AttackComponent>();
+  spearman_attack->can_melee = true;
+  spearman_attack->can_ranged = false;
+  spearman_attack->preferred_mode = AttackComponent::CombatMode::Melee;
+  spearman_attack->current_mode = AttackComponent::CombatMode::Melee;
+  spearman_attack->cooldown = 0.0F;
+  spearman_attack->melee_cooldown = 0.0F;
+  spearman_attack->time_since_last = 1.0F;
+
+  auto *spearman_target = world->create_entity();
+  spearman_target->add_component<TransformComponent>(0.5F, 0.0F, 0.0F);
+  auto *spearman_target_unit =
+      spearman_target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  spearman_target_unit->owner_id = 2;
+
+  auto *spearman_target_sel = spearman->add_component<AttackTargetComponent>();
+  spearman_target_sel->target_id = spearman_target->get_id();
+  spearman_target_sel->should_chase = false;
+
+  auto const query_context =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context, 0.016F);
+
+  auto *spearman_state = spearman->get_component<CombatStateComponent>();
+  ASSERT_NE(spearman_state, nullptr);
+  EXPECT_EQ(spearman_state->attack_family, CombatAttackFamily::Spear);
+
+  auto *horse_archer = world->create_entity();
+  horse_archer->add_component<TransformComponent>(3.0F, 0.0F, 0.0F);
+  auto *horse_archer_unit =
+      horse_archer->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  horse_archer_unit->owner_id = 1;
+  horse_archer_unit->spawn_type = Game::Units::SpawnType::HorseArcher;
+  auto *horse_archer_attack = horse_archer->add_component<AttackComponent>();
+  horse_archer_attack->can_melee = true;
+  horse_archer_attack->can_ranged = true;
+  horse_archer_attack->preferred_mode = AttackComponent::CombatMode::Ranged;
+  horse_archer_attack->current_mode = AttackComponent::CombatMode::Ranged;
+  horse_archer_attack->range = 10.0F;
+  horse_archer_attack->cooldown = 0.0F;
+  horse_archer_attack->time_since_last = 1.0F;
+
+  auto *horse_archer_target = world->create_entity();
+  horse_archer_target->add_component<TransformComponent>(6.0F, 0.0F, 0.0F);
+  auto *horse_archer_target_unit =
+      horse_archer_target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  horse_archer_target_unit->owner_id = 2;
+
+  auto *horse_archer_target_sel =
+      horse_archer->add_component<AttackTargetComponent>();
+  horse_archer_target_sel->target_id = horse_archer_target->get_id();
+  horse_archer_target_sel->should_chase = false;
+
+  auto const query_context_ranged =
+      Game::Systems::Combat::build_combat_query_context(world.get());
+  Game::Systems::Combat::process_attacks(world.get(), query_context_ranged,
+                                         0.016F);
+
+  auto *horse_archer_state = horse_archer->get_component<CombatStateComponent>();
+  ASSERT_NE(horse_archer_state, nullptr);
+  EXPECT_EQ(horse_archer_state->attack_family, CombatAttackFamily::Bow);
 }
 
 TEST_F(CombatModeTest, RangedVolleyVisualsAreClampedWithoutChangingDamage) {
@@ -853,7 +929,7 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   auto *attacker_unit =
       attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   attacker_unit->owner_id = 1;
-  attacker_unit->spawn_type = Game::Units::SpawnType::Swordsman;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
   auto *attacker_attack = attacker->add_component<AttackComponent>();
   attacker_attack->current_mode = AttackComponent::CombatMode::Melee;
 
@@ -874,12 +950,38 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   ASSERT_NE(death, nullptr);
   EXPECT_EQ(death->state, DeathSequenceState::Dying);
   EXPECT_EQ(death->profile, DeathSequenceProfile::Infantry);
-  EXPECT_LE(death->sequence_variant, 1U);
+  EXPECT_EQ(death->sequence_variant, 0U);
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
   EXPECT_FALSE(movement->has_target);
 }
 
-TEST_F(CombatModeTest, MountedAndElephantDeathsSelectProfileOverrides) {
+TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
+  auto *attacker = world->create_entity();
+  attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *attacker_unit =
+      attacker->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  attacker_unit->owner_id = 1;
+  attacker_unit->spawn_type = Game::Units::SpawnType::Knight;
+
+  auto *target = world->create_entity();
+  target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
+  auto *target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  target_unit->owner_id = 2;
+  target_unit->spawn_type = Game::Units::SpawnType::Archer;
+  target_unit->render_individuals_per_unit_override = 3;
+
+  Game::Systems::Combat::deal_damage(world.get(), target, 40, attacker->get_id());
+
+  auto *casualties =
+      target->get_component<SoldierCasualtyAnimationComponent>();
+  ASSERT_NE(casualties, nullptr);
+  ASSERT_EQ(casualties->entries.size(), 1u);
+  EXPECT_EQ(casualties->entries.front().slot_index, 2U);
+  EXPECT_EQ(casualties->entries.front().state, DeathSequenceState::Dying);
+  EXPECT_FALSE(target->has_component<DeathAnimationComponent>());
+}
+
+TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
   auto *mounted = world->create_entity();
   mounted->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto *mounted_unit = mounted->add_component<UnitComponent>(120, 120, 1.0F, 12.0F);
@@ -898,7 +1000,7 @@ TEST_F(CombatModeTest, MountedAndElephantDeathsSelectProfileOverrides) {
   auto *mounted_death = mounted_target->get_component<DeathAnimationComponent>();
   ASSERT_NE(mounted_death, nullptr);
   EXPECT_EQ(mounted_death->profile, DeathSequenceProfile::MountedRider);
-  EXPECT_EQ(mounted_death->sequence_variant, 2U);
+  EXPECT_EQ(mounted_death->sequence_variant, 0U);
 
   auto *elephant = world->create_entity();
   elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
@@ -911,12 +1013,14 @@ TEST_F(CombatModeTest, MountedAndElephantDeathsSelectProfileOverrides) {
   target->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
   auto *target_unit = target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
+  target_unit->spawn_type = Game::Units::SpawnType::Elephant;
 
   Game::Systems::Combat::deal_damage(world.get(), target, 80, elephant->get_id());
 
   auto *death = target->get_component<DeathAnimationComponent>();
   ASSERT_NE(death, nullptr);
   EXPECT_EQ(death->profile, DeathSequenceProfile::Elephant);
+  EXPECT_EQ(death->sequence_variant, 0U);
   EXPECT_GE(death->state_duration, 1.2F);
 }
 

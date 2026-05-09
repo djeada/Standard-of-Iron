@@ -67,6 +67,12 @@ inline auto clamp_frame_index(std::uint8_t frame) -> std::size_t {
   return std::min<std::size_t>(frame, k_frame_slots - 1);
 }
 
+inline auto clamp_attack_family_index(
+    Engine::Core::CombatAttackFamily family) -> std::size_t {
+  return std::min<std::size_t>(static_cast<std::size_t>(family),
+                               TemplateCache::k_dense_attack_family_slots - 1);
+}
+
 inline auto dense_anim_state_slot_index(AnimState state, CombatAnimPhase phase,
                                         std::uint8_t frame) -> std::size_t {
   const auto frame_idx = clamp_frame_index(frame);
@@ -101,6 +107,8 @@ std::size_t TemplateKeyHash::operator()(const TemplateKey &key) const noexcept {
   h ^= static_cast<std::size_t>(key.mount_lod) + 0x9e3779b9 + (h << 6) +
        (h >> 2);
   h ^= static_cast<std::size_t>(key.variant) + 0x9e3779b9 + (h << 6) + (h >> 2);
+  h ^= static_cast<std::size_t>(key.attack_family) + 0x9e3779b9 + (h << 6) +
+       (h >> 2);
   h ^= static_cast<std::size_t>(key.attack_variant) + 0x9e3779b9 + (h << 6) +
        (h >> 2);
   h ^= static_cast<std::size_t>(key.state) + 0x9e3779b9 + (h << 6) + (h >> 2);
@@ -202,12 +210,16 @@ auto TemplateCache::dense_slot_index(std::uint8_t variant,
                                      const AnimKey &anim_key) -> std::size_t {
   const std::size_t variant_slot =
       std::min<std::size_t>(variant, k_dense_variant_slots - 1);
+  const std::size_t family_slot =
+      clamp_attack_family_index(anim_key.attack_family);
   const std::size_t attack_slot = std::min<std::size_t>(
       anim_key.attack_variant, k_dense_attack_variant_slots - 1);
   const std::size_t anim_slot = dense_anim_state_slot_index(
       anim_key.state, anim_key.combat_phase, anim_key.frame);
 
-  return ((variant_slot * k_dense_attack_variant_slots) + attack_slot) *
+  return (((variant_slot * k_dense_attack_family_slots) + family_slot) *
+              k_dense_attack_variant_slots +
+          attack_slot) *
              k_dense_anim_state_slots +
          anim_slot;
 }
@@ -256,6 +268,7 @@ void TemplateCache::clear_dense_slot_for_key(const TemplateKey &key) {
   anim_key.state = key.state;
   anim_key.combat_phase = key.combat_phase;
   anim_key.frame = key.frame;
+  anim_key.attack_family = key.attack_family;
   anim_key.attack_variant = key.attack_variant;
   const std::size_t dense_slot = dense_slot_index(key.variant, anim_key);
   if (dense_slot >= k_dense_anim_slot_count) {
@@ -378,6 +391,7 @@ auto make_anim_key(const AnimationInputs &anim, float phase_offset,
     key.state =
         anim.is_melee ? AnimState::AttackMelee : AnimState::AttackRanged;
     key.combat_phase = anim.combat_phase;
+    key.attack_family = anim.attack_family;
     key.attack_variant = attack_variant;
     float phase = anim.combat_phase_progress;
     if (phase <= 0.0F) {
@@ -424,6 +438,7 @@ auto make_animation_inputs(const AnimKey &key) -> AnimationInputs {
   anim.hold_exit_progress = 0.0F;
   anim.combat_phase = CombatAnimPhase::Idle;
   anim.combat_phase_progress = 0.0F;
+  anim.attack_family = key.attack_family;
   anim.attack_variant = key.attack_variant;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
@@ -448,12 +463,18 @@ auto make_animation_inputs(const AnimKey &key) -> AnimationInputs {
     anim.is_melee = true;
     anim.combat_phase = key.combat_phase;
     anim.combat_phase_progress = phase;
+    if (anim.attack_family == Engine::Core::CombatAttackFamily::None) {
+      anim.attack_family = Engine::Core::CombatAttackFamily::Sword;
+    }
     break;
   case AnimState::AttackRanged:
     anim.is_attacking = true;
     anim.is_melee = false;
     anim.combat_phase = key.combat_phase;
     anim.combat_phase_progress = phase;
+    if (anim.attack_family == Engine::Core::CombatAttackFamily::None) {
+      anim.attack_family = Engine::Core::CombatAttackFamily::Bow;
+    }
     break;
   case AnimState::Construct:
     anim.is_constructing = true;

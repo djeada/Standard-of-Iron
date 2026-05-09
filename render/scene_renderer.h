@@ -268,6 +268,7 @@ private:
     std::uint8_t anim_state{0};
     std::uint8_t combat_phase{0};
     std::uint8_t frame{0};
+    std::uint8_t attack_family{0};
     std::uint8_t attack_variant{0};
   };
 
