@@ -30,16 +30,22 @@ MountedKnightRendererBase::MountedKnightRendererBase(
     MountedKnightRendererConfig config)
     : m_config(std::move(config)) {
   auto &equipment_registry = EquipmentRegistry::instance();
-  m_sword_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
-                                                     m_config.sword_equipment_id);
+  m_sword_handle = m_config.sword_handle;
+  if (m_sword_handle == kInvalidEquipmentHandle) {
+    m_sword_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Weapon, m_config.sword_equipment_id);
+  }
   m_config.has_sword =
       m_config.has_sword && m_sword_handle != kInvalidEquipmentHandle;
   if (!m_config.has_sword) {
     m_config.sword_equipment_id.clear();
   }
 
-  m_shield_handle = equipment_registry.resolve_handle(
-      EquipmentCategory::Weapon, m_config.shield_equipment_id);
+  m_shield_handle = m_config.shield_handle;
+  if (m_shield_handle == kInvalidEquipmentHandle) {
+    m_shield_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Weapon, m_config.shield_equipment_id);
+  }
   m_config.has_cavalry_shield =
       m_config.has_cavalry_shield && m_shield_handle != kInvalidEquipmentHandle;
   if (!m_config.has_cavalry_shield) {

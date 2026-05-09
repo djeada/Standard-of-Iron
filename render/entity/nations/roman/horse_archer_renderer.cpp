@@ -13,6 +13,7 @@
 #include "../../../equipment/horse/saddles/horse_mount_archetype.h"
 #include "../../../equipment/horse/saddles/roman_saddle_renderer.h"
 #include "../../../submitter.h"
+#include "../equipment_loadout_catalog.h"
 #include "../../horse_archer_renderer_base.h"
 
 #include <QVector3D>
@@ -102,10 +103,14 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
 
 auto make_horse_archer_config() -> HorseArcherRendererConfig {
   HorseArcherRendererConfig config;
-  config.bow_equipment_id = "bow_roman";
-  config.quiver_equipment_id = "quiver";
-  config.armor_equipment_id = "roman_light_armor";
-  config.cloak_equipment_id = "cloak_carthage";
+  const auto loadout =
+      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_archer");
+  config.bow_equipment_id = loadout.ids.bow;
+  config.quiver_equipment_id = loadout.ids.quiver;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.cloak_equipment_id = loadout.ids.cloak;
+  config.bow_handle = loadout.bow_handle;
+  config.quiver_handle = loadout.quiver_handle;
   config.has_cloak = true;
   config.cloak_color = {0.70F, 0.15F, 0.18F};
   config.cloak_trim_color = {0.78F, 0.72F, 0.58F};

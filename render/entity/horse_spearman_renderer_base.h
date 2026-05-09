@@ -30,6 +30,9 @@ struct HorseSpearmanRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
+
+  EquipmentHandle spear_handle{kInvalidEquipmentHandle};
+  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
 };
 
 class HorseSpearmanRendererBase : public MountedHumanoidRendererBase {

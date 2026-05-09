@@ -37,6 +37,7 @@ add_executable(standard_of_iron_tests
     render/mounted_pose_controller_test.cpp
     render/body_frames_test.cpp
     render/equipment_registry_test.cpp
+    render/equipment_loadout_catalog_test.cpp
     render/helmet_renderers_test.cpp
     render/armor_renderer_test.cpp
     render/rider_proportions_test.cpp

@@ -101,16 +101,22 @@ HorseArcherRendererBase::HorseArcherRendererBase(
     HorseArcherRendererConfig config)
     : m_config(std::move(config)) {
   auto &equipment_registry = EquipmentRegistry::instance();
-  m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
-                                                   m_config.bow_equipment_id);
+  m_bow_handle = m_config.bow_handle;
+  if (m_bow_handle == kInvalidEquipmentHandle) {
+    m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                     m_config.bow_equipment_id);
+  }
   m_config.has_bow =
       m_config.has_bow && m_bow_handle != kInvalidEquipmentHandle;
   if (!m_config.has_bow) {
     m_config.bow_equipment_id.clear();
   }
 
-  m_quiver_handle = equipment_registry.resolve_handle(
-      EquipmentCategory::Weapon, m_config.quiver_equipment_id);
+  m_quiver_handle = m_config.quiver_handle;
+  if (m_quiver_handle == kInvalidEquipmentHandle) {
+    m_quiver_handle = equipment_registry.resolve_handle(
+        EquipmentCategory::Weapon, m_config.quiver_equipment_id);
+  }
   m_config.has_quiver =
       m_config.has_quiver && m_quiver_handle != kInvalidEquipmentHandle;
   if (!m_config.has_quiver) {

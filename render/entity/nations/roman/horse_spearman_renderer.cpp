@@ -14,6 +14,7 @@
 #include "../../../equipment/horse/saddles/roman_saddle_renderer.h"
 #include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../submitter.h"
+#include "../equipment_loadout_catalog.h"
 #include "../../horse_spearman_renderer_base.h"
 
 #include <QVector3D>
@@ -132,9 +133,13 @@ auto register_horse_spearman_rider_archetype()
 
 auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
   HorseSpearmanRendererConfig config;
-  config.spear_equipment_id = "spear";
-  config.armor_equipment_id = "roman_heavy_armor";
-  config.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/roman/horse_spearman");
+  config.spear_equipment_id = loadout.ids.spear;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.shoulder_equipment_id = loadout.ids.shoulder;
+  config.spear_handle = loadout.spear_handle;
+  config.shield_handle = loadout.shield_handle;
   config.has_shoulder = true;
   config.rider_archetype_id = register_horse_spearman_rider_archetype();
   static const auto k_mount_archetype = register_mount_saddle_archetype(

@@ -32,6 +32,9 @@ struct MountedKnightRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
+
+  EquipmentHandle sword_handle{kInvalidEquipmentHandle};
+  EquipmentHandle shield_handle{kInvalidEquipmentHandle};
 };
 
 class MountedKnightRendererBase : public MountedHumanoidRendererBase {

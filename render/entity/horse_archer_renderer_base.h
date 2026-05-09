@@ -37,6 +37,9 @@ struct HorseArcherRendererConfig {
 
   Render::Creature::ArchetypeId mount_archetype_id{
       Render::Creature::kInvalidArchetype};
+
+  EquipmentHandle bow_handle{kInvalidEquipmentHandle};
+  EquipmentHandle quiver_handle{kInvalidEquipmentHandle};
 };
 
 class HorseArcherRendererBase : public MountedHumanoidRendererBase {

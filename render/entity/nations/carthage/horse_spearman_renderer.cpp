@@ -12,6 +12,7 @@
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../submitter.h"
+#include "../equipment_loadout_catalog.h"
 #include "../../horse_spearman_renderer_base.h"
 
 #include <memory>
@@ -141,10 +142,14 @@ auto register_horse_spearman_rider_archetype()
 
 auto make_horse_spearman_config() -> HorseSpearmanRendererConfig {
   HorseSpearmanRendererConfig config;
-  config.spear_equipment_id = "spear";
-  config.helmet_equipment_id = "carthage_heavy";
-  config.armor_equipment_id = "armor_heavy_carthage";
-  config.shoulder_equipment_id = "carthage_shoulder_cover_cavalry";
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/carthage/horse_spearman");
+  config.spear_equipment_id = loadout.ids.spear;
+  config.helmet_equipment_id = loadout.ids.helmet;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.shoulder_equipment_id = loadout.ids.shoulder;
+  config.spear_handle = loadout.spear_handle;
+  config.shield_handle = loadout.shield_handle;
   config.has_shoulder = true;
   config.helmet_offset_moving = 0.04F;
   config.rider_archetype_id = register_horse_spearman_rider_archetype();

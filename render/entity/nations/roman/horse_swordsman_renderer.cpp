@@ -17,6 +17,7 @@
 #include "../../../equipment/weapons/roman_scutum.h"
 #include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../submitter.h"
+#include "../equipment_loadout_catalog.h"
 #include "../../mounted_knight_renderer_base.h"
 
 #include <QVector3D>
@@ -162,10 +163,14 @@ auto register_horse_swordsman_rider_archetype()
 
 auto make_mounted_knight_config() -> MountedKnightRendererConfig {
   MountedKnightRendererConfig config;
-  config.sword_equipment_id = "sword_roman";
-  config.shield_equipment_id = "roman_scutum";
-  config.armor_equipment_id = "roman_heavy_armor";
-  config.shoulder_equipment_id = "roman_shoulder_cover_cavalry";
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/roman/horse_swordsman");
+  config.sword_equipment_id = loadout.ids.sword;
+  config.shield_equipment_id = loadout.ids.shield;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.shoulder_equipment_id = loadout.ids.shoulder;
+  config.sword_handle = loadout.sword_handle;
+  config.shield_handle = loadout.shield_handle;
   config.has_shoulder = true;
   config.rider_creature_asset_id =
       Render::Creature::Pipeline::kHumanoidSwordAsset;
