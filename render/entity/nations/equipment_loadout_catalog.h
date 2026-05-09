@@ -17,6 +17,12 @@ struct EquipmentLoadoutIds {
   std::string armor{};
   std::string shoulder{};
   std::string cloak{};
+  std::string horse_bridle{};
+  std::string horse_reins{};
+  std::string horse_blanket{};
+  std::string horse_barding{};
+  std::string horse_crupper{};
+  std::string horse_decoration{};
 };
 
 struct ResolvedEquipmentLoadout {
@@ -31,6 +37,12 @@ struct ResolvedEquipmentLoadout {
   EquipmentHandle armor_handle{kInvalidEquipmentHandle};
   EquipmentHandle shoulder_handle{kInvalidEquipmentHandle};
   EquipmentHandle cloak_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_bridle_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_reins_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_blanket_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_barding_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_crupper_handle{kInvalidEquipmentHandle};
+  EquipmentHandle horse_decoration_handle{kInvalidEquipmentHandle};
 
   bool found{false};
 };
