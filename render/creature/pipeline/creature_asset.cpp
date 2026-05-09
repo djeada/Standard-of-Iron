@@ -10,6 +10,7 @@
 #include "creature_visual_definition.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace Render::Creature::Pipeline {
 
@@ -299,7 +300,12 @@ auto CreatureRenderAssetHandleRegistry::acquire_attachment_set_id(
     return kInvalidAttachmentSetId;
   }
   const auto id = next_attachment_set_id_;
-  ++next_attachment_set_id_;
+  if (next_attachment_set_id_ ==
+      std::numeric_limits<AttachmentSetId>::max()) {
+    next_attachment_set_id_ = kInvalidAttachmentSetId;
+  } else {
+    ++next_attachment_set_id_;
+  }
   attachment_sets_.emplace(key, id);
   return id;
 }

@@ -26,8 +26,7 @@ void EquipmentRegistry::register_equipment(
   }
 
   if (m_renderers_by_handle.size() >=
-      static_cast<std::size_t>(std::numeric_limits<EquipmentHandle>::max() -
-                               1U)) {
+      static_cast<std::size_t>(std::numeric_limits<EquipmentHandle>::max())) {
     return;
   }
 
