@@ -10,6 +10,7 @@
 #include "creature_visual_definition.h"
 
 #include <algorithm>
+#include <limits>
 
 namespace Render::Creature::Pipeline {
 
@@ -194,9 +195,14 @@ auto resolve_creature_render_asset_handle(
   }
 
   handle.bind_palette = handle.asset->bind_palette();
-  auto const attachments = handle.archetype->attachments_view();
+  handle.attachments = handle.archetype->attachments_view();
+  handle.has_static_attachments = !handle.attachments.empty();
+  handle.requires_prebaked_minimal_snapshot =
+      !handle.has_static_attachments &&
+      (handle.archetype->species == CreatureKind::Horse ||
+       handle.archetype->species == CreatureKind::Elephant);
   handle.attachments_hash = Render::Creature::static_attachments_hash(
-      attachments.data(), attachments.size());
+      handle.attachments.data(), handle.attachments.size());
 
   auto const species_id = handle.asset->bpat_species_id;
   const auto *blob =
@@ -248,6 +254,11 @@ auto CreatureRenderAssetHandleRegistry::get_or_create(
   if (!has_playback) {
     return Render::Creature::kInvalidCreatureRenderAssetHandle;
   }
+  handle.attachment_set_id = acquire_attachment_set_id(
+      handle.archetype->attachments_view(), handle.attachments_hash);
+  if (handle.attachment_set_id == kInvalidAttachmentSetId) {
+    return Render::Creature::kInvalidCreatureRenderAssetHandle;
+  }
   if (handles_.size() >= Render::Creature::kInvalidCreatureRenderAssetHandle) {
     return Render::Creature::kInvalidCreatureRenderAssetHandle;
   }
@@ -277,6 +288,54 @@ auto CreatureRenderAssetHandleRegistry::get(
 void CreatureRenderAssetHandleRegistry::clear() {
   lookup_.clear();
   handles_.clear();
+  attachment_sets_.clear();
+  next_attachment_set_id_ = 1U;
+}
+
+auto CreatureRenderAssetHandleRegistry::acquire_attachment_set_id(
+    std::span<const Render::Creature::StaticAttachmentSpec> attachments,
+    std::uint64_t attachments_hash) -> AttachmentSetId {
+  auto same_attachments =
+      [](const AttachmentSetRecord &record,
+         std::span<const Render::Creature::StaticAttachmentSpec> specs) {
+        if (record.attachment_count != specs.size()) {
+          return false;
+        }
+        for (std::size_t i = 0; i < specs.size(); ++i) {
+          if (!Render::Creature::static_attachment_equal(record.attachments[i],
+                                                         specs[i])) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+  for (const auto &record : attachment_sets_) {
+    if (record.hash == attachments_hash &&
+        same_attachments(record, attachments)) {
+      return record.id;
+    }
+  }
+
+  if (next_attachment_set_id_ == kInvalidAttachmentSetId) {
+    return kInvalidAttachmentSetId;
+  }
+  const auto id = next_attachment_set_id_;
+  if (next_attachment_set_id_ == std::numeric_limits<AttachmentSetId>::max()) {
+    next_attachment_set_id_ = kInvalidAttachmentSetId;
+  } else {
+    ++next_attachment_set_id_;
+  }
+  AttachmentSetRecord record{};
+  record.hash = attachments_hash;
+  record.attachment_count = static_cast<std::uint8_t>(
+      std::min<std::size_t>(attachments.size(), record.attachments.size()));
+  for (std::size_t i = 0; i < record.attachment_count; ++i) {
+    record.attachments[i] = attachments[i];
+  }
+  record.id = id;
+  attachment_sets_.push_back(record);
+  return id;
 }
 
 } // namespace Render::Creature::Pipeline

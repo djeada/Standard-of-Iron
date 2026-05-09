@@ -72,6 +72,7 @@ add_library(render_gl STATIC
     entity/nations/carthage/spearman_renderer.cpp
     entity/nations/roman/spearman_style.cpp
     entity/nations/carthage/spearman_style.cpp
+    entity/nations/equipment_loadout_catalog.cpp
     horse/horse_profile_data.cpp
     horse/prepare.cpp
     horse/horse_spec.cpp

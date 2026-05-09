@@ -12,6 +12,7 @@
 #include "../../../humanoid/skeleton.h"
 #include "../../../submitter.h"
 #include "../../horse_archer_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <memory>
 
@@ -39,8 +40,9 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
   }();
   static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
     auto &reg = Render::GL::EquipmentRegistry::instance();
-    auto cloak_inst =
-        reg.get(Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+    const auto cloak_handle = reg.resolve_handle(
+        Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+    auto cloak_inst = reg.get(cloak_handle);
     if (cloak_inst) {
       if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
         return cr->meshes();
@@ -108,11 +110,15 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
 
 auto make_horse_archer_config() -> HorseArcherRendererConfig {
   HorseArcherRendererConfig config;
-  config.bow_equipment_id = "bow_carthage";
-  config.quiver_equipment_id = "quiver";
-  config.helmet_equipment_id = "carthage_light";
-  config.armor_equipment_id = "armor_light_carthage";
-  config.cloak_equipment_id = "cloak_carthage";
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/carthage/horse_archer");
+  config.bow_equipment_id = loadout.ids.bow;
+  config.quiver_equipment_id = loadout.ids.quiver;
+  config.helmet_equipment_id = loadout.ids.helmet;
+  config.armor_equipment_id = loadout.ids.armor;
+  config.cloak_equipment_id = loadout.ids.cloak;
+  config.bow_handle = loadout.bow_handle;
+  config.quiver_handle = loadout.quiver_handle;
   config.has_cloak = true;
   config.cloak_color = {0.14F, 0.38F, 0.54F};
   config.cloak_trim_color = {0.75F, 0.66F, 0.42F};

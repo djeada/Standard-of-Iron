@@ -505,12 +505,12 @@ TEST(HorseSpecTest, FullSpecUsesSegmentedLegPrimitives) {
               1.0e-6F);
   EXPECT_GT(rear_thigh->params.head_offset.z(), -dims.body_length * 0.015F);
   EXPECT_LT(rear_thigh->params.head_offset.z(), 0.0F);
-  EXPECT_NEAR(rear_thigh->params.tail_offset.y(), rear_calf->params.head_offset.y(),
-              1.0e-6F);
+  EXPECT_NEAR(rear_thigh->params.tail_offset.y(),
+              rear_calf->params.head_offset.y(), 1.0e-6F);
   EXPECT_GT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.05F);
   EXPECT_LT(rear_thigh->params.tail_offset.z(), dims.body_length * 0.08F);
-  EXPECT_NEAR(rear_thigh->params.tail_offset.z(), rear_calf->params.head_offset.z(),
-              1.0e-6F);
+  EXPECT_NEAR(rear_thigh->params.tail_offset.z(),
+              rear_calf->params.head_offset.z(), 1.0e-6F);
   EXPECT_GT(front_hoof->params.half_extents.x(), dims.body_width * 0.18F);
   EXPECT_GT(front_hoof->params.half_extents.z(), dims.body_width * 0.32F);
   EXPECT_GT(front_hoof->params.half_extents.y(), dims.hoof_height * 0.50F);
@@ -537,10 +537,13 @@ TEST(HorseSpecTest, RearThighAndCalfShareKneeSeam) {
   ASSERT_NE(rear_thigh, nullptr);
   ASSERT_NE(rear_calf, nullptr);
   EXPECT_EQ(rear_thigh->params.tail_bone, rear_calf->params.anchor_bone);
-  EXPECT_NEAR((rear_thigh->params.tail_offset - rear_calf->params.head_offset).length(),
-              0.0F, 1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.10F, 1.0e-6F);
-  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.070F, 1.0e-6F);
+  EXPECT_NEAR(
+      (rear_thigh->params.tail_offset - rear_calf->params.head_offset).length(),
+      0.0F, 1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.y(), dims.leg_length * 0.10F,
+              1.0e-6F);
+  EXPECT_NEAR(rear_calf->params.head_offset.z(), dims.body_length * 0.070F,
+              1.0e-6F);
 }
 
 TEST(HorseSpecTest, ManifestUsesFacetedHorseHeadAndEars) {

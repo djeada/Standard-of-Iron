@@ -46,6 +46,7 @@ inline constexpr const char *SOIL_COLOR = "soil_color";
 inline constexpr const char *ROCK_LOW = "rock_low";
 inline constexpr const char *ROCK_HIGH = "rock_high";
 inline constexpr const char *PLANT_DENSITY = "plant_density";
+inline constexpr const char *SPAWN_EDGE_PADDING = "spawn_edge_padding";
 inline constexpr const char *BACKGROUND_BLADE_DENSITY =
     "background_blade_density";
 inline constexpr const char *TERRAIN_MACRO_NOISE_SCALE =

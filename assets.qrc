@@ -93,6 +93,7 @@
 
         <!-- Visual config -->
         <file>assets/visuals/unit_visuals.json</file>
+        <file>assets/visuals/unit_equipment_loadouts.json</file>
         <file>assets/visuals/emblems/rome.png</file>
         <file>assets/visuals/emblems/cartaghe.png</file>
         <file>assets/visuals/load_screen.png</file>

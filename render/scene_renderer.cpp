@@ -60,6 +60,7 @@
 #include <initializer_list>
 #include <memory>
 #include <mutex>
+#include <qglobal.h>
 #include <qvectornd.h>
 #include <string>
 #include <thread>
@@ -74,6 +75,27 @@ const QVector3D k_axis_y(0.0F, 1.0F, 0.0F);
 const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
+
+auto render_stage_logging_enabled() -> bool {
+  return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
+}
+
+void log_render_first_use_once(const char *stage, const QString &detail) {
+  if (!render_stage_logging_enabled()) {
+    return;
+  }
+
+  static std::mutex mutex;
+  static std::unordered_set<std::string> emitted_stages;
+
+  std::lock_guard<std::mutex> const lock(mutex);
+  if (!emitted_stages.emplace(stage).second) {
+    return;
+  }
+
+  qInfo().noquote() << QStringLiteral("SOI render first-use [%1]: %2")
+                           .arg(QString::fromLatin1(stage), detail);
+}
 
 float get_unit_cull_radius(Game::Units::SpawnType spawn_type) {
   switch (spawn_type) {
@@ -207,11 +229,17 @@ auto Renderer::initialize() -> bool {
   if (!m_backend) {
     m_backend = RenderBackendFactory::create(m_shader_quality);
     m_gl_backend = dynamic_cast<Backend *>(m_backend.get());
+    log_render_first_use_once(
+        "backend-create",
+        QStringLiteral("created render backend for QSG/FBO render thread"));
   }
   m_backend->initialize();
   m_entity_registry = std::make_unique<EntityRendererRegistry>();
   register_built_in_entity_renderers(*m_entity_registry);
   register_built_in_equipment();
+  log_render_first_use_once(
+      "renderer-registries",
+      QStringLiteral("registered entity renderers and equipment renderers"));
 
   const std::size_t loaded_bpat =
       Render::Creature::Bpat::BpatRegistry::instance().load_all(
@@ -224,6 +252,9 @@ auto Renderer::initialize() -> bool {
   }
   (void)Render::Creature::Snapshot::SnapshotMeshRegistry::instance().load_all(
       "assets/creatures");
+  log_render_first_use_once(
+      "creature-assets",
+      QStringLiteral("loaded BPAT and snapshot creature asset registries"));
   return true;
 }
 
@@ -1005,6 +1036,9 @@ void Renderer::render_world(Engine::Core::World *world) {
   if (!m_render_registry.is_attached_to(world)) {
     m_cached_world = world;
     m_render_registry.attach(world);
+    log_render_first_use_once(
+        "render-registry-attach",
+        QStringLiteral("attached persistent render registry to world"));
   }
 
   auto &vis = Game::Map::VisibilityService::instance();

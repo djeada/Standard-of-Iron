@@ -184,8 +184,9 @@ public:
       }();
       static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
         auto &reg = Render::GL::EquipmentRegistry::instance();
-        auto cloak_inst =
-            reg.get(Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+        const auto cloak_handle = reg.resolve_handle(
+            Render::GL::EquipmentCategory::Armor, "cloak_carthage");
+        auto cloak_inst = reg.get(cloak_handle);
         if (cloak_inst) {
           if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
             return cr->meshes();
@@ -199,9 +200,9 @@ public:
                                                    k_cloak_base_role_byte);
       static const std::array<Render::Creature::StaticAttachmentSpec, 12>
           k_attachments{k_helmet_spec,     k_greaves_l_spec,  k_greaves_r_spec,
-                         k_quiver_specs[0], k_quiver_specs[1], k_quiver_specs[2],
-                         k_quiver_specs[3], k_quiver_specs[4], k_armor_spec,
-                         k_bow_specs[0],    k_bow_specs[1],    k_cloak_spec};
+                        k_quiver_specs[0], k_quiver_specs[1], k_quiver_specs[2],
+                        k_quiver_specs[3], k_quiver_specs[4], k_armor_spec,
+                        k_bow_specs[0],    k_bow_specs[1],    k_cloak_spec};
       static const auto k_archer_archetype = []() {
         using Render::Creature::AnimationStateId;
         using Render::Creature::ArchetypeDescriptor;

@@ -6,6 +6,7 @@
 #include "game/core/world.h"
 #include "game/game_config.h"
 #include "game/map/terrain.h"
+#include "game/map/terrain_noise.h"
 #include "game/map/terrain_service.h"
 #include "game/map/world_bootstrap.h"
 #include "game/systems/ai_system.h"
@@ -46,9 +47,7 @@
 #include <QWheelEvent>
 #include <QtMath>
 #include <algorithm>
-#include <array>
 #include <cmath>
-#include <cstdint>
 #include <limits>
 
 namespace {
@@ -91,68 +90,6 @@ auto local_controllable_selection(
     controllable_ids.push_back(entity_id);
   }
   return controllable_ids;
-}
-
-inline auto clamp_octaves(int octaves) -> int {
-  return std::clamp(octaves, 1, 8);
-}
-
-inline auto hash_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
-  std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
-  std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
-  return ux ^ uz ^ (seed * 83492791U + 0x9e3779b9U);
-}
-
-inline auto hash_to_unit(std::uint32_t h) -> float {
-  h ^= h >> 17;
-  h *= 0xed5ad4bbU;
-  h ^= h >> 11;
-  h *= 0xac4c1b51U;
-  h ^= h >> 15;
-  h *= 0x31848babU;
-  h ^= h >> 14;
-  return static_cast<float>(h & 0x00FFFFFFU) / static_cast<float>(0x01000000U);
-}
-
-inline auto smooth_lerp(float a, float b, float t) -> float {
-  float const smooth = t * t * (3.0F - 2.0F * t);
-  return a + (b - a) * smooth;
-}
-
-auto value_noise(float x, float z, std::uint32_t seed) -> float {
-  int const ix0 = static_cast<int>(std::floor(x));
-  int const iz0 = static_cast<int>(std::floor(z));
-  int const ix1 = ix0 + 1;
-  int const iz1 = iz0 + 1;
-
-  float const tx = x - static_cast<float>(ix0);
-  float const tz = z - static_cast<float>(iz0);
-
-  float const n00 = hash_to_unit(hash_coords(ix0, iz0, seed));
-  float const n10 = hash_to_unit(hash_coords(ix1, iz0, seed));
-  float const n01 = hash_to_unit(hash_coords(ix0, iz1, seed));
-  float const n11 = hash_to_unit(hash_coords(ix1, iz1, seed));
-
-  float const nx0 = smooth_lerp(n00, n10, tx);
-  float const nx1 = smooth_lerp(n01, n11, tx);
-  return smooth_lerp(nx0, nx1, tz);
-}
-
-auto fbm_noise(float x, float z, std::uint32_t seed, int octaves) -> float {
-  float sum = 0.0F;
-  float amplitude = 1.0F;
-  float frequency = 1.0F;
-  float normalization = 0.0F;
-
-  for (int i = 0; i < clamp_octaves(octaves); ++i) {
-    sum +=
-        value_noise(x * frequency, z * frequency, seed + i * 97U) * amplitude;
-    normalization += amplitude;
-    amplitude *= 0.5F;
-    frequency *= 2.0F;
-  }
-
-  return normalization > 0.0F ? (sum / normalization) : 0.0F;
 }
 
 auto sample_grid(const Game::Map::TerrainField &field, int x, int z) -> float {
@@ -1045,6 +982,9 @@ void ArenaViewport::regenerate_terrain() {
   float const half_width = static_cast<float>(k_terrain_width) * 0.5F - 0.5F;
   float const half_height = static_cast<float>(k_terrain_height) * 0.5F - 0.5F;
   float const safe_scale = std::max(0.0F, m_terrain_settings.height_scale);
+  Game::Map::MountainNoiseSettings const noise_settings{
+      static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)),
+      m_terrain_settings.frequency, m_terrain_settings.octaves};
   float max_height = 0.0F;
 
   for (int z = 0; z < k_terrain_height; ++z) {
@@ -1053,23 +993,12 @@ void ArenaViewport::regenerate_terrain() {
           (static_cast<float>(x) - half_width) * k_terrain_tile_size;
       float const world_z =
           (static_cast<float>(z) - half_height) * k_terrain_tile_size;
-      float const primary = fbm_noise(
-          world_x * m_terrain_settings.frequency,
-          world_z * m_terrain_settings.frequency,
-          static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed)),
-          m_terrain_settings.octaves);
-      float const detail = fbm_noise(
-          world_x * m_terrain_settings.frequency * 2.4F,
-          world_z * m_terrain_settings.frequency * 2.4F,
-          static_cast<std::uint32_t>(std::max(0, m_terrain_settings.seed + 31)),
-          std::max(1, m_terrain_settings.octaves - 1));
-      float const ridge = 1.0F - std::abs(primary * 2.0F - 1.0F);
       float const radial =
           std::clamp(1.0F - QVector3D(world_x, 0.0F, world_z).length() /
                                 (static_cast<float>(k_terrain_width) * 0.72F),
                      0.35F, 1.0F);
-      float const blended = std::clamp(
-          (primary * 0.62F) + (detail * 0.23F) + (ridge * 0.15F), 0.0F, 1.0F);
+      float const blended =
+          Game::Map::sample_mountain_region(world_x, world_z, noise_settings);
       float const height = safe_scale * blended * radial;
       size_t const index = static_cast<size_t>(z * k_terrain_width + x);
       heights[index] = height;
@@ -1164,7 +1093,7 @@ void ArenaViewport::set_terrain_height_scale(float value) {
 }
 
 void ArenaViewport::set_terrain_octaves(int value) {
-  m_terrain_settings.octaves = clamp_octaves(value);
+  m_terrain_settings.octaves = Game::Map::clamp_noise_octaves(value);
 }
 
 void ArenaViewport::set_terrain_frequency(float value) {

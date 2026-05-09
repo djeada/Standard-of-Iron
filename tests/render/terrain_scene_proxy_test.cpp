@@ -133,7 +133,7 @@ TEST_F(TerrainSceneProxyServiceTest, ExposesTerrainFieldAndRoadSegments) {
   ASSERT_EQ(scatters.size(), 6U);
   EXPECT_EQ(scatters[0].species, Render::GL::ScatterSpeciesId::Grass);
   EXPECT_EQ(scatters[0].visibility_mode,
-            Render::GL::ScatterVisibilityMode::None);
+            Render::GL::ScatterVisibilityMode::InstanceFiltered);
   EXPECT_EQ(scatters[0].instance_count, 0U);
   EXPECT_TRUE(scatters[0].gpu_ready);
   EXPECT_EQ(scatters[1].species, Render::GL::ScatterSpeciesId::Stone);
