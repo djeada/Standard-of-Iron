@@ -464,13 +464,115 @@ auto RiggedCharacterPipeline::draw_instanced(
   if (cmds == nullptr || count == 0) {
     return false;
   }
-  thread_local std::vector<const RiggedCreatureCmd *> cmd_refs;
-  cmd_refs.clear();
-  cmd_refs.reserve(count);
-  for (std::size_t k = 0; k < count; ++k) {
-    cmd_refs.push_back(&cmds[k]);
+  if (count > m_max_instances_per_batch || m_instanced_shader == nullptr) {
+    return false;
   }
-  return draw_instanced(cmd_refs.data(), count, view_proj);
+  if (cmds[0].mesh == nullptr || cmds[0].texture != nullptr) {
+    return false;
+  }
+  for (std::size_t k = 1; k < count; ++k) {
+    if (!same_role_palette(cmds[0], cmds[k])) {
+      return false;
+    }
+  }
+
+  auto *fn = gl_funcs();
+  if (fn == nullptr) {
+    m_batch_sizes.push_back(count);
+    m_last_instance_count = count;
+    return true;
+  }
+
+  m_instance_scratch.resize(count);
+  for (std::size_t k = 0; k < count; ++k) {
+    const auto &c = cmds[k];
+    InstanceAttrib &ia = m_instance_scratch[k];
+    const float *src = c.world.constData();
+    std::memcpy(ia.world, src, sizeof(float) * 16);
+    ia.color_alpha[0] = c.color.x();
+    ia.color_alpha[1] = c.color.y();
+    ia.color_alpha[2] = c.color.z();
+    ia.color_alpha[3] = c.alpha;
+    ia.variation_material[0] = c.variation_scale.x();
+    ia.variation_material[1] = c.variation_scale.y();
+    ia.variation_material[2] = c.variation_scale.z();
+    ia.variation_material[3] = static_cast<float>(c.material_id);
+  }
+
+  std::size_t const bytes = count * sizeof(InstanceAttrib);
+  if (!ensure_instance_vbo(bytes)) {
+    return false;
+  }
+  fn->glBindBuffer(GL_ARRAY_BUFFER, m_instance_vbo);
+
+  fn->glBufferData(GL_ARRAY_BUFFER,
+                   static_cast<GLsizeiptr>(m_instance_vbo_capacity_bytes),
+                   nullptr, GL_DYNAMIC_DRAW);
+  fn->glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<GLsizeiptr>(bytes),
+                      m_instance_scratch.data());
+
+  GLuint const vao = ensure_instanced_vao(*cmds[0].mesh);
+  if (vao == 0) {
+    return false;
+  }
+
+  m_instanced_shader->use();
+  if (m_instanced_view_proj != Shader::InvalidUniform) {
+    m_instanced_shader->set_uniform(m_instanced_view_proj, view_proj);
+  }
+  set_role_palette_uniforms(m_instanced_shader, m_instanced_role_colors,
+                            m_instanced_role_color_count, cmds[0]);
+
+  std::size_t const upload_palette_bytes =
+      count * BonePaletteArena::kPaletteBytes;
+  std::size_t const bound_palette_bytes =
+      palette_range_bytes_for_instanced_shader(m_max_instances_per_batch);
+  if (m_palette_ubo == 0) {
+    fn->glGenBuffers(1, &m_palette_ubo);
+  }
+  if (bound_palette_bytes > m_palette_ubo_capacity_bytes) {
+    fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+    fn->glBufferData(GL_UNIFORM_BUFFER,
+                     static_cast<GLsizeiptr>(bound_palette_bytes), nullptr,
+                     GL_DYNAMIC_DRAW);
+    m_palette_ubo_capacity_bytes = bound_palette_bytes;
+  }
+
+  std::size_t const floats_per_palette = BonePaletteArena::kPaletteFloats;
+  m_palette_scratch.resize(count * floats_per_palette);
+  for (std::size_t k = 0; k < count; ++k) {
+    const auto &c = cmds[k];
+    float *dst = m_palette_scratch.data() + k * floats_per_palette;
+    BonePaletteArena::pack_palette_for_gpu(c.bone_palette, dst);
+  }
+  fn->glBindBuffer(GL_UNIFORM_BUFFER, m_palette_ubo);
+
+  fn->glBufferData(GL_UNIFORM_BUFFER,
+                   static_cast<GLsizeiptr>(m_palette_ubo_capacity_bytes),
+                   nullptr, GL_DYNAMIC_DRAW);
+  fn->glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                      static_cast<GLsizeiptr>(upload_palette_bytes),
+                      m_palette_scratch.data());
+  fn->glBindBufferRange(GL_UNIFORM_BUFFER, kBonePaletteBindingPoint,
+                        m_palette_ubo, 0,
+                        static_cast<GLsizeiptr>(bound_palette_bytes));
+
+  fn->glBindVertexArray(vao);
+  GLsizei const idx_count = static_cast<GLsizei>(cmds[0].mesh->index_count());
+  fn->glDrawElementsInstanced(GL_TRIANGLES, idx_count, GL_UNSIGNED_INT, nullptr,
+                              static_cast<GLsizei>(count));
+  fn->glBindVertexArray(0);
+
+  GLenum err = fn->glGetError();
+  if (err != GL_NO_ERROR) {
+    qWarning() << "RiggedCharacterPipeline::draw_instanced GL error" << err
+               << "count" << count;
+    return false;
+  }
+
+  m_batch_sizes.push_back(count);
+  m_last_instance_count = count;
+  return true;
 }
 
 auto RiggedCharacterPipeline::draw_instanced(
