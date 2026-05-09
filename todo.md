@@ -4,27 +4,6 @@ Goal: make the runtime render path modern, scalable, and close to data-only play
 
 The perf sample that motivated this list showed `RiggedMeshCache::get_or_bake`, `Backend::execute`, `__memmove`, allocator calls, `prepare_humanoid_instances`, `SnapshotMeshCache`, and minimap fog activity on the render thread. A later sample additionally showed `Render::Creature::Pipeline::submit_snapshot_creature(...)` as the top app-side hotspot, with visible time in `Render::GL::RiggedMeshCache::get_or_bake_prehashed(...)`, `__memmove_avx_unaligned_erms`, and render-thread work on `QSGRenderThread`.
 
-## P2 - Terrain and World Assets
-
-### Separate minimap fog cadence from render frame cadence
-
-Files:
-- `app/core/minimap_manager.*`
-- `game/map/minimap/*`
-- call sites in engine/render loop
-
-Problem:
-- `MinimapManager::update_fog()` appears in the render-thread sample.
-- Fog/minimap texture updates still need fixed-cadence scheduling, off-thread recomputation where safe, and dirty-region uploads.
-
-Work:
-- Throttle fog/minimap texture updates to a fixed cadence or dirty-region updates.
-- Ensure expensive fog recomputation happens off the render thread where safe.
-- Upload only changed texture regions when possible.
-
-Acceptance:
-- Minimap fog no longer appears as a regular QSG render thread cost in stable gameplay captures.
-
 ## P2 - Equipment and Data-Driven Extensibility
 
 ### Move equipment selection toward data handles
