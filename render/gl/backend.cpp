@@ -2309,9 +2309,12 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
       if (rigged_instancing_enabled &&
           prepared.kind == PreparedBatchKind::RiggedCreatureInstanced &&
           m_riggedCharacterPipeline->instanced_shader() != nullptr) {
-        thread_local std::vector<RiggedCreatureCmd> rig_batch_scratch;
+        thread_local std::vector<const RiggedCreatureCmd *> rig_batch_refs;
         const std::size_t cap = std::max<std::size_t>(
             1U, m_riggedCharacterPipeline->max_instances_per_batch());
+        if (rig_batch_refs.capacity() < cap) {
+          rig_batch_refs.reserve(cap);
+        }
         std::size_t j = i;
         while (j < batch_end) {
           const std::size_t chunk_end = std::min(batch_end, j + cap);
@@ -2328,15 +2331,14 @@ void Backend::execute(const DrawQueue &queue, const Camera &cam) {
             continue;
           }
 
-          rig_batch_scratch.clear();
-          rig_batch_scratch.reserve(chunk_count);
+          rig_batch_refs.clear();
           for (std::size_t k = j; k < chunk_end; ++k) {
-            rig_batch_scratch.push_back(
-                std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
+            rig_batch_refs.push_back(
+                &std::get<RiggedCreatureCmdIndex>(queue.get_sorted(k)));
           }
           ++debug_rigged_instanced_attempts;
           if (m_riggedCharacterPipeline->draw_instanced(
-                  rig_batch_scratch.data(), rig_batch_scratch.size(),
+                  rig_batch_refs.data(), rig_batch_refs.size(),
                   view_proj)) {
             ++debug_rigged_instanced_successes;
             m_lastBoundShader = m_riggedCharacterPipeline->instanced_shader();
