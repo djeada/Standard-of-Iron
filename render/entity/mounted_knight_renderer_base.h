@@ -2,6 +2,7 @@
 
 #include "../creature/pipeline/unit_visual_spec.h"
 #include "../creature/render_request.h"
+#include "../equipment/equipment_registry.h"
 #include "mounted_humanoid_renderer_base.h"
 
 #include <QVector3D>
@@ -61,6 +62,8 @@ protected:
 
 private:
   MountedKnightRendererConfig m_config;
+  EquipmentHandle m_sword_handle{kInvalidEquipmentHandle};
+  EquipmentHandle m_shield_handle{kInvalidEquipmentHandle};
   Render::Creature::Pipeline::UnitVisualSpec m_spec{};
   void build_visual_spec();
 };

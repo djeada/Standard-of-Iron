@@ -1,6 +1,7 @@
 #include "mounted_knight_renderer_base.h"
 
 #include "../creature/archetype_registry.h"
+#include "../equipment/equipment_registry.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -28,14 +29,19 @@ constexpr QVector3D k_default_proportion_scale{0.82F, 0.90F, 0.90F};
 MountedKnightRendererBase::MountedKnightRendererBase(
     MountedKnightRendererConfig config)
     : m_config(std::move(config)) {
+  auto &equipment_registry = EquipmentRegistry::instance();
+  m_sword_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                     m_config.sword_equipment_id);
   m_config.has_sword =
-      m_config.has_sword && !m_config.sword_equipment_id.empty();
+      m_config.has_sword && m_sword_handle != kInvalidEquipmentHandle;
   if (!m_config.has_sword) {
     m_config.sword_equipment_id.clear();
   }
 
+  m_shield_handle = equipment_registry.resolve_handle(
+      EquipmentCategory::Weapon, m_config.shield_equipment_id);
   m_config.has_cavalry_shield =
-      m_config.has_cavalry_shield && !m_config.shield_equipment_id.empty();
+      m_config.has_cavalry_shield && m_shield_handle != kInvalidEquipmentHandle;
   if (!m_config.has_cavalry_shield) {
     m_config.shield_equipment_id.clear();
   }

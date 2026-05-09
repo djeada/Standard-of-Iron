@@ -1,6 +1,7 @@
 #include "horse_spearman_renderer_base.h"
 
 #include "../creature/archetype_registry.h"
+#include "../equipment/equipment_registry.h"
 #include "../humanoid/humanoid_math.h"
 #include "../humanoid/humanoid_specs.h"
 #include "../palette.h"
@@ -28,14 +29,19 @@ constexpr QVector3D k_default_proportion_scale{0.80F, 0.88F, 0.88F};
 HorseSpearmanRendererBase::HorseSpearmanRendererBase(
     HorseSpearmanRendererConfig config)
     : m_config(std::move(config)) {
+  auto &equipment_registry = EquipmentRegistry::instance();
+  m_spear_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                     m_config.spear_equipment_id);
   m_config.has_spear =
-      m_config.has_spear && !m_config.spear_equipment_id.empty();
+      m_config.has_spear && m_spear_handle != kInvalidEquipmentHandle;
   if (!m_config.has_spear) {
     m_config.spear_equipment_id.clear();
   }
 
+  m_shield_handle = equipment_registry.resolve_handle(
+      EquipmentCategory::Weapon, m_config.shield_equipment_id);
   m_config.has_shield =
-      m_config.has_shield && !m_config.shield_equipment_id.empty();
+      m_config.has_shield && m_shield_handle != kInvalidEquipmentHandle;
   if (!m_config.has_shield) {
     m_config.shield_equipment_id.clear();
   }

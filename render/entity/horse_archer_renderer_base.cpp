@@ -4,6 +4,7 @@
 #include "../creature/pipeline/creature_render_graph.h"
 #include "../creature/pipeline/preparation_common.h"
 #include "../equipment/equipment_submit.h"
+#include "../equipment/equipment_registry.h"
 #include "../equipment/weapons/bow_renderer.h"
 #include "../equipment/weapons/quiver_renderer.h"
 #include "../humanoid/humanoid_full_builder.h"
@@ -99,13 +100,19 @@ auto archetype_cache_mutex() -> std::mutex & {
 HorseArcherRendererBase::HorseArcherRendererBase(
     HorseArcherRendererConfig config)
     : m_config(std::move(config)) {
-  m_config.has_bow = m_config.has_bow && !m_config.bow_equipment_id.empty();
+  auto &equipment_registry = EquipmentRegistry::instance();
+  m_bow_handle = equipment_registry.resolve_handle(EquipmentCategory::Weapon,
+                                                   m_config.bow_equipment_id);
+  m_config.has_bow =
+      m_config.has_bow && m_bow_handle != kInvalidEquipmentHandle;
   if (!m_config.has_bow) {
     m_config.bow_equipment_id.clear();
   }
 
+  m_quiver_handle = equipment_registry.resolve_handle(
+      EquipmentCategory::Weapon, m_config.quiver_equipment_id);
   m_config.has_quiver =
-      m_config.has_quiver && !m_config.quiver_equipment_id.empty();
+      m_config.has_quiver && m_quiver_handle != kInvalidEquipmentHandle;
   if (!m_config.has_quiver) {
     m_config.quiver_equipment_id.clear();
   }

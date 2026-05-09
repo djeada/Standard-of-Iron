@@ -1,4 +1,5 @@
 #include "equipment_registry.h"
+#include <limits>
 #include <utility>
 
 namespace Render::GL {
@@ -15,6 +16,25 @@ void EquipmentRegistry::register_equipment(
     return;
   }
   m_renderers[category][id] = std::move(renderer);
+  const HandleKey key{category, id};
+  if (const auto it = m_handles.find(key); it != m_handles.end()) {
+    const std::size_t index = static_cast<std::size_t>(it->second - 1U);
+    if (index < m_renderers_by_handle.size()) {
+      m_renderers_by_handle[index] = m_renderers[category][id];
+    }
+    return;
+  }
+
+  if (m_renderers_by_handle.size() >=
+      static_cast<std::size_t>(std::numeric_limits<EquipmentHandle>::max() -
+                               1U)) {
+    return;
+  }
+
+  const EquipmentHandle handle =
+      static_cast<EquipmentHandle>(m_renderers_by_handle.size() + 1U);
+  m_renderers_by_handle.push_back(m_renderers[category][id]);
+  m_handles.emplace(key, handle);
 }
 
 auto EquipmentRegistry::get(EquipmentCategory category, const std::string &id)
@@ -40,6 +60,32 @@ auto EquipmentRegistry::has(EquipmentCategory category,
   }
 
   return category_it->second.find(id) != category_it->second.end();
+}
+
+auto EquipmentRegistry::resolve_handle(EquipmentCategory category,
+                                       const std::string &id) const
+    -> EquipmentHandle {
+  const HandleKey key{category, id};
+  if (const auto it = m_handles.find(key); it != m_handles.end()) {
+    return it->second;
+  }
+  return kInvalidEquipmentHandle;
+}
+
+auto EquipmentRegistry::get(EquipmentHandle handle) const
+    -> std::shared_ptr<IEquipmentRenderer> {
+  if (handle == kInvalidEquipmentHandle) {
+    return nullptr;
+  }
+  const std::size_t index = static_cast<std::size_t>(handle - 1U);
+  if (index >= m_renderers_by_handle.size()) {
+    return nullptr;
+  }
+  return m_renderers_by_handle[index];
+}
+
+auto EquipmentRegistry::has(EquipmentHandle handle) const -> bool {
+  return get(handle) != nullptr;
 }
 
 } // namespace Render::GL
