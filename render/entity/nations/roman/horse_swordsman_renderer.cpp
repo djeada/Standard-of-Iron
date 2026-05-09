@@ -17,8 +17,8 @@
 #include "../../../equipment/weapons/roman_scutum.h"
 #include "../../../equipment/weapons/sword_renderer.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../mounted_knight_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <QVector3D>
 #include <array>

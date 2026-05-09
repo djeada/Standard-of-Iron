@@ -15,8 +15,8 @@
 #include "../../../humanoid/skeleton.h"
 #include "../../../humanoid/style_palette.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../mounted_knight_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 #include "swordsman_style.h"
 
 #include <memory>

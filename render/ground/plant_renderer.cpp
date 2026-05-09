@@ -111,8 +111,8 @@ void PlantRenderer::generate_plant_instances() {
   config.grid_width = m_width;
   config.grid_height = m_height;
   config.tile_size = m_tile_size;
-  config.edge_padding = scatter_profile.spawn_edge_padding *
-                        k_plant_edge_padding_scale;
+  config.edge_padding =
+      scatter_profile.spawn_edge_padding * k_plant_edge_padding_scale;
 
   SpawnValidator validator(terrain_cache, config);
 

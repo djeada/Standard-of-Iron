@@ -13,8 +13,8 @@
 #include "../../../equipment/horse/saddles/horse_mount_archetype.h"
 #include "../../../equipment/horse/saddles/roman_saddle_renderer.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../horse_archer_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <QVector3D>
 #include <array>
@@ -47,9 +47,8 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
   }();
   static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
     auto &reg = Render::GL::EquipmentRegistry::instance();
-    const auto cloak_handle =
-        reg.resolve_handle(Render::GL::EquipmentCategory::Armor,
-                           "cloak_carthage");
+    const auto cloak_handle = reg.resolve_handle(
+        Render::GL::EquipmentCategory::Armor, "cloak_carthage");
     auto cloak_inst = reg.get(cloak_handle);
     if (cloak_inst) {
       if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {
@@ -103,8 +102,8 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
 
 auto make_horse_archer_config() -> HorseArcherRendererConfig {
   HorseArcherRendererConfig config;
-  const auto loadout =
-      Render::GL::Nation::resolve_equipment_loadout("troops/roman/horse_archer");
+  const auto loadout = Render::GL::Nation::resolve_equipment_loadout(
+      "troops/roman/horse_archer");
   config.bow_equipment_id = loadout.ids.bow;
   config.quiver_equipment_id = loadout.ids.quiver;
   config.armor_equipment_id = loadout.ids.armor;

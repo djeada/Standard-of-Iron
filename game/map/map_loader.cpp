@@ -216,8 +216,8 @@ void readBiome(const QJsonObject &obj, BiomeSettings &out) {
         float(obj.value(PLANT_DENSITY).toDouble(out.plant_density));
   }
   if (obj.contains(SPAWN_EDGE_PADDING)) {
-    out.spawn_edge_padding = float(
-        obj.value(SPAWN_EDGE_PADDING).toDouble(out.spawn_edge_padding));
+    out.spawn_edge_padding =
+        float(obj.value(SPAWN_EDGE_PADDING).toDouble(out.spawn_edge_padding));
   }
   if (obj.contains(GROUND_IRREGULARITY_ENABLED)) {
     out.ground_irregularity_enabled =

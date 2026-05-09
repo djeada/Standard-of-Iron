@@ -12,8 +12,8 @@
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../horse_spearman_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <memory>
 

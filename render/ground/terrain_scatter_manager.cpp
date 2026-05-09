@@ -141,8 +141,7 @@ auto TerrainScatterManager::chunks() const -> std::vector<ScatterChunk> {
   std::lock_guard<std::mutex> lock(m_mutex);
 
   return {{ScatterSpeciesId::Grass, ScatterVisibilityMode::InstanceFiltered,
-           m_biome.get(),
-           m_biome != nullptr ? m_biome->instance_count() : 0U,
+           m_biome.get(), m_biome != nullptr ? m_biome->instance_count() : 0U,
            m_biome == nullptr || m_biome->is_gpu_ready()},
           {ScatterSpeciesId::Stone, ScatterVisibilityMode::InstanceFiltered,
            m_stone.get(), m_stone != nullptr ? m_stone->instance_count() : 0U,

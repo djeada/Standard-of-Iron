@@ -52,8 +52,7 @@ void main() {
   float broadA = fbm2(uvWarp * max(freq * 0.105, 0.045));
   float broadB = fbm2((uvWarp + vec2(-19.4, 27.1)) * max(freq * 0.19, 0.070));
   float broadRidge = 1.0 - abs(broadA * 2.0 - 1.0);
-  float broad =
-      (broadA * 0.58 + broadB * 0.27 + broadRidge * 0.15) * 2.0 - 1.0;
+  float broad = (broadA * 0.58 + broadB * 0.27 + broadRidge * 0.15) * 2.0 - 1.0;
   float base = fbm2(uvWarp * freq * 0.55);
   float detail = fbm2(uvWarp * freq * 1.35);
   float fine = noise21(uvWarp * freq * 3.4);
@@ -76,14 +75,12 @@ void main() {
   float gradStep = max(0.08, 0.22 / max(freq, 0.05));
   float broad_a_x =
       fbm2((uvWarp + vec2(gradStep, 0.0)) * max(freq * 0.105, 0.045));
-  float broad_b_x = fbm2(((uvWarp + vec2(gradStep, 0.0)) +
-                          vec2(-19.4, 27.1)) *
+  float broad_b_x = fbm2(((uvWarp + vec2(gradStep, 0.0)) + vec2(-19.4, 27.1)) *
                          max(freq * 0.19, 0.070));
-  float broad_x =
-      (broad_a_x * 0.58 + broad_b_x * 0.27 +
-       (1.0 - abs(broad_a_x * 2.0 - 1.0)) * 0.15) *
-          2.0 -
-      1.0;
+  float broad_x = (broad_a_x * 0.58 + broad_b_x * 0.27 +
+                   (1.0 - abs(broad_a_x * 2.0 - 1.0)) * 0.15) *
+                      2.0 -
+                  1.0;
   float h_base_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 0.55);
   float h_det_x = fbm2((uvWarp + vec2(gradStep, 0.0)) * freq * 1.35);
   float h_fin_x = noise21((uvWarp + vec2(gradStep, 0.0)) * freq * 3.4);
@@ -96,14 +93,12 @@ void main() {
 
   float broad_a_z =
       fbm2((uvWarp + vec2(0.0, gradStep)) * max(freq * 0.105, 0.045));
-  float broad_b_z = fbm2(((uvWarp + vec2(0.0, gradStep)) +
-                          vec2(-19.4, 27.1)) *
+  float broad_b_z = fbm2(((uvWarp + vec2(0.0, gradStep)) + vec2(-19.4, 27.1)) *
                          max(freq * 0.19, 0.070));
-  float broad_z =
-      (broad_a_z * 0.58 + broad_b_z * 0.27 +
-       (1.0 - abs(broad_a_z * 2.0 - 1.0)) * 0.15) *
-          2.0 -
-      1.0;
+  float broad_z = (broad_a_z * 0.58 + broad_b_z * 0.27 +
+                   (1.0 - abs(broad_a_z * 2.0 - 1.0)) * 0.15) *
+                      2.0 -
+                  1.0;
   float h_base_z = fbm2((uvWarp + vec2(0.0, gradStep)) * freq * 0.55);
   float h_det_z = fbm2((uvWarp + vec2(0.0, gradStep)) * freq * 1.35);
   float h_fin_z = noise21((uvWarp + vec2(0.0, gradStep)) * freq * 3.4);
@@ -115,12 +110,10 @@ void main() {
              1.0;
 
   float normalAmp = amp * 2.8;
-  vec3 dx =
-      vec3(gradStep * ts, (hx - h) * normalAmp + (broad_x - broad) * broadAmp,
-           0.0);
-  vec3 dz =
-      vec3(0.0, (hz - h) * normalAmp + (broad_z - broad) * broadAmp,
-           gradStep * ts);
+  vec3 dx = vec3(gradStep * ts,
+                 (hx - h) * normalAmp + (broad_x - broad) * broadAmp, 0.0);
+  vec3 dz = vec3(0.0, (hz - h) * normalAmp + (broad_z - broad) * broadAmp,
+                 gradStep * ts);
   vec3 warpedNormal = normalize(cross(dz, dx));
   vec3 wn = normalize(mix(worldNormal, warpedNormal, 0.72));
   vec3 displaced = wp + vec3(0.0, disp, 0.0);

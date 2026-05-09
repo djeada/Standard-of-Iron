@@ -1018,11 +1018,7 @@ void GameEngine::update(float dt) {
   }
 
   if (m_world) {
-    // GLView::GLRenderer::render() intentionally runs simulation update on the
-    // Qt FBO render callback thread immediately before render submit. Systems
-    // that build gameplay query state, including CombatSystem, belong here;
-    // GameEngine::render() and Renderer::render_world() consume the resulting
-    // component state without running combat searches.
+
     log_render_stage_once(
         "simulation-update",
         QStringLiteral(

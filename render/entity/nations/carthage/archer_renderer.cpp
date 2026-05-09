@@ -192,9 +192,8 @@ public:
       }();
       static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
         auto &reg = Render::GL::EquipmentRegistry::instance();
-        const auto cloak_handle =
-            reg.resolve_handle(Render::GL::EquipmentCategory::Armor,
-                               "cloak_carthage");
+        const auto cloak_handle = reg.resolve_handle(
+            Render::GL::EquipmentCategory::Armor, "cloak_carthage");
         auto cloak_inst = reg.get(cloak_handle);
         if (cloak_inst) {
           if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {

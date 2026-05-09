@@ -14,8 +14,8 @@
 #include "../../../equipment/horse/saddles/roman_saddle_renderer.h"
 #include "../../../equipment/weapons/spear_renderer.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../horse_spearman_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <QVector3D>
 #include <array>

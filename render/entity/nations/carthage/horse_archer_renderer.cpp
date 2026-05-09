@@ -11,8 +11,8 @@
 #include "../../../humanoid/humanoid_spec.h"
 #include "../../../humanoid/skeleton.h"
 #include "../../../submitter.h"
-#include "../equipment_loadout_catalog.h"
 #include "../../horse_archer_renderer_base.h"
+#include "../equipment_loadout_catalog.h"
 
 #include <memory>
 
@@ -40,9 +40,8 @@ auto register_horse_archer_rider_archetype() -> Render::Creature::ArchetypeId {
   }();
   static const CloakMeshes k_cloak_meshes = []() -> CloakMeshes {
     auto &reg = Render::GL::EquipmentRegistry::instance();
-    const auto cloak_handle =
-        reg.resolve_handle(Render::GL::EquipmentCategory::Armor,
-                           "cloak_carthage");
+    const auto cloak_handle = reg.resolve_handle(
+        Render::GL::EquipmentCategory::Armor, "cloak_carthage");
     auto cloak_inst = reg.get(cloak_handle);
     if (cloak_inst) {
       if (auto *cr = dynamic_cast<CloakRenderer *>(cloak_inst.get())) {

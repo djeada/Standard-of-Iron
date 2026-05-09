@@ -109,8 +109,8 @@ auto loadouts() -> const LoadoutMap & {
   return k_loadouts;
 }
 
-auto resolve_slot_handle(EquipmentCategory category, const std::string &id)
-    -> EquipmentHandle {
+auto resolve_slot_handle(EquipmentCategory category,
+                         const std::string &id) -> EquipmentHandle {
   if (id.empty()) {
     return kInvalidEquipmentHandle;
   }
@@ -141,10 +141,12 @@ auto resolve_equipment_loadout(std::string_view renderer_key)
       resolve_slot_handle(EquipmentCategory::Weapon, out.ids.shield);
   out.helmet_handle =
       resolve_slot_handle(EquipmentCategory::Helmet, out.ids.helmet);
-  out.armor_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.armor);
+  out.armor_handle =
+      resolve_slot_handle(EquipmentCategory::Armor, out.ids.armor);
   out.shoulder_handle =
       resolve_slot_handle(EquipmentCategory::Armor, out.ids.shoulder);
-  out.cloak_handle = resolve_slot_handle(EquipmentCategory::Armor, out.ids.cloak);
+  out.cloak_handle =
+      resolve_slot_handle(EquipmentCategory::Armor, out.ids.cloak);
   return out;
 }
 
