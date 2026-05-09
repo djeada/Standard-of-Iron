@@ -9,6 +9,7 @@
 #include "../game/units/troop_config.h"
 #include "../game/visuals/team_colors.h"
 #include "battle_render_optimizer.h"
+#include "creature/archetype_registry.h"
 #include "creature/bpat/bpat_registry.h"
 #include "creature/quadruped/render_stats.h"
 #include "creature/runtime_bake_guard.h"
@@ -76,6 +77,19 @@ const QVector3D k_axis_z(0.0F, 0.0F, 1.0F);
 constexpr uint32_t k_animation_cache_cleanup_mask = 0x3F;
 constexpr uint32_t k_animation_cache_max_age = 240;
 
+auto prewarm_attack_family_for_spawn(Game::Units::SpawnType spawn_type,
+                                     AnimState state) noexcept
+    -> Engine::Core::CombatAttackFamily {
+  switch (state) {
+  case AnimState::AttackMelee:
+    return Engine::Core::resolve_combat_attack_family(
+        spawn_type, Engine::Core::AttackComponent::CombatMode::Melee);
+  case AnimState::AttackRanged:
+    return Engine::Core::resolve_combat_attack_family(
+        spawn_type, Engine::Core::AttackComponent::CombatMode::Ranged);
+  default:
+    return Engine::Core::CombatAttackFamily::None;
+  }
 auto render_stage_logging_enabled() -> bool {
   return qEnvironmentVariableIsSet("SOI_RENDER_STAGE_LOG");
 }
@@ -602,6 +616,8 @@ void Renderer::run_template_prewarm_item(const AsyncPrewarmProfile &profile,
   anim_key.state = static_cast<AnimState>(item.anim_state);
   anim_key.combat_phase = static_cast<CombatAnimPhase>(item.combat_phase);
   anim_key.frame = item.frame;
+  anim_key.attack_family =
+      static_cast<Engine::Core::CombatAttackFamily>(item.attack_family);
   anim_key.attack_variant = item.attack_variant;
   AnimationInputs anim = make_animation_inputs(anim_key);
   ctx.animation_override = &anim;
@@ -1079,12 +1095,15 @@ void Renderer::render_world(Engine::Core::World *world) {
     if (entity == nullptr) {
       continue;
     }
-    if (entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+    bool const has_death_motion =
+        entity->get_component<Engine::Core::DeathAnimationComponent>() != nullptr;
+    if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
+        !has_death_motion) {
       continue;
     }
 
     auto *unit_comp = entity->get_component<Engine::Core::UnitComponent>();
-    if ((unit_comp != nullptr) && unit_comp->health <= 0) {
+    if ((unit_comp != nullptr) && unit_comp->health <= 0 && !has_death_motion) {
       continue;
     }
 
@@ -1807,14 +1826,15 @@ void Renderer::prewarm_unit_templates(
   };
 
   auto add_attack_frames = [&](std::vector<AnimKey> &keys, AnimState state,
-                               int frame_step) {
+                               int frame_step, std::uint8_t variant_count) {
     constexpr CombatAnimPhase phases[] = {
         CombatAnimPhase::Idle,      CombatAnimPhase::Advance,
         CombatAnimPhase::WindUp,    CombatAnimPhase::Strike,
         CombatAnimPhase::Impact,    CombatAnimPhase::Recover,
         CombatAnimPhase::Reposition};
     const int step = std::max(1, frame_step);
-    for (std::uint8_t attack_variant = 0; attack_variant < 3;
+    variant_count = std::max<std::uint8_t>(variant_count, 1U);
+    for (std::uint8_t attack_variant = 0; attack_variant < variant_count;
          ++attack_variant) {
       for (CombatAnimPhase phase : phases) {
         for (int frame = 0; frame < static_cast<int>(k_anim_frame_count);
@@ -1853,17 +1873,37 @@ void Renderer::prewarm_unit_templates(
   add_state_frames(full_anim_keys, AnimState::Construct, 1);
   add_state_frames(full_anim_keys, AnimState::Heal, 1);
   add_state_frames(full_anim_keys, AnimState::Hit, 1);
-  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1);
-  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1);
+  auto const &archetypes = Render::Creature::ArchetypeRegistry::instance();
+  auto const melee_variant_count = std::max(
+      std::max(archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::kHumanoidBase,
+                   Render::Creature::AnimationStateId::AttackSword),
+               archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::kHumanoidBase,
+                   Render::Creature::AnimationStateId::AttackSpear)),
+      std::max(archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::kRiderBase,
+                   Render::Creature::AnimationStateId::AttackSword),
+               archetypes.clip_variant_count(
+                   Render::Creature::ArchetypeRegistry::kRiderBase,
+                   Render::Creature::AnimationStateId::AttackSpear)));
+  auto const ranged_variant_count =
+      archetypes.clip_variant_count(Render::Creature::ArchetypeRegistry::kHumanoidBase,
+                                    Render::Creature::AnimationStateId::AttackBow);
+  add_attack_frames(full_anim_keys, AnimState::AttackMelee, 1,
+                    melee_variant_count);
+  add_attack_frames(full_anim_keys, AnimState::AttackRanged, 1,
+                    ranged_variant_count);
 
-  auto encode_anim_key = [](const AnimKey &key) -> std::uint32_t {
-    return static_cast<std::uint32_t>(key.state) |
-           (static_cast<std::uint32_t>(key.combat_phase) << 8U) |
-           (static_cast<std::uint32_t>(key.frame) << 16U) |
-           (static_cast<std::uint32_t>(key.attack_variant) << 24U);
+  auto encode_anim_key = [](const AnimKey &key) -> std::uint64_t {
+    return static_cast<std::uint64_t>(key.state) |
+           (static_cast<std::uint64_t>(key.combat_phase) << 8U) |
+           (static_cast<std::uint64_t>(key.frame) << 16U) |
+           (static_cast<std::uint64_t>(key.attack_family) << 24U) |
+           (static_cast<std::uint64_t>(key.attack_variant) << 32U);
   };
 
-  std::unordered_set<std::uint32_t> core_key_set;
+  std::unordered_set<std::uint64_t> core_key_set;
   core_key_set.reserve(core_anim_keys.size() * 2);
   for (const auto &key : core_anim_keys) {
     core_key_set.insert(encode_anim_key(key));
@@ -1961,6 +2001,8 @@ void Renderer::prewarm_unit_templates(
     constexpr HumanoidLOD lods[] = {HumanoidLOD::Full, HumanoidLOD::Minimal};
     for (std::size_t profile_idx = 0; profile_idx < profiles.size();
          ++profile_idx) {
+      auto const spawn_type =
+          static_cast<Game::Units::SpawnType>(profiles[profile_idx].spawn_type);
       for (int owner_id : owner_ids) {
         for (HumanoidLOD lod : lods) {
           for (std::uint8_t variant : variant_values) {
@@ -1971,6 +2013,8 @@ void Renderer::prewarm_unit_templates(
               item.lod = lod;
               item.variant = variant;
               item.anim_key = anim_key;
+              item.anim_key.attack_family =
+                  prewarm_attack_family_for_spawn(spawn_type, anim_key.state);
               items.push_back(item);
             }
           }
@@ -2164,6 +2208,8 @@ void Renderer::prewarm_unit_templates(
       async_item.combat_phase =
           static_cast<std::uint8_t>(item.anim_key.combat_phase);
       async_item.frame = item.anim_key.frame;
+      async_item.attack_family =
+          static_cast<std::uint8_t>(item.anim_key.attack_family);
       async_item.attack_variant = item.anim_key.attack_variant;
       async_state->work_items.push_back(async_item);
     }

@@ -23,6 +23,7 @@ struct ArchetypeDescriptor {
 
   static constexpr std::uint16_t kUnmappedClip = 0xFFFFu;
   std::array<std::uint16_t, animation_state_count()> bpat_clip{};
+  std::array<std::uint8_t, animation_state_count()> bpat_clip_variant_count{};
 
   std::array<bool, animation_state_count()> snapshot{};
 
@@ -69,6 +70,14 @@ public:
   [[nodiscard]] auto
   bpat_clip(ArchetypeId id,
             AnimationStateId state) const noexcept -> std::uint16_t;
+
+  [[nodiscard]] auto clip_variant_count(ArchetypeId id,
+                                        AnimationStateId state) const noexcept
+      -> std::uint8_t;
+
+  [[nodiscard]] auto resolve_bpat_clip(
+      ArchetypeId id, AnimationStateId state,
+      std::uint8_t clip_variant = 0U) const noexcept -> std::uint16_t;
 
   [[nodiscard]] auto is_snapshot(ArchetypeId id,
                                  AnimationStateId state) const noexcept -> bool;

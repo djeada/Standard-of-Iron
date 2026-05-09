@@ -6,6 +6,7 @@
 #include "entity.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -90,7 +91,23 @@ public:
   Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
   int render_individuals_per_unit_override{0};
   bool render_rider{true};
+  std::uint8_t death_sequence_override{0xFF};
 };
+
+[[nodiscard]] inline auto
+resolve_surviving_individual_count(int health, int max_health,
+                                   int individuals_per_unit) noexcept -> int {
+  if (individuals_per_unit <= 0 || health <= 0) {
+    return 0;
+  }
+  int const safe_max_health = std::max(1, max_health);
+  float const ratio =
+      std::clamp(health / static_cast<float>(safe_max_health), 0.0F, 1.0F);
+  return std::max(
+      1, std::min(individuals_per_unit,
+                  static_cast<int>(std::ceil(
+                      ratio * static_cast<float>(individuals_per_unit)))));
+}
 
 class MovementComponent : public Component {
 public:
@@ -207,6 +224,42 @@ public:
   bool should_chase{false};
 };
 
+enum class CombatAttackFamily : std::uint8_t {
+  None = 0,
+  Sword = 1,
+  Spear = 2,
+  Bow = 3
+};
+
+[[nodiscard]] inline auto
+resolve_combat_attack_family(Game::Units::SpawnType spawn_type,
+                             AttackComponent::CombatMode mode) noexcept
+    -> CombatAttackFamily {
+  using Game::Units::SpawnType;
+  if (mode == AttackComponent::CombatMode::Ranged) {
+    switch (spawn_type) {
+    case SpawnType::Archer:
+    case SpawnType::HorseArcher:
+      return CombatAttackFamily::Bow;
+    default:
+      return CombatAttackFamily::None;
+    }
+  }
+
+  switch (spawn_type) {
+  case SpawnType::Knight:
+  case SpawnType::MountedKnight:
+  case SpawnType::Archer:
+  case SpawnType::HorseArcher:
+    return CombatAttackFamily::Sword;
+  case SpawnType::Spearman:
+  case SpawnType::HorseSpearman:
+    return CombatAttackFamily::Spear;
+  default:
+    return CombatAttackFamily::None;
+  }
+}
+
 enum class CombatAnimationState : std::uint8_t {
   Idle,
   Advance,
@@ -222,6 +275,7 @@ public:
   CombatStateComponent() = default;
 
   CombatAnimationState animation_state{CombatAnimationState::Idle};
+  CombatAttackFamily attack_family{CombatAttackFamily::None};
   float state_time{0.0F};
   float state_duration{0.0F};
   float attack_offset{0.0F};
@@ -236,7 +290,7 @@ public:
   static constexpr float k_impact_duration = 0.08F;
   static constexpr float k_recover_duration = 0.25F;
   static constexpr float k_reposition_duration = 0.15F;
-  static constexpr std::uint8_t k_max_attack_variants = 3;
+  static constexpr std::uint8_t k_attack_variant_seed_slots = 8;
 };
 
 class HitFeedbackComponent : public Component {
@@ -332,6 +386,42 @@ public:
 class PendingRemovalComponent : public Component {
 public:
   PendingRemovalComponent() = default;
+};
+
+enum class DeathSequenceProfile : std::uint8_t {
+  Infantry = 0,
+  MountedRider = 1,
+  Horse = 2,
+  Elephant = 3
+};
+
+enum class DeathSequenceState : std::uint8_t { Dying = 0, DeadHold = 1 };
+
+class DeathAnimationComponent : public Component {
+public:
+  DeathAnimationComponent() = default;
+
+  DeathSequenceProfile profile{DeathSequenceProfile::Infantry};
+  DeathSequenceState state{DeathSequenceState::Dying};
+  float state_time{0.0F};
+  float state_duration{1.0F};
+  float dead_hold_duration{0.8F};
+  std::uint8_t sequence_variant{0};
+};
+
+class SoldierCasualtyAnimationComponent : public Component {
+public:
+  struct Entry {
+    std::uint16_t slot_index{0};
+    DeathSequenceProfile profile{DeathSequenceProfile::Infantry};
+    DeathSequenceState state{DeathSequenceState::Dying};
+    float state_time{0.0F};
+    float state_duration{1.0F};
+    float dead_hold_duration{0.8F};
+    std::uint8_t sequence_variant{0};
+  };
+
+  std::vector<Entry> entries;
 };
 
 class HoldModeComponent : public Component {
