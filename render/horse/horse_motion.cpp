@@ -82,7 +82,7 @@ auto compute_mount_frame(const HorseProfile &profile)
 
   float const body_height_vis = Render::Horse::horse_body_visual_height(d);
   float const body_length_vis = Render::Horse::horse_body_visual_length(d);
-  float const torso_lift = Render::Horse::horse_torso_lift(d);
+  float const torso_lift = Render::Horse::horse_torso_visual_lift(d);
   QVector3D const back_center(
       0.0F, d.barrel_center_y + torso_lift + body_height_vis * 0.56F,
       body_length_vis * 0.02F);
@@ -117,29 +117,30 @@ auto compute_mount_frame(const HorseProfile &profile)
   frame.stirrup_bottom_right =
       frame.stirrup_attach_right + QVector3D(0.0F, -d.stirrup_drop, 0.0F);
 
-  QVector3D const neck_top(0.0F,
-                           d.barrel_center_y +
-                               d.body_height * k_neck_top_body_height_scale +
-                               d.neck_rise,
-                           d.body_length * k_neck_top_body_length_scale);
+  QVector3D const neck_top = QVector3D(0.0F, d.barrel_center_y, 0.0F) +
+                             Render::Horse::horse_neck_top_local(d);
   QVector3D const head_center =
       neck_top + QVector3D(0.0F, d.head_height * k_head_center_height_scale,
                            d.head_length * k_head_center_length_scale);
+  float const muzzle_forward = d.head_length * k_muzzle_length_offset *
+                               Render::Horse::k_horse_muzzle_length_scale;
+  float const muzzle_length =
+      d.muzzle_length * Render::Horse::k_horse_muzzle_length_scale;
 
   QVector3D const muzzle_center =
-      head_center + QVector3D(0.0F, -d.head_height * k_muzzle_height_offset,
-                              d.head_length * k_muzzle_length_offset);
+      head_center +
+      QVector3D(0.0F, -d.head_height * k_muzzle_height_offset, muzzle_forward);
   frame.bridle_base =
       muzzle_center + QVector3D(0.0F, -d.head_height * k_bridle_height_offset,
-                                d.muzzle_length * k_bridle_length_offset);
+                                muzzle_length * k_bridle_length_offset);
   frame.rein_bit_left =
       muzzle_center + QVector3D(d.head_width * k_bit_width_offset,
                                 -d.head_height * k_bit_height_offset,
-                                d.muzzle_length * k_bit_length_offset);
+                                muzzle_length * k_bit_length_offset);
   frame.rein_bit_right =
       muzzle_center + QVector3D(-d.head_width * k_bit_width_offset,
                                 -d.head_height * k_bit_height_offset,
-                                d.muzzle_length * k_bit_length_offset);
+                                muzzle_length * k_bit_length_offset);
 
   return frame;
 }

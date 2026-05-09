@@ -44,8 +44,7 @@ void GroundRenderer::update_noise_offset() {
   const float span_x =
       (m_width > 0 ? float(m_width) * m_tile_size + margin * 2.0F : m_extent);
   const float span_z =
-      (m_height > 0 ? float(m_height) * m_tile_size + margin * 2.0F
-                    : m_extent);
+      (m_height > 0 ? float(m_height) * m_tile_size + margin * 2.0F : m_extent);
   const auto seed = static_cast<float>(m_biome_settings.seed % 1024U);
 
   QVector2D new_offset;
@@ -73,7 +72,7 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   const QVector3D primary = surface_profile.grass_primary * 0.97F;
   const QVector3D secondary = surface_profile.grass_secondary * 0.93F;
   const QVector3D dry = surface_profile.grass_dry * 0.90F;
-  const QVector3D soil = surface_profile.soil_color * 0.68F;
+  const QVector3D soil = surface_profile.soil_color * 0.82F;
 
   params.grass_primary = saturate(primary);
   params.grass_secondary = saturate(secondary);
@@ -87,9 +86,9 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
   params.tile_size = std::max(0.25F, m_tile_size);
 
   params.macro_noise_scale =
-      std::max(0.012F, surface_profile.terrain_macro_noise_scale * 0.60F);
+      std::max(0.012F, surface_profile.terrain_macro_noise_scale * 0.95F);
   params.detail_noise_scale =
-      std::max(0.045F, surface_profile.terrain_detail_noise_scale * 0.75F);
+      std::max(0.045F, surface_profile.terrain_detail_noise_scale * 1.15F);
 
   params.slope_rock_threshold =
       std::clamp(surface_profile.terrain_rock_threshold + 0.30F, 0.40F, 0.90F);
@@ -125,27 +124,27 @@ auto GroundRenderer::build_params() const -> TerrainChunkParams {
                  0.04F, 0.82F);
 
   params.micro_bump_amp =
-      std::clamp(0.045F + climate_profile.soil_roughness * 0.05F +
-                     params.rock_exposure * 0.04F,
-                 0.04F, 0.14F);
+      std::clamp(0.070F + climate_profile.soil_roughness * 0.085F +
+                     params.rock_exposure * 0.055F,
+                 0.07F, 0.22F);
   params.micro_bump_freq =
-      std::clamp(1.8F + climate_profile.soil_roughness * 1.5F +
-                     climate_profile.crack_intensity * 0.8F,
-                 1.6F, 4.0F);
+      std::clamp(2.4F + climate_profile.soil_roughness * 2.3F +
+                     climate_profile.crack_intensity * 1.1F,
+                 2.2F, 6.2F);
   params.micro_normal_weight =
-      std::clamp(0.56F + params.rock_exposure * 0.22F +
+      std::clamp(0.68F + params.rock_exposure * 0.20F +
                      climate_profile.moisture_level * 0.08F,
-                 0.56F, 0.86F);
+                 0.68F, 0.94F);
 
   params.albedo_jitter =
-      std::clamp(0.035F + climate_profile.soil_roughness * 0.035F +
-                     climate_profile.crack_intensity * 0.02F,
-                 0.03F, 0.12F);
+      std::clamp(0.070F + climate_profile.soil_roughness * 0.060F +
+                     climate_profile.crack_intensity * 0.035F,
+                 0.06F, 0.18F);
 
-  params.ambient_boost = surface_profile.terrain_ambient_boost * 0.85F;
+  params.ambient_boost = surface_profile.terrain_ambient_boost * 0.95F;
 
   params.rock_detail_strength =
-      surface_profile.terrain_rock_detail_strength * 0.18F;
+      surface_profile.terrain_rock_detail_strength * 0.42F;
 
   QVector3D const l(0.35F, 0.85F, 0.42F);
   params.light_direction = l.normalized();

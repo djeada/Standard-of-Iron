@@ -17,6 +17,7 @@ constexpr float k_neck_length_min = 0.54F;
 constexpr float k_neck_length_max = 0.66F;
 constexpr float k_neck_rise_min = 0.42F;
 constexpr float k_neck_rise_max = 0.50F;
+constexpr float k_neck_length_scale = 1.20F;
 
 constexpr float k_head_length_min = 0.36F;
 constexpr float k_head_length_max = 0.46F;
@@ -26,6 +27,7 @@ constexpr float k_head_height_min = 0.22F;
 constexpr float k_head_height_max = 0.28F;
 constexpr float k_muzzle_length_min = 0.16F;
 constexpr float k_muzzle_length_max = 0.20F;
+constexpr float k_head_scale = 1.35F;
 
 constexpr float k_leg_length_min = 1.14F;
 constexpr float k_leg_length_max = 1.28F;

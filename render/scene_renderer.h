@@ -10,6 +10,7 @@
 #include "gl/resources.h"
 #include "gl/texture.h"
 #include "i_render_backend.h"
+#include "persistent_render_registry.h"
 #include "rigged_mesh_cache.h"
 #include "snapshot_mesh_cache.h"
 #include "submitter.h"
@@ -204,6 +205,7 @@ public:
   void unlock_world_for_modification() { m_world_mutex.unlock(); }
 
   void fog_batch(const FogInstanceData *instances, std::size_t count);
+  void fog_batch(Buffer *instance_buffer, std::size_t count);
   void rain_batch(Buffer *instance_buffer, std::size_t instance_count,
                   const RainBatchParams &params);
 
@@ -312,6 +314,9 @@ private:
   RiggedMeshCache m_rigged_mesh_cache;
   SnapshotMeshCache m_snapshot_mesh_cache;
   std::uint32_t m_frame_counter{0};
+
+  Render::PersistentRenderRegistry m_render_registry;
+  Engine::Core::World *m_cached_world{nullptr};
 
   std::mutex m_async_prewarm_mutex;
   std::shared_ptr<AsyncTemplatePrewarmState> m_async_prewarm_state;

@@ -1197,6 +1197,61 @@ void HumanoidPoseController::mount_on_horse(float saddle_height) {
   m_pose.pelvis_pos.setY(saddle_height);
 }
 
+void HumanoidPoseController::brace_spear_for_hold() {
+  using HP = HumanProportions;
+
+  QVector3D const hand_r_target(0.24F, HP::SHOULDER_Y - 0.12F, 0.56F);
+  QVector3D hand_l_target = compute_offhand_spear_grip(
+      m_pose, m_anim_ctx, hand_r_target, false, -0.30F, 0.07F, -0.04F);
+  hand_l_target.setZ(hand_l_target.z() + 0.03F);
+
+  place_hand_at(false, hand_r_target);
+  place_hand_at(true, hand_l_target);
+
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.05F);
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.03F);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.08F);
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + 0.06F);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + 0.07F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + 0.06F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - 0.01F);
+}
+
+void HumanoidPoseController::hold_bow_ready() {
+  using HP = HumanProportions;
+
+  QVector3D const bow_hand_pos(0.08F, HP::SHOULDER_Y - 0.08F, 0.34F);
+  QVector3D const support_hand_pos(0.02F, HP::SHOULDER_Y + 0.02F, 0.60F);
+
+  place_hand_at(false, bow_hand_pos);
+  place_hand_at(true, support_hand_pos);
+
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() - 0.01F);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.05F);
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + 0.05F);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.09F);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + 0.05F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + 0.04F);
+  m_pose.head_pos.setY(m_pose.head_pos.y() - 0.01F);
+}
+
+void HumanoidPoseController::brace_sword_and_shield_for_hold() {
+  using HP = HumanProportions;
+
+  QVector3D const sword_hand_pos(0.26F, HP::SHOULDER_Y - 0.16F, 0.32F);
+  QVector3D const shield_hand_pos(-0.32F, HP::SHOULDER_Y + 0.05F, 0.40F);
+
+  place_hand_at(false, sword_hand_pos);
+  place_hand_at(true, shield_hand_pos);
+
+  m_pose.shoulder_l.setY(m_pose.shoulder_l.y() + 0.03F);
+  m_pose.shoulder_r.setY(m_pose.shoulder_r.y() - 0.03F);
+  m_pose.shoulder_l.setZ(m_pose.shoulder_l.z() + 0.09F);
+  m_pose.shoulder_r.setZ(m_pose.shoulder_r.z() + 0.04F);
+  m_pose.neck_base.setZ(m_pose.neck_base.z() + 0.05F);
+  m_pose.head_pos.setZ(m_pose.head_pos.z() + 0.04F);
+}
+
 void HumanoidPoseController::hold_sword_and_shield() {
   using HP = HumanProportions;
 

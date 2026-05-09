@@ -31,6 +31,11 @@ void World::on_component_changed(EntityID entity_id,
       }
     }
   }
+
+  const auto observers = m_component_observers;
+  for (const auto &observer : observers) {
+    observer.callback(entity_id, component_type, added);
+  }
 }
 
 void World::setup_entity_callback(Entity *entity) {
@@ -82,6 +87,11 @@ void World::destroy_entity(EntityID entity_id) {
   } else {
     m_entities.erase(entity_id);
   }
+
+  const auto observers = m_entity_destroyed_observers;
+  for (const auto &observer : observers) {
+    observer.callback(entity_id);
+  }
 }
 
 void World::clear() {
@@ -89,6 +99,11 @@ void World::clear() {
   m_entities.clear();
   m_component_index.clear();
   m_next_entity_id = 1;
+
+  const auto observers = m_world_cleared_observers;
+  for (const auto &observer : observers) {
+    observer.callback();
+  }
 }
 
 auto World::get_entity(EntityID entity_id) -> Entity * {
@@ -192,6 +207,48 @@ auto World::get_next_entity_id() const -> EntityID {
 void World::set_next_entity_id(EntityID next_id) {
   const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
   m_next_entity_id = std::max(next_id, m_next_entity_id);
+}
+
+auto World::add_component_observer(ComponentObserverCallback callback)
+    -> ObserverHandle {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const ObserverHandle handle = m_next_observer_handle++;
+  m_component_observers.push_back({handle, std::move(callback)});
+  return handle;
+}
+
+auto World::add_entity_destroyed_observer(EntityDestroyedCallback callback)
+    -> ObserverHandle {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const ObserverHandle handle = m_next_observer_handle++;
+  m_entity_destroyed_observers.push_back({handle, std::move(callback)});
+  return handle;
+}
+
+auto World::add_world_cleared_observer(WorldClearedCallback callback)
+    -> ObserverHandle {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  const ObserverHandle handle = m_next_observer_handle++;
+  m_world_cleared_observers.push_back({handle, std::move(callback)});
+  return handle;
+}
+
+void World::remove_component_observer(ObserverHandle handle) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  std::erase_if(m_component_observers,
+                [handle](const auto &entry) { return entry.handle == handle; });
+}
+
+void World::remove_entity_destroyed_observer(ObserverHandle handle) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  std::erase_if(m_entity_destroyed_observers,
+                [handle](const auto &entry) { return entry.handle == handle; });
+}
+
+void World::remove_world_cleared_observer(ObserverHandle handle) {
+  const std::lock_guard<std::recursive_mutex> lock(m_entity_mutex);
+  std::erase_if(m_world_cleared_observers,
+                [handle](const auto &entry) { return entry.handle == handle; });
 }
 
 } // namespace Engine::Core

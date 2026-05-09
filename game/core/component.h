@@ -340,6 +340,12 @@ public:
       : stand_up_duration(Defaults::k_hold_stand_up_duration),
         kneel_duration(Defaults::k_hold_kneel_duration) {}
 
+  void begin_exit() {
+    active = false;
+    exit_cooldown =
+        stand_up_duration * std::clamp(kneel_entry_progress, 0.0F, 1.0F);
+  }
+
   bool active{true};
   float exit_cooldown{0.0F};
   float stand_up_duration;

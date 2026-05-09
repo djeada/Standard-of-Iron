@@ -36,7 +36,7 @@ auto select_state(const Render::GL::AnimationInputs &inputs,
   if (inputs.is_healing) {
     return HumanoidState::Healing;
   }
-  if (inputs.is_in_hold_mode) {
+  if (inputs.is_in_hold_mode || inputs.is_exiting_hold) {
     return HumanoidState::Hold;
   }
   if (inputs.is_running) {

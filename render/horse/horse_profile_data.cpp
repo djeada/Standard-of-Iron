@@ -108,17 +108,22 @@ auto make_horse_dimensions(uint32_t seed) -> HorseDimensions {
                   k_torso_height_scale;
 
   d.neck_length = rand_between(seed, k_salt_neck_length, k_neck_length_min,
-                               k_neck_length_max);
+                               k_neck_length_max) *
+                  k_neck_length_scale;
   d.neck_rise =
       rand_between(seed, k_salt_neck_rise, k_neck_rise_min, k_neck_rise_max);
   d.head_length = rand_between(seed, k_salt_head_length, k_head_length_min,
-                               k_head_length_max);
-  d.head_width =
-      rand_between(seed, k_salt_head_width, k_head_width_min, k_head_width_max);
+                               k_head_length_max) *
+                  k_head_scale;
+  d.head_width = rand_between(seed, k_salt_head_width, k_head_width_min,
+                              k_head_width_max) *
+                 k_head_scale;
   d.head_height = rand_between(seed, k_salt_head_height, k_head_height_min,
-                               k_head_height_max);
+                               k_head_height_max) *
+                  k_head_scale;
   d.muzzle_length = rand_between(seed, k_salt_muzzle_length,
-                                 k_muzzle_length_min, k_muzzle_length_max);
+                                 k_muzzle_length_min, k_muzzle_length_max) *
+                    k_head_scale;
 
   d.leg_length =
       rand_between(seed, k_salt_leg_length, k_leg_length_min, k_leg_length_max);
@@ -249,14 +254,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
         lerp(v.muzzle_color, QVector3D(0.88F, 0.86F, 0.82F), 0.18F);
   }
 
-  QVector3D const dark_hoof(0.14F, 0.12F, 0.10F);
-  QVector3D const pale_hoof(0.78F, 0.74F, 0.66F);
-  bool const any_sock = v.sock_mask != 0U;
-  v.hoof_color =
-      any_sock ? lerp(dark_hoof, pale_hoof,
-                      rand_between(seed, k_salt_hoof_blend, 0.30F, 0.55F))
-               : lerp(dark_hoof, QVector3D(0.32F, 0.28F, 0.24F),
-                      rand_between(seed, k_salt_hoof_blend, 0.10F, 0.45F));
+  v.hoof_color = QVector3D(0.03F, 0.03F, 0.03F);
 
   float const leather_tone = rand_between(
       seed, k_salt_leather_tone, k_leather_tone_min, k_leather_tone_max);
@@ -282,7 +280,7 @@ auto make_horse_variant(uint32_t seed, const QVector3D &leather_base,
   v.mane_color = QVector3D(0.045F, 0.030F, 0.020F);
   v.tail_color = v.mane_color;
   v.muzzle_color = QVector3D(0.12F, 0.075F, 0.045F);
-  v.hoof_color = QVector3D(0.055F, 0.040F, 0.030F);
+  v.hoof_color = QVector3D(0.03F, 0.03F, 0.03F);
   v.has_blaze = false;
   v.has_star = false;
   v.sock_mask = 0U;

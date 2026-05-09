@@ -22,13 +22,11 @@ compute_spear_direction(const AnimationInputs &anim_inputs) -> QVector3D {
 
   QVector3D spear_dir = normalize(QVector3D(0.05F, 0.55F, 0.85F));
 
-  if (anim_inputs.is_in_hold_mode || anim_inputs.is_exiting_hold) {
-    float const t = anim_inputs.is_in_hold_mode
-                        ? 1.0F
-                        : (1.0F - anim_inputs.hold_exit_progress);
-
+  float const hold_blend = hold_transition_amount(anim_inputs);
+  if (hold_blend > 0.0F) {
     QVector3D const braced_dir = normalize(QVector3D(0.05F, 0.40F, 0.91F));
-    spear_dir = normalize(spear_dir * (1.0F - t) + braced_dir * t);
+    spear_dir =
+        normalize(spear_dir * (1.0F - hold_blend) + braced_dir * hold_blend);
   } else if (anim_inputs.is_attacking && anim_inputs.is_melee) {
     float const attack_phase =
         std::fmod(anim_inputs.time * SPEARMAN_INV_ATTACK_CYCLE_TIME, 1.0F);

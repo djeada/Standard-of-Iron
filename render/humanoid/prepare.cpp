@@ -609,12 +609,8 @@ void prepare_humanoid_instances(const HumanoidRendererBase &owner,
           inst_seed, anim.time, locomotion_state.gait, variation, pose);
 
       const float hold_kneel_depth = owner.get_hold_kneel_depth();
-      float effective_kneel = 0.0F;
-      if (anim.is_in_hold_mode) {
-        effective_kneel = anim.hold_entry_progress * hold_kneel_depth;
-      } else if (anim.is_exiting_hold) {
-        effective_kneel = (1.0F - anim.hold_exit_progress) * hold_kneel_depth;
-      }
+      float const effective_kneel =
+          hold_transition_amount(anim) * hold_kneel_depth;
       if (effective_kneel > 1e-4F) {
         HumanoidPoseController kneel_ctrl(pose, anim_ctx);
         kneel_ctrl.kneel(effective_kneel);

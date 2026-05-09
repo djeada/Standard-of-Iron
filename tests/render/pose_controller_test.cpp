@@ -1,6 +1,7 @@
 #include "render/humanoid/humanoid_renderer_base.h"
 #include "render/humanoid/humanoid_specs.h"
 #include "render/humanoid/pose_controller.h"
+#include "render/humanoid/spear_pose_utils.h"
 #include <QVector3D>
 #include <cmath>
 #include <gtest/gtest.h>
@@ -281,6 +282,50 @@ TEST_F(HumanoidPoseControllerTest,
   EXPECT_LT(moving_pose.hand_l.y(), idle_pose.hand_l.y());
 }
 
+TEST_F(HumanoidPoseControllerTest,
+       BraceSpearForHoldPositionsHandsForwardAndLow) {
+  anim_ctx.inputs.is_in_hold_mode = true;
+  anim_ctx.inputs.hold_entry_progress = 1.0F;
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.brace_spear_for_hold();
+
+  EXPECT_GT(pose.hand_r.z(), 0.48F);
+  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
+  EXPECT_GT(pose.hand_l.z(), 0.20F);
+  EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y);
+  EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.18F);
+}
+
+TEST_F(HumanoidPoseControllerTest, HoldBowReadyKeepsHandsInLowerReadyPose) {
+  HumanoidPoseController controller(pose, anim_ctx);
+
+  controller.hold_bow_ready();
+
+  EXPECT_GT(pose.hand_r.x(), 0.03F);
+  EXPECT_GT(pose.hand_l.x(), -0.02F);
+  EXPECT_GT(pose.hand_r.z(), 0.28F);
+  EXPECT_GT(pose.hand_l.z(), 0.52F);
+  EXPECT_LT(pose.hand_r.y(), HumanProportions::SHOULDER_Y);
+  EXPECT_LT(pose.hand_l.y(), HumanProportions::SHOULDER_Y + 0.04F);
+  EXPECT_GT((pose.hand_r - pose.hand_l).length(), 0.18F);
+}
+
+TEST_F(HumanoidPoseControllerTest,
+       BraceSwordAndShieldForHoldRaisesShieldComparedToMarchHold) {
+  HumanoidPose march_pose = pose;
+  HumanoidPoseController march_controller(march_pose, anim_ctx);
+  march_controller.hold_sword_and_shield();
+
+  HumanoidPose brace_pose = pose;
+  HumanoidPoseController brace_controller(brace_pose, anim_ctx);
+  brace_controller.brace_sword_and_shield_for_hold();
+
+  EXPECT_GT(brace_pose.hand_l.y(), march_pose.hand_l.y());
+  EXPECT_GT(brace_pose.hand_l.z(), march_pose.hand_l.z());
+  EXPECT_LT(brace_pose.hand_r.y(), march_pose.hand_r.y());
+}
+
 TEST_F(HumanoidPoseControllerTest, LookAtMovesHeadTowardTarget) {
   HumanoidPoseController controller(pose, anim_ctx);
 
@@ -511,6 +556,41 @@ TEST_F(HumanoidPoseControllerTest, KneelExitProgressReturnsTowardsStanding) {
       << "Full kneel should be lower than half-way through exit";
   EXPECT_NEAR(full_exit_pose.pelvis_pos.y(), standing_pelvis_y, 0.001F)
       << "Completed exit should restore original standing height";
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearDirectionBlendsDuringHoldEntry) {
+  AnimationInputs standing_inputs{};
+  QVector3D const standing_dir = compute_spear_direction(standing_inputs);
+
+  AnimationInputs partial_hold_inputs{};
+  partial_hold_inputs.is_in_hold_mode = true;
+  partial_hold_inputs.hold_entry_progress = 0.5F;
+  QVector3D const partial_hold_dir =
+      compute_spear_direction(partial_hold_inputs);
+
+  AnimationInputs full_hold_inputs{};
+  full_hold_inputs.is_in_hold_mode = true;
+  full_hold_inputs.hold_entry_progress = 1.0F;
+  QVector3D const full_hold_dir = compute_spear_direction(full_hold_inputs);
+
+  EXPECT_LT(partial_hold_dir.y(), standing_dir.y());
+  EXPECT_GT(partial_hold_dir.y(), full_hold_dir.y());
+  EXPECT_GT(partial_hold_dir.z(), standing_dir.z());
+  EXPECT_LT(partial_hold_dir.z(), full_hold_dir.z());
+}
+
+TEST_F(HumanoidPoseControllerTest, SpearDirectionMatchesExitHoldDepth) {
+  AnimationInputs entry_inputs{};
+  entry_inputs.is_in_hold_mode = true;
+  entry_inputs.hold_entry_progress = 0.75F;
+  QVector3D const entry_dir = compute_spear_direction(entry_inputs);
+
+  AnimationInputs exit_inputs{};
+  exit_inputs.is_exiting_hold = true;
+  exit_inputs.hold_exit_progress = 0.25F;
+  QVector3D const exit_dir = compute_spear_direction(exit_inputs);
+
+  EXPECT_TRUE(approxEqual(entry_dir, exit_dir, 0.001F));
 }
 
 TEST_F(HumanoidPoseControllerTest,

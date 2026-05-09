@@ -6,6 +6,7 @@ add_library(render_gl STATIC
     gl/primitives.cpp
     scene_renderer.cpp
     render_backend_factory.cpp
+    persistent_render_registry.cpp
     gl/camera.cpp
     gl/resources.cpp
     gl/bootstrap.cpp

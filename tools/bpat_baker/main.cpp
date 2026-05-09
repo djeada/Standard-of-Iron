@@ -2,6 +2,7 @@
 
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_writer.h"
+#include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/snapshot_mesh_asset.h"
 #include "render/creature/species_manifest.h"
 
@@ -28,6 +29,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
@@ -47,6 +49,7 @@ namespace bpat = Render::Creature::Bpat;
 namespace snapshot = Render::Creature::Snapshot;
 
 enum class BakerAttackType : std::uint8_t { None, Sword, Spear, Bow };
+enum class BakerHoldType : std::uint8_t { None, Spear, Bow };
 enum class BakerRidingType : std::uint8_t {
   None,
   Idle,
@@ -62,46 +65,57 @@ struct HumanoidClipSpec {
   BakerAttackType attack_type{BakerAttackType::None};
   std::uint8_t attack_variant{0};
   BakerRidingType riding_type{BakerRidingType::None};
+  BakerHoldType hold_type{BakerHoldType::None};
   std::uint32_t frames;
   float fps;
   float cycle_time;
   bool loops;
 };
 
-constexpr std::array<HumanoidClipSpec, 15> kHumanoidClips{{
+constexpr std::array<HumanoidClipSpec, 16> kHumanoidClips{{
     {"idle", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None, 0,
-     BakerRidingType::None, 24U, 24.0F, 1.6F, true},
+     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 1.6F, true},
     {"walk", Render::GL::HumanoidMotionState::Walk, BakerAttackType::None, 0,
-     BakerRidingType::None, 24U, 24.0F, 0.92F, true},
+     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 0.92F, true},
     {"run", Render::GL::HumanoidMotionState::Run, BakerAttackType::None, 0,
-     BakerRidingType::None, 24U, 24.0F, 0.56F, true},
+     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 0.56F, true},
     {"hold", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None, 0,
-     BakerRidingType::None, 16U, 24.0F, 1.8F, true},
+     BakerRidingType::None, BakerHoldType::Spear, 16U, 24.0F, 1.8F, true},
+    {"hold_bow", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None,
+     0, BakerRidingType::None, BakerHoldType::Bow, 16U, 24.0F, 1.8F, true},
     {"attack_sword_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 0, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Sword, 0, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_sword_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 1, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Sword, 1, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_sword_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 2, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Sword, 2, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_spear_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 0, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Spear, 0, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_spear_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 1, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Spear, 1, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_spear_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 2, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Spear, 2, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"attack_bow", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Bow, 0, BakerRidingType::None, 24U, 24.0F, 1.0F, false},
+     BakerAttackType::Bow, 0, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 1.0F, false},
     {"riding_idle", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerRidingType::Idle, 24U, 24.0F, 1.6F, true},
+     BakerAttackType::None, 0, BakerRidingType::Idle, BakerHoldType::None, 24U,
+     24.0F, 1.6F, true},
     {"riding_charge", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerRidingType::Charge, 24U, 24.0F, 1.0F,
-     false},
+     BakerAttackType::None, 0, BakerRidingType::Charge, BakerHoldType::None,
+     24U, 24.0F, 1.0F, false},
     {"riding_reining", Render::GL::HumanoidMotionState::Hold,
-     BakerAttackType::None, 0, BakerRidingType::Reining, 24U, 24.0F, 1.0F,
-     false},
+     BakerAttackType::None, 0, BakerRidingType::Reining, BakerHoldType::None,
+     24U, 24.0F, 1.0F, false},
     {"riding_bow_shot", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerRidingType::BowShot, 24U, 24.0F, 1.0F,
-     false},
+     BakerAttackType::None, 0, BakerRidingType::BowShot, BakerHoldType::None,
+     24U, 24.0F, 1.0F, false},
 }};
 
 struct HumanoidSocketSpec {
@@ -121,6 +135,130 @@ constexpr std::array<HumanoidSocketSpec, 10> kHumanoidSockets{{
     {"foot_l", Render::Humanoid::HumanoidSocket::FootL},
     {"foot_r", Render::Humanoid::HumanoidSocket::FootR},
 }};
+
+auto blend_vec(const QVector3D &from, const QVector3D &to,
+               float t) -> QVector3D {
+  return from * (1.0F - t) + to * t;
+}
+
+auto blend_attachment_frame(const Render::GL::AttachmentFrame &from,
+                            const Render::GL::AttachmentFrame &to,
+                            float t) -> Render::GL::AttachmentFrame {
+  Render::GL::AttachmentFrame blended = from;
+  blended.origin = blend_vec(from.origin, to.origin, t);
+  blended.right = blend_vec(from.right, to.right, t);
+  blended.up = blend_vec(from.up, to.up, t);
+  blended.forward = blend_vec(from.forward, to.forward, t);
+  blended.radius = from.radius * (1.0F - t) + to.radius * t;
+  blended.depth = from.depth * (1.0F - t) + to.depth * t;
+  return blended;
+}
+
+auto blend_body_frames(const Render::GL::BodyFrames &from,
+                       const Render::GL::BodyFrames &to,
+                       float t) -> Render::GL::BodyFrames {
+  Render::GL::BodyFrames blended = from;
+  blended.head = blend_attachment_frame(from.head, to.head, t);
+  blended.torso = blend_attachment_frame(from.torso, to.torso, t);
+  blended.back = blend_attachment_frame(from.back, to.back, t);
+  blended.waist = blend_attachment_frame(from.waist, to.waist, t);
+  blended.shoulder_l =
+      blend_attachment_frame(from.shoulder_l, to.shoulder_l, t);
+  blended.shoulder_r =
+      blend_attachment_frame(from.shoulder_r, to.shoulder_r, t);
+  blended.hand_l = blend_attachment_frame(from.hand_l, to.hand_l, t);
+  blended.hand_r = blend_attachment_frame(from.hand_r, to.hand_r, t);
+  blended.grip_l = blend_attachment_frame(from.grip_l, to.grip_l, t);
+  blended.grip_r = blend_attachment_frame(from.grip_r, to.grip_r, t);
+  blended.foot_l = blend_attachment_frame(from.foot_l, to.foot_l, t);
+  blended.foot_r = blend_attachment_frame(from.foot_r, to.foot_r, t);
+  blended.shin_l = blend_attachment_frame(from.shin_l, to.shin_l, t);
+  blended.shin_r = blend_attachment_frame(from.shin_r, to.shin_r, t);
+  return blended;
+}
+
+auto blend_pose(const Render::GL::HumanoidPose &from,
+                const Render::GL::HumanoidPose &to,
+                float t) -> Render::GL::HumanoidPose {
+  Render::GL::HumanoidPose blended = from;
+  blended.head_pos = blend_vec(from.head_pos, to.head_pos, t);
+  blended.head_r = from.head_r * (1.0F - t) + to.head_r * t;
+  blended.neck_base = blend_vec(from.neck_base, to.neck_base, t);
+  blended.head_frame =
+      blend_attachment_frame(from.head_frame, to.head_frame, t);
+  blended.body_frames = blend_body_frames(from.body_frames, to.body_frames, t);
+  blended.shoulder_l = blend_vec(from.shoulder_l, to.shoulder_l, t);
+  blended.shoulder_r = blend_vec(from.shoulder_r, to.shoulder_r, t);
+  blended.elbow_l = blend_vec(from.elbow_l, to.elbow_l, t);
+  blended.elbow_r = blend_vec(from.elbow_r, to.elbow_r, t);
+  blended.hand_l = blend_vec(from.hand_l, to.hand_l, t);
+  blended.hand_r = blend_vec(from.hand_r, to.hand_r, t);
+  blended.pelvis_pos = blend_vec(from.pelvis_pos, to.pelvis_pos, t);
+  blended.knee_l = blend_vec(from.knee_l, to.knee_l, t);
+  blended.knee_r = blend_vec(from.knee_r, to.knee_r, t);
+  blended.foot_y_offset =
+      from.foot_y_offset * (1.0F - t) + to.foot_y_offset * t;
+  blended.foot_l = blend_vec(from.foot_l, to.foot_l, t);
+  blended.foot_r = blend_vec(from.foot_r, to.foot_r, t);
+  return blended;
+}
+
+auto transition_phase(std::uint32_t frame_index,
+                      std::uint32_t frame_count) -> float {
+  if (frame_count <= 1U) {
+    return 1.0F;
+  }
+  return std::clamp(static_cast<float>(frame_index) /
+                        static_cast<float>(frame_count - 1U),
+                    0.0F, 1.0F);
+}
+
+auto hold_gait_descriptor() -> Render::GL::HumanoidGaitDescriptor {
+  Render::GL::HumanoidGaitDescriptor gait{};
+  gait.state = Render::GL::HumanoidMotionState::Hold;
+  gait.cycle_time = 1.8F;
+  gait.cycle_phase = 0.0F;
+  gait.speed = 0.0F;
+  gait.normalized_speed = 0.0F;
+  return gait;
+}
+
+void bake_hold_pose(HumanoidBakeProfile profile, BakerHoldType hold_type,
+                    float blend, Render::GL::HumanoidPose &pose) {
+  float const mix = std::clamp(blend, 0.0F, 1.0F);
+  if (mix <= 0.0F) {
+    return;
+  }
+
+  Render::GL::HumanoidPose const standing_pose = pose;
+  Render::GL::HumanoidAnimationContext anim_ctx{};
+  anim_ctx.gait = hold_gait_descriptor();
+  anim_ctx.motion_state = Render::GL::HumanoidMotionState::Hold;
+  anim_ctx.inputs.is_in_hold_mode = true;
+  anim_ctx.inputs.hold_entry_progress = mix;
+
+  Render::GL::HumanoidPose held_pose = standing_pose;
+  Render::GL::HumanoidPoseController ctrl(held_pose, anim_ctx);
+
+  float kneel_depth = 0.875F;
+  if (profile == HumanoidBakeProfile::SwordReady) {
+    kneel_depth = 0.825F;
+  } else if (hold_type == BakerHoldType::Bow) {
+    kneel_depth = 1.125F;
+  }
+
+  ctrl.kneel(kneel_depth);
+  if (profile == HumanoidBakeProfile::SwordReady) {
+    ctrl.brace_sword_and_shield_for_hold();
+  } else if (hold_type == BakerHoldType::Bow) {
+    ctrl.hold_bow_ready();
+  } else {
+    ctrl.brace_spear_for_hold();
+  }
+
+  float const eased_mix = mix * mix * (3.0F - 2.0F * mix);
+  pose = blend_pose(standing_pose, held_pose, eased_mix);
+}
 
 void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
                               const HumanoidClipSpec &clip,
@@ -222,7 +360,6 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     Render::GL::HumanoidGaitDescriptor gait{};
     gait.state = clip.state;
     gait.cycle_time = clip.cycle_time;
-    gait.cycle_phase = phase;
 
     switch (clip.state) {
     case Render::GL::HumanoidMotionState::Idle:
@@ -244,9 +381,19 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
       break;
     }
 
-    Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-        0U, phase * clip.cycle_time, gait, variation, pose);
-    if (profile == HumanoidBakeProfile::SwordReady) {
+    if (clip.hold_type != BakerHoldType::None) {
+      gait.cycle_phase = 0.0F;
+      Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+          0U, 0.0F, gait, variation, pose);
+      bake_hold_pose(profile, clip.hold_type,
+                     transition_phase(frame_index, clip.frames), pose);
+    } else {
+      gait.cycle_phase = phase;
+      Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+          0U, phase * clip.cycle_time, gait, variation, pose);
+    }
+    if (profile == HumanoidBakeProfile::SwordReady &&
+        clip.hold_type == BakerHoldType::None) {
       Render::GL::HumanoidAnimationContext anim_ctx{};
       anim_ctx.gait = gait;
       anim_ctx.motion_state = clip.state;
@@ -749,6 +896,13 @@ bool bake_elephant(const std::filesystem::path &out_dir) {
 } // namespace
 
 int main(int argc, char **argv) {
+  static_assert(Render::Creature::kHumanoidHoldClip == 3U);
+  static_assert(Render::Creature::kHumanoidHoldBowClip == 4U);
+  static_assert(Render::Creature::kHumanoidAttackSwordAClip == 5U);
+  static_assert(Render::Creature::kHumanoidAttackSpearAClip == 8U);
+  static_assert(Render::Creature::kHumanoidAttackBowClip == 11U);
+  static_assert(Render::Creature::kHumanoidRidingIdleClip == 12U);
+  static_assert(Render::Creature::kHumanoidRidingBowShotClip == 15U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];
