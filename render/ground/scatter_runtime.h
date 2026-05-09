@@ -57,7 +57,7 @@ auto collect_visible_instances(
   visible_instances.reserve(instances.size());
   for (const auto &instance : instances) {
     const auto position = position_accessor(instance);
-    if (snapshot.isVisibleWorld(position.x(), position.z())) {
+    if (snapshot.is_visible_world(position.x(), position.z())) {
       visible_instances.push_back(instance);
     }
   }

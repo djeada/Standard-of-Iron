@@ -159,12 +159,12 @@ void RiverbankRenderer::submit(Renderer &renderer, ResourceManager *resources) {
         state = SegmentState::Visible;
       }
       for (const auto &sample : samples) {
-        if (visibility_snapshot.isVisibleWorld(sample.x(), sample.z())) {
+        if (visibility_snapshot.is_visible_world(sample.x(), sample.z())) {
           state = SegmentState::Visible;
           break;
         }
         if ((state == SegmentState::Hidden) &&
-            visibility_snapshot.isExploredWorld(sample.x(), sample.z())) {
+            visibility_snapshot.is_explored_world(sample.x(), sample.z())) {
           state = SegmentState::Explored;
         }
       }

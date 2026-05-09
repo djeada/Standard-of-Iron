@@ -94,7 +94,7 @@ TEST_F(MissionLoaderTest, LoadsValidMission) {
   MissionDefinition mission;
   QString error;
   bool result =
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error);
 
   EXPECT_TRUE(result) << "Error: " << error.toStdString();
   EXPECT_EQ(mission.id, "test_mission");
@@ -113,7 +113,7 @@ TEST_F(MissionLoaderTest, ParsesPlayerSetup) {
   MissionDefinition mission;
   QString error;
   ASSERT_TRUE(
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   EXPECT_EQ(mission.player_setup.nation, "roman_republic");
   EXPECT_EQ(mission.player_setup.faction, "roman");
@@ -136,7 +136,7 @@ TEST_F(MissionLoaderTest, ParsesAISetups) {
   MissionDefinition mission;
   QString error;
   ASSERT_TRUE(
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.ai_setups.size(), 1);
   EXPECT_EQ(mission.ai_setups[0].id, "enemy_1");
@@ -158,7 +158,7 @@ TEST_F(MissionLoaderTest, ParsesVictoryConditions) {
   MissionDefinition mission;
   QString error;
   ASSERT_TRUE(
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.victory_conditions.size(), 1);
   EXPECT_EQ(mission.victory_conditions[0].type, "survive_duration");
@@ -176,7 +176,7 @@ TEST_F(MissionLoaderTest, ParsesDefeatConditions) {
   MissionDefinition mission;
   QString error;
   ASSERT_TRUE(
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error));
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error));
 
   ASSERT_EQ(mission.defeat_conditions.size(), 1);
   EXPECT_EQ(mission.defeat_conditions[0].type, "lose_structure");
@@ -194,7 +194,7 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
   MissionDefinition mission;
   QString error;
   bool result =
-      MissionLoader::loadFromJsonFile(temp_file.fileName(), mission, &error);
+      MissionLoader::load_from_json_file(temp_file.fileName(), mission, &error);
 
   EXPECT_FALSE(result);
   EXPECT_FALSE(error.isEmpty());
@@ -203,7 +203,7 @@ TEST_F(MissionLoaderTest, FailsOnInvalidJSON) {
 TEST_F(MissionLoaderTest, FailsOnNonexistentFile) {
   MissionDefinition mission;
   QString error;
-  bool result = MissionLoader::loadFromJsonFile("/nonexistent/file.json",
+  bool result = MissionLoader::load_from_json_file("/nonexistent/file.json",
                                                 mission, &error);
 
   EXPECT_FALSE(result);

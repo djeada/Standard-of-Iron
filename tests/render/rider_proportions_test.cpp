@@ -26,11 +26,11 @@ public:
 
 class RiderProportionsTest : public ::testing::Test {
 protected:
-  bool inRange(float value, float min, float max) {
+  bool in_range(float value, float min, float max) {
     return value >= min && value <= max;
   }
 
-  bool approxEqual(float a, float b, float epsilon = 0.01F) {
+  bool approx_equal(float a, float b, float epsilon = 0.01F) {
     return std::abs(a - b) < epsilon;
   }
 };
@@ -41,11 +41,11 @@ TEST_F(RiderProportionsTest, RomanRiderHasRealisticProportions) {
   TestMocks::RomanHorseSwordsmanRenderer renderer;
   QVector3D const proportions = renderer.get_proportion_scaling();
 
-  EXPECT_TRUE(inRange(proportions.x(), 0.9F, 1.1F))
+  EXPECT_TRUE(in_range(proportions.x(), 0.9F, 1.1F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.85F, 0.98F))
+  EXPECT_TRUE(in_range(proportions.y(), 0.85F, 0.98F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.9F, 1.1F))
+  EXPECT_TRUE(in_range(proportions.z(), 0.9F, 1.1F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
@@ -53,11 +53,11 @@ TEST_F(RiderProportionsTest, CarthageRiderHasRealisticProportions) {
   TestMocks::CarthageHorseSwordsmanRenderer renderer;
   QVector3D const proportions = renderer.get_proportion_scaling();
 
-  EXPECT_TRUE(inRange(proportions.x(), 0.9F, 1.1F))
+  EXPECT_TRUE(in_range(proportions.x(), 0.9F, 1.1F))
       << "Width scale " << proportions.x() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.y(), 0.85F, 0.98F))
+  EXPECT_TRUE(in_range(proportions.y(), 0.85F, 0.98F))
       << "Height scale " << proportions.y() << " is outside realistic range";
-  EXPECT_TRUE(inRange(proportions.z(), 0.9F, 1.1F))
+  EXPECT_TRUE(in_range(proportions.z(), 0.9F, 1.1F))
       << "Depth scale " << proportions.z() << " is outside realistic range";
 }
 
@@ -68,11 +68,11 @@ TEST_F(RiderProportionsTest, AllNationsHaveConsistentProportions) {
   QVector3D const roman_props = roman_renderer.get_proportion_scaling();
   QVector3D const carthage_props = carthage_renderer.get_proportion_scaling();
 
-  EXPECT_TRUE(approxEqual(roman_props.x(), carthage_props.x(), 0.1F))
+  EXPECT_TRUE(approx_equal(roman_props.x(), carthage_props.x(), 0.1F))
       << "Roman and Carthage width scales differ too much";
-  EXPECT_TRUE(approxEqual(roman_props.y(), carthage_props.y(), 0.1F))
+  EXPECT_TRUE(approx_equal(roman_props.y(), carthage_props.y(), 0.1F))
       << "Roman and Carthage height scales differ too much";
-  EXPECT_TRUE(approxEqual(roman_props.z(), carthage_props.z(), 0.1F))
+  EXPECT_TRUE(approx_equal(roman_props.z(), carthage_props.z(), 0.1F))
       << "Roman and Carthage depth scales differ too much";
 }
 
@@ -81,16 +81,16 @@ TEST_F(RiderProportionsTest, ProportionsPreventOverlyElongatedLimbs) {
   QVector3D const proportions = renderer.get_proportion_scaling();
 
   float const width_height_ratio = proportions.x() / proportions.y();
-  EXPECT_TRUE(inRange(width_height_ratio, 0.5F, 2.0F))
+  EXPECT_TRUE(in_range(width_height_ratio, 0.5F, 2.0F))
       << "Width/height ratio " << width_height_ratio << " is too extreme";
 
   float const depth_height_ratio = proportions.z() / proportions.y();
-  EXPECT_TRUE(inRange(depth_height_ratio, 0.5F, 2.0F))
+  EXPECT_TRUE(in_range(depth_height_ratio, 0.5F, 2.0F))
       << "Depth/height ratio " << depth_height_ratio << " is too extreme";
 
   float const avg_lateral = (proportions.x() + proportions.z()) / 2.0F;
   float const height_vs_lateral = proportions.y() / avg_lateral;
-  EXPECT_TRUE(inRange(height_vs_lateral, 0.7F, 1.3F))
+  EXPECT_TRUE(in_range(height_vs_lateral, 0.7F, 1.3F))
       << "Height vs lateral proportion ratio " << height_vs_lateral
       << " is unbalanced";
 }

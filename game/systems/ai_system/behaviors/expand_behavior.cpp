@@ -35,7 +35,7 @@ void ExpandBehavior::execute(const AISnapshot &snapshot, AIContext &context,
       continue;
     }
 
-    if (!Game::Core::isNeutralOwner(enemy.owner_id)) {
+    if (!Game::Core::is_neutral_owner(enemy.owner_id)) {
       continue;
     }
 
@@ -148,7 +148,7 @@ auto ExpandBehavior::should_execute(const AISnapshot &snapshot,
   for (const auto &enemy : snapshot.visible_enemies) {
     if (enemy.is_building &&
         enemy.spawn_type == Game::Units::SpawnType::Barracks &&
-        Game::Core::isNeutralOwner(enemy.owner_id)) {
+        Game::Core::is_neutral_owner(enemy.owner_id)) {
       return true;
     }
   }

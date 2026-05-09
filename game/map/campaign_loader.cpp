@@ -6,7 +6,7 @@
 
 namespace Game::Campaign {
 
-auto CampaignLoader::parseCampaignMission(const QJsonObject &obj)
+auto CampaignLoader::parse_campaign_mission(const QJsonObject &obj)
     -> CampaignMission {
   CampaignMission mission;
   mission.mission_id = obj["mission_id"].toString();
@@ -32,7 +32,7 @@ auto CampaignLoader::parseCampaignMission(const QJsonObject &obj)
   return mission;
 }
 
-auto CampaignLoader::loadFromJsonFile(const QString &file_path,
+auto CampaignLoader::load_from_json_file(const QString &file_path,
                                       CampaignDefinition &out_campaign,
                                       QString *error_msg) -> bool {
   QFile file(file_path);
@@ -73,7 +73,7 @@ auto CampaignLoader::loadFromJsonFile(const QString &file_path,
     const QJsonArray missions = root["missions"].toArray();
     for (const auto &mission_val : missions) {
       out_campaign.missions.push_back(
-          parseCampaignMission(mission_val.toObject()));
+          parse_campaign_mission(mission_val.toObject()));
     }
   }
 

@@ -51,11 +51,11 @@ inline auto evaluate_linear_feature_visibility(
     const QVector3D sample = start + (end - start) * t;
     any_sample_in_bounds = any_sample_in_bounds || is_in_bounds(sample);
 
-    if (snapshot->isVisibleWorld(sample.x(), sample.z())) {
+    if (snapshot->is_visible_world(sample.x(), sample.z())) {
       max_visibility_state = 2;
       break;
     }
-    if (snapshot->isExploredWorld(sample.x(), sample.z())) {
+    if (snapshot->is_explored_world(sample.x(), sample.z())) {
       max_visibility_state = std::max(max_visibility_state, 1);
     }
   }

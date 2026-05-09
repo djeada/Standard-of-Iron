@@ -91,11 +91,11 @@ inline auto terrainTypeToQString(TerrainType type) -> QString {
   return QStringLiteral("flat");
 }
 
-inline auto terrainTypeToString(TerrainType type) -> std::string {
+inline auto terrain_type_to_string(TerrainType type) -> std::string {
   return terrainTypeToQString(type).toStdString();
 }
 
-inline auto tryParseTerrainType(const QString &value,
+inline auto try_parse_terrain_type(const QString &value,
                                 TerrainType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("flat")) {
@@ -124,7 +124,7 @@ inline auto tryParseTerrainType(const QString &value,
 inline auto
 terrainTypeFromString(const std::string &str) -> std::optional<TerrainType> {
   TerrainType result;
-  if (tryParseTerrainType(QString::fromStdString(str), result)) {
+  if (try_parse_terrain_type(QString::fromStdString(str), result)) {
     return result;
   }
   return std::nullopt;
@@ -583,7 +583,7 @@ struct TerrainFeature {
 
   std::vector<QVector3D> entrances;
 
-  float rotationDeg = 0.0F;
+  float rotation_deg = 0.0F;
 };
 
 struct RiverSegment {
@@ -629,9 +629,9 @@ class TerrainHeightMap {
 public:
   TerrainHeightMap(int width, int height, float tile_size);
 
-  void buildFromFeatures(const std::vector<TerrainFeature> &features);
+  void build_from_features(const std::vector<TerrainFeature> &features);
 
-  void addRiverSegments(const std::vector<RiverSegment> &riverSegments);
+  void add_river_segments(const std::vector<RiverSegment> &riverSegments);
 
   [[nodiscard]] auto getHeightAt(float world_x, float world_z) const -> float;
 
@@ -666,7 +666,7 @@ public:
     return m_riverSegments;
   }
 
-  void addBridges(const std::vector<Bridge> &bridges);
+  void add_bridges(const std::vector<Bridge> &bridges);
   [[nodiscard]] auto get_bridges() const -> const std::vector<Bridge> & {
     return m_bridges;
   }
@@ -679,9 +679,9 @@ public:
   [[nodiscard]] auto getBridgeDeckHeight(float world_x, float world_z) const
       -> std::optional<float>;
 
-  void applyBiomeVariation(const BiomeSettings &settings);
+  void apply_biome_variation(const BiomeSettings &settings);
 
-  void restoreFromData(const std::vector<float> &heights,
+  void restore_from_data(const std::vector<float> &heights,
                        const std::vector<TerrainType> &terrain_types,
                        const std::vector<RiverSegment> &rivers,
                        const std::vector<Bridge> &bridges);
@@ -702,9 +702,9 @@ private:
   std::vector<QVector3D> m_bridgeCenters;
 
   [[nodiscard]] auto indexAt(int x, int z) const -> int;
-  [[nodiscard]] auto inBounds(int x, int z) const -> bool;
+  [[nodiscard]] auto in_bounds(int x, int z) const -> bool;
 
-  void precomputeBridgeData();
+  void precompute_bridge_data();
 
   [[nodiscard]] static auto
   calculateFeatureHeight(const TerrainFeature &feature, float world_x,

@@ -17,7 +17,7 @@ namespace {
 struct MeshBounds {
   QVector3D min;
   QVector3D max;
-  int materialId = 0;
+  int material_id = 0;
 };
 
 class BoundsSubmitter : public ISubmitter {
@@ -25,7 +25,7 @@ public:
   std::vector<MeshBounds> meshes;
 
   void mesh(Mesh *mesh, const QMatrix4x4 &model, const QVector3D &,
-            Texture * = nullptr, float = 1.0F, int materialId = 0) override {
+            Texture * = nullptr, float = 1.0F, int material_id = 0) override {
     if (mesh == nullptr) {
       return;
     }
@@ -37,7 +37,7 @@ public:
     b.max = QVector3D(std::numeric_limits<float>::lowest(),
                       std::numeric_limits<float>::lowest(),
                       std::numeric_limits<float>::lowest());
-    b.materialId = materialId;
+    b.material_id = material_id;
 
     for (const auto &v : mesh->getVertices()) {
       QVector3D p(v.position[0], v.position[1], v.position[2]);
@@ -126,7 +126,7 @@ public:
   }
 };
 
-auto extractMinY(const std::vector<MeshBounds> &meshes) -> float {
+auto extract_min_y(const std::vector<MeshBounds> &meshes) -> float {
   float min_y = std::numeric_limits<float>::max();
   for (const auto &m : meshes) {
     min_y = std::min(min_y, m.min.y());
@@ -150,12 +150,12 @@ TEST(CarthageArmorBoundsTest, LightArmorStaysNearWaist) {
   for (size_t i = 0; i < submitter.meshes.size(); ++i) {
     const auto &m = submitter.meshes[i];
     debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
-          << m.materialId << ") ";
+          << m.material_id << ") ";
   }
   debug << "waist_r=" << pose_result.pose.body_frames.waist.radius;
   SCOPED_TRACE(debug.str());
 
-  float const armor_min_y = extractMinY(submitter.meshes);
+  float const armor_min_y = extract_min_y(submitter.meshes);
   float const waist_y =
       pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
 
@@ -177,12 +177,12 @@ TEST(CarthageArmorBoundsTest, HeavyArmorStaysNearWaist) {
   for (size_t i = 0; i < submitter.meshes.size(); ++i) {
     const auto &m = submitter.meshes[i];
     debug << "#" << i << ": [" << m.min.y() << ", " << m.max.y() << "] (mat "
-          << m.materialId << ") ";
+          << m.material_id << ") ";
   }
   debug << "waist_r=" << pose_result.pose.body_frames.waist.radius;
   SCOPED_TRACE(debug.str());
 
-  float const armor_min_y = extractMinY(submitter.meshes);
+  float const armor_min_y = extract_min_y(submitter.meshes);
   float const waist_y =
       pose_result.ctx.model.map(pose_result.pose.body_frames.waist.origin).y();
 

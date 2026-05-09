@@ -41,14 +41,14 @@ constexpr float k_entry_mouth_soften_strength = 0.06F;
 constexpr float k_entry_floor_flatten_strength = 0.04F;
 constexpr float k_entry_shoulder_raise_strength = 0.06F;
 
-inline auto hashCoords(int x, int z, std::uint32_t seed) -> std::uint32_t {
+inline auto hash_coords(int x, int z, std::uint32_t seed) -> std::uint32_t {
   std::uint32_t const ux = static_cast<std::uint32_t>(x) * 73856093U;
   std::uint32_t const uz = static_cast<std::uint32_t>(z) * 19349663U;
   std::uint32_t const s = seed * 83492791U + 0x9e3779b9U;
   return ux ^ uz ^ s;
 }
 
-inline auto hashToFloat01(std::uint32_t h) -> float {
+inline auto hash_to_float01(std::uint32_t h) -> float {
   h ^= h >> 17;
   h *= 0xed5ad4bbU;
   h ^= h >> 11;
@@ -59,7 +59,7 @@ inline auto hashToFloat01(std::uint32_t h) -> float {
   return (h & 0x00FFFFFFU) / float(0x01000000);
 }
 
-inline auto valueNoise2D(float x, float z, std::uint32_t seed) -> float {
+inline auto value_noise_2d(float x, float z, std::uint32_t seed) -> float {
   int const ix0 = static_cast<int>(std::floor(x));
   int const iz0 = static_cast<int>(std::floor(z));
   int const ix1 = ix0 + 1;
@@ -68,10 +68,10 @@ inline auto valueNoise2D(float x, float z, std::uint32_t seed) -> float {
   float const tx = x - static_cast<float>(ix0);
   float const tz = z - static_cast<float>(iz0);
 
-  float const n00 = hashToFloat01(hashCoords(ix0, iz0, seed));
-  float const n10 = hashToFloat01(hashCoords(ix1, iz0, seed));
-  float const n01 = hashToFloat01(hashCoords(ix0, iz1, seed));
-  float const n11 = hashToFloat01(hashCoords(ix1, iz1, seed));
+  float const n00 = hash_to_float01(hash_coords(ix0, iz0, seed));
+  float const n10 = hash_to_float01(hash_coords(ix1, iz0, seed));
+  float const n01 = hash_to_float01(hash_coords(ix0, iz1, seed));
+  float const n11 = hash_to_float01(hash_coords(ix1, iz1, seed));
 
   float const nx0 = n00 * (1.0F - tx) + n10 * tx;
   float const nx1 = n01 * (1.0F - tx) + n11 * tx;
@@ -147,7 +147,7 @@ TerrainHeightMap::TerrainHeightMap(int width, int height, float tile_size)
   m_hillWalkable.resize(count, false);
 }
 
-void TerrainHeightMap::buildFromFeatures(
+void TerrainHeightMap::build_from_features(
     const std::vector<TerrainFeature> &features) {
 
   std::fill(m_heights.begin(), m_heights.end(), 0.0F);
@@ -178,7 +178,7 @@ void TerrainHeightMap::buildFromFeatures(
       const int max_z =
           std::min(m_height - 1, int(std::ceil(grid_center_z + bound)));
 
-      const float angle_rad = feature.rotationDeg * k_deg_to_rad;
+      const float angle_rad = feature.rotation_deg * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
       const float sin_a = std::sin(angle_rad);
 
@@ -239,7 +239,7 @@ void TerrainHeightMap::buildFromFeatures(
       std::vector<std::uint8_t> entrance_line_mask(map_cell_count, 0);
       std::vector<int> entrance_indices;
 
-      const float angle_rad = feature.rotationDeg * k_deg_to_rad;
+      const float angle_rad = feature.rotation_deg * k_deg_to_rad;
       const float cos_a = std::cos(angle_rad);
       const float sin_a = std::sin(angle_rad);
 
@@ -294,7 +294,7 @@ void TerrainHeightMap::buildFromFeatures(
             (entrance.z() / m_tile_size) + grid_half_height;
         int const ex = int(std::round(entrance_gx));
         int const ez = int(std::round(entrance_gz));
-        if (!inBounds(ex, ez)) {
+        if (!in_bounds(ex, ez)) {
           continue;
         }
 
@@ -342,7 +342,7 @@ void TerrainHeightMap::buildFromFeatures(
           for (int step = 0; step < steps; ++step) {
             int const ix = int(std::round(test_x));
             int const iz = int(std::round(test_z));
-            if (!inBounds(ix, iz)) {
+            if (!in_bounds(ix, iz)) {
               break;
             }
             const float cell_dx = float(ix) - grid_center_x;
@@ -383,7 +383,7 @@ void TerrainHeightMap::buildFromFeatures(
           bool const is_outward = ramp_step < outward_steps;
           int const center_ix = int(std::round(cur_x));
           int const center_iz = int(std::round(cur_z));
-          if (!inBounds(center_ix, center_iz)) {
+          if (!in_bounds(center_ix, center_iz)) {
             break;
           }
 
@@ -451,7 +451,7 @@ void TerrainHeightMap::buildFromFeatures(
             int const ix = int(std::round(offset_x));
             int const iz = int(std::round(offset_z));
 
-            if (!inBounds(ix, iz)) {
+            if (!in_bounds(ix, iz)) {
               continue;
             }
 
@@ -539,7 +539,7 @@ void TerrainHeightMap::buildFromFeatures(
             for (const auto &dir : k_dirs) {
               int const nx = x + dir[0];
               int const nz = z + dir[1];
-              if (!inBounds(nx, nz)) {
+              if (!in_bounds(nx, nz)) {
                 adjacent_to_non_hill = true;
                 break;
               }
@@ -570,7 +570,7 @@ void TerrainHeightMap::buildFromFeatures(
             for (const auto &dir : k_dirs) {
               int const nx = x + dir[0];
               int const nz = z + dir[1];
-              if (!inBounds(nx, nz)) {
+              if (!in_bounds(nx, nz)) {
                 on_edge = true;
                 break;
               }
@@ -611,7 +611,7 @@ void TerrainHeightMap::buildFromFeatures(
             for (const auto &dir : k_dirs) {
               int const nx = cx + dir[0];
               int const nz = cz + dir[1];
-              if (!inBounds(nx, nz)) {
+              if (!in_bounds(nx, nz)) {
                 continue;
               }
               int const n_idx = indexAt(nx, nz);
@@ -677,17 +677,17 @@ auto TerrainHeightMap::getHeightAt(float world_x,
   int const x1 = x0 + 1;
   int const z1 = z0 + 1;
 
-  if (!inBounds(x0, z0)) {
+  if (!in_bounds(x0, z0)) {
     return 0.0F;
   }
 
   float const tx = gx - x0;
   float const tz = gz - z0;
 
-  float const h00 = inBounds(x0, z0) ? m_heights[indexAt(x0, z0)] : 0.0F;
-  float const h10 = inBounds(x1, z0) ? m_heights[indexAt(x1, z0)] : 0.0F;
-  float const h01 = inBounds(x0, z1) ? m_heights[indexAt(x0, z1)] : 0.0F;
-  float const h11 = inBounds(x1, z1) ? m_heights[indexAt(x1, z1)] : 0.0F;
+  float const h00 = in_bounds(x0, z0) ? m_heights[indexAt(x0, z0)] : 0.0F;
+  float const h10 = in_bounds(x1, z0) ? m_heights[indexAt(x1, z0)] : 0.0F;
+  float const h01 = in_bounds(x0, z1) ? m_heights[indexAt(x0, z1)] : 0.0F;
+  float const h11 = in_bounds(x1, z1) ? m_heights[indexAt(x1, z1)] : 0.0F;
 
   float const h0 = h00 * (1.0F - tx) + h10 * tx;
   float const h1 = h01 * (1.0F - tx) + h11 * tx;
@@ -705,14 +705,14 @@ auto TerrainHeightMap::getHeightAt(float world_x,
 }
 
 auto TerrainHeightMap::getHeightAtGrid(int grid_x, int grid_z) const -> float {
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return 0.0F;
   }
   return m_heights[indexAt(grid_x, grid_z)];
 }
 
 auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return false;
   }
 
@@ -739,7 +739,7 @@ auto TerrainHeightMap::is_walkable(int grid_x, int grid_z) const -> bool {
 }
 
 auto TerrainHeightMap::isHillEntrance(int grid_x, int grid_z) const -> bool {
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return false;
   }
   return m_hillEntrances[indexAt(grid_x, grid_z)];
@@ -747,7 +747,7 @@ auto TerrainHeightMap::isHillEntrance(int grid_x, int grid_z) const -> bool {
 
 auto TerrainHeightMap::getTerrainType(int grid_x,
                                       int grid_z) const -> TerrainType {
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return TerrainType::Flat;
   }
   return m_terrain_types[indexAt(grid_x, grid_z)];
@@ -755,7 +755,7 @@ auto TerrainHeightMap::getTerrainType(int grid_x,
 
 auto TerrainHeightMap::isRiverOrNearby(int grid_x, int grid_z,
                                        int margin) const -> bool {
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return false;
   }
 
@@ -770,7 +770,7 @@ auto TerrainHeightMap::isRiverOrNearby(int grid_x, int grid_z,
       }
       int const nx = grid_x + dx;
       int const nz = grid_z + dz;
-      if (inBounds(nx, nz) &&
+      if (in_bounds(nx, nz) &&
           m_terrain_types[indexAt(nx, nz)] == TerrainType::River) {
         return true;
       }
@@ -784,7 +784,7 @@ auto TerrainHeightMap::indexAt(int x, int z) const -> int {
   return z * m_width + x;
 }
 
-auto TerrainHeightMap::inBounds(int x, int z) const -> bool {
+auto TerrainHeightMap::in_bounds(int x, int z) const -> bool {
   return x >= 0 && x < m_width && z >= 0 && z < m_height;
 }
 
@@ -805,7 +805,7 @@ auto TerrainHeightMap::calculateFeatureHeight(const TerrainFeature &feature,
   return feature.height * height_factor;
 }
 
-void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
+void TerrainHeightMap::apply_biome_variation(const BiomeSettings &settings) {
   if (m_heights.empty()) {
     return;
   }
@@ -842,12 +842,12 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
           float const sample_z = world_z * frequency;
 
           float const base_noise =
-              valueNoise2D(sample_x, sample_z, surface_profile.seed);
+              value_noise_2d(sample_x, sample_z, surface_profile.seed);
           float const detail_noise =
-              valueNoise2D(sample_x * 2.5F, sample_z * 2.5F,
+              value_noise_2d(sample_x * 2.5F, sample_z * 2.5F,
                            surface_profile.seed ^ 0xA21C9E37U);
           float const fine_noise =
-              valueNoise2D(sample_x * 5.0F, sample_z * 5.0F,
+              value_noise_2d(sample_x * 5.0F, sample_z * 5.0F,
                            surface_profile.seed ^ 0x7E4B92F1U);
 
           float const blended =
@@ -885,9 +885,9 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
         float const sample_z = world_z * frequency;
 
         float const base_noise =
-            valueNoise2D(sample_x, sample_z, surface_profile.seed);
+            value_noise_2d(sample_x, sample_z, surface_profile.seed);
         float const detail_noise =
-            valueNoise2D(sample_x * 2.0F, sample_z * 2.0F,
+            value_noise_2d(sample_x * 2.0F, sample_z * 2.0F,
                          surface_profile.seed ^ 0xA21C9E37U);
 
         float const blended = 0.65F * base_noise + 0.35F * detail_noise;
@@ -905,7 +905,7 @@ void TerrainHeightMap::applyBiomeVariation(const BiomeSettings &settings) {
   }
 }
 
-void TerrainHeightMap::addRiverSegments(
+void TerrainHeightMap::add_river_segments(
     const std::vector<RiverSegment> &riverSegments) {
   m_riverSegments = riverSegments;
 
@@ -968,7 +968,7 @@ void TerrainHeightMap::addRiverSegments(
   }
 }
 
-void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
+void TerrainHeightMap::add_bridges(const std::vector<Bridge> &bridges) {
   constexpr float kBridgeSinkMin = 0.25F;
   constexpr float kBridgeSinkMax = 0.65F;
   constexpr float kBridgeEntryMarginTiles = 1.0F;
@@ -1062,10 +1062,10 @@ void TerrainHeightMap::addBridges(const std::vector<Bridge> &bridges) {
     }
   }
 
-  precomputeBridgeData();
+  precompute_bridge_data();
 }
 
-void TerrainHeightMap::precomputeBridgeData() {
+void TerrainHeightMap::precompute_bridge_data() {
 
   const size_t grid_size = static_cast<size_t>(m_width * m_height);
   m_onBridge.clear();
@@ -1144,7 +1144,7 @@ void TerrainHeightMap::precomputeBridgeData() {
   }
 }
 
-void TerrainHeightMap::restoreFromData(
+void TerrainHeightMap::restore_from_data(
     const std::vector<float> &heights,
     const std::vector<TerrainType> &terrain_types,
     const std::vector<RiverSegment> &rivers,
@@ -1174,7 +1174,7 @@ void TerrainHeightMap::restoreFromData(
   m_riverSegments = rivers;
   m_bridges = bridges;
 
-  precomputeBridgeData();
+  precompute_bridge_data();
 }
 
 auto TerrainHeightMap::getBridgeDeckHeight(float world_x, float world_z) const
@@ -1234,7 +1234,7 @@ auto TerrainHeightMap::isOnBridge(float world_x, float world_z) const -> bool {
   const int grid_z =
       static_cast<int>(std::round((world_z / m_tile_size) + grid_half_height));
 
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return false;
   }
   return m_onBridge[indexAt(grid_x, grid_z)];
@@ -1254,7 +1254,7 @@ auto TerrainHeightMap::getBridgeCenterPosition(
   const int grid_z =
       static_cast<int>(std::round((world_z / m_tile_size) + grid_half_height));
 
-  if (!inBounds(grid_x, grid_z)) {
+  if (!in_bounds(grid_x, grid_z)) {
     return std::nullopt;
   }
 

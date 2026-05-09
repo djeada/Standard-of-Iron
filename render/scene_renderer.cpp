@@ -1209,7 +1209,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       }
 
       if (unit_comp->owner_id != m_local_owner_id && visibility_enabled) {
-        entry.fog_visible = visibility_snapshot.isVisibleWorld(
+        entry.fog_visible = visibility_snapshot.is_visible_world(
             cached.transform->position.x, cached.transform->position.z);
       }
 
@@ -2340,7 +2340,7 @@ void Renderer::render_construction_previews(
 
     if (unit_comp != nullptr && unit_comp->owner_id != m_local_owner_id) {
       if (visibility_enabled &&
-          !visibility_snapshot.isVisibleWorld(preview_x, preview_z)) {
+          !visibility_snapshot.is_visible_world(preview_x, preview_z)) {
         continue;
       }
     }

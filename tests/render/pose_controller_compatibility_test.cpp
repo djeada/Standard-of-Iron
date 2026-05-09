@@ -35,7 +35,7 @@ protected:
   HumanoidPose pose;
   HumanoidAnimationContext anim_ctx;
 
-  bool approxEqual(const QVector3D &a, const QVector3D &b,
+  bool approx_equal(const QVector3D &a, const QVector3D &b,
                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
            std::abs(a.y() - b.y()) < epsilon &&
@@ -62,7 +62,7 @@ TEST_F(PoseControllerCompatibilityTest, ElbowIKMatchesLegacyFunction) {
       controller.solve_elbow_ik(false, shoulder, hand, outward_dir, along_frac,
                                 lateral_offset, y_bias, outward_sign);
 
-  EXPECT_TRUE(approxEqual(legacy_elbow, controller_elbow, 0.001F))
+  EXPECT_TRUE(approx_equal(legacy_elbow, controller_elbow, 0.001F))
       << "Legacy: " << legacy_elbow.x() << ", " << legacy_elbow.y() << ", "
       << legacy_elbow.z() << "\n"
       << "Controller: " << controller_elbow.x() << ", " << controller_elbow.y()
@@ -86,9 +86,9 @@ TEST_F(PoseControllerCompatibilityTest, PlaceHandAtUsesCorrectElbowIK) {
   HumanoidPoseController controller(pose, anim_ctx);
   controller.place_hand_at(false, target_hand);
 
-  EXPECT_TRUE(approxEqual(pose.hand_r, target_hand, 0.001F));
+  EXPECT_TRUE(approx_equal(pose.hand_r, target_hand, 0.001F));
 
-  EXPECT_TRUE(approxEqual(pose.elbow_r, legacy_pose.elbow_r, 0.05F))
+  EXPECT_TRUE(approx_equal(pose.elbow_r, legacy_pose.elbow_r, 0.05F))
       << "Legacy elbow: " << legacy_pose.elbow_r.x() << ", "
       << legacy_pose.elbow_r.y() << ", " << legacy_pose.elbow_r.z() << "\n"
       << "Controller elbow: " << pose.elbow_r.x() << ", " << pose.elbow_r.y()

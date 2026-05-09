@@ -35,7 +35,7 @@ public:
 
   static void
   setPlayerTeamOverrides(const std::unordered_map<int, int> &overrides);
-  static void clearPlayerTeamOverrides();
+  static void clear_player_team_overrides();
 };
 
 } // namespace Game::Map

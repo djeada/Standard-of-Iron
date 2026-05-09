@@ -63,7 +63,7 @@ void Home::init(const SpawnParams &params) {
     home_comp->family_manpower_value = 8;
   }
 
-  if (!Game::Core::isNeutralOwner(m_u->owner_id)) {
+  if (!Game::Core::is_neutral_owner(m_u->owner_id)) {
     if (auto *prod = e->add_component<Engine::Core::ProductionComponent>()) {
       prod->product_type = TroopType::Civilian;
       prod->in_progress = false;

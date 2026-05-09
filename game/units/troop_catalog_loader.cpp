@@ -155,7 +155,7 @@ auto TroopCatalogLoader::load_from_file(const QString &path) -> bool {
       continue;
     }
 
-    const auto type_opt = tryParseTroopType(troop_id.toStdString());
+    const auto type_opt = try_parse_troop_type(troop_id.toStdString());
     if (!type_opt.has_value()) {
       qCWarning(logger()) << "Unknown troop type" << troop_id << "in" << path;
       continue;

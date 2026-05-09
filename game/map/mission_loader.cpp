@@ -6,38 +6,38 @@
 
 namespace Game::Mission {
 
-auto MissionLoader::parsePosition(const QJsonObject &obj) -> Position {
+auto MissionLoader::parse_position(const QJsonObject &obj) -> Position {
   Position pos;
   pos.x = static_cast<float>(obj["x"].toDouble(0.0));
   pos.z = static_cast<float>(obj["z"].toDouble(0.0));
   return pos;
 }
 
-auto MissionLoader::parseUnitSetup(const QJsonObject &obj) -> UnitSetup {
+auto MissionLoader::parse_unit_setup(const QJsonObject &obj) -> UnitSetup {
   UnitSetup unit;
   unit.type = obj["type"].toString();
   unit.count = obj["count"].toInt(1);
-  unit.position = parsePosition(obj["position"].toObject());
+  unit.position = parse_position(obj["position"].toObject());
   return unit;
 }
 
-auto MissionLoader::parseBuildingSetup(const QJsonObject &obj)
+auto MissionLoader::parse_building_setup(const QJsonObject &obj)
     -> BuildingSetup {
   BuildingSetup building;
   building.type = obj["type"].toString();
-  building.position = parsePosition(obj["position"].toObject());
+  building.position = parse_position(obj["position"].toObject());
   building.max_population = obj["max_population"].toInt(100);
   return building;
 }
 
-auto MissionLoader::parseResources(const QJsonObject &obj) -> Resources {
+auto MissionLoader::parse_resources(const QJsonObject &obj) -> Resources {
   Resources res;
   res.gold = obj["gold"].toInt(0);
   res.food = obj["food"].toInt(0);
   return res;
 }
 
-auto MissionLoader::parsePlayerSetup(const QJsonObject &obj) -> PlayerSetup {
+auto MissionLoader::parse_player_setup(const QJsonObject &obj) -> PlayerSetup {
   PlayerSetup setup;
   setup.nation = obj["nation"].toString();
   setup.faction = obj["faction"].toString();
@@ -48,24 +48,24 @@ auto MissionLoader::parsePlayerSetup(const QJsonObject &obj) -> PlayerSetup {
 
   const QJsonArray units = obj["starting_units"].toArray();
   for (const auto &unit_val : units) {
-    setup.starting_units.push_back(parseUnitSetup(unit_val.toObject()));
+    setup.starting_units.push_back(parse_unit_setup(unit_val.toObject()));
   }
 
   const QJsonArray buildings = obj["starting_buildings"].toArray();
   for (const auto &building_val : buildings) {
     setup.starting_buildings.push_back(
-        parseBuildingSetup(building_val.toObject()));
+        parse_building_setup(building_val.toObject()));
   }
 
   if (obj.contains("starting_resources")) {
     setup.starting_resources =
-        parseResources(obj["starting_resources"].toObject());
+        parse_resources(obj["starting_resources"].toObject());
   }
 
   return setup;
 }
 
-auto MissionLoader::parseAIPersonality(const QJsonObject &obj)
+auto MissionLoader::parse_ai_personality(const QJsonObject &obj)
     -> AIPersonality {
   AIPersonality personality;
   personality.aggression = static_cast<float>(obj["aggression"].toDouble(0.5));
@@ -74,7 +74,7 @@ auto MissionLoader::parseAIPersonality(const QJsonObject &obj)
   return personality;
 }
 
-auto MissionLoader::parseWaveComposition(const QJsonObject &obj)
+auto MissionLoader::parse_wave_composition(const QJsonObject &obj)
     -> WaveComposition {
   WaveComposition comp;
   comp.type = obj["type"].toString();
@@ -82,20 +82,20 @@ auto MissionLoader::parseWaveComposition(const QJsonObject &obj)
   return comp;
 }
 
-auto MissionLoader::parseWave(const QJsonObject &obj) -> Wave {
+auto MissionLoader::parse_wave(const QJsonObject &obj) -> Wave {
   Wave wave;
   wave.timing = static_cast<float>(obj["timing"].toDouble(0.0));
-  wave.entry_point = parsePosition(obj["entry_point"].toObject());
+  wave.entry_point = parse_position(obj["entry_point"].toObject());
 
   const QJsonArray composition = obj["composition"].toArray();
   for (const auto &comp_val : composition) {
-    wave.composition.push_back(parseWaveComposition(comp_val.toObject()));
+    wave.composition.push_back(parse_wave_composition(comp_val.toObject()));
   }
 
   return wave;
 }
 
-auto MissionLoader::parseAISetup(const QJsonObject &obj) -> AISetup {
+auto MissionLoader::parse_ai_setup(const QJsonObject &obj) -> AISetup {
   AISetup setup;
   setup.id = obj["id"].toString();
   setup.nation = obj["nation"].toString();
@@ -115,13 +115,13 @@ auto MissionLoader::parseAISetup(const QJsonObject &obj) -> AISetup {
   }
 
   if (obj.contains("personality")) {
-    setup.personality = parseAIPersonality(obj["personality"].toObject());
+    setup.personality = parse_ai_personality(obj["personality"].toObject());
   }
 
   if (obj.contains("starting_units")) {
     const QJsonArray units = obj["starting_units"].toArray();
     for (const auto &unit_val : units) {
-      setup.starting_units.push_back(parseUnitSetup(unit_val.toObject()));
+      setup.starting_units.push_back(parse_unit_setup(unit_val.toObject()));
     }
   }
 
@@ -129,21 +129,21 @@ auto MissionLoader::parseAISetup(const QJsonObject &obj) -> AISetup {
     const QJsonArray buildings = obj["starting_buildings"].toArray();
     for (const auto &building_val : buildings) {
       setup.starting_buildings.push_back(
-          parseBuildingSetup(building_val.toObject()));
+          parse_building_setup(building_val.toObject()));
     }
   }
 
   if (obj.contains("waves")) {
     const QJsonArray waves = obj["waves"].toArray();
     for (const auto &wave_val : waves) {
-      setup.waves.push_back(parseWave(wave_val.toObject()));
+      setup.waves.push_back(parse_wave(wave_val.toObject()));
     }
   }
 
   return setup;
 }
 
-auto MissionLoader::parseCondition(const QJsonObject &obj) -> Condition {
+auto MissionLoader::parse_condition(const QJsonObject &obj) -> Condition {
   Condition cond;
   cond.type = obj["type"].toString();
   cond.description = obj["description"].toString();
@@ -174,7 +174,7 @@ auto MissionLoader::parseCondition(const QJsonObject &obj) -> Condition {
   return cond;
 }
 
-auto MissionLoader::parseEventTrigger(const QJsonObject &obj) -> EventTrigger {
+auto MissionLoader::parse_event_trigger(const QJsonObject &obj) -> EventTrigger {
   EventTrigger trigger;
   trigger.type = obj["type"].toString();
 
@@ -185,7 +185,7 @@ auto MissionLoader::parseEventTrigger(const QJsonObject &obj) -> EventTrigger {
   return trigger;
 }
 
-auto MissionLoader::parseEventAction(const QJsonObject &obj) -> EventAction {
+auto MissionLoader::parse_event_action(const QJsonObject &obj) -> EventAction {
   EventAction action;
   action.type = obj["type"].toString();
 
@@ -196,19 +196,19 @@ auto MissionLoader::parseEventAction(const QJsonObject &obj) -> EventAction {
   return action;
 }
 
-auto MissionLoader::parseGameEvent(const QJsonObject &obj) -> GameEvent {
+auto MissionLoader::parse_game_event(const QJsonObject &obj) -> GameEvent {
   GameEvent event;
-  event.trigger = parseEventTrigger(obj["trigger"].toObject());
+  event.trigger = parse_event_trigger(obj["trigger"].toObject());
 
   const QJsonArray actions = obj["actions"].toArray();
   for (const auto &action_val : actions) {
-    event.actions.push_back(parseEventAction(action_val.toObject()));
+    event.actions.push_back(parse_event_action(action_val.toObject()));
   }
 
   return event;
 }
 
-auto MissionLoader::loadFromJsonFile(const QString &file_path,
+auto MissionLoader::load_from_json_file(const QString &file_path,
                                      MissionDefinition &out_mission,
                                      QString *error_msg) -> bool {
   QFile file(file_path);
@@ -264,13 +264,13 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
 
   if (root.contains("player_setup")) {
     out_mission.player_setup =
-        parsePlayerSetup(root["player_setup"].toObject());
+        parse_player_setup(root["player_setup"].toObject());
   }
 
   if (root.contains("ai_setups")) {
     const QJsonArray ai_setups = root["ai_setups"].toArray();
     for (const auto &ai_val : ai_setups) {
-      out_mission.ai_setups.push_back(parseAISetup(ai_val.toObject()));
+      out_mission.ai_setups.push_back(parse_ai_setup(ai_val.toObject()));
     }
   }
 
@@ -278,7 +278,7 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     const QJsonArray victory = root["victory_conditions"].toArray();
     for (const auto &cond_val : victory) {
       out_mission.victory_conditions.push_back(
-          parseCondition(cond_val.toObject()));
+          parse_condition(cond_val.toObject()));
     }
   }
 
@@ -286,7 +286,7 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     const QJsonArray defeat = root["defeat_conditions"].toArray();
     for (const auto &cond_val : defeat) {
       out_mission.defeat_conditions.push_back(
-          parseCondition(cond_val.toObject()));
+          parse_condition(cond_val.toObject()));
     }
   }
 
@@ -294,14 +294,14 @@ auto MissionLoader::loadFromJsonFile(const QString &file_path,
     const QJsonArray optional = root["optional_objectives"].toArray();
     for (const auto &cond_val : optional) {
       out_mission.optional_objectives.push_back(
-          parseCondition(cond_val.toObject()));
+          parse_condition(cond_val.toObject()));
     }
   }
 
   if (root.contains("events")) {
     const QJsonArray events = root["events"].toArray();
     for (const auto &event_val : events) {
-      out_mission.events.push_back(parseGameEvent(event_val.toObject()));
+      out_mission.events.push_back(parse_game_event(event_val.toObject()));
     }
   }
 

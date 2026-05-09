@@ -90,7 +90,7 @@ auto load_campaign_map_paths() -> QSet<QString> {
   for (const auto &campaign_path : campaign_files) {
     Game::Campaign::CampaignDefinition campaign;
     QString error;
-    if (!Game::Campaign::CampaignLoader::loadFromJsonFile(campaign_path,
+    if (!Game::Campaign::CampaignLoader::load_from_json_file(campaign_path,
                                                           campaign, &error)) {
       qWarning() << "Failed to load campaign for map filtering:"
                  << campaign_path << error;
@@ -107,7 +107,7 @@ auto load_campaign_map_paths() -> QSet<QString> {
       }
 
       Game::Mission::MissionDefinition mission_def;
-      if (!Game::Mission::MissionLoader::loadFromJsonFile(
+      if (!Game::Mission::MissionLoader::load_from_json_file(
               mission_file, mission_def, &error)) {
         qWarning() << "Failed to load mission for map filtering:"
                    << mission_file << error;
@@ -129,7 +129,7 @@ auto load_campaign_map_paths() -> QSet<QString> {
 
 MapCatalog::MapCatalog(QObject *parent) : QObject(parent) {}
 
-auto MapCatalog::availableMaps() -> QVariantList {
+auto MapCatalog::available_maps() -> QVariantList {
   QVariantList list;
   const QSet<QString> campaign_map_paths = load_campaign_map_paths();
   const QString maps_root =
@@ -276,7 +276,7 @@ void MapCatalog::load_next_map() {
       Utils::Resources::resolveResourcePath(maps_dir.filePath(file_name));
 
   if (!m_campaign_map_paths.contains(path)) {
-    QVariantMap const entry = loadSingleMap(path);
+    QVariantMap const entry = load_single_map(path);
     if (!entry.isEmpty()) {
       m_maps.append(entry);
       emit map_loaded(entry);
@@ -292,7 +292,7 @@ void MapCatalog::load_next_map() {
   }
 }
 
-auto MapCatalog::loadSingleMap(const QString &path) -> QVariantMap {
+auto MapCatalog::load_single_map(const QString &path) -> QVariantMap {
   const QString resolved_path = Utils::Resources::resolveResourcePath(path);
   QFile file(resolved_path);
   QString name = QFileInfo(resolved_path).fileName();

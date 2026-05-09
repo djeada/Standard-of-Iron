@@ -552,7 +552,7 @@ void Serialization::deserialize_entity(Entity *entity,
 
     QString const unit_type_str = unit_obj["unit_type"].toString();
     Game::Units::SpawnType spawn_type;
-    if (Game::Units::tryParseSpawnType(unit_type_str, spawn_type)) {
+    if (Game::Units::try_parse_spawn_type(unit_type_str, spawn_type)) {
       unit->spawn_type = spawn_type;
     } else {
       qWarning() << "Unknown spawn type in save file:" << unit_type_str
@@ -1364,7 +1364,7 @@ void Serialization::deserialize_terrain(
     }
   }
 
-  height_map->restoreFromData(heights, terrain_types, rivers, bridges);
+  height_map->restore_from_data(heights, terrain_types, rivers, bridges);
 }
 
 auto Serialization::serialize_world(const World *world) -> QJsonDocument {

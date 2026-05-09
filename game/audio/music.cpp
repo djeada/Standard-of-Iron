@@ -102,7 +102,7 @@ void Music::play(float volume, bool loop) {
             (player_ptr->playbackState() == QMediaPlayer::PlayingState);
 
         if (output) {
-          output->setVolume(volume);
+          output->set_volume(volume);
         }
         player_ptr->setLoops(loop ? QMediaPlayer::Infinite : 1);
 
@@ -116,7 +116,7 @@ void Music::play(float volume, bool loop) {
                    << "- updating volume only";
         }
 #else
-        player_ptr->setVolume(static_cast<int>(volume * 100));
+        player_ptr->set_volume(static_cast<int>(volume * 100));
         playing = true;
         player_ptr->play();
 #endif
@@ -212,10 +212,10 @@ void Music::set_volume(float volume) {
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         if (player_ptr->audioOutput()) {
-          player_ptr->audioOutput()->setVolume(volume);
+          player_ptr->audioOutput()->set_volume(volume);
         }
 #else
-        player_ptr->setVolume(static_cast<int>(volume * 100));
+        player_ptr->set_volume(static_cast<int>(volume * 100));
 #endif
       },
       Qt::QueuedConnection);
@@ -241,7 +241,7 @@ void Music::fade_out() {
         }
 #if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
         if (player_ptr->audioOutput()) {
-          player_ptr->audioOutput()->setVolume(0.0F);
+          player_ptr->audioOutput()->set_volume(0.0F);
         }
 
         QTimer::singleShot(FADE_OUT_DELAY_MS, [player_ptr, this]() {
@@ -254,7 +254,7 @@ void Music::fade_out() {
           }
         });
 #else
-        player_ptr->setVolume(0);
+        player_ptr->set_volume(0);
         player_ptr->pause();
         playing = false;
 #endif

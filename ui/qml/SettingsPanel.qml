@@ -124,7 +124,7 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.setMasterVolume(value / 100);
+                                            game.audioSystem.set_master_volume(value / 100);
 
                                     }
                                 }
@@ -158,7 +158,7 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.setMusicVolume(value / 100);
+                                            game.audioSystem.set_music_volume(value / 100);
 
                                     }
                                 }
@@ -192,7 +192,7 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.setSoundVolume(value / 100);
+                                            game.audioSystem.set_sound_volume(value / 100);
 
                                     }
                                 }
@@ -226,7 +226,7 @@ Item {
                                     stepSize: 1
                                     onValueChanged: {
                                         if (typeof game !== 'undefined' && game.audioSystem)
-                                            game.audioSystem.setVoiceVolume(value / 100);
+                                            game.audioSystem.set_voice_volume(value / 100);
 
                                     }
                                 }

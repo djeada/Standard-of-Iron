@@ -14,7 +14,7 @@ public:
   using Factory = std::function<std::unique_ptr<Unit>(Engine::Core::World &,
                                                       const SpawnParams &)>;
 
-  void registerFactory(SpawnType type, Factory f) {
+  void register_factory(SpawnType type, Factory f) {
     m_factories[type] = std::move(f);
   }
 
@@ -37,6 +37,6 @@ private:
   std::unordered_map<SpawnType, Factory> m_factories;
 };
 
-void registerBuiltInUnits(UnitFactoryRegistry &reg);
+void register_built_in_units(UnitFactoryRegistry &reg);
 
 } // namespace Game::Units

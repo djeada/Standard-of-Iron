@@ -61,7 +61,7 @@ inline int draw_count_of(const EquipmentBatch &b) {
 
 namespace {
 
-DrawContext createTestContext() {
+DrawContext create_test_context() {
   DrawContext ctx;
   ctx.model.setToIdentity();
   ctx.backend = nullptr;
@@ -69,7 +69,7 @@ DrawContext createTestContext() {
   return ctx;
 }
 
-BodyFrames createTestFrames() {
+BodyFrames create_test_frames() {
   using HP = HumanProportions;
   BodyFrames frames;
   float const head_center_y = HP::HEAD_CENTER_Y;
@@ -81,7 +81,7 @@ BodyFrames createTestFrames() {
   return frames;
 }
 
-HumanoidPalette createTestPalette() {
+HumanoidPalette create_test_palette() {
   HumanoidPalette palette;
   palette.skin = QVector3D(0.8F, 0.6F, 0.5F);
   palette.cloth = QVector3D(0.7F, 0.3F, 0.2F);
@@ -100,9 +100,9 @@ protected:
 
     register_built_in_equipment();
 
-    ctx = createTestContext();
-    frames = createTestFrames();
-    palette = createTestPalette();
+    ctx = create_test_context();
+    frames = create_test_frames();
+    palette = create_test_palette();
     anim.inputs.time = 0.0F;
     anim.inputs.is_moving = false;
     anim.inputs.is_attacking = false;

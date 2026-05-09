@@ -8,7 +8,7 @@ namespace Game::Units {
 
 enum class BuildingType : std::uint8_t { Barracks, DefenseTower, Home };
 
-inline auto buildingTypeToQString(BuildingType type) -> QString {
+inline auto building_type_to_q_string(BuildingType type) -> QString {
   switch (type) {
   case BuildingType::Barracks:
     return QStringLiteral("barracks");
@@ -21,11 +21,11 @@ inline auto buildingTypeToQString(BuildingType type) -> QString {
   return QStringLiteral("barracks");
 }
 
-inline auto buildingTypeToString(BuildingType type) -> std::string {
-  return buildingTypeToQString(type).toStdString();
+inline auto building_type_to_string(BuildingType type) -> std::string {
+  return building_type_to_q_string(type).toStdString();
 }
 
-inline auto tryParseBuildingType(const QString &value,
+inline auto try_parse_building_type(const QString &value,
                                  BuildingType &out) -> bool {
   const QString lowered = value.trimmed().toLower();
   if (lowered == QStringLiteral("barracks")) {
@@ -46,7 +46,7 @@ inline auto tryParseBuildingType(const QString &value,
 inline auto
 buildingTypeFromString(const std::string &str) -> std::optional<BuildingType> {
   BuildingType result;
-  if (tryParseBuildingType(QString::fromStdString(str), result)) {
+  if (try_parse_building_type(QString::fromStdString(str), result)) {
     return result;
   }
   return std::nullopt;

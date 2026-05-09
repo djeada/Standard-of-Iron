@@ -61,7 +61,7 @@ protected:
   HumanoidAnimationContext anim_ctx;
   MountedAttachmentFrame mount;
 
-  bool approxEqual(const QVector3D &a, const QVector3D &b,
+  bool approx_equal(const QVector3D &a, const QVector3D &b,
                    float epsilon = 0.01F) {
     return std::abs(a.x() - b.x()) < epsilon &&
            std::abs(a.y() - b.y()) < epsilon &&
@@ -80,7 +80,7 @@ TEST_F(MountedPoseControllerTest, MountOnHorsePositionsPelvisOnSaddle) {
 
   controller.mount_on_horse(mount);
 
-  EXPECT_TRUE(approxEqual(pose.pelvis_pos, mount.seat_position));
+  EXPECT_TRUE(approx_equal(pose.pelvis_pos, mount.seat_position));
 }
 
 TEST_F(MountedPoseControllerTest, MountOnHorsePlacesFeetInStirrups) {
@@ -88,8 +88,8 @@ TEST_F(MountedPoseControllerTest, MountOnHorsePlacesFeetInStirrups) {
 
   controller.mount_on_horse(mount);
 
-  EXPECT_TRUE(approxEqual(pose.foot_l, mount.stirrup_bottom_left));
-  EXPECT_TRUE(approxEqual(pose.foot_r, mount.stirrup_bottom_right));
+  EXPECT_TRUE(approx_equal(pose.foot_l, mount.stirrup_bottom_left));
+  EXPECT_TRUE(approx_equal(pose.foot_r, mount.stirrup_bottom_right));
 }
 
 TEST_F(MountedPoseControllerTest, MountOnHorseLiftsUpperBody) {
@@ -359,14 +359,14 @@ TEST_F(MountedPoseControllerTest, RidingChargingIntensityClamping) {
   MountedPoseController controller2(pose, anim_ctx);
   controller2.riding_charging(mount, 1.0F);
 
-  EXPECT_TRUE(approxEqual(pose.shoulder_l, max_lean));
+  EXPECT_TRUE(approx_equal(pose.shoulder_l, max_lean));
 }
 
 TEST_F(MountedPoseControllerTest, FullRidingSequence) {
   MountedPoseController controller(pose, anim_ctx);
 
   controller.mount_on_horse(mount);
-  EXPECT_TRUE(approxEqual(pose.pelvis_pos, mount.seat_position));
+  EXPECT_TRUE(approx_equal(pose.pelvis_pos, mount.seat_position));
 
   controller.riding_idle(mount);
   QVector3D const idle_hands = pose.hand_l;
