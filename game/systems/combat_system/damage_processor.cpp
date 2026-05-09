@@ -31,7 +31,7 @@ auto resolve_death_profile(const Engine::Core::UnitComponent *unit)
   }
   if (unit->death_sequence_override != 0xFFU &&
       unit->death_sequence_override <=
-      static_cast<std::uint8_t>(DeathSequenceProfile::Elephant)) {
+          static_cast<std::uint8_t>(DeathSequenceProfile::Elephant)) {
     return static_cast<DeathSequenceProfile>(unit->death_sequence_override);
   }
   if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
@@ -49,10 +49,9 @@ struct DeathSequenceTiming {
   std::uint8_t sequence_variant{0U};
 };
 
-auto resolve_death_variant(Engine::Core::Entity *target,
-                           Engine::Core::Entity *attacker,
-                           Engine::Core::DeathSequenceProfile profile)
-    -> std::uint8_t {
+auto resolve_death_variant(
+    Engine::Core::Entity *target, Engine::Core::Entity *attacker,
+    Engine::Core::DeathSequenceProfile profile) -> std::uint8_t {
   (void)target;
   (void)attacker;
   switch (profile) {
@@ -61,8 +60,7 @@ auto resolve_death_variant(Engine::Core::Entity *target,
   case Engine::Core::DeathSequenceProfile::Horse:
   case Engine::Core::DeathSequenceProfile::Infantry:
   default:
-    // Death profile selects the archetype/clip family; sequence variants remain
-    // local within that family instead of encoding raw cross-family offsets.
+
     return 0U;
   }
 }
@@ -104,7 +102,8 @@ void apply_death_sequence(Engine::Core::DeathAnimationComponent &death,
   death.sequence_variant = timing.sequence_variant;
 }
 
-auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit) -> int {
+auto resolved_individuals_per_unit(const Engine::Core::UnitComponent &unit)
+    -> int {
   if (unit.render_individuals_per_unit_override > 0) {
     return unit.render_individuals_per_unit_override;
   }
@@ -139,9 +138,8 @@ void begin_soldier_casualties(Engine::Core::Entity *target,
   }
 
   auto const profile = resolve_death_profile(unit);
-  auto *casualties =
-      Engine::Core::get_or_add_component<
-          Engine::Core::SoldierCasualtyAnimationComponent>(target);
+  auto *casualties = Engine::Core::get_or_add_component<
+      Engine::Core::SoldierCasualtyAnimationComponent>(target);
   if (casualties == nullptr) {
     return;
   }
@@ -299,7 +297,8 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
     }
 
     if (target->has_component<Engine::Core::BuildingComponent>()) {
-      if (auto *r = target->get_component<Engine::Core::RenderableComponent>()) {
+      if (auto *r =
+              target->get_component<Engine::Core::RenderableComponent>()) {
         r->visible = false;
       }
       target->add_component<Engine::Core::PendingRemovalComponent>();
@@ -338,7 +337,8 @@ void apply_hit_feedback(Engine::Core::Entity *target,
       if (attacker_transform != nullptr) {
         auto *attacker_attack =
             attacker->get_component<Engine::Core::AttackComponent>();
-        auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
+        auto *attacker_unit =
+            attacker->get_component<Engine::Core::UnitComponent>();
         float knockback_scale = 1.0F;
         if ((attacker_attack != nullptr) &&
             attacker_attack->current_mode ==
@@ -364,8 +364,7 @@ void apply_hit_feedback(Engine::Core::Entity *target,
           float const knockback = std::clamp(
               Engine::Core::HitFeedbackComponent::k_max_knockback *
                   knockback_scale,
-              0.0F,
-              Engine::Core::HitFeedbackComponent::k_max_knockback * 2.8F);
+              0.0F, Engine::Core::HitFeedbackComponent::k_max_knockback * 2.8F);
           feedback->knockback_x = (dx / dist) * knockback;
           feedback->knockback_z = (dz / dist) * knockback;
 
@@ -376,8 +375,8 @@ void apply_hit_feedback(Engine::Core::Entity *target,
           float const face_dist =
               std::sqrt(face_dx * face_dx + face_dz * face_dz);
           if (face_dist > 0.001F) {
-            float const yaw =
-                std::atan2(face_dx, face_dz) * 180.0F / std::numbers::pi_v<float>;
+            float const yaw = std::atan2(face_dx, face_dz) * 180.0F /
+                              std::numbers::pi_v<float>;
             target_transform->desired_yaw = yaw;
             target_transform->has_desired_yaw = true;
           }

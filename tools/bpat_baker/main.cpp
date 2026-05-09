@@ -129,9 +129,9 @@ constexpr std::array<HumanoidClipSpec, 20> kHumanoidClips{{
     {"dead_infantry", Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None, 0, BakerDeathType::Infantry, BakerRidingType::None,
      BakerHoldType::None, 1U, 1.0F, 1.0F, true},
-    {"die_mounted", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
-     0, BakerDeathType::Mounted, BakerRidingType::None, BakerHoldType::None,
-     20U, 24.0F, 1.0F, false},
+    {"die_mounted", Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None, 0, BakerDeathType::Mounted, BakerRidingType::None,
+     BakerHoldType::None, 20U, 24.0F, 1.0F, false},
     {"dead_mounted", Render::GL::HumanoidMotionState::Idle,
      BakerAttackType::None, 0, BakerDeathType::Mounted, BakerRidingType::None,
      BakerHoldType::None, 1U, 1.0F, 1.0F, true},
@@ -283,7 +283,8 @@ void bake_death_pose(BakerDeathType death_type, float blend,
                      Render::GL::HumanoidPose &pose) {
   float const fall = std::clamp(blend, 0.0F, 1.0F);
   float const eased = fall * fall * (3.0F - 2.0F * fall);
-  float const side_sign = (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
+  float const side_sign =
+      (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
 
   pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.42F * eased);
   pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.36F * eased);
@@ -350,8 +351,8 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
     gait.cycle_phase = 0.0F;
     gait.speed = 0.0F;
     gait.normalized_speed = 0.0F;
-    Render::GL::HumanoidRendererBase::compute_locomotion_pose(
-        0U, 0.0F, gait, variation, pose);
+    Render::GL::HumanoidRendererBase::compute_locomotion_pose(0U, 0.0F, gait,
+                                                              variation, pose);
     float const death_blend = clip.loops ? 1.0F : phase;
     bake_death_pose(clip.death_type, death_blend, pose);
   } else if (clip.attack_type != BakerAttackType::None) {

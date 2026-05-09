@@ -765,11 +765,12 @@ TEST(HumanoidPrepare, SpearAttackPlaybackUsesSpearClipFamily) {
   attack_anim.gait.state = Render::GL::HumanoidMotionState::Attacking;
   attack_anim.attack_phase = 0.35F;
 
-  auto const attack = humanoid_bpat_playback_for_anim(archetype_id, attack_anim);
+  auto const attack =
+      humanoid_bpat_playback_for_anim(archetype_id, attack_anim);
   ASSERT_TRUE(attack.has_value());
   EXPECT_EQ(attack->clip_id,
-            registry.resolve_bpat_clip(archetype_id, AnimationStateId::AttackSpear,
-                                       1U));
+            registry.resolve_bpat_clip(archetype_id,
+                                       AnimationStateId::AttackSpear, 1U));
 }
 
 TEST(HumanoidPrepare, RomanSwordsmanUsesRomanScutumRoleLayout) {
@@ -1048,10 +1049,11 @@ TEST(HumanoidPrepare, ActiveSoldierCasualtiesRenderDeathRequests) {
   Render::Humanoid::prepare_humanoid_instances(owner, ctx, anim, 0U, prep);
 
   ASSERT_EQ(prep.bodies.requests().size(), 3u);
-  EXPECT_EQ(std::count_if(prep.bodies.requests().begin(),
-                          prep.bodies.requests().end(), [](const auto &req) {
-                            return req.state == Render::Creature::AnimationStateId::Die;
-                          }),
+  EXPECT_EQ(std::count_if(
+                prep.bodies.requests().begin(), prep.bodies.requests().end(),
+                [](const auto &req) {
+                  return req.state == Render::Creature::AnimationStateId::Die;
+                }),
             1);
 }
 
