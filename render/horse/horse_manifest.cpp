@@ -9,6 +9,7 @@
 
 #include <QMatrix4x4>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <memory>
@@ -42,40 +43,68 @@ struct HorseClipSpec {
   Render::GL::GaitType gait;
   bool is_moving;
   bool is_fighting{false};
+  bool is_death{false};
+  bool is_dead_hold{false};
   float bob_scale{0.0F};
 };
 
-const std::array<HorseClipSpec, 6> k_horse_clips{{
+const std::array<HorseClipSpec, 8> k_horse_clips{{
     {{"idle", 24U, 24.0F, true},
      Render::GL::GaitType::IDLE,
      false,
      false,
-     0.0F},
+      false,
+      false,
+      0.0F},
     {{"walk", 24U, 24.0F, true},
      Render::GL::GaitType::WALK,
      true,
      false,
-     0.50F},
+      false,
+      false,
+      0.50F},
     {{"trot", 16U, 24.0F, true},
      Render::GL::GaitType::TROT,
      true,
      false,
-     0.85F},
+      false,
+      false,
+      0.85F},
     {{"canter", 16U, 24.0F, true},
      Render::GL::GaitType::CANTER,
      true,
      false,
-     1.00F},
+      false,
+      false,
+      1.00F},
     {{"gallop", 12U, 24.0F, true},
      Render::GL::GaitType::GALLOP,
      true,
      false,
-     1.12F},
+      false,
+      false,
+      1.12F},
     {{"fight", 24U, 24.0F, true},
      Render::GL::GaitType::IDLE,
      false,
      true,
-     0.0F},
+      false,
+      false,
+      0.0F},
+    {{"die", 20U, 24.0F, false},
+      Render::GL::GaitType::IDLE,
+      false,
+      false,
+      true,
+      false,
+      0.0F},
+    {{"dead", 1U, 1.0F, true},
+      Render::GL::GaitType::IDLE,
+      false,
+      false,
+      true,
+      true,
+      0.0F},
 }};
 
 const std::array<Render::Creature::BakeClipDescriptor, k_horse_clips.size()>
@@ -86,6 +115,8 @@ const std::array<Render::Creature::BakeClipDescriptor, k_horse_clips.size()>
         k_horse_clips[3].desc,
         k_horse_clips[4].desc,
         k_horse_clips[5].desc,
+        k_horse_clips[6].desc,
+        k_horse_clips[7].desc,
     }};
 
 struct TorsoSectionRing {
@@ -861,6 +892,16 @@ void bake_horse_manifest_clip_palettes(std::size_t clip_index,
 
   Render::Horse::BonePalette palette{};
   Render::Horse::evaluate_horse_skeleton(pose, palette);
+  if (clip.is_death) {
+    float death_phase = clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
+    QMatrix4x4 death_transform;
+    death_transform.translate(0.0F, -0.28F * death_phase, 0.0F);
+    death_transform.rotate(82.0F * death_phase, 1.0F, 0.0F, 0.0F);
+    death_transform.rotate(16.0F * death_phase, 0.0F, 0.0F, 1.0F);
+    for (auto &bone : palette) {
+      bone = death_transform * bone;
+    }
+  }
   out_palettes.insert(out_palettes.end(), palette.begin(), palette.end());
 }
 

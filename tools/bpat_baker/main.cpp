@@ -50,6 +50,7 @@ namespace snapshot = Render::Creature::Snapshot;
 
 enum class BakerAttackType : std::uint8_t { None, Sword, Spear, Bow };
 enum class BakerHoldType : std::uint8_t { None, Spear, Bow };
+enum class BakerDeathType : std::uint8_t { None, Infantry, Mounted };
 enum class BakerRidingType : std::uint8_t {
   None,
   Idle,
@@ -64,6 +65,7 @@ struct HumanoidClipSpec {
   Render::GL::HumanoidMotionState state;
   BakerAttackType attack_type{BakerAttackType::None};
   std::uint8_t attack_variant{0};
+  BakerDeathType death_type{BakerDeathType::None};
   BakerRidingType riding_type{BakerRidingType::None};
   BakerHoldType hold_type{BakerHoldType::None};
   std::uint32_t frames;
@@ -72,50 +74,67 @@ struct HumanoidClipSpec {
   bool loops;
 };
 
-constexpr std::array<HumanoidClipSpec, 16> kHumanoidClips{{
+constexpr std::array<HumanoidClipSpec, 20> kHumanoidClips{{
     {"idle", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None, 0,
-     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 1.6F, true},
-    {"walk", Render::GL::HumanoidMotionState::Walk, BakerAttackType::None, 0,
-     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 0.92F, true},
-    {"run", Render::GL::HumanoidMotionState::Run, BakerAttackType::None, 0,
-     BakerRidingType::None, BakerHoldType::None, 24U, 24.0F, 0.56F, true},
-    {"hold", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None, 0,
-     BakerRidingType::None, BakerHoldType::Spear, 16U, 24.0F, 1.8F, true},
-    {"hold_bow", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None,
-     0, BakerRidingType::None, BakerHoldType::Bow, 16U, 24.0F, 1.8F, true},
-    {"attack_sword_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 0, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_sword_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 1, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_sword_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Sword, 2, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_spear_a", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 0, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_spear_b", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 1, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_spear_c", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Spear, 2, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"attack_bow", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::Bow, 0, BakerRidingType::None, BakerHoldType::None, 24U,
-     24.0F, 1.0F, false},
-    {"riding_idle", Render::GL::HumanoidMotionState::Idle,
-     BakerAttackType::None, 0, BakerRidingType::Idle, BakerHoldType::None, 24U,
+     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None, 24U,
      24.0F, 1.6F, true},
+    {"walk", Render::GL::HumanoidMotionState::Walk, BakerAttackType::None, 0,
+     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 0.92F, true},
+    {"run", Render::GL::HumanoidMotionState::Run, BakerAttackType::None, 0,
+     BakerDeathType::None, BakerRidingType::None, BakerHoldType::None, 24U,
+     24.0F, 0.56F, true},
+    {"hold", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None, 0,
+     BakerDeathType::None, BakerRidingType::None, BakerHoldType::Spear, 16U,
+     24.0F, 1.8F, true},
+    {"hold_bow", Render::GL::HumanoidMotionState::Hold, BakerAttackType::None,
+     0, BakerDeathType::None, BakerRidingType::None, BakerHoldType::Bow, 16U,
+     24.0F, 1.8F, true},
+    {"attack_sword_a", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword, 0, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_sword_b", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword, 1, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_sword_c", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Sword, 2, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_spear_a", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear, 0, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_spear_b", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear, 1, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_spear_c", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Spear, 2, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"attack_bow", Render::GL::HumanoidMotionState::Attacking,
+     BakerAttackType::Bow, 0, BakerDeathType::None, BakerRidingType::None,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"riding_idle", Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Idle,
+     BakerHoldType::None, 24U, 24.0F, 1.6F, true},
     {"riding_charge", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerRidingType::Charge, BakerHoldType::None,
-     24U, 24.0F, 1.0F, false},
+     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Charge,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
     {"riding_reining", Render::GL::HumanoidMotionState::Hold,
-     BakerAttackType::None, 0, BakerRidingType::Reining, BakerHoldType::None,
-     24U, 24.0F, 1.0F, false},
+     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::Reining,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
     {"riding_bow_shot", Render::GL::HumanoidMotionState::Attacking,
-     BakerAttackType::None, 0, BakerRidingType::BowShot, BakerHoldType::None,
-     24U, 24.0F, 1.0F, false},
+     BakerAttackType::None, 0, BakerDeathType::None, BakerRidingType::BowShot,
+     BakerHoldType::None, 24U, 24.0F, 1.0F, false},
+    {"die_infantry", Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None, 0, BakerDeathType::Infantry, BakerRidingType::None,
+     BakerHoldType::None, 20U, 24.0F, 1.0F, false},
+    {"dead_infantry", Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None, 0, BakerDeathType::Infantry, BakerRidingType::None,
+     BakerHoldType::None, 1U, 1.0F, 1.0F, true},
+    {"die_mounted", Render::GL::HumanoidMotionState::Idle, BakerAttackType::None,
+     0, BakerDeathType::Mounted, BakerRidingType::None, BakerHoldType::None,
+     20U, 24.0F, 1.0F, false},
+    {"dead_mounted", Render::GL::HumanoidMotionState::Idle,
+     BakerAttackType::None, 0, BakerDeathType::Mounted, BakerRidingType::None,
+     BakerHoldType::None, 1U, 1.0F, 1.0F, true},
 }};
 
 struct HumanoidSocketSpec {
@@ -260,6 +279,51 @@ void bake_hold_pose(HumanoidBakeProfile profile, BakerHoldType hold_type,
   pose = blend_pose(standing_pose, held_pose, eased_mix);
 }
 
+void bake_death_pose(BakerDeathType death_type, float blend,
+                     Render::GL::HumanoidPose &pose) {
+  float const fall = std::clamp(blend, 0.0F, 1.0F);
+  float const eased = fall * fall * (3.0F - 2.0F * fall);
+  float const side_sign = (death_type == BakerDeathType::Mounted) ? -1.0F : 1.0F;
+
+  pose.pelvis_pos.setY(pose.pelvis_pos.y() - 0.42F * eased);
+  pose.pelvis_pos.setZ(pose.pelvis_pos.z() - 0.36F * eased);
+
+  pose.neck_base.setY(pose.neck_base.y() - 0.58F * eased);
+  pose.neck_base.setZ(pose.neck_base.z() - 0.52F * eased);
+  pose.head_pos.setY(pose.head_pos.y() - 0.72F * eased);
+  pose.head_pos.setZ(pose.head_pos.z() - 0.64F * eased);
+  pose.head_pos.setX(pose.head_pos.x() + side_sign * 0.12F * eased);
+
+  pose.shoulder_l.setY(pose.shoulder_l.y() - 0.45F * eased);
+  pose.shoulder_r.setY(pose.shoulder_r.y() - 0.42F * eased);
+  pose.shoulder_l.setZ(pose.shoulder_l.z() - 0.28F * eased);
+  pose.shoulder_r.setZ(pose.shoulder_r.z() - 0.22F * eased);
+  pose.shoulder_l.setX(pose.shoulder_l.x() - side_sign * 0.08F * eased);
+  pose.shoulder_r.setX(pose.shoulder_r.x() - side_sign * 0.03F * eased);
+
+  pose.hand_l.setY(pose.hand_l.y() - 0.58F * eased);
+  pose.hand_r.setY(pose.hand_r.y() - 0.52F * eased);
+  pose.hand_l.setZ(pose.hand_l.z() - 0.40F * eased);
+  pose.hand_r.setZ(pose.hand_r.z() - 0.28F * eased);
+  pose.hand_l.setX(pose.hand_l.x() - side_sign * 0.14F * eased);
+  pose.hand_r.setX(pose.hand_r.x() - side_sign * 0.06F * eased);
+
+  pose.knee_l.setY(pose.knee_l.y() - 0.26F * eased);
+  pose.knee_r.setY(pose.knee_r.y() - 0.24F * eased);
+  pose.knee_l.setZ(pose.knee_l.z() + 0.18F * eased);
+  pose.knee_r.setZ(pose.knee_r.z() + 0.08F * eased);
+  pose.foot_l.setZ(pose.foot_l.z() + 0.28F * eased);
+  pose.foot_r.setZ(pose.foot_r.z() + 0.12F * eased);
+
+  if (death_type == BakerDeathType::Mounted) {
+    pose.pelvis_pos.setX(pose.pelvis_pos.x() + side_sign * 0.22F * eased);
+    pose.neck_base.setX(pose.neck_base.x() + side_sign * 0.26F * eased);
+    pose.head_pos.setX(pose.head_pos.x() + side_sign * 0.34F * eased);
+    pose.foot_l.setX(pose.foot_l.x() + side_sign * 0.16F * eased);
+    pose.foot_r.setX(pose.foot_r.x() + side_sign * 0.12F * eased);
+  }
+}
+
 void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
                               const HumanoidClipSpec &clip,
                               std::uint32_t frame_index,
@@ -279,7 +343,18 @@ void bake_humanoid_clip_frame(HumanoidBakeProfile profile,
 
   Render::GL::HumanoidPose pose{};
 
-  if (clip.attack_type != BakerAttackType::None) {
+  if (clip.death_type != BakerDeathType::None) {
+    Render::GL::HumanoidGaitDescriptor gait{};
+    gait.state = Render::GL::HumanoidMotionState::Idle;
+    gait.cycle_time = 1.6F;
+    gait.cycle_phase = 0.0F;
+    gait.speed = 0.0F;
+    gait.normalized_speed = 0.0F;
+    Render::GL::HumanoidRendererBase::compute_locomotion_pose(
+        0U, 0.0F, gait, variation, pose);
+    float const death_blend = clip.loops ? 1.0F : phase;
+    bake_death_pose(clip.death_type, death_blend, pose);
+  } else if (clip.attack_type != BakerAttackType::None) {
 
     Render::GL::HumanoidGaitDescriptor hold_gait{};
     hold_gait.state = Render::GL::HumanoidMotionState::Hold;
@@ -903,6 +978,8 @@ int main(int argc, char **argv) {
   static_assert(Render::Creature::kHumanoidAttackBowClip == 11U);
   static_assert(Render::Creature::kHumanoidRidingIdleClip == 12U);
   static_assert(Render::Creature::kHumanoidRidingBowShotClip == 15U);
+  static_assert(Render::Creature::kHumanoidDieInfantryClip == 16U);
+  static_assert(Render::Creature::kHumanoidDeadMountedClip == 19U);
   std::filesystem::path out_dir = "assets/creatures";
   if (argc >= 2) {
     out_dir = argv[1];

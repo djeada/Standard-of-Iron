@@ -344,6 +344,8 @@ auto Serialization::serialize_entity(const Entity *entity) -> QJsonObject {
     QJsonObject combat_state_obj;
     combat_state_obj["animation_state"] =
         static_cast<int>(combat_state->animation_state);
+    combat_state_obj["attack_family"] =
+        static_cast<int>(combat_state->attack_family);
     combat_state_obj["state_time"] =
         static_cast<double>(combat_state->state_time);
     combat_state_obj["state_duration"] =
@@ -789,6 +791,9 @@ void Serialization::deserialize_entity(Entity *entity,
     combat_state->animation_state = static_cast<CombatAnimationState>(
         combat_state_obj["animation_state"].toInt(
             static_cast<int>(CombatAnimationState::Idle)));
+    combat_state->attack_family = static_cast<CombatAttackFamily>(
+        combat_state_obj["attack_family"].toInt(
+            static_cast<int>(CombatAttackFamily::None)));
     combat_state->state_time =
         static_cast<float>(combat_state_obj["state_time"].toDouble(0.0));
     combat_state->state_duration =

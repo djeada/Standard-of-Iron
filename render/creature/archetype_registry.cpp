@@ -10,12 +10,26 @@ namespace Render::Creature {
 namespace {
 
 constexpr std::size_t k_state_count = animation_state_count();
+constexpr std::uint16_t k_horse_die_clip = 6U;
+constexpr std::uint16_t k_horse_dead_clip = 7U;
+constexpr std::uint16_t k_elephant_die_clip = 4U;
+constexpr std::uint16_t k_elephant_dead_clip = 5U;
 
 constexpr auto
 make_unmapped_clip_table() -> std::array<std::uint16_t, k_state_count> {
   std::array<std::uint16_t, k_state_count> t{};
   for (std::size_t i = 0; i < k_state_count; ++i) {
     t[i] = ArchetypeDescriptor::kUnmappedClip;
+  }
+  return t;
+}
+
+constexpr auto make_variant_count_table_for_clips(
+    const std::array<std::uint16_t, k_state_count> &clips)
+    -> std::array<std::uint8_t, k_state_count> {
+  std::array<std::uint8_t, k_state_count> t{};
+  for (std::size_t i = 0; i < k_state_count; ++i) {
+    t[i] = (clips[i] != ArchetypeDescriptor::kUnmappedClip) ? 1U : 0U;
   }
   return t;
 }
@@ -42,8 +56,10 @@ make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidHoldClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidHoldClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] =
+      kHumanoidDieInfantryClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] =
+      kHumanoidDeadInfantryClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
@@ -62,8 +78,8 @@ make_horse_clip_table() -> std::array<std::uint16_t, k_state_count> {
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 5U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_horse_die_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = k_horse_dead_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 5U;
@@ -79,8 +95,8 @@ make_elephant_clip_table() -> std::array<std::uint16_t, k_state_count> {
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 3U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_elephant_die_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = k_elephant_dead_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 3U;
@@ -99,8 +115,10 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidAttackBowClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidRidingIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] =
+      kHumanoidDieMountedClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] =
+      kHumanoidDeadMountedClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
@@ -115,6 +133,32 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidRidingReiningClip;
   t[static_cast<std::size_t>(AnimationStateId::RidingBowShot)] =
       kHumanoidRidingBowShotClip;
+  return t;
+}
+
+constexpr auto make_humanoid_variant_count_table()
+    -> std::array<std::uint8_t, k_state_count> {
+  auto t = make_variant_count_table_for_clips(make_humanoid_clip_table());
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
+  return t;
+}
+
+constexpr auto make_horse_variant_count_table()
+    -> std::array<std::uint8_t, k_state_count> {
+  return make_variant_count_table_for_clips(make_horse_clip_table());
+}
+
+constexpr auto make_elephant_variant_count_table()
+    -> std::array<std::uint8_t, k_state_count> {
+  return make_variant_count_table_for_clips(make_elephant_clip_table());
+}
+
+constexpr auto make_rider_variant_count_table()
+    -> std::array<std::uint8_t, k_state_count> {
+  auto t = make_variant_count_table_for_clips(make_rider_clip_table());
+  t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
+  t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   return t;
 }
 
@@ -133,6 +177,7 @@ void ArchetypeRegistry::seed_baseline() {
   humanoid.debug_name = "humanoid_base";
   humanoid.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
   humanoid.bpat_clip = humanoid_clips;
+  humanoid.bpat_clip_variant_count = make_humanoid_variant_count_table();
   humanoid.snapshot = make_snapshot_table_for_clips(humanoid_clips);
   humanoid.role_count = 6;
   register_archetype(humanoid);
@@ -142,6 +187,7 @@ void ArchetypeRegistry::seed_baseline() {
   horse.debug_name = "horse_base";
   horse.species = Render::Creature::Pipeline::CreatureKind::Horse;
   horse.bpat_clip = horse_clips;
+  horse.bpat_clip_variant_count = make_horse_variant_count_table();
   horse.snapshot = make_snapshot_table_for_clips(horse_clips);
   horse.role_count = 8;
   register_archetype(horse);
@@ -151,6 +197,7 @@ void ArchetypeRegistry::seed_baseline() {
   elephant.debug_name = "elephant_base";
   elephant.species = Render::Creature::Pipeline::CreatureKind::Elephant;
   elephant.bpat_clip = elephant_clips;
+  elephant.bpat_clip_variant_count = make_elephant_variant_count_table();
   elephant.snapshot = make_snapshot_table_for_clips(elephant_clips);
   elephant.role_count = 6;
   register_archetype(elephant);
@@ -160,6 +207,7 @@ void ArchetypeRegistry::seed_baseline() {
   rider.debug_name = "rider_base";
   rider.species = Render::Creature::Pipeline::CreatureKind::Humanoid;
   rider.bpat_clip = rider_clips;
+  rider.bpat_clip_variant_count = make_rider_variant_count_table();
   rider.snapshot = make_snapshot_table_for_clips(rider_clips);
   rider.role_count = 6;
   register_archetype(rider);
@@ -245,6 +293,34 @@ auto ArchetypeRegistry::bpat_clip(
     return ArchetypeDescriptor::kUnmappedClip;
   }
   return d->bpat_clip[idx];
+}
+
+auto ArchetypeRegistry::clip_variant_count(
+    ArchetypeId id, AnimationStateId state) const noexcept -> std::uint8_t {
+  auto const *d = get(id);
+  if (d == nullptr) {
+    return 0U;
+  }
+  auto const idx = static_cast<std::size_t>(state);
+  if (idx >= k_state_count) {
+    return 0U;
+  }
+  return d->bpat_clip_variant_count[idx];
+}
+
+auto ArchetypeRegistry::resolve_bpat_clip(
+    ArchetypeId id, AnimationStateId state,
+    std::uint8_t clip_variant) const noexcept -> std::uint16_t {
+  auto const base_clip = bpat_clip(id, state);
+  if (base_clip == ArchetypeDescriptor::kUnmappedClip) {
+    return base_clip;
+  }
+  auto const variant_count = clip_variant_count(id, state);
+  if (variant_count <= 1U) {
+    return base_clip;
+  }
+  return static_cast<std::uint16_t>(
+      base_clip + std::min<std::uint8_t>(clip_variant, variant_count - 1U));
 }
 
 auto ArchetypeRegistry::is_snapshot(

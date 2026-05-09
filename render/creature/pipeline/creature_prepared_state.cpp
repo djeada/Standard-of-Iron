@@ -57,6 +57,9 @@ auto resolve_elephant_animation_state(const Render::GL::DrawContext &ctx)
   if (ctx.entity == nullptr || state.used_override) {
     return state;
   }
+  if (state.inputs.is_dying || state.inputs.is_dead) {
+    return state;
+  }
 
   auto *combat_state =
       ctx.entity->get_component<Engine::Core::CombatStateComponent>();

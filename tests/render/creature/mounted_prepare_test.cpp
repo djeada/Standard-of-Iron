@@ -264,6 +264,35 @@ TEST(MountedPrepare, MountedHumanoidPreparationQueuesRiderAndHorseBodies) {
                         LegacySlotMask::Attachments));
 }
 
+TEST(MountedPrepare, MountedRiderUsesSemanticAttackClipState) {
+  Render::GL::HorseSpearmanRendererConfig cfg;
+  cfg.has_spear = false;
+  cfg.has_shield = false;
+
+  Render::GL::HorseSpearmanRendererBase renderer(cfg);
+  Render::GL::DrawContext ctx{};
+  ctx.force_single_soldier = true;
+  ctx.allow_template_cache = false;
+
+  Render::GL::AnimationInputs anim{};
+  anim.is_attacking = true;
+  anim.is_melee = true;
+  anim.attack_family = Engine::Core::CombatAttackFamily::Spear;
+
+  Render::Humanoid::HumanoidPreparation prep;
+  Render::Humanoid::prepare_humanoid_instances(renderer, ctx, anim, 0, prep);
+
+  auto const &requests = prep.bodies.requests();
+  auto const rider_req =
+      std::find_if(requests.begin(), requests.end(), [](const auto &req) {
+        return Render::Creature::ArchetypeRegistry::instance().species(
+                   req.archetype) ==
+               Render::Creature::Pipeline::CreatureKind::Humanoid;
+      });
+  ASSERT_NE(rider_req, requests.end());
+  EXPECT_EQ(rider_req->state, Render::Creature::AnimationStateId::AttackSpear);
+}
+
 TEST(MountedPrepare, SubmitPreparationDrawsRiderFromPreparedPose) {
   using namespace Render::Creature::Pipeline;
 

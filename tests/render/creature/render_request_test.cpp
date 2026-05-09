@@ -3,6 +3,7 @@
 #include "render/creature/archetype_registry.h"
 #include "render/creature/bpat/bpat_format.h"
 #include "render/creature/bpat/bpat_registry.h"
+#include "render/creature/humanoid_clip_ids.h"
 #include "render/creature/pipeline/creature_asset.h"
 #include "render/creature/pipeline/creature_pipeline.h"
 #include "render/creature/pipeline/prepared_submit.h"
@@ -176,6 +177,35 @@ TEST(ArchetypeRegistryBaseline, UnknownArchetypeReturnsUnmappedClip) {
   EXPECT_EQ(reg.bpat_clip(9999, AnimationStateId::Idle),
             ArchetypeDescriptor::kUnmappedClip);
   EXPECT_EQ(reg.get(9999), nullptr);
+}
+
+TEST(ArchetypeRegistryBaseline, VariantCountsReflectBakedClipFamilies) {
+  const auto &reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kHumanoidBase,
+                                   AnimationStateId::AttackSword),
+            3U);
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kHumanoidBase,
+                                   AnimationStateId::AttackBow),
+            1U);
+  EXPECT_EQ(reg.clip_variant_count(ArchetypeRegistry::kRiderBase,
+                                   AnimationStateId::Die),
+            1U);
+}
+
+TEST(ArchetypeRegistryBaseline, ResolveBpatClipClampsInsideClipFamily) {
+  const auto &reg = ArchetypeRegistry::instance();
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kHumanoidBase,
+                                  AnimationStateId::AttackSword, 2U),
+            Render::Creature::kHumanoidAttackSwordCClip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kHumanoidBase,
+                                  AnimationStateId::AttackSword, 99U),
+            Render::Creature::kHumanoidAttackSwordCClip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kRiderBase,
+                                  AnimationStateId::Die, 3U),
+            Render::Creature::kHumanoidDieMountedClip);
+  EXPECT_EQ(reg.resolve_bpat_clip(ArchetypeRegistry::kRiderBase,
+                                  AnimationStateId::Dead, 3U),
+            Render::Creature::kHumanoidDeadMountedClip);
 }
 
 TEST(SubmitRequests, EmptySpanProducesZeroStats) {
