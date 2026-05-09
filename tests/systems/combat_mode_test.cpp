@@ -847,7 +847,7 @@ TEST_F(CombatModeTest, HitPauseUsesPerUnitCombatAnimationConstant) {
   EXPECT_GT(combat_state->state_time, 0.25F);
 }
 
-TEST_F(CombatModeTest, LethalDamageCreatesDeathMotionBeforeCleanup) {
+TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   auto *attacker = world->create_entity();
   attacker->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   auto *attacker_unit =
@@ -870,19 +870,42 @@ TEST_F(CombatModeTest, LethalDamageCreatesDeathMotionBeforeCleanup) {
   Game::Systems::Combat::deal_damage(world.get(), target, 120, attacker->get_id());
 
   EXPECT_EQ(target_unit->health, 0);
-  EXPECT_TRUE(target->has_component<DeathMotionComponent>());
+  auto *death = target->get_component<DeathAnimationComponent>();
+  ASSERT_NE(death, nullptr);
+  EXPECT_EQ(death->state, DeathSequenceState::Dying);
+  EXPECT_EQ(death->profile, DeathSequenceProfile::Infantry);
+  EXPECT_LE(death->sequence_variant, 1U);
   EXPECT_FALSE(target->has_component<PendingRemovalComponent>());
   EXPECT_FALSE(movement->has_target);
 }
 
-TEST_F(CombatModeTest, ElephantChargeDeathsUseContextualReactionProfiles) {
+TEST_F(CombatModeTest, MountedAndElephantDeathsSelectProfileOverrides) {
+  auto *mounted = world->create_entity();
+  mounted->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  auto *mounted_unit = mounted->add_component<UnitComponent>(120, 120, 1.0F, 12.0F);
+  mounted_unit->owner_id = 1;
+  mounted_unit->spawn_type = Game::Units::SpawnType::HorseArcher;
+
+  auto *mounted_target = world->create_entity();
+  mounted_target->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
+  auto *mounted_target_unit =
+      mounted_target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
+  mounted_target_unit->owner_id = 2;
+  mounted_target_unit->spawn_type = Game::Units::SpawnType::MountedKnight;
+
+  Game::Systems::Combat::deal_damage(world.get(), mounted_target, 80,
+                                     mounted->get_id());
+  auto *mounted_death = mounted_target->get_component<DeathAnimationComponent>();
+  ASSERT_NE(mounted_death, nullptr);
+  EXPECT_EQ(mounted_death->profile, DeathSequenceProfile::MountedRider);
+  EXPECT_EQ(mounted_death->sequence_variant, 2U);
+
   auto *elephant = world->create_entity();
   elephant->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *elephant_unit = elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
+  auto *elephant_unit =
+      elephant->add_component<UnitComponent>(300, 300, 1.0F, 12.0F);
   elephant_unit->owner_id = 1;
   elephant_unit->spawn_type = Game::Units::SpawnType::Elephant;
-  auto *elephant_comp = elephant->add_component<ElephantComponent>();
-  elephant_comp->charge_state = ElephantComponent::ChargeState::Charging;
 
   auto *target = world->create_entity();
   target->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
@@ -891,31 +914,40 @@ TEST_F(CombatModeTest, ElephantChargeDeathsUseContextualReactionProfiles) {
 
   Game::Systems::Combat::deal_damage(world.get(), target, 80, elephant->get_id());
 
-  auto *death = target->get_component<DeathMotionComponent>();
+  auto *death = target->get_component<DeathAnimationComponent>();
   ASSERT_NE(death, nullptr);
-  EXPECT_NE(death->reaction, DeathReactionType::Collapse);
-  EXPECT_GE(death->duration, 1.1F);
+  EXPECT_EQ(death->profile, DeathSequenceProfile::Elephant);
+  EXPECT_GE(death->state_duration, 1.2F);
 }
 
-TEST_F(CombatModeTest, CleanupSystemFinalizesDeathMotionThenRemovesEntity) {
+TEST_F(CombatModeTest, CleanupSystemRunsDeathThenDeadHoldBeforeRemoval) {
   auto *target = world->create_entity();
   auto target_id = target->get_id();
-  auto *transform = target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
+  target->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
   target->add_component<RenderableComponent>("mesh", "tex");
   target->add_component<UnitComponent>(0, 100, 1.0F, 12.0F);
-  auto *death = target->add_component<DeathMotionComponent>();
-  death->reaction = DeathReactionType::Thrown;
-  death->duration = 0.1F;
-  death->impulse_x = 1.0F;
-  death->impulse_z = 0.0F;
-  death->angular_velocity = 90.0F;
+  auto *death = target->add_component<DeathAnimationComponent>();
+  death->profile = DeathSequenceProfile::Infantry;
+  death->state = DeathSequenceState::Dying;
+  death->state_duration = 0.1F;
+  death->dead_hold_duration = 0.1F;
+  death->state_time = 0.0F;
 
   CleanupSystem cleanup;
   cleanup.update(world.get(), 0.02F);
-  EXPECT_GT(transform->position.x, 0.0F);
+  EXPECT_EQ(death->state, DeathSequenceState::Dying);
   EXPECT_NE(world->get_entity(target_id), nullptr);
 
-  for (int i = 0; i < 8; ++i) {
+  for (int i = 0; i < 6; ++i) {
+    cleanup.update(world.get(), 0.02F);
+  }
+  auto *entity_mid = world->get_entity(target_id);
+  ASSERT_NE(entity_mid, nullptr);
+  auto *death_mid = entity_mid->get_component<DeathAnimationComponent>();
+  ASSERT_NE(death_mid, nullptr);
+  EXPECT_EQ(death_mid->state, DeathSequenceState::DeadHold);
+
+  for (int i = 0; i < 6; ++i) {
     cleanup.update(world.get(), 0.02F);
   }
   EXPECT_EQ(world->get_entity(target_id), nullptr);

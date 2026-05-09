@@ -59,6 +59,12 @@ auto derive_unit_seed(const Render::GL::DrawContext &ctx,
 auto humanoid_state_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept
     -> Render::Creature::AnimationStateId {
+  if (anim.inputs.is_dying) {
+    return Render::Creature::AnimationStateId::Die;
+  }
+  if (anim.inputs.is_dead) {
+    return Render::Creature::AnimationStateId::Dead;
+  }
   if (anim.inputs.is_in_hold_mode || anim.inputs.is_exiting_hold) {
     return Render::Creature::AnimationStateId::Hold;
   }
@@ -85,6 +91,12 @@ auto humanoid_state_for_anim(
 auto humanoid_phase_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> float {
   auto const state = humanoid_state_for_anim(anim);
+  if (state == Render::Creature::AnimationStateId::Die) {
+    return std::clamp(anim.inputs.death_progress, 0.0F, 1.0F);
+  }
+  if (state == Render::Creature::AnimationStateId::Dead) {
+    return 0.0F;
+  }
   if (state == Render::Creature::AnimationStateId::Hold) {
     return hold_phase_for_anim(anim);
   }
@@ -98,6 +110,10 @@ auto humanoid_phase_for_anim(
 auto humanoid_clip_variant_for_anim(
     const Render::GL::HumanoidAnimationContext &anim) noexcept -> std::uint8_t {
   auto const state = humanoid_state_for_anim(anim);
+  if (state == Render::Creature::AnimationStateId::Die ||
+      state == Render::Creature::AnimationStateId::Dead) {
+    return anim.inputs.death_variant;
+  }
   bool const is_attack_state =
       (state == Render::Creature::AnimationStateId::AttackSword ||
        state == Render::Creature::AnimationStateId::AttackSpear ||

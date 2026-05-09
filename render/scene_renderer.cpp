@@ -1046,7 +1046,7 @@ void Renderer::render_world(Engine::Core::World *world) {
       continue;
     }
     bool const has_death_motion =
-        entity->get_component<Engine::Core::DeathMotionComponent>() != nullptr;
+        entity->get_component<Engine::Core::DeathAnimationComponent>() != nullptr;
     if (entity->has_component<Engine::Core::PendingRemovalComponent>() &&
         !has_death_motion) {
       continue;

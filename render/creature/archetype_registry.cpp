@@ -10,6 +10,10 @@ namespace Render::Creature {
 namespace {
 
 constexpr std::size_t k_state_count = animation_state_count();
+constexpr std::uint16_t k_horse_die_clip = 6U;
+constexpr std::uint16_t k_horse_dead_clip = 7U;
+constexpr std::uint16_t k_elephant_die_clip = 4U;
+constexpr std::uint16_t k_elephant_dead_clip = 5U;
 
 constexpr auto
 make_unmapped_clip_table() -> std::array<std::uint16_t, k_state_count> {
@@ -42,8 +46,10 @@ make_humanoid_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidHoldClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidHoldClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] =
+      kHumanoidDieInfantryClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] =
+      kHumanoidDeadInfantryClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =
@@ -62,8 +68,8 @@ make_horse_clip_table() -> std::array<std::uint16_t, k_state_count> {
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 5U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_horse_die_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = k_horse_dead_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 5U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 5U;
@@ -79,8 +85,8 @@ make_elephant_clip_table() -> std::array<std::uint16_t, k_state_count> {
   t[static_cast<std::size_t>(AnimationStateId::Hold)] = 0U;
   t[static_cast<std::size_t>(AnimationStateId::AttackMelee)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] = 3U;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = 0U;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = 0U;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] = k_elephant_die_clip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] = k_elephant_dead_clip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] = 3U;
   t[static_cast<std::size_t>(AnimationStateId::AttackBow)] = 3U;
@@ -99,8 +105,10 @@ make_rider_clip_table() -> std::array<std::uint16_t, k_state_count> {
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackRanged)] =
       kHumanoidAttackBowClip;
-  t[static_cast<std::size_t>(AnimationStateId::Die)] = kHumanoidRidingIdleClip;
-  t[static_cast<std::size_t>(AnimationStateId::Dead)] = kHumanoidRidingIdleClip;
+  t[static_cast<std::size_t>(AnimationStateId::Die)] =
+      kHumanoidDieInfantryClip;
+  t[static_cast<std::size_t>(AnimationStateId::Dead)] =
+      kHumanoidDeadInfantryClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSword)] =
       kHumanoidAttackSwordAClip;
   t[static_cast<std::size_t>(AnimationStateId::AttackSpear)] =

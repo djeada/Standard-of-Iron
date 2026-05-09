@@ -24,138 +24,97 @@ auto mix_hash(std::uint32_t value) -> std::uint32_t {
   return value;
 }
 
-auto resolve_death_reaction(Engine::Core::Entity *target,
-                            Engine::Core::Entity *attacker)
-    -> Engine::Core::DeathReactionType {
-  using Engine::Core::DeathReactionType;
-  if (target == nullptr) {
-    return DeathReactionType::Collapse;
-  }
-
-  if (attacker == nullptr) {
-    return DeathReactionType::Collapse;
-  }
-
-  auto *attacker_unit = attacker->get_component<Engine::Core::UnitComponent>();
-  if (attacker_unit == nullptr) {
-    return DeathReactionType::Collapse;
-  }
-
-  if (attacker_unit->spawn_type == Game::Units::SpawnType::Elephant) {
-    auto *elephant = attacker->get_component<Engine::Core::ElephantComponent>();
-    // Mix both entity ids (with a simple shift+xor) so each pair yields a
-    // deterministic but varied elephant impact reaction.
-    std::uint32_t seed = target->get_id() ^ (attacker->get_id() << 1U);
-    seed = mix_hash(seed);
-    std::uint32_t const style = seed % 5U;
-
-    bool const charging = (elephant != nullptr) &&
-                          (elephant->charge_state ==
-                               Engine::Core::ElephantComponent::ChargeState::
-                                   Charging ||
-                           elephant->charge_state ==
-                               Engine::Core::ElephantComponent::ChargeState::
-                                   Trampling);
-    if (charging) {
-      switch (style) {
-      case 0U:
-        return DeathReactionType::Thrown;
-      case 1U:
-        return DeathReactionType::SpinFall;
-      case 2U:
-        return DeathReactionType::Crushed;
-      case 3U:
-        return DeathReactionType::Knockback;
-      default:
-        return DeathReactionType::BackwardFall;
-      }
-    }
-    return (style % 2U == 0U) ? DeathReactionType::Knockback
-                              : DeathReactionType::BackwardFall;
-  }
-
-  auto *attack = attacker->get_component<Engine::Core::AttackComponent>();
-  if ((attack != nullptr) &&
-      attack->current_mode == Engine::Core::AttackComponent::CombatMode::Melee) {
-    return DeathReactionType::BackwardFall;
-  }
-
-  return DeathReactionType::Collapse;
+auto is_mounted_spawn(Game::Units::SpawnType spawn_type) -> bool {
+  using Game::Units::SpawnType;
+  return spawn_type == SpawnType::MountedKnight ||
+         spawn_type == SpawnType::HorseArcher ||
+         spawn_type == SpawnType::HorseSpearman;
 }
 
-void apply_death_motion(Engine::Core::Entity *target,
-                        Engine::Core::Entity *attacker) {
+auto resolve_death_profile(const Engine::Core::UnitComponent *unit)
+    -> Engine::Core::DeathSequenceProfile {
+  using Engine::Core::DeathSequenceProfile;
+  if (unit == nullptr) {
+    return DeathSequenceProfile::Infantry;
+  }
+  if (unit->death_sequence_override != 0xFFU &&
+      unit->death_sequence_override <=
+      static_cast<std::uint8_t>(DeathSequenceProfile::Elephant)) {
+    return static_cast<DeathSequenceProfile>(unit->death_sequence_override);
+  }
+  if (unit->spawn_type == Game::Units::SpawnType::Elephant) {
+    return DeathSequenceProfile::Elephant;
+  }
+  if (is_mounted_spawn(unit->spawn_type)) {
+    return DeathSequenceProfile::MountedRider;
+  }
+  return DeathSequenceProfile::Infantry;
+}
+
+auto resolve_death_variant(Engine::Core::Entity *target,
+                           Engine::Core::Entity *attacker,
+                           Engine::Core::DeathSequenceProfile profile)
+    -> std::uint8_t {
+  if (target == nullptr) {
+    return 0U;
+  }
+  std::uint32_t seed = target->get_id() * 2654435761U;
+  if (attacker != nullptr) {
+    seed ^= attacker->get_id() * 2246822519U;
+  }
+  seed = mix_hash(seed);
+  switch (profile) {
+  case Engine::Core::DeathSequenceProfile::MountedRider:
+    return 2U;
+  case Engine::Core::DeathSequenceProfile::Elephant:
+    return static_cast<std::uint8_t>(seed & 1U);
+  case Engine::Core::DeathSequenceProfile::Horse:
+    return 0U;
+  case Engine::Core::DeathSequenceProfile::Infantry:
+  default:
+    return static_cast<std::uint8_t>(seed & 1U);
+  }
+}
+
+void begin_death_sequence(Engine::Core::Entity *target,
+                          Engine::Core::Entity *attacker) {
   if (target == nullptr) {
     return;
   }
 
-  auto *death = target->get_component<Engine::Core::DeathMotionComponent>();
+  auto *unit = target->get_component<Engine::Core::UnitComponent>();
+  auto *death = target->get_component<Engine::Core::DeathAnimationComponent>();
   if (death == nullptr) {
-    death = target->add_component<Engine::Core::DeathMotionComponent>();
+    death = target->add_component<Engine::Core::DeathAnimationComponent>();
   }
   if (death == nullptr) {
     return;
   }
 
-  death->reaction = resolve_death_reaction(target, attacker);
-  death->elapsed_time = 0.0F;
-  death->duration = 1.35F;
-  death->impulse_x = 0.0F;
-  death->impulse_z = 0.0F;
-  death->angular_velocity = 0.0F;
+  death->profile = resolve_death_profile(unit);
+  death->state = Engine::Core::DeathSequenceState::Dying;
+  death->state_time = 0.0F;
+  death->state_duration = 1.0F;
+  death->dead_hold_duration = 0.8F;
+  death->sequence_variant =
+      resolve_death_variant(target, attacker, death->profile);
 
-  auto *target_transform = target->get_component<Engine::Core::TransformComponent>();
-  auto *attacker_transform =
-      (attacker != nullptr)
-          ? attacker->get_component<Engine::Core::TransformComponent>()
-          : nullptr;
-  if (target_transform != nullptr && attacker_transform != nullptr) {
-    float const dx =
-        target_transform->position.x - attacker_transform->position.x;
-    float const dz =
-        target_transform->position.z - attacker_transform->position.z;
-    float const dist = std::sqrt(dx * dx + dz * dz);
-    if (dist > 0.0001F) {
-      death->impulse_x = dx / dist;
-      death->impulse_z = dz / dist;
-    }
-  }
-
-  switch (death->reaction) {
-  case Engine::Core::DeathReactionType::Thrown:
-    death->duration = 1.8F;
-    death->impulse_x *= 2.8F;
-    death->impulse_z *= 2.8F;
-    death->angular_velocity = 780.0F;
+  switch (death->profile) {
+  case Engine::Core::DeathSequenceProfile::MountedRider:
+    death->state_duration = 1.15F;
+    death->dead_hold_duration = 0.95F;
     break;
-  case Engine::Core::DeathReactionType::SpinFall:
-    death->duration = 1.65F;
-    death->impulse_x *= 2.2F;
-    death->impulse_z *= 2.2F;
-    death->angular_velocity = 620.0F;
+  case Engine::Core::DeathSequenceProfile::Horse:
+    death->state_duration = 1.20F;
+    death->dead_hold_duration = 1.00F;
+    death->sequence_variant = 0U;
     break;
-  case Engine::Core::DeathReactionType::Crushed:
-    death->duration = 1.1F;
-    death->impulse_x *= 0.5F;
-    death->impulse_z *= 0.5F;
-    death->angular_velocity = 140.0F;
+  case Engine::Core::DeathSequenceProfile::Elephant:
+    death->state_duration = 1.50F;
+    death->dead_hold_duration = 1.25F;
     break;
-  case Engine::Core::DeathReactionType::Knockback:
-    death->duration = 1.45F;
-    death->impulse_x *= 1.8F;
-    death->impulse_z *= 1.8F;
-    death->angular_velocity = 260.0F;
-    break;
-  case Engine::Core::DeathReactionType::BackwardFall:
-    death->duration = 1.5F;
-    death->impulse_x *= 1.35F;
-    death->impulse_z *= 1.35F;
-    death->angular_velocity = 180.0F;
-    break;
-  case Engine::Core::DeathReactionType::Collapse:
+  case Engine::Core::DeathSequenceProfile::Infantry:
   default:
-    death->duration = 1.35F;
-    death->angular_velocity = 70.0F;
     break;
   }
 }
@@ -269,7 +228,7 @@ void deal_damage(Engine::Core::World *world, Engine::Core::Entity *target,
       }
       target->add_component<Engine::Core::PendingRemovalComponent>();
     } else {
-      apply_death_motion(target, attacker);
+      begin_death_sequence(target, attacker);
     }
   }
 }

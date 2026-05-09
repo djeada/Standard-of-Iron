@@ -1,5 +1,6 @@
 #include "prepare.h"
 
+#include "../../game/core/component.h"
 #include "../creature/animation_state_components.h"
 #include "../creature/pipeline/creature_prepared_state.h"
 #include "../creature/pipeline/preparation_common.h"
@@ -15,6 +16,7 @@
 #include <QMatrix4x4>
 #include <QVector3D>
 
+#include <algorithm>
 #include <cstdint>
 
 namespace Render::Elephant {
@@ -22,8 +24,15 @@ namespace Render::Elephant {
 namespace {
 
 auto elephant_state_for_motion(const Render::GL::ElephantMotionSample &motion,
-                               const Render::GL::AnimationInputs &anim) noexcept
+                               const Render::GL::AnimationInputs &anim,
+                               const Engine::Core::DeathAnimationComponent
+                                   *death_anim) noexcept
     -> Render::Creature::AnimationStateId {
+  if (death_anim != nullptr) {
+    return death_anim->state == Engine::Core::DeathSequenceState::Dying
+               ? Render::Creature::AnimationStateId::Die
+               : Render::Creature::AnimationStateId::Dead;
+  }
   if (motion.is_fighting) {
     return Render::Creature::AnimationStateId::AttackMelee;
   }
@@ -133,6 +142,9 @@ void prepare_elephant_render(
 
   HowdahAttachmentFrame const howdah =
       shared_howdah ? *shared_howdah : motion.howdah;
+  auto *death_anim = (ctx.entity != nullptr)
+                         ? ctx.entity->get_component<Engine::Core::DeathAnimationComponent>()
+                         : nullptr;
 
   Render::GL::DrawContext elephant_ctx = ctx;
   elephant_ctx.model = ctx.model;
@@ -152,8 +164,15 @@ void prepare_elephant_render(
   RCP::PreparedElephantBodyState body_state;
   body_state.graph = graph_output;
   body_state.variant = v;
-  body_state.animation_state = elephant_state_for_motion(motion, anim);
-  body_state.phase = motion.phase;
+  body_state.animation_state = elephant_state_for_motion(motion, anim, death_anim);
+  if (death_anim != nullptr &&
+      death_anim->state == Engine::Core::DeathSequenceState::Dying &&
+      death_anim->state_duration > 0.0F) {
+    body_state.phase =
+        std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F, 1.0F);
+  } else {
+    body_state.phase = (death_anim == nullptr) ? motion.phase : 0.0F;
+  }
   out.bodies.add_quadruped(body_state);
 
   QVector3D const elephant_world_pos =

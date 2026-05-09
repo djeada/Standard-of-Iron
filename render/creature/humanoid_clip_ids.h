@@ -20,5 +20,9 @@ inline constexpr std::uint16_t kHumanoidRidingIdleClip = 12U;
 inline constexpr std::uint16_t kHumanoidRidingChargeClip = 13U;
 inline constexpr std::uint16_t kHumanoidRidingReiningClip = 14U;
 inline constexpr std::uint16_t kHumanoidRidingBowShotClip = 15U;
+inline constexpr std::uint16_t kHumanoidDieInfantryClip = 16U;
+inline constexpr std::uint16_t kHumanoidDeadInfantryClip = 17U;
+inline constexpr std::uint16_t kHumanoidDieMountedClip = 18U;
+inline constexpr std::uint16_t kHumanoidDeadMountedClip = 19U;
 
 } // namespace Render::Creature

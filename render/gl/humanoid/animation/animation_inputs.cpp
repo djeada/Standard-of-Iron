@@ -53,12 +53,20 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
   anim.attack_variant = 0;
   anim.is_hit_reacting = false;
   anim.hit_reaction_intensity = 0.0F;
+  anim.is_dying = false;
+  anim.is_dead = false;
+  anim.death_progress = 0.0F;
+  anim.death_variant = 0;
 
   if (ctx.entity == nullptr) {
     return anim;
   }
 
-  if (ctx.entity->has_component<Engine::Core::PendingRemovalComponent>()) {
+  auto *death_anim =
+      ctx.entity->get_component<Engine::Core::DeathAnimationComponent>();
+  bool const has_active_death = (death_anim != nullptr);
+  if (ctx.entity->has_component<Engine::Core::PendingRemovalComponent>() &&
+      !has_active_death) {
     return anim;
   }
 
@@ -76,6 +84,30 @@ auto sample_anim_state(const DrawContext &ctx) -> AnimationInputs {
       ctx.entity->get_component<Engine::Core::HitFeedbackComponent>();
   const auto *stamina =
       ctx.entity->get_component<Engine::Core::StaminaComponent>();
+
+  if (death_anim != nullptr) {
+    anim.is_moving = false;
+    anim.is_running = false;
+    anim.is_attacking = false;
+    anim.is_melee = false;
+    anim.is_hit_reacting = false;
+    anim.hit_reaction_intensity = 0.0F;
+    anim.death_variant = death_anim->sequence_variant;
+    if (death_anim->state == Engine::Core::DeathSequenceState::Dying) {
+      anim.is_dying = true;
+      if (death_anim->state_duration > 0.0F) {
+        anim.death_progress =
+            std::clamp(death_anim->state_time / death_anim->state_duration, 0.0F,
+                       1.0F);
+      } else {
+        anim.death_progress = 1.0F;
+      }
+    } else {
+      anim.is_dead = true;
+      anim.death_progress = 1.0F;
+    }
+    return anim;
+  }
 
   anim.is_in_hold_mode = ((hold_mode != nullptr) && hold_mode->active);
   if (anim.is_in_hold_mode && hold_mode != nullptr) {

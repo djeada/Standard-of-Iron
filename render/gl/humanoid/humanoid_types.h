@@ -37,6 +37,10 @@ struct AnimationInputs {
   float healing_target_dz{0.0F};
   bool is_constructing{false};
   float construction_progress{0.0F};
+  bool is_dying{false};
+  bool is_dead{false};
+  float death_progress{0.0F};
+  std::uint8_t death_variant{0};
 };
 
 inline auto hold_transition_amount(const AnimationInputs &inputs) -> float {

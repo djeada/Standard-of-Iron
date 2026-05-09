@@ -90,6 +90,7 @@ public:
   Game::Systems::NationID nation_id{Game::Systems::NationID::RomanRepublic};
   int render_individuals_per_unit_override{0};
   bool render_rider{true};
+  std::uint8_t death_sequence_override{0xFF};
 };
 
 class MovementComponent : public Component {
@@ -334,25 +335,25 @@ public:
   PendingRemovalComponent() = default;
 };
 
-enum class DeathReactionType : std::uint8_t {
-  Collapse,
-  Knockback,
-  BackwardFall,
-  SpinFall,
-  Thrown,
-  Crushed
+enum class DeathSequenceProfile : std::uint8_t {
+  Infantry = 0,
+  MountedRider = 1,
+  Horse = 2,
+  Elephant = 3
 };
 
-class DeathMotionComponent : public Component {
-public:
-  DeathMotionComponent() = default;
+enum class DeathSequenceState : std::uint8_t { Dying = 0, DeadHold = 1 };
 
-  DeathReactionType reaction{DeathReactionType::Collapse};
-  float elapsed_time{0.0F};
-  float duration{1.4F};
-  float impulse_x{0.0F};
-  float impulse_z{0.0F};
-  float angular_velocity{0.0F};
+class DeathAnimationComponent : public Component {
+public:
+  DeathAnimationComponent() = default;
+
+  DeathSequenceProfile profile{DeathSequenceProfile::Infantry};
+  DeathSequenceState state{DeathSequenceState::Dying};
+  float state_time{0.0F};
+  float state_duration{1.0F};
+  float dead_hold_duration{0.8F};
+  std::uint8_t sequence_variant{0};
 };
 
 class HoldModeComponent : public Component {
