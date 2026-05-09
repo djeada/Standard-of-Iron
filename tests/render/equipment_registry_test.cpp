@@ -1,4 +1,5 @@
 #include "render/equipment/equipment_registry.h"
+#include "render/equipment/horse/tack/bridle_renderer.h"
 #include "render/equipment/equipment_submit.h"
 #include "render/equipment/i_equipment_renderer.h"
 #include <gtest/gtest.h>
@@ -203,4 +204,27 @@ TEST_F(EquipmentRegistryTest, OverwriteKeepsStableHandle) {
   EXPECT_EQ(handle_v1, handle_v2);
   EXPECT_NE(handle_v1, kInvalidEquipmentHandle);
   EXPECT_EQ(registry->get(handle_v2), armor_v2);
+}
+
+TEST_F(EquipmentRegistryTest, RegisterAndGetHorseEquipment) {
+  auto horse_bridle = std::make_shared<BridleRenderer>();
+  registry->register_horse_equipment(EquipmentCategory::HorseTack,
+                                     "horse_bridle_test", horse_bridle);
+
+  auto retrieved =
+      registry->get_horse(EquipmentCategory::HorseTack, "horse_bridle_test");
+  ASSERT_NE(retrieved, nullptr);
+  EXPECT_EQ(retrieved, horse_bridle);
+}
+
+TEST_F(EquipmentRegistryTest, HorseEquipmentResolvesHandleFromSameRegistry) {
+  auto horse_bridle = std::make_shared<BridleRenderer>();
+  registry->register_horse_equipment(EquipmentCategory::HorseTack,
+                                     "horse_bridle_handle", horse_bridle);
+
+  const auto handle =
+      registry->resolve_handle(EquipmentCategory::HorseTack, "horse_bridle_handle");
+
+  EXPECT_NE(handle, kInvalidEquipmentHandle);
+  EXPECT_EQ(registry->get_horse(handle), horse_bridle);
 }

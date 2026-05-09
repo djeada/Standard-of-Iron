@@ -20,8 +20,12 @@ TEST_F(EquipmentLoadoutCatalogTest, RomanMountedKnightLoadoutFromData) {
   EXPECT_EQ(loadout.ids.shield, "roman_scutum");
   EXPECT_EQ(loadout.ids.armor, "roman_heavy_armor");
   EXPECT_EQ(loadout.ids.shoulder, "roman_shoulder_cover_cavalry");
+  EXPECT_EQ(loadout.ids.horse_barding, "horse_scale_barding");
+  EXPECT_EQ(loadout.ids.horse_crupper, "horse_crupper");
   EXPECT_NE(loadout.sword_handle, kInvalidEquipmentHandle);
   EXPECT_NE(loadout.shield_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.horse_barding_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.horse_crupper_handle, kInvalidEquipmentHandle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
@@ -33,10 +37,14 @@ TEST_F(EquipmentLoadoutCatalogTest, CarthageHorseArcherLoadoutResolvesHandles) {
   EXPECT_EQ(loadout.ids.quiver, "quiver");
   EXPECT_EQ(loadout.ids.armor, "armor_light_carthage");
   EXPECT_EQ(loadout.ids.cloak, "cloak_carthage");
+  EXPECT_EQ(loadout.ids.horse_bridle, "horse_bridle");
+  EXPECT_EQ(loadout.ids.horse_decoration, "horse_saddle_bag");
   EXPECT_NE(loadout.bow_handle, kInvalidEquipmentHandle);
   EXPECT_NE(loadout.quiver_handle, kInvalidEquipmentHandle);
   EXPECT_NE(loadout.armor_handle, kInvalidEquipmentHandle);
   EXPECT_NE(loadout.cloak_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.horse_bridle_handle, kInvalidEquipmentHandle);
+  EXPECT_NE(loadout.horse_decoration_handle, kInvalidEquipmentHandle);
 }
 
 TEST_F(EquipmentLoadoutCatalogTest, MissingLoadoutReturnsNotFound) {
