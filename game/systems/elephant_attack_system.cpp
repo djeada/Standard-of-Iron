@@ -1,8 +1,8 @@
 #include "elephant_attack_system.h"
 #include "../core/component.h"
 #include "../core/world.h"
-#include "combat_system/damage_processor.h"
 #include "../units/spawn_type.h"
+#include "combat_system/damage_processor.h"
 #include <algorithm>
 #include <array>
 #include <cmath>

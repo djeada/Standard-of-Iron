@@ -61,30 +61,30 @@ const std::array<ElephantClipSpec, 6> k_elephant_clips{{
      false,
      Render::GL::ElephantGait{2.0F, 0.0F, 0.0F, 0.02F, 0.01F},
      false,
-      false,
-      false,
-      0.0F},
+     false,
+     false,
+     0.0F},
     {{"walk", 24U, 24.0F, true},
      true,
      Render::GL::ElephantGait{1.2F, 0.25F, 0.0F, 0.30F, 0.10F},
      false,
-      false,
-      false,
-      0.62F},
+     false,
+     false,
+     0.62F},
     {{"run", 16U, 24.0F, true},
      true,
      Render::GL::ElephantGait{0.6F, 0.5F, 0.5F, 0.70F, 0.25F},
      false,
-      false,
-      false,
-      0.75F},
+     false,
+     false,
+     0.75F},
     {{"fight", 24U, 24.0F, true},
      false,
      Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F},
      true,
-      false,
-      false,
-      0.0F},
+     false,
+     false,
+     0.0F},
     {{"die", 24U, 24.0F, false},
      false,
      Render::GL::ElephantGait{1.15F, 0.0F, 0.0F, 0.30F, 0.06F},
@@ -98,7 +98,7 @@ const std::array<ElephantClipSpec, 6> k_elephant_clips{{
      false,
      true,
      true,
-      0.0F},
+     0.0F},
 }};
 
 const std::array<Render::Creature::BakeClipDescriptor, k_elephant_clips.size()>
@@ -631,7 +631,8 @@ void bake_elephant_manifest_clip_palettes(
   Render::Elephant::BonePalette palette{};
   Render::Elephant::evaluate_elephant_skeleton(pose, palette);
   if (clip.is_death) {
-    float death_phase = clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
+    float death_phase =
+        clip.is_dead_hold ? 1.0F : std::clamp(phase, 0.0F, 1.0F);
     QMatrix4x4 death_transform;
     death_transform.translate(0.0F, -0.42F * death_phase, -0.12F * death_phase);
     death_transform.rotate(72.0F * death_phase, 1.0F, 0.0F, 0.0F);

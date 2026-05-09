@@ -791,8 +791,8 @@ void Serialization::deserialize_entity(Entity *entity,
     combat_state->animation_state = static_cast<CombatAnimationState>(
         combat_state_obj["animation_state"].toInt(
             static_cast<int>(CombatAnimationState::Idle)));
-    combat_state->attack_family = static_cast<CombatAttackFamily>(
-        combat_state_obj["attack_family"].toInt(
+    combat_state->attack_family =
+        static_cast<CombatAttackFamily>(combat_state_obj["attack_family"].toInt(
             static_cast<int>(CombatAttackFamily::None)));
     combat_state->state_time =
         static_cast<float>(combat_state_obj["state_time"].toDouble(0.0));

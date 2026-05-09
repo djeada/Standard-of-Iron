@@ -2,6 +2,7 @@
 #include "core/entity.h"
 #include "core/world.h"
 #include "systems/arrow_system.h"
+#include "systems/cleanup_system.h"
 #include "systems/combat_system/attack_processor.h"
 #include "systems/combat_system/auto_engagement.h"
 #include "systems/combat_system/combat_mode_processor.h"
@@ -9,7 +10,6 @@
 #include "systems/combat_system/combat_types.h"
 #include "systems/combat_system/combat_utils.h"
 #include "systems/combat_system/damage_processor.h"
-#include "systems/cleanup_system.h"
 #include "systems/command_service.h"
 #include "systems/owner_registry.h"
 #include "units/troop_config.h"
@@ -828,7 +828,8 @@ TEST_F(CombatModeTest, AttackAnimationFamilyFollowsUnitTypeAndMode) {
   Game::Systems::Combat::process_attacks(world.get(), query_context_ranged,
                                          0.016F);
 
-  auto *horse_archer_state = horse_archer->get_component<CombatStateComponent>();
+  auto *horse_archer_state =
+      horse_archer->get_component<CombatStateComponent>();
   ASSERT_NE(horse_archer_state, nullptr);
   EXPECT_EQ(horse_archer_state->attack_family, CombatAttackFamily::Bow);
 }
@@ -940,10 +941,12 @@ TEST_F(CombatModeTest, LethalDamageStartsDeathSequenceBeforeCleanup) {
   movement->has_target = true;
   movement->vx = 1.0F;
   movement->vz = 1.0F;
-  auto *target_unit = target->add_component<UnitComponent>(30, 100, 1.0F, 12.0F);
+  auto *target_unit =
+      target->add_component<UnitComponent>(30, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
 
-  Game::Systems::Combat::deal_damage(world.get(), target, 120, attacker->get_id());
+  Game::Systems::Combat::deal_damage(world.get(), target, 120,
+                                     attacker->get_id());
 
   EXPECT_EQ(target_unit->health, 0);
   auto *death = target->get_component<DeathAnimationComponent>();
@@ -965,15 +968,16 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
 
   auto *target = world->create_entity();
   target->add_component<TransformComponent>(1.0F, 0.0F, 0.0F);
-  auto *target_unit = target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
+  auto *target_unit =
+      target->add_component<UnitComponent>(100, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
   target_unit->spawn_type = Game::Units::SpawnType::Archer;
   target_unit->render_individuals_per_unit_override = 3;
 
-  Game::Systems::Combat::deal_damage(world.get(), target, 40, attacker->get_id());
+  Game::Systems::Combat::deal_damage(world.get(), target, 40,
+                                     attacker->get_id());
 
-  auto *casualties =
-      target->get_component<SoldierCasualtyAnimationComponent>();
+  auto *casualties = target->get_component<SoldierCasualtyAnimationComponent>();
   ASSERT_NE(casualties, nullptr);
   ASSERT_EQ(casualties->entries.size(), 1u);
   EXPECT_EQ(casualties->entries.front().slot_index, 2U);
@@ -984,7 +988,8 @@ TEST_F(CombatModeTest, NonLethalDamageQueuesPerSoldierCasualtyAnimations) {
 TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
   auto *mounted = world->create_entity();
   mounted->add_component<TransformComponent>(0.0F, 0.0F, 0.0F);
-  auto *mounted_unit = mounted->add_component<UnitComponent>(120, 120, 1.0F, 12.0F);
+  auto *mounted_unit =
+      mounted->add_component<UnitComponent>(120, 120, 1.0F, 12.0F);
   mounted_unit->owner_id = 1;
   mounted_unit->spawn_type = Game::Units::SpawnType::HorseArcher;
 
@@ -997,7 +1002,8 @@ TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
 
   Game::Systems::Combat::deal_damage(world.get(), mounted_target, 80,
                                      mounted->get_id());
-  auto *mounted_death = mounted_target->get_component<DeathAnimationComponent>();
+  auto *mounted_death =
+      mounted_target->get_component<DeathAnimationComponent>();
   ASSERT_NE(mounted_death, nullptr);
   EXPECT_EQ(mounted_death->profile, DeathSequenceProfile::MountedRider);
   EXPECT_EQ(mounted_death->sequence_variant, 0U);
@@ -1011,11 +1017,13 @@ TEST_F(CombatModeTest, MountedAndElephantVictimsSelectDeathProfiles) {
 
   auto *target = world->create_entity();
   target->add_component<TransformComponent>(1.5F, 0.0F, 0.0F);
-  auto *target_unit = target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
+  auto *target_unit =
+      target->add_component<UnitComponent>(40, 100, 1.0F, 12.0F);
   target_unit->owner_id = 2;
   target_unit->spawn_type = Game::Units::SpawnType::Elephant;
 
-  Game::Systems::Combat::deal_damage(world.get(), target, 80, elephant->get_id());
+  Game::Systems::Combat::deal_damage(world.get(), target, 80,
+                                     elephant->get_id());
 
   auto *death = target->get_component<DeathAnimationComponent>();
   ASSERT_NE(death, nullptr);

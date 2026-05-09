@@ -71,9 +71,9 @@ public:
   bpat_clip(ArchetypeId id,
             AnimationStateId state) const noexcept -> std::uint16_t;
 
-  [[nodiscard]] auto clip_variant_count(ArchetypeId id,
-                                        AnimationStateId state) const noexcept
-      -> std::uint8_t;
+  [[nodiscard]] auto
+  clip_variant_count(ArchetypeId id,
+                     AnimationStateId state) const noexcept -> std::uint8_t;
 
   [[nodiscard]] auto resolve_bpat_clip(
       ArchetypeId id, AnimationStateId state,

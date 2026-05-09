@@ -147,8 +147,7 @@ public:
   static constexpr std::size_t k_dense_anim_state_slots = 305;
   static constexpr std::size_t k_dense_anim_slot_count =
       k_dense_variant_slots * k_dense_attack_family_slots *
-      k_dense_attack_variant_slots *
-      k_dense_anim_state_slots;
+      k_dense_attack_variant_slots * k_dense_anim_state_slots;
 
   struct DenseDomainHandle {
     static constexpr std::size_t k_invalid =
